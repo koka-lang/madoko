@@ -1,0 +1,47 @@
+{
+  "name"        : "madoko",
+  "author"      : "Daan Leijen, Microsoft Corp.",
+  "version"     : "0.1.1-alpha",
+  "homepage"    : "http://madoko.codeplex.com",
+  "description" : "Madoko is a fast javascript Markdown processor written in Koka",
+  "licenses": [{
+    "type"      : "Apache License 2.0", 
+    "url"       : "http://www.apache.org/licenses/LICENSE-2.0.html"
+  }],
+  "keywords": [
+      "Madoko",
+      "Markdown",
+      "LaTeX",
+      "Koka", 
+      "Microsoft"
+  ],
+  "preferGlobal": true,
+  "main": "./lib/madoko.js",
+  "bin": {
+    "madoko": "./lib/cli.js"
+  },
+  "directories": {
+    "lib": "./lib",
+    "doc": "./doc"
+  },
+  "files": [
+    "lib",
+    "doc/*.png",
+    "doc/overview.html",
+    "doc/overview.pdf",
+    "Jakefile.js",
+    "readme.md",
+    "license.txt"
+  ],
+  "engines" : { 
+    "node": ">=0.10.0" 
+  },
+  "dependencies": {
+    "amdefine"   : ">=0.0.4",    
+    "requirejs"  : ">=2.1"
+  },
+  "repository": {
+    "type": "hg", 
+    "url" : "https://hg.codeplex.com/madoko"
+  }
+}

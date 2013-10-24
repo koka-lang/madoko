@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <title>Koka: Programming with Row-Polymorphic Effects</title>
+  <link rel="stylesheet" type="text/css" href="madoko.css">
+
+</head>
+<body>
+
+<div class='titleblock align-center'><div class='title'>Koka: Programming with Row-Polymorphic Effects</div>
+<div class='subtitle'>A &Ccedil;ubtitle</div>
+<table><tr><td class='authorblock align-center'><span class="author">Daan Leijen</span><br><span class="affiliation">Microsoft Research</span><br><span class="email">daan@microsoft.com</span></td>
+<td class='authorblock align-center'><span class="author">Someone else</span><br><span class="affiliation">Foo bar</span><br><span class="email">http://foobar.com/~someone</span></td></tr></table></div>
+<h3 id="contents">Contents</h3>
+<div id="toc" class="toc">
+<div class="tocblock">
+<div class="tocitem" style='toctarget:sec-intro;toclevel:1'><a href="#sec-intro" class="localref"><span class="heading-before"><span class="heading-label">1</span>.&nbsp;&nbsp;&nbsp;</span>Introduction</a></div>
+<div class="tocblock">
+<div class="tocitem" style='toctarget:sec-inference;toclevel:2'><a href="#sec-inference" class="localref"><span class="heading-before"><span class="heading-label">1.1</span>.&nbsp;&nbsp;&nbsp;</span>Type inference</a></div>
+<div class="tocitem" style='toctarget:sec-semeffect;toclevel:2'><a href="#sec-semeffect" class="localref"><span class="heading-before"><span class="heading-label">1.2</span>.&nbsp;&nbsp;&nbsp;</span>Semantics of effects</a></div></div>
+<div class="tocitem" style='toctarget:related-work;toclevel:1'><a href="#related-work" class="localref"><span class="heading-before"><span class="heading-label">2</span>.&nbsp;&nbsp;&nbsp;</span>Related work</a></div></div></div>
+<h3 id="abstract">Abstract</h3>
+<p>We propose a programming model where effects are treated in a disciplined way,
+and where the potential side-effects of a function are apparent in its type
+signature. The type and effect of expressions can also be inferred
+automatically, and we describe a polymorphic type inference system based on
+Hindley-Milner style inference. A novel feature is that we support polymorphic
+effects through row-polymorphism using duplicate labels. Moreover, we show
+that our effects are not just syntactic labels but have a deep semantic
+connection to the program. For example, if an expression can be typed without
+an <em>exn</em> effect, then it will never throw an unhandled exception. Similar to
+Haskell&#39;s <code>runST</code> we show how we can safely encapsulate stateful operations.
+Through the state effect, we can also safely combine state with let-
+polymorphism without needing either imperative type variables or a syntactic
+value restriction. Finally,our system is implemented fully in a new language
+called Koka<sup id="fnref-koka"><a href="#fn-koka" class="footnote-ref localref">1</a></sup> and has been used successfully on various small to medium-
+sized sample programs ranging from a Markdown processor to a tier-splitted
+chat application.
+</p>
+<h2 id="sec-intro"><span class="heading-before"><span class="heading-label">1</span>.&nbsp;&nbsp;&nbsp;</span>Introduction</h2>
+<p>We propose a programming model where effects are a part of the type signature
+of a function. Currently, types only tell us something about the input and
+output value of a function but say nothing about all <em>other</em> behaviors; for
+example, if the function writes to the console or can throw an exception. In
+our system, the squaring function:
+</p>
+<pre class="para-block">
+<code>function sqr(x : int) { x | $ * x }</code></pre>
+<p>will get the type: 
+</p>
+<pre class="fenced para-block">
+<code>sqr : int -&gt; total | $ int </code></pre>
+<p>signifying that <code>sqr</code> has no
+side effect at all and behaves as a total function from integers to integers.
+If we add a <code>print</code> statement though:
+</p>
+<pre class="para-block">
+<code>function sqr(x : int) { print(x); x*x }</code></pre>
+<p>the (inferred) type indicates that <code>sqr</code> has an input-output (<code>io</code>) effect:
+</p>
+<pre class="para-block">
+<code>sqr : int -&gt; io int</code></pre>
+<p>Note that there was no need to change the original function nor to promote the
+expression <code>x*x</code> into the <code>io</code> effect. One of our goals is to make effects
+convenient for the programmer, so we automatically combine effects. In
+particular, this makes it convenient for the programmer to use precise effects
+without having to insert coercions. For example, we can split Haskell&#39;s state
+monad into three separate effects (read, allocate, and write), while
+automatically combining these effects when required.
+</p>
+<p class="indent">There have been many proposals for effects systems in the past&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#gifford:imperative" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">3</span></a>, <a href="#lucassen:polyeffect" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">9</span></a>, <a href="#talpin:effects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">16</span></a>, <a href="#wadler:marriage" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">22</span></a>, <a href="#nielson:polyeffect" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">12</span></a>, <a href="#benton:exceptioneffects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">1</span></a>, <a href="#marino:genericeffects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">10</span></a>, <a href="#leijen:effects-tr" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">18</span></a>, <a href="#scala:effects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">15</span></a>]</span>.
+However, many such systems suffer from being syntactical in nature (i.e.
+effects are just labels), or by being quite restricted, for example being
+monomorphic or applied to a very specific set of effects. Some of the more
+general systems suffer from having complicated effect types, especially in a
+polymorphic setting that generally requires sub-effect constraints.
+</p>
+<p class="indent para-continue">This paper has been long in the works and brings together many pieces of the
+effect puzzle: ranging from effect types as rows with duplicate labels, the
+semantics of effect types, and practical experience with effect inference. In
+particular, we make the following contributions:
+</p>
+<ul>
+<li>
+<p>We describe a novel effect system based on row polymorphism which allows
+<em>duplicated</em> effects. It turns out that this is essential to provide natural types to effect elimination forms, like catching exceptions.
+</p></li>
+<li>
+<p>The effect types are not just syntactic labels
+  but they have a deep semantic connection to the program (Section&nbsp;<a href="#sec-semeffect" class="localref" style='target-element:h2'><span class="heading-label">1.2</span></a>). For example, we can prove that if an expression that can be typed without an <em>exn</em> effect, then it will never throws an unhandled exception; or if an expressions can be typed without a <em>div</em> effect, then it will always terminate.
+</p></li>
+<li>
+<p>The interaction between polymorphism and mutable state is fraught with 
+  danger. We show that by modeling state as an effect we can safely combine mutability with let-polymorphism without needing either <em>imperative type variables</em>, nor a syntactic value restriction.
+</p>
+<p>  Moreover, we can safely encapsulate local state operations and we prove that such encapsulation is sound where no references or stateful behavior can escape the encapsulation scope.
+</p>
+<p>  The interaction between divergence and higher-order mutable state is also tricky. Again, we show how explicit heap effects allow us to safely infer whether stateful operations may diverge.
+</p></li>
+<li>
+<p>Having to keep track of effects manually would be a large burden: we
+  describe a sound and complete type inference system that automatically infers the principal effect and type of any expression, and automatically promotes effects when necessary. (Section&nbsp;<a href="#sec-inference" class="localref" style='target-element:h2'><span class="heading-label">1.1</span></a>).
+</p></li>
+<li>
+<p>We have an extensive experience with the type system within the 
+  Koka language. The Koka language fully implements the effect types as described in this paper and we have used it successfully in various small to medium sized code examples ranging from a fully compliant
+  Markdown text processor to a tier-splitted chat application.
+</p></li></ul>
+
+<h3 id="sec-inference"><span class="heading-before"><span class="heading-label">1.1</span>.&nbsp;&nbsp;&nbsp;</span>Type inference</h3>
+<p>To address. Some greek &delta;&alpha;&alpha;&nu;&hellip;&times;&aelig;&strange;&#3333; .
+</p>
+<h3 id="sec-semeffect"><span class="heading-before"><span class="heading-label">1.2</span>.&nbsp;&nbsp;&nbsp;</span>Semantics of effects</h3>
+<h2 id="related-work"><span class="heading-before"><span class="heading-label">2</span>.&nbsp;&nbsp;&nbsp;</span>Related work</h2>
+<p>A main contribution of this paper is showing that our notion of mutable state
+is sound, in particular the combination of mutable state and polymorphic let-
+bindings is tricky as shown by Tofte&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#tofte:refs" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">19</span></a>]</span> for the ML
+language. Later, variants of the ML value restriction are studied by Leroy&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#leroy:valuerestriction" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">7</span></a>]</span>.
+</p>
+<p class="indent">Safe state encapsulation using a lazy state monad was first proven formally by
+Launchbury  and Sabry&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#launchbury:monadstate" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">5</span></a>]</span>. Their formalization is
+quite different though from ours and applies to a lazy store in a monadic
+setting. In particular, in their formalization there is no separate heap
+binding, but heaps are always bound at the outer <code>run</code>. We tried this, but it
+proved difficult in our setting; for example, it is hard to state the stateful
+lemma since answers would never contain an explicit heap. Very similar to our
+state encapsulation is region inference&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#tofte:regioninf" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">20</span></a>]</span>. Our <code>run</code>
+operation essentially delimits a heap region. Regions live at the value level
+though, and we can for example not access references in several regions at
+once.
+</p>
+<p class="indent">Independently of our work, Lindley and Cheney&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#lindley:effects" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">8</span></a>]</span> also
+used row polymorphism for effect types. Their approach is based on
+presence/absence flags&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#remy:records" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">14</span></a>]</span> to give effect types to database
+operations in the context of the Links web programming language. The main
+effects of the database operations are <em>wild</em>, <em>tame</em>, and <em>hear</em>, for
+arbitrary effects including divergence, pure queries, and asynchronous
+messages respectively.They report on practical experience exposing effect
+types to the programmer and discuss various syntax forms to easily denote
+effect types.
+</p>
+<p class="indent">The problems with arbitrary effects have been widely recognized, and there is
+a large body of work studying how to delimit the scope of effects. There have
+been many effect typing disciplines proposed. Early work is by Gifford and
+Lucassen&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#gifford:imperative" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">3</span></a>, <a href="#lucassen:polyeffect" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">9</span></a>]</span> which was later
+extended by Talpin&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#talpin:thesis" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">17</span></a>]</span> and others&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#talpin:effects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">16</span></a>, <a href="#nielson:polyeffect" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">12</span></a>]</span>. 
+These systems are closely related
+since they describe polymorphic effect systems and use type constraints to
+give principal types. The system described by Nielson <em>et al.</em>&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#nielson:polyeffect" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">12</span></a>]</span> 
+also requires the effects to form a complete
+lattice with meets and joins.
+</p>
+<p class="indent">Java contains a simple effect system where each method is labeled with the
+exceptions it might raise&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#gosling:java" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">4</span></a>]</span> . A system for finding uncaught
+exceptions was developed for ML by Pessaux <em>et al.</em>&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#pessaux:exceptions" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">13</span></a>]</span>. 
+A more powerful system for tracking effects was
+developed by Benton&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#benton:exceptioneffects" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">1</span></a>]</span> who also studies the
+semantics of such effect systems&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#benton:relsemantics" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">2</span></a>]</span> . Recent work on
+effects in Scala&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#scala:effects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">15</span></a>]</span> shows how even a restricted form of
+polymorphic effect types can be used to track effects for many programs in
+practice.
+</p>
+<p class="indent">Tolmach&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#tolmach:monadhierarchy" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">21</span></a>]</span> describes an effect analysis for ML
+in terms of effect monads, namely <code>Total</code>, <code>Partial</code>, <code>Divergent</code> and <code>ST</code>.
+This is system is not polymorphic though and meant more for internal compiler
+analysis. In the context proof systems there has been work to show absence of
+observable side effects for object-oriented programming languages, for example
+by Naumann&nbsp;<span class="short citations" style='target-element:bibitem'>[<a href="#naumann:purity" class="short bibref localref" style='target-element:bibitem'><span class="bibitem-label">11</span></a>]</span>.
+</p>
+<p class="indent">Marino <em>et al.</em> recently produced a generic type-and-effect system&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#marino:genericeffects" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">10</span></a>]</span>. 
+This system uses privilege checking to describe
+analytical effect systems, and they provide a soundness proof for their type
+system. For example, an effect system could use try-catch statements to grant
+the <code>canThrow</code> privilege inside try blocks. <code>throw</code> statements are then only
+permitted when this privilege is present. Their system is very general and can
+express many properties but has no semantics on its own. For example, it would
+be sound for the effect system to have &ldquo;+&rdquo; grant the <code>canThrow</code> privilege to
+its arguments, and one has to do an additional proof to show that the effects
+in these systems actually correspond to an intended meaning.
+</p>
+<p class="indent">Wadler and Thiemann showed the close relation between effect systems and
+monads&nbsp;<span class="citations" style='target-element:bibitem'>[<a href="#wadler:marriage" class="bibref localref" style='target-element:bibitem'><span class="bibitem-label">22</span></a>]</span> and showed how any effect system can be translated
+to a monadic version. For our particular system though a monadic translation
+is quite involved due to polymorphic effects; essentially we need dependently
+typed operations and we leave a proper monadic semantics for future work.
+</p>
+<p class="indent"><!-- here is how to create a hidden citation -->
+<span class="hidden citations" style='target-element:bibitem'>[<a href="#leijen:hmf" class="hidden bibref localref" style='target-element:bibitem'><span class="bibitem-label">6</span></a>]</span>
+</p>
+<h3 id="references">References</h3>
+<div class="tex input-tex">
+<div class="bibliography" style='bib-style:plain;bib-data:../test'>
+<div id="benton:exceptioneffects" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">1</span>]&nbsp;&nbsp;</span>Nick Benton and Peter Buchlovsky.
+<span class="newblock"></span> Semantics of an effect analysis for exceptions.
+<span class="newblock"></span> In <em>TLDI &#39;07: Proceedings of the 2007 ACM SIGPLAN international
+  workshop on Types in languages design and implementation</em>, pages 15&ndash;26,
+  2007.</div>
+<div id="benton:relsemantics" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">2</span>]&nbsp;&nbsp;</span>Nick Benton, Andrew Kennedy, Lennart Beringer, and Martin Hofmann.
+<span class="newblock"></span> Relational semantics for effect-based program transformations with
+  dynamic allocation.
+<span class="newblock"></span> In <em>PPDP &#39;07: Proc. of the 9th ACM SIGPLAN int. conf. on
+  Principles and Practice of Declarative Prog.</em>, pages 87&ndash;96, 2007.</div>
+<div id="gifford:imperative" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">3</span>]&nbsp;&nbsp;</span>David&nbsp;K. Gifford and John&nbsp;M. Lucassen.
+<span class="newblock"></span> Integrating functional and imperative programming.
+<span class="newblock"></span> In <em>LFP &#39;86: Proceedings of the 1986 ACM conference on LISP and
+  functional programming</em>, pages 28&ndash;38, 1986.</div>
+<div id="gosling:java" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">4</span>]&nbsp;&nbsp;</span>James Gosling, Bill Joy, and Guy Steele.
+<span class="newblock"></span> <em>The Java Language Specification</em>.
+<span class="newblock"></span> Addison-Wesley, 1996.</div>
+<div id="launchbury:monadstate" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">5</span>]&nbsp;&nbsp;</span>John Launchbury and Amr Sabry.
+<span class="newblock"></span> Monadic state: Axiomatization and type safety.
+<span class="newblock"></span> In <em>ICFP&#39;97</em>, pages 227&ndash;238, 1997.</div>
+<div id="leijen:hmf" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">6</span>]&nbsp;&nbsp;</span>Daan Leijen.
+<span class="newblock"></span> HMF: Simple type inference for first-class polymorphism.
+<span class="newblock"></span> In <em>13th ACM symp. of the International Conference on Functional
+  Programming (ICFP&#39;08)</em>, September 2008.
+<span class="newblock"></span> Extended version available as a technical report: MSR-TR-2007-118,
+  Sep 2007, Microsoft Research.</div>
+<div id="leroy:valuerestriction" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">7</span>]&nbsp;&nbsp;</span>Xavier Leroy.
+<span class="newblock"></span> Polymorphism by name for references and continuations.
+<span class="newblock"></span> In <em>POPL &#39;93: Proc. of the 20th ACM SIGPLAN-SIGACT symposium on
+  Principles of programming languages</em>, pages 220&ndash;231, 1993.</div>
+<div id="lindley:effects" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">8</span>]&nbsp;&nbsp;</span>Sam Lindley and James Cheney.
+<span class="newblock"></span> Row-based effect types for database integration.
+<span class="newblock"></span> In <em>TLDI&#39;12</em>, pages 91&ndash;102, 2012.</div>
+<div id="lucassen:polyeffect" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">9</span>]&nbsp;&nbsp;</span>J.&nbsp;M. Lucassen and D.&nbsp;K. Gifford.
+<span class="newblock"></span> Polymorphic effect systems.
+<span class="newblock"></span> In <em>POPL &#39;88</em>, pages 47&ndash;57, 1988.</div>
+<div id="marino:genericeffects" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">10</span>]&nbsp;&nbsp;</span>Daniel Marino and Todd Millstein.
+<span class="newblock"></span> A generic type-and-effect system.
+<span class="newblock"></span> In <em>TLDI &#39;09: Proceedings of the 4th international workshop on
+  Types in language design and implementation</em>, pages 39&ndash;50, 2009.</div>
+<div id="naumann:purity" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">11</span>]&nbsp;&nbsp;</span>David&nbsp;A. Naumann.
+<span class="newblock"></span> Observational purity and encapsulation.
+<span class="newblock"></span> <em>Theor. Comput. Sci.</em>, 376(3):205&ndash;224, 2007.</div>
+<div id="nielson:polyeffect" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">12</span>]&nbsp;&nbsp;</span>Hanne&nbsp;Riis Nielson, Flemming Nielson, and Torben Amtoft.
+<span class="newblock"></span> Polymorphic subtyping for effect analysis: The static semantics.
+<span class="newblock"></span> In <em>Selected papers from the 5th LOMAPS Workshop on Analysis and
+  Verification of Multiple-Agent Languages</em>, pages 141&ndash;171, 1997.</div>
+<div id="pessaux:exceptions" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">13</span>]&nbsp;&nbsp;</span>Fran&ccedil;ois Pessaux and Xavier Leroy.
+<span class="newblock"></span> Type-based analysis of uncaught exceptions.
+<span class="newblock"></span> In <em>POPL &#39;99</em>, pages 276&ndash;290, 1999.</div>
+<div id="remy:records" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">14</span>]&nbsp;&nbsp;</span>Didier R&eacute;my.
+<span class="newblock"></span> Type inference for records in a natural extension of ML.
+<span class="newblock"></span> In Carl&nbsp;A. Gunter and John&nbsp;C. Mitchell, editors, <em>Theoretical
+  Aspects Of Object-Oriented Programming. Types, Semantics and Language
+  Design</em>. MIT Press, 1993.</div>
+<div id="scala:effects" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">15</span>]&nbsp;&nbsp;</span>Lukas Rytz, Martin Odersky, and Philipp Haller.
+<span class="newblock"></span> Lightweight polymorphic effects.
+<span class="newblock"></span> In <em>European Conference on Object-Oriented Programming (ECOOP),
+  Beijing, China</em>, June 2012.</div>
+<div id="talpin:effects" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">16</span>]&nbsp;&nbsp;</span>Jean-Pierre Talpin and Pierre Jouvelot.
+<span class="newblock"></span> The type and effect discipline.
+<span class="newblock"></span> <em>Inf. Comput.</em>, 111(2):245&ndash;296, 1994.</div>
+<div id="talpin:thesis" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">17</span>]&nbsp;&nbsp;</span>J.P. Talpin.
+<span class="newblock"></span> <em>Theoretical and practical aspects of type and effect inference</em>.
+<span class="newblock"></span> PhD thesis, Ecole des Mines de Paris and University Paris VI, Paris,
+  France, 1993.</div>
+<div id="leijen:effects-tr" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">18</span>]&nbsp;&nbsp;</span>Ross Tate and Daan Leijen.
+<span class="newblock"></span> Convenient explicit effects using type inference with subeffects.
+<span class="newblock"></span> Technical Report MSR-TR-2010-80, Microsoft Research, June 2010.</div>
+<div id="tofte:refs" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">19</span>]&nbsp;&nbsp;</span>Mads Tofte.
+<span class="newblock"></span> Type inference for polymorphic references.
+<span class="newblock"></span> <em>Inf. Comput.</em>, 89(1):1&ndash;34, September 1990.</div>
+<div id="tofte:regioninf" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">20</span>]&nbsp;&nbsp;</span>Mads Tofte and Lars Birkedal.
+<span class="newblock"></span> A region inference algorithm.
+<span class="newblock"></span> <em>ACM Trans. Program. Lang. Syst.</em>, 20(4):724&ndash;767, 1998.</div>
+<div id="tolmach:monadhierarchy" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">21</span>]&nbsp;&nbsp;</span>Andrew&nbsp;P. Tolmach.
+<span class="newblock"></span> Optimizing ML using a hierarchy of monadic types.
+<span class="newblock"></span> In <em>TIC &#39;98</em>, pages 97&ndash;115, 1998.</div>
+<div id="wadler:marriage" class="bibitem has-before"><span class="bibitem-before">[<span class="bibitem-label">22</span>]&nbsp;&nbsp;</span>Philip Wadler and Peter Thiemann.
+<span class="newblock"></span> The marriage of effects and monads.
+<span class="newblock"></span> <em>ACM Trans. Comput. Logic</em>, 4(1):1&ndash;32, 2003.</div></div></div>
+<div class="footnotes">
+<hr >
+
+<ol>
+<li id="fn-koka">
+<p>Koka means &lsquo;effect&rsquo; or &lsquo;effective&rsquo; in Japanese.
+<a href="#fnref-koka" class="footnote-backref localref">&#8617;</a></p></li></ol></div>
+</body>
+</html>

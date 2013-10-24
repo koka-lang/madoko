@@ -1,0 +1,616 @@
+%---------------------------------------------------------------------------
+%  Copyright 2013 Microsoft Corporation.
+% 
+%  This is free software; you can redistribute it and/or modify it under the
+%  terms of the Apache License, Version 2.0. A copy of the License can be
+%  found in the file "license.txt" at the root of this distribution.
+%---------------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+
+\RequirePackage{etoolbox}
+\RequirePackage{xkeyval}
+\RequirePackage[svgnames]{xcolor}
+\RequirePackage{mdframed}
+\RequirePackage{graphicx}
+\RequirePackage{tablefootnote}
+
+\definecolor{DeepBlue}{rgb}{0,0.08,0.45}
+
+\newcommand{\@swap}[2]{#2{#1}}
+\newcommand{\@expandafter}[2]{\expandafter\@swap\expandafter{#2}{#1}}
+
+\newcommand{\eifstrequal}{\expandafter\ifstrequal\expandafter}
+\newcommand{\eeifstrequal}[2]{\@expandafter{\eifstrequal{#1}}{#2}}
+
+\providecommand\providelength[1]{%
+  \begingroup
+    \escapechar\m@ne
+    \xdef\@gtempa{\string#1}%
+  \endgroup
+  \@ifundefined{\@gtempa}%
+    {\newskip#1}%
+    {}%
+}
+
+
+% ---------------------------------------------------
+% Some TeX stuff to compose functions
+% ---------------------------------------------------
+\newcommand{\apptox}[2]{%  apptox{\cmd1}{\cmd2} == newcommand{\cmd1'}[1]{\cmd1{\cmd2{#1}}}
+  \providecommand{#1}[1]{##1}% define it if necessary (as identity)
+  \protected@edef#1##1{#1{\protect #2{##1}}}%
+}
+
+\newcommand{\pretox}[2]{%  pretox{\cmd1}{\cmd2} == newcommand{\cmd1'}[1]{\cmd2{\cmd1{#1}}}
+  \providecommand{#1}[1]{##1}%
+  \protected@edef#1##1{\protect #2{#1{##1}}}%
+}
+
+%-------------------------------------------------------------
+% Save footnotes inside mdframed and minipage environments
+%-------------------------------------------------------------
+\newif\if@saveFootnotes
+\newcommand{\@saveFootnotes}%
+	{\if@saveFootnotes\else%
+		\let\footnote\tablefootnote%
+	 \fi%
+	 \@saveFootnotestrue}%
+\newcommand{\@restoreFootnotes}%	 
+	{\if@saveFootnotes\else%
+ 		\tfn@tablefootnoteprintout% 
+ 		\gdef\tfn@fnt{0}%
+ 	 \fi}% 
+
+%-------------------------------------------------------------
+% Setup mdframed with default values
+%-------------------------------------------------------------
+\newlength{\cssPixel}\setlength{\cssPixel}{0.4pt}
+\mdfsetup{%
+	leftmargin=0pt,%
+	rightmargin=0pt,%
+	skipabove=1pt,%
+	skipbelow=0pt,%
+	innertopmargin=0pt,%
+	innerbottommargin=0pt,%
+	innerleftmargin=0pt,%
+	innerrightmargin=0pt,%
+	middlelinewidth=0pt,%
+	linewidth=0pt,%
+	outerlinewidth=0pt,innerlinewidth=0pt%
+}
+
+
+% ---------------------------------------------------
+% Basic command to process attributes passed to TeX
+% ---------------------------------------------------
+\newif\if@usewrap
+\newcommand{\@doBefore}{}
+\newcommand{\@doAfter}{}
+\newcommand{\@wrapCmd}[1]{#1}
+
+\newcommand{\@cssUseCmd}{\renewcommand{\@wrapCmd}[1]{##1}\@usewraptrue}
+\newcommand{\@cssUseEnv}{\renewcommand{\@doBefore}{}\renewcommand{\@doAfter}{}\@usewrapfalse}
+
+\newcommand{\@cssApplyCmd}[1]{{\@wrapCmd{#1}}}
+\newcommand{\@cssApplyBefore}{\@doBefore{}}
+\newcommand{\@cssApplyAfter}{\@doAfter{}}
+
+\newcommand{\@cssProcessAttrs}[2]{%
+  \setkeys*{cssx}{#1}\setrmkeys*{csspre}\setrmkeys*{css}\setrmkeys*{csspost}% defaults
+  \@cssApplyRulesFor{parentclass}{css}{\cssParentClass}%
+  \setkeys*{cssx}{#2}\setrmkeys*{csspre}\setrmkeys*{css}\setrmkeys*{csspost}% regular
+  \protected@edef\cssParentClass{\cssClass}%
+}
+
+
+\newcommand{\@cmdBefore}[2]{#1#2}
+\newcommand{\@cmdAfter}[2]{#2#1}
+
+\newcommand{\cssWrapCmd}[1]{\apptox{\@wrapCmd}{#1}}
+\newcommand{\cssDoBefore}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
+\newcommand{\cssDoAfter}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
+
+\newcommand{\cssDoEnv}[1]{\cssDoBefore{\begin{#1}}\cssDoAfter{\end{#1}}}
+\newcommand{\cssDoEnvOpt}[2]{\cssDoBefore{\begin{#1}[#2]}\cssDoAfter{\end{#1}}}
+\newcommand{\cssDoEnvArg}[2]{\cssDoBefore{\begin{#1}{#2}}\cssDoAfter{\end{#1}}}
+\newcommand{\cssDoEnvArgII}[3]{\cssDoBefore{\begin{#1}{#2}{#3}}\cssDoAfter{\end{#1}}}
+
+\newcommand{\newKey}[4][]{\define@key{#2}{#3}[#1]{#4}}
+\newcommand{\newLength}[2]{\providelength{#1}\setlength{#1}{#2}}
+
+
+\newcommand{\@cssReset}{}
+\newcommand{\cssAddReset}[1]{\appto{\@cssReset}{#1}}
+\newcommand{\cssNewResetCommand}[2]{\newcommand{#1}{#2}\cssAddReset{\renewcommand{#1}{#2}}}
+
+\newcommand{\cssNewLengthKey}[4][0pt]{%
+	\newLength{#4}{#1}%
+	\newKey{#2}{#3}{%
+		\ifstrequal{##1}{auto}{\setlength{#4}{\fill}}{\setlength{#4}{##1}}%
+	}%
+	\cssAddReset{\setlength{#4}{#1}}%
+}
+
+
+\newcommand{\cssNewKeyNoReset}[4]{%
+	\newcommand{#3}{#4}%
+	\newKey{#1}{#2}{\renewcommand{#3}{##1}}%
+}
+
+\newcommand{\cssNewKey}[4]{%
+	\cssNewResetCommand{#3}{#4}%
+	\newKey{#1}{#2}{%(#2=##1)%debug key setting
+		\renewcommand{#3}{##1}}%
+}
+\newcommand{\cssNewKeyX}[5]{%
+	\cssNewResetCommand{#3}{#4}%
+	\newKey{#1}{#2}{\renewcommand{#3}{##1}#5{##1}}%
+}
+\newcommand{\cssNewListKey}[4]{%
+	\cssNewResetCommand{#3}{#4}%
+	\newKey{#1}{#2}{\appto{#3}{,##1}}%
+}
+\newcommand{\cssNewListKeyX}[5]{%
+	\cssNewResetCommand{#3}{#4}%
+	\newKey{#1}{#2}{\appto{#3}{,##1}#5{##1}}%
+}
+\newcommand{\cssNewPseudoKey}[3]{%
+	\newKey{#1}{#2}{\setkeys{#1}{#3}}%
+}
+
+%-------------------------------------------------------------
+% css: display
+%-------------------------------------------------------------
+\cssNewKey{css}{display}{\cssDisplay}{block}
+
+%-------------------------------------------------------------
+% css: width, height, and margins
+%-------------------------------------------------------------
+
+\cssNewLengthKey{css}{margin-left}{\cssMarginLeft}
+\cssNewLengthKey{css}{margin-right}{\cssMarginRight}
+\cssNewLengthKey{css}{margin-top}{\cssMarginTop}
+\cssNewLengthKey{css}{margin-bottom}{\cssMarginBottom}
+\cssNewLengthKey{css}{width}{\cssWidth}
+\cssNewLengthKey{css}{height}{\cssHeight}
+\cssNewKey{css}{vertical-align}{\cssVerticalAlign}{}
+
+\cssNewPseudoKey{css}{margin}{margin-top=#1,margin-bottom=#1,margin-left=#1,margin-right=#1}
+
+
+\newcommand{\@cssProcessMargins}{%
+	\eifstrequal{\cssDisplay}{block}%
+		{\@cssBlockEndPar\@cssBlockMargins}%
+	{\eifstrequal{\cssDisplay}{block-inline}%
+		{\@cssBlockMargins}%
+		{\@cssInlineMargins}%
+	}}
+
+\newcommand{\@cssBlockEndPar}{%
+	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfter{\relax\ifhmode\par\fi}}%
+}
+
+\newif\if@hasdim
+
+\newLength{\@cssMarginAfter}{0pt}
+\newLength{\@cssParSkip}{\parskip}
+\newLength{\@cssParIndent}{\parindent}
+\newcommand{\@cssFixMathSpacing}{\strut\vspace{-\baselineskip}} % fixes weird abovedisplay skip spacing
+\newcommand{\@cssBlockMargins}{%
+	\@hasdimfalse
+	\ifdim\cssWidth=0pt\else\@hasdimtrue\fi
+	\ifdim\cssHeight=0pt\else\@hasdimtrue\fi
+	\if@hasdim%
+		%minipage		
+		\ifdim\cssMarginTop=0pt\else\cssDoBefore{\vspace{\cssMarginTop}}\fi
+		\ifdim\cssMarginLeft=0pt\else\cssDoBefore{\hspace*{\cssMarginLeft}}\fi
+		\setlength{\@cssParIndent}{\parindent}% save parskip and parindent since minipage resets it
+		\setlength{\@cssParSkip}{\parskip}%
+		\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
+		{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
+		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
+		{\def\@cssValign{c}}}}%
+		\ifdim\cssHeight=0pt%
+	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidth}}%
+		\else
+			\ifdim\cssWidth=0pt \setlength{\cssWidth}{\linewidth}\fi%
+			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeight]{\cssWidth}}%
+		\fi
+		\cssDoBefore{\@saveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
+		%note: DoAfter prepends, so in opposite order
+		\ifdim\cssMarginBottom=0pt\else\cssDoAfter{\vspace{\cssMarginBottom}}\fi
+		\ifdim\cssMarginRight=0pt\else\cssDoAfter{\hspace*{\cssMarginRight}}\fi
+		\cssDoAfter{\end{minipage}\@restoreFootnotes}%
+	\else
+		% no height/width: trivlist
+		\@hasdimfalse
+		\ifdim\cssMarginLeft=0pt\else\@hasdimtrue\fi
+		\ifdim\cssMarginRight=0pt\else\@hasdimtrue\fi
+		\ifdim\cssMarginTop=0pt\else\@hasdimtrue\fi
+		\ifdim\cssMarginBottom=0pt\else\@hasdimtrue\fi
+	  	\if@hasdim
+			\setlength{\@cssMarginAfter}{\dimexpr\cssMarginBottom-\cssMarginTop\relax}%
+			\cssDoEnvArgII{list}{}{%
+				\leftmargin=\cssMarginLeft%
+				\rightmargin=\cssMarginRight%
+				\topsep=\cssMarginTop%
+				\itemsep=0pt%
+				\parsep=0pt%
+				\parskip=0pt%
+				\partopsep=0pt%	
+				\listparindent=\parindent%	
+			}%
+			\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
+			\cssIfHasClass{math-display}%
+				{\cssDoBefore{\item\@cssFixMathSpacing}}%
+				{\cssDoBefore{\item}}%	\fi
+		\fi
+	\fi
+}
+
+\newcommand{\@cssHide}[1]{}
+\newcommand{\@cssInlineMargins}{%
+	\ifdim\cssMarginLeft=0pt\else\cssDoBefore{\hspace*{\cssMarginLeft}}\fi
+	\ifdim\cssMarginRight=0pt\else\cssDoAfter{\hspace*{\cssMarginRight}}\fi
+	\ifdim\cssMarginBottom=0pt\else\cssDoBefore{\rule[-\cssMarginBottom]{0pt}{\cssMarginBottom}}\fi
+	\ifdim\cssMarginTop=0pt\else\cssDoBefore{\rule{0pt}{\dimexpr\baselineskip*0.7+\cssMarginTop\relax}}\fi
+	\eifstrequal{\cssDisplay}{hidden}{%
+		\cssWrapCmd{\@cssHide}%
+	}{}%
+}
+
+%-------------------------------------------------------------
+% css: Borders and padding 
+%-------------------------------------------------------------
+
+\cssNewLengthKey{css}{padding-left}{\cssPaddingLeft}
+\cssNewLengthKey{css}{padding-right}{\cssPaddingRight}
+\cssNewLengthKey{css}{padding-top}{\cssPaddingTop}
+\cssNewLengthKey{css}{padding-bottom}{\cssPaddingBottom}
+
+\cssNewLengthKey[\cssPixel]{css}{border-width}{\cssBorderWidth}
+\cssNewKey{css}{border-color}{\cssBorderColor}{black}
+\cssNewKey{css}{border-style-top}{\cssBorderStyleTop}{none}
+\cssNewKey{css}{border-style-bottom}{\cssBorderStyleBottom}{none}
+\cssNewKey{css}{border-style-left}{\cssBorderStyleLeft}{none}
+\cssNewKey{css}{border-style-right}{\cssBorderStyleRight}{none}
+
+\cssNewPseudoKey{css}{padding}{padding-top=#1,padding-bottom=#1,padding-right=#1,padding-left=#1}
+
+\cssNewPseudoKey{css}{border-style}%
+	{border-style-top=#1,border-style-bottom=#1,border-style-left=#1,border-style-right=#1}
+
+\newcommand{\@cssProcessPadding}{%
+	\eifstrequal{\cssDisplay}{block}%
+		{\@cssBlockPadding}%
+	{\eifstrequal{\cssDisplay}{block-inline}%
+		{\@cssBlockPadding}%
+		{\@cssInlinePadding}%
+	}}
+
+% Special math-framed environment that fixes vertical spacing around math display
+\newenvironment{mdmathframed}[1][]%
+	{\begin{mdframed}[#1]\@cssFixMathSpacing}%
+	{\@cssFixMathSpacing\end{mdframed}}
+
+\newif\if@needframe
+\newLength{\@cssPaddingLength}{0pt}
+\newcommand{\@cssFramedArgs}{}
+\newcommand{\@cssBorderStyleAll}{}
+\newcommand{\@cssBlockPadding}{%
+	\@needframefalse%
+	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%
+	\ifdim\cssPaddingTop=0pt\else\@needframetrue\fi
+	\ifdim\cssPaddingBottom=0pt\else\@needframetrue\fi
+	\ifdim\cssPaddingLeft=0pt\else\@needframetrue\fi
+	\ifdim\cssPaddingRight=0pt\else\@needframetrue\fi
+	\if@needframe%		
+		\cssDoAfter{\@restoreFootnotes}% first, because post commands are pre-pended
+		\renewcommand{\@cssFramedArgs}{%
+			innertopmargin=\the\cssPaddingTop,%
+			innerbottommargin=\the\cssPaddingBottom,%
+			innerleftmargin=\the\cssPaddingLeft,%
+			innerrightmargin=\the\cssPaddingRight,%
+			linewidth=\the\cssBorderWidth,%
+			linecolor=\cssBorderColor%
+		}%
+		\eifstrequal{\cssBorderStyleTop}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
+		\eifstrequal{\cssBorderStyleBottom}{none}{\appto{\@cssFramedArgs}{,bottomline=false}}{}%	
+		\eifstrequal{\cssBorderStyleLeft}{none}{\appto{\@cssFramedArgs}{,leftline=false}}{}%	
+		\eifstrequal{\cssBorderStyleRight}{none}{\appto{\@cssFramedArgs}{,rightline=false}}{}%		
+		\cssIfHasClass{math-display}%
+			{\@expandafter{\cssDoEnvOpt{mdmathframed}}{\@cssFramedArgs}}%
+			{\@expandafter{\cssDoEnvOpt{mdframed}}{\@cssFramedArgs}}%
+		\cssDoBefore{\@saveFootnotes}%
+	\fi
+}
+
+\newcommand{\@robustFramebox}[2]{%
+	\eifstrequal{\cssTextAlign}{center}{\framebox[#1][c]{#2}}%
+	{\eifstrequal{\cssTextAlign}{right}{\framebox[#1][r]{#2}}%
+	{\framebox[#1][l]{#2}}}%
+}
+\newcommand{\@robustMakebox}[2]{%
+	\eifstrequal{\cssDisplay}{table-cell}%
+		{\@robustParbox{#1}{#2}}%
+		{\eifstrequal{\cssTextAlign}{center}{\makebox[#1][c]{#2}}%
+		 {\eifstrequal{\cssTextAlign}{right}{\makebox[#1][r]{#2}}%
+		 {\makebox[#1][l]{#2}}}}%
+}
+
+\newcommand{\@robustParbox}[2]{%
+	\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
+	{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
+	{\def\@cssValign{t}}}%
+	\ifdim\cssHeight=0pt%
+		\parbox[\@cssValign]{#1}{#2}%
+	\else%
+		\parbox[\@cssValign][\cssHeight]{#1}{#2}%
+	\fi%
+}
+
+\newcommand{\@cssInlinePadding}{%
+	\@needframefalse%
+	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%	
+	\if@needframe
+		\setlength{\fboxrule}{\cssBorderWidth}%
+		\ifdim\cssWidth=0pt%
+			\cssWrapCmd{\fbox}%
+		\else
+		    \cssWrapCmd{\@robustFramebox{\cssWidth}}%
+		\fi
+	\else
+		\ifdim\cssWidth=0pt\else
+			\cssWrapCmd{\@robustMakebox{\cssWidth}}%
+		\fi
+	\fi
+	\ifdim\cssHeight=0pt\else\cssDoBefore{\rule{0pt}{\cssHeight}}\fi	
+	\if@needframe
+		\setlength{\fboxsep}{\cssPaddingTop}%  todo: define our own box so we can set paddingtop/bot separately
+		\ifdim\cssPaddingBottom>\fboxsep \setlength{\fboxsep}{\cssPaddingBottom}\fi	
+		\ifdim\cssPaddingLeft=\fboxsep \else\hspace*{\dimexpr\cssPaddingLeft-\fboxsep\relax}\fi
+		\ifdim\cssPaddingRight=\fboxsep \else\hspace*{\dimexpr\cssPaddingRight-\fboxsep\relax}\fi
+	\else
+		\ifdim\cssPaddingLeft=0pt\else\cssDoBefore{\hspace*{\cssPaddingLeft}}\fi
+		\ifdim\cssPaddingRight=0pt\else\cssDoAfter{\hspace*{\cssPaddingRight}}\fi
+		\ifdim\cssPaddingBottom=0pt\else\cssDoBefore{\rule[-\cssPaddingBottom]{0pt}{\cssPaddingBottom}}\fi
+		\ifdim\cssPaddingTop=0pt\else\cssDoBefore{\rule{0pt}{\dimexpr\baselineskip*0.7+\cssPaddingTop\relax}}\fi
+	\fi
+}
+
+%-------------------------------------------------------------
+% css: Textalign, textindent etc 
+%-------------------------------------------------------------
+
+\cssNewLengthKey{css}{text-indent}{\cssTextIndent}
+\cssNewKey{css}{text-align}{\cssTextAlign}{justify}
+\cssNewLengthKey{css}{line-height}{\cssLineHeight}
+
+\newcommand{\@cssProcessText}{%
+	\eifstrequal{\cssDisplay}{block}%
+		{\@cssBlockText}%
+	{\eifstrequal{\cssDisplay}{block-inline}%
+		{\@cssBlockText}%
+		{\@cssInlineText}%
+	}}
+
+\newcommand{\@cssBlockText}{%
+	\eifstrequal{\cssId}{}{}{\label{\cssId}}% set label
+	\eifstrequal{\cssTextAlign}{left}%
+		{\cssDoBefore\raggedright}%
+	{\eifstrequal{\cssTextAlign}{right}%
+		{\cssDoBefore\raggedleft}%
+	{\eifstrequal{\cssTextAlign}{center}%
+		{\cssDoBefore\centering}%
+	{}}}%
+	\ifdim\cssLineHeight=0pt\else\setlength{\baselineskip}{\cssLineHeight}\fi
+	\noindent\ifdim\cssTextIndent=0pt\else\hspace*{\cssTextIndent}\fi	
+}
+
+\newcommand{\@cssInlineText}{%
+	\eifstrequal{\cssId}{}{}{\label{\cssId}}% set label
+	\eifstrequal{\cssTextAlign}{left}%
+		{\cssDoAfter{\hspace*{\fill}}}%
+	{\eifstrequal{\cssTextAlign}{right}%
+		{\cssDoBefore{\hspace*{\fill}}}%
+	{\eifstrequal{\cssTextAlign}{center}%
+		{\cssDoAfter{\hspace*{\fill}}\cssDoBefore{\hspace*{\fill}}}%
+	{}}}%
+	\ifdim\cssLineHeight=0pt\else\cssDoBefore{\rule{0pt}{\cssLineHeight}}\fi
+}
+
+%-------------------------------------------------------------
+% css: Font attributes 
+%-------------------------------------------------------------
+
+\cssNewKey{css}{font-weight}{\cssFontWeight}{}
+\cssNewKey{css}{font-variant}{\cssFontVariant}{}
+\cssNewKey{css}{font-style}{\cssFontStyle}{}
+\cssNewKey{css}{font-size}{\cssFontSize}{}
+\cssNewKey{css}{font-family}{\cssFontFamily}{}
+\cssNewKey{css}{color}{\cssColor}{}
+\cssNewKey{css}{penalty}{\cssPenalty}{}
+
+
+\newcommand{\@cssProcessFont}{%
+	% font family
+	\def\@fontFamily{\cssFontFamily}%
+	\@for\@ii:=\cssFontFamily\do{%  find the last argument in a comma separated list
+		\edef\@fontFamily{\@ii}%
+	}%
+	\eifstrequal{\@fontFamily}{}{}% quick test
+	{\eifstrequal{\@fontFamily}{monospace}%
+		{\cssDoBefore\ttfamily}%
+	{\eifstrequal{\@fontFamily}{serif}%
+		{\cssDoBefore\rmfamily}%
+	{\eifstrequal{\@fontFamily}{sans-serif}%
+		{\cssDoBefore\sffamily}%
+	{\eifstrequal{\@fontFamily}{normal}%
+		{\cssDoBefore\rmfamily}%
+		{}}}}}%
+	%
+  	\eifstrequal{\cssFontWeight}{bold}%
+    	{\cssDoBefore\bfseries}%
+    {\eifstrequal{\cssFontWeight}{normal}%
+      	{\cssDoBefore\mdseries}%
+    {}}%
+  	\eifstrequal{\cssFontVariant}{small-caps}%
+    	{\cssDoBefore\scshape}%
+    {\eifstrequal{\cssFontVariant}{normal}%
+      	{\cssDoBefore\upshape}%
+      	{}}%
+  	\eifstrequal{\cssFontStyle}{italic}%
+    	{\cssDoBefore\itshape\hspace{-0.2ex}}%
+    {\eifstrequal{\cssFontStyle}{oblique}%
+   		{\cssDoBefore\slshape}%
+    {\eifstrequal{\cssFontStyle}{normal}%
+        {\cssDoBefore\upshape}%
+        {}}}%
+    \eifstrequal{\cssFontSize}{}{}% quick test
+	{\eifstrequal{\cssFontSize}{xx-small}%
+		{\cssDoBefore\tiny}%
+	{\eifstrequal{\cssFontSize}{x-small}%
+		{\cssDoBefore\scripsize}%
+	{\eifstrequal{\cssFontSize}{small}%
+		{\cssDoBefore\small}%
+	{\eifstrequal{\cssFontSize}{medium}%
+		{\cssDoBefore\normalsize}%
+	{\eifstrequal{\cssFontSize}{large}%
+		{\cssDoBefore\large}%
+	{\eifstrequal{\cssFontSize}{x-large}%
+		{\cssDoBefore\Large}%
+	{\eifstrequal{\cssFontSize}{xx-large}%
+		{\cssDoBefore\LARGE}%
+		{}}}}}}}}%
+	%
+	\eifstrequal{\cssColor}{}{}%
+		{\color{\cssColor}}%
+	%
+	\eifstrequal{\cssPenalty}{}{}%
+		{\penalty \cssPenalty}%
+}
+
+
+
+
+%-------------------------------------------------------------
+% Generic css rules for certain classes, ids, or elements
+%-------------------------------------------------------------
+\newcommand{\cssRule}[3]{%
+  \@for\@ii:=#2\do{%
+	\csappto{@rule@#1@\@ii}{,#3}%
+  }%	
+}%
+
+\newcommand{\cssRuleDo}[3]{%
+  \@for\@ii:=#2\do{%
+	\csappto{@ruleDo@#1@\@ii}{#3}%
+  }%	
+}%
+
+
+\newcommand{\@cssApplyRulesFor}[3]{%
+  \@for\@ii:=#3\do{%
+    \ifcsmacro{@rule@#1@\@ii}{%
+      \edef\@args{\csname @rule@#1@\@ii\endcsname}%
+      \@expandafter{\setkeys{#2}}{\@args}%
+    }{}%
+  }%	
+}
+
+\newcommand{\@cssApplyDoRulesFor}[3]{%
+  \@for\@ii:=#3\do{%
+    \ifcsmacro{@ruleDo@#1@\@ii}{%
+      \csname @ruleDo@#1@\@ii\endcsname%
+    }{}%
+  }%	
+}
+
+\newcommand{\cssIfHasClass}[3]{%
+  \def\@found{}%
+  \@for\@ii:=\cssClass\do{%
+    \@for\@cname:=#1\do{%
+	 	\eeifstrequal{\@ii}{\@cname}{%
+       		\def\@found{true}%       		
+    	}{}%
+    }%
+  }%
+  \ifdefvoid{\@found}{#3}{#2}%
+}
+
+
+\newcommand{\cssClassRule}[2]{\cssRule{class}{#1}{#2}}
+\newcommand{\cssElemRule}[2]{\cssRule{elem}{#1}{#2}}
+\newcommand{\cssIdRule}[2]{\cssRule{id}{#1}{#2}}
+
+\cssNewListKeyX{cssx}{class}{\cssClass}{}{\@cssApplyRulesFor{class}{css}}
+\cssNewKeyX{cssx}{elem}{\cssElem}{}{\@cssApplyRulesFor{elem}{css}}
+\cssNewKeyX{cssx}{id}{\cssId}{}{\@cssApplyRulesFor{id}{css}}
+
+
+\newcommand{\cssClassRuleDo}[2]{\cssRuleDo{class}{#1}{#2}}
+\newcommand{\cssClassRuleCmd}[2]{\cssClassRuleDo{#1}{\cssWrapCmd{#2}}}
+\newcommand{\cssClassRuleDoBefore}[2]{\cssClassRuleDo{#1}{\cssDoBefore{#2}}}
+\newcommand{\cssClassRuleDoAfter}[2]{\cssClassRuleDo{#1}{\cssDoAfter{#2}}}
+\newcommand{\cssClassRuleEnv}[2]{\cssClassRuleDoBefore{#1}{\begin{#2}}\cssClassRuleDoAfter{#1}{#2}}
+
+\newcommand{\cssElemRuleDo}[2]{\cssRuleDo{class}{#1}{#2}}
+\newcommand{\cssElemRuleCmd}[2]{\cssElemRuleDo{#1}{\cssWrapCmd{#2}}}
+\newcommand{\cssElemRuleDoBefore}[2]{\cssElemRuleDo{#1}{\cssDoBefore{#2}}}
+\newcommand{\cssElemRuleDoAfter}[2]{\cssElemRuleDo{#1}{\cssDoAfter{#2}}}
+\newcommand{\cssElemRuleEnv}[2]{\cssElemRuleDo{#1}{\cssDoEnv{#2}}}
+
+\newcommand{\@cssClassDoRules}{\@cssApplyDoRulesFor{class}{css}{\cssClass}}
+\newcommand{\@cssElemDoRules}{%
+	\@cssApplyDoRulesFor{elem}{css}{\cssElem}%
+	\@cssApplyDoRulesFor{id}{css}{\cssId}%
+}
+
+\newcommand{\cssParentClass}{}
+\newcommand{\cssParentClassRule}[2]{\cssRule{parentclass}{#1}{#2}}
+
+
+%-------------------------------------------------------------
+% 
+%-------------------------------------------------------------
+
+\newenvironment{cssBlockX}[2]%
+	{\@cssReset\@cssUseEnv\@cssProcessAttrs{#1}{#2}%
+	 \@cssElemDoRules%
+	 \@cssProcessMargins\@cssProcessPadding%
+	 \@cssClassDoRules%
+	 \@cssProcessText\@cssProcessFont%
+	 \@cssApplyBefore}%
+	{\@cssApplyAfter}
+
+\newenvironment{cssBlock}[1][]%
+	{\begin{cssBlockX}{}{#1}}{\end{cssBlockX}}
+
+\newcommand{\cssInlineX}[4]%
+	{\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline,#1}{#2}%
+	 \@cssElemDoRules%
+	 \@cssProcessMargins\@cssProcessPadding%
+	 \@cssClassDoRules%
+	 #3%
+	 \@cssProcessText\@cssProcessFont%
+	 \@cssApplyCmd{#4}%
+	}%	 
+
+\newcommand{\cssInline}[2][]{\cssInlineX{}{#1}{}{#2}}
+\newcommand{\cssInlineCmd}[3][]{\cssInlineX{}{#1}{\cssWrapCmd{#2}}{#3}}
+
+\newcommand{\cssNewBlockElem}[3]{%
+	\newenvironment{#1}[1][]{\begin{cssBlockX}{elem=#2,#3}{##1}}{\end{cssBlockX}}}
+
+\newcommand{\cssNewInlineElem}[3]{%
+	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{}{##2}}}
+
+
+\newcommand{\cssNewInlineElemCmd}[4]{%
+	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{\cssWrapCmd{#4}}{##2}}}

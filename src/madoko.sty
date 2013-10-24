@@ -1,0 +1,339 @@
+%---------------------------------------------------------------------------
+%  Copyright 2013 Microsoft Corporation.
+% 
+%  This is free software; you can redistribute it and/or modify it under the
+%  terms of the Apache License, Version 2.0. A copy of the License can be
+%  found in the file "license.txt" at the root of this distribution.
+%---------------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+
+\RequirePackage{css}
+\RequirePackage{array}
+\RequirePackage{amsmath}
+\RequirePackage{listings}
+\RequirePackage[colorlinks=true,linkcolor=DarkBlue,urlcolor=DarkBlue,filecolor=Maroon]{hyperref}
+\RequirePackage{amsmath}
+\RequirePackage{amsfonts}
+\RequirePackage{amssymb}
+
+%-------------------------------------------------------------
+% Setup packages 
+%-------------------------------------------------------------
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible
+}
+
+%-------------------------------------------------------------
+% Character commands 
+%-------------------------------------------------------------
+
+\providecommand{\lt}{\ensuremath{<}}
+\providecommand{\gt}{\ensuremath{>}}
+\providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
+
+% inserted for unknown html entities
+\newcommand{\mdEntity}[1]{\&#1;}
+
+% inserted for unknown unicode entities
+\newcommand{\mdUnicode}[1]{\&\##1;}
+
+\newcommand{\mdBr}{\\}
+\newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+
+% We need to call \mdLabeltarget for any structure that can set label
+\newcounter{@mdTargetCount}
+\newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
+
+
+%-------------------------------------------------------------
+% Title and subtitle 
+%-------------------------------------------------------------
+
+\providecommand{\subtitle}[1]{\edef\oldtitle{\@title}\title{\oldtitle\\{\Large #1}}} 
+
+% If there is no authorinfo, we provide a simple one
+\newcounter{@mdAuthorcount}
+\newcommand{\@mdauthors}{}
+\newcommand{\@mdinsts}{}
+\providerobustcmd{\@and}{\and}
+\providecommand{\email}[1]{\textsf{#1}}%
+\providecommand{\authorinfo}[3]{%
+  \stepcounter{@mdAuthorcount}%
+  \ifdef{\institute}
+  {% LLNCS like style
+   \ifnum\value{@mdAuthorcount}>1%
+     \gappto\@mdauthors{\@and}%
+     \gappto\@mdinsts{\@and}%
+   \fi%
+   \gappto\@mdauthors{#1}%
+   \gappto\@mdinsts{#2}%
+   \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi   
+  }%
+  {% Our own simple style (like sigplanconf)
+   \ifnum\value{@mdAuthorcount}>1%
+     \gappto\@mdauthors{\\[2ex]}%
+   \fi%
+   \gappto\@mdauthors{\large #1}%
+   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex]\normalsize #2}\fi%
+   \ifx\relax#3\relax\else\gappto\@mdauthors{\\\normalsize\email{#3}}\fi%
+  }%
+}
+
+
+\newcommand{\mdTitle}[1]{\title{#1}}
+\newcommand{\mdSubtitle}[1]{\subtitle{#1}}
+\newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
+\newcommand{\mdMaketitle}{%
+  \ifnum\value{@mdAuthorcount}>0%
+    \author{\@mdauthors}%
+    \ifdef\institute{\institute{\@mdinsts}}{}%
+  \fi
+  \maketitle{}}
+
+\cssElemRuleEnv{abstract}{abstract}
+
+
+%-------------------------------------------------------------
+% Paragraphs and indentation 
+%-------------------------------------------------------------
+\newcommand{\mdParIndent}{\parindent}
+\cssClassRule{indent}{text-indent=\mdParIndent}
+\cssClassRule{para-block}{text-indent=0pt}
+
+\cssNewBlockElem{mdP}{p}{}
+
+\cssParentClassRule{align-center}{text-align=center,margin-left=auto,margin-right=auto}
+
+\cssClassRule{hidden}{display=hidden}
+
+%-------------------------------------------------------------
+% Common Inline elements 
+%-------------------------------------------------------------
+\cssNewInlineElem{\mdEm}{em}{font-style=italic}
+\cssNewInlineElem{\mdStrong}{strong}{font-weight=bold}
+
+\newcommand{\mdFootnote}[2][]{\footnote{#2}} % no cssInline since footnotes can contain block elements
+\newcommand{\mdSub}[2][]{\ensuremath{_{\mbox{\scriptsize\cssInline[elem=sub,#1]{#2}}}}}
+\newcommand{\mdSup}[2][]{\ensuremath{^{\mbox{\scriptsize\cssInline[elem=sup,#1]{#2}}}}}
+
+\cssClassRule{footnote-backref}{display=hidden}
+
+\newcommand{\@mdMakeA}[2]{%
+  \cssIfHasClass{localref}%
+    {\hyperref[#1]{#2}%
+     \cssIfHasClass{bibref}{\write\@mainaux{\string\citation{#1}}}{}}%
+    {\href{#1}{#2}}%
+}
+
+\newcommand{\mdA}[3][]{\cssInlineCmd[#1]{\@mdMakeA{#2}}{#3}}
+
+%-------------------------------------------------------------
+% Headers
+%-------------------------------------------------------------
+\newcommand{\mdH}[2][]{\part*{\cssInline[elem=h0,#1]{#2}}}
+\newcommand{\mdHx}[2][]{\chapter*{\cssInline[elem=h1,#1]{#2}}}
+\newcommand{\mdHxx}[2][]{\section*{\cssInline[elem=h2,#1]{#2}}}
+\newcommand{\mdHxxx}[2][]{\subsection*{\cssInline[elem=h3,#1]{#2}}}
+\newcommand{\mdHxxxx}[2][]{\subsubsection*{\cssInline[elem=h4,#1]{#2}}}
+\newcommand{\mdHxxxxx}[2][]{\paragraph*{\cssInline[elem=h5,#1]{#2}}}
+\newcommand{\mdHxxxxxx}[2][]{\paragraph*{\cssInline[elem=h6,#1]{#2}}}
+
+
+%-------------------------------------------------------------
+% Common block elements
+%-------------------------------------------------------------
+\cssNewInlineElem{\mdSpan}{span}{}
+\cssNewBlockElem{mdDiv}{div}{}
+\cssNewBlockElem{mdDivInline}{divinline}{display=block-inline}
+
+
+%-------------------------------------------------------------
+% Images 
+%-------------------------------------------------------------
+
+\newcommand{\@imgInclude}[4]{%
+  \begin{minipage}[#1]{#2}%
+  \eifstrequal{#1}{c}%
+    {$\vcenter{\hbox{\protect\includegraphics[#4]{#3}}}$}%
+    {\eifstrequal{#1}{t}{\vspace{-0.7\baselineskip}}{}%
+     \protect\includegraphics[#4]{#3}}%
+  \end{minipage}%
+}
+\newcommand{\@imgArgs}{}
+
+\newcommand{\mdImg}[2][]{%
+  \begingroup%  
+  \cssNewLengthKey{csspre}{width}{\cssImageWidth}    % capture width and height
+  \cssNewLengthKey{csspre}{height}{\cssImageHeight}
+  \cssInline[elem=img,#1]{%   
+    \renewcommand{\@imgArgs}{}%
+    \ifdim\cssImageWidth=0pt\else\appto{\@imgArgs}{,width=\cssImageWidth}\fi
+    \ifdim\cssImageHeight=0pt\else\appto{\@imgArgs}{,height=\cssImageHeight}\fi
+    \eifstrequal{\@imgArgs}{}%
+      {\includegraphics{#2}}%
+    {\eifstrequal{\cssVerticalAlign}{top}%
+      {\@expandafter{\@imgInclude{t}{\cssImageWidth}{#2}}{\@imgArgs}}%
+    {\eifstrequal{\cssVerticalAlign}{middle}%
+      {\@expandafter{\@imgInclude{c}{\cssImageWidth}{#2}}{\@imgArgs}}%
+      {\@expandafter{\@imgInclude{b}{\cssImageWidth}{#2}}{\@imgArgs}}}%
+    }%
+  }%
+  \endgroup%
+}%
+
+%-------------------------------------------------------------
+% Math
+%-------------------------------------------------------------
+
+\newenvironment{mdMathprearray}%
+  {\begin {array}{llllllll}}%
+  {\end{array}\hspace*{\linewidth minus \linewidth}} % flush left
+
+\newcommand{\mathkw}[1]{\mathsf{{#1}}}
+\newcommand{\mathid}[1]{\mathit{#1}}
+
+
+% Equation tags are stored in mdTag (which resets automatically after each math display)
+\newcommand{\mdTag}{}
+\preto{\]}{\mdTag\global\def\mdTag{}}  % hookup in math displays
+
+\newcommand{\mdEquationbefore}[1]{%
+  \global\def\mdTag{\tag*{#1}}% use the amsmath tag command to set the label
+}
+\cssClassRuleCmd{equation-before}{\mdEquationbefore}
+
+
+
+%-------------------------------------------------------------
+% Lists
+%-------------------------------------------------------------
+
+\newenvironment{mdUl}[1][]{\begin{mdDiv}[#1]\begin{itemize}}{\end{itemize}\end{mdDiv}}
+\newenvironment{mdOl}[1][]{\begin{mdDiv}[#1]\begin{enumerate}}{\end{enumerate}\end{mdDiv}}
+\newenvironment{mdLi}[1][]{\mdLabeltarget\item\begin{mdDivInline}[#1]}{\end{mdDivInline}}
+
+
+% ---------------------------------------------------
+% Bibliography
+% ---------------------------------------------------
+
+\newlength{\mdBibhang}
+
+\cssNewKey{css}{caption}{\cssCaption}{?}
+\newKey{css}{bibstyle}{\write\@mainaux{\string\bibstyle{#1}}}
+\newKey{css}{bibdata}{\write\@mainaux{\string\bibdata{#1}}}
+
+\newenvironment{mdBibliography}[1][]{%
+  \begin{mdDiv}[#1]%
+  \settowidth{\mdBibhang}{\@biblabel{\cssCaption}}%
+  \def\section*##1{}% suppress bibliography header
+  \def\chapter*##1{}% suppress bibliography header
+  \begin{thebibliography}{\cssCaption}}%
+  {\end{thebibliography}\end{mdDiv}}
+
+\newenvironment{mdBibitem}[1][]{%
+  \item[]\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
+  {\end{mdDivInline}}
+
+\cssClassRule{bibitem-before}{display=inline,width=\mdBibhang,text-align=right}
+
+\cssClassRuleDoBefore{newblock}{\newblock}
+
+% ---------------------------------------------------
+% Table of contents
+% ---------------------------------------------------
+
+% until this level, the entry is bold
+\newcommand{\mdTocLevelBold}{1}
+% until this level, no dots are used
+\newcommand{\mdTocLevelNodots}{1}
+\newlength{\mdTocIndent}
+\setlength{\mdTocIndent}{1.3em}
+
+\cssNewKeyNoReset{css}{toclevel}{\cssTocLevel}{1}
+\cssNewKeyNoReset{css}{toctarget}{\cssTocTarget}{no-toc-target}
+
+\cssElemRule{tocitem}{display=block-inline}
+\cssClassRuleDoBefore{tocitem}{%
+   \ifnum\cssTocLevel>\mdTocLevelBold\relax\else\bfseries\fi%
+   \noindent\hspace*{-\mdTocIndent}\hspace*{\cssTocLevel\mdTocIndent}}%
+\cssClassRuleDoAfter{tocitem}{%   
+   \hspace{1ex}%
+   \ifnum\cssTocLevel>\mdTocLevelNodots\dotfill\else\hfill\fi%
+   \hspace{1ex}\pageref{\cssTocTarget}}%
+
+
+
+% ---------------------------------------------------
+% Tables
+% ---------------------------------------------------
+
+\newcommand{\mdCellstrut}{}%\mbox{\rule{-0.1ex}{1.8ex}}}
+\newlength{\mdLineWidth}
+\setlength{\mdLineWidth}{\linewidth}
+\newlength{\mdDefaultColumnWidth}
+
+\newenvironment{mdTable}[3][]{% [attributes]{column-count}{column-specifiers}
+  \begin{mdDiv}[#1]%
+  \renewcommand{\tabcolsep}{0.5ex}%
+  \setlength{\mdLineWidth}{\dimexpr\linewidth-\tabcolsep*2*#2-\tabcolsep\relax}% the line length minus table spacing
+  \setlength{\mdDefaultColumnWidth}{\dimexpr\mdLineWidth/#2\relax}%
+  \setlength{\linewidth}{\mdLineWidth}
+  \begin{tabular}{#3}}{\end{tabular}\end{mdDiv}}
+
+
+\newenvironment{mdThead}[1][]{}{}
+\newenvironment{mdTbody}[1][]{}{}
+\newenvironment{mdTr}[1][]{}{\\}
+\cssNewBlockElem{mdColumn}{column}{}
+
+\newcommand{\mdTh}[2][]{\mdSpan[#1]{\mdCellstrut\textbf{#2}}}
+\newcommand{\mdTd}[2][]{\mdSpan[#1]{\mdCellstrut #2}}
+
+\newlength{\mdTablelineskip}
+\setlength{\mdTablelineskip}{2.4ex}
+
+
+% ---------------------------------------------------
+% Figures
+% ---------------------------------------------------
+\cssNewKey{css}{page-align}{\cssPageAlign}{}
+\cssElemRuleDo{figure}{%
+  \eifstrequal{\cssPageAlign}{top}%
+    {\def\@pagealign{t}}%
+  {\eifstrequal{\cssPageAlign}{bottom}%
+    {\def\@pagealign{b}}%
+  {\eifstrequal{\cssPageAlign}{here}%
+    {\def\@pagealign{h}}%
+    {\def\@pagealign{}}}}%
+  \cssIfHasClass{wide}%
+    {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
+    {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}\cssDoAfter{\end{figure}}}%
+}
+
+\newlength{\mdCaptionlen}
+\newcommand{\mdCaption}[1]{%
+  \settowidth{\mdCaptionlen}{#1}%
+  \ifnum\mdCaptionlen<\linewidth%
+    \parbox{\linewidth}{\noindent\centering #1}%
+  \else%
+    \parbox{\linewidth}{\noindent #1}%
+  \fi%
+}
+\cssClassRuleCmd{figure-caption}{\mdCaption}
+\cssClassRule{figure-caption}{text-align=justify}% prevents insertion of hspace{\fill} due to outer align-center
+
+\newcommand{\mdHr}[2][]{%
+  \begingroup%  
+  \cssNewLengthKey{csspre}{width}{\cssHrWidth}% capture width 
+  \begin{mdDiv}[height=1ex,vertical-align=center,text-align=center,#1]{%
+    \ifdim\cssHrWidth=0pt\setlength{\cssHrWidth}{\linewidth}\fi%
+    \rule{\cssHrWidth}{0.4pt}#2}%
+  \end{mdDiv}%
+  \endgroup}
+
+\cssClassRule{block}{margin-top=\topsep,margin-bottom=\topsep}
+

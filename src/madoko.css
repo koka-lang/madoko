@@ -1,0 +1,226 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
+/* Styling for full html pages */
+body.madoko {
+  margin: 1em 16% 1em 12%;
+  font-family: Cambria, Georgia, serif;
+}
+
+body.madoko p {
+  text-align: justify;
+}
+
+/* The table of contents */
+.toc>.tocblock .tocblock {
+  margin-left: 1.7em;
+}
+
+.toc>.tocblock .tocblock .tocblock {
+  margin-left: 2.5em;
+}
+
+.toc>.tocblock>.tocitem {
+  font-weight: bold;
+}
+
+/* Paragraphs */
+p.para-continue, p.para-block {
+  margin-bottom: 0pt;
+  margin-top: 0pt;
+}
+
+/* Local page links do not get an underline unless hovering */
+a.localref {
+  text-decoration: none;
+}
+a.localref:hover {
+  text-decoration: underline;
+}
+
+
+/* Footnotes */
+.footnotes {
+  font-size: smaller;
+  margin-top: 2em;
+}
+
+.footnotes hr {
+  width: 50%;
+  text-align: left;
+}
+
+
+
+/* Alignment */
+.align-center {
+  text-align: center;
+}
+
+.align-center>* {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-center>table {
+  text-align: left;
+}
+
+.align-left {
+  text-align: left;
+}
+
+.align-left>* {
+  margin-left: 0pt;
+  margin-right: auto;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-right>* {
+  margin-left: auto;
+  margin-right: 0pt;
+}
+
+.align-right>table {
+  text-align: left;
+}
+
+
+/* Equations, Figure's etc. */
+.equation-before {
+  float: right;
+}
+
+
+/* Bibliography */
+.bibitem {
+  font-size: smaller;
+}
+
+.bibitem.has-before {
+  margin-left: 2em;
+  text-indent: -2em;
+}
+
+.bibitem-before {
+  display: inline-block;
+  width: 2em;
+  text-align: right;
+}
+
+.bibliography {
+}
+
+/* General */
+.block, .figure, .bibitem, .equation  {
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
+
+.figure {
+  padding: 0.5em;
+}
+
+.hidden {
+  display: none;
+}
+
+hr {
+  border: none;
+  border-bottom: black solid 1px;
+  margin-bottom: 0.5ex;
+}
+
+.framed>*:first-child {
+  margin-top: 0pt;
+}
+.framed>*:last-child {
+  margin-bottom: 0pt;
+}
+
+
+/* Title, authors */
+.title {
+  font-size: xx-large;
+  font-weight: bold;
+  margin-bottom: 1ex;
+}
+
+.subtitle {
+  font-size: x-large;
+  margin-bottom: 1ex;
+  margin-top: -1ex;
+}
+
+.titleblock>* {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.titleblock table {
+  width: 80%;
+}
+
+.authorblock .author {
+  display: block;
+  font-size: large;
+  margin-bottom: -1.9ex;
+}
+
+.authorblock .email {
+  font-family: monospace;
+}
+
+
+/* Tables */
+table {
+  border-collapse: collapse;
+}
+td, th {
+  padding-left: 1ex;
+  padding-right: 1ex;
+  vertical-align: top;
+}
+
+.cell-border-left {
+  border-left: 1px solid black;
+}
+.cell-border-right {
+  border-right: 1px solid black;
+}
+
+thead>tr:first-child>.cell-line,
+tbody:first-child>tr:first-child>.cell-line {
+  border-top: 1px solid black;
+  border-bottom: none;
+}
+
+.cell-line, .cell-double-line {
+  border-bottom: 1px solid black;
+}
+
+.cell-double-line {
+  border-top: 1px solid black;
+}
+
+
+/* Math Pre */
+.input-mathpre .MathJax_Display {
+  text-align: left !important;
+  margin-left: 1em;
+}
+
+/* Code prettify */
+ol.linenums li {
+  background-color: white;
+  list-style-type: decimal;
+}

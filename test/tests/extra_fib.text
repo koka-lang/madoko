@@ -1,0 +1,17 @@
+Title	: Examples
+MathJax	: True
+Heading Base: 2
+~Fib    : replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' notag tight 
+.Upper  : replace='/([\s\S]*)/\U\1\E and more/' 
+
+# Examples
+
+~Fib
+xxxxx
+~
+
+Some [Upper case text]{.upper}.
+Here is an image [![monarch]]{vertical-align=top}.
+
+  [monarch]:  ../butterfly.png { width=2cm  }
+

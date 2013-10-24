@@ -1,0 +1,18 @@
+~h2 : label="@h1#@h1-h2" 
+
+# Main Section
+
+Here is a reference to [Section #header12](#header12),
+or using a shorthand, to Section [#header12] which
+is the same as this reference [#header12][].
+Perhaps you just want the label text #myheader?
+
+Let's set a special label for sub-sections
+
+## header11      { #myheader } 
+## header12 
+#### header1201?
+# header2
+
+## header 2.1  
+### header 2.1.1

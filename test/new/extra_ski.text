@@ -1,0 +1,31 @@
+Title	: SKI combinator example
+MathJax	: True
+Heading Base: 2
+
+Comment:  SKI combinator example. Because we cannot describe proper nested parenthesis
+	in a regular expression, we encode this up to a certain depth. An argument
+	with a maximal nesting depth of 4 can be defined as:
+	
+arg0    : [^()]
+arg1    : (?:#arg0|\(#arg0+\))
+arg2    : (?:#arg0|\(#arg1+\))
+arg3    : (?:#arg0|\(#arg2+\))
+arg4    : (?:#arg0|\(#arg3+\))
+arg     : #arg4
+
+Comment: Then, we encode SKI evaluation using the following rules.
+	The first rule removes initial parenthesis, the next three the SKI combinators,
+	and the last rule skips initial evaluated terms.
+
+~ski: 	replace="/^\(((?:#arg)+)\)(.*)$/[\1\2]{.ski}/" 		
+		replace="/^I(#arg)(.*)$/[\1\2]{.ski}/"
+		replace="/^K(#arg)(#arg)(.*)$/[\1\3]{.ski}/" 
+		replace="/^S(#arg)(#arg)(#arg)(.*)$/[\1\3(\2\3)\4]{.ski}/"
+		replace="/^([^IKS(\[])(.*)$/\1[\2]{.ski}/"
+
+~skishow: replace="`#source` evaluates to '[#source]{.ski}'"
+
+# Examples
+
+This example encodes SKI combinator logic. 
+Here we reverse α and β where [S(K(SI))Kαβ]{.skishow}
