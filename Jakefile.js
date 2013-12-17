@@ -160,7 +160,7 @@ task("sourcedoc", [], function(mode) {
 }, {async:true});
 
 
-desc(["install Sublime Text 2 support files for Koka",
+desc(["install Sublime Text 2 support files",
      "     sublime[<version>]  # install for <version> instead (2 or 3)"].join("\n")
     );
 task("sublime", function(sversion) {
@@ -182,6 +182,11 @@ task("sublime", function(sversion) {
     jake.logger.error("error: cannot find sublime package directory: " + sublime);
   }
   else {
+    var dirCS = "Color Scheme - Default";
+    var sublimeCS = path.join(sublime,dirCS);
+
+    jake.mkdirP(sublimeCS);
+    jake.cpR(path.join("support","sublime-text","Snow.tmTheme"),sublimeCS);    
     jake.cpR(path.join("support","sublime-text","madoko"),sublime);
   }
 });

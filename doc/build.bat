@@ -1,3 +1,3 @@
-REM call madoko -v --tex overview.md
-node ../lib/cli.js --tex -v overview.md
+REM call madoko -v --tex overview.mdk
+node ../lib/cli.js --tex -v overview.mdk
 pdflatex -halt-on-error overview
