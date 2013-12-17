@@ -20,7 +20,7 @@ It started out as a demo program for the new [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
 Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
-then [Marked] (one of the fastest Javascript markdown implementations), and
+then [Marked] \(one of the fastest Javascript markdown implementations), and
 about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
 available as a .NET executable on windows.
 
@@ -31,6 +31,7 @@ available as a .NET executable on windows.
 [Marked]: 		https://github.com/chjj/marked
 [MathJax]:		http://www.mathjax.org
 [Node.js]:		http://nodejs.org	
+[NodeJs]: 		http://nodejs.org	
 
 [PanDoc]:			http://johnmacfarlane.net/pandoc
 [MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
@@ -79,11 +80,28 @@ looking HTML page.  Look at this academic article for an example[^fn-slow-load]:
 [koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/doc/koka-effects-2013.html
 [koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/doc/koka-effects-2013.md.txt
 
+# Usage
+
+The easiest way to use Madoko is as a command line tool using Node.js (which
+works on many platforms, like Windows, MacOSX, Linux etc). Madoko can also run
+inside a web browser or as a .NET executable. To install under Node.js is very
+easy:
+
+* Ensure you have [Node.js] installed on your system.
+* Open a command line window and run: `npm install madoko -g`
+
+and you are done. Translating a markdown document is done simply as:
+
+* `madoko -v mydoc.md`  
+
+which generates `mydoc.html`. The `-v` flag gives more verbose output.
 
 # Syntax
 
-Madoko is fully compatible with basic Markdown syntax and passes the entire test suite.
-It also implements most extensions, like Github flavored markdown and multi-markdown.
+Madoko is fully compatible with basic [Markdown syntax][Markdown] and passes
+the entire test suite. It also implements most extensions, like Github
+flavored markdown and multi-markdown, and it adds quite a few features itself
+to make it really useful for writing professional documents.
 
 We assume that the reader is familiar with basic markdown syntax. 
 
@@ -130,6 +148,7 @@ if the underscores appear inside a word, as in my_example_here. Using the
 empty escape sequence we can emphasize inside words too: when writing
 `my\/_example_\/here`, we get my\/_example_\/here.
 
+
 ## Footnotes
 
 Footnotes are written as regular link definitions prefixed with a hat (`^`)
@@ -146,7 +165,7 @@ Here is a footnote[^fn].
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
 
 
-## Table of contents
+## Table of contents  { #sec-toc }
 
 Generating a table of contents is easy, just include the special element
 `[TOC]` anywhere in your document and it will expand to a table of contents.
@@ -156,7 +175,7 @@ table of contents goes (by default 3).
 You can also a create a list of figures, by using `[TOC=tof]`. This will list
 all the `~Figure` block elements.
 
-#### Custom tables of contents
+### Custom tables of contents
 
 Custom tables of contents can be generated using the `toc` attribute.  The
 `toc-depth` attribute specifies the depth of the element (by default 1), while
@@ -172,7 +191,7 @@ the table of equations anywhere in the document as:
 
 	[TOC=equations]
 
-## Bibliography
+## Bibliography		{ #sec-bib }
 
 One of Madoko's main design goals is to enable the creation of high-quality
 scientific articles. As such, Madoko integrates closely with the standard 
@@ -191,7 +210,7 @@ If necessary, you can also include extra text for each entry:
 
 	Please read more about LaTeX and TeX [#Lamport:Latex, Chapter 4; #Knuth:Tex, page 5]. 
 
-When running the Madoko tool, it emits a warning that these references
+When running Madoko the first time, we get a warning that these references
 are not yet defined:
 
 	warning: missing anchor or citation: #Lamport:Latex
@@ -202,7 +221,7 @@ BibTeX, and we can just run it on our document:
 	
 	> bibtex myfile.aux
 
-to generate the bibliography entries. The bibliography entries can be
+to generate the bibliography entries. The bibliography entries are
 included in your document using the special `[BIB]` element, for example:
 
 	## References	{-}
@@ -220,7 +239,7 @@ fancy LaTeX commands in bibliography entries.
 
 [bibtex]: http://en.wikipedia.org/wiki/BibTeX
 
-### Bibliography styles
+### Bibliography styles  { #sec-bibstyle }
 
 You can specify which bibliography files are to be used using 
 [meta data](#sec-metadata) entries:
@@ -234,7 +253,7 @@ and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.ht
 
 	Bib Style: plainnat
 
-### Citation styles
+### Citation styles   { #sec-cite }
 
 The citation style is usually automatically determined from the 
 bibliography style. However, it can be set explicitly using the `Cite Style`
@@ -263,9 +282,121 @@ This attribute has no effect if the _numeric_ style is used.
 
 ## Metadata  		{ #sec-metadata }
 
+Similar to [multimarkdown], a document can begin with a special metadata
+section that contains meta information like the document title, the author,
+etc. Moreover, this section can contain attribute rules to globally apply
+attributes to certain elements, much like CSS rules.
+
+Metadata must come immediately as the first thing in a document, and consists
+of keys followed by a colon and then the key value. A key value can span 
+multiple lines by indenting, and you can leave blank lines between different keys.
+
+	Title       : An overview of Madoko
+	Author      : Daan Leijen
+	Affiliation : Microsoft Research
+	Email       : daan@microsoft.com
+	Heading Base: 2
+	MathJax     : True
+
+### Special metadata keys
+
+Any metadata key and value can be given (and referred to using 
+[hash names][#sec-hashname],  but certain keys have special meaning to Madoko.
+
+*Title*: The title of the document. For example, in HTML output it
+determines the `<title>` element. It is also used by the special `[TITLE]`
+element (Section [#sec-special]).
+
+*Subtitle*: An optional subtitle.
+
+*Author*, *Affiliation*, *Email*: the author name, affiliation, and
+email. There can be  multiple authors. The author info is also used by the
+`[TITLE]` element to generate a proper document title header.
+
+*Toc depth* (=3): The maximum depth of headings that are included in the
+table of contents (Section [#sec-toc]).
+
+*Heading depth* (=3): The maximum depth of headings that are numbered (Section [#numbering]).
+Set it to zero to suppress numbering of headings completely.
+
+*Heading base* (=1): Usually, a top heading (`# heading`) maps to a `<h1>` or
+`\chapter` element in HTML and LaTeX respectively. By increasing the `Heading Base` you
+can change this mapping. For example, by using:
+
+	Heading Base: 2
+
+the top headings will map to `<h2>` or `\section` elements instead.
+
+*Bib* or *Bibliography*: Specify a bibliography (`.bib`) file to be used by
+the BibTeX tool to generate a list of references (see Section [#sec-bib]).
+
+	Bib: ../mybibliography.bib
+
+*Bib Style* or *Biblio Style* (=plain): Specify a BibTeX style that is used to format the list of 
+references. See Section [#sec-bibstyle] for more information.
+
+	Bib Style: plainnat
+
+*Cite Style* (=auto): Specify the citation style used for citations,
+_natural_, _numeric_, _square_, or _auto_. See Section [#sec-cite] for more 
+information.
+
+
+### HTML keys
+
+Some keys are only interpreted for HTML output:
+
+*Css*: Specify a CSS file that needs to be included in HTML output. There can
+be many CSS keys present.
+
+	Css: lib/main.css
+	Css: http://foo.com/bar.css
+
+*Script*: Specify a Javascript file that needs to be included in the HTML output
+via a `<script>` tag. There can be many script keys present.
+
+	Script: lib/main.js
+
+*MathJax* (=false): Set this key to true to include the right script
+tags to enable rendering of LaTeX mathematics in the browser. 
+
+	MathJax: True	
+
+*HTML Header*: The value of this key is included literally in the 
+`<head>` section of the HTML document.
+
+
+### LaTeX keys
+
+For LaTeX output, the following keys are relevant:
+
+*Document Class* (=book): Specify the LaTeX document class. Can be 
+prefixed with its options using square brackets:
+
+	Document Class: [9pt]article
+
+*Package*: Specify a LaTeX package that needs to be included via `\usepackage`.
+The package name can be prefixed with its options using square brackets.
+
+	Package: amsmath
+	Package: [colorlinks=true,linkcolor=DarkBlue]hyperref
+
+
 ### Hash names		{ #sec-hashname }
 
+An extension of Madoko is the use of _hash names_. If Madoko finds a name
+prefixed by a hash (#) character, it looks up the name. If there is a block
+element with that _id_, the hash name is replaced by the _label_ value of that block
+(see Section [#sec-ids-labels]). If there is no block with that identity, 
+Madoko looks if there is a metadata value with that name, and replaces the
+hash name with its value: $\sin2 \begin{itemize}$.
+~ Sample
+The title of this document is "#title".
+~
+
 ### Rules			{ #sec-rules }
+
+
 
 ## Attributes 		{ #sec-attr }
 
@@ -313,7 +444,7 @@ With [bold]{font-weight=bold} text.
 ## Identities and labels {#sec-ids-labels}
 
 Attributes are most often used to give a block element an identity and then
-refer to that element later one. For example, here we give an identifier
+refer to that element later on. For example, here we give an identifier
 to a header:
 
 ~ Sample 
@@ -321,8 +452,8 @@ to a header:
 
 And we can refer to it
 
-* Using an explicit [link](#myheader)
-* Or using an implicit link to Section [#myheader]
+* Using an explicit [link](#myheader) (or [reference][#myheader]).
+* Or using an implicit link to Section [#myheader].
 * Or we can just see its label, namely #myheader.
 ~
 
@@ -330,10 +461,10 @@ Using an implicit link is generally recommended. When rendering a reference such
 as Section [#myheader], there should never be a line break in between _Section_
 and the label _#myheader_. In LaTeX for example, it is customary to write a
 non-breakable space (`~`) instead of a regular space. Madoko takes care of
-this automatically and always uses a non-breakable space  between a link and
-what comes before it (unless they are separated by  an explicit line break).
+this automatically and always renders a non-breakable space  between a link and
+what comes before it (unless the user uses an explicit line break).
 
-Of course, we can refer to any element that has an identity,
+Of course, we can refer to _any_ element that has an identity,
 like equations, figures, tables, etc. Here is an example with an equation:
 
 ~~ Sample
@@ -366,10 +497,10 @@ Let's refer to Section [#myheader1].
 For larger documents, numbering sections, figures, tables, images, etc. is
 quite important and Madoko supports this well. By default, Madoko will number
 headers, figures, and equations. Numbering for headers is by default up to 3
-levels, but it can be set for the document using the `Header depth` meta
-variable. If it is set to zero, it suppresses numbering for headers completely
+levels, but it can be set for the document using the `Heading depth` meta
+variable. If it is set to zero, it suppresses numbering for headings completely:
 
-	Header Depth: 0 
+	Heading Depth: 0 
 
 
 #### Custom numbering
