@@ -309,4 +309,4 @@ function fmtOptArg( s : string ) : string {
   }
 } 
 
-val rxPkgOpt = regex(@"^\[(.*?)\](.+)$")
+val rxPkgOpt = regex(@"^\[(.*?)\]\s*(.+)$")
