@@ -159,7 +159,37 @@ task("sourcedoc", [], function(mode) {
   });
 }, {async:true});
 
-// Help
+
+desc(["install Sublime Text 2 support files for Koka",
+     "     sublime[<version>]  # install for <version> instead (2 or 3)"].join("\n")
+    );
+task("sublime", function(sversion) {
+  jake.logger.log("install Sublime Text support");
+  var sublime =　"";
+  var sversion = sversion || "2"
+  if (process.env.APPDATA) {
+    sublime = path.join(process.env.APPDATA,"Sublime Text " + sversion);
+  } 
+  else if (process.env.HOME) {
+    if (path.platform === "darwin") 
+      sublime = path.join(process.env.HOME,"Library","Application Support","Sublime Text " + sversion);
+    else 
+      sublime = path.join(process.env.HOME,".config","sublime-text-" + sversion);
+  }
+  sublime = path.join(sublime,"Packages");
+
+  if (!fileExist(sublime)) {
+    jake.logger.error("error: cannot find sublime package directory: " + sublime);
+  }
+  else {
+    jake.cpR(path.join("support","sublime-text","madoko"),sublime);
+  }
+});
+
+
+//-----------------------------------------------------
+// Tasks: help
+//-----------------------------------------------------
 var usageInfo = [
   "usage: jake target[options]",
   "  <options>        are target specific, like bench[quick]",
@@ -212,4 +242,13 @@ function fixVersion(fname) {
       fs.writeFileSync(fname,content2,{encoding: "utf8"});
     } 
   }
+}
+
+function fileExist(fileName) {
+  var stats = null;
+  try {
+    stats = fs.statSync(fileName);    
+  }
+  catch(e) {};
+  return (stats != null);
 }
