@@ -353,6 +353,10 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
             space + context.fmtSpan(txt,attrs)
           }
           else {
+            // warn if there are no spaces or commas
+            if (!(txt.contains(rxNotRef))) {
+              trace("warning: possibly missing link definition: " + txt)
+            }
             // just brackets
             space + "[" + formatInline(context,txt) + "]" + formatInline(context,after)
           }
@@ -361,6 +365,8 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
     }
   }
 }
+
+val rxNotRef = regex(@"[\s,;]")
 
 // Format a span element
 function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : string {
