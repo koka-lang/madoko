@@ -11,6 +11,7 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 ~Sample		 : margin-bottom=2ex 
 				replace="~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~SampleOutput#nl#source#nl~~~~#nl~~~#nl"
 
+[TOC]
 
 # Overview of Madoko
 
@@ -34,14 +35,14 @@ available as a .NET executable on windows.
 
 [PanDoc]:			http://johnmacfarlane.net/pandoc
 [MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
-[Maruku]:			http://maruku.rubyforge.org/maruku.html
+[Kramdown]:			http://kramdown.gettalong.org
 
 ## Madoko philosophy
 
-Even though Madoko is fast, the main design goal is not efficiency: I wanted to
-extend Markdown to make it suitable to create high-quality documents for the
-web and print, while maintaining John Gruber's Markdown philosophy of
-simplicity and focus on plain text readability.
+Even though Madoko is fast, the main design goal is not efficiency: I wanted
+to extend Markdown to make it suitable to create high-quality scholarly and
+industrial documents for the web and print, while maintaining John Gruber's
+Markdown philosophy of simplicity and focus on plain text readability.
 
 The popularity of Markdown is not accidental, and it is great for writing
 prose: it is super simple and straightforward to create good looking HTML
@@ -54,11 +55,10 @@ document styling.
 
 Besides HTML output, Madoko can also generate high-quality PDF files through
 LaTeX. Even though more Markdown implementations support this, there has been
-
 a lot of effort in Madoko to make the LaTeX generation very good and
-customizable. This makes it possible to write high-quality articles
+customizable. This makes it possible to write high-quality scholarly articles
 using just Madoko and get both a high-quality print format (PDF) and a good
-looking HTML page.  Look at this academic article for an example[^fn-slow-load]:
+looking HTML page.  Look at this scientific article for an example[^fn-slow-load]:
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
@@ -98,10 +98,7 @@ which generates `mydoc.html`. The `-v` flag gives more verbose output.
 
 # Syntax
 
-Madoko 
-======
-
-is fully compatible with basic [Markdown syntax][Markdown] and passes
+Madoko is fully compatible with basic [Markdown syntax][Markdown] and passes
 the entire test suite. It also implements most extensions, like Github
 flavored markdown and multi-markdown, and it adds quite a few features itself
 to make it really useful for writing professional documents.
@@ -197,11 +194,16 @@ the table of equations anywhere in the document as:
 ## Bibliography		{ #sec-bib }
 
 One of Madoko's main design goals is to enable the creation of high-quality
-scientific articles. As such, Madoko integrates closely with the standard 
+scholarly articles. As such, Madoko integrates closely with the standard 
 [BibTeX] tool to generate bibliographies and references inside a document.
-
 In particular, you can simply use any existing BibTeX bibliography file
-(`.bib`) and just include a references as semi-colon (or comma) separated 
+(`.bib`). You can specify which bibliography files are to be used using 
+`Bib` [meta data](#sec-metadata) entries:
+
+	Bib:  ../mybib1
+	Bib:  mybib2
+ 
+Entries in the biblopgraphy files can now be referenced using semi-colon separated 
 local links, for example 
 
 	Please read more about LaTeX and TeX [#Lamport:Latex; #Knuth:Tex]. 
@@ -219,8 +221,9 @@ are not yet defined:
 	warning: missing anchor or citation: #Lamport:Latex
 	warning: missing anchor or citation: #Knuth:Tex
 
-When Madoko finds such references, it writes them to a `.aux` file that can be read by 
-BibTeX, and we can just run it on our document:
+When Madoko finds such references, it writes them to a `.aux` file (together
+with the needed bibliography files) that can be read by BibTeX, and we can
+just run it this file:
 	
 	> bibtex myfile.aux
 
@@ -239,18 +242,11 @@ and recognizes many formatting commands. Even though it is sufficient for
 bibliography entries in general, the Madoko LaTeX parser may not work for more
 fancy LaTeX commands in bibliography entries.
 
-
 [bibtex]: http://en.wikipedia.org/wiki/BibTeX
 
 ### Bibliography styles  { #sec-bibstyle }
 
-You can specify which bibliography files are to be used using 
-[meta data](#sec-metadata) entries:
-
-	Bib:  ../mybib1
-	Bib:  mybib2
-
-The bibliograpy style is determined using the `Bib Style` key
+The style of the bibliography entries is determined using the `Bib Style` key
 and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.html)
 (by default `plain`):
 
@@ -281,7 +277,60 @@ only cite the year which is used when the author is already mentioned in the tex
 
 This attribute has no effect if the _numeric_ style is used.
 
+### Not using BibTeX
+
+If necessary, it is possible to completely circumvent using BibTeX and write
+your bibliograpy entries by hand. The bibliography entries need to be put inside
+a `Bibliography` block:
+
+	~ Bibliography { caption="00" }
+	...
+	~
+
+where the `caption` is only used in LaTeX output and should be a string that
+is the widest label necessary for the numeric style. Inside the bibliography
+block, you can put `Bibitem` blocks for each bibliography entry. For example:
+
+	~~ Bibitem { id='wadler:marriage' .has-before }
+	Philip Wadler and Peter Thiemann.
+	[]{.newblock} The marriage of effects and monads.
+	[]{.newblock} _ACM Trans. Comput. Logic_, 4(1):1--32, 2003.
+	~~
+
+The above example is for numeric style citations. The `.has-before` class
+ensures that the html output is styled correctly with the right hanging
+indentation. The `[]{.newblock}` spans are used in LaTeX output to create
+flexible whitespace that justifies the entry nicely. If author-year citations
+are used, the entry should have an explicit label and clear the default
+`before` key (which would otherwise put numbers in front):
+
+	~~ Bibitem { id='remy:records' label='R&eacute;my(1993)' before=clear }
+	Didier R&eacute;my.
+	[]{.newblock} Type inference for records in a natural extension of ML.
+	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
+	  Theoretical Aspects Of Object-Oriented Programming. 
+	  Types, Semantics and Language Design. MIT Press, 1993.
+	~~
+
+	~~ Bibitem { id='nielson:polyeffect' label='Nielson _et\ al_.(1997)Nielson, N
+	ielson, and Amtoft' before=clear }
+	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
+	[]{.newblock} Polymorphic subtyping for effect analysis: The static semantics.
+	[]{.newblock} In Selected papers from the 5th LOMAPS Workshop on Analysis and
+	  Verification of Multiple-Agent Languages, pages 141--171, 1997.
+	[]{.newblock} ISBN 3-540-62503-8.
+	~~
+
+Note how it is allowed to have long citation label after the year. This is
+used when a citation is given the `.long` class (versus `.short`).
+
+## Tables
+
+_todo_
+
 ## Mathematics
+
+_todo_
 
 ## Metadata  		{ #sec-metadata }
 
@@ -306,83 +355,85 @@ multiple lines by indenting, and you can leave blank lines between different key
 Any metadata key and value can be given (and referred to using 
 [hash names][#sec-hashname]),  but certain keys have special meaning to Madoko.
 
-*Title*: The title of the document. For example, in HTML output it
-determines the `<title>` element. It is also used by the special `[TITLE]`
-element (Section [#sec-special]).
+* `Title`: The title of the document. For example, in HTML output it
+	determines the `<title>` element. It is also used by the special `[TITLE]`
+	element (Section [#sec-special]).
 
-*Subtitle*: An optional subtitle.
+* `Subtitle`: An optional subtitle.
 
-*Author*, *Affiliation*, *Email*: the author name, affiliation, and
-email. There can be  multiple authors. The author info is also used by the
-`[TITLE]` element to generate a proper document title header.
+* `Author`, `Affiliation`, `Email`: the author name, affiliation, and
+	email. There can be  multiple authors. The author info is also used by the
+	`[TITLE]` element to generate a proper document title header.
 
-*Toc depth* (=3): The maximum depth of headings that are included in the
-table of contents (Section [#sec-toc]).
+* `Toc depth` (=3): The maximum depth of headings that are included in the
+	table of contents (Section [#sec-toc]).	
 
-*Heading depth* (=3): The maximum depth of headings that are numbered (Section [#numbering]).
-Set it to zero to suppress numbering of headings completely.
+* `Heading depth` (=3): The maximum depth of headings that are numbered (Section [#numbering]).
+	Set it to zero to suppress numbering of headings completely.
 
-*Heading base* (=1): Usually, a top heading (`# heading`) maps to a `<h1>` or
-`\chapter` element in HTML and LaTeX respectively. By increasing the `Heading Base` you
-can change this mapping. For example, by using:
-
+* `Heading base` (=1): Usually, a top heading (`# heading`) maps to a `<h1>` or
+	`\chapter` element in HTML and LaTeX respectively. By increasing the `Heading Base` you
+	can change this mapping. For example, by using:
+	```
 	Heading Base: 2
+	```
+	the top headings will map to `<h2>` or `\section` elements instead.
 
-the top headings will map to `<h2>` or `\section` elements instead.
-
-*Bib* or *Bibliography*: Specify a bibliography (`.bib`) file to be used by
-the BibTeX tool to generate a list of references (see Section [#sec-bib]).
-
+* `Bib` or `Bibliography`: Specify a bibliography (`.bib`) file to be used by
+	the BibTeX tool to generate a list of references (see Section [#sec-bib]).
+	```
 	Bib: ../mybibliography.bib
-
-*Bib Style* or *Biblio Style* (=plain): Specify a BibTeX style that is used to format the list of 
-references. See Section [#sec-bibstyle] for more information.
-
+	```
+* `Bib Style` or `Biblio Style` (=plain): Specify a BibTeX style that is used to format the list of 
+	references. See Section [#sec-bibstyle] for more information.
+	```
 	Bib Style: plainnat
-
-*Cite Style* (=auto): Specify the citation style used for citations,
-_natural_, _numeric_, _square_, or _auto_. See Section [#sec-cite] for more 
-information.
+	```
+* `Cite Style` (=auto): Specify the citation style used for citations,
+	_natural_, _numeric_, _square_, or _auto_. See Section [#sec-cite] for more 
+	information.
 
 
 ### HTML keys
 
 Some keys are only interpreted for HTML output:
 
-*Css*: Specify a CSS file that needs to be included in HTML output. There can
-be many CSS keys present.
-
+* `Css`: Specify a CSS file that needs to be included in HTML output. There can
+	be many CSS keys present.
+	```
 	Css: lib/main.css
 	Css: http://foo.com/bar.css
-
-*Script*: Specify a Javascript file that needs to be included in the HTML output
-via a `<script>` tag. There can be many script keys present.
-
+	Css: http://fonts.googleapis.com/css?family=Open+Sans
+	```
+* `Script`: Specify a Javascript file that needs to be included in the HTML output
+	via a `<script>` tag. There can be many script keys present.
+	```
 	Script: lib/main.js
-
-*MathJax* (=false): Set this key to true to include the right script
-tags to enable rendering of LaTeX mathematics in the browser. 
-
+	```
+* `MathJax` (=false): Set this key to true to include the right script
+	tags to enable rendering of LaTeX mathematics in the browser. 
+	```
 	MathJax: True	
-
-*HTML Header*: The value of this key is included literally in the 
-`<head>` section of the HTML document.
+	```
+* `HTML Header`: The value of this key is included literally in the 
+	`<head>` section of the HTML document.
 
 
 ### LaTeX keys
 
 For LaTeX output, the following keys are relevant:
 
-*Document Class* (=book): Specify the LaTeX document class. Can be 
-prefixed with its options using square brackets:
+* `Document Class` (=book): Specify the LaTeX document class. Can be 
+   prefixed with its options using square brackets:
 
-	Document Class: [9pt]article
+		Document Class: [9pt]article
 
-*Package*: Specify a LaTeX package that needs to be included via `\usepackage`.
-The package name can be prefixed with its options using square brackets.
+* `Package`: Specify a LaTeX package that needs to be included via `\usepackage`.
+	The package name can be prefixed with its options using square brackets.
 
-	Package: amsmath
-	Package: [colorlinks=true,linkcolor=DarkBlue]hyperref
+		Package: amsmath
+		Package: [colorlinks=true,linkcolor=DarkBlue]hyperref
+
 
 
 ### Hash names		{ #sec-hashname }
@@ -397,14 +448,47 @@ hash name with its value:
 The title of this document is "#title".
 ~
 
+Note that if values contain themselves hash names, these are expanded
+recursively (up to a certain limit) which can provide a powerful abstraction
+mechanism. If hash names are used inside [attributes][#sec-attr], Madoko first
+looks for the name as one of the attribute key values. For example, you can
+use names like `#id`, `#class`, and `#label`. Two special available keys are `#nl` 
+which always expands to a newline character, and `#source` that expands to the
+literal source of a block element. For some examples of their usage, see 
+Sections [#sec-replace] and [#sec-reset].
+
 ### Rules			{ #sec-rules }
 
+_todo_
 
+
+## Special elements { #sec-special }
+
+Madoko supports some special block elements that get expanded automatically.
+
+`[TITLE]`: Expands to a title element generated from the meta data keys _title_,
+_subtitle_, and author info (_author_, _affiliation_, and _email_).
+
+`[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
+
+`[FOOTNOTES]`: Expands to the defined footnotes. If there are footnotes and this element
+is not present, the footnotes are automatically included at the end of the document.
+
+`[INCLUDE=`_file_`]`: Expands to the contents of _file_. Include elements are
+processed before any other processing happens and can for example be used to
+include meta data elements.
+
+`[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
+expands to:
+	~ TeX 
+	[INCLUDE="myfile.bbl"]
+	~
+See also Section [#sec-bib].
 
 ## Attributes 		{ #sec-attr }
 
 An essential addition of Madoko is good support for attributes. The syntax is
-similar to attribute definitions in [Maruku], [Pandoc], and [MultiMarkdown],
+similar to attribute definitions in [Kramdown], [Pandoc], and [MultiMarkdown],
 and denoted between curly braces:
 
 	{ .class #id key=value }
@@ -506,7 +590,7 @@ variable. If it is set to zero, it suppresses numbering for headings completely:
 	Heading Depth: 0 
 
 
-#### Custom numbering
+### Custom numbering
 
 The numbering can be completely customized though. Numbers are introduced
 using `@`_name_ syntax in attributes. When such counter name occurs, it is
@@ -530,7 +614,7 @@ the full definition for the main sections is:
 	{ @h1 label="@h1" before="#label.\ \ \ " }
 
 
-#### Reset counters 
+### Reset counters { #sec-reset }
 
 If a counter has a dash in its name, of the form `@`_prefix_`-name`, then the
 counter will be reset on every increment of the counter _prefix_. For example,
@@ -540,7 +624,7 @@ rules][#sec-rules]):
 	~h2: @h1-h2 label="@h1.@h1-h2" before="#label.\ \ \ "
 
 
-#### Display format 
+### Display format 
 
 The counters above are displayed as numbers but sometimes we would like to
 number using other formats. When you assign a single letter to a counter, it
@@ -582,6 +666,10 @@ set the display mode here and not a specific value.
 	it  is already done automatically by Madoko for any `Equation` block. If it is
 	added, it will effectively increment the `@equation` counter twice.
 
-## Replacement
+## Replacement { #sec-replace }
+
+_todo_ 
 
 ### Before and after 	{ #sec-before }
+
+_todo_
