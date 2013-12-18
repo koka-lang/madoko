@@ -73,7 +73,7 @@ function include( txt : string, fast : bool, outName : string, action : (string)
   }
   action(itxt)
 }
-val rxInclude = regex(@"^ *\[(?:(BIB)|INCLUDE +(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
+val rxInclude = regex(@"^ *\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
 
 public function markdownFiles(args : string, action : (string,string,string,string,commandOptions) -> <io|e> ()) : <io|e> () { 
   val mbopts = parseOptions(args);
