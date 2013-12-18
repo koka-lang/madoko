@@ -354,7 +354,7 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
           }
           else {
             // warn if there are no spaces or commas
-            if (!(txt.contains(rxNotRef))) {
+            if (txt.contains(rxCanBeRef)) {
               trace("warning: possibly missing link definition: " + txt)
             }
             // just brackets
@@ -367,6 +367,7 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
 }
 
 val rxNotRef = regex(@"[\s,;]")
+val rxCanBeRef = regex(@"^[A-Za-z_]\w*$")
 
 // Format a span element
 function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : string {
@@ -434,7 +435,7 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
   context.fmtCmd("span", txt, attrs.addClass("citations"))
 }
 
-val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d)\)?(?: *[,;] *)?(.*)$")
+val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[A-Za-z]?)\)?(?: *[,;] *)?(.*)$")
 val rxNumCite    = regex(@"^[^\w]*\w*\d+")
 val rxEtAl       = regex(@"\bet(?: |&nbsp;|\\ )al.(?!_)") 
 
