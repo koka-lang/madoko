@@ -322,11 +322,131 @@ are used, the entry should have an explicit label and clear the default
 	~~
 
 Note how it is allowed to have long citation label after the year. This is
-used when a citation is given the `.long` class (versus `.short`).
+used when a citation is given the `.long` class (versus `.short`). 
+For author-year style citaitons, the label is passed directly to the LaTeX 
+`\bibitem` command which means you should probably include a package like `natbib`
+through the meta data:
+
+	Package: natbib
+
+The `natbib` package extends the LaTeX citation command to understand these
+kind of labels. This is of course not necesary if standard numeric citations
+are used.
 
 ## Tables
 
-_todo_
+Madoko significantly extends the table syntax of basic Markdown. In particular,
+it is easy to add horizontal or vertical lines, and to control cell alignment,
+multiple column spans, and the width of the columns.
+
+A plain table from "[Just a Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
+By using tildes `~` (instead of dashes `-`) in the table separator 
+we do not get any lines inside the table:
+
+~ Sample
+|   id   |      name     |          description           |  price   |
+| :~~~~~ | :~~~~~~~~~~~: | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~ |
+|   1    |     gizmo     |  Takes care of the doohickies  |   1.99   |
+|   2    |     doodad    |       Collects *gizmos*        |  23.80   |
+|   10   |    dojigger   |              Foo               |  102.98  |
+|   1024 | Self-explanatory, no?                         ||     0.99 |
+~
+
+Here is one with some horizontal lines:
+
+~ Sample
+|------|-------------|------------------------------|--------|
+| id   | name        | description                  | price  |
+|------|------------:|------------------------------|--------|
+|    1 | gizmo       | Takes care of the doohickies |   1.99 |
+|    2 | doodad      | Collects *gizmos*            |  23.80 |
+|   10 | dojigger    | Foo                          | 102.98 |
+| 1024 | Self-explanatory, no?                     ||   0.99 |
+|------|-------------|------------------------------|--------|
+~
+
+We can get double lines simply by adding more rows with dashes.
+
+~ Sample
+| ------ | ----------------- | ------------------------------ | ----------------- |
+|   id   |        name       |          description           |       price       |
++--------+-------------------+:------------------------------:+                  :+
+| 1      | gizmo                                                                |||
+|        | ---------------------------------------------------                  |||
+| 2      | doodad            | Collects *gizmos*              | 23.80             |
+| ------ | ----------------- | ------------------------------ |                   |
+| ------ |                   | ------------------------------ | ----------------- |
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== | ----------------- | ============================== |                   |
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== |                   |                                |===================|
+| 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
+| ------ | ----------------- |                                | ----------------- |
+~
+
+A table with no header and an outer border:
+~ Sample
++:--------------: | ----------- +:----------------------------:| -----: +
+| centered gizmos              || Takes care of the doohickies |  1.99  |
+|        2        |    doodad   |      Collects *gizmos*       | 23.80  |
+|        10       |   dojigger  |             Foo              | 102.98 |
+|       1024      | thingamabob |    Self-explanatory, no?     |  0.99  |
+|-----------------|-------------|------------------------------|--------|
+~
+
+<!--
+And a math table with just an inner block of lines:
+
+|$j$|$0$|$1$|$2$|$3$|$4$|$5$|$6$|$7$|$8$|
+|:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:|
+|$\mathcal{C}\ell_{j}^-$|$\mathbb{R}$|$\mathbb{C}$|$\mathbb{H}$|$\mathbb{H}\oplus\mathbb{H}$|$\mathbb{H}(2)$|$\mathbb{C}(4)$|$\mathbb{R}(8)$|$\mathbb{R}(8)\oplus\mathbb{R}(8)$|$\mathbb{R}(16)$|
+|$\mathcal{C}\ell_{j}^+$|$\mathbb{R}$|$\mathbb{R}\oplus\mathbb{R}$|$\mathbb{R}(2)$|$\mathbb{C}(2)$|$\mathbb{H}(2)$|$\mathbb{H}(2)\oplus\mathbb{H}(2)$|$\mathbb{H}(4)$|$\mathbb{C}(8)$|$\mathbb{R}(16)$|
+-->
+
+Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
+~ Sample
+|              |           Grouping          ||
+| First Header | Second Header | Third Header |
+| ------------ | :-----------: | -----------: |
+| Content      |         *Long Cell*         ||
+| Content      |    **Cell**   |         Cell |
+| New section  |      More     |         Data |
+| And more     |    And more   |              |
+| ----------------------------------------- |||
+~
+
+An example from [TeX stackexchange](http://tex.stackexchange.com/questions/8549/how-can-i-draw-a-horizontal-line-spanning-only-some-of-the-table-cells)
+
+~ Sample
++:---+---+---+
+|Foo | 1 | 2 |
+|    | 1 | 2 |
+|    +---+---+
+|    | 1 | 2 |
+|    | 1 | 2 |
++----+---+---+
++----+---+---+
+|Bar | 1 | 2 |
+|    | 1 | 2 |
+|    +---+---+
+|    | 1 | 2 |
+|    | 1 | 2 |
++----+---+---+
+~
+
+Note that we used an alignment colon in the first line so the first block does not become one
+big header.
+
+And finally a table with fixed width columns:
+
+~ Sample
++:----------------: + -----{width=2cm}---- + :--------{width=30%}---------: + --{background-color=lightgray}---: +
+|             centered gizmos             ||  Takes care of the doohickies  |  1.99  |
+|         2         |       dood ad        |       Collects *gizmos*        | 23.80  |
+|         10        |      do jigger       |              Foo               | 102.98 |
+|        1024       | thing a mabob&#8203; |     Self-explanatory, no?      |  0.99  |
+| ----------------- | -------------------- | ------------------------------ | ------ |
+~
 
 ## Mathematics
 
@@ -466,24 +586,24 @@ _todo_
 
 Madoko supports some special block elements that get expanded automatically.
 
-`[TITLE]`: Expands to a title element generated from the meta data keys _title_,
-_subtitle_, and author info (_author_, _affiliation_, and _email_).
+* `[TITLE]`: Expands to a title element generated from the meta data keys _title_,
+	_subtitle_, and author info (_author_, _affiliation_, and _email_).
 
-`[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
+* `[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
 
-`[FOOTNOTES]`: Expands to the defined footnotes. If there are footnotes and this element
-is not present, the footnotes are automatically included at the end of the document.
+* `[FOOTNOTES]`: Expands to the defined footnotes. If there are footnotes and this element
+	is not present, the footnotes are automatically included at the end of the document.
 
-`[INCLUDE=`_file_`]`: Expands to the contents of _file_. Include elements are
-processed before any other processing happens and can for example be used to
-include meta data elements.
+* `[INCLUDE=`_file_`]`: Expands to the contents of _file_. Include elements are
+	processed before any other processing happens and can for example be used to
+	include meta data elements.
 
-`[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
-expands to:
-	~ TeX 
-	[INCLUDE="myfile.bbl"]
-	~
-See also Section [#sec-bib].
+* `[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
+	expands to:
+		~ TeX 
+		[INCLUDE="myfile.bbl"]
+		~
+	See also Section [#sec-bib].
 
 ## Attributes 		{ #sec-attr }
 
