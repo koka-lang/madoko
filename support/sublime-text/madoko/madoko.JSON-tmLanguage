@@ -14,7 +14,7 @@
       }
     },
 
-    { "match": "^\\s*#+[^{]+"
+    { "match": "^\\s*#+\\s[^{]+"
     , "name": "keyword markup.heading.madoko"
     },
 
@@ -39,7 +39,7 @@
       }
     },
 
-    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)\\b)(?!.*?</\\1>)"
+    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\\b)(?!.*?</\\1>)"
     , "end": "(?<=^</\\1>)\\s*$\\n?"
     , "patterns": [
         { "include": "text.html.basic" }
@@ -60,7 +60,6 @@
       { "begin": "^(Title|Author)\\s*:"
       , "end": "^(?=(\\w|[\\.~#])(?![\\w\\-\\.#~,\\s]*:))"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
-      , "endCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
       , "patterns": [
           { "begin": "^([\\.~#][\\w\\-\\.#~,\\s]*):"
@@ -82,7 +81,7 @@
 
     "embedded": {
       "patterns": [
-        { "begin": "^\\s*(?:\\|\\s*|\\+)[\\-=~:]+" 
+        { "begin": "^\\s*(?:\\|\\s*|\\+)[\\-=~:]*" 
         , "beginCaptures": { "0": { "name": "keyword" }}
         , "end":   "^(?!\\s*(\\|\\s*|\\+))"
         , "patterns": [
@@ -99,7 +98,7 @@
         },
 
         { "begin": "^(\\s*)([*+\\-]|\\d+\\.)\\s"
-        , "end": "^(?!(    |\\t))"
+        , "end": "^[ ]{0,3}(?!([ \\t]|$))"
         , "beginCaptures": {
             "0": { "name": "keyword markup.heading.madoko" }
           }
@@ -125,7 +124,7 @@
         },
 
 
-        { "begin": "^\\s*(~+)\\s*(?i:(Equation))\\b(.*)(\\n|$)" 
+        { "begin": "^\\s*(~+)\\s*(?i:(Equation|TexRaw|TeX))\\b(.*)(\\n|$)" 
         , "end": "^\\1\\s*$" 
         , "beginCaptures": { 
             "1": { "name": "entity.name.class markup.block.madoko" },
@@ -178,6 +177,15 @@
           ]
         },
 
+        { "begin": "^<!--(?!.*?-->)"
+        , "end": "^.*?-->\\s*$\\n?"
+        , "contentName": "comment"
+        , "endCaptures": {
+           "0": { "name": "comment" }
+          }
+        },
+
+
         { "include": "#inline" }
       ]
     },
@@ -229,7 +237,12 @@
           }
         },
 
-        { "match": "<(?:!--[\\s\\S]*?-->|/?\\w+\\b(?:\"[^\"]*\"|'[^']*'|[^'\">])*?>)"
+
+
+        { "match": "<!--[\\s\\S]*?-->"
+        , "name": "comment"
+        },        
+        { "match": "<(?:/?\\w+\\b(?:\"[^\"]*\"|'[^']*'|[^'\">])*?>)"
         , "name": "entity.name.tag"
         },
 

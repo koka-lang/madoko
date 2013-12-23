@@ -39,7 +39,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>^\s*#+[^{]+</string>
+			<string>^\s*#+\s[^{]+</string>
 			<key>name</key>
 			<string>keyword markup.heading.madoko</string>
 		</dict>
@@ -89,7 +89,7 @@
 		</dict>
 		<dict>
 			<key>begin</key>
-			<string>^(?=&lt;(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)\b)(?!.*?&lt;/\1&gt;)</string>
+			<string>^(?=&lt;(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\b)(?!.*?&lt;/\1&gt;)</string>
 			<key>end</key>
 			<string>(?&lt;=^&lt;/\1&gt;)\s*$\n?</string>
 			<key>patterns</key>
@@ -126,7 +126,7 @@
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>^\s*(?:\|\s*|\+)[\-=~:]+</string>
+					<string>^\s*(?:\|\s*|\+)[\-=~:]*</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>0</key>
@@ -169,7 +169,7 @@
 						</dict>
 					</dict>
 					<key>end</key>
-					<string>^(?!(    |\t))</string>
+					<string>^[ ]{0,3}(?!([ \t]|$))</string>
 					<key>patterns</key>
 					<array>
 						<dict>
@@ -207,7 +207,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^\s*(~+)\s*(?i:(Equation))\b(.*)(\n|$)</string>
+					<string>^\s*(~+)\s*(?i:(Equation|TexRaw|TeX))\b(.*)(\n|$)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>
@@ -357,6 +357,22 @@
 					</array>
 				</dict>
 				<dict>
+					<key>begin</key>
+					<string>^&lt;!--(?!.*?--&gt;)</string>
+					<key>contentName</key>
+					<string>comment</string>
+					<key>end</key>
+					<string>^.*?--&gt;\s*$\n?</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment</string>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
 					<key>include</key>
 					<string>#inline</string>
 				</dict>
@@ -465,7 +481,13 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>&lt;(?:!--[\s\S]*?--&gt;|/?\w+\b(?:"[^"]*"|'[^']*'|[^'"&gt;])*?&gt;)</string>
+					<string>&lt;!--[\s\S]*?--&gt;</string>
+					<key>name</key>
+					<string>comment</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>&lt;(?:/?\w+\b(?:"[^"]*"|'[^']*'|[^'"&gt;])*?&gt;)</string>
 					<key>name</key>
 					<string>entity.name.tag</string>
 				</dict>
@@ -546,14 +568,6 @@
 			</dict>
 			<key>end</key>
 			<string>^(?=(\w|[\.~#])(?![\w\-\.#~,\s]*:))</string>
-			<key>endCaptures</key>
-			<dict>
-				<key>0</key>
-				<dict>
-					<key>name</key>
-					<string>entity.name.function meta.tag.preprocessor.madoko</string>
-				</dict>
-			</dict>
 			<key>name</key>
 			<string>markup.metadata.madoko</string>
 			<key>patterns</key>
