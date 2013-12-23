@@ -135,7 +135,7 @@ val rxspaces = regex(@"\s+")
 
 public function newLink( href : string, title : string = "", linkattrs : attrs = attrsNone, bench : bool ) : link {
   Link(href,title,
-       if (!bench && href.contains('#')) 
+       if (!bench && href.startsWith("#"))
         then linkattrs.addClass("localref") 
         else linkattrs)
 }
