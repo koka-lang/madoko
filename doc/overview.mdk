@@ -338,114 +338,100 @@ are used.
 Madoko significantly extends the table syntax of basic Markdown. In particular,
 it is easy to add horizontal or vertical lines, and to control cell alignment,
 multiple column spans, and the width of the columns.
-
-A plain table from "[Just a Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
-By using tildes `~` (instead of dashes `-`) in the table separator 
-we do not get any lines inside the table:
-
+Here is an example of a plain table from "[Just a
+Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
 ~ Sample
-|   id   |      name     |          description           |  price   |
-| :~~~~~ | :~~~~~~~~~~~: | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~ |
-|   1    |     gizmo     |  Takes care of the doohickies  |   1.99   |
-|   2    |     doodad    |       Collects *gizmos*        |  23.80   |
-|   10   |    dojigger   |              Foo               |  102.98  |
-|   1024 | Self-explanatory, no?                         ||     0.99 |
+|  id  |    name    |      description             |  price  |
+|:-----|:----------:|------------------------------|--------:|
+| 1    |   gizmo    | Takes care of the doohickies |   1.99  |
+| 2    |   doodad   |       Collects *gizmos*      |  23.80  |
+| 10   |  dojigger  |              Foo             |  102.98 |
+| 1024 | Self-explanatory, no?                    ||    0.99 |
+~
+The basic rules for formatting a table are:
+
+* Every line of the table should start and end with a `|` (or `+`) and columns are 
+	separated by `|` (or `+`) too. If you need a `|` character in cell content, use 
+	`&124;` instead.
+* Every row can be on one line only, and there can be no blank lines.
+* The table can optionally start with one or more _header_ rows.
+* A cell can span multiple columns by using multiple bars to end the cell, like 
+	`||` in the previous example.
+* The table should always have an initial *column specifier* row that separates
+	the header from the body of the table (or marks the start of the body in case
+	there is no header). The content of each column specifier cell is just
+	dashes (`-`) or tildes (`~`)
+
+The column specifier row determines alignment and vertical lines in a table:
+
+* Columns can be aligned by using a `:` in the column specifier: one on the
+	right or left aligns to the right or left, while a colon on both sides will
+	center the column.
+* If a column specifier uses a plus (`+`) instead of a bar (`|`) to separate
+	the column, a vertical line is used to separate the columns. To prevent accidental
+	column separation from using a `+` character in, say, a formula, there should
+	be *no whitespace* following a `+` when used this way!
+* If a column specifier cell uses dashes `-`, a horizontal line is drawn. By using
+	tildes (`~`) instead, no line is drawn for that column specifier cell.  
+
+In the next example, we suppress the horizontal line after the header, but add 
+vertical lines on the outsides. Also, we use two header rows.
+~ Sample
+|    grouped       ||                              |         |
+|  id  |    name    |      description             |  price  |
++:~~~~:|:~~~~~~~~~~:|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~:+
+| 1    |   gizmo    | Takes care of the doohickies |   1.99  |
+| 2    |   doodad   |       Collects *gizmos*      |  23.80  |
+| 10   |  dojigger  |              Foo             |  102.98 |
+| 1024 | Self-explanatory, no?                    ||    0.99 |
 ~
 
-Here is one with some horizontal lines:
+### Horizontal lines
 
+We can draw horizontal lines in a table by using a row where
+every cell just contains dashes (`-`). By using more then one 
+row of dashes, we get double horizontal lines. Here is a
+a table with no header and an outer border:
 ~ Sample
++:----:|-------------+:----------------------------:|-------:+
+| centered gizmos   || Takes care of the doohickies |  1.99  |
+|   2  |    doodad   |      Collects *gizmos*       | 23.80  |
+|  10  |   dojigger  |     Escaped \| and \+        | 102.98 |
+| 1024 | thingamabob |    Self-explanatory, no?     |  0.99  |
 |------|-------------|------------------------------|--------|
-| id   | name        | description                  | price  |
-|------|------------:|------------------------------|--------|
-|    1 | gizmo       | Takes care of the doohickies |   1.99 |
-|    2 | doodad      | Collects *gizmos*            |  23.80 |
-|   10 | dojigger    | Foo                          | 102.98 |
-| 1024 | Self-explanatory, no?                     ||   0.99 |
-|------|-------------|------------------------------|--------|
 ~
+And finally a complex table with all kinds of alignment, 
+multiple column spans and horizontal lines. 
+~ Sample
+| ------ | ----------------- | -------------------- | ------ |
+|   id   |        name       |    description       |  price |
++--------+-------------------+:--------------------:+~~~~~~~:+
+| 1      | gizmo                                           |||
+|        | -----------------------------------------       |||
+| 2      | doodad            | Collects *gizmos*    | 23.80  |
+| ------ | ----------------- | -------------------- |        |
+| ------ |                   | -------------------- | ------ |
+| 1024   | thingamabob       | Self-explanatory, no?| 0.99   |
+| ------ | ----------------- |                      | ------ |
+~
+Note how we started the previous table with a horizontal line, 
+where the column specifier row is on the third line. 
 
-We can get double lines simply by adding more rows with dashes.
+### The width of columns
+
+We can specify the width (and other attributes) of a column by
+adding an [attribute][#sec-attr] specification in the column
+specification row. In the following example, we use a colunn
+of fixed width, and one of a relative with with respect to 
+the overall width of the table.
 
 ~ Sample
-| ------ | ----------------- | ------------------------------ | ----------------- |
-|   id   |        name       |          description           |       price       |
-+--------+-------------------+:------------------------------:+                  :+
-| 1      | gizmo                                                                |||
-|        | ---------------------------------------------------                  |||
-| 2      | doodad            | Collects *gizmos*              | 23.80             |
-| ------ | ----------------- | ------------------------------ |                   |
-| ------ |                   | ------------------------------ | ----------------- |
-| 10     | dojigger          | Foo                            | 102.98            |
-| ====== | ----------------- | ============================== |                   |
-| 10     | dojigger          | Foo                            | 102.98            |
-| ====== |                   |                                |===================|
-| 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
-| ------ | ----------------- |                                | ----------------- |
-~
-
-A table with no header and an outer border:
-~ Sample
-+:--------------: | ----------- +:----------------------------:| -----: +
-| centered gizmos              || Takes care of the doohickies |  1.99  |
-|        2        |    doodad   |      Collects *gizmos*       | 23.80  |
-|        10       |   dojigger  |             Foo              | 102.98 |
-|       1024      | thingamabob |    Self-explanatory, no?     |  0.99  |
-|-----------------|-------------|------------------------------|--------|
-~
-
-<!--
-And a math table with just an inner block of lines:
-
-|$j$|$0$|$1$|$2$|$3$|$4$|$5$|$6$|$7$|$8$|
-|:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:|
-|$\mathcal{C}\ell_{j}^-$|$\mathbb{R}$|$\mathbb{C}$|$\mathbb{H}$|$\mathbb{H}\oplus\mathbb{H}$|$\mathbb{H}(2)$|$\mathbb{C}(4)$|$\mathbb{R}(8)$|$\mathbb{R}(8)\oplus\mathbb{R}(8)$|$\mathbb{R}(16)$|
-|$\mathcal{C}\ell_{j}^+$|$\mathbb{R}$|$\mathbb{R}\oplus\mathbb{R}$|$\mathbb{R}(2)$|$\mathbb{C}(2)$|$\mathbb{H}(2)$|$\mathbb{H}(2)\oplus\mathbb{H}(2)$|$\mathbb{H}(4)$|$\mathbb{C}(8)$|$\mathbb{R}(16)$|
--->
-
-Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
-~ Sample
-|              |           Grouping          ||
-| First Header | Second Header | Third Header |
-| ------------ | :-----------: | -----------: |
-| Content      |         *Long Cell*         ||
-| Content      |    **Cell**   |         Cell |
-| New section  |      More     |         Data |
-| And more     |    And more   |              |
-| ----------------------------------------- |||
-~
-
-An example from [TeX stackexchange](http://tex.stackexchange.com/questions/8549/how-can-i-draw-a-horizontal-line-spanning-only-some-of-the-table-cells)
-
-~ Sample
-+:---+---+---+
-|Foo | 1 | 2 |
-|    | 1 | 2 |
-|    +---+---+
-|    | 1 | 2 |
-|    | 1 | 2 |
-+----+---+---+
-+----+---+---+
-|Bar | 1 | 2 |
-|    | 1 | 2 |
-|    +---+---+
-|    | 1 | 2 |
-|    | 1 | 2 |
-+----+---+---+
-~
-
-Note that we used an alignment colon in the first line so the first block does not become one
-big header.
-
-And finally a table with fixed width columns:
-
-~ Sample
-+:----------------: + -----{width=2cm}---- + :--------{width=30%}---------: + --{background-color=lightgray}---: +
-|             centered gizmos             ||  Takes care of the doohickies  |  1.99  |
-|         2         |       dood ad        |       Collects *gizmos*        | 23.80  |
-|         10        |      do jigger       |              Foo               | 102.98 |
-|        1024       | thing a mabob&#8203; |     Self-explanatory, no?      |  0.99  |
-| ----------------- | -------------------- | ------------------------------ | ------ |
++:----:|---{width=2cm}--+:------{width=30%}--------:|-------:+
+| centered gizmos      || Takes care of doo hickies |  1.99  |
+|   2  |    doodad      |      Collects *gizmos*    | 23.80  |
+|  10  |   dojigger     |             Foo           | 102.98 |
+| 1024 | thingamabob    |    Self-explanatory, no?  |  0.99  |
+|------|----------------|---------------------------|--------|
 ~
 
 ## Mathematics
