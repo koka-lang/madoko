@@ -62,7 +62,7 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
   }
 }
 
-function texText( txt : string ) : string {
+public function texText( txt : string ) : string {
   txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)     
 }
 
@@ -78,6 +78,7 @@ val specials = [
   (@"}", @"\}"),
   (@"_", @"\_"),
   (@"^", @"{\textasciicircum}"),
+  (@"|", @"{\textbar}"),
   //(@"<", @"{\textless}"),
   //(@">", @"{\textgreater}"),
   (@"\",@"{\textbackslash}"),  // must come last, see rxSpecial that appends a "\"
@@ -154,7 +155,7 @@ function fmtLine( lines : list<line>, row : list<(string,attrs)> ) : string {
     zipWithIndexed(row,lines,fun(i,cell,line) {
       attrs = cell.snd
       if (line.isNoLine) then "" 
-       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("colspan","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join
   }
   line2 = if (!(lines.any(isDouble))) then "" 
@@ -163,7 +164,7 @@ function fmtLine( lines : list<line>, row : list<(string,attrs)> ) : string {
      zipWithIndexed(row,lines,fun(i,cell,line) {
       attrs = cell.snd
       if (!(line.isDouble)) then "" 
-       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("colspan","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
   }
   line1 + line2
