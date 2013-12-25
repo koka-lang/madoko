@@ -27,7 +27,7 @@ public function entityToTex( entity : string ) : string
     i = num.parseInt.maybe(-1,id)
     match (entities.find(fun(e) { e.ecode == i })) {
       Nothing -> {
-        trace("warning: tex output: unknown unicode point: &#" + i.show + ";")
+        trace("warning: tex output: unknown unicode point: &#" + num + ";")
         @"\mdUnicode{" + i.show + "}"
       }
       Just(e) -> e.entityCmd
@@ -349,7 +349,12 @@ val entities : list<entity> = [
   Entity("", 8617, @"\hookleftarrow", True ),  
   Entity("", 8718, @"\Box", True ),  
   Entity("", 9633, @"\Box", True ),
+  Entity("ballotbox", 9742, @"\Box", True ),
+  Entity("ballotc", 9743, @"\mdUnicode{9743}", False ),
+  Entity("ballotx", 9744, @"\mdUnicode{9744}", False ),
   Entity("checkmark", 10003, @"\checkmark", False ),
   Entity("", 10004, @"\checkmark", False ),   
+  Entity("xmark", 10007, @"\xmark", False ),
+  Entity("", 10008, @"\xmark", False ),   
 ]
 
