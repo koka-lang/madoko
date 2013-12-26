@@ -499,7 +499,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\\([\`*{}\[\]()#+-\.!_&gt;~|\$'"?/ 
+					<string>\\([\\`*{}\[\]()#+-\.!_&lt;&gt;~|\$'"?/ 
 ]|&gt;&gt;|&lt;&lt;)</string>
 					<key>name</key>
 					<string>string.escape.madoko</string>

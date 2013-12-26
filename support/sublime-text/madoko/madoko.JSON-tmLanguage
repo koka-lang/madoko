@@ -250,7 +250,7 @@
         , "name": "comment meta.tag.preprocessor.xml"
         },
 
-        { "match": "\\\\([\\`*{}\\[\\]()#+-\\.!_>~|\\$'\"?/ \n]|>>|<<)"
+        { "match": "\\\\([\\\\`*{}\\[\\]()#+-\\.!_<>~|\\$'\"?/ \n]|>>|<<)"
         , "name": "string.escape.madoko"
         },
 
