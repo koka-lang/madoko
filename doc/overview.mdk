@@ -5,11 +5,15 @@ Email		: daan@microsoft.com
 Heading Base: 2
 MathJax		: True
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
-
+Css         : Serif/cmun-serif.css
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
 ~Sample		 : margin-bottom=2ex 
 				replace="~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~SampleOutput#nl#source#nl~~~~#nl~~~#nl"
+
+<style>
+body.madoko { font-family: Cambria,"Computer Modern Serif" }
+</style>
 
 [TOC]
 
@@ -130,7 +134,7 @@ meaning,  precede it with a backslash (`\`). For example, to use a star (`*`)
 without causing emphasis, you can write `\*`. The full list of special 
 escape characters are:
 
-	\`*{}[]()#+-.!_>~|$'"?/
+	\`*{}[]()#+-.!_<>~|$'"?/
 
 If you escape a space (` `), it is translated as a non-breakable space, while
 a backslash at the end of a line causes a hard line break to be inserted. The 
@@ -138,7 +142,7 @@ latter is recommended over using the standard Markdown way of using two spaces
 at the end of a line because it leaves visual clue that a line break occurs.
 
 ~ Sample
-Here is a\ non\ breakable\ space and a hard\
+Here is non\ breakable space and a hard\
 line break with a \* star.
 ~
 
@@ -352,7 +356,7 @@ The basic rules for formatting a table are:
 
 * Every line of the table should start and end with a `|` (or `+`) and columns are 
 	separated by `|` (or `+`) too. If you need a `|` character in cell content, use 
-	`&124;` instead.
+	an escaped bar instead (`\|`).
 * Every row can be on one line only, and there can be no blank lines.
 * The table can optionally start with one or more _header_ rows.
 * A cell can span multiple columns by using multiple bars to end the cell, like 
@@ -674,8 +678,8 @@ An implicit link like `[#myheader]` is a shorthand for the explicit link
 `[#myheader](#myheader)`, i.e. it links to the local reference `#myheader` and
 it displays the text `#myheader`. In Madoko, a [hash name][#sec-hashname]
 (`#`_name_) is replaced by the _label_ value of the referred block. For
-headers, this is by default the header number (as we will see in Section
-[#numbering]) but you can set any label you'd like. Using a minus\ (`-`) in
+headers, this is by default the header number (as we will see in Section [#numbering]) 
+but you can set any label you'd like. Using a minus\ (`-`) in
 the attributes clears all attributes, which is used in the following example
 to suppress the default numbering:
 
