@@ -124,7 +124,7 @@
         },
 
 
-        { "begin": "^\\s*(~+)\\s*(?i:(Equation|TexRaw|TeX))\\b(.*)(\\n|$)" 
+        { "begin": "^\\s*(~+)\\s*(?i:(Equation|TexRaw|TeX|MathDefs))\\b(.*)(\\n|$)" 
         , "end": "^\\1\\s*$" 
         , "beginCaptures": { 
             "1": { "name": "entity.name.class markup.block.madoko" },

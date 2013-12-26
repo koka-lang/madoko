@@ -207,7 +207,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^\s*(~+)\s*(?i:(Equation|TexRaw|TeX))\b(.*)(\n|$)</string>
+					<string>^\s*(~+)\s*(?i:(Equation|TexRaw|TeX|MathDefs))\b(.*)(\n|$)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>

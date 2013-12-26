@@ -5,15 +5,11 @@ Email		: daan@microsoft.com
 Heading Base: 2
 MathJax		: True
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
-Css         : Serif/cmun-serif.css
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
 ~Sample		 : margin-bottom=2ex 
 				replace="~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~SampleOutput#nl#source#nl~~~~#nl~~~#nl"
 
-<style>
-body.madoko { font-family: Cambria,"Computer Modern Serif" }
-</style>
 
 [TOC]
 
@@ -440,7 +436,122 @@ the overall width of the table.
 
 ## Mathematics
 
-_todo_
+Madoko documents can include mathematics in standard LaTeX syntax.
+This is supported in HTML pages through the [MathJax] library. 
+MathJax is a very rich library and supports almost every LaTeX command
+required for complex mathematics, 
+see [here](http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands)
+for a full list of supported commands.
+By default,
+the MathJax library is not included in the generated HTML (as documents without
+mathematics do not need it). An easy way to enable MathJax is to set the
+`MathJax` [metadata][#sec-metadata] key:
+
+	MathJax: True
+
+Mathematics can be included in various ways. Generally, inline math should
+be typeset between `$`\ characters, while block equations should use the 
+`Equation` block syntax.
+
+~~ Sample
+A famous equation is $E = mc^2$, but another famous one is:
+~ Equation 	{#eq-gaussian}
+	\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+~
+and we can refer to Equation [#eq-gaussian] just like any heading.
+~~
+Block equations can also be included
+using the standard LaTeX `$$` characters on separate lines. However, the
+`Equation` block is preferred as it takes care of numbering, alignment, etc.
+See also Section [#sec-custom] on custom blocks that support mathematics,
+like `Theorem`, `Lemma`, `Proof`, etc. 
+
+### Math commands
+
+For math-heavy documents, it is conventient to define LaTeX commands for 
+common operations. Such command definitions can be directly understood by LaTeX
+but need to be handled specially for MathJaX in an HTML page. Madoko defines
+the custom block `MathDefs` to support this.
+~~ Sample
+~ MathDefs
+\newcommand{\infer}[3]{#1 \vdash #2\,:#3}
+~ 
+We can infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
+~~
+Often it is convenient to put all such definitions in a separate `.tex` file and
+include it in the document as:
+
+	~ MathDefs
+	[INCLUDE="mathdefs.tex"]
+	~
+
+### Preformatted math
+
+LaTeX math mode is great for regular mathematics but not so good if one tries
+to preserve whitespace or uses longer identifiers. This is actually quite common
+for computer science documents where mathematics is mixed with program code.
+Madoko supports a `MathPre` custom block that makes _preformatted_ math much
+easier to typeset. In particular:
+
+* A name (consisting of letters and digits) is typeset in a `\mathid` command so 
+it will look like $\mathit{name}$ instead of $name$.
+
+* If a name ends with digits, the are set as subscripts: $\mathit{name}_1$.
+
+* A name starting with an `@` character is set using a `\mathkw` command.
+
+* A name starting with a `#` character is directly passed to LaTeX as is.
+
+* Whitespace is preserved where spaces are replaced by `\:` commands.
+
+* Ampersands can be used to align text.
+
+Using this convention, we can easily typeset program code using nice symbols.
+
+~~ Sample
+~ MathPre
+@function fib( n :int ) 
+\{
+  @val x = ref(0)
+  @val y = ref(1)
+  @repeat(n) \{
+    @val y0= !y
+    y := \,!x + !y
+    x := y0
+  \}
+  @return !x
+\}	
+~
+~~ Sample
+
+Here is an example of aligned text which also demonstrates the use of `replace` (see 
+Section [#sec-replace]):
+
+~~ Sample
+~ MathPre   { replace="/->/\rightarrow/g" }
+random &: () -> ndet double
+print  &: string -> io ()
+error  &: \forall\alpha. string -> exn a
+(:=)   &: \forall\alpha. (ref\langle h,a\rangle, a) -> write\langle h\rangle\ ()
+~
+~~
+
+### Setting all code to preformatted math
+
+If you want to typeset all code using preformatted math, you can actually 'take over'
+the standard code blocks in Madoko and set the input of those to `mathpre`. For example,
+in the earlier scientific article, the document starts with the following 
+metadata [rules][#sec-rules]:
+
+	~Pre,~Code  : input=mathpre 
+					replace="/\|->>/{\dlongmapsto}/g"
+					replace="/->/{\rightarrow}/g"
+					replace="/</{\langle}/g"
+					replace="/>/{\rangle}/g"
+
+These set both block- and inline-code to the `mathpre` input mode and define a set of
+useful replacements.
+
 
 ## Metadata  		{ #sec-metadata }
 
@@ -665,13 +776,14 @@ Of course, we can refer to _any_ element that has an identity,
 like equations, figures, tables, etc. Here is an example with an equation:
 
 ~~ Sample
-This is a famous equation:
-
-~ Equation 	{#eq-gaussian}
-	{\int_{-\infty}^\infty e^{-a x^2} d x} = \sqrt{\frac{\pi}{a}}
+In Equation [#eq-clifford] we define generators $\mathcal{C}\ell_{j}^\pm$
+for Clifford[^moreInfo] algebras over $\mathbb{R}$ which satisfy
+~ Equation { #eq-clifford }
+  \gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
 ~
+and $\mathcal{C}\ell_{n+8}^\pm = \mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
 
-and we can refer to Equation [#eq-gaussian] just like any header.
+[^moreInfo]: For more information, see [Wikipedia](http://en.wikipedia.org/wiki/Clifford_algebra).
 ~~
 
 An implicit link like `[#myheader]` is a shorthand for the explicit link
