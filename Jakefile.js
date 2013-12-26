@@ -39,7 +39,7 @@ task("default",["madoko"]);
 
 
 desc(["build madoko.",
-      "  madoko[--target=cs] # generate .NET binary"].join("\n"));
+      "  madoko[--target=cs] # generate .NET binary."].join("\n"));
 task("madoko", [], function(rebuild) {
   var args = Array.prototype.slice.call(arguments).join(" ")
   if (args.indexOf("--target=cs") >= 0) {
@@ -57,14 +57,14 @@ task("madoko", [], function(rebuild) {
   })
 },{async:true});
 
-desc("interactive madoko");
+desc("interactive madoko.");
 task("interactive", [], function(rebuild) {
   var cmd = kokaCmd + " -e -p " + maincli
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { complete(); })
 },{async:true});
 
-desc("run 'npm install' to install prerequisites");
+desc("run 'npm install' to install prerequisites.");
 task("config", [], function () {
   if (!fileExist("node_modules")) {
     var cmd = "npm install";
@@ -80,7 +80,7 @@ task("config", [], function () {
 //-----------------------------------------------------
 // Tasks: clean 
 //-----------------------------------------------------
-desc("remove all generated files");
+desc("remove all generated files.");
 task("clean", function() {
   jake.logger.log("remove all generated files");
   jake.rmRf(outputDir);
@@ -91,7 +91,7 @@ task("clean", function() {
 //-----------------------------------------------------
 // Tasks: test 
 //-----------------------------------------------------
-desc("run tests.");
+desc("run tests.\n  test[--extra]    # run tests for extensions.");
 task("test", ["madoko"], function() {
   testFlags=(process.env.testFlags||"")
   args = Array.prototype.slice.call(arguments)
@@ -103,7 +103,7 @@ task("test", ["madoko"], function() {
 //-----------------------------------------------------
 // Tasks: bench 
 //-----------------------------------------------------
-desc("run benchmark.\n  bench[--quick]   # run the bench mark in quick mode");
+desc("run benchmark.\n  bench[--quick]   # run the bench mark in quick mode.");
 task("bench", [], function() {
   testFlags=(process.env.testFlags||"") 
   args = Array.prototype.slice.call(arguments)
@@ -112,11 +112,30 @@ task("bench", [], function() {
   jake.exec(testCmd,{interactive:true})
 }); 
 
+//-----------------------------------------------------
+// Tasks: doc
+//-----------------------------------------------------
+desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
+task("doc", [], function(arg) {
+  mdCmd = "node lib/cli.js --tex -v doc/overview.mdk";
+  jake.log("> " + mdCmd);
+  jake.exec(mdCmd, function() {
+    if (arg=="pdf" || arg=="--pdf") {
+      process.chdir("doc");
+      texCmd = "pdflatex -halt-on-error overview.tex";
+      jake.log("> " + texCmd);
+      jake.exec(texCmd,function() { 
+        process.chdir("..");
+      },{interactive:true});
+    }
+  }, {interactive:true});
+});
+
 
 //-----------------------------------------------------
 // Tasks: line count
 //-----------------------------------------------------
-desc("line count (without comments)")  
+desc("line count.")  
 task("linecount", [], function() {
   var sources = new jake.FileList().include(path.join(sourceDir,"*.kk"));
   var src = sources.toArray().map( function(file) { return fs.readFileSync(file,{encoding:"utf8"}); }).join()
@@ -139,7 +158,7 @@ function lineCount(s) {
 //-----------------------------------------------------
 var cmdMarkdown = "node " + path.join(outputDir,maincli + ".js");
           
-desc("create source documentation")  
+desc("create source documentation.")  
 task("sourcedoc", [], function(mode) {
   jake.logger.log("build documentation");
   var out = outputDir + "doc"
@@ -160,8 +179,8 @@ task("sourcedoc", [], function(mode) {
 }, {async:true});
 
 
-desc(["install Sublime Text 2 support files",
-     "     sublime[<version>]  # install for <version> instead (2 or 3)"].join("\n")
+desc(["install Sublime Text 2 support files.",
+     "     sublime[<version>]  # install for <version> instead (2 or 3)."].join("\n")
     );
 task("sublime", function(sversion) {
   jake.logger.log("install Sublime Text support");
@@ -197,7 +216,7 @@ task("sublime", function(sversion) {
 //-----------------------------------------------------
 var usageInfo = [
   "usage: jake target[options]",
-  "  <options>        are target specific, like bench[quick]",
+  "  <options>        are target specific, like bench[--quick].",
   ""].join("\n");
 
 function showHelp() {
