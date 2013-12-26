@@ -30,5 +30,5 @@ import htmlFormatter
 import formatInline
 import formatBlock
 import definitions
-import markdown
 import madoko
+import main
