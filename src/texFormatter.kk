@@ -79,8 +79,8 @@ val specials = [
   (@"_", @"\_"),
   (@"^", @"{\textasciicircum}"),
   (@"|", @"{\textbar}"),
-  //(@"<", @"{\textless}"),
-  //(@">", @"{\textgreater}"),
+  (@"<", @"{\textless}"),
+  (@">", @"{\textgreater}"),
   (@"\",@"{\textbackslash}"),  // must come last, see rxSpecial that appends a "\"
 ]
 
