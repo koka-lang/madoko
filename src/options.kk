@@ -17,7 +17,7 @@ import std/path
 import common // just for parseAttrs
 
 // Do not edit the version, it is set in the Jakefile from package.json
-public val version = "0.1.1-alpha" 
+public val version = "0.2.0-beta" 
 
 // Metadata is just a string to string map.
 public alias metadata = list<(string,string)>
