@@ -2,6 +2,7 @@ syntax:glob
 
 lib/*
 libnet/*
+libdoc/*
 test/out/*
 node_modules/*
 *.text.html
@@ -16,3 +17,4 @@ doc/*.html
 doc/*.pdf
 doc/*.sty
 doc/*.css
+doc/Serif/*
