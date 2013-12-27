@@ -92,10 +92,11 @@ public function inlineContext( fmt : formatter,
                                metadata : dict<string>,
                                citestyle : citestyle = Auto,
                                sanitize : bool = False,
-                               bench: bool = False ) : inlineContext
+                               bench: bool = False,
+                               verbose : int = 0 ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
-                 metadata, citestyle, sanitize, bench, 
+                 metadata, citestyle, sanitize, bench, verbose,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 

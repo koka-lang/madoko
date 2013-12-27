@@ -209,42 +209,28 @@ function mapBlocks( blocks : list<block>, action : (bool,block) -> <st<h>|e> blo
   }
 }
 
-function renderDiv( txt : string, attrs : attrs, citestyle : citestyle ) : block {
-  //trace("render div: " + attrs.classes.join(" "))
-  match(attrs.input) {
-    Tex -> {
-      Div(txt.parseTex(citestyle).parseBlocks(citestyle),attrs)
-    }
-    Markdown -> {
-      Div(txt.parseBlocks(citestyle),attrs)
-    }
-    input -> {
-      Div([Source(txt,input)],attrs)
-    }
-  }
-}
-
 // Sets new attributes for a block, and applies conversion to text
 function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block {
   match(block) {
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,fcontext.inlineContext.metadata),xs)
     Code( text, lang)   -> if (lang=="" && !(xs.input.isPre))
-                            then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata )
+                            then transformDiv([Source(text)], xs(source=text,elem="pre"), 
+                                                fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata, fcontext.inlineContext.verbose )
                             else Code(xs.transformText(text,fcontext.inlineContext.metadata),lang,xs)  
     Heading(depth,text) -> Heading(depth,xs.transformText(text,fcontext.inlineContext.metadata),xs)
-    Div( content  )     -> transformDiv(content, xs, fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata )
+    Div( content  )     -> transformDiv(content, xs, fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata, fcontext.inlineContext.verbose )
     Quote( content )    -> Quote(content, xs) 
     _                   -> block
   }
 } 
 
-function transformDiv( blocks : list<block>, attrs : attrs, citestyle : citestyle, metadata : dict<string> )  : block {
+function transformDiv( blocks : list<block>, attrs : attrs, citestyle : citestyle, metadata : dict<string>, verbose : int )  : block {
   //if (attrs.source=="") then return Div(blocks,attrs) 
   txt = attrs.transformText(attrs.source,metadata)
   match(attrs.input) {
     Tex -> {
-      Div(txt.parseTex(citestyle).parseBlocks(citestyle),attrs)
+      Div(txt.parseTex(citestyle,verbose >= 3).parseBlocks(citestyle),attrs)
     }
     Markdown -> {
       Div(txt.parseBlocks(citestyle),attrs)

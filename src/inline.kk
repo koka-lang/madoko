@@ -39,6 +39,7 @@ public rectype inlineContext {
                  citestyle  : citestyle,
                  xsanitize  : bool,
                  bench      : bool,
+                 verbose    : int,
 
                  xfmtCmd : (ctx:inlineContext,cmd:string,body:string,attrs:attrs) -> string,
                  xfmtEscape : (ctx:inlineContext,body:string,allowEntity:bool) -> string,
@@ -98,6 +99,7 @@ public function copy( self : inlineContext,
                        citestyle : citestyle = self.citestyle,
                        sanitize : bool = self.sanitize,
                        bench : bool = self.bench,
+                       verbose : int = self.verbose,
                        xfmtCmd = self.xfmtCmd,
                        xfmtEscape = self.xfmtEscape,
                        xfmtLink = self.xfmtLink,
@@ -106,7 +108,8 @@ public function copy( self : inlineContext,
                        xfmtTable = self.xfmtTable,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
-  InlineContext( grammar,links,labels,footnotes,defaults,metadata,citestyle,sanitize,bench,
+  InlineContext( grammar,links,labels,footnotes,defaults,metadata,
+                 citestyle,sanitize,bench,verbose,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
                  fmt )
 }

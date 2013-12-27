@@ -56,7 +56,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
   val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
   
   // parse definitions
-  val icontext  = inlineContext(fmt,options.metadata.dict,options.citestyle,options.sanitize,options.bench) 
+  val icontext  = inlineContext(fmt,options.metadata.dict,options.citestyle,options.sanitize,options.bench,options.verbose) 
   if (options.verbose > 1) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseDefinitions(initialFormatContext(icontext,options.titleInfo,options.headingBase,options.pedantic,fmt), 

@@ -40,8 +40,8 @@ val texargs  = @"(" + texnest(texarg3) + "*)"
 val optarg   = @"(?:\[([^\]]*)\])"
 val optargs  = optarg + @"*"
 val texenv1  = @"(thebibliography)"
-val texcmd1  = @"(begin|end|newlength|setlength)"
-val texcmd2  = @"(newcommand|renewcommand|providecommand)"
+val texcmd1  = @"(begin|end|newlength|setlength|bibinfo)"
+val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
 val texGrammar : grammar<string,texContext> = [
   Rule("texnormal",   regex(@"^(?:[^" + special + "])+"), texNormal ),
@@ -50,11 +50,12 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texNormal ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texBibliography ),
-  Rule("bibitem",     regex(@"^\\bibitem" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texBibitem ),
+  Rule("bibitem",     regex(@"^\\bibitem\b" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texBibitem ),
+
   Rule("newblock",    regex(@"^\\(newblock|nobreak)\b"), texCommandClass ),
-  Rule("citeay",      regex(@"^\\citeauthoryear" + texarg + texarg + texarg), texCiteAuthorYear ),
-  Rule("url",         regex(@"^\\(?:url|email)" + texarg), texUrl ),
-  Rule("penalty",     regex(@"^\\(penalty)\s*(-?\d+|" + texarg + ")"), texAttribute ),
+  Rule("citeay",      regex(@"^\\citeauthoryear\b" + texarg + texarg + texarg), texCiteAuthorYear ),
+  Rule("url",         regex(@"^\\(?:url|email)\b" + texarg), texUrl ),
+  Rule("penalty",     regex(@"^\\(penalty)\b\s*(-?\d+|" + texarg + ")"), texAttribute ),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
   Rule("texit",       regex(@"^\\textit" + texarg), texEmph ),
@@ -64,7 +65,6 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textt2",      regex(@"^\\texttt" + texarg), texCode ),
 
   Rule("texaccent",   regex(@"^\\([`'^""~vrc])\b(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
-  // Rule("texchar",     regex(@"^\\&"), texChar ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),
   
@@ -79,6 +79,8 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texcmd1",     regex(@"^\\(" + texcmd1 + @")" + optargs + texarg), texIgnore ),
   Rule("texcmd",      regex(@"^(\\[a-zA-Z@]+)(" + optargs + ")"), texGenericCommand ),
 
+  Rule("texchar",     regex(@"^\\[^a-zA-Z]"), texChar ),
+  
   Rule("texother",    regex(@"^[\s\S]"), texOther ),
 ]
 
@@ -97,6 +99,12 @@ public rectype texContext {
 function texNormal( cap : matched, _context ) : string {
   cap.matched 
 }
+
+function texChar( cap : matched, _context ) : string {
+  ent = texCmdToEntity(cap.matched)
+  if (ent=="") then cap.matched.substr(1) else ent
+}
+
 
 function texOther( cap : matched, _context ) : string {
   char = cap.matched
@@ -216,10 +224,10 @@ function unbrace(s : string ) : string {
 
 
 // Parse TeX elements and return Markdown
-public function parseTex( txt : string, citestyle : citestyle = Auto  ) : string
+public function parseTex( txt : string, citestyle : citestyle = Auto, verbose : bool = False  ) : string
 {
   md = parseTexX(txt,TexContext(texGrammar,citestyle))
-  //trace( "TeX md:\n"+ md )
+  if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
 
