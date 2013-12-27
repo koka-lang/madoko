@@ -265,7 +265,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Div(content,attrs) -> {    
       txt = formatBlocksX(context,content)
       rnd = attrs.input
-      if ((attrs.classes.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
+      if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
             (context.fmt==FmtTex && rnd.isMathDefs))
         then txt 
         else context.fmtEnv("div",txt,attrs.addInputClass)
