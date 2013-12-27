@@ -193,7 +193,7 @@ function inlineTagCode( cap : matched, context : inlineContext ) : string {
 function inlineCode( cap : matched, context ) : string {
   txt0 = cap.groups[2]
   txt1 = if (txt0.startsWith(" `")) then txt0.substr(1) else txt0
-  txt  = if (txt0.endsWith("` ")) then txt0.substr(0,txt0.length-1) else txt0
+  txt  = if (txt0.endsWith("` ")) then txt1.substr(0,txt1.length-1) else txt1
   if (context.bench || cap.groups[1].length > 1)
    then context.fmtCode("code",txt)
    else context.fmtSpan( txt, Attrs(classes=["code"]) )
