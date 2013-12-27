@@ -98,6 +98,8 @@ public function markdownFiles(args : string, action : (string,string,string,stri
               }
               
               if (xopts.tex) {
+                outTexName = outName.changeExt(".tex")
+                if (opts.options.verbose > 0) println("         " + input + " -> " + outTexName )        
                 tex = markdown(icontent,xopts,FmtTex) 
                 //trace(tex)
                 if (!(tryWriteTextFile(outName.changeExt(".tex"),tex))) {
