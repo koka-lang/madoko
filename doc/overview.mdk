@@ -30,6 +30,7 @@ available as a .NET executable on windows.
 [Showdown]: 	https://github.com/coreyti/showdown
 [Marked]: 		https://github.com/chjj/marked
 [MathJax]:		http://www.mathjax.org
+[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
 [Node.js]:		http://nodejs.org	
 [NodeJs]: 		http://nodejs.org	
 
@@ -439,13 +440,12 @@ the overall width of the table.
 Madoko documents can include mathematics in standard LaTeX syntax.
 This is supported in HTML pages through the [MathJax] library. 
 MathJax is a very rich library and supports almost every LaTeX command
-required for complex mathematics, 
-see [here](http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands)
-for a full list of supported commands.
+required for complex mathematics.
+A full list of supported commands is available [online][MathJaxCmds].
 By default,
 the MathJax library is not included in the generated HTML (as documents without
 mathematics do not need it). An easy way to enable MathJax is to set the
-`MathJax` [metadata][#sec-metadata] key:
+`MathJax` [metadata][#sec-metadata] key at the start of the document:
 
 	MathJax: True
 
@@ -468,7 +468,7 @@ like `Theorem`, `Lemma`, `Proof`, etc.
 
 ### Math commands
 
-For math-heavy documents, it is conventient to define LaTeX commands for 
+For math-heavy documents, it is convenient to define LaTeX commands for 
 common operations. Such command definitions can be directly understood by LaTeX
 but need to be handled specially for MathJaX in an HTML page. Madoko defines
 the custom block `MathDefs` to support this.
@@ -493,16 +493,21 @@ for computer science documents where mathematics is mixed with program code.
 Madoko supports a `MathPre` custom block that makes _preformatted_ math much
 easier to typeset. In particular:
 
+* Whitespace is preserved where spaces are replaced by medium space (`\:`) commands
+	(except when the spaces directly follow a LaTeX command).
+
 * A name (consisting of letters and digits) is typeset in a `\mathid` command so 
-it will look like $\mathit{name}$ instead of $name$.
+	it will look like $\mathit{sinus}$ instead of $sinus$.
 
-* If a name ends with digits, the are set as subscripts: $\mathit{name}_1$.
+* If a name ends with digits, they are typeset as subscripts, where `x1` becomes $\mathit{x}_1$.
 
-* A name starting with an `@` character is set using a `\mathkw` command.
+* A name starting with an `@` character is typeset using a `\mathkw` command, where
+	`@return` becomes $\mathkw{return}$.
 
-* A name starting with a `#` character is directly passed to LaTeX as is.
-
-* Whitespace is preserved where spaces are replaced by `\:` commands.
+* Sometimes it is necessary to suppress the insertion of a `\mathid` or `\mathkw` command.
+	Any text that is an argument of a `\begin`, `\end`, `\text`_xx_ or `\math`_xx_ command, 
+	where _xx_ is one of `tt`, `sf`, `rm`, `it`, `bb`, or `bf`, is kept unchanged.
+    Also any name starting with a `#` character is kept unchanged.
 
 * Ampersands can be used to align text.
 
@@ -510,16 +515,8 @@ Using this convention, we can easily typeset program code using nice symbols.
 
 ~~ Sample
 ~ MathPre
-@function fib( n :int ) 
-\{
-  @val x = ref(0)
-  @val y = ref(1)
-  @repeat(n) \{
-    @val y0= !y
-    y := \,!x + !y
-    x := y0
-  \}
-  @return !x
+@function sqr_\pi( num :int ) \{ 
+   @return (num {\times} num \times{} \pi)
 \}	
 ~
 ~~ Sample
@@ -532,7 +529,6 @@ Section [#sec-replace]):
 random &: () -> ndet double
 print  &: string -> io ()
 error  &: \forall\alpha. string -> exn a
-(:=)   &: \forall\alpha. (ref\langle h,a\rangle, a) -> write\langle h\rangle\ ()
 ~
 ~~
 
@@ -541,7 +537,7 @@ error  &: \forall\alpha. string -> exn a
 If you want to typeset all code using preformatted math, you can actually 'take over'
 the standard code blocks in Madoko and set the input of those to `mathpre`. For example,
 in the earlier scientific article, the document starts with the following 
-metadata [rules][#sec-rules]:
+[metadata rules][#sec-rules]:
 
 	~Pre,~Code  : input=mathpre 
 					replace="/\|->>/{\dlongmapsto}/g"
@@ -552,6 +548,29 @@ metadata [rules][#sec-rules]:
 These set both block- and inline-code to the `mathpre` input mode and define a set of
 useful replacements.
 
+## Custom blocks    { #sec-custom }
+
+Madoko custom blocks are similar to the `div` element in HTML and allow the
+use of custom block elements that can be styled and processed in a particlar
+way. A custom block starts on new line starting with one or more tildes (`~`)
+optionally followed by the block name and attributes. It ends at the first
+line containing the same number of tildes that started this block. 
+
+~~~ Sample
+~ Note			 
+Here is a note.
+~
+~~  { font-style=italic }
+And some italic text in an unnamed block.
+~~
+~~~ 
+
+Note that [git flavored markdown][gitmd] uses three or more tildes for fenced
+code blocks. Since Madoko uses tildes for custom code blocks this cannot be
+used anymore and Madoko only uses the more popular back-ticks (```` ``` ````)
+for fenced code blocks.
+
+[gitmd]: https://help.github.com/articles/github-flavored-markdown
 
 ## Metadata  		{ #sec-metadata }
 
