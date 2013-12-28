@@ -9,7 +9,7 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 .SampleOutput: margin-bottom=1.7ex
 ~Sample		 : margin-bottom=2ex 
 				replace="~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~SampleOutput#nl#source#nl~~~~#nl~~~#nl"
-
+~Slanted	: font-style=oblique
 
 [TOC]
 
@@ -146,8 +146,8 @@ line break with a \* star.
 Finally, the escape sequence `\/` translates to nothing; this can be very 
 useful to separate certain constructs. For example, emphasis is suppressed
 if the underscores appear inside a word, as in my_example_here. Using the
-empty escape sequence we can emphasize inside words too: when writing
-`my\/_example_\/here`, we get my\/_example_\/here.
+empty escape sequence we can emphasize inside words too: to get
+my\/_example_\/here, we can simply write `my\/_example_\/here`.
 
 
 ## Footnotes
@@ -207,14 +207,14 @@ In particular, you can simply use any existing BibTeX bibliography file
 Entries in the biblopgraphy files can now be referenced using semi-colon separated 
 local links, for example 
 
-	Please read more about LaTeX and TeX [#Lamport:Latex; #Knuth:Tex]. 
+	Read about LaTeX and TeX [#Lamport:Latex; #Knuth:Tex]. 
 
 Note that unlike LaTeX there is no need to explicitly insert an unbreakable
 space between the text and the citation, Madoko automatically takes care of this
 (as described in Section [#sec-ids-labels]).
 If necessary, you can also include extra text for each entry:
 
-	Please read more about LaTeX and TeX [#Lamport:Latex, Chapter 4; #Knuth:Tex, page 5]. 
+	Read about TeX [#Lamport:Latex, Chapter 4; #Knuth:Tex, page 5]. 
 
 When running Madoko the first time, we get a warning that these references
 are not yet defined:
@@ -294,8 +294,8 @@ block, you can put `Bibitem` blocks for each bibliography entry. For example:
 
 	~~ Bibitem { id='wadler:marriage' .has-before }
 	Philip Wadler and Peter Thiemann.
-	[]{.newblock} The marriage of effects and monads.
-	[]{.newblock} _ACM Trans. Comput. Logic_, 4(1):1--32, 2003.
+	[]{.newblock} _The marriage of effects and monads._
+	[]{.newblock} ACM Trans. Comput. Logic, 4(1):1--32, 2003.
 	~~
 
 The above example is for numeric style citations. The `.has-before` class
@@ -305,21 +305,22 @@ flexible whitespace that justifies the entry nicely. If author-year citations
 are used, the entry should have an explicit label and clear the default
 `before` key (which would otherwise put numbers in front):
 
-	~~ Bibitem { id='remy:records' label='R&eacute;my(1993)' before=clear }
-	Didier R&eacute;my.
-	[]{.newblock} Type inference for records in a natural extension of ML.
+	~~ Bibitem { id='remy' label='R&eacute;my(1993)' before=clear }
+	Didier R&eacute;my. []{.newblock} 
+	_Type inference for records in a natural extension of ML._
 	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
 	  Theoretical Aspects Of Object-Oriented Programming. 
 	  Types, Semantics and Language Design. MIT Press, 1993.
 	~~
 
-	~~ Bibitem { id='nielson:polyeffect' label='Nielson _et\ al_.(1997)Nielson, N
-	ielson, and Amtoft' before=clear }
+	~~ Bibitem { id='nielson:polyeffect' before=clear
+	label='Nielson _et\ al_.(1997)Nielson, Nielson, and Amtoft'}
 	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
-	[]{.newblock} Polymorphic subtyping for effect analysis: The static semantics.
-	[]{.newblock} In Selected papers from the 5th LOMAPS Workshop on Analysis and
-	  Verification of Multiple-Agent Languages, pages 141--171, 1997.
-	[]{.newblock} ISBN 3-540-62503-8.
+	[]{.newblock} _Polymorphic subtyping for effect analysis: 
+	  The static semantics._
+	[]{.newblock} In Selected papers from the 5th LOMAPS Workshop on 
+	  Analysis and Verification of Multiple-Agent Languages, 
+	  pages 141--171, 1997. []{.newblock} ISBN 3-540-62503-8.
 	~~
 
 Note how it is allowed to have long citation label after the year. This is
@@ -342,12 +343,12 @@ multiple column spans, and the width of the columns.
 Here is an example of a plain table from "[Just a
 Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
 ~ Sample
-|  id  |    name    |      description             |  price  |
-|:-----|:----------:|------------------------------|--------:|
-| 1    |   gizmo    | Takes care of the doohickies |   1.99  |
-| 2    |   doodad   |       Collects *gizmos*      |  23.80  |
-| 10   |  dojigger  |              Foo             |  102.98 |
-| 1024 | Self-explanatory, no?                    ||    0.99 |
+|  id  |    name    |      description           |  price  |
+|:-----|:----------:|----------------------------|--------:|
+| 1    |   gizmo    | Takes care of doohickies   |   1.99  |
+| 2    |   doodad   |     Collects *gizmos*      |  23.80  |
+| 10   |  dojigger  |            Foo             |  102.98 |
+| 1024 | Self-explanatory, no?                  ||    0.99 |
 ~
 The basic rules for formatting a table are:
 
@@ -378,13 +379,13 @@ The column specifier row determines alignment and vertical lines in a table:
 In the next example, we suppress the horizontal line after the header, but add 
 vertical lines on the outsides. Also, we use two header rows.
 ~ Sample
-|    grouped       ||                              |         |
-|  id  |    name    |      description             |  price  |
-+:~~~~:|:~~~~~~~~~~:|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~:+
-| 1    |   gizmo    | Takes care of the doohickies |   1.99  |
-| 2    |   doodad   |       Collects *gizmos*      |  23.80  |
-| 10   |  dojigger  |              Foo             |  102.98 |
-| 1024 | Self-explanatory, no?                    ||    0.99 |
+|    grouped       ||                            |         |
+|  id  |    name    |      description           |  price  |
++:~~~~:|:~~~~~~~~~~:|~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~:+
+| 1    |   gizmo    | Takes care of doohickies   |   1.99  |
+| 2    |   doodad   |     Collects *gizmos*      |  23.80  |
+| 10   |  dojigger  |           Foo              |  102.98 |
+| 1024 | Self-explanatory, no?                  ||    0.99 |
 ~
 
 ### Horizontal lines
@@ -394,26 +395,26 @@ every cell just contains dashes (`-`). By using more then one
 row of dashes, we get double horizontal lines. Here is a
 a table with no header and an outer border:
 ~ Sample
-+:----:|-------------+:----------------------------:|-------:+
-| centered gizmos   || Takes care of the doohickies |  1.99  |
-|   2  |    doodad   |      Collects *gizmos*       | 23.80  |
-|  10  |   dojigger  |     Escaped \| and \+        | 102.98 |
-| 1024 | thingamabob |    Self-explanatory, no?     |  0.99  |
-|------|-------------|------------------------------|--------|
++:----:|-------------+:--------------------------:|-------:+
+| centered gizmos   || Takes care of doohickies   |  1.99  |
+|   2  |    doodad   |    Collects *gizmos*       | 23.80  |
+|  10  |   dojigger  |    Escaped \| and \+       | 102.98 |
+| 1024 | thingamabob |  Self-explanatory, no?     |  0.99  |
+|------|-------------|----------------------------|--------|
 ~
 And finally a complex table with all kinds of alignment, 
 multiple column spans and horizontal lines. 
 ~ Sample
-| ------ | ----------------- | -------------------- | ------ |
-|   id   |        name       |    description       |  price |
-+--------+-------------------+:--------------------:+~~~~~~~:+
-| 1      | gizmo                                           |||
-|        | -----------------------------------------       |||
-| 2      | doodad            | Collects *gizmos*    | 23.80  |
-| ------ | ----------------- | -------------------- |        |
-| ------ |                   | -------------------- | ------ |
-| 1024   | thingamabob       | Self-explanatory, no?| 0.99   |
-| ------ | ----------------- |                      | ------ |
+| ------ | ----------------- | ------------------- | ------ |
+|   id   |        name       |    description      |  price |
++--------+-------------------+:-------------------:+~~~~~~~:+
+| 1      | gizmo                                          |||
+|        | ----------------------------------------       |||
+| 2      | doodad            | Collect *gizmos*    | 23.80  |
+| ------ | ----------------- | ------------------- |        |
+| ------ |                   | ------------------- | ------ |
+| 1024   | thingamabob       | Self-explanatory    | 0.99   |
+| ------ | ----------------- |                     | ------ |
 ~
 Note how we started the previous table with a horizontal line, 
 where the column specifier row is on the third line. 
@@ -427,15 +428,15 @@ of fixed width, and one of a relative with with respect to
 the overall width of the table.
 
 ~ Sample
-+:----:|---{width=2cm}--+:------{width=30%}--------:|-------:+
-| centered gizmos      || Takes care of doo hickies |  1.99  |
-|   2  |    doodad      |      Collects *gizmos*    | 23.80  |
-|  10  |   dojigger     |             Foo           | 102.98 |
-| 1024 | thingamabob    |    Self-explanatory, no?  |  0.99  |
-|------|----------------|---------------------------|--------|
++:----:|---{width=2cm}--+:-----{width=33%}--------:|-------:+
+| centered gizmos      || Take care of doo hickies |  1.99  |
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |
+|  10  |   dojigger     |            Foo           | 102.98 |
+| 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
+|------|----------------|--------------------------|--------|
 ~
 
-## Mathematics
+## Mathematics   { #sec-math }
 
 Madoko documents can include mathematics in standard LaTeX syntax.
 This is supported in HTML pages through the [MathJax] library. 
@@ -456,9 +457,9 @@ be typeset between `$`\ characters, while block equations should use the
 ~~ Sample
 A famous equation is $E = mc^2$, but another famous one is:
 ~ Equation 	{#eq-gaussian}
-	\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
 ~
-and we can refer to Equation [#eq-gaussian] just like any heading.
+and we can refer to Equation [#eq-gaussian] like any heading.
 ~~
 Block equations can also be included
 using the standard LaTeX `$$` characters on separate lines. However, the
@@ -466,7 +467,7 @@ using the standard LaTeX `$$` characters on separate lines. However, the
 See also Section [#sec-custom] on custom blocks that support mathematics,
 like `Theorem`, `Lemma`, `Proof`, etc. 
 
-### Math commands
+### Math commands   { #sec-mathdefs }
 
 For math-heavy documents, it is convenient to define LaTeX commands for 
 common operations. Such command definitions can be directly understood by LaTeX
@@ -476,7 +477,7 @@ the custom block `MathDefs` to support this.
 ~ MathDefs
 \newcommand{\infer}[3]{#1 \vdash #2\,:#3}
 ~ 
-We can infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
+We infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
 ~~
 Often it is convenient to put all such definitions in a separate `.tex` file and
 include it in the document as:
@@ -485,7 +486,7 @@ include it in the document as:
 	[INCLUDE="mathdefs.tex"]
 	~
 
-### Preformatted math
+### Preformatted math   { #sec-mathpre }
 
 LaTeX math mode is great for regular mathematics but not so good if one tries
 to preserve whitespace or uses longer identifiers. This is actually quite common
@@ -504,8 +505,7 @@ easier to typeset. In particular:
 * A name starting with an `@` character is typeset using a `\mathkw` command, where
 	`@return` becomes $\mathkw{return}$.
 
-* Sometimes it is necessary to suppress the insertion of a `\mathid` or `\mathkw` command.
-	Any text that is an argument of a `\begin`, `\end`, `\text`_xx_ or `\math`_xx_ command, 
+* Any text that is an argument of a `\begin`, `\end`, `\text`_xx_ or `\math`_xx_ command, 
 	where _xx_ is one of `tt`, `sf`, `rm`, `it`, `bb`, or `bf`, is kept unchanged.
     Also any name starting with a `#` character is kept unchanged.
 
@@ -571,6 +571,68 @@ used anymore and Madoko only uses the more popular back-ticks (```` ``` ````)
 for fenced code blocks.
 
 [gitmd]: https://help.github.com/articles/github-flavored-markdown
+
+Custom blocks work especially well with metadata rules (see Section [#sec-rules])
+where we can define attributes that get applied to every occurrence of a 
+custom block. For example, we could define the metadata rule:
+
+	~Slanted:  font-style=oblique 
+
+and then every occurrence of a `Slanted` custom block would be typeset in a
+slanted font.
+~~ Sample
+~ Slanted
+Here is my slanted custom block
+~
+~~
+
+### Predefined custom blocks
+
+Madoko defines quite a few common custom blocks.
+
+* `Figure`: This is used to define figures. Recognizes the following attributes:
+	- `caption=`_caption_: specify the caption of a figure.
+	- `.wide`: if the class `wide` is set, the figure will span the width of a page 
+		in a two-column format (used in LaTeX).
+	- `page-align=`(`top`|`bottom`|`here`): specify the alignment of the figure in a page 
+		(used for LaTeX output).
+* `Equation`: Specify mathematical equations. See Section [#sec-math] for its usage.
+* `Bibitem`, `Bibliography`: Used for writing bibliography entries by hand. See Section [#sec-bib] 
+	for more information.
+* `Note`, `Remark`, `Proof`: Used for notes, remarks, and proofs.
+* `Framed`: A block with a solid border. Use the `tight` attribute to suppress a paragraph
+	block around its content.
+* `Center`: A block that centers its contents horizontally on the page. 
+* `TexRaw`: A block for raw TeX content that is passed directly to LaTeX.
+* `HtmlRaw`: A block with raw HTML content that is pasted directly into the HTML output.
+* `MathPre`: A block with preformatted math (Section [#sec-mathpre]).
+* `MathDefs`: A block with LaTeX math definitions (Section [#sec-mathdefs]).
+* `Theorem`, `Lemma`, `Proposition`, `Corollary`, `Example`, `Definition`: Each of these blocks
+	is individually numbered and starts with the block name in bold. For example:
+	~ Sample
+	~~ Lemma 	{#LeftCosetsDisjoint}
+	Let $H$ be a subgroup of a group $G$, and let $x$ and 
+	$y$ be elements of $G$.  Suppose that $xH \cap yH$ is 
+	non-empty. Then $xH = yH$.
+	~~
+	~~ Proof
+	Let $z$ be some element of $xH \cap yH$.  Then $z = xa$
+	for some $a \in H$, and $z = yb$ for some $b \in H$.
+	If $h$ is any element of $H$ then $ah \in H$ and
+	$a^{-1}h \in H$, since $H$ is a subgroup of $G$.
+	But $zh = x(ah)$ and $xh = z(a^{-1}h)$ for all 
+	$h \in H$.
+	Therefore $zH \subset xH$ and $xH \subset zH$, and thus
+	$xH = zH$.  Similarly $yH = zH$, and thus $xH = yH$,
+	as required. [&#9633;]{float=right}
+	~~
+	~ 
+Of course, each of the predefined blocks can be customized further using attributes and rules.
+For example, by including the following metadata rule, we can typeset proofs with _Proof_ in
+an italic style instead of bold:
+```
+~Proof: before="[_Proof_. ]{.proof-before}"
+```
 
 ## Metadata  		{ #sec-metadata }
 
@@ -668,7 +730,7 @@ For LaTeX output, the following keys are relevant:
 
 		Document Class: [9pt]article
 
-* `Package`: Specify a LaTeX package that needs to be included via `\usepackage`.
+* `Package`: Specify a LaTeX package that is included via `\usepackage`.
 	The package name can be prefixed with its options using square brackets.
 
 		Package: amsmath
@@ -765,7 +827,7 @@ link or image definitions themselves.
 Here is an ![butterfly] image. 
 With [bold]{font-weight=bold} text.
 
-[butterfly]: butterfly.png   { width=100px vertical-align=top }
+[butterfly]: butterfly.png { width=100px vertical-align=top }
 ~
 
 ## Identities and labels {#sec-ids-labels}
@@ -779,7 +841,8 @@ to a header:
 
 And we can refer to it
 
-* Using an explicit [link](#myheader) (or [reference][#myheader]).
+* Using an explicit [link](#myheader) 
+				(or [reference][#myheader]).
 * Or using an implicit link to Section [#myheader].
 * Or we can just see its label, namely #myheader.
 ~
@@ -795,17 +858,20 @@ Of course, we can refer to _any_ element that has an identity,
 like equations, figures, tables, etc. Here is an example with an equation:
 
 ~~ Sample
-In Equation [#eq-clifford] we define generators $\mathcal{C}\ell_{j}^\pm$
-for Clifford[^moreInfo] algebras over $\mathbb{R}$ which satisfy
+In Equation [#eq-clifford] we define generators 
+$\mathcal{C}\ell_{j}^\pm$ for Clifford
+algebras[^moreInfo] over $\mathbb{R}$ which satisfy
 ~ Equation { #eq-clifford }
   \gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
 ~
-and $\mathcal{C}\ell_{n+8}^\pm = \mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
+and $\mathcal{C}\ell_{n+8}^\pm = 
+		\mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
 
-[^moreInfo]: For more information, see [Wikipedia](http://en.wikipedia.org/wiki/Clifford_algebra).
+[^moreInfo]: For more information, see [Wikipedia][Clifford].
+[Clifford]:  http://en.wikipedia.org/wiki/Clifford_algebra
 ~~
 
-An implicit link like `[#myheader]` is a shorthand for the explicit link
+An implicit link such as `[#myheader]` is a shorthand for an explicit link
 `[#myheader](#myheader)`, i.e. it links to the local reference `#myheader` and
 it displays the text `#myheader`. In Madoko, a [hash name][#sec-hashname]
 (`#`_name_) is replaced by the _label_ value of the referred block. For
@@ -815,8 +881,8 @@ the attributes clears all attributes, which is used in the following example
 to suppress the default numbering:
 
 ~ Sample
-### A header without a number { - }
-### A header that is labeled  { - #myheader1 label="my label" }
+### An unnumbered header { - }
+### A labeled header     { - #myheader1 label="my label" }
 Let's refer to Section [#myheader1].
 ~
 
