@@ -56,13 +56,16 @@ val texGrammar : grammar<string,texContext> = [
   Rule("citeay",      regex(@"^\\citeauthoryear\b" + texarg + texarg + texarg), texCiteAuthorYear ),
   Rule("url",         regex(@"^\\(?:url|email)\b" + texarg), texUrl ),
   Rule("penalty",     regex(@"^\\(penalty)\b\s*(-?\d+|" + texarg + ")"), texAttribute ),
+  Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
+  Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
-  Rule("texit",       regex(@"^\\textit" + texarg), texEmph ),
+  Rule("texsl",       regex(@"^\{\\sl\b" + texargs + @"\}"), texSlanted ),
+  Rule("texit",       regex(@"^\\(?:textit|emph)\b" + texarg), texEmph ),
   Rule("texbf",       regex(@"^\{\\bffamily\b" + texargs + @"\}"), texStrong ),
-  Rule("texbold",     regex(@"^\\textbf" + texarg), texStrong ),
-  Rule("textt1",      regex(@"^\{\\ttfamily " + texargs + @"\}"), texCode ),
-  Rule("textt2",      regex(@"^\\texttt" + texarg), texCode ),
+  Rule("texbold",     regex(@"^\\textbf\b" + texarg), texStrong ),
+  Rule("textt1",      regex(@"^\{\\ttfamily\b" + texargs + @"\}"), texCode ),
+  Rule("textt2",      regex(@"^\\texttt\b" + texarg), texCode ),
 
   Rule("texaccent",   regex(@"^\\([`'^""~vrc])\b(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
@@ -165,6 +168,11 @@ function texEmph( cap : matched, context : texContext ) : string {
   if (txt=="") then "" else "_" + txt.parseTexX(context) + "_"
 }
 
+function texSlanted( cap : matched, context : texContext ) : string {
+  txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-style=oblique}"
+}
+
 function texStrong( cap : matched, context : texContext ) : string {
   txt = cap.groups[1]
   if (txt=="") then "" else "**" + txt.parseTexX(context) + "**"
@@ -178,6 +186,16 @@ function texCode( cap : matched, context : texContext ) : string {
 function texUrl( cap : matched, context : texContext ) : string {
   txt = cap.groups[1].unbrace
   if (txt=="") then "" else ("[" + txt + "](" + txt + ")")
+}
+
+function texUrlPrefix( cap : matched, context : texContext ) : string {
+  "Available at "
+}
+
+
+function texDoi( cap : matched, context : texContext ) : string {
+  txt = cap.groups[1].unbrace
+  if (txt=="") then "" else ("doi:[" + txt + "](http://dx.doi.org/" + txt + ")")
 }
 
 function texDquot( cap : matched, context : texContext ) : string {
