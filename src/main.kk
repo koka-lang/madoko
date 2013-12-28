@@ -114,7 +114,10 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                 bibStyleName = if (mopts.bibStyle != "") then mopts.bibStyle else "plain"
                 bibNames = if (mopts.bib != "") then mopts.bib.splitPaths else [input.changeExt(".bib")]
                 auxName = outName.changeExt(".aux")
-                if (!(tryWriteTextFile(auxName,logs + 
+                initial = readTextFileDef(auxName,"").replaceAll(rxCite,"")
+                if (!(tryWriteTextFile(auxName,
+                      initial + 
+                      "\n% Madoko generated\n" + logs + 
                       "\n\\bibstyle{" + bibStyleName + "}\n" +
                        bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join))) then 
                 {
@@ -135,6 +138,8 @@ public function markdownFiles(args : string, action : (string,string,string,stri
     }
   }
 }
+
+val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 
 public function main() : io () {
   markdownFiles("") fun(html,inName,outName,logs,opts) {
