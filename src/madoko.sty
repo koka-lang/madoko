@@ -11,10 +11,15 @@
 \RequirePackage{array}
 \RequirePackage{amsmath}
 \RequirePackage{listings}
-\RequirePackage[colorlinks=true,linkcolor=DarkBlue,urlcolor=DarkBlue,filecolor=Maroon]{hyperref}
+\RequirePackage{hyperref}
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
+
+\hypersetup{
+  colorlinks=true,linkcolor=DarkBlue,urlcolor=DarkBlue,filecolor=Maroon
+}
+
 
 %-------------------------------------------------------------
 % Setup packages 
@@ -89,8 +94,8 @@
 \newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
 \newcommand{\mdMaketitle}{%
   \ifnum\value{@mdAuthorcount}>0%
-    \author{\@mdauthors}%
-    \ifdef\institute{\institute{\@mdinsts}}{}%
+    \author{\@mdauthors%
+     \ifdef\institute{\institute{\@mdinsts}}{}}%
   \fi
   \maketitle{}}
 
