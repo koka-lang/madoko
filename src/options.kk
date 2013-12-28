@@ -217,7 +217,7 @@ function defaultMeta( options : options ) : string {
       @"~Figure   : label='[@figure]{.figure-label}' .align-center after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]{.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
       @"~Figure   : toc=tof toc-line='#label. #caption' tight",
       
-      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[[#label]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
+      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
       @"~Bibliography : bib-style='" + options.bibStyle + @"' bib-data='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",
       
       @"~Note     : .block before='[**Note**. ]{.note-before}'",
