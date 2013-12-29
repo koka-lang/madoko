@@ -217,7 +217,14 @@ function hi() {
 ```
 ~
 
-In LaTeX the code generated uses the [listings] package.  Unfortunately,
+Note how the sample shows line numbers using the `.linenums` class. You can
+start numbering at a specific line using a colon followed by the line number,
+for example: `.linenums:10`. Of course, you can use a [metadata rule][#sec-rules] 
+to enable pretty printed code for all code blocks:
+
+	~Pre: .prettyprint .linenums
+
+In LaTeX the code is typeset using the [listings] package. Unfortunately,
 this package does not predefine the JavaScript language so we  need to define
 it ourselves. This can be done at the start of the document using a `TexRaw`
 custom block (see Section [#sec-custom]). For example, in this document we
@@ -235,6 +242,11 @@ used:
 }
 ~
 ```
+
+Madoko will automatically pass the `language` key to the listings package, and
+also include line numbers if the `.linenums` class is present. Use the
+`.showspaces` class to show spaces and tabs in the code.
+
 
 [GPretty]: http://code.google.com/p/google-code-prettify
 [listings]: http://www.ctan.org/pkg/listings

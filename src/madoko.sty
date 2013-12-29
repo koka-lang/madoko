@@ -25,11 +25,14 @@
 % Setup packages 
 %-------------------------------------------------------------
 
+\newcommand{\mdLineNumber}[1]{\scriptsize #1.}
 \lstset{
+  mathescape,                 % must be here as madoko uses it to escape $ and |
+  numbersep=1ex,              % ensures numbers stay within a frame
+  numberstyle=\mdLineNumber,  % typeset line numbers
   basicstyle=\ttfamily,
   columns=fullflexible,
-  keepspaces,
-  mathescape
+  keepspaces
 }
 
 %-------------------------------------------------------------

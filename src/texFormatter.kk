@@ -238,11 +238,21 @@ function texCmdPlain( cmd : string, body : string, pre : string = "md" ) : strin
 
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
   if (env=="pre") then {
-    // body is unprocessed
-    opts = match(attrs.hasKey("language")) {
+    // pass right options to lstlisting package
+    opts1 = match(attrs.hasKey("language")) {
              Nothing    -> ""
-             Just(lang) -> "[language={" + lang + "}]"
-           }   
+             Just(lang) -> "language={" + lang + "}"
+           }
+    opts2 = match(attrs.classes.filter(fun(c){ c.startsWith("linenums") }).maybe) {
+              Nothing   -> ""
+              Just(cls) -> match(cls.find(regex(@"linenums:(\d+)"))) {
+                Nothing   -> "numbers=left"
+                Just(cap) -> "numbers=left,firstnumber=" + cap.groups[1]
+              }
+            }
+    opts3 = if (attrs.hasClass("showspaces")) then "showspaces,showtabs" else ""  
+    opts  = "[" + [opts1,opts2,opts3].join(",") + "]"
+
     "\\begin{lstlisting}" + opts + "\n" + body + "\n\\end{lstlisting}\n"
   }
   else texEnvPlain(env,body,attrs)
