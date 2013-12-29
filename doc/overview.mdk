@@ -13,6 +13,19 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
 [TOC]
 
+~TexRaw
+% The LaTeX lstlisting package does not know the 'javascript' language
+% so we define some limited one here based on Java.
+\definecolor{dark-blue}{rgb}{0,0.08,0.45}
+\definecolor{string-purple}{rgb}{0.49,0,0.47}
+
+\lstdefinelanguage{javascript}[]{Java}{
+	morekeywords={function},
+	keywordstyle=\color{dark-blue},
+	stringstyle=\color{string-purple}
+}
+~
+
 # Overview of Madoko
 
 Madoko is a fast javascript [Markdown] processor written in [Koka]
@@ -165,6 +178,66 @@ Here is a footnote[^fn].
 
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
 
+
+## Code blocks  { #sec-code }
+
+You can write preformatted code simply by indenting the code with a tab
+character or at least four spaces. For example:
+
+~ Sample
+	<b>some html code</b>
+~
+
+Another way to write code is to used _fenced_ code blocks. These start with at
+least three backticks (`` ` ``) and goes on to the first line containing the
+same number of backticks. Moreover, you can include the language name after
+the backticks:
+
+~ Sample
+``` javascript
+function hi() { return "hi"; }
+```
+~
+
+Madoko will automatically add the `lang-javascript` class for HTML output, and
+the option `language=javascript` to the LaTeX [listings] package. This can
+be used to  enable syntax highlighting. For example, to highlight the above
+example using  [Google Prettify][GPretty] we should include the Google script
+in the [metadata][#sec-metadata]:
+
+	Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+
+and add the `.prettyprint` class using attributes:
+
+~ Sample
+``` javascript	{ .prettyprint .linenums }
+function hi() { 
+  return "hi"; 
+}
+```
+~
+
+In LaTeX the code generated uses the [listings] package.  Unfortunately,
+this package does not predefine the JavaScript language so we  need to define
+it ourselves. This can be done at the start of the document using a `TexRaw`
+custom block (see Section [#sec-custom]). For example, in this document we
+used:
+
+```latex	{ .prettyprint language=TeX }
+~ TexRaw
+\definecolor{dark-blue}{rgb}{0,0.08,0.45}
+\definecolor{string-purple}{rgb}{0.49,0,0.47}
+
+\lstdefinelanguage{javascript}[]{Java}{
+	morekeywords={function,let},
+	keywordstyle=\color{dark-blue},
+	stringstyle=\color{string-purple}
+}
+~
+```
+
+[GPretty]: http://code.google.com/p/google-code-prettify
+[listings]: http://www.ctan.org/pkg/listings
 
 ## Table of contents  { #sec-toc }
 
@@ -605,6 +678,8 @@ Madoko defines quite a few common custom blocks.
 * `Center`: A block that centers its contents horizontally on the page. 
 * `TexRaw`: A block for raw TeX content that is passed directly to LaTeX.
 * `HtmlRaw`: A block with raw HTML content that is pasted directly into the HTML output.
+* `TexOnly`: A markdown block that is only processed for LaTeX output (and not shown in HTML output).
+* `HtmlOnly`: A markdown block that is only processed for Html output (and no shown in LaTeX output).
 * `MathPre`: A block with preformatted math (Section [#sec-mathpre]).
 * `MathDefs`: A block with LaTeX math definitions (Section [#sec-mathdefs]).
 * `Theorem`, `Lemma`, `Proposition`, `Corollary`, `Example`, `Definition`: Each of these blocks
@@ -748,6 +823,7 @@ Madoko looks if there is a metadata value with that name, and replaces the
 hash name with its value: 
 ~ Sample
 The title of this document is "#title".
+And this section has label #sec-hashname.
 ~
 
 Note that if values contain themselves hash names, these are expanded
@@ -812,7 +888,7 @@ line.
 
 ~ Sample
 ### This header is not bold    { font-weight=normal }
-```javascript   { .prettyprint .linenums }
+```javascript   { .prettyprint .linenums  }
 function one { 
 	return "a one"; 
 }
@@ -842,7 +918,7 @@ to a header:
 And we can refer to it
 
 * Using an explicit [link](#myheader) 
-				(or [reference][#myheader]).
+	(or [reference][#myheader]).
 * Or using an implicit link to Section [#myheader].
 * Or we can just see its label, namely #myheader.
 ~
