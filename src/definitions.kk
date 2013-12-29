@@ -215,25 +215,28 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,fcontext.inlineContext.metadata),xs)
     Code( text, lang)   -> if (lang=="" && !(xs.input.isPre))
-                            then transformDiv([Source(text)], xs(source=text,elem="pre"), 
-                                                fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata, fcontext.inlineContext.verbose )
+                            then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext )
                             else Code(xs.transformText(text,fcontext.inlineContext.metadata),lang,xs)  
     Heading(depth,text) -> Heading(depth,xs.transformText(text,fcontext.inlineContext.metadata),xs)
-    Div( content  )     -> transformDiv(content, xs, fcontext.inlineContext.citestyle, fcontext.inlineContext.metadata, fcontext.inlineContext.verbose )
+    Div( content  )     -> transformDiv(content, xs, fcontext )
     Quote( content )    -> Quote(content, xs) 
     _                   -> block
   }
 } 
 
-function transformDiv( blocks : list<block>, attrs : attrs, citestyle : citestyle, metadata : dict<string>, verbose : int )  : block {
+function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
+  citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
-  txt = attrs.transformText(attrs.source,metadata)
+  txt = attrs.transformText(attrs.source,fcontext.inlineContext.metadata)
   match(attrs.input) {
-    Tex -> {
-      Div(txt.parseTex(citestyle,verbose >= 3).parseBlocks(citestyle),attrs)
+    Tex -> {      
+      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 3).parseBlocks(citestyle),attrs)
     }
-    Markdown -> {
-      Div(txt.parseBlocks(citestyle),attrs)
+    Markdown(monly) -> {
+      match(monly) {
+        Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
+        _ -> Div(txt.parseBlocks(citestyle),attrs)
+      }
     }
     input -> {
       Div([Source(txt,input)],attrs)

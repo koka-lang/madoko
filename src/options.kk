@@ -236,6 +236,8 @@ function defaultMeta( options : options ) : string {
       @"~Math     : input=math .para-block",
       @"~MathPre  : input=mathpre .para-block",
       @"~MathDefs : input=mathdefs .hidden",
+      @"~HtmlOnly : input=htmlonly",
+      @"~TexOnly  : input=texonly",
 
       theorem("Theorem"),
       theorem("Lemma"),

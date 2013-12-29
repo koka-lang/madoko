@@ -162,7 +162,7 @@ public type input {
   MathDefs    // TeX math definitions
   Tex         // TeX code that should be parsed (i.e for the bibliography)
   Raw( only: maybe<formatter> = Nothing ) // Raw content for some backend (or all)
-  Markdown
+  Markdown( only: maybe<formatter> = Nothing )  // Markdown -- perhaps only for some backend
 }
 
 public function showInput( r : input ) {
@@ -198,7 +198,7 @@ public struct attrs  (
   replacers : list<string> = [],    // replacers
   notag   : bool = False,           // suppress output of tag
   tight   : bool = False,           // suppress first paragraph  
-  input   : input = Markdown,       // how to input the content
+  input   : input = Markdown(),       // how to input the content
  
   elem    : string = "",            // element name
   texelem : string = "",            // element name used for TeX command or environment

@@ -35,7 +35,7 @@ public type block {
   DefFootnote( id : string, content : list<block> )
   Empty()
   Div( content : list<block>, attrs : attrs = attrsNone )
-  Source( text : string, input : input = Markdown )     // raw content
+  Source( text : string, input : input = Markdown() )     // raw content
   Special( name : string, value : string = "" )  // Special blocks, like [TOC] or [FOOTNOTES]
 }
 
@@ -92,7 +92,7 @@ val blockGrammar : grammar<block,blockContext> = [
     
   Rule("heading",    regex(@"^ *(#{1,6}) *(.+?) *#* *" + iattrs + @"(?:\n+|$)"), blockHeading ),
   Rule("blockquote", regex(@"^((?: *>.+(?:\n[^{\n]+)*\n*)+)" + battrs + "(?:\n+|$)"), blockQuote ),
-  Rule("fenced",     regex(@"^ *(```+) *(\S*) *" + iattrs + @"\n([\s\S]+?)\n *\1 *(?:\n+|$)"), blockFencedCode ),
+  Rule("fenced",     regex(@"^ *(```+) *([^{} ]*) *" + iattrs + @"\n([\s\S]+?)\n *\1 *(?:\n+|$)"), blockFencedCode ),
 
   Rule("list",       regex(@"^" + alist), blockList ), 
   Rule("table",      regex(@"^ *" + rxtableHeader + rxtableSep + rxtableBody + pattrs + @"\n*"), blockTable ),
