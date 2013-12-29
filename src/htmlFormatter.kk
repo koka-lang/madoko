@@ -104,7 +104,7 @@ function formatKeyval( key : string, value : string, tag : string ) {
   elif ((key=="width" || key=="height" || key=="text-align") && (tag=="span")) {
     "display: inline-block; " + key + ":" + cssQuote(value) 
   }
-  elif (value=="" || (key=="toc" || key=="toc-line" || key=="toc-depth")) {
+  elif (value=="" || (key=="toc" || key=="toc-line" || key=="toc-depth" || key=="language")) {
     "" // nothing
   }
   else {

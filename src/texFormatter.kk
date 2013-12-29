@@ -28,7 +28,7 @@ public function fmtTexEnv(context : inlineContext, env : string, txt : string, a
 public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
   if (cmd=="") then texText(txt) 
   elif (cmd=="br") then "\\mdBr\n" 
-  elif (cmd=="code") then "\\lstinline[mathescape]|" + txt + "|" 
+  elif (cmd=="code") then "\\lstinline|" + txt + "|" 
   else texCmd(cmd,txt,attrs)
 }
 
@@ -239,8 +239,11 @@ function texCmdPlain( cmd : string, body : string, pre : string = "md" ) : strin
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
   if (env=="pre") then {
     // body is unprocessed
-    // TODO: get language name from the classes
-    "\\begin{lstlisting}[mathescape]\n" + body + "\n\\end{lstlisting}\n"
+    opts = match(attrs.hasKey("language")) {
+             Nothing    -> ""
+             Just(lang) -> "[language={" + lang + "}]"
+           }   
+    "\\begin{lstlisting}" + opts + "\n" + body + "\n\\end{lstlisting}\n"
   }
   else texEnvPlain(env,body,attrs)
 }
@@ -258,7 +261,7 @@ function texClassName( attrs : attrs, def : string ) : (string,attrs) {
 }
 
 /* --------------------------------------
-  Entities
+  Entities 
 ---------------------------------------- */
 
 function normalizeCmd( cmd : string ) {
