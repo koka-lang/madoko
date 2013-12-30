@@ -12,6 +12,9 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 				replace="~~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~~SampleOutput#nl#source#nl~~~~~#nl~~~~#nl"
 ~Slanted	: font-style=oblique
 
+
+[TITLE]
+
 [TOC]
 
 ~TexRaw
@@ -92,8 +95,8 @@ looking HTML page.  Look at this scientific article for an example[^fn-slow-load
 [doc-md]: 		koka-doc-md.png 	{width=300px vertical-align=top }
 
 [koka-article-pdf]: 	http://research.microsoft.com/pubs/200436/koka-effects-2013.pdf
-[koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/doc/koka-effects-2013.html
-[koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/doc/koka-effects-2013.md.txt
+[koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.html
+[koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.md.txt
 
 # Usage
 
@@ -107,9 +110,20 @@ easy:
 
 and you are done. Translating a markdown document is done simply as:
 
-* `madoko -v mydoc.md`  
+* `madoko -v mydoc.mdk`
 
 which generates `mydoc.html`. The `-v` flag gives more verbose output.
+To also generate a `.tex` file that can be processed by LaTeX into a
+pdf file, use:
+
+* `madoko --tex -v mydoc.mdk`
+* `pdflatex mydoc.tex`
+
+This assumes that you have LaTeX installed on your system. For Window users,
+a good LaTeX system is [MikTeX] for example.
+
+[MikTeX]: http://miktex.org/
+
 
 # Syntax
 

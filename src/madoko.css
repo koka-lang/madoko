@@ -29,6 +29,10 @@ body.madoko p {
   font-weight: bold;
 }
 
+.toc {
+  margin-top: 2ex;
+}
+
 /* Paragraphs */
 p.para-continue, p.para-block {
   margin-bottom: 0pt;

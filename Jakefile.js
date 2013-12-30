@@ -117,12 +117,12 @@ task("bench", [], function() {
 //-----------------------------------------------------
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
 task("doc", [], function(arg) {
-  mdCmd = "node lib/cli.js --tex -v doc/overview.mdk";
+  mdCmd = "node lib/cli.js --tex -v doc/reference.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
     if (arg=="pdf" || arg=="--pdf") {
       process.chdir("doc");
-      texCmd = "pdflatex -halt-on-error overview.tex";
+      texCmd = "pdflatex -halt-on-error reference.tex";
       jake.log("> " + texCmd);
       jake.exec(texCmd,function() { 
         process.chdir("..");
@@ -131,6 +131,18 @@ task("doc", [], function(arg) {
   }, {interactive:true});
 });
 
+
+var doclocal = (process.env.doclocal || "\\\\research\\root\\web\\external\\en-us\\UM\\People\\daan\\madoko\\doc");
+desc("publish documentation")
+task("publish", [], function () {
+  // copy to website
+  var files = new jake.FileList().include(path.join("doc","*.html"))
+                                 .include(path.join("doc","*.css"))
+                                 .include(path.join("doc","*.pdf"))
+                                 .include(path.join("doc","*.png"))
+                                 .include(path.join("doc","*.mdk"));
+  copyFiles("doc",files.toArray(),doclocal);
+},{async:false});
 
 //-----------------------------------------------------
 // Tasks: line count
@@ -275,4 +287,18 @@ function fileExist(fileName) {
   }
   catch(e) {};
   return (stats != null);
+}
+
+// copyFiles 'files' to 'destdir' where the files in destdir are named relative to 'rootdir'
+// i.e. copyFiles('A',['A/B/c.txt'],'D')  creates 'D/B/c.txt'
+function copyFiles(rootdir,files,destdir) {
+  rootdir = rootdir || "";
+  files.forEach(function(filename) {
+    // make relative
+    var destname = path.join(destdir,(rootdir && filename.lastIndexOf(rootdir,0)===0 ? filename.substr(rootdir.length) : filename));
+    var logfilename = (filename.length > 30 ? "..." + filename.substr(filename.length-30) : filename);    
+    var logdestname = (destname.length > 30 ? "..." + destname.substr(destname.length-30) : destname);    
+    //jake.logger.log("cp -r " + logfilename + " " + logdestname);
+    jake.cpR(filename,path.dirname(destname));
+  })
 }
