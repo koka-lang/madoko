@@ -229,7 +229,7 @@
 					<key>contentName</key>
 					<string>source.embedded.latex</string>
 					<key>end</key>
-					<string>^\1\s*$</string>
+					<string>^[ \t]*\1\s*$</string>
 					<key>endCaptures</key>
 					<dict>
 						<key>0</key>
