@@ -209,7 +209,7 @@
 		\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
 		{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
 		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
-		{\def\@cssValign{c}}}}%
+		{\def\@cssValign{c}}}}% including `middle`
 		\ifdim\cssHeight=0pt%
 	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidth}}%
 		\else

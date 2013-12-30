@@ -55,6 +55,17 @@ a.localref:hover {
   text-align: left;
 }
 
+/* Abstract */
+.abstract>p:before {
+  content: "Abstract. ";
+  font-weight: bold;
+}
+
+.abstract {
+  margin-left: 2.7em;
+  margin-right: 2.7em;
+  font-size: small;
+}
 
 
 /* Alignment */

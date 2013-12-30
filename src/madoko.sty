@@ -103,8 +103,20 @@
   \fi
   \maketitle{}}
 
+% Use the pre-defined abstract environment
 \cssElemRuleEnv{abstract}{abstract}
 
+% and define it if not yet defined
+\ifdef{\abstract}{}{
+  \newenvironment{abstract}%
+    {\list{}{\small
+      \leftmargin=2.65em%
+      \labelwidth=0em%
+      \listparindent=0em%
+      \itemindent\listparindent
+      \rightmargin\leftmargin}\item[\hskip\labelsep\bfseries Abstract.]}
+    {\endlist}
+}
 
 %-------------------------------------------------------------
 % Paragraphs and indentation 
