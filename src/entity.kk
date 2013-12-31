@@ -100,9 +100,9 @@ val entities : list<entity> = [
   Entity("yen", 165, @"\textyen", False),
   Entity("brvbar", 166, @"\textbrokenbar", False),
   Entity("sect", 167, @"\S", False),
-  Entity("uml", 168, @"\textasciidiaeresis", False),
+  Entity("uml", 168, @"\textasciidieresis", False),
   Entity("copy", 169, @"\copyright", False),
-  Entity("ordf", 170, @"\ordfeminine", False),
+  Entity("ordf", 170, @"\textordfeminine", False),
   Entity("laquo", 171, @"\guillemotleft", False),
   Entity("not", 172, @"\textlnot", False),
   Entity("shy", 173, @"\-", False),
@@ -122,102 +122,102 @@ val entities : list<entity> = [
   Entity("raquo", 187, @"\guillemotright", False),
   Entity("frac14", 188, @"\textonequarter", False),
   Entity("frac12", 189, @"\textonehalf", False),
-  Entity("frac34", 190, @"\textthreequarter", False),
+  Entity("frac34", 190, @"\textthreequarters", False),
   Entity("iquest", 191, @"\textquestiondown", False),
-  // Entity("Agrave", 192, @"\", False),
-  // Entity("Aacute", 193, "", False),
-  // Entity("Acirc", 194, "", False),
-  // Entity("Atilde", 195, "", False),
-  // Entity("Auml", 196, "", False),
-  // Entity("Aring", 197, "", False),
+  Entity("Agrave", 192, @"\`{A}", False), // accent
+  Entity("Aacute", 193, @"\'{A}", False), // accent
+  Entity("Acirc", 194,  @"\^{A}", False), // accent
+  Entity("Atilde", 195, @"\~{A}", False), // accent
+  Entity("Auml", 196,   @"\""{A}", False), // accent
+  Entity("Aring", 197,  @"\r{A}", False), // accent
   Entity("AElig", 198, @"\AE", False),
-  // Entity("Ccedil", 199, "", False),
-  // Entity("Egrave", 200, "", False),
-  // Entity("Eacute", 201, "", False),
-  // Entity("Ecirc", 202, "", False),
-  // Entity("Euml", 203, "", False),
-  // Entity("Igrave", 204, "", False),
-  // Entity("Iacute", 205, "", False),
-  // Entity("Icirc", 206, "", False),
-  // Entity("Iuml", 207, "", False),
+  Entity("Ccedil", 199, @"\c{C}", False), // accent
+  Entity("Egrave", 200, @"\`{E}", False), // accent
+  Entity("Eacute", 201, @"\'{E}", False), // accent
+  Entity("Ecirc", 202, @"\^{E}", False), // accent
+  Entity("Euml", 203, @"\""{E}", False), // accent
+  Entity("Igrave", 204, @"\`{I}", False), // accent
+  Entity("Iacute", 205, @"\'{I}", False), // accent
+  Entity("Icirc", 206, @"\c{I}", False), // accent
+  Entity("Iuml", 207, @"\""{I}", False), // accent
   Entity("ETH", 208, @"\DH", False),
-  // Entity("Ntilde", 209, "", False),
-  // Entity("Ograve", 210, "", False),
-  // Entity("Oacute", 211, "", False),
-  // Entity("Ocirc", 212, "", False),
-  // Entity("Otilde", 213, "", False),
-  // Entity("Ouml", 214, "", False),
+  Entity("Ntilde", 209, @"\~{N}", False), // accent
+  Entity("Ograve", 210, @"\`{O}", False), // accent
+  Entity("Oacute", 211, @"\'{O}", False), // accent
+  Entity("Ocirc", 212, @"\^{O}", False), // accent
+  Entity("Otilde", 213, @"\~{O}", False), // accent
+  Entity("Ouml", 214, @"\""{O}", False), // accent
   Entity("times", 215, @"\times", True),
   Entity("Oslash", 216, @"\O", False),
-  // Entity("Ugrave", 217, "", False),
-  // Entity("Uacute", 218, "", False),
-  // Entity("Ucirc", 219, "", False),
-  // Entity("Uuml", 220, "", False),
-  // Entity("Yacute", 221, "", False),
+  Entity("Ugrave", 217, @"\`{U}", False), // accent
+  Entity("Uacute", 218, @"\'{U}", False), // accent
+  Entity("Ucirc", 219, @"\^{U}", False), // accent
+  Entity("Uuml", 220, @"\""{U}", False), // accent
+  Entity("Yacute", 221, @"\'{Y}", False), // accent
   Entity("THORN", 222, @"\TH", False),
   Entity("szlig", 223, @"\ss", False),
-  // Entity("agrave", 224, "", False),
-  // Entity("aacute", 225, "", False),
-  // Entity("acirc", 226, "", False),
-  // Entity("atilde", 227, "", False),
-  // Entity("auml", 228, "", False),
-  // Entity("aring", 229, "", False),
+  Entity("agrave", 224, @"\`{a}", False), // accent
+  Entity("aacute", 225, @"\'{a}", False), // accent
+  Entity("acirc", 226, @"\^{a}", False), // accent
+  Entity("atilde", 227, @"\~{a}", False), // accent
+  Entity("auml", 228, @"\""{a}", False), // accent
+  Entity("aring", 229, @"\r{a}", False), // accent
   Entity("aelig", 230, @"\ae", False),
-  // Entity("ccedil", 231, "", False),
-  // Entity("egrave", 232, "", False),
-  // Entity("eacute", 233, "", False),
-  // Entity("ecirc", 234, "", False),
-  // Entity("euml", 235, "", False),
-  // Entity("igrave", 236, "", False),
-  // Entity("iacute", 237, "", False),
-  // Entity("icirc", 238, "", False),
-  // Entity("iuml", 239, "", False),
+  Entity("ccedil", 231, @"\c{c}", False), // accent
+  Entity("egrave", 232, @"\`{e}", False), // accent
+  Entity("eacute", 233, @"\'{e}", False), // accent
+  Entity("ecirc", 234, @"\^{e}", False), // accent
+  Entity("euml", 235, @"\""{e}", False), // accent
+  Entity("igrave", 236, @"\`{\i}", False), // accent
+  Entity("iacute", 237, @"\'{\i}", False), // accent
+  Entity("icirc", 238, @"\^{\i}", False), // accent
+  Entity("iuml", 239, @"\""{\i}", False), // accent
   Entity("eth", 240, @"\dh", False),
-  // Entity("ntilde", 241, "", False),
-  // Entity("ograve", 242, "", False),
-  // Entity("oacute", 243, "", False),
-  // Entity("ocirc", 244, "", False),
-  // Entity("otilde", 245, "", False),
-  // Entity("ouml", 246, "", False),
+  Entity("ntilde", 241, @"\~{n}", False), // accent
+  Entity("ograve", 242, @"\`{o}", False), // accent
+  Entity("oacute", 243, @"\'{o}", False), // accent
+  Entity("ocirc", 244, @"\^{o}", False), // accent
+  Entity("otilde", 245, @"\~{o}", False), // accent
+  Entity("ouml", 246, @"\""{o}", False), // accent
   Entity("divide", 247, @"\div", True),
   Entity("oslash", 248, @"\o", False),
-  // Entity("ugrave", 249, "", False),
-  // Entity("uacute", 250, "", False),
-  // Entity("ucirc", 251, "", False),
-  // Entity("uuml", 252, "", False),
-  // Entity("yacute", 253, "", False),
+  Entity("ugrave", 249, @"\`{u}", False), // accent
+  Entity("uacute", 250, @"\'{u}", False), // accent
+  Entity("ucirc", 251, @"\^{u}", False), // accent
+  Entity("uuml", 252, @"\""{u}", False), // accent
+  Entity("yacute", 253, @"\'{y}", False), // accent
   Entity("thorn", 254, @"\th", False),
-  // Entity("yuml", 255, "", False),
+  Entity("yuml", 255, @"\""{y}", False), // accent
   Entity("OElig", 338, @"\OE", False),
   Entity("oelig", 339, @"\oe", False),
-  // Entity("Scaron", 352, "", False),
-  // Entity("scaron", 353, "", False),
-  // Entity("Yuml", 376, "", False),
+  Entity("Scaron", 352, @"\u{S}", False), // accent
+  Entity("scaron", 353, @"\u{s}", False), // accent
+  Entity("Yuml", 376, @"\""{Y}", False), // accent
   Entity("fnof", 402, @"\textit{f}", False),
-  Entity("circ", 710, @"\\textasciicircum", False),
+  Entity("circ", 710, @"\textasciicircum", False),
   Entity("tilde", 732, @"\textasciitilde", False),
-  Entity("Alpha", 913, @"\Alpha", True ),
-  Entity("Beta", 914, @"\Beta", True ),
+  Entity("Alpha", 913, @"A", False ),
+  Entity("Beta", 914, @"B", False ),
   Entity("Gamma", 915, @"\Gamma", True ),
   Entity("Delta", 916, @"\Delta", True ),
-  Entity("Epsilon", 917, @"\Epsilon", True),
-  Entity("Zeta", 918, @"\Zeta", True),
-  Entity("Eta", 919, @"\Eta", True),
+  Entity("Epsilon", 917, @"E", False),
+  Entity("Zeta", 918, @"Z", False),
+  Entity("Eta", 919, @"H", False),
   Entity("Theta", 920, @"\Theta", True),
-  Entity("Iota", 921, @"\Iota", True),
-  Entity("Kappa", 922, @"\Kappa", True),
+  Entity("Iota", 921, @"I", False),
+  Entity("Kappa", 922, @"K", False),
   Entity("Lambda", 923, @"\Lambda", True),
-  Entity("Mu", 924, @"\Mu", True),
-  Entity("Nu", 925, @"\Nu", True),
+  Entity("Mu", 924, @"M", False),
+  Entity("Nu", 925, @"N", False),
   Entity("Xi", 926, @"\Xi", True),
-  Entity("Omicron", 927, @"\Omicron", True),
+  Entity("Omicron", 927, @"O", False),
   Entity("Pi", 928, @"\Pi", True),
-  Entity("Rho", 929, @"\Rho", True),
+  Entity("Rho", 929, @"P", False),
   Entity("Sigma", 931, @"\Sigma", True),
-  Entity("Tau", 932, @"\Tau", True),
+  Entity("Tau", 932, @"T", False),
   Entity("Upsilon", 933, @"\Upsilon", True),
   Entity("Phi", 934, @"\Phi", True),
-  Entity("Chi", 935, @"\Chi", True),
+  Entity("Chi", 935, @"X", False),
   Entity("Psi", 936, @"\Psi", True),
   Entity("Omega", 937, @"\Omega", True),
   Entity("alpha", 945, @"\alpha", True),
@@ -234,7 +234,7 @@ val entities : list<entity> = [
   Entity("mu", 956, @"\mu", True),
   Entity("nu", 957, @"\nu", True),
   Entity("xi", 958, @"\xi", True),
-  Entity("omicron", 959, @"\omicron", True),
+  Entity("omicron", 959, @"o", True),
   Entity("pi", 960, @"\pi", True),
   Entity("rho", 961, @"\rho", True),
   Entity("sigmaf", 962, @"\varsigma", True),
@@ -245,7 +245,7 @@ val entities : list<entity> = [
   Entity("chi", 967, @"\chi", True),
   Entity("psi", 968, @"\psi", True),
   Entity("omega", 969, @"\omega", True),
-  Entity("thetasym", 977, @"\thetasym", True),
+  Entity("thetasym", 977, @"\vartheta", True),
   Entity("upsih", 978, @"\Upsilon", True ),
   Entity("piv", 982, @"\varpi", True ),
   Entity("ensp", 8194, @"\hspace{1ex}", False),
@@ -269,24 +269,24 @@ val entities : list<entity> = [
   Entity("bull", 8226, @"\textbullet", False),
   Entity("hellip", 8230, @"\dots", False),
   Entity("permil", 8240, @"\textperthousand", False),
-  Entity("prime", 8242, @"\prime", False),
-  Entity("Prime", 8243, @"\doubleprime", False),
-  Entity("lsaquo", 8249, @"\guilsingleleft", False),
-  Entity("rsaquo", 8250, @"\guilsingleright", False),
+  Entity("prime", 8242, @"\prime", True),
+  Entity("Prime", 8243, @"\prime\prime", True),
+  Entity("lsaquo", 8249, @"\guilsinglleft", False),
+  Entity("rsaquo", 8250, @"\guilsinglright", False),
   Entity("oline", 8254, "-", False), //TODO
   Entity("frasl", 8260, @"\textfraction", False),
   Entity("euro", 8364, @"\texteuro", False),
   Entity("image", 8465, @"\Im", True ),
   Entity("weierp", 8472, @"\wp", True ),
   Entity("real", 8476, @"\Re", True ),
-  Entity("trade", 8482, @"\texttrademark", True),
+  Entity("trade", 8482, @"\texttrademark", False),
   Entity("alefsym", 8501, @"\aleph", True),
   Entity("larr", 8592, @"\leftarrow", True),
   Entity("uarr", 8593, @"\uparrow", True),
   Entity("rarr", 8594, @"\rightarrow", True),
   Entity("darr", 8595, @"\downarrow", True),
   Entity("harr", 8596, @"\leftrightarrow", True),
-  Entity("crarr", 8629, @"\carriagereturn", True),
+  Entity("crarr", 8629, @"\hookleftarrow", True),
   Entity("lArr", 8656, @"\Leftarrow", True),
   Entity("uArr", 8657, @"\Uparrow", True),
   Entity("rArr", 8658, @"\Rightarrow", True),
@@ -298,7 +298,7 @@ val entities : list<entity> = [
   Entity("empty", 8709, @"\varnothing", True),
   Entity("nabla", 8711, @"\nabla", True),
   Entity("isin", 8712, @"\in", True),
-  Entity("notin", 8713, @"\nin", True),
+  Entity("notin", 8713, @"\notin", True),
   Entity("ni", 8715, @"\ni", True),
   Entity("prod", 8719, @"\prod", True),
   Entity("sum", 8721, @"\sum", True),
@@ -323,7 +323,7 @@ val entities : list<entity> = [
   Entity("ge", 8805, @"\geq", True),
   Entity("sub", 8834, @"\subset", True),
   Entity("sup", 8835, @"\supset", True),
-  Entity("nsub", 8836, @"\nsubset", True),
+  Entity("nsub", 8836, @"\subsetneq", True),
   Entity("sube", 8838, @"\subseteq", True),
   Entity("supe", 8839, @"\supseteq", True),
   Entity("oplus", 8853, @"\oplus", True),
@@ -331,8 +331,8 @@ val entities : list<entity> = [
   Entity("perp", 8869, @"\bot", True),
   Entity("sdot", 8901, @"\cdot", True),
   Entity("vellip", 8942, @"\vdots", True),
-  Entity("lceil", 8968, @"\lceiling", True),
-  Entity("rceil", 8969, @"\rceiling", True),
+  Entity("lceil", 8968, @"\lceil", True),
+  Entity("rceil", 8969, @"\rceil", True),
   Entity("lfloor", 8970, @"\lfloor", True),
   Entity("rfloor", 8971, @"\rfloor", True),
   Entity("lang", 9001, @"\langle", True),
@@ -349,12 +349,12 @@ val entities : list<entity> = [
   Entity("", 8617, @"\hookleftarrow", True ),  
   Entity("", 8718, @"\Box", True ),  
   Entity("", 9633, @"\Box", True ),
-  Entity("ballotbox", 9742, @"\Box", True ),
-  Entity("ballotc", 9743, @"\mdUnicode{9743}", False ),
-  Entity("ballotx", 9744, @"\mdUnicode{9744}", False ),
-  Entity("checkmark", 10003, @"\checkmark", False ),
-  Entity("", 10004, @"\checkmark", False ),   
-  Entity("xmark", 10007, @"\xmark", False ),
-  Entity("", 10008, @"\xmark", False ),   
+  Entity("ballotbox", 9744, @"\Box", True ),
+  Entity("ballotc", 9745, @"\text{\rlap{\small\ding{51}}}\square", True ),
+  Entity("ballotx", 9746, @"\text{\rlap{\small\ding{55}}}\square", True ),
+  Entity("checkmark", 10003, @"\ding{51}", False ),
+  Entity("", 10004, @"\ding{52}", False ),   
+  Entity("xmark", 10007, @"\ding{55}", False ),
+  Entity("", 10008, @"\ding{56}", False ),   
 ]
 

@@ -111,12 +111,12 @@ public function fmtTexTable( context : inlineContext, head : cells, body : cells
   pre = "md"
   cells = head + body
   td = if (attrs.hasClass("columns")) then "column" else "td"
-
+  table = if (attrs.hasClass("long")) then "LongTable" else "Table"
   columns = cells.map(length).maximum
-  "\\begin{" + pre + "Table}" + attrs.addClass("block").texAttrsX + "{" + columns.show + "}{" + list(1,max(columns,1)).map(fun(i){"l"}).join + "}\n" +
+  "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + "{" + columns.show + "}{" + list(1,max(columns,1)).map(fun(i){"l"}).join + "}\n" +
     head.fmtRows("th",pre) + "\n" +
     body.fmtRows(td,pre) +
-    "\\end{" + pre + "Table}\n"
+    "\\end{" + pre + table + "}\n"
 }
 
 type line {
