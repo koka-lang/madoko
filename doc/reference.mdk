@@ -11,7 +11,8 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 ~Sample		 : margin-bottom=2ex 
 				replace="~~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~~SampleOutput#nl#source#nl~~~~~#nl~~~~#nl"
 ~Slanted	: font-style=oblique
-
+~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' notag tight 
+Title2		: #Title #Title
 
 [TITLE]
 
@@ -324,7 +325,7 @@ are not yet defined:
 
 When Madoko finds such references, it writes them to a `.aux` file (together
 with the needed bibliography files) that can be read by BibTeX, and we can
-just run it this file:
+just run it directly on this file:
 	
 	> bibtex myfile.aux
 
@@ -341,9 +342,13 @@ Madoko uses a very simple LaTeX parser to format the bibliography entries in
 Markdown. It can handle things like special characters and accents quite well
 and recognizes many formatting commands. Even though it is sufficient for
 bibliography entries in general, the Madoko LaTeX parser may not work for more
-fancy LaTeX commands in bibliography entries.
+fancy LaTeX commands in bibliography entries. However, we strive to make it
+work for any bibliograpy style and entries, so please [file a bug report][issues] 
+if you encounter situations where it does not work correctly.
 
 [bibtex]: http://en.wikipedia.org/wiki/BibTeX
+[issues]: http://madoko.codeplex.com/workitem/list/basic
+
 
 ### Bibliography styles  { #sec-bibstyle }
 
@@ -470,9 +475,9 @@ The column specifier row determines alignment and vertical lines in a table:
 	right or left aligns to the right or left, while a colon on both sides will
 	center the column.
 * If a column specifier uses a plus (`+`) instead of a bar (`|`) to separate
-	the column, a vertical line is used to separate the columns. To prevent accidental
-	column separation from using a `+` character in, say, a formula, there should
-	be *no whitespace* following a `+` when used this way!
+	the column, a vertical line is used to separate the columns. To distinguish
+	the use of a `+` for a table instead of as a list item, there should be
+    *no whitespace* following a `+` when used this way!
 * If a column specifier cell uses dashes `-`, a horizontal line is drawn. By using
 	tildes (`~`) instead, no line is drawn for that column specifier cell.  
 
@@ -503,7 +508,11 @@ a table with no header and an outer border:
 |------|-------------|----------------------------|--------|
 ~
 And finally a complex table with all kinds of alignment, 
-multiple column spans and horizontal lines. 
+multiple column spans and horizontal lines[^funfn].
+
+[^funfn]: For fun, try to draw this example table in LaTeX
+	without consulting the manual :-).
+
 ~ Sample
 | ------ | ----------------- | ------------------- | ------ |
 |   id   |        name       |    description      |  price |
@@ -523,7 +532,7 @@ where the column specifier row is on the third line.
 
 We can specify the width (and other attributes) of a column by
 adding an [attribute][#sec-attr] specification in the column
-specification row. In the following example, we use a colunn
+specification row. In the following example, we use a column
 of fixed width, and one of a relative with with respect to 
 the overall width of the table.
 
@@ -859,7 +868,14 @@ And this section has label #sec-hashname.
 
 Note that if values contain themselves hash names, these are expanded
 recursively (up to a certain limit) which can provide a powerful abstraction
-mechanism. If hash names are used inside [attributes][#sec-attr], Madoko first
+mechanism. For example, if we define a metadata value `Title2`:
+
+	Title2: (#Title,#Title)
+
+then the hashname `#Title2` expands to "#Title2".
+
+
+If hash names are used inside [attributes][#sec-attr], Madoko first
 looks for the name as one of the attribute key values. For example, you can
 use names like `#id`, `#class`, and `#label`. Two special available keys are `#nl` 
 which always expands to a newline character, and `#source` that expands to the
@@ -1111,7 +1127,7 @@ parenthesis. Similarly, the default label for main sections is defined as:
 	{ @h1 label="@h1" }
 
 Of course, for headers we like to display the label by default in front of the
-header text. This can be done using the [before][#sec-before] attribute where
+header text. This can be done using the [before][#sec-replace] attribute where
 we use the [`#label`][#sec-hashname] key to insert the value of the label. So,
 the full definition for the main sections is:
 
@@ -1172,8 +1188,101 @@ set the display mode here and not a specific value.
 
 ## Replacement { #sec-replace }
 
-_todo_ 
+Madoko has three attributes that can transform the content of block or inline
+element, namely `before`, `after`, and `replace`. The `before` and `after`
+elements just add content before and after:
 
-### Before and after 	{ #sec-before }
+~~ Sample
+~ Myblock { before="*Myblock*: " after="." }
+the content
+~
+~~
 
-_todo_
+The `replace` attribute replaces the entire content with its value. You can
+have multiple replacers and they are all applied in order. The replacers can
+be cleared using the special `clear` value. Finally, all replacers can contain
+hash names (Section [sec-hashname]) which are expanded. Useful hash names are
+`#source` which expands to the current content of the block (possibly having
+already some replacers applied), and `#nl` which expands to a newline
+character. In particular, `before` and `after` are defined in terms of
+`replace`, where `before=`_value_  is just syntactic sugar for
+`replace=`_value_`\/#source` and similarly for `after`.
+
+As an advanced example, for this document I defined a metadata rule for  the
+`Sample` custom block that replaces its content by both a code block and a
+regular markdown block. In a simplified form, it is defined as:
+
+	~Sample: 
+	  replace="```#nl#source#nl```#nl----#nl~~#nl#source#nl~~#nl"
+
+
+
+### Regular expression replacement	{ #sec-regex }
+
+A `replace` attribute can also define a general [regular expression][regex] replacement
+of the form `/`_regex_`/`_replacer_`/`(`g`|`i`|`m`)?. The regular expression _regex_
+is matched against the content, and a match is replaced by _replacer_. The options are:
+
+* `g`: instead of just the first match, it will globally replace all matches found in the content.
+* `i`: use case-insensitive matching.
+* `m`: do a multi-line match where `^` and `$` match the beginning and end of each line respectively
+	instead of just the start and end of the content.
+
+[regex]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+
+For example, here is an example where we replace `<`quoted`>` text by 
+single guillemet quotes:
+
+~~ Sample
+~ { replace="/<(.*?)>/&lsaquo;\1&rsaquo;/g" }
+Here is <quoted> text.
+~
+~~
+
+In the _replacer_ expression, we can also use special case conversion escape sequences:
+
+* `\U` or `\L` transform the following text up to the next `\E` to upper- or lower-case 
+	respectively.
+* `\u` and `\l` replace the following character to upper- or lower-case.
+
+~~ Sample
+~ { replace="/(\w+)/\u\1/g" }
+all words to title-case.
+~
+~~
+
+
+### Advanced recursion and replacement
+
+As more advanced example of recursion and replacement, we can actually
+calculate  [fibonacci numbers][fib]. In the following sample, _n_ number of
+`x` characters are replaced by _fib(n)_ `y` characters: 
+
+~~ Sample 
+~ Fib 
+xxxxx
+~  
+~~
+
+This is done through the following metadata rule:
+
+	~Fib: replace='/^x?$/y/' 
+		  replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
+		  notag tight 
+
+The first replacer will replace a single optional `x` with a `y`.  The second
+one matches 2 or more `x`'s, and replaces these recursively by two  new `Fib`
+blocks: one with _n-1_ and one with _n-2_ `x` characters. These blocks will
+get processed now recursively. Finally, by using the `notag` attribute we
+suppress the inclusion of many `div` elements in the HTML, while the `tight`
+attribute suppresses the addition of paragraph elements.
+
+This example shows the replacement facility of Madoko is quite powerful.
+It is even possible to define a generic [SKI combinator expander][ski] which
+makes Madoko's replacement mechanism (almost) Turing complete[^turing].
+
+[fib]: http://en.wikipedia.org/wiki/Fibonacci_number
+[ski]: http://madoko.codeplex.com/SourceControl/latest#test/new/extra_ski.text
+[^turing]: Almost, since Madoko expands only up to a certain limit and since
+	regular expressions cannot express arbitrary nesting levels.
+
