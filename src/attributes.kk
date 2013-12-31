@@ -295,7 +295,7 @@ function caseConvert( txt : string ) : string {
   txt.replaceAll(regex(@"\\([UL])([\s\S]*?)(\\E|$)"), fun(cap) {
         if (cap.groups[1]=="U") then cap.groups[2].toUpper else cap.groups[2].toLower
       })
-     .replaceAll(regex(@"\\(ul)(.)"), fun(cap) {
+     .replaceAll(regex(@"\\([ul])(.)"), fun(cap) {
         if (cap.groups[1]=="u") then cap.groups[2].toUpper else cap.groups[2].toLower
       })
 }
