@@ -42,6 +42,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
   Rule("ifootnote", regex(@"^\[\^" + linkid + @"\]"), inlineFootnote ),
+  Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>"), inlineAutoLink ),  
   Rule("istrong_",  regex(@"^__((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
   Rule("istrong*",  regex(@"^\*\*((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
@@ -73,7 +74,7 @@ val benchGrammar
 function stripFancyRules( g : grammar<string,inlineContext> ) : grammar<string,inlineContext> {
   g.ruleReplace(True, Rule("itext", regex("^" + normalbench + "+"), inlineNormal ))
    .ruleReplace(True, Rule("iquotes", regex(@"^[""']"), inlineQuot ))
-   .ruleRemove(True,["idashes","ielipsis","tex"])
+   .ruleRemove(True,["idashes","ielipsis","tex","iguil"])
 }
 
 function inlineGrammar( fmt : formatter, bench : bool = False ) {
@@ -218,9 +219,12 @@ function inlineDashes( cap : matched, context ) : string {
 
 
 function inlineQuotes( cap : matched, context : inlineContext ) : string {
-  if (cap.groups[1] != "") 
-    then context.fmtText("&lsquo;") + context.formatInline(cap.groups[1]) + context.fmtText("&rsquo;")
-    else context.fmtText("&ldquo;") + context.formatInline(cap.groups[2]) + context.fmtText("&rdquo;")
+  quote = cap.matched.substr(0,1)
+  if (quote == "'") 
+   then context.fmtText("&lsquo;") + context.formatInline(cap.groups[1]) + context.fmtText("&rsquo;")
+  elif (quote=="<")
+   then context.fmtText("&laquo;") + context.formatInline(cap.groups[1]) + context.fmtText("&raquo;")
+   else context.fmtText("&ldquo;") + context.formatInline(cap.groups[2]) + context.fmtText("&rdquo;")
 }
 
 function inlineDots( cap : matched, context ) : string {
