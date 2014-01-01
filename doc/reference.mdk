@@ -185,6 +185,30 @@ if the underscores appear inside a word, as in my_example_here. Using the
 empty escape sequence we can emphasize inside words too: to get
 my\/_example_\/here, we can simply write `my\/_example_\/here`.
 
+### Smart quotes and symbols
+
+Madoko will quote smartly using proper open and closing quotes for anything
+enclosed in single quotes (`'`), double quotes (`"`), or french quotes (`<<`
+and `>>`).
+
+~ Sample
+"double quoted"\
+'single quoted'\
+<<guillemet quoted>>\
+<http://www.google.com>
+~
+
+Note that text enclosed in `<` and `>` brackets gets interpreted as direct 
+link. Similarly, Madoko will also replace some character sequences to a 
+proper symbol:
+
+~ Sample
+Please distinguish a minus sign, -, from the _en dash_ which
+is used to separate spans or pages, like 1--20, and the 
+_em dash_ which is even longer and sometimes used for 
+quotations. --- Oscar Wilde.  
+Three dots ... should be close together.
+~
 
 ## Footnotes
 
