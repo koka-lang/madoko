@@ -13,6 +13,13 @@ Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 ~Slanted	: font-style=oblique
 ~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' notag tight 
 Title2		: #Title #Title
+llbracket	: &#10214;
+rrbracket	: &#10215;
+
+~ TexRaw
+\mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
+~
 
 [TITLE]
 
@@ -1291,6 +1298,36 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 
 ## Recognized entities   { @h1="A" }
 
+Madoko recognizes all named html entities and translates them to the
+appropiate LaTeX commands. If you often need a numbered entity, it can be
+convenient to define a shorthand for it in the metadata:
+
+	llbracket: &#10214;
+	rrbracket: &#10215;
+
+and then use the hash-names instead. For example:
+
+~ Sample 
+\/#llbracket;hi#rrbracket;.
+~
+
+However, the LaTeX backend will still give a warning that these enitities are
+not defined in LaTeX. You can define your own definition for it using the
+LaTeX `\mdDefineUnicode` command in a `TexRaw` block at the start of the
+document. For example:
+
+```latex	{ .prettyprint language=TeX }
+~ TeXRaw
+\mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
+~
+```
+
+If no definition is given, LaTeX will work but output the entity as is,
+i.e. `&#10214;` for `#llbracket`.
+
+The full list of predefined named entities is:
+
 +--------|---------|--------+
 | number | name    | glyph  |
 +--------|---------|--------+
@@ -1313,7 +1350,7 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 | 96   | grave  | &#96; |
 | 123   | lcurly  | &#123; |
 | 124   | bar  | &#124; |
-| 124   | rcurly  | &#124; |
+| 125   | rcurly  | &#125; |
 | 126   | tilde  | &#126; |
 | 160   | nbsp  | &#160; |
 | 161   | iexcl  | &#161; |
@@ -1411,6 +1448,8 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 | 253   | yacute  | &#253; |
 | 254   | thorn  | &#254; |
 | 255   | yuml  | &#255; |
+| 321   | lstroke  | &#321; |
+| 322   | Lstroke  | &#322; |
 | 338   | OElig  | &#338; |
 | 339   | oelig  | &#339; |
 | 352   | Scaron  | &#352; |
@@ -1565,18 +1604,16 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 | 9827   | clubs  | &#9827; |
 | 9829   | hearts  | &#9829; |
 | 9830   | diams  | &#9830; |
-| 321   |   | &#321; |
-| 322   |   | &#322; |
-| 8617   |   | &#8617; |
-| 8718   |   | &#8718; |
-| 9633   |   | &#9633; |
+| 8617   | hooklarr  | &#8617; |
+| 8718   | bbox  | &#8718; |
+| 9633   | box  | &#9633; |
 | 9744   | ballotbox  | &#9744; |
 | 9745   | ballotc  | &#9745; |
 | 9746   | ballotx  | &#9746; |
 | 10003   | checkmark  | &#10003; |
-| 10004   |   | &#10004; |
+| 10004   | bcheckmark  | &#10004; |
 | 10007   | xmark  | &#10007; |
-| 10008   |   | &#10008; |
+| 10008   | bxmark  | &#10008; |
 +---------+---+----------+
 { .long }
 
