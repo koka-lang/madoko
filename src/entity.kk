@@ -89,7 +89,7 @@ val entities : list<entity> = [
   Entity("grave", 96,   @"{`}", False),
   Entity("lcurly", 123,  @"\{", False),
   Entity("bar", 124,  @"\textbar", False),
-  Entity("rcurly", 124,  @"\}", False),
+  Entity("rcurly", 125,  @"\}", False),
   Entity("tilde", 126,  @"\textasciitilde", False),
 
   Entity("nbsp", 160, @"\mdNbsp", False),
@@ -188,6 +188,8 @@ val entities : list<entity> = [
   Entity("yacute", 253, @"\'{y}", False), // accent
   Entity("thorn", 254, @"\th", False),
   Entity("yuml", 255, @"\""{y}", False), // accent
+  Entity("Lstroke", 321, @"\L", False),  
+  Entity("lstroke", 322, @"\l", False),  
   Entity("OElig", 338, @"\OE", False),
   Entity("oelig", 339, @"\oe", False),
   Entity("Scaron", 352, @"\u{S}", False), // accent
@@ -344,17 +346,15 @@ val entities : list<entity> = [
   Entity("diams", 9830, @"\diamondsuit", True),
 
   // unnamed entities
-  Entity("", 321, @"\L", False),  
-  Entity("", 322, @"\l", False),  
-  Entity("", 8617, @"\hookleftarrow", True ),  
-  Entity("", 8718, @"\Box", True ),  
-  Entity("", 9633, @"\Box", True ),
+  Entity("hooklarr", 8617, @"\hookleftarrow", True ),  
+  Entity("bbox", 8718, @"\blacksquare", True ),  
+  Entity("box", 9633, @"\Box", True ),
   Entity("ballotbox", 9744, @"\Box", True ),
-  Entity("ballotc", 9745, @"\text{\rlap{\small\ding{51}}}\square", True ),
-  Entity("ballotx", 9746, @"\text{\rlap{\small\ding{55}}}\square", True ),
+  Entity("ballotc", 9745, @"\mdUnicode{9745}", False ),
+  Entity("ballotx", 9746, @"\mdUnicode{9746}", False ),
   Entity("checkmark", 10003, @"\ding{51}", False ),
-  Entity("", 10004, @"\ding{52}", False ),   
+  Entity("bcheckmark", 10004, @"\ding{52}", False ),   
   Entity("xmark", 10007, @"\ding{55}", False ),
-  Entity("", 10008, @"\ding{56}", False ),   
+  Entity("bxmark", 10008, @"\ding{56}", False ),   
 ]
 
