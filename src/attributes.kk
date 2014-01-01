@@ -305,7 +305,8 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
   if (txt=="") then return txt
   txt.replaceAll(rxkey) fun(cap) {
     key = cap.groups[1]
-    if (key=="label") then attrs.label
+    if (key=="") then cap.matched  // no key was matched
+    elif (key=="label") then attrs.label
     elif (key=="id" && attrs.name != "") then attrs.name 
     elif (key=="nl") then "\n" 
     elif (key=="class") then attrs.classes.join(" ") 
@@ -319,7 +320,8 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
           var cval := value
           forWhile(1,1000) fun(i) {  // expand to at most N levels of metadata...
             cres = cval.replaceAll(rxkey) fun(ccap) {
-              match(metadata[ccap.groups[1]]) {
+              if (ccap.groups[1]=="") then ccap.matched
+              else match(metadata[ccap.groups[1]]) {
                 Just(nval) -> nval
                 Nothing    -> {
                   notFound(ccap.groups[1],ccap.matched)
@@ -337,7 +339,7 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
     }
   }
 }
-val rxkey = regex(@"(?:\\/)?#([\w\-]+)(?:\\/)?") 
+val rxkey = regex(@"&#[xX]?\d+;|(?:\\/)?#([\w\-:]+)(?:;|\\/)?") 
 
 function keyNotFound( key: string, matched : string ) : string {
   trace("warning: undefined key: " + key)
