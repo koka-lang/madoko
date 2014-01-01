@@ -188,6 +188,8 @@ function parseCiteStyle( s : string ) : citestyle {
   if (s=="numeric") then Numeric
   elif (s=="natural") then Natural
   elif (s=="naturalsq" || s=="square") then Square
+  elif (s=="plain") then Plain
+  elif (s=="super") then Super
   else Auto
 }
 

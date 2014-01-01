@@ -5,6 +5,7 @@ Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
 Heading Base: 2
 MathJax		: True
+
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
@@ -20,6 +21,11 @@ rrbracket	: &#10215;
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 ~
+
+<!-- apa, apalike, plainnat, newapa, chicago, named, 
+	agsm, dcu, kluwer, 
+	astron, bbs, cbe, humannat, humanbio, jtb,
+	eptcs -->
 
 [TITLE]
 
@@ -159,6 +165,14 @@ Here is how you write H~2~O or E=MC^2^.
 Please use escapes for~longer\ script~.
 ~
 
+### Strike-out
+
+Enclose anything in two tildes and it will strike out the content:
+
+~ Sample
+There is a ~~strike out~~ here.
+~
+
 ### Escape sequences		{ #sec-escapes }
 
 Madoko adds some extra escape sequences to the standard ones in Markdown. If
@@ -168,6 +182,13 @@ without causing emphasis, you can write `\*`. The full list of special
 escape characters are:
 
 	\`*{}[]()#+-.!_<>~|$'"?/
+
+Madoko will never escape a letter or digit, and you can safely write windows
+style file names without needing an escape:
+
+~ Sample
+Would you like c:\foo\bar to be deleted? Yes\No.
+~
 
 If you escape a space (` `), it is translated as a non-breakable space, while
 a backslash at the end of a line causes a hard line break to be inserted. The 
@@ -192,9 +213,9 @@ enclosed in single quotes (`'`), double quotes (`"`), or french quotes (`<<`
 and `>>`).
 
 ~ Sample
-"double quoted"\
-'single quoted'\
-<<guillemet quoted>>\
+"double quoted"  
+'single quoted'  
+<<guillemet quoted>>  
 <http://www.google.com>
 ~
 
@@ -206,11 +227,11 @@ proper symbol:
 Please distinguish a minus sign, -, from the _en dash_ which
 is used to separate spans or pages, like 1--20, and the 
 _em dash_ which is even longer and sometimes used for 
-quotations. --- Oscar Wilde.  
+quotation attribution. --- Oscar Wilde.  
 Three dots ... should be close together.
 ~
 
-## Footnotes
+## Footnotes  { #sec-footnotes }
 
 Footnotes are written as regular link definitions prefixed with a hat (`^`)
 character. This is the syntax [originally proposed][fnsyntax] by John Gruber.
@@ -246,11 +267,11 @@ function hi() { return "hi"; }
 ```
 ~
 
-Madoko will automatically add the `lang-javascript` class for HTML output, and
-the option `language=javascript` to the LaTeX [listings] package. This can
-be used to  enable syntax highlighting. For example, to highlight the above
-example using  [Google Prettify][GPretty] we should include the Google script
-in the [metadata][#sec-metadata]:
+For the previous example, Madoko will automatically add the `lang-javascript`
+class for HTML output, and the option `language=javascript` to the LaTeX
+[listings] package. This can be used to  enable syntax highlighting. For
+example, to highlight the above example using  [Google Prettify][GPretty] we
+should include the Google script in the [metadata][#sec-metadata]:
 
 	Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
@@ -302,7 +323,7 @@ also include line numbers if the `.linenums` class is present. Use the
 
 Generating a table of contents is easy, just include the special element
 `[TOC]` anywhere in your document and it will expand to a table of contents.
-You an use the meta data value `Toc Depth` to set how many levels deep the
+You an use the metadata value `Toc Depth` to set how many levels deep the
 table of contents goes (by default 3).
 
 You can also a create a list of figures, by using `[TOC=tof]`. This will list
@@ -331,7 +352,7 @@ scholarly articles. As such, Madoko integrates closely with the standard
 [BibTeX] tool to generate bibliographies and references inside a document.
 In particular, you can simply use any existing BibTeX bibliography file
 (`.bib`). You can specify which bibliography files are to be used using 
-`Bib` [meta data](#sec-metadata) entries:
+`Bib` [metadata](#sec-metadata) entries:
 
 	Bib:  ../mybib1
 	Bib:  mybib2
@@ -339,14 +360,18 @@ In particular, you can simply use any existing BibTeX bibliography file
 Entries in the biblopgraphy files can now be referenced using semi-colon separated 
 local links, for example 
 
-	Read about LaTeX and TeX [#Lamport:Latex; #Knuth:Tex]. 
+~ Sample
+Read about LaTeX and TeX [#Knuth:Tex; #Lamport:Latex]. 
+~
 
 Note that unlike LaTeX there is no need to explicitly insert an unbreakable
 space between the text and the citation, Madoko automatically takes care of this
 (as described in Section [#sec-ids-labels]).
 If necessary, you can also include extra text for each entry:
 
-	Read about TeX [#Lamport:Latex, Chapter 4; #Knuth:Tex, page 5]. 
+~ Sample
+Read about TeX [#Knuth:Tex; #Lamport:Latex (chapter 4)]. 
+~
 
 When running Madoko the first time, we get a warning that these references
 are not yet defined:
@@ -369,17 +394,6 @@ included in your document using the special `[BIB]` element, for example:
 When running Madoko again, the bibliography entries are now known and no
 warnings will be issued.
 
-Madoko uses a very simple LaTeX parser to format the bibliography entries in
-Markdown. It can handle things like special characters and accents quite well
-and recognizes many formatting commands. Even though it is sufficient for
-bibliography entries in general, the Madoko LaTeX parser may not work for more
-fancy LaTeX commands in bibliography entries. However, we strive to make it
-work for any bibliograpy style and entries, so please [file a bug report][issues] 
-if you encounter situations where it does not work correctly.
-
-[bibtex]: http://en.wikipedia.org/wiki/BibTeX
-[issues]: http://madoko.codeplex.com/workitem/list/basic
-
 
 ### Bibliography styles  { #sec-bibstyle }
 
@@ -389,6 +403,23 @@ and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.ht
 
 	Bib Style: plainnat
 
+Madoko uses a very simple LaTeX parser to format the bibliography entries in
+Markdown. It can handle things like special characters and accents quite well
+and recognizes many formatting commands. Even though it is sufficient for
+bibliography entries in general, the Madoko LaTeX parser may not work for more
+fancy LaTeX commands in bibliography entries. However, we strive to make it
+work for any bibliograpy style and entries, so please [file a bug report][issues] 
+if you encounter situations where it does not work correctly.
+
+Bibliography styles known to work with Madoko include: apa, apalike, plainnat,
+newapa, chicago, named,  agsm, dcu, kluwer,  astron, bbs, cbe, humannat,
+humanbio, jtb, eptcs, etc. 
+
+[bibtex]: http://en.wikipedia.org/wiki/BibTeX
+[issues]: http://madoko.codeplex.com/workitem/list/basic
+
+
+
 ### Citation styles   { #sec-cite }
 
 The citation style is usually automatically determined from the 
@@ -397,17 +428,20 @@ key:
 
 	Cite Style: natural
 
-Valid citation styles are _natural_, _square_, _numeric_, and _auto_ (default).
-The natural and square styles use author-date style citations, while the numeric
-style uses numbers. 
+Valid citation styles are _natural_, _square_, _numeric_, _plain_, _super_,
+and _auto_ (default). The natural and square styles use author-year style
+citations, while the numeric, plain, and super styles use numbers.
 
-* _natural_: (Lamport, 1994; Knuth, 1984)
-* _square_:  [Lamport, 1994; Knuth, 1984]
-* _numeric_: [1,2]
+|~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+| _natural_ | ([Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex])	| (default for author-year citations) |
+| _square_  | [[Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]] ||
+| _numeric_ | [[2][#Lamport:latex]; [1][#Knuth:Tex]] ||
+| _plain_   | [[2][#Lamport:latex], [1][#Knuth:Tex]] |	(default for numeric citations) |
+| _super_   | ^[2][#Lamport:latex],\ [1][#Knuth:Tex]^ ||
 
-Note that full author-date style citations only work with BibTeX styles that
+Note that full author-year style citations only work with BibTeX styles that
 support this, i.e. generally any style that works with the `natbib` package like `plainnat`.
-Finally, with author-date citations we can use the `.short` class attribute to 
+Finally, with author-year citations we can use the `.short` class attribute to 
 only cite the year which is used when the author is already mentioned in the text:
 
 	As described by Lamport [#Lamport:Latex]{.short}
@@ -461,15 +495,6 @@ are used, the entry should have an explicit label and clear the default
 
 Note how it is allowed to have long citation label after the year. This is
 used when a citation is given the `.long` class (versus `.short`). 
-For author-year style citaitons, the label is passed directly to the LaTeX 
-`\bibitem` command which means you should probably include a package like `natbib`
-through the meta data:
-
-	Package: natbib
-
-The `natbib` package extends the LaTeX citation command to understand these
-kind of labels. This is of course not necesary if standard numeric citations
-are used.
 
 ## Tables
 
@@ -939,7 +964,7 @@ For example, we can give all code, inline or as a block, the class `mycode` as:
 
 Madoko supports some special block elements that get expanded automatically.
 
-* `[TITLE]`: Expands to a title element generated from the meta data keys _title_,
+* `[TITLE]`: Expands to a title element generated from the metadata keys _title_,
 	_subtitle_, and author info (_author_, _affiliation_, and _email_).
 
 * `[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
@@ -1205,8 +1230,8 @@ figures as a metadata rule:
 
 The label definition here displays figure labels of the form `2-b` for example
 (where we used the empty [escape sequence][#sec-escapes] `\/` to prevent the
-counter name `@h1`  being read as `@h1-`). Note that because this is a meta-
-data rule, we could not  use the assignment `@h1-figure="a"` here, or
+counter name `@h1`  being read as `@h1-`). Note that because this is a
+metadata rule, we could not  use the assignment `@h1-figure="a"` here, or
 otherwise every figure would get numbered as `a`. In this case we just want to
 set the display mode here and not a specific value.
 
@@ -1317,6 +1342,8 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 [^turing]: Almost, since Madoko expands only up to a certain limit and since
 	regular expressions cannot express arbitrary nesting levels.
 
+## References { - }
+[BIB]
 
 # Appendix	{ - }
 

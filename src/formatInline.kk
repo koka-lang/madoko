@@ -419,7 +419,7 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
              if (attrs.hasClass("short")) then cap.groups[2]
              elif (attrs.hasClass("long") && cap.groups[3] != "") then cap.groups[3] + @",\ " + cap.groups[2]
              elif (attrs.hasClass("textual")) 
-              then cap.groups[1] + (if (cs.isSquare) then @"\ [" + cap.groups[2] + "]" else @"\ (" + cap.groups[2] + ")")
+              then cap.groups[1] + (if (!(cs.isNatural)) then @"\ [" + cap.groups[2] + "]" else @"\ (" + cap.groups[2] + ")")
              else cap.groups[1] + @",\ " + cap.groups[2]
            }
           Nothing   -> lab.labelText
@@ -435,7 +435,8 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
           }
   txt = if ((cs.isAuto || cs.isNatural || cs.isSquare) && attrs.hasClass("textual")) then links.join("; ")
         elif (cs.isNatural || (cs.isAuto && !isNum)) then "(" + links.join("; ") + ")"
-        elif (cs.isSquare) then "[" + links.join("; ") + "]"
+        elif (cs.isSquare || cs.isNumeric) then "[" + links.join("; ") + "]"
+        elif (cs.isSuper) then context.fmtCmd("sup", links.join(", "))
         else "[" + links.join(", ") + "]"
   context.fmtCmd("span", txt, attrs.addClass("citations"))
 }

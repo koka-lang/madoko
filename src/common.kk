@@ -117,7 +117,22 @@ public type citestyle {
   Natural
   Square
   Numeric
+  Plain     // default: numeric with commas
+  Super
   Auto
+}
+
+public function isNumCite( cs : citestyle ) : bool {
+  match(cs) {
+    Numeric -> True
+    Plain   -> True
+    Super   -> True
+    _       -> False
+  }
+}
+
+public function isAuthorYearCite( cs : citestyle ) : bool {
+  !(cs.isNumCite)
 }
 
 /* --------------------------------------

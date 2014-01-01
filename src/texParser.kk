@@ -51,6 +51,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texBibliography ),
   Rule("bibitem",     regex(@"^\\bibitem\b" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texBibitem ),
+  Rule("harvarditem", regex(@"^\\harvarditem\b" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
 
   Rule("newblock",    regex(@"^\\(newblock|nobreak)\b"), texCommandClass ),
   Rule("citeay",      regex(@"^\\citeauthoryear\b" + texarg + texarg + texarg), texCiteAuthorYear ),
@@ -216,19 +217,32 @@ function texCiteAuthorYear( cap : matched, context : texContext ) : string {
   (cap.groups[2] + "," + cap.groups[3] + "," + cap.groups[1]).parseTexX(context,True)
 }
 
+function texHarvarditem( cap : matched, context : texContext ) : string {
+  key  = cap.groups[4]
+  year = "(" + cap.groups[3] + ")"
+  lab  = if (cap.groups[1]!="") 
+          then cap.groups[1] + year + cap.groups[2] 
+          else cap.groups[2] + year         
+  content = cap.groups[5]
+  context.makeBibitem(key,lab,content)
+}
+
 function texBibitem( cap : matched, context : texContext ) : string {
-  key = cap.groups[2].unbrace
-  lab = cap.groups[1].parseTexX(context,True)  
-  //trace("bibitem: lab: " + cap.groups[1] + " -> " + lab)
-  content = cap.groups[3]
-  "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="" || context.citestyle.isNumeric) then "" else "label='" + lab + "' ") +
-                  (if (context.citestyle.isNumeric || (context.citestyle.isAuto && lab.contains(rxNumCite)))
+  context.makeBibitem( cap.groups[2], cap.groups[1], cap.groups[3] )
+}
+
+function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
+  key = keyx.unbrace
+  lab = labx.parseTexX(context,True)  
+  //trace("bibitem: lab: " + labx + " -> " + lab)
+  "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="" || context.citestyle.isNumCite) then "" else "label='" + lab + "' ") +
+                  (if (context.citestyle.isNumCite || (context.citestyle.isAuto && lab.contains(rxNumCite)))
                     then ".has-before " else @"before=clear " ) + "}\n" +
    content.parseTexX(context) + 
    "\n~~~\n"
 }
 
-val rxNumCite    = regex(@"^([-\w&#;]*\d+)?$")
+val rxNumCite    = regex(@"^([-_a-zA-Z&#;]*\d{1,3})?$")
 
 function unbrace(s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) 
