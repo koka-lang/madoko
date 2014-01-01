@@ -20,6 +20,7 @@
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
+\RequirePackage{stmaryrd}
 
 \hypersetup{
   colorlinks=true,linkcolor=DarkBlue,urlcolor=DarkBlue,filecolor=Maroon
@@ -51,9 +52,6 @@
 % inserted for unknown html entities
 \newcommand{\mdEntity}[1]{\&#1;}
 
-% inserted for unknown unicode entities
-\newcommand{\mdUnicode}[1]{\&\##1;}
-
 \newcommand{\mdBr}{\\}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
@@ -62,6 +60,17 @@
 \newcounter{@mdTargetCount}
 \newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
 
+
+% inserted for unknown unicode entities
+\newcommand{\mdUnicode}[1]{\&\##1;}
+
+% allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\newcommand{\mdDefineUnicode}[2]{%
+  \protected@edef\mdUnicode##1{\protect\ifnum##1=#1 {#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
+}
+
+\mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\hspace{0.1em}\ding{51}}}
+\mdDefineUnicode{9746}{\rlap{$\square$}{\hspace{0.1em}\ding{55}}}
 
 %-------------------------------------------------------------
 % Title and subtitle 
