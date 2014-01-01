@@ -52,7 +52,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("itagcode",  regex(@"^(<code\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)([\s\S]*?)(</code>)"), inlineTagCode ),
   Rule("itag",      regex(@"^<(?:!--[\s\S]*?-->|/?\w+\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)"), inlineTag ),
   Rule("ientity",   regex(@"^&#?\w+;"), inlineNormal ),
-  Rule("ilabel",    regex(@"^(#[\w\-:]+)"), inlineLabel ),
+  Rule("ilabel",    regex(@"^(#[\w\-:]+);?"), inlineLabel ),
   
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
   Rule("ielipsis",  regex(@"^\.\.\."), inlineDots ),
