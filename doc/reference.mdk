@@ -6,6 +6,7 @@ Email		: daan@microsoft.com
 Heading Base: 2
 MathJax		: True
 
+
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
@@ -413,14 +414,13 @@ work for any bibliograpy style and entries, so please [file a bug report][issues
 if you encounter situations where it does not work correctly.
 
 Bibliography styles known to work with Madoko include the following author-
-year styles: apa, apalike, plainnat, newapa, chicago, named,  agsm, dcu,
-kluwer, astron, bbs, cbe, humannat, humanbio, jtb, and others. Also, the
-following numeric styles have been tested: eptcs,  abbrv, plain, ieeetr, acm,
-unsrt, alpha, siam, and others.
+year styles: apa, apalike, plainnat, abbrvnat, unsrtnat, newapa, chicago,
+named,  agsm, dcu, kluwer, astron, bbs, cbe, humannat, humanbio, jtb, and
+others. Also, the following numeric styles have been tested: eptcs,  abbrv,
+plain, ieeetr, acm, unsrt, alpha, siam, and others.
 
 [bibtex]: http://en.wikipedia.org/wiki/BibTeX
 [issues]: http://madoko.codeplex.com/workitem/list/basic
-
 
 
 ### Citation styles   { #sec-cite }
@@ -443,13 +443,19 @@ citations, while the numeric, plain, and super styles use numbers.
 | _super_   | ^[2][#Lamport:latex],\ [1][#Knuth:Tex]^ ||
 
 Note that full author-year style citations only work with BibTeX styles that
-support this, i.e. generally any style that works with the `natbib` package like `plainnat`.
-Finally, with author-year citations we can use the `.short` class attribute to 
-only cite the year which is used when the author is already mentioned in the text:
+support this, i.e. generally any style that works with the `natbib` package
+like `plainnat`. With author-year citations we can use the `.short`, `.long`,
+and `.textual` class attributes to change how the citation is shown:
 
-	As described by Lamport [#Lamport:Latex]{.short}
+|~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+| `[#Goo93]`			 | ([Goossens _et al._, 1993][#Goo93])   |
+| `[#Goo93]{.short}`	 | ([1993][#Goo93])					   |
+| `[#Goo93]{.long}`		 | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
+| `[#Goo93]{.textual}`	 | Goossens _et al._, ([1993][#Goo93])   |
+| `[#Goo93]{.long .textual}` | Goossens, Mittelbach, and Samarin ([1993][#Goo93]) |
 
-This attribute has no effect if the _numeric_ style is used.
+These attributes have no effect if the _numeric_ style is used and all
+would be displayed as [#Goo93].
 
 ### Not using BibTeX
 
@@ -1091,6 +1097,7 @@ Some attributes have a special meaning to Madoko. In particular:
 * `.hidden`.
 * `.block`.
 * `.wide`.
+* `.short`, `.long`, `.textual`
 
 ### Recognized formatting attributes
 
@@ -1361,7 +1368,7 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 [^turing]: Almost, since Madoko expands only up to a certain limit and since
 	regular expressions cannot express arbitrary nesting levels.
 
-## References { - }
+## References 
 [BIB]
 
 # Appendix	{ - }

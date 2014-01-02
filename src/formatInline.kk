@@ -417,9 +417,11 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
         match(lab.labelText.find(rxAuthorYear)) {
           Just(cap) -> { 
              if (attrs.hasClass("short")) then cap.groups[2]
-             elif (attrs.hasClass("long") && cap.groups[3] != "") then cap.groups[3] + @",\ " + cap.groups[2]
              elif (attrs.hasClass("textual")) 
-              then cap.groups[1] + (if (!(cs.isNatural)) then @"\ [" + cap.groups[2] + "]" else @"\ (" + cap.groups[2] + ")")
+              then (if (attrs.hasClass("long")) then cap.groups[3] else cap.groups[1]) + 
+                   (if (!(cs.isNatural || (cs.isAuto && !(isNum)))) 
+                     then @"\ [" + cap.groups[2] + "]" else @"\ (" + cap.groups[2] + ")")
+             elif (attrs.hasClass("long") && cap.groups[3] != "") then cap.groups[3] + @",\ " + cap.groups[2]
              else cap.groups[1] + @",\ " + cap.groups[2]
            }
           Nothing   -> lab.labelText
@@ -433,7 +435,7 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
                                 context.formatInline(citeText.replaceAll(rxEtAl,@"_et\ al_.")))
              + context.formatInline(cite.snd)
           }
-  txt = if ((cs.isAuto || cs.isNatural || cs.isSquare) && attrs.hasClass("textual")) then links.join("; ")
+  txt = if (((cs.isAuto && !(isNum)) || cs.isNatural || cs.isSquare) && attrs.hasClass("textual")) then links.join("; ")
         elif (cs.isNatural || (cs.isAuto && !isNum)) then "(" + links.join("; ") + ")"
         elif (cs.isSquare || cs.isNumeric) then "[" + links.join("; ") + "]"
         elif (cs.isSuper) then context.fmtCmd("sup", links.join(", "))

@@ -59,6 +59,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("penalty",     regex(@"^\\(penalty)\b\s*(-?\d+|" + texarg + ")"), texAttribute ),
   Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
+  Rule("cite",        regex(@"^\\[Cc]ite(?:(year)(?:par)?|(?:al)?([pt])?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
   Rule("texsl",       regex(@"^\{\\sl\b" + texargs + @"\}"), texSlanted ),
@@ -215,6 +216,20 @@ function texBibliography( cap : matched, context : texContext ) : string {
 
 function texCiteAuthorYear( cap : matched, context : texContext ) : string {
   (cap.groups[2] + "," + cap.groups[3] + "," + cap.groups[1]).parseTexX(context,True)
+}
+
+function texCite( cap : matched, context : texContext ) : string {
+  // groups: 1: year?, 2: p or t?, 3: *?, 4: optarg1, 5: optarg2, 6: citations
+  citations = cap.groups[6].unbrace.split(",")  
+  classes   = [if (cap.groups[2] == "t") then [".textual"] else [],
+               if (cap.groups[1] == "year") then [".short"] 
+               elif (cap.groups[3]=="*") then [".long"] else []].concat
+  val (pre,post)
+    = if (cap.groups[5]!="") then (cap.groups[4] + " ", "," + cap.groups[5])
+       elif (cap.groups[4] != "") then ("","," + cap.groups[4])
+       else ("","")
+  pre + "[" + citations.list.map(fun(c){ "#" + c }).join(";") + post + "]" +
+    (if (classes.isNil) then "" else "{" + classes.join(" ") + "}")
 }
 
 function texHarvarditem( cap : matched, context : texContext ) : string {
