@@ -333,17 +333,23 @@
 	{\eifstrequal{\cssTextAlign}{right}{\framebox[#1][r]{#2}}%
 	{\framebox[#1][l]{#2}}}%
 }
+
 \newcommand{\@robustMakebox}[2]{%
 	\eifstrequal{\cssDisplay}{table-cell}%
-		{\@robustParbox{#1}{#2}}%
+		{\@robustTableParbox{#1}{#2}}%
 		{\eifstrequal{\cssTextAlign}{center}{\makebox[#1][c]{#2}}%
 		 {\eifstrequal{\cssTextAlign}{right}{\makebox[#1][r]{#2}}%
 		 {\makebox[#1][l]{#2}}}}%
 }
 
-\newcommand{\@robustParbox}[2]{%
+\newcommand{\@robustRaisebox}[2]{%
+	\raisebox{#1}{#2}%
+}
+
+\newcommand{\@robustTableParbox}[2]{%
 	\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
 	{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
+	{\eifstrequal{\cssVerticalAlign}{middle}{\def\@cssValign{c}}}%
 	{\def\@cssValign{t}}}%
 	\ifdim\cssHeight=0pt%
 		\parbox[\@cssValign]{#1}{#2}%
@@ -357,7 +363,7 @@
 	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%	
+	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%		
 	\if@needframe
 		\setlength{\fboxrule}{\cssBorderWidth}%
 		\ifdim\cssWidth=0pt%
@@ -370,6 +376,17 @@
 			\cssWrapCmd{\@robustMakebox{\cssWidth}}%
 		\fi
 	\fi
+	% raisebox?
+	\eifstrequal{\cssDisplay}{inline}{%
+		\eifstrequal{\cssVerticalAlign}{}{}%
+		{\eifstrequal{\cssVerticalAlign}{top}{}%
+		{\eifstrequal{\cssVerticalAlign}{bottom}{}%
+		{\eifstrequal{\cssVerticalAlign}{middle}{}%
+		{\eifstrequal{\cssVerticalAlign}{baseline}{}%
+		{\cssWrapCmd{\@robustRaisebox{\cssVerticalAlign}}%
+		}}}}}%
+	}{}%
+	% padding
 	\ifdim\cssHeight=0pt\else\cssDoBefore{\rule{0pt}{\cssHeight}}\fi	
 	\if@needframe
 		\setlength{\fboxsep}{\cssPaddingTop}%  todo: define our own box so we can set paddingtop/bot separately
