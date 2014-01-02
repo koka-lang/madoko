@@ -1033,6 +1033,18 @@ logo.
 [butterfly]: butterfly.png { width=100px vertical-align=top }
 ~
 
+~ Sample
+[**Aaaa[a]{vertical-align=-0.3ex}
+[aa]{vertical-align=-0.7ex}
+[r]{vertical-align=-1.4ex}
+[g]{vertical-align=-2.5ex}
+[h]{vertical-align=-5ex}**]{font-size=large height=0.0001pt }
+he shouted but not even the next
+one in line noticed that something
+terrible had happened to him.
+{width=18em}
+~
+
 ### Special attribute keys
 
 Some attributes have a special meaning to Madoko. In particular:

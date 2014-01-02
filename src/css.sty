@@ -346,6 +346,15 @@
 	\raisebox{#1}{#2}%
 }
 
+\newcommand{\@robustHeight}[1]{%
+	\eifstrequal{\cssVerticalAlign}{bottom}%
+		{\raisebox{0pt}[\dimexpr\cssHeight-\depth\relax][\depth]{#1}}%
+	{\eifstrequal{\cssVerticalAlign}{middle}%
+		{\raisebox{0pt}[0.5\cssHeight][0.5\cssHeight]{#1}}%
+		{\raisebox{0pt}[\height][\dimexpr\cssHeight-\height\relax]{#1}}%
+	}%
+}
+
 \newcommand{\@robustTableParbox}[2]{%
 	\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
 	{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
@@ -376,6 +385,8 @@
 			\cssWrapCmd{\@robustMakebox{\cssWidth}}%
 		\fi
 	\fi
+	% height?
+	\ifdim\cssHeight=0pt\else\cssWrapCmd{\@robustHeight}\fi
 	% raisebox?
 	\eifstrequal{\cssDisplay}{inline}{%
 		\eifstrequal{\cssVerticalAlign}{}{}%
@@ -387,7 +398,6 @@
 		}}}}}%
 	}{}%
 	% padding
-	\ifdim\cssHeight=0pt\else\cssDoBefore{\rule{0pt}{\cssHeight}}\fi	
 	\if@needframe
 		\setlength{\fboxsep}{\cssPaddingTop}%  todo: define our own box so we can set paddingtop/bot separately
 		\ifdim\cssPaddingBottom>\fboxsep \setlength{\fboxsep}{\cssPaddingBottom}\fi	
