@@ -180,6 +180,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="affiliation") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+    elif (key=="cite-all" && value!="") { log(@"\citation{*}"); options } 
     else options
   }
 } 
