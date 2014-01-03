@@ -52,13 +52,10 @@
 % inserted for unknown html entities
 \newcommand{\mdEntity}[1]{\&#1;}
 
-\newcommand{\mdBr}{\\}
-\newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
-
-
-% We need to call \mdLabeltarget for any structure that can set label
-\newcounter{@mdTargetCount}
-\newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
+% allow the definition of new entities: \mdDefineEntity{bar}{\|}
+\newcommand{\mdDefineEntity}[2]{%
+  \protected@edef\mdEntity##1{\protect\eifstrequal{##1}{#1}{#2}{\mdEntity{##1}}}%
+}
 
 
 % inserted for unknown unicode entities
@@ -71,6 +68,15 @@
 
 \mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\hspace{0.1em}\ding{51}}}
 \mdDefineUnicode{9746}{\rlap{$\square$}{\hspace{0.1em}\ding{55}}}
+
+% break and nbsp
+\newcommand{\mdBr}{\\}
+\newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+
+% We need to call \mdLabeltarget for any structure that can set label
+\newcounter{@mdTargetCount}
+\newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
 
 %-------------------------------------------------------------
 % Title and subtitle 
