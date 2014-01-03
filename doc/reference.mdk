@@ -19,9 +19,14 @@ llbracket	: &#10214;
 rrbracket	: &#10215;
 Cite All	: True
 
+<style>
+.tt { font-family: consolas,monospace; font-size: small }
+</style>
+
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
+\cssClassRule{tt}{font-family=monospace}
 ~
 
 <!-- apa, apalike, plainnat, newapa, chicago, named, 
@@ -435,24 +440,24 @@ Valid citation styles are _natural_, _square_, _numeric_, _plain_, _super_,
 and _auto_ (default). The natural and square styles use author-year style
 citations, while the numeric, plain, and super styles use numbers.
 
-|~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
-| _natural_ | ([Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex])	| (default for author-year citations) |
-| _square_  | [[Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]] ||
-| _numeric_ | [[2][#Lamport:latex]; [1][#Knuth:Tex]] ||
-| _plain_   | [[2][#Lamport:latex], [1][#Knuth:Tex]] |	(default for numeric citations) |
-| _super_   | ^[2][#Lamport:latex],\ [1][#Knuth:Tex]^ ||
+| ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~       |
+| _natural_   | ([Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]) | (default for author-year citations) |
+| _square_    | [[Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]] |                                     |
+| _numeric_   | [[2][#Lamport:latex]; [1][#Knuth:Tex]]                       |                                     |
+| _plain_     | [[2][#Lamport:latex], [1][#Knuth:Tex]]                       | (default for numeric citations)     |
+| _super_     | ^[2][#Lamport:latex],\ [1][#Knuth:Tex]^                      |                                     |
 
 Note that full author-year style citations only work with BibTeX styles that
 support this, i.e. generally any style that works with the `natbib` package
 like `plainnat`. With author-year citations we can use the `.short`, `.long`,
 and `.textual` class attributes to change how the citation is shown:
 
-|~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
-| `[#Goo93]`			 | ([Goossens _et al._, 1993][#Goo93])   |
-| `[#Goo93]{.short}`	 | ([1993][#Goo93])					   |
-| `[#Goo93]{.long}`		 | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
-| `[#Goo93]{.textual}`	 | Goossens _et al._, ([1993][#Goo93])   |
-| `[#Goo93]{.long .textual}` | Goossens, Mittelbach, and Samarin ([1993][#Goo93]) |
+| ~~~~~~~~~~~~~~~~~~~~~~~~   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| [\[\#Goo93\]]{.tt}                 | ([Goossens _et al._, 1993][#Goo93])                 |
+| [\[\#Goo93\]{.short}]{.tt}         | ([1993][#Goo93])                                    |
+| [\[\#Goo93\]{.long}]{.tt}          | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
+| [\[\#Goo93\]{.textual}]{.tt}       | Goossens _et al._, ([1993][#Goo93])                 |
+| [\[\#Goo93\]{.long .textual}]{.tt} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
 
 These attributes have no effect if the _numeric_ style is used and all
 would be displayed as [#Goo93].
@@ -760,7 +765,7 @@ Here is my slanted custom block
 ~
 ~~
 
-### Predefined custom blocks
+### Predefined custom blocks  { #sec-predef-custom }
 
 Madoko defines quite a few common custom blocks.
 
@@ -1039,19 +1044,7 @@ logo.
 [butterfly]: butterfly.png { width=100px vertical-align=top }
 ~
 
-~ Sample
-[**Aaaa[a]{vertical-align=-0.3ex}
-[aa]{vertical-align=-0.7ex}
-[r]{vertical-align=-1.4ex}
-[g]{vertical-align=-2.5ex}
-[h]{vertical-align=-5ex}**]{font-size=large height=0.0001pt }
-he shouted but not even the next
-one in line noticed that something
-terrible had happened to him.
-{width=18em}
-~
-
-### Special attribute keys
+### Special attribute keys  { #sec-specialattr}
 
 Some attributes have a special meaning to Madoko. In particular:
 
@@ -1092,29 +1085,47 @@ Some attributes have a special meaning to Madoko. In particular:
 
 ### Special attribute classes
 
-* `.para-block`.
-* `.align-center`, `.align-right`, `.align-left`.
-* `.hidden`.
-* `.block`.
-* `.wide`.
-* `.short`, `.long`, `.textual`
+Some class attributes are treated specially by Madoko. In particular:
+
+* `.para-block`. If a block element has the `.para-block` class, it will
+	considered part of the preceding paragraph (and not end that paragraph).
+	This is for example done for the `Equation` block since equations are part
+	of a paragraph. This improves typography significantly, especially for
+	the LaTeX backend.
+* `.indent`. This class is automatically added by Madoko to any paragraph that
+	follows other paragraphs (and is not inside a list). This can be used to switch
+	from _block_ mode paragraphs to _indented_ paragraphs instead using some CSS.
+* `.align-center`, `.align-right`, `.align-left`. These classes align the _content_
+	of a block (instead of the block itself) to the center, right, or left.
+* `.hidden`. Hides the content of the block.
+* `.block`. Treat this as a block element instead of as inline content.
+* `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
+	both columns horizontally (see also Section [#sec-predef-custom]).
+* `.short`, `.long`, `.textual`: used for typesetting citations (see Section [#sec-cite]).
 
 ### Recognized formatting attributes
+
+Attributes that are not special to Madoko (as described in Section [#sec-specialattr]),
+are passed as CSS style attributes in the HTML backend. For the LaTeX backend 
+Madoko includes as special style files (`css.sty` and `madoko.sty`) that process
+many CSS formatting commands (and ignores all others). Currently formatting
+commands that are recognized are:
 
 * `display=`(`block`|`inline`|`block-inline`|`hidden`)
 * `margin=`(`auto`|_length_)
 * `margin-left`,`margin-right`,`margin-bottom`,`margin-top`
 * `padding=`(`auto`|_length_)
 * `padding-left`,`padding-right`,`padding-bottom`,`padding-top`
-* `width`,`height`
+* `width=`_length_
+* `height=`_length_
 * `vertical-align=`(`top`|`middle`|`bottom`|_length_)
 * `border-style=`(`none`|`solid`|`dotted`)
 * `border-style-left`,`border-style-right`,`border-style-top`,`border-style-bottom`
-* `border-width`
+* `border-width=`_length_
 * `border-color=`_color_
 * `text-align=`(`center`|`right`|`left`|`justify`)
-* `text-indent`
-* `line-height`
+* `text-indent=`_length_
+* `line-height=`_length_
 * `font-style=`(`italic`|`oblique`|`normal`)
 * `font-variant=`(`small-caps`|`normal`)
 * `font-weight=`(`bold`|`normal`)
@@ -1123,6 +1134,47 @@ Some attributes have a special meaning to Madoko. In particular:
 * `color=`_color_
 * `penalty=`_number_
 * `page-align=`(`top`|`bottom`|`here`)
+
+Note that the syntax is quite a bit more restrictive than in in plain CSS.
+For example, we cannot just say:
+
+	{ border="solid 1px" }
+
+as in CSS, but need to state each property separately as:
+
+	{ border-style=solid border-width=1px }
+
+Also, units are not yet parsed correctly and only work if the syntax is the
+same between CSS and LaTeX. This means that _length_\/s must use common units,
+such as `10ex`, `5em`, `4px`, `2cm`, or `-6pt` for example. Percentages may
+only work in some particular cases (like the `width` of a table column). 
+Due to a bug, currently zero lengths (`0pt`) will not always work correctly
+and you need to use a very small length instead, like `0.0001pt`.
+
+A _color_ must be a named color at this point and known to LaTeX. However, you
+can also use a `TeXRaw` block to define a color name explicitly:
+
+	~ TeXRaw
+	\definecolor{ivory}{rgb}{1,1,0.941}
+	~
+
+Moreover, it is sometimes hard to emulate all CSS magic in LaTeX so some
+particular combinations may not work as expected in LaTeX. We strive to make
+it work seamlessly though so please [report any issues][issues].
+Nevertheless, the above formatting commands should suffice in most situations
+and we can program already many fancy examples:
+
+~ Sample
+[**Aaaa[a]{vertical-align=-0.3ex}
+[aa]{vertical-align=-0.7ex}
+[r]{vertical-align=-1.4ex}
+[g]{vertical-align=-2.5ex}
+[h]{vertical-align=-5ex}**]{font-size=large height=0.0001pt }
+he shouted but not even the next
+one in line noticed that something
+terrible had happened to him.
+{width=18em border-style=solid border-width=1px padding=1ex }
+~
 
 
 ## Identities and labels {#sec-ids-labels}
@@ -1371,9 +1423,133 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 ## References 
 [BIB]
 
-# Appendix	{ - }
+# Appendix	{ @H1="A" }
 
-## Recognized entities   { @h1="A" }
+## Styling the document { #sec-styling }
+
+Writing Madoko documents is clearly about content: the main advantage of using
+a markdown format is that it allows the writer to concentrate on prose and
+content instead of formatting. However, in the final stages it is desirable to
+_style_ a document to make it look good. This section describes some tricks
+and tips that can help doing this well. 
+
+The main tool for styling in Madoko are class attributes and metadata rules.
+For example, through a metadata rule, we can style all code blocks in a 
+smaller font, and all content that has a `.slanted` class in a slanted font:
+
+	~Pre    : font-size=small
+	.Slanted: font-style=oblique
+
+Such rules are nice since, just like CSS, allow one to separate styling from
+the content, where the main document contains as few style elements as
+possible. We already saw the `Sample` custom block example (Section 
+[#sec-replace]) used in this document: the main document just contains sample
+fragments in `Sample` blocks while the styling is done completely through
+metadata rules.
+
+### Advanced styling in CSS and LaTeX
+
+Sometimes though, we would only want to apply certain styling to just HTML.
+Or sometimes the CSS needed is just not yet supported in our LaTeX backend.
+In those cases, styling through classes works best. For the HTML backend,
+we can simply write some CSS (and include it through the `Css` metadata or
+directly within `<style>` tags.). For example,
+	
+	<style>
+	.slanted { font-style: oblique; font-family: Cambria }
+	</style>
+
+For the LaTeX backend, all attributes are also passed to the LaTeX commands,
+and there are generic hooks to apply LaTeX formatting too. For example, we
+can include the following LaTeX commands in a `TexRaw` section:
+
+	~ TexRaw
+	\cssClassRule{slanted}{font-style=oblique}
+	~
+
+The following commands are quite useful for this:
+
+* `\cssClassRule{`_class_`}{`_attributes_`}`: adds _attributes_ to any command
+	that contains _class_.
+* `\cssClassRuleEnv{`_class_`}{`_env_`}`: encloses any block with class _class_ 
+	in the LaTeX environment _env_ (after margins and padding). 
+* `\cssClassRuleCmd{`_class_`}{\`_cmd_`}`: applies any content with class _class_ 
+	to the single argument LaTeX command `\`_cmd_ (after margins and padding).
+* `\cssClassRuleDoBefore{`_class_`}{`_cmds_`}`: execute commands _cmds_ before 
+	formatting the content for any block that contains the class _class_ (but
+	after margins and padding).
+* `\cssClassRuleDoAfter{`_class_`}{`_cmds_`}`: execute commands _cmds_ after
+	formatting the content for any block that contains the class _class_.
+* `\cssClassRuleDo{`_class_`}{`_cmds_`}`: execute commands _cmds_ when processing
+	the attributes. These _cmds_ can contain:
+	* `\cssDoBefore{`_cmds_`}`: executes _cmds_ before formatting the contents.
+	* `\cssDoAfter{`_cmds_`}`: execute _cmds_ after formatting the contents.
+	* `\cssDoEnv{`_env_`}`: enclose the formatting in _env_.
+* `\cssIfHasClass{`_class`}{`_then_`}{`_else_`}`: To be used inside _cmds_ of
+	the `\cssClassDo`(`Before`|`After`|) commands. If this element has _class_
+	then execute the _then_ part, else the _else_ part.
+* `\cssNewKey{css}{`_attrname_`}{\css`_cmdname_`}{`_default_`}`: Define a new
+	attribute _attrname_. When present its value gets bound to `\css`_cmdname_.
+	The _default_ value is optional.
+* `\cssNewLengthKey{css}{`_attrname_`}{\css`_cmdname_`}`: Define a new
+	attribute _attrname_ that contains a length. When present its value gets
+	bound to `\css`_cmdname_. The _default_ value is `0pt`.
+* `\cssElemRule{`_elem_`}{`_attributes_`}`: adds _attributes_ to any custom block 
+	_elem_. 
+* `\cssElemRule`(`Env`|`Cmd`|`Do`|`DoBefore`|`DoAfter`). As the `Class` variants
+	but for elements. In contrast to the `Class` rules, these variants will apply
+	commands before margins and padding is applied. If this is not wanted, use the
+	`Class` variant instead since those also match on element names.
+
+Inside rules, you can also access most CSS attributes that defined through
+`\cssNewKey` or `\cssNewLengthKey`. The attributes are named using `\cssCamelCasing`
+where `text-indent` is stored in `\cssTextIndent`, or `border-style-left` as
+`\cssBorderStyleLeft`.
+
+As an advanced example, here is how `madoko.sty` defines the rules for the 
+`Figure` custom block:
+
+```latex  { language=TeX }
+\cssNewKey{css}{page-align}{\cssPageAlign}{}
+\cssElemRuleDo{figure}{%
+  \eifstrequal{\cssPageAlign}{top}%
+    {\def\@pagealign{t}}%
+  {\eifstrequal{\cssPageAlign}{bottom}%
+    {\def\@pagealign{b}}%
+  {\eifstrequal{\cssPageAlign}{here}%
+    {\def\@pagealign{h}}%
+    {\def\@pagealign{}}}}%
+  \cssIfHasClass{wide}%
+    {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}%
+     \cssDoAfter{\end{figure*}}}%
+    {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}%
+     \cssDoAfter{\end{figure}}}%
+}
+
+\newlength{\mdCaptionlen}
+\newcommand{\mdCaption}[1]{%
+  \settowidth{\mdCaptionlen}{#1}%
+  \ifnum\mdCaptionlen<\linewidth%
+    \parbox{\linewidth}{\noindent\centering #1}%
+  \else%
+    \parbox{\linewidth}{\noindent #1}%
+  \fi%
+}
+\cssClassRuleCmd{figure-caption}{\mdCaption}
+\cssClassRule{figure-caption}{text-align=justify}
+```
+The sample uses two utility functions from `css.sty`:
+
+* `\eifstrequal{`_str1_`}{`_str2_`}{`_then_`}{`_else_`}`: expands the
+ 	content of _str1_ and then compares for equality with _str2_, and
+ 	executes either the _then_ or _else_ branch. Use `\eeifstrequal` if
+ 	both string arguments must be expanded.
+* `\@expandafter{`_arg1_`}{`_arg2_`}`: first expands _arg2_ and then 
+	continues executing _arg1_ (followed by the expansion of _arg2_).
+	Used in the previous example to expand the optional argument to 
+	the `figure` environment to one of `b`, `h`, or `t`.
+
+## Recognized entities   { #app-entities }
 
 Madoko recognizes all named html entities and translates them to the
 appropiate LaTeX commands. If you often need a numbered entity, it can be
@@ -1405,292 +1581,359 @@ i.e. `&#10214;` for `#llbracket`.
 
 The full list of predefined named entities is:
 
-+--------|---------|--------+
-| number | name    | glyph  |
-+--------|---------|--------+
-| 34   | quot  | &#34; |
-| 35   | hash  | &#35; |
-| 36   | dollar  | &#36; |
-| 37   | perc  | &#37; |
-| 38   | amp  | &#38; |
-| 39   | apos  | &#39; |
-| 40   | lpar  | &#40; |
-| 41   | rpar  | &#41; |
-| 42   | ast  | &#42; |
-| 43   | plus  | &#43; |
-| 47   | fslash  | &#47; |
-| 60   | lt  | &#60; |
-| 62   | gt  | &#62; |
-| 92   | backslash  | &#92; |
-| 94   | caret  | &#94; |
-| 95   | underscore  | &#95; |
-| 96   | grave  | &#96; |
-| 123   | lcurly  | &#123; |
-| 124   | bar  | &#124; |
-| 125   | rcurly  | &#125; |
-| 126   | tilde  | &#126; |
-| 160   | nbsp  | &#160; |
-| 161   | iexcl  | &#161; |
-| 162   | cent  | &#162; |
-| 163   | pound  | &#163; |
-| 164   | curren  | &#164; |
-| 165   | yen  | &#165; |
-| 166   | brvbar  | &#166; |
-| 167   | sect  | &#167; |
-| 168   | uml  | &#168; |
-| 169   | copy  | &#169; |
-| 170   | ordf  | &#170; |
-| 171   | laquo  | &#171; |
-| 172   | not  | &#172; |
-| 173   | shy  | &#173; |
-| 174   | reg  | &#174; |
-| 175   | macr  | &#175; |
-| 176   | deg  | &#176; |
-| 177   | plusmn  | &#177; |
-| 178   | sup2  | &#178; |
-| 179   | sup3  | &#179; |
-| 180   | acute  | &#180; |
-| 181   | micro  | &#181; |
-| 182   | para  | &#182; |
-| 183   | middot  | &#183; |
-| 184   | cedil  | &#184; |
-| 185   | sup1  | &#185; |
-| 186   | ordm  | &#186; |
-| 187   | raquo  | &#187; |
-| 188   | frac14  | &#188; |
-| 189   | frac12  | &#189; |
-| 190   | frac34  | &#190; |
-| 191   | iquest  | &#191; |
-| 192   | Agrave  | &#192; |
-| 193   | Aacute  | &#193; |
-| 194   | Acirc  | &#194; |
-| 195   | Atilde  | &#195; |
-| 196   | Auml  | &#196; |
-| 197   | Aring  | &#197; |
-| 198   | AElig  | &#198; |
-| 199   | Ccedil  | &#199; |
-| 200   | Egrave  | &#200; |
-| 201   | Eacute  | &#201; |
-| 202   | Ecirc  | &#202; |
-| 203   | Euml  | &#203; |
-| 204   | Igrave  | &#204; |
-| 205   | Iacute  | &#205; |
-| 206   | Icirc  | &#206; |
-| 207   | Iuml  | &#207; |
-| 208   | ETH  | &#208; |
-| 209   | Ntilde  | &#209; |
-| 210   | Ograve  | &#210; |
-| 211   | Oacute  | &#211; |
-| 212   | Ocirc  | &#212; |
-| 213   | Otilde  | &#213; |
-| 214   | Ouml  | &#214; |
-| 215   | times  | &#215; |
-| 216   | Oslash  | &#216; |
-| 217   | Ugrave  | &#217; |
-| 218   | Uacute  | &#218; |
-| 219   | Ucirc  | &#219; |
-| 220   | Uuml  | &#220; |
-| 221   | Yacute  | &#221; |
-| 222   | THORN  | &#222; |
-| 223   | szlig  | &#223; |
-| 224   | agrave  | &#224; |
-| 225   | aacute  | &#225; |
-| 226   | acirc  | &#226; |
-| 227   | atilde  | &#227; |
-| 228   | auml  | &#228; |
-| 229   | aring  | &#229; |
-| 230   | aelig  | &#230; |
-| 231   | ccedil  | &#231; |
-| 232   | egrave  | &#232; |
-| 233   | eacute  | &#233; |
-| 234   | ecirc  | &#234; |
-| 235   | euml  | &#235; |
-| 236   | igrave  | &#236; |
-| 237   | iacute  | &#237; |
-| 238   | icirc  | &#238; |
-| 239   | iuml  | &#239; |
-| 240   | eth  | &#240; |
-| 241   | ntilde  | &#241; |
-| 242   | ograve  | &#242; |
-| 243   | oacute  | &#243; |
-| 244   | ocirc  | &#244; |
-| 245   | otilde  | &#245; |
-| 246   | ouml  | &#246; |
-| 247   | divide  | &#247; |
-| 248   | oslash  | &#248; |
-| 249   | ugrave  | &#249; |
-| 250   | uacute  | &#250; |
-| 251   | ucirc  | &#251; |
-| 252   | uuml  | &#252; |
-| 253   | yacute  | &#253; |
-| 254   | thorn  | &#254; |
-| 255   | yuml  | &#255; |
-| 321   | lstroke  | &#321; |
-| 322   | Lstroke  | &#322; |
-| 338   | OElig  | &#338; |
-| 339   | oelig  | &#339; |
-| 352   | Scaron  | &#352; |
-| 353   | scaron  | &#353; |
-| 376   | Yuml  | &#376; |
-| 402   | fnof  | &#402; |
-| 710   | circ  | &#710; |
-| 732   | tilde  | &#732; |
-| 913   | Alpha  | &#913; |
-| 914   | Beta  | &#914; |
-| 915   | Gamma  | &#915; |
-| 916   | Delta  | &#916; |
-| 917   | Epsilon  | &#917; |
-| 918   | Zeta  | &#918; |
-| 919   | Eta  | &#919; |
-| 920   | Theta  | &#920; |
-| 921   | Iota  | &#921; |
-| 922   | Kappa  | &#922; |
-| 923   | Lambda  | &#923; |
-| 924   | Mu  | &#924; |
-| 925   | Nu  | &#925; |
-| 926   | Xi  | &#926; |
-| 927   | Omicron  | &#927; |
-| 928   | Pi  | &#928; |
-| 929   | Rho  | &#929; |
-| 931   | Sigma  | &#931; |
-| 932   | Tau  | &#932; |
-| 933   | Upsilon  | &#933; |
-| 934   | Phi  | &#934; |
-| 935   | Chi  | &#935; |
-| 936   | Psi  | &#936; |
-| 937   | Omega  | &#937; |
-| 945   | alpha  | &#945; |
-| 946   | beta  | &#946; |
-| 947   | gamma  | &#947; |
-| 948   | delta  | &#948; |
-| 949   | epsilon  | &#949; |
-| 950   | zeta  | &#950; |
-| 951   | eta  | &#951; |
-| 952   | theta  | &#952; |
-| 953   | iota  | &#953; |
-| 954   | kappa  | &#954; |
-| 955   | lambda  | &#955; |
-| 956   | mu  | &#956; |
-| 957   | nu  | &#957; |
-| 958   | xi  | &#958; |
-| 959   | omicron  | &#959; |
-| 960   | pi  | &#960; |
-| 961   | rho  | &#961; |
-| 962   | sigmaf  | &#962; |
-| 963   | sigma  | &#963; |
-| 964   | tau  | &#964; |
-| 965   | upsilon  | &#965; |
-| 966   | phi  | &#966; |
-| 967   | chi  | &#967; |
-| 968   | psi  | &#968; |
-| 969   | omega  | &#969; |
-| 977   | thetasym  | &#977; |
-| 978   | upsih  | &#978; |
-| 982   | piv  | &#982; |
-| 8194   | ensp  | &#8194; |
-| 8195   | emsp  | &#8195; |
-| 8201   | thinsp  | &#8201; |
-| 8203   | strut  | &#8203; |
-| 8204   | zwnj  | &#8204; |
-| 8205   | zwj  | &#8205; |
-| 8206   | lrm  | &#8206; |
-| 8207   | rlm  | &#8207; |
-| 8211   | ndash  | &#8211; |
-| 8212   | mdash  | &#8212; |
-| 8216   | lsquo  | &#8216; |
-| 8217   | rsquo  | &#8217; |
-| 8218   | sbquo  | &#8218; |
-| 8220   | ldquo  | &#8220; |
-| 8221   | rdquo  | &#8221; |
-| 8222   | bdquo  | &#8222; |
-| 8224   | dagger  | &#8224; |
-| 8225   | Dagger  | &#8225; |
-| 8226   | bull  | &#8226; |
-| 8230   | hellip  | &#8230; |
-| 8240   | permil  | &#8240; |
-| 8242   | prime  | &#8242; |
-| 8243   | Prime  | &#8243; |
-| 8249   | lsaquo  | &#8249; |
-| 8250   | rsaquo  | &#8250; |
-| 8254   | oline  | &#8254; |
-| 8260   | frasl  | &#8260; |
-| 8364   | euro  | &#8364; |
-| 8465   | image  | &#8465; |
-| 8472   | weierp  | &#8472; |
-| 8476   | real  | &#8476; |
-| 8482   | trade  | &#8482; |
-| 8501   | alefsym  | &#8501; |
-| 8592   | larr  | &#8592; |
-| 8593   | uarr  | &#8593; |
-| 8594   | rarr  | &#8594; |
-| 8595   | darr  | &#8595; |
-| 8596   | harr  | &#8596; |
-| 8629   | crarr  | &#8629; |
-| 8656   | lArr  | &#8656; |
-| 8657   | uArr  | &#8657; |
-| 8658   | rArr  | &#8658; |
-| 8659   | dArr  | &#8659; |
-| 8660   | hArr  | &#8660; |
-| 8704   | forall  | &#8704; |
-| 8706   | part  | &#8706; |
-| 8707   | exist  | &#8707; |
-| 8709   | empty  | &#8709; |
-| 8711   | nabla  | &#8711; |
-| 8712   | isin  | &#8712; |
-| 8713   | notin  | &#8713; |
-| 8715   | ni  | &#8715; |
-| 8719   | prod  | &#8719; |
-| 8721   | sum  | &#8721; |
-| 8722   | minus  | &#8722; |
-| 8727   | lowast  | &#8727; |
-| 8730   | radic  | &#8730; |
-| 8733   | prop  | &#8733; |
-| 8734   | infin  | &#8734; |
-| 8736   | ang  | &#8736; |
-| 8743   | and  | &#8743; |
-| 8744   | or  | &#8744; |
-| 8745   | cap  | &#8745; |
-| 8746   | cup  | &#8746; |
-| 8747   | int  | &#8747; |
-| 8756   | there4  | &#8756; |
-| 8764   | sim  | &#8764; |
-| 8773   | cong  | &#8773; |
-| 8776   | asymp  | &#8776; |
-| 8800   | ne  | &#8800; |
-| 8801   | equiv  | &#8801; |
-| 8804   | le  | &#8804; |
-| 8805   | ge  | &#8805; |
-| 8834   | sub  | &#8834; |
-| 8835   | sup  | &#8835; |
-| 8836   | nsub  | &#8836; |
-| 8838   | sube  | &#8838; |
-| 8839   | supe  | &#8839; |
-| 8853   | oplus  | &#8853; |
-| 8855   | otimes  | &#8855; |
-| 8869   | perp  | &#8869; |
-| 8901   | sdot  | &#8901; |
-| 8942   | vellip  | &#8942; |
-| 8968   | lceil  | &#8968; |
-| 8969   | rceil  | &#8969; |
-| 8970   | lfloor  | &#8970; |
-| 8971   | rfloor  | &#8971; |
-| 9001   | lang  | &#9001; |
-| 9002   | rang  | &#9002; |
-| 9674   | loz  | &#9674; |
-| 9824   | spades  | &#9824; |
-| 9827   | clubs  | &#9827; |
-| 9829   | hearts  | &#9829; |
-| 9830   | diams  | &#9830; |
-| 8617   | hooklarr  | &#8617; |
-| 8718   | bbox  | &#8718; |
-| 9633   | box  | &#9633; |
-| 9744   | ballotbox  | &#9744; |
-| 9745   | ballotc  | &#9745; |
-| 9746   | ballotx  | &#9746; |
-| 10003   | checkmark  | &#10003; |
-| 10004   | bcheckmark  | &#10004; |
-| 10007   | xmark  | &#10007; |
-| 10008   | bxmark  | &#10008; |
-+---------+---+----------+
+|--------|------------|----------|
+| number |    name    |  glyph   |
+|--------|------------|----------|
+|     34 | quot       | &#34;    |
+|     35 | hash       | &#35;    |
+|     36 | dollar     | &#36;    |
+|     37 | perc       | &#37;    |
+|     38 | amp        | &#38;    |
+|     39 | apos       | &#39;    |
+|     40 | lpar       | &#40;    |
+|     41 | rpar       | &#41;    |
+|     42 | ast        | &#42;    |
+|     43 | plus       | &#43;    |
+|     47 | fslash     | &#47;    |
+|     60 | lt         | &#60;    |
+|     62 | gt         | &#62;    |
+|     92 | backslash  | &#92;    |
+|     94 | caret      | &#94;    |
+|     95 | underscore | &#95;    |
+|     96 | grave      | &#96;    |
+|    123 | lcurly     | &#123;   |
+|    124 | bar        | &#124;   |
+|    125 | rcurly     | &#125;   |
+|    126 | tilde      | &#126;   |
+|    160 | nbsp       | &#160;   |
+|    161 | iexcl      | &#161;   |
+|    162 | cent       | &#162;   |
+|    163 | pound      | &#163;   |
+|    164 | curren     | &#164;   |
+|    165 | yen        | &#165;   |
+|    166 | brvbar     | &#166;   |
+|    167 | sect       | &#167;   |
+|    168 | uml        | &#168;   |
+|    169 | copy       | &#169;   |
+|    170 | ordf       | &#170;   |
+|    171 | laquo      | &#171;   |
+|    172 | not        | &#172;   |
+|    173 | shy        | &#173;   |
+|    174 | reg        | &#174;   |
+|    175 | macr       | &#175;   |
+|    176 | deg        | &#176;   |
+|    177 | plusmn     | &#177;   |
+|    178 | sup2       | &#178;   |
+|    179 | sup3       | &#179;   |
+|    180 | acute      | &#180;   |
+|    181 | micro      | &#181;   |
+|    182 | para       | &#182;   |
+|    183 | middot     | &#183;   |
+|    184 | cedil      | &#184;   |
+|    185 | sup1       | &#185;   |
+|    186 | ordm       | &#186;   |
+|    187 | raquo      | &#187;   |
+|    188 | frac14     | &#188;   |
+|    189 | frac12     | &#189;   |
+|    190 | frac34     | &#190;   |
+|    191 | iquest     | &#191;   |
+|    192 | Agrave     | &#192;   |
+|    193 | Aacute     | &#193;   |
+|    194 | Acirc      | &#194;   |
+|    195 | Atilde     | &#195;   |
+|    196 | Auml       | &#196;   |
+|    197 | Aring      | &#197;   |
+|    198 | AElig      | &#198;   |
+|    199 | Ccedil     | &#199;   |
+|    200 | Egrave     | &#200;   |
+|    201 | Eacute     | &#201;   |
+|    202 | Ecirc      | &#202;   |
+|    203 | Euml       | &#203;   |
+|    204 | Igrave     | &#204;   |
+|    205 | Iacute     | &#205;   |
+|    206 | Icirc      | &#206;   |
+|    207 | Iuml       | &#207;   |
+|    208 | ETH        | &#208;   |
+|    209 | Ntilde     | &#209;   |
+|    210 | Ograve     | &#210;   |
+|    211 | Oacute     | &#211;   |
+|    212 | Ocirc      | &#212;   |
+|    213 | Otilde     | &#213;   |
+|    214 | Ouml       | &#214;   |
+|    215 | times      | &#215;   |
+|    216 | Oslash     | &#216;   |
+|    217 | Ugrave     | &#217;   |
+|    218 | Uacute     | &#218;   |
+|    219 | Ucirc      | &#219;   |
+|    220 | Uuml       | &#220;   |
+|    221 | Yacute     | &#221;   |
+|    222 | THORN      | &#222;   |
+|    223 | szlig      | &#223;   |
+|    224 | agrave     | &#224;   |
+|    225 | aacute     | &#225;   |
+|    226 | acirc      | &#226;   |
+|    227 | atilde     | &#227;   |
+|    228 | auml       | &#228;   |
+|    229 | aring      | &#229;   |
+|    230 | aelig      | &#230;   |
+|    231 | ccedil     | &#231;   |
+|    232 | egrave     | &#232;   |
+|    233 | eacute     | &#233;   |
+|    234 | ecirc      | &#234;   |
+|    235 | euml       | &#235;   |
+|    236 | igrave     | &#236;   |
+|    237 | iacute     | &#237;   |
+|    238 | icirc      | &#238;   |
+|    239 | iuml       | &#239;   |
+|    240 | eth        | &#240;   |
+|    241 | ntilde     | &#241;   |
+|    242 | ograve     | &#242;   |
+|    243 | oacute     | &#243;   |
+|    244 | ocirc      | &#244;   |
+|    245 | otilde     | &#245;   |
+|    246 | ouml       | &#246;   |
+|    247 | divide     | &#247;   |
+|    248 | oslash     | &#248;   |
+|    249 | ugrave     | &#249;   |
+|    250 | uacute     | &#250;   |
+|    251 | ucirc      | &#251;   |
+|    252 | uuml       | &#252;   |
+|    253 | yacute     | &#253;   |
+|    254 | thorn      | &#254;   |
+|    255 | yuml       | &#255;   |
+|    321 | lstroke    | &#321;   |
+|    322 | Lstroke    | &#322;   |
+|    338 | OElig      | &#338;   |
+|    339 | oelig      | &#339;   |
+|    352 | Scaron     | &#352;   |
+|    353 | scaron     | &#353;   |
+|    376 | Yuml       | &#376;   |
+|    402 | fnof       | &#402;   |
+|    710 | circ       | &#710;   |
+|    732 | tilde      | &#732;   |
+|    913 | Alpha      | &#913;   |
+|    914 | Beta       | &#914;   |
+|    915 | Gamma      | &#915;   |
+|    916 | Delta      | &#916;   |
+|    917 | Epsilon    | &#917;   |
+|    918 | Zeta       | &#918;   |
+|    919 | Eta        | &#919;   |
+|    920 | Theta      | &#920;   |
+|    921 | Iota       | &#921;   |
+|    922 | Kappa      | &#922;   |
+|    923 | Lambda     | &#923;   |
+|    924 | Mu         | &#924;   |
+|    925 | Nu         | &#925;   |
+|    926 | Xi         | &#926;   |
+|    927 | Omicron    | &#927;   |
+|    928 | Pi         | &#928;   |
+|    929 | Rho        | &#929;   |
+|    931 | Sigma      | &#931;   |
+|    932 | Tau        | &#932;   |
+|    933 | Upsilon    | &#933;   |
+|    934 | Phi        | &#934;   |
+|    935 | Chi        | &#935;   |
+|    936 | Psi        | &#936;   |
+|    937 | Omega      | &#937;   |
+|    945 | alpha      | &#945;   |
+|    946 | beta       | &#946;   |
+|    947 | gamma      | &#947;   |
+|    948 | delta      | &#948;   |
+|    949 | epsilon    | &#949;   |
+|    950 | zeta       | &#950;   |
+|    951 | eta        | &#951;   |
+|    952 | theta      | &#952;   |
+|    953 | iota       | &#953;   |
+|    954 | kappa      | &#954;   |
+|    955 | lambda     | &#955;   |
+|    956 | mu         | &#956;   |
+|    957 | nu         | &#957;   |
+|    958 | xi         | &#958;   |
+|    959 | omicron    | &#959;   |
+|    960 | pi         | &#960;   |
+|    961 | rho        | &#961;   |
+|    962 | sigmaf     | &#962;   |
+|    963 | sigma      | &#963;   |
+|    964 | tau        | &#964;   |
+|    965 | upsilon    | &#965;   |
+|    966 | phi        | &#966;   |
+|    967 | chi        | &#967;   |
+|    968 | psi        | &#968;   |
+|    969 | omega      | &#969;   |
+|    977 | thetasym   | &#977;   |
+|    978 | upsih      | &#978;   |
+|    982 | piv        | &#982;   |
+|   8194 | ensp       | &#8194;  |
+|   8195 | emsp       | &#8195;  |
+|   8201 | thinsp     | &#8201;  |
+|   8203 | strut      | &#8203;  |
+|   8204 | zwnj       | &#8204;  |
+|   8205 | zwj        | &#8205;  |
+|   8206 | lrm        | &#8206;  |
+|   8207 | rlm        | &#8207;  |
+|   8211 | ndash      | &#8211;  |
+|   8212 | mdash      | &#8212;  |
+|   8216 | lsquo      | &#8216;  |
+|   8217 | rsquo      | &#8217;  |
+|   8218 | sbquo      | &#8218;  |
+|   8220 | ldquo      | &#8220;  |
+|   8221 | rdquo      | &#8221;  |
+|   8222 | bdquo      | &#8222;  |
+|   8224 | dagger     | &#8224;  |
+|   8225 | Dagger     | &#8225;  |
+|   8226 | bull       | &#8226;  |
+|   8230 | hellip     | &#8230;  |
+|   8240 | permil     | &#8240;  |
+|   8242 | prime      | &#8242;  |
+|   8243 | Prime      | &#8243;  |
+|   8249 | lsaquo     | &#8249;  |
+|   8250 | rsaquo     | &#8250;  |
+|   8254 | oline      | &#8254;  |
+|   8260 | frasl      | &#8260;  |
+|   8364 | euro       | &#8364;  |
+|   8465 | image      | &#8465;  |
+|   8472 | weierp     | &#8472;  |
+|   8476 | real       | &#8476;  |
+|   8482 | trade      | &#8482;  |
+|   8501 | alefsym    | &#8501;  |
+|   8592 | larr       | &#8592;  |
+|   8593 | uarr       | &#8593;  |
+|   8594 | rarr       | &#8594;  |
+|   8595 | darr       | &#8595;  |
+|   8596 | harr       | &#8596;  |
+|   8629 | crarr      | &#8629;  |
+|   8656 | lArr       | &#8656;  |
+|   8657 | uArr       | &#8657;  |
+|   8658 | rArr       | &#8658;  |
+|   8659 | dArr       | &#8659;  |
+|   8660 | hArr       | &#8660;  |
+|   8704 | forall     | &#8704;  |
+|   8706 | part       | &#8706;  |
+|   8707 | exist      | &#8707;  |
+|   8709 | empty      | &#8709;  |
+|   8711 | nabla      | &#8711;  |
+|   8712 | isin       | &#8712;  |
+|   8713 | notin      | &#8713;  |
+|   8715 | ni         | &#8715;  |
+|   8719 | prod       | &#8719;  |
+|   8721 | sum        | &#8721;  |
+|   8722 | minus      | &#8722;  |
+|   8727 | lowast     | &#8727;  |
+|   8730 | radic      | &#8730;  |
+|   8733 | prop       | &#8733;  |
+|   8734 | infin      | &#8734;  |
+|   8736 | ang        | &#8736;  |
+|   8743 | and        | &#8743;  |
+|   8744 | or         | &#8744;  |
+|   8745 | cap        | &#8745;  |
+|   8746 | cup        | &#8746;  |
+|   8747 | int        | &#8747;  |
+|   8756 | there4     | &#8756;  |
+|   8764 | sim        | &#8764;  |
+|   8773 | cong       | &#8773;  |
+|   8776 | asymp      | &#8776;  |
+|   8800 | ne         | &#8800;  |
+|   8801 | equiv      | &#8801;  |
+|   8804 | le         | &#8804;  |
+|   8805 | ge         | &#8805;  |
+|   8834 | sub        | &#8834;  |
+|   8835 | sup        | &#8835;  |
+|   8836 | nsub       | &#8836;  |
+|   8838 | sube       | &#8838;  |
+|   8839 | supe       | &#8839;  |
+|   8853 | oplus      | &#8853;  |
+|   8855 | otimes     | &#8855;  |
+|   8869 | perp       | &#8869;  |
+|   8901 | sdot       | &#8901;  |
+|   8942 | vellip     | &#8942;  |
+|   8968 | lceil      | &#8968;  |
+|   8969 | rceil      | &#8969;  |
+|   8970 | lfloor     | &#8970;  |
+|   8971 | rfloor     | &#8971;  |
+|   9001 | lang       | &#9001;  |
+|   9002 | rang       | &#9002;  |
+|   9674 | loz        | &#9674;  |
+|   9824 | spades     | &#9824;  |
+|   9827 | clubs      | &#9827;  |
+|   9829 | hearts     | &#9829;  |
+|   9830 | diams      | &#9830;  |
+|   8617 | hooklarr   | &#8617;  |
+|   8718 | bbox       | &#8718;  |
+|   9633 | box        | &#9633;  |
+|   9744 | ballotbox  | &#9744;  |
+|   9745 | ballotc    | &#9745;  |
+|   9746 | ballotx    | &#9746;  |
+|  10003 | checkmark  | &#10003; |
+|  10004 | bcheckmark | &#10004; |
+|  10007 | xmark      | &#10007; |
+|  10008 | bxmark     | &#10008; |
+|--------|------------|----------|
 { .long }
+
+
+## Definitions of predefined custom blocks { #app-custom }
+
+These are the definitions of the predefined custom blocks,  assuming a
+`Heading Depth` and `Toc Depth` of 3 (and adding some spurious line breaks for
+formatting).
+
+```
+~Equation : label='[(@equation)]{.equation-label}' 
+			replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' 
+			.align-center tight .para-block
+~Figure   : label='[@figure]{.figure-label}' .align-center 
+			after='#nl********* {.figureline}#nl
+					[[**Figure\ #label.** ]{.caption-before}#caption]
+					{.figure-caption}#nl{notag}#nl'
+			toc=tof toc-line='#label. #caption' tight",
+      
+~Bibitem  : label='[@bibitem]{.bibitem-label}' 
+			before='[\[#label\]\ \ ]{.bibitem-before}' 
+			tight texelem=mdBibitem
+~Bibliography : bib-style=... 
+			bib-data='...' 
+			texelem=mdBibliography
+      
+~Note     : .block before='[**Note**. ]{.note-before}'
+~Remark   : .block before='[**Remark**. ]{.remark-before}'
+~Proof    : .block before='[**Proof**. ]{.proof-before}'
+
+~Framed   : border-style=solid border-color=black border-width=1px
+~Center   : .align-center
+
+~Pre      : input=pre .para-block
+~Code     : input=pre
+      
+~Tex      : input=tex
+~TexRaw   : input=texraw
+~HtmlRaw  : input=htmlraw
+~Math     : input=math .para-block
+~MathPre  : input=mathpre .para-block
+~MathDefs : input=mathdefs .hidden
+~HtmlOnly : input=htmlonly
+~TexOnly  : input=texonly
+
+~Theorem  : .block label='[@Theorem]{.Theorem-label}'
+      		before='[**Theorem\ #label.** ]{.Theorem-before}'
+~Lemma	  : .block label='[@Lemma]{.Lemma-label}'
+      		before='[**Lemma\ #label.** ]{.Lemma-before}'
+~Proposition: .block label='[@Proposition]{.Proposition-label}'
+      		before='[**Proposition\ #label.** ]{.Proposition-before}'
+~Corollary: .block label='[@Corollary]{.Corollary-label}'
+      		before='[**Corollary\ #label.** ]{.Corollary-before}'
+~Example: .block label='[@Example]{.Example-label}'
+      		before='[**Example\ #label.** ]{.Example-before}'
+~Definition: .block label='[@Definition]{.Definition-label}'
+      		before='[**Definition\ #label.** ]{.Definition-before}'
+
+~H1: label='[@h1]{.heading-label}' 
+     before='[#label.\ \ \ ]{.heading-before}'
+     toc    
+~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' 
+     before='[#label.\ \ \ ]{.heading-before}'
+     toc    
+~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
+     before='[#label.\ \ \ ]{.heading-before}'
+     toc    
+```
 
