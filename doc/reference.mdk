@@ -6,7 +6,7 @@ Email		: daan@microsoft.com
 Heading Base: 2
 MathJax		: True
 
-
+Bib			: reference
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
@@ -150,7 +150,7 @@ a good LaTeX system is [MikTeX] for example.
 
 Generally Madoko is invoked on the command line as:
 
-* `madoko` [_options_] _files_
+* `madoko` \[_options_] _files_
 
 where the options can consist of:
 
@@ -232,16 +232,15 @@ There is a ~~strike out~~ here.
 Madoko adds some extra escape sequences to the standard ones in Markdown. If
 you want to use a special character directly without a special Markdown
 meaning,  precede it with a backslash (`\`). For example, to use a star (`*`)
-without causing emphasis, you can write `\*`. The full list of special 
-escape characters are:
-
-	\`*{}[]()#+-.!_<>~|$'"?/
-
-Madoko will never escape a letter or digit, and you can safely write windows
+without causing emphasis, you can write `\*`. 
+Madoko will never escape a letter or digit and keep the slash, so 
+`\a` becomes "\\a" while `\&` becomes just "&".
+Thus, you can safely write windows
 style file names without needing an escape:
 
 ~ Sample
-Would you like c:\foo\bar to be deleted? Yes\No.
+Would you like c:\foo\bar to be deleted? Yes\No. 
+Here are some other escapes: \\, \#, \*, \|, and \0.
 ~
 
 If you escape a space (`\ `), it is translated as a non-breakable space, while
@@ -367,11 +366,26 @@ used:
 
 Madoko will automatically pass the `language` key to the listings package, and
 also include line numbers if the `.linenums` class is present. Use the
-`.showspaces` class to show spaces and tabs in the code.
+`.showspaces` class to show spaces and tabs in the code. 
 
+In some cases, the listings package does not work correctly in certain
+contexts, like tables or command arguments, due to the fragility of LaTeX
+parsing[^listings].  In such cases, you can switch to a robust verbatim mode using the
+`.plain` class.
+
+~ Sample
++-----------------------+
+|`function foo`{.plain} |
++-----------------------+
+~
 
 [GPretty]: http://code.google.com/p/google-code-prettify
 [listings]: http://www.ctan.org/pkg/listings
+
+[^listings]: The way the [listings] package and other verbatim environments
+ 	work in LaTeX makes them inherently fragile. It is not possible to fix this
+ 	robustly. You can read more about this on 
+ 	[stack exchange](http://tex.stackexchange.com/questions/29971/why-can-lstlisting-not-be-saved-in-a-command).
 
 ## Table of contents  { #sec-toc }
 
@@ -411,6 +425,7 @@ In particular, you can simply use any existing BibTeX bibliography file
 	Bib:  ../mybib1
 	Bib:  mybib2
  
+As an example, you can view the bibliography for this document [here](reference.bib).
 Entries in the biblopgraphy files can now be referenced using semi-colon separated 
 local links, for example 
 
@@ -436,14 +451,16 @@ are not yet defined:
 When Madoko finds such references, it writes them to a `.aux` file (together
 with the needed bibliography files) that can be read by BibTeX, and we can
 just run it directly on this file:
-	
-	> bibtex myfile.aux
+
+* `bibtex myfile.aux`
 
 to generate the bibliography entries. The bibliography entries are
 included in your document using the special `[BIB]` element, for example:
 
 	## References	{-}
 	[BIB]
+
+which you can see at the [end of this document][#sec-references].
 
 When running Madoko again, the bibliography entries are now known and no
 warnings will be issued.
@@ -465,11 +482,14 @@ fancy LaTeX commands in bibliography entries. However, we strive to make it
 work for any bibliograpy style and entries, so please [file a bug report][issues] 
 if you encounter situations where it does not work correctly.
 
-Bibliography styles known to work with Madoko include the following author-
-year styles: apa, apalike, plainnat, abbrvnat, unsrtnat, newapa, chicago,
-named,  agsm, dcu, kluwer, astron, bbs, cbe, humannat, humanbio, jtb, and
-others. Also, the following numeric styles have been tested: eptcs,  abbrv,
-plain, ieeetr, acm, unsrt, alpha, siam, and others.
+Bibliography styles known to work with Madoko include the following author-year
+styles: `apa`, `apalike`, `plainnat`, `abbrvnat`, `unsrtnat`, `newapa`,
+`chicago`, `named`,  `agsm`, `dcu`, `kluwer`, `astron`, `bbs`, `cbe`,
+`humannat`, `humanbio`, `jtb`, and others. Also, the following numeric styles
+have been tested: `eptcs`,  `abbrv`, `plain`, `ieeetr`, `acm`, `unsrt`,
+`alpha`, `siam`, and others.
+Since tools like BibTeX and Madoko make numbering and linking automatic,  it
+is generally preferred for modern documents to use a numeric citations style.
 
 [bibtex]: http://en.wikipedia.org/wiki/BibTeX
 [issues]: http://madoko.codeplex.com/workitem/list/basic
@@ -506,14 +526,14 @@ and `.textual` class attributes to change how the citation is shown:
 | `[#Goo93]{.textual}`{.plain}       | Goossens _et al._, ([1993][#Goo93])                 |
 | `[#Goo93]{.long .textual}`{.plain} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
 
-These attributes have no effect if the _numeric_ style is used and all
-would be displayed as [#Goo93].
+These attributes have no effect if the _numeric_ style is used and all would
+be displayed as [#Goo93].
 
-### Not using BibTeX
+### Advanced: Not using BibTeX 
 
 If necessary, it is possible to completely circumvent using BibTeX and write
 your bibliograpy entries by hand. The bibliography entries need to be put inside
-a `Bibliography` block:
+a `Bibliography` block: 
 
 	~ Bibliography { caption="00" }
 	...
@@ -523,7 +543,7 @@ where the `caption` is only used in LaTeX output and should be a string that
 is the widest label necessary for the numeric style. Inside the bibliography
 block, you can put `Bibitem` blocks for each bibliography entry. For example:
 
-	~~ Bibitem { id='wadler:marriage' .has-before }
+	~~ Bibitem { #wadler:marriage .has-before }
 	Philip Wadler and Peter Thiemann.
 	[]{.newblock} _The marriage of effects and monads._
 	[]{.newblock} ACM Trans. Comput. Logic, 4(1):1--32, 2003.
@@ -536,7 +556,7 @@ flexible whitespace that justifies the entry nicely. If author-year citations
 are used, the entry should have an explicit label and clear the default
 `before` key (which would otherwise put numbers in front):
 
-	~~ Bibitem { id='remy' label='R&eacute;my(1993)' before=clear }
+	~~ Bibitem { #remy='R&eacute;my(1993)' before=clear }
 	Didier R&eacute;my. []{.newblock} 
 	_Type inference for records in a natural extension of ML._
 	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
@@ -712,7 +732,7 @@ include it in the document as:
 	[INCLUDE="mathdefs.tex"]
 	~
 
-### Preformatted math   { #sec-mathpre }
+### Advanced: Preformatted math   { #sec-mathpre }
 
 LaTeX math mode is great for regular mathematics but not so good if one tries
 to preserve whitespace or uses longer identifiers. This is actually quite common
@@ -1477,7 +1497,7 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 [^turing]: Almost, since Madoko expands only up to a certain limit and since
 	regular expressions cannot express arbitrary nesting levels.
 
-## References 
+## References 	{ #sec-references } 
 [BIB]
 
 # Appendix	{ @H1="A" }

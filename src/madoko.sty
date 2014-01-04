@@ -268,7 +268,11 @@
 \newlength{\mdBibhang}
 
 \cssNewKey{css}{caption}{\cssCaption}{?}
-\newKey{css}{bibstyle}{\write\@mainaux{\string\bibstyle{#1}}}
+\newKey{css}{bibstyle}{%
+  \eifstrequal{#1}{}%
+    {\write\@mainaux{\string\bibstyle{plain}}}%
+    {\write\@mainaux{\string\bibstyle{#1}}}
+}
 \newKey{css}{bibdata}{\write\@mainaux{\string\bibdata{#1}}}
 
 \newenvironment{mdBibliography}[1][]{%

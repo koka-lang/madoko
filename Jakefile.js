@@ -122,10 +122,14 @@ task("doc", [], function(arg) {
   jake.exec(mdCmd, function() {
     if (arg=="pdf" || arg=="--pdf") {
       process.chdir("doc");
-      texCmd = "pdflatex -halt-on-error reference.tex";
-      jake.log("> " + texCmd);
-      jake.exec(texCmd,function() { 
-        process.chdir("..");
+      bibCmd = "bibtex reference.aux";
+      jake.log("> " + bibCmd);
+      jake.exec(bibCmd, function() {
+        texCmd = "pdflatex -halt-on-error reference.tex";
+        jake.log("> " + texCmd);
+        jake.exec(texCmd,function() { 
+          process.chdir("..");
+        },{interactive:true});
       },{interactive:true});
     }
   }, {interactive:true});

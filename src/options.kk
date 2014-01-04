@@ -221,7 +221,7 @@ function defaultMeta( options : options ) : string {
       @"~Figure   : toc=tof toc-line='#label. #caption' tight",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
-      @"~Bibliography : bib-style='" + options.bibStyle + @"' bib-data='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",
+      @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",
       
       @"~Note     : .block before='[**Note**. ]{.note-before}'",
       @"~Remark   : .block before='[**Remark**. ]{.remark-before}'",
