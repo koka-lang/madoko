@@ -157,6 +157,8 @@
 \cssNewInlineElem{\mdEm}{em}{font-style=italic}
 \cssNewInlineElem{\mdStrong}{strong}{font-weight=bold}
 \cssNewInlineElem{\mdDel}{del}{color=gray}  % not great but strike-out is just not well supported on LaTeX...
+\cssNewInlineElem{\mdVerb}{verb}{font-family=monospace}
+\cssNewBlockElem{mdVerbatim}{verbatim}{font-family=monospace}
 
 \newcommand{\mdFootnote}[2][]{\footnote{#2}} % no cssInline since footnotes can contain block elements
 \newcommand{\mdSub}[2][]{\ensuremath{_{\mbox{\scriptsize\cssInline[elem=sub,#1]{#2}}}}}

@@ -33,10 +33,11 @@ public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, a
 }
 
 public function fmtTexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
+  //texText(htmlEscape(txt,allowEntity))
   if (allowEntity)
    then texText(htmlEscape(txt,allowEntity))
    else // we use lstlisting with 'mathescape' and escape just $ and |
-        txt.replaceAll(regex(@"\$"),@"$\mbox{\$}$").replaceAll(regex(@"\|"),@"$\mbox{\char124}$")
+        txt.replaceAll(regex(@"\$"),@"$\mbox{\$}$").replaceAll(regex(@"\|"),@"$\mbox{\char124}$")  
 }
 
 public function fmtTexFootnote(context : inlineContext, id : string, fn : footnote ) : string {

@@ -146,6 +146,53 @@ a good LaTeX system is [MikTeX] for example.
 [MikTeX]: http://miktex.org/
 
 
+## Command line options
+
+Generally Madoko is invoked on the command line as:
+
+* `madoko` [_options_] _files_
+
+where the options can consist of:
+
+|  short  |         long         |                      description                      |
+|---------|----------------------|-------------------------------------------------------|
+|         | `--version`          | Display version information.                           |
+| `-v`    | `--verbose`          | Be more verbose.                                       |
+|         | `--odir=`_dir_       | Write output files to the specified directory.         |
+|         | `--xmp`              | Only process markdown between `<xmp>` tags.            |
+|         | `--tex`              | Output a LaTeX file too.                               |
+| `-f`    | `--full`             | Generate a full html/latex document                   |
+|         | `--sanitize`         | Always escape or suppress user defined html           |
+|         | `--pedantic`         | Pedantic mode                                         |
+|         | `--bench`            | For benchmarking: turn off numbering, footnotes, etc. |
+|         | `--installdir=`_dir_ | Set installation directory explicitly                 |
+
+All the boolean flags can be negated by prefixing them with `no`, for example
+to suppress LaTeX output, use `--notex`.
+
+Normally, Madoko writes the output files to the same directory as where the
+input file resides but you can override this with the `--odir` option.  The
+HTML output for a file _file_`.mdk` consists of _file_`.html` and
+`madoko.css`. The latter contains standard styling for Madoko and is necessary
+for example to display lines in tables correctly. For LaTeX output (`--tex`),
+Madoko also emits _file_`.tex` and two style files, `css.sty` and
+`madoko.sty`, which contain necessary commands to  process the Madoko output
+in LaTeX.
+
+The `--xmp` option instructs Madoko to only process content between
+`<xmp>` and `</xmp>` tags. This can be useful if the main body of your document is
+in HTML and only some parts are written in Madoko. 
+
+Finally, the `--full` flag forces Madoko to generate a _full_ document. A full
+document is self sufficient and contains for example for HTML proper `<head>`
+and `<body>` elements instead of just the markup for the content. Similarly,
+for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
+and necessary `\usepackage` commands. The `--full` flag is usually not
+necessary since Madoko will generate a full document whenever one of the
+following [metadata][#sec-metadata] keys is present in the document: `Title`,
+`Css`, `Script`, `Package`, `HTML Header` or `Tex Header`. In most stand-alone
+documents this is the case.
+
 # Syntax
 
 Madoko is fully compatible with basic [Markdown syntax][Markdown] and passes
@@ -197,7 +244,7 @@ style file names without needing an escape:
 Would you like c:\foo\bar to be deleted? Yes\No.
 ~
 
-If you escape a space (` `), it is translated as a non-breakable space, while
+If you escape a space (`\ `), it is translated as a non-breakable space, while
 a backslash at the end of a line causes a hard line break to be inserted. The 
 latter is recommended over using the standard Markdown way of using two spaces
 at the end of a line because it leaves visual clue that a line break occurs.
@@ -269,7 +316,7 @@ same number of backticks. Moreover, you can include the language name after
 the backticks:
 
 ~ Sample
-``` javascript
+``` javascript 
 function hi() { return "hi"; }
 ```
 ~
@@ -452,12 +499,12 @@ support this, i.e. generally any style that works with the `natbib` package
 like `plainnat`. With author-year citations we can use the `.short`, `.long`,
 and `.textual` class attributes to change how the citation is shown:
 
-| ~~~~~~~~~~~~~~~~~~~~~~~~   | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
-| [\[\#Goo93\]]{.tt}                 | ([Goossens _et al._, 1993][#Goo93])                 |
-| [\[\#Goo93\]{.short}]{.tt}         | ([1993][#Goo93])                                    |
-| [\[\#Goo93\]{.long}]{.tt}          | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
-| [\[\#Goo93\]{.textual}]{.tt}       | Goossens _et al._, ([1993][#Goo93])                 |
-| [\[\#Goo93\]{.long .textual}]{.tt} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| `[#Goo93]`                         | ([Goossens _et al._, 1993][#Goo93])                 |
+| `[#Goo93]{.short}`{.plain}         | ([1993][#Goo93])                                    |
+| `[#Goo93]{.long}`{.plain}          | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
+| `[#Goo93]{.textual}`{.plain}       | Goossens _et al._, ([1993][#Goo93])                 |
+| `[#Goo93]{.long .textual}`{.plain} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
 
 These attributes have no effect if the _numeric_ style is used and all
 would be displayed as [#Goo93].
@@ -946,6 +993,16 @@ mechanism. For example, if we define a metadata value `Title2`:
 	Title2: (#Title,#Title)
 
 then the hashname `#Title2` expands to "#Title2".
+
+Hash names are mostly used to reference other elements in a document.
+For example:
+
+~ Sample
+See Section [#sec-hashname] for more information.
+~
+
+Section [#sec-ids-labels] explains the use of hash names for identities and
+referencing in more detail.
 
 If hash names are used inside [attributes][#sec-attr], Madoko first
 looks for the name as one of the attribute key values. For example, you can

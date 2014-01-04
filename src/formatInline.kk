@@ -36,7 +36,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("itext",     regex(@"^" + normal + "+"), inlineNormal ),
 
   Rule("iquotes",   regex(@"^(?:'((?:[^\\']|\\.)*)'|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
-  Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1"), inlineCode ),
+  Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
   Rule("ilink",     regex(@"^( *)" + linkreg), inlineLink ),
   Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
   
@@ -196,15 +196,19 @@ function inlineCode( cap : matched, context ) : string {
   txt0 = cap.groups[2]
   txt1 = if (txt0.startsWith(" `")) then txt0.substr(1) else txt0
   txt  = if (txt0.endsWith("` ")) then txt1.substr(0,txt1.length-1) else txt1
+  attrs = if (cap.groups.matchedOn(3)) 
+           then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone 
   if (context.bench || cap.groups[1].length > 1)
-   then context.fmtCode("code",txt)
-   else context.fmtSpan( txt, Attrs(classes=["code"]) )
+   then context.fmtCode("code",txt,attrs)
+   else context.fmtSpan( txt, attrs(classes=["code"] + attrs.classes) ) // can be overridden by the user
 }
 
-function fmtCode( context : inlineContext, tag : string, txt : string ) : string {
+function fmtCode( context : inlineContext, tag : string, txt : string, attrs : attrs = attrsNone) : string {
   match(context.fmt) {
-    FmtHtml -> context.fmtCmd(tag, context.fmtEscapePre(txt))  
-    FmtTex  -> context.fmtCmd(tag, txt.escapeTexPre )
+    FmtHtml -> context.fmtCmd(tag, context.fmtEscapePre(txt), attrs)  
+    FmtTex  -> if (attrs.hasClass("plain"))
+                then context.fmtCmd("verb", context.fmtText(txt), attrs )
+                else context.fmtCmd(tag, txt.escapeTexPre, attrs )
   }
 }
 
@@ -386,7 +390,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
 
   txt = attrsd.transformText(txt0,context.metadata)
   match(attrsd.input) {
-    Pre      -> context.fmtCode(sname, txt)
+    Pre      -> context.fmtCode(sname, txt, attrs)
     Math     -> context.fmtMath(txt,attrsd)
     MathPre  -> context.fmtMath(txt.mathPre,attrsd)
     Raw(monly) -> {
