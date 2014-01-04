@@ -7,6 +7,7 @@ Heading Base: 2
 MathJax		: True
 
 Bib			: reference
+
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
 .SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
 .SampleOutput: margin-bottom=1.7ex
@@ -485,9 +486,10 @@ if you encounter situations where it does not work correctly.
 Bibliography styles known to work with Madoko include the following author-year
 styles: `apa`, `apalike`, `plainnat`, `abbrvnat`, `unsrtnat`, `newapa`,
 `chicago`, `named`,  `agsm`, `dcu`, `kluwer`, `astron`, `bbs`, `cbe`,
-`humannat`, `humanbio`, `jtb`, and others. Also, the following numeric styles
+`humannat`, `humanbio`, `jtb`, `apsrev4-1`, `aipauth4-1` and others. 
+Also, the following numeric styles
 have been tested: `eptcs`,  `abbrv`, `plain`, `ieeetr`, `acm`, `unsrt`,
-`alpha`, `siam`, and others.
+`alpha`, `siam`, `apsrmp4-1`, `aipnum4-1` and others.
 Since tools like BibTeX and Madoko make numbering and linking automatic,  it
 is generally preferred for modern documents to use a numeric citations style.
 

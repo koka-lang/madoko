@@ -29,7 +29,7 @@ val special = @"\\{}~*_\[\]#\$`";
 
 
 function texnest(s:string)  = @"(?:" + texval + @"|(?:\{" + s + @"\}))"
-val texval   = @"(?:[^\\{}]|\\[@a-zA-Z]+|\\.)"
+val texval   = @"(?:[^\\{}]|\\[@a-zA-Z]+\b\s*|\\.\s*)"
 val texarg0  = texval + "*"
 val texarg1  = texnest(texarg0) + "*"
 val texarg2  = texnest(texarg1) + "*"
@@ -40,7 +40,7 @@ val texargs  = @"(" + texnest(texarg3) + "*)"
 val optarg   = @"(?:\[([^\]]*)\])"
 val optargs  = optarg + @"*"
 val texenv1  = @"(thebibliography)"
-val texcmd1  = @"(begin|end|newlength|setlength|bibinfo)"
+val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
 val texGrammar : grammar<string,texContext> = [
@@ -49,9 +49,9 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texNormal ),
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texNormal ),
 
-  Rule("biblio",      regex(@"^\\begin\{thebibliography\}(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texBibliography ),
-  Rule("bibitem",     regex(@"^\\bibitem\b" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texBibitem ),
-  Rule("harvarditem", regex(@"^\\harvarditem\b" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
+  Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texBibliography ),
+  Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n(?= *\n|\\bibitem)"), texBibitem ),
+  Rule("harvarditem", regex(@"^\\harvarditem\b\s*" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
 
   Rule("newblock",    regex(@"^\\(newblock|nobreak)\b"), texCommandClass ),
   Rule("citeay",      regex(@"^\\citeauthoryear\b" + texarg + texarg + texarg), texCiteAuthorYear ),
@@ -60,14 +60,16 @@ val texGrammar : grammar<string,texContext> = [
   Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
   Rule("cite",        regex(@"^\\[Cc]ite(?:(year)(?:par)?|(?:al)?([pt])?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
+  Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
   Rule("texsl",       regex(@"^\{\\sl\b" + texargs + @"\}"), texSlanted ),
-  Rule("texit",       regex(@"^\\(?:textit|emph)\b" + texarg), texEmph ),
-  Rule("texbf",       regex(@"^\{\\bffamily\b" + texargs + @"\}"), texStrong ),
-  Rule("texbold",     regex(@"^\\textbf\b" + texarg), texStrong ),
-  Rule("textt1",      regex(@"^\{\\ttfamily\b" + texargs + @"\}"), texCode ),
-  Rule("textt2",      regex(@"^\\texttt\b" + texarg), texCode ),
+  Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
+  Rule("texbf",       regex(@"^\{\\bffamily\b\s*" + texargs + @"\}"), texStrong ),
+  Rule("texbold",     regex(@"^\\textbf\b\s*" + texarg), texStrong ),
+  Rule("textt1",      regex(@"^\{\\ttfamily\b\s*" + texargs + @"\}"), texCode ),
+  Rule("textt2",      regex(@"^\\texttt\b\s*" + texarg), texCode ),
+  Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
 
   Rule("texaccent",   regex(@"^\\([`'^""~vrc])\b(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
@@ -79,10 +81,10 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
 
   Rule("texgroup",    regex(@"^\{" + texargs + @"\}" ), texGroup ),  
-  Rule("texenv1",     regex(@"^\\begin\{" + texenv1 + @"\}" + optargs + texarg), texIgnore ),
-  Rule("texcmd2",     regex(@"^\\(" + texcmd2 + @")" + optargs + texarg + optargs + texarg), texIgnore ),
-  Rule("texcmd1",     regex(@"^\\(" + texcmd1 + @")" + optargs + texarg), texIgnore ),
-  Rule("texcmd",      regex(@"^(\\[a-zA-Z@]+)(" + optargs + ")"), texGenericCommand ),
+  Rule("texenv1",     regex(@"^\\begin\{" + texenv1 + @"\}\s*" + optargs + texarg), texIgnore ),
+  Rule("texcmd2",     regex(@"^\\(" + texcmd2 + @")\b\s*" + optargs + texarg + optargs + texarg), texIgnore ),
+  Rule("texcmd1",     regex(@"^\\(" + texcmd1 + @")\b\s*" + optargs + texarg), texIgnore ),
+  Rule("texcmd",      regex(@"^(\\[a-zA-Z@]+)\b\s*(" + optargs + ")"), texGenericCommand ),
 
   Rule("texchar",     regex(@"^\\[^a-zA-Z]"), texChar ),
   
@@ -200,6 +202,10 @@ function texDoi( cap : matched, context : texContext ) : string {
   if (txt=="") then "" else ("doi:[" + txt + "](http://dx.doi.org/" + txt + ")")
 }
 
+function texBibinfo( cap : matched, context : texContext ) : string {
+  "[" + cap.groups[2].parseTexX(context) + "]{ .bibinfo field='" + cap.groups[1].unbrace + "'}"
+}
+
 function texDquot( cap : matched, context : texContext ) : string {
   texQuot("\"",cap,context)
 }
@@ -211,7 +217,7 @@ function texQuot( quot : string, cap : matched, context : texContext ) : string 
 }
 
 function texBibliography( cap : matched, context : texContext ) : string {
-  "~~ Bibliography { caption=\"" + cap.groups[1].unbrace + "\"}\n" + cap.groups[2].parseTexX(context) + "\n~~\n"
+  "~~ Bibliography { caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + "\n~~\n"
 }
 
 function texCiteAuthorYear( cap : matched, context : texContext ) : string {
@@ -248,7 +254,7 @@ function texBibitem( cap : matched, context : texContext ) : string {
 
 function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
   key = keyx.unbrace
-  lab = labx.parseTexX(context,True)  
+  lab = labx.unbrace.parseTexX(context,True)  
   //trace("bibitem: lab: " + labx + " -> " + lab)
   "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="" || context.citestyle.isNumCite) then "" else "label='" + lab + "' ") +
                   (if (context.citestyle.isNumCite || (context.citestyle.isAuto && lab.contains(rxNumCite)))
@@ -273,7 +279,10 @@ function unbrace(s : string ) : string {
 // Parse TeX elements and return Markdown
 public function parseTex( txt : string, citestyle : citestyle = Auto, verbose : bool = False  ) : string
 {
-  md = parseTexX(txt,TexContext(texGrammar,citestyle))
+  normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
+               .replaceAll(regex(@"\t"),"   ")
+               .replaceAll(regex(@"(^|[^\\])%.*"),@"$1")
+  md = parseTexX(normTxt,TexContext(texGrammar,citestyle))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
