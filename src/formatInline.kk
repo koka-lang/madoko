@@ -63,7 +63,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
   
   Rule("ibr",       regex(@"^  \n(?!\s*$)"), inlineBreak ),  
-  Rule("iescape",   regex(@"^\\([ \n\\`*{}\[\]()#+\-.!_<>~\|/\$'""\?])"), inlineEscape ),
+  Rule("iescape",   regex(@"^\\([^a-zA-Z0-9])"), inlineEscape ),
 
   Rule("other",     regex(@"^[\s\S]"), inlineOther ),
 ]
