@@ -51,9 +51,13 @@ function fmtCode( context : formatContext, lang : string, txt : string, attrs : 
   lattrs = if (lang=="") then attrsNone else Attrs(classes=[langClassName])      
   match(context.fmt) {
     FmtHtml -> context.fmtEnv("pre", context.fmtCmd("code", txt.htmlEscape, lattrs ), attrs)
-    _       -> context.fmtEnv("pre", context.fmtPre(txt), 
-                                if (lang=="" || attrs.hasKey("language").isJust) 
-                                  then attrs else attrs.addKeyval("language",lang))
+    FmtTex  -> {
+      attrsx = if (lang=="" || attrs.hasKey("language").isJust) 
+                then attrs else attrs.addKeyval("language",lang)
+      if (attrsx.hasClass("plain"))
+       then context.fmtEnv("verbatim", context.fmtText(txt), attrsx )
+       else context.fmtEnv("pre", context.fmtPre(txt), attrsx )
+    }
   }
 }
 
