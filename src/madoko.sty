@@ -282,8 +282,9 @@
   \settowidth{\mdBibhang}{\@biblabel{\cssCaption}}%
   \def\section*##1{}% suppress bibliography header
   \def\chapter*##1{}% suppress bibliography header
+  \providecommand{\markboth}[2]{}%
   \begin{thebibliography}{\cssCaption}}%
-  {\end{thebibliography}\end{mdDiv}}
+  {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
 \newenvironment{mdBibitem}[1][]{%
   \item[]\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
@@ -369,7 +370,7 @@
     {\def\@pagealign{b}}%
   {\eifstrequal{\cssPageAlign}{here}%
     {\def\@pagealign{h}}%
-    {\def\@pagealign{}}}}%
+    {\def\@pagealign{tbp}}}}% default tbp
   \cssIfHasClass{wide}%
     {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
     {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}\cssDoAfter{\end{figure}}}%

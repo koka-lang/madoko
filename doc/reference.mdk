@@ -152,18 +152,18 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-| short |         long         |                      description                      |
-|-------|----------------------|-------------------------------------------------------|
-|       | `--version`          | Display version information.                          |
-| `-v`  | `--verbose`          | Be more verbose.                                      |
-|       | `--odir=`_dir_       | Write output files to the specified directory.        |
-|       | `--xmp`              | Only process markdown between `<xmp>` tags.           |
-|       | `--tex`              | Output a LaTeX file too.                              |
-| `-f`  | `--full`             | Generate a full html/latex document.                  |
-|       | `--sanitize`         | Always escape or suppress user defined html.          |
-|       | `--pedantic`         | Pedantic mode.                                        |
-|       | `--bench`            | For benchmarking: turn off numbering, footnotes, etc. |
-|       | `--installdir=`_dir_ | Set installation directory explicitly.                |
+| short |         long         |                  description                   |
+|-------|----------------------|------------------------------------------------|
+|       | `--version`          | Display version information.                   |
+| `-v`  | `--verbose`          | Be more verbose.                               |
+|       | `--odir=`_dir_       | Write output files to the specified directory. |
+|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
+|       | `--tex`              | Output a LaTeX file too.                       |
+| `-f`  | `--full`             | Generate a full html/latex document.           |
+|       | `--sanitize`         | Always escape or suppress user defined html.   |
+|       | `--pedantic`         | Pedantic mode.                                 |
+|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
+|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
 
 All the boolean flags can be negated by prefixing them with `no`, for example
 to suppress LaTeX output, use `--notex`.
@@ -334,7 +334,7 @@ In Equation [#euler] we define [Euler]'s number $e$:
 e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 ~
 
-[Euler]: http://en.wikipedia.org/wiki/E_(mathematical_constant)
+[Euler]: http://en.wikipedia.org/wiki/Euler's_number
 ~~
 
 
@@ -364,7 +364,7 @@ Figure [#fig-monarch] shows how to put an image in a figure.
 The ![monarch] image.
 ~
 
-[monarch]: butterfly.png { width=100px vertical-align=middle }
+[monarch]: butterfly.png {width=100px vertical-align=middle}
 ```
 * * * { width=50% text-align=left }
 ~~~ SampleOutput
@@ -412,8 +412,9 @@ class for HTML output, and the option `language=javascript` to the LaTeX
 [listings] package. This can be used to  enable syntax highlighting. For
 example, to highlight the above example using  [Google Prettify][GPretty] we
 should include the Google script in the metadata (see Section [#sec-metadata]):
-
-	Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+``` { font-size=x-small }
+Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+```
 
 and add the `.prettyprint` class using attributes:
 
@@ -568,7 +569,7 @@ fancy LaTeX commands in bibliography entries. However, we strive to make it
 work for any bibliograpy style and entries, so please [file a bug report][issues] 
 if you encounter situations where it does not work correctly.
 
-Bibliography styles known to work with Madoko include the following author-year
+Bibliography styles tested with Madoko include the following author-year
 styles: `apa`, `apalike`, `plainnat`, `abbrvnat`, `unsrtnat`, `newapa`,
 `chicago`, `named`,  `agsm`, `dcu`, `kluwer`, `astron`, `bbs`, `cbe`,
 `humannat`, `humanbio`, `jtb`, `apsrev4-1`, `aipauth4-1` and others. 
@@ -1227,7 +1228,7 @@ commands that are recognized are:
 * `height=`_length_
 * `vertical-align=`(`top`|`middle`|`bottom`|_length_)
 * `border-style=`(`none`|`solid`|`dotted`)
-* `border-style-left`,`border-style-right`,`border-style-top`,`border-style-bottom`
+* `border-style-left`, `border-style-right`, `border-style-top`, `border-style-bottom`.
 * `border-width=`_length_
 * `border-color=`_color_
 * `text-align=`(`center`|`right`|`left`|`justify`)
@@ -1554,7 +1555,8 @@ The following commands are quite useful for this:
 	* `\cssDoBefore{`_cmds_`}`: executes _cmds_ before formatting the contents.
 	* `\cssDoAfter{`_cmds_`}`: execute _cmds_ after formatting the contents.
 	* `\cssDoEnv{`_env_`}`: enclose the formatting in _env_.
-* `\cssIfHasClass{`_class_`}{`_then_`}{`_else_`}`: To be used inside _cmds_ of
+* `\cssIfHasClass{`_class_`}{`_then_`}{`_else_`}`: This command is can be used
+	inside _cmds_ of
 	the `\cssClassDo`(`Before`|`After`|) commands. If this element has _class_
 	then execute the _then_ part, else the _else_ part.
 * `\cssNewKey{css}{`_attrname_`}{\css`_cmdname_`}{`_default_`}`: Define a new
@@ -1571,7 +1573,8 @@ The following commands are quite useful for this:
 	`Class` variant instead since those also match on element names.
 
 Inside rules, you can also access most CSS attributes that defined through
-`\cssNewKey` or `\cssNewLengthKey`. The attributes are named using `\cssCamelCasing`
+`\cssNewKey` or `\cssNewLengthKey`. The attributes are named using camel casing 
+with a `css` prefix, i.e. `\cssCamelCasing`,
 where `text-indent` is stored in `\cssTextIndent`, or `border-style-left` as
 `\cssBorderStyleLeft`.
 
@@ -1658,10 +1661,10 @@ Some attributes have a special meaning to Madoko. In particular:
 	- `raw`: Raw unprocessed input that is passed directly to the output.
 	- `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
 	- `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
-	- `math`: LaTeX mathematics mode input. Usually used through an `Equation` 
+	- `math`: LaTeX mathematics mode input. This input is usually invoked through an `Equation` 
 		block as described in Section [#sec-math].
-	- `mathpre`: Preformatted LaTeX mathematics. Usually used through a `MathPre` block (Section [#sec-mathpre]).
-	- `mathdefs`: LaTeX math definitions. Usually used through a `MathDefs` block (Section [#sec-mathdefs]).
+	- `mathpre`: Preformatted LaTeX mathematics. This input is usually invoked through a `MathPre` block (Section [#sec-mathpre]).
+	- `mathdefs`: LaTeX math definitions. This input is usually invoked through a `MathDefs` block (Section [#sec-mathdefs]).
 	- `normal`, `markdown`: Regular Madoko markdown input (default).
 	- `texonly`: Regular Madoko markdown that is only processed when generating LaTeX output.
 		Usually used through the `TexOnly` block (Section [#sec-custom]).
@@ -1687,7 +1690,7 @@ Some class attributes are treated specially by Madoko. In particular:
 	in HTML output this will add a top and bottom margin to the element.
 * `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
 	both columns horizontally (see also Section [#sec-predef-custom]).
-* `.short`, `.long`, `.textual`: used for typesetting citations (see Section [#sec-cite]).
+* `.short`, `.long`, `.textual`: these classes are used for typesetting citations (see Section [#sec-cite]).
 * `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-code]).
 
 ## Recognized entities   { #app-entities }
@@ -2014,19 +2017,19 @@ The full list of predefined named entities is:
 
 ## Definitions of predefined custom blocks { #app-custom }
 
-These are the definitions of the predefined custom blocks,  assuming a
-`Heading Depth` and `Toc Depth` of 3 (and adding some spurious line breaks for
+These are the definitions of the predefined custom blocks, where we assume that 
+`Heading Depth` and `Toc Depth` are set to 3 (and adding some spurious line breaks for
 formatting).
 
 ```
-~Equation : label='[(@equation)]{.equation-label}' 
-			replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' 
-			.align-center tight .para-block
-~Figure   : label='[@figure]{.figure-label}' .align-center 
-			after='#nl********* {.figureline}#nl
-					[[**Figure\ #label.** ]{.caption-before}#caption]
-					{.figure-caption}#nl{notag}#nl'
-			toc=tof toc-line='#label. #caption'",
+~Equation: label='[(@equation)]{.equation-label}' 
+  replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' 
+  .align-center tight .para-block
+~Figure: label='[@figure]{.figure-label}' .align-center 
+	after='#nl********* {.figureline}#nl
+			[[**Figure\ #label.** ]{.caption-before}#caption]
+			{.figure-caption}#nl{notag}#nl'
+	toc=tof toc-line='#label. #caption'",
       
 ~Bibitem  : label='[@bibitem]{.bibitem-label}' 
 			before='[\[#label\]\ \ ]{.bibitem-before}' 
@@ -2035,15 +2038,15 @@ formatting).
 			bib-data='...' 
 			texelem=mdBibliography
       
-~Note     : .block before='[**Note**. ]{.note-before}'
-~Remark   : .block before='[**Remark**. ]{.remark-before}'
-~Proof    : .block before='[**Proof**. ]{.proof-before}'
+~Note  : .block before='[**Note**. ]{.note-before}'
+~Remark: .block before='[**Remark**. ]{.remark-before}'
+~Proof : .block before='[**Proof**. ]{.proof-before}'
 
-~Framed   : border-style=solid border-color=black border-width=1px
-~Center   : .align-center
+~Framed: border-style=solid border-color=black border-width=1px
+~Center: .align-center
 
-~Pre      : input=pre .para-block
-~Code     : input=pre
+~Pre   : input=pre .para-block
+~Code  : input=pre
       
 ~Tex      : input=tex
 ~TexRaw   : input=texraw
@@ -2055,17 +2058,17 @@ formatting).
 ~TexOnly  : input=texonly
 
 ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
-      		before='[**Theorem\ #label.** ]{.Theorem-before}'
+    before='[**Theorem\ #label.** ]{.Theorem-before}'
 ~Lemma	  : .block label='[@Lemma]{.Lemma-label}'
-      		before='[**Lemma\ #label.** ]{.Lemma-before}'
+    before='[**Lemma\ #label.** ]{.Lemma-before}'
 ~Proposition: .block label='[@Proposition]{.Proposition-label}'
-      		before='[**Proposition\ #label.** ]{.Proposition-before}'
+    before='[**Proposition\ #label.** ]{.Proposition-before}'
 ~Corollary: .block label='[@Corollary]{.Corollary-label}'
-      		before='[**Corollary\ #label.** ]{.Corollary-before}'
+    before='[**Corollary\ #label.** ]{.Corollary-before}'
 ~Example: .block label='[@Example]{.Example-label}'
-      		before='[**Example\ #label.** ]{.Example-before}'
+    before='[**Example\ #label.** ]{.Example-before}'
 ~Definition: .block label='[@Definition]{.Definition-label}'
-      		before='[**Definition\ #label.** ]{.Definition-before}'
+    before='[**Definition\ #label.** ]{.Definition-before}'
 
 ~H1: label='[@h1]{.heading-label}' 
      before='[#label.\ \ \ ]{.heading-before}'
