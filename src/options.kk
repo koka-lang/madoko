@@ -218,7 +218,7 @@ val metaKey = @"((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' tight .para-block",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]{.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
-      @"~Figure   : toc=tof toc-line='#label. #caption' tight",
+      @"~Figure   : toc=tof toc-line='#label. #caption'",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",

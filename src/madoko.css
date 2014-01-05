@@ -73,8 +73,8 @@ a.localref:hover {
 
 
 /* Alignment */
-.align-center {
-  text-align: center;
+.align-center, .align-center>p {
+  text-align: center !important;
 }
 
 .align-center>* {
@@ -82,12 +82,8 @@ a.localref:hover {
   margin-right: auto;
 }
 
-.align-center>table {
-  text-align: left;
-}
-
-.align-left {
-  text-align: left;
+.align-left, .align-left>p {
+  text-align: left !important;
 }
 
 .align-left>* {
@@ -95,8 +91,8 @@ a.localref:hover {
   margin-right: auto;
 }
 
-.align-right {
-  text-align: right;
+.align-right, .align-right>p {
+  text-align: right !important;
 }
 
 .align-right>* {
@@ -104,6 +100,8 @@ a.localref:hover {
   margin-right: 0pt;
 }
 
+.align-center>table,
+.align-left>table,
 .align-right>table {
   text-align: left;
 }

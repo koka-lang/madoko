@@ -3,39 +3,36 @@ Subtitle	: A Fast Scholarly Markdown Processor
 Author		: Daan Leijen
 Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
+
 Heading Base: 2
 MathJax		: True
-
+Cite All	: True
+Script		: reference.js
 Bib			: reference
 
-Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
-.SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px padding-top=-1ex
-.SampleOutput: margin-bottom=1.7ex
+.SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px 
+				padding-top=-1ex 
+.ZXSampleOutput: margin-bottom=1ex
 ~Sample		 : margin-bottom=2ex 
-				replace="~~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl~~~~~SampleOutput#nl#source#nl~~~~~#nl~~~~#nl"
+				replace="~~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl#source#nl~~~~#nl"
 ~Slanted	: font-style=oblique
 ~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' notag tight 
+
+Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
 Title2		: (#Title,#Title)
 llbracket	: &#10214;
 rrbracket	: &#10215;
-Cite All	: True
 
-<style>
-.tt { font-family: consolas,monospace; font-size: small }
-</style>
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
-\cssClassRule{tt}{font-family=monospace}
+\cssClassRule{sampleblock}{padding-bottom=1ex}
 ~
 
-<!-- apa, apalike, plainnat, newapa, chicago, named, 
-	agsm, dcu, kluwer, 
-	astron, bbs, cbe, humannat, humanbio, jtb,
-	eptcs -->
-
 [TITLE]
+
+# []{#toc-toggle}Table of contents {- #toc-header }
 
 [TOC]
 
@@ -155,18 +152,18 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-|  short  |         long         |                      description                      |
-|---------|----------------------|-------------------------------------------------------|
-|         | `--version`          | Display version information.                           |
-| `-v`    | `--verbose`          | Be more verbose.                                       |
-|         | `--odir=`_dir_       | Write output files to the specified directory.         |
-|         | `--xmp`              | Only process markdown between `<xmp>` tags.            |
-|         | `--tex`              | Output a LaTeX file too.                               |
-| `-f`    | `--full`             | Generate a full html/latex document                   |
-|         | `--sanitize`         | Always escape or suppress user defined html           |
-|         | `--pedantic`         | Pedantic mode                                         |
-|         | `--bench`            | For benchmarking: turn off numbering, footnotes, etc. |
-|         | `--installdir=`_dir_ | Set installation directory explicitly                 |
+| short |         long         |                      description                      |
+|-------|----------------------|-------------------------------------------------------|
+|       | `--version`          | Display version information.                          |
+| `-v`  | `--verbose`          | Be more verbose.                                      |
+|       | `--odir=`_dir_       | Write output files to the specified directory.        |
+|       | `--xmp`              | Only process markdown between `<xmp>` tags.           |
+|       | `--tex`              | Output a LaTeX file too.                              |
+| `-f`  | `--full`             | Generate a full html/latex document.                  |
+|       | `--sanitize`         | Always escape or suppress user defined html.          |
+|       | `--pedantic`         | Pedantic mode.                                        |
+|       | `--bench`            | For benchmarking: turn off numbering, footnotes, etc. |
+|       | `--installdir=`_dir_ | Set installation directory explicitly.                |
 
 All the boolean flags can be negated by prefixing them with `no`, for example
 to suppress LaTeX output, use `--notex`.
@@ -301,6 +298,93 @@ Here is a footnote[^fn].
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
 
 
+## Identities and labels {#sec-ids-labels}
+
+Madoko has extensive support for numbering and referencing elements in a document.
+Elements are given an identity using attributes (see Section [#sec-attr]).
+For example, here we give an identifier `myheader` to a header:
+
+~ Sample 
+### A named header { #myheader }
+
+And we can refer to it
+
+* Using an explicit [link](#myheader) 
+	(or [reference][#myheader]).
+* Or using an implicit link to Section [#myheader].
+* Or we can just see its label, namely #myheader.
+~
+
+Using an implicit link is generally recommended. 
+When type setting a reference such as Section [#myheader], Madoko automatically
+inserts a non-breakable space between "Section" and the reference[^refsp]. 
+Unlike LaTeX there is no need to insert such non-breakable space yourself. 
+
+[^refsp]: Madoko will still use a regular space if you use an explicit line 
+	break between "Section" and the reference in the source.
+
+Of course, we can refer to _any_ element that has an identity,
+like equations, figures, tables, etc. Here is an example with an equation
+(see Section [#sec-math]):
+
+~~ Sample
+In Equation [#euler] we define [Euler]'s number $e$: 
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+[Euler]: http://en.wikipedia.org/wiki/E_(mathematical_constant)
+~~
+
+
+An implicit link such as `[#myheader]` is a shorthand for an explicit link of
+the form `[#myheader](#myheader)`, i.e. it links to the local reference
+`#myheader` and it displays the text `#myheader`. In Madoko, a _hash name_
+(see Section  [#sec-hashname]) like `#myheader` is replaced by the _label_
+value of the referred block. For headers, this is by default the header number
+(as we will see in Section [#numbering])  but you can set any label you'd
+like. Using a minus\ (`-`) in the attributes clears all attributes, which is
+used in the following example to suppress the default numbering:
+
+~ Sample
+### An unnumbered header { - }
+### A labeled header     { - #myheader1 label="my label" }
+Let's refer to Section [#myheader1].
+~
+
+## Figures { #sec-figure }
+
+Figures can be included using the `Figure` custom block (see Section [#sec-custom]):
+~~ SampleBlock
+``` 
+Figure [#fig-monarch] shows how to put an image in a figure.
+
+~ Figure { #fig-monarch caption="A Monarch butterfly." }
+The ![monarch] image.
+~
+
+[monarch]: butterfly.png { width=100px vertical-align=middle }
+```
+* * * { width=50% text-align=left }
+~~~ SampleOutput
+Figure [#fig-monarch] shows how to include an image in a figure.
+~~~
+~~
+
+~ Figure { #fig-monarch caption="A picture of a Monarch butterfly." }
+The nice ![monarch] image.
+~
+[monarch]: butterfly.png { width=100px vertical-align=middle }
+
+A figure can be given an identity and referred to just like headings.
+The `caption` attribute gives the caption of the figure which is also
+used in the table-of-figures. A `Figure` can have a `page-align`
+attribute that can be set to `top`, `bottom`, or `here`. This is ignored
+in the HTML output but used in LaTeX to influence where a figure is
+placed on a page. The `.wide` attribute is used in LaTeX to have figures
+span both columns in a two-column document class.
+
 ## Code blocks  { #sec-code }
 
 You can write preformatted code simply by indenting the code with a tab
@@ -321,11 +405,13 @@ function hi() { return "hi"; }
 ```
 ~
 
+### Advanced: Syntax highlighting
+
 For the previous example, Madoko will automatically add the `lang-javascript`
 class for HTML output, and the option `language=javascript` to the LaTeX
 [listings] package. This can be used to  enable syntax highlighting. For
 example, to highlight the above example using  [Google Prettify][GPretty] we
-should include the Google script in the [metadata][#sec-metadata]:
+should include the Google script in the metadata (see Section [#sec-metadata]):
 
 	Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
@@ -371,8 +457,8 @@ also include line numbers if the `.linenums` class is present. Use the
 
 In some cases, the listings package does not work correctly in certain
 contexts, like tables or command arguments, due to the fragility of LaTeX
-parsing[^listings].  In such cases, you can switch to a robust verbatim mode using the
-`.plain` class.
+parsing[^listings].  In such cases, you can switch to a robust verbatim mode
+using the `.plain` class.
 
 ~ Sample
 +-----------------------+
@@ -398,7 +484,7 @@ table of contents goes (by default 3).
 You can also a create a list of figures, by using `[TOC=tof]`. This will list
 all the `~Figure` block elements.
 
-### Custom tables of contents
+### Advanced: Custom tables of contents
 
 Custom tables of contents can be generated using the `toc` attribute.  The
 `toc-depth` attribute specifies the depth of the element (by default 1), while
@@ -414,7 +500,7 @@ the table of equations anywhere in the document as:
 
 	[TOC=equations]
 
-## Bibliography		{ #sec-bib }
+## Bibliography and Citations		{ #sec-bib }
 
 One of Madoko's main design goals is to enable the creation of high-quality
 scholarly articles. As such, Madoko integrates closely with the standard 
@@ -466,7 +552,6 @@ which you can see at the [end of this document][#sec-references].
 When running Madoko again, the bibliography entries are now known and no
 warnings will be issued.
 
-
 ### Bibliography styles  { #sec-bibstyle }
 
 The style of the bibliography entries is determined using the `Bib Style` key
@@ -501,7 +586,7 @@ is generally preferred for modern documents to use a numeric citations style.
 
 The citation style is usually automatically determined from the 
 bibliography style. However, it can be set explicitly using the `Cite Style`
-key:
+metadata key:
 
 	Cite Style: natural
 
@@ -746,7 +831,8 @@ easier to typeset. In particular:
 	(except when the spaces directly follow a LaTeX command).
 
 * A name (consisting of letters and digits) is typeset in a `\mathid` command so 
-	it will look like $\mathit{sinus}$ instead of $sinus$.
+	it will look like $\mathit{function}$ instead of $function$ (note the spacing
+	between the $f$ and $u$ for example).
 
 * If a name ends with digits, they are typeset as subscripts, where `x1` becomes $\mathit{x}_1$.
 
@@ -838,7 +924,8 @@ Here is my slanted custom block
 
 Madoko defines quite a few common custom blocks.
 
-* `Figure`: This is used to define figures. Recognizes the following attributes:
+* `Figure`: This is used to define figures (see Section [#sec-figure]. 
+	Recognizes the following attributes:
 	- `caption=`_caption_: specify the caption of a figure.
 	- `.wide`: if the class `wide` is set, the figure will span the width of a page 
 		in a two-column format (used in LaTeX).
@@ -1078,7 +1165,7 @@ Madoko supports some special block elements that get expanded automatically.
 		~		
 	See also Section [#sec-bib].
 
-## Attributes 		{ #sec-attr }
+## Attributes and Formatting		{ #sec-attr }
 
 An essential addition of Madoko is good support for attributes. The syntax is
 similar to attribute definitions in [Kramdown], [Pandoc], and [MultiMarkdown],
@@ -1123,70 +1210,11 @@ logo.
 [butterfly]: butterfly.png { width=100px vertical-align=top }
 ~
 
-### Special attribute keys  { #sec-specialattr}
-
-Some attributes have a special meaning to Madoko. In particular:
-
-* `tight`: Supresses enclosing the first text content in this block as a paragraph.
-	This is used for example for a `BibItem` block. 
-* `notag`: Supresses the output of a `div` tag (or LaTeX environment) for a custom block.
-* `toc`, `toc-line`, `toc-depth`: Used for generating custom table of contents. Used
-	for example by headings. See Section [#sec-toc] for more information.
-* `before`, `replace`, and `after`: Used to transform the content of the block. See 
-	Section [#sec-replace].
-* `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
-	block.
-* `label=`_label_: Sets the label of an element. This is used when referencing this block
-	as explained in Section [#sec-ids-labels]
-* `id=`_id_: Sets the _id_ of an element. Usually this is done using a hash name directly
-	as `#`_id_.
-* `class=`_classes_: Adds to the classes of this element. Usually set using a dot name 
- 	as in `.`_class_. If you use `class=clear`, the classes are cleared. Similarly, you
- 	can use `.`_class_`=clear` to remove one particular class.
-* `sticky`: The attributes for this element will stick to apply to all of the same
-	elements that follow in the document.
-* `-`: clear any attributes that have been set before (usually through metadata rules).
-* `input=`_input_. Sets the input mode of this block which determines how the content
-	of this block is processed. One of:
-	- `pre`: Preformatted code (Section [#sec-code]).
-	- `raw`: Raw unprocessed input that is passed directly to the output.
-	- `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
-	- `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
-	- `math`: LaTeX mathematics mode input. Usually used through an `Equation` 
-		block as described in Section [#sec-math].
-	- `mathpre`: Preformatted LaTeX mathematics. Usually used through a `MathPre` block (Section [#sec-mathpre]).
-	- `mathdefs`: LaTeX math definitions. Usually used through a `MathDefs` block (Section [#sec-mathdefs]).
-	- `normal`, `markdown`: Regular Madoko markdown input (default).
-	- `texonly`: Regular Madoko markdown that is only processed when generating LaTeX output.
-		Usually used through the `TexOnly` block (Section [#sec-custom]).
-	- `htmlonly`: Regular Madoko markdown that is only processed when generating HTML output.
-		Usually used through the `HtmlOnly` block (Section [#sec-custom]).
-
-### Special attribute classes
-
-Some class attributes are treated specially by Madoko. In particular:
-
-* `.para-block`. If a block element has the `.para-block` class, it will
-	considered part of the preceding paragraph (and not end that paragraph).
-	This is for example done for the `Equation` block since equations are part
-	of a paragraph. This improves typography significantly, especially for
-	the LaTeX backend.
-* `.indent`. This class is automatically added by Madoko to any paragraph that
-	follows other paragraphs (and is not inside a list). This can be used to switch
-	from _block_ mode paragraphs to _indented_ paragraphs instead using some CSS.
-* `.align-center`, `.align-right`, `.align-left`. These classes align the _content_
-	of a block (instead of the block itself) to the center, right, or left.
-* `.hidden`. Hides the content of the block.
-* `.block`. Treat this as a block element instead of as inline content.
-* `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
-	both columns horizontally (see also Section [#sec-predef-custom]).
-* `.short`, `.long`, `.textual`: used for typesetting citations (see Section [#sec-cite]).
-
-### Recognized formatting attributes
+### Recognized formatting attributes  { #sec-css }
 
 Attributes that are not special to Madoko (as described in Section [#sec-specialattr]),
-are passed as CSS style attributes in the HTML backend. For the LaTeX backend 
-Madoko includes as special style files (`css.sty` and `madoko.sty`) that process
+are passed as CSS style attributes in the HTML backend. For the LaTeX backend,
+Madoko includes special style files (`css.sty` and `madoko.sty`) that process
 many CSS formatting commands (and ignores all others). Currently formatting
 commands that are recognized are:
 
@@ -1212,7 +1240,8 @@ commands that are recognized are:
 * `font-family=`(`monospace`|`serif`|`sans-serif`|`normal`)
 * `color=`_color_
 * `penalty=`_number_
-* `page-align=`(`top`|`bottom`|`here`)
+* `page-align=`(`top`|`bottom`|`here`). Used for `Figure` custom blocks 
+	(see Section [#sec-predef-custom]).
 
 Note that the syntax is quite a bit more restrictive than in in plain CSS.
 For example, we cannot just say:
@@ -1256,62 +1285,6 @@ terrible had happened to him.
 ~
 
 
-## Identities and labels {#sec-ids-labels}
-
-Attributes are most often used to give a block element an identity and then
-refer to that element later on. For example, here we give an identifier
-to a header:
-
-~ Sample 
-### A named header { #myheader }
-
-And we can refer to it
-
-* Using an explicit [link](#myheader) 
-	(or [reference][#myheader]).
-* Or using an implicit link to Section [#myheader].
-* Or we can just see its label, namely #myheader.
-~
-
-Using an implicit link is generally recommended. When rendering a reference such
-as Section [#myheader], there should never be a line break in between _Section_
-and the label _#myheader_. In LaTeX for example, it is customary to write a
-non-breakable space (`~`) instead of a regular space. Madoko takes care of
-this automatically and always renders a non-breakable space  between a link and
-what comes before it (unless the user uses an explicit line break).
-
-Of course, we can refer to _any_ element that has an identity,
-like equations, figures, tables, etc. Here is an example with an equation:
-
-~~ Sample
-In Equation [#eq-clifford] we define generators 
-$\mathcal{C}\ell_{j}^\pm$ for Clifford
-algebras[^moreInfo] over $\mathbb{R}$ which satisfy
-~ Equation { #eq-clifford }
-  \gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
-~
-and $\mathcal{C}\ell_{n+8}^\pm = 
-		\mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
-
-[^moreInfo]: For more information, see [Wikipedia][Clifford].
-[Clifford]:  http://en.wikipedia.org/wiki/Clifford_algebra
-~~
-
-An implicit link such as `[#myheader]` is a shorthand for an explicit link
-`[#myheader](#myheader)`, i.e. it links to the local reference `#myheader` and
-it displays the text `#myheader`. In Madoko, a [hash name][#sec-hashname]
-(`#`_name_) is replaced by the _label_ value of the referred block. For
-headers, this is by default the header number (as we will see in Section [#numbering]) 
-but you can set any label you'd like. Using a minus\ (`-`) in
-the attributes clears all attributes, which is used in the following example
-to suppress the default numbering:
-
-~ Sample
-### An unnumbered header { - }
-### A labeled header     { - #myheader1 label="my label" }
-Let's refer to Section [#myheader1].
-~
-
 ## Numbering	{ #numbering }
 
 For larger documents, numbering sections, figures, tables, images, etc. is
@@ -1323,7 +1296,7 @@ variable. If it is set to zero, it suppresses numbering for headings completely:
 	Heading Depth: 0 
 
 
-### Custom numbering
+### Advanced: Custom numbering
 
 The numbering can be completely customized though. Numbers are introduced
 using `@`_name_ syntax in attributes. When such counter name occurs, it is
@@ -1347,7 +1320,7 @@ the full definition for the main sections is:
 	{ @h1 label="@h1" before="#label.\ \ \ " }
 
 
-### Reset counters { #sec-reset }
+### Advanced: Reset counters { #sec-reset }
 
 If a counter has a dash in its name, of the form `@`_prefix_`-name`, then the
 counter will be reset on every increment of the counter _prefix_. For example,
@@ -1356,8 +1329,10 @@ rules][#sec-rules]):
 
 	~h2: @h1-h2 label="@h1.@h1-h2" before="#label.\ \ \ "
 
+Similarly, a counter like `@h1-h2-h3` would reset on every increment of
+counter `@h1` or `@h1-h2`.
 
-### Display format 
+### Advanced: Display format 
 
 The counters above are displayed as numbers but sometimes we would like to
 number using other formats. When you assign a single letter to a counter, it
@@ -1372,7 +1347,7 @@ the appendix where each section is generally numbered using letters:
 	# Another appendix section
 	This section will be numbered as 'B'
 
-The display format of a counter can also be set indepently of setting its
+The display format of a counter can also be set independently of setting its
 value. Currently, Madoko supports `arabic`, `upper-case`, and `lower-case`
 display. Assigning a single letter, like `@h1="A"` in the previous example is
 just a shorthand for:
@@ -1399,7 +1374,49 @@ set the display mode here and not a specific value.
 	it  is already done automatically by Madoko for any `Equation` block. If it is
 	added, it will effectively increment the `@equation` counter twice.
 
-## Replacement { #sec-replace }
+
+
+## Styling the document { #sec-styling }
+
+Writing Madoko documents is clearly about content: the main advantage of using
+a markdown format is that it allows the writer to concentrate on prose and
+content instead of formatting. However, in the final stages it is desirable to
+_style_ a document to make it look good. This section describes some tricks
+and tips that can help doing this well. 
+
+The main tool for styling in Madoko are class attributes and metadata rules.
+For example, through a metadata rule, we can style all code blocks in a 
+smaller font, and all content that has a `.slanted` class in a slanted font:
+
+	~Pre    : font-size=small
+	.Slanted: font-style=oblique
+
+Such rules are nice since, just like CSS, they allow us to separate styling from
+the content, where the main document contains as few style elements as
+possible. We already saw the `Sample` custom block example (Section 
+[#sec-replace]) used in this document: the main document just contains sample
+fragments in `Sample` blocks while the styling is done completely through
+metadata rules.
+
+For a full list of CSS formatting attributes that are supported in both 
+HTML and LaTex, see Section [#sec-css].
+
+### Styling in CSS 
+
+Sometimes though, we only want to apply certain styling to just HTML.
+For HTML, styling through classes works best: we can simply write some CSS
+(and include it through the `Css` metadata or directly within `<style>`
+tags.). For example,
+	
+	<style>
+	.slanted { font-style: oblique; font-family: Cambria }
+	</style>
+
+For styling in LaTeX, or when certain CSS keys are not yet processed in
+LaTeX, see Appendix [#sec-latex-style].
+
+
+## Advanced: Replacement { #sec-replace }
 
 Madoko has three attributes that can transform the content of block or inline
 element, namely `before`, `after`, and `replace`. The `before` and `after`
@@ -1504,43 +1521,16 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 
 # Appendix	{ @H1="A" }
 
-## Styling the document { #sec-styling }
+## Advanced styling in LaTeX  { #sec-latex-style }
 
-Writing Madoko documents is clearly about content: the main advantage of using
-a markdown format is that it allows the writer to concentrate on prose and
-content instead of formatting. However, in the final stages it is desirable to
-_style_ a document to make it look good. This section describes some tricks
-and tips that can help doing this well. 
+Sometimes we need to style LaTeX code specially, or handle cases where
+the CSS elements are not yet supported by Madoko (as described in 
+Section [#sec-css]).
 
-The main tool for styling in Madoko are class attributes and metadata rules.
-For example, through a metadata rule, we can style all code blocks in a 
-smaller font, and all content that has a `.slanted` class in a slanted font:
-
-	~Pre    : font-size=small
-	.Slanted: font-style=oblique
-
-Such rules are nice since, just like CSS, allow one to separate styling from
-the content, where the main document contains as few style elements as
-possible. We already saw the `Sample` custom block example (Section 
-[#sec-replace]) used in this document: the main document just contains sample
-fragments in `Sample` blocks while the styling is done completely through
-metadata rules.
-
-### Advanced styling in CSS and LaTeX
-
-Sometimes though, we would only want to apply certain styling to just HTML.
-Or sometimes the CSS needed is just not yet supported in our LaTeX backend.
-In those cases, styling through classes works best. For the HTML backend,
-we can simply write some CSS (and include it through the `Css` metadata or
-directly within `<style>` tags.). For example,
-	
-	<style>
-	.slanted { font-style: oblique; font-family: Cambria }
-	</style>
-
-For the LaTeX backend, all attributes are also passed to the LaTeX commands,
-and there are generic hooks to apply LaTeX formatting too. For example, we
-can include the following LaTeX commands in a `TexRaw` section:
+For the LaTeX backend, all attributes are passed to the LaTeX commands,
+and there are generic hooks to apply LaTeX formatting. For example, we
+can include the following LaTeX commands in a `TexRaw` section to make
+all `Slanted` custom blocks use a slanted font:
 
 	~ TexRaw
 	\cssClassRule{slanted}{font-style=oblique}
@@ -1564,7 +1554,7 @@ The following commands are quite useful for this:
 	* `\cssDoBefore{`_cmds_`}`: executes _cmds_ before formatting the contents.
 	* `\cssDoAfter{`_cmds_`}`: execute _cmds_ after formatting the contents.
 	* `\cssDoEnv{`_env_`}`: enclose the formatting in _env_.
-* `\cssIfHasClass{`_class`}{`_then_`}{`_else_`}`: To be used inside _cmds_ of
+* `\cssIfHasClass{`_class_`}{`_then_`}{`_else_`}`: To be used inside _cmds_ of
 	the `\cssClassDo`(`Before`|`After`|) commands. If this element has _class_
 	then execute the _then_ part, else the _else_ part.
 * `\cssNewKey{css}{`_attrname_`}{\css`_cmdname_`}{`_default_`}`: Define a new
@@ -1607,6 +1597,7 @@ As an advanced example, here is how `madoko.sty` defines the rules for the
 
 \newlength{\mdCaptionlen}
 \newcommand{\mdCaption}[1]{%
+  % center a caption if it is smaller than the line width
   \settowidth{\mdCaptionlen}{#1}%
   \ifnum\mdCaptionlen<\linewidth%
     \parbox{\linewidth}{\noindent\centering #1}%
@@ -1617,7 +1608,16 @@ As an advanced example, here is how `madoko.sty` defines the rules for the
 \cssClassRuleCmd{figure-caption}{\mdCaption}
 \cssClassRule{figure-caption}{text-align=justify}
 ```
-The sample uses two utility functions from `css.sty`:
+Where we recall that the standard metadata rules for a `Figure` are:
+
+	~Figure: label='[@figure]{.figure-label}' .align-center 
+			after='#nl********* {.figureline}#nl
+					[[**Figure\ #label.** ]{.caption-before}#caption]
+					{.figure-caption}#nl{notag}#nl'
+			toc=tof toc-line='#label. #caption'",
+
+as shown in Appendix [#app-custom]. The sample uses two utility functions from
+`css.sty`:
 
 * `\eifstrequal{`_str1_`}{`_str2_`}{`_then_`}{`_else_`}`: expands the
  	content of _str1_ and then compares for equality with _str2_, and
@@ -1627,6 +1627,68 @@ The sample uses two utility functions from `css.sty`:
 	continues executing _arg1_ (followed by the expansion of _arg2_).
 	Used in the previous example to expand the optional argument to 
 	the `figure` environment to one of `b`, `h`, or `t`.
+
+
+## Special attribute keys  { #sec-specialattr}
+
+Some attributes have a special meaning to Madoko. In particular:
+
+* `tight`: Supresses enclosing the first text content in this block as a paragraph.
+	This is used for example for a `BibItem` block. 
+* `notag`: Supresses the output of a `div` tag (or LaTeX environment) for a custom block.
+* `toc`, `toc-line`, `toc-depth`: Used for generating custom table of contents. Used
+	for example by headings. See Section [#sec-toc] for more information.
+* `before`, `replace`, and `after`: Used to transform the content of the block. See 
+	Section [#sec-replace].
+* `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
+	block.
+* `label=`_label_: Sets the label of an element. This is used when referencing this block
+	as explained in Section [#sec-ids-labels]
+* `id=`_id_: Sets the _id_ of an element. Usually this is done using a hash name directly
+	as `#`_id_.
+* `class=`_classes_: Adds to the classes of this element. Usually set using a dot name 
+ 	as in `.`_class_. If you use `class=clear`, the classes are cleared. Similarly, you
+ 	can use `.`_class_`=clear` to remove one particular class.
+* `sticky`: The attributes for this element will stick to apply to all of the same
+	elements that follow in the document.
+* `-`: clear any attributes that have been set before (usually through metadata rules).
+* `input=`_input_. Sets the input mode of this block which determines how the content
+	of this block is processed. One of:
+	- `pre`: Preformatted code (Section [#sec-code]).
+	- `raw`: Raw unprocessed input that is passed directly to the output.
+	- `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
+	- `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
+	- `math`: LaTeX mathematics mode input. Usually used through an `Equation` 
+		block as described in Section [#sec-math].
+	- `mathpre`: Preformatted LaTeX mathematics. Usually used through a `MathPre` block (Section [#sec-mathpre]).
+	- `mathdefs`: LaTeX math definitions. Usually used through a `MathDefs` block (Section [#sec-mathdefs]).
+	- `normal`, `markdown`: Regular Madoko markdown input (default).
+	- `texonly`: Regular Madoko markdown that is only processed when generating LaTeX output.
+		Usually used through the `TexOnly` block (Section [#sec-custom]).
+	- `htmlonly`: Regular Madoko markdown that is only processed when generating HTML output.
+		Usually used through the `HtmlOnly` block (Section [#sec-custom]).
+
+## Special attribute classes
+
+Some class attributes are treated specially by Madoko. In particular:
+
+* `.para-block`. If a block element has the `.para-block` class, it will
+	considered part of the preceding paragraph (and not end that paragraph).
+	This is for example done for the `Equation` block since equations are part
+	of a paragraph. This improves typography significantly, especially for
+	the LaTeX backend.
+* `.indent`. This class is automatically added by Madoko to any paragraph that
+	follows other paragraphs (and is not inside a list). This can be used to switch
+	from _block_ mode paragraphs to _indented_ paragraphs instead using some CSS.
+* `.align-center`, `.align-right`, `.align-left`. These classes align the _content_
+	of a block (instead of the block itself) to the center, right, or left.
+* `.hidden`. Hides the content of the block.
+* `.block`. Treat this as a block element instead of inline content. For example,
+	in HTML output this will add a top and bottom margin to the element.
+* `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
+	both columns horizontally (see also Section [#sec-predef-custom]).
+* `.short`, `.long`, `.textual`: used for typesetting citations (see Section [#sec-cite]).
+* `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-code]).
 
 ## Recognized entities   { #app-entities }
 
@@ -1964,7 +2026,7 @@ formatting).
 			after='#nl********* {.figureline}#nl
 					[[**Figure\ #label.** ]{.caption-before}#caption]
 					{.figure-caption}#nl{notag}#nl'
-			toc=tof toc-line='#label. #caption' tight",
+			toc=tof toc-line='#label. #caption'",
       
 ~Bibitem  : label='[@bibitem]{.bibitem-label}' 
 			before='[\[#label\]\ \ ]{.bibitem-before}' 

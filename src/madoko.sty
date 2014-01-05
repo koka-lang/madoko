@@ -193,7 +193,9 @@
 \cssNewInlineElem{\mdSpan}{span}{}
 \cssNewBlockElem{mdDiv}{div}{}
 \cssNewBlockElem{mdDivInline}{divinline}{display=block-inline}
-
+\newenvironment{mdBlockquote}[1][]%
+  {\begin{mdDiv}[#1]\begin{quote}}%
+  {\end{quote}\end{mdDiv}}
 
 %-------------------------------------------------------------
 % Images 
@@ -388,6 +390,7 @@
 \newcommand{\mdHr}[2][]{%
   \begingroup%  
   \cssNewLengthKey{csspre}{width}{\cssHrWidth}% capture width 
+  %\relax\ifhmode\par\fi%
   \begin{mdDiv}[height=1ex,vertical-align=center,text-align=center,#1]{%
     \ifdim\cssHrWidth=0pt\setlength{\cssHrWidth}{\linewidth}\fi%
     \rule{\cssHrWidth}{0.4pt}#2}%

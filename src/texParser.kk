@@ -281,7 +281,9 @@ public function parseTex( txt : string, citestyle : citestyle = Auto, verbose : 
 {
   normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
                .replaceAll(regex(@"\t"),"   ")
-               .replaceAll(regex(@"(^|[^\\])%.*"),@"$1")
+               // strip off comments
+               // little conservative but % sometimes occurs inside url's
+               .replaceAll(regex(@"(^|[^\\])%[^\n}]*"),@"$1") 
   md = parseTexX(normTxt,TexContext(texGrammar,citestyle))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
