@@ -86,7 +86,7 @@ val blockGrammar : grammar<block,blockContext> = [
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
   Rule("html",       regex(@"^ *" + html), blockHtml ),
-  Rule("deflink",    regex(@"^ *\[(?!\^)" + linkid + @"\]: *<?((?:[^\s>]|\\\n *)+)>?(?: +[""(]((?:[^\n\\]|\\\n *)+)["")])? *" +iattrs+ @"(\n+|$)"), blockDefLink ),
+  Rule("deflink",    regex(@"^ *\[(?!\^)" + linkid + @"\]: *<?((?:[^\\\s>]|\\(?:.|\n *))+)>?(?: +[""(]((?:[^\n\\]|\\(?:.|\n *))+)["")])?(?: |\\\n *)*" +iattrs+ @"(\n+|$)"), blockDefLink ),
   Rule("deffootnote",regex(@"^ *\[\^" + linkid + @"\]: *(?:\n {4})?(.*(?:\n+ {4}.*)*)(?:\n+|$)"), blockDefFootnote),
   Rule("hline",      regex(@"^ *" + hr), blockHLine ),
     

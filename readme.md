@@ -1,7 +1,7 @@
 Title 		: Madoko
 Heading Base: 2
 
-# Madoko
+# Madoko -- a Fast Scholarly Markdown Processor
 
 Madoko is a fast javascript [Markdown] processor written in [Koka]
 It started out as a demo program for the new [Koka] language and
@@ -12,7 +12,20 @@ then [Marked] (one of the fastest Javascript markdown implementations), and
 about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
 available as a .NET executable on windows.
 
-For more information look in the `doc` directory.
+Even though Madoko is fast, the main design goal is not efficiency: I wanted
+to extend Markdown to make it suitable to create high-quality scholarly and
+industrial documents for the web and print, while maintaining John Gruber's
+Markdown philosophy of simplicity and focus on plain text readability.
+
+Besides HTML output, also generates high-quality PDF files through LaTeX. Even
+though more Markdown implementations support this, there has been a lot of
+effort in Madoko to make the LaTeX generation robust and customizable. This
+makes it possible to write high-quality articles using just Madoko and get
+both a high-quality print format (PDF) and a good looking HTML page.
+
+For more information look at the [Madoko documentation](doc/reference.html)
+in the `doc` directory.
+
 Have fun,
 -- Daan
 
@@ -24,29 +37,6 @@ Have fun,
 [Node.js]:		http://nodejs.org	
 
 [Documentation]: http://madoko.codeplex.com
-
-## Madoko philosophy
-
-Even though Madoko is fast, the main design goal is not efficiency: I wanted to
-extend Markdown to make it suitable to create high-quality documents for the
-web and print, while maintaining John Gruber's Markdown philosophy of
-simplicity and focus on plain text readability.
-
-The popularity of Markdown is not accidental, and it is great for writing
-prose: it is super simple and straightforward to create good looking HTML
-documents. But for more serious use Markdown falls short in several areas and
-many extended implementations have arisen in the recent years. Madoko
-addresses many of the weaknesses of Markdown. In particular, it helps you
-with those things that a computer can well do for you: like numbering, document
-references, generating table of contents, footnotes, bibliographies, and
-document styling.
-
-Besides HTML output, Madoko can also generate high-quality PDF files through
-LaTeX. Even though more Markdown implementations support this, there has been
-a lot of effort in Madoko to make the LaTeX generation very good and
-customizable. This makes it possible to write high-quality articles
-using just Madoko and get both a high-quality print format (PDF) and a good
-looking HTML page. 
 
 ## Performance
 

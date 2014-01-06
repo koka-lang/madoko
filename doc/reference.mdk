@@ -70,8 +70,7 @@ available as a .NET executable on windows.
 [Showdown]: 	https://github.com/coreyti/showdown
 [Marked]: 		https://github.com/chjj/marked
 [MathJax]:		http://www.mathjax.org
-[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html\
-				#supported-latex-commands
+[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
 [Node.js]:		http://nodejs.org	
 [NodeJs]: 		http://nodejs.org	
 
@@ -82,7 +81,7 @@ available as a .NET executable on windows.
 ## Madoko philosophy
 
 Even though Madoko is fast, the main design goal is not efficiency: I wanted
-to extend Markdown to make it suitable to create high-quality scholarly and
+to extend Markdown to make it suitable to create high-quality scholarly[^scholarly] and
 industrial documents for the web and print, while maintaining John Gruber's
 Markdown philosophy of simplicity and focus on plain text readability.
 
@@ -109,10 +108,16 @@ looking HTML page.  Look at this scientific article for an example[^fn-slow-load
 |                                |                                  |                              |
 ~
 
+Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this document.
+
 [^fn-slow-load]:   
 	Note that the example article loads somewhat slowly in the browser. This is
 	because it is a long article that uses _a lot_ of math which takes a while to
 	render in [MathJax].
+
+[^scholarly]:
+	There is actually an effort to define 
+	[scholarly markdown](http://blog.martinfenner.org/2013/06/17/what-is-scholarly-markdown/).
 
 [doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
 [doc-html]: 	koka-doc-html.png 	{width=250px vertical-align=top }
@@ -121,6 +126,9 @@ looking HTML page.  Look at this scientific article for an example[^fn-slow-load
 [koka-article-pdf]: 	http://research.microsoft.com/pubs/200436/koka-effects-2013.pdf
 [koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.html
 [koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.md.txt
+
+[this-pdf]: reference.pdf
+[this-mdk]: reference.mdk.txt
 
 # Usage
 
@@ -373,12 +381,12 @@ The ![monarch] image.
 ```
 * * * { width=50% text-align=left }
 ~~~ SampleOutput
-Figure [#fig-monarch] shows how to include an image in a figure.
+Figure [#fig-monarch] shows how to put an image in a figure.
 ~~~
 ~~
 
-~ Figure { #fig-monarch caption="A picture of a Monarch butterfly." }
-The nice ![monarch] image.
+~ Figure { #fig-monarch caption="A Monarch butterfly." }
+The ![monarch] image.
 ~
 [monarch]: butterfly.png { width=100px vertical-align=middle }
 

@@ -27,8 +27,12 @@
   "files": [
     "lib",
     "doc/*.png",
-    "doc/overview.html",
-    "doc/overview.pdf",
+    "doc/reference.pdf",
+    "doc/reference.html",
+    "doc/reference.bib",
+    "doc/reference.js",
+    "doc/reference.mdk",
+    "doc/madoko.css",
     "Jakefile.js",
     "readme.md",
     "license.txt"

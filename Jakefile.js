@@ -86,6 +86,16 @@ task("clean", function() {
   jake.rmRf(outputDir);
   jake.rmRf(outputDir + "net");
   jake.rmRf(outputDir + "doc");
+  var files = new jake.FileList().include(path.join("doc","*.aux"))
+                               .include(path.join("doc","*.log"))
+                               .include(path.join("doc","*.blg"))
+                               .include(path.join("doc","*.bbl"))
+                               .include(path.join("doc","*.tex"))
+                               .include(path.join("doc","*.out"));
+  files.toArray().map( function(file) {
+    jake.log("rm -f " + file )
+    fs.unlink(file);
+  });
 });
 
 //-----------------------------------------------------
@@ -144,8 +154,11 @@ task("publish", [], function () {
                                  .include(path.join("doc","*.css"))
                                  .include(path.join("doc","*.pdf"))
                                  .include(path.join("doc","*.png"))
+                                 .include(path.join("doc","*.bib"))
+                                 .include(path.join("doc","*.js"))
                                  .include(path.join("doc","*.mdk"));
   copyFiles("doc",files.toArray(),doclocal);
+  fs.renameSync(path.join(doclocal,"reference.mdk"),path.join(doclocal,"reference.mdk.txt"));
 },{async:false});
 
 //-----------------------------------------------------
