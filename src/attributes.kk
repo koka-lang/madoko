@@ -339,7 +339,7 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
     }
   }
 }
-val rxkey = regex(@"&#[xX]?\d+;|(?:\\/)?#([\w\-:]+)(?:;|\\/)?") 
+val rxkey = regex(@"&#[xX]?\d+;|(?:\\/)?#([a-zA-Z][\w\-:]*)(?:;|\\/)?") 
 
 function keyNotFound( key: string, matched : string ) : string {
   trace("warning: undefined key: " + key)

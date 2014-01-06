@@ -92,7 +92,7 @@ val blockGrammar : grammar<block,blockContext> = [
     
   Rule("heading",    regex(@"^ *(#{1,6}) *(.+?) *#* *" + iattrs + @"(?:\n+|$)"), blockHeading ),
   Rule("blockquote", regex(@"^((?: *>.+(?:\n[^{\n]+)*\n*)+)" + battrs + "(?:\n+|$)"), blockQuote ),
-  Rule("fenced",     regex(@"^ *(```+) *([^{} ]*) *" + iattrs + @"\n([\s\S]+?)\n *\1 *(?:\n+|$)"), blockFencedCode ),
+  Rule("fenced",     regex(@"^ *(```+) *([^{}\s]+ *)?" + iattrs + @"\n([\s\S]+?)\n *\1 *(?:\n+|$)"), blockFencedCode ),
 
   Rule("list",       regex(@"^" + alist), blockList ), 
   Rule("table",      regex(@"^ *" + rxtableHeader + rxtableSep + rxtableBody + pattrs + @"\n*"), blockTable ),

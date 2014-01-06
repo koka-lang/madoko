@@ -23,8 +23,7 @@ effort in Madoko to make the LaTeX generation robust and customizable. This
 makes it possible to write high-quality articles using just Madoko and get
 both a high-quality print format (PDF) and a good looking HTML page.
 
-For more information look at the [Madoko documentation](doc/reference.html)
-in the `doc` directory.
+For more information look at the [Madoko documentation][doc] in the `doc` directory.
 
 Have fun,
 -- Daan
@@ -36,7 +35,7 @@ Have fun,
 [Marked]: 		https://github.com/chjj/marked
 [Node.js]:		http://nodejs.org	
 
-[Documentation]: http://madoko.codeplex.com
+[doc]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html
 
 ## Performance
 

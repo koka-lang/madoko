@@ -3,7 +3,7 @@ Subtitle	: A &Ccedil;ubtitle
 Heading Base: 2
 
 Bib       	: ../test
-Bib Style   : plain
+Bib Style   : plainnat
 Package		: natbib
 Doc Class	: [preprint]../sigplanconf
 
@@ -75,7 +75,7 @@ without having to insert coercions. For example, we can split Haskell's state
 monad into three separate effects (read, allocate, and write), while
 automatically combining these effects when required.
 
-There have been many proposals for effects systems in the past [#Gifford:imperative,#Lucassen:polyeffect, #Talpin:effects, #Wadler:marriage, #Nielson:polyeffect, #Benton:exceptioneffects, #Marino:genericeffects, #Leijen:effects-tr, #Scala:effects].
+There have been many proposals for effects systems in the past [#Gifford:imperative, Chap. 5, #Lucassen:polyeffect, page 29, #Talpin:effects, #Wadler:marriage, #Nielson:polyeffect, #Benton:exceptioneffects, #Marino:genericeffects, #Leijen:effects-tr, #Scala:effects].
 However, many such systems suffer from being syntactical in nature (i.e.
 effects are just labels), or by being quite restricted, for example being
 monomorphic or applied to a very specific set of effects. Some of the more

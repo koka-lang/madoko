@@ -112,8 +112,8 @@ main:
     }
     
     try {
-      text = engine(file.text, options.madoko ).replace(/\s+/g, '');
-      html = file.html.replace(/\s+/g, '');
+      text = engine(file.text, options.madoko ).replace(/\s+/g, '').replace(/<!--[\s\S]*?-->/g,"");
+      html = file.html.replace(/\s+/g, '').replace(/<!--[\s\S]*?-->/g,"");
     } catch(e) {
       console.log('%s failed.', filename);
       throw e;

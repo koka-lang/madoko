@@ -63,7 +63,7 @@ And a math table with just an inner block of lines:
 |$\mathcal{C}\ell_{j}^-$|$\mathbb{R}$|$\mathbb{C}$|$\mathbb{H}$|$\mathbb{H}\oplus\mathbb{H}$|$\mathbb{H}(2)$|$\mathbb{C}(4)$|$\mathbb{R}(8)$|$\mathbb{R}(8)\oplus\mathbb{R}(8)$|$\mathbb{R}(16)$|
 |$\mathcal{C}\ell_{j}^+$|$\mathbb{R}$|$\mathbb{R}\oplus\mathbb{R}$|$\mathbb{R}(2)$|$\mathbb{C}(2)$|$\mathbb{H}(2)$|$\mathbb{H}(2)\oplus\mathbb{H}(2)$|$\mathbb{H}(4)$|$\mathbb{C}(8)$|$\mathbb{R}(16)$|
 
-Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide)
+Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
 
 |              |           Grouping          ||
 | First Header | Second Header | Third Header |

@@ -43,5 +43,5 @@ And indented
 ```
 
 ``` scheme {.lang-scm}
-friends 'of '(parentheses))
+(friends 'of '(parentheses))
 ```
