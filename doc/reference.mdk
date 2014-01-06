@@ -10,15 +10,19 @@ Cite All	: True
 Script		: reference.js
 Bib			: reference
 
-.SampleBlock : padding-left=1em padding-right=1em border-style=solid border-width=1px 
-				padding-top=-1ex 
-.ZXSampleOutput: margin-bottom=1ex
-~Sample		 : margin-bottom=2ex 
-				replace="~~~~SampleBlock#nl````` {.SampleSource}#nl#source#nl`````#nl* * *{ width=50% text-align=left }#nl#source#nl~~~~#nl"
+.SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
+				border-style=solid border-width=1px 
+~Sample		: margin-bottom=2ex 
+			  replace="~~~~SampleBlock#nl\
+			           ````` {.SampleSource}#nl\
+				       #source#nl`````#nl* * *{ width=50% text-align=left }#nl\
+				       #source#nl~~~~#nl"
 ~Slanted	: font-style=oblique
-~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' notag tight 
+~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
+			  notag tight 
 
-Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
+Script		: https://google-code-prettify.googlecode.com\
+				/svn/loader/run_prettify.js?lang=scm&lang=latex
 Title2		: (#Title,#Title)
 llbracket	: &#10214;
 rrbracket	: &#10215;
@@ -66,7 +70,8 @@ available as a .NET executable on windows.
 [Showdown]: 	https://github.com/coreyti/showdown
 [Marked]: 		https://github.com/chjj/marked
 [MathJax]:		http://www.mathjax.org
-[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
+[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html\
+				#supported-latex-commands
 [Node.js]:		http://nodejs.org	
 [NodeJs]: 		http://nodejs.org	
 
@@ -109,9 +114,9 @@ looking HTML page.  Look at this scientific article for an example[^fn-slow-load
 	because it is a long article that uses _a lot_ of math which takes a while to
 	render in [MathJax].
 
-[doc-pdf]: 		koka-doc-pdf.png 	{width=300px vertical-align=top } 
-[doc-html]: 	koka-doc-html.png 	{width=300px vertical-align=top }
-[doc-md]: 		koka-doc-md.png 	{width=300px vertical-align=top }
+[doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
+[doc-html]: 	koka-doc-html.png 	{width=250px vertical-align=top }
+[doc-md]: 		koka-doc-md.png 	{width=250px vertical-align=top }
 
 [koka-article-pdf]: 	http://research.microsoft.com/pubs/200436/koka-effects-2013.pdf
 [koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.html
@@ -412,8 +417,9 @@ class for HTML output, and the option `language=javascript` to the LaTeX
 [listings] package. This can be used to  enable syntax highlighting. For
 example, to highlight the above example using  [Google Prettify][GPretty] we
 should include the Google script in the metadata (see Section [#sec-metadata]):
-``` { font-size=x-small }
-Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+``` 
+Script: https://google-code-prettify.googlecode.com\
+		/svn/loader/run_prettify.js
 ```
 
 and add the `.prettyprint` class using attributes:
@@ -652,7 +658,7 @@ are used, the entry should have an explicit label and clear the default
 	  Types, Semantics and Language Design. MIT Press, 1993.
 	~~
 
-	~~ Bibitem { id='nielson:polyeffect' before=clear
+	~~ Bibitem { id='nielson:polyeffect' before=clear\
 	label='Nielson _et\ al_.(1997)Nielson, Nielson, and Amtoft'}
 	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
 	[]{.newblock} _Polymorphic subtyping for effect analysis: 
@@ -769,6 +775,13 @@ the overall width of the table.
 | 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
 |------|----------------|--------------------------|--------|
 ~
+
+### Long tables
+
+If a table is expected to be long and cross multiple pages, the table should
+be followed by an attribute declaration that sets the `.long` class. This is
+used in LaTeX output to switch to a `longtable` environment which supports
+tables that can be broken over multiple pages.
 
 ## Mathematics   { #sec-math }
 
@@ -1198,18 +1211,35 @@ function one {
 ``` 
 ~ 
 
-For inline elements, you can follow links, images, and bracketed text (between
-`[` and `]`) with attributes although it is recommended to put attributes in 
-link or image definitions themselves.
+For inline elements, you can follow links, images, code, and bracketed text (between
+`[` and `]`) with attributes. Bracketed text with attributes become a `<span>` in 
+the HTML backend.
+It is of course recommended to put attributes when possible in 
+link or image definitions themselves:
 
 ~ Sample
 Here is an ![butterfly] image. 
 With [bold]{font-weight=bold} text, and even the
-T[E]{vertical-align=-0.5ex margin-left=-0.25ex margin-right=-0.25ex}X
+T[E]{vertical-align=-0.5ex margin-left=-0.25ex \
+	 margin-right=-0.25ex}X
 logo.
 
 [butterfly]: butterfly.png { width=100px vertical-align=top }
 ~
+
+Note that inside attributes, and also metadata values,
+a backslash followed by a newline acts as a line joiner and removes the newline
+and the following whitespace before processing the attributes. This is convenient
+when defining long strings inside attributes. For example, if a figure has a long
+caption, we could write it as:
+
+	~ Figure { #myfigure \
+			   caption="Here is a really \
+	       		        long caption." }
+	...
+	~
+
+To get a literal line break inside an attribute string, use the hashname `#nl` instead.
 
 ### Recognized formatting attributes  { #sec-css }
 
@@ -1228,7 +1258,8 @@ commands that are recognized are:
 * `height=`_length_
 * `vertical-align=`(`top`|`middle`|`bottom`|_length_)
 * `border-style=`(`none`|`solid`|`dotted`)
-* `border-style-left`, `border-style-right`, `border-style-top`, `border-style-bottom`.
+* `border-style-left`, `border-style-right`.
+* `border-style-top`, `border-style-bottom`.
 * `border-width=`_length_
 * `border-color=`_color_
 * `text-align=`(`center`|`right`|`left`|`justify`)
@@ -1590,7 +1621,7 @@ As an advanced example, here is how `madoko.sty` defines the rules for the
     {\def\@pagealign{b}}%
   {\eifstrequal{\cssPageAlign}{here}%
     {\def\@pagealign{h}}%
-    {\def\@pagealign{}}}}%
+    {\def\@pagealign{tbp}}}}% default
   \cssIfHasClass{wide}%
     {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}%
      \cssDoAfter{\end{figure*}}}%
@@ -1614,10 +1645,11 @@ As an advanced example, here is how `madoko.sty` defines the rules for the
 Where we recall that the standard metadata rules for a `Figure` are:
 
 	~Figure: label='[@figure]{.figure-label}' .align-center 
-			after='#nl********* {.figureline}#nl
-					[[**Figure\ #label.** ]{.caption-before}#caption]
+			 after='#nl********* {.figureline}#nl\
+					[[**Figure\ #label.** ]\
+					{.caption-before}#caption]\
 					{.figure-caption}#nl{notag}#nl'
-			toc=tof toc-line='#label. #caption'",
+			 toc=tof toc-line='#label. #caption'
 
 as shown in Appendix [#app-custom]. The sample uses two utility functions from
 `css.sty`:
@@ -1691,7 +1723,11 @@ Some class attributes are treated specially by Madoko. In particular:
 * `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
 	both columns horizontally (see also Section [#sec-predef-custom]).
 * `.short`, `.long`, `.textual`: these classes are used for typesetting citations (see Section [#sec-cite]).
+	The `.long` class is also used to signify that a table might span multiple pages so that
+	the LaTeX backend can use the `longtable` environment instead of the regular `tabular` environment
+	(which cannot break across pages).
 * `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-code]).
+
 
 ## Recognized entities   { #app-entities }
 
@@ -2023,20 +2059,22 @@ formatting).
 
 ```
 ~Equation: label='[(@equation)]{.equation-label}' 
-  replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' 
-  .align-center tight .para-block
-~Figure: label='[@figure]{.figure-label}' .align-center 
-	after='#nl********* {.figureline}#nl
-			[[**Figure\ #label.** ]{.caption-before}#caption]
-			{.figure-caption}#nl{notag}#nl'
-	toc=tof toc-line='#label. #caption'",
+  		   replace='[#label]{.equation-before}#nl\
+  		            ~~Math#nl#source#nl~~#nl' 
+           .align-center tight .para-block
+~Figure  : label='[@figure]{.figure-label}' .align-center 
+		   after='#nl********* {.figureline}#nl\
+			      [[**Figure\ #label.** ]\
+			      {.caption-before}#caption]\
+			      {.figure-caption}#nl{notag}#nl'
+		   toc=tof toc-line='#label. #caption'
       
-~Bibitem  : label='[@bibitem]{.bibitem-label}' 
-			before='[\[#label\]\ \ ]{.bibitem-before}' 
-			tight texelem=mdBibitem
-~Bibliography : bib-style=... 
-			bib-data='...' 
-			texelem=mdBibliography
+~Bibitem : label='[@bibitem]{.bibitem-label}' 
+		   before='[\[#label\]\ \ ]{.bibitem-before}' 
+		   tight texelem=mdBibitem
+~Bibliography: bib-style=... 
+			   bib-data='...' 
+			   texelem=mdBibliography
       
 ~Note  : .block before='[**Note**. ]{.note-before}'
 ~Remark: .block before='[**Remark**. ]{.remark-before}'
@@ -2070,14 +2108,11 @@ formatting).
 ~Definition: .block label='[@Definition]{.Definition-label}'
     before='[**Definition\ #label.** ]{.Definition-before}'
 
-~H1: label='[@h1]{.heading-label}' 
-     before='[#label.\ \ \ ]{.heading-before}'
-     toc    
-~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' 
-     before='[#label.\ \ \ ]{.heading-before}'
-     toc    
+~H1: label='[@h1]{.heading-label}' toc
+     before='[#label.\ \ \ ]{.heading-before}'     
+~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' toc
+     before='[#label.\ \ \ ]{.heading-before}'     
 ~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
-     before='[#label.\ \ \ ]{.heading-before}'
-     toc    
+     before='[#label.\ \ \ ]{.heading-before}' toc
 ```
 

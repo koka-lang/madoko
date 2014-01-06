@@ -299,3 +299,9 @@ public val attrsNone = Attrs(empty=True)
 public function splitPaths( paths : string ) : list<string> {
   paths.split(";").list.filter(fun(s){ s != ""})
 }
+
+// Join lines that were broken using `\` followed by a newline.
+public function joinLines( s : string ) : string {
+  s.replaceAll(rxLineBreak,"")
+}
+val rxLineBreak = regex(@"\\\n\r?[ \t]*")

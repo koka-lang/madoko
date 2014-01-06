@@ -44,7 +44,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
                     text=attrs0.text + " " + attrsStr,
                     classes=[])
 
-  kvs = attrsStr.parseAttributes
+  kvs = attrsStr.joinLines.parseAttributes  // join lines here.
   
   attrs = kvs.foldl(attrsx) fun(acc:attrs,kv:(string,string,string)) {
     val (name,kwvalue,value) = kv

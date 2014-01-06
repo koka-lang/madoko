@@ -56,8 +56,8 @@ val closedTag   = @"(" + atag + @")[\s\S]+?</\1>"
 val soloTag     = @"" + atag + tagContent + ">"
 val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n{2,}|\s*$)"
 
-// Attributes
-val xattrs      = @"\{:?((?:[^\\'""\}\n]|\\.|'[^']*'|""[^""]*"")*)\} *"  // allow optional colon for maraku compat
+// Attributes: allow escaped newline
+val xattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\} *"  // allow optional colon for maraku compat
 val iattrs      = "(?:" + xattrs + ")?"           // inline: headers and fences
 val pattrs      = @"(?: {0,3}" + xattrs + ")?"    // after a paragraph
 val battrs      = @"(?:\n {0,3}" + xattrs + ")?"  // after a block element
@@ -86,7 +86,7 @@ val blockGrammar : grammar<block,blockContext> = [
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
   Rule("html",       regex(@"^ *" + html), blockHtml ),
-  Rule("deflink",    regex(@"^ *\[(?!\^)" + linkid + @"\]: *<?([^\s>]+)>?(?: +[""(](.+)["")])? *" +iattrs+ @"(\n+|$)"), blockDefLink ),
+  Rule("deflink",    regex(@"^ *\[(?!\^)" + linkid + @"\]: *<?((?:[^\s>]|\\\n *)+)>?(?: +[""(]((?:[^\n\\]|\\\n *)+)["")])? *" +iattrs+ @"(\n+|$)"), blockDefLink ),
   Rule("deffootnote",regex(@"^ *\[\^" + linkid + @"\]: *(?:\n {4})?(.*(?:\n+ {4}.*)*)(?:\n+|$)"), blockDefFootnote),
   Rule("hline",      regex(@"^ *" + hr), blockHLine ),
     
@@ -143,7 +143,7 @@ function blockPara( cap : matched, _context ) : block {
 }
   
 function blockDefLink( cap : matched, context : blockContext ) :  block {
-  DefLink(cap.groups[1].definitionId, newLink(cap.groups[2], cap.groups[3], cap.groups[4].parseAttrs, context.bench ))
+  DefLink(cap.groups[1].definitionId, newLink(cap.groups[2].joinLines, cap.groups[3].joinLines, cap.groups[4].parseAttrs, context.bench ))
 }
 
 function blockLine( cap : matched, context : blockContext ) : block {

@@ -492,15 +492,22 @@
 					<string>entity.name.tag</string>
 				</dict>
 				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>string.escape.madoko</string>
+						</dict>
+					</dict>
 					<key>match</key>
-					<string>\{(?:[^\\}]|\\.)+\}(?=\s*$)</string>
+					<string>\{(?:[^\\}]|(\\[.\n]))+\}(?=\s*$)</string>
 					<key>name</key>
 					<string>comment meta.tag.preprocessor.xml</string>
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\\([\\`*{}\[\]()#+-\.!_&lt;&gt;~|\$'"?/ 
-]|&gt;&gt;|&lt;&lt;)</string>
+					<string>\\([^a-zA-Z0-9])</string>
 					<key>name</key>
 					<string>string.escape.madoko</string>
 				</dict>
@@ -589,9 +596,15 @@
 					<array>
 						<dict>
 							<key>match</key>
-							<string>.*</string>
+							<string>([^\\]|\\.)*</string>
 							<key>name</key>
 							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+						<dict>
+							<key>match</key>
+							<string>\\\n</string>
+							<key>name</key>
+							<string>string.escape.madoko</string>
 						</dict>
 					</array>
 				</dict>

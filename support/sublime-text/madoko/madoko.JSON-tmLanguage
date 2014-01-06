@@ -68,8 +68,11 @@
               "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
             }
           , "patterns": [
-              { "match": ".*"
+              { "match": "([^\\\\]|\\\\.)*"
               , "name": "comment meta.tag.preprocessor.xml" 
+              },
+              { "match": "\\\\\\n"
+              , "name": "string.escape.madoko" 
               }
             ]
           },
@@ -246,11 +249,14 @@
         , "name": "entity.name.tag"
         },
 
-        { "match": "\\{(?:[^\\\\}]|\\\\.)+\\}(?=\\s*$)"
+        { "match": "\\{(?:[^\\\\}]|(\\\\[.\\n]))+\\}(?=\\s*$)"
         , "name": "comment meta.tag.preprocessor.xml"
+        , "captures": {
+            "1": { "name": "string.escape.madoko" }
+          }
         },
 
-        { "match": "\\\\([\\\\`*{}\\[\\]()#+-\\.!_<>~|\\$'\"?/ \n]|>>|<<)"
+        { "match": "\\\\([^a-zA-Z0-9])"
         , "name": "string.escape.madoko"
         },
 

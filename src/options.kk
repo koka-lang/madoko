@@ -203,7 +203,7 @@ public function parsePlainMeta( txt : string, metadata : metadata = [], verbose 
       (metadata.reverse,txt)
     }
     Just(cap) -> {
-      value = cap.groups[3].trim
+      value = cap.groups[3].joinLines.trim
       kvs   = if (cap.groups.matchedOn(2))
                then cap.groups[1].toLower.split(",").list.map(fun(k) { (k,value) })
                else [(cap.groups[1].normalizeId, value)]
@@ -217,7 +217,9 @@ val metaKey = @"((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' tight .para-block",
-      @"~Figure   : label='[@figure]{.figure-label}' .align-center after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]{.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
+      @"~Figure   : label='[@figure]{.figure-label}' .align-center",
+      @"~Figure   : after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]\
+                           {.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
       @"~Figure   : toc=tof toc-line='#label. #caption'",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
