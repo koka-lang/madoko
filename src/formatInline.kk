@@ -305,7 +305,7 @@ function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) 
 function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
 {
   citations = if (context.bench) then Nil  
-               else txt.split(rxCommaSep).list.map(fun(elem) {
+               else txt.split(rxCiteSep).list.map(fun(elem) {
                       val (l,desc) = match (elem.find(rxCitation)) {
                                         Nothing -> (elem,"")
                                         Just(cap) -> (cap.groups[1],cap.groups[2])
@@ -332,7 +332,7 @@ function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : str
     inlineLinkRef( isImage, nbsp, txt, after, "", attrs, context )
   }
 }
-val rxCommaSep = regex(@"\s*[;,]\s*(?=#)")
+val rxCiteSep  = regex(@"\s*[;,]\s*(?=#)")
 val rxCitation = regex(@"^(#[\w-:]+)([\s\S]*)$")
 
 function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : string, ref : string, 
@@ -443,9 +443,10 @@ function fmtCite(context : inlineContext, citations : list<(string,string)>, att
           }
   txt = if (((cs.isAuto && !(isNum)) || cs.isNatural || cs.isSquare) && attrs.hasClass("textual")) then links.join("; ")
         elif (cs.isNatural || (cs.isAuto && !isNum)) then "(" + links.join("; ") + ")"
-        elif (cs.isSquare || cs.isNumeric) then "[" + links.join("; ") + "]"
-        elif (cs.isSuper) then context.fmtCmd("sup", links.join(", "))
-        else "[" + links.join(", ") + "]"
+        elif (cs.isSquare) then "[" + links.join("; ") + "]"
+        elif (cs.isSuper) then context.fmtCmd("sup", links.join(","))
+        elif (cs.isNumeric) then "[" + links.join(";") + "]"
+        else "[" + links.join(",") + "]"
   context.fmtCmd("span", txt, attrs.addClass("citations"))
 }
 

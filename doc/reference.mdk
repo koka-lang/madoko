@@ -27,11 +27,14 @@ Title2		: (#Title,#Title)
 llbracket	: &#10214;
 rrbracket	: &#10215;
 
+
+<!--
 Css			: serif/cmun-serif.css
 
 <style>
 body.madoko	{ font-family: "Computer Modern Serif", Cambria, Georgia, serif }
 </style>
+-->
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
@@ -698,7 +701,7 @@ Read about LaTeX and TeX [#Knuth:Tex; #Lamport:Latex].
 Note that unlike LaTeX there is no need to explicitly insert an unbreakable
 space between the text and the citation, Madoko automatically takes care of this
 (as described in Section [#sec-ids-labels]).
-If necessary, you can also include extra text for each entry:
+If necessary, you can also append extra text for each entry:
 
 ~ Sample
 Read about TeX [#Knuth:Tex; #Lamport:Latex (chapter 4)]. 
@@ -772,9 +775,9 @@ citations, while the numeric, plain, and super styles use numbers.
 | ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~       |
 | _natural_   | ([Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]) | (default for author-year citations) |
 | _square_    | [[Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]] |                                     |
-| _numeric_   | [[2][#Lamport:latex]; [1][#Knuth:Tex]]                       |                                     |
-| _plain_     | [[2][#Lamport:latex], [1][#Knuth:Tex]]                       | (default for numeric citations)     |
-| _super_     | ^[2][#Lamport:latex],\ [1][#Knuth:Tex]^                      |                                     |
+| _numeric_   | [[5][#Lamport:latex];[4][#Knuth:Tex]]                        |                                     |
+| _plain_     | [[5][#Lamport:latex],[4][#Knuth:Tex]]                        | (default for numeric citations)     |
+| _super_     | ^[5][#Lamport:latex],[4][#Knuth:Tex]^                        |                                     |
 
 Note that full author-year style citations only work with BibTeX styles that
 support this, i.e. generally any style that works with the `natbib` package
@@ -785,11 +788,11 @@ and `.textual` class attributes to change how the citation is shown:
 | `[#Goo93]`                         | ([Goossens _et al._, 1993][#Goo93])                 |
 | `[#Goo93]{.short}`{.plain}         | ([1993][#Goo93])                                    |
 | `[#Goo93]{.long}`{.plain}          | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
-| `[#Goo93]{.textual}`{.plain}       | Goossens _et al._, ([1993][#Goo93])                 |
+| `[#Goo93]{.textual}`{.plain}       | Goossens _et al._ ([1993][#Goo93])                  |
 | `[#Goo93]{.long .textual}`{.plain} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
 
-These attributes have no effect if the _numeric_ style is used and all would
-be displayed as [#Goo93].
+These attributes have no effect if a numeric style is used and in the _plain_
+style for example, all of the above would be displayed as [#Goo93].
 
 ### Advanced: Not using BibTeX 
 
