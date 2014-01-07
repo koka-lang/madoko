@@ -47,7 +47,7 @@ public struct options(
   author   : string = "",
   affiliation: string = "",
   email    : string = "",
-  citestyle: citestyle = Auto,   
+  citestyle: citestyle = parseCiteStyle("auto"),   
   
   tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth : int  = 3, // default depth where headings are numbered
@@ -185,15 +185,6 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
   }
 } 
 
-function parseCiteStyle( s : string ) : citestyle {
-  if (s=="numeric") then Numeric
-  elif (s=="natural") then Natural
-  elif (s=="naturalsq" || s=="square") then Square
-  elif (s=="plain") then Plain
-  elif (s=="super") then Super
-  else Auto
-}
-
 
 public function parsePlainMeta( txt : string, metadata : metadata = [], verbose : bool = False ) : (metadata,string) 
 {
@@ -222,7 +213,8 @@ function defaultMeta( options : options ) : string {
                            {.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
       @"~Figure   : toc=tof toc-line='#label. #caption'",
       
-      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
+      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' before='[\[#label\]\ \ ]{.bibitem-before}' cite-label='#label' tight texelem=mdBibitem",
+
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",
       
       @"~Note     : .block before='[**Note**. ]{.note-before}'",

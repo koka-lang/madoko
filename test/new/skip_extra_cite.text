@@ -4,6 +4,7 @@ Heading Base: 2
 
 Bib       	: ../test
 Bib Style   : plainnat
+
 Package		: natbib
 Doc Class	: [preprint]../sigplanconf
 
@@ -75,7 +76,7 @@ without having to insert coercions. For example, we can split Haskell's state
 monad into three separate effects (read, allocate, and write), while
 automatically combining these effects when required.
 
-There have been many proposals for effects systems in the past [#Gifford:imperative, Chap. 5, #Lucassen:polyeffect, page 29, #Talpin:effects, #Wadler:marriage, #Nielson:polyeffect, #Benton:exceptioneffects, #Marino:genericeffects, #Leijen:effects-tr, #Scala:effects].
+There have been many proposals for effects systems in the past [@Gifford:imperative, Chap. 5; @Lucassen:polyeffect, page 29; @Talpin:effects; @Wadler:marriage; @Nielson:polyeffect; @Benton:exceptioneffects; @Marino:genericeffects; @Leijen:effects-tr; @Scala:effects].
 However, many such systems suffer from being syntactical in nature (i.e.
 effects are just labels), or by being quite restricted, for example being
 monomorphic or applied to a very specific set of effects. Some of the more
@@ -118,24 +119,24 @@ To address. Some greek &delta;&alpha;&alpha;&nu;...&times;&aelig;&strange;&#3333
 
 A main contribution of this paper is showing that our notion of mutable state
 is sound, in particular the combination of mutable state and polymorphic let-
-bindings is tricky as shown by Tofte [#Tofte:refs]{.short} for the ML
-language. Later, variants of the ML value restriction are studied by Leroy [#Leroy:valuerestriction]{.short}.
+bindings is tricky as shown by Tofte [-@Tofte:refs] for the ML
+language. Later, variants of the ML value restriction are studied by Leroy [-@Leroy:valuerestriction].
 
 Safe state encapsulation using a lazy state monad was first proven formally by
-Launchbury  and Sabry [#Launchbury:monadstate]{.short}. Their formalization is
+[@Launchbury:monadstate]{.textual}. Their formalization is
 quite different though from ours and applies to a lazy store in a monadic
 setting. In particular, in their formalization there is no separate heap
 binding, but heaps are always bound at the outer `run`. We tried this, but it
 proved difficult in our setting; for example, it is hard to state the stateful
 lemma since answers would never contain an explicit heap. Very similar to our
-state encapsulation is region inference [#Tofte:regioninf]. Our `run`
+state encapsulation is region inference [@Tofte:regioninf]. Our `run`
 operation essentially delimits a heap region. Regions live at the value level
 though, and we can for example not access references in several regions at
 once.
 
-Independently of our work, Lindley and Cheney [#Lindley:effects]{.short} also
+Independently of our work, [@Lindley:effects]{.textual} also
 used row polymorphism for effect types. Their approach is based on
-presence/absence flags [#Remy:records] to give effect types to database
+presence/absence flags [@Remy:records] to give effect types to database
 operations in the context of the Links web programming language. The main
 effects of the database operations are _wild_, _tame_, and _hear_, for
 arbitrary effects including divergence, pure queries, and asynchronous
@@ -146,32 +147,32 @@ effect types.
 The problems with arbitrary effects have been widely recognized, and there is
 a large body of work studying how to delimit the scope of effects. There have
 been many effect typing disciplines proposed. Early work is by Gifford and
-Lucassen [#Gifford:imperative,#Lucassen:polyeffect]{.short} which was later
-extended by Talpin [#Talpin:thesis]{.short} and others [#Talpin:effects,#Nielson:polyeffect]. 
+Lucassen [-@Gifford:imperative;-@Lucassen:polyeffect] which was later
+extended by Talpin [-@Talpin:thesis] and others [@Talpin:effects;@Nielson:polyeffect]. 
 These systems are closely related
 since they describe polymorphic effect systems and use type constraints to
-give principal types. The system described by Nielson _et al._ [#Nielson:polyeffect]{.short} 
+give principal types. The system described by Nielson _et al._ [-@Nielson:polyeffect] 
 also requires the effects to form a complete
 lattice with meets and joins.
 
 Java contains a simple effect system where each method is labeled with the
-exceptions it might raise [#Gosling:java] . A system for finding uncaught
-exceptions was developed for ML by Pessaux _et al._ [#Pessaux:exceptions]{.short}. 
+exceptions it might raise [@Gosling:java] . A system for finding uncaught
+exceptions was developed for ML by [+@Pessaux:exceptions]{.textual}. 
 A more powerful system for tracking effects was
-developed by Benton [#Benton:exceptioneffects]{.short} who also studies the
-semantics of such effect systems [#Benton:relsemantics] . Recent work on
-effects in Scala [#Scala:effects] shows how even a restricted form of
+developed by Benton [-@Benton:exceptioneffects] who also studies the
+semantics of such effect systems [@Benton:relsemantics]. Recent work on
+effects in Scala [@Scala:effects] shows how even a restricted form of
 polymorphic effect types can be used to track effects for many programs in
 practice.
 
-Tolmach [#Tolmach:monadhierarchy]{.short} describes an effect analysis for ML
+Tolmach [-@Tolmach:monadhierarchy] describes an effect analysis for ML
 in terms of effect monads, namely `Total`, `Partial`, `Divergent` and `ST`.
 This is system is not polymorphic though and meant more for internal compiler
 analysis. In the context proof systems there has been work to show absence of
 observable side effects for object-oriented programming languages, for example
-by Naumann [#Naumann:purity]{.short}.
+by Naumann [-@Naumann:purity].
 
-Marino _et al._ recently produced a generic type-and-effect system [#Marino:genericeffects]. 
+Marino _et al._ recently produced a generic type-and-effect system [@Marino:genericeffects]. 
 This system uses privilege checking to describe
 analytical effect systems, and they provide a soundness proof for their type
 system. For example, an effect system could use try-catch statements to grant
@@ -183,13 +184,24 @@ its arguments, and one has to do an additional proof to show that the effects
 in these systems actually correspond to an intended meaning.
 
 Wadler and Thiemann showed the close relation between effect systems and
-monads [#Wadler:marriage] and showed how any effect system can be translated
+monads [@Wadler:marriage] and showed how any effect system can be translated
 to a monadic version. For our particular system though a monadic translation
 is quite involved due to polymorphic effects; essentially we need dependently
 typed operations and we leave a proper monadic semantics for future work.
 
 <!-- here is how to create a hidden citation -->
-[#Leijen:hmf]{.hidden}
+[@Leijen:hmf]{.hidden}
+
+More tests: 
+
+* \/#Leijen:hmf 
+* [@Leijen:hmf;@Naumann:purity]{cite-style=natural} 
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=square}
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=super}
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=natural .textual}
+* By [!@Leijen:hmf]{.free} in year [-@Leijen:hmf]{.free}
+* [@Leijen:hml; @Leijen:hmltech]
+* [see @Leijen:hml, chap 2]
 
 ## References {-}
 

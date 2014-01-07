@@ -93,7 +93,7 @@ function inlineGrammar( fmt : formatter, bench : bool = False ) {
 // Create an ":inlineContext"
 public function inlineContext( fmt : formatter, 
                                metadata : dict<string>,
-                               citestyle : citestyle = Auto,
+                               citestyle : citestyle = citeAuto,
                                sanitize : bool = False,
                                bench: bool = False,
                                verbose : int = 0 ) : inlineContext
@@ -302,38 +302,48 @@ function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) 
   }
 }
 
+struct cite( 
+  name    : string, 
+  pre     : string, 
+  post    : string, 
+  modifier  : string, 
+  citelabel : string )
+
 function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
 {
-  citations = if (context.bench) then Nil  
-               else txt.split(rxCiteSep).list.map(fun(elem) {
-                      val (l,desc) = match (elem.find(rxCitation)) {
-                                        Nothing -> (elem,"")
-                                        Just(cap) -> (cap.groups[1],cap.groups[2])
-                                     }
-                      lab = l.definitionId 
-                      match(context.labels[lab]) {
-                        Just(lbl) | lbl.element == "bibitem" -> (lab,desc)
-                        Nothing | l.startsWith("#") -> {
-                          trace("warning: missing anchor or citation: " + l )
-                          log("\\citation{" + l.substr(1) + "}")
-                          ("","")
-                        } 
-                        _ -> ("","")
-                      }
-                    })
-  //trace("citations: " + citations.join("-")) 
-  if (citations.isCons && citations.all(fun(s){ s.fst != ""})) {
+  citationss = if (context.bench || !(txt.contains("@"))) then Nil  
+                else txt.splitExclude(rxCiteSep,rxCiteSepExclude).map(fun(elem) {
+                        match (elem.find(rxCitation)) {
+                          Nothing -> []
+                          Just(cap) -> {
+                            log("\\citation{" + cap.groups[3] + "}")
+                            lab = ("@" + cap.groups[3]).definitionId 
+                            match(context.labels[lab]) {
+                              Just(lbl) -> {  // | lbl.element == "bibitem" 
+                                [Cite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
+                              }
+                              Nothing -> {
+                                trace("warning: missing citation: " + cap.groups[3] )
+                                []
+                              }
+                            }
+                          } 
+                        }                      
+                      })
+
+  //trace("citations: " + citationss.concat.join("-")) 
+  if (citationss.isCons && citationss.all(isCons)) {
     // Citations link
-    citations.foreach fun(cite) { log("\\citation{" + cite.fst.substr(1) + "}") }
     cattrs = attrs.addKeyval("target-element","bibitem")
-    nbsp + context.fmtCite(citations,cattrs)
+    nbsp + context.fmtCite(citationss.concat,cattrs)
   } 
   else {
     inlineLinkRef( isImage, nbsp, txt, after, "", attrs, context )
   }
 }
-val rxCiteSep  = regex(@"\s*[;,]\s*(?=#)")
-val rxCitation = regex(@"^(#[\w-:]+)([\s\S]*)$")
+val rxCiteSep         = regex(@"\s*[;]\s*")
+val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
+val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@([\w-:]+))([\s\S]*)$")
 
 function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : string, ref : string, 
                           attrs : attrs, context : inlineContext ) : string 
@@ -409,49 +419,96 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
   }
 }
 
-
 // Format a citation link
-function fmtCite(context : inlineContext, citations : list<(string,string)>, attrs : attrs ) : string {
-  var isNum := True
-  cs = context.citestyle
-  citeTexts = citations.map fun(cite) {
-    id = cite.fst
-    match(context.labels[id]) {
-      Nothing   -> id
-      Just(lab) -> {
-        if (!(lab.labelText.contains(rxNumCite))) then isNum := False
-        match(lab.labelText.find(rxAuthorYear)) {
-          Just(cap) -> { 
-             if (attrs.hasClass("short")) then cap.groups[2]
-             elif (attrs.hasClass("textual")) 
-              then (if (attrs.hasClass("long")) then cap.groups[3] else cap.groups[1]) + 
-                   (if (!(cs.isNatural || (cs.isAuto && !(isNum)))) 
-                     then @"\ [" + cap.groups[2] + "]" else @"\ (" + cap.groups[2] + ")")
-             elif (attrs.hasClass("long") && cap.groups[3] != "") then cap.groups[3] + @",\ " + cap.groups[2]
-             else cap.groups[1] + @",\ " + cap.groups[2]
-           }
-          Nothing   -> lab.labelText
+function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs ) : string 
+{  
+  cs0 = match(attrs.hasKey("cite-style")) {
+          Just(cstext) -> parseCiteStyle(cstext)
+          Nothing      -> context.citestyle
         }
-      }
+  cs1 = match(cs0.mode) {
+          Auto -> match(citations) {
+                    Cons(cite,_) -> match(cite.citelabel.find(rxAuthorYear)) {
+                      Just(_) -> citeNatural
+                      _       -> citeNumeric
+                    }
+                    _ -> cs0  
+                  }
+          _ -> cs0
+        }
+  cs = if (attrs.hasClass("free")) then cs1(open="",close="") else cs1 
+
+  isTextual = (attrs.hasClass("textual") || cs.mode.isTextual)
+
+  function makeParens(text) {
+    cs.open + text + cs.close
+  }
+
+  function makeLink(cite:cite,text:string) :string {
+    link = context.fmtLink(False,newLink("#" + cite.name,"",attrs.addClass("bibref"),bench=context.bench),
+                            context.formatInline(text))
+    if (isTextual)
+     then makeParens(link)
+     else link
+  }
+
+  function fmtAuthorYear(cite,short,year,long) {
+    link = makeLink(cite,year)
+    sep  = if (isTextual) then " " else cs.aysep
+    fpre = context.formatInline(cite.pre)
+    fpost= context.formatInline(cite.post)
+    fshort = context.formatInline(context.formatInline(short.replaceAll(rxEtAl,@"_et\ al_.")))
+
+    if (cite.modifier=="-") 
+     then fpre + link + fpost
+    elif (cite.modifier=="+" && long!="")
+     then fpre + context.formatInline(long) + sep + link + fpost
+    elif (cite.modifier=="!")
+     then fpre + fshort + fpost
+     else fpre + fshort + sep + link + fpost 
+  }
+
+  function fmtNumeric(cite : cite,numLabel,short,year,long) {
+    if (isTextual) then { 
+      if (short=="") then trace("warning: textual citation but this bib style has no author-year info: @" + cite.name )
+      fmtAuthorYear(cite,short,numLabel,long)      
+    }
+    else {
+      context.formatInline(cite.pre) + makeLink(cite,numLabel) + context.formatInline(cite.post)
     }
   }
-  //trace("cites: " + cites.join(","))
-  links = zipWith(citations,citeTexts) fun(cite,citeText) {
-            context.fmtLink(False,newLink(cite.fst,"",attrs.addClass("bibref"),bench=context.bench),
-                                context.formatInline(citeText.replaceAll(rxEtAl,@"_et\ al_.")))
-             + context.formatInline(cite.snd)
-          }
-  txt = if (((cs.isAuto && !(isNum)) || cs.isNatural || cs.isSquare) && attrs.hasClass("textual")) then links.join("; ")
-        elif (cs.isNatural || (cs.isAuto && !isNum)) then "(" + links.join("; ") + ")"
-        elif (cs.isSquare) then "[" + links.join("; ") + "]"
-        elif (cs.isSuper) then context.fmtCmd("sup", links.join(","))
-        elif (cs.isNumeric) then "[" + links.join(";") + "]"
-        else "[" + links.join(",") + "]"
-  context.fmtCmd("span", txt, attrs.addClass("citations"))
+
+  function fmtCitation(cite : cite) : string {
+    numLabel = match(context.labels["#" + cite.name]) {
+                 Nothing   -> "?"
+                 Just(lbl) -> lbl.labelText
+               }
+    val (short,year,long) = match(cite.citelabel.find(rxAuthorYear)) {
+                              Nothing   -> ("","","")
+                              Just(cap) -> (cap.groups[1],cap.groups[2],cap.groups[3])
+                            }           
+    match(cs.mode) {
+      Numeric -> fmtNumeric(cite,numLabel,short,year,long)
+      Super   -> fmtNumeric(cite,numLabel,short,year,long)
+      // Auto or Natural
+      _  -> if (short=="") 
+             then fmtNumeric(cite,numLabel,short,year,long)
+             else fmtAuthorYear(cite,short,year,long)            
+    }
+  }
+
+  citeText = citations.map(fmtCitation).join(cs.citesep)
+  pciteText = if (isTextual) then citeText else makeParens(citeText) 
+  
+  sciteText = match(cs.mode) {
+    Super -> context.fmtCmd("sup", pciteText)
+    _     -> pciteText
+  }  
+  context.fmtCmd("span", sciteText, attrs.addClass("citations"))
 }
 
-val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[A-Za-z]?)\)?(?: *[,;] *)?(.*)$")
-val rxNumCite    = regex(@"^[^\w]*\w*\d+")
+
+val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
 val rxEtAl       = regex(@"\bet(?: |&nbsp;|\\ )al.(?!_)") 
 
 

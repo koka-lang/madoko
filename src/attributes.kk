@@ -136,8 +136,8 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(tight=value.toBool)
     }
     else {
-      //trace("key " + name + "=" + value.string)
-      acc(keyvals = acc.keyvals + [(name,value)])
+      //trace("key " + name + "=" + value)
+      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name}) + [(name,value)])
     }
   }
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'

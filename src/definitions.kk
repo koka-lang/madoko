@@ -98,6 +98,13 @@ function parseDefinitionsFull(
     // set label
     if (attrsx.name != "") then {
       labels["#" + attrsx.name] := Label(bname,attrsx.label)   
+      match (attrsx.hasKey("cite-label")) {
+        Nothing -> ()
+        Just(clabel) -> {
+          clabelx = clabel.expandKeys(attrsx.source,attrsx,fcontext.inlineContext.metadata)
+          labels["@" + attrsx.name] := Label(bname,clabelx)
+        }
+      }
     }
 
     // paragraph indentation

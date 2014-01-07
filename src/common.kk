@@ -112,28 +112,62 @@ public function traceRuleHist() {
  Citations styles 
 ---------------------------------------- */
 
-// Citation styles
-public type citestyle {
-  Natural
-  Square
+public struct citestyle(
+  mode  : citemode, 
+  open  : string, 
+  close : string, 
+  citesep : string, 
+  aysep : string, 
+  yysep : string 
+)
+
+public type citemode {
   Numeric
-  Plain     // default: numeric with commas
+  Natural
+  Textual
   Super
   Auto
 }
 
 public function isNumCite( cs : citestyle ) : bool {
-  match(cs) {
-    Numeric -> True
-    Plain   -> True
-    Super   -> True
-    _       -> False
+  match(cs.mode) {
+    Natural -> False
+    Textual -> False
+    Auto    -> False
+    _       -> True
   }
 }
 
-public function isAuthorYearCite( cs : citestyle ) : bool {
-  !(cs.isNumCite)
+public val citeNatural = Citestyle(Natural,"(",")","; ",", ",",")
+public val citeNumeric = Citestyle(Numeric,"[","]",",",",",",")
+public val citeAuto    = Citestyle(Auto   ,"[","]",",",",",",")
+val citeTextual = Citestyle(Textual,"(",")","; ",", ",",")
+val citeSuper   = Citestyle(Super  ,"","",",",",","")
+
+public function parseCiteStyle( text : string ) : citestyle {
+  if (text=="natural") then citeNatural
+  elif (text=="numeric") then citeNumeric
+  elif (text=="super") then citeSuper
+  elif (text=="textual") then citeTextual
+  else match(text.find(rxCiteSpec)) {
+    Just(cap) -> {
+      md = if (cap.groups[1]=="natural") then Natural
+           elif (cap.groups[1]=="textual") then Textual
+           elif (cap.groups[1]=="numeric") then Numeric
+           elif (cap.groups[1]=="super") then Super
+           else Auto
+      aysep = if (cap.groups.matchedOn(5)) then cap.groups[5] else cap.groups[4]
+      yysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else aysep      
+      Citestyle(md,cap.groups[2],cap.groups[3],cap.groups[4],aysep,yysep)
+    } 
+    Nothing -> citeAuto
+  }
 }
+
+val rxVal      = @"\s*""([^""]*)""\s*"
+val rxValOpt   = "(?:," + rxVal + ")?"
+val rxVals     = rxVal + "," + rxVal + "," + rxVal + rxValOpt + rxValOpt
+val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|):" + rxVals  )
 
 /* --------------------------------------
  Links 

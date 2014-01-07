@@ -334,7 +334,7 @@ function columnStyle( style : string ) : attrs {
 
 // Parse text into blocks
 public function parseBlocks( src : string,
-                             citestyle : citestyle = Auto, 
+                             citestyle : citestyle = citeAuto, 
                              bench : bool = False,
                              pedantic : bool = False )  : list<block>
 {

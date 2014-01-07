@@ -56,7 +56,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("newblock",    regex(@"^\\(newblock|nobreak)\b"), texCommandClass ),
   Rule("citeay",      regex(@"^\\citeauthoryear\b" + texarg + texarg + texarg), texCiteAuthorYear ),
   Rule("url",         regex(@"^\\(?:url|email)\b" + texarg), texUrl ),
-  Rule("penalty",     regex(@"^\\(penalty)\b\s*(-?\d+|" + texarg + ")"), texAttribute ),
+  Rule("penalty",     regex(@"^\\(penalty)(?![a-zA-Z])\s*(-?\d+|" + texarg + ")"), texAttribute ),
   Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
   Rule("cite",        regex(@"^\\[Cc]ite(?:(year)(?:par)?|(?:al)?([pt])?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
@@ -96,7 +96,7 @@ val texGrammar : grammar<string,texContext> = [
 ---------------------------------------- */
 public rectype texContext {
   // The parse context for latex elements. 
-  TexContext( grammar : grammar<string,texContext> = texGrammar, citestyle : citestyle = Auto )                 
+  TexContext( grammar : grammar<string,texContext> = texGrammar, citestyle : citestyle = citeAuto )                 
 }
 
 /* --------------------------------------
@@ -256,8 +256,8 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   key = keyx.unbrace
   lab = labx.unbrace.parseTexX(context,True)  
   //trace("bibitem: lab: " + labx + " -> " + lab)
-  "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="" || context.citestyle.isNumCite) then "" else "label='" + lab + "' ") +
-                  (if (context.citestyle.isNumCite || (context.citestyle.isAuto && lab.contains(rxNumCite)))
+  "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="") then "" else "cite-label='" + lab + "' ") +
+                  (if (context.citestyle.isNumCite || (context.citestyle.mode.isAuto && lab.contains(rxNumCite)))
                     then ".has-before " else @"before=clear " ) + "}\n" +
    content.parseTexX(context) + 
    "\n~~~\n"
@@ -277,7 +277,7 @@ function unbrace(s : string ) : string {
 
 
 // Parse TeX elements and return Markdown
-public function parseTex( txt : string, citestyle : citestyle = Auto, verbose : bool = False  ) : string
+public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False  ) : string
 {
   normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
                .replaceAll(regex(@"\t"),"   ")
