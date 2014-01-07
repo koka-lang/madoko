@@ -232,19 +232,29 @@ function blockList( cap : matched, context : blockContext ) : block {
     }
   }
 
-  val (txt,attrs) = match(cap.matched.find(rxlattrs)) {
+  val (txt,attrsTxt) = match(cap.matched.find(rxlattrs)) {
     Just(acap) -> (cap.matched.substr(0,cap.matched.length - acap.matched.length), acap.groups[1])
     Nothing    -> (cap.matched,"")
   }
+  attrs0 = attrsTxt.parseAttrs
+  attrs = match (txt.find(rxFirstNum)) {
+            Nothing    -> attrs0
+            Just(icap) -> {
+              num = icap.groups[1].parseInt.maybe(1,id)
+              if (num==1) then attrs0
+               else attrs0.addKeyval("start",icap.groups[1])
+            }
+          } 
   // if loose then add a blank at the end of the last item so it has a Blank
   items = parseItems( txt + (if (loose) then "\n\n" else "")) 
-  List(if (cap.groups[2].length > 1) then "ol" else "ul",items,attrs.parseAttrs)
+  List(if (cap.groups[2].length > 1) then "ol" else "ul",items,attrs)
 }
 
 val rxlattrs    = regex(lattrs)
 val blankline   = regex(@"\n\n(?!\s*$)")
 val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
 val rxindent4   = regex(@"^    ",multiline=True)
+val rxFirstNum  = regex(@"^ *(\d+)\.")
 
 function rxindent(i : int ) : regex { 
   if (i==4) then rxindent4x 

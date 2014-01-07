@@ -258,9 +258,27 @@
 % Lists
 %-------------------------------------------------------------
 
-\newenvironment{mdUl}[1][]{\begin{mdDiv}[#1]\begin{itemize}}{\end{itemize}\end{mdDiv}}
-\newenvironment{mdOl}[1][]{\begin{mdDiv}[#1]\begin{enumerate}}{\end{enumerate}\end{mdDiv}}
+\newcounter{mdListNesting}
+
+\newenvironment{mdUl}[1][]%
+  {\begin{mdDiv}[#1]%
+   \advance\c@mdListNesting by 1% use advance to be local
+   \begin{itemize}}%
+  {\end{itemize}\end{mdDiv}}
+
+\cssNewKey{css}{start}{\cssStart}{}
+\newenvironment{mdOl}[1][]%
+  {\begin{mdDiv}[#1]%
+  \advance\c@mdListNesting by 1% use advance to be local
+  \begin{enumerate}%
+  \eifstrequal{\cssStart}{}{}%
+    {\addtocounter{enum\roman{mdListNesting}}{\cssStart}%
+     \addtocounter{enum\roman{mdListNesting}}{-1}}%
+  }%
+  {\end{enumerate}\end{mdDiv}}
+
 \newenvironment{mdLi}[1][]{\mdLabeltarget\item\begin{mdDivInline}[#1]}{\end{mdDivInline}}
+
 
 
 % ---------------------------------------------------

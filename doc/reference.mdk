@@ -27,12 +27,19 @@ Title2		: (#Title,#Title)
 llbracket	: &#10214;
 rrbracket	: &#10215;
 
+Css			: serif/cmun-serif.css
+
+<style>
+body.madoko	{ font-family: "Computer Modern Serif", Cambria, Georgia, serif }
+</style>
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 \cssClassRule{sampleblock}{padding-bottom=1ex}
 ~
+
+
 
 [TITLE]
 
@@ -59,43 +66,25 @@ Madoko is a fast javascript [Markdown] processor written in [Koka]
 It started out as a demo program for the new [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
-Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
-then [Marked] \(one of the fastest Javascript markdown implementations), and
-about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
-available as a .NET executable on windows.
-
-[Koka]: 		http://koka.codeplex.com
-[Markdown]: 	http://daringfireball.net/projects/markdown/syntax
-[Markdown.js]: 	https://github.com/evilstreak/markdown-js
-[Showdown]: 	https://github.com/coreyti/showdown
-[Marked]: 		https://github.com/chjj/marked
-[MathJax]:		http://www.mathjax.org
-[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
-[Node.js]:		http://nodejs.org	
-[NodeJs]: 		http://nodejs.org	
-
-[PanDoc]:			http://johnmacfarlane.net/pandoc
-[MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
-[Kramdown]:			http://kramdown.gettalong.org
-
 ## Madoko philosophy
 
-Even though Madoko is fast, the main design goal is not efficiency: I wanted
-to extend Markdown to make it suitable to create high-quality scholarly[^scholarly] and
-industrial documents for the web and print, while maintaining John Gruber's
-Markdown philosophy of simplicity and focus on plain text readability.
+The main design goal of Madoko is to enable light-weight creation of  high-
+quality scholarly[^scholarly] and industrial documents for the web and print,
+while maintaining John Gruber's Markdown philosophy of simplicity and focus on
+plain text readability.
 
 The popularity of Markdown is not accidental, and it is great for writing
 prose: it is super simple and straightforward to create good looking HTML
 documents. But for more serious use Markdown falls short in several areas and
-many extended implementations have arisen in the recent years. Madoko
-addresses many of the weaknesses of Markdown. In particular, it helps you
-with those things that a computer can well do for you: like numbering, document
-references, generating table of contents, footnotes, bibliographies, and
-document styling.
+many extended implementations have arisen in the recent years. 
 
-Besides HTML output, Madoko can also generate high-quality PDF files through
-LaTeX. Even though more Markdown implementations support this, there has been
+Madoko addresses many of the weaknesses of Markdown. In particular, it helps
+you with those things that a computer can do well for you: like numbering,
+document references, generating table of contents, footnotes, bibliographies,
+and document styling.
+
+Besides HTML output, Madoko generates high-quality PDF files through
+[LaTeX]. Even though more Markdown implementations support this, there has been
 a lot of effort in Madoko to make the LaTeX generation very good and
 customizable. This makes it possible to write high-quality scholarly articles
 using just Madoko and get both a high-quality print format (PDF) and a good
@@ -129,6 +118,29 @@ Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this documen
 
 [this-pdf]: reference.pdf
 [this-mdk]: reference.mdk.txt
+
+[latex]: http://en.wikibooks.org/wiki/LaTeX
+
+## Performance
+
+Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
+then [Marked] \(one of the fastest Javascript markdown implementations), and
+about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
+available as a .NET executable on windows.
+
+[Koka]: 		http://koka.codeplex.com
+[Markdown]: 	http://daringfireball.net/projects/markdown/syntax
+[Markdown.js]: 	https://github.com/evilstreak/markdown-js
+[Showdown]: 	https://github.com/coreyti/showdown
+[Marked]: 		https://github.com/chjj/marked
+[MathJax]:		http://www.mathjax.org
+[MathJaxCmds]:  http://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
+[Node.js]:		http://nodejs.org	
+[NodeJs]: 		http://nodejs.org	
+
+[PanDoc]:			http://johnmacfarlane.net/pandoc
+[MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
+[Kramdown]:			http://kramdown.gettalong.org
 
 # Usage
 
@@ -207,17 +219,42 @@ documents this is the case.
 # Syntax
 
 Madoko is fully compatible with basic [Markdown syntax][Markdown] and passes
-the entire test suite. It also implements most extensions, like Github
-flavored markdown and multi-markdown, and it adds quite a few features itself
-to make it really useful for writing professional documents.
+the entire test suite. It also implements most extensions, like [Github
+flavored markdown][GithubFM], [Markdown Extra], and [multi-markdown][MultiMarkdown],
+and it adds quite a few features itself to make it really useful for writing 
+scholarly and industrial documents.
 
-We assume that the reader is familiar with basic markdown syntax. 
+We assume that the reader is familiar with [basic markdown syntax][Markdown]. 
 
 [Markdown Extra]: 	http://michelf.ca/projects/php-markdown/extra
-[MultiMarkdown]:    http://fletcherpenney.net/multimarkdown
 [GitHubFM]:			https://help.github.com/articles/github-flavored-markdown
 
+In Madoko, _tab_'s are considered to be equivalent to 4 spaces. It is therefore 
+best to configure your editor to view tabs as 4 spaces wide or documents may
+look off.
+
 ## Inline elements
+
+### Emphasis
+
+Enclose words in asteriks (`*`) or underscores (`_`) to emphasize them.
+Use double asteriks or underscores for strong emphasis:
+
+~ Sample
+Here is _some emphasis_, or using *asteriks*.
+Or use __strong emphasis__, or like **this**.
+~
+
+### Code
+
+You can include pre-formatted text in regular text using back-quotes (`` ` ``).
+
+~ Sample
+For emphasis, use the `<strong>` tag in HTML.
+We can use back-quotes by using multiple ``back`quotes``. 
+~
+
+Section [#sec-code] discusses code in more detail including syntax highlighting.
 
 ### Sub- and super-script
 
@@ -238,39 +275,7 @@ Enclose anything in two tildes and it will strike out the content:
 There is a ~~strike out~~ here.
 ~
 
-### Escape sequences		{ #sec-escapes }
-
-Madoko adds some extra escape sequences to the standard ones in Markdown. If
-you want to use a special character directly without a special Markdown
-meaning,  precede it with a backslash (`\`). For example, to use a star (`*`)
-without causing emphasis, you can write `\*`. 
-Madoko will never escape a letter or digit and keep the slash, so 
-`\a` becomes "\\a" while `\&` becomes just "&".
-Thus, you can safely write windows
-style file names without needing an escape:
-
-~ Sample
-Would you like c:\foo\bar to be deleted? Yes\No. 
-Here are some other escapes: \\, \#, \*, \|, and \0.
-~
-
-If you escape a space (`\ `), it is translated as a non-breakable space, while
-a backslash at the end of a line causes a hard line break to be inserted. The 
-latter is recommended over using the standard Markdown way of using two spaces
-at the end of a line because it leaves visual clue that a line break occurs.
-
-~ Sample
-Here is non\ breakable space and a hard\
-line break with a \* star.
-~
-
-Finally, the escape sequence `\/` translates to nothing; this can be very 
-useful to separate certain constructs. For example, emphasis is suppressed
-if the underscores appear inside a word, as in my_example_here. Using the
-empty escape sequence we can emphasize inside words too: to get
-my\/_example_\/here, we can simply write `my\/_example_\/here`.
-
-### Smart quotes and symbols
+### Smart quotes, symbols, and direct links
 
 Madoko will quote smartly using proper open and closing quotes for anything
 enclosed in single quotes (`'`), double quotes (`"`), or french quotes (`<<`
@@ -295,7 +300,46 @@ quotation attribution. --- Oscar Wilde.
 Three dots ... should be close together.
 ~
 
-## Footnotes  { #sec-footnotes }
+## Links  { #sec-links }
+
+Madoko has three kinds of links, reference links, inline links, and direct
+links. The inline links have the linked text between square brackets and the
+URL follows between parenthesis, while direct links are simply enclosed
+between angled brackets:
+
+~ Sample
+Here is a link to [Google](http://www.google.com). 
+Or as a direct link: <http://www.google.com>.
+~
+
+Generally, reference links are preferred. Here, the link is defined separately
+after the body of text such that it looks less cluttered:
+
+~ Sample
+Here is a link to [Google] again. 
+We can also [Change the text][Google].
+
+[Google]: http://www.google.com "Google"
+~
+
+Note how `[Google]` is simply a shorthand for `[Google][Google]`. The title in
+double quotes in the link definition is optional.  See also Section 
+[#sec-attr] on how to include attributes in link  definitions.
+
+### Images	   { #sec-image }
+
+Images are included using a regular link prefixed with an exclamation mark (`!`).
+
+~ Sample
+A butterfly: ![bfly].
+
+[bfly]: butterfly.png "A Monarch" { width=100px }
+~
+
+This example also shows the use of attributes (Section [#sec-attr]) where
+we can specifiy the `width`, `height`, or `vertical-align` of the image.
+
+### Footnotes  { #sec-footnotes }
 
 Footnotes are written as regular link definitions prefixed with a hat (`^`)
 character. This is the syntax [originally proposed][fnsyntax] by John Gruber.
@@ -309,6 +353,76 @@ Here is a footnote[^fn].
 ~
 
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
+
+### Escape sequences		{ #sec-escapes }
+
+If you want to use a special character directly without a special Markdown
+meaning, precede it with a backslash (`\`). For example, to use a star (`*`)
+without causing emphasis, you can write `\*`.  
+
+Madoko will never escape a letter or digit and always keep the backslash, so
+`\a` becomes "\\a" while `\&` becomes just "&". Thus, you can safely write
+windows style file names without needing an escape:
+
+~ Sample
+Would you like c:\foo\bar to be deleted? Yes\No. 
+Here are some other escapes: \\, \#, \*, \|, and \0.
+~
+
+This approach is different than that of Markdown which only escapes a specific
+set of characters, while Madoko escapes everything that is not a letter or digit.
+The advantage of the approach of Madoko is that this is easy to remember, while
+trying to remember a specific set of special escape characters is near impossible.
+
+### Special escapes
+
+Some characters are translated specially when escaped.
+If you escape a space (`\ `), it is translated as a non-breakable space, while
+a backslash at the end of a line causes a hard line break to be inserted. The 
+latter is recommended over using the standard Markdown way of using two spaces
+at the end of a line because it leaves visual clue that a line break occurs.
+
+~ Sample
+Here is non\ breakable space and a hard\
+line break with a \* star.
+~
+
+Finally, the escape sequence `\/` translates to nothing; this can be very 
+useful to separate certain constructs. For example, emphasis is suppressed
+if the underscores appear inside a word, as in my_example_here. Using the
+empty escape sequence we can emphasize inside words too: to get
+my\/_example_\/here, we can simply write `my\/_example_\/here`.
+
+
+## Headings and rules { #sec-heading }
+
+Headings are written by prefixing with one or more hash characters (`#`):
+
+	# A level one heading
+	## A level two heading
+	### A level three heading
+	...
+	###### Up to level six
+
+It is also possible to write level one and level two headers using
+a line of three or more equal (`=`) or dash (`-`) characters:
+
+	A level one heading
+	===================
+
+	A level two heading
+	-------------------
+
+But hash-headings are generally preferred since a three or more  dashes (or
+underscores or asteriks) are also used for horizontal rules:
+
+~ Sample
+Above...
+
+------------
+
+and below the line.
+~ 
 
 
 ## Identities and labels {#sec-ids-labels}
@@ -366,7 +480,7 @@ used in the following example to suppress the default numbering:
 Let's refer to Section [#myheader1].
 ~
 
-## Figures { #sec-figure }
+## Figures and images { #sec-figure }
 
 Figures can be included using the `Figure` custom block (see Section [#sec-custom]):
 ~~ SampleBlock
@@ -397,6 +511,52 @@ attribute that can be set to `top`, `bottom`, or `here`. This is ignored
 in the HTML output but used in LaTeX to influence where a figure is
 placed on a page. The `.wide` attribute is used in LaTeX to have figures
 span both columns in a two-column document class.
+
+## Lists  { #sec-lists }
+
+Unordered lists are created simply by using an asteriks (`*`), plus (`+`),
+or dash (`-`) as item markers preceded by an empty line (or otherwise
+it is considered part of a paragraph):
+
+~ Sample
+Groceries:
+
+* Banana
+* Bread
+	- white
+	- whole grain
+* Basil
+~
+
+Each item marker must be followed by a space.
+You can created ordered lists using numbers followed by a dot and space. Also
+long list items can be wrapped by indenting the text for each item:
+
+~ Sample
+1. An ordered list example. 
+	With some longer items.
+2. An another item
+	with more text.
+~
+
+Normally, the content of each list item is just treated as text and not as a
+paragraph. If there are any blank lines in the entire list, each item is 
+typeset with a surrounding paragraph which makes the list a bit looser for
+HTML output:
+
+~ Sample
+3. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+	Aliquam hendrerit mi posuere lectus. 
+
+3. Vestibulum enim wisi,
+    viverra nec, fringilla in, laoreet vitae, risus.
+
+3. Donec sit amet nisl. Aliquam semper ipsum sit amet velit.
+    Suspendisse id sem consectetuer libero luctus adipiscing.
+~
+
+Note how the specific numbers used in the list do not matter, except that
+the first item determines the start number of the enumeration.
 
 ## Code blocks  { #sec-code }
 
@@ -1683,6 +1843,8 @@ Some attributes have a special meaning to Madoko. In particular:
 	for example by headings. See Section [#sec-toc] for more information.
 * `before`, `replace`, and `after`: Used to transform the content of the block. See 
 	Section [#sec-replace].
+* `start=`_num_: Gives the start number for an ordered list (Section [#sec-lists]).
+* `target=`_frame_: Gives the HTML frame target for a link. 
 * `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
 	block.
 * `label=`_label_: Sets the label of an element. This is used when referencing this block
