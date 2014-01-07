@@ -683,35 +683,37 @@ the table of equations anywhere in the document as:
 One of Madoko's main design goals is to enable the creation of high-quality
 scholarly articles. As such, Madoko integrates closely with the standard 
 [BibTeX] tool to generate bibliographies and references inside a document.
-In particular, you can simply use any existing BibTeX bibliography file
-(`.bib`). You can specify which bibliography files are to be used using 
-`Bib` [metadata](#sec-metadata) entries:
+Usually, BibTeX comes standard with any LaTeX installation.
+
+You can simply use any existing BibTeX bibliography file (`.bib`). You can
+specify which bibliography files are to be used using  `Bib` 
+[metadata](#sec-metadata) entries:
 
 	Bib:  ../mybib1
 	Bib:  mybib2
  
 As an example, you can view the bibliography for this document [here](reference.bib).
-Entries in the biblopgraphy files can now be referenced using semi-colon separated 
-local links, for example 
+Entries in the bibliography files can now be referenced using semi-colon separated 
+references (as in [Pandoc]), for example 
 
 ~ Sample
-Read about LaTeX and TeX [#Knuth:Tex; #Lamport:Latex]. 
+Read about LaTeX and TeX [@Knuth:Tex; @Lamport:Latex].
 ~
 
 Note that unlike LaTeX there is no need to explicitly insert an unbreakable
 space between the text and the citation, Madoko automatically takes care of this
 (as described in Section [#sec-ids-labels]).
-If necessary, you can also append extra text for each entry:
+If necessary, you can also include extra text for each entry:
 
 ~ Sample
-Read about TeX [#Knuth:Tex; #Lamport:Latex (chapter 4)]. 
+Read more [The book @Knuth:Tex; @Lamport:Latex (chapter 4)]. 
 ~
 
 When running Madoko the first time, we get a warning that these references
 are not yet defined:
 
-	warning: missing anchor or citation: #Lamport:Latex
-	warning: missing anchor or citation: #Knuth:Tex
+	warning: missing citation: Lamport:Latex
+	warning: missing citation: Knuth:Tex
 
 When Madoko finds such references, it writes them to a `.aux` file (together
 with the needed bibliography files) that can be read by BibTeX, and we can
@@ -734,9 +736,9 @@ warnings will be issued.
 
 The style of the bibliography entries is determined using the `Bib Style` key
 and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.html)
-(by default `plain`):
+(by default `plainnat`):
 
-	Bib Style: plainnat
+	Bib Style: abbrvnat
 
 Madoko uses a very simple LaTeX parser to format the bibliography entries in
 Markdown. It can handle things like special characters and accents quite well
@@ -762,37 +764,70 @@ is generally preferred for modern documents to use a numeric citations style.
 
 ### Citation styles   { #sec-cite }
 
-The citation style is usually automatically determined from the 
-bibliography style. However, it can be set explicitly using the `Cite Style`
-metadata key:
+The citation style defaults to a _numeric_ style. However, it can be set
+explicitly using the `Cite Style` metadata key:
 
 	Cite Style: natural
 
-Valid citation styles are _natural_, _square_, _numeric_, _plain_, _super_,
-and _auto_ (default). The natural and square styles use author-year style
-citations, while the numeric, plain, and super styles use numbers.
+Valid citation styles are _natural_, _textual_, _numeric_, _super_,
+and _auto_ (default). The natural and textual style use author-year style
+citations, while the numeric and super styles use numbers.
 
-| ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~       |
-| _natural_   | ([Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]) | (default for author-year citations) |
-| _square_    | [[Lamport, 1994][#Lamport:latex]; [Knuth, 1984][#Knuth:Tex]] |                                     |
-| _numeric_   | [[5][#Lamport:latex];[4][#Knuth:Tex]]                        |                                     |
-| _plain_     | [[5][#Lamport:latex],[4][#Knuth:Tex]]                        | (default for numeric citations)     |
-| _super_     | ^[5][#Lamport:latex],[4][#Knuth:Tex]^                        |                                     |
+| ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| _natural_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=natural}  | (default for author-year citations) |
+| _textual_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=textual}  |                                     |
+| _numeric_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=numeric}  | (default for numeric citations)     |
+| _super_     | [@Lamport:Latex;@Knuth:Tex]{cite-style=super}    |                                     |
 
 Note that full author-year style citations only work with BibTeX styles that
 support this, i.e. generally any style that works with the `natbib` package
-like `plainnat`. With author-year citations we can use the `.short`, `.long`,
-and `.textual` class attributes to change how the citation is shown:
+like `plainnat`. With author-year citations we can use modifiers to change how 
+the citation is shown. For example, assuming a _natural_ style:
 
-| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
-| `[#Goo93]`                         | ([Goossens _et al._, 1993][#Goo93])                 |
-| `[#Goo93]{.short}`{.plain}         | ([1993][#Goo93])                                    |
-| `[#Goo93]{.long}`{.plain}          | ([Goossens, Mittelbach, and Samarin, 1993][#Goo93]) |
-| `[#Goo93]{.textual}`{.plain}       | Goossens _et al._ ([1993][#Goo93])                  |
-| `[#Goo93]{.long .textual}`{.plain} | Goossens, Mittelbach, and Samarin ([1993][#Goo93])  |
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     |
+| `[@Goo93]`                    | [@Goo93]{cite-style=natural}          | Natural                             |
+| `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}         | Short -- just show the year         |
+| `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}\ \ \ Long     ||
+| `[!@Goo93]`                   | [!@Goo93]{cite-style=natural}         | Just show the authors               |
+| `[@Goo93]{.textual}`{.plain}  | [@Goo93]{cite-style=natural .textual} | Force textual style                 |
+| `[@Goo93]{.free}`{.plain}     | [@Goo93]{cite-style=natural .free}    | Free form -- no parenthesis |
 
-These attributes have no effect if a numeric style is used and in the _plain_
-style for example, all of the above would be displayed as [#Goo93].
+In a numeric style, most of these attibutes have no effect and the first four cases 
+would be displayed as: [@Goo93]. With the `.textual` modifier, we get: 
+[@Goo93]{.textual}, and in free mode we just get a number: [@Goo93]{.free}.
+
+### Advanced: Customizing citations
+
+For each citation, you can actually change how it is displayed by setting
+the `cite-style` attribute on the citations:
+
+~ Sample
+First a natural citation [@Goo93]{cite-style=natural},
+then a super one[@Goo93]{cite-style=super}.
+~
+
+Moreover, we can customize the formatting of citations by specifying 
+braces etc. The general format of a citation style is: 
+
+> _base_ \[`:`_open_`,`_close_`,`_sep_ \[`,`_aysep_] \[`,` _yysep_]]
+
+where _base_ is one of `natural`, `numeric`, `textual`, or `super`,
+and the values _open_ to _yysep_ are double quoted strings:
+
+* _open_: the opening brace.
+* _close_: the closing brace.
+* _sep_: separator between citations.
+* _aysep_: separator between authors and years. Equal to _sep_ by default.
+* _yysep_: separator between years with a common author. Equal to _yysep_ by default.
+
+For example, the default for _natural_ is `natural:"(",")","; ",", ",","`.
+
+~ Sample
+Switch to a compact square natural style
+[@Goo93;@FBerg04]{cite-style='natural:"[","]","; ",",",","'}
+~
+
+Clearly, one should usually only do this for the `Cite Style` metadata key.
 
 ### Advanced: Not using BibTeX 
 
@@ -818,10 +853,10 @@ The above example is for numeric style citations. The `.has-before` class
 ensures that the html output is styled correctly with the right hanging
 indentation. The `[]{.newblock}` spans are used in LaTeX output to create
 flexible whitespace that justifies the entry nicely. If author-year citations
-are used, the entry should have an explicit label and clear the default
+are used, the entry should have an explicit `cite-label` and clear the default
 `before` key (which would otherwise put numbers in front):
 
-	~~ Bibitem { #remy='R&eacute;my(1993)' before=clear }
+	~~ Bibitem { #remy cite-label='R&eacute;my(1993)' before=clear }
 	Didier R&eacute;my. []{.newblock} 
 	_Type inference for records in a natural extension of ML._
 	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
@@ -830,7 +865,7 @@ are used, the entry should have an explicit label and clear the default
 	~~
 
 	~~ Bibitem { id='nielson:polyeffect' before=clear\
-	label='Nielson _et\ al_.(1997)Nielson, Nielson, and Amtoft'}
+	cite-label='Nielson et\ al.(1997)Nielson, Nielson, and Amtoft'}
 	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
 	[]{.newblock} _Polymorphic subtyping for effect analysis: 
 	  The static semantics._
@@ -839,8 +874,9 @@ are used, the entry should have an explicit label and clear the default
 	  pages 141--171, 1997. []{.newblock} ISBN 3-540-62503-8.
 	~~
 
-Note how it is allowed to have long citation label after the year. This is
-used when a citation is given the `.long` class (versus `.short`). 
+A `cite-label` should have the form _authors_`(`_year_`)`_longauthors_,
+where the _longauthors_ are optional. Madoko parses these labels to
+correctly format citations. 
 
 ## Tables
 

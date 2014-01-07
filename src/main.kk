@@ -111,7 +111,7 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                 //trace(logs)
                 // write out the log to an aux file
                 mopts = if (xopts.xmp) then xopts else xopts.parseMeta( icontent.normalizeSource ).fst // get bibdata and bibstyle
-                bibStyleName = if (mopts.bibStyle != "") then mopts.bibStyle else "plain"
+                bibStyleName = if (mopts.bibStyle != "") then mopts.bibStyle else "plainnat"
                 bibNames = mopts.bib.splitPaths
                 auxName = outName.changeExt(".aux")
                 initial = readTextFileDef(auxName,"").replaceAll(rxCite,"").replace(rxEmptyTail,"")

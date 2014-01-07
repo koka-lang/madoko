@@ -160,7 +160,10 @@ public function parseCiteStyle( text : string ) : citestyle {
       yysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else aysep      
       Citestyle(md,cap.groups[2],cap.groups[3],cap.groups[4],aysep,yysep)
     } 
-    Nothing -> citeAuto
+    Nothing -> {
+      trace("warning: unrecognized citation style: " + text)
+      citeNumeric
+    }
   }
 }
 

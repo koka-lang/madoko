@@ -47,7 +47,7 @@ public struct options(
   author   : string = "",
   affiliation: string = "",
   email    : string = "",
-  citestyle: citestyle = parseCiteStyle("auto"),   
+  citestyle: citestyle = citeNumeric,   
   
   tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth : int  = 3, // default depth where headings are numbered

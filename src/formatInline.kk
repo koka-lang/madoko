@@ -454,10 +454,10 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
 
   function fmtAuthorYear(cite,short,year,long) {
     link = makeLink(cite,year)
-    sep  = if (isTextual) then " " else cs.aysep
+    sep  = context.formatInline(if (isTextual) then "&nbsp;" else cs.aysep)
     fpre = context.formatInline(cite.pre)
     fpost= context.formatInline(cite.post)
-    fshort = context.formatInline(context.formatInline(short.replaceAll(rxEtAl,@"_et\ al_.")))
+    fshort = context.formatInline(short.replaceAll(rxEtAl,@"_et\ al_."))
 
     if (cite.modifier=="-") 
      then fpre + link + fpost
