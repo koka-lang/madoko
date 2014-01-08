@@ -144,7 +144,7 @@ public val citeNatural = Citestyle(Natural,"(",")","; ",", ",", ")
 public val citeNumeric = Citestyle(Numeric,"[","]",",",",",",",True,True)
 public val citeAuto    = Citestyle(Auto   ,"[","]",",",",",",")
 val citeTextual = Citestyle(Textual,"(",")","; ",", ",", ")
-val citeSuper   = Citestyle(Super  ,"","",",",",","",True,True)
+val citeSuper   = Citestyle(Super,"","",",",",",",",True,True)
 
 public function parseCiteStyle( text : string ) : citestyle {
   match(text.find(rxCiteSpec)) {

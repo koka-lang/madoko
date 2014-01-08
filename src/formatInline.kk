@@ -329,10 +329,9 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                           }     
   authors = if (modifier=="+" && long!="") then long else short.replaceAll(rxEtAl,@"_et\ al_.")
 
-  Cite( name, context.formatInline(pre), context.formatInline(post), modifier, 
-        context.formatInline(number), 
-        context.formatInline(if (year=="") then number else year), 
-        context.formatInline(authors), ordinal )
+  Cite( name, pre, post, modifier, number, 
+        if (year=="") then number else year, 
+        authors, ordinal )
 }
 
 val rxDigits = regex(@"\d+")
@@ -472,17 +471,14 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   }
 
   function makeLink(cite:cite,text:string) :string {
-    context.fmtLink(False,
-                     newLink("#" + cite.name,"",
-                              attrs.addClass("bibref"),bench=context.bench),
-                     text)
+    "[" + text + "][#" + cite.name + "]{.bibref}"
   }
 
   // Takes a list of citations that share common authors
   function fmtAuthorYear(cites : list<cite> ) {
     links = cites.map(fun(cite){ makeLink(cite,cite.year) }).join(cs.yysep)
     plinks= if (isTextual) then makeParens(links) else links
-    sep   = context.formatInline(if (isTextual) then "&nbsp;" else cs.aysep)
+    sep   = if (isTextual) then "&nbsp;" else cs.aysep
 
     val (modifier,authors,pre,post) = match(cites) {
       Cons(cite,_) -> (cite.modifier,cite.authors,cite.pre,cite.post)
@@ -509,7 +505,7 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   function fmtNumericSpan( cite1 : cite, cite2 : cite ) : string {
     link1 = makeLink(cite1,cite1.number)
     link2 = makeLink(cite2,cite2.number)
-    cite1.pre + link1 + context.formatInline("--") + link2 + cite1.post  
+    cite1.pre + link1 + @"\/--\/" + link2 + cite1.post  
   }
 
   // compress numeric citations
@@ -596,10 +592,10 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   pciteText = if (isTextual) then citeText else makeParens(citeText) 
   
   sciteText = match(cs.mode) {
-    Super -> context.fmtCmd("sup", pciteText)
+    Super -> @"\/^" + pciteText + @"^\/"
     _     -> pciteText
   }  
-  context.fmtCmd("span", sciteText, attrs.addClass("citations"))
+  context.fmtCmd("span", context.formatInline(sciteText), attrs.addClass("citations"))
 }
 
 
