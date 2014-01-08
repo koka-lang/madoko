@@ -372,6 +372,7 @@ This approach is different than that of Markdown which only escapes a specific
 set of characters, while Madoko escapes everything that is not a letter or digit.
 The advantage of the approach of Madoko is that this is easy to remember, while
 trying to remember a specific set of special escape characters is near impossible.
+This is similar to the [PanDoc] approach to escape sequences.
 
 ### Special escapes
 
@@ -775,7 +776,8 @@ citations, while the super and numeric styles use numbers.
 | _numeric_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=numeric}  | (default for numeric citations)     |
 | _super_     | [@Lamport:Latex;@Knuth:Tex]{cite-style=super}    |                                     |
 
-Note that full author-year style citations only work with BibTeX styles that
+Note that numeric citations are sorted (and compressed) by default.
+Also full author-year style citations only work with BibTeX styles that
 support this, i.e. generally any style that works with the `natbib` package
 like `plainnat`. With author-year citations we can use modifiers to change how 
 the citation is shown. For example, assuming a _natural_ style:
@@ -792,56 +794,9 @@ In a numeric style, most of these attibutes have no effect and the first four ca
 would be displayed as: [@Goo93]. With the `.textual` modifier, we get: 
 [@Goo93]{.textual}, and in free mode we just get a number: [@Goo93]{.free}.
 
-See Appendix [#sec-custom-cite] on how to customize citations styles further.
-
-### Advanced: Not using BibTeX 
-
-If necessary, it is possible to completely circumvent using BibTeX and write
-your bibliograpy entries by hand. The bibliography entries need to be put inside
-a `Bibliography` block: 
-
-	~ Bibliography { caption="00" }
-	...
-	~
-
-where the `caption` is only used in LaTeX output and should be a string that
-is the widest label necessary for the numeric style. Inside the bibliography
-block, you can put `Bibitem` blocks for each bibliography entry. For example:
-
-	~~ Bibitem { #wadler:marriage .has-before }
-	Philip Wadler and Peter Thiemann.
-	[]{.newblock} _The marriage of effects and monads._
-	[]{.newblock} ACM Trans. Comput. Logic, 4(1):1--32, 2003.
-	~~
-
-The above example is for numeric style citations. The `.has-before` class
-ensures that the html output is styled correctly with the right hanging
-indentation. The `[]{.newblock}` spans are used in LaTeX output to create
-flexible whitespace that justifies the entry nicely. If author-year citations
-are used, the entry should have an explicit `cite-label` and clear the default
-`before` key (which would otherwise put numbers in front):
-
-	~~ Bibitem { #remy cite-label='R&eacute;my(1993)' before=clear }
-	Didier R&eacute;my. []{.newblock} 
-	_Type inference for records in a natural extension of ML._
-	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
-	  Theoretical Aspects Of Object-Oriented Programming. 
-	  Types, Semantics and Language Design. MIT Press, 1993.
-	~~
-
-	~~ Bibitem { id='nielson:polyeffect' before=clear\
-	cite-label='Nielson et\ al.(1997)Nielson, Nielson, and Amtoft'}
-	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
-	[]{.newblock} _Polymorphic subtyping for effect analysis: 
-	  The static semantics._
-	[]{.newblock} In Selected papers from the 5th LOMAPS Workshop on 
-	  Analysis and Verification of Multiple-Agent Languages, 
-	  pages 141--171, 1997. []{.newblock} ISBN 3-540-62503-8.
-	~~
-
-A `cite-label` should have the form _authors_`(`_year_`)`_longauthors_,
-where the _longauthors_ are optional. Madoko parses these labels to
-correctly format citations. 
+See Appendix [#sec-custom-cite] on how to customize citations styles further,
+and Appendix [#sec-custom-bib] on how to write your bibliography entries
+by hand without using BibTeX.
 
 ## Tables
 
@@ -1749,7 +1704,7 @@ then a super one[@Goo93]{cite-style=super}.
 Moreover, we can customize the formatting of citations by specifying 
 braces etc. The general format of a citation style is: 
 
-> _base_ \[`:`_open_`,`_close_`,`_sep_ \[`,`_aysep_] \[`,` _yysep_]]
+> _base_ \[`:`(`sort`|`nosort`)\] \[`:`_open_`,`_close_`,`_sep_ \[`,`_aysep_] \[`,` _yysep_]]
 
 where _base_ is one of `natural`, `numeric`, `textual`, or `super`,
 and the values _open_ to _yysep_ are double quoted strings:
@@ -1757,18 +1712,70 @@ and the values _open_ to _yysep_ are double quoted strings:
 * _open_: the opening brace.
 * _close_: the closing brace.
 * _sep_: separator between citations.
-* _aysep_: separator between authors and years. Equal to _sep_ by default.
-* _yysep_: separator between years with a common author. Equal to _yysep_ by default.
+* _aysep_: Optional separator between authors and years. Equal to _sep_ by default.
+* _yysep_: Optional separator between years with a common author. Equal to _yysep_ by default.
 
 For example:
 
 ~ Sample
-Switch to a compact square natural style
-[@Goo93;@FBerg04]{cite-style='natural:"[","]","; ",",",","'}
+Switch to a compact bold numeric style
+[@Goo93;@FBerg04]{cite-style='numeric:"[**","**]","**;**"'}
+or an unsorted super style 
+[@Lamport:Latex;@Knuth:TeX]{cite-style=super:nosort}
 ~
 
 Clearly, one should usually only do this for the `Cite Style` metadata key,
 and not sprinkle this kind of formatting through your prose.
+
+
+## Advanced: Not using BibTeX {#sec-custom-bib}
+
+If necessary, it is possible to completely circumvent using BibTeX and write
+your bibliograpy entries by hand. The bibliography entries need to be put inside
+a `Bibliography` block: 
+
+	~ Bibliography { caption="00" }
+	...
+	~
+
+where the `caption` is only used in LaTeX output and should be a string that
+is the widest label necessary for the numeric style. Inside the bibliography
+block, you can put `Bibitem` blocks for each bibliography entry. For example:
+
+	~~ Bibitem { #wadler:marriage .has-before }
+	Philip Wadler and Peter Thiemann.
+	[]{.newblock} _The marriage of effects and monads._
+	[]{.newblock} ACM Trans. Comput. Logic, 4(1):1--32, 2003.
+	~~
+
+The above example is for numeric style citations. The `.has-before` class
+ensures that the html output is styled correctly with the right hanging
+indentation. The `[]{.newblock}` spans are used in LaTeX output to create
+flexible whitespace that justifies the entry nicely. If author-year citations
+are used, the entry should have an explicit `cite-label` and clear the default
+`before` key (which would otherwise put numbers in front):
+
+	~~ Bibitem { #remy cite-label='R&eacute;my(1993)' before=clear }
+	Didier R&eacute;my. []{.newblock} 
+	_Type inference for records in a natural extension of ML._
+	[]{.newblock} In Carl\ A. Gunter and John\ C. Mitchell, editors, 
+	  Theoretical Aspects Of Object-Oriented Programming. 
+	  Types, Semantics and Language Design. MIT Press, 1993.
+	~~
+
+	~~ Bibitem { id='nielson:polyeffect' before=clear\
+	cite-label='Nielson et\ al.(1997)Nielson, Nielson, and Amtoft'}
+	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
+	[]{.newblock} _Polymorphic subtyping for effect analysis: 
+	  The static semantics._
+	[]{.newblock} In Selected papers from the 5th LOMAPS Workshop on 
+	  Analysis and Verification of Multiple-Agent Languages, 
+	  pages 141--171, 1997. []{.newblock} ISBN 3-540-62503-8.
+	~~
+
+A `cite-label` should have the form _authors_`(`_year_`)`_longauthors_,
+where the _longauthors_ are optional. Madoko parses these labels to
+correctly format citations. 
 
 
 ## Advanced styling in LaTeX  { #sec-latex-style }

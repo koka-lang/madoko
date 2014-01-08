@@ -154,7 +154,14 @@ public function parseCiteStyle( text : string ) : citestyle {
            elif (cap.groups[1]=="numeric") then Numeric
            elif (cap.groups[1]=="super") then Super
            else Auto
-      xsort = (cap.groups[2]=="sort")
+      cite = match(md) {
+        Natural -> citeNatural
+        Textual -> citeTextual
+        Super   -> citeSuper
+        Numeric -> citeNumeric
+        _       -> citeAuto
+      }
+      xsort = if (cap.groups[2]!="") then (cap.groups[2]=="sort") else cite.sort
       xcompress = xsort      
       if (cap.groups.matchedOn(3)) {           
         aysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else cap.groups[5]
@@ -162,14 +169,7 @@ public function parseCiteStyle( text : string ) : citestyle {
         Citestyle(md,cap.groups[3],cap.groups[4],cap.groups[5],aysep,yysep,xsort,xcompress)
       }
       else {
-        cite = match(md) {
-          Natural -> citeNatural
-          Textual -> citeTextual
-          Super   -> citeSuper
-          Numeric -> citeNumeric
-          _       -> citeAuto
-        }
-        if (cap.groups[2]!="" && cite.sort != xsort) 
+        if (cite.sort != xsort) 
          then cite(sort=xsort,compress=xcompress) 
          else cite
       }
