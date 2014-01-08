@@ -138,10 +138,10 @@ public function isNumCite( cs : citestyle ) : bool {
   }
 }
 
-public val citeNatural = Citestyle(Natural,"(",")","; ",", ",",")
+public val citeNatural = Citestyle(Natural,"(",")","; ",", ",", ")
 public val citeNumeric = Citestyle(Numeric,"[","]",",",",",",")
 public val citeAuto    = Citestyle(Auto   ,"[","]",",",",",",")
-val citeTextual = Citestyle(Textual,"(",")","; ",", ",",")
+val citeTextual = Citestyle(Textual,"(",")","; ",", ",", ")
 val citeSuper   = Citestyle(Super  ,"","",",",",","")
 
 public function parseCiteStyle( text : string ) : citestyle {

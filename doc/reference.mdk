@@ -161,10 +161,11 @@ pdf file, use:
 * `madoko --tex -v mydoc.mdk`
 * `pdflatex mydoc.tex`
 
-This assumes that you have LaTeX installed on your system. For Window users,
-a good LaTeX system is [MikTeX] for example.
+This assumes that you have LaTeX installed on your system. Popular LaTeX
+systems include [MikTeX] for Windows, and [MacTeX] for MacOSX.
 
 [MikTeX]: http://miktex.org/
+[MacTeX]: http://tug.org/mactex/
 
 
 ## Command line options

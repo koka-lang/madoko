@@ -325,7 +325,8 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
   authors = if (modifier=="+" && long!="") then long else short.replaceAll(rxEtAl,@"_et\ al_.")
 
   Cite( name, context.formatInline(pre), context.formatInline(post), modifier, 
-        context.formatInline(number), context.formatInline(year), 
+        context.formatInline(number), 
+        context.formatInline(if (year=="") then number else year), 
         context.formatInline(authors) )
 }
 
@@ -464,47 +465,78 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   }
 
   function makeLink(cite:cite,text:string) :string {
-    link = context.fmtLink(False,
-                           newLink("#" + cite.name,"",
-                                    attrs.addClass("bibref"),bench=context.bench),
-                           text)
-    if (isTextual) then makeParens(link) else link
+    context.fmtLink(False,
+                     newLink("#" + cite.name,"",
+                              attrs.addClass("bibref"),bench=context.bench),
+                     text)
   }
 
-  function fmtAuthorYear(cite) {
-    link = makeLink(cite,cite.year)
-    sep  = context.formatInline(if (isTextual) then "&nbsp;" else cs.aysep)
+  // Takes a list of citations that share common authors
+  function fmtAuthorYear(cites : list<cite> ) {
+    links = cites.map(fun(cite){ makeLink(cite,cite.year) }).join(cs.yysep)
+    plinks= if (isTextual) then makeParens(links) else links
+    sep   = context.formatInline(if (isTextual) then "&nbsp;" else cs.aysep)
+
+    val (modifier,authors,pre,post) = match(cites) {
+      Cons(cite,_) -> (cite.modifier,cite.authors,cite.pre,cite.post)
+      _ -> ("","?","","")  // should never happen
+    }
     
-    if (cite.modifier=="-") 
-     then link
-    elif (cite.modifier=="!")
-     then cite.authors
-     else cite.authors + sep + link 
+    mid  = if (modifier=="-") 
+             then plinks
+            elif (modifier=="!")
+             then authors
+             else authors + sep + plinks 
+    pre + mid + post
   }
 
   function fmtNumeric(cite : cite) {
     if (isTextual) then { 
       if (cite.authors=="") then trace("warning: textual citation but this bib style has no author-year info: @" + cite.name )
-      fmtAuthorYear(cite)      
+      fmtAuthorYear([cite])      
     }
     else {
-      makeLink(cite,cite.number) 
+      link = makeLink(cite,cite.number)      
+      cite.pre + (if (isTextual) then makeParens(link) else link) + cite.post
     }
   }
 
-  function fmtCitation(cite : cite) : string {
-    mid = match(cs.mode) {
-      Numeric -> fmtNumeric(cite)
-      Super   -> fmtNumeric(cite)
-      // Auto or Natural
-      _  -> if (cite.authors=="") 
-             then fmtNumeric(cite)
-             else fmtAuthorYear(cite)            
+  // Group common authors together for author-year citations.
+  // We pass an explicit "done" list so Koka can see this is terminating
+  function groupAuthors( cites : list<cite>, done : list<string> ) : list<list<cite>> {
+    match(cites) {
+      Nil -> Nil
+      Cons(cite,rest) -> {
+        if (done.any( fun(s) { s == cite.authors })) 
+          then groupAuthors(rest,done) 
+          else {
+            val same = rest.filter( fun(citex) { citex.authors == cite.authors } )
+            if (same.isNil) 
+             then Cons([cite], rest.groupAuthors(done))
+             else Cons( Cons(cite,same), rest.groupAuthors( Cons(cite.authors,done)) )
+          }
+      }
     }
-    cite.pre + mid + cite.post
   }
 
-  citeText = citations.map(fmtCitation).join(cs.citesep)
+  function fmtAuthorYears( cites : list<cite> ) : list<string> {
+    cites.groupAuthors([]).map(fmtAuthorYear)
+  }
+
+  function fmtNumerics( cites : list<cite> ) : list<string> {
+    // sort and group numeric citations?
+    cites.map(fmtNumeric)
+  }
+
+  function fmtCitations(cites : list<cite> ) : list<string> {
+    match(cs.mode) {
+      Natural -> fmtAuthorYears(cites)
+      Textual -> fmtAuthorYears(cites)
+      _ -> fmtNumerics(cites)
+    }
+  }
+
+  citeText = citations.fmtCitations.join(cs.citesep)
   pciteText = if (isTextual) then citeText else makeParens(citeText) 
   
   sciteText = match(cs.mode) {
