@@ -333,9 +333,11 @@ function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : str
 
   //trace("citations: " + citationss.concat.join("-")) 
   if (citationss.isCons && citationss.all(isCons)) {
-    // Citations link
-    cattrs = attrs.addKeyval("target-element","bibitem")
-    nbsp + context.fmtCite(citationss.concat,cattrs)
+    // Citations link: set defaults as "citations" block
+    attrsc = attrs.addKeyval("target-element","bibitem")
+    attrsd = if (!(attrsc.defaults)) then attrsc 
+              else context.defaults.matchRules("citations",attrsc)
+    nbsp + context.fmtCite(citationss.concat,attrsd)
   } 
   else {
     inlineLinkRef( isImage, nbsp, txt, after, "", attrs, context )

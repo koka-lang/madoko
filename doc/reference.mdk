@@ -28,14 +28,6 @@ llbracket	: &#10214;
 rrbracket	: &#10215;
 
 
-<!--
-Css			: serif/cmun-serif.css
-
-<style>
-body.madoko	{ font-family: "Computer Modern Serif", Cambria, Georgia, serif }
-</style>
--->
-
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
@@ -71,8 +63,8 @@ the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
 ## Madoko philosophy
 
-The main design goal of Madoko is to enable light-weight creation of  high-
-quality scholarly[^scholarly] and industrial documents for the web and print,
+The main design goal of Madoko is to enable light-weight creation of  high-quality
+scholarly[^scholarly] and industrial documents for the web and print,
 while maintaining John Gruber's Markdown philosophy of simplicity and focus on
 plain text readability.
 
@@ -86,12 +78,14 @@ you with those things that a computer can do well for you: like numbering,
 document references, generating table of contents, footnotes, bibliographies,
 and document styling.
 
-Besides HTML output, Madoko generates high-quality PDF files through
-[LaTeX]. Even though more Markdown implementations support this, there has been
-a lot of effort in Madoko to make the LaTeX generation very good and
-customizable. This makes it possible to write high-quality scholarly articles
+Madoko concentrates on generating either HTML or high-quality PDF files through
+[LaTeX].Even though more Markdown implementations support this, there has been
+a lot of effort in Madoko to make the LaTeX generation robust and
+customizable, and as painless as possible for the user. 
+This makes it possible to write high-quality scholarly articles
 using just Madoko and get both a high-quality print format (PDF) and a good
-looking HTML page.  Look at this scientific article for an example[^fn-slow-load]:
+looking HTML page. Look at this scientific article for an example[^fn-slow-load]
+(generated with a rather old version of Madoko):
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
@@ -101,6 +95,7 @@ looking HTML page.  Look at this scientific article for an example[^fn-slow-load
 ~
 
 Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this document.
+For bibliographies, Madoko uses the standard [BibTex] tool.
 
 [^fn-slow-load]:   
 	Note that the example article loads somewhat slowly in the browser. This is
@@ -706,7 +701,7 @@ space between the text and the citation, Madoko automatically takes care of this
 If necessary, you can also include extra text for each entry:
 
 ~ Sample
-Read more [The book @Knuth:Tex; @Lamport:Latex (chapter 4)]. 
+Read more [The book @Knuth:Tex;\ @Lamport:Latex (chapter 4)]. 
 ~
 
 When running Madoko the first time, we get a warning that these references
@@ -769,9 +764,9 @@ explicitly using the `Cite Style` metadata key:
 
 	Cite Style: natural
 
-Valid citation styles are _natural_, _textual_, _numeric_, _super_,
-and _auto_ (default). The natural and textual style use author-year style
-citations, while the numeric and super styles use numbers.
+Valid citation styles are _natural_, _textual_, _super_,
+and _numeric_ (default). The natural and textual style use author-year style
+citations, while the super and numeric styles use numbers.
 
 | ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
 | _natural_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=natural}  | (default for author-year citations) |
@@ -796,38 +791,7 @@ In a numeric style, most of these attibutes have no effect and the first four ca
 would be displayed as: [@Goo93]. With the `.textual` modifier, we get: 
 [@Goo93]{.textual}, and in free mode we just get a number: [@Goo93]{.free}.
 
-### Advanced: Customizing citations
-
-For each citation, you can actually change how it is displayed by setting
-the `cite-style` attribute on the citations:
-
-~ Sample
-First a natural citation [@Goo93]{cite-style=natural},
-then a super one[@Goo93]{cite-style=super}.
-~
-
-Moreover, we can customize the formatting of citations by specifying 
-braces etc. The general format of a citation style is: 
-
-> _base_ \[`:`_open_`,`_close_`,`_sep_ \[`,`_aysep_] \[`,` _yysep_]]
-
-where _base_ is one of `natural`, `numeric`, `textual`, or `super`,
-and the values _open_ to _yysep_ are double quoted strings:
-
-* _open_: the opening brace.
-* _close_: the closing brace.
-* _sep_: separator between citations.
-* _aysep_: separator between authors and years. Equal to _sep_ by default.
-* _yysep_: separator between years with a common author. Equal to _yysep_ by default.
-
-For example, the default for _natural_ is `natural:"(",")","; ",", ",","`.
-
-~ Sample
-Switch to a compact square natural style
-[@Goo93;@FBerg04]{cite-style='natural:"[","]","; ",",",","'}
-~
-
-Clearly, one should usually only do this for the `Cite Style` metadata key.
+See Appendix [#sec-custom-cite] on how to customize citations styles further.
 
 ### Advanced: Not using BibTeX 
 
@@ -1253,11 +1217,22 @@ Any metadata key and value can be given (and referred to using
 	```
 	Bib Style: plainnat
 	```
-* `Cite Style` (=auto): Specify the citation style used for citations,
-	_natural_, _numeric_, _square_, or _auto_. See Section [#sec-cite] for more 
+* `Cite Style` (=numeric): Specify the citation style used for citations,
+	_natural_, _textual, _super_, or _numeric_. See Section [#sec-cite] for more 
 	information.
 
 * `Cite All` (=false): Set to `True` to cite everything in the included bibliography files.
+
+The following keys are not used as this moment but have a standard meaning:
+
+* `Copyright`: Copyright information.
+* `License`: License for this document.
+* `Keywords`: A list of document keywords.
+* `Comment`: General comments.
+* `Date`: Date the document was written.
+* `Revision`: Revision of the document.
+* `Address`: Address of an author.
+* `Phone`: Phone number of an author.
 
 ### HTML keys
 
@@ -1760,6 +1735,41 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 
 # Appendix	{ @H1="A" }
 
+## Advanced: Customizing citations { #sec-custom-cite }
+
+For each citation, you can actually change how it is displayed by setting
+the `cite-style` attribute on the citations:
+
+~ Sample
+First a natural citation [@Goo93]{cite-style=natural},
+then a super one[@Goo93]{cite-style=super}.
+~
+
+Moreover, we can customize the formatting of citations by specifying 
+braces etc. The general format of a citation style is: 
+
+> _base_ \[`:`_open_`,`_close_`,`_sep_ \[`,`_aysep_] \[`,` _yysep_]]
+
+where _base_ is one of `natural`, `numeric`, `textual`, or `super`,
+and the values _open_ to _yysep_ are double quoted strings:
+
+* _open_: the opening brace.
+* _close_: the closing brace.
+* _sep_: separator between citations.
+* _aysep_: separator between authors and years. Equal to _sep_ by default.
+* _yysep_: separator between years with a common author. Equal to _yysep_ by default.
+
+For example:
+
+~ Sample
+Switch to a compact square natural style
+[@Goo93;@FBerg04]{cite-style='natural:"[","]","; ",",",","'}
+~
+
+Clearly, one should usually only do this for the `Cite Style` metadata key,
+and not sprinkle this kind of formatting through your prose.
+
+
 ## Advanced styling in LaTeX  { #sec-latex-style }
 
 Sometimes we need to style LaTeX code specially, or handle cases where
@@ -1886,13 +1896,16 @@ Some attributes have a special meaning to Madoko. In particular:
 * `target=`_frame_: Gives the HTML frame target for a link. 
 * `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
 	block.
-* `label=`_label_: Sets the label of an element. This is used when referencing this block
-	as explained in Section [#sec-ids-labels]
 * `id=`_id_: Sets the _id_ of an element. Usually this is done using a hash name directly
 	as `#`_id_.
 * `class=`_classes_: Adds to the classes of this element. Usually set using a dot name 
  	as in `.`_class_. If you use `class=clear`, the classes are cleared. Similarly, you
  	can use `.`_class_`=clear` to remove one particular class.
+* `label=`_label_: Sets the label of an element. This is used when referencing this block
+	as explained in Section [#sec-ids-labels]
+* `cite-label=`_label_: Sets the citation label of an `BibItem` block. This is used when 
+	referencing a bibliography item as explained in Section [#sec-bib]
+* `cite-style=`_style_: Sets the citation style for a citation (Section [#sec-cite]).
 * `sticky`: The attributes for this element will stick to apply to all of the same
 	elements that follow in the document.
 * `-`: clear any attributes that have been set before (usually through metadata rules).
@@ -1931,10 +1944,10 @@ Some class attributes are treated specially by Madoko. In particular:
 	in HTML output this will add a top and bottom margin to the element.
 * `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
 	both columns horizontally (see also Section [#sec-predef-custom]).
-* `.short`, `.long`, `.textual`: these classes are used for typesetting citations (see Section [#sec-cite]).
-	The `.long` class is also used to signify that a table might span multiple pages so that
-	the LaTeX backend can use the `longtable` environment instead of the regular `tabular` environment
-	(which cannot break across pages).
+*  `.free`, `.textual`. These classes are used for typesetting citations (see Section [#sec-cite]).
+*  `.long`. Used to signify that a table might span multiple pages so that
+	the LaTeX backend can use the `longtable` environment instead of the 
+	regular `tabular` environment (which cannot break across pages).
 * `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-code]).
 
 
@@ -2279,6 +2292,7 @@ formatting).
 		   toc=tof toc-line='#label. #caption'
       
 ~Bibitem : label='[@bibitem]{.bibitem-label}' 
+		   cite-label='#label'
 		   before='[\[#label\]\ \ ]{.bibitem-before}' 
 		   tight texelem=mdBibitem
 ~Bibliography: bib-style=... 

@@ -249,6 +249,7 @@
 
 \newcommand{\mdEquationbefore}[1]{%
   \global\def\mdTag{\tag*{#1}}% use the amsmath tag command to set the label
+  \mdLabeltarget%
 }
 \cssClassRuleCmd{equation-before}{\mdEquationbefore}
 
@@ -277,7 +278,7 @@
   }%
   {\end{enumerate}\end{mdDiv}}
 
-\newenvironment{mdLi}[1][]{\mdLabeltarget\item\begin{mdDivInline}[#1]}{\end{mdDivInline}}
+\newenvironment{mdLi}[1][]{\item\mdLabeltarget\begin{mdDivInline}[#1]}{\end{mdDivInline}}
 
 
 
@@ -305,7 +306,7 @@
   {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
 \newenvironment{mdBibitem}[1][]{%
-  \item[]\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
+  \item[]\mdLabeltarget\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
   {\end{mdDivInline}}
 
 \cssClassRule{bibitem-before}{display=inline,width=\mdBibhang,text-align=right}
