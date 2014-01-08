@@ -118,7 +118,9 @@ public struct citestyle(
   close : string, 
   citesep : string, 
   aysep : string, 
-  yysep : string 
+  yysep : string,
+  sort  : bool = False,
+  compress : bool = False
 )
 
 public type citemode {
@@ -139,26 +141,38 @@ public function isNumCite( cs : citestyle ) : bool {
 }
 
 public val citeNatural = Citestyle(Natural,"(",")","; ",", ",", ")
-public val citeNumeric = Citestyle(Numeric,"[","]",",",",",",")
+public val citeNumeric = Citestyle(Numeric,"[","]",",",",",",",True,True)
 public val citeAuto    = Citestyle(Auto   ,"[","]",",",",",",")
 val citeTextual = Citestyle(Textual,"(",")","; ",", ",", ")
-val citeSuper   = Citestyle(Super  ,"","",",",",","")
+val citeSuper   = Citestyle(Super  ,"","",",",",","",True,True)
 
 public function parseCiteStyle( text : string ) : citestyle {
-  if (text=="natural") then citeNatural
-  elif (text=="numeric") then citeNumeric
-  elif (text=="super") then citeSuper
-  elif (text=="textual") then citeTextual
-  else match(text.find(rxCiteSpec)) {
+  match(text.find(rxCiteSpec)) {
     Just(cap) -> {
       md = if (cap.groups[1]=="natural") then Natural
            elif (cap.groups[1]=="textual") then Textual
            elif (cap.groups[1]=="numeric") then Numeric
            elif (cap.groups[1]=="super") then Super
            else Auto
-      aysep = if (cap.groups.matchedOn(5)) then cap.groups[5] else cap.groups[4]
-      yysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else aysep      
-      Citestyle(md,cap.groups[2],cap.groups[3],cap.groups[4],aysep,yysep)
+      xsort = (cap.groups[2]=="sort")
+      xcompress = xsort      
+      if (cap.groups.matchedOn(3)) {           
+        aysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else cap.groups[5]
+        yysep = if (cap.groups.matchedOn(7)) then cap.groups[7] else aysep      
+        Citestyle(md,cap.groups[3],cap.groups[4],cap.groups[5],aysep,yysep,xsort,xcompress)
+      }
+      else {
+        cite = match(md) {
+          Natural -> citeNatural
+          Textual -> citeTextual
+          Super   -> citeSuper
+          Numeric -> citeNumeric
+          _       -> citeAuto
+        }
+        if (cap.groups[2]!="" && cite.sort != xsort) 
+         then cite(sort=xsort,compress=xcompress) 
+         else cite
+      }
     } 
     Nothing -> {
       trace("warning: unrecognized citation style: " + text)
@@ -170,7 +184,7 @@ public function parseCiteStyle( text : string ) : citestyle {
 val rxVal      = @"\s*""([^""]*)""\s*"
 val rxValOpt   = "(?:," + rxVal + ")?"
 val rxVals     = rxVal + "," + rxVal + "," + rxVal + rxValOpt + rxValOpt
-val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|):" + rxVals  )
+val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|)(?:[:](sort|nosort))?(?:[:]" + rxVals + ")?" )
 
 /* --------------------------------------
  Links 

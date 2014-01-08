@@ -203,6 +203,8 @@ More tests:
 * By [!@Leijen:hmf]{.free} in year [-@Leijen:hmf]{.free}
 * [@Leijen:hml; @Leijen:hmltech]
 * [see @Leijen:hml, chap 2]
+* Range [@Benton:exceptioneffects;@Benton:relsemantics;@Gifford:imperative;
+  @Lucassen:polyeffect;@Marino:genericeffects]{cite-style=numeric}
 
 ## References {-}
 

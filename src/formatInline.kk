@@ -309,7 +309,8 @@ struct cite(
   modifier: string, 
   number  : string,
   year    : string,
-  authors : string  
+  authors : string,
+  ordinal : int  
 )
 
 function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
@@ -318,6 +319,10 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
              Nothing   -> "?"
              Just(lbl) -> lbl.labelText
            }
+  ordinal = match(number.find(rxDigits)) {
+              Just(cap) -> cap.matched.parseInt.maybe(0,id)
+              Nothing   -> 0
+            }
   val (short,year,long) = match(citeLabel.find(rxAuthorYear)) {
                             Nothing   -> ("","","")
                             Just(cap) -> (cap.groups[1],cap.groups[2],cap.groups[3])
@@ -327,8 +332,10 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
   Cite( name, context.formatInline(pre), context.formatInline(post), modifier, 
         context.formatInline(number), 
         context.formatInline(if (year=="") then number else year), 
-        context.formatInline(authors) )
+        context.formatInline(authors), ordinal )
 }
+
+val rxDigits = regex(@"\d+")
 
 function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
 {
@@ -481,7 +488,11 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
       Cons(cite,_) -> (cite.modifier,cite.authors,cite.pre,cite.post)
       _ -> ("","?","","")  // should never happen
     }
-    
+
+    if (authors=="") {
+      trace("warning: author-year citation but this bib style does not support this: " + 
+              cites.map(fun(cite){ "@" + cite.name }).join(", "))
+    }
     mid  = if (modifier=="-") 
              then plinks
             elif (modifier=="!")
@@ -491,13 +502,49 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   }
 
   function fmtNumeric(cite : cite) {
-    if (isTextual) then { 
-      if (cite.authors=="") then trace("warning: textual citation but this bib style has no author-year info: @" + cite.name )
-      fmtAuthorYear([cite])      
+    mid  = if (cite.modifier=="!") then cite.authors else makeLink(cite,cite.number)      
+    cite.pre + mid + cite.post
+  }
+
+  function fmtNumericSpan( cite1 : cite, cite2 : cite ) : string {
+    link1 = makeLink(cite1,cite1.number)
+    link2 = makeLink(cite2,cite2.number)
+    cite1.pre + link1 + context.formatInline("--") + link2 + cite1.post  
+  }
+
+  // compress numeric citations
+  function takeSeq1(cite:cite, final:cite, cites : list<cite> ) : maybe<cite> {
+    match(cites) {
+      Cons(citex,citesx) | citex.ordinal == final.ordinal+1
+        -> takeSeq1(cite,citex,citesx)
+      _ -> if (final.ordinal - cite.ordinal <= 1) then Nothing else Just(final)
     }
-    else {
-      link = makeLink(cite,cite.number)      
-      cite.pre + (if (isTextual) then makeParens(link) else link) + cite.post
+  }
+
+  function takeSeq(cite:cite, cites : list<cite> ) : maybe<cite> {
+    if (cite.modifier=="!") then return Nothing
+    if (cite.ordinal<=0) then return Nothing
+    match(cites) {
+      Cons(citex,citesx) -> {
+        if (citex.ordinal == cite.ordinal+1) 
+         then takeSeq1(cite,citex,citesx) 
+         else Nothing
+      }
+      Nil -> Nothing
+    }
+  }
+
+  function fmtCompressed( cites : list<cite>, done : int = -1 ) : list<string> 
+  {    
+    match(cites) {
+      Cons(cite,rest0) ->
+        if (done >= cite.ordinal) then fmtCompressed(rest0,done) else {
+          match(takeSeq(cite,rest0)) {
+            Just(final) -> Cons(fmtNumericSpan(cite,final), rest0.fmtCompressed(final.ordinal))    
+            Nothing     -> Cons(fmtNumeric(cite), rest0.fmtCompressed())
+          }
+        }
+      Nil -> Nil
     }
   }
 
@@ -507,13 +554,14 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
     match(cites) {
       Nil -> Nil
       Cons(cite,rest) -> {
-        if (done.any( fun(s) { s == cite.authors })) 
+        if (done.any( fun(s) { s == cite.modifier + cite.authors })) 
           then groupAuthors(rest,done) 
           else {
-            val same = rest.filter( fun(citex) { citex.authors == cite.authors } )
+            val same = rest.filter( fun(citex) { 
+                          (citex.authors == cite.authors) && (citex.modifier == cite.modifier) } )
             if (same.isNil) 
              then Cons([cite], rest.groupAuthors(done))
-             else Cons( Cons(cite,same), rest.groupAuthors( Cons(cite.authors,done)) )
+             else Cons( Cons(cite,same), rest.groupAuthors( Cons(cite.modifier + cite.authors, done)) )
           }
       }
     }
@@ -523,16 +571,24 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
     cites.groupAuthors([]).map(fmtAuthorYear)
   }
 
+
   function fmtNumerics( cites : list<cite> ) : list<string> {
-    // sort and group numeric citations?
-    cites.map(fmtNumeric)
+    // group numeric citations?
+    if (cs.compress) then cites.fmtCompressed else cites.map(fmtNumeric)
+  }
+
+  function fmtTextualNumerics( cites : list<cite> ) : list<string> {
+    cites.map(fun(cite){ fmtAuthorYear([cite(year = cite.number)])} )
   }
 
   function fmtCitations(cites : list<cite> ) : list<string> {
+    function gtCite(cite1,cite2) { cite1.ordinal > cite2.ordinal }
+    scites = if (cs.sort) then cites.isort(gtCite) else cites
     match(cs.mode) {
-      Natural -> fmtAuthorYears(cites)
-      Textual -> fmtAuthorYears(cites)
-      _ -> fmtNumerics(cites)
+      Natural -> fmtAuthorYears(scites)
+      Textual -> fmtAuthorYears(scites)
+      _ | isTextual -> fmtTextualNumerics(scites)
+      _ -> fmtNumerics(scites)
     }
   }
 
@@ -545,6 +601,8 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   }  
   context.fmtCmd("span", sciteText, attrs.addClass("citations"))
 }
+
+
 
 
 val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
@@ -567,3 +625,16 @@ function inlineFootnote( cap : matched, context : inlineContext ) : string {
   }
 }
 
+function isort( xs : list<a>, gt : (a,a) -> bool ) : list<a> {
+  match(xs) {
+    Cons(x,xx) -> insert(x,xx.isort(gt),gt)
+    Nil -> Nil
+  }
+}
+
+function insert( x : a, xs : list<a>, gt : (a,a) -> bool ) : list<a> {
+  match(xs) {
+    Cons(y,yy) -> if (gt(x,y)) then Cons(y,insert(x,yy,gt)) else Cons(x,xs)    
+    Nil -> [x]
+  }
+}
