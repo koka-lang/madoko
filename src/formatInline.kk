@@ -306,8 +306,28 @@ struct cite(
   name    : string, 
   pre     : string, 
   post    : string, 
-  modifier  : string, 
-  citelabel : string )
+  modifier: string, 
+  number  : string,
+  year    : string,
+  authors : string  
+)
+
+function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
+{
+  number = match(context.labels["#" + name]) {
+             Nothing   -> "?"
+             Just(lbl) -> lbl.labelText
+           }
+  val (short,year,long) = match(citeLabel.find(rxAuthorYear)) {
+                            Nothing   -> ("","","")
+                            Just(cap) -> (cap.groups[1],cap.groups[2],cap.groups[3])
+                          }     
+  authors = if (modifier=="+" && long!="") then long else short.replaceAll(rxEtAl,@"_et\ al_.")
+
+  Cite( name, context.formatInline(pre), context.formatInline(post), modifier, 
+        context.formatInline(number), context.formatInline(year), 
+        context.formatInline(authors) )
+}
 
 function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
 {
@@ -320,7 +340,7 @@ function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : str
                             lab = ("@" + cap.groups[3]).definitionId 
                             match(context.labels[lab]) {
                               Just(lbl) -> {  // | lbl.element == "bibitem" 
-                                [Cite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
+                                [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
                               }
                               Nothing -> {
                                 trace("warning: missing citation: " + cap.groups[3] )
@@ -430,11 +450,8 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
         }
   cs1 = match(cs0.mode) {
           Auto -> match(citations) {
-                    Cons(cite,_) -> match(cite.citelabel.find(rxAuthorYear)) {
-                      Just(_) -> citeNatural
-                      _       -> citeNumeric
-                    }
-                    _ -> cs0  
+                    Cons(cite,_) | cite.authors != "" -> citeNatural
+                    _  -> citeNumeric                      
                   }
           _ -> cs0
         }
@@ -447,56 +464,44 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
   }
 
   function makeLink(cite:cite,text:string) :string {
-    link = context.fmtLink(False,newLink("#" + cite.name,"",attrs.addClass("bibref"),bench=context.bench),
-                            context.formatInline(text))
-    if (isTextual)
-     then makeParens(link)
-     else link
+    link = context.fmtLink(False,
+                           newLink("#" + cite.name,"",
+                                    attrs.addClass("bibref"),bench=context.bench),
+                           text)
+    if (isTextual) then makeParens(link) else link
   }
 
-  function fmtAuthorYear(cite,short,year,long) {
-    link = makeLink(cite,year)
+  function fmtAuthorYear(cite) {
+    link = makeLink(cite,cite.year)
     sep  = context.formatInline(if (isTextual) then "&nbsp;" else cs.aysep)
-    fpre = context.formatInline(cite.pre)
-    fpost= context.formatInline(cite.post)
-    fshort = context.formatInline(short.replaceAll(rxEtAl,@"_et\ al_."))
-
+    
     if (cite.modifier=="-") 
-     then fpre + link + fpost
-    elif (cite.modifier=="+" && long!="")
-     then fpre + context.formatInline(long) + sep + link + fpost
+     then link
     elif (cite.modifier=="!")
-     then fpre + fshort + fpost
-     else fpre + fshort + sep + link + fpost 
+     then cite.authors
+     else cite.authors + sep + link 
   }
 
-  function fmtNumeric(cite : cite,numLabel,short,year,long) {
+  function fmtNumeric(cite : cite) {
     if (isTextual) then { 
-      if (short=="") then trace("warning: textual citation but this bib style has no author-year info: @" + cite.name )
-      fmtAuthorYear(cite,short,numLabel,long)      
+      if (cite.authors=="") then trace("warning: textual citation but this bib style has no author-year info: @" + cite.name )
+      fmtAuthorYear(cite)      
     }
     else {
-      context.formatInline(cite.pre) + makeLink(cite,numLabel) + context.formatInline(cite.post)
+      makeLink(cite,cite.number) 
     }
   }
 
   function fmtCitation(cite : cite) : string {
-    numLabel = match(context.labels["#" + cite.name]) {
-                 Nothing   -> "?"
-                 Just(lbl) -> lbl.labelText
-               }
-    val (short,year,long) = match(cite.citelabel.find(rxAuthorYear)) {
-                              Nothing   -> ("","","")
-                              Just(cap) -> (cap.groups[1],cap.groups[2],cap.groups[3])
-                            }           
-    match(cs.mode) {
-      Numeric -> fmtNumeric(cite,numLabel,short,year,long)
-      Super   -> fmtNumeric(cite,numLabel,short,year,long)
+    mid = match(cs.mode) {
+      Numeric -> fmtNumeric(cite)
+      Super   -> fmtNumeric(cite)
       // Auto or Natural
-      _  -> if (short=="") 
-             then fmtNumeric(cite,numLabel,short,year,long)
-             else fmtAuthorYear(cite,short,year,long)            
+      _  -> if (cite.authors=="") 
+             then fmtNumeric(cite)
+             else fmtAuthorYear(cite)            
     }
+    cite.pre + mid + cite.post
   }
 
   citeText = citations.map(fmtCitation).join(cs.citesep)

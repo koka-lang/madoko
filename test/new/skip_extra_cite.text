@@ -4,6 +4,7 @@ Heading Base: 2
 
 Bib       	: ../test
 Bib Style   : plainnat
+Cite Style	: natural
 
 Package		: natbib
 Doc Class	: [preprint]../sigplanconf
@@ -196,7 +197,7 @@ More tests:
 
 * \/#Leijen:hmf 
 * [@Leijen:hmf;@Naumann:purity]{cite-style=natural} 
-* [@Leijen:hmf;@Wadler:marriage]{cite-style=square}
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=numeric}
 * [@Leijen:hmf;@Wadler:marriage]{cite-style=super}
 * [@Leijen:hmf;@Wadler:marriage]{cite-style=natural .textual}
 * By [!@Leijen:hmf]{.free} in year [-@Leijen:hmf]{.free}
