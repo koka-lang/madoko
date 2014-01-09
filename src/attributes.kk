@@ -287,7 +287,7 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
           then txt.replaceAll(rexp,replaceGroups) 
           else txt.replace(rexp,replaceGroups)
   //trace("replace (" + rxText.substr(0,20) + "): '" + txt + "' to '" + gtxt + "'")    
-  gtxt.caseConvert
+  gtxt //.caseConvert
 }
 
 
