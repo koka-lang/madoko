@@ -38,6 +38,7 @@ public struct options(
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
   mathjax  : string = "",  // use mathjax to render math (use "-" for default path)
+  mjext    : string = "",  // list of mathjax extensions
   htmlHeader: string= "",  // literal html header
   texHeader: string= "",  // literal tex header
   bibStyle : string = "",  // bibliography style file (.bst)
@@ -175,6 +176,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="bib" || key=="bibliography" || key=="bib-data" || key=="bibtex") options(bib=if (value=="") then "" else options.bib + ";" + value)
     elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
     elif (key=="mathjax") options(mathjax=(if (lvalue=="true") then "-" else value))
+    elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
     elif (key=="html-header") options(htmlHeader = value)
     elif (key=="author") options(author=if (value=="") then "" else options.author + ";" + value)
     elif (key=="affiliation") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)

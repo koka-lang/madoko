@@ -9,6 +9,10 @@ MathJax		: True
 Cite All	: True
 Script		: reference.js
 Bib			: reference
+MathJax Ext : AMScd
+Package		: AMScd
+MathJax Ext : mhchem
+Package		: mhchem
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
@@ -33,7 +37,6 @@ rrbracket	: &#10215;
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 \cssClassRule{sampleblock}{padding-bottom=1ex}
 ~
-
 
 
 [TITLE]
@@ -960,6 +963,51 @@ include it in the document as:
 	[INCLUDE="mathdefs.tex"]
 	~
 
+### Advanced: Using extensions { #sec-mathext }
+
+By default, Madoko supports most of the AMS mathematics commands in HTML/MathJaX
+and the LaTeX backend. However, sometimes you need specific packages. You can
+specify extra MathJaX extensions through the `MathJax Ext` metadata key, and
+extra LaTeX packages through the `Package` key. 
+For example, in this document, we included the [`AMScd`][amscd] package for drawing 
+commutative diagrams, as:
+
+	MathJax Ext: AMScd
+	Package    : amscd
+
+And now we can draw commutative diagrams as:
+~~ Sample
+~ Equation
+\begin{CD}
+S^{{\mathcal{W}}_\Lambda}\otimes T @>j>> T\\
+@VVV @VV{P}V\\
+(S\otimes T)/I @= (Z\otimes T)/J
+\end{CD}
+~
+~~
+
+Or the [`mhchem`][mhchem] package:
+
+	MathJax Ext: mhchem
+	Package    : mhchem
+
+which can be used to easily draw chemical formulas:
+
+~~ Sample
+~ Equation
+\ce{C6H5-CHO}
+\ce{$A$ ->[\ce{+H2O}] $B$}
+\ce{SO4^2- + Ba^2+ -> BaSO4 v}
+~
+~~
+
+In the previous examples, it may seem superfluous to specify both a MathJaX extension
+and LaTeX package but not in all cases the names or package functionality happens to
+be exactly the same.
+
+[mhchem]: http://www.ctan.org/pkg/mhchem
+[amscd]: http://www.ctan.org/pkg/amscd
+
 ### Advanced: Preformatted math   { #sec-mathpre }
 
 LaTeX math mode is great for regular mathematics but not so good if one tries
@@ -1227,10 +1275,11 @@ For LaTeX output, the following keys are relevant:
 * `Package`: Specify a LaTeX package that is included via `\usepackage`.
 	The package name can be prefixed with its options using square brackets.
 
-		Package: amsmath
+		Package: fancyhdr
 		Package: [colorlinks=true,linkcolor=DarkBlue]hyperref
 
-
+	If the package name ends with `.tex` and has no options, it will be
+	included using the `\input` command instead.
 
 ### Hash names		{ #sec-hashname }
 
