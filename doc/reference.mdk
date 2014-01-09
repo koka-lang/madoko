@@ -13,6 +13,10 @@ MathJax Ext : AMScd
 Package		: AMScd
 MathJax Ext : mhchem
 Package		: mhchem
+XMathJax Ext : http://sonoisa.github.io/xyjax/extensions/fp.js
+XMathJax Ext : http://sonoisa.github.io/xyjax/extensions/TeX/xypic.js
+Package		: xypic
+Package		: mathrsfs
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
@@ -32,12 +36,12 @@ llbracket	: &#10214;
 rrbracket	: &#10215;
 
 
+
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 \cssClassRule{sampleblock}{padding-bottom=1ex}
 ~
-
 
 [TITLE]
 
@@ -995,8 +999,8 @@ which can be used to easily draw chemical formulas:
 
 ~~ Sample
 ~ Equation
-\ce{C6H5-CHO}
-\ce{$A$ ->[\ce{+H2O}] $B$}
+\ce{C6H5-CHO}\quad
+\ce{$A$ ->[\ce{+H2O}] $B$}\quad
 \ce{SO4^2- + Ba^2+ -> BaSO4 v}
 ~
 ~~
@@ -1005,8 +1009,54 @@ In the previous examples, it may seem superfluous to specify both a MathJaX exte
 and LaTeX package but not in all cases the names or package functionality happens to
 be exactly the same.
 
+As an example, here are some complex drawing examples using the
+[`xypic`][xyjax] package. This is MathJax version is beta software, and we
+need to include those extensions from a different server. Moreover, on the
+LaTeX side the package `mathrsfs` is required since the `\mathscr` command is
+available by default on MathJaX but not in LaTeX:
+
+	MathJax Ext : http://sonoisa.github.io/xyjax/extensions/fp.js
+	MathJax Ext : http://sonoisa.github.io/xyjax/extensions/TeX/xypic.js
+	Package     : xypic
+	Package     : mathrsfs
+
+We can now program fancy mathematical diagrams like co-variant functors:
+
+~~ Sample
+~ Equation
+\begin{xy}
+\xymatrix {
+{\mathscr{C}} & 
+  a \ar[r]^f \ar[dr]_{g \circ f} & 
+  b \ar[d]^g & 
+  \ar@{~>}[r]^F & &
+  Fa \ar[r]^{Ff} \ar[dr]_*[l]{
+  	\hspace{-4em}\scriptstyle F(g\circ f) = Fg\circ Ff} & 
+  Fb \ar[d]^{Fg} & {\mathscr{D}} \\
+&& c & \ar@{~>}[r]^F &&& Fc
+}
+\end{xy}
+~
+~~
+
+or some other complex commutative diagram:
+
+~~ Sample
+~ Equation
+\begin{xy}
+\xymatrix {
+U \ar@/_/[ddr]_y \ar@{.>}[dr]|
+	{\langle x,y \rangle} \ar@/^/[drr]^x \\
+ & X \times_Z Y \ar[d]^q \ar[r]_p & X \ar[d]_f \\
+ & Y \ar[r]^g & Z
+}
+\end{xy}
+~ 
+~~
+
 [mhchem]: http://www.ctan.org/pkg/mhchem
 [amscd]: http://www.ctan.org/pkg/amscd
+[xyjax]: http://sonoisa.github.io/xyjax/xyjax.html
 
 ### Advanced: Preformatted math   { #sec-mathpre }
 
@@ -1136,15 +1186,15 @@ Madoko defines quite a few common custom blocks.
 * `HtmlOnly`: A markdown block that is only processed for Html output (and no shown in LaTeX output).
 * `MathPre`: A block with preformatted math (Section [#sec-mathpre]).
 * `MathDefs`: A block with LaTeX math definitions (Section [#sec-mathdefs]).
-* `Theorem`, `Lemma`, `Proposition`, `Corollary`, `Example`, `Definition`: Each of these blocks
+*   `Theorem`, `Lemma`, `Proposition`, `Corollary`, `Example`, `Definition`: Each of these blocks
 	is individually numbered and starts with the block name in bold. For example:
-	~ Sample
-	~~ Lemma 	{#LeftCosetsDisjoint}
+	~~ Sample
+	~ Lemma 	{#LeftCosetsDisjoint}
 	Let $H$ be a subgroup of a group $G$, and let $x$ and 
 	$y$ be elements of $G$.  Suppose that $xH \cap yH$ is 
 	non-empty. Then $xH = yH$.
-	~~
-	~~ Proof
+	~
+	~ Proof
 	Let $z$ be some element of $xH \cap yH$.  Then $z = xa$
 	for some $a \in H$, and $z = yb$ for some $b \in H$.
 	If $h$ is any element of $H$ then $ah \in H$ and
@@ -1155,8 +1205,8 @@ Madoko defines quite a few common custom blocks.
 	$xH = zH$.  Similarly $yH = zH$, and thus $xH = yH$,
 	as required. This concludes the proof of 
 	Lemma [#LeftCosetsDisjoint]. [&#9633;]{float=right}
-	~~
-	~ 
+	~
+	~~ 
 Of course, each of the predefined blocks can be customized further using attributes and rules.
 For example, by including the following metadata rule, we can typeset proofs with _Proof_ in
 an italic style instead of bold:
@@ -1249,19 +1299,28 @@ Some keys are only interpreted for HTML output:
 	Css: http://foo.com/bar.css
 	Css: http://fonts.googleapis.com/css?family=Open+Sans
 	```
+
 * `Script`: Specify a Javascript file that needs to be included in the HTML output
 	via a `<script>` tag. There can be many script keys present.
 	```
 	Script: lib/main.js
 	```
-* `MathJax` (=false): Set this key to true to include the right script
-	tags to enable rendering of LaTeX mathematics in the browser. 
+
+* `MathJax` (=false): Set this key to the path of your MathJaX script.
+	Set this key to `True` to include the standard secure script
+	to the latest MathJaX installation on the [CDN network][mathjax-cdn].
 	```
 	MathJax: True	
-	```
+	```	
+
+* `MathJax Ext`: requires that the `MathJax` is key is set. Adds a MathJaX
+ 	extension to the loaded scripts. See Section [#sec-mathext] for more 
+ 	information.
+
 * `HTML Header`: The value of this key is included literally in the 
 	`<head>` section of the HTML document.
 
+[mathjax-cdn]: http://docs.mathjax.org/en/latest/start.html#secure-access-to-the-cdn
 
 ### LaTeX keys
 
