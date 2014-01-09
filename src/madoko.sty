@@ -83,6 +83,7 @@
 %-------------------------------------------------------------
 
 \providecommand{\subtitle}[1]{\edef\oldtitle{\@title}\title{\oldtitle\\{\Large #1}}} 
+\providecommand{\authorrunning}
 
 % If there is no authorinfo, we provide a simple one
 \newcounter{@mdAuthorcount}
@@ -100,7 +101,7 @@
    \fi%
    \gappto\@mdauthors{#1}%
    \gappto\@mdinsts{#2}%
-   \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi   
+   \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
   }%
   {% Our own simple style (like sigplanconf)
    \ifnum\value{@mdAuthorcount}>1%
@@ -110,10 +111,17 @@
    \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex]\normalsize #2}\fi%
    \ifx\relax#3\relax\else\gappto\@mdauthors{\\\normalsize\email{#3}}\fi%
   }%
+  \ifnum\value{@mdAuthorcount}>2%
+    \gpreto\authorrunning{#1, }%
+  \else\ifnum\value{@mdAuthorcount}=2%
+    \gpreto\authorrunning{#1{} and }%
+  \else
+    \newcommand{\authorrunning}{#1}%
+  \fi\fi
 }
 
 
-\newcommand{\mdTitle}[1]{\title{#1}}
+\newcommand{\mdTitle}[1]{\title{#1}\newcommand{\titlerunning}{#1}}
 \newcommand{\mdSubtitle}[1]{\subtitle{#1}}
 \newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
 \newcommand{\mdMaketitle}{%
@@ -121,7 +129,8 @@
     \author{\@mdauthors%
      \ifdef\institute{\institute{\@mdinsts}}{}}%
   \fi
-  \maketitle{}}
+  \maketitle{}%
+}
 
 % Use the pre-defined abstract environment
 \cssElemRuleEnv{abstract}{abstract}
