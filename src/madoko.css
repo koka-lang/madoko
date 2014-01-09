@@ -16,6 +16,19 @@ body.madoko p {
   text-align: justify;
 }
 
+/* style h5 and h6 headers a bit better */
+body.madoko h5, body.madoko h6 {
+  margin-top: 0.5em;
+  margin-bottom: 0pt;
+  font-size: 100%;
+}
+body.madoko h5+p {
+  margin-top: 0.5em
+}
+body.madoko h6+p {
+  margin-top: 0pt;
+}
+
 /* The table of contents */
 .toc>.tocblock .tocblock {
   margin-left: 1.7em;
