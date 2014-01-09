@@ -114,9 +114,9 @@
   \ifnum\value{@mdAuthorcount}>2%
     \gpreto\authorrunning{#1, }%
   \else\ifnum\value{@mdAuthorcount}=2%
-    \gpreto\authorrunning{#1{} and }%
+    \gpreto\authorrunning{#1{} \& }%
   \else
-    \newcommand{\authorrunning}{#1}%
+    \renewcommand{\authorrunning}{#1}%
   \fi\fi
 }
 
