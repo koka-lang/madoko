@@ -142,7 +142,7 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
 
 
 public function mathPre( txt : string ) : string
-{
+{  
   txt.replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*} *|\\[a-zA-Z@]+\b *|\\[^ ] *|\\ )|^( +)|( )|(\n)",multiline=True), fun(cap) {
         if (cap.groups.matchedOn(2)) then cap.matched.list.map(fun(_){@"\:\:"}).join // double space indentation
         elif (cap.groups.matchedOn(3)) then @"\:"

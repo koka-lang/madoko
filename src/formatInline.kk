@@ -39,7 +39,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
 
   Rule("iquotes",   regex(@"^(?:'((?:[^\\']|\\.)*)'|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
   Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
-  Rule("ilink",     regex(@"^( *)" + linkreg), inlineLink ),
+  Rule("ilink",     regex(@"^([\n ]*)" + linkreg), inlineLink ),
   Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
   
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
@@ -286,7 +286,8 @@ function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) 
   // cap.groups = 1:optional spaces, 2:txt, 3:everything after it, 
   //               AND 4:href, 5:href-title, OR 6: linkid, AND 7:span attributes
   attrs = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
-  nbsp = if (cap.groups[1]==" ") then context.fmtText("&nbsp;") else cap.groups[1]
+  nbsp = if (cap.groups[1] != "" && cap.groups[1].list.all(fun(c){c==' '})) 
+          then context.fmtText("&nbsp;") else cap.groups[1]
   if (cap.groups.matchedOn(4)) {
     // direct url link:  [text](url title){attrs}
     nbsp + context.fmtLink(isImage, newLink(cap.groups[4],cap.groups[5],attrs,bench=context.bench), 
@@ -294,11 +295,11 @@ function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) 
   }
   elif (context.bench || cap.groups.matchedOn(6)) {
     // [text][ref]{attrs} 
-    inlineLinkRef(isImage, nbsp, cap.groups[2], cap.groups[3], cap.groups[6], attrs, context )
+    inlineLinkRef(isImage, cap.groups[1], nbsp, cap.groups[2], cap.groups[3], cap.groups[6], attrs, context )
   }
   else {
     // [text]{attrs}
-    inlineLinkNoRef(isImage, nbsp, cap.groups[2], cap.groups[3], attrs, context)
+    inlineLinkNoRef(isImage, cap.groups[1], nbsp, cap.groups[2], cap.groups[3], attrs, context)
   }
 }
 
@@ -336,7 +337,7 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
 
 val rxDigits = regex(@"\d+")
 
-function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
+function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
 {
   citationss = if (context.bench || !(txt.contains("@"))) then Nil  
                 else txt.splitExclude(rxCiteSep,rxCiteSepExclude).map(fun(elem) {
@@ -367,14 +368,14 @@ function inlineLinkNoRef( isImage:bool, nbsp : string, txt : string, after : str
     nbsp + context.fmtCite(citationss.concat,attrsd)
   } 
   else {
-    inlineLinkRef( isImage, nbsp, txt, after, "", attrs, context )
+    inlineLinkRef( isImage, spaces, nbsp, txt, after, "", attrs, context )
   }
 }
 val rxCiteSep         = regex(@"\s*[;]\s*")
 val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
 val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@([\w-:]+))([\s\S]*)$")
 
-function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : string, ref : string, 
+function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : string, after : string, ref : string, 
                           attrs : attrs, context : inlineContext ) : string 
 {    
   id = if (ref != "") then ref.definitionId else txt.definitionId
@@ -393,14 +394,13 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
           nbsp + context.fmtLink(isImage,llink,context.formatInline(txt)) 
         }      
         Nothing -> {
-          space = if (nbsp=="") then "" else " "
           if (ref != "") then {            
             trace("warning: missing link definition: " + ref)
-            space + context.formatInline(txt) + "[??]"
+            spaces + context.formatInline(txt) + "[??]"
           }
           elif (!(attrs.empty)) {
             // Span element
-            space + context.fmtSpan(txt,attrs)
+            spaces + context.fmtSpan(txt,attrs)
           }
           else {
             // warn if there are no spaces or commas
@@ -408,7 +408,7 @@ function inlineLinkRef( isImage : bool, nbsp : string, txt : string, after : str
               trace("warning: possibly missing link definition: " + txt)
             }
             // just brackets
-            space + "[" + formatInline(context,txt) + "]" + formatInline(context,after)
+            spaces + "[" + formatInline(context,txt) + "]" + formatInline(context,after)
           }
         }
       }
