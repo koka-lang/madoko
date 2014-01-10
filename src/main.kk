@@ -9,6 +9,7 @@
 // Main Madoko command line interface
 module main
 
+import std/log
 import std/regex
 import std/path
 import std/file
@@ -28,7 +29,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
   outputDir = "test/out"
   target = root + ".html"
 
-  markdownFiles("-vv --tex --installdir=src --odir=" + outputDir + " " + moreargs + " " + input) fun(outText,_input,output,logs,_options) {
+  markdownFiles("-v --tex --installdir=src --odir=" + outputDir + " " + moreargs + " " + input) fun(outText,_input,output,logs,_options) {
     //trace("-----\n" + outText + "\n-----")
     targetText = target.readTextFileDef("")
     outStrip = outText.replaceAll(regex(@"\s"),"")
@@ -91,16 +92,24 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                         then (opts.options)(xmp = True) else opts.options
 
               //val (mopts,mcontent) = parseMeta(xopts,icontent)              
-              val (logs, html) = withLog { markdown(icontent,xopts) }
-              
+              val (warns,(logs, html)) = withLog("warning") { 
+                                           withLog("aux") { 
+                                            markdown(icontent,xopts) 
+                                           }
+                                         }
+              if (warns != "" && xopts.verbose >= 1) {
+                print(warns)
+              }
+
               if (!(tryWriteTextFile(outName,html))) {
                 println("error: unable to write: " + outName) 
               }
               
               if (xopts.tex) {
                 outTexName = outName.changeExt(".tex")
-                if (opts.options.verbose > 0) println("         " + input + " -> " + outTexName )        
-                tex = markdown(icontent,xopts,FmtTex) 
+                if (opts.options.verbose > 0) println("process: " + input + " -> " + outTexName )        
+                val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
+                if (texwarns != "" && xopts.verbose >= 1) print(texwarns) 
                 //trace(tex)
                 if (!(tryWriteTextFile(outName.changeExt(".tex"),tex))) {
                   println("error: unable to write: " + outName.changeExt(".tex")) 

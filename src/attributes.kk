@@ -127,7 +127,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
           elif (v=="htmlonly") then Markdown(Just(FmtHtml))
           elif (v=="texonly") then Markdown(Just(FmtTex))
           else {
-            trace("warning: unrecognized input value: " + value)
+            warning( "unrecognized input value: " + value)
             Markdown()
           }         
       acc(input=r)
@@ -162,7 +162,7 @@ function parseAttributeX( s : string ) : list<(string,string,string)>
 {
   match( s.find(rxAttr) ) {
     Nothing -> {
-      trace("warning: invalid attribute: " + s )
+      warning( "invalid attribute: " + s )
       []
     }
     Just(cap) -> {
@@ -360,7 +360,7 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
 val rxkey = regex(@"&#[xX]?\d+;|(?:\\/)?#([a-zA-Z][\w\-:]*)(?:;|\\/)?") 
 
 function keyNotFound( key: string, matched : string ) : string {
-  trace("warning: undefined key: " + key)
+  warning( "undefined key: " + key)
   matched
 }
 

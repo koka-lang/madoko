@@ -9,6 +9,7 @@
 // The parsing and formatting of _inline_ elements (i.e. emphasis, links, etc.)
 module formatInline
 
+import std/log
 import std/dict
 import std/string
 import std/regex
@@ -267,7 +268,7 @@ function inlineLabel( cap : matched, context : inlineContext ) : string {
   //trace("inlineLabel: " + key )
   match(context.labels[key]) {
     Nothing   -> {
-      //trace("warning: missing anchor: " + cap.groups[1])
+      //warning( "missing anchor: " + cap.groups[1])
       context.fmtText(cap.matched)
     }
     Just(lab) -> formatInline(context,lab.labelText)
@@ -332,7 +333,7 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
 
   match (post.find(rxCommaAt)) {
     Nothing -> ()
-    Just(cap) -> trace("warning: citations need to be semi-colon separated: "  + cap.matched )
+    Just(cap) -> warning( "citations need to be semi-colon separated: "  + cap.matched )
   }
 
   Cite( name, pre, post, modifier, number, 
@@ -349,14 +350,14 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                         match (elem.find(rxCitation)) {
                           Nothing -> []
                           Just(cap) -> {
-                            log("\\citation{" + cap.groups[3] + "}")
+                            log("aux",@"\citation{" + cap.groups[3] + "}")
                             lab = ("@" + cap.groups[3]).definitionId 
                             match(context.labels[lab]) {
                               Just(lbl) -> {  // | lbl.element == "bibitem" 
                                 [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
                               }
                               Nothing -> {
-                                trace("warning: missing citation: " + cap.groups[3] )
+                                warning( "missing citation: " + cap.groups[3] )
                                 []
                               }
                             }
@@ -400,7 +401,7 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
         }      
         Nothing -> {
           if (ref != "") then {            
-            trace("warning: missing link definition: " + ref)
+            warning( "missing link definition: " + ref)
             spaces + context.formatInline(txt) + "[??]"
           }
           elif (!(attrs.empty)) {
@@ -411,13 +412,13 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
             // warn for missing labels or links
             if (txt.contains(rxCanBeRef)) {
               if (txt.startsWith("#")) {
-                trace("warning: reference to missing id: " + txt)
+                warning( "reference to missing id: " + txt)
               }
               elif (context.labels[("#"+txt).definitionId].isJust) {
-                trace("warning: possibly forgot '#' to reference id: " + txt)
+                warning( "possibly forgot '#' to reference id: " + txt)
               }
               else {
-                trace("warning: possibly missing link definition or id: " + txt)
+                warning( "possibly missing link definition or id: " + txt)
               }
             }
             
@@ -499,7 +500,7 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
     }
 
     if (authors=="") {
-      trace("warning: author-year citation but this bib style does not support this: " + 
+      warning( "author-year citation but this bib style does not support this: " + 
               cites.map(fun(cite){ "@" + cite.name }).join(", "))
     }
     mid  = if (modifier=="-") 
@@ -628,7 +629,7 @@ function inlineFootnote( cap : matched, context : inlineContext ) : string {
   match( context.footnotes[id] ) {
     Just(fn) -> context.fmtFootnote(id,fn)      
     Nothing -> {
-      trace("warning: missing footnote definition: " + cap.groups[1])
+      warning( "missing footnote definition: " + cap.groups[1])
       context.fmtText("[^" + formatInline(context,cap.groups[1]) + "]") // leave as plain text?
     }
   }

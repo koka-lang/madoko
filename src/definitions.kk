@@ -367,7 +367,7 @@ function increment(counter :counter, xvalue : string) : counter {
     _ -> match(v.parseInt) {
       Just(i) -> counter(value=i)
       Nothing -> {
-        trace("warning: unrecognized counter value: " + xvalue)
+        warning( "unrecognized counter value: " + xvalue)
         counter
       }
     }

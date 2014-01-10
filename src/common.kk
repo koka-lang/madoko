@@ -9,8 +9,15 @@
 // Common types and operations
 module common
 
+import std/log
 import std/regex
 import std/dict
+
+
+// Warning messages get logged
+public function warning( message : string, logname : string = "warning" ) : () {
+  log(logname,"  warning: " + message)
+}
 
 /* --------------------------------------
   Grammar rules 
@@ -175,7 +182,7 @@ public function parseCiteStyle( text : string ) : citestyle {
       }
     } 
     Nothing -> {
-      trace("warning: unrecognized citation style: " + text)
+      warning( "unrecognized citation style: " + text)
       citeNumeric
     }
   }

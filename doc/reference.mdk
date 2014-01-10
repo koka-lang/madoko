@@ -10,7 +10,7 @@ Cite All	: True
 Script		: reference.js
 Bib			: reference
 MathJax Ext : AMScd
-Package		: AMScd
+Package		: amscd
 MathJax Ext : mhchem
 Package		: mhchem
 XMathJax Ext : http://sonoisa.github.io/xyjax/extensions/fp.js
@@ -1840,7 +1840,7 @@ For example:
 Switch to a compact bold numeric style
 [@Goo93;@FBerg04]{cite-style='numeric:"[**","**]","**;**"'}
 or an unsorted super style 
-[@Lamport:Latex;@Knuth:TeX]{cite-style=super:nosort}
+[@Lamport:Latex;@Knuth:Tex]{cite-style=super:nosort}
 ~
 
 Clearly, one should usually only do this for the `Cite Style` metadata key,

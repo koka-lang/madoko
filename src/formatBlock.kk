@@ -255,12 +255,12 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         match(b) {
           Div(bs,xs) -> {
             if (!(xs.hasClass("column"))) {
-              trace("warning: a 'Columns' block should only contain 'Column' blocks")
+              warning( "a 'Columns' block should only contain 'Column' blocks")
             }  
             (context.formatBlocksX(bs), xs)
           }
           _ -> {
-            trace("warning: a 'Columns' block can only contain 'Column' blocks")
+            warning( "a 'Columns' block can only contain 'Column' blocks")
             (context.formatBlock(b), attrsNone)
           }
         }

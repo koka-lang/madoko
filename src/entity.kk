@@ -9,6 +9,8 @@
 // Parsing and formatting of html entities (for TeX output)
 module entity
 
+import common  // warning
+
 struct entity(
   ename : string,
   ecode : int,
@@ -27,7 +29,7 @@ public function entityToTex( entity : string ) : string
     i = num.parseInt.maybe(-1,id)
     match (entities.find(fun(e) { e.ecode == i })) {
       Nothing -> {
-        trace("warning: tex output: unknown unicode point: &#" + num + ";")
+        warning( "unknown unicode point: &#" + num + ";", "texwarning")
         @"\mdUnicode{" + i.show + "}"
       }
       Just(e) -> e.entityCmd
@@ -35,7 +37,7 @@ public function entityToTex( entity : string ) : string
   }
   else match(entities.find(fun(e) { e.ename == entity })) {
     Nothing -> {
-      trace("warning: tex output: unknown entity: &" + entity + ";")
+      warning( "unknown entity: &" + entity + ";", "texwarning")
       @"\mdEntity{" + entity + "}"
     }
     Just(e) -> e.entityCmd
@@ -46,7 +48,7 @@ public function entityNameToNum( name : string ) : string
 {
   match(entities.find(fun(e) { e.ename == name })) {
     Nothing -> {
-      trace("warning: unknown entity name: &" + name + ";")
+      warning( "unknown entity name: &" + name + ";")
       @"&" + name + ";"
     }
     Just(e) -> "&#" + e.ecode.show + ";"
