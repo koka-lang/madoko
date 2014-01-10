@@ -83,27 +83,44 @@
 %-------------------------------------------------------------
 
 \providecommand{\subtitle}[1]{\edef\oldtitle{\@title}\title{\oldtitle\\{\Large #1}}} 
-\providecommand{\authorrunning}
 
-% If there is no authorinfo, we provide a simple one
+\ifdef\titlerunning%
+  {\newcommand{\mdTitlerunning}[1]{\titlerunning{#1}}}% llncs
+  {\newcommand{\mdTitlerunning}[1]{\global\def\titlerunning{#1}}}% eptcs
+
+\ifdef\authorrunning%
+  {\newcommand{\mdAuthorrunning}[1]{\authorrunning{#1}}}% llncs
+  {\newcommand{\mdAuthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
+
+
+% If there is no \authorinfo, we provide a simple one that works
+% with some other common styles
 \newcounter{@mdAuthorcount}
-\newcommand{\@mdauthors}{}
+\newcommand{\@mdauthors}{}   % fancy list of authors
+\newcommand{\@mdauthorss}{}  % simple list of authors
 \newcommand{\@mdinsts}{}
 \providerobustcmd{\@and}{\and}
 \providecommand{\email}[1]{\textsf{#1}}%
 \providecommand{\authorinfo}[3]{%
   \stepcounter{@mdAuthorcount}%
-  \ifdef{\institute}
-  {% LLNCS like style
-   \ifnum\value{@mdAuthorcount}>1%
+  \ifdef{\institute}{%  
+    \ifnum\value{@mdAuthorcount}>1%
      \gappto\@mdauthors{\@and}%
-     \gappto\@mdinsts{\@and}%
-   \fi%
-   \gappto\@mdauthors{#1}%
-   \gappto\@mdinsts{#2}%
-   \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
+     \ifx\relax#2\else\gappto\@mdinsts{\@and}\fi
+    \fi%
+    \ifdef{\inst}%
+    {%LLNCS
+      \gappto\@mdauthors{#1}%
+      \gappto\@mdinsts{#2}%
+      \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
+    }%
+    {% EPTCS
+      \gappto\@mdauthors{#1%
+        \ifx\relax#2\else\protect\institute{#2}\fi%
+        \ifx\relax#3\else\protect\email{#2}\fi}%
+    }%
   }%
-  {% Our own simple style (like sigplanconf)
+  {% Our own simple style (similar to sigplanconf)
    \ifnum\value{@mdAuthorcount}>1%
      \gappto\@mdauthors{\\[2ex]}%
    \fi%
@@ -111,17 +128,22 @@
    \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex]\normalsize #2}\fi%
    \ifx\relax#3\relax\else\gappto\@mdauthors{\\\normalsize\email{#3}}\fi%
   }%
-  \ifnum\value{@mdAuthorcount}>2%
-    \gpreto\authorrunning{#1, }%
-  \else\ifnum\value{@mdAuthorcount}=2%
-    \gpreto\authorrunning{#1{} \& }%
+  \ifnum\value{@mdAuthorcount}>1%
+    \gappto\@mdauthorsx{, #1}%
   \else
-    \renewcommand{\authorrunning}{#1}%
-  \fi\fi
+    \global\def\@mdauthorsx{#1}%
+  \fi
+  \mdAuthorrunning{\@mdauthorsx}%
 }
 
+% support \inst
+\newcommand{\mdInst}[1]{%
+  \ifdef{\inst}{\inst{#1}}{}%
+}
+\cssClassRuleCmd{inst}{\mdInst}
 
-\newcommand{\mdTitle}[1]{\title{#1}\newcommand{\titlerunning}{#1}}
+
+\newcommand{\mdTitle}[1]{\title{#1}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\subtitle{#1}}
 \newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
 \newcommand{\mdMaketitle}{%
