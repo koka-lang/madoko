@@ -1009,6 +1009,7 @@ In the previous examples, it may seem superfluous to specify both a MathJaX exte
 and LaTeX package but not in all cases the names or package functionality happens to
 be exactly the same.
 
+<!--
 As an example, here are some complex drawing examples using the
 [`xypic`][xyjax] package. This is MathJax version is beta software, and we
 need to include those extensions from a different server. Moreover, on the
@@ -1053,6 +1054,7 @@ U \ar@/_/[ddr]_y \ar@{.>}[dr]|
 \end{xy}
 ~ 
 ~~
+-->
 
 [mhchem]: http://www.ctan.org/pkg/mhchem
 [amscd]: http://www.ctan.org/pkg/amscd
