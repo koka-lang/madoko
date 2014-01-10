@@ -1709,7 +1709,7 @@ the content
 The `replace` attribute replaces the entire content with its value. You can
 have multiple replacers and they are all applied in order. The replacers can
 be cleared using the special `clear` value. Finally, all replacers can contain
-hash names (Section [sec-hashname]) which are expanded. Useful hash names are
+hash names (Section [#sec-hashname]) which are expanded. Useful hash names are
 `#source` which expands to the current content of the block (possibly having
 already some replacers applied), and `#nl` which expands to a newline
 character. In particular, `before` and `after` are defined in terms of
@@ -1728,15 +1728,23 @@ regular markdown block. In a simplified form, it is defined as:
 ### Regular expression replacement	{ #sec-regex }
 
 A `replace` attribute can also define a general [regular expression][regex] replacement
-of the form `/`_regex_`/`_replacer_`/`(`g`|`i`|`m`)?. The regular expression _regex_
+of the form `/`_regex_`/`_replacer_`/`(`g`|`i`|`m`|`c`)?. The regular expression _regex_
 is matched against the content, and a match is replaced by _replacer_. The options are:
 
 * `g`: instead of just the first match, it will globally replace all matches found in the content.
 * `i`: use case-insensitive matching.
 * `m`: do a multi-line match where `^` and `$` match the beginning and end of each line respectively
 	instead of just the start and end of the content.
+* `c`: do case conversion; enlarges valid escape characters with one of `luLUE` which can be
+	used to do case conversion, see Section [#sec-case].
 
 [regex]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+
+Inside the _replacer_ we can use the following escape sequences:
+
+* `\`_digit_: gets replaced by the _digit_ capture group in _regex_.
+* `\/`: becomes a forward slash.
+* `\\`: becomes a single backward slash.
 
 For example, here is an example where we replace `<`quoted`>` text by 
 single guillemet quotes:
@@ -1747,14 +1755,17 @@ Here is <quoted> text.
 ~
 ~~
 
-In the _replacer_ expression, we can also use special case conversion escape sequences:
+#### Case conversion {#sec-case}
 
-* `\U` or `\L` transform the following text up to the next `\E` to upper- or lower-case 
-	respectively.
+When we pass the `c` flag, we can also use special case conversion escape sequences
+in the _replacer_ expression:
+
+* `\U` or `\L` transform the following text up to the next `\E` (or the end of the
+	replacement) to upper- or lower-case respectively.
 * `\u` and `\l` replace the following character to upper- or lower-case.
 
 ~~ Sample
-~ { replace="/(\w+)/\u\1/g" }
+~ { replace="/(\w+)/\u\1/gc" }
 all words to title-case.
 ~
 ~~
