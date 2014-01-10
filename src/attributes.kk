@@ -229,7 +229,7 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, metadata : d
   checkCond(repl)
 }
 
-val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gim]*)$")
+val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
 val rxcond  = regex(@"^\?if\s+(" + rxescapedc + @"+)\s*\?then\s+(" + rxescapedc + @"*)\s*(?:\?else\s+(" + rxescapedc + @"*)\s*)?$")
@@ -277,27 +277,45 @@ val rxop  = @"(?:==|!=|>=|<=|<|>)"
 function regexReplacer( rxText : string, rtxt : string, flags : string, txt : string ) 
 {
   rexp = regex(rxText, ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
+  convCase = flags.contains("c")
+
   function replaceGroups( cap : matched ) {
-    rtxt.replaceAll(regex(@"\\(\d)"), fun(gcap) {
-      i = gcap.groups[1].parseInt.maybe(0,id)
-      cap.groups[i]
+    rtxt.replaceAll(regex(@"\\(?:(\d)|\\)"), fun(gcap) {
+      if (gcap.groups.matchedOn(1)) {
+        i = gcap.groups[1].parseInt.maybe(0,id)
+        // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
+        cap.groups[i].replaceAll(if (convCase) then rxCaseEsc else rxRegEsc,@"\\$2$1")  
+      }
+      else {
+        gcap.matched
+      }
     })
   }  
   gtxt = if (flags.contains("g")) 
           then txt.replaceAll(rexp,replaceGroups) 
           else txt.replace(rexp,replaceGroups)
   //trace("replace (" + rxText.substr(0,20) + "): '" + txt + "' to '" + gtxt + "'")    
-  gtxt //.caseConvert
+  if (convCase)
+   then gtxt.caseConvert
+   else gtxt.replaceAll(rxRegEsc,"$1")
 }
 
+val rxCaseEsc = regex(@"\\((\\)|[/ulULE])")
+val rxRegEsc  = regex(@"\\((\\)|[/])")
 
 function caseConvert( txt : string ) : string {
-  txt.replaceAll(regex(@"\\([UL])([\s\S]*?)(\\E|$)"), fun(cap) {
-        if (cap.groups[1]=="U") then cap.groups[2].toUpper else cap.groups[2].toLower
-      })
-     .replaceAll(regex(@"\\([ul])(.)"), fun(cap) {
-        if (cap.groups[1]=="u") then cap.groups[2].toUpper else cap.groups[2].toLower
-      })
+  txt.replaceAll(regex(@"\\([\\/E])|\\([ul])(.)|\\([UL])([\s\S]*?)(\\E|$)"), fun(cap) {
+    if (cap.groups.matchedOn(1)) {
+      cap.groups[1]
+    }
+    elif (cap.groups.matchedOn(2)) {
+      if (cap.groups[2]=="u") then cap.groups[3].toUpper else cap.groups[3].toLower      
+    }
+    elif (cap.groups.matchedOn(4)) {
+      if (cap.groups[4]=="U") then cap.groups[5].toUpper else cap.groups[5].toLower      
+    }
+    else cap.matched
+  }) 
 }
 
 // expand keys in a string

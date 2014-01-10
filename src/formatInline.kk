@@ -330,11 +330,16 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                           }     
   authors = if (modifier=="+" && long!="") then long else short.replaceAll(rxEtAl,@"_et\ al_.")
 
+  match (post.find(rxCommaAt)) {
+    Nothing -> ()
+    Just(cap) -> trace("warning: citations need to be semi-colon separated: "  + cap.matched )
+  }
+
   Cite( name, pre, post, modifier, number, 
         if (year=="") then number else year, 
         authors, ordinal )
 }
-
+val rxCommaAt = regex(@",\s*[+!-]?@([\w-:]+)")
 val rxDigits = regex(@"\d+")
 
 function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : string, after : string, attrs : attrs, context : inlineContext ) : string 
@@ -403,10 +408,19 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
             spaces + context.fmtSpan(txt,attrs)
           }
           else {
-            // warn if there are no spaces or commas
+            // warn for missing labels or links
             if (txt.contains(rxCanBeRef)) {
-              trace("warning: possibly missing link definition: " + txt)
+              if (txt.startsWith("#")) {
+                trace("warning: reference to missing id: " + txt)
+              }
+              elif (context.labels[("#"+txt).definitionId].isJust) {
+                trace("warning: possibly forgot '#' to reference id: " + txt)
+              }
+              else {
+                trace("warning: possibly missing link definition or id: " + txt)
+              }
             }
+            
             // just brackets
             spaces + "[" + formatInline(context,txt) + "]" + formatInline(context,after)
           }
@@ -416,8 +430,7 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
   }
 }
 
-val rxNotRef = regex(@"[\s,;]")
-val rxCanBeRef = regex(@"^[A-Za-z_]\w*$")
+val rxCanBeRef = regex(@"^#?[A-Za-z_][\w-]*$")
 
 // Format a span element
 function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : string {
