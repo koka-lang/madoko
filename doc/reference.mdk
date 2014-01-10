@@ -65,12 +65,12 @@ rrbracket	: &#10215;
 # Overview of Madoko
 
 Madoko is a fast javascript [Markdown] processor written in [Koka]
-It started out as a demo program for the new [Koka] language and
+It started out as a demo program for the new, strongly typed, [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
 ## Madoko philosophy
 
-The main design goal of Madoko is to enable light-weight creation of  high-quality
+The main design goal of Madoko is to enable light-weight creation of high-quality
 scholarly[^scholarly] and industrial documents for the web and print,
 while maintaining John Gruber's Markdown philosophy of simplicity and focus on
 plain text readability.
