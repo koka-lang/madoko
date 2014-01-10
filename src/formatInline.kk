@@ -602,7 +602,7 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
     }
   }
 
-  citeText = citations.fmtCitations.join(cs.citesep)
+  citeText = citations.fmtCitations.join(cs.citesep + @"\/")  // add \/ or nbsp's are inserted.
   pciteText = if (isTextual) then citeText else makeParens(citeText) 
   
   sciteText = match(cs.mode) {
