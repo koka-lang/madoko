@@ -59,7 +59,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("penalty",     regex(@"^\\(penalty)(?![a-zA-Z])\s*(-?\d+|" + texarg + ")"), texAttribute ),
   Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
-  Rule("cite",        regex(@"^\\[Cc]ite(?:(year)(?:par)?|(?:al)?([pt])?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
+  Rule("cite",        regex(@"^\\(?:short)?[Cc]ite(?:(author)|(year)(par)?|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
   Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
@@ -225,17 +225,26 @@ function texCiteAuthorYear( cap : matched, context : texContext ) : string {
 }
 
 function texCite( cap : matched, context : texContext ) : string {
-  // groups: 1: year?, 2: p or t?, 3: *?, 4: optarg1, 5: optarg2, 6: citations
-  citations = cap.groups[6].unbrace.split(",")  
-  classes   = [if (cap.groups[2] == "t") then [".textual"] else [],
-               if (cap.groups[1] == "year") then [".short"] 
-               elif (cap.groups[3]=="*") then [".long"] else []].concat
+  // handles various natbib and chicago style citations
+  // groups: 1: author? 2: year?, 3: par?, 4: al?,  5: p or t?, or A?N?P? 
+  //         6: *?, 7: optarg1, 8: optarg2, 9: citations
+  citations = cap.groups[9].unbrace.split(",")  
+  modifier  = if (cap.groups[2] == "year") then "-" 
+              elif (cap.groups[6]=="*" || cap.groups[5].contains("A") || cap.groups[5].contains("N")) then "+" 
+              elif (cap.groups[1]=="author" || cap.groups[5].contains("A")) then "!"
+              else ""
+  function bracket(s) { 
+    if ((cap.groups[2]=="year" && cap.groups[3]!="par") || cap.groups[1]=="author" ||
+         cap.groups[5] == "t" || cap.groups[5]=="NP") then s else "[" + s + "]" 
+  }
+
   val (pre,post)
-    = if (cap.groups[5]!="") then (cap.groups[4] + " ", "," + cap.groups[5])
-       elif (cap.groups[4] != "") then ("","," + cap.groups[4])
+    = if (cap.groups[8]!="") then (cap.groups[7] + " ", "," + cap.groups[8])
+       elif (cap.groups[7] != "") then ("","," + cap.groups[7])
        else ("","")
-  pre + "[" + citations.list.map(fun(c){ "#" + c }).join(";") + post + "]" +
-    (if (classes.isNil) then "" else "{" + classes.join(" ") + "}")
+
+  val classes = if (cap.groups[4]=="al") then "{.free}" else ""        
+  bracket( pre +  citations.list.map(fun(c){ modifier + "@" + c }).join(";") + post) + classes
 }
 
 function texHarvarditem( cap : matched, context : texContext ) : string {
@@ -256,14 +265,16 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   key = keyx.unbrace
   lab = labx.unbrace.parseTexX(context,True)  
   //trace("bibitem: lab: " + labx + " -> " + lab)
-  "~~~ Bibitem { id='" + key.definitionId + "' " + (if (lab=="") then "" else "cite-label='" + lab + "' ") +
-                  (if (context.citestyle.isNumCite || (context.citestyle.mode.isAuto && lab.contains(rxNumCite)))
+  "~~~ Bibitem { id='" + key.definitionId + "' " + 
+                  (if (lab=="") then "" else "cite-label='" + lab + "' " ) +
+                  (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label='" + lab + "' " else "") +
+                  (if (context.citestyle.isNumCite || !(lab.contains(rxAuthorYear)))
                     then ".has-before " else @"before=clear " ) + "}\n" +
    content.parseTexX(context) + 
    "\n~~~\n"
 }
 
-val rxNumCite    = regex(@"^([-_a-zA-Z&#;]*\d{1,3})?$")
+public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
 
 function unbrace(s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) 

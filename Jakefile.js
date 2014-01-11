@@ -130,16 +130,18 @@ task("doc", [], function(arg) {
   mdCmd = "node lib/cli.js --tex -v doc/reference.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
-    if (arg=="pdf" || arg=="--pdf") {
+    if (arg=="pdf" || arg=="--pdf" || arg=="bib" || arg=="--bib") {
       process.chdir("doc");
       bibCmd = "bibtex reference.aux";
       jake.log("> " + bibCmd);
       jake.exec(bibCmd, function() {
-        texCmd = "pdflatex -halt-on-error reference.tex";
-        jake.log("> " + texCmd);
-        jake.exec(texCmd,function() { 
-          process.chdir("..");
-        },{interactive:true});
+        if (arg=="pdf" || arg=="--pdf") {
+          texCmd = "pdflatex -halt-on-error reference.tex";
+          jake.log("> " + texCmd);
+          jake.exec(texCmd,function() { 
+            process.chdir("..");
+          },{interactive:true});
+        }
       },{interactive:true});
     }
   }, {interactive:true});

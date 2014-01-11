@@ -18,6 +18,7 @@ import attributes
 import inline
 import htmlFormatter
 import texFormatter
+import texParser   // rxAuthorYear
 
 /* --------------------------------------
   Inline grammar 
@@ -319,20 +320,22 @@ struct cite(
 
 function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
 {
-  number = match(context.labels["#" + name]) {
+  numlab = match(context.labels["#" + name]) {
              Nothing   -> "?"
              Just(lbl) -> lbl.labelText
            }
-  ordinal = match(number.find(rxDigits)) {
+  ordinal = match(numlab.find(rxDigits)) {
               Just(cap) -> cap.matched.parseInt.maybe(0,id)
               Nothing   -> 0
             }
-  val (short,year,long) = match(citeLabel.find(rxAuthorYear)) {
-                            Nothing   -> ("","","")
-                            Just(cap) -> (cap.groups[1],cap.groups[2],cap.groups[3])
-                          }     
-  authors = if (modifier=="+" && long!="") then long else short.replaceAll(rxEtAl,@"_et\ al_.")
-
+  val (number,authors,year) = 
+    match(citeLabel.find(rxAuthorYear)) {
+      Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
+      Just(cap) -> (numlab, 
+                    if (modifier=="+" && cap.groups[3]!="") then cap.groups[3] else cap.groups[1],
+                    cap.groups[2])
+    }     
+  
   match (post.find(rxCommaAt)) {
     Nothing -> ()
     Just(cap) -> warning( "citations need to be semi-colon separated: "  + cap.matched )
@@ -506,23 +509,23 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
 
   // Takes a list of citations that share common authors
   function fmtAuthorYear(cites : list<cite> ) {
-    links = cites.map(fun(cite){ makeLink(cite,cite.year) }).join(cs.yysep)
-    plinks= if (isTextual) then makeParens(links) else links
-    sep   = if (isTextual) then "&nbsp;" else cs.aysep
-
     val (modifier,authors,pre,post) = match(cites) {
       Cons(cite,_) -> (cite.modifier,cite.authors,cite.pre,cite.post)
       _ -> ("","?","","")  // should never happen
     }
+    links = cites.map(fun(cite){ makeLink(cite,cite.year) }).join(cs.yysep)
+    plinks= if (isTextual && !(modifier.contains("-"))) then makeParens(links) else links
+    sep   = if (isTextual) then "&nbsp;" else cs.aysep
+
 
     if (authors=="") {
       warning( "author-year citation but this bib style does not support this: " + 
               cites.map(fun(cite){ "@" + cite.name }).join(", "))
     }
-    mid  = if (modifier=="-") 
-             then plinks
-            elif (modifier=="!")
+    mid  = if (modifier=="!") 
              then authors
+           elif (modifier=="-" || authors=="")
+             then plinks
              else authors + sep + plinks 
     pre + mid + post
   }
@@ -629,9 +632,6 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
 }
 
 
-
-
-val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
 val rxEtAl       = regex(@"\bet(?: |&nbsp;|\\ )al.(?!_)") 
 
 

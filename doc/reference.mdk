@@ -9,6 +9,7 @@ MathJax		: True
 Cite All	: True
 Script		: reference.js
 Bib			: reference
+
 MathJax Ext : AMScd
 Package		: amscd
 MathJax Ext : mhchem
@@ -789,16 +790,19 @@ support this, i.e. generally any style that works with the `natbib` package
 like `plainnat`. With author-year citations we can use modifiers to change how 
 the citation is shown. For example, assuming a _natural_ style:
 
-| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~            | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  |
-| `[@Goo93]`                    | [@Goo93]{cite-style=natural}\ \ \                | Natural                          |
-| `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}                    | Short -- just show the year      |
-| `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}\ \ \ Long          ||
-| `[!@Goo93]`                   | [!@Goo93]{cite-style=natural}                    | Just show the authors            |
-|                               |                                                  |                                  |
-| `@Goo93`                      | [@Goo93]{cite-style=natural .textual}            | No brackets forces textual style |
-| `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual .free}     | Year in textual style            |
-| `+@Goo93`                     | [+@Goo93]{cite-style=natural .textual}\ \ \ Long ||
-| `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual}           | Authors in textual style         |
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| `[@Goo93]`                    | [@Goo93]{cite-style=natural}          | Natural                         |
+| `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}         | Long -- all authors             |
+| `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}         | Short -- just year              |
+| `[!@Goo93]`                   | [!@Goo93]{cite-style=natural}         | Just authors                    |
+
+Moreover, if you leave out the brackets, you force a _textual_ style:
+
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| `@Goo93`                      | [@Goo93]{cite-style=natural .textual}  | Textual style                   |
+| `+@Goo93`                     | [+@Goo93]{cite-style=natural .textual} | Long -- all authors             |
+| `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual} | Short -- just year              |
+| `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual} | Just authors                    |
 
 <!-- 
 | `[@Goo93]{.textual}`{.plain}  | [@Goo93]{cite-style=natural .textual}            | Force textual style              |
@@ -806,10 +810,9 @@ testing: @Goo93, -@Goo93, +@Goo93, !@Goo93, @Goo9r5
 
 -->
 
-
-In a numeric style, most of these attibutes have no effect and the first four
-cases  are displayed "[@Goo93]". For the last four cases, without the brackets
-in textual mode, we get  "@Goo93", "-@Goo93", "+@Goo93", and "!@Goo93".
+In a numeric style, most of these attibutes have no effect and all the 
+bracketed cases are displayed as "[@Goo93]". 
+For the four cases in textual style, we get  "@Goo93", "+@Goo93", "-@Goo93", and "!@Goo93".
 
 See Appendix [#sec-custom-cite] on how to customize citations styles further,
 and Appendix [#sec-custom-bib] on how to write your bibliography entries
