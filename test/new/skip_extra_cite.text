@@ -26,6 +26,10 @@ Email       : http://foobar.com/~someone
 ## Abstract 		{-}
 
 We propose a programming model where effects are treated in a disciplined way,
+
+testing: @Gifford:imperative
+ -@Gifford:imperative, +@Gifford:imperative, !@Gifford:imperative.
+ 
 and where the potential side-effects of a function are apparent in its type
 signature. The type and effect of expressions can also be inferred
 automatically, and we describe a polymorphic type inference system based on

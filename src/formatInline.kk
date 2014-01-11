@@ -24,7 +24,7 @@ import texFormatter
 ---------------------------------------- */
 alias inlineRule = rule<string,inlineContext>
 
-val normal       = @"(?:[^`*_\\~&<>\^#\$""'\[!\-\. ]| (?! \n| *\[)|-(?!-)|\.(?!\.\.)|!(?!\[))"
+val normal       = @"(?:[^`*_\\~&<>\^#\$""'\[!\-\. \+@]| (?! \n| *[\[\-\+!@])|-(?![@\-])|\+(?!@)|\.(?!\.\.)|!(?![@\[]))"
 val normalbench  = @"(?:[^""'`*_\\~&<>\^#\$\[!]| (?! \n))"
 
 //val attrs    = @"\{:?((?:[^\}\n]|\\\})*)\}"
@@ -64,6 +64,8 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("texinline", regex(@"^\$((?:[^\\\$]|\\.)+)\$"), inlineMath ),
   Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\.|\$[^\$])*)\$\$]"), inlineMathBlock ),
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
+
+  Rule("textcite",  regex(@"^([\n ]*)(([\-+!]?)(@[\w:\-]+))"), inlineCite ),
   
   Rule("ibr",       regex(@"^  \n(?!\s*$)"), inlineBreak ),  
   Rule("iescape",   regex(@"^\\([^a-zA-Z0-9])"), inlineEscape ),
@@ -77,7 +79,7 @@ val benchGrammar
 function stripFancyRules( g : grammar<string,inlineContext> ) : grammar<string,inlineContext> {
   g.ruleReplace(True, Rule("itext", regex("^" + normalbench + "+"), inlineNormal ))
    .ruleReplace(True, Rule("iquotes", regex(@"^[""']"), inlineQuot ))
-   .ruleRemove(True,["idashes","ielipsis","tex","iguil"])
+   .ruleRemove(True,["idashes","ielipsis","tex","iguil","textcite"])
 }
 
 function inlineGrammar( fmt : formatter, bench : bool = False ) {
@@ -380,6 +382,20 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
 val rxCiteSep         = regex(@"\s*[;]\s*")
 val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
 val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@([\w-:]+))([\s\S]*)$")
+
+
+function inlineCite( cap : matched, context : inlineContext ) : string {
+  match(context.labels[(cap.groups[4]).definitionId]) {
+    Just(_) -> context.formatInline(cap.groups[1] + "[" + cap.groups[2] + "]{.textual" + 
+                                      (if (cap.groups[3]=="-") then " .free" else "") + "}")  
+    Nothing -> {
+      if (cap.groups[1] != "") {
+        warning( "possibly missing citation: " + cap.groups[2])
+      }
+      context.fmtText(cap.matched)
+    }
+  }
+}
 
 function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : string, after : string, ref : string, 
                           attrs : attrs, context : inlineContext ) : string 
