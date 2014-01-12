@@ -1784,6 +1784,28 @@ all words to title-case.
 ~
 ~~
 
+#### Mapping strings { #sec-map }
+
+The `replace` attribute can also perform a _mapping_ when it
+has the form: `{` _regex1_ `/` _repl1_ `|` ... `|` _regexN_ `/` _replN_ `}(`g`|`i`|`m`|`c`)`.
+
+A mapping matches against the regular expression `(`_regex1_`)|`...`|(`_regexN_`)`,
+and when it finds a match on some group _i_, it applies the replacer _repli_. 
+The replacement expression can use capture groups as usual.
+
+For example, we could device a _greek_ or _hiragana_ mode replacement. Here is a simplified
+example:
+
+~~ Sample
+~ Greek { replace="{a/&alpha;|d/&delta;|n/&nu;}g" }
+greek daan.
+~
+~ Hiragana { replace="{ko/&#12371;|ni/&#12395;|\
+	         \\(.)/\1|chi/&#12385;|ha/&#12399;|n/&#12435;}g" }
+konnichiha is Japa\nese.
+~
+~~
+
 
 ### Advanced recursion and replacement
 
@@ -1846,7 +1868,7 @@ and the values _open_ to _yysep_ are double quoted strings:
 * _close_: the closing brace.
 * _sep_: separator between citations.
 * _aysep_: Optional separator between authors and years. Equal to _sep_ by default.
-* _yysep_: Optional separator between years with a common author. Equal to _yysep_ by default.
+* _yysep_: Optional separator between years with a common author. Equal to _aysep_ by default.
 
 For example:
 

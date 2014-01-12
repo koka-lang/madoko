@@ -204,7 +204,12 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, metadata : d
 
   function checkReplace( rrepl : string ) {    
     match(rrepl.find(rxregex)) {
-      Nothing -> rrepl.expand
+      Nothing -> match(rrepl.find(rxmapping)) {
+        Nothing -> rrepl.expand
+        Just(mcap) -> {
+          regexMapping( mcap.groups[1].expand, mcap.groups[2], txt )
+        }
+      }
       Just(rcap) -> {
         regexReplacer( rcap.groups[1].expand, rcap.groups[2].expand, rcap.groups[3], txt )
       }
@@ -228,6 +233,9 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, metadata : d
 
   checkCond(repl)
 }
+
+val rxmapping = regex(@"^\{((?:[^\\}]|\\.)*)\}([gimc]*)$")
+
 
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
@@ -270,6 +278,66 @@ val rxcompare = regex(@"^(" + rxesc + @"*)\s*(" + rxop + @")\s*(" + rxesc + @"*)
 
 val rxesc = @"(?:(?!" + rxop + @")[^\\]|\\.)"
 val rxop  = @"(?:==|!=|>=|<=|<|>)"
+
+// remove all grouping from a regular expression
+function ungroup( r : string ) : string {
+  r.replaceAll(regex(@"\\.|(\((?!\?))"), fun(cap) {
+    if (cap.groups[1]!="") then "(?:" else cap.matched
+    })
+}
+
+// perform a mapping.
+function regexMapping( mapping : string, flags : string, txt : string ) : string 
+{
+  val entries
+    = mapping.splitExclude(regex(@"\|"),regex(@"[^\\\|]|\\.")).map( fun(entry) {
+        match(entry.find(regex(@"^((?:[^\\/]|\\.)*)/(.*)$"))) {
+          Just(ecap) -> {
+            (ecap.groups[1],ecap.groups[2])
+          }
+          Nothing -> {
+            warning("illegal mapping: " + entry)  
+            (entry,"")
+          }
+        }
+      })
+
+  rexp = regex( entries.map(fun(e){"(" + e.fst.ungroup + ")"}).join("|"), ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
+  convCase = flags.contains("c")
+
+  function replaceGroups( cap : matched ) {
+    i = cap.groups.firstMatchedOn(1,entries.length)
+    if (i<=0) return ""
+    match(entries.drop(i-1)) {
+      Nil -> cap.matched // should never happen
+      Cons(entry) -> {
+        val (rx,repl) = entry
+        match(cap.matched.find(regex("^" + rx + "$"))) {
+          Nothing -> cap.matched // should never happen
+          Just(rcap) -> {
+            repl.replaceAll(regex(@"\\(?:(\d)|\\)"), fun(gcap) {
+              if (gcap.groups.matchedOn(1)) {
+                j = gcap.groups[1].parseInt.maybe(0,id)
+                // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
+                rcap.groups[j].replaceAll(if (convCase) then rxCaseEsc else rxRegEsc,@"\\$2$1")  
+              }
+              else {
+                gcap.matched
+              }
+            })
+          }
+        }
+      }
+    }
+  }
+  
+  gtxt = if (flags.contains("g")) 
+          then txt.replaceAll(rexp,replaceGroups) 
+          else txt.replace(rexp,replaceGroups)
+  if (convCase)
+   then gtxt.caseConvert
+   else gtxt.replaceAll(rxRegEsc,"$1")
+}
 
 // "?#caption?/././"
 // val rxcond  = regex(@"^/[?](" + rxescaped + @"+)/(" + rxescaped + @"*)/([gim]*)$")
