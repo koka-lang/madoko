@@ -794,7 +794,6 @@ the citation is shown. For example, assuming a _natural_ style:
 | `[@Goo93]`                    | [@Goo93]{cite-style=natural}          | Natural                         |
 | `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}         | Long -- all authors             |
 | `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}         | Short -- just year              |
-| `[!@Goo93]`                   | [!@Goo93]{cite-style=natural}         | Just authors                    |
 
 Moreover, if you leave out the brackets, you force a _textual_ style:
 

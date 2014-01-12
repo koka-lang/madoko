@@ -59,7 +59,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("penalty",     regex(@"^\\(penalty)(?![a-zA-Z])\s*(-?\d+|" + texarg + ")"), texAttribute ),
   Rule("doi",         regex(@"^\\doi\b" + texarg), texDoi ),
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
-  Rule("cite",        regex(@"^\\(?:short)?[Cc]ite(?:(author)|(year)(par)?|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
+  Rule("cite",        regex(@"^\\(short)?[Cc]ite(?:(author)|(year(?:par)?)|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
   Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
 
   Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
@@ -226,24 +226,25 @@ function texCiteAuthorYear( cap : matched, context : texContext ) : string {
 
 function texCite( cap : matched, context : texContext ) : string {
   // handles various natbib and chicago style citations
-  // groups: 1: author? 2: year?, 3: par?, 4: al?,  5: p or t?, or A?N?P? 
+  // groups: 1: short? 2: author? 3: year|yearpar?, 4: al?,  5: p or t?, or A?N?P? 
   //         6: *?, 7: optarg1, 8: optarg2, 9: citations
   citations = cap.groups[9].unbrace.split(",")  
-  modifier  = if (cap.groups[2] == "year") then "-" 
-              elif (cap.groups[6]=="*" || cap.groups[5].contains("A") || cap.groups[5].contains("N")) then "+" 
-              elif (cap.groups[1]=="author" || cap.groups[5].contains("A")) then "!"
+  modifier  = if (cap.groups[6]=="*") then "+" 
+              elif (cap.groups[2]=="author" || cap.groups[5].contains("A")) then "!"
+              elif (cap.groups[3].startsWith("year") || cap.groups[1]=="short") then "-"               
               else ""
   function bracket(s) { 
-    if ((cap.groups[2]=="year" && cap.groups[3]!="par") || cap.groups[1]=="author" ||
-         cap.groups[5] == "t" || cap.groups[5]=="NP") then s else "[" + s + "]" 
+    if (cap.groups[3]=="year" || cap.groups[2]=="author" ||
+         cap.groups[5] == "t" || cap.groups[5].contains("N")) 
+     then s else "[" + s + "]" 
   }
-
+  val classes = if (cap.groups[4]=="al"||cap.groups[5]=="NP") then "{.free}" else ""
+  
   val (pre,post)
     = if (cap.groups[8]!="") then (cap.groups[7] + " ", "," + cap.groups[8])
        elif (cap.groups[7] != "") then ("","," + cap.groups[7])
        else ("","")
 
-  val classes = if (cap.groups[4]=="al") then "{.free}" else ""        
   bracket( pre +  citations.list.map(fun(c){ modifier + "@" + c }).join(";") + post) + classes
 }
 

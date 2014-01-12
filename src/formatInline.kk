@@ -332,7 +332,9 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
     match(citeLabel.find(rxAuthorYear)) {
       Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
       Just(cap) -> (numlab, 
-                    if (modifier=="+" && cap.groups[3]!="") then cap.groups[3] else cap.groups[1],
+                    if (modifier=="+" && cap.groups[3]!="") 
+                      then cap.groups[3] 
+                      else cap.groups[1], //.replaceAll(rxEtAl,"_et al._"),
                     cap.groups[2])
     }     
   
