@@ -109,7 +109,7 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                 outTexName = outName.changeExt(".tex")
                 if (opts.options.verbose > 0) println("process: " + input + " -> " + outTexName )        
                 val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-                if (texwarns != "" && xopts.verbose >= 1) print(texwarns) 
+                if (texwarns != "" && xopts.verbose >= 2) print(texwarns) 
                 //trace(tex)
                 if (!(tryWriteTextFile(outName.changeExt(".tex"),tex))) {
                   println("error: unable to write: " + outName.changeExt(".tex")) 

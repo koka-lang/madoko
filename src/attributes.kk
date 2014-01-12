@@ -281,17 +281,22 @@ val rxop  = @"(?:==|!=|>=|<=|<|>)"
 
 // remove all grouping from a regular expression
 function ungroup( r : string ) : string {
-  r.replaceAll(regex(@"\\.|(\((?!\?))"), fun(cap) {
+  r.replaceAll(rxOpenParen, fun(cap) {
     if (cap.groups[1]!="") then "(?:" else cap.matched
     })
 }
+val rxOpenParen = regex(@"\\.|(\((?!\?))")
+
+val rxEntry      = regex(@"^((?:[^\\/]|\\.)*)/(.*)$")
+val rxBar        = regex(@"\|")
+val rxExcludeBar = regex(@"[^\\\|]|\\.")
 
 // perform a mapping.
 function regexMapping( mapping : string, flags : string, txt : string ) : string 
 {
   val entries
-    = mapping.splitExclude(regex(@"\|"),regex(@"[^\\\|]|\\.")).map( fun(entry) {
-        match(entry.find(regex(@"^((?:[^\\/]|\\.)*)/(.*)$"))) {
+    = mapping.splitExclude(rxBar,rxExcludeBar).map( fun(entry) {
+        match(entry.find(rxEntry)) {
           Just(ecap) -> {
             (ecap.groups[1],ecap.groups[2])
           }
@@ -312,10 +317,12 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
       Nil -> cap.matched // should never happen
       Cons(entry) -> {
         val (rx,repl) = entry
-        match(cap.matched.find(regex("^" + rx + "$"))) {
+        match(cap.matched.find(regex(rx))) // should always match from start to end... 
+        {
           Nothing -> cap.matched // should never happen
           Just(rcap) -> {
-            repl.replaceAll(regex(@"\\(?:(\d)|\\)"), fun(gcap) {
+            // assert: cap.matched == rcap.matched
+            repl.replaceAll(rxCaptureGroup, fun(gcap) {
               if (gcap.groups.matchedOn(1)) {
                 j = gcap.groups[1].parseInt.maybe(0,id)
                 // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
@@ -348,7 +355,7 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
   convCase = flags.contains("c")
 
   function replaceGroups( cap : matched ) {
-    rtxt.replaceAll(regex(@"\\(?:(\d)|\\)"), fun(gcap) {
+    rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
       if (gcap.groups.matchedOn(1)) {
         i = gcap.groups[1].parseInt.maybe(0,id)
         // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
@@ -368,6 +375,7 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
    else gtxt.replaceAll(rxRegEsc,"$1")
 }
 
+val rxCaptureGroup = regex(@"\\(?:(\d)|\\)")
 val rxCaseEsc = regex(@"\\((\\)|[/ulULE])")
 val rxRegEsc  = regex(@"\\((\\)|[/])")
 

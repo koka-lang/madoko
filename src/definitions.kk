@@ -237,7 +237,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   txt = attrs.transformText(attrs.source,fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
-      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 3).parseBlocks(citestyle),attrs)
+      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4).parseBlocks(citestyle),attrs)
     }
     Markdown(monly) -> {
       match(monly) {

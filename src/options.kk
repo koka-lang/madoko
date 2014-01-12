@@ -148,10 +148,10 @@ function check( cmdOptions : commandOptions ) : io commandOptions
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, txt : string ) : (options, string) 
 {
-  val (mdata2,rest) = parsePlainMeta(txt, verbose=options0.verbose > 2)
+  val (mdata2,rest) = parsePlainMeta(txt, verbose=options0.verbose >= 4)
   options = options0.fromMeta(mdata2)
   mdata1  = if (options0.metadata.isCons || options.bench) then Nil 
-             else parsePlainMeta(defaultMeta(options), verbose=options0.verbose > 3).fst
+             else parsePlainMeta(defaultMeta(options), verbose=options0.verbose >= 4).fst
   mdata = options.metadata + mdata1 + mdata2             
   (options(metadata = mdata),rest)  
 }
