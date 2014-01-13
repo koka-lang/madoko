@@ -3,7 +3,7 @@
   "author"      : "Daan Leijen, Microsoft Corp.",
   "version"     : "0.3.2-beta",
   "homepage"    : "http://madoko.codeplex.com",
-  "description" : "Madoko is a fast javascript Markdown processor written in Koka",
+  "description" : "Madoko is a fast scholarly Markdown processor written in Koka",
   "licenses": [{
     "type"      : "Apache License 2.0", 
     "url"       : "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -13,7 +13,9 @@
       "Markdown",
       "LaTeX",
       "Koka", 
-      "Microsoft"
+      "Microsoft",
+      "Scholarly",
+      "Academic"
   ],
   "preferGlobal": true,
   "main": "./lib/madoko.js",

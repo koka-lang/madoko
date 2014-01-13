@@ -92,7 +92,13 @@ function formatKeyvals( attrs : attrs, tag : string ) {
 }
 
 function formatKeyval( key : string, value : string, tag : string ) {
-  if ((key=="colspan" || key=="column-span") && (tag=="td" || tag=="th")) {
+  if (key.startsWith("html-")) {
+    key.substr(5) + "=" + value.htmlQuote
+  }
+  elif (key.startsWith("tex-")) {
+    ""
+  }
+  elif ((key=="colspan" || key=="column-span") && (tag=="td" || tag=="th")) {
     "colspan=" + value.htmlQuote
   }
   elif (((key=="width") && (tag=="td" || tag=="th")) ||

@@ -16,10 +16,6 @@ MathJax Ext : AMScd
 Package		: amscd
 MathJax Ext : mhchem
 Package		: mhchem
-XMathJax Ext : http://sonoisa.github.io/xyjax/extensions/fp.js
-XMathJax Ext : http://sonoisa.github.io/xyjax/extensions/TeX/xypic.js
-Package		: xypic
-Package		: mathrsfs
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
@@ -52,7 +48,7 @@ rrbracket	: &#10215;
 
 [TITLE]
 
-# []{#toc-toggle}Table of contents {- #toc-header }
+# Table of contents {- #toc-header }
 
 [TOC]
 
@@ -77,29 +73,39 @@ the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
 ## Madoko philosophy
 
-The main design goal of Madoko is to enable light-weight creation of high-quality
-scholarly[^scholarly] and industrial documents for the web and print,
+The main design goal of Madoko is to enable light-weight creation of 
+high-quality scholarly[^scholarly] and industrial documents for the web and print,
 while maintaining John Gruber's Markdown philosophy of simplicity and focus on
 plain text readability.
 
+
 The popularity of Markdown is not accidental, and it is great for writing
 prose: it is super simple and straightforward to create good looking HTML
-documents. But for more serious use Markdown falls short in several areas and
-many extended implementations have arisen in the recent years. 
+documents. But for more serious use Markdown falls short in several areas,
+and Madoko provides many essential additions:
 
-Madoko addresses many of the weaknesses of Markdown. In particular, it helps
-you with those things that a computer can do well for you: like numbering,
-document references, generating table of contents, footnotes, bibliographies,
-and document styling.
+* Extensive support for labeling and in-document [references][#sec-ids-labels].
+* [Tables][#sec-table] with custom borders, column alignment and width, multicolumn spans etc.
+* Extensive [citation][#sec-bib] support, using standard BibTeX entries and BibTeX styles.
+* Automatic and customizable [numbering][#sec-numbering] of sections, figures, etc. 
+* Title page and table-of-contents [generation][#sec-special].
+* Support for [custom text elements][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
+* Styling for both HTML and LaTeX output through [standard CSS attributes][#sec-css].
+* Powerful styling through [attributes][#sec-attr], [metadata rules][#sec-rules] and 
+	[replacement rules][#sec-replace].
+* Support for [syntax highlighting][#sec-code] and code with [mathematical formatting][#sec-mathpre].
+* Compatible with most common Markdown extensions, like [footnotes][#sec-footnotes], 
+	[mathematics][#sec-math], etc. Tries to be as compatible as possible with
+	existing Markdown implemenations like [Markdown Extra], [PanDoc], [Kramdown], or [MultiMarkdown].
 
-Madoko concentrates on generating either HTML or high-quality PDF files through
-[LaTeX].Even though more Markdown implementations support this, there has been
-a lot of effort in Madoko to make the LaTeX generation robust and
-customizable, and as painless as possible for the user. 
-This makes it possible to write high-quality scholarly articles
-using just Madoko and get both a high-quality print format (PDF) and a good
-looking HTML page. Look at this scientific article for an example[^fn-slow-load]
-(generated with a rather old version of Madoko):
+Instead of a plethora of backends, Madoko concentrates on generating either
+HTML or high-quality PDF files through [LaTeX]. There has been a lot of effort
+in Madoko to make the LaTeX generation robust and customizable while
+integrating well with the various academic document- and bibliography styles.
+This makes it possible to write articles using just Madoko and get both a
+high-quality print format (PDF) and a good looking HTML page. Look at this
+scientific article for an example[^fn-slow-load] (generated with a rather old
+version of Madoko):
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
@@ -109,16 +115,19 @@ looking HTML page. Look at this scientific article for an example[^fn-slow-load]
 ~
 
 Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this document.
-For bibliographies, Madoko uses the standard [BibTex] tool.
-
-[^fn-slow-load]:   
-	Note that the example article loads somewhat slowly in the browser. This is
-	because it is a long article that uses _a lot_ of math which takes a while to
-	render in [MathJax].
+In the future, we plan to support e-books through the [ePub] format too.
 
 [^scholarly]:
 	There is actually an effort to define 
 	[scholarly markdown](http://blog.martinfenner.org/2013/06/17/what-is-scholarly-markdown/).
+
+
+[^fn-slow-load]:
+	Note that the example article loads somewhat slowly in the browser. This is
+	because it is a long article that uses _a lot_ of math which takes a while to
+	render in [MathJax].
+
+[epub]: http://en.wikipedia.org/wiki/EPUB
 
 [doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
 [doc-html]: 	koka-doc-html.png 	{width=250px vertical-align=top }
@@ -137,7 +146,7 @@ For bibliographies, Madoko uses the standard [BibTex] tool.
 
 Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
 then [Marked] \(one of the fastest Javascript markdown implementations), and
-about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
+about 6 to 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
 available as a .NET executable on windows.
 
 [Koka]: 		http://koka.codeplex.com
@@ -154,7 +163,7 @@ available as a .NET executable on windows.
 [MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
 [Kramdown]:			http://kramdown.gettalong.org
 
-# Usage
+# Installation and usage
 
 The easiest way to use Madoko is as a command line tool using Node.js (which
 works on many platforms, like Windows, MacOSX, Linux etc). Madoko can also run
@@ -177,65 +186,20 @@ pdf file, use:
 
 This assumes that you have LaTeX installed on your system. Popular LaTeX
 systems include [MikTeX] for Windows, and [MacTeX] for MacOSX.
+A full description of all command line options can be found in 
+Appendix [#sec-commandline]
 
 [MikTeX]: http://miktex.org/
 [MacTeX]: http://tug.org/mactex/
 
 
-## Command line options
-
-Generally Madoko is invoked on the command line as:
-
-* `madoko` \[_options_] _files_
-
-where the options can consist of:
-
-| short |         long         |                  description                   |
-|-------|----------------------|------------------------------------------------|
-|       | `--version`          | Display version information.                   |
-| `-v`  | `--verbose`          | Be more verbose.                               |
-|       | `--odir=`_dir_       | Write output files to the specified directory. |
-|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
-|       | `--tex`              | Output a LaTeX file too.                       |
-| `-f`  | `--full`             | Generate a full html/latex document.           |
-|       | `--sanitize`         | Always escape or suppress user defined html.   |
-|       | `--pedantic`         | Pedantic mode.                                 |
-|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
-|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
-
-All the boolean flags can be negated by prefixing them with `no`, for example
-to suppress LaTeX output, use `--notex`.
-
-Normally, Madoko writes the output files to the same directory as where the
-input file resides but you can override this with the `--odir` option.  The
-HTML output for a file _file_`.mdk` consists of _file_`.html` and
-`madoko.css`. The latter contains standard styling for Madoko and is necessary
-for example to display lines in tables correctly. For LaTeX output (`--tex`),
-Madoko also emits _file_`.tex` and two style files, `css.sty` and
-`madoko.sty`, which contain necessary commands to  process the Madoko output
-in LaTeX.
-
-The `--xmp` option instructs Madoko to only process content between
-`<xmp>` and `</xmp>` tags. This can be useful if the main body of your document is
-in HTML and only some parts are written in Madoko. 
-
-Finally, the `--full` flag forces Madoko to generate a _full_ document. A full
-document is self sufficient and contains for example for HTML proper `<head>`
-and `<body>` elements instead of just the markup for the content. Similarly,
-for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
-and necessary `\usepackage` commands. The `--full` flag is usually not
-necessary since Madoko will generate a full document whenever one of the
-following [metadata][#sec-metadata] keys is present in the document: `Title`,
-`Css`, `Script`, `Package`, `HTML Header` or `Tex Header`. In most stand-alone
-documents this is the case.
-
-# Syntax
+# Syntax: Inline elements
 
 Madoko is fully compatible with basic [Markdown syntax][Markdown] and passes
 the entire test suite. It also implements most extensions, like [Github
-flavored markdown][GithubFM], [Markdown Extra], and [multi-markdown][MultiMarkdown],
+flavored markdown][GithubFM], [PanDoc], [Markdown Extra], and [multi-markdown][MultiMarkdown],
 and it adds quite a few features itself to make it really useful for writing 
-scholarly and industrial documents.
+academic and industrial documents.
 
 We assume that the reader is familiar with [basic markdown syntax][Markdown]. 
 
@@ -246,9 +210,7 @@ In Madoko, _tab_'s are considered to be equivalent to 4 spaces. It is therefore
 best to configure your editor to view tabs as 4 spaces wide or documents may
 look off.
 
-## Inline elements
-
-### Emphasis
+## Emphasis
 
 Enclose words in asteriks (`*`) or underscores (`_`) to emphasize them.
 Use double asteriks or underscores for strong emphasis:
@@ -258,7 +220,7 @@ Here is _some emphasis_, or using *asteriks*.
 Or use __strong emphasis__, or like **this**.
 ~
 
-### Code
+## Code
 
 You can include pre-formatted text in regular text using back-quotes (`` ` ``).
 
@@ -269,7 +231,7 @@ We can use back-quotes by using multiple ``back`quotes``.
 
 Section [#sec-code] discusses code in more detail including syntax highlighting.
 
-### Sub- and super-script
+## Sub- and super-script
 
 Using tilde (`~`) and hat (`^`), you can format inline text as sub- and super-script respectively.
 Inside script, no white space is allowed to prevent mistakes. If you need white space you
@@ -280,7 +242,7 @@ Here is how you write H~2~O or E=MC^2^.
 Please use escapes for~longer\ script~.
 ~
 
-### Strike-out
+## Strike-out
 
 Enclose anything in two tildes and it will strike out the content:
 
@@ -288,7 +250,7 @@ Enclose anything in two tildes and it will strike out the content:
 There is a ~~strike out~~ here.
 ~
 
-### Smart quotes, symbols, and direct links
+## Smart quotes, symbols, and direct links
 
 Madoko will quote smartly using proper open and closing quotes for anything
 enclosed in single quotes (`'`), double quotes (`"`), or french quotes (`<<`
@@ -339,7 +301,7 @@ Note how `[Google]` is simply a shorthand for `[Google][Google]`. The title in
 double quotes in the link definition is optional.  See also Section 
 [#sec-attr] on how to include attributes in link  definitions.
 
-### Images	   { #sec-image }
+## Images	   { #sec-image }
 
 Images are included using a regular link prefixed with an exclamation mark (`!`).
 
@@ -352,7 +314,7 @@ A butterfly: ![bfly].
 This example also shows the use of attributes (Section [#sec-attr]) where
 we can specifiy the `width`, `height`, or `vertical-align` of the image.
 
-### Footnotes  { #sec-footnotes }
+## Footnotes  { #sec-footnotes }
 
 Footnotes are written as regular link definitions prefixed with a hat (`^`)
 character. This is the syntax [originally proposed][fnsyntax] by John Gruber.
@@ -367,7 +329,7 @@ Here is a footnote[^fn].
 
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
 
-### Escape sequences		{ #sec-escapes }
+## Escape sequences		{ #sec-escapes }
 
 If you want to use a special character directly without a special Markdown
 meaning, precede it with a backslash (`\`). For example, to use a star (`*`)
@@ -407,6 +369,7 @@ if the underscores appear inside a word, as in my_example_here. Using the
 empty escape sequence we can emphasize inside words too: to get
 my\/_example_\/here, we can simply write `my\/_example_\/here`.
 
+# Syntax: Block elements
 
 ## Headings and rules { #sec-heading }
 
@@ -484,7 +447,7 @@ the form `[#myheader](#myheader)`, i.e. it links to the local reference
 `#myheader` and it displays the text `#myheader`. In Madoko, a _hash name_
 (see Section  [#sec-hashname]) like `#myheader` is replaced by the _label_
 value of the referred block. For headers, this is by default the header number
-(as we will see in Section [#numbering])  but you can set any label you'd
+(as we will see in Section [#sec-numbering])  but you can set any label you'd
 like. Using a minus\ (`-`) in the attributes clears all attributes, which is
 used in the following example to suppress the default numbering:
 
@@ -571,6 +534,19 @@ HTML output:
 
 Note how the specific numbers used in the list do not matter, except that
 the first item determines the start number of the enumeration.
+
+## Block quotes { #sec-blockquote }
+
+Block quotes are written just as in email using `>` angle brackets:
+
+~ Sample
+Let's start a block quote:
+> Of life's two chief prizes, beauty and truth, I found the
+> first in a loving heart and the second in a laborer's hand.\
+> \ \ \ --- Khalil Gibran
+~
+
+Just like lists, block quotes can be nested and contain other block elements.
 
 ## Code blocks  { #sec-code }
 
@@ -823,7 +799,7 @@ See Appendix [#sec-custom-cite] on how to customize citations styles further,
 and Appendix [#sec-custom-bib] on how to write your bibliography entries
 by hand without using BibTeX.
 
-## Tables
+## Tables { #sec-table }
 
 Madoko significantly extends the table syntax of basic Markdown. In particular,
 it is easy to add horizontal or vertical lines, and to control cell alignment,
@@ -1235,6 +1211,8 @@ an italic style instead of bold:
 ~Proof: before="[_Proof_. ]{.proof-before}"
 ```
 
+# Syntax: Metadata and Styling
+
 ## Metadata  		{ #sec-metadata }
 
 Similar to [multimarkdown], a document can begin with a special metadata
@@ -1271,7 +1249,7 @@ Any metadata key and value can be given (and referred to using
 * `Toc depth` (=3): The maximum depth of headings that are included in the
 	table of contents (Section [#sec-toc]).	
 
-* `Heading depth` (=3): The maximum depth of headings that are numbered (Section [#numbering]).
+* `Heading depth` (=3): The maximum depth of headings that are numbered (Section [#sec-numbering]).
 	Set it to zero to suppress numbering of headings completely.
 
 * `Heading base` (=1): Usually, a top heading (`# heading`) maps to a `<h1>` or
@@ -1414,11 +1392,11 @@ for matching a custom block, class name, or id respectively. The value of
 a rule are attributes that get applied to any matching block.
 Here are some examples:
 	
-	~Slanted    : font-style=oblique
+	~Blockquote : font-style=oblique
 	.bold       : font-weight=bold
 	#myblock    : border-width=1px border-style=solid
 
-This would typeset a `Slanted` custom block in an oblique font, any block with 
+This would typeset a block quotes in an oblique font, any block with 
 a `bold` class in bold, and the block with the `myblock` id with a solid border.
 You can also use a comma separated list of matches that apply to all.
 For example, we can give all code, inline or as a block, the class `mycode` as:
@@ -1587,7 +1565,7 @@ terrible had happened to him.
 ~
 
 
-## Numbering	{ #numbering }
+## Numbering	{ #sec-numbering }
 
 For larger documents, numbering sections, figures, tables, images, etc. is
 quite important and Madoko supports this well. By default, Madoko will number
@@ -1856,10 +1834,58 @@ makes Madoko's replacement mechanism (almost) Turing complete[^turing].
 [^turing]: Almost, since Madoko expands only up to a certain limit and since
 	regular expressions cannot express arbitrary nesting levels.
 
-## References 	{ #sec-references } 
+# References 	{ #sec-references } 
 [BIB]
 
 # Appendix	{ @H1="A" }
+
+## Command line options { #sec-commandline	}
+
+Generally Madoko is invoked on the command line as:
+
+* `madoko` \[_options_] _files_
+
+where the options can consist of:
+
+| short |         long         |                  description                   |
+|-------|----------------------|------------------------------------------------|
+|       | `--version`          | Display version information.                   |
+| `-v`  | `--verbose`          | Be more verbose.                               |
+|       | `--odir=`_dir_       | Write output files to the specified directory. |
+|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
+|       | `--tex`              | Output a LaTeX file too.                       |
+| `-f`  | `--full`             | Generate a full html/latex document.           |
+|       | `--sanitize`         | Always escape or suppress user defined html.   |
+|       | `--pedantic`         | Pedantic mode.                                 |
+|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
+|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
+
+All the boolean flags can be negated by prefixing them with `no`, for example
+to suppress LaTeX output, use `--notex`.
+
+Normally, Madoko writes the output files to the same directory as where the
+input file resides but you can override this with the `--odir` option.  The
+HTML output for a file _file_`.mdk` consists of _file_`.html` and
+`madoko.css`. The latter contains standard styling for Madoko and is necessary
+for example to display lines in tables correctly. For LaTeX output (`--tex`),
+Madoko also emits _file_`.tex` and two style files, `css.sty` and
+`madoko.sty`, which contain necessary commands to  process the Madoko output
+in LaTeX.
+
+The `--xmp` option instructs Madoko to only process content between
+`<xmp>` and `</xmp>` tags. This can be useful if the main body of your document is
+in HTML and only some parts are written in Madoko. 
+
+Finally, the `--full` flag forces Madoko to generate a _full_ document. A full
+document is self sufficient and contains for example for HTML proper `<head>`
+and `<body>` elements instead of just the markup for the content. Similarly,
+for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
+and necessary `\usepackage` commands. The `--full` flag is usually not
+necessary since Madoko will generate a full document whenever one of the
+following [metadata][#sec-metadata] keys is present in the document: `Title`,
+`Css`, `Script`, `Package`, `HTML Header` or `Tex Header`. In most stand-alone
+documents this is the case.
+
 
 ## Advanced: Customizing citations { #sec-custom-cite }
 

@@ -1,8 +1,15 @@
 function initTOC() {
   var toc = document.getElementById('toc');    
   if (toc == null) return;
+  var tocHeader = document.getElementById('toc-header');
+  if (tocHeader== null) return;
+
   var tocToggle = document.getElementById('toc-toggle');
-  var tocHeader = document.getElementById('toc-header') || tocToggle;
+  if (tocToggle==null) {
+    tocHeader.innerHTML = "<span id='toc-toggle'></span>" + tocHeader.innerHTML;
+    tocToggle = document.getElementById('toc-toggle');
+  }
+  if (tocToggle==null) return;
   	
   function showToc() {
     toc.style.display = 'block';
@@ -29,4 +36,6 @@ function initTOC() {
   hideToc()
 }
 
-window.onload = function() { initTOC(); };
+ document.addEventListener("DOMContentLoaded", function(event) {
+   initTOC();
+ });

@@ -205,15 +205,24 @@ function texAttrsX( attrs : attrs = attrsNone ) : string {
             if (attrs.name=="") then [] else ["id=" + attrs.name],
             if (attrs.label=="") then [] else ["label={" + attrs.label.texText + "}"],
             if (attrs.elem=="") then [] else ["elem={" + attrs.elem.texText + "}"],
-            attrs.keyvals.filter(nosuppressKey).map(fun(kv) { kv.fst.normalizeId + "={" + kv.snd.normalizeVal + "}" }),
+            attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
+              kv.fst.unprefix.normalizeId + "={" + kv.snd.normalizeVal + "}" 
+            }),          
           ].concat.join(",") 
     if (txt=="") then "" else "[" + txt + "]"
   }
 }
 
+function unprefix( key : string ) : string {
+  if (key.startsWith("tex-")) {
+    key.substr(4)
+  }
+  else key
+}
+
 function nosuppressKey( kv : (string,string) ) : bool {
   key = kv.fst
-  (key != "source")
+  (key != "source" && !(key.startsWith("html-")))
 }
 
 function normalizeVal( v : string ) : string {
