@@ -136,7 +136,7 @@ task("doc", [], function(arg) {
       jake.log("> " + bibCmd);
       jake.exec(bibCmd, function() {
         if (arg=="pdf" || arg=="--pdf") {
-          texCmd = "pdflatex -halt-on-error reference.tex";
+          texCmd = "xelatex -halt-on-error reference.tex";
           jake.log("> " + texCmd);
           jake.exec(texCmd,function() { 
             process.chdir("..");

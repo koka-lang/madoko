@@ -7,6 +7,7 @@
 %---------------------------------------------------------------------------
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 
+\RequirePackage{iftex}
 \RequirePackage[T1]{fontenc}
 \RequirePackage{textcomp}
 \RequirePackage{pifont}
@@ -50,7 +51,8 @@
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
 % inserted for unknown html entities
-\newcommand{\mdEntity}[1]{\&#1;}
+\newcommand{\mdUnknownEntity}[1]{\&#1;}
+\newcommand{\mdEntity}[1]{\protect\mdUnknownEntity{#1}}
 
 % allow the definition of new entities: \mdDefineEntity{bar}{\|}
 \newcommand{\mdDefineEntity}[2]{%
@@ -59,7 +61,8 @@
 
 
 % inserted for unknown unicode entities
-\newcommand{\mdUnicode}[1]{\&\##1;}
+\newcommand{\mdUnknownUnicode}[1]{\&\##1;}
+\newcommand{\mdUnicode}[1]{\protect\mdUnknownUnicode{#1}}
 
 % allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \newcommand{\mdDefineUnicode}[2]{%

@@ -234,7 +234,7 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, metadata : d
   checkCond(repl)
 }
 
-val rxmapping = regex(@"^\{((?:[^\\}]|\\.)*)\}([gimc]*)$")
+val rxmapping = regex(@"^//((?:[^\\]|\\.)*)//([gimc]*)$")
 
 
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
@@ -288,8 +288,8 @@ function ungroup( r : string ) : string {
 val rxOpenParen = regex(@"\\.|(\((?!\?))")
 
 val rxEntry      = regex(@"^((?:[^\\/]|\\.)*)/(.*)$")
-val rxBar        = regex(@"\|")
-val rxExcludeBar = regex(@"[^\\\|]|\\.")
+val rxBar        = regex(@"//")
+val rxExcludeBar = regex(@"[^\\/]|\\.|/(?!/)")
 
 // perform a mapping.
 function regexMapping( mapping : string, flags : string, txt : string ) : string 

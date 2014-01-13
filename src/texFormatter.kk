@@ -313,7 +313,7 @@ public function fmtTexFull(body : string, options : options) : string {
         Nothing -> @"\usepackage" + fmtOptArg(pkg)
       }
     }).join("\n"),
-   options.texHeader,
+   options.texHeader + "\n",
    @"\begin{document}",
    (if (options.title=="") then "" else
       "\\title{" + texText(options.title) + "}\n"),
