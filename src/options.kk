@@ -50,11 +50,15 @@ public struct options(
   affiliation: string = "",
   email    : string = "",
   citestyle: citestyle = citeNumeric,   
+  mathimg  : string = ".",    // use static images to render math
+  mathScale: int    = 125,  // math scaling in percentage
+  mathDpi  : int    = 400,  // math resolution 
   
   tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth : int  = 3, // default depth where headings are numbered
   headingBase  : int  = 1, // heading level for #
-  metadata  : metadata = []
+  metadata  : metadata = [],
+  mathdim   : string = ""
 );               
 
 public struct commandOptions(
@@ -184,6 +188,9 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
+    elif (key=="mathimg") options(mathimg = if (value=="true") then "." else value)
+    elif (key=="math-scale") options(mathScale=ivalue)
+    elif (key=="math-dpi") options(mathDpi=ivalue) 
     else options
   }
 } 

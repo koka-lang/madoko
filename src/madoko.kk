@@ -56,7 +56,11 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
   val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
   
   // parse definitions
-  val icontext  = inlineContext(fmt,options.metadata.dict,options.citestyle,options.sanitize,options.bench,options.verbose) 
+  val icontext  = inlineContext(fmt,options.metadata.dict,
+                                    options.mathdim.parseMathDim(options.mathimg,options.mathScale), 
+                                    options.citestyle,
+                                    options.sanitize,options.bench,options.verbose,
+                                    options.mathimg) 
   if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseDefinitions(initialFormatContext(icontext,options.titleInfo,options.headingBase,options.pedantic,fmt), 
@@ -107,4 +111,27 @@ public val initialOptions = Options()
 
 public function traceRuleHist() {
   common/traceRuleHist()
+}
+
+// parse a dimension file written by latex snippets
+function parseMathDim( txt : string, imgPrefix : string = ".", imgScale : int = 100 ) : dict<mathinfo> {
+  mi = mdict()
+  scale = imgScale.double / 100.0
+  txt.findAll(rxDimLine).foreach fun(cap) {
+    imageName = imgPrefix + "/eq-" + cap.groups[1] + ".png"
+    height = scale * dimension(cap.groups[3],cap.groups[4])
+    depth  = scale * dimension(cap.groups[5],cap.groups[6])
+    width  = scale * dimension(cap.groups[7],cap.groups[8])
+    mi[cap.groups[2]] := Mathinfo(imageName,height,depth,width,"")
+  }
+  return mi.freeze()
+} 
+
+val rxDimLine = regex(@"^(\d+) *, *([a-zA-Z0-9]+) *" + rxDim + rxDim + rxDim + "$", multiLine=True)
+val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
+
+function dimension( whole : string, fraction : string ) : double {
+  w = whole.parseInt.maybe(0,id).double
+  f = (fraction + "00").substr(0,2).parseInt.maybe(0,id).double / 100.0
+  return (w+f)
 }

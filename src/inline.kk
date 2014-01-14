@@ -36,10 +36,12 @@ public rectype inlineContext {
                  footnotes  : dict<footnote>,
                  defaults   : dict<string>,
                  metadata   : dict<string>,
+                 mathinfos  : dict<mathinfo>,
                  citestyle  : citestyle,
                  xsanitize  : bool,
                  bench      : bool,
                  verbose    : int,
+                 mathimg    : string,
 
                  xfmtCmd : (ctx:inlineContext,cmd:string,body:string,attrs:attrs) -> string,
                  xfmtEscape : (ctx:inlineContext,body:string,allowEntity:bool) -> string,
@@ -50,6 +52,14 @@ public rectype inlineContext {
                  fmt : formatter
                )                 
 }
+
+public struct mathinfo (
+  imageName : string,
+  height    : double,
+  depth     : double,
+  width     : double,
+  imageData : string   // base64 encoding
+)
 
 public struct titleinfo (
   title : string,
@@ -96,10 +106,12 @@ public function copy( self : inlineContext,
                        footnotes : dict<footnote> = self.footnotes,
                        defaults: dict<string> = self.defaults,
                        metadata: dict<string> = self.metadata,
+                       mathinfos : dict<mathinfo> = self.mathinfos,
                        citestyle : citestyle = self.citestyle,
                        sanitize : bool = self.sanitize,
                        bench : bool = self.bench,
                        verbose : int = self.verbose,
+                       mathimg : string = self.mathimg,
                        xfmtCmd = self.xfmtCmd,
                        xfmtEscape = self.xfmtEscape,
                        xfmtLink = self.xfmtLink,
@@ -108,8 +120,8 @@ public function copy( self : inlineContext,
                        xfmtTable = self.xfmtTable,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
-  InlineContext( grammar,links,labels,footnotes,defaults,metadata,
-                 citestyle,sanitize,bench,verbose,
+  InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,
+                 citestyle,sanitize,bench,verbose,mathimg,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
                  fmt )
 }

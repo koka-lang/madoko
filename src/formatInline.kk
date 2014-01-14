@@ -19,6 +19,7 @@ import inline
 import htmlFormatter
 import texFormatter
 import texParser   // rxAuthorYear
+import md5
 
 /* --------------------------------------
   Inline grammar 
@@ -62,7 +63,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
   Rule("ielipsis",  regex(@"^\.\.\."), inlineDots ),
   
-  Rule("texinline", regex(@"^\$((?:[^\\\$]|\\.)+)\$"), inlineMath ),
+  Rule("texinline", regex(@"^\$((?:[^\\\$]|\\.)+)\$(?:" + attrs + ")?"), inlineMath ),
   Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\.|\$[^\$])*)\$\$]"), inlineMathBlock ),
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
 
@@ -97,13 +98,16 @@ function inlineGrammar( fmt : formatter, bench : bool = False ) {
 // Create an ":inlineContext"
 public function inlineContext( fmt : formatter, 
                                metadata : dict<string>,
+                               mathinfos : dict<mathinfo>,
                                citestyle : citestyle = citeAuto,
                                sanitize : bool = False,
                                bench: bool = False,
-                               verbose : int = 0 ) : inlineContext
+                               verbose : int = 0,
+                               mathimg : string = "" ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
-                 metadata, citestyle, sanitize, bench, verbose,
+                 metadata, mathinfos, 
+                 citestyle, sanitize, bench, verbose, mathimg,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 
@@ -131,7 +135,7 @@ function inlineNormal( cap : matched, context : inlineContext ) : string {
 } 
 
 function inlineMath( cap : matched, context : inlineContext ) : string {
-  context.fmtMath(cap.groups[1])
+  context.fmtMath(cap.groups[1],context.formatAttrs(cap.groups[2].parseAttrs))
 }
 
 function inlineMathBlock( cap : matched, context : inlineContext ) : string {
@@ -140,20 +144,62 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
 
 function fmtMath( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string {
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
-  mtxt = "$" + txt + "$"
+  mtxt = "$" + txt.escapeMath(context.fmt) + "$"
   match(context.fmt) {
     FmtTex -> mtxt 
-    _      -> context.fmtText(mtxt)
+    _      -> {
+      if (context.mathimg != "") {
+        digest = md5(txt)
+        log("math",@"\begin{mdInlineSnippet}[" + digest + "]\n$" + txt + "$\n\\end{mdInlineSnippet}")
+        match(context.mathinfos[digest]) {
+          Nothing  -> context.fmtText(mtxt)
+          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrs)
+        }
+      }
+      else context.fmtText(mtxt)
+    }
   }
 } 
 
-function fmtMathBlock( context : inlineContext, txt : string ) : string {
-  mtxt = "\\[" + txt + "\\]"
+public function fmtMathBlock( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string {
+  mtxt = "\\[" + txt.escapeMath(context.fmt) + "\\]"
   match(context.fmt) {
     FmtTex -> mtxt 
-    _      -> context.fmtText(mtxt)
+    _      -> {
+      if (context.mathimg!="") {
+        digest = md5(txt)
+        log("math",@"\begin{mdDisplaySnippet}[" + digest + "]%\n\\[" + txt + "\\]%\n\\end{mdDisplaySnippet}")
+        match(context.mathinfos[digest]) {
+          Nothing  -> {
+            context.fmtText(mtxt)
+          }
+          Just(mi) -> context.fmtMathImg( mi, txt, mtxt, attrs ) + "<br>" + context.fmtText(mtxt)
+        }
+      }
+      else context.fmtText(mtxt)
+    }
   }
 } 
+
+public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string, mtxt : string, attrs : attrs ) {
+  scale = match(attrs.hasKey("math-scale")) {
+            Just(value) -> value.parseInt.maybe(100,id).double / 100.0
+            Nothing     -> 1.0
+          }
+  xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + (scale * mi.depth).showFixed(2) + "pt")
+                .addKeyvalIfNotExist("height",(scale * mi.height).showFixed(2) + "pt")
+                .addClass("math")
+                // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
+  context.fmtLink(True,Link(mi.imageName,txt,xattrs),mtxt)
+}
+
+function escapeMath( txt : string, fmt : formatter ) : string {
+  match(fmt) {
+    FmtHtml -> txt.htmlEscape
+    FmtTex  -> txt 
+  }
+}
+
 
 function inlineQuot( cap : matched, context ) : string {
   context.fmtText(if (cap.matched=="\"") then "&quot;" else "&#39;")

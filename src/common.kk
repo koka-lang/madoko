@@ -302,6 +302,10 @@ public function addKeyvalIfNotEmpty( attrs : attrs, key : string, value : string
   if (value==""||key=="") then attrs else attrs.addKeyval(key,value)
 }
 
+public function addKeyvalIfNotExist( attrs : attrs, key : string, value : string ) : attrs {
+  if (attrs.hasKey(key).bool) then attrs else attrs.addKeyval(key,value)
+}
+
 public function addKeyvals( attrs : attrs, kvs : list<(string,string)> ) : attrs {
   kvs.foldl(attrs,fun(acc,kv) { acc.addKeyval(kv.fst,kv.snd) })
 }
@@ -363,3 +367,4 @@ public function joinLines( s : string ) : string {
   s.replaceAll(rxLineBreak,"")
 }
 val rxLineBreak = regex(@"\\\n\r?[ \t]*")
+

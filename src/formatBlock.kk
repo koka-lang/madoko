@@ -12,6 +12,7 @@ module formatBlock
 import std/string
 import std/regex
 import std/dict
+import std/log
 import common
 import block
 import inline
@@ -213,13 +214,25 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Source(txt,input) -> {
       match(input) {
         Pre       -> context.fmtCode("",txt,attrsNone)
-        Math      -> ("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
-        MathPre   -> ("\\[" + txt.mathPreBlock.escapeMath(context.fmt) + "\\]")
+        Math      -> {
+          //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
+          context.inlineContext.fmtMathBlock(txt)
+        }
+        MathPre   -> {
+          // ("\\[" + txt.mathPreBlock.escapeMath(context.fmt) + "\\]")
+          context.inlineContext.fmtMathBlock(txt.mathPreBlock)
+        }
         MathDefs  -> {
           mtxt = txt.escapeMath(context.fmt)
           match(context.fmt) {
             FmtTex  -> mtxt
-            FmtHtml -> "\\[" + mtxt + "\\]"
+            FmtHtml -> {
+              if (context.inlineContext.mathimg != "") {
+                log("math","% math definitions\n" + txt + "\n")
+                ""
+              }
+              else "\\[" + mtxt + "\\]"
+            }
           }
         }
         Markdown  -> context.inlineContext.formatInline(txt)

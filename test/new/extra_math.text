@@ -1,7 +1,11 @@
 Title		: Math Example
 Heading Base: 2
 Mathjax		: True
-      
+MathImg		: img
+
+<style>
+/*  img { border: 1pt dotted black; } */
+</style>      
 
 # Math and equation examples. 
 
@@ -29,7 +33,7 @@ Or how about these type rules in Figure\ [#fig-typerules]:
 The table of Clifford[^moreInfo] algebras over $\mathbb{R}$ is defined in Figure\ [#fig-clifford],
 where the generators of $\mathcal{C}\ell_{j}^\pm$ satisfy
 ~~ Equation
-  \gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
+\gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
 ~~
 and $\mathcal{C}\ell_{n+8}^\pm = \mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
 

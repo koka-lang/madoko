@@ -17,6 +17,7 @@ import common
 import options
 import inline  // format type
 import madoko
+import texFormatter
 
 external import {
   js "fs"
@@ -88,17 +89,31 @@ public function markdownFiles(args : string, action : (string,string,string,stri
           Left -> println("error: unable to read: " + input )
           Right(content) -> {
             content.include(opts.options.bench, outName) fun(icontent) {
+              mdim   = outName.changeExt("math.dim").readTextFileDef("")
+              dopts  = (opts.options)(mathdim=mdim)  
               xopts  = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
-                        then (opts.options)(xmp = True) else opts.options
+                        then dopts(xmp = True) else dopts
 
               //val (mopts,mcontent) = parseMeta(xopts,icontent)              
-              val (warns,(logs, html)) = withLog("warning") { 
+              val (math,(warns,(logs, html))) = 
+                                         withLog("math") {
+                                          withLog("warning") { 
                                            withLog("aux") { 
                                             markdown(icontent,xopts) 
                                            }
+                                          }
                                          }
               if (warns != "" && xopts.verbose >= 1) {
                 print(warns)
+              }
+
+              if (math != "") {
+                outMathName = outName.changeExt(".math.tex")
+                body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
+                outMath = fmtTexFull(body,xopts)                
+                if (!(tryWriteTextFile(outMathName,outMath))) {
+                  println("error: unable to write: " + outMathName)
+                }
               }
 
               if (!(tryWriteTextFile(outName,html))) {
@@ -147,6 +162,8 @@ public function markdownFiles(args : string, action : (string,string,string,stri
     }
   }
 }
+
+
 
 val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
