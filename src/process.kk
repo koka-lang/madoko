@@ -11,7 +11,24 @@ public external system( cmd : string, callback : (int,string,string) -> <io|e> (
   js inline "child_process.exec(#1,{timeout:#3,cwd:(#4!=''?#4:null)},function(err,stdout,stderr) { (#2)(err?err.code:0,stdout,stderr); });"
 }
 
-public external readFileSyncBase64( fileName : string ) : io string
+public type buffer
+
+public external string( b : buffer, fmt : string ) : string
 {
-  js inline "fs.readFileSync(#1,{encoding:'base64'})"
+  js inline "#1.toString(#2)"
+}
+
+public external readInt1( b : buffer, ofs : int ) : int
+{
+  js inline "#1.readUInt8(#2)"
+}
+
+public external readInt4( b : buffer, ofs : int ) : int
+{
+  js inline "#1.readInt32BE(#2)"
+}
+
+public external readFileSync( fileName : string ) : io buffer
+{
+  js inline "fs.readFileSync(#1)"
 }

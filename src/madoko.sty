@@ -16,8 +16,8 @@
 \RequirePackage{array}
 \RequirePackage{longtable}
 \RequirePackage{amsmath}
-\RequirePackage{listings}
 \RequirePackage{hyperref}
+\RequirePackage{listings}
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
@@ -469,7 +469,7 @@
   %\setlength{\@snippetHeight}{\dimexpr\@snippetHeight*\mdMathScale/100\relax}%
   %\setlength{\@snippetDepth}{\dimexpr\@snippetDepth*\mdMathScale/100\relax}%
   %\setlength{\@snippetWidth}{\dimexpr\@snippetWidth*\mdMathScale/100\relax}%  
-  \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetHeight,\the\@snippetDepth,\the\@snippetWidth}%
+  \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
   %\setlength{\fboxsep}{0pt}\fbox{
   \usebox\@snippetBox%}
 }
@@ -490,5 +490,7 @@
      \belowdisplayskip=0pt%
      \abovedisplayshortskip=0pt%
      \belowdisplayshortskip=0pt%
-     \newwrite\foo\immediate\openout\foo=\jobname.dim}%
+     \newwrite\foo\immediate\openout\foo=\jobname.dim%
+     \immediate\write\foo{\%ordinal,(hash)name,width,height,depth,image width,image height,dpi,base64 encoding}%
+    }%
     {\closeout\foo}

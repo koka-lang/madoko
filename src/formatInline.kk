@@ -114,6 +114,7 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlFootnote,fmtTexFootnote),
                  fmt.pick(fmtHtmlTitle,fmtTexTitle),
                  fmt.pick(fmtHtmlTable,fmtTexTable),
+                 fmt.pick(fmtHtmlEnv,fmtTexEnv),
                  fmt 
                )
 }
@@ -173,7 +174,9 @@ public function fmtMathBlock( context : inlineContext, txt : string, attrs : att
           Nothing  -> {
             context.fmtText(mtxt)
           }
-          Just(mi) -> context.fmtMathImg( mi, txt, mtxt, attrs ) //+ "<br>" + context.fmtText(mtxt)
+          Just(mi) -> {
+            context.fmtMathImg( mi, txt, mtxt, attrs.addClass("math-display") )
+          }
         }
       }
       else context.fmtText(mtxt)

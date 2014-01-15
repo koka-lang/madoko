@@ -28,18 +28,17 @@ public struct formatContext(
   headingBase: int,
   langPrefix : string,
   pedantic : bool,
-  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
   fmt : formatter = FmtHtml
 )
 
 public function initialFormatContext( icontext : inlineContext, titleinfo : titleinfo, headingBase : int, pedantic : bool, fmt : formatter ) {
-  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"lang-",pedantic,fmt.pick(fmtHtmlEnv,fmtTexEnv), fmt)
+  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"lang-",pedantic, fmt)
 }
 
 function fmtEnv( context : formatContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
   match(context.fmt) {
     FmtHtml -> tagEnv(env, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
-    _ -> (context.xfmtEnv)(context.inlineContext,env,txt,attrs)
+    _ -> context.inlineContext.fmtEnv(env,txt,attrs)
   }
 }
 

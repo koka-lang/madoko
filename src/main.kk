@@ -91,8 +91,8 @@ public function markdownFiles(args : string, action : (string,string,string,stri
           Left -> println("error: unable to read: " + input )
           Right(content) -> {
             content.include(opts.options.bench, outName) fun(icontent) {
-              dims   = outName.changeExt("math.dim").readTextFileDef("")
-              mdim   = dims.parseMathDim(outName.dirname,"img",opts.options.mathScale)
+              dims   = outName.changeExt("math.dimx").readTextFileDef("")
+              mdim   = dims.parseMathDim("img", opts.options.mathDpi, opts.options.mathScale)
 
               dopts  = (opts.options)(mathdim=mdim)  
               xopts  = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
@@ -141,10 +141,14 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                             println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)
                           }
                           else {
+                            if (xopts.verbose>=1) println("  analyse and embed math images...")
+                            dims2 = extendDim(outMathName.changeExt(".dim"), "img", xopts.mathDpi, 1000 )
+                            mdim2 = dims2.parseMathDim("img",opts.options.mathDpi,opts.options.mathScale)
+
                             // write html again
                             if (xopts.verbose>=1) println("  aligning math in HTML...")
                             
-                            html2 = markdown(icontent,xopts)
+                            html2 = markdown(icontent,xopts(mathdim=mdim2))
                             if (!(tryWriteTextFile(outName,html2))) {
                               println("error: unable to write: " + outName) 
                             }
@@ -246,33 +250,69 @@ function tryCopyTextFileFromTo( fname, srcDir, outDir ) {
 }
 
 
+function extendDim( dimFile : string, imgPrefix : string = ".", imgDpi : int, embedLimit : int = 1000 ) : io string
+{
+  dims = readTextFileDef(dimFile,"").lines
+  dimsx = dims.map fun(line) {
+    match(line.find(rxDimLine)) {
+      Nothing   -> line
+      Just(cap) -> { 
+        imageName = combine(imgPrefix, "eq-" + cap.groups[2] + ".png")
+        match( tryReadFileSync( combine(dimFile.dirname,imageName) )) {
+          Nothing -> line
+          Just(buf) -> {
+            base64 = buf.string("base64")
+            pxwidth = buf.readInt4(16)
+            pxheight = buf.readInt4(20)
+            trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
+            pngprefix = "data:image/png;base64,"
+            embed = if (base64!="" && base64.length + pngprefix.length < embedLimit)
+                     then "," + pngprefix + base64 else ""
+            if (embed!="") trace("inline image: " + cap.groups[1])         
+            cap.groups[1] + "," + pxwidth.show + "px," + pxheight.show + "px," + imgDpi.show + "dpi" + embed
+          }
+        }
+      }
+    }
+  }
+  txt = dimsx.unlines
+  tryWriteTextFile( dimFile.changeExt(".dimx"), txt )
+  txt
+}
+
+function tryReadFileSync( fname : string ) : io maybe<buffer> {
+  catch({ b = readFileSync(fname); Just(b) },fun(_exn){ Nothing } )
+}
 
 // parse a dimension file written by latex snippets
-function parseMathDim( txt : string, cwd : string = ".", imgPrefix : string = ".", imgScale : int = 100 ) : io dict<mathinfo> {
+function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale : int  ) : dict<mathinfo> {
   mi = mdict()
   scale = imgScale.double / 100.0
   txt.findAll(rxDimLine).foreach fun(cap) {
-    imageName = imgPrefix + "/eq-" + cap.groups[1] + ".png"
-    height = scale * dimension(cap.groups[3],cap.groups[4])
-    depth  = scale * dimension(cap.groups[5],cap.groups[6])
-    width  = scale * dimension(cap.groups[7],cap.groups[8])
-    rawData = readImageData(cwd + "/" + imageName)
-    imageData = if (rawData == "" || rawData.length>=1000) then "" 
-                 else {
-                    trace("inline image: " + imageName )
-                    "data:image/png;base64," + rawData
-                  }
-    mi[cap.groups[2]] := Mathinfo(imageName,height,depth,width,imageData)
+    imageName = imgPrefix + "/eq-" + cap.groups[2] + ".png"
+    ptwidth   = dimension(cap.groups[4],cap.groups[5])
+    ptheight  = dimension(cap.groups[6],cap.groups[7])
+    depth     = dimension(cap.groups[8],cap.groups[9])
+    pxwidth   = cap.groups[10].parseInt.maybe(-1,id)
+    pxheight  = cap.groups[11].parseInt.maybe(-1,id)
+    dpi       = cap.groups[12].parseInt.maybe(imgDpi,id)
+    
+    ppt    = dpi.double/72.27
+    height = if (pxheight >= 0) then pxheight.double / ppt else ptheight
+    width  = if (pxwidth >= 0) then pxwidth.double / ppt else ptwidth
+
+    mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*depth,scale*width,cap.groups[13])
   }
   return mi.freeze()
 } 
 
-function readImageData( fname : string ) : io string {
-  catch( { readFileSyncBase64(fname) }, function(exn) { return "" } )
-}
-
-val rxDimLine = regex(@"^(\d+) *, *([a-zA-Z0-9]+) *" + rxDim + rxDim + rxDim + "$", multiLine=True)
+val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
+                          rxDim + rxDim + rxDim +
+                           "(?:" + rxPix + rxPix + rxDpi + rxEmbed + ")?)$", multiLine=True)
 val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
+val rxPix = @", *(\d+) *(?:px\b *)?"
+val rxDpi = @"(?:, *(\d+) *dpi\b *)?"
+val rxEmbed = @"(?:, *(data:.*))?"
 
 function dimension( whole : string, fraction : string ) : double {
   w = whole.parseInt.maybe(0,id).double

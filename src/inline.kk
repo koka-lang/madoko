@@ -49,6 +49,7 @@ public rectype inlineContext {
                  xfmtFootnote: (context : inlineContext, id : string, fn : footnote ) -> string,
                  xfmtTitle: (context : inlineContext, titleinfo : titleinfo ) -> string,
                  xfmtTable: (context : inlineContext, head : cells, body : cells, attrs : attrs ) -> string,
+                 xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  fmt : formatter
                )                 
 }
@@ -68,6 +69,10 @@ public struct label( element : string, labelText : string )
 
 public function fmtCmd( context : inlineContext, cmd : string, txt : string, attrs : attrs = attrsNone ) : string {
   (context.xfmtCmd)(context,cmd,txt,attrs)
+}
+
+public function fmtEnv( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
+  (context.xfmtEnv)(context,env,txt,attrs)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {
@@ -110,12 +115,13 @@ public function copy( self : inlineContext,
                        xfmtFootnote = self.xfmtFootnote,
                        xfmtTitle = self.xfmtTitle,
                        xfmtTable = self.xfmtTable,
+                       xfmtEnv = self.xfmtEnv,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,
                  citestyle,sanitize,bench,verbose,mathimg,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
-                 fmt )
+                 xfmtEnv, fmt )
 }
 
 public function sanitize( context : inlineContext ) : bool {

@@ -146,7 +146,7 @@ a.localref:hover {
 }
 
 /* General */
-.block, .figure, .bibitem, .equation  {
+.block, .figure, .bibitem, .equation {
   margin-top: 1ex;
   margin-bottom: 1ex;
 }
@@ -240,10 +240,16 @@ tbody:first-child>tr:first-child>.cell-line {
 
 
 /* Math Pre */
-.input-mathpre .MathJax_Display {
+.input-mathpre .MathJax_Display, .input-mathpre .math-display {
   text-align: left !important;
   margin-left: 1em;
 }
+
+div.input-mathpre {
+  margin-top: 1.5ex;
+  margin-bottom: 1ex;
+}
+
 
 /* Code prettify */
 ol.linenums li {
