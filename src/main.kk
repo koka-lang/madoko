@@ -13,6 +13,7 @@ import std/log
 import std/regex
 import std/path
 import std/file
+import std/dict
 import common
 import options
 import inline  // format type
@@ -90,7 +91,9 @@ public function markdownFiles(args : string, action : (string,string,string,stri
           Left -> println("error: unable to read: " + input )
           Right(content) -> {
             content.include(opts.options.bench, outName) fun(icontent) {
-              mdim   = outName.changeExt("math.dim").readTextFileDef("")
+              dims   = outName.changeExt("math.dim").readTextFileDef("")
+              mdim   = dims.parseMathDim(outName.dirname,"img",opts.options.mathScale)
+
               dopts  = (opts.options)(mathdim=mdim)  
               xopts  = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
                         then dopts(xmp = True) else dopts
@@ -129,7 +132,7 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                       else {
                         dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
-                                      " " + "img/" + "/eq-%d.png" +
+                                      " -o " + "img" + "/eq-%d.png" +
                                       " " + outMathName.basename.changeExt(".dvi")
                         if (xopts.verbose>=1) println("  running dvipng on math...")
                         if (xopts.verbose>=2) println("  > " + dvipngCmd)
@@ -240,4 +243,39 @@ function tryCopyTextFile( fileName : string, outName : string ) : io bool {
 
 function tryCopyTextFileFromTo( fname, srcDir, outDir ) {
   tryCopyTextFile( combine(srcDir,fname), combine(outDir,fname))
+}
+
+
+
+// parse a dimension file written by latex snippets
+function parseMathDim( txt : string, cwd : string = ".", imgPrefix : string = ".", imgScale : int = 100 ) : io dict<mathinfo> {
+  mi = mdict()
+  scale = imgScale.double / 100.0
+  txt.findAll(rxDimLine).foreach fun(cap) {
+    imageName = imgPrefix + "/eq-" + cap.groups[1] + ".png"
+    height = scale * dimension(cap.groups[3],cap.groups[4])
+    depth  = scale * dimension(cap.groups[5],cap.groups[6])
+    width  = scale * dimension(cap.groups[7],cap.groups[8])
+    rawData = readImageData(cwd + "/" + imageName)
+    imageData = if (rawData == "" || rawData.length>=1000) then "" 
+                 else {
+                    trace("inline image: " + imageName )
+                    "data:image/png;base64," + rawData
+                  }
+    mi[cap.groups[2]] := Mathinfo(imageName,height,depth,width,imageData)
+  }
+  return mi.freeze()
+} 
+
+function readImageData( fname : string ) : io string {
+  catch( { readFileSyncBase64(fname) }, function(exn) { return "" } )
+}
+
+val rxDimLine = regex(@"^(\d+) *, *([a-zA-Z0-9]+) *" + rxDim + rxDim + rxDim + "$", multiLine=True)
+val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
+
+function dimension( whole : string, fraction : string ) : double {
+  w = whole.parseInt.maybe(0,id).double
+  f = (fraction + "00").substr(0,2).parseInt.maybe(0,id).double / 100.0
+  return (w+f)
 }

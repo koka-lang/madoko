@@ -173,7 +173,7 @@ public function fmtMathBlock( context : inlineContext, txt : string, attrs : att
           Nothing  -> {
             context.fmtText(mtxt)
           }
-          Just(mi) -> context.fmtMathImg( mi, txt, mtxt, attrs ) + "<br>" + context.fmtText(mtxt)
+          Just(mi) -> context.fmtMathImg( mi, txt, mtxt, attrs ) //+ "<br>" + context.fmtText(mtxt)
         }
       }
       else context.fmtText(mtxt)
@@ -190,7 +190,8 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
                 .addKeyvalIfNotExist("height",(scale * mi.height).showFixed(2) + "pt")
                 .addClass("math")
                 // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
-  context.fmtLink(True,Link(mi.imageName,txt,xattrs),mtxt)
+  src = if (mi.imageData!="") then mi.imageData else mi.imageName
+  context.fmtLink(True,Link(src,txt,xattrs),mtxt)
 }
 
 function escapeMath( txt : string, fmt : formatter ) : string {

@@ -213,6 +213,17 @@ public function newLink( href : string, title : string = "", linkattrs : attrs =
         else linkattrs)
 }
 
+// Info for static math based on images
+public struct mathinfo (
+  imageName : string,
+  height    : double,
+  depth     : double,
+  width     : double,
+  imageData : string   // base64 encoding
+)
+
+
+
 /* --------------------------------------
  Attributes 
 ---------------------------------------- */

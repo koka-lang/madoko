@@ -11,6 +11,7 @@ module options
 
 import std/log
 import std/env
+import std/dict
 import std/flags
 import std/regex
 import std/string
@@ -22,8 +23,7 @@ public val version = "0.3.2-beta"
 
 // Metadata is just a string to string map.
 public alias metadata = list<(string,string)>
-
-
+  
 // The options
 public struct options(
   bench    : bool = False, // turn off more expensive features for benchmarking
@@ -60,7 +60,7 @@ public struct options(
   headingDepth : int  = 3, // default depth where headings are numbered
   headingBase  : int  = 1, // heading level for #
   metadata  : metadata = [],
-  mathdim   : string = ""
+  mathdim   : dict<mathinfo> = dict()
 );               
 
 public struct commandOptions(

@@ -53,14 +53,6 @@ public rectype inlineContext {
                )                 
 }
 
-public struct mathinfo (
-  imageName : string,
-  height    : double,
-  depth     : double,
-  width     : double,
-  imageData : string   // base64 encoding
-)
-
 public struct titleinfo (
   title : string,
   subtitle : string,
