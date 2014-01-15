@@ -18,6 +18,7 @@ import options
 import inline  // format type
 import madoko
 import texFormatter
+import process
 
 external import {
   js "fs"
@@ -52,7 +53,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
     else {
       trace("*** test success (modulo whitespace)")
     }
-    println("done!")
+    //println("done!")
   } 
 }
 
@@ -109,10 +110,49 @@ public function markdownFiles(args : string, action : (string,string,string,stri
 
               if (math != "") {
                 outMathName = outName.changeExt(".math.tex")
+                oldMath = readTextFileDef(outMathName,"")
                 body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-                outMath = fmtTexFull(body,xopts)                
-                if (!(tryWriteTextFile(outMathName,outMath))) {
-                  println("error: unable to write: " + outMathName)
+                outMath = fmtTexFull(body,xopts)
+                if (outMath != oldMath) {
+                  if (xopts.verbose>=1) println("  typesetting math...")
+                  if (!(tryWriteTextFile(outMathName,outMath))) {
+                    println("error: unable to write: " + outMathName)
+                  }
+                  else {
+                    latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + outMathName.basename + "\""
+                    if (xopts.verbose>=1) println("  running latex on math...")
+                    if (xopts.verbose>=2) println("  > " + latexCmd)
+                    system(latexCmd, function(err:int,stdout:string,stderr:string) {
+                      if (err!=0) {
+                        println("error: latex failed while typesetting math: \n" + stdout + stderr )
+                      }
+                      else {
+                        dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
+                                      " -D" + xopts.mathDpi.show +
+                                      " " + "img/" + "/eq-%d.png" +
+                                      " " + outMathName.basename.changeExt(".dvi")
+                        if (xopts.verbose>=1) println("  running dvipng on math...")
+                        if (xopts.verbose>=2) println("  > " + dvipngCmd)
+                        system(dvipngCmd,function(err2,stdout2,stderr2) {
+                          if (err2 != 0) {
+                            println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)
+                          }
+                          else {
+                            // write html again
+                            if (xopts.verbose>=1) println("  aligning math in HTML...")
+                            
+                            html2 = markdown(icontent,xopts)
+                            if (!(tryWriteTextFile(outName,html2))) {
+                              println("error: unable to write: " + outName) 
+                            }
+                            else {
+                              if (xopts.verbose>=1) println("  done typesetting math.")
+                            }
+                          }
+                        },30000,dirname(outMathName))              
+                      }     
+                    },10000,dirname(outMathName))
+                  }                
                 }
               }
 

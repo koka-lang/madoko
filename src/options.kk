@@ -53,6 +53,8 @@ public struct options(
   mathimg  : string = ".",    // use static images to render math
   mathScale: int    = 125,  // math scaling in percentage
   mathDpi  : int    = 400,  // math resolution 
+  latex    : string = "latex",
+  dvipng   : string = "dvipng",
   
   tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth : int  = 3, // default depth where headings are numbered
@@ -191,6 +193,8 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="mathimg") options(mathimg = if (value=="true") then "." else value)
     elif (key=="math-scale") options(mathScale=ivalue)
     elif (key=="math-dpi") options(mathDpi=ivalue) 
+    elif (key=="latex") options(latex=if (value=="") then "latex" else value)
+    elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     else options
   }
 } 
