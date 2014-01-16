@@ -191,7 +191,7 @@ val rxEmptyTail = regex(@"(\s|%.*)*$")
 function mathStatic( math : string, texName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
   oldMath = readTextFileDef(texName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-  outMath = fmtTexFull(body,xopts)
+  outMath = fmtTexFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
   if (outMath != oldMath) {
     if (xopts.verbose>=1) println("  typesetting math...")
     if (!(tryWriteTextFile(texName,outMath))) {
@@ -237,7 +237,7 @@ function mathDviToPng( dviName : string, xopts : options, continue : () -> io ()
     else {
       continue()
     }
-  },30000,dirname(dviName))
+  },60000,dirname(dviName))
 }
 
 function mathDimAnalyse( dimxName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
