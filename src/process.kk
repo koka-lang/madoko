@@ -13,6 +13,10 @@ public external system( cmd : string, callback : (int,string,string) -> <io|e> (
 
 public type buffer
 
+public external length( b : buffer ) : int {
+  js inline "#1.length"
+}
+
 public external string( b : buffer, fmt : string ) : string
 {
   js inline "#1.toString(#2)"
@@ -31,4 +35,9 @@ public external readInt4( b : buffer, ofs : int ) : int
 public external readFileSync( fileName : string ) : io buffer
 {
   js inline "fs.readFileSync(#1)"
+}
+
+public external unlink( fname : string ) : io ()
+{
+  js inline "fs.unlinkSync(#1)"
 }

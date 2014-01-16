@@ -172,6 +172,7 @@ public function fmtMathBlock( context : inlineContext, txt : string, attrs : att
         log("math",@"\begin{mdDisplaySnippet}[" + digest + "]%\n\\[" + txt + "\\]%\n\\end{mdDisplaySnippet}")
         match(context.mathinfos[digest]) {
           Nothing  -> {
+            //trace("math not found: " + digest)
             context.fmtText(mtxt)
           }
           Just(mi) -> {

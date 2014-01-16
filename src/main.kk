@@ -91,14 +91,18 @@ public function markdownFiles(args : string, action : (string,string,string,stri
           Left -> println("error: unable to read: " + input )
           Right(content) -> {
             content.include(opts.options.bench, outName) fun(icontent) {
-              dims   = outName.changeExt("math.dimx").readTextFileDef("")
-              mdim   = dims.parseMathDim("img", opts.options.mathDpi, opts.options.mathScale)
+              xxopts = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
+                        then (opts.options)(xmp = True) else opts.options
+              mmopts = if (xxopts.xmp) then xxopts
+                        else xxopts.parseMeta( icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
+              dims   = outName.changeExt(".math.dimx").readTextFileDef("")
+              mdim   = dims.parseMathDim(mmopts.mathimg, mmopts.mathDpi, mmopts.mathScale)
 
-              dopts  = (opts.options)(mathdim=mdim)  
-              xopts  = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
-                        then dopts(xmp = True) else dopts
+              xopts  = xxopts(mathdim=mdim)
+              mopts  = mmopts(mathdim=mdim)  
 
-              //val (mopts,mcontent) = parseMeta(xopts,icontent)              
+
+              // markdown to html          
               val (math,(warns,(logs, html))) = 
                                          withLog("math") {
                                           withLog("warning") { 
@@ -111,95 +115,50 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                 print(warns)
               }
 
-              if (math != "") {
-                outMathName = outName.changeExt(".math.tex")
-                oldMath = readTextFileDef(outMathName,"")
-                body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-                outMath = fmtTexFull(body,xopts)
-                if (outMath != oldMath) {
-                  if (xopts.verbose>=1) println("  typesetting math...")
-                  if (!(tryWriteTextFile(outMathName,outMath))) {
-                    println("error: unable to write: " + outMathName)
-                  }
-                  else {
-                    latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + outMathName.basename + "\""
-                    if (xopts.verbose>=1) println("  running latex on math...")
-                    if (xopts.verbose>=2) println("  > " + latexCmd)
-                    system(latexCmd, function(err:int,stdout:string,stderr:string) {
-                      if (err!=0) {
-                        println("error: latex failed while typesetting math: \n" + stdout + stderr )
-                      }
-                      else {
-                        dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
-                                      " -D" + xopts.mathDpi.show +
-                                      " -o " + "img" + "/eq-%d.png" +
-                                      " " + outMathName.basename.changeExt(".dvi")
-                        if (xopts.verbose>=1) println("  running dvipng on math...")
-                        if (xopts.verbose>=2) println("  > " + dvipngCmd)
-                        system(dvipngCmd,function(err2,stdout2,stderr2) {
-                          if (err2 != 0) {
-                            println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)
-                          }
-                          else {
-                            if (xopts.verbose>=1) println("  analyse and embed math images...")
-                            dims2 = extendDim(outMathName.changeExt(".dim"), "img", xopts.mathDpi, 1000 )
-                            mdim2 = dims2.parseMathDim("img",opts.options.mathDpi,opts.options.mathScale)
-
-                            // write html again
-                            if (xopts.verbose>=1) println("  aligning math in HTML...")
-                            
-                            html2 = markdown(icontent,xopts(mathdim=mdim2))
-                            if (!(tryWriteTextFile(outName,html2))) {
-                              println("error: unable to write: " + outName) 
-                            }
-                            else {
-                              if (xopts.verbose>=1) println("  done typesetting math.")
-                            }
-                          }
-                        },30000,dirname(outMathName))              
-                      }     
-                    },10000,dirname(outMathName))
-                  }                
-                }
-              }
-
-              if (!(tryWriteTextFile(outName,html))) {
-                println("error: unable to write: " + outName) 
-              }
-              
-              if (xopts.tex) {
-                outTexName = outName.changeExt(".tex")
-                if (opts.options.verbose > 0) println("process: " + input + " -> " + outTexName )        
-                val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-                if (texwarns != "" && xopts.verbose >= 2) print(texwarns) 
-                //trace(tex)
-                if (!(tryWriteTextFile(outName.changeExt(".tex"),tex))) {
-                  println("error: unable to write: " + outName.changeExt(".tex")) 
-                }
-              }            
-
-              if (logs != "") {
-                //trace(logs)
-                // write out the log to an aux file
-                mopts = if (xopts.xmp) then xopts else xopts.parseMeta( icontent.normalizeSource ).fst // get bibdata and bibstyle
-                bibStyleName = if (mopts.bibStyle != "") then mopts.bibStyle else "plainnat"
-                bibNames = mopts.bib.splitPaths
-                auxName = outName.changeExt(".aux")
-                initial = readTextFileDef(auxName,"").replaceAll(rxCite,"").replace(rxEmptyTail,"")
-                if (!(tryWriteTextFile(auxName,
-                      initial + 
-                      "\n% Madoko generated\n" + logs + 
-                      "\n\\bibstyle{" + bibStyleName + "}\n" +
-                       bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join))) then 
-                {
-                  println("error: unable to write citations: " + auxName )
-                }
-              }
+              // copy early since async latex may start for math
               tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
               if (xopts.tex) {
                 tryCopyTextFileFromTo( "css.sty", opts.installDir, outName.dirname)
                 tryCopyTextFileFromTo( "madoko.sty", opts.installDir, outName.dirname)
                 ()
+              }
+
+              // write html result
+              if (!(tryWriteTextFile(outName,html))) {
+                println("error: unable to write: " + outName) 
+              }
+
+              // possibly typeset math using latex
+              if (math != "") {
+                mathStatic( math, outName.changeExt(".math.tex"), mopts ) fun(mdim2) {
+                  // write html again
+                  if (mopts.verbose>=1) println("  re-aligning math in HTML...")
+                  
+                  html2 = markdown(icontent,xopts(mathdim=mdim2))
+                  if (!(tryWriteTextFile(outName,html2))) {
+                    println("error: unable to write: " + outName) 
+                  }
+                  else {
+                    if (mopts.verbose>=1) println("  done typesetting math.")
+                  }
+                }
+              }
+              
+              // generate tex
+              if (mopts.tex) {
+                outTexName = outName.changeExt(".tex")
+                if (mopts.verbose > 0) println("process: " + input + " -> " + outTexName )        
+                val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
+                if (texwarns != "" && mopts.verbose >= 2) print(texwarns) 
+                //trace(tex)
+                if (!(tryWriteTextFile(outTexName,tex))) {
+                  println("error: unable to write: " + outTexName) 
+                }
+              }            
+
+              if (logs != "") {
+                // write out the log to an aux file
+                writeCitations( logs, outName, mopts )
               }
               action(html,input,outName,logs,opts)
             }
@@ -211,9 +170,83 @@ public function markdownFiles(args : string, action : (string,string,string,stri
 }
 
 
-
+function writeCitations( auxData : string, outName : string, opts : options ) : io () {
+  bibStyleName = if (opts.bibStyle != "") then opts.bibStyle else "plainnat"
+  bibNames = opts.bib.splitPaths
+  auxName = outName.changeExt(".aux")
+  initial = readTextFileDef(auxName,"").replaceAll(rxCite,"").replace(rxEmptyTail,"")
+  if (!(tryWriteTextFile(auxName,
+        initial + 
+        "\n% Madoko generated\n" + auxData + 
+        "\n\\bibstyle{" + bibStyleName + "}\n" +
+         bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join))) then 
+  {
+    println("error: unable to write citations: " + auxName )
+  }
+}
 val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
+
+
+function mathStatic( math : string, texName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
+  oldMath = readTextFileDef(texName,"")
+  body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
+  outMath = fmtTexFull(body,xopts)
+  if (outMath != oldMath) {
+    if (xopts.verbose>=1) println("  typesetting math...")
+    if (!(tryWriteTextFile(texName,outMath))) {
+      println("error: unable to write: " + texName)
+    }
+    else {
+      mathSnippetsToDvi( texName, xopts ) {
+        mathDviToPng( texName.changeExt(".dvi"), xopts ) {
+          mathDimAnalyse( texName.changeExt(".dimx"), xopts, continue )
+        }
+      }
+    }
+  }
+}
+
+
+function mathSnippetsToDvi( texName : string, xopts : options, continue : () -> io () ) : io () {
+  latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + texName.basename + "\""
+  if (xopts.verbose>=1) println("  running latex on math...")
+  if (xopts.verbose>=2) println("  > " + latexCmd)
+  system(latexCmd, function(err:int,stdout:string,stderr:string) {
+    if (err!=0) {
+      println("error: latex failed while typesetting math: \n" + stdout + stderr )
+    }
+    else {
+      continue()
+    }
+  }, 30000, dirname(texName))
+}
+
+function mathDviToPng( dviName : string, xopts : options, continue : () -> io () ) : io () 
+{
+  dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
+                                      " -D" + xopts.mathDpi.show +
+                                      " -o " + combine(xopts.mathimg,"eq-%d.png") +
+                                      " " + dviName.basename
+  if (xopts.verbose>=1) println("  running dvipng on math...")
+  if (xopts.verbose>=2) println("  > " + dvipngCmd)
+  system(dvipngCmd,function(err2,stdout2,stderr2) {
+    if (err2 != 0) {
+      println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)
+    }
+    else {
+      continue()
+    }
+  },30000,dirname(dviName))
+}
+
+function mathDimAnalyse( dimxName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
+  if (xopts.verbose>=1) println("  analyse and embed math images...")
+  dims2 = extendDim(dimxName, xopts.mathimg, xopts.mathDpi, xopts.mathEmbedLimit, xopts.verbose )
+  mdim2 = dims2.parseMathDim(xopts.mathimg, xopts.mathDpi, xopts.mathScale)
+  continue( mdim2 )
+}
+
 
 public function main() : io () {
   markdownFiles("") fun(html,inName,outName,logs,opts) {
@@ -250,25 +283,38 @@ function tryCopyTextFileFromTo( fname, srcDir, outDir ) {
 }
 
 
-function extendDim( dimFile : string, imgPrefix : string = ".", imgDpi : int, embedLimit : int = 1000 ) : io string
+function extendDim( dimxFile : string, imgPrefix : string, imgDpi : int, embedLimit : int, verbose : int  ) : io string
 {
-  dims = readTextFileDef(dimFile,"").lines
+  var imageSize := 0
+  var imageCount := 0
+  var embedSize := 0
+  var embedCount := 0
+  dims = (readTextFileDef(dimxFile.changeExt(".dim"),"")).lines
   dimsx = dims.map fun(line) {
     match(line.find(rxDimLine)) {
       Nothing   -> line
       Just(cap) -> { 
         imageName = combine(imgPrefix, "eq-" + cap.groups[2] + ".png")
-        match( tryReadFileSync( combine(dimFile.dirname,imageName) )) {
+        imageFile = combine(dimxFile.dirname,imageName)
+        match( tryReadFileSync( imageFile )) {
           Nothing -> line
           Just(buf) -> {
             base64 = buf.string("base64")
             pxwidth = buf.readInt4(16)
             pxheight = buf.readInt4(20)
-            trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
+            //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
             pngprefix = "data:image/png;base64,"
             embed = if (base64!="" && base64.length + pngprefix.length < embedLimit)
                      then "," + pngprefix + base64 else ""
-            if (embed!="") trace("inline image: " + cap.groups[1])         
+            if (embed == "") then {
+              imageSize := imageSize + buf.length                      
+              imageCount := imageCount + 1
+            }
+            else {
+              embedSize := embedSize + base64.length
+              embedCount := embedCount + 1
+              unlink(imageFile) // delete the image
+            }  
             cap.groups[1] + "," + pxwidth.show + "px," + pxheight.show + "px," + imgDpi.show + "dpi" + embed
           }
         }
@@ -276,8 +322,22 @@ function extendDim( dimFile : string, imgPrefix : string = ".", imgDpi : int, em
     }
   }
   txt = dimsx.unlines
-  tryWriteTextFile( dimFile.changeExt(".dimx"), txt )
+  tryWriteTextFile( dimxFile, txt )
+  if (verbose >= 1) {
+    println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize.align(5) )
+    println("   math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize.align(5) )
+  }
   txt
+}
+
+function showSize( size : int ) : string {
+  kb = 1024
+  mb = kb*kb
+  if (size < kb) 
+   then size.show + " bytes"
+  elif (size < mb)
+   then ((size + kb - 1)/kb).show + "kb"
+   else ((size + mb - 1)/mb).show + "mb"
 }
 
 function tryReadFileSync( fname : string ) : io maybe<buffer> {
@@ -301,14 +361,15 @@ function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale 
     height = if (pxheight >= 0) then pxheight.double / ppt else ptheight
     width  = if (pxwidth >= 0) then pxwidth.double / ppt else ptwidth
 
+    //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*depth,scale*width,cap.groups[13])
   }
   return mi.freeze()
 } 
 
 val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
-                          rxDim + rxDim + rxDim +
-                           "(?:" + rxPix + rxPix + rxDpi + rxEmbed + ")?)$", multiLine=True)
+                          rxDim + rxDim + rxDim + ")" +
+                           "(?:" + rxPix + rxPix + rxDpi + rxEmbed + ")?$", multiLine=True)
 val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
 val rxPix = @", *(\d+) *(?:px\b *)?"
 val rxDpi = @"(?:, *(\d+) *dpi\b *)?"

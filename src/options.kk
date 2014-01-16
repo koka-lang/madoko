@@ -53,6 +53,7 @@ public struct options(
   mathimg  : string = ".",    // use static images to render math
   mathScale: int    = 125,  // math scaling in percentage
   mathDpi  : int    = 400,  // math resolution 
+  mathEmbedLimit : int = 1024, // maximal embedded image size
   latex    : string = "latex",
   dvipng   : string = "dvipng",
   
@@ -193,6 +194,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="mathimg") options(mathimg = if (value=="true") then "." else value)
     elif (key=="math-scale") options(mathScale=ivalue)
     elif (key=="math-dpi") options(mathDpi=ivalue) 
+    elif (key=="math-embed") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     else options
