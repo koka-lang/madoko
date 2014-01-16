@@ -1,8 +1,6 @@
 Title		: Math Example
 Heading Base: 2
-Mathjax		: True
-MathImg		: img
-Math Embed  : 4
+Math Embed  : 2
 
 <style>
 /*  img { border: 1pt dotted black; } */

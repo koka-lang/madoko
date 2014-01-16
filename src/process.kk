@@ -6,6 +6,9 @@ external import {
 external import {
   js "fs"
 }
+external import {
+  js "mkdirp"
+}
 
 public external system( cmd : string, callback : (int,string,string) -> <io|e> (), timeout : int = 0, cwd : string = "") : <io|e> () {
   js inline "child_process.exec(#1,{timeout:#3,cwd:(#4!=''?#4:null)},function(err,stdout,stderr) { (#2)(err?err.code:0,stdout,stderr); });"
@@ -40,4 +43,20 @@ public external readFileSync( fileName : string ) : io buffer
 public external unlink( fname : string ) : io ()
 {
   js inline "fs.unlinkSync(#1)"
+}
+
+public external fexists( fname : string ) : io bool {
+  js inline "fs.exists(#1)"
+}
+
+public external mkdir( dir : string, mode : int = 0x1FF ) : io () {
+  js inline "fs.mkdirSync(#1,#2)"
+}
+
+public external mkdirp( dir : string, mode : int = 0x1FF ) : io () {
+  js inline "require('mkdirp').sync(#1,#2)"
+}
+
+public external rename( fnameOld : string, fnameNew : string ) : io () {
+  js inline "fs.renameSync(#1,#2)"
 }

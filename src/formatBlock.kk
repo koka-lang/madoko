@@ -226,7 +226,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           match(context.fmt) {
             FmtTex  -> mtxt
             FmtHtml -> {
-              if (context.inlineContext.mathimg != "") {
+              if (context.inlineContext.mathStatic) {
                 log("math","% math definitions\n" + txt + "\n")
                 ""
               }

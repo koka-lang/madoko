@@ -96,7 +96,7 @@ public function markdownFiles(args : string, action : (string,string,string,stri
               mmopts = if (xxopts.xmp) then xxopts
                         else xxopts.parseMeta( icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
               dims   = outName.changeExt(".math.dimx").readTextFileDef("")
-              mdim   = dims.parseMathDim(mmopts.mathimg, mmopts.mathDpi, mmopts.mathScale)
+              mdim   = dims.parseMathDim(mmopts.mathStatic, mmopts.mathDpi, mmopts.mathScale)
 
               xopts  = xxopts(mathdim=mdim)
               mopts  = mmopts(mathdim=mdim)  
@@ -191,7 +191,13 @@ val rxEmptyTail = regex(@"(\s|%.*)*$")
 function mathStatic( math : string, texName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
   oldMath = readTextFileDef(texName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-  outMath = fmtTexFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
+  outTex = fmtTexFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
+
+  outHdr = "% MathDpi: " + xopts.mathDpi.show + 
+            ", MathStatic: " + xopts.mathStatic +
+            ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
+            ", MathDocClass: " + xopts.mathDocClass + "\n"
+  outMath = outHdr + outTex
   if (outMath != oldMath) {
     if (xopts.verbose>=1) println("  typesetting math...")
     if (!(tryWriteTextFile(texName,outMath))) {
@@ -199,14 +205,42 @@ function mathStatic( math : string, texName : string, xopts : options, continue 
     }
     else {
       mathSnippetsToDvi( texName, xopts ) {
-        mathDviToPng( texName.changeExt(".dvi"), xopts ) {
-          mathDimAnalyse( texName.changeExt(".dimx"), xopts, continue )
-        }
+        pages = match(oldMath.find(rxHdr)) {
+                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts )
+                  _ -> (0,0) 
+                }
+        mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
+          mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages, continue )
+        }      
       }
     }
   }
 }
+val rxHdr = regex(@"^.*\n")
 
+function mathAnalyseChanged( snippets : string, xopts : options ) : (int,int) {
+  dim = xopts.mathdim
+  var page := 1
+  var pageLo := 1
+  var pageHi := 0
+  
+  digests = snippets.findAll(rxDigest).list.map( fun(cap) { cap.groups[1] })
+  digests.map fun(digest) {
+    match(dim[digest]) {
+      Nothing  -> {
+        pageHi := page
+      }
+      Just(_) -> {
+        if (page==pageLo) then pageLo := page + 1
+      } 
+    }
+    page := page + 1
+  }
+
+  (pageLo,pageHi)
+}
+
+val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 
 function mathSnippetsToDvi( texName : string, xopts : options, continue : () -> io () ) : io () {
   latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + texName.basename + "\""
@@ -219,16 +253,28 @@ function mathSnippetsToDvi( texName : string, xopts : options, continue : () -> 
     else {
       continue()
     }
-  }, 30000, dirname(texName))
+  },0, dirname(texName))
 }
 
-function mathDviToPng( dviName : string, xopts : options, continue : () -> io () ) : io () 
-{
+function mathDviToPng( dviName : string, xopts : options, pages : (int,int), continue : () -> io () ) : io () 
+{  
+  val (pageLo,pageHi) = pages
+  if (pageHi < pageLo) then return continue()
+  
   dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
-                                      " -o " + combine(xopts.mathimg,"eq-%d.png") +
+                                      (if (pageLo==0) then "" 
+                                        else " -p" + pageLo.show + " -l" + pageHi.show) + 
+                                      " -o " + combine(xopts.mathStatic,"eq-%d.png") +
                                       " " + dviName.basename
-  if (xopts.verbose>=1) println("  running dvipng on math...")
+  // make sure the output directory exists
+  outDir = combine(dviName.dirname,xopts.mathStatic)
+  if (!(fexists(outDir))) {
+    if (xopts.verbose>=1) println("  create: " + outDir)
+    mkdirp(outDir)
+  }                                      
+  // run dvipng
+  if (xopts.verbose>=1) println("  running dvipng on math... (" + pageLo.show + "-" + pageHi.show + ")")
   if (xopts.verbose>=2) println("  > " + dvipngCmd)
   system(dvipngCmd,function(err2,stdout2,stderr2) {
     if (err2 != 0) {
@@ -237,14 +283,29 @@ function mathDviToPng( dviName : string, xopts : options, continue : () -> io ()
     else {
       continue()
     }
-  },60000,dirname(dviName))
+  },0,dirname(dviName))
 }
 
-function mathDimAnalyse( dimxName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
+function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (dict<mathinfo>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
-  dims2 = extendDim(dimxName, xopts.mathimg, xopts.mathDpi, xopts.mathEmbedLimit, xopts.verbose )
-  mdim2 = dims2.parseMathDim(xopts.mathimg, xopts.mathDpi, xopts.mathScale)
+  dims2 = extendDim(pages, dimxName, xopts )
+  mdim2 = dims2.parseMathDim(xopts.mathStatic, xopts.mathDpi, xopts.mathScale)
+  mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( mdim2 )
+}
+
+function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir : string ) : io ()
+{
+  oldDim.list.foreach fun(kv) {
+    val (digest,mi) = kv
+    match(newDim[digest]) {
+      Just -> ()
+      Nothing -> {
+        imageFile = combine(outDir,mi.imageName)
+        unlink(imageFile)
+      }
+    }
+  }
 }
 
 
@@ -283,47 +344,79 @@ function tryCopyTextFileFromTo( fname, srcDir, outDir ) {
 }
 
 
-function extendDim( dimxFile : string, imgPrefix : string, imgDpi : int, embedLimit : int, verbose : int  ) : io string
+function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io string
 {
-  var imageSize := 0
+  val (pageLo,pageHi) = pages
+  var imageSize := 0  
   var imageCount := 0
   var embedSize := 0
   var embedCount := 0
+  dim = opts.mathdim
   dims = (readTextFileDef(dimxFile.changeExt(".dim"),"")).lines
   dimsx = dims.map fun(line) {
     match(line.find(rxDimLine)) {
       Nothing   -> line
       Just(cap) -> { 
-        imageName = combine(imgPrefix, "eq-" + cap.groups[2] + ".png")
+        pageNo = cap.groups[2].parseInt.maybe(0,id)
+        digest = cap.groups[3]
+        imageName = combine(opts.mathStatic, "eq-" + cap.groups[2] + ".png")
         imageFile = combine(dimxFile.dirname,imageName)
-        match( tryReadFileSync( imageFile )) {
-          Nothing -> line
-          Just(buf) -> {
-            base64 = buf.string("base64")
-            pxwidth = buf.readInt4(16)
-            pxheight = buf.readInt4(20)
-            //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
-            pngprefix = "data:image/png;base64,"
-            embed = if (base64!="" && base64.length + pngprefix.length < embedLimit)
-                     then "," + pngprefix + base64 else ""
-            if (embed == "") then {
-              imageSize := imageSize + buf.length                      
-              imageCount := imageCount + 1
+                
+        val (pxwidth,pxheight,size,embed) 
+          = match(dim[digest]) {
+              Just(mi) | (pageNo < pageLo || (pageHi > 0 && pageNo > pageHi)) 
+                -> {                  
+                  //trace("known image: " + digest)
+                  (mi.pxwidth,mi.pxheight,mi.size,mi.imageData)
+                }
+              _ -> {
+                match( tryReadFileSync( imageFile )) {
+                  Nothing   -> {
+                    trace("cannot read; " + imageFile)
+                    (0,0,0,"") // should not happen?
+                  }
+                  Just(buf) -> {
+                    base64 = buf.string("base64")
+                    pxwidth = buf.readInt4(16)
+                    pxheight = buf.readInt4(20)
+                    //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
+                    pngprefix = "data:image/png;base64,"
+
+                    embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
+                             then pngprefix + base64 else ""
+                    size  = if (embed=="") then {
+                              // give robust name  
+                              rename(imageFile,combine(imageFile.dirname,"math-" + digest + ".png"))
+                              buf.length 
+                            }
+                            else {
+                              unlink(imageFile) // delete the image
+                              embed.length
+                            }
+                    (pxwidth,pxheight,size,embed)
+                  }
+                }
+              }
             }
-            else {
-              embedSize := embedSize + base64.length
-              embedCount := embedCount + 1
-              unlink(imageFile) // delete the image
-            }  
-            cap.groups[1] + "," + pxwidth.show + "px," + pxheight.show + "px," + imgDpi.show + "dpi" + embed
+        
+        if (pxwidth==0 || pxheight==0) then line else {
+          if (embed == "") then {
+            imageSize  := imageSize + size
+            imageCount := imageCount + 1            
           }
+          else {
+            embedSize  := embedSize + size
+            embedCount := embedCount + 1
+          }  
+          cap.groups[1] + "," + pxwidth.show + "px," + pxheight.show + "px," + 
+            opts.mathDpi.show + "dpi," + size.show + (if (embed=="") then "" else (", " + embed))
         }
       }
     }
   }
   txt = dimsx.unlines
   tryWriteTextFile( dimxFile, txt )
-  if (verbose >= 1) {
+  if (opts.verbose >= 1) {
     println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize.align(5) )
     println("   math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize.align(5) )
   }
@@ -349,31 +442,34 @@ function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale 
   mi = mdict()
   scale = imgScale.double / 100.0
   txt.findAll(rxDimLine).foreach fun(cap) {
-    imageName = imgPrefix + "/eq-" + cap.groups[2] + ".png"
+    imageName = imgPrefix + "/math-" + cap.groups[3] + ".png"
     ptwidth   = dimension(cap.groups[4],cap.groups[5])
     ptheight  = dimension(cap.groups[6],cap.groups[7])
     depth     = dimension(cap.groups[8],cap.groups[9])
     pxwidth   = cap.groups[10].parseInt.maybe(-1,id)
     pxheight  = cap.groups[11].parseInt.maybe(-1,id)
     dpi       = cap.groups[12].parseInt.maybe(imgDpi,id)
+    size      = cap.groups[13].parseInt.maybe(0,id)
     
     ppt    = dpi.double/72.27
     height = if (pxheight >= 0) then pxheight.double / ppt else ptheight
     width  = if (pxwidth >= 0) then pxwidth.double / ppt else ptwidth
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
-    mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*depth,scale*width,cap.groups[13])
+    mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*width,scale*depth,
+                                    pxwidth,pxheight,size,cap.groups[14])
   }
   return mi.freeze()
 } 
 
 val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
                           rxDim + rxDim + rxDim + ")" +
-                           "(?:" + rxPix + rxPix + rxDpi + rxEmbed + ")?$", multiLine=True)
+                           "(?:" + rxPix + rxPix + rxDpi + rxNum + rxEmbed + ")?$", multiLine=True)
 val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
 val rxPix = @", *(\d+) *(?:px\b *)?"
 val rxDpi = @"(?:, *(\d+) *dpi\b *)?"
 val rxEmbed = @"(?:, *(data:.*))?"
+val rxNum   = @", *(\d+) *"
 
 function dimension( whole : string, fraction : string ) : double {
   w = whole.parseInt.maybe(0,id).double

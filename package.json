@@ -45,7 +45,8 @@
   "dependencies": {
     "amdefine"   : ">=0.0.4",    
     "requirejs"  : ">=2.1",
-    "request"    : ">=2"
+    "request"    : ">=2",
+    "mkdirp"     : ">=0.3.5"
   },
   "repository": {
     "type": "hg", 

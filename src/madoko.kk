@@ -60,7 +60,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
                                     options.mathdim, 
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
-                                    options.mathimg) 
+                                    options.mathStatic != "") 
   if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseDefinitions(initialFormatContext(icontext,options.titleInfo,options.headingBase,options.pedantic,fmt), 

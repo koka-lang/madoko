@@ -217,9 +217,12 @@ public function newLink( href : string, title : string = "", linkattrs : attrs =
 public struct mathinfo (
   imageName : string,
   height    : double,
-  depth     : double,
   width     : double,
-  imageData : string   // base64 encoding
+  depth     : double,
+  pxwidth   : int,
+  pxheight  : int,
+  size      : int,
+  imageData : string   // base64 encoding or ""
 )
 
 

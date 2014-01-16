@@ -50,10 +50,11 @@ public struct options(
   affiliation: string = "",
   email    : string = "",
   citestyle: citestyle = citeNumeric,   
-  mathimg  : string = ".",    // use static images to render math
+  mathStatic  : string = "math",    // use static images to render math
   mathScale: int    = 125,  // math scaling in percentage
-  mathDpi  : int    = 400,  // math resolution 
+  mathDpi  : int    = 300,  // math resolution 
   mathEmbedLimit : int = 1024, // maximal embedded image size
+  mathDocClass : string = "book",
   latex    : string = "latex",
   dvipng   : string = "dvipng",
   
@@ -191,7 +192,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
-    elif (key=="mathimg") options(mathimg = if (value=="true") then "." else value)
+    elif (key=="math-static") options(mathStatic = if (value=="true") then "math" else value)
     elif (key=="math-scale") options(mathScale=ivalue)
     elif (key=="math-dpi") options(mathDpi=ivalue) 
     elif (key=="math-embed") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))

@@ -103,11 +103,11 @@ public function inlineContext( fmt : formatter,
                                sanitize : bool = False,
                                bench: bool = False,
                                verbose : int = 0,
-                               mathimg : string = "" ) : inlineContext
+                               mathStatic : bool = False ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
                  metadata, mathinfos, 
-                 citestyle, sanitize, bench, verbose, mathimg,
+                 citestyle, sanitize, bench, verbose, mathStatic,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 
@@ -149,7 +149,7 @@ function fmtMath( context : inlineContext, txt : string, attrs : attrs = attrsNo
   match(context.fmt) {
     FmtTex -> mtxt 
     _      -> {
-      if (context.mathimg != "") {
+      if (context.mathStatic) {
         digest = md5(txt)
         log("math",@"\begin{mdInlineSnippet}[" + digest + "]\n$" + txt + "$\n\\end{mdInlineSnippet}")
         match(context.mathinfos[digest]) {
@@ -167,7 +167,7 @@ public function fmtMathBlock( context : inlineContext, txt : string, attrs : att
   match(context.fmt) {
     FmtTex -> mtxt 
     _      -> {
-      if (context.mathimg!="") {
+      if (context.mathStatic) {
         digest = md5(txt)
         log("math",@"\begin{mdDisplaySnippet}[" + digest + "]%\n\\[" + txt + "\\]%\n\\end{mdDisplaySnippet}")
         match(context.mathinfos[digest]) {
