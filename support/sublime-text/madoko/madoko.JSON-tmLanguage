@@ -40,12 +40,12 @@
     },
 
     { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\\b)(?!.*?</\\1>)"
-    , "end": "(?<=^</\\1>)\\s*$\\n?"
+    , "end": ""
     , "patterns": [
         { "include": "text.html.basic" }
       ]
     },
-    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)\\b)"
+    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\\b)"
     , "end": "$\\n?"
     , "patterns": [
         { "include": "text.html.basic" }
@@ -58,12 +58,12 @@
   "repository": {
     "metadata":
       { "begin": "^(Title|Author)\\s*:"
-      , "end": "^(?=(\\w|[\\.~#])(?![\\w\\-\\.#~,\\s]*:))"
+      , "end": "^(?![\\w\\.#~][\\w\\-\\.#~, \\t]*:)"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
       , "patterns": [
           { "begin": "^([\\.~#][\\w\\-\\.#~,\\s]*):"
-          , "end": "^(?!\\s)"
+          , "end": "^(?![ \\t])"
           , "beginCaptures": {
               "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
             }
@@ -180,7 +180,7 @@
           ]
         },
 
-        { "begin": "^<!--(?!.*?-->)"
+        { "begin": "^ {0,3}<!--(?!.*?-->)"
         , "end": "^.*?-->\\s*$\\n?"
         , "contentName": "comment"
         , "endCaptures": {

@@ -91,7 +91,7 @@
 			<key>begin</key>
 			<string>^(?=&lt;(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\b)(?!.*?&lt;/\1&gt;)</string>
 			<key>end</key>
-			<string>(?&lt;=^&lt;/\1&gt;)\s*$\n?</string>
+			<string></string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -102,7 +102,7 @@
 		</dict>
 		<dict>
 			<key>begin</key>
-			<string>^(?=&lt;(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)\b)</string>
+			<string>^(?=&lt;(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\b)</string>
 			<key>end</key>
 			<string>$\n?</string>
 			<key>patterns</key>
@@ -358,7 +358,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^&lt;!--(?!.*?--&gt;)</string>
+					<string>^ {0,3}&lt;!--(?!.*?--&gt;)</string>
 					<key>contentName</key>
 					<string>comment</string>
 					<key>end</key>
@@ -574,7 +574,7 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>^(?=(\w|[\.~#])(?![\w\-\.#~,\s]*:))</string>
+			<string>^(?![\w\.#~][\w\-\.#~, \t]*:)</string>
 			<key>name</key>
 			<string>markup.metadata.madoko</string>
 			<key>patterns</key>
@@ -591,7 +591,7 @@
 						</dict>
 					</dict>
 					<key>end</key>
-					<string>^(?!\s)</string>
+					<string>^(?![ \t])</string>
 					<key>patterns</key>
 					<array>
 						<dict>
