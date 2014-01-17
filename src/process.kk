@@ -35,6 +35,12 @@ public external readInt4( b : buffer, ofs : int ) : int
   js inline "#1.readInt32BE(#2)"
 }
 
+
+public function tryReadFileSync( fname : string ) : io maybe<buffer> {
+  catch({ b = readFileSync(fname); Just(b) },fun(_exn){ Nothing } )
+}
+
+
 public external readFileSync( fileName : string ) : io buffer
 {
   js inline "fs.readFileSync(#1)"
