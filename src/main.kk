@@ -206,8 +206,8 @@ function mathStatic( math : string, texName : string, xopts : options, continue 
     else {
       mathSnippetsToDvi( texName, xopts ) {
         pages = match(oldMath.find(rxHdr)) {
-                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts )
-                  _ -> (0,0) 
+                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim )
+                  _ -> (0,mathAnalyseChanged(outMath,dict()).snd) 
                 }
         mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
           mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages, continue )
@@ -218,8 +218,7 @@ function mathStatic( math : string, texName : string, xopts : options, continue 
 }
 val rxHdr = regex(@"^.*\n")
 
-function mathAnalyseChanged( snippets : string, xopts : options ) : (int,int) {
-  dim = xopts.mathdim
+function mathAnalyseChanged( snippets : string, dim : dict<mathinfo> ) : (int,int) {
   var page := 1
   var pageLo := 1
   var pageHi := 0
@@ -386,7 +385,10 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
                              then pngprefix + base64 else ""
                     size  = if (embed=="") then {
                               // give robust name  
-                              rename(imageFile,combine(imageFile.dirname,"math-" + digest + ".png"))
+                              imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
+                              if (fexists(imageDigestFile)) // happens to be duplicate formula
+                               then unlink(imageFile)
+                               else rename(imageFile,imageDigestFile)
                               buf.length 
                             }
                             else {
@@ -417,20 +419,24 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
   txt = dimsx.unlines
   tryWriteTextFile( dimxFile, txt )
   if (opts.verbose >= 1) {
-    println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize.align(5) )
-    println("   math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize.align(5) )
+    totalCount = imageCount + embedCount
+    totalSize = imageSize + embedSize
+    println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize )
+    println("   math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize )
+    println("   math total   : " + totalCount.show.align(4) + " in " + totalSize.showSize )
   }
   txt
 }
 
 function showSize( size : int ) : string {
   kb = 1024
-  mb = kb*kb
-  if (size < kb) 
-   then size.show + " bytes"
-  elif (size < mb)
-   then ((size + kb - 1)/kb).show + "kb"
-   else ((size + mb - 1)/mb).show + "mb"
+//  mb = kb*kb
+  if (size < 10*kb) 
+   then (size.double / kb.double).showFixed(1).align(4) + " kb"
+   else ((size + kb - 1)/kb).show.align(4) + " kb"
+//  elif (size < 10*mb) 
+//   then (size.double/mb.double).showFixed(1) + "mb"
+//   else ((size + mb - 1)/mb).show + "mb"
 }
 
 function tryReadFileSync( fname : string ) : io maybe<buffer> {

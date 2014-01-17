@@ -46,7 +46,7 @@ public external unlink( fname : string ) : io ()
 }
 
 public external fexists( fname : string ) : io bool {
-  js inline "fs.exists(#1)"
+  js inline "(fs.existsSync(#1) != 0)"
 }
 
 public external mkdir( dir : string, mode : int = 0x1FF ) : io () {
