@@ -130,7 +130,7 @@ public function markdownFiles(args : string, action : (string,string,string,stri
 
               // possibly typeset math using latex
               if (math != "") {
-                mathStatic( math, outName.changeExt(".math.tex"), mopts ) fun(mdim2) {
+                mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mdim2) {
                   // write html again
                   if (mopts.verbose>=1) println("  re-aligning math in HTML...")
                   
@@ -188,7 +188,7 @@ val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
 
 
-function mathStatic( math : string, texName : string, xopts : options, continue : (dict<mathinfo>) -> io () ) : io () {
+function mathStatic( math : string, texName : string, xopts : options, content : string, continue : (dict<mathinfo>) -> io () ) : io () {
   oldMath = readTextFileDef(texName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
   outTex = fmtTexFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
@@ -204,7 +204,7 @@ function mathStatic( math : string, texName : string, xopts : options, continue 
       println("error: unable to write: " + texName)
     }
     else {
-      mathSnippetsToDvi( texName, xopts ) {
+      mathSnippetsToDvi( texName, xopts, content, outMath, oldMath ) {
         pages = match(oldMath.find(rxHdr)) {
                   Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim )
                   _ -> (0,mathAnalyseChanged(outMath,dict()).snd) 
@@ -241,19 +241,60 @@ function mathAnalyseChanged( snippets : string, dim : dict<mathinfo> ) : (int,in
 
 val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 
-function mathSnippetsToDvi( texName : string, xopts : options, continue : () -> io () ) : io () {
+function mathSnippetsToDvi( texName : string, xopts : options, 
+                            content : string, texContent :string, oldMath : string, continue : () -> io () ) : io () {
   latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + texName.basename + "\""
   if (xopts.verbose>=1) println("  running latex on math...")
-  if (xopts.verbose>=2) println("  > " + latexCmd)
+  if (xopts.verbose>=3) println("  > " + latexCmd)
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
     if (err!=0) {
-      println("error: latex failed while typesetting math: \n" + stdout + stderr )
+      println("error: latex failed while typesetting math:" )
+      logout = readTextFileDef(texName.changeExt(".log"),"")
+      match(logout.find(rxLatexErr)) {
+        Just(cap) -> {
+          match(content.findLatexLine(cap.matched,texContent)) {
+            Just(lineNo) -> println("error: source line: " + lineNo.show)
+            Nothing -> ()
+          }
+          println(cap.matched)
+        }  
+        Nothing -> ()
+      }
+      println("log written at: " + texName.changeExt(".log"))
+      tryWriteTextFile(texName,oldMath) // restore old math version
+      ()
     }
     else {
       continue()
     }
   },0, dirname(texName))
 }
+val rxLatexErr = regex(@"^![\s\S]*?(?=^\s*(?:!|Here is how much of TeX's memory you used:|Type X to quit))",multiline=True)
+
+function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
+  match(texerr.find(rxLatexLineNum)) {
+    Nothing -> Nothing
+    Just(cap) -> {
+      lineStart0 = cap.groups[2]
+      lineStart = if (!(lineStart0.contains(rxLatexEndSnippet))) then lineStart0
+                  else { // find line before it in the TeX source
+                    lineNo = cap.groups[1].parseInt.maybe(0,id)
+                    match(texSrc.lines.list.drop(lineNo-2)) {
+                      Cons(line) -> line
+                      _          -> lineStart0
+                    }
+                  }
+
+      ilines = src.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
+      match(ilines.find(fun(iline){ iline.snd.contains(lineStart)})) {
+        Nothing -> Nothing
+        Just(iline) -> Just(iline.fst+1)
+      }
+    }
+  }
+}
+val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
+val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
 
 function mathDviToPng( dviName : string, xopts : options, pages : (int,int), continue : () -> io () ) : io () 
 {  
@@ -274,7 +315,7 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
   }                                      
   // run dvipng
   if (xopts.verbose>=1) println("  running dvipng on math... (" + pageLo.show + "-" + pageHi.show + ")")
-  if (xopts.verbose>=2) println("  > " + dvipngCmd)
+  if (xopts.verbose>=3) println("  > " + dvipngCmd)
   system(dvipngCmd,function(err2,stdout2,stderr2) {
     if (err2 != 0) {
       println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)
@@ -418,7 +459,7 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
   }
   txt = dimsx.unlines
   tryWriteTextFile( dimxFile, txt )
-  if (opts.verbose >= 1) {
+  if (opts.verbose >= 2) {
     totalCount = imageCount + embedCount
     totalSize = imageSize + embedSize
     println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize )

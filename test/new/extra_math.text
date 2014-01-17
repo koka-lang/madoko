@@ -1,16 +1,11 @@
 Title		: Math Example
 Heading Base: 2
-Math Embed  : 2
-
-<style>
-/*  img { border: 1pt dotted black; } */
-</style>      
 
 # Math and equation examples. 
 
 Here is a classic formula:
 ~ Equation {#eq-gaussian}
-  {\int_{-\infty}^\infty e^{-a x^2} d x} = \sqrt{\frac{\pi}{a}}
+   {\int_{-\infty}^\infty e^{-a x^2} d x} = \sqrt{\frac{\pi}{a}}
 ~
 
 And we can refer back[^nb] to this equation [#eq-gaussian].
