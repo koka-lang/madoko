@@ -542,7 +542,7 @@ Block quotes are written just as in email using `>` angle brackets:
 Let's start a block quote:
 > Of life's two chief prizes, beauty and truth, I found the
 > first in a loving heart and the second in a laborer's hand.\
-> \ \ \ --- Khalil Gibran
+> &emsp;&emsp; --- Khalil Gibran
 ~
 
 Just like lists, block quotes can be nested and contain other block elements.
