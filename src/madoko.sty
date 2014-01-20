@@ -329,12 +329,18 @@
 }
 \newKey{css}{bibdata}{\write\@mainaux{\string\bibdata{#1}}}
 
+\newcommand{\mdBibStyle}{numeric}
+
 \newenvironment{mdBibliography}[1][]{%
   \begin{mdDiv}[#1]%
   \settowidth{\mdBibhang}{\@biblabel{\cssCaption}}%
+  \def\mdBibDisplay{inline}%
   \def\section*##1{}% suppress bibliography header
   \def\chapter*##1{}% suppress bibliography header
   \providecommand{\markboth}[2]{}%
+  \cssIfHasClass{bib-authoryear}%
+    {\setlength{\mdBibhang}{0em}\def\mdBibDisplay{hidden}}%
+    {}%
   \begin{thebibliography}{\cssCaption}}%
   {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
@@ -342,8 +348,7 @@
   \item[]\mdLabeltarget\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
   {\end{mdDivInline}}
 
-\cssClassRule{bibitem-before}{display=inline,width=\mdBibhang,text-align=right}
-
+\cssClassRule{bibitem-before}{display=\mdBibDisplay,width=\mdBibhang,text-align=right}
 \cssClassRuleDoBefore{newblock}{\newblock}
 
 % ---------------------------------------------------

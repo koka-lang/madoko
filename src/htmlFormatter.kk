@@ -115,7 +115,7 @@ function formatKeyval( key : string, value : string, tag : string ) {
   }
   elif (value=="" || (key=="toc" || key=="toc-line" || key=="toc-depth" || 
           key=="toctarget" || key=="toclevel" ||
-          key=="language")) {
+          key=="language" || key=="bibdata" || key=="caption" || key=="cite-label")) {
     "" // nothing
   }
   else {

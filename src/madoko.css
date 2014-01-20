@@ -131,14 +131,18 @@ a.localref:hover {
   font-size: smaller;
 }
 
-.bibitem.has-before {
+.bib-numeric .bibitem {
   margin-left: 2em;
   text-indent: -2em;
 }
 
 .bibitem-before {
+  display: none;
+}
+
+.bib-numeric .bibitem-before {
   display: inline-block;
-  width: 2em;
+  width: 3em;
   text-align: right;
 }
 

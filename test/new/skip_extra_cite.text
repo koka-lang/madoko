@@ -4,10 +4,8 @@ Heading Base: 2
 
 Bib       	: ../test
 Bib Style   : plainnat
-Cite Style	: natural
 
 Package		: natbib
-Doc Class	: [preprint]../sigplanconf
 
 Author      : Daan Leijen
 Affiliation : Microsoft Research

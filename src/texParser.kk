@@ -217,7 +217,9 @@ function texQuot( quot : string, cap : matched, context : texContext ) : string 
 }
 
 function texBibliography( cap : matched, context : texContext ) : string {
-  "~~ Bibliography { caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + "\n~~\n"
+  numcite = if (context.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"
+  "~~ Bibliography { " + numcite +
+    " caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + "\n~~\n"
 }
 
 function texCiteAuthorYear( cap : matched, context : texContext ) : string {
@@ -269,8 +271,7 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   "~~~ Bibitem { id='" + key.definitionId + "' " + 
                   (if (lab=="") then "" else "cite-label='" + lab + "' " ) +
                   (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label='" + lab + "' " else "") +
-                  (if (context.citestyle.isNumCite || !(lab.contains(rxAuthorYear)))
-                    then ".has-before " else @"before=clear " ) + "}\n" +
+                  "}\n" +
    content.parseTexX(context) + 
    "\n~~~\n"
 }
