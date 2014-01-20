@@ -190,8 +190,13 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
             Just(value) -> value.parseInt.maybe(100,id).double / 100.0
             Nothing     -> 1.0
           }
-  xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + (scale * mi.depth).showFixed(2) + "pt")
-                .addKeyvalIfNotExist("height",(scale * mi.height).showFixed(2) + "pt")
+  // Depth and height are in _pt_. Since we assume that the math has been 
+  // type set with a 10pt font, we divide by 10 to get the units in _em_. 
+  // This has the advantage that it will scale automatically if the user
+  // selected a larger display font.
+  fontsize = 10.0
+  xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + (scale * mi.depth / fontsize).showFixed(2) + "em")
+                .addKeyvalIfNotExist("height",(scale * mi.height / fontsize).showFixed(2) + "em")
                 .addClass("math")
                 // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
   src = if (mi.imageData!="") then mi.imageData else mi.imageName

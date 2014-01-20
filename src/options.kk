@@ -33,6 +33,7 @@ public struct options(
   xmp      : bool = False, // only process markdown between xmp tags
   full     : maybe<bool> = Nothing, // generate a full html/latex file instead of a snippet
   tex      : bool = False,  // generate latex file too
+  pdf      : bool = False,  // generate pdf file too
 
   title    : string = "",  // html title 
   subtitle : string = "",  // sub title 
@@ -51,12 +52,14 @@ public struct options(
   email    : string = "",
   citestyle: citestyle = citeNumeric,   
   mathStatic  : string = "math",    // use static images to render math
-  mathScale: int    = 125,  // math scaling in percentage
+  mathScale: int    = 110,  // math scaling in percentage
   mathDpi  : int    = 300,  // math resolution 
   mathEmbedLimit : int = 1024, // maximal embedded image size
   mathDocClass : string = "book",
   latex    : string = "latex",
   dvipng   : string = "dvipng",
+  pdflatex : string = "",
+  bibtex   : string = "bibtex",
   
   tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth : int  = 3, // default depth where headings are numbered
@@ -108,6 +111,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["odir"],    creq(fun(co,s) { co(outputDir=s) },"DIR"), "Write output files to the specified directory" ),
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),        "Only process markdown between <xmp> tags"),
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),        "Output a LaTeX file too"),
+      Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),
             
       Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }),         "Generate a full html/latex document"),
       Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }),   "Always escape or suppress user defined html"),
@@ -199,6 +203,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
+    elif (key=="pdf-latex") options(pdflatex=value)
     else options
   }
 } 

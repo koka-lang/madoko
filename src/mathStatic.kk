@@ -9,6 +9,7 @@
 // Process math statically as LaTeX generated snippets
 module mathStatic
 
+import std/string
 import std/regex
 import std/path
 import std/file
@@ -18,10 +19,79 @@ import options
 import texFormatter
 import process
 
+
+public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
+  if (opts.verbose>=1) println("  running bibtex to generate bibliography...")
+  bibtexCmd = opts.bibtex + " \"" + bibFile.basename + "\""
+  if (opts.verbose>=3) println("  > " + bibtexCmd)
+  system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
+    if (err!=0) {
+      println("> " + bibtexCmd)
+      system(bibtexCmd + " -version") function(errx:int,stdoutx,stderrx) {
+        if (errx!=0) {
+          println("could not find BibTeX: \"" + bibtexCmd + "\"")
+          println("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
+        }
+        else {
+          println(stdout + stderr)
+        }
+        continue(True)
+      }
+    }
+    else continue(False)
+  },0,bibFile.dirname)
+}
+
+public function runPdfLaTeX( texFile : string, opts : options, content : string = "", continue : () -> io () ) {
+  if (opts.verbose>=1) println("  running latex to generate pdf...")
+  notfound = "set the 'Pdf Latex: ...' key in the metadata?"
+  pdfCmd = if (opts.pdflatex!="") then opts.pdflatex else "pdf" + opts.latex
+  runLaTeX( texFile, pdfCmd, opts, content, notfound,
+    function() { () }, continue )  
+}
+
+
+function runLaTeX( texFile : string, texCmd : string, opts : options, 
+                    content : string,
+                    notfound : string,
+                    onError : () -> io (),
+                    onSuccess : () -> io () )
+{
+  latexCmd = texCmd + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
+  if (opts.verbose>=3) println("  > " + latexCmd)
+  system(latexCmd, function(err:int,stdout:string,stderr:string) {
+    if (err!=0) {
+      println("> " + latexCmd)
+      logout = readTextFileDef(texFile.changeExt(".log"),"")
+      match(logout.find(rxLatexErr)) {
+        Just(cap) -> {          
+          texContent = readTextFileDef(texFile,"")
+          match (content.findLatexLine(cap.matched,texContent)) {
+            Just(lineNo) -> println("error: source line: " + lineNo.show)
+            Nothing -> ()
+          }
+          println(cap.matched)
+        }
+        Nothing -> {
+          system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
+            if (errx!=0) {
+              println("could not find LaTeX: \"" + texCmd + "\"")
+              if (notfound != "") println(notfound)
+            }
+          }
+        }
+      }
+      println("log written at: " + texFile.changeExt(".log"))
+      onError()
+    }
+    else onSuccess()
+  },0,texFile.dirname)
+} 
+
 public function mathStatic( math : string, texName : string, xopts : options, content : string, continue : (dict<mathinfo>) -> io () ) : io () {
   oldMath = readTextFileDef(texName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-  outTex = fmtTexFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
+  outTex = fmtTexMathFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
 
   outHdr = "% MathDpi: " + xopts.mathDpi.show + 
             ", MathStatic: " + xopts.mathStatic +
@@ -34,7 +104,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
       println("error: unable to write: " + texName)
     }
     else {
-      mathSnippetsToDvi( texName, xopts, content, outMath, oldMath ) {
+      mathSnippetsToDvi( texName, xopts, content, oldMath ) {
         pages = match(oldMath.find(rxHdr)) {
                   Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim )
                   _ -> (0,mathAnalyseChanged(outMath,dict()).snd) 
@@ -71,43 +141,19 @@ function mathAnalyseChanged( snippets : string, dim : dict<mathinfo> ) : (int,in
 
 val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 
+
 function mathSnippetsToDvi( texName : string, xopts : options, 
-                            content : string, texContent :string, oldMath : string, continue : () -> io () ) : io () {
-  latexCmd = xopts.latex + " -halt-on-error -interaction=batchmode \"" + texName.basename + "\""
+                            content : string, oldMath : string, continue : () -> io () ) : io () {
   if (xopts.verbose>=1) println("  running latex on math...")
-  if (xopts.verbose>=3) println("  > " + latexCmd)
-  system(latexCmd, function(err:int,stdout:string,stderr:string) {
-    if (err!=0) {
-      println("error: latex failed while typesetting math:" )
-      logout = readTextFileDef(texName.changeExt(".log"),"")
-      match(logout.find(rxLatexErr)) {
-        Just(cap) -> {
-          match(content.findLatexLine(cap.matched,texContent)) {
-            Just(lineNo) -> println("error: source line: " + lineNo.show)
-            Nothing -> ()
-          }
-          println(cap.matched)
-        }  
-        Nothing -> {
-          println("> " + latexCmd )
-          system(xopts.latex + " -version") function(errx:int,stdoutx,stderrx) {
-            if (errx!=0) {
-              println("could not find LaTeX: \"" + xopts.latex + "\"")
-              println("set either the 'MathJax: True' or the 'Latex: ...' key in the metadata")
-            }
-          }
-        }
-      }
-      println("log written at: " + texName.changeExt(".log"))
-      tryWriteTextFile(texName,oldMath) // restore old math version
+  notfound = "set either the 'MathJax: True' or the 'Latex: ...' key in the metadata"
+  runLaTeX( texName, xopts.latex, xopts, content, notfound,
+    function () {
+      tryWriteTextFile(texName,oldMath) // restore old math version on error
       ()
-    }
-    else {
-      continue()
-    }
-  },0, dirname(texName))
+    } 
+    , continue ) 
 }
-val rxLatexErr = regex(@"^![\s\S]*?(?=^\s*(?:!|Here is how much of TeX's memory you used:|Type X to quit))",multiline=True)
+val rxLatexErr = regex(@"^![\s\S]*?(?=^\s*(?:Here is how much of TeX's memory you used:|Type X to quit))",multiline=True)
 
 function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
   match(texerr.find(rxLatexLineNum)) {
@@ -122,11 +168,12 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
                       _          -> lineStart0
                     }
                   }
-
-      ilines = src.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
-      match(ilines.find(fun(iline){ iline.snd.contains(lineStart)})) {
-        Nothing -> Nothing
-        Just(iline) -> Just(iline.fst+1)
+      if (lineStart.trim.length < 3) then Nothing else { // ensure at least 3 chars for more reliable match
+        ilines = src.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
+        match(ilines.find(fun(iline){ iline.snd.contains(lineStart)})) {
+          Nothing -> Nothing
+          Just(iline) -> Just(iline.fst+1)
+        }
       }
     }
   }
@@ -279,6 +326,9 @@ function showSize( size : int ) : string {
    else ((size + kb - 1)/kb).show.align(4) + " kb"
 }
 
+// convert to other units inside tex
+//\def\convertto#1#2{\strip@pt\dimexpr #2*65536/\number\dimexpr 1#1}
+
 
 // parse a dimension file written by latex snippets
 public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale : int  ) : dict<mathinfo> {
@@ -288,7 +338,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
     imageName = imgPrefix + "/math-" + cap.groups[3] + ".png"
     ptwidth   = dimension(cap.groups[4],cap.groups[5])
     ptheight  = dimension(cap.groups[6],cap.groups[7])
-    depth     = dimension(cap.groups[8],cap.groups[9])
+    ptdepth   = dimension(cap.groups[8],cap.groups[9])
     pxwidth   = cap.groups[10].parseInt.maybe(-1,id)
     pxheight  = cap.groups[11].parseInt.maybe(-1,id)
     dpi       = cap.groups[12].parseInt.maybe(imgDpi,id)
@@ -297,6 +347,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
     ppt    = dpi.double/72.27
     height = if (pxheight >= 0) then pxheight.double / ppt else ptheight
     width  = if (pxwidth >= 0) then pxwidth.double / ppt else ptwidth
+    depth  = ptdepth * (height / ptheight)
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*width,scale*depth,
@@ -316,6 +367,6 @@ val rxNum   = @", *(\d+) *"
 
 function dimension( whole : string, fraction : string ) : double {
   w = whole.parseInt.maybe(0,id).double
-  f = (fraction + "00").substr(0,2).parseInt.maybe(0,id).double / 100.0
+  f = (fraction + "0000").substr(0,4).parseInt.maybe(0,id).double / 10000.0
   return (w+f)
 }

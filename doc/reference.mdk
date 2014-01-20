@@ -5,12 +5,11 @@ Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
 
 Heading Base: 2
-MathJax		: True
 Cite All	: True
 Script		: reference.js
 Bib			: reference
-
-Package		: fontspec
+Package		: fontspec*
+Package		: [curve]xypic
 
 MathJax Ext : AMScd
 Package		: amscd
@@ -33,7 +32,6 @@ Script		: https://google-code-prettify.googlecode.com\
 Title2		: (#Title,#Title)
 llbracket	: &#10214;
 rrbracket	: &#10215;
-
 
 
 ~ TexRaw
@@ -914,6 +912,19 @@ tables that can be broken over multiple pages.
 ## Mathematics   { #sec-math }
 
 Madoko documents can include mathematics in standard LaTeX syntax.
+To typeset mathematics in HTML, there are two options:
+
+* _static images_: In this mode, LaTeX is used to generate
+static images for each math formula. This is the default mode.
+The advantage is that any LaTeX mathematics can be rendered,
+it requires no javascript, and page loads fast. The disadvantages
+include longer compilation time, and you need to have installed
+'latex' (and 'dvipng').
+
+* _dynamic_ via _MathJax_: The HTML uses the MathJax JavaScript
+library that dynamically computes the  
+
+
 This is supported in HTML pages through the [MathJax] library. 
 MathJax is a very rich library and supports almost every LaTeX command
 required for complex mathematics.
@@ -941,6 +952,43 @@ using the standard LaTeX `$$` characters on separate lines. However, the
 `Equation` block is preferred as it takes care of numbering, alignment, etc.
 See also Section [#sec-custom] on custom blocks that support mathematics,
 like `Theorem`, `Lemma`, `Proof`, etc. 
+
+~~ Sample
+~ Equation
+\begin{xy}
+(0,40)*+{U}="u";(30,20)*+{X\times_ZY}=%
+"xzy";%
+(55,20)*+{X}="x";(30,-5)*+{Y}="y";%
+(55,-5)*+{Z}="z";%
+{\ar@{->}_p "xzy";"x"};%
+{\ar@{->}^q "xzy";"y"};%
+{\ar@{->}^g "y";"z"};
+{\ar@{->}^f "x";"z"};%
+{\ar@{->}|{(x,y)}"u";"xzy"};%
+{\ar@{->}@/^0.5pc/^x "u";"x"};%
+{\ar@{->}@/_/_{y} "u";"y"};
+\end{xy}
+~
+~~
+
+~~ Sample
+~ Equation
+\xymatrix @W=3pc @H=1pc @R=0pc @*[F-] {%
+: \save+<-4pc,1pc>*\hbox{\textit{root}}
+\ar[]\restore\\
+{\bullet}
+\save*{}
+\ar`r[dd]+/r4pc/`[dd][dd]
+\restore\\
+{\bullet}
+\save*{}
+\ar`r[d]+/r3pc/`[d]+/d2pc/
+`[uu]+/l3pc/`[uu][uu]
+\restore\\
+1 }\mathit{Answer}
+~
+~~
+
 
 ### Math commands   { #sec-mathdefs }
 

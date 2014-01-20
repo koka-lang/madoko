@@ -23,7 +23,7 @@ import mathStatic
 
 
 public function main() : io () {
-  markdownFiles("") fun(html,inName,outName,logs,opts) {
+  markdownFiles("") fun(html,inName,outName,opts) {
     ()
   }
 }
@@ -35,7 +35,8 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
   outputDir = "test/out"
   target = root + ".html"
 
-  markdownFiles("-v --tex --installdir=src --odir=" + outputDir + " " + moreargs + " " + input) fun(outText,_input,output,logs,_options) {
+  markdownFiles("-v --tex --installdir=src --odir=" + outputDir + " " + moreargs + " " + input) 
+    fun(outText,_input,output,_options) {
     //trace("-----\n" + outText + "\n-----")
     targetText = target.readTextFileDef("")
     outStrip = outText.replaceAll(regex(@"\s"),"")
@@ -62,7 +63,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
 }
 
 
-public function markdownFiles(args : string, action : (string,string,string,string,commandOptions) -> <io|e> ()) : <io|e> () { 
+public function markdownFiles(args : string, action : (string,string,string,options) -> <io|e> ()) : <io|e> () { 
   val mbopts = parseOptions(args);
   match(mbopts) {
     Nothing -> ()
@@ -89,20 +90,6 @@ public function markdownFiles(args : string, action : (string,string,string,stri
               xopts  = xxopts(mathdim=mdim)
               mopts  = mmopts(mathdim=mdim)  
 
-
-              // markdown to html          
-              val (math,(warns,(logs, html))) = 
-                                         withLog("math") {
-                                          withLog("warning") { 
-                                           withLog("aux") { 
-                                            markdown(icontent,xopts) 
-                                           }
-                                          }
-                                         }
-              if (warns != "" && xopts.verbose >= 1) {
-                print(warns)
-              }
-
               // copy early since async latex may start for math
               tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
               if (xopts.tex) {
@@ -111,42 +98,9 @@ public function markdownFiles(args : string, action : (string,string,string,stri
                 ()
               }
 
-              // write html result
-              if (!(tryWriteTextFile(outName,html))) {
-                println("error: unable to write: " + outName) 
+              process( input, outName, content, icontent, xopts, mopts) fun(html) {
+                action(html,input,outName,mopts)  
               }
-
-              // possibly typeset math using latex
-              if (math != "" && mmopts.mathjax=="") {
-                mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mdim2) {
-                  // write html again
-                  if (mopts.verbose>=1) println("  re-aligning math in HTML.")
-                  
-                  html2 = markdown(icontent,xopts(mathdim=mdim2))
-                  if (!(tryWriteTextFile(outName,html2))) {
-                    println("error: unable to write: " + outName) 
-                  }
-                  //if (mopts.verbose>=1) println("  done typesetting math.")                  
-                }
-              }
-              
-              // generate tex
-              if (mopts.tex) {
-                outTexName = outName.changeExt(".tex")
-                if (mopts.verbose > 0) println("process: " + input + " -> " + outTexName )        
-                val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-                if (texwarns != "" && mopts.verbose >= 2) print(texwarns) 
-                //trace(tex)
-                if (!(tryWriteTextFile(outTexName,tex))) {
-                  println("error: unable to write: " + outTexName) 
-                }
-              }            
-
-              if (logs != "") {
-                // write out the log to an aux file
-                writeCitations( logs, outName, mopts )
-              }
-              action(html,input,outName,logs,opts)
             }
           }
         } 
@@ -155,20 +109,100 @@ public function markdownFiles(args : string, action : (string,string,string,stri
   }
 }
 
+function process( inName : string, outName : string, content : string, icontent : string, 
+                  xopts : options, mopts : options,
+                  continue : (string) -> <io|e> () ) : <io|e> () 
+{
 
-function writeCitations( auxData : string, outName : string, opts : options ) : io () {
+  function phaseHtml( firstTime : bool = False ) 
+  {
+    // markdown to html          
+    val (math,(warns,(logs, html))) = 
+                               withLog("math") {
+                                withLog("warning") { 
+                                 withLog("aux") { 
+                                  markdown(icontent,xopts) 
+                                 }
+                                }
+                               }
+    if (warns != "" && mopts.verbose >= 1) {
+      print(warns)
+    }
+
+    // write html result
+    if (!(tryWriteTextFile(outName,html))) {
+      println("error: unable to write: " + outName) 
+    }
+
+    // write an aux file
+    bibAux = outName.changeExt(".bib.aux")
+    bibChanged =
+      if (logs == "") then False else {
+        // write the log to an aux file (both for latex, and one to track changes)
+        writeCitations( logs, outName.changeExt(".aux"), mopts )
+        writeCitations( logs, bibAux, mopts )                
+      }
+
+    // run bibtex?
+    if (bibChanged && firstTime && mopts.bibtex!="") {
+      runBibtex( bibAux, mopts ) fun(err) {
+        phaseHtml(False)
+      }
+    }
+    else {
+      // possibly typeset math using latex
+      if (math != "" && mopts.mathjax=="") {
+        mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mdim2) {
+          // write html again
+          if (mopts.verbose>=1) println("  re-aligning math in HTML.")
+          
+          html2 = markdown(icontent,xopts(mathdim=mdim2))
+          if (!(tryWriteTextFile(outName,html2))) {
+            println("error: unable to write: " + outName) 
+          }
+          //if (mopts.verbose>=1) println("  done typesetting math.")                  
+        }
+      }    
+    
+      // generate tex
+      if (mopts.tex) {
+        outTexName = outName.changeExt(".tex")
+        if (mopts.verbose > 0) println("process: " + inName + " -> " + outTexName )        
+        val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
+        if (texwarns != "" && mopts.verbose >= 2) print(texwarns) 
+        //trace(tex)
+        if (!(tryWriteTextFile(outTexName,tex))) {
+          println("error: unable to write: " + outTexName) 
+        }
+        elif (mopts.pdf) {
+          runPdfLaTeX( outTexName, mopts, content, function() { () } )                  
+        }
+      }
+
+      continue(html)            
+    }
+  }
+
+  phaseHtml(True)
+}
+
+
+// Write citations to an aux file. Returns "True" if the bibliography data changed.
+function writeCitations( auxData : string, auxName : string, opts : options ) : io bool {
   bibStyleName = if (opts.bibStyle != "") then opts.bibStyle else "plainnat"
   bibNames = opts.bib.splitPaths
-  auxName = outName.changeExt(".aux")
-  initial = readTextFileDef(auxName,"").replaceAll(rxCite,"").replace(rxEmptyTail,"")
-  if (!(tryWriteTextFile(auxName,
-        initial + 
-        "\n% Madoko generated\n" + auxData + 
-        "\n\\bibstyle{" + bibStyleName + "}\n" +
-         bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join))) then 
-  {
+  oldData = readTextFileDef(auxName,"")
+  initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")
+  newData = (if (initial!="") then initial + "\n" else "") + 
+            "% Generated by Madoko, version " + version + "\n" + auxData + 
+            "\n\\bibstyle{" + bibStyleName + "}\n" +
+            bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join
+
+  if (!(tryWriteTextFile(auxName, newData))) then {
     println("error: unable to write citations: " + auxName )
   }
+
+  return (oldData != newData)
 }
 val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
@@ -178,7 +212,7 @@ function include( txt : string, fast : bool, outName : string, action : (string)
   itxt = if (fast) then txt else txt.replaceAll(rxInclude) fun(cap) {
     fname = cap.groups.firstMatched
     if (fname=="BIB") then {
-      bbl = readTextFileDef( outName.changeExt(".bbl"), "" )  
+      bbl = readTextFileDef( outName.changeExt(".bib.bbl"), "" )  
       "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~"
     }
     else {
