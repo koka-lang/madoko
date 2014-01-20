@@ -420,7 +420,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                                 [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
                               }
                               Nothing -> {
-                                warning( "missing citation: " + cap.groups[3] )
+                                warning( "missing citation: @" + cap.groups[3] )
                                 []
                               }
                             }

@@ -344,9 +344,11 @@ val rxTexFile = regex(@"^[^\n\r\[\]]+?\.tex$",ignoreCase=True)
 function fmtOptArg( pre:string, pkg : string,  snippets : bool = False ) : string {
   fullpre = if (snippets && pkg.trim.endsWith("*")) ("% " + pre) else pre
   match(pkg.find(rxPkgOpt)) {
-    Just(cap) -> fullpre + "[" + cap.groups[1] + "]{" + cap.groups[2] + "}"
+    Just(cap) -> fullpre + 
+                 (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") + 
+                 "{" + cap.groups[2] + "}"
     Nothing   -> fullpre + "{" + pkg.trim + "}"
   }
 } 
 
-val rxPkgOpt = regex(@"^\s*\[(.*?)\]\s*([^\*]+)\s*(\*?\s*)$")
+val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")

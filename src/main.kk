@@ -113,6 +113,12 @@ function process( inName : string, outName : string, content : string, icontent 
                   xopts : options, mopts : options,
                   continue : (string) -> <io|e> () ) : <io|e> () 
 {
+  function genPdf(outTexName:string) {
+    if (mopts.pdf) {
+      runPdfLaTeX( outTexName, mopts, content, function() { () } )                  
+    }        
+  }
+
 
   function phaseHtml( firstTime : bool = False ) 
   {
@@ -125,9 +131,6 @@ function process( inName : string, outName : string, content : string, icontent 
                                  }
                                 }
                                }
-    if (warns != "" && mopts.verbose >= 1) {
-      print(warns)
-    }
 
     // write html result
     if (!(tryWriteTextFile(outName,html))) {
@@ -150,23 +153,14 @@ function process( inName : string, outName : string, content : string, icontent 
       }
     }
     else {
-      // possibly typeset math using latex
-      if (math != "" && mopts.mathjax=="") {
-        mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mdim2) {
-          // write html again
-          if (mopts.verbose>=1) println("  re-aligning math in HTML.")
-          
-          html2 = markdown(icontent,xopts(mathdim=mdim2))
-          if (!(tryWriteTextFile(outName,html2))) {
-            println("error: unable to write: " + outName) 
-          }
-          //if (mopts.verbose>=1) println("  done typesetting math.")                  
-        }
-      }    
-    
+      // show warnings
+      if (warns != "" && mopts.verbose >= 1) {
+        print(warns)
+      }
+
       // generate tex
+      outTexName = outName.changeExt(".tex")
       if (mopts.tex) {
-        outTexName = outName.changeExt(".tex")
         if (mopts.verbose > 0) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
         if (texwarns != "" && mopts.verbose >= 2) print(texwarns) 
@@ -174,10 +168,31 @@ function process( inName : string, outName : string, content : string, icontent 
         if (!(tryWriteTextFile(outTexName,tex))) {
           println("error: unable to write: " + outTexName) 
         }
-        elif (mopts.pdf) {
-          runPdfLaTeX( outTexName, mopts, content, function() { () } )                  
-        }
       }
+
+      // possibly typeset math using latex
+      if (math != "" && mopts.mathjax=="") {
+        mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mbmdim2) {
+          match(mbmdim2) {
+            Just(mdim2) -> {
+              // write html again
+              if (mopts.verbose>=1) println("  re-aligning math in HTML.")
+              
+              html2 = markdown(icontent,xopts(mathdim=mdim2))
+              if (!(tryWriteTextFile(outName,html2))) {
+                println("error: unable to write: " + outName) 
+              }
+            }
+            Nothing -> ()
+          }
+          //if (mopts.verbose>=1) println("  done typesetting math.")
+          genPdf(outTexName)
+        }
+      }    
+      else {
+        genPdf(outTexName)
+      }
+    
 
       continue(html)            
     }

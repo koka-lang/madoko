@@ -46,7 +46,7 @@ public function runPdfLaTeX( texFile : string, opts : options, content : string 
   if (opts.verbose>=1) println("  running latex to generate pdf...")
   notfound = "set the 'Pdf Latex: ...' key in the metadata?"
   pdfCmd = if (opts.pdflatex!="") then opts.pdflatex else "pdf" + opts.latex
-  runLaTeX( texFile, pdfCmd, opts, content, notfound,
+  runLaTeX( texFile, pdfCmd, opts, content, notfound, 0, True,
     function() { () }, continue )  
 }
 
@@ -54,15 +54,17 @@ public function runPdfLaTeX( texFile : string, opts : options, content : string 
 function runLaTeX( texFile : string, texCmd : string, opts : options, 
                     content : string,
                     notfound : string,
+                    runCount : int = 0,
+                    showWarnings : bool = True,
                     onError : () -> io (),
                     onSuccess : () -> io () )
 {
   latexCmd = texCmd + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
   if (opts.verbose>=3) println("  > " + latexCmd)
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
+    logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
-      println("> " + latexCmd)
-      logout = readTextFileDef(texFile.changeExt(".log"),"")
+      println("error while running: " + latexCmd)
       match(logout.find(rxLatexErr)) {
         Just(cap) -> {          
           texContent = readTextFileDef(texFile,"")
@@ -78,17 +80,32 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
               println("could not find LaTeX: \"" + texCmd + "\"")
               if (notfound != "") println(notfound)
             }
+            else {
+              println(stdout + stderr)
+            }
           }
         }
       }
       println("log written at: " + texFile.changeExt(".log"))
       onError()
     }
-    else onSuccess()
+    else {
+      if (runCount <= 2 && logout.contains(rxLatexRerun)) {
+        if (opts.verbose >= 1) println("  rerun LaTeX to resolve references...")
+        runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, onError, onSuccess)
+      }
+      else {
+        if (showWarnings) then latexShowWarnings(texFile,logout,opts)
+        onSuccess()
+      }
+    }
   },0,texFile.dirname)
 } 
+val rxLatexErr = regex(@"^\*\* ERROR .*|^![\s\S]*?(?=^\s*(?:Here is how much of TeX's memory you used:|Type X to quit))",multiline=True)
 
-public function mathStatic( math : string, texName : string, xopts : options, content : string, continue : (dict<mathinfo>) -> io () ) : io () {
+val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
+
+public function mathStatic( math : string, texName : string, xopts : options, content : string, continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   oldMath = readTextFileDef(texName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
   outTex = fmtTexMathFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
@@ -102,6 +119,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
     if (xopts.verbose>=1) println("  typesetting math...")
     if (!(tryWriteTextFile(texName,outMath))) {
       println("error: unable to write: " + texName)
+      continue(Nothing)
     }
     else {
       mathSnippetsToDvi( texName, xopts, content, oldMath ) {
@@ -115,6 +133,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
       }
     }
   }
+  else continue(Nothing)
 }
 val rxHdr = regex(@"^.*\n")
 
@@ -146,14 +165,13 @@ function mathSnippetsToDvi( texName : string, xopts : options,
                             content : string, oldMath : string, continue : () -> io () ) : io () {
   if (xopts.verbose>=1) println("  running latex on math...")
   notfound = "set either the 'MathJax: True' or the 'Latex: ...' key in the metadata"
-  runLaTeX( texName, xopts.latex, xopts, content, notfound,
+  runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
     function () {
       tryWriteTextFile(texName,oldMath) // restore old math version on error
       ()
     } 
     , continue ) 
 }
-val rxLatexErr = regex(@"^![\s\S]*?(?=^\s*(?:Here is how much of TeX's memory you used:|Type X to quit))",multiline=True)
 
 function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
   match(texerr.find(rxLatexLineNum)) {
@@ -180,6 +198,56 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
 }
 val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
 val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
+
+
+function latexShowWarnings(texFile:string,logout:string,opts:options) : io () 
+{
+  if (opts.verbose<2) then return ()
+  warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { cap.matched })
+  if (warnings.isNil) then return () 
+
+  println("latex warnings:")
+  texlines = readTextFileDef(texFile,"").lines
+  warnings.foreach fun(warning0) {
+    warning = warning0.replace(rxLatexBrackets,"")
+    warn = match(warning.find(rxLatexLine)) {
+      Nothing   -> warning
+      Just(cap) -> {
+        lineNo = cap.groups[1].parseInt.maybe(0,id)
+        line = texlines.latexFindLine(lineNo)
+        if (line!="") then (warning + "\n> " + line.substr(0,76)) else warning
+      }
+    }
+    println(warn + "\n")
+  }
+}
+
+val rxLatexLine = regex(@"lines?[\s:]*(\d+).*$") // only match single line warnings
+val rxLatexBrackets = regex(@"(\s|[\[\]])+$")
+
+function latexFindLine( src : vector<string>, lineNo : int, direction : int = 0 ) : div string
+{
+  line = latexGetLine(src,lineNo)
+  if (line.startsWith(@"\end") && direction <= 0) {
+    latexFindLine(src,lineNo-1,-1)
+  }
+  elif (line.startsWith(@"\begin") && direction >= 0) {
+    latexFindLine(src,lineNo+1,1)
+  }
+  else {
+    line
+  }
+}
+
+function latexGetLine( src : vector<string>, lineNo : int ) : string
+{
+  if (lineNo <= 0 || lineNo > src.length) then "" else {
+    catch( { src[lineNo-1] }, fun(_) { "" })
+  }
+}
+
+val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *$", multiline=True)
+        
 
 function mathDviToPng( dviName : string, xopts : options, pages : (int,int), continue : () -> io () ) : io () 
 {  
@@ -212,12 +280,12 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
   },0,dirname(dviName))
 }
 
-function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (dict<mathinfo>) -> io () ) : io () {
+function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
   dims2 = extendDim(pages, dimxName, xopts )
   mdim2 = dims2.parseMathDim(xopts.mathStatic, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
-  continue( mdim2 )
+  continue( Just(mdim2) )
 }
 
 function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir : string ) : io ()
