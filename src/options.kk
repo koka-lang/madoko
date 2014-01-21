@@ -33,47 +33,55 @@ public struct options(
   xmp      : bool = False, // only process markdown between xmp tags
   full     : maybe<bool> = Nothing, // generate a full html/latex file instead of a snippet
   tex      : bool = False,  // generate latex file too
-  pdf      : bool = False,  // generate pdf file too
-
+  pdf      : bool = False,  // generate pdf file too 
+  
   title    : string = "",  // html title 
   subtitle : string = "",  // sub title 
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
-  mathjax  : string = "",  // use mathjax to render math (use "-" for default path)
-  mjext    : string = "",  // list of mathjax extensions
   htmlHeader: string= "",  // literal html header
   texHeader: string= "",  // literal tex header
+  
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
+  
   packages : string = "madoko",  // link to latex packages (.sty)
   docClass : string = "book",  // latex document class (.cls)
+  
   author   : string = "",
   affiliation: string = "",
   email    : string = "",
-  citestyle: citestyle = citeNumeric,   
-  mathStatic  : string = "math",    // use static images to render math
-  mathScale: int    = 110,  // math scaling in percentage
-  mathDpi  : int    = 300,  // math resolution 
-  mathEmbedLimit : int = 1024, // maximal embedded image size
-  mathDocClass : string = "book",
-  latex    : string = "latex",
-  dvipng   : string = "dvipng",
-  pdflatex : string = "",
-  bibtex   : string = "bibtex",
+
+  citestyle     : citestyle = citeNumeric,     
+  tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
+  headingDepth  : int  = 3, // default depth where headings are numbered
+  headingBase   : int  = 1, // heading level for #
   
-  tocDepth     : int  = 3, // max. depth for inclusion in the table of contents
-  headingDepth : int  = 3, // default depth where headings are numbered
-  headingBase  : int  = 1, // heading level for #
-  metadata  : metadata = [],
-  mathdim   : dict<mathinfo> = dict()
+  mathmode      : mathmode = Static, // mode used to render math
+  mathjax       : string = "-",  // mathjax scripts path (use "-" for default path)
+  mjext         : string = "",  // semicolon separated list of mathjax extensions
+  
+  mathImgDir    : string = "math",    // directory for static math images
+  mathScale     : int    = 110,  // math scaling in percentage
+  mathDpi       : int    = 300,  // math resolution 
+  mathEmbedLimit: int = 1024, // maximal embedded image size  
+  mathDocClass  : string = "book",
+
+  latex         : string = "latex",
+  dvipng        : string = "dvipng",
+  pdflatex      : string = "",
+  bibtex        : string = "bibtex",
+  
+  metadata      : metadata = [],
+  mathdim       : dict<mathinfo> = dict()
 );               
 
 public struct commandOptions(
-  showVersion: bool = False,
-  outputDir : string = "",
-  installDir: string = "",
-  inputs    : list<string> = [],
-  options   : options = Options()
+  showVersion : bool = False,
+  outputDir   : string = "",
+  installDir  : string = "",
+  inputs      : list<string> = [],
+  options     : options = Options()
 );
 
 function creq( f : (commandOptions,string) -> commandOptions, help : string ) : optionArg<commandOptions>
@@ -109,15 +117,20 @@ val optionsDesc : list<option<commandOptions>>
   = [ Option( "",  ["version"], cflag(fun(co,v) { co(showVersion = v) }),   "Display version information" ),
       Option( "v", ["verbose"], oflag(fun(o,v) { o(verbose = if (v) then o.verbose + 1 else 0) }),     "Be more verbose"),
       Option( "",  ["odir"],    creq(fun(co,s) { co(outputDir=s) },"DIR"), "Write output files to the specified directory" ),
-      Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),        "Only process markdown between <xmp> tags"),
-      Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),        "Output a LaTeX file too"),
-      Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),
-            
-      Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }),         "Generate a full html/latex document"),
-      Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }),   "Always escape or suppress user defined html"),
-      Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }),   "Pedantic mode"),
-      Option( "",  ["bench"],    oflag(setbench),                       "For benchmarking: turn off numbering, footnotes, etc."),
+      Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
+      Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Output a LaTeX file too"),
+      Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),      
+      
+      Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }), "Generate a full html/latex document"),
+      Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }), "Always escape or suppress user defined html"),
+      Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }), "Pedantic mode"),
+      Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, footnotes, etc."),
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
+
+      Option( "",  ["bibtex"],   oreq(fun(o,v) { o(bibtex = v) },"CMD"),   "bibtex command"),
+      Option( "",  ["pdflatex"], oreq(fun(o,v) { o(pdflatex = v)},"CMD"),  "pdflatex command"),
+      Option( "",  ["dvipng"],   oreq(fun(o,v) { o(dvipng = v) },"CMD"),   "dvipng command (for math)"),
+      Option( "",  ["latex"],    oreq(fun(o,v) { o(latex = v) },"CMD"),    "latex command (for math)"),            
     ]
 
 // Parse the options from the command line given some extra arguments (default `""`).
@@ -182,31 +195,54 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
     elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
     elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
-    elif (key=="toc-depth" && ivalue >= 0) options(tocDepth = ivalue)
-    elif (key=="heading-depth" && ivalue >= 0) options(headingDepth = ivalue)
-    elif ((key=="heading-base" || key=="base-header-level") && ivalue >= 0) options(headingBase = ivalue)
-    elif (key=="document-class" || key=="doc-class") options(docClass=value)
-    elif (key=="bib" || key=="bibliography" || key=="bib-data" || key=="bibtex") options(bib=if (value=="") then "" else options.bib + ";" + value)
-    elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
-    elif (key=="mathjax") options(mathjax=(if (lvalue=="true") then "-" else value))
-    elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
-    elif (key=="html-header") options(htmlHeader = value)
+    elif (key=="tocdepth" && ivalue >= 0) options(tocDepth = ivalue)
+    elif (key=="headingdepth" && ivalue >= 0) options(headingDepth = ivalue)
+    elif ((key=="headingbase" || key=="baseheaderlevel") && ivalue >= 0) options(headingBase = ivalue)
+    elif (key=="documentclass" || key=="docclass") options(docClass=value)
+    elif (key=="bib" || key=="bibliography" || key=="bibdata" || key=="bibtex") options(bib=if (value=="") then "" else options.bib + ";" + value)
+    elif (key=="bibstyle" || key=="bibliostyle" || key=="bibliographystyle") options(bibStyle=value)
+    elif (key=="mathjaxext" || key=="mathjaxextension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
+    elif (key=="htmlheader") options(htmlHeader = value)
     elif (key=="author") options(author=if (value=="") then "" else options.author + ";" + value)
     elif (key=="affiliation") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
-    elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
-    elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
-    elif (key=="math-static") options(mathStatic = if (value=="true") then "math" else value)
-    elif (key=="math-scale") options(mathScale=ivalue)
-    elif (key=="math-dpi") options(mathDpi=ivalue) 
-    elif (key=="math-embed") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
+    elif (key=="citestyle") options(citestyle=parseCiteStyle(lvalue))
+    elif (key=="citeall" && value!="") { log("aux",@"\citation{*}"); options } 
+    elif (key=="mathstatic" || key=="mathimgdir") options(mathImgDir = if (value=="true") then "math" else value)
+    elif (key=="mathscale") options(mathScale=ivalue)
+    elif (key=="mathdpi") options(mathDpi=ivalue) 
+    elif (key=="mathembed") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
-    elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-    elif (key=="pdf-latex") options(pdflatex=value)
-    else options
+    elif (key=="mathdocumentclass" || key=="mathdocclass") options(mathDocClass=value)
+    elif (key=="pdflatex") options(pdflatex=value)
+    elif (key=="bibtex") options(bibtex=value)
+    elif (key=="mathmode") options.setMathMode(value)
+    elif (key=="mathjax") then (if (value!="")
+                                 then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "-" else value))
+                                 else options(mathmode=Static, mathjax=""))
+    else {
+      if (options.verbose >= 3) warning("custom metadata key: " + key)
+      options
+    }
   }
-} 
+}
+
+// Mathematics rendering mode.
+public type mathmode {
+  Static  // latex generated images
+  Dynamic // mathjax
+}
+
+function setMathMode( options : options, value : string ) : options {
+  nvalue = value.normalizeId
+  if (nvalue=="static") then options(mathmode=Static)
+  elif (nvalue=="dynamic" || nvalue=="mathjax") then options(mathmode=Dynamic)
+  else {
+    warning("unrecognized math mode: " + nvalue)
+    options
+  }
+}
 
 
 public function parsePlainMeta( txt : string, metadata : metadata = [], verbose : bool = False ) : (metadata,string) 
@@ -220,7 +256,7 @@ public function parsePlainMeta( txt : string, metadata : metadata = [], verbose 
       value = cap.groups[3].joinLines.trim
       kvs   = if (cap.groups.matchedOn(2))
                then cap.groups[1].toLower.split(",").list.map(fun(k) { (k,value) })
-               else [(cap.groups[1].normalizeId, value)]
+               else [(cap.groups[1].normalizeId.replaceAll("-",""), value)]
       if (verbose) then trace("meta data:" + cap.groups[1] + ": " + value )
       parsePlainMeta( txt.substr1(cap.next), kvs + metadata, verbose )
     }

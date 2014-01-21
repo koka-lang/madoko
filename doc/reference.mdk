@@ -916,14 +916,20 @@ Madoko documents can include mathematics in standard LaTeX syntax.
 To typeset mathematics in HTML, there are two options:
 
 * _static images_: In this mode, LaTeX is used to generate
-static images for each math formula. This is the default mode.
-The advantage is that any LaTeX mathematics can be rendered,
-it requires no javascript, and page loads fast. The disadvantages
-include longer compilation time, and you need to have installed
-'latex' (and 'dvipng').
+	static images for each math formula. This is the default mode.
+	The advantage is that any LaTeX mathematics can be rendered,
+	it requires no javascript, and page loads fast. The disadvantages
+	are twofold: you need to have `latex` (and `dvipng`) installed,
+	and images used to display formulas in HTML increase the web page size.
 
-* _dynamic_ via _MathJax_: The HTML uses the MathJax JavaScript
-library that dynamically computes the  
+* _dynamic_ via _MathJax_: In this mode, the HTML uses the MathJax
+	JavaScript library that typesets the math on the client-side.
+	The advantages are that it does not require LaTeX to process the
+	markdown and the font rendering is generally of high quality. 
+	The disadvantages include:
+	- Rendering in MathJax may be quite slow for math-heavy documents.
+	- Loading the MathJax scripts and fonts can easily be 1 to 2 Mb of data. 
+	- Not all of LaTeX mathematics and packages are available.
 
 
 This is supported in HTML pages through the [MathJax] library. 
@@ -1987,19 +1993,16 @@ where the `caption` is only used in LaTeX output and should be a string that
 is the widest label necessary for the numeric style. Inside the bibliography
 block, you can put `Bibitem` blocks for each bibliography entry. For example:
 
-	~~ Bibitem { #WadlerThiemann03 .has-before }
+	~~ Bibitem { #WadlerThiemann03  }
 	Philip Wadler and Peter Thiemann.
 	_The marriage of effects and monads._
 	ACM Trans. Comput. Logic, 4(1):1--32, 2003.
 	~~
 
-The above example is for numeric style citations. The `.has-before` class
-ensures that the html output is styled correctly with the right hanging
-indentation.  If author-year citations
-are used, the entry should have an explicit `cite-label` and clear the default
-`before` key (which would otherwise put numbers in front):
+The above example is for numeric style citations.
+For author-year citations, the entry should have an explicit `cite-label`:
 
-	~~ Bibitem { #remy cite-label='R&eacute;my(1993)' before=clear }
+	~~ Bibitem { #remy cite-label='R&eacute;my(1993)' }
 	Didier R&eacute;my. 
 	_Type inference for records in a natural extension of ML._
 	In Carl\ A. Gunter and John\ C. Mitchell, editors, 
@@ -2007,7 +2010,7 @@ are used, the entry should have an explicit `cite-label` and clear the default
 	Types, Semantics and Language Design. MIT Press, 1993.
 	~~
 
-	~~ Bibitem { id='nielson:polyeffect' before=clear\
+	~~ Bibitem { id='nielson:polyeffect' \
 	cite-label='Nielson et\ al.(1997)Nielson, Nielson, and Amtoft'}
 	Hanne\ Riis Nielson, Flemming Nielson, and Torben Amtoft.
 	_Polymorphic subtyping for effect analysis: 

@@ -44,7 +44,7 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
 
 public function runPdfLaTeX( texFile : string, opts : options, content : string = "", continue : () -> io () ) {
   if (opts.verbose>=1) println("  running latex to generate pdf...")
-  notfound = "set the 'Pdf Latex: ...' key in the metadata?"
+  notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
   pdfCmd = if (opts.pdflatex!="") then opts.pdflatex else "pdf" + opts.latex
   runLaTeX( texFile, pdfCmd, opts, content, notfound, 0, True,
     function() { () }, continue )  
@@ -111,7 +111,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
   outTex = fmtTexMathFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
 
   outHdr = "% MathDpi: " + xopts.mathDpi.show + 
-            ", MathStatic: " + xopts.mathStatic +
+            ", MathImgDir: " + xopts.mathImgDir +
             ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
             ", MathDocClass: " + xopts.mathDocClass + "\n"
   outMath = outHdr + outTex
@@ -164,7 +164,7 @@ val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 function mathSnippetsToDvi( texName : string, xopts : options, 
                             content : string, oldMath : string, continue : () -> io () ) : io () {
   if (xopts.verbose>=1) println("  running latex on math...")
-  notfound = "set either the 'MathJax: True' or the 'Latex: ...' key in the metadata"
+  notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
     function () {
       tryWriteTextFile(texName,oldMath) // restore old math version on error
@@ -258,10 +258,10 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
                                       " -D" + xopts.mathDpi.show +
                                       (if (pageLo==0) then "" 
                                         else " -p" + pageLo.show + " -l" + pageHi.show) + 
-                                      " -o " + combine(xopts.mathStatic,"eq-%d.png") +
+                                      " -o " + combine(xopts.mathImgDir,"eq-%d.png") +
                                       " " + dviName.basename
   // make sure the output directory exists
-  outDir = combine(dviName.dirname,xopts.mathStatic)
+  outDir = combine(dviName.dirname,xopts.mathImgDir)
   if (!(fexists(outDir))) {
     if (xopts.verbose>=1) println("  create: " + outDir)
     mkdirp(outDir)
@@ -283,7 +283,7 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
 function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
   dims2 = extendDim(pages, dimxName, xopts )
-  mdim2 = dims2.parseMathDim(xopts.mathStatic, xopts.mathDpi, xopts.mathScale)
+  mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( Just(mdim2) )
 }
@@ -317,7 +317,7 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
       Just(cap) -> { 
         pageNo = cap.groups[2].parseInt.maybe(0,id)
         digest = cap.groups[3]
-        imageName = combine(opts.mathStatic, "eq-" + cap.groups[2] + ".png")
+        imageName = combine(opts.mathImgDir, "eq-" + cap.groups[2] + ".png")
         imageFile = combine(dimxFile.dirname,imageName)
                 
         val (pxwidth,pxheight,size,embed) 

@@ -80,11 +80,11 @@ public function markdownFiles(args : string, action : (string,string,string,opti
                         then (opts.options)(xmp = True) else opts.options
               mmopts = if (xxopts.xmp) then xxopts
                         else xxopts.parseMeta( icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
-              mdim   = if (mmopts.mathjax!="")
+              mdim   = if (!(mmopts.mathmode.isStatic))
                         then dict()
                         else {
                           dims = outName.changeExt(".math.dimx").readTextFileDef("")
-                          dims.parseMathDim(mmopts.mathStatic, mmopts.mathDpi, mmopts.mathScale)
+                          dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
                         }
 
               xopts  = xxopts(mathdim=mdim)
@@ -171,7 +171,7 @@ function process( inName : string, outName : string, content : string, icontent 
       }
 
       // possibly typeset math using latex
-      if (math != "" && mopts.mathjax=="") {
+      if (math != "" && mopts.mathmode.isStatic) {
         mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mbmdim2) {
           match(mbmdim2) {
             Just(mdim2) -> {
