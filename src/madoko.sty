@@ -480,18 +480,18 @@
   %\setlength{\@snippetWidth}{\dimexpr\@snippetWidth*\mdMathScale/100\relax}%  
   \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
   %\setlength{\fboxsep}{0pt}\fbox{
-  \usebox\@snippetBox%}
+  \noindent\usebox\@snippetBox%}
 }
 
 \newenvironment{mdDisplaySnippet}[1][\arabic{snippets}]%
   {\stepcounter{snippets}\edef\@snippetName{#1}%
-   \setbox\@snippetBox=\vbox\bgroup}%
-  {\egroup\@savedepth\newpage}
+   \begin{lrbox}{\@snippetBox}\vbox\bgroup}%
+  {\egroup\end{lrbox}\@savedepth\newpage}
 
 \newenvironment{mdInlineSnippet}[1][\arabic{snippets}]%
   {\stepcounter{snippets}\def\@snippetName{#1}%
-   \setbox\@snippetBox=\hbox\bgroup}%
-  {\egroup\@savedepth\newpage}
+   \begin{lrbox}{\@snippetBox}}%
+  {\end{lrbox}\@savedepth\newpage}
 
 \newenvironment{mdSnippets}%
     {\pagestyle{empty}%
