@@ -463,6 +463,11 @@
 \cssClassRule{block}{margin-top=\topsep,margin-bottom=\topsep}
 
 
+
+% ---------------------------------------------------
+% Math snippets for static image generation
+% ---------------------------------------------------
+
 \newsavebox{\@snippetBox}
 \newlength{\@snippetWidth}
 \newlength{\@snippetHeight}
@@ -471,16 +476,12 @@
 \newcounter{snippets}
 
 \newcommand{\@savedepth}{%
-  \settowidth{\@snippetWidth}{\usebox{\@snippetBox}}%
-  \settoheight{\@snippetHeight}{\usebox{\@snippetBox}}%
-  \settodepth{\@snippetDepth}{\usebox{\@snippetBox}}%
+  \setlength{\@snippetWidth}{\wd\@snippetBox}%
+  \setlength{\@snippetHeight}{\ht\@snippetBox}%
+  \setlength{\@snippetDepth}{\dp\@snippetBox}%
   \addtolength{\@snippetHeight}{\@snippetDepth}%
-  %\setlength{\@snippetHeight}{\dimexpr\@snippetHeight*\mdMathScale/100\relax}%
-  %\setlength{\@snippetDepth}{\dimexpr\@snippetDepth*\mdMathScale/100\relax}%
-  %\setlength{\@snippetWidth}{\dimexpr\@snippetWidth*\mdMathScale/100\relax}%  
   \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
-  %\setlength{\fboxsep}{0pt}\fbox{
-  \noindent\usebox\@snippetBox%}
+  \noindent\usebox\@snippetBox%
 }
 
 \newenvironment{mdDisplaySnippet}[1][\arabic{snippets}]%
@@ -500,6 +501,6 @@
      \abovedisplayshortskip=0pt%
      \belowdisplayshortskip=0pt%
      \newwrite\foo\immediate\openout\foo=\jobname.dim%
-     \immediate\write\foo{\%ordinal,(hash)name,width,height,depth,image width,image height,dpi,base64 encoding}%
+     \immediate\write\foo{\%ordinal,(hash)name,width,(total) height,depth,image width,image height,dpi,base64 encoding}%
     }%
     {\closeout\foo}
