@@ -238,7 +238,7 @@ function blockList( cap : matched, context : blockContext ) : block {
     Just(acap) -> (cap.matched.substr(0,cap.matched.length - acap.matched.length), acap.groups[1])
     Nothing    -> (cap.matched,"")
   }
-  attrs0 = attrsTxt.parseAttrs
+  attrs0 = attrsTxt.parseAttrs.addClass(if (loose) then "loose" else "compact")
   attrs = match (txt.find(rxFirstNum)) {
             Nothing    -> attrs0
             Just(icap) -> {

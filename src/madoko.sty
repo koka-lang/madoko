@@ -303,7 +303,9 @@
 \newenvironment{mdUl}[1][]%
   {\begin{mdDiv}[#1]%
    \advance\c@mdListNesting by 1% use advance to be local
-   \begin{itemize}}%
+   \begin{itemize}%
+   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
+  }%
   {\end{itemize}\end{mdDiv}}
 
 \cssNewKey{css}{start}{\cssStart}{}
@@ -314,6 +316,7 @@
   \eifstrequal{\cssStart}{}{}%
     {\addtocounter{enum\roman{mdListNesting}}{\cssStart}%
      \addtocounter{enum\roman{mdListNesting}}{-1}}%
+  \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
   {\end{enumerate}\end{mdDiv}}
 
@@ -456,7 +459,7 @@
   %\relax\ifhmode\par\fi%
   \begin{mdDiv}[height=1ex,vertical-align=center,text-align=center,#1]{%
     \ifdim\cssHrWidth=0pt\setlength{\cssHrWidth}{\linewidth}\fi%
-    \rule{\cssHrWidth}{0.4pt}#2}%
+    \rule{\cssHrWidth}{\cssPixel}#2}%
   \end{mdDiv}%
   \endgroup}
 
