@@ -123,10 +123,13 @@
 \newcommand{\cssAddReset}[1]{\appto{\@cssReset}{#1}}
 \newcommand{\cssNewResetCommand}[2]{\newcommand{#1}{#2}\cssAddReset{\renewcommand{#1}{#2}}}
 
+\newlength{\cssFill}
+\setlength{\cssFill}{2sp plus 1fill minus 2sp} % make \fill unequal to 0pt, and detectable as 2sp
+
 \newcommand{\cssNewLengthKey}[4][0pt]{%
 	\newLength{#4}{#1}%
 	\newKey{#2}{#3}{%
-		\ifstrequal{##1}{auto}{\setlength{#4}{\fill}}{\setlength{#4}{##1}}%
+		\ifstrequal{##1}{auto}{\setlength{#4}{\cssFill}}{\setlength{#4}{##1}}%
 	}%
 	\cssAddReset{\setlength{#4}{#1}}%
 }
@@ -192,16 +195,30 @@
 
 \newif\if@hasdim
 
+\newlength{\cssHeightFull} % height including padding and border
+\newlength{\cssWidthFull}  % width including padding and border
 \newLength{\@cssMarginAfter}{0pt}
 \newLength{\@cssParSkip}{\parskip}
 \newLength{\@cssParIndent}{\parindent}
 \newcommand{\@cssFixMathSpacing}{\strut\vspace{-\baselineskip}} % fixes weird abovedisplay skip spacing
 \newcommand{\@cssBlockMargins}{%
 	\@hasdimfalse
-	\ifdim\cssWidth=1sp\else\@hasdimtrue\fi
-	\ifdim\cssHeight=1sp\else\@hasdimtrue\fi
+	\ifdim\cssWidth=1sp\setlength{\cssWidthFull}{1sp}\else\@hasdimtrue\fi
+	\ifdim\cssHeight=1sp\setlength{\cssHeightFull}{1sp}\else\@hasdimtrue\fi
 	\if@hasdim%
-		%minipage		
+		% set full height and width
+		\setlength{\cssWidthFull}{\dimexpr\cssWidth+\cssPaddingLeft+\cssPaddingRight\relax}%
+		\eifstrequal{\cssBorderStyleLeft}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
+		\eifstrequal{\cssBorderStyleRight}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
+		\setlength{\cssHeightFull}{\dimexpr\cssHeight+\cssPaddingTop+\cssPaddingBottom\relax}%
+		\eifstrequal{\cssBorderStyleTop}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%
+		\eifstrequal{\cssBorderStyleBottom}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%		
+		% set default width?
+		\ifdim\cssWidth=1sp% in this case, cssWidthFull is just padding and borders
+			\setlength{\cssWidth}{\dimexpr\linewidth-\cssWidthFull-\cssMarginLeft-\cssMarginRight}%
+			\addtolength{\cssWidthFull}{\cssWidth}%
+		\fi%
+		%minipage				
 		\ifdim\cssMarginTop=0pt\else\cssDoBefore{\vspace{\cssMarginTop}}\fi
 		\ifdim\cssMarginLeft=0pt\else\cssDoBefore{\hspace*{\cssMarginLeft}}\fi
 		\setlength{\@cssParIndent}{\parindent}% save parskip and parindent since minipage resets it
@@ -211,10 +228,9 @@
 		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
 		{\def\@cssValign{c}}}}% including `middle`
 		\ifdim\cssHeight=1sp%
-	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidth}}%
+	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidthFull}}%
 		\else
-			\ifdim\cssWidth=1sp\setlength{\cssWidth}{\dimexpr\linewidth-\cssMarginLeft-\cssMarginRight}\fi%
-			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeight]{\cssWidth}}%
+			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
 		\fi
 		\cssDoBefore{\@saveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
 		%note: DoAfter prepends, so in opposite order
@@ -333,18 +349,9 @@
 		\ifdim\cssWidth=1sp\else\@hasdimtrue\fi
 		\ifdim\cssHeight=1sp\else\@hasdimtrue\fi
 		\if@hasdim%
-			\ifdim\cssWidth=1sp\else
-				\addtolength{\cssWidth}{\dimexpr-\cssPaddingLeft-\cssPaddingRight%
-										-\cssBorderWidthTotal\relax}\fi%	
-			\ifdim\cssHeight=1sp\else
-				\addtolength{\cssHeight}{\dimexpr-\cssPaddingTop-\cssPaddingBottom\relax}\fi%	
 			\ifdim\cssHeight=1sp%					
 		   		\cssDoBefore{\begin{minipage}{\cssWidth}}%
 			\else
-				\ifdim\cssWidth=1sp
-					\setlength{\cssWidth}{\dimexpr\linewidth-\cssMarginLeft-\cssMarginRight%
-										  -\cssPaddingLeft-\cssPaddingRight%
-										  -\cssBorderWidthTotal\relax}\fi%
 				\cssDoBefore{\begin{minipage}[t][\cssHeight]{\cssWidth}}%
 		    \fi
 		    \cssDoBefore{\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
