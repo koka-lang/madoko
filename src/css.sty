@@ -213,7 +213,7 @@
 		\ifdim\cssHeight=1sp%
 	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidth}}%
 		\else
-			\ifdim\cssWidth=1sp\setlength{\cssWidth}{\linewidth}\fi%
+			\ifdim\cssWidth=1sp\setlength{\cssWidth}{\dimexpr\linewidth-\cssMarginLeft-\cssMarginRight}\fi%
 			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeight]{\cssWidth}}%
 		\fi
 		\cssDoBefore{\@saveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
@@ -268,6 +268,7 @@
 \cssNewLengthKey{css}{padding-top}{\cssPaddingTop}
 \cssNewLengthKey{css}{padding-bottom}{\cssPaddingBottom}
 
+\newlength{\cssBorderWidthTotal}
 \cssNewLengthKey[\cssPixel]{css}{border-width}{\cssBorderWidth}
 \cssNewKey{css}{border-color}{\cssBorderColor}{black}
 \cssNewKey{css}{border-style-top}{\cssBorderStyleTop}{none}
@@ -317,13 +318,39 @@
 			linewidth=\the\cssBorderWidth,%
 			linecolor=\cssBorderColor%
 		}%
+		\setlength{\cssBorderWidthTotal}{0pt}%
 		\eifstrequal{\cssBorderStyleTop}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
 		\eifstrequal{\cssBorderStyleBottom}{none}{\appto{\@cssFramedArgs}{,bottomline=false}}{}%	
-		\eifstrequal{\cssBorderStyleLeft}{none}{\appto{\@cssFramedArgs}{,leftline=false}}{}%	
-		\eifstrequal{\cssBorderStyleRight}{none}{\appto{\@cssFramedArgs}{,rightline=false}}{}%		
+		\eifstrequal{\cssBorderStyleLeft}{none}{\appto{\@cssFramedArgs}{,leftline=false}}%
+			{\addtolength{\cssBorderWidthTotal}{\cssBorderWidth}}%	
+		\eifstrequal{\cssBorderStyleRight}{none}{\appto{\@cssFramedArgs}{,rightline=false}}%		
+			{\addtolength{\cssBorderWidthTotal}{\cssBorderWidth}}%	
 		\cssIfHasClass{math-display}%
 			{\@expandafter{\cssDoEnvOpt{mdmathframed}}{\@cssFramedArgs}}%
 			{\@expandafter{\cssDoEnvOpt{mdframed}}{\@cssFramedArgs}}%
+		% insert a minipage if height or width was set so the frame is as large
+		\@hasdimfalse
+		\ifdim\cssWidth=1sp\else\@hasdimtrue\fi
+		\ifdim\cssHeight=1sp\else\@hasdimtrue\fi
+		\if@hasdim%
+			\ifdim\cssWidth=1sp\else
+				\addtolength{\cssWidth}{\dimexpr-\cssPaddingLeft-\cssPaddingRight%
+										-\cssBorderWidthTotal\relax}\fi%	
+			\ifdim\cssHeight=1sp\else
+				\addtolength{\cssHeight}{\dimexpr-\cssPaddingTop-\cssPaddingBottom\relax}\fi%	
+			\ifdim\cssHeight=1sp%					
+		   		\cssDoBefore{\begin{minipage}{\cssWidth}}%
+			\else
+				\ifdim\cssWidth=1sp
+					\setlength{\cssWidth}{\dimexpr\linewidth-\cssMarginLeft-\cssMarginRight%
+										  -\cssPaddingLeft-\cssPaddingRight%
+										  -\cssBorderWidthTotal\relax}\fi%
+				\cssDoBefore{\begin{minipage}[t][\cssHeight]{\cssWidth}}%
+		    \fi
+		    \cssDoBefore{\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
+			%note: DoAfter prepends, so in opposite order
+			\cssDoAfter{\end{minipage}}%
+		\fi    
 		\cssDoBefore{\@saveFootnotes}%
 	\fi
 }
