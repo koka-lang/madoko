@@ -62,7 +62,7 @@ public struct options(
   mjext         : string = "",  // semicolon separated list of mathjax extensions
   
   mathImgDir    : string = "math",    // directory for static math images
-  mathScale     : int    = 110,  // math scaling in percentage
+  mathScale     : int    = 108,  // math scaling in percentage
   mathDpi       : int    = 300,  // math resolution 
   mathEmbedLimit: int = 1024, // maximal embedded image size  
   mathDocClass  : string = "book",
@@ -208,10 +208,10 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
     elif (key=="citestyle") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="citeall" && value!="") { log("aux",@"\citation{*}"); options } 
-    elif (key=="mathstatic" || key=="mathimgdir") options(mathImgDir = if (value=="true") then "math" else value)
+    elif (key=="mathstatic" || key=="mathimgdir" || key=="mathimagedir") options(mathImgDir = if (value=="true") then "math" else value)
     elif (key=="mathscale") options(mathScale=ivalue)
     elif (key=="mathdpi") options(mathDpi=ivalue) 
-    elif (key=="mathembed") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
+    elif (key=="mathembed" || key=="mathembedlimit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="mathdocumentclass" || key=="mathdocclass") options(mathDocClass=value)
