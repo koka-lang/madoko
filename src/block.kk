@@ -57,7 +57,8 @@ val soloTag     = @"" + atag + tagContent + ">"
 val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n{2,}|\s*$)"
 
 // Attributes: allow escaped newline
-val xattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\} *"  // allow optional colon for maraku compat
+val rattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}" // allow optional colon for maraku compat
+val xattrs      = rattrs + " *"  
 val iattrs      = "(?:" + xattrs + ")?"           // inline: headers and fences
 val pattrs      = @"(?: {0,3}" + xattrs + ")?"    // after a paragraph
 val battrs      = @"(?:\n {0,3}" + xattrs + ")?"  // after a block element
@@ -219,10 +220,11 @@ function blockList( cap : matched, context : blockContext ) : block {
 
 
   function parseItem( icap : matched ) :  block {
-    item = icap.groups[3].replaceAll(if (icontext.pedantic) 
+    item = icap.groups[4].replaceAll(if (icontext.pedantic) 
                                        then rxindent4
                                        else rxindent(icap.groups[1].length) ,"") 
-    Item(parseBlocks(icontext,item))
+    attrs = icap.groups[3].parseAttrs
+    Item(parseBlocks(icontext,item),attrs)
   }
 
   function parseItems( src : string, acc : list<block> = Nil ) {
@@ -252,7 +254,7 @@ function blockList( cap : matched, context : blockContext ) : block {
 
 val rxlattrs    = regex(lattrs)
 val blankline   = regex(@"\n\n(?!\s*$)")
-val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
+val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
 val rxindent4   = regex(@"^    ",multiline=True)
 val rxFirstNum  = regex(@"^ *(\d+)\.")
 
