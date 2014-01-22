@@ -51,7 +51,7 @@ p.para-continue {
   margin-bottom: 0pt;
 }
 
-.para-block~p {
+.para-block+p {
   margin-top: 0pt;
 }
 

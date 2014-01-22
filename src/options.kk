@@ -208,7 +208,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
     elif (key=="citestyle") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="citeall" && value!="") { log("aux",@"\citation{*}"); options } 
-    elif (key=="mathstatic" || key=="mathimgdir" || key=="mathimagedir") options(mathImgDir = if (value=="true") then "math" else value)
+    elif (key=="mathstatic" || key=="mathdir") options(mathImgDir = if (value=="true") then "math" else value)
     elif (key=="mathscale") options(mathScale=ivalue)
     elif (key=="mathdpi") options(mathDpi=ivalue) 
     elif (key=="mathembed" || key=="mathembedlimit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))

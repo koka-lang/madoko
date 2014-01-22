@@ -10,6 +10,7 @@ Script		: reference.js
 Bib			: reference
 Package		: fontspec*
 Package		: [curve]xypic
+Math Embed	: 16
 
 MathJax Ext : AMScd
 Package		: amscd
@@ -170,23 +171,21 @@ inside a web browser or as a .NET executable. To install under Node.js is very
 easy:
 
 * Ensure you have [Node.js] installed on your system.
-* Open a command line window and run: `npm install madoko -g`
+* Open a command line window and run:\
+  `npm install madoko -g`
 
 and you are done. Translating a markdown document is done simply as:
 
 * `madoko -v mydoc.mdk`
 
 which generates `mydoc.html`. The `-v` flag gives more verbose output.
-To also generate a `.tex` file that can be processed by LaTeX into a
-pdf file, use:
+To also generate a PDF file, use:
 
-* `madoko --tex -v mydoc.mdk`
-* `pdflatex mydoc.tex`
+* `madoko --pdf -v mydoc.mdk`
 
-This assumes that you have LaTeX installed on your system. Popular LaTeX
-systems include [MikTeX] for Windows, and [MacTeX] for MacOSX.
-A full description of all command line options can be found in 
-Appendix [#sec-commandline]
+To generate a PDF, you need to have LaTeX installed on your system. Popular
+LaTeX systems include [MikTeX] for Windows, and [MacTeX] for MacOSX. A full
+description of all command line options can be found in  Appendix [#sec-commandline]
 
 [MikTeX]: http://miktex.org/
 [MacTeX]: http://tug.org/mactex/
@@ -702,28 +701,16 @@ If necessary, you can also include extra text for each entry:
 Read more [The book @Knuth:Tex;\ @Lamport:Latex (chapter 4)]. 
 ~
 
-When running Madoko the first time, we get a warning that these references
-are not yet defined:
-
-	warning: missing citation: Lamport:Latex
-	warning: missing citation: Knuth:Tex
-
-When Madoko finds such references, it writes them to a `.aux` file (together
-with the needed bibliography files) that can be read by BibTeX, and we can
-just run it directly on this file:
-
-* `bibtex myfile.aux`
-
-to generate the bibliography entries. The bibliography entries are
-included in your document using the special `[BIB]` element, for example:
+When Madoko finds such references, it writes them to a `.bib.aux` file
+(together with the needed bibliography files) that are read by BibTeX to
+generate the bibliography entries. BibTeX is called automatically by Madoko
+whenever the citations change. The generated bibliography entries are included
+in your document using the special `[BIB]` element, for example:
 
 	## References	{-}
 	[BIB]
 
 which you can see at the [end of this document][#sec-references].
-
-When running Madoko again, the bibliography entries are now known and no
-warnings will be issued.
 
 ### Bibliography styles  { #sec-bibstyle }
 
@@ -790,12 +777,6 @@ Moreover, if you leave out the brackets, you force a _textual_ style:
 | `+@Goo93`                     | [+@Goo93]{cite-style=natural .textual} | Long -- all authors             |
 | `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual} | Short -- just year              |
 | `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual} | Just authors                    |
-
-<!-- 
-| `[@Goo93]{.textual}`{.plain}  | [@Goo93]{cite-style=natural .textual}            | Force textual style              |
-testing: @Goo93, -@Goo93, +@Goo93, !@Goo93, @Goo9r5
-
--->
 
 In a numeric style, most of these attibutes have no effect and all the 
 bracketed cases are displayed as "[@Goo93]". 
@@ -938,30 +919,70 @@ See also Section [#sec-custom] on custom blocks that support mathematics,
 like `Theorem`, `Lemma`, `Proof`, etc. Madoko does not support the `\(` and
 `\[` commands to enclose mathematics since those are escape sequences.
 
-One more complex example, using the `xypic` package. To include this package,
-we used the `Package` metadata key:
 
-	Package: [curve]xypic
+### Advanced: using packages
 
-in this document.
+By default, Madoko supports most of the AMS mathematics commands,  i.e.
+`amsmath`, `amsfonts`, and `amssymb`.  However, sometimes you need specific
+packages. You can import more packages using the `Package` metadata key. For
+example, we can include the [amscd]  package,
+
+	Package: amscd
+
+to draw commutative diagrams:
 
 ~~ Sample
 ~ Equation
-\begin{xy}
-(0,40)*+{U}="u";(30,20)*+{X\times_ZY}=%
-"xzy";%
-(55,20)*+{X}="x";(30,-5)*+{Y}="y";%
-(55,-5)*+{Z}="z";%
-{\ar@{->}_p "xzy";"x"};%
-{\ar@{->}^q "xzy";"y"};%
-{\ar@{->}^g "y";"z"};
-{\ar@{->}^f "x";"z"};%
-{\ar@{->}|{(x,y)}"u";"xzy"};%
-{\ar@{->}@/^0.5pc/^x "u";"x"};%
-{\ar@{->}@/_/_{y} "u";"y"};
-\end{xy}
+\begin{CD}
+S^{{\mathcal{W}}_\Lambda}\otimes T @>j>> T\\
+@VVV @VV{P}V\\
+(S\otimes T)/I @= (Z\otimes T)/J
+\end{CD}
 ~
 ~~
+As a hint to understand the previous example, note that `@VVV` denotes a downward arrow,
+`@>j>>` a right pointing arrow with a label `j` on top, and `@=` a long equality.
+
+Here is an example of the more modern [xypic] package which we included in this
+document with the `curve` option:
+
+	Package: [curve]xypic
+
+With this package, we can draw very complex diagrams:
+
+~~ Sample
+~ Equation
+\xyoption{tips}
+\entrymodifiers={++[o][F-]}
+\SelectTips{cm}{}
+\xymatrix @-0.25em {
+*\txt{start} \ar[r]
+& 0 \ar@(r,u)[]^b \ar[r]_a
+& 1 \ar[r]^b \ar@(r,d)[]_a
+& 2 \ar[r]^b
+\ar `dr_l[l] `_ur[l] _(.2)a [l]
+&*++[o][F=]{3}
+\ar `ur^l[lll]`^dr[lll]^b [lll]
+\ar `dr_l[ll] `_ur[ll] [ll] }
+~
+~~
+
+or:
+
+~~ Sample
+~ Equation
+\xymatrix @-0.5em{
+U \ar@/_/[ddr]_y \ar@/^/[drr]^x
+\ar@{.>}[dr]|-{(x,y)} \\
+& X \times_Z Y \ar[d]^q \ar[r]_p
+& X \ar[d]_f \\
+& Y \ar[r]^g & Z }
+~
+~~
+
+As a hint to understand the above code, note that `\ar@/_/[ddr]_y` denotes an arrow,
+left curved (`@/_/`), going down, down, right (`[ddr]`), with a label `y`
+underneath. See the package [user guide][xypic] for more examples.
 
 <!--
 ~~ Sample
@@ -987,14 +1008,17 @@ in this document.
 
 For math-heavy documents, it is convenient to define LaTeX commands for 
 common operations. Such command definitions can be directly understood by LaTeX
-but need to be handled specially for MathJaX in an HTML page. Madoko defines
-the custom block `MathDefs` to support this.
+but need to be handled specially if the math is rendered dynamically in a HTML page. 
+Madoko defines the custom block `MathDefs` to support mathematics definitions 
+transparently across modes:
+
 ~~ Sample
 ~ MathDefs
 \newcommand{\infer}[3]{#1 \vdash #2\,:#3}
 ~ 
 We infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
 ~~
+
 Often it is convenient to put all such definitions in a separate `.tex` file and
 include it in the document as:
 
@@ -1002,72 +1026,27 @@ include it in the document as:
 	[INCLUDE="mathdefs.tex"]
 	~
 
-## Mathematics in HTML
+### Mathematics in HTML
 
-To typeset mathematics in HTML, Madoko can either typeset the math 
-using LaTeX, generating static images for each formula. This is the
-default mode and is generally preferred because pages load fast, 
-it requires no javascript, and pages load fast.
+To typeset mathematics in HTML, Madoko can either typeset the math
+statically or dynamically:
 
-The other mode is dynamic where the HTML uses the [MathJax] JavaScript
-library to render the math on the client-side. This means you do not
-need LaTeX but it is generally quite slow for math-heavy documents and
-not all of the LaTeX commands and packages are available.
+* `static`: In the default static mode, Madoko uses LaTeX to generate static images 
+	for each formula. This is generally preferred because pages load fast, 
+	and it requires no javascript. The drawback is that you
+	need to have LaTeX installed on your system. See the 
+	[metadata section][#item-math]
+	for more information on fine-tuning static mathematics.
 
-### Using static mode
+* `dynamic`:  Madoko uses the [MathJax] JavaScript
+	library to render the math on the client-side. This means you do not
+	need LaTeX but it is generally quite slow for math-heavy documents and
+	not all of the LaTeX commands and packages are available. This mode can be
+	enabled in the metadata as:
 
-The static mode is default and uses LaTeX and the `dvipng` program
-to generate static high-resolution images of all math formulas for
-display in web pages. This
-requires you to have LaTeX installed on your system, like [MikTeX]
-(on Windows) or [MacTeX] (on MacOSX). On Linux systems, LaTeX is
-usually available through package management.
+		Math Mode: dynamic
 
-
-
-
-
-### Advanced: Using MathJax extensions { #sec-mathext }
-
-By default, Madoko supports most of the AMS mathematics commands in HTML/MathJaX
-and the LaTeX backend. However, sometimes you need specific packages. You can
-specify extra MathJaX extensions through the `MathJax Ext` metadata key, and
-extra LaTeX packages through the `Package` key. 
-For example, we could include the [`AMScd`][amscd] package for drawing 
-commutative diagrams, as:
-
-	MathJax Ext: AMScd
-	Package    : amscd
-
-And now we can draw commutative diagrams as:
-~~ Sample
-~ Equation
-\begin{CD}
-S^{{\mathcal{W}}_\Lambda}\otimes T @>j>> T\\
-@VVV @VV{P}V\\
-(S\otimes T)/I @= (Z\otimes T)/J
-\end{CD}
-~
-~~
-
-Or the [`mhchem`][mhchem] package:
-
-	MathJax Ext: mhchem
-	Package    : mhchem
-
-which can be used to easily draw chemical formulas:
-
-~~ Sample
-~ Equation
-\ce{C6H5-CHO}\quad
-\ce{$A$ ->[\ce{+H2O}] $B$}\quad
-\ce{SO4^2- + Ba^2+ -> BaSO4 v}
-~
-~~
-
-In the previous examples, it may seem superfluous to specify both a MathJaX extension
-and LaTeX package but not in all cases the names or package functionality happens to
-be exactly the same.
+	The [metadata section][#item-math] contains more information on customizing MathJax.
 
 <!--
 As an example, here are some complex drawing examples using the
@@ -1119,6 +1098,7 @@ U \ar@/_/[ddr]_y \ar@{.>}[dr]|
 [mhchem]: http://www.ctan.org/pkg/mhchem
 [amscd]: http://www.ctan.org/pkg/amscd
 [xyjax]: http://sonoisa.github.io/xyjax/xyjax.html
+[xypic]: http://mirror.utexas.edu/ctan/macros/generic/diagrams/xypic/doc/xyguide.pdf
 
 ### Advanced: Preformatted math   { #sec-mathpre }
 
@@ -1330,7 +1310,7 @@ Any metadata key and value can be given (and referred to using
 	the BibTeX tool to generate a list of references (see Section [#sec-bib]).
 	```
 	Bib: ../mybibliography.bib
-	```
+	``` 
 * `Bib Style` or `Biblio Style` (=plain): Specify a BibTeX style that is used to format the list of 
 	references. See Section [#sec-bibstyle] for more information.
 	```
@@ -1341,6 +1321,14 @@ Any metadata key and value can be given (and referred to using
 	information.
 
 * `Cite All` (=false): Set to `True` to cite everything in the included bibliography files.
+
+* `BibTex` (=bibtex): The command to run the BibTeX tool. Set it to `false` to suppress
+	running BibTeX (for example, where writing bibliography entries by hand 
+	(see Section [#sec-custom-bib]))
+
+* `PdfLatex` (=pdflatex): The command used to run the pdfLaTeX program when the `--pdf`
+	command line flag is present. Can be used to set a different LaTeX engine for
+	example when using direct [unicode characters][#sec-unicode-latex].
 
 The following keys are not used as this moment but have a standard meaning:
 
@@ -1364,6 +1352,8 @@ Some keys are only interpreted for HTML output:
 	Css: http://foo.com/bar.css
 	Css: http://fonts.googleapis.com/css?family=Open+Sans
 	```
+	Use `Css: clear` to clear the list of CSS files. This can be used for example
+	to not include the default `madoko.css` style file.
 
 * `Script`: Specify a Javascript file that needs to be included in the HTML output
 	via a `<script>` tag. There can be many script keys present.
@@ -1376,7 +1366,7 @@ Some keys are only interpreted for HTML output:
 
 * {#item-math} `Math Mode` (=`static`): The mathematics rendering mode: `static` or `dynamic`.
   In static mode, you can use the following keys to fine-tune the rendering:
-	* `Math Image Dir:` _dir_ (=`math`): The relative directory where Madoko
+	* `Math Dir:` _dir_ (=`math`): The relative directory where Madoko
 		stores the images for the math formulas. All images can also be embedded
 		in the web page if you set `Math Embed` high enough.
 	* `Math Dpi:` _dpi_ (=`300`): The resolution at which the images are rendered.
@@ -1395,6 +1385,7 @@ Some keys are only interpreted for HTML output:
 		from the `.dvi` file generated by LaTeX.
 
   The following keys are used when math mode is dynamic:
+
 	* `MathJax` (=false): Set this key to the path of your MathJaX script.
 		Set this key to `True` to include the standard secure script
 		to the latest MathJaX installation on the [CDN network][mathjax-cdn].
@@ -1412,7 +1403,7 @@ Some keys are only interpreted for HTML output:
 
 For LaTeX output, the following keys are relevant:
 
-* `Document Class` (=book): Specify the LaTeX document class. Can be 
+* `Document Class` or `Doc Class` (=book): Specify the LaTeX document class. Can be 
    prefixed with its options using square brackets:
 
 		Document Class: [9pt]article
@@ -1425,6 +1416,16 @@ For LaTeX output, the following keys are relevant:
 
 	If the package name ends with `.tex` and has no options, it will be
 	included using the `\input` command instead.
+	You can clear the package list using `Package: clear`. This can be
+	used to not include the default `madoko.sty` package.
+
+	Sometimes, a package does not work when typesetting mathematics
+	in plain LaTeX. This can happen for example if the rest of the document
+	needs a package that only loads in some other latex engine, like XeLaTeX.
+	In that case, you can exclude the package when typesetting math by 
+	ending the name with a star:
+
+		Package: fontspec*
 
 * `Tex Header`: The value of this key is included literally before
 	the `\begin{document}` command of the LaTeX output.	
@@ -1934,18 +1935,23 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-| short |         long         |                  description                   |
-|-------|----------------------|------------------------------------------------|
-|       | `--version`          | Display version information.                   |
-| `-v`  | `--verbose`          | Be more verbose.                               |
-|       | `--odir=`_dir_       | Write output files to the specified directory. |
-|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
-|       | `--tex`              | Output a LaTeX file too.                       |
-| `-f`  | `--full`             | Generate a full html/latex document.           |
-|       | `--sanitize`         | Always escape or suppress user defined html.   |
-|       | `--pedantic`         | Pedantic mode.                                 |
-|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
-|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
+| short |         long         |                      description                      |
+|-------|----------------------|-------------------------------------------------------|
+|       | `--version`          | Display version information.                          |
+| `-v`  | `--verbose`          | Be more verbose.                                      |
+|       | `--odir=`_dir_       | Write output files to the specified directory.        |
+|       | `--xmp`              | Only process markdown between `<xmp>` tags.           |
+|       | `--tex`              | Output a LaTeX file too.                              |
+|       | `--pdf`              | Generate a PDF file using pdfLaTeX (implies `--tex`). |
+| `-f`  | `--full`             | Generate a full html/latex document.                  |
+|       | `--sanitize`         | Always escape or suppress user defined html.          |
+|       | `--pedantic`         | Pedantic mode.                                        |
+|       | `--bench`            | For benchmarking: turn off numbering,  etc.           |
+|       | `--installdir=`_dir_ | Set installation directory explicitly.                |
+|       | `--bibtex=`_cmd_     | command to run bibtex.                                |
+|       | `--pdflatex=`_cmd_   | command to run pdflatex.                              |
+|       | `--latex=`_cmd_      | command to run latex (to typeset static math).        |
+|       | `--dvipng=`_cmd_     | command to run dvipng (to typeset static math).       |
 
 All the boolean flags can be negated by prefixing them with `no`, for example
 to suppress LaTeX output, use `--notex`.
@@ -2014,8 +2020,12 @@ and not sprinkle this kind of formatting through your prose.
 ## Advanced: Not using BibTeX {#sec-custom-bib}
 
 If necessary, it is possible to completely circumvent using BibTeX and write
-your bibliograpy entries by hand. The bibliography entries need to be put inside
-a `Bibliography` block: 
+your bibliograpy entries by hand. First, we need to ensure Madoko will not 
+run the BibTeX tool for us:
+
+	BibTeX: False
+
+Next, we write our bibliography entries inside a `Bibliography` block: 
 
 	~ Bibliography { caption="00" }
 	...
@@ -2055,6 +2065,36 @@ For author-year citations, the entry should have an explicit `cite-label`:
 A `cite-label` should have the form _authors_`(`_year_`)`_longauthors_,
 where the _longauthors_ are optional. Madoko parses these labels to
 correctly format citations. 
+
+
+## Advanced: packages in dynamic math mode { #sec-mathext }
+
+In dynamic math mode packages are not loaded since MathJax cannot handle arbitrary
+LaTeX packages. We need a special MathJax 'extension'. For example,
+the [amscd][amscd] package is available as `AMScd` and we can use it in MathJax as:
+
+	MathJax Ext: AMScd
+
+Another package that is available in both Latex and MathJax is 
+the [`mhchem`][mhchem] package:
+
+	MathJax Ext: mhchem
+	Package    : mhchem
+
+which can be used to easily draw chemical formulas:
+
+~~ Sample
+~ Equation
+\ce{C6H5-CHO}\quad
+\ce{$A$ ->[\ce{+H2O}] $B$}\quad
+\ce{SO4^2- + Ba^2+ -> BaSO4 v}
+~
+~~
+
+In the previous examples, it may seem superfluous to specify both a MathJaX extension
+and LaTeX package but not in all cases the names or package functionality happens to
+be exactly the same.
+
 
 ## Advanced styling in LaTeX  { #sec-latex-style }
 
@@ -2219,10 +2259,13 @@ Some class attributes are treated specially by Madoko. In particular:
 	considered part of the preceding paragraph (and not end that paragraph).
 	This is for example done for the `Equation` block since equations are part
 	of a paragraph. This improves typography significantly, especially for
-	the LaTeX backend.
+	the LaTeX backend. Madoko will also assign the `para-continue` class to the
+	paragraph preceding a `.para-block` element.
 * `.indent`. This class is automatically added by Madoko to any paragraph that
-	follows other paragraphs (and is not inside a list). This can be used to switch
-	from _block_ mode paragraphs to _indented_ paragraphs instead using some CSS.
+	follows other paragraphs or `.para-block`s (and is not inside a list). 
+	This can be used to switch
+	from _block_ mode paragraphs to _indented_ paragraphs using some CSS:
+		p.indent { text-indent: 1em }
 * `.align-center`, `.align-right`, `.align-left`. These classes align the _content_
 	of a block (instead of the block itself) to the center, right, or left.
 * `.hidden`. Hides the content of the block.
@@ -2268,10 +2311,11 @@ document. For example:
 ```
 
 If no definition is given, LaTeX will work but output the entity as is,
-i.e. `&#10214;` for `#llbracket`. If you want to override this behaviour,
-you need to renew the `\mdUnknownUnicode` command.
+i.e. `&#10214;` for `#llbracket`. Under a unicode aware LaTeX, like [XeLaTeX]
+or [LuaLaTeX], it will call `\mdUnicodeChar` which will use the `\char` command
+to directly select the glyph from the current font.
 
-### Unicode font selection in LaTeX
+### Unicode font selection in LaTeX { #sec-unicode-latex }
 
 The previous examples works fine if only some unicode characters are used, 
 but becomes cumbersome if you need many unicode characters, for example,
@@ -2282,26 +2326,36 @@ in Section [#sec-map]:
 ~
 
 In this case, declaring all unicode characters by hand for each character
-would be too cumbersome. Instead, we are going to redefine `\mdUnknownUnicode`
-to select the right characters from the font directly.
+would be too cumbersome. Instead, we are going to redefine `\mdUnicodeChar`
+command which is called when a unicode character not declared.
 
 First, we need a unicode aware LaTex, like [XeLaTeX] or [LuaLaTeX] instead of
 the usual [pdfLaTeX]. Both of these variants usually come standard in your
-LaTeX distribution. With these LaTeX variants, we can use  the `fontspec`
+LaTeX distribution. You can enable this using:
+
+	Pdf Latex: xelatex
+
+With these LaTeX variants, we can use  the `fontspec`
 package, which we included in this document using `Package` metadata:
 
-	Package: fontspec
+	Package: fontspec*
 
-Next, we redefine the `\mdUnknownUnicode` command to select a specific
+Note that we appended a star to the name to exclude it when typesetting
+mathematics since `fontspec` fails to load under regular LaTeX.
+Next, we redefine the `\mdUnicodeChar` command to select a specific
 character (using the `\char` command) from a font that contains Hiragana,
 namely `MS Gothic` in  our case. There exist many other fonts too, like
 `SimSun`. Consult the XeLaTeX documentation for more information:
 
 	~ TexRaw
-	\renewcommand{\mdUnknownUnicode}[1]{{\fontspec{MS Gothic}\char#1}}
+	\renewcommand{\mdUnicodeChar}[1]{{\fontspec{MS Gothic}\char#1}}
 	~
 
 Using the above magic, we translated this document using XeLaTeX into a PDF file:
+
+* `madoko --pdf -v reference.mdk`
+
+or more explicitly as:
 
 * `madoko --tex -v reference.mdk`
 * `xelatex reference.tex`
