@@ -4,6 +4,7 @@ lib/*
 libnet/*
 libdoc/*
 test/out/*
+test/scripts/*
 node_modules/*
 *.text.html
 *.md.html
@@ -12,9 +13,13 @@ node_modules/*
 *.blg
 *.out
 *.log
+*.dim
+*.dimx
+*.dvi
 doc/*.tex
 doc/*.html
 doc/*.pdf
 doc/*.sty
 doc/*.css
+doc/math/*
 doc/Serif/*
