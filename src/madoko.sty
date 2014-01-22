@@ -60,8 +60,13 @@
 
 
 % inserted for unknown unicode entities
-\newcommand{\mdUnknownUnicode}[1]{\&\##1;}
-\newcommand{\mdUnicode}[1]{\protect\mdUnknownUnicode{#1}}
+\newcommand{\mdUnicodeUnknown}[1]{%
+  \ifXeTeX\mdUnicodeChar{#1}\else%
+  \ifLuaTeX\mdUnicodeChar{#1}\else%
+  \&\##1;\fi\fi
+}
+\newcommand{\mdUnicodeChar}[1]{\char#1} % directly insert the unicode glyph
+\newcommand{\mdUnicode}[1]{\protect\mdUnicodeUnknown{#1}}
 
 % allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \newcommand{\mdDefineUnicode}[2]{%
@@ -274,7 +279,8 @@
 
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
 \newcommand{\mathid}[1]{\mathit{#1}}
-
+\newcommand{\mathsp}{\:}
+\newcommand{\mathindent}{\mathsp\mathsp}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)
 \newcommand{\mdTag}{}
@@ -319,7 +325,6 @@
 % Bibliography
 % ---------------------------------------------------
 
-\newlength{\mdBibhang}
 
 \cssNewKey{css}{caption}{\cssCaption}{?}
 \newKey{css}{bibstyle}{%
@@ -329,26 +334,26 @@
 }
 \newKey{css}{bibdata}{\write\@mainaux{\string\bibdata{#1}}}
 
-\newcommand{\mdBibStyle}{numeric}
+
+\newcommand{\mdBibDisplay}{inline}
 
 \newenvironment{mdBibliography}[1][]{%
   \begin{mdDiv}[#1]%
-  \settowidth{\mdBibhang}{\@biblabel{\cssCaption}}%
-  \def\mdBibDisplay{inline}%
   \def\section*##1{}% suppress bibliography header
   \def\chapter*##1{}% suppress bibliography header
   \providecommand{\markboth}[2]{}%
-  \cssIfHasClass{bib-authoryear}%
-    {\setlength{\mdBibhang}{0em}\def\mdBibDisplay{hidden}}%
-    {}%
+  \cssIfHasClass{bib-authoryear}{\def\mdBibDisplay{hidden}}{}%
   \begin{thebibliography}{\cssCaption}}%
   {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
+
+\cssNewKey{css}{cite-label}{\cssCiteLabel}{}
+
 \newenvironment{mdBibitem}[1][]{%
-  \item[]\mdLabeltarget\hspace{-\mdBibhang}\begin{mdDivInline}[#1]}%  
+  \item[]\mdLabeltarget\begin{mdDivInline}[#1]\hspace*{-\leftmargin}}%  
   {\end{mdDivInline}}
 
-\cssClassRule{bibitem-before}{display=\mdBibDisplay,width=\mdBibhang,text-align=right}
+\cssClassRule{bibitem-before}{display=\mdBibDisplay,width=\leftmargin,text-align=right}
 \cssClassRuleDoBefore{newblock}{\newblock}
 
 % ---------------------------------------------------

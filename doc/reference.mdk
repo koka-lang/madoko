@@ -28,7 +28,7 @@ Pdf Latex   : XeLaTeX
 ~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
 			  notag tight 
 
-Script		: https://google-code-prettify.googlecode.com\
+XScript		: https://google-code-prettify.googlecode.com\
 				/svn/loader/run_prettify.js?lang=scm&lang=latex
 Title2		: (#Title,#Title)
 llbracket	: &#10214;
@@ -40,7 +40,7 @@ rrbracket	: &#10215;
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 \cssClassRule{sampleblock}{padding-bottom=1ex}
 
-\renewcommand{\mdUnknownUnicode}[1]{{\fontspec{MS Gothic}\char#1}}
+\renewcommand{\mdUnicodeChar}[1]{{\fontspec{MS Gothic}\char#1}}
 \newcommand{\hiragana}[1]{{\fontspec{MS Gothic}#1}}
 \cssClassRuleCmd{hiragana}{\hiragana}
 ~
@@ -263,8 +263,15 @@ and `>>`).
 ~
 
 Note that text enclosed in `<` and `>` brackets gets interpreted as direct 
-link. Similarly, Madoko will also replace some character sequences to a 
-proper symbol:
+link. Madoko will only smart quote single quotes if the last quote is not directly
+followed by a letter. This often prevents wrong quotation with words like "can't":
+
+~ Sample
+'really, I can't do this', he said. 
+I can't and mustn't do this.
+~ Sample
+
+Madoko will also replace multiple dashes and dots to a proper symbol:
 
 ~ Sample
 Please distinguish a minus sign, -, from the _en dash_ which
@@ -913,37 +920,7 @@ tables that can be broken over multiple pages.
 ## Mathematics   { #sec-math }
 
 Madoko documents can include mathematics in standard LaTeX syntax.
-To typeset mathematics in HTML, there are two options:
-
-* _static images_: In this mode, LaTeX is used to generate
-	static images for each math formula. This is the default mode.
-	The advantage is that any LaTeX mathematics can be rendered,
-	it requires no javascript, and page loads fast. The disadvantages
-	are twofold: you need to have `latex` (and `dvipng`) installed,
-	and images used to display formulas in HTML increase the web page size.
-
-* _dynamic_ via _MathJax_: In this mode, the HTML uses the MathJax
-	JavaScript library that typesets the math on the client-side.
-	The advantages are that it does not require LaTeX to process the
-	markdown and the font rendering is generally of high quality. 
-	The disadvantages include:
-	- Rendering in MathJax may be quite slow for math-heavy documents.
-	- Loading the MathJax scripts and fonts can easily be 1 to 2 Mb of data. 
-	- Not all of LaTeX mathematics and packages are available.
-
-
-This is supported in HTML pages through the [MathJax] library. 
-MathJax is a very rich library and supports almost every LaTeX command
-required for complex mathematics.
-A full list of supported commands is available [online][MathJaxCmds].
-By default,
-the MathJax library is not included in the generated HTML (as documents without
-mathematics do not need it). An easy way to enable MathJax is to set the
-`MathJax` [metadata][#sec-metadata] key at the start of the document:
-
-	MathJax: True
-
-Mathematics can be included in various ways. Generally, inline math should
+Generally, inline math should
 be typeset between `$`\ characters, while block equations should use the 
 `Equation` block syntax.
 
@@ -958,7 +935,15 @@ Block equations can also be included
 using the standard LaTeX `$$` characters on separate lines. However, the
 `Equation` block is preferred as it takes care of numbering, alignment, etc.
 See also Section [#sec-custom] on custom blocks that support mathematics,
-like `Theorem`, `Lemma`, `Proof`, etc. 
+like `Theorem`, `Lemma`, `Proof`, etc. Madoko does not support the `\(` and
+`\[` commands to enclose mathematics since those are escape sequences.
+
+One more complex example, using the `xypic` package. To include this package,
+we used the `Package` metadata key:
+
+	Package: [curve]xypic
+
+in this document.
 
 ~~ Sample
 ~ Equation
@@ -978,6 +963,7 @@ like `Theorem`, `Lemma`, `Proof`, etc.
 ~
 ~~
 
+<!--
 ~~ Sample
 ~ Equation
 \xymatrix @W=3pc @H=1pc @R=0pc @*[F-] {%
@@ -995,7 +981,7 @@ like `Theorem`, `Lemma`, `Proof`, etc.
 1 }\mathit{Answer}
 ~
 ~~
-
+-->
 
 ### Math commands   { #sec-mathdefs }
 
@@ -1016,13 +1002,41 @@ include it in the document as:
 	[INCLUDE="mathdefs.tex"]
 	~
 
-### Advanced: Using extensions { #sec-mathext }
+## Mathematics in HTML
+
+To typeset mathematics in HTML, there are two options:
+
+* `Static` (default): In this mode, LaTeX is used to generate
+	static images for each math formula in HTML. This is the default mode.
+	The advantage is that any LaTeX mathematics can be rendered,
+	it requires no javascript, and a web page loads fast. The disadvantages
+	are twofold: you need to have `latex` (and `dvipng`) installed,
+	and images used to display formulas in HTML increase the web page size.
+* `Dynamic`: In this mode, the HTML backend uses the [MathJax]
+	javascript library that typesets the math on the client-side.
+	The advantages are that it does not require LaTeX to process the
+	markdown and the font rendering is generally of high quality. 
+	The disadvantages include:
+	- Rendering in MathJax may be quite slow for math-heavy documents.
+	- Loading the MathJax scripts and fonts can easily be 1- to 2 Mb of data. 
+	- Not all of the LaTeX mathematics and packages are available. However,
+	  MathJax is a rich library and supports almost every LaTeX command
+      required for complex mathematics. A full list of supported commands is 
+      available [online][MathJaxCmds].
+
+The mathematics mode can be set using the `Math Mode` metadata key, for example:
+
+	Math Mode: Dynamic
+
+
+
+### Advanced: Using MathJax extensions { #sec-mathext }
 
 By default, Madoko supports most of the AMS mathematics commands in HTML/MathJaX
 and the LaTeX backend. However, sometimes you need specific packages. You can
 specify extra MathJaX extensions through the `MathJax Ext` metadata key, and
 extra LaTeX packages through the `Package` key. 
-For example, in this document, we included the [`AMScd`][amscd] package for drawing 
+For example, we could include the [`AMScd`][amscd] package for drawing 
 commutative diagrams, as:
 
 	MathJax Ext: AMScd
@@ -1117,7 +1131,7 @@ for computer science documents where mathematics is mixed with program code.
 Madoko supports a `MathPre` custom block that makes _preformatted_ math much
 easier to typeset. In particular:
 
-* Whitespace is preserved where spaces are replaced by medium space (`\:`) commands
+* Whitespace is preserved where spaces are replaced by medium space (`\mathsp`) commands
 	(except when the spaces directly follow a LaTeX command).
 
 * A name (consisting of letters and digits) is typeset in a `\mathid` command so 

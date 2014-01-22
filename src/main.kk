@@ -92,7 +92,7 @@ public function markdownFiles(args : string, action : (string,string,string,opti
 
               // copy early since async latex may start for math
               tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
-              if (xopts.tex) {
+              if (xopts.tex || xopts.mathmode.isStatic) {
                 tryCopyTextFileFromTo( "css.sty", opts.installDir, outName.dirname)
                 tryCopyTextFileFromTo( "madoko.sty", opts.installDir, outName.dirname)
                 ()

@@ -47,8 +47,11 @@ body.madoko h6+p {
 }
 
 /* Paragraphs */
-p.para-continue, p.para-block {
+p.para-continue {
   margin-bottom: 0pt;
+}
+
+.para-block~p {
   margin-top: 0pt;
 }
 
@@ -132,8 +135,8 @@ a.localref:hover {
 }
 
 .bib-numeric .bibitem {
-  margin-left: 2em;
-  text-indent: -2em;
+  margin-left: 3em;
+  text-indent: -3em;
 }
 
 .bibitem-before {

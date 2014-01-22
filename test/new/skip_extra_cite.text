@@ -2,10 +2,8 @@ Title 		: Koka: Programming with Row-Polymorphic Effects
 Subtitle	: A &Ccedil;ubtitle
 Heading Base: 2
 
+Doc Class	: article
 Bib       	: ../test
-Bib Style   : plainnat
-
-Package		: natbib
 
 Author      : Daan Leijen
 Affiliation : Microsoft Research

@@ -126,24 +126,12 @@ task("bench", [], function() {
 // Tasks: doc
 //-----------------------------------------------------
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
-task("doc", [], function(arg) {
-  mdCmd = "node lib/cli.js --tex -v doc/reference.mdk";
+task("doc", [], function() {
+  args = Array.prototype.slice.call(arguments).join(" ");
+  mdCmd = "node lib/cli.js -v " + args + " doc/reference.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
-    if (arg=="pdf" || arg=="--pdf" || arg=="bib" || arg=="--bib") {
-      process.chdir("doc");
-      bibCmd = "bibtex reference.aux";
-      jake.log("> " + bibCmd);
-      jake.exec(bibCmd, function() {
-        if (arg=="pdf" || arg=="--pdf") {
-          texCmd = "xelatex -halt-on-error reference.tex";
-          jake.log("> " + texCmd);
-          jake.exec(texCmd,function() { 
-            process.chdir("..");
-          },{interactive:true});
-        }
-      },{interactive:true});
-    }
+    complete();
   }, {interactive:true});
 });
 

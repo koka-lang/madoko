@@ -77,7 +77,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
         Nothing -> {
           system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
             if (errx!=0) {
-              println("could not find LaTeX: \"" + texCmd + "\"")
+              println("could not find latex: \"" + texCmd + "\"")
               if (notfound != "") println(notfound)
             }
             else {
@@ -91,7 +91,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
     }
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
-        if (opts.verbose >= 1) println("  rerun LaTeX to resolve references...")
+        if (opts.verbose >= 1) println("  rerun latex to resolve references...")
         runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, onError, onSuccess)
       }
       else {
@@ -206,7 +206,6 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
   warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { cap.matched })
   if (warnings.isNil) then return () 
 
-  println("latex warnings:")
   texlines = readTextFileDef(texFile,"").lines
   warnings.foreach fun(warning0) {
     warning = warning0.replace(rxLatexBrackets,"")
@@ -220,6 +219,7 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
     }
     println(warn + "\n")
   }
+  if (warnings.isCons) println("end of latex warnings.")  
 }
 
 val rxLatexLine = regex(@"lines?[\s:]*(\d+).*$") // only match single line warnings
