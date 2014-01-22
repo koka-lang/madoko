@@ -230,12 +230,16 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
     }
     println(warn + "\n")
   }
-  if (warnings.isCons) println("end of latex warnings.")  
+  match(logout.find(rxLatexOutput)) {
+    Just(cap) -> println(cap.matched)
+    Nothing   -> if (warnings.isCons) println("end of latex warnings.")  
+  }
 }
 
 val rxLatexLine = regex(@"lines?[\s:]*(\d+).*$") // only match single line warnings
 val rxLatexOutputActive = regex(@"\output is active\s*$") // only match single line 
 val rxLatexPage = regex(@"\s\[(\d+)\]")
+val rxLatexOutput = regex(@"^Output written on .*", multiline=True)
 val rxLatexBrackets = regex(@"(\s|[\[\]])+$")
 val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *$", multiline=True)
 

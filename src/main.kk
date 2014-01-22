@@ -74,34 +74,7 @@ public function markdownFiles(args : string, action : (string,string,string,opti
         match (input.tryReadTextFile()) {
           Left -> println("error: unable to read: " + input )
           Right(content) -> {
-            content.include(opts.options.bench, outName) fun(icontent) {
-              // set up options
-              xxopts = if (input.endsWith(".xmp.html") || input.endsWith(".xmp")) 
-                        then (opts.options)(xmp = True) else opts.options
-              mmopts = if (xxopts.xmp) then xxopts
-                        else xxopts.parseMeta( icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
-              mdim   = if (!(mmopts.mathmode.isStatic))
-                        then dict()
-                        else {
-                          dims = outName.changeExt(".math.dimx").readTextFileDef("")
-                          dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
-                        }
-
-              xopts  = xxopts(mathdim=mdim)
-              mopts  = mmopts(mathdim=mdim)  
-
-              // copy early since async latex may start for math
-              tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
-              if (xopts.tex || xopts.mathmode.isStatic) {
-                tryCopyTextFileFromTo( "css.sty", opts.installDir, outName.dirname)
-                tryCopyTextFileFromTo( "madoko.sty", opts.installDir, outName.dirname)
-                ()
-              }
-
-              process( input, outName, content, icontent, xopts, mopts) fun(html) {
-                action(html,input,outName,mopts)  
-              }
-            }
+            processContent(input, outName, content, opts, True, action)
           }
         } 
       } // foreach
@@ -109,8 +82,47 @@ public function markdownFiles(args : string, action : (string,string,string,opti
   }
 }
 
+function processContent( inName : string, outName : string, content : string, 
+                          opts : commandOptions, firstTime : bool = False,
+                          continue : (string,string,string,options) -> <io|e> () ) : <io|e> () 
+{
+  content.include(False, outName) fun(icontent) {
+    // set up options
+    xxopts = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
+              then (opts.options)(xmp = True) else opts.options
+    mmopts = if (xxopts.xmp) then xxopts
+              else xxopts.parseMeta( icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
+    mdim   = if (!(mmopts.mathmode.isStatic))
+              then dict()
+              else {
+                dims = outName.changeExt(".math.dimx").readTextFileDef("")
+                dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
+              }
+
+    xopts  = xxopts(mathdim=mdim)
+    mopts  = mmopts(mathdim=mdim)  
+
+    // copy early since async latex may start for math
+    tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
+    if (xopts.tex || xopts.mathmode.isStatic) {
+      tryCopyTextFileFromTo( "css.sty", opts.installDir, outName.dirname)
+      tryCopyTextFileFromTo( "madoko.sty", opts.installDir, outName.dirname)
+      ()
+    }
+
+    process( inName, outName, content, icontent, xopts, mopts, firstTime) 
+      fun() {
+        processContent(inName,outName,content,opts,False,continue) // redo!
+      }
+      fun(html) {
+        continue(html,inName,outName,mopts)  
+      }
+  }
+}
+
 function process( inName : string, outName : string, content : string, icontent : string, 
-                  xopts : options, mopts : options,
+                  xopts : options, mopts : options, firstTime : bool,
+                  redo : () -> <io|e> (),
                   continue : (string) -> <io|e> () ) : <io|e> () 
 {
   function genPdf(outTexName:string) {
@@ -120,7 +132,7 @@ function process( inName : string, outName : string, content : string, icontent 
   }
 
 
-  function phaseHtml( firstTime : bool = False ) 
+  function phaseHtml() 
   {
     // markdown to html          
     val (math,(warns,(logs, html))) = 
@@ -149,7 +161,7 @@ function process( inName : string, outName : string, content : string, icontent 
     // run bibtex?
     if (bibChanged && firstTime && mopts.bibtex!="") {
       runBibtex( bibAux, mopts ) fun(err) {
-        phaseHtml(False)
+        redo()
       }
     }
     else {
@@ -198,7 +210,7 @@ function process( inName : string, outName : string, content : string, icontent 
     }
   }
 
-  phaseHtml(True)
+  phaseHtml()
 }
 
 
