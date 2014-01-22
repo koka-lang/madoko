@@ -171,8 +171,8 @@
 \cssNewLengthKey{css}{margin-right}{\cssMarginRight}
 \cssNewLengthKey{css}{margin-top}{\cssMarginTop}
 \cssNewLengthKey{css}{margin-bottom}{\cssMarginBottom}
-\cssNewLengthKey{css}{width}{\cssWidth}
-\cssNewLengthKey{css}{height}{\cssHeight}
+\cssNewLengthKey[1sp]{css}{width}{\cssWidth}
+\cssNewLengthKey[1sp]{css}{height}{\cssHeight}
 \cssNewKey{css}{vertical-align}{\cssVerticalAlign}{}
 
 \cssNewPseudoKey{css}{margin}{margin-top=#1,margin-bottom=#1,margin-left=#1,margin-right=#1}
@@ -198,8 +198,8 @@
 \newcommand{\@cssFixMathSpacing}{\strut\vspace{-\baselineskip}} % fixes weird abovedisplay skip spacing
 \newcommand{\@cssBlockMargins}{%
 	\@hasdimfalse
-	\ifdim\cssWidth=0pt\else\@hasdimtrue\fi
-	\ifdim\cssHeight=0pt\else\@hasdimtrue\fi
+	\ifdim\cssWidth=1sp\else\@hasdimtrue\fi
+	\ifdim\cssHeight=1sp\else\@hasdimtrue\fi
 	\if@hasdim%
 		%minipage		
 		\ifdim\cssMarginTop=0pt\else\cssDoBefore{\vspace{\cssMarginTop}}\fi
@@ -210,10 +210,10 @@
 		{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
 		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
 		{\def\@cssValign{c}}}}% including `middle`
-		\ifdim\cssHeight=0pt%
+		\ifdim\cssHeight=1sp%
 	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidth}}%
 		\else
-			\ifdim\cssWidth=0pt \setlength{\cssWidth}{\linewidth}\fi%
+			\ifdim\cssWidth=1sp\setlength{\cssWidth}{\linewidth}\fi%
 			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeight]{\cssWidth}}%
 		\fi
 		\cssDoBefore{\@saveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
@@ -360,7 +360,7 @@
 	{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
 	{\eifstrequal{\cssVerticalAlign}{middle}{\def\@cssValign{c}}}%
 	{\def\@cssValign{t}}}%
-	\ifdim\cssHeight=0pt%
+	\ifdim\cssHeight=1sp%
 		\parbox[\@cssValign]{#1}{#2}%
 	\else%
 		\parbox[\@cssValign][\cssHeight]{#1}{#2}%
@@ -375,18 +375,18 @@
 	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%		
 	\if@needframe
 		\setlength{\fboxrule}{\cssBorderWidth}%
-		\ifdim\cssWidth=0pt%
+		\ifdim\cssWidth=1sp%
 			\cssWrapCmd{\fbox}%
 		\else
 		    \cssWrapCmd{\@robustFramebox{\cssWidth}}%
 		\fi
 	\else
-		\ifdim\cssWidth=0pt\else
+		\ifdim\cssWidth=1sp\else
 			\cssWrapCmd{\@robustMakebox{\cssWidth}}%
 		\fi
 	\fi
 	% height?
-	\ifdim\cssHeight=0pt\else\cssWrapCmd{\@robustHeight}\fi
+	\ifdim\cssHeight=1sp\else\cssWrapCmd{\@robustHeight}\fi
 	% raisebox?
 	\eifstrequal{\cssDisplay}{inline}{%
 		\eifstrequal{\cssVerticalAlign}{}{}%

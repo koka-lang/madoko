@@ -1624,8 +1624,6 @@ Also, units are not yet parsed correctly and only work if the syntax is the
 same between CSS and LaTeX. This means that _length_\/s must use common units,
 such as `10ex`, `5em`, `4px`, `2cm`, or `-6pt` for example. Percentages may
 only work in some particular cases (like the `width` of a table column). 
-Due to a bug, currently zero lengths (`0pt`) will not always work correctly
-and you need to use a very small length instead, like `0.0001pt`.
 
 A _color_ must be a named color at this point and known to LaTeX. However, you
 can also use a `TeXRaw` block to define a color name explicitly:
@@ -1645,7 +1643,7 @@ and we can program already many fancy examples:
 [aa]{vertical-align=-0.7ex}
 [r]{vertical-align=-1.4ex}
 [g]{vertical-align=-2.5ex}
-[h]{vertical-align=-5ex}**]{font-size=large height=0.0001pt }
+[h]{vertical-align=-5ex}**]{font-size=large height=0pt }
 he shouted but not even the next
 one in line noticed that something
 terrible had happened to him.
