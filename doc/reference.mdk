@@ -1826,7 +1826,7 @@ is matched against the content, and a match is replaced by _replacer_. The optio
 * `m`: do a multi-line match where `^` and `$` match the beginning and end of each line respectively
 	instead of just the start and end of the content.
 * `c`: do case conversion; enlarges valid escape characters with one of `luLUE` which can be
-	used to do case conversion, see Section [#sec-case].
+	used to do case conversion, see the next section for more information.
 
 [regex]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 
@@ -1865,10 +1865,10 @@ all words to title-case.
 The `replace` attribute can also perform a _mapping_ when it
 has the form: 
 
-> `//` _regex1_ `/` _repl1_ `//` ... `//` _regexN_ `/` _replN_ `//(`g`|`i`|`m`|`c`)`.
+> `//` _regex~1~_ `/` _repl~1~_ `//` ... `//` _regex~n~_ `/` _repl~n~_ `//(`g`|`i`|`m`|`c`)`.
 
-A mapping matches against the regular expression `(`_regex1_`)|`...`|(`_regexN_`)`,
-and when it finds a match on some group _i_, it applies the replacer _repli_. 
+A mapping matches against the regular expression `(`_regex~1~_`)|`...`|(`_regex~n~_`)`,
+and when it finds a match on some group _i_, it applies the replacer _repl~i~_. 
 The replacement expression can use capture groups as usual.
 
 For example, we could device a _greek_ or _hiragana_ mode replacement. Here is a simplified
