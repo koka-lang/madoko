@@ -133,10 +133,12 @@ function inlineBreak( cap : matched, context ) {
 }
 
 function inlineEntity( cap : matched, context : inlineContext ) : string {
+  if (context.bench) return context.fmtText(cap.matched)  
   name = cap.groups[1]
-  if (!(context.bench) && !(name.startsWith("#"))) 
-   then context.fmtText(entityNameToNum(name))
-   else context.fmtText(cap.matched)
+  match(context.fmt) {
+    FmtHtml | !(name.startsWith("#")) -> context.fmtText(entityNameToNum(name))
+    _ -> context.fmtText(cap.matched)
+  }
 } 
 
 function inlineNormal( cap : matched, context : inlineContext ) : string {
