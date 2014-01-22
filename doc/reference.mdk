@@ -10,7 +10,6 @@ Script		: reference.js
 Bib			: reference
 Package		: fontspec*
 Package		: [curve]xypic
-Math Embed	: 16
 
 MathJax Ext : AMScd
 Package		: amscd

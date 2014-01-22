@@ -436,7 +436,7 @@
 		\ifdim\cssPaddingBottom=0pt\else\cssDoBefore{\rule[-\cssPaddingBottom]{0pt}{\cssPaddingBottom}}\fi
 		\ifdim\cssPaddingTop=0pt\else\cssDoBefore{\rule{0pt}{\dimexpr\baselineskip*0.7+\cssPaddingTop\relax}}\fi
 	\fi
-}
+}	
 
 %-------------------------------------------------------------
 % css: Textalign, textindent etc 
@@ -451,17 +451,19 @@
 		{\@cssBlockText}%
 	{\eifstrequal{\cssDisplay}{block-inline}%
 		{\@cssBlockText}%
+	{\eifstrequal{\cssDisplay}{table-cell}%
+		{\@cssBlockText}%
 		{\@cssInlineText}%
-	}}
+	}}}
 
 \newcommand{\@cssBlockText}{%
 	\eifstrequal{\cssId}{}{}{\label{\cssId}}% set label
-	\eifstrequal{\cssTextAlign}{left}%
-		{\cssDoBefore\raggedright}%
+		\eifstrequal{\cssTextAlign}{left}%
+		{\cssDoBefore{\protect\raggedright}}%
 	{\eifstrequal{\cssTextAlign}{right}%
-		{\cssDoBefore\raggedleft}%
+		{\cssDoBefore{\protect\raggedleft}}%
 	{\eifstrequal{\cssTextAlign}{center}%
-		{\cssDoBefore\centering}%
+		{\cssDoBefore{\protect\centering}}%
 	{}}}%
 	\ifdim\cssLineHeight=0pt\else\setlength{\baselineskip}{\cssLineHeight}\fi
 	\noindent\ifdim\cssTextIndent=0pt\else\hspace*{\cssTextIndent}\fi	
