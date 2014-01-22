@@ -20,6 +20,7 @@ import htmlFormatter
 import texFormatter
 import texParser   // rxAuthorYear
 import md5
+import entity
 
 /* --------------------------------------
   Inline grammar 
@@ -57,7 +58,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("isup",      regex(@"^\^((?:[^\^\\\s]|\\.)+)\^"), inlineSup ),
   Rule("itagcode",  regex(@"^(<code\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)([\s\S]*?)(</code>)"), inlineTagCode ),
   Rule("itag",      regex(@"^<(?:!--[\s\S]*?-->|/?\w+\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)"), inlineTag ),
-  Rule("ientity",   regex(@"^&#?\w+;"), inlineNormal ),
+  Rule("ientity",   regex(@"^&(#?\w+);"), inlineEntity ),
   Rule("ilabel",    regex(@"^(#[a-zA-Z][\w\-:]*);?"), inlineLabel ),
   
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
@@ -130,6 +131,13 @@ function inlineBreak( cap : matched, context ) {
     _ -> context.fmtCmd("br","")
   }
 }
+
+function inlineEntity( cap : matched, context : inlineContext ) : string {
+  name = cap.groups[1]
+  if (!(context.bench) && !(name.startsWith("#"))) 
+   then context.fmtText(entityNameToNum(name))
+   else context.fmtText(cap.matched)
+} 
 
 function inlineNormal( cap : matched, context : inlineContext ) : string {
   context.fmtText(cap.matched)
