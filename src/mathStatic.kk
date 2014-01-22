@@ -203,14 +203,25 @@ val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
 function latexShowWarnings(texFile:string,logout:string,opts:options) : io () 
 {
   if (opts.verbose<2) then return ()
-  warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { cap.matched })
+  warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { (cap.index,cap.matched) })
   if (warnings.isNil) then return () 
 
   texlines = readTextFileDef(texFile,"").lines
-  warnings.foreach fun(warning0) {
+  warnings.foreach fun(iw) {
+    val (index,warning0) = iw
     warning = warning0.replace(rxLatexBrackets,"")
     warn = match(warning.find(rxLatexLine)) {
-      Nothing   -> warning
+      Nothing   -> {
+        match(warning.find(rxLatexOutputActive)) { 
+          Just -> {  // find a page
+            match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
+              Cons(pcap,_) -> warning + "\n> page " + pcap.groups[1]               
+              Nil -> warning
+            }  
+          } 
+          Nothing -> warning 
+        }
+      }
       Just(cap) -> {
         lineNo = cap.groups[1].parseInt.maybe(0,id)
         line = texlines.latexFindLine(lineNo)
@@ -223,7 +234,10 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
 }
 
 val rxLatexLine = regex(@"lines?[\s:]*(\d+).*$") // only match single line warnings
+val rxLatexOutputActive = regex(@"\output is active\s*$") // only match single line 
+val rxLatexPage = regex(@"\s\[(\d+)\]")
 val rxLatexBrackets = regex(@"(\s|[\[\]])+$")
+val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *$", multiline=True)
 
 function latexFindLine( src : vector<string>, lineNo : int, direction : int = 0 ) : div string
 {
@@ -246,7 +260,6 @@ function latexGetLine( src : vector<string>, lineNo : int ) : string
   }
 }
 
-val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *$", multiline=True)
         
 
 function mathDviToPng( dviName : string, xopts : options, pages : (int,int), continue : () -> io () ) : io () 

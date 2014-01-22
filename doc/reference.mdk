@@ -94,7 +94,7 @@ and Madoko provides many essential additions:
 * Powerful styling through [attributes][#sec-attr], [metadata rules][#sec-rules] and 
 	[replacement rules][#sec-replace].
 * Support for [syntax highlighting][#sec-code] and code with [mathematical formatting][#sec-mathpre].
-* Compatible with most common Markdown extensions, like [footnotes][#sec-footnotes], 
+* Compatible with most common Markdown extensions, such as [footnotes][#sec-footnotes], 
 	[mathematics][#sec-math], etc. Tries to be as compatible as possible with
 	existing Markdown implemenations like [Markdown Extra], [PanDoc], [Kramdown], or [MultiMarkdown].
 
@@ -546,8 +546,9 @@ Block quotes are written just as in email using `>` angle brackets:
 
 ~ Sample
 Let's start a block quote:
-> Of life's two chief prizes, beauty and truth, I found the
-> first in a loving heart and the second in a laborer's hand.\
+> Of life's two chief prizes, beauty and truth,
+> I found the first in a loving heart and the 
+> second in a laborer's hand.\
 > &emsp;&emsp; --- Khalil Gibran
 ~
 
@@ -1108,7 +1109,7 @@ for computer science documents where mathematics is mixed with program code.
 Madoko supports a `MathPre` custom block that makes _preformatted_ math much
 easier to typeset. In particular:
 
-* Whitespace is preserved where spaces are replaced by medium space (`\mathsp`) commands
+* Whitespace is preserved and spaces are replaced with a medium space (`\mathsp`) command
 	(except when the spaces directly follow a LaTeX command).
 
 * A name (consisting of letters and digits) is typeset in a `\mathid` command so 
@@ -1361,7 +1362,7 @@ Some keys are only interpreted for HTML output:
 	Script: lib/main.js
 	```
 
-* `HTML Header`: The value of this key is included literally in the 
+* `HTML Header`: The value is included literally in the 
 	`<head>` section of the HTML document.
 
 * {#item-math} `Math Mode` (=`static`): The mathematics rendering mode: `static` or `dynamic`.
@@ -1371,7 +1372,7 @@ Some keys are only interpreted for HTML output:
 		in the web page if you set `Math Embed` high enough.
 	* `Math Dpi:` _dpi_ (=`300`): The resolution at which the images are rendered.
 		The default is a fairly high resolution. Decrease it to make the
-		images generated smaller. Use the `-vv` flag to see the sizes of
+		generated images smaller. Use the `-vv` flag to see the sizes of
 		all the images generated for formulas.
 	* `Math Scale:` _scale_ (=`108`): Scaling in percentage used for all math. The default looks 
 		quite good for most fonts, but you may want to change it depending
@@ -1427,7 +1428,7 @@ For LaTeX output, the following keys are relevant:
 
 		Package: fontspec*
 
-* `Tex Header`: The value of this key is included literally before
+* `Tex Header`: The value is included literally before
 	the `\begin{document}` command of the LaTeX output.	
 
 ### Hash names		{ #sec-hashname }
@@ -1620,19 +1621,18 @@ as in CSS, but need to state each property separately as:
 
 	{ border-style=solid border-width=1px }
 
-Also, units are not yet parsed correctly and only work if the syntax is the
-same between CSS and LaTeX. This means that _length_\/s must use common units,
-such as `10ex`, `5em`, `4px`, `2cm`, or `-6pt` for example. Percentages may
-only work in some particular cases (like the `width` of a table column). 
+Also, _length_\/s must use common units, such as `10ex`, `5em`, `4px`, `2cm`,
+or `-6pt` for example. Percentages only work for widths.
 
-A _color_ must be a named color at this point and known to LaTeX. However, you
-can also use a `TeXRaw` block to define a color name explicitly:
+A _color_ must be a named color at this point and known to LaTeX. 
+A list of recognized colors can be found [here](http://www.latextemplates.com/svgnames-colors).
+However, you can always use a `TeXRaw` block to define a color name explicitly:
 
 	~ TeXRaw
 	\definecolor{ivory}{rgb}{1,1,0.941}
 	~
 
-Moreover, it is sometimes hard to emulate all CSS magic in LaTeX so some
+Moreover, it is sometimes hard to emulate a complex CSS layout in LaTeX so some
 particular combinations may not work as expected in LaTeX. We strive to make
 it work seamlessly though so please [report any issues][issues].
 Nevertheless, the above formatting commands should suffice in most situations
@@ -1877,7 +1877,8 @@ example:
 greek daan.
 ~
 ~ Hiragana {replace="//ko/&#12371;//ni/&#12395;//\
-	        \\(.)/\1//chi/&#12385;//ha/&#12399;//n/&#12435;//g"}
+	        \\(.)/\1//chi/&#12385;//ha/&#12399;//\
+	        n/&#12435;//g"}
 konnichiha is Japa\nese.
 ~
 ~~
@@ -1933,26 +1934,30 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-| short |         long         |                      description                      |
-|-------|----------------------|-------------------------------------------------------|
-|       | `--version`          | Display version information.                          |
-| `-v`  | `--verbose`          | Be more verbose.                                      |
-|       | `--odir=`_dir_       | Write output files to the specified directory.        |
-|       | `--xmp`              | Only process markdown between `<xmp>` tags.           |
-|       | `--tex`              | Output a LaTeX file too.                              |
-|       | `--pdf`              | Generate a PDF file using pdfLaTeX (implies `--tex`). |
-| `-f`  | `--full`             | Generate a full html/latex document.                  |
-|       | `--sanitize`         | Always escape or suppress user defined html.          |
-|       | `--pedantic`         | Pedantic mode.                                        |
-|       | `--bench`            | For benchmarking: turn off numbering,  etc.           |
-|       | `--installdir=`_dir_ | Set installation directory explicitly.                |
-|       | `--bibtex=`_cmd_     | command to run bibtex.                                |
-|       | `--pdflatex=`_cmd_   | command to run pdflatex.                              |
-|       | `--latex=`_cmd_      | command to run latex (to typeset static math).        |
-|       | `--dvipng=`_cmd_     | command to run dvipng (to typeset static math).       |
+| short |         long         |                  description                   |
+|-------|----------------------|------------------------------------------------|
+|       | `--version`          | Display version information.                   |
+| `-v`  | `--verbose`          | Be more verbose.                               |
+|       | `--odir=`_dir_       | Write output files to the specified directory. |
+|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
+|       | `--tex`              | Output a LaTeX file too.                       |
+|       | `--pdf`              | Generate a PDF file (implies `--tex`).         |
+| `-f`  | `--full`             | Generate a full html/latex document.           |
+|       | `--sanitize`         | Always escape or suppress user defined html.   |
+|       | `--pedantic`         | Pedantic mode.                                 |
+|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
+|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
+|       | `--bibtex=`_cmd_     | command to run bibtex.                         |
+|       | `--pdflatex=`_cmd_   | command to run pdflatex.                       |
+|       | `--latex=`_cmd_      | command to run latex (for static math).        |
+|       | `--dvipng=`_cmd_     | command to run dvipng (for static math).       |
+|       |                      |                                                |
 
 All the boolean flags can be negated by prefixing them with `no`, for example
 to suppress LaTeX output, use `--notex`.
+
+The verbose flag (`-v`) can be repeated to become more verbose. For example, 
+by using `-vv` LaTeX warnings and the size of math images are displayed.
 
 Normally, Madoko writes the output files to the same directory as where the
 input file resides but you can override this with the `--odir` option.  The
@@ -2192,7 +2197,7 @@ Where we recall that the standard metadata rules for a `Figure` are:
 					{.figure-caption}#nl{notag}#nl'
 			 toc=tof toc-line='#label. #caption'
 
-as shown in Appendix [#app-custom]. The sample uses two utility functions from
+as shown in Appendix [#app-custom]. The sample uses two extra functions from
 `css.sty`:
 
 * `\eifstrequal{`_str1_`}{`_str2_`}{`_then_`}{`_else_`}`: expands the
@@ -2378,8 +2383,8 @@ class rule that selects the right font for Japanese text:
 	\cssClassRuleCmd{hiragana}{\hiragana}
 	~	
 
-If most of your document is using such characters, you can also
-use the `\setmainfont` command of the `fontspec` package to set
+If most of your document is using such characters, the `\setmainfont` command
+ of the `fontspec` package can set
 the default for the entire document instead of using attributes.
 
 [XeLaTeX]: http://en.wikipedia.org/wiki/XeTeX
