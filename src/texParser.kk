@@ -218,8 +218,9 @@ function texQuot( quot : string, cap : matched, context : texContext ) : string 
 
 function texBibliography( cap : matched, context : texContext ) : string {
   numcite = if (context.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"
-  "~~ Bibliography { " + numcite +
-    " caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + "\n~~\n"
+  "~ Begin Bibliography { " + numcite +
+    " caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + 
+    "\n~ End Bibliography\n"
 }
 
 function texCiteAuthorYear( cap : matched, context : texContext ) : string {
@@ -268,12 +269,12 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   key = keyx.unbrace
   lab = labx.unbrace.parseTexX(context,True)  
   //trace("bibitem: lab: " + labx + " -> " + lab)
-  "~~~ Bibitem { id='" + key.definitionId + "' " + 
+  "~ Begin Bibitem { id='" + key.definitionId + "' " + 
                   (if (lab=="") then "" else "cite-label='" + lab + "' " ) +
                   (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label='" + lab + "' " else "") +
                   "}\n" +
    content.parseTexX(context) + 
-   "\n~~~\n"
+   "\n~ End Bibitem\n"
 }
 
 public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")

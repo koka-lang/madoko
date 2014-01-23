@@ -289,6 +289,7 @@ public struct attrs  (
  
   elem    : string = "",            // element name
   texelem : string = "",            // element name used for TeX command or environment
+  htmlelem : string = "",           // element name used for HTML tag
   name    : string = "",            // id, without "#" prefix
   label   : string = "",            // label: "1.2"
   source  : string = "",            // the original source (only set for certain elements)

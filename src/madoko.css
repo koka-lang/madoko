@@ -7,25 +7,25 @@
 ---------------------------------------------------------------------------*/
 
 /* Styling for full html pages */
-body.madoko {
+body {
   margin: 1em 16% 1em 12%;
   font-family: Cambria, Georgia, serif;
 }
 
-body.madoko p {
+p {
   text-align: justify;
 }
 
 /* style h5 and h6 headers a bit better */
-body.madoko h5, body.madoko h6 {
+h5,h6 {
   margin-top: 0.5em;
   margin-bottom: 0pt;
   font-size: 100%;
 }
-body.madoko h5+p {
-  margin-top: 0.5em
+h5+p {
+  margin-top: 0.5em;
 }
-body.madoko h6+p {
+h6+p {
   margin-top: 0pt;
 }
 

@@ -84,8 +84,11 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     elif (name=="elem") {
       acc(elem = value, classes = [value] + acc.classes )
     }
-    elif (name=="texelem") {
+    elif (name=="tex-elem") {
       acc(texelem = value )
+    }
+    elif (name=="html-elem") {
+      acc(htmlelem = value )
     }
     elif (name=="id") {
       //trace("id: " + value)

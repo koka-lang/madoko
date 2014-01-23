@@ -1170,8 +1170,8 @@ useful replacements.
 Madoko custom blocks are similar to the `div` element in HTML and allow the
 use of custom block elements that can be styled and processed in a particlar
 way. A custom block starts on new line starting with one or more tildes (`~`)
-optionally followed by the block name and attributes. It ends at the first
-line containing the same number of tildes that started this block. 
+optionally followed by the block name and attributes. It ends at _the first
+line containing the same number of tildes_ that started this block.
 
 ~~~ Sample
 ~ Note			 
@@ -1182,7 +1182,17 @@ And some italic text in an unnamed block.
 ~~
 ~~~ 
 
-Note that [git flavored markdown][gitmd] uses three or more tildes for fenced
+Note that blocks with the same number of tildes do not nest, e.g. the following 
+is wrong:
+
+	~ Note
+	~ Equation
+	e = mc^2
+	~
+	~
+
+since the `Note` will end at the first lonely tilde, not the second one.
+As an aside, [git flavored markdown][gitmd] uses three or more tildes for fenced
 code blocks. Since Madoko uses tildes for custom code blocks this cannot be
 used and Madoko only supports the more popular back-ticks (```` ``` ````)
 for fenced code blocks.
@@ -1201,6 +1211,22 @@ slanted font.
 ~ Slanted
 Here is my slanted custom block
 ~
+~~
+
+The "number-of-tildes" rule to delimit custom blocks is convenient and works
+fine  when nesting a small number of custom blocks, but for long  blocks or
+deep nesting, this can easily lead to confusion. To alleviate this, a custom
+block can also start with one or more tildes, followed by `Begin` _blockname_.
+Such block continues until a corresponding number of tildes is found followed
+by `End` _blockname_.  It is recommended to use this form of blocks for
+example in  [metadata rules][#sec-rules]
+
+~~ Sample
+~ Begin Slanted
+~ Begin Note
+Here is a slanted note.
+~ End Note
+~ End Slanted
 ~~
 
 ### Predefined custom blocks  { #sec-predef-custom }
@@ -2703,7 +2729,7 @@ formatting).
 ```
 ~Equation: label='[(@equation)]{.equation-label}' 
   		   replace='[#label]{.equation-before}#nl\
-  		            ~~Math#nl#source#nl~~#nl' 
+  		            ~ Begin Math#nl#source#nl~ End Math#nl' 
            .align-center tight .para-block
 ~Figure  : label='[@figure]{.figure-label}' .align-center 
 		   after='#nl********* {.figureline}#nl\
@@ -2758,5 +2784,8 @@ formatting).
      before='[#label.\ \ \ ]{.heading-before}'     
 ~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
      before='[#label.\ \ \ ]{.heading-before}' toc
+~H4: @h1-h2-h3-h4 
+  label='[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}'
+...
 ```
 

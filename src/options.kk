@@ -266,16 +266,16 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.+(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~~Math#nl#source#nl~~#nl' tight .para-block",
+  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math#nl#source#nl~ End Math#nl' tight .para-block",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center",
       @"~Figure   : after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]\
                            {.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
       @"~Figure   : toc=tof toc-line='#label. #caption'",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='#label'",
-      @"            before='[\[#label\]\ \ ]{.bibitem-before}' tight texelem=mdBibitem",
+      @"            before='[\[#label\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
 
-      @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' texelem=mdBibliography",
+      @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
       
       @"~Note     : .block before='[**Note**. ]{.note-before}'",
       @"~Remark   : .block before='[**Remark**. ]{.remark-before}'",
@@ -303,7 +303,7 @@ function defaultMeta( options : options ) : string {
       theorem("Example"),
       theorem("Definition"),
     ] +
-    list(1,max(options.headingDepth,options.tocDepth)).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
+    list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
     +
     ["\n"]
   ).join("\n")
@@ -319,10 +319,9 @@ function heading( depth : int, headingDepth : int, tocDepth : int ) {
   label = list(1,depth).map( fun(d){ headingCounter(d) } ).join(".")
   num   = depth.show
   "~h" + num + ": " + 
-    (if (depth > headingDepth) then "" else {
-       (if (depth > 1) then headingCounter(depth) else "") + 
-        " label='[" + label + "]{.heading-label}' before='[#label.\\ \\ \\ ]{.heading-before}'"
-     }) +
+    (if (depth > 1) then headingCounter(depth) else "") + 
+    " label='[" + label + "]{.heading-label}'" +
+    (if (depth > headingDepth) then "" else " before='[#label.\\ \\ \\ ]{.heading-before}'") +
     (if (depth > tocDepth) then "" else " toc")    
 }
 

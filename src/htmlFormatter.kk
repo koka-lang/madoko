@@ -19,14 +19,20 @@ import options
 public function fmtHtmlEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
    then txt 
-   else tagEnv(env, (if(env.length>2) then "\n" else "") + txt,attrs,context.sanitize)
+   else tagEnv(env.translate(attrs,context.sanitize), (if(env.length>2) then "\n" else "") + txt,attrs,context.sanitize)
 }
 
 
 public function fmtHtmlCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
-  if (cmd=="") then txt else tag(cmd,txt,attrs.htmlFormat(cmd,context.sanitize))
+  if (cmd=="") then txt else tag(cmd.translate(attrs,context.sanitize),txt,attrs.htmlFormat(cmd,context.sanitize))
 }
 
+function translate(tagName : string, attrs : attrs, sanitize : bool ) : string  {
+  if (attrs.empty || sanitize) return tagName
+  if (attrs.htmlelem != "") 
+   then attrs.htmlelem
+   else tagName
+}
 
 public function fmtHtmlEscape(context : inlineContext, txt : string, allowEntity : bool ) : string {
   htmlEscape(txt,allowEntity)

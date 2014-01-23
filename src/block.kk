@@ -99,7 +99,8 @@ val blockGrammar : grammar<block,blockContext> = [
   Rule("table",      regex(@"^ *" + rxtableHeader + rxtableSep + rxtableBody + pattrs + @"\n*"), blockTable ),
   Rule("nptable",    regex(@"^ *(\S[^|\n]*?\|.*?)\n *([-=~:]+ *\|[-=~| :]*)\n((?:.*\|.*(?:\n|$))*)" + pattrs + @"\n*"), blockNpTable ),
 
-  Rule("div",        regex(@"^ *(~~*) *([\w\d\-]*) *" + iattrs + @"\n([\s\S]*?)\n *\1 *(?:\2 *)?(?:\n+|$)"), blockDiv ),
+  Rule("divnamed",   regex(@"^ *(~+) *[Bb]egin +([\w\d\-]*) *" + iattrs + @"\n([\s\S]*?)\n *\1 *[Ee]nd +\2 *(?:\n+|$)"), blockDiv ),
+  Rule("div",        regex(@"^ *(~+) *([\w\d\-]*) *" + iattrs + @"\n([\s\S]*?)\n *\1 *(?:\n+|$)"), blockDiv ),
 
   Rule("special",    regex(@"^ *\[ *(TOC|FOOTNOTES|TITLE)(?: *= *([\w-]*))? *\] *\n*"), blockSpecial ), 
   Rule("para",       regex(@"^(.+(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 

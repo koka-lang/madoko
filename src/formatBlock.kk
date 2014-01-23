@@ -37,7 +37,7 @@ public function initialFormatContext( icontext : inlineContext, titleinfo : titl
 
 function fmtEnv( context : formatContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
   match(context.fmt) {
-    FmtHtml -> tagEnv(env, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
+    FmtHtml | context.inlineContext.bench -> tagEnv(env, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
     _ -> context.inlineContext.fmtEnv(env,txt,attrs)
   }
 }
