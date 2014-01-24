@@ -1,6 +1,12 @@
 Title		: Math Example
 Heading Base: 2
 Math Dpi	: 400
+MathJax		: True
+Math Mode	: static
+
+<style>
+.mathjax-inline:before { content: " | "; }
+</style>
 
 # Math and equation examples. 
 
@@ -182,3 +188,25 @@ for all $\vert z \vert\le 1$. In sum, equality holds in [#eq-eqn1] iff $f$ is a 
 ~~ Remark
 Someone needs to code \abs, i.e. \left\vert # \right\vert.  This is terribly annoying. Also, when using \$\$, why must one enter a line before and after.  
 ~~
+
+
+
+<script>
+function insertAfter(elem, newNode) {
+    elem.parentNode.insertBefore(newNode, elem.nextSibling);
+}
+[].forEach.call( document.getElementsByClassName("math-inline"), function(m) {
+	var span = document.createElement("span");
+	span.className = "mathjax-inline"
+	var content = document.createTextNode(m.alt);
+	span.appendChild(content);
+	insertAfter(m,span);
+});
+[].forEach.call( document.getElementsByClassName("math-display"), function(m) {
+	var div = document.createElement("div");
+	div.className = "mathjax-display"
+	var content = document.createTextNode(m.alt);
+	div.appendChild(content);
+	insertAfter(m,div);
+});
+</script>

@@ -218,7 +218,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       links = options.scripts.splitPaths
       links.map(fun(link) { "  <script src=\"" + escape(link.expand) + "\"></script>\n" }).join 
     }) +
-   (if (options.mathmode.isStatic || options.mathjax=="") then "" else {
+   (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
       ["  <script type=\"text/x-mathjax-config\">",
        "  MathJax.Hub.Config({",
        "    tex2jax: {inlineMath: [['$','$']]},",
