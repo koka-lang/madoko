@@ -21,10 +21,10 @@ Pdf Latex   : XeLaTeX
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
 ~Sample		: margin-bottom=2ex 
-			  replace="~~~~SampleBlock#nl\
-			           ````` {.SampleSource}#nl\
-				       #source#nl`````#nl* * *{ width=50% text-align=left }#nl\
-				       #source#nl~~~~#nl"
+			  replace="~ Begin SampleBlock#nl;\
+			           ````` {.SampleSource}#nl;\
+				       #source#nl;`````#nl;-------- { width=50% text-align=left }#nl;\
+				       #source#nl;~ End SampleBlock#nl"
 ~Slanted	: font-style=oblique
 ~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
 			  notag tight 
@@ -268,7 +268,7 @@ followed by a letter. This often prevents wrong quotation with words like "can't
 ~ Sample
 'really, I can't do this', he said. 
 I can't and mustn't do this.
-~ Sample
+~ 
 
 Madoko will also replace multiple dashes and dots to a proper symbol:
 
@@ -1835,7 +1835,10 @@ As an advanced example, for this document I defined a metadata rule for  the
 regular markdown block. In a simplified form, it is defined as:
 
 	~Sample: 
-	  replace="```#nl#source#nl```#nl----#nl~~#nl#source#nl~~#nl"
+	  replace="~ Begin SampleBlock#nl;\
+                 ````#nl#source#nl````nl;\
+                 ---- #nl#source#nl;\
+               ~ End SampleBlock"
 
 
 

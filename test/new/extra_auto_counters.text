@@ -1,3 +1,4 @@
+Section Depth: 6
 
 # header1
 
@@ -7,7 +8,8 @@ is the same as this reference [#header12][].
 Perhaps you just want the label text #header-211?
 
 ## header11 
-## header12 
+## header12
+
 #### header1201?
 # header2
 

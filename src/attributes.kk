@@ -397,15 +397,21 @@ function caseConvert( txt : string ) : string {
   }) 
 }
 
+public function expandKeys( txt : string, metadata : dict<string> ) : string {  
+  expandKeys(txt,"",attrsNone,metadata)
+}
+
 // expand keys in a string
 public function expandKeys( txt : string, source : string, attrs : attrs, metadata : dict<string>, notFound : (string,string) -> string = keyNotFound ) : string {  
   if (txt=="") then return txt
   txt.replaceAll(rxkey) fun(cap) {
-    key = cap.groups[1]
+    rawkey = cap.groups[1]
+    key = rawkey.normalizeId
     if (key=="") then cap.matched  // no key was matched
     elif (key=="label") then attrs.label
     elif (key=="id" && attrs.name != "") then attrs.name 
     elif (key=="nl") then "\n" 
+    elif (key=="hash" || rawkey=="#") then "#"
     elif (key=="class") then attrs.classes.join(" ") 
     elif (key=="source") then source // attrs.source 
     else match (attrs.keyvals.find(fun(kv){ kv.fst == key })) {
@@ -436,7 +442,7 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
     }
   }
 }
-val rxkey = regex(@"&#[xX]?\d+;|(?:\\/)?#([a-zA-Z][\w\-:]*)(?:;|\\/)?") 
+val rxkey = regex(@"&#[xX]?\d+;|\\#|(?:\\/)?#([a-zA-Z][\w\-:]*|#)(?:;|\\/)?") 
 
 function keyNotFound( key: string, matched : string ) : string {
   warning( "undefined key: " + key)

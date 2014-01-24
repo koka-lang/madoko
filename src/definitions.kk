@@ -25,11 +25,13 @@ public function parseDefinitions(
                      fcontext : formatContext,
                      blocks : list<block>,
                      metadata : metadata, 
-                     tocDepth : int = 0 ) :  div (list<block>,formatContext)
+                     tocDepth : int = 0,
+                     secBase : int = 2,
+                     secDepth : int = 6 ) :  div (list<block>,formatContext)
 {
   if (fcontext.inlineContext.bench) 
     then parseDefinitionsBench(fcontext,blocks)
-    else parseDefinitionsFull(fcontext,blocks,metadata,tocDepth)
+    else parseDefinitionsFull(fcontext,blocks,metadata,tocDepth,secBase,secDepth)
 }
 
 // Fast version for benchmarking
@@ -57,7 +59,9 @@ function parseDefinitionsFull(
                      fcontext : formatContext,
                      blocks : list<block>, 
                      mdata : metadata,
-                     tocDepth : int = 0 ) :  div (list<block>,formatContext)
+                     tocDepth : int = 0,
+                     secBase : int,
+                     secDepth : int ) :  div (list<block>,formatContext)
 {
   val counters = mdict()
   val nested   = mdict()
@@ -146,7 +150,7 @@ function parseDefinitionsFull(
       }
       DefFootnote(id,content) -> {
         footnoteCount := footnoteCount+1
-        ncontent = content.mapBlocks(parseDefBlock)
+        ncontent = content.mapBlocks(secNone,parseDefBlock)
         footnotes[id] := Footnote(footnoteCount.show, fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) })
         footnoteItems := Cons(Item(content,Attrs(name="fn-" + id)),footnoteItems)        
         attrsNone
@@ -159,9 +163,7 @@ function parseDefinitionsFull(
       HLine(attrs=xs) -> xs
       Table(attrs=xs) -> xs
       Div(attrs=xs)   -> xs
-      Heading(_,txt,xs) -> {
-        xs.generateHeaderId(txt)
-      }
+      Heading(_,_,xs) -> xs 
       Special(name) -> {
         if (name == "FOOTNOTES") then footnotesAtEnd := False
         attrsNone
@@ -172,7 +174,8 @@ function parseDefinitionsFull(
     attrs.process( previousIsPar, block )
   }
   
-  newblocks     = blocks.mapBlocks(parseDefBlock)
+  secinfo = secInit(secBase=secBase,secMax=secDepth)
+  newblocks     = blocks.mapBlocks(secinfo,parseDefBlock)
   tocBlocks     = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                   (tocs.list.map fun(entry) {
                      (entry.fst, createToc(entry.snd.reverse,fcontext.inlineContext.metadata))
@@ -187,30 +190,50 @@ function parseDefinitionsFull(
               tocBlocks, footnoteBlock )  )
 }
 
-function mapBlocks( blocks : list<block>, action : (bool,block) -> <st<h>|e> block  ) : <st<h>|e> list<block> {
+struct secinfo(
+  level   : int,  // current level; start at 1
+  secMax  : int,  // max level for sections 
+  secMin  : int,  // min level for sections
+  secBase : int   // level used is max(base,level)
+)
+
+val secInit = Secinfo(1,6,1,1)
+val secNone = Secinfo(1,0,1,1)
+
+function mapBlocks( blocks : list<block>, secinfo : secinfo, 
+                    action : (bool,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
   var previousIsPar := False
-  blocks.map fun(block) {
+  blocks.sections(secinfo).map fun(block) {
     nblock = action(previousIsPar,block)
   
     match(nblock) {
       Para -> previousIsPar := True
-      Div  | nblock.blockName == "figure" -> ()
-      DefLink -> ()
+      Div  | nblock.blockName == "figure" -> ()  // leave as is
+      DefLink     -> ()
       DefFootnote -> ()
-      _   -> previousIsPar := False
+      _    -> previousIsPar := False
     }
     match(nblock) {
       Div(content,xs) -> {
-        ncontent = match(content.mapBlocks(action)) {
+        nsecinfo = if (nblock.blockName!="section") then secinfo else {
+                     match(xs.hasKey("data-level")) {
+                       Just(value) -> {
+                          i = value.parseInt.maybe(secinfo.secMin,id)
+                          secinfo(level=i+1,secMin=i+1)
+                       }
+                       Nothing -> secinfo(level=secinfo.level+1,secMin=secinfo.secMin+1)
+                     }
+                   }
+        ncontent = match(content.mapBlocks(nsecinfo,action)) {
           Cons(Para(txt,attrs),rest) | xs.tight
             -> Cons(Line(txt,False,attrs),rest)
           other -> other
         }
         Div(ncontent,xs)
       }
-      Quote(content,xs)    -> Quote(content.mapBlocks(action),xs)
-      List(tag,content,xs) -> List(tag,content.mapBlocks(action),xs)
-      Item(content,xs)     -> Item(content.mapBlocks(action),xs)
+      Quote(content,xs)    -> Quote(content.mapBlocks(secNone,action),xs)
+      List(tag,content,xs) -> List(tag,content.mapBlocks(secNone,action),xs)
+      Item(content,xs)     -> Item(content.mapBlocks(secNone,action),xs)
       _ -> nblock
     }
   }
@@ -232,6 +255,7 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
 } 
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
+  if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
   citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
   txt = attrs.transformText(attrs.source,fcontext.inlineContext.metadata)
@@ -282,7 +306,66 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
       labels["#" + key] := Label("metadata",value)
     }
   }
-}  
+}
+
+//--------------------------------------------------------
+// Divide into sections
+//--------------------------------------------------------
+
+function sections( blocks : list<block>, secinfo : secinfo ) : div list<block>
+{
+  if (secinfo.level > secinfo.secMax) return blocks
+  match (blocks.findHeading(secinfo)) {
+    Nothing -> blocks
+    Just((pre,h,post)) -> pre + h.sectionSpan(post,secinfo)
+  }
+}
+
+function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : div list<block>
+{
+  function createSection(bs) {
+    match(h) {
+      Heading(d,_,attrs) -> {
+        secattrs = "html-elem=section .section" + d.show +
+                     (if (attrs.name=="") then "" else " id='section-" + attrs.name + "'")
+        [Div(Cons(h,bs), secattrs.parseAttrs("section"))]
+      }
+      _ -> Cons(h,bs)
+    }
+  }
+
+  match(blocks.findHeading(secinfo)) {
+    Nothing -> blocks.createSection()
+    Just((pre,hdr,post)) -> pre.createSection() + hdr.sectionSpan(post,secinfo)
+  }    
+}
+
+function findHeading( blocks : list<block>, secinfo : secinfo ) : maybe<(list<block>,block,list<block>)>
+{
+  lvl = max(secinfo.level,secinfo.secBase)
+  val (pre,post) = blocks.span(fun(b) { 
+    d = b.headingLevel(lvl+1, lvl)
+    (d > lvl || d < secinfo.secMin)
+  })  
+  match(post) {
+    Cons(hdr,rest) -> Just((pre,hdr,rest))
+    Nil -> Nothing
+  }
+}
+
+
+function headingLevel( block : block, default : int, defaultSection : int = default ) : int {
+  match(block) {
+    Heading(d)   -> d
+    Div(_,attrs) | block.blockName=="section" -> {
+      match(attrs.hasKey("data-level")) {
+        Just(value) -> value.parseInt.maybe(defaultSection,id)
+        Nothing     -> defaultSection
+      }
+    }
+    _  -> default
+  }
+}
 
 //--------------------------------------------------------
 // TOC
@@ -292,7 +375,7 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
 // Create a table of contents
 function createToc( headings : list<(int,attrs)>, metadata : dict<string> ) : div block 
 {
-  Div( [headings.tocItems(0,metadata).tocList], Attrs(name="toc",classes=["toc"]) )
+  Div( [headings.tocItems(0,metadata).tocList], Attrs(name="toc",classes=["toc"],htmlelem="nav") )
 }
 
 function tocList( items : list<block> ) : block {

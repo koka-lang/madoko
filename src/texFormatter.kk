@@ -320,7 +320,7 @@ public function fmtTexTitle(context : inlineContext, titleinfo : titleinfo ) : s
 /* --------------------------------------
   Full header 
 ---------------------------------------- */
-public function fmtTexFull(body : string, options : options ) : string {
+public function fmtTexFull(body : string, options : options, metadata : dict<string> ) : string {
   fmtTexFullX(body,options,False)
 }
 

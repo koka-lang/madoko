@@ -165,7 +165,9 @@ function blockHtml( cap : matched, context : blockContext ) :  block  {
 }
 
 function blockHeading( cap : matched, context : blockContext ) : block  {
-  Heading(cap.groups[1].length, cap.groups[2], cap.groups[3].parseAttrs)
+  attrs = cap.groups[3].parseAttrs
+  txt   = cap.groups[2]
+  Heading(cap.groups[1].length, cap.groups[2], if (context.bench) then attrs else attrs.generateHeaderId(txt))
 }
 
 function blockHeadingLine( cap : matched, context : blockContext ) : block {

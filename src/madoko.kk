@@ -66,7 +66,8 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
     = parseDefinitions(initialFormatContext(icontext,options.titleInfo,options.headingBase,options.pedantic,fmt), 
                         blocks,
                         options.metadata,
-                        options.tocDepth)
+                        options.tocDepth,
+                        options.sectionBase,options.sectionMax)
 
   // parse inline elements
   if (options.verbose > 2) then trace("parse inline")
@@ -81,7 +82,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
            then True else options.full.maybe(False,id) 
 
   res = if (xfull) 
-         then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options)
+         then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options,fcontext.inlineContext.metadata)
          else body 
   if (options.verbose > 2) then trace("done")
   res           

@@ -56,6 +56,8 @@ public struct options(
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth  : int  = 3, // default depth where headings are numbered
   headingBase   : int  = 1, // heading level for #
+  sectionMax    : int  = 0, // maximal depth for adding sections (0 = disable)
+  sectionBase   : int  = 1, // starting section level.
   
   mathmode      : mathmode = Static, // mode used to render math
   mathjax       : string = "-",  // mathjax scripts path (use "-" for default path)
@@ -191,36 +193,38 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
 
     //trace("from meta: " + key + "=" + value)
     if   (key=="title")  options(title=value)
-    elif (key=="subtitle")  options(subtitle=value)
+    elif (key=="sub-title" || key=="subtitle")  options(subtitle=value)
     elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
     elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
     elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
-    elif (key=="tocdepth" && ivalue >= 0) options(tocDepth = ivalue)
-    elif ((key=="headingdepth" || key=="headerdepth") && ivalue >= 0) options(headingDepth = ivalue)
-    elif ((key=="headingbase" || key=="headerbase" || key=="baseheaderlevel") && ivalue >= 0) options(headingBase = ivalue)
-    elif (key=="documentclass" || key=="docclass") options(docClass=value)
-    elif (key=="bib" || key=="bibliography" || key=="bibdata" || key=="bibtex") options(bib=if (value=="") then "" else options.bib + ";" + value)
-    elif (key=="bibstyle" || key=="bibliostyle" || key=="bibliographystyle") options(bibStyle=value)
-    elif (key=="mathjaxext" || key=="mathjaxextension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
-    elif (key=="htmlheader") options(htmlHeader = value)
+    elif (key=="toc-depth" && ivalue >= 0) options(tocDepth = ivalue)
+    elif ((key=="heading-depth" || key=="header-depth") && ivalue >= 0) options(headingDepth = ivalue)
+    elif ((key=="heading-base" || key=="header-base" || key=="base-header-level") && ivalue >= 0) options(headingBase = ivalue)
+    elif (key=="document-class" || key=="doc-class") options(docClass=value)
+    elif (key=="bib" || key=="bibliography" || key=="bib-data") options(bib=if (value=="") then "" else options.bib + ";" + value)
+    elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
+    elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
+    elif (key=="html-header") options(htmlHeader = value)
     elif (key=="author") options(author=if (value=="") then "" else options.author + ";" + value)
-    elif (key=="affiliation") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
+    elif (key=="affiliation" || key=="institute") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
-    elif (key=="citestyle") options(citestyle=parseCiteStyle(lvalue))
-    elif (key=="citeall" && value!="") { log("aux",@"\citation{*}"); options } 
-    elif (key=="mathstatic" || key=="mathdir") options(mathImgDir = if (value=="true") then "math" else value)
-    elif (key=="mathscale") options(mathScale=ivalue)
-    elif (key=="mathdpi") options(mathDpi=ivalue) 
-    elif (key=="mathembed" || key=="mathembedlimit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
+    elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+    elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
+    elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (value=="true") then "math" else value)
+    elif (key=="math-scale") options(mathScale=ivalue)
+    elif (key=="math-dpi") options(mathDpi=ivalue) 
+    elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
-    elif (key=="mathdocumentclass" || key=="mathdocclass") options(mathDocClass=value)
+    elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
     elif (key=="pdflatex") options(pdflatex=value)
     elif (key=="bibtex") options(bibtex=value)
-    elif (key=="mathmode") options.setMathMode(value)
+    elif (key=="math-mode") options.setMathMode(value)
     elif (key=="mathjax") then (if (value!="")
                                  then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "-" else value))
                                  else options(mathmode=Static, mathjax=""))
+    elif (key=="section-depth") options(sectionMax=ivalue)
+    elif (key=="section-base") options(sectionBase=ivalue)
     else {
       if (options.verbose >= 3) warning("custom metadata key: " + key)
       options
@@ -256,20 +260,20 @@ public function parsePlainMeta( txt : string, metadata : metadata = [], verbose 
       value = cap.groups[3].joinLines.trim
       kvs   = if (cap.groups.matchedOn(2))
                then cap.groups[1].toLower.split(",").list.map(fun(k) { (k,value) })
-               else [(cap.groups[1].normalizeId.replaceAll("-",""), value)]
+               else [(cap.groups[1].normalizeId, value)]
       if (verbose) then trace("meta data:" + cap.groups[1] + ": " + value )
       parsePlainMeta( txt.substr1(cap.next), kvs + metadata, verbose )
     }
   }
 } 
-val rxMeta = regex(@"^"+ metaKey + @" *(.+(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
+val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
 val metaKey = @"((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math#nl#source#nl~ End Math#nl' tight .para-block",
-      @"~Figure   : label='[@figure]{.figure-label}' .align-center",
+      @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
       @"~Figure   : after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]\
-                           {.caption-before}#caption]{.figure-caption}#nl{notag}#nl'",
+                           {.caption-before}#caption]{.figure-caption html-elem=fig-caption}#nl{notag}#nl'",
       @"~Figure   : toc=tof toc-line='#label. #caption'",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='#label'",
@@ -277,6 +281,11 @@ function defaultMeta( options : options ) : string {
 
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
       
+      @"~Article  : html-elem='article'",
+      @"~Section  : html-elem='section'",
+      @"~Aside    : html-elem='aside'",
+      @"~Nav      : html-elem='nav'",
+
       @"~Note     : .block before='[**Note**. ]{.note-before}'",
       @"~Remark   : .block before='[**Remark**. ]{.remark-before}'",
       @"~Proof    : .block before='[**Proof**. ]{.proof-before}'",

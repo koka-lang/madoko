@@ -164,7 +164,7 @@ function fmtMath( context : inlineContext, txt : string, attrs : attrs = attrsNo
         log("math",@"\begin{mdInlineSnippet}[" + digest + "]\n$" + txt + "$\n\\end{mdInlineSnippet}")
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtText(mtxt)
-          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrs)
+          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrs.addClass("math-inline"))
         }
       }
       else context.fmtText(mtxt)
