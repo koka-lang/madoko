@@ -150,7 +150,7 @@ function parseDefinitionsFull(
       }
       DefFootnote(id,content) -> {
         footnoteCount := footnoteCount+1
-        ncontent = content.mapBlocks(secNone,parseDefBlock)
+        ncontent = content.mapBlocks(parseDefBlock)
         footnotes[id] := Footnote(footnoteCount.show, fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) })
         footnoteItems := Cons(Item(content,Attrs(name="fn-" + id)),footnoteItems)        
         attrsNone
@@ -163,7 +163,7 @@ function parseDefinitionsFull(
       HLine(attrs=xs) -> xs
       Table(attrs=xs) -> xs
       Div(attrs=xs)   -> xs
-      Heading(_,_,xs) -> xs 
+      Heading(_,txt,xs) -> xs.generateHeaderId(txt)
       Special(name) -> {
         if (name == "FOOTNOTES") then footnotesAtEnd := False
         attrsNone
@@ -174,8 +174,7 @@ function parseDefinitionsFull(
     attrs.process( previousIsPar, block )
   }
   
-  secinfo = secInit(secBase=secBase,secMax=secDepth)
-  newblocks     = blocks.mapBlocks(secinfo,parseDefBlock)
+  newblocks     = blocks.mapBlocks(parseDefBlock)
   tocBlocks     = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                   (tocs.list.map fun(entry) {
                      (entry.fst, createToc(entry.snd.reverse,fcontext.inlineContext.metadata))
@@ -184,7 +183,9 @@ function parseDefinitionsFull(
                    else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes"]))  
   fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
-  (fblocks,                   
+  secblocks = newblocks.sections(secInit(secBase=secBase,secMax=secDepth))
+
+  (secblocks,                   
    fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labels.freeze, 
                                           footnotes=footnotes.freeze, defaults=defaultAttrs ),
               tocBlocks, footnoteBlock )  )
@@ -193,17 +194,16 @@ function parseDefinitionsFull(
 struct secinfo(
   level   : int,  // current level; start at 1
   secMax  : int,  // max level for sections 
-  secMin  : int,  // min level for sections
-  secBase : int   // level used is max(base,level)
+  secBase : int   // level used is max(base,level) 
 )
 
-val secInit = Secinfo(1,6,1,1)
-val secNone = Secinfo(1,0,1,1)
+val secInit = Secinfo(1,6,1)
+val secNone = Secinfo(1,0,1)
 
-function mapBlocks( blocks : list<block>, secinfo : secinfo, 
+function mapBlocks( blocks : list<block>, 
                     action : (bool,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
   var previousIsPar := False
-  blocks.sections(secinfo).map fun(block) {
+  blocks.map fun(block) {
     nblock = action(previousIsPar,block)
   
     match(nblock) {
@@ -215,25 +215,16 @@ function mapBlocks( blocks : list<block>, secinfo : secinfo,
     }
     match(nblock) {
       Div(content,xs) -> {
-        nsecinfo = if (nblock.blockName!="section") then secinfo else {
-                     match(xs.hasKey("data-level")) {
-                       Just(value) -> {
-                          i = value.parseInt.maybe(secinfo.secMin,id)
-                          secinfo(level=i+1,secMin=i+1)
-                       }
-                       Nothing -> secinfo(level=secinfo.level+1,secMin=secinfo.secMin+1)
-                     }
-                   }
-        ncontent = match(content.mapBlocks(nsecinfo,action)) {
+        ncontent = match(content.mapBlocks(action)) {
           Cons(Para(txt,attrs),rest) | xs.tight
             -> Cons(Line(txt,False,attrs),rest)
           other -> other
         }
         Div(ncontent,xs)
       }
-      Quote(content,xs)    -> Quote(content.mapBlocks(secNone,action),xs)
-      List(tag,content,xs) -> List(tag,content.mapBlocks(secNone,action),xs)
-      Item(content,xs)     -> Item(content.mapBlocks(secNone,action),xs)
+      Quote(content,xs)    -> Quote(content.mapBlocks(action),xs)
+      List(tag,content,xs) -> List(tag,content.mapBlocks(action),xs)
+      Item(content,xs)     -> Item(content.mapBlocks(action),xs)
       _ -> nblock
     }
   }
@@ -316,21 +307,39 @@ function sections( blocks : list<block>, secinfo : secinfo ) : div list<block>
 {
   if (secinfo.level > secinfo.secMax) return blocks
   match (blocks.findHeading(secinfo)) {
-    Nothing -> blocks
-    Just((pre,h,post)) -> pre + h.sectionSpan(post,secinfo)
+    Nothing -> blocks.sectionMap(secinfo)
+    Just((pre,h,post)) -> pre.sectionMap(secinfo) + h.sectionSpan(post,secinfo)
+  }
+}
+
+function sectionMap( blocks : list<block>, secinfo : secinfo ) : div list<block> 
+{
+  if (secinfo.level > secinfo.secMax) return blocks
+  blocks.map fun(block) {
+    match(block) {
+      Div(content,attrs) -> {
+        Div(content.sections(secinfo),attrs)
+      }
+      _ -> block
+    }
   }
 }
 
 function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : div list<block>
 {
-  function createSection(bs) {
+  function createSection(content) 
+  {
+    lvl = h.headingLevel(secinfo.level)
+    nsecinfo = secinfo(level=lvl+1)
+    ncontent = content.sections(nsecinfo)
     match(h) {
-      Heading(d,_,attrs) -> {
+      Heading(d,txt,attrs) -> {
         secattrs = "html-elem=section .section" + d.show +
-                     (if (attrs.name=="") then "" else " id='section-" + attrs.name + "'")
-        [Div(Cons(h,bs), secattrs.parseAttrs("section"))]
+                     (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
+        hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
+        [Div(Cons(Heading(d,txt,hattrs),ncontent), secattrs.parseAttrs("section"))]
       }
-      _ -> Cons(h,bs)
+      _ -> [h].sectionMap(nsecinfo) + ncontent
     }
   }
 
@@ -345,7 +354,7 @@ function findHeading( blocks : list<block>, secinfo : secinfo ) : maybe<(list<bl
   lvl = max(secinfo.level,secinfo.secBase)
   val (pre,post) = blocks.span(fun(b) { 
     d = b.headingLevel(lvl+1, lvl)
-    (d > lvl || d < secinfo.secMin)
+    (d > lvl) //  || d < secinfo.secMin
   })  
   match(post) {
     Cons(hdr,rest) -> Just((pre,hdr,rest))
@@ -357,7 +366,7 @@ function findHeading( blocks : list<block>, secinfo : secinfo ) : maybe<(list<bl
 function headingLevel( block : block, default : int, defaultSection : int = default ) : int {
   match(block) {
     Heading(d)   -> d
-    Div(_,attrs) | block.blockName=="section" -> {
+    Div(_,attrs) | attrs.hasClass("section") -> {
       match(attrs.hasKey("data-level")) {
         Just(value) -> value.parseInt.maybe(defaultSection,id)
         Nothing     -> defaultSection

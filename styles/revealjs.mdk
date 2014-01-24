@@ -2,8 +2,10 @@ Description:
 	Include this file to create reveal.js slide shows.
 	* It expects the reveal.js library to be in a subdirectory "reveal.js".
 	  You can use another url by setting the `Reveal Url` metadata key.
+	* Surround your presentation in `~ Begin Presentation` and `~ End Presentation`.
 	* Slides are started on a level 1 `#` or 2 `##` header.
-	* Use a `~ Section` custom block to create a vertical section.
+	  You can also a `~ Slide` custom block.
+	* Use a `~ Vertical` custom block to create a set of vertical slides.
 	* Use a `~ Notes` custom block for speaker notes.
 	* Select another default theme by setting the `Theme` metadata key
 	  to a theme, such as `sky`.
@@ -24,6 +26,10 @@ Math Dpi	  : 400
 .Author		  : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
+~Presentation : before="~ Begin Reveal#nl;~ Begin Slides#nl;"
+                after="~ End Slides#nl;~ End Reveal#nl;" notag
+~Slide        : .section html-elem=section
+~Vertical     : .section html-elem=section
 Html Header   : 		
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -51,6 +57,15 @@ Html Header   :
 	}
 	.reveal pre {
 		box-shadow: none;
+	}	
+	.reveal .tocitem {
+	  	text-align: left;
+	}
+	.reveal .toc>.tocblock .tocblock {
+	  	margin-left: 0.5em;
+	}
+	.reveal .toc>.tocblock .tocblock .tocblock {
+	  	margin-left: 1em;
 	}
 	</style>
 	<script>	
