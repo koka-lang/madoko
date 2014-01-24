@@ -53,7 +53,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
   val (options,src) = parseMeta(options0,src0.normalizeSource)
 
   if (options.verbose > 2) then trace("parse blocks")
-  val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
+  //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
   
   // parse definitions
   val icontext  = inlineContext(fmt,options.metadata.dict,
@@ -61,13 +61,13 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
                                     options.mathmode.isStatic) 
-  if (options.verbose > 2) then trace("process definitions")
+  //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
-    = parseDefinitions(initialFormatContext(icontext,options.titleInfo,options.headingBase,options.pedantic,fmt), 
-                        blocks,
-                        options.metadata,
-                        options.tocDepth,
-                        options.sectionBase,options.sectionMax)
+    = parseBody(initialFormatContext(icontext,options.titleInfo,
+                                      options.headingBase,options.pedantic,fmt), 
+                src,
+                options.metadata, options.tocDepth,
+                options.sectionBase,options.sectionMax)
 
   // parse inline elements
   if (options.verbose > 2) then trace("parse inline")

@@ -2,7 +2,6 @@ Description:
 	Include this file to create reveal.js slide shows.
 	* It expects the reveal.js library to be in a subdirectory "reveal.js".
 	  You can use another url by setting the `Reveal Url` metadata key.
-	* Surround your presentation in `~ Begin Presentation` and `~ End Presentation`.
 	* Slides are started on a level 1 `#` or 2 `##` header.
 	  You can also a `~ Slide` custom block.
 	* Use a `~ Vertical` custom block to create a set of vertical slides.
@@ -26,8 +25,8 @@ Math Dpi	  : 400
 .Author		  : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
-~Presentation : before="~ Begin Reveal#nl;~ Begin Slides#nl;"
-                after="~ End Slides#nl;~ End Reveal#nl;" notag
+~Body         : before="~ Begin Reveal#nl;~ Begin Slides#nl;"
+                after="~ End Slides#nl;~ End Reveal#nl;" 
 ~Slide        : .section html-elem=section
 ~Vertical     : .section html-elem=section
 Html Header   : 		

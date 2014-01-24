@@ -19,6 +19,19 @@ import inline
 import formatBlock   // just the formatContext
 import texParser
 
+// Parse source into blocks (see "parseBlocks") and 
+// process all definitions (see "parseDefinitions").
+public function parseBody( fcontext : formatContext,
+                           src : string,
+                           metadata : metadata, 
+                           tocDepth : int,
+                           secBase : int,
+                           secDepth : int ) :  div (list<block>,formatContext)
+{
+  parseDefinitions(fcontext, [Div([],"notag".parseAttrs("body",src))], 
+                   metadata,tocDepth,secBase,secDepth)
+}
+
 // Visits all blocks and returns a dictionary of links, labels, footnotes,
 // a footnote block, and a table-of-contents block. 
 public function parseDefinitions( 
@@ -26,7 +39,7 @@ public function parseDefinitions(
                      blocks : list<block>,
                      metadata : metadata, 
                      tocDepth : int = 0,
-                     secBase : int = 2,
+                     secBase : int = 1,
                      secDepth : int = 6 ) :  div (list<block>,formatContext)
 {
   if (fcontext.inlineContext.bench) 
