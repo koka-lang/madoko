@@ -20,7 +20,7 @@ import inline  // format type
 import madoko
 import texFormatter
 import mathStatic
-
+import process
 
 public function main() : io () {
   markdownFiles("") fun(html,inName,outName,opts) {
@@ -86,7 +86,7 @@ function processContent( inName : string, outName : string, content : string,
                           opts : commandOptions, firstTime : bool = False,
                           continue : (string,string,string,options) -> <io|e> () ) : <io|e> () 
 {
-  content.include(False, outName) fun(icontent) {
+  content.include(False, outName, [opts.installDir,outName.dirname]) fun(icontent) {
     // set up options
     xxopts = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options
@@ -235,7 +235,7 @@ val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
 
 
-function include( txt : string, fast : bool, outName : string, action : (string) -> <io|e> a ) : <io|e> a {
+function include( txt : string, fast : bool, outName : string, dirs : list<string>, action : (string) -> <io|e> a ) : <io|e> a {
   itxt = if (fast) then txt else txt.replaceAll(rxInclude) fun(cap) {
     fname = cap.groups.firstMatched
     if (fname=="BIB") then {
@@ -243,12 +243,12 @@ function include( txt : string, fast : bool, outName : string, action : (string)
       "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~"
     }
     else {
-      match (tryReadTextFile(fname)) {
-        Left -> {
+      match (trySearchReadTextFile(fname,dirs)) {
+        Nothing -> {
           println("warning: unable to read include: " + fname )
           ""
         }
-        Right(content) -> content 
+        Just(content) -> content 
       }
     }
   }
@@ -256,7 +256,19 @@ function include( txt : string, fast : bool, outName : string, action : (string)
 }
 val rxInclude = regex(@"^ *\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
 
+function searchReadTextFileDef( fname : string, def : string, dirs : list<string> ) : io string {
+  match(trySearchReadTextFile(fname,dirs)) {
+    Nothing -> def
+    Just(content) -> content
+  } 
+}
 
+function trySearchReadTextFile( fname : string, dirs : list<string> ) : io maybe<string> {
+  match(searchFileSync(dirs,fname)) {
+    Nothing -> Nothing
+    Just(fullname) -> tryReadTextFile(fullname).maybe
+  }
+}
 
 function outputName( inputName : string, options : commandOptions ) {
   noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 

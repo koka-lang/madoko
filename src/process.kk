@@ -1,5 +1,7 @@
 module process 
 
+import std/path
+
 external import {
   js "child_process"
 }
@@ -38,6 +40,13 @@ public external readInt4( b : buffer, ofs : int ) : int
 
 public function tryReadFileSync( fname : string ) : io maybe<buffer> {
   catch({ b = readFileSync(fname); Just(b) },fun(_exn){ Nothing } )
+}
+
+public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
+  fnames = Cons("",dirs).map(fun(dir){ combine(dir,fname) })
+  fnames.foreachWhile fun(f) {
+    if (f.fexists) then Just(f) else Nothing
+  }
 }
 
 
