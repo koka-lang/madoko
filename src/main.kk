@@ -86,7 +86,8 @@ function processContent( inName : string, outName : string, content : string,
                           opts : commandOptions, firstTime : bool = False,
                           continue : (string,string,string,options) -> <io|e> () ) : <io|e> () 
 {
-  content.include(False, outName, [opts.installDir,outName.dirname]) fun(icontent) {
+  styleDir = opts.installDir + "/../styles"
+  content.include(False, outName, [styleDir,outName.dirname]) fun(icontent) {
     // set up options
     xxopts = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options
@@ -103,10 +104,10 @@ function processContent( inName : string, outName : string, content : string,
     mopts  = mmopts(mathdim=mdim)  
 
     // copy early since async latex may start for math
-    tryCopyTextFileFromTo( "madoko.css", opts.installDir, outName.dirname)
+    tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
     if (xopts.tex || xopts.mathmode.isStatic) {
-      tryCopyTextFileFromTo( "css.sty", opts.installDir, outName.dirname)
-      tryCopyTextFileFromTo( "madoko.sty", opts.installDir, outName.dirname)
+      tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
+      tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
       ()
     }
 

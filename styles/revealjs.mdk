@@ -1,0 +1,77 @@
+Description: 
+	Include this file to create reveal.js slide shows.
+	* It expects the reveal.js library to be in a subdirectory "reveal.js".
+	  You can use another url by setting the `Reveal Url` metadata key.
+	* Slides are started on a level 1 `#` or 2 `##` header.
+	* Use a `~ Section` custom block to create a vertical section.
+	* Use a `~ Notes` custom block for speaker notes.
+	* Select another default theme by setting the `Theme` metadata key
+	  to a theme, such as `sky`.
+	* The "revealConfig" variable contains the default configuration options
+		and can be extended inside `<script>` tags.
+
+Reveal Url    : reveal.js 		
+Theme         : default
+Css  		  : #reveal-url/css/reveal.min.css
+Css           : #reveal-url/lib/css/zenburn.css
+Script        : #reveal-url/lib/js/head.min.js
+Script        : #reveal-url/js/reveal.min.js
+Header Depth  : 0
+Section Base  : 2
+Section Depth : 2
+Math Dpi	  : 400
+~Notes		  : html-elem=aside .notes
+.Author		  : font-size=xx-large
+.Affiliation  : font-size=x-large
+.Email        : font-size=x-large
+Html Header   : 		
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="#reveal-url/css/theme/#theme.css" id="theme">
+	<script>
+		document.write( '<link rel="stylesheet" href="#reveal-url/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+	</script>
+	<!--[if lt IE 9]>
+	<script src="#reveal-url/lib/js/html5shiv.js"></script>
+	<![endif]-->
+	<style>
+	.reveal p { 
+		text-align: center; 
+	}
+	.reveal section img.math-display {
+		padding: 1em;
+	}
+	.reveal section img.math-inline {
+		margin: 0pt;
+		padding: 0pt;
+		background-color: none;
+		box-shadow: none;
+		border: none;
+	}
+	.reveal pre {
+		box-shadow: none;
+	}
+	</style>
+	<script>	
+	// Full list of configuration options available here:
+	// https://github.com/hakimel/reveal.js##configuration
+	var revealConfig = {
+		controls: true,
+		progress: true,
+		history: true,
+		center: true,
+		theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+		transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+		// Optional libraries used to extend on reveal.js
+		dependencies: [
+			{ src: '#reveal-url/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+			{ src: '#reveal-url/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+			{ src: '#reveal-url/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+			{ src: '#reveal-url/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+		]
+	};
+	document.addEventListener("DOMContentLoaded", function(event) {
+		Reveal.initialize(revealConfig);
+	});
+	</script>

@@ -32,7 +32,7 @@ public struct formatContext(
 )
 
 public function initialFormatContext( icontext : inlineContext, titleinfo : titleinfo, headingBase : int, pedantic : bool, fmt : formatter ) {
-  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"lang-",pedantic, fmt)
+  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"language-",pedantic, fmt)
 }
 
 function fmtEnv( context : formatContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
@@ -47,8 +47,8 @@ function fmtPre( context : formatContext, txt : string ) : string {
 }
 
 function fmtCode( context : formatContext, lang : string, txt : string, attrs : attrs = attrsNone ) : string {
-  langClassName = context.langPrefix + lang
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=[langClassName])      
+  //langClassName = context.langPrefix + lang
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["lang-"+lang,"language-"+lang])      
   match(context.fmt) {
     FmtHtml -> context.fmtEnv("pre", context.fmtCmd("code", txt.htmlEscape, lattrs ), attrs)
     FmtTex  -> {

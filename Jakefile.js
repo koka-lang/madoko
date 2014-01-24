@@ -50,9 +50,6 @@ task("madoko", [], function(rebuild) {
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
-    jake.cpR(path.join(sourceDir,"css.sty"), outputDir);
-    jake.cpR(path.join(sourceDir,main + ".sty"), outputDir);
-    jake.cpR(path.join(sourceDir,main + ".css"), outputDir);
     complete(); 
   })
 },{async:true});
