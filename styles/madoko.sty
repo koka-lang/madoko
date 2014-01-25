@@ -49,6 +49,20 @@
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
+\newcommand{\presp}{\hspace*{0.25em}}
+\newcommand{\prespiv}{\presp\presp\presp\presp}
+
+\newcommand{\mdToken}[2]{%
+  \eifstrequal{#1}{hljs-keyword}%
+    {{\color{DeepBlue}\textbf{#2}}}%
+    {#2}%
+}
+
+\cssNewInlineElem{\mdVerb}{verb}{font-family=monospace}
+\cssNewBlockElem{mdVerbatim}{verbatim}{font-family=monospace}
+\cssNewBlockElem{mdPre}{pre}{font-family=monospace,margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
+\cssNewInlineElem{\mdCode}{code}{font-family=monospace}
+
 % inserted for unknown html entities
 \newcommand{\mdUnknownEntity}[1]{\&#1;}
 \newcommand{\mdEntity}[1]{\protect\mdUnknownEntity{#1}}
@@ -195,8 +209,6 @@
 \cssNewInlineElem{\mdEm}{em}{font-style=italic}
 \cssNewInlineElem{\mdStrong}{strong}{font-weight=bold}
 \cssNewInlineElem{\mdDel}{del}{color=gray}  % not great but strike-out is just not well supported on LaTeX...
-\cssNewInlineElem{\mdVerb}{verb}{font-family=monospace}
-\cssNewBlockElem{mdVerbatim}{verbatim}{font-family=monospace}
 
 \newcommand{\mdFootnote}[2][]{\footnote{#2}} % no cssInline since footnotes can contain block elements
 \newcommand{\mdSub}[2][]{\ensuremath{_{\mbox{\scriptsize\cssInline[elem=sub,#1]{#2}}}}}
@@ -280,6 +292,7 @@
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
 \newcommand{\mathid}[1]{\mathit{#1}}
 \newcommand{\mathsp}{\:}
+\newcommand{\mathspiv}{\:\:\:\:}
 \newcommand{\mathindent}{\mathsp\mathsp}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)

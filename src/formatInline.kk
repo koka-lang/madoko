@@ -116,6 +116,7 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlTitle,fmtTexTitle),
                  fmt.pick(fmtHtmlTable,fmtTexTable),
                  fmt.pick(fmtHtmlEnv,fmtTexEnv),
+                 fmt.pick(fmtHtmlCode,fmtTexCode),
                  fmt 
                )
 }
@@ -271,10 +272,11 @@ function inlineCode( cap : matched, context ) : string {
   attrs = if (cap.groups.matchedOn(3)) 
            then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone 
   if (context.bench || cap.groups[1].length > 1)
-   then context.fmtCode("code",txt,attrs)
+   then context.fmtCode("","",txt,attrs)
    else context.fmtSpan( txt, attrs(classes=["code"] + attrs.classes) ) // can be overridden by the user
 }
 
+/*
 function fmtCode( context : inlineContext, tag : string, txt : string, attrs : attrs = attrsNone) : string {
   match(context.fmt) {
     FmtHtml -> context.fmtCmd(tag, context.fmtEscapePre(txt), attrs)  
@@ -283,6 +285,7 @@ function fmtCode( context : inlineContext, tag : string, txt : string, attrs : a
                 else context.fmtCmd(tag, txt.escapeTexPre, attrs )
   }
 }
+*/
 
 function escapeTexPre( txt : string ) : string {
   txt.replaceAll(regex(@"\$"),@"$\text{\tt\textdollar}$")
@@ -532,7 +535,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
 
   txt = attrsd.transformText(txt0,context.metadata)
   match(attrsd.input) {
-    Pre      -> context.fmtCode(sname, txt, attrs)
+    Pre      -> context.fmtCode(sname, "", txt, attrs)
     Math     -> context.fmtMath(txt,attrsd)
     MathPre  -> context.fmtMath(txt.mathPre,attrsd)
     Raw(monly) -> {

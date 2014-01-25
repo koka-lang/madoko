@@ -295,6 +295,7 @@ function defaultMeta( options : options ) : string {
 
       @"~Pre      : input=pre .para-block",
       @"~Code     : input=pre",
+      @"~Hilite   : html-elem='pre'",
       
       @"~Tex      : input=tex",
       @"~TexRaw   : input=texraw",

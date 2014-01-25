@@ -16,11 +16,12 @@ import common
 import inline
 import options
 import attributes // expandKeys
+import hilite
 
 public function fmtHtmlEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
    then txt 
-   else tagEnv(env.translate(attrs,context.sanitize), (if(env.length>2) then "\n" else "") + txt,attrs,context.sanitize)
+   else tagEnv(env.translate(attrs,context.sanitize), (if(env.length>3) then "\n" else "") + txt,attrs,context.sanitize)
 }
 
 
@@ -72,6 +73,21 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
       link.linkattrs.htmlFormat("a",context.sanitize) + ">" + 
       content + "</a>"
   }
+}
+
+public function fmtHtmlCode( context : inlineContext, env : string, lang : string, 
+                              txt : string, attrs : attrs ) : string 
+{
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["highlighted", "lang-"+lang,"language-"+lang])
+  xattrs = attrs.addClass("hljs")
+  // etxt   = txt.escapePre
+  content = match( txt.hilite(lang) ) {
+              Just(html) -> html
+              Nothing    -> txt.escapePre  // as is..
+            }
+  if (env=="") 
+   then context.fmtHtmlCmd("code", content, xattrs.mergeDefault(lattrs))
+   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), xattrs)
 }
 
 /* --------------------------------------

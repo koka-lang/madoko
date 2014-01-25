@@ -248,18 +248,20 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
   match(block) {
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,fcontext.inlineContext.metadata),xs)
-    Code( text, lang)   -> if (lang=="" && !(xs.input.isPre))
-                            then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext )
-                            else Code(xs.transformText(text,fcontext.inlineContext.metadata),lang,xs)  
     Heading(depth,text) -> Heading(depth,xs.transformText(text,fcontext.inlineContext.metadata),xs)
     Div( content  )     -> transformDiv(content, xs, fcontext )
     Quote( content )    -> Quote(content, xs) 
+    Code( text, lang)   -> {
+      if (lang=="" && !(xs.input.isPre))
+        then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext )
+        else Code(xs.transformText(text,fcontext.inlineContext.metadata),lang,xs)  
+    }
     _                   -> block
   }
 } 
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
-  if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
+  //if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
   citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
   txt = attrs.transformText(attrs.source,fcontext.inlineContext.metadata)

@@ -18,6 +18,7 @@ import inline
 import options
 import texParser      // for texAccents et al
 import htmlFormatter  // for htmlEscape
+import hilite
 
 public function fmtTexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
@@ -63,6 +64,55 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
   }
 }
 
+
+
+
+
+public function fmtTexCode( context : inlineContext, env : string, lang : string, 
+                              txt : string, attrs : attrs ) : string 
+{
+  content = match(txt.hilite(lang)) {
+              Just(hl) -> hl.texText.unspan.preSpace
+              Nothing  -> txt.texText.preSpace
+            }
+  lattrs = if (lang=="") then attrs else attrs.addKeyval("language",lang)            
+  if (env=="") 
+   then texCmd("code",content,lattrs)
+   else texEnv("pre",texCmd("code",content,attrsNone),lattrs)
+
+  /*          
+  if (env=="pre") then {
+    // pass right options to lstlisting package
+    opts1 = if (lang=="") then "" else "language={" + lang + "}"           
+    opts2 = match(attrs.classes.filter(fun(c){ c.startsWith("linenums") }).maybe) {
+              Nothing   -> ""
+              Just(cls) -> match(cls.find(regex(@"linenums:(\d+)"))) {
+                Nothing   -> "numbers=left"
+                Just(cap) -> "numbers=left,firstnumber=" + cap.groups[1]
+              }
+            }
+    opts3 = if (attrs.hasClass("showspaces")) then "showspaces,showtabs" else ""  
+    opts  = "[" + [opts1,opts2,opts3].join(",") + "]"
+
+    "\\begin{lstlisting}" + opts + "\n" + 
+      context.fmtTexEscape(txt,False) + 
+      "\n\\end{lstlisting}\n"
+  }
+  else texEnv("verbatim",txt,attrs) 
+  */
+}
+
+public function unspan( txt : string ) : string {
+  txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan, @"\mdToken{$1}{")  
+} 
+
+val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
+val rxSpan = regex(@"{\\textless}span\s+class=['""]?([\w\-]+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
+
+public function preSpace( txt : string ) : string {
+  txt.replaceAll("    ",@"\prespiv{}").replaceAll(" ", @"\presp{}").replaceAll("\n","\\\\\n")
+}
+
 public function texText( txt : string ) : string {
   txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)     
 }
@@ -73,7 +123,7 @@ val specials = [
   (@"%", @"\%"),
   (@"~", @"{\textasciitilde}"),
   (@"#", @"\#"),
-  (@"&", @"\&"),
+  (@"&", @"\&"),  // defined by madoko.sty
   (@"$", @"\$"),
   (@"{", @"\{"),
   (@"}", @"\}"),
@@ -255,25 +305,7 @@ function texCmdPlain( cmd : string, body : string, pre : string = "md" ) : strin
 }
 
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
-  if (env=="pre") then {
-    // pass right options to lstlisting package
-    opts1 = match(attrs.hasKey("language")) {
-             Nothing    -> ""
-             Just(lang) -> "language={" + lang + "}"
-           }
-    opts2 = match(attrs.classes.filter(fun(c){ c.startsWith("linenums") }).maybe) {
-              Nothing   -> ""
-              Just(cls) -> match(cls.find(regex(@"linenums:(\d+)"))) {
-                Nothing   -> "numbers=left"
-                Just(cap) -> "numbers=left,firstnumber=" + cap.groups[1]
-              }
-            }
-    opts3 = if (attrs.hasClass("showspaces")) then "showspaces,showtabs" else ""  
-    opts  = "[" + [opts1,opts2,opts3].join(",") + "]"
-
-    "\\begin{lstlisting}" + opts + "\n" + body + "\n\\end{lstlisting}\n"
-  }
-  else texEnvPlain(env,body,attrs)
+  texEnvPlain(env,body,attrs)
 }
 
 function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
