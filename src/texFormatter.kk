@@ -72,7 +72,7 @@ public function fmtTexCode( context : inlineContext, env : string,
                               txt : string, attrs : attrs ) : string 
 {
   lang = attrs.hasKey("language").maybe("",id)
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang])
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang],keyvals=[("language",lang)])
   plain = txt.texText.preSpace
   content = if (attrs.hasClass("plain")) then plain 
              else match(txt.hilite(lang)) {
@@ -110,12 +110,12 @@ public function unspan( txt : string ) : string {
 } 
 
 val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
-val rxSpan = regex(@"{\\textless}span\s+class=['""]?([\w\-]+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
+val rxSpan = regex(@"{\\textless}span\s+class=['""]?(?:hljs-)?([\w\-]+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
 
 public function preSpace( txt : string ) : string {
   txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
-     .replaceAll("\n","\\\\{}\n")
+     .replaceAll("\n","\\prebr{}\n")
      .replaceAll("`","{`}")
 }
 val rxIndent = regex(@"^ +",multiLine=True)

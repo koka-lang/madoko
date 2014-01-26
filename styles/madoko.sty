@@ -49,19 +49,6 @@
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
-\newcommand{\mdToken}[2]{%
-  \eifstrequal{#1}{hljs-keyword}%
-    {{\color{DeepBlue}{#2}}}%
-    {#2}%
-}
-
-\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
-\cssNewInlineElem{\mdCode}{code}{font-family=monospace}
-
-\newlength{\@presp}
-\settowidth{\@presp}{\mdCode{ }}
-\newcommand{\prespace}[1]{\hspace*{#1\@presp}}
-\newcommand{\preindent}[1]{\hspace*{#1\@presp}}
 
 
 % inserted for unknown html entities
@@ -287,7 +274,7 @@
 %-------------------------------------------------------------
 
 \newenvironment{mdMathprearray}%
-  {\begin {array}{llllllll}}%
+  {\setlength{\arraycolsep}{0pt}\begin {array}{llllllll}}%
   {\end{array}\hspace*{\linewidth minus \linewidth}} % flush left
 
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
@@ -299,6 +286,7 @@
 \settowidth{\@maththick}{$\;$}
 \newcommand{\mathspace}[1]{\mskip#1\medmuskip}
 \newcommand{\mathindent}[1]{\mskip#1\thickmuskip}
+\newcommand{\mathbr}{\\}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)
 \newcommand{\mdTag}{}
@@ -483,6 +471,68 @@
 
 \cssClassRule{block}{margin-top=\topsep,margin-bottom=\topsep}
 
+%-------------------------------------------------------------
+% Code and syntax highlighting 
+%-------------------------------------------------------------
+\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
+\cssNewInlineElem{\mdCode}{code}{font-family=monospace}
+
+\newlength{\@presp}
+\settowidth{\@presp}{\mdCode{ }}
+\newcommand{\prespace}[1]{\hspace*{#1\@presp}}
+\newcommand{\preindent}[1]{\hspace*{#1\@presp}}
+\newcommand{\prebr}{\\}
+
+\cssNewKey{css}{language}{\cssLanguage}{}
+
+\newcommand{\mdTokenUnknown}[2]{#2}
+\newcommand{\mdToken}[2]{\mdTokenUnknown{#1}{#2}}
+
+\newcommand{\mdDefineToken}[2]{%
+  \protected@edef\mdToken##1##2{\protect\mdIfTokenIn{##1}{#1}{{\protect#2{##2}}}{\mdToken{##1}{##2}}}%
+}
+
+\newcommand{\mdIfTokenIn}[4]{%
+  \eifstrelement{\cssLanguage:#1}{#2}{#3}%
+  {\eifstrelement{#1}{#2}{#3}{#4}}%
+}
+
+%-------------------------------------------------------------
+% Standard token classes for syntax highlighting 
+%-------------------------------------------------------------
+\mdDefineToken{keyword,id,built_in,class,winutils,variable,command,request,status,title,tag,value}%
+              {\mdTokenKeyword}
+\mdDefineToken{string,parent,tagvalue,rulesvalue,rulesvaluenumber,symbol,symbolstring,%
+               aggregate,template_tag,variable,addition,flow,stream,tag,date,formula,attribute}%
+               {\mdTokenString}
+\mdDefineToken{comment,annotation,template_comment,diffheader,chunk,apachecbracket}
+              {\mdTokenComment}
+\mdDefineToken{decorator,filterargument,localvars,array,attr_selector,pseudo,pi,doctype,%
+               deletion,envvar,shebang,preprocessor,pragma,.userType,sqbracket,built_in,special,%
+               prompt}
+               {\mdTokenSpecial}
+\mdDefineToken{phpdoc,javadoc,xmlDocTag}{\mdTokenDoc}
+\mdDefineToken{type,typename}{\mdTokenType}
+\mdDefineToken{literal,number}{\mdTokenConstant}
+\mdDefineToken{attribute}{\mdTokenAttribute}
+\mdDefineToken{emphasis,italic}{\mdTokenEmphasis}
+\mdDefineToken{strong,bold}{\mdTokenStrong}
+\mdDefineToken{title}{\mdTokenTitle}
+\mdDefineToken{formula}{\mdTokenMeta}
+\mdDefineToken{lisp:title}{\mdTokenKeyword}
+
+\newcommand{\mdTokenKeyword}[1]{\color{NavyBlue}#1}
+\newcommand{\mdTokenString}[1]{\color{Purple}#1}
+\newcommand{\mdTokenComment}[1]{\color{DarkGreen}#1}
+\newcommand{\mdTokenSpecial}[1]{\color{NavyBlue}#1}
+\newcommand{\mdTokenDoc}[1]{\color{SlateGrey}#1}
+\newcommand{\mdTokenConstant}[1]{\color{NavyBlue}#1}
+\newcommand{\mdTokenAttribute}[1]{\color{DarkRed}#1}
+\newcommand{\mdTokenType}[1]{\color{Teal}#1}
+\newcommand{\mdTokenEmphasis}[1]{\itshape #1}
+\newcommand{\mdTokenStrong}[1]{\bfseries #1}
+\newcommand{\mdTokenTitle}[1]{\bfseries #1}
+\newcommand{\mdTokenMeta}[1]{\colorbox{WhiteSmoke}{#1}}
 
 
 % ---------------------------------------------------

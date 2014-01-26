@@ -159,13 +159,13 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
 
 public function mathPre( txt : string ) : string
 {  
-  txt.replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
+  txt.replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
         if (cap.groups.matchedOn(2)) then @"\mathindent{" + cap.matched.length.show + "}" 
         elif (cap.groups.matchedOn(3)) then @"\mathspace{" + cap.matched.length.show + "}"
-        elif (cap.groups.matchedOn(4)) then "\\\\{}\n"
+        elif (cap.groups.matchedOn(4)) then "\\mathbr{}\n"
         else cap.matched
       })     
-     .replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-z@]+(?![a-z@]))|#([a-z][a-z\d]*(?![a-z\d]))|([a-z][a-z\d]*(?![a-z\d]))|@([a-z][a-z\d]*(?![a-z\d]))", ignoreCase=True), fun(cap) {
+     .replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-z@]+(?![a-z@]))|#([a-z][a-z\d]*(?![a-z\d]))|([a-z][a-z\d]*(?![a-z\d]))|@([a-z][a-z\d]*(?![a-z\d]))", ignoreCase=True), fun(cap) {
         val grp = cap.groups.firstMatchedOn
         if (grp==2) then cap.groups[2]
         elif (grp < 2) then cap.matched

@@ -32,6 +32,14 @@
     {}%
 }
 
+% is a string an element of a list of (comma separated) strings
+\newcommand{\eifstrelement}[4]{%
+  \def\@found{}%
+  \@for\@ii:=#2\do{%
+    \eeifstrequal{\@ii}{#1}{\def\@found{true}}{}%
+  }%
+  \ifdefvoid{\@found}{#4}{#3}%
+}
 
 % ---------------------------------------------------
 % Some TeX stuff to compose functions
