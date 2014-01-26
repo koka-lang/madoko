@@ -1,12 +1,5 @@
 syntax:glob
 
-lib/*
-libnet/*
-libdoc/*
-slide/*
-test/out/*
-test/scripts/*
-node_modules/*
 *.text.html
 *.md.html
 *.aux
@@ -17,6 +10,13 @@ node_modules/*
 *.dim
 *.dimx
 *.dvi
+lib/*
+libnet/*
+libdoc/*
+slide/*
+test/out/*
+test/scripts/*
+node_modules/*
 doc/*.tex
 doc/*.html
 doc/*.pdf

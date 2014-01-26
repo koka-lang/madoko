@@ -272,8 +272,8 @@ function inlineCode( cap : matched, context ) : string {
   attrs = if (cap.groups.matchedOn(3)) 
            then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone 
   if (context.bench || cap.groups[1].length > 1)
-   then context.fmtCode("","",txt,attrs)
-   else context.fmtSpan( txt, attrs(classes=["code"] + attrs.classes) ) // can be overridden by the user
+   then context.fmtCode( "",txt,attrs)
+   else context.fmtSpan( txt, attrs.addClass("code") ) // can be overridden by the user
 }
 
 /*
@@ -535,7 +535,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
 
   txt = attrsd.transformText(txt0,context.metadata)
   match(attrsd.input) {
-    Pre      -> context.fmtCode(sname, "", txt, attrs)
+    Pre      -> context.fmtCode(sname, txt, attrs) // todo: sname as env name?
     Math     -> context.fmtMath(txt,attrsd)
     MathPre  -> context.fmtMath(txt.mathPre,attrsd)
     Raw(monly) -> {

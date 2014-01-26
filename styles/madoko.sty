@@ -49,19 +49,14 @@
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
-
-
 \newcommand{\mdToken}[2]{%
   \eifstrequal{#1}{hljs-keyword}%
     {{\color{DeepBlue}{#2}}}%
     {#2}%
 }
 
-\cssNewInlineElem{\mdVerb}{verb}{font-family=monospace}
-\cssNewBlockElem{mdVerbatim}{verbatim}{font-family=monospace}
 \cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
-\cssNewInlineElem{\mdCode}{code}{font-family=sans-serif}
-
+\cssNewInlineElem{\mdCode}{code}{font-family=monospace}
 
 \newlength{\@presp}
 \settowidth{\@presp}{\mdCode{ }}
@@ -297,9 +292,13 @@
 
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
 \newcommand{\mathid}[1]{\mathit{#1}}
-\newcommand{\mathsp}{\:}
-\newcommand{\mathspiv}{\:\:\:\:}
-\newcommand{\mathindent}{\mathsp\mathsp}
+
+\newlength{\@mathmed}
+\settowidth{\@mathmed}{$\:$}
+\newlength{\@maththick}
+\settowidth{\@maththick}{$\;$}
+\newcommand{\mathspace}[1]{\mskip#1\medmuskip}
+\newcommand{\mathindent}[1]{\mskip#1\thickmuskip}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)
 \newcommand{\mdTag}{}

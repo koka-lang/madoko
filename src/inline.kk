@@ -50,7 +50,7 @@ public rectype inlineContext {
                  xfmtTitle: (context : inlineContext, titleinfo : titleinfo ) -> string,
                  xfmtTable: (context : inlineContext, head : cells, body : cells, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
-                 xfmtCode : (context : inlineContext, env : string, lang : string, txt : string, attrs : attrs ) -> string,
+                 xfmtCode : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  fmt : formatter
                )                 
 }
@@ -76,8 +76,8 @@ public function fmtEnv( context : inlineContext, env : string, txt : string, att
   (context.xfmtEnv)(context,env,txt,attrs)
 }
 
-public function fmtCode( context : inlineContext, env : string, lang : string, txt : string, attrs : attrs = attrsNone ) : string {
-  (context.xfmtCode)(context,env,lang,txt,attrs)
+public function fmtCode( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
+  (context.xfmtCode)(context,env,txt,attrs)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {
@@ -159,10 +159,10 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
 
 public function mathPre( txt : string ) : string
 {  
-  txt.replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^ ] *|\\ )|^( +)|( )|(\n)",multiline=True), fun(cap) {
-        if (cap.groups.matchedOn(2)) then cap.matched.list.map(fun(_){@"\mathindent{}"}).join // double space indentation
-        elif (cap.groups.matchedOn(3)) then @"\mathsp{}"
-        elif (cap.groups.matchedOn(4)) then "\\\\\n"
+  txt.replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
+        if (cap.groups.matchedOn(2)) then @"\mathindent{" + cap.matched.length.show + "}" 
+        elif (cap.groups.matchedOn(3)) then @"\mathspace{" + cap.matched.length.show + "}"
+        elif (cap.groups.matchedOn(4)) then "\\\\{}\n"
         else cap.matched
       })     
      .replaceAll(regex(@"(\\(?:text|math|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-z@]+(?![a-z@]))|#([a-z][a-z\d]*(?![a-z\d]))|([a-z][a-z\d]*(?![a-z\d]))|@([a-z][a-z\d]*(?![a-z\d]))", ignoreCase=True), fun(cap) {

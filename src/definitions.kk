@@ -169,7 +169,11 @@ function parseDefinitionsFull(
         attrsNone
       }
       Para(attrs=xs)  -> xs
-      Code(attrs=xs)  -> xs
+      Code(_,lang,xs)  -> {
+        if (lang=="") then xs else {
+          xs.addKeyval("language",lang).addClass("language-" + lang)
+        }
+      }
       Quote(attrs=xs) -> xs
       List(attrs=xs)  -> xs
       Item(attrs=xs)  -> xs

@@ -75,19 +75,21 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
   }
 }
 
-public function fmtHtmlCode( context : inlineContext, env : string, lang : string, 
+public function fmtHtmlCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 
 {
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=["highlighted", "lang-"+lang,"language-"+lang])
-  xattrs = attrs.addClass("hljs")
-  // etxt   = txt.escapePre
-  content = match( txt.hilite(lang) ) {
-              Just(html) -> html
-              Nothing    -> txt.escapePre  // as is..
-            }
-  if (env=="") 
-   then context.fmtHtmlCmd("code", content, xattrs.mergeDefault(lattrs))
-   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), xattrs)
+  lang = attrs.hasKey("language").maybe("",id)
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang])
+  
+  plain = txt.escapePre
+  content = if (attrs.hasClass("plain")) then plain 
+             else match( txt.hilite(lang) ) {
+                    Just(html) -> html
+                    Nothing    -> plain  // as is..
+                  }
+  if (env=="" || env=="code") 
+   then context.fmtHtmlCmd("code", content, attrs.mergeDefault(lattrs))
+   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), attrs.addClass("hljs"))
 }
 
 /* --------------------------------------

@@ -68,17 +68,20 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
 
 
 
-public function fmtTexCode( context : inlineContext, env : string, lang : string, 
+public function fmtTexCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 
 {
-  content = match(txt.hilite(lang)) {
-              Just(hl) -> hl.texText.unspan.preSpace
-              Nothing  -> txt.texText.preSpace
-            }
-  lattrs = if (lang=="") then attrs else attrs.addKeyval("language",lang)            
-  if (env=="") 
-   then texCmd("code",content,lattrs)
-   else texEnv("pre",texCmd("code",content,attrsNone),lattrs)
+  lang = attrs.hasKey("language").maybe("",id)
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang])
+  plain = txt.texText.preSpace
+  content = if (attrs.hasClass("plain")) then plain 
+             else match(txt.hilite(lang)) {
+                    Just(hl) -> hl.texText.unspan.preSpace
+                    Nothing  -> plain
+                  }
+  if (env=="" || env=="code") 
+   then texCmd("code",content,attrs)
+   else texEnv(env,texCmd("code",content,lattrs),attrs)
 
   /*          
   if (env=="pre") then {
@@ -112,7 +115,8 @@ val rxSpan = regex(@"{\\textless}span\s+class=['""]?([\w\-]+)['""]?[^{]*{\\textg
 public function preSpace( txt : string ) : string {
   txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
-     .replaceAll("\n","\\\\\n")
+     .replaceAll("\n","\\\\{}\n")
+     .replaceAll("`","{`}")
 }
 val rxIndent = regex(@"^ +",multiLine=True)
 val rxSpaces = regex(@" +")

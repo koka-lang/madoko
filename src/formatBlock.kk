@@ -47,10 +47,10 @@ function fmtPre( context : formatContext, txt : string ) : string {
   context.inlineContext.fmtEscapePre(txt)
 }
 
-function fmtCode( context : formatContext, lang : string, txt : string, attrs : attrs = attrsNone ) : string {
+function fmtCode( context : formatContext, txt : string, attrs : attrs = attrsNone ) : string {
   //langClassName = context.langPrefix + lang
   //lattrs = if (lang=="") then attrsNone else Attrs(classes=["lang-"+lang,"language-"+lang])
-  context.inlineContext.fmtCode( "pre", lang, txt, attrs )
+  context.inlineContext.fmtCode( "pre", txt, attrs )
   /*
   match(context.fmt) {
     FmtHtml -> context.fmtEnv("pre", context.fmtCmd("code", txt.hilite(lang), lattrs ), attrs.addClass("hljs"))
@@ -191,8 +191,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       }
     }
     
-    Code(txt,lang,attrs) -> {
-      context.fmtCode( lang, txt, attrs)
+    Code(txt,_,attrs) -> {      
+      context.fmtCode( txt, attrs)
     }
 
     List(tagname,items,attrs) -> {
@@ -217,7 +217,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Source(txt,input) -> {
       match(input) {
         Pre       -> {
-          context.fmtCode("",txt,attrsNone)
+          context.fmtCode(txt,attrsNone)
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")

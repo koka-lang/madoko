@@ -16,7 +16,7 @@ MathJax Ext : AMScd
 Package		: amscd
 MathJax Ext : mhchem
 Package		: [version=3]mhchem
-Pdf Latex   : XeLaTeX
+PdfLatex    : XeLaTeX
 
 Css     : http://highlightjs.org/static/styles/vs.css
 
@@ -1144,7 +1144,7 @@ Using this convention, we can easily typeset program code using nice symbols.
    @return (num {\times} num \times{} \pi)
 \}	
 ~
-~~ Sample
+~~ 
 
 Here is an example of aligned text which also demonstrates the use of `replace` (see 
 Section [#sec-replace]):
