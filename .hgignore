@@ -3,6 +3,7 @@ syntax:glob
 lib/*
 libnet/*
 libdoc/*
+slide/*
 test/out/*
 test/scripts/*
 node_modules/*
