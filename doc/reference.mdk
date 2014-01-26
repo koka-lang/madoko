@@ -18,6 +18,8 @@ MathJax Ext : mhchem
 Package		: [version=3]mhchem
 Pdf Latex   : XeLaTeX
 
+Css     : http://highlightjs.org/static/styles/vs.css
+
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
 ~Sample		: margin-bottom=2ex 
@@ -45,6 +47,12 @@ rrbracket	: &#10215;
 \newcommand{\hiragana}[1]{{\fontspec{MS Gothic}#1}}
 \cssClassRuleCmd{hiragana}{\hiragana}
 ~
+
+<style>
+.hljs-command { color: blue;}
+.hljs-special { color: purple; }
+.hljs-formula { background-color: #EEE; }
+</style>
 
 [TITLE]
 
@@ -609,7 +617,7 @@ it ourselves. This can be done at the start of the document using a `TexRaw`
 custom block (see Section [#sec-custom]). For example, in this document we
 used:
 
-```latex	{ .prettyprint language=TeX }
+``` tex	{ .prettyprint language=TeX }
 ~ TexRaw
 \definecolor{dark-blue}{rgb}{0,0.08,0.45}
 \definecolor{string-purple}{rgb}{0.49,0,0.47}

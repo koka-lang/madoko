@@ -110,8 +110,12 @@ val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
 val rxSpan = regex(@"{\\textless}span\s+class=['""]?([\w\-]+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
 
 public function preSpace( txt : string ) : string {
-  txt.replaceAll("    ",@"\prespiv{}").replaceAll(" ", @"\presp{}").replaceAll("\n","\\\\\n")
+  txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
+     .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
+     .replaceAll("\n","\\\\\n")
 }
+val rxIndent = regex(@"^ +",multiLine=True)
+val rxSpaces = regex(@" +")
 
 public function texText( txt : string ) : string {
   txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)     

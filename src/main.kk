@@ -21,6 +21,7 @@ import madoko
 import texFormatter
 import mathStatic
 import process
+import hilite
 
 public function main() : io () {
   markdownFiles("") fun(html,inName,outName,opts) {
@@ -102,6 +103,9 @@ function processContent( inName : string, outName : string, content : string,
 
     xopts  = xxopts(mathdim=mdim)
     mopts  = mmopts(mathdim=mdim)  
+
+    // register languages for highlighting
+    mopts.hilitelang.split(";").foreach fun(lang) { registerLanguage(lang) }
 
     // copy early since async latex may start for math
     tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)

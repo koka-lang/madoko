@@ -49,19 +49,25 @@
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
-\newcommand{\presp}{\hspace*{0.25em}}
-\newcommand{\prespiv}{\presp\presp\presp\presp}
+
 
 \newcommand{\mdToken}[2]{%
   \eifstrequal{#1}{hljs-keyword}%
-    {{\color{DeepBlue}\textbf{#2}}}%
+    {{\color{DeepBlue}{#2}}}%
     {#2}%
 }
 
 \cssNewInlineElem{\mdVerb}{verb}{font-family=monospace}
 \cssNewBlockElem{mdVerbatim}{verbatim}{font-family=monospace}
-\cssNewBlockElem{mdPre}{pre}{font-family=monospace,margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
-\cssNewInlineElem{\mdCode}{code}{font-family=monospace}
+\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
+\cssNewInlineElem{\mdCode}{code}{font-family=sans-serif}
+
+
+\newlength{\@presp}
+\settowidth{\@presp}{\mdCode{ }}
+\newcommand{\prespace}[1]{\hspace*{#1\@presp}}
+\newcommand{\preindent}[1]{\hspace*{#1\@presp}}
+
 
 % inserted for unknown html entities
 \newcommand{\mdUnknownEntity}[1]{\&#1;}
