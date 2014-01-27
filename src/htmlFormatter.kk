@@ -89,7 +89,7 @@ public function fmtHtmlCode( context : inlineContext, env : string,
                   }
   if (env=="" || env=="code") 
    then context.fmtHtmlCmd("code", content, attrs.mergeDefault(lattrs))
-   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), attrs.addClass("hljs"))
+   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), attrs.addClass("hljs"), context.sanitize)
 }
 
 /* --------------------------------------

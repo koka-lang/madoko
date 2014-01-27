@@ -6,7 +6,6 @@ Heading Base: 2
 .upper  : replace='/^[\s\S]*$/\U\0\E and more/c' 
 .fib    : replace='/^x?$/y/' replace='/xx(x*)/[x\1]{.fib}[\1]{.fib}/' notag 
 
-Css     : http://highlightjs.org/static/styles/vs.css
 Highlight Language : ../test/new/xjavascript.js
 
 <style>

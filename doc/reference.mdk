@@ -18,8 +18,6 @@ MathJax Ext : mhchem
 Package		: [version=3]mhchem
 PdfLatex    : XeLaTeX
 
-Css     : http://highlightjs.org/static/styles/vs.css
-
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
 ~Sample		: margin-bottom=2ex 

@@ -233,7 +233,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="highlight") options(highlight=if (value=="") then False else True)
     elif (key=="highlight-language") options(hilitelang=if (value=="") then "" else options.hilitelang + ";" + value)
     else {
-      if (options.verbose >= 3) warning("custom metadata key: " + key)
+      //  if (options.verbose >= 3) warning("custom metadata key: " + key)
       options
     }
   }
