@@ -113,6 +113,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
   outHdr = "% MathDpi: " + xopts.mathDpi.show + 
             ", MathImgDir: " + xopts.mathImgDir +
             ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
+            ", MathConvert: " + xopts.mathconvert + 
             ", MathDocClass: " + xopts.mathDocClass + "\n"
   outMath = outHdr + outTex
   if (outMath != oldMath) {
@@ -125,10 +126,12 @@ public function mathStatic( math : string, texName : string, xopts : options, co
       mathSnippetsToDvi( texName, xopts, content, oldMath ) {
         pages = match(oldMath.find(rxHdr)) {
                   Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim )
-                  _ -> (0,mathAnalyseChanged(outMath,dict()).snd) 
+                  _ -> (1,mathAnalyseChanged(outMath,dict()).snd) 
                 }
         mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
-          mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages, continue )
+          mathConvertPng( texName.changeExt(".dvi"), xopts, pages ) {
+            mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages, continue )
+          }
         }      
       }
     }
@@ -297,6 +300,24 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
   },0,dirname(dviName))
 }
 
+function mathConvertPng( dviName : string,xopts : options, pages : (int,int), continue : () -> io () ) : io () 
+{
+  if (xopts.mathconvert=="") then continue() else {
+    val (pageLo,pageHi) = pages
+    convertCmd = xopts.mathconvert + " eq-%d.png[" + pageLo.show + "-" + pageHi.show + "]" +
+                          " -scene " + pageLo.show + " eqc.png"
+    if (xopts.verbose>=1) println( "  converting math images..." )
+    if (xopts.verbose>=3) println( "  > " + convertCmd )
+    system(convertCmd, function(err,stdout,stderr) {
+      if (err!=0) {
+        println("  > " + convertCmd)
+        println("  warning: conversion failed: \n" + stdout + stderr )
+      }
+      continue()
+    },0,combine(dirname(dviName),xopts.mathImgDir))
+  }
+}
+
 function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
   dims2 = extendDim(pages, dimxName, xopts )
@@ -313,7 +334,7 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
       Just -> ()
       Nothing -> {
         imageFile = combine(outDir,mi.imageName)
-        unlink(imageFile)
+        tryUnlink(imageFile)
       }
     }
   }
@@ -334,7 +355,8 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
       Just(cap) -> { 
         pageNo = cap.groups[2].parseInt.maybe(0,id)
         digest = cap.groups[3]
-        imageName = combine(opts.mathImgDir, "eq-" + cap.groups[2] + ".png")
+        imageMod = if (opts.mathconvert!="") then "c" else ""
+        imageName = combine(opts.mathImgDir, "eq" + imageMod + "-" + cap.groups[2] + ".png")
         imageFile = combine(dimxFile.dirname,imageName)
                 
         val (pxwidth,pxheight,size,embed) 
@@ -347,7 +369,7 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
               _ -> {
                 match( tryReadFileSync( imageFile )) {
                   Nothing   -> {
-                    trace("cannot read; " + imageFile)
+                    warning("cannot read; " + imageFile)
                     (0,0,0,"") // should not happen?
                   }
                   Just(buf) -> {
@@ -452,6 +474,6 @@ val rxNum   = @", *(\d+) *"
 
 function dimension( whole : string, fraction : string ) : double {
   w = whole.parseInt.maybe(0,id).double
-  f = (fraction + "0000").substr(0,4).parseInt.maybe(0,id).double / 10000.0
+  f = (fraction + "00000").substr(0,5).parseInt.maybe(0,id).double / 100000.0
   return (w+f)
 }

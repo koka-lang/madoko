@@ -206,8 +206,8 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
   // This has the advantage that it will scale automatically if the user
   // selected a larger display font.
   fontsize = 10.0
-  xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + (scale * mi.depth / fontsize).showFixed(2) + "em")
-                .addKeyvalIfNotExist("height",(scale * mi.height / fontsize).showFixed(2) + "em")
+  xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + (scale * mi.depth / fontsize).showFixed(3) + "em")
+                .addKeyvalIfNotExist("height",(scale * mi.height / fontsize).showFixed(3) + "em")
                 .addClass("math")
                 // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
   src = if (mi.imageData!="") then mi.imageData else mi.imageName

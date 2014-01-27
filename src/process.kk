@@ -39,7 +39,7 @@ public external readInt4( b : buffer, ofs : int ) : int
 
 
 public function tryReadFileSync( fname : string ) : io maybe<buffer> {
-  catch({ b = readFileSync(fname); Just(b) },fun(_exn){ Nothing } )
+  onExn( Nothing, { b = readFileSync(fname); Just(b) } )
 }
 
 public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
@@ -58,6 +58,11 @@ public external readFileSync( fileName : string ) : io buffer
 public external unlink( fname : string ) : io ()
 {
   js inline "fs.unlinkSync(#1)"
+}
+
+public function tryUnlink( fname : string ) : io ()
+{
+  ignore( { fname.unlink } )
 }
 
 public external fexists( fname : string ) : io bool {
