@@ -41,6 +41,16 @@
   \ifdefvoid{\@found}{#4}{#3}%
 }
 
+% do two lists of strings intersect?
+\newcommand{\ifintersect}[4]{%
+  \def\@intersect{}%
+  \@for\@sname:=#1\do{%
+  	\ifdefvoid{\@intersect}{%
+    	\eifstrelement{\@sname}{#2}{\def\@intersect{true}}{}%
+    }{}%
+  }%
+  \ifdefvoid{\@intersect}{#4}{#3}%
+}
 % ---------------------------------------------------
 % Some TeX stuff to compose functions
 % ---------------------------------------------------

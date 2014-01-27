@@ -106,11 +106,16 @@ public function fmtTexCode( context : inlineContext, env : string,
 }
 
 public function unspan( txt : string ) : string {
-  txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan, @"\mdToken{$1}{")  
+  txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan) fun(cap) {
+    classes=cap.groups[1].toLower.trim.split(rxSpaces).map fun(cname) {
+      if (cname.startsWith("hljs-")) then cname.substr(5) else cname
+    }
+    @"\mdToken{" + classes.join(",") + "}{"
+  }  
 } 
 
 val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
-val rxSpan = regex(@"{\\textless}span\s+class=['""]?(?:hljs-)?([\w\-]+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
+val rxSpan = regex(@"{\\textless}span\s+.*?\bclass=['""]?([^""']+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
 
 public function preSpace( txt : string ) : string {
   txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
