@@ -47,9 +47,7 @@ Math Dpi	  : 400
 @tex ~Notes	  : display=none
 @tex ~Vertical: notag
 Tex Header    :
-	\makeatletter
-	\@ifclassloaded{beamer}{\usetheme[#beamer-theme-options]{#beamer-theme}}{}
-	\makeatother
+	\ifmathmode\else\usetheme[#beamer-theme-options]{#beamer-theme}\fi	
 Html Header   : 		
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

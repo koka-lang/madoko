@@ -26,6 +26,13 @@
   colorlinks=true,linkcolor=Navy,urlcolor=Navy,filecolor=Maroon
 }
 
+% conditionals
+\newif\ifmathmode
+\newif\ifbeamer
+
+\@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
+\ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
+
 
 %-------------------------------------------------------------
 % Setup packages 
@@ -117,16 +124,23 @@
      \gappto\@mdauthors{\@and}%
      \ifx\relax#2\else\gappto\@mdinsts{\@and}\fi
     \fi%
-    \ifdef{\inst}%
-    {%LLNCS
+    \ifdef\titlepage%
+    { %BEAMER
       \gappto\@mdauthors{#1}%
       \gappto\@mdinsts{#2}%
-      \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
-    }%
-    {% EPTCS
-      \gappto\@mdauthors{#1%
-        \ifx\relax#2\else\protect\institute{#2}\fi%
-        \ifx\relax#3\else\protect\email{#2}\fi}%
+      \ifx\relax#3\else\gappto\@mdinsts{\\\email{#3}}\fi
+    }{%
+      \ifdef{\inst}%
+      {%LLNCS
+        \gappto\@mdauthors{#1}%
+        \gappto\@mdinsts{#2}%
+        \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
+      }%
+      {% EPTCS
+        \gappto\@mdauthors{#1%
+          \ifx\relax#2\else\protect\institute{#2}\fi%
+          \ifx\relax#3\else\protect\email{#2}\fi}%
+      }%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
@@ -158,9 +172,9 @@
 \newcommand{\mdMaketitle}{%
   \ifnum\value{@mdAuthorcount}>0%
     \author{\@mdauthors%
-     \ifdef\institute{\institute{\@mdinsts}}{}}%
+    \ifdef\institute{\institute{\@mdinsts}}{}}%
   \fi
-  \maketitle{}%
+  \ifdef\titlepage{\institute{\@mdinsts}\titlepage}{\maketitle}%
 }
 
 % Use the pre-defined abstract environment
@@ -535,7 +549,7 @@
 % ---------------------------------------------------
 
 
-\@ifclassloaded{beamer}{%
+\ifbeamer%
   \renewcommand{\@mdHyperref}[2]{\hyperlink{#1}{#2}}%
   \renewcommand{\mdH}[2][]{\frametitle{\cssInline[elem=h0,#1]{#2}}}%
   \renewcommand{\mdHx}[2][]{\frametitle{\cssInline[elem=h1,#1]{#2}}}%
@@ -551,11 +565,11 @@
   \def\mdLi{%
     \begingroup\def\@fragmentend{}% use fragmented class from the parent (ie. ul or ol)
     \cssIfHasClass{fragmented}{\def\@fragmentend{\end{onlyenv}}\begin{onlyenv}<+->}{}%
-    \old@mdLi}
+    \old@mdLi}%
   \def\endmdLi{%
     \old@endmdLi\@fragmentend\endgroup%
-  }
-}
+  }%
+\fi
 
 % ---------------------------------------------------
 % Math snippets for static image generation
