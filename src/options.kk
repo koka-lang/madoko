@@ -40,13 +40,16 @@ public struct options(
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
   htmlHeader: string= "",  // literal html header
-  texHeader: string= "",  // literal tex header
+  htmlMeta : string = "name=\"viewport\" content=\"inital-scale=1.0\"",  // html meta tags
+  texHeader: string= "",   // literal tex header
+  texHeaderx: string= "",  // literal tex header in non-math mode only
   
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
   
   packages : string = "madoko",  // link to latex packages (.sty)
-  docClass : string = "book",  // latex document class (.cls)
+  packagesx: string = "",        // packages in non-math mode only
+  docClass : string = "book",    // latex document class (.cls)
   
   author   : string = "",
   affiliation: string = "",
@@ -199,8 +202,10 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     if   (key=="title")  options(title=value)
     elif (key=="sub-title" || key=="subtitle")  options(subtitle=value)
     elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
+    elif (key=="html-meta")    options(css=if (value=="") then "" else options.htmlMeta + ";" + value)
     elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
     elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
+    elif (key=="package-")  options(packagesx=if (value=="") then "" else options.packagesx + ";" + value)
     elif (key=="toc-depth" && ivalue >= 0) options(tocDepth = ivalue)
     elif ((key=="heading-depth" || key=="header-depth") && ivalue >= 0) options(headingDepth = ivalue)
     elif ((key=="heading-base" || key=="header-base" || key=="base-header-level") && ivalue >= 0) options(headingBase = ivalue)
@@ -210,9 +215,15 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
     elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader + "\n" + value)
     elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader + "\n" + value)
-    elif (key=="author") options(author=if (value=="") then "" else options.author + ";" + value)
-    elif (key=="affiliation" || key=="institute") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
-    elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
+    elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx + "\n" + value)
+    elif (key=="author") {
+      if (value=="") then options(author="") else {
+        options(author=options.author + ";" + value, 
+                affiliation=options.affiliation + ";", email=options.email + ";")
+      }
+    }
+    elif (key=="affiliation" || key=="institute") options(affiliation=if (value=="") then "" else options.affiliation + value)
+    elif (key=="email") options(email=if (value=="") then "" else options.email + value)    
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
     elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (value=="true") then "math" else value)
@@ -222,7 +233,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-    elif (key=="pdflatex") options(pdflatex=value)
+    elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=value)
     elif (key=="bibtex") options(bibtex=value)
     elif (key=="math-mode") options.setMathMode(value)
     elif (key=="math-convert") options(mathconvert=value)

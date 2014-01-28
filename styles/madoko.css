@@ -331,3 +331,18 @@ pre.hljs code {
 .hljs-formula, .hljs-meta {
   background: #EEE;
 }
+
+
+/* ---------------------------------------------------
+   Mobile device settings
+----------------------------------------------------*/
+
+@media only screen and (max-device-width:480px) {
+  pre {
+    white-space: pre-wrap;
+  }  
+  body {
+    margin-left: 1em;
+    margin-right: 1em;
+  }
+}

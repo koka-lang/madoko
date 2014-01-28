@@ -8,9 +8,9 @@ Heading Base: 2
 Cite All	: True
 Script		: reference.js
 Bib			: reference
-Package		: fontspec*
+Package-	: fontspec
 Package		: [curve]xypic
-Math Embed  : 15
+Math Embed  : 16
 
 MathJax Ext : AMScd
 Package		: amscd
@@ -129,9 +129,9 @@ In the future, we plan to support e-books through the [ePub] format too.
 
 [epub]: http://en.wikipedia.org/wiki/EPUB
 
-[doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
-[doc-html]: 	koka-doc-html.png 	{width=250px vertical-align=top }
-[doc-md]: 		koka-doc-md.png 	{width=250px vertical-align=top }
+[doc-pdf]: 		koka-doc-pdf.png 	{width=200px vertical-align=top } 
+[doc-html]: 	koka-doc-html.png 	{width=200px vertical-align=top }
+[doc-md]: 		koka-doc-md.png 	{width=200px vertical-align=top }
 
 [koka-article-pdf]: 	http://research.microsoft.com/pubs/200436/koka-effects-2013.pdf
 [koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.html
@@ -833,7 +833,7 @@ vertical lines on the outsides. Also, we use two header rows.
 ~ Sample
 |    grouped       ||                            |         |
 |  id  |    name    |      description           |  price  |
-+:~~~~:|:~~~~~~~~~~:|~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~:+
++:~~~~:|:~~~~~~~~~~:| ~~~~~~~~~~~~~~~~~~~~~~~~~~ |~~~~~~~~:+
 | 1    |   gizmo    | Takes care of doohickies   |   1.99  |
 | 2    |   doodad   |     Collects *gizmos*      |  23.80  |
 | 10   |  dojigger  |           Foo              |  102.98 |
@@ -985,7 +985,6 @@ As a hint to understand the above code, note that `\ar@/_/[ddr]_y` denotes an ar
 left curved (`@/_/`), going down, down, right (`[ddr]`), with a label `y`
 underneath. See the package [user guide][xypic] for more examples.
 
-<!--
 ~~ Sample
 ~ Equation
 \xymatrix @W=3pc @H=1pc @R=0pc @*[F-] {%
@@ -1003,7 +1002,6 @@ underneath. See the package [user guide][xypic] for more examples.
 1 }\mathit{Answer}
 ~
 ~~
--->
 
 ### Math commands   { #sec-mathdefs }
 
