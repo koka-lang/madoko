@@ -574,7 +574,7 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>^(?!\s)(?![\w\.#~][\w\-\.#~, \t]*:)</string>
+			<string>^(?!\s)(?![\w\.#~][\w\-\.#~, \t\*]*:)</string>
 			<key>name</key>
 			<string>markup.metadata.madoko</string>
 			<key>patterns</key>
@@ -610,7 +610,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>^\w[\w\-\.#~,\s]*:</string>
+					<string>^\w[\w\-\.#~,\s\*]*:</string>
 					<key>name</key>
 					<string>entity.name.function meta.tag.preprocessor.madoko</string>
 				</dict>

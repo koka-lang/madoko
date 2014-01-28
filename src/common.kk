@@ -368,11 +368,11 @@ public function generateHeaderId( attrs : attrs, heading : string ) : attrs {
 }
 
  
-// Normalize an identifier: just keep letters, digits, underscores and dashes,
-// replace whitespace by a dash, and convert to lower case. 
+// Normalize an identifier: just keep letters, digits, underscores, colons, stars, and dashes,
+// replace whitespace, colons, and stars by a dash, and convert to lower case. 
 public function normalizeId( txt : string ) : string {
-  txt.replaceAll(regex(@"[^\w\-_:\s]+"),"")
-     .replaceAll(regex(@"\s+|[:]"),"-")
+  txt.replaceAll(regex(@"[^\w\-_:\*\s]+"),"")
+     .replaceAll(regex(@"\s+|[:\*]"),"-")
      .toLower
 }
 

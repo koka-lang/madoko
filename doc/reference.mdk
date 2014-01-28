@@ -8,9 +8,9 @@ Heading Base: 2
 Cite All	: True
 Script		: reference.js
 Bib			: reference
-Package-	: fontspec
+Package*	: fontspec
 Package		: [curve]xypic
-Math Embed  : 16
+Math Embed  : 24
 
 MathJax Ext : AMScd
 Package		: amscd

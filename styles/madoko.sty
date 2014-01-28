@@ -174,7 +174,7 @@
     \author{\@mdauthors%
     \ifdef\institute{\institute{\@mdinsts}}{}}%
   \fi
-  \ifdef\titlepage{\institute{\@mdinsts}\titlepage}{\maketitle}%
+  \ifdef\titlepage{\ifdef\institute{\institute{\@mdinsts}\titlepage}{\maketitle}}{\maketitle}%
 }
 
 % Use the pre-defined abstract environment

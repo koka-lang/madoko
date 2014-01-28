@@ -58,7 +58,7 @@
   "repository": {
     "metadata":
       { "begin": "^(Title|Author)\\s*:"
-      , "end": "^(?!\\s)(?![\\w\\.#~][\\w\\-\\.#~, \\t]*:)"
+      , "end": "^(?!\\s)(?![\\w\\.#~][\\w\\-\\.#~, \\t\\*]*:)"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
       , "patterns": [
@@ -76,7 +76,7 @@
               }
             ]
           },
-          { "match": "^\\w[\\w\\-\\.#~,\\s]*:"
+          { "match": "^\\w[\\w\\-\\.#~,\\s\\*]*:"
           , "name": "entity.name.function meta.tag.preprocessor.madoko" 
           }
         ]
