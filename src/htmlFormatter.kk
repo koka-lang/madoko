@@ -56,8 +56,8 @@ function fmtRows( context : inlineContext, tbody : string, td : string, cells : 
   if (cells.isNil) then return ""
   tagBlock(tbody,
     cells.map( fun(row) {
-      tag("tr", row.map(fun(cell) { tag(td,cell.fst,cell.snd.htmlFormat(td,context.sanitize)) }).join)
-    }).join())
+      tag("tr", row.map(fun(cell) { tag(td,cell.fst,cell.snd.htmlFormat(td,context.sanitize)) }).join) 
+    }).join("\n"))
 } 
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
@@ -79,17 +79,18 @@ public function fmtHtmlCode( context : inlineContext, env : string,
                               txt : string, attrs : attrs ) : string 
 {
   lang = attrs.hasKey("language").maybe("",id)
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang])
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
   
   plain = txt.escapePre
-  content = if (attrs.hasClass("plain")) then plain 
-             else match( txt.hilite(lang) ) {
-                    Just(html) -> html
-                    Nothing    -> plain  // as is..
-                  }
+  val (pattrs,content)
+    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then (attrs,plain) 
+       else match( txt.hilite(lang) ) {
+              Just(html) -> (attrs.addClass("hljs"),html)
+              Nothing    -> (attrs,plain)  // as is..
+            }
   if (env=="" || env=="code") 
-   then context.fmtHtmlCmd("code", content, attrs.mergeDefault(lattrs))
-   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), attrs.addClass("hljs"), context.sanitize)
+   then context.fmtHtmlCmd("code", content, pattrs.mergeDefault(lattrs))
+   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), pattrs, context.sanitize)
 }
 
 /* --------------------------------------

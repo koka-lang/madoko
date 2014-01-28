@@ -242,6 +242,17 @@ public function (==)( x : formatter, y : formatter ) : bool {
   }
 }
 
+// See if a string matches the format. An empty string always matches.
+public function matchFmt( fmt : formatter, fmtstr : string ) : bool {
+  if (fmtstr=="") return True
+  s = fmtstr.toLower
+  match(fmt) {
+    FmtHtml | s == "html" -> True
+    FmtTex  | s == "tex"  -> True
+    _ -> False
+  }
+}
+
 public type input {
   Pre         // preformatted
   MathPre     // TeX math, preformatted

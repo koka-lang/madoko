@@ -43,28 +43,6 @@ function fmtEnv( context : formatContext, env : string, txt : string, attrs : at
   }
 }
 
-function fmtPre( context : formatContext, txt : string ) : string {
-  context.inlineContext.fmtEscapePre(txt)
-}
-
-function fmtCode( context : formatContext, txt : string, attrs : attrs = attrsNone ) : string {
-  //langClassName = context.langPrefix + lang
-  //lattrs = if (lang=="") then attrsNone else Attrs(classes=["lang-"+lang,"language-"+lang])
-  context.inlineContext.fmtCode( "pre", txt, attrs )
-  /*
-  match(context.fmt) {
-    FmtHtml -> context.fmtEnv("pre", context.fmtCmd("code", txt.hilite(lang), lattrs ), attrs.addClass("hljs"))
-    FmtTex  -> {
-      attrsx = if (lang=="" || attrs.hasKey("language").isJust) 
-                then attrs else attrs.addKeyval("language",lang)
-      if (attrsx.hasClass("plain"))
-       then context.fmtEnv("verbatim", context.fmtText(txt), attrsx )
-       else context.fmtEnv("pre", context.fmtPre(txt), attrsx )
-    }
-  }
-  */
-}
-
 function fmtCmd( context : formatContext, cmd : string, txt : string, attrs : attrs = attrsNone ) : string {
   match(context.fmt) {
     FmtHtml -> tagEnv(cmd, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
@@ -192,7 +170,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Code(txt,_,attrs) -> {      
-      context.fmtCode( txt, attrs)
+      context.inlineContext.fmtCode( "pre", txt, attrs)
     }
 
     List(tagname,items,attrs) -> {
@@ -217,7 +195,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Source(txt,input) -> {
       match(input) {
         Pre       -> {
-          context.fmtCode(txt,attrsNone)
+          context.inlineContext.fmtCode("pre",txt,attrsNone)
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
@@ -250,7 +228,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           }
         }
         // these should not happen by now
-        Tex  -> context.fmtPre(txt)
+        Tex  -> context.inlineContext.fmtEscapePre(txt)
       }      
     }
 

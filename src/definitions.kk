@@ -171,7 +171,7 @@ function parseDefinitionsFull(
       Para(attrs=xs)  -> xs
       Code(_,lang,xs)  -> {
         if (lang=="") then xs else {
-          xs.addKeyval("language",lang).addClass("language-" + lang)
+          xs.addKeyvalIfNotExist("language",lang).addClass("language-" + lang)
         }
       }
       Quote(attrs=xs) -> xs
@@ -200,7 +200,7 @@ function parseDefinitionsFull(
                    else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes"]))  
   fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
-  secblocks = newblocks.sections(secInit(secBase=secBase,secMax=secDepth))
+  secblocks = newblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
 
   (secblocks,                   
    fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labels.freeze, 
@@ -211,11 +211,12 @@ function parseDefinitionsFull(
 struct secinfo(
   level   : int,  // current level; start at 1
   secMax  : int,  // max level for sections 
-  secBase : int   // level used is max(base,level) 
+  secBase : int,   // level used is max(base,level) 
+  secDefaults: attrs -> attrs
 )
 
-val secInit = Secinfo(1,6,1)
-val secNone = Secinfo(1,0,1)
+val secInit = Secinfo(1,6,1,id)
+val secNone = Secinfo(1,0,1,id)
 
 function mapBlocks( blocks : list<block>, 
                     action : (bool,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
@@ -265,6 +266,7 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
 } 
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
+  if (attrs.hasKey("display").maybe("",id) == "none") return Empty
   //if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
   citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
@@ -356,7 +358,8 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
         secattrs = "html-elem=section .section" + d.show +
                      (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
         hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
-        [Div(Cons(Heading(d,txt,hattrs),ncontent), secattrs.parseAttrs("section"))]
+        sattrs = secattrs.parseAttrs("section")
+        [Div(Cons(Heading(d,txt,hattrs),ncontent), (secinfo.secDefaults)(sattrs))]
       }
       _ -> [h].sectionMap(nsecinfo) + ncontent
     }

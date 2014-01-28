@@ -60,7 +60,7 @@ public struct options(
   sectionBase   : int  = 1, // starting section level.
   
   mathmode      : mathmode = Static, // mode used to render math
-  mathjax       : string = "-",  // mathjax scripts path (use "-" for default path)
+  mathjax       : string = "",  // mathjax scripts path (use "-" for default path)
   mjext         : string = "",  // semicolon separated list of mathjax extensions
   
   mathImgDir    : string = "math",    // directory for static math images
@@ -177,12 +177,12 @@ function check( cmdOptions : commandOptions ) : io commandOptions
 
 // Parse the meta-data at the start of a document,
 // and return updated options and the rest of the document
-public function parseMeta( options0 : options, txt : string ) : (options, string) 
+public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
-  val (mdata2,rest) = parsePlainMeta(txt, verbose=options0.verbose >= 4)
+  val (mdata2,rest) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
   options = options0.fromMeta(mdata2)
   mdata1  = if (options0.metadata.isCons || options.bench) then Nil 
-             else parsePlainMeta(defaultMeta(options), verbose=options0.verbose >= 4).fst
+             else parsePlainMeta(defaultMeta(options), fmt, verbose=options0.verbose >= 4).fst
   mdata = options.metadata + mdata1 + mdata2             
   (options(metadata = mdata),rest)  
 }
@@ -208,7 +208,8 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="bib" || key=="bibliography" || key=="bib-data") options(bib=if (value=="") then "" else options.bib + ";" + value)
     elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
     elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
-    elif (key=="html-header") options(htmlHeader = value)
+    elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader + "\n" + value)
+    elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader + "\n" + value)
     elif (key=="author") options(author=if (value=="") then "" else options.author + ";" + value)
     elif (key=="affiliation" || key=="institute") options(affiliation=if (value=="") then "" else options.affiliation + ";" + value)
     elif (key=="email") options(email=if (value=="") then "" else options.email + ";" + value)    
@@ -256,7 +257,7 @@ function setMathMode( options : options, value : string ) : options {
 }
 
 
-public function parsePlainMeta( txt : string, metadata : metadata = [], verbose : bool = False ) : (metadata,string) 
+public function parsePlainMeta( txt : string, fmt : formatter, metadata : metadata = [], verbose : bool = False ) : (metadata,string) 
 {
   match(txt.find(rxMeta)) {
     Nothing   -> {
@@ -264,17 +265,20 @@ public function parsePlainMeta( txt : string, metadata : metadata = [], verbose 
       (metadata.reverse,txt)
     }
     Just(cap) -> {
-      value = cap.groups[3].joinLines.trim
-      kvs   = if (cap.groups.matchedOn(2))
-               then cap.groups[1].toLower.split(",").list.map(fun(k) { (k,value) })
-               else [(cap.groups[1].normalizeId, value)]
-      if (verbose) then trace("meta data:" + cap.groups[1] + ": " + value )
-      parsePlainMeta( txt.substr1(cap.next), kvs + metadata, verbose )
+      kvs = if (fmt.matchFmt(cap.groups[1])) then {
+              value = cap.groups[4].joinLines.trim
+              if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
+              if (cap.groups.matchedOn(3))
+               then cap.groups[2].toLower.split(",").list.map(fun(k) { (k,value) })
+               else [(cap.groups[2].normalizeId, value)]
+            }
+            else []
+      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose )
     }
   }
 } 
 val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-val metaKey = @"((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
+val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?) *[:]"
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math#nl#source#nl~ End Math#nl' tight .para-block",
@@ -289,13 +293,13 @@ function defaultMeta( options : options ) : string {
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
       
       @"~Article  : html-elem='article'",
-      @"~Section  : html-elem='section'",
+      @"~Section  : html-elem='section' tex-elem='mdSection'",
       @"~Aside    : html-elem='aside'",
       @"~Nav      : html-elem='nav'",
 
-      @"~Note     : .block before='[**Note**. ]{.note-before}'",
-      @"~Remark   : .block before='[**Remark**. ]{.remark-before}'",
-      @"~Proof    : .block before='[**Proof**. ]{.proof-before}'",
+      @"~Note     : .block before='[**Note**. ]{.note-before}#nl'",
+      @"~Remark   : .block before='[**Remark**. ]{.remark-before}#nl'",
+      @"~Proof    : .block before='[**Proof**. ]{.proof-before}#nl'",
 
       @"~Framed   : border-style=solid border-color=black border-width=1px",
       @"~Center   : .align-center",
@@ -338,7 +342,7 @@ function heading( depth : int, headingDepth : int, tocDepth : int ) {
   "~h" + num + ": " + 
     (if (depth > 1) then headingCounter(depth) else "") + 
     " label='[" + label + "]{.heading-label}'" +
-    (if (depth > headingDepth) then "" else " before='[#label.\\ \\ \\ ]{.heading-before}'") +
+    (if (depth > headingDepth) then "" else " before='[#label.&ensp;]{.heading-before}'") +
     (if (depth > tocDepth) then "" else " toc")    
 }
 

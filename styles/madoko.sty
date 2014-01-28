@@ -23,7 +23,7 @@
 \RequirePackage{stmaryrd}
 
 \hypersetup{
-  colorlinks=true,linkcolor=NavyBlue,urlcolor=NavyBlue,filecolor=Maroon
+  colorlinks=true,linkcolor=Navy,urlcolor=Navy,filecolor=Maroon
 }
 
 
@@ -204,9 +204,10 @@
 
 \cssClassRule{footnote-backref}{display=hidden}
 
+\newcommand{\@mdHyperref}[2]{\hyperref[#1]{#2}}
 \newcommand{\@mdMakeA}[2]{%
   \cssIfHasClass{localref}%
-    {\hyperref[#1]{#2}%
+    {\@mdHyperref{#1}{#2}%
      \cssIfHasClass{bibref}{\write\@mainaux{\string\citation{#1}}}{}}%
     {\href{#1}{#2}}%
 }
@@ -223,7 +224,7 @@
 \newcommand{\mdHxxxx}[2][]{\subsubsection*{\cssInline[elem=h4,#1]{#2}}}
 \newcommand{\mdHxxxxx}[2][]{\paragraph*{\cssInline[elem=h5,#1]{#2}}}
 \newcommand{\mdHxxxxxx}[2][]{\paragraph*{\cssInline[elem=h6,#1]{#2}}}
-
+\newenvironment{mdSection}[1][]{\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %-------------------------------------------------------------
 % Common block elements
@@ -280,10 +281,6 @@
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
 \newcommand{\mathid}[1]{\mathit{#1}}
 
-\newlength{\@mathmed}
-\settowidth{\@mathmed}{$\:$}
-\newlength{\@maththick}
-\settowidth{\@maththick}{$\;$}
 \newcommand{\mathspace}[1]{\mskip#1\medmuskip}
 \newcommand{\mathindent}[1]{\mskip#1\thickmuskip}
 \newcommand{\mathbr}{\\}
@@ -520,12 +517,12 @@
 \mdDefineToken{formula}{\mdTokenMeta}
 \mdDefineToken{lisp:title}{\mdTokenKeyword}
 
-\newcommand{\mdTokenKeyword}[1]{\textcolor{NavyBlue}{#1}}
+\newcommand{\mdTokenKeyword}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenString}[1]{\textcolor{Maroon}{#1}}
-\newcommand{\mdTokenComment}[1]{\textcolor{DarkGreen}{#1}}
-\newcommand{\mdTokenSpecial}[1]{\textcolor{NavyBlue}{#1}}
+\newcommand{\mdTokenComment}[1]{\textcolor{Green}{#1}}
+\newcommand{\mdTokenSpecial}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenDoc}[1]{\textcolor{Gray}{#1}}
-\newcommand{\mdTokenConstant}[1]{\textcolor{NavyBlue}{#1}}
+\newcommand{\mdTokenConstant}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenAttribute}[1]{\textcolor{Purple}{#1}}
 \newcommand{\mdTokenType}[1]{\textcolor{Teal}{#1}}
 \newcommand{\mdTokenEmphasis}[1]{\itshape #1}
@@ -533,6 +530,32 @@
 \newcommand{\mdTokenTitle}[1]{\bfseries #1}
 \newcommand{\mdTokenMeta}[1]{\colorbox[gray]{0.9}{#1}}
 
+% ---------------------------------------------------
+% Support the Beamer class
+% ---------------------------------------------------
+
+
+\@ifclassloaded{beamer}{%
+  \renewcommand{\@mdHyperref}[2]{\hyperlink{#1}{#2}}%
+  \renewcommand{\mdH}[2][]{\frametitle{\cssInline[elem=h0,#1]{#2}}}%
+  \renewcommand{\mdHx}[2][]{\frametitle{\cssInline[elem=h1,#1]{#2}}}%
+  \renewcommand{\mdHxx}[2][]{\frametitle{\cssInline[elem=h2,#1]{#2}}}%
+  \renewenvironment{mdSection}[1][]{\begin{mdDiv}[#1]\begin{frame}}{\end{frame}\end{mdDiv}}%
+  % handle fragments
+  \cssClassRuleDoBefore{fragment}{\begin{onlyenv}<+->}%
+  \cssClassRuleDoAfter{fragment}{\end{onlyenv}}%
+  \cssClassRuleDoBefore{pause}{\pause{}}%
+  % item appearance on a list defined with a fragmented class
+  \let\old@mdLi\mdLi%
+  \let\old@endmdLi\endmdLi%
+  \def\mdLi{%
+    \begingroup\def\@fragmentend{}% use fragmented class from the parent (ie. ul or ol)
+    \cssIfHasClass{fragmented}{\def\@fragmentend{\end{onlyenv}}\begin{onlyenv}<+->}{}%
+    \old@mdLi}
+  \def\endmdLi{%
+    \old@endmdLi\@fragmentend\endgroup%
+  }
+}
 
 % ---------------------------------------------------
 % Math snippets for static image generation

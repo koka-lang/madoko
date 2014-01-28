@@ -50,7 +50,7 @@ public function normalizeSource( src : string ) : string {
 function markdownNormal( src0 : string, options0 : options = Options(), fmt : formatter = FmtHtml ) : pure string
 {  
   // first normalize the input: all tabs to 4 spaces.
-  val (options,src) = parseMeta(options0,src0.normalizeSource)
+  val (options,src) = parseMeta(options0,fmt,src0.normalizeSource)
 
   if (options.verbose > 2) then trace("parse blocks")
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
@@ -60,7 +60,8 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
                                     options.mathdim, 
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
-                                    options.mathmode.isStatic) 
+                                    options.mathmode.isStatic,
+                                    options.highlight) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseBody(initialFormatContext(icontext,options.titleInfo,

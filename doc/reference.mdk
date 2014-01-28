@@ -10,7 +10,7 @@ Script		: reference.js
 Bib			: reference
 Package		: fontspec*
 Package		: [curve]xypic
-Math Embed  : 16
+Math Embed  : 15
 
 MathJax Ext : AMScd
 Package		: amscd
@@ -45,12 +45,6 @@ rrbracket	: &#10215;
 \newcommand{\hiragana}[1]{{\fontspec{MS Gothic}#1}}
 \cssClassRuleCmd{hiragana}{\hiragana}
 ~
-
-<style>
-.hljs-command { color: blue;}
-.hljs-special { color: purple; }
-.hljs-formula { background-color: #EEE; }
-</style>
 
 [TITLE]
 
@@ -1149,9 +1143,9 @@ Section [#sec-replace]):
 
 ~~ Sample
 ~ MathPre   { replace="/->/\rightarrow/g" }
-random &: () -> ndet double
-print  &: string -> io ()
-error  &: \forall\alpha. string -> exn a
+random~ &: () -> ndet double
+print   &: string -> io ()
+error   &: \forall\alpha. string -> exn a
 ~
 ~~
 
@@ -2431,7 +2425,7 @@ the default for the entire document instead of using attributes.
 
 Madoko recognizes all HTML5 named character entities and translates them
 correctly in LaTeX. Besides the standard named entities, Madoko also
-recognizes some extra named entities, like _bar_, _bslash_, _emsp_,
+recognizes some extra named entities, like _bar_, _bslash_, 
 _pagebreak_, _strut_, etc. These are denoted in the table with a star. The
 full list of predefined entities is:
 
@@ -2617,18 +2611,18 @@ full list of predefined entities is:
 |    977 | thetasym    | &#977;   |
 |    978 | upsih       | &#978;   |
 |    982 | piv         | &#982;   |
-|   8194 | ensp*       | &#8194;  |
-|   8195 | emsp*       | &#8195;  |
+|   8194 | ensp        | &#8194;  |
+|   8195 | emsp        | &#8195;  |
 |   8195 | quad*       | &#8195;  |
 |   8196 | thicksp*    | &#8196;  |
 |   8197 | medsp*      | &#8197;  |
-|   8201 | thinsp*     | &#8201;  |
+|   8201 | thinsp      | &#8201;  |
 |   8203 | strut*      | &#8203;  |
 |   8203 | pagebreak*  | &#8203;  |
-|   8204 | zwnj*       | &#8204;  |
-|   8205 | zwj*        | &#8205;  |
-|   8206 | lrm*        | &#8206;  |
-|   8207 | rlm*        | &#8207;  |
+|   8204 | zwnj        | &#8204;  |
+|   8205 | zwj         | &#8205;  |
+|   8206 | lrm         | &#8206;  |
+|   8207 | rlm         | &#8207;  |
 |   8211 | ndash       | &#8211;  |
 |   8212 | mdash       | &#8212;  |
 |   8216 | lsquo       | &#8216;  |

@@ -28,7 +28,7 @@ external xhilite( src : string, lang : string = "auto") : string {
 public function hilite( src : string, lang : string = "auto") : maybe<string> 
 {
   if (lang=="") return Nothing
-  catch( { Just(xhilite(src,lang))  }, fun(exn) { 
+  catch( { Just(xhilite(src,lang.toLower))  }, fun(exn) { 
            warning("could not highlight: " + exn.show)
            Nothing
          })
@@ -41,7 +41,7 @@ external xregisterLanguage( name : string, fname : string ) : io () {
 
 public function registerLanguage( fname : string ) : io () {
   if (fname=="") return ()
-  name = fname.basename.noext
+  name = fname.basename.noext.toLower
   catch( { trace("register: " + name + ": " + fname); xregisterLanguage(name,fname) }, 
          fun(exn) { warning("could not register language: " + name ) } )
 }

@@ -9,10 +9,39 @@
 
 \RequirePackage{etoolbox}
 \RequirePackage{xkeyval}
-\RequirePackage[svgnames]{xcolor}
+\RequirePackage{xcolor}
 \RequirePackage{mdframed}
 \RequirePackage{graphicx}
 \RequirePackage{tablefootnote}
+\RequirePackage{verbatim}
+
+\definecolor{Red}{HTML}{FF0000}
+\definecolor{Lime}{HTML}{00FF00}
+\definecolor{Blue}{HTML}{0000FF}
+
+\definecolor{Yellow}{HTML}{FFFF00}
+\definecolor{Cyan}{HTML}{00FFFF}
+\definecolor{Magenta}{HTML}{FF00FF}
+
+\definecolor{Navy}{HTML}{000080}
+\definecolor{Maroon}{HTML}{800000}
+\definecolor{Green}{HTML}{008000}
+
+\definecolor{Teal}{HTML}{008080}
+\definecolor{Purple}{HTML}{800080}
+\definecolor{Olive}{HTML}{808000}
+
+\definecolor{Black}{HTML}{000000}
+\definecolor{DimGray}{HTML}{696969}
+\definecolor{Gray}{HTML}{808080}
+\definecolor{DarkGray}{HTML}{A9A9A9}
+\definecolor{Silver}{HTML}{C0C0C0}
+\definecolor{LightGray}{HTML}{D3D3D3}
+\definecolor{Gainsboro}{HTML}{DCDCDC}
+\definecolor{FloralWhite}{HTML}{FFFAF0}
+\definecolor{Ivory}{HTML}{FFFFF0}
+\definecolor{White}{HTML}{FFFFFF}
+
 
 \newcommand{\@swap}[2]{#2{#1}}
 \newcommand{\@expandafter}[2]{\expandafter\@swap\expandafter{#2}{#1}}
@@ -126,7 +155,7 @@
 \newcommand{\cssDoBefore}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
 \newcommand{\cssDoAfter}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
 
-\newcommand{\cssDoEnv}[1]{\cssDoBefore{\begin{#1}}\cssDoAfter{\end{#1}}}
+\newcommand{\cssDoEnv}[1]{\cssDoBefore{\protect\begin{#1}}\cssDoAfter{\protect\end{#1}}}
 \newcommand{\cssDoEnvOpt}[2]{\cssDoBefore{\begin{#1}[#2]}\cssDoAfter{\end{#1}}}
 \newcommand{\cssDoEnvArg}[2]{\cssDoBefore{\begin{#1}{#2}}\cssDoAfter{\end{#1}}}
 \newcommand{\cssDoEnvArgII}[3]{\cssDoBefore{\begin{#1}{#2}{#3}}\cssDoAfter{\end{#1}}}
@@ -203,7 +232,8 @@
 	{\eifstrequal{\cssDisplay}{block-inline}%
 		{\@cssBlockMargins}%
 		{\@cssInlineMargins}%
-	}}
+	}%
+}
 
 \newcommand{\@cssBlockEndPar}{%
 	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfter{\relax\ifhmode\par\fi}}%

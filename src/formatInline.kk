@@ -104,11 +104,12 @@ public function inlineContext( fmt : formatter,
                                sanitize : bool = False,
                                bench: bool = False,
                                verbose : int = 0,
-                               mathStatic : bool = False ) : inlineContext
+                               mathStatic : bool = False,
+                               highlight : bool = True ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
                  metadata, mathinfos, 
-                 citestyle, sanitize, bench, verbose, mathStatic,
+                 citestyle, sanitize, bench, verbose, mathStatic, highlight,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 
