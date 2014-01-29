@@ -220,14 +220,32 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
 {
   function expand(s) { s.expandKeys(metadata) }
 
+  function makeMeta(name : string, sep : string = "" ) : list<string> {
+    match (metadata[name]) {
+      Nothing -> []
+      Just(value) -> {
+        evalue = value.escape
+        ["name=\"" + name.escape + "\" content=\"" + 
+          (if (sep=="") then evalue else evalue.replaceAll(";",sep)) + "\""]
+      }
+    }
+  }
+
   extensions = options.mjext.splitPaths.map(fun(path) { 
       "\"" + (if (path.endsWith(".js")) then path else path + ".js") +"\"" 
     }).join(",")
 
+  meta = options.htmlMeta.splitPaths + 
+          makeMeta("copyright") +
+          makeMeta("license") +
+          makeMeta("keywords",",") + 
+          makeMeta("author",",") +
+          makeMeta("description") 
+          
   "<!DOCTYPE html>\n<html>\n<head>\n" +
    "  <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n" +
    "  <meta name=\"generator\" content=\"Madoko, version " + version + "\" />\n" +
-   options.htmlMeta.splitPaths.map(fun(m) { "  <meta " + m + " />\n" }).join +
+   meta.map(fun(m) { "  <meta " + m + " />\n" }).join +
    (if (options.title=="") then "" else
       "  <title>" + escape(options.title.expand) + "</title>\n") +
    (if (options.css == "") then "" else {
