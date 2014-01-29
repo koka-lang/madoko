@@ -10,6 +10,7 @@
 body.madoko {
   margin: 1em 16% 1em 12%;
   font-family: Cambria,Utopia,"Hoefler Text","Liberation Serif","Times New Roman",serif;
+  -webkit-text-size-adjust: 100%;
 }
 
 .madoko p {
@@ -20,10 +21,10 @@ body.madoko {
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
 pre, code, kbd, samp, tt {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
 pre code {
-  font-size: 1em;
+  font-size: 0.95em;
 }
 
 /* style h5 and h6 headers a bit better */
@@ -342,10 +343,7 @@ pre.hljs {
    Mobile device settings
 ----------------------------------------------------*/
 
-@media only screen and (max-device-width:480px) {
-  pre {
-    white-space: pre-wrap;
-  }  
+@media only screen and (max-device-width:1024px) {
   body {
     margin-left: 1em;
     margin-right: 1em;

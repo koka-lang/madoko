@@ -40,7 +40,7 @@ public struct options(
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
   htmlHeader: string= "",  // literal html header
-  htmlMeta : string = "name=\"viewport\" content=\"inital-scale=1.0\"",  // html meta tags
+  htmlMeta : string = "name=\"viewport\" content=\"initial-scale=1.0\"",  // html meta tags
   texHeader: string= "",   // literal tex header
   texHeaderx: string= "",  // literal tex header in non-math mode only
   
@@ -202,7 +202,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     if   (key=="title")  options(title=value)
     elif (key=="sub-title" || key=="subtitle")  options(subtitle=value)
     elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
-    elif (key=="html-meta")    options(css=if (value=="") then "" else options.htmlMeta + ";" + value)
+    elif (key=="html-meta")    options(htmlMeta=if (value=="") then "" else options.htmlMeta + ";" + value)
     elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
     elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
     elif (key=="package-")  options(packagesx=if (value=="") then "" else options.packagesx + ";" + value)
