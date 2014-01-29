@@ -10,7 +10,7 @@ Script		: reference.js
 Bib			: reference
 Package*	: fontspec
 Package		: [curve]xypic
-Math Embed  : 24
+Math Embed  : 64
 
 MathJax Ext : AMScd
 Package		: amscd
@@ -921,7 +921,7 @@ like `Theorem`, `Lemma`, `Proof`, etc. Madoko does not support the `\(` and
 `\[` commands to enclose mathematics since those are escape sequences.
 
 
-### Advanced: using packages
+### Using packages
 
 By default, Madoko supports most of the AMS mathematics commands,  i.e.
 `amsmath`, `amsfonts`, and `amssymb`.  However, sometimes you need specific
@@ -985,6 +985,7 @@ As a hint to understand the above code, note that `\ar@/_/[ddr]_y` denotes an ar
 left curved (`@/_/`), going down, down, right (`[ddr]`), with a label `y`
 underneath. See the package [user guide][xypic] for more examples.
 
+<!--
 ~~ Sample
 ~ Equation
 \xymatrix @W=3pc @H=1pc @R=0pc @*[F-] {%
@@ -1002,6 +1003,7 @@ underneath. See the package [user guide][xypic] for more examples.
 1 }\mathit{Answer}
 ~
 ~~
+-->
 
 ### Math commands   { #sec-mathdefs }
 
@@ -1316,6 +1318,7 @@ Any metadata key and value can be given (and referred to using
 * `Author`, `Affiliation`, `Email`: the author name, affiliation, and
 	email. There can be  multiple authors. The author info is also used by the
 	`[TITLE]` element to generate a proper document title header.
+	The authors are also written to the author `<meta>` tag.
 
 * `Toc depth` (=3): The maximum depth of headings that are included in the
 	table of contents (Section [#sec-toc]).	
@@ -1357,9 +1360,10 @@ Any metadata key and value can be given (and referred to using
 
 The following keys are not used as this moment but have a standard meaning:
 
-* `Copyright`: Copyright information.
-* `License`: License for this document.
-* `Keywords`: A list of document keywords.
+* `Copyright`: Copyright information. Written to the copyright `<meta>` tag.
+* `License`: License for this document. Written to the license `<meta>` tag.
+* `Keywords`: A list of document keywords. Written to the keywords `<meta>` tag.
+* `Description`: A short description of the document. Written to the description `<meta>` tag.
 * `Comment`: General comments.
 * `Date`: Date the document was written.
 * `Revision`: Revision of the document.
@@ -1385,6 +1389,14 @@ Some keys are only interpreted for HTML output:
 	```
 	Script: lib/main.js
 	```
+* `HTML Meta`: Specify content included in a `<meta>` tag. There can be many
+	meta tags specified. 
+	```
+	HTML Meta: http-equiv="refresh" content="30"
+	```
+	Use the value `clear` to clear the list of meta tags.
+	This can be used for example to exclude the default `viewport` meta tag that
+	is emitted for proper viewing on mobile devices.
 
 * `HTML Header`: The value is included literally in the 
 	`<head>` section of the HTML document.
@@ -1404,6 +1416,9 @@ Some keys are only interpreted for HTML output:
 	* `Math Embed:`_size_ (=`1`): Limit in kilobytes at which images are embedded
 		in the HTML page instead of separate `.png` images. Set it to `0`
 		to never embed an image, and high enough to always embed.
+	* `Math Convert:` _cmd_ (=``): Specify the `convert` command that is executed
+		for each image. This can be used to do additional processing on the generated
+		math images. This command is called with the proper input and output files.
 	* `Latex:` _cmd_ (=`latex`): The command used to invoke LaTeX when rendering
 		math.
 	* `Dvipng:` _cmd_ (=`dvipng`): The command used to generate `.png` images
@@ -1448,12 +1463,18 @@ For LaTeX output, the following keys are relevant:
 	in plain LaTeX. This can happen for example if the rest of the document
 	needs a package that only loads in some other latex engine, like XeLaTeX.
 	In that case, you can exclude the package when typesetting math by 
-	ending the name with a star:
-
-		Package: fontspec*
+	using the star option:
+	```
+	Package*: fontspec
+	```
 
 * `Tex Header`: The value is included literally before
 	the `\begin{document}` command of the LaTeX output.	
+
+* `Tex Header*`: The value is included literally before
+	the `\begin{document}` command of the LaTeX output but excluded
+	when rendering mathematics.	
+
 
 ### Hash names		{ #sec-hashname }
 

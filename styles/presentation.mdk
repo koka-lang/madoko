@@ -60,6 +60,9 @@ Html Header   :
 	<script src="#reveal-url/lib/js/html5shiv.js"></script>
 	<![endif]-->
 	<style>
+	body.madoko {
+		margin: 0pt
+	}	
 	.reveal p { 
 		text-align: center; 
 	}
