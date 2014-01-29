@@ -16,6 +16,7 @@ import std/flags
 import std/regex
 import std/string
 import std/path
+import std/date
 import common // just for parseAttrs
 
 // Do not edit the version, it is set in the Jakefile from package.json
@@ -174,7 +175,10 @@ public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOpt
 // sanitize options
 function check( cmdOptions : commandOptions ) : io commandOptions 
 {
-  cmdOptions(installDir=if (cmdOptions.installDir=="") then programPath().dirname else cmdOptions.installDir )
+  date = now()
+  cmdOptions(installDir=if (cmdOptions.installDir=="") then programPath().dirname else cmdOptions.installDir,
+             options=(cmdOptions.options)(metadata=cmdOptions.options.metadata + 
+                                                   [("date",date.isoDate),("time",date.isoTime)]))
 }
 
 
@@ -184,7 +188,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
 {
   val (mdata2,rest) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
   options = options0.fromMeta(mdata2)
-  mdata1  = if (options0.metadata.isCons || options.bench) then Nil 
+  mdata1  = if (options.bench || options.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) then Nil 
              else parsePlainMeta(defaultMeta(options), fmt, verbose=options0.verbose >= 4).fst
   mdata = options.metadata + mdata1 + mdata2             
   (options(metadata = mdata),rest)  
@@ -318,6 +322,8 @@ function defaultMeta( options : options ) : string {
       @"~Pre      : input=pre .para-block",
       @"~Code     : input=pre",
       @"~Hilite   : html-elem='pre'",
+      @"~Hr       : .madoko",
+      @"~Table    : .madoko",
       
       @"~Tex      : input=tex",
       @"~TexRaw   : input=texraw",
@@ -327,6 +333,9 @@ function defaultMeta( options : options ) : string {
       @"~MathDefs : input=mathdefs .hidden",
       @"~HtmlOnly : input=htmlonly",
       @"~TexOnly  : input=texonly",
+
+      @"Madoko Version: " + version,
+      @"Defaults  : True",
 
       theorem("Theorem"),
       theorem("Lemma"),

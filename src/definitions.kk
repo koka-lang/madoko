@@ -197,7 +197,7 @@ function parseDefinitionsFull(
                      (entry.fst, createToc(entry.snd.reverse,fcontext.inlineContext.metadata))
                    }).dict
   footnoteBlock = if (isNil(footnoteItems)) then Empty 
-                   else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes"]))  
+                   else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes","madoko"]))  
   fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
   secblocks = newblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))

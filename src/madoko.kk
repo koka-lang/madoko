@@ -20,6 +20,7 @@ import formatInline
 import definitions
 import htmlFormatter    // for full
 import texFormatter     // for full
+import attributes       // expandKeys
 
 /* --------------------------------------
   Main library entry point 
@@ -64,7 +65,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
                                     options.highlight) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
-    = parseBody(initialFormatContext(icontext,options.titleInfo,
+    = parseBody(initialFormatContext(icontext,options.titleInfo(icontext.metadata),
                                       options.headingBase,options.pedantic,fmt), 
                 src,
                 options.metadata, options.tocDepth,
@@ -89,9 +90,11 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
   res           
 }
 
-function titleInfo( options : options ) : titleinfo {
-  authors = zip(options.author.splitPaths, options.affiliation.splitPaths, options.email.splitPaths) 
-  Titleinfo(options.title, options.subtitle, authors)
+function titleInfo( options : options, metadata : dict<string> ) : titleinfo {
+  function expand(s) { s.expandKeys(metadata) }  
+  authors = zip(options.author.expand.splitPaths, options.affiliation.expand.splitPaths, 
+                  options.email.expand.splitPaths) 
+  Titleinfo(options.title.expand, options.subtitle.expand, authors)
 }
 
 function zip(xs,ys,zs,acc=[]) : list<(string,string,string)> {

@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------------
+`/*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
@@ -6,39 +6,15 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-/* Styling for full html pages */
-body.madoko {
-  margin: 1em 16% 1em 12%;
-  font-family: Cambria,Utopia,"Hoefler Text","Liberation Serif","Times New Roman",serif;
-  -webkit-text-size-adjust: 100%;
-}
+/* ---------------------------------------------------
+   Various settings to display madoko elements correctly.
+   For example, lines in tables or a table of contents.
 
-.madoko p {
-  text-align: justify;
-}
-
-
-/* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-pre, code, kbd, samp, tt {
-  font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace;
-  font-size: 0.85em;
-}
-pre code {
-  font-size: 0.95em;
-}
-
-/* style h5 and h6 headers a bit better */
-h5,h6 {
-  margin-top: 0.5em;
-  margin-bottom: 0pt;
-  font-size: 100%;
-}
-h5+p {
-  margin-top: 0.5em;
-}
-h6+p {
-  margin-top: 0pt;
-}
+   All rules use specific madoko classes and never just
+   a generic element. This means one can safely include
+   this CSS into any web page without affecting non-madoko
+   content (as long as the class names are different)
+----------------------------------------------------*/
 
 /* The table of contents */
 .toc>.tocblock .tocblock {
@@ -54,7 +30,7 @@ h6+p {
 }
 
 .toc {
-  margin-top: 2ex;
+  margin-top: 1em;
 }
 
 /* Paragraphs */
@@ -73,7 +49,6 @@ a.localref {
 a.localref:hover {
   text-decoration: underline;
 }
-
 
 /* Footnotes */
 .footnotes {
@@ -177,7 +152,7 @@ a.localref:hover {
   display: none;
 }
 
-hr {
+hr.madoko, .madoko hr {
   border: none;
   border-bottom: black solid 1px;
   margin-bottom: 0.5ex;
@@ -226,10 +201,10 @@ hr {
 
 
 /* Tables */
-table {
+table.madoko {
   border-collapse: collapse;
 }
-td, th {
+.madoko td, .madoko th {
   padding-left: 1ex;
   padding-right: 1ex;
   vertical-align: top;
@@ -242,8 +217,8 @@ td, th {
   border-right: 1px solid black;
 }
 
-thead>tr:first-child>.cell-line,
-tbody:first-child>tr:first-child>.cell-line {
+.madoko thead>tr:first-child>.cell-line,
+.madoko tbody:first-child>tr:first-child>.cell-line {
   border-top: 1px solid black;
   border-bottom: none;
 }
@@ -269,18 +244,12 @@ div.input-mathpre {
 }
 
 
-/* Code prettify */
-ol.linenums li {
-  background-color: white;
-  list-style-type: decimal;
-}
-
 
 /*---------------------------------------------------------------------------
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
-pre.hljs {
+.madoko pre.hljs {
   background-color: white;
   color: black;
 }
@@ -340,11 +309,52 @@ pre.hljs {
 
 
 /* ---------------------------------------------------
+   Styling for full documents
+----------------------------------------------------*/
+body.madoko {
+  margin: 1em 16% 1em 12%;
+  font-family: Cambria,Utopia,"Hoefler Text","Liberation Serif","Times New Roman",serif;
+  -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
+}
+
+.madoko p {
+  text-align: justify;
+}
+
+/* style h5 and h6 headers a bit better */
+.madoko h5, .madoko h6 {
+  margin-top: 0.5em;
+  margin-bottom: 0pt;
+  font-size: 100%;
+}
+.madoko h5+p {
+  margin-top: 0.5em;
+}
+.madoko h6+p {
+  margin-top: 0pt;
+}
+
+/* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt {
+  font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace;
+  font-size: 0.85em;
+}
+.madoko pre code {
+  font-size: 0.95em;
+}
+
+/* Code prettify */
+.madoko ol.linenums li {
+  background-color: white;
+  list-style-type: decimal;
+}
+
+/* ---------------------------------------------------
    Mobile device settings
 ----------------------------------------------------*/
 
 @media only screen and (max-device-width:1024px) {
-  body {
+  body.madoko {
     margin-left: 1em;
     margin-right: 1em;
   }

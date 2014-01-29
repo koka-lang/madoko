@@ -90,10 +90,11 @@ function processContent( inName : string, outName : string, content : string,
   styleDir = opts.installDir + "/../styles"
   content.include(False, outName, [styleDir,outName.dirname]) fun(icontent) {
     // set up options
-    xxopts = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
+    opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options
-    mmopts = if (xxopts.xmp) then xxopts
-              else xxopts.parseMeta( FmtHtml, icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
+    opts1  = opts0(metadata=opts0.metadata + [("filename",inName)])              
+    mmopts = if (opts1.xmp) then opts1
+              else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
     mdim   = if (!(mmopts.mathmode.isStatic))
               then dict()
               else {
@@ -101,7 +102,7 @@ function processContent( inName : string, outName : string, content : string,
                 dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
               }
 
-    xopts  = xxopts(mathdim=mdim)
+    xopts  = opts1(mathdim=mdim)
     mopts  = mmopts(mathdim=mdim)  
 
     // register languages for highlighting

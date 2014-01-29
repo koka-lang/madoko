@@ -1,5 +1,5 @@
 Title		: Madoko Reference
-Subtitle	: A Fast Scholarly Markdown Processor
+Subtitle	: A Fast Scholarly Markdown Processor  <br>[#date; (version #madoko-version)]{font-size=medium}
 Author		: Daan Leijen
 Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
