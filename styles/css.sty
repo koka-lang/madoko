@@ -78,6 +78,14 @@
   }%
   \ifdefvoid{\@intersect}{#4}{#3}%
 }
+
+% get string head and tail
+\def\strsplit#1{\expandafter\strsplitx#1\empty\empty\empty}
+\def\strsplitx#1#2\empty{%
+	\edef\strhead{#1}%
+	\edef\strtail{#2}%
+}
+
 % ---------------------------------------------------
 % Some TeX stuff to compose functions
 % ---------------------------------------------------
@@ -544,8 +552,11 @@
 \cssNewKey{css}{font-size}{\cssFontSize}{}
 \cssNewKey{css}{font-family}{\cssFontFamily}{}
 \cssNewKey{css}{color}{\cssColor}{}
+\cssNewKey{css}{background-color}{\cssBackgroundColor}{}
 \cssNewKey{css}{penalty}{\cssPenalty}{}
 
+
+\newcommand{\@robustColor}[2]{\@expandafter{\color[#1]}{#2}}
 
 \newcommand{\@cssProcessFont}{%
 	% font family
@@ -599,10 +610,20 @@
 		{}}}}}}}}%
 	%
 	\eifstrequal{\cssColor}{}{}%
-		{\cssDoBefore{\color{\cssColor}}}%
+		{\strsplit{\cssColor}%			
+		 \eifstrequal{\strhead}{\#}%
+		 	{\cssDoBefore{\protect\color[HTML]{\strtail}}}%
+		 	{\cssDoBefore{\protect\color{\cssColor}}}%
+		}%
+	\eifstrequal{\cssBackgroundColor}{}{}%
+		{\strsplit{\cssBackgroundColor}%			
+		 \eifstrequal{\strhead}{\#}%
+		 	{\cssWrapCmd{\protect\colorbox[HTML]{\strtail}}}%
+		 	{\cssWrapCmd{\protect\colorbox{\cssBackgroundColor}}}%
+		}%
 	%
 	\eifstrequal{\cssPenalty}{}{}%
-		{\penalty \cssPenalty}%
+		{\penalty \cssPenalty\relax}%
 }
 
 
@@ -723,3 +744,18 @@
 
 \newcommand{\cssNewInlineElemCmd}[4]{%
 	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{\cssWrapCmd{#4}}{##2}}}
+
+
+
+% cssText is just for font attributes; no padding or margins
+\newcommand{\cssTextX}[2]%
+	{\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline}{#1}%
+	 \@cssElemDoRules%
+	 %\@cssProcessMargins\@cssProcessPadding%
+	 \@cssClassDoRules%
+	 \@cssProcessText\@cssProcessFont%
+	 \@cssApplyCmd{#2}%
+	}%
+
+
+\newcommand{\cssText}[2][]{\cssTextX{#1}{#2}}

@@ -282,7 +282,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
       }
     }
     input -> {
-      Div([Source(txt,input)],attrs)
+      Div([Source(txt,input,attrs)],attrs)
     }
   }  
 }

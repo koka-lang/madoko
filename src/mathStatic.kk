@@ -65,6 +65,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
     logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
       println("error while running: " + latexCmd)
+      //println(stdout + stderr)
       match(logout.find(rxLatexErr)) {
         Just(cap) -> {          
           texContent = readTextFileDef(texFile,"")
@@ -116,7 +117,7 @@ public function mathStatic( math : string, texName : string, xopts : options, co
             ", MathConvert: " + xopts.mathconvert + 
             ", MathDocClass: " + xopts.mathDocClass + "\n"
   outMath = outHdr + outTex
-  if (outMath != oldMath) {
+  if (outMath != oldMath || xopts.rebuild) {
     if (xopts.verbose>=1) println("  typesetting math...")
     if (!(tryWriteTextFile(texName,outMath))) {
       println("error: unable to write: " + texName)
@@ -125,8 +126,8 @@ public function mathStatic( math : string, texName : string, xopts : options, co
     else {
       mathSnippetsToDvi( texName, xopts, content, oldMath ) {
         pages = match(oldMath.find(rxHdr)) {
-                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim )
-                  _ -> (1,mathAnalyseChanged(outMath,dict()).snd) 
+                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim,xopts.rebuild )
+                  _ -> (1,mathAnalyseChanged(outMath,dict(),xopts.rebuild).snd) 
                 }
         mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
           mathConvertPng( texName.changeExt(".dvi"), xopts, pages ) {
@@ -140,12 +141,14 @@ public function mathStatic( math : string, texName : string, xopts : options, co
 }
 val rxHdr = regex(@"^.*\n")
 
-function mathAnalyseChanged( snippets : string, dim : dict<mathinfo> ) : (int,int) {
+function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : (int,int) {
   var page := 1
   var pageLo := 1
   var pageHi := 0
   
   digests = snippets.findAll(rxDigest).list.map( fun(cap) { cap.groups[1] })
+  if (rebuild) return (1,digests.length.max(1))
+
   digests.map fun(digest) {
     match(dim[digest]) {
       Nothing  -> {
@@ -157,7 +160,6 @@ function mathAnalyseChanged( snippets : string, dim : dict<mathinfo> ) : (int,in
     }
     page := page + 1
   }
-
   (pageLo,pageHi)
 }
 
@@ -384,9 +386,8 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
                     size  = if (embed=="") then {
                               // give robust name  
                               imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
-                              if (fexists(imageDigestFile)) // happens to be duplicate formula
-                               then unlink(imageFile)
-                               else rename(imageFile,imageDigestFile)
+                              tryUnlink(imageDigestFile)
+                              rename(imageFile,imageDigestFile)
                               buf.length 
                             }
                             else {

@@ -165,7 +165,7 @@ function process( inName : string, outName : string, content : string, icontent 
       }
 
     // run bibtex?
-    if (bibChanged && firstTime && mopts.bibtex!="") {
+    if ((bibChanged || mopts.rebuild) && firstTime && mopts.bibtex!="") {
       runBibtex( bibAux, mopts ) fun(err) {
         redo()
       }

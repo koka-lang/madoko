@@ -192,18 +192,18 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       }
     }
     
-    Source(txt,input) -> {
+    Source(txt,input,parentAttrs) -> {
       match(input) {
         Pre       -> {
           context.inlineContext.fmtCode("pre",txt,attrsNone)
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
-          context.inlineContext.fmtMathBlock(txt)
+          context.inlineContext.fmtMath(True,txt,parentAttrs.deriveMathAttrs)
         }
         MathPre   -> {
           // ("\\[" + txt.mathPreBlock.escapeMath(context.fmt) + "\\]")
-          context.inlineContext.fmtMathBlock(txt.mathPreBlock)
+          context.inlineContext.fmtMath(True,txt.mathPreBlock,parentAttrs.deriveMathAttrs)
         }
         MathDefs  -> {
           mtxt = txt.escapeMath(context.fmt)
@@ -291,6 +291,13 @@ public function formatBlock( context : formatContext, block : block ) : div stri
 val rxblank = regex(@"^\s*$")
 val rxDashes  = regex(@"^ *---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*$")
 val rxDDashes = regex(@"^ *===+ *[|+]*$")
+
+function deriveMathAttrs( parentAttrs : attrs ) {
+  Attrs( keyvals = parentAttrs.keyvals.filter( fun(kv) {
+    key = kv.fst
+    key.startsWith("color") || key.startsWith("font-")    
+  }))
+}
 
 function formatRows( cells : list<list<string>>, 
                       colstyles : list<attrs>, context : formatContext ) : list<list<(string,attrs)>>

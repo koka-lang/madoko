@@ -35,6 +35,7 @@ public struct options(
   full     : maybe<bool> = Nothing, // generate a full html/latex file instead of a snippet
   tex      : bool = False,  // generate latex file too
   pdf      : bool = False,  // generate pdf file too 
+  rebuild  : bool = False,  // always rebuild bibtex, math etc.
   
   title    : string = "",  // html title 
   subtitle : string = "",  // sub title 
@@ -136,6 +137,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }), "Pedantic mode"),
       Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, footnotes, etc."),
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
+      Option( "r", ["rebuild"],  oflag(fun(o,v) { o(rebuild=v) }),    "Force rebuild bibliography, math, etc."),
 
       Option( "",  ["bibtex"],   oreq(fun(o,v) { o(bibtex = v) },"CMD"),   "bibtex command"),
       Option( "",  ["pdflatex"], oreq(fun(o,v) { o(pdflatex = v)},"CMD"),  "pdflatex command"),
@@ -248,6 +250,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="section-base") options(sectionBase=ivalue)
     elif (key=="highlight") options(highlight=if (value=="") then False else True)
     elif (key=="highlight-language") options(hilitelang=if (value=="") then "" else options.hilitelang + ";" + value)
+    elif (key=="rebuild") options(rebuild=(value != ""))
     else {
       //  if (options.verbose >= 3) warning("custom metadata key: " + key)
       options
@@ -296,7 +299,7 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math#nl#source#nl~ End Math#nl' tight .para-block",
+  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math { color=""#color"" }#nl#source#nl~ End Math#nl' tight .para-block",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
       @"~Figure   : after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]\
                            {.caption-before}#caption]{.figure-caption html-elem=fig-caption}#nl{notag}#nl'",

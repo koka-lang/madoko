@@ -148,51 +148,35 @@ function inlineNormal( cap : matched, context : inlineContext ) : string {
 } 
 
 function inlineMath( cap : matched, context : inlineContext ) : string {
-  context.fmtMath(cap.groups[1],context.formatAttrs(cap.groups[2].parseAttrs))
+  context.fmtMath(False,cap.groups[1],cap.groups[2].parseAttrs)
 }
 
 function inlineMathBlock( cap : matched, context : inlineContext ) : string {
-  context.fmtMathBlock(cap.groups[1])
+  context.fmtMath(True,cap.groups[1])
 }
 
-function fmtMath( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string {
+public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone ) : string {
+  val (kind,left,right) = if (isDisplay) then ("Display","\\[","\\]") else ("Inline","$","$")
+  lkind  = kind.toLower
+  class  = "math-" + lkind
+  attrsd = context.formatAttrs(context.applyDefaults("span", (attrs(texelem="cssText")).addClass(class)))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
-  mtxt = "$" + txt.escapeMath(context.fmt) + "$"
+  mtxt = left + txt.escapeMath(context.fmt) + right
+  mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
+  texcmd = context.fmtTexCmd("span",mtxt,attrsd)
   match(context.fmt) {
-    FmtTex -> mtxt 
+    FmtTex -> texcmd
     _      -> {
       if (context.mathStatic) {
         digest = md5(txt)
-        log("math",@"\begin{mdInlineSnippet}[" + digest + "]\n$" + txt + "$\n\\end{mdInlineSnippet}")
+        log("math",@"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
+                      texcmd + "\n\\end{md" + kind + "Snippet}")
         match(context.mathinfos[digest]) {
-          Nothing  -> context.fmtText(mtxt)
-          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrs.addClass("math-inline"))
+          Nothing  -> mcmd
+          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
         }
       }
-      else context.fmtText(mtxt)
-    }
-  }
-} 
-
-public function fmtMathBlock( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string {
-  mtxt = "\\[" + txt.escapeMath(context.fmt) + "\\]"
-  match(context.fmt) {
-    FmtTex -> mtxt 
-    _      -> {
-      if (context.mathStatic) {
-        digest = md5(txt)
-        log("math",@"\begin{mdDisplaySnippet}[" + digest + "]%\n\\[" + txt + "\\]%\n\\end{mdDisplaySnippet}")
-        match(context.mathinfos[digest]) {
-          Nothing  -> {
-            //trace("math not found: " + digest)
-            context.fmtText(mtxt)
-          }
-          Just(mi) -> {
-            context.fmtMathImg( mi, txt, mtxt, attrs.addClass("math-display") )
-          }
-        }
-      }
-      else context.fmtText(mtxt)
+      else mcmd
     }
   }
 } 
@@ -537,8 +521,8 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
   txt = attrsd.transformText(txt0,context.metadata)
   match(attrsd.input) {
     Pre      -> context.fmtCode(sname, txt, attrs) // todo: sname as env name?
-    Math     -> context.fmtMath(txt,attrsd)
-    MathPre  -> context.fmtMath(txt.mathPre,attrsd)
+    Math     -> context.fmtMath(False,txt,attrsd)
+    MathPre  -> context.fmtMath(False,txt.mathPre,attrsd)
     Raw(monly) -> {
       if (context.sanitize) then "" 
        else match(monly) {
@@ -710,6 +694,11 @@ val rxEtAl       = regex(@"\bet(?: |&nbsp;|\\ )al.(?!_)")
 // Format attributes
 function formatAttrs( context : inlineContext, attrs : attrs ) : attrs {
   attrs( label = context.formatInline(attrs.label) )
+}
+
+// Apply defaults
+function applyDefaults( context : inlineContext, sname : string, attrs : attrs ) : attrs {
+  if (!(attrs.defaults)) then attrs else context.defaults.matchRules(sname,attrs)
 }
 
 function inlineFootnote( cap : matched, context : inlineContext ) : string {

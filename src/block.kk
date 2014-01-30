@@ -35,7 +35,7 @@ public type block {
   DefFootnote( id : string, content : list<block> )
   Empty()
   Div( content : list<block>, attrs : attrs = attrsNone )
-  Source( text : string, input : input = Markdown() )     // raw content
+  Source( text : string, input : input = Markdown(), parentAttrs : attrs = attrsNone )     // raw content
   Special( name : string, value : string = "" )  // Special blocks, like [TOC] or [FOOTNOTES]
 }
 
@@ -161,7 +161,7 @@ function blockHLine( cap : matched, _context ) : block {
 }
 
 function blockHtml( cap : matched, context : blockContext ) :  block  {
-  Source(cap.matched,Raw(Just(FmtHtml)))
+  Source(cap.matched,Raw(Just(FmtHtml)),attrsNone)
 }
 
 function blockHeading( cap : matched, context : blockContext ) : block  {
