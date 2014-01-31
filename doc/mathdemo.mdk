@@ -204,7 +204,7 @@ for all $\vert z \vert\le 1$. In sum, equality holds in [#eq-eqn1] iff $f$ is a 
 
 <script>
 function showMath( showStatic, showDynamic ) {
-	document.body.className=[(showStatic ? "show-static" : ""),(showDynamic?"show-dynamic":"")].join(" ");
+	document.body.className=["madoko",(showStatic ? "show-static" : ""),(showDynamic?"show-dynamic":"")].join(" ");
 }
 
 function checkOnChanged() {
