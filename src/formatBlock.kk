@@ -239,7 +239,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Table(header,colstyles,cells,attrs) -> {
       thead = formatRows(header,colstyles,context)
       tbody = formatRows(cells,colstyles,context)
-      context.fmtTable(thead,tbody, attrs)  
+      context.fmtTable(thead,tbody, attrs.addClass("madoko"))  
     }
 
     Div(Cons(Source(txt,Pre),Nil),attrs) | context.pedantic && attrs.elementName("div") == "pre" -> {
