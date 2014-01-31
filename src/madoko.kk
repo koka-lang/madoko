@@ -13,6 +13,7 @@ import std/dict
 import std/regex
 import common
 import options
+import metadata
 import block
 import formatBlock
 import inline
@@ -94,7 +95,7 @@ function titleInfo( options : options, metadata : dict<string> ) : titleinfo {
   function expand(s) { s.expandKeys(metadata) }  
   authors = zip(options.author.expand.splitPaths, options.affiliation.expand.splitPaths, 
                   options.email.expand.splitPaths) 
-  Titleinfo(options.title.expand, options.subtitle.expand, authors)
+  Titleinfo(options.title.expand, options.subtitle.expand, authors, options.titleDate.expand)
 }
 
 function zip(xs,ys,zs,acc=[]) : list<(string,string,string)> {

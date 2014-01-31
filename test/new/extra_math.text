@@ -4,8 +4,21 @@ MathJax		: True
 Math Mode	: static
 
 <style>
-.mathjax-inline:before { content: " | "; }
+.mathjax-inline, .mathjax-display { display: none; }
+.math-inline,    .math-display 	  { display: none; }
+
+.show-dynamic .mathjax-inline 	{ display: inline; } 
+.show-dynamic .mathjax-display 	{ display: block; }
+.show-static  .math-inline 		{ display: inline; }
+.show-static  .math-display 	{ display: inline; }
+.show-static  .mathjax-inline:before { content: " | "; }
 </style>
+
+
+<div>
+<input type="checkbox" id="check-static" checked> Show static math (using LaTeX) <br/>
+<input type="checkbox" id="check-dynamic" checked> Show dynamic math (using MathJax)
+</div>
 
 # Math and equation examples. 
 
@@ -184,13 +197,23 @@ Since $e^{i\gamma'}C_a(z)$ is conformal, $C_{f(a)}^{-1},$ the inverse function o
 for all $\vert z \vert\le 1$. In sum, equality holds in [#eq-eqn1] iff $f$ is a conformal map from $\Delta$ to itself.
 ~~
 
-~~ Remark
-Someone needs to code \abs, i.e. \left\vert # \right\vert.  This is terribly annoying. Also, when using \$\$, why must one enter a line before and after.  
-~~
-
 
 
 <script>
+function showMath( showStatic, showDynamic ) {
+	document.body.className=[(showStatic ? "show-static" : ""),(showDynamic?"show-dynamic":"")].join(" ");
+}
+
+function checkOnChanged() {
+	showMath(checkStatic.checked,checkDynamic.checked);
+}
+
+var checkStatic = document.getElementById("check-static");
+var checkDynamic = document.getElementById("check-dynamic");
+checkStatic.onchange=checkOnChanged;
+checkDynamic.onchange=checkOnChanged;
+checkOnChanged();
+
 function insertAfter(elem, newNode) {
     elem.parentNode.insertBefore(newNode, elem.nextSibling);
 }

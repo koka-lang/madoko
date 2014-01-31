@@ -16,6 +16,7 @@ import std/file
 import std/dict
 import common
 import options
+import metadata
 import inline  // format type
 import madoko
 import texFormatter

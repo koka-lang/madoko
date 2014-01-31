@@ -207,7 +207,8 @@ public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : 
         tag("td", context.formatInline("[" + aae.fst + "]{.author}<br>[" + aae.snd + "]{.affiliation}<br>[" +
                                               aae.thd + "]{.email}" )
            ," class='authorblock align-center'")
-       }).join("\n")))
+       }).join("\n"))),
+     if (titleinfo.date=="") then "" else "<div class=date>" + context.formatInline(titleinfo.date) + "</div>"
     ].join("\n"),
     " class='titleblock align-center'")
    

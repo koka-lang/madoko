@@ -59,7 +59,8 @@ public rectype inlineContext {
 public struct titleinfo (
   title : string,
   subtitle : string,
-  authors : list<(string,string,string)>
+  authors : list<(string,string,string)>,
+  date : string
 )
 
 public rectype footnote {

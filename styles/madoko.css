@@ -235,7 +235,6 @@ table.madoko {
 /* Math Pre */
 .input-mathpre .MathJax_Display, .input-mathpre .math-display {
   text-align: left !important;
-  margin-left: 1em;
 }
 
 div.input-mathpre {

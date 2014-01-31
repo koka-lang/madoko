@@ -172,7 +172,11 @@ function mathSnippetsToDvi( texName : string, xopts : options,
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
     function () {
-      tryWriteTextFile(texName,oldMath) // restore old math version on error
+      // restore old math version on error and save erronuous one for debug purposes.
+      texErrName = texName.changeExt("log.tex")
+      tryUnlink(texErrName)
+      rename(texName,texErrName)
+      tryWriteTextFile(texName,oldMath) 
       ()
     } 
     , continue ) 

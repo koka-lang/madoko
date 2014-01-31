@@ -318,7 +318,7 @@ public function fmtTexTitle(context : inlineContext, titleinfo : titleinfo ) : s
                       context.formatInline(aae.snd) + "}{" + 
                       context.formatInline(aae.thd) + "}"
    }).join("\n"),
-   @"\mdMaketitle",""].join("\n")
+   @"\mdMaketitle{" + titleinfo.date + "}",""].join("\n")
 }
 
 

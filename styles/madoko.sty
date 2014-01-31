@@ -108,6 +108,13 @@
   {\newcommand{\mdAuthorrunning}[1]{\authorrunning{#1}}}% llncs
   {\newcommand{\mdAuthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
 
+% LLNCS: \author{ \and ...}, \institute{ \email \and ...}
+% EPTCS: \author{ \institute \email \and ... }
+% LATEX: \author{ ... } \date
+
+\ifdef\date{\date{}}{}
+\providecommand{\email}[1]{\textsf{#1}}%
+\ifbeamer\providecommand{\inst}[1]{$^{\mbox{#1}}$}\fi%
 
 % If there is no \authorinfo, we provide a simple one that works
 % with some other common styles
@@ -116,31 +123,23 @@
 \newcommand{\@mdauthorss}{}  % simple list of authors
 \newcommand{\@mdinsts}{}
 \providerobustcmd{\@and}{\and}
-\providecommand{\email}[1]{\textsf{#1}}%
 \providecommand{\authorinfo}[3]{%
   \stepcounter{@mdAuthorcount}%
   \ifdef{\institute}{%  
     \ifnum\value{@mdAuthorcount}>1%
      \gappto\@mdauthors{\@and}%
      \ifx\relax#2\else\gappto\@mdinsts{\@and}\fi
-    \fi%
-    \ifdef\titlepage%
-    { %BEAMER
+    \fi%    
+    \ifdef{\inst}%
+    {%LLNCS, Beamer
       \gappto\@mdauthors{#1}%
       \gappto\@mdinsts{#2}%
       \ifx\relax#3\else\gappto\@mdinsts{\\\email{#3}}\fi
-    }{%
-      \ifdef{\inst}%
-      {%LLNCS
-        \gappto\@mdauthors{#1}%
-        \gappto\@mdinsts{#2}%
-        \ifx\relax#3\else\gappto\@mdinsts{, \email{#3}}\fi
-      }%
-      {% EPTCS
-        \gappto\@mdauthors{#1%
-          \ifx\relax#2\else\protect\institute{#2}\fi%
-          \ifx\relax#3\else\protect\email{#2}\fi}%
-      }%
+    }%
+    {% EPTCS
+      \gappto\@mdauthors{#1%
+        \ifx\relax#2\else\protect\institute{#2}\fi%
+        \ifx\relax#3\else\protect\email{#3}\fi}%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
@@ -161,7 +160,7 @@
 
 % support \inst
 \newcommand{\mdInst}[1]{%
-  \ifdef{\inst}{\inst{#1}}{}%
+  \ifdef{\inst}{\inst{#1}}{\ensuremath{^{\mbox{#1}}}}%
 }
 \cssClassRuleCmd{inst}{\mdInst}
 
@@ -169,12 +168,13 @@
 \newcommand{\mdTitle}[1]{\title{#1}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\subtitle{#1}}
 \newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
-\newcommand{\mdMaketitle}{%
+\newcommand{\mdMaketitle}[1]{%  
   \ifnum\value{@mdAuthorcount}>0%
-    \author{\@mdauthors%
-    \ifdef\institute{\institute{\@mdinsts}}{}}%
+    \author{\@mdauthors}%
+    \ifdef\inst{\ifdef\institute{\institute{\@mdinsts}}{}}{}%
   \fi
-  \ifdef\titlepage{\ifdef\institute{\institute{\@mdinsts}\titlepage}{\maketitle}}{\maketitle}%
+  \ifx#1\relax\else\date{#1}\fi%
+  \maketitle%
 }
 
 % Use the pre-defined abstract environment

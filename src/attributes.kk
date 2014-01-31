@@ -410,7 +410,8 @@ public function expandKeys( txt : string, source : string, attrs : attrs, metada
     if (key=="") then cap.matched  // no key was matched
     elif (key=="label") then attrs.label
     elif (key=="id" && attrs.name != "") then attrs.name 
-    elif (key=="nl") then "\n" 
+    elif (key=="nl") then "\n"
+    elif (key=="br") then "\\\n"
     elif (key=="hash" || rawkey=="#") then "#"
     elif (key=="class") then attrs.classes.join(" ") 
     elif (key=="source") then source // attrs.source 

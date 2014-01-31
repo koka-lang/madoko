@@ -161,12 +161,12 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   class  = "math-" + lkind
   attrsd = context.formatAttrs(context.applyDefaults("span", (attrs(texelem="cssText")).addClass(class)))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
-  mtxt = left + txt.escapeMath(context.fmt) + right
-  mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
-  texcmd = context.fmtTexCmd("span",mtxt,attrsd)
+  texcmd = context.fmtTexCmd("span",left + txt + right,attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {
+      mtxt = left + txt.escapeMath(context.fmt) + right
+      mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
       if (context.mathStatic) {
         digest = md5(txt)
         log("math",@"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 

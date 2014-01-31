@@ -1,8 +1,9 @@
 Title		: Madoko Reference
-Subtitle	: A Fast Scholarly Markdown Processor  <br>[#date; (version #madoko-version)]{font-size=medium}
+Subtitle	: A Fast Scholarly Markdown Processor
 Author		: Daan Leijen
 Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
+Title Date  : #date; (version #madoko-version)
 
 Heading Base: 2
 Cite All	: True
@@ -133,9 +134,9 @@ In the future, we plan to support e-books through the [ePub] format too.
 [doc-html]: 	koka-doc-html.png 	{width=200px vertical-align=top }
 [doc-md]: 		koka-doc-md.png 	{width=200px vertical-align=top }
 
-[koka-article-pdf]: 	http://research.microsoft.com/pubs/200436/koka-effects-2013.pdf
-[koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.html
-[koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2013.md.txt
+[koka-article-pdf]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.pdf
+[koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.html
+[koka-article-md]: 		http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.mdk.txt
 
 [this-pdf]: reference.pdf
 [this-mdk]: reference.mdk.txt
@@ -1048,6 +1049,13 @@ statically or dynamically:
 		Math Mode: dynamic
 
 	The [metadata section][#item-math] contains more information on customizing MathJax.
+
+You can view and experiment with the different rendering modes in the online
+[mathematics rendering demo][mathdemo].
+
+
+[mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.html
+[mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
 
 <!--
 As an example, here are some complex drawing examples using the
