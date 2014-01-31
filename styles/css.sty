@@ -15,33 +15,37 @@
 \RequirePackage{tablefootnote}
 \RequirePackage{verbatim}
 
-\definecolor{Red}{HTML}{FF0000}
-\definecolor{Lime}{HTML}{00FF00}
-\definecolor{Blue}{HTML}{0000FF}
+% Define CSS 17 standard colors
+\definecolor{red}{HTML}{FF0000}
+\definecolor{lime}{HTML}{00FF00}
+\definecolor{blue}{HTML}{0000FF}
 
-\definecolor{Yellow}{HTML}{FFFF00}
-\definecolor{Cyan}{HTML}{00FFFF}
-\definecolor{Magenta}{HTML}{FF00FF}
+\definecolor{yellow}{HTML}{FFFF00}
+\definecolor{cyan}{HTML}{00FFFF}
+\definecolor{magenta}{HTML}{FF00FF}
 
-\definecolor{Navy}{HTML}{000080}
-\definecolor{Maroon}{HTML}{800000}
-\definecolor{Green}{HTML}{008000}
+\definecolor{navy}{HTML}{000080}
+\definecolor{maroon}{HTML}{800000}
+\definecolor{green}{HTML}{008000}
 
-\definecolor{Teal}{HTML}{008080}
-\definecolor{Purple}{HTML}{800080}
-\definecolor{Olive}{HTML}{808000}
+\definecolor{teal}{HTML}{008080}
+\definecolor{purple}{HTML}{800080}
+\definecolor{olive}{HTML}{808000}
 
-\definecolor{Black}{HTML}{000000}
-\definecolor{DimGray}{HTML}{696969}
-\definecolor{Gray}{HTML}{808080}
-\definecolor{DarkGray}{HTML}{A9A9A9}
-\definecolor{Silver}{HTML}{C0C0C0}
-\definecolor{LightGray}{HTML}{D3D3D3}
-\definecolor{Gainsboro}{HTML}{DCDCDC}
-\definecolor{FloralWhite}{HTML}{FFFAF0}
-\definecolor{Ivory}{HTML}{FFFFF0}
-\definecolor{White}{HTML}{FFFFFF}
+\definecolor{black}{HTML}{000000}
+\definecolor{dimgray}{HTML}{696969}
+\definecolor{gray}{HTML}{808080}
+\definecolor{darkgray}{HTML}{A9A9A9}
+\definecolor{silver}{HTML}{C0C0C0}
+\definecolor{lightgray}{HTML}{D3D3D3}
+\definecolor{gainsboro}{HTML}{DCDCDC}
+\definecolor{floralwhite}{HTML}{FFFAF0}
+\definecolor{ivory}{HTML}{FFFFF0}
+\definecolor{white}{HTML}{FFFFFF}
 
+\definecolor{orange}{HTML}{FFA500}
+\definecolor{aqua}{HTML}{00FFFF}
+\definecolor{fuchsia}{HTML}{FF00FF}
 
 \newcommand{\@swap}[2]{#2{#1}}
 \newcommand{\@expandafter}[2]{\expandafter\@swap\expandafter{#2}{#1}}
@@ -345,6 +349,7 @@
 \cssNewKey{css}{border-style-bottom}{\cssBorderStyleBottom}{none}
 \cssNewKey{css}{border-style-left}{\cssBorderStyleLeft}{none}
 \cssNewKey{css}{border-style-right}{\cssBorderStyleRight}{none}
+\cssNewKey{css}{background-color}{\cssBackgroundColor}{white}
 
 \cssNewPseudoKey{css}{padding}{padding-top=#1,padding-bottom=#1,padding-right=#1,padding-left=#1}
 
@@ -374,10 +379,12 @@
 	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBackgroundColor}{white}{}{\@needframetrue}%
 	\ifdim\cssPaddingTop=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingBottom=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingLeft=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingRight=0pt\else\@needframetrue\fi
+	\expandafter\lowercase\expandafter{\expandafter\def\expandafter\bcolor\expandafter{\cssBackgroundColor}}%
 	\if@needframe%		
 		\cssDoAfter{\@restoreFootnotes}% first, because post commands are pre-pended
 		\renewcommand{\@cssFramedArgs}{%
@@ -386,7 +393,8 @@
 			innerleftmargin=\the\cssPaddingLeft,%
 			innerrightmargin=\the\cssPaddingRight,%
 			linewidth=\the\cssBorderWidth,%
-			linecolor=\cssBorderColor%
+			linecolor=\cssBorderColor,%
+			backgroundcolor=\bcolor%
 		}%
 		\setlength{\cssBorderWidthTotal}{0pt}%
 		\eifstrequal{\cssBorderStyleTop}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
@@ -435,19 +443,21 @@
 }
 
 \newcommand{\@robustHeight}[1]{%
-	\eifstrequal{\cssVerticalAlign}{bottom}%
-		{\raisebox{0pt}[\dimexpr\cssHeight-\depth\relax][\depth]{#1}}%
+	\eifstrequal{\cssVerticalAlign}{top}%
+		{\raisebox{0pt}[0pt][\cssHeight]{#1}}%
 	{\eifstrequal{\cssVerticalAlign}{middle}%
 		{\raisebox{0pt}[0.5\cssHeight][0.5\cssHeight]{#1}}%
-		{\raisebox{0pt}[\height][\dimexpr\cssHeight-\height\relax]{#1}}%
-	}%
+	{\eifstrequal{\cssVerticalAlign}{baseline}%
+		{\raisebox{0pt}[\dimexpr\cssHeight-\depth\relax][\depth]{#1}}%
+		{\raisebox{0pt}[\cssHeight][0pt]{#1}}% bottom
+	}}%
 }
 
 \newcommand{\@robustTableParbox}[2]{%
-	\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
+	\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
 	{\eifstrequal{\cssVerticalAlign}{center}{\def\@cssValign{c}}%
 	{\eifstrequal{\cssVerticalAlign}{middle}{\def\@cssValign{c}}}%
-	{\def\@cssValign{t}}}%
+	{\def\@cssValign{b}}}%
 	\ifdim\cssHeight=1sp%
 		\parbox[\@cssValign]{#1}{#2}%
 	\else%
@@ -456,12 +466,20 @@
 }
 
 \newcommand{\@cssInlinePadding}{%
+	\eifstrequal{\cssBackgroundColor}{}{}%
+	  {\eifstrequal{\cssBackgroundColor}{white}{}%
+		{\strsplit{\cssBackgroundColor}%			
+		 \eifstrequal{\strhead}{\#}%
+		 	{\cssWrapCmd{\protect\colorbox[HTML]{\strtail}}}%
+		 	{\cssWrapCmd{\@robustColorbox{\cssBackgroundColor}}}%
+		}%
+	  }%
 	\@needframefalse%
 	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%		
-	\if@needframe
+	\if@needframe%
 		\setlength{\fboxrule}{\cssBorderWidth}%
 		\ifdim\cssWidth=1sp%
 			\cssWrapCmd{\fbox}%
@@ -488,9 +506,9 @@
 	% padding
 	\if@needframe
 		\setlength{\fboxsep}{\cssPaddingTop}%  todo: define our own box so we can set paddingtop/bot separately
-		\ifdim\cssPaddingBottom>\fboxsep \setlength{\fboxsep}{\cssPaddingBottom}\fi	
-		\ifdim\cssPaddingLeft=\fboxsep \else\hspace*{\dimexpr\cssPaddingLeft-\fboxsep\relax}\fi
-		\ifdim\cssPaddingRight=\fboxsep \else\hspace*{\dimexpr\cssPaddingRight-\fboxsep\relax}\fi
+		\ifdim\cssPaddingBottom>\fboxsep\setlength{\fboxsep}{\cssPaddingBottom}\fi	
+		\ifdim\cssPaddingLeft=\fboxsep\else\hspace*{\dimexpr\cssPaddingLeft-\fboxsep\relax}\fi
+		\ifdim\cssPaddingRight=\fboxsep\else\hspace*{\dimexpr\cssPaddingRight-\fboxsep\relax}\fi
 	\else
 		\ifdim\cssPaddingLeft=0pt\else\cssDoBefore{\hspace*{\cssPaddingLeft}}\fi
 		\ifdim\cssPaddingRight=0pt\else\cssDoAfter{\hspace*{\cssPaddingRight}}\fi
@@ -506,6 +524,15 @@
 \cssNewLengthKey{css}{text-indent}{\cssTextIndent}
 \cssNewKey{css}{text-align}{\cssTextAlign}{justify}
 \cssNewLengthKey{css}{line-height}{\cssLineHeight}
+
+
+\DeclareRobustCommand{\@robustColor}[1]{%
+	\lowercase{\def\clr{#1}}\color{\clr}%
+}
+\DeclareRobustCommand{\@robustColorbox}[2]{%
+	\lowercase{\def\clr{#1}}\colorbox{\clr}{#2}%
+}
+
 
 \newcommand{\@cssProcessText}{%
 	\eifstrequal{\cssDisplay}{block}%
@@ -552,11 +579,7 @@
 \cssNewKey{css}{font-size}{\cssFontSize}{}
 \cssNewKey{css}{font-family}{\cssFontFamily}{}
 \cssNewKey{css}{color}{\cssColor}{}
-\cssNewKey{css}{background-color}{\cssBackgroundColor}{}
 \cssNewKey{css}{penalty}{\cssPenalty}{}
-
-
-\newcommand{\@robustColor}[2]{\@expandafter{\color[#1]}{#2}}
 
 \newcommand{\@cssProcessFont}{%
 	% font family
@@ -613,13 +636,7 @@
 		{\strsplit{\cssColor}%			
 		 \eifstrequal{\strhead}{\#}%
 		 	{\cssDoBefore{\protect\color[HTML]{\strtail}}}%
-		 	{\cssDoBefore{\protect\color{\cssColor}}}%
-		}%
-	\eifstrequal{\cssBackgroundColor}{}{}%
-		{\strsplit{\cssBackgroundColor}%			
-		 \eifstrequal{\strhead}{\#}%
-		 	{\cssWrapCmd{\protect\colorbox[HTML]{\strtail}}}%
-		 	{\cssWrapCmd{\protect\colorbox{\cssBackgroundColor}}}%
+		 	{\cssDoBefore{\@robustColor{\cssColor}}}%
 		}%
 	%
 	\eifstrequal{\cssPenalty}{}{}%
