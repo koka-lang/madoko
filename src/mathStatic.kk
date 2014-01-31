@@ -106,8 +106,11 @@ val rxLatexErr = regex(@"^\*\* ERROR .*|^![\s\S]*?(?=^\s*(?:Here is how much of 
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
-public function mathStatic( math : string, texName : string, xopts : options, content : string, continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
-  oldMath = readTextFileDef(texName,"")
+public function mathStatic( math : string, texName : string, xopts : options, content : string, 
+                            continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
+{
+  texFinalName = texName.changeExt(".final.tex")
+  oldMath = readTextFileDef(texFinalName,"")
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
   outTex = fmtTexMathFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
 
@@ -131,7 +134,12 @@ public function mathStatic( math : string, texName : string, xopts : options, co
                 }
         mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
           mathConvertPng( texName.changeExt(".dvi"), xopts, pages ) {
-            mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages, continue )
+            mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages ) fun(mbmath) {
+              if (mbmath.isJust) {
+                rename(texName,texFinalName); // save result to prevent rebuilds
+              }
+              continue(mbmath)
+            }
           }
         }      
       }
@@ -171,15 +179,7 @@ function mathSnippetsToDvi( texName : string, xopts : options,
   if (xopts.verbose>=1) println("  running latex on math...")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
-    function () {
-      // restore old math version on error and save erronuous one for debug purposes.
-      texErrName = texName.changeExt("log.tex")
-      tryUnlink(texErrName)
-      rename(texName,texErrName)
-      tryWriteTextFile(texName,oldMath) 
-      ()
-    } 
-    , continue ) 
+    function () { () }, continue ) 
 }
 
 function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
@@ -279,12 +279,13 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
 {  
   val (pageLo,pageHi) = pages
   if (pageHi < pageLo) then return continue()
+  stem = dviName.stemname
   
   dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
                                       (if (pageLo==0) then "" 
                                         else " -p" + pageLo.show + " -l" + pageHi.show) + 
-                                      " -o " + combine(xopts.mathImgDir,"eq-%d.png") +
+                                      " -o " + combine(xopts.mathImgDir,stem + "-eq-%d.png") +
                                       " " + dviName.basename
   // make sure the output directory exists
   outDir = combine(dviName.dirname,xopts.mathImgDir)
@@ -310,8 +311,9 @@ function mathConvertPng( dviName : string,xopts : options, pages : (int,int), co
 {
   if (xopts.mathconvert=="") then continue() else {
     val (pageLo,pageHi) = pages
-    convertCmd = xopts.mathconvert + " eq-%d.png[" + pageLo.show + "-" + pageHi.show + "]" +
-                          " -scene " + pageLo.show + " eqc.png"
+    convertCmd = xopts.mathconvert + " " + dviName.stemname + "-eq-%d.png[" + 
+                          pageLo.show + "-" + pageHi.show + "]" +
+                          " -scene " + pageLo.show + " " + dviName.stemname + "-eqc.png"
     if (xopts.verbose>=1) println( "  converting math images..." )
     if (xopts.verbose>=3) println( "  > " + convertCmd )
     system(convertCmd, function(err,stdout,stderr) {
@@ -362,7 +364,7 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
         pageNo = cap.groups[2].parseInt.maybe(0,id)
         digest = cap.groups[3]
         imageMod = if (opts.mathconvert!="") then "c" else ""
-        imageName = combine(opts.mathImgDir, "eq" + imageMod + "-" + cap.groups[2] + ".png")
+        imageName = combine(opts.mathImgDir, dimxFile.stemname + "-eq" + imageMod + "-" + cap.groups[2] + ".png")
         imageFile = combine(dimxFile.dirname,imageName)
                 
         val (pxwidth,pxheight,size,embed) 
@@ -395,7 +397,7 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
                               buf.length 
                             }
                             else {
-                              unlink(imageFile) // delete the image
+                              tryUnlink(imageFile) // delete the image
                               embed.length
                             }
                     (pxwidth,pxheight,size,embed)
