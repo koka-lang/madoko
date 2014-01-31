@@ -2437,7 +2437,7 @@ in Section [#sec-map]:
 
 In this case, declaring all unicode characters by hand for each character
 would be too cumbersome. Instead, we are going to redefine `\mdUnicodeChar`
-command which is called when a unicode character not declared.
+command which is called whenever a unicode character is not declared.
 
 First, we need a unicode aware LaTex, like [XeLaTeX] or [LuaLaTeX] instead of
 the usual [pdfLaTeX]. Both of these variants usually come standard in your
@@ -2448,9 +2448,9 @@ LaTeX distribution. You can enable this using:
 With these LaTeX variants, we can use  the `fontspec`
 package, which we included in this document using `Package` metadata:
 
-	Package: fontspec*
+	Package*: fontspec
 
-Note that we appended a star to the name to exclude it when typesetting
+Note that we appended a star to the `Package` key to exclude it when typesetting
 mathematics since `fontspec` fails to load under regular LaTeX.
 Next, we redefine the `\mdUnicodeChar` command to select a specific
 character (using the `\char` command) from a font that contains Hiragana,

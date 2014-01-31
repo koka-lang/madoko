@@ -200,7 +200,7 @@ function parseDefinitionsFull(
                    else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes","madoko"]))  
   fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
-  secblocks = newblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
+  secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
 
   (secblocks,                   
    fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labels.freeze, 

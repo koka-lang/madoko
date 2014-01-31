@@ -266,7 +266,7 @@ div.input-mathpre {
 }
 
 .hljs-title {
-  /* nothing */
+  font-weight: bold;
 }
 
 .hljs-localvars, .hljs-chunk, .hljs-decorator, .hljs-built_in, .hljs-identifier, .vhdl .hljs-literal, .hljs-id, .css .hljs-function {
