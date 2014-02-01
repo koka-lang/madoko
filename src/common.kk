@@ -282,6 +282,9 @@ public function showFormatter( f : formatter ) {
   }
 }
 
+// A label is created for every element with an id.
+public struct label( element : string, labelText : string )
+
 public function show( attrs : attrs ) : string {
   "{" + attrs.text.substr(0,40) + "... }"
 }

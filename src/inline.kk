@@ -67,9 +67,6 @@ public rectype footnote {
   Footnote( footnoteNum : string, footnoteContent : (inlineContext) -> string  )
 }
 
-public struct label( element : string, labelText : string )
-
-
 public function fmtCmd( context : inlineContext, cmd : string, txt : string, attrs : attrs = attrsNone ) : string {
   (context.xfmtCmd)(context,cmd,txt,attrs)
 }

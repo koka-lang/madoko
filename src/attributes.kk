@@ -13,7 +13,7 @@ import std/regex
 import std/dict
 import std/string
 import common
-
+import entity
 
 public function parseAttrs( attrStr : string, elemName : string = "", source : string = "" ) : attrs {
   if (attrStr == "" && elemName == "" && source=="") return attrsNone
@@ -110,10 +110,10 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(replacers = acc.replacers + [value])
     }    
     elif (name=="before") {
-      acc(replacers = acc.replacers + [value + @"\/#source"])
+      acc(replacers = acc.replacers + [value + @"\/&source;"])
     }
     elif (name=="after") {
-      acc(replacers = acc.replacers + [@"\/#source" + value])
+      acc(replacers = acc.replacers + [@"\/&source;" + value])
     }
     elif (name=="input") {
       v = kwvalue
@@ -189,20 +189,20 @@ function toBool( s : string ) : bool {
   (s=="" || s=="true")
 }
 
-public function transformText( attrs : attrs, txt : string, metadata : dict<string> ) : string 
+public function transformText( attrs : attrs, txt : string, labels : dict<label>, metadata : dict<string> ) : string 
 {  
   if (attrs.empty) then return txt
   attrs.replacers.foldl(txt,fun(cur,repl) {
-    res = repl.applyReplacer(cur,attrs,metadata) 
+    res = repl.applyReplacer(cur,attrs,labels,metadata) 
     //trace("replacer '" + erepl.substr(0,10) + "': " + cur + " -> " + res)
     res
   })
 }
 
-function applyReplacer( repl : string, txt : string, attrs : attrs, metadata : dict<string> ) : string 
+function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : string 
 {
   function expand( s : string ) { 
-    s.expandKeys(txt,attrs,metadata,fun(_,_) {""}) 
+    expandKeys(peanoN,s,txt,attrs,labels,metadata,fun(_,_) {""}) 
   }
 
   function checkReplace( rrepl : string ) {    
@@ -397,53 +397,78 @@ function caseConvert( txt : string ) : string {
   }) 
 }
 
+type peano {
+  Succ(prev:peano)
+  Zero
+}
+
+function peano(n : int ) : peano {
+  var p := Zero
+  repeat(n) {
+    p := Succ(p)
+  }
+  p
+}
+
+val peanoN = peano(100)
+
 public function expandKeys( txt : string, metadata : dict<string> ) : string {  
-  expandKeys(txt,"",attrsNone,metadata)
+  expandKeys(peanoN,txt,"",attrsNone,dict(),metadata)
+}
+
+public function expandKeyName( name : string, labels : dict<label>, metadata : dict<string> ) : string {  
+  expandKeys(peanoN,"&" + name + ";","",attrsNone,labels,metadata)
+}
+
+public function expandKeys( txt : string, source : string, 
+                            attrs : attrs, 
+                            labels : dict<label>, metadata : dict<string> ) : string {
+  expandKeys(peanoN,txt,source,attrs,labels,metadata)
 }
 
 // expand keys in a string
-public function expandKeys( txt : string, source : string, attrs : attrs, metadata : dict<string>, notFound : (string,string) -> string = keyNotFound ) : string {  
+private function expandKeys( p0 : peano, txt : string, source : string, 
+                            attrs : attrs, 
+                            labels : dict<label>, metadata : dict<string>, 
+                            notFound : (string,string) -> string = keyNotFound ) : string 
+{  
   if (txt=="") then return txt
-  txt.replaceAll(rxkey) fun(cap) {
-    rawkey = cap.groups[1]
-    key = rawkey.normalizeId
-    if (key=="") then cap.matched  // no key was matched
-    elif (key=="label") then attrs.label
-    elif (key=="id" && attrs.name != "") then attrs.name 
-    elif (key=="nl") then "\n"
-    elif (key=="br") then "\\\n"
-    elif (key=="hash" || rawkey=="#") then "#"
-    elif (key=="class") then attrs.classes.join(" ") 
-    elif (key=="source") then source // attrs.source 
-    else match (attrs.keyvals.find(fun(kv){ kv.fst == key })) {
-      Just(kv) -> {
-        kv.snd
-      }
-      Nothing -> match(metadata[key]) {
-        Just(value) -> {
-          var cval := value
-          forWhile(1,1000) fun(i) {  // expand to at most N levels of metadata...
-            cres = cval.replaceAll(rxkey) fun(ccap) {
-              if (ccap.groups[1]=="") then ccap.matched
-              else match(metadata[ccap.groups[1]]) {
-                Just(nval) -> nval
-                Nothing    -> {
-                  notFound(ccap.groups[1],ccap.matched)
-                }
+  match(p0) {
+    Zero -> txt
+    Succ(p) -> {
+      txt.replaceAll(rxkey) fun(cap) {
+        rawkey = cap.groups[1]
+        key = rawkey.definitionId // TODO: normalizeId?
+        if (key=="") then cap.matched  // no key was matched
+        elif (key=="&") then "&"       // special in replacements
+        elif (key=="label" && !(attrs.empty)) then attrs.label
+        elif (key=="id" && !(attrs.empty)) then attrs.name 
+        elif (key=="class" && !(attrs.empty)) then attrs.classes.join(" ") 
+        elif (key=="source" && !(attrs.empty)) then source // attrs.source 
+        else match (attrs.keyvals.find(fun(kv){ kv.fst == key })) {
+          Just(kv) -> kv.snd          
+          Nothing  -> match(labels[key]) {
+            Just(label) -> label.labelText // already expanded
+            Nothing -> match(metadata[key]) {
+              Just(value) -> {
+                // semi-static scoping: clear out labels, but keep attributes
+                expandKeys(p,value,source,attrs,dict(),metadata,notFound)
+                // todo? full static scoping: clear out attributes and labels..
+                //expandKeys(p,value,"",attrsNone,dict(),metadata,notFound)              
               }
-            }                 
-            if (cres != cval) then { cval := cres; Nothing } else Just(cres)       
+              Nothing -> match(entityNameAsNum(key)) {
+                Just(value) -> value
+                Nothing     -> notFound(key,cap.matched)
+                //entityNameToNum(key)
+              }
+            }
           }
-          cval
         }
-        Nothing -> {
-          notFound(key,cap.matched)
-        }
-      }
+      }      
     }
   }
 }
-val rxkey = regex(@"&#[xX]?\d+;|\\#|(?:\\/)?#([a-zA-Z][\w\-:]*|#)(?:;|\\/)?") 
+val rxkey = regex(@"\\&|(?:\\/)?&([\w\-:]*|&);(\\/)?") 
 
 function keyNotFound( key: string, matched : string ) : string {
   warning( "undefined key: " + key)

@@ -44,14 +44,25 @@ public function entityToTex( entity : string ) : string
   }
 }
 
+public function entityNameAsNum( name : string ) : maybe<string> 
+{
+  if (name=="nl") then Just("\n")
+  elif (name=="br") then Just("\\\n")
+  elif (name=="null") then Just("")
+  else match(entities.find(fun(e) { e.ename == name })) {
+    Nothing -> Nothing
+    Just(e) -> Just("&#" + e.ecode.show + ";")
+  }  
+}
+
 public function entityNameToNum( name : string ) : string
 {
-  match(entities.find(fun(e) { e.ename == name })) {
+  match(name.entityNameAsNum) {
+    Just(e) -> e
     Nothing -> {
       warning( "unknown entity name: &" + name + ";")
       @"&" + name + ";"
     }
-    Just(e) -> "&#" + e.ecode.show + ";"
   }
 }
 

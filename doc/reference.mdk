@@ -3,7 +3,7 @@ Subtitle	: A Fast Scholarly Markdown Processor
 Author		: Daan Leijen
 Affiliation	: Microsoft Research
 Email		: daan@microsoft.com
-Title Date  : #date; (version #madoko-version)
+Title Date  : &date; (version &madoko-version;)
 
 Heading Base: 2
 Cite All	: True
@@ -22,19 +22,19 @@ PdfLatex    : XeLaTeX
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
 ~Sample		: margin-bottom=2ex 
-			  replace="~ Begin SampleBlock#nl;\
-			           ````` {.SampleSource}#nl;\
-				       #source#nl;`````#nl;-------- { width=50% text-align=left }#nl;\
-				       #source#nl;~ End SampleBlock#nl"
+			  replace="~ Begin SampleBlock&nl;\
+			           ````` {.SampleSource}&nl;\
+				       &source;&nl;`````&nl;-------- { width=50% text-align=left }&nl;\
+				       &source;&nl;~ End SampleBlock&nl;"
 ~Slanted	: font-style=oblique
-~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
+~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib&nl;x\1&nl;~&nl;~Fib&nl;\1&nl;~/' 
 			  notag tight 
 
 XScript		: https://google-code-prettify.googlecode.com\
 				/svn/loader/run_prettify.js?lang=scm&lang=latex
-Title2		: (#Title,#Title)
-llbracket	: &#10214;
-rrbracket	: &#10215;
+Title2		: (&Title;,&Title;)
+llb			: &#10214;
+rrb			: &#10215;
 
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 
@@ -423,7 +423,7 @@ And we can refer to it
 * Using an explicit [link](#myheader) 
 	(or [reference][#myheader]).
 * Or using an implicit link to Section [#myheader].
-* Or we can just see its label, namely #myheader.
+* Or we can just see its label, namely &myheader;.
 ~
 
 Using an implicit link is generally recommended. 
@@ -450,10 +450,11 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 
 
 An implicit link such as `[#myheader]` is a shorthand for an explicit link of
-the form `[#myheader](#myheader)`, i.e. it links to the local reference
-`#myheader` and it displays the text `#myheader`. In Madoko, a _hash name_
-(see Section  [#sec-hashname]) like `#myheader` is replaced by the _label_
-value of the referred block. For headers, this is by default the header number
+the form `[&myheader;](#myheader)`, i.e. it links to the local reference
+`#myheader` and it displays the entity `&myheader;`. In Madoko, an entity
+name like `&myheader;` is replaced by the _label_
+value of the referred block (see Section  [#sec-entity]). 
+For headers, this is by default the header number
 (as we will see in Section [#sec-numbering])  but you can set any label you'd
 like. Using a minus\ (`-`) in the attributes clears all attributes, which is
 used in the following example to suppress the default numbering:
@@ -665,7 +666,7 @@ the `toc-line` specifies the contents of the line displayed in the table of
 contents. For example, using [metadata rules][#sec-rules] we can generate a
 table of contents for equations:
 
-	~Equation: toc=equations toc-line="#caption"
+	~Equation: toc=equations toc-line="&caption;"
 
 Here we assume that the user adds a `caption` attribute when denoting
 equations (which will get expanded inside the `toc-line`). We can then render
@@ -1316,7 +1317,7 @@ multiple lines by indenting, and you can leave blank lines between different key
 ### Special metadata keys
 
 Any metadata key and value can be given (and referred to using 
-[hash names][#sec-hashname]),  but certain keys have special meaning to Madoko.
+[entity names][#sec-entity]),  but certain keys have special meaning to Madoko.
 
 * `Title`: The title of the document. For example, in HTML output it
 	determines the `<title>` element. It is also used by the special `[TITLE]`
@@ -1327,7 +1328,7 @@ Any metadata key and value can be given (and referred to using
 * `Title Date`: The date the document was written. Used in the `[TITLE]`
 	element where it is put below the title and authors. 
 	```
-	Title Date: #date; (version 1.0)
+	Title Date: &date; (version 1.0)
 	```
 
 * `Author`, `Affiliation`, `Email`: the author name, affiliation, and
@@ -1492,7 +1493,7 @@ For LaTeX output, the following keys are relevant:
 	when rendering mathematics.	
 
 
-### Hash names		{ #sec-hashname }
+### Entities		{ #sec-entity }
 
 An extension of Madoko is the use of _hash names_. If Madoko finds a name
 prefixed by a hash (#) character, it looks up the name. If there is a block
@@ -1501,8 +1502,8 @@ element with that _id_, the hash name is replaced by the _label_ value of that b
 Madoko looks if there is a metadata value with that name, and replaces the
 hash name with its value: 
 ~ Sample
-The title of this document is "#title".
-And this section has label #sec-hashname.
+The title of this document is "&title;".
+And this section has label &sec-entity;.
 ~
 A hash-name can consist of letters, underscores, minus signs, and digits.
 If you want to follow the name directly with one of such symbols, the
@@ -1511,24 +1512,18 @@ Note that if values contain themselves hash names, these are expanded
 recursively (up to a certain limit) which can provide a powerful abstraction
 mechanism. For example, if we define a metadata value `Title2`:
 
-	Title2: (#Title,#Title)
+	Title2: (&Title;,&Title;)
 
-then the hashname `#Title2` expands to "#Title2".
-
-Hash names are mostly used to reference other elements in a document.
-For example:
-
-~ Sample
-See Section [#sec-hashname] for more information.
-~
+then the hashname `&Title2;` expands to "&Title2;".
 
 Section [#sec-ids-labels] explains the use of hash names for identities and
 referencing in more detail.
 
 If hash names are used inside [attributes][#sec-attr], Madoko first
 looks for the name as one of the attribute key values. For example, you can
-use names like `#id`, `#class`, and `#label`. Two special available keys are `#nl` 
-which always expands to a newline character, and `#source` that expands to the
+use names like `&id;`, `&class;`, and `&label;`. 
+Two special available keys are `&nl;` 
+which always expands to a newline character, and `&source;` that expands to the
 literal source of a block element. For some examples of their usage, see 
 Sections [#sec-replace] and [#sec-reset].
 
@@ -1646,7 +1641,7 @@ caption, we could write it as:
 	...
 	~
 
-To get a literal line break inside an attribute string, use the hashname `#nl` instead.
+To get a literal line break inside an attribute string, use the hashname `&nl;` instead.
 
 ### Recognized formatting attributes  { #sec-css }
 
@@ -1784,10 +1779,10 @@ parenthesis. Similarly, the default label for main sections is defined as:
 
 Of course, for headers we like to display the label by default in front of the
 header text. This can be done using the [before][#sec-replace] attribute where
-we use the [`#label`][#sec-hashname] key to insert the value of the label. So,
+we use the [`&label;`][#sec-entity] key to insert the value of the label. So,
 the full definition for the main sections is:
 
-	{ @h1 label="@h1" before="#label.&ensp;" }
+	{ @h1 label="@h1" before="&label;.&ensp;" }
 
 
 ### Advanced: Reset counters { #sec-reset }
@@ -1797,7 +1792,7 @@ counter will be reset on every increment of the counter _prefix_. For example,
 the counter for subsections is reset on every new section (using [metadata
 rules][#sec-rules]):
 
-	~h2: @h1-h2 label="@h1.@h1-h2" before="#label.&ensp;"
+	~h2: @h1-h2 label="@h1.@h1-h2" before="&label;.&ensp;"
 
 Similarly, a counter like `@h1-h2-h3` would reset on every increment of
 counter `@h1` or `@h1-h2`.
@@ -1901,21 +1896,21 @@ the content
 The `replace` attribute replaces the entire content with its value. You can
 have multiple replacers and they are all applied in order. The replacers can
 be cleared using the special `clear` value. Finally, all replacers can contain
-hash names (Section [#sec-hashname]) which are expanded. Useful hash names are
-`#source` which expands to the current content of the block (possibly having
-already some replacers applied), and `#nl` which expands to a newline
+entity names (Section [#sec-entity]) which are expanded. Useful entities are
+`&source;` which expands to the current content of the block (possibly having
+already some replacers applied), and `&nl;` which expands to a newline
 character. In particular, `before` and `after` are defined in terms of
 `replace`, where `before=`_value_  is just syntactic sugar for
-`replace=`_value_`\/#source` and similarly for `after`.
+`replace=`_value_`\/&source;` and similarly for `after`.
 
 As an advanced example, for this document I defined a metadata rule for  the
 `Sample` custom block that replaces its content by both a code block and a
 regular markdown block. In a simplified form, it is defined as:
 
 	~Sample: 
-	  replace="~ Begin SampleBlock#nl;\
-                 ````#nl#source#nl````nl;\
-                 ---- #nl#source#nl;\
+	  replace="~ Begin SampleBlock&nl;\
+                 ````&nl;&source;&nl;````&nl;\
+                 ---- &nl;&source;&nl;\
                ~ End SampleBlock"
 
 
@@ -2009,7 +2004,7 @@ xxxxx
 This is done through the following metadata rule:
 
 	~Fib: replace='/^x?$/y/' 
-		  replace='/xx(x*)/~Fib#nl\/x\1#nl~#nl~Fib#nl\1\/#nl~/' 
+		  replace='/xx(x*)/~Fib&nl;x\1&nl;~&nl;~Fib&nl;\1&nl;~/' 
 		  notag tight 
 
 The first replacer will replace a single optional `x` with a `y`.  The second
@@ -2298,11 +2293,11 @@ As an advanced example, here is how `madoko.sty` defines the rules for the
 Where we recall that the standard metadata rules for a `Figure` are:
 
 	~Figure: label='[@figure]{.figure-label}' .align-center 
-			 after='#nl********* {.figureline}#nl\
-					[[**Figure\ #label.** ]\
-					{.caption-before}#caption]\
-					{.figure-caption}#nl{notag}#nl'
-			 toc=tof toc-line='#label. #caption'
+			 after='&nl;********* {.figureline}&nl;\
+					[[**Figure\ &label;.** ]\
+					{.caption-before}&caption;]\
+					{.figure-caption}&nl;{notag}&nl;'
+			 toc=tof toc-line='&label;. &caption;'
 
 as shown in Appendix [#app-custom]. The sample uses two extra functions from
 `css.sty`:
@@ -2397,13 +2392,13 @@ appropiate LaTeX commands (Appendix [#app-entities]).
 If you often need a specific unnamed unicode character, it can be
 convenient to define a shorthand for it in the metadata:
 
-	llbracket: &#10214;
-	rrbracket: &#10215;
+	llb: &#10214;
+	rrb: &#10215;
 
 and then use the hash-names instead. For example:
 
 ~ Sample 
-\/#llbracket;hi#rrbracket;.
+&llb;hi&rrb;.
 ~
 
 ### Unicode in LaTeX
@@ -2809,19 +2804,19 @@ formatting).
 
 ```
 ~Equation: label='[(@equation)]{.equation-label}' 
-  		   replace='[#label]{.equation-before}#nl\
-  		            ~ Begin Math#nl#source#nl~ End Math#nl' 
+  		   replace='[&label;]{.equation-before}&nl;\
+  		            ~ Begin Math&nl;#source&nl;~ End Math&nl;' 
            .align-center tight .para-block
 ~Figure  : label='[@figure]{.figure-label}' .align-center 
-		   after='#nl********* {.figureline}#nl\
-			      [[**Figure\ #label.** ]\
-			      {.caption-before}#caption]\
-			      {.figure-caption}#nl{notag}#nl'
-		   toc=tof toc-line='#label. #caption'
+		   after='&nl;********* {.figureline}&nl;\
+			      [[**Figure\ &label;.** ]\
+			      {.caption-before}&caption;]\
+			      {.figure-caption}&nl;{notag}&nl;'
+		   toc=tof toc-line='&label;. &caption;'
       
 ~Bibitem : label='[@bibitem]{.bibitem-label}' 
-		   cite-label='#label'
-		   before='[\[#label\]\ \ ]{.bibitem-before}' 
+		   cite-label='&label;'
+		   before='[\[&label;\]\ \ ]{.bibitem-before}' 
 		   tight texelem=mdBibitem
 ~Bibliography: bib-style=... 
 			   bib-data='...' 
@@ -2847,24 +2842,24 @@ formatting).
 ~TexOnly  : input=texonly
 
 ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
-    before='[**Theorem\ #label.** ]{.Theorem-before}'
+    before='[**Theorem\ &label;.** ]{.Theorem-before}'
 ~Lemma	  : .block label='[@Lemma]{.Lemma-label}'
-    before='[**Lemma\ #label.** ]{.Lemma-before}'
+    before='[**Lemma\ &label;.** ]{.Lemma-before}'
 ~Proposition: .block label='[@Proposition]{.Proposition-label}'
-    before='[**Proposition\ #label.** ]{.Proposition-before}'
+    before='[**Proposition\ &label;.** ]{.Proposition-before}'
 ~Corollary: .block label='[@Corollary]{.Corollary-label}'
-    before='[**Corollary\ #label.** ]{.Corollary-before}'
+    before='[**Corollary\ &label;.** ]{.Corollary-before}'
 ~Example: .block label='[@Example]{.Example-label}'
-    before='[**Example\ #label.** ]{.Example-before}'
+    before='[**Example\ &label;.** ]{.Example-before}'
 ~Definition: .block label='[@Definition]{.Definition-label}'
-    before='[**Definition\ #label.** ]{.Definition-before}'
+    before='[**Definition\ &label;.** ]{.Definition-before}'
 
 ~H1: label='[@h1]{.heading-label}' toc
-     before='[#label.\ \ \ ]{.heading-before}'     
+     before='[&label;.\ \ \ ]{.heading-before}'     
 ~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' toc
-     before='[#label.\ \ \ ]{.heading-before}'     
+     before='[&label;.\ \ \ ]{.heading-before}'     
 ~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
-     before='[#label.\ \ \ ]{.heading-before}' toc
+     before='[&label;.\ \ \ ]{.heading-before}' toc
 ~H4: @h1-h2-h3-h4 
   label='[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}'
 ...

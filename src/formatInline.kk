@@ -58,8 +58,8 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("isup",      regex(@"^\^((?:[^\^\\\s]|\\.)+)\^"), inlineSup ),
   Rule("itagcode",  regex(@"^(<code\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)([\s\S]*?)(</code>)"), inlineTagCode ),
   Rule("itag",      regex(@"^<(?:!--[\s\S]*?-->|/?\w+\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)"), inlineTag ),
-  Rule("ientity",   regex(@"^&(#?\w+);"), inlineEntity ),
-  Rule("ilabel",    regex(@"^(#[a-zA-Z][\w\-:]*);?"), inlineLabel ),
+  Rule("ientity",   regex(@"^&(#?[\w\-:]*);"), inlineEntity ),
+  //Rule("ilabel",    regex(@"^(#[a-zA-Z][\w\-:]*);?"), inlineLabel ),
   
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
   Rule("ielipsis",  regex(@"^\.\.\."), inlineDots ),
@@ -134,12 +134,38 @@ function inlineBreak( cap : matched, context ) {
   }
 }
 
-function inlineEntity( cap : matched, context : inlineContext ) : string {
+function oldinlineEntity( cap : matched, context : inlineContext ) : string {
   if (context.bench) return context.fmtText(cap.matched)  
   name = cap.groups[1]
   match(context.fmt) {
     FmtHtml | !(name.startsWith("#")) -> context.fmtText(entityNameToNum(name))
     _ -> context.fmtText(cap.matched)
+  }
+} 
+
+
+function oldinlineLabel( cap : matched, context : inlineContext ) : string {
+  key = cap.groups[1].definitionId
+  //trace("inlineLabel: " + key )
+  match(context.labels[key]) {
+    Nothing   -> {
+      //warning( "missing anchor: " + cap.groups[1])
+      context.fmtText(cap.matched)
+    }
+    Just(lab) -> formatInline(context,lab.labelText)
+  }
+}
+
+function inlineEntity( cap : matched, context : inlineContext ) : string {
+  key = cap.groups[1]
+  if (key.startsWith("#")) 
+   then context.fmtText(cap.matched) 
+   else {
+    txt = expandKeyName(key,context.labels,context.metadata)
+    if (txt==cap.matched) 
+     then context.fmtText(txt)
+     else context.formatInline(txt)
+    //context.fmtText(expandKeyName(key,context.labels,context.metadata)) // should recurse?
   }
 } 
 
@@ -320,18 +346,6 @@ function inlineAutoLink( cap : matched, context : inlineContext ) : string {
   }
 }
 
-function inlineLabel( cap : matched, context : inlineContext ) : string {
-  key = cap.groups[1].definitionId
-  //trace("inlineLabel: " + key )
-  match(context.labels[key]) {
-    Nothing   -> {
-      //warning( "missing anchor: " + cap.groups[1])
-      context.fmtText(cap.matched)
-    }
-    Just(lab) -> formatInline(context,lab.labelText)
-  }
-}
-
 function inlineLink( cap : matched, context : inlineContext ) : string {
   inlineLinkEx(False,cap,context)
 }
@@ -374,7 +388,7 @@ struct cite(
 
 function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
 {
-  numlab = match(context.labels["#" + name]) {
+  numlab = match(context.labels[name]) {
              Nothing   -> "?"
              Just(lbl) -> lbl.labelText
            }
@@ -467,12 +481,14 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
     }
     Nothing -> {
       // Link not found! Try if it is a label
-      match(context.labels[id]) {
+      labelId = if (id.startsWith("#")) then id.substr(1) else ""
+      match(context.labels[labelId]) {
         Just(lab) -> {
           // Label reference
           lattrs = attrs.addKeyval("target-element",lab.element)
           llink  = newLink(id,"",lattrs,bench=context.bench)
-          nbsp + context.fmtLink(isImage,llink,context.formatInline(txt)) 
+          nbsp + context.fmtLink(isImage,llink,context.formatInline(
+                                 if (ref=="") then "&" + labelId + ";" else txt)) 
         }      
         Nothing -> {
           if (ref != "") then {            
@@ -518,7 +534,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
   attrsd  = if (!(attrs.defaults)) then attrs 
              else context.defaults.matchRules(sname,attrs)
 
-  txt = attrsd.transformText(txt0,context.metadata)
+  txt = attrsd.transformText(txt0,context.labels,context.metadata)
   match(attrsd.input) {
     Pre      -> context.fmtCode(sname, txt, attrs) // todo: sname as env name?
     Math     -> context.fmtMath(False,txt,attrsd)

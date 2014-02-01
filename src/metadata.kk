@@ -126,14 +126,14 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[#label]{.equation-before}#nl~ Begin Math { color=""#color"" }#nl#source#nl~ End Math#nl' tight .para-block",
+  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" }&nl;&source;&nl;~ End Math&nl;' tight .para-block",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
-      @"~Figure   : after='#nl********* {.figureline}#nl[[**Figure\ #label.** ]\
-                           {.caption-before}#caption]{.figure-caption html-elem=fig-caption}#nl{notag}#nl'",
-      @"~Figure   : toc=tof toc-line='#label. #caption'",
+      @"~Figure   : after='&nl;********* {.figureline}&nl;[[**Figure\ &label;.** ]\
+                           {.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
+      @"~Figure   : toc=tof toc-line='&label;. &caption;'",
       
-      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='#label'",
-      @"            before='[\[#label\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
+      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'",
+      @"            before='[\[&label;\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
 
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
       
@@ -142,9 +142,9 @@ function defaultMeta( options : options ) : string {
       @"~Aside    : html-elem='aside'",
       @"~Nav      : html-elem='nav'",
 
-      @"~Note     : .block before='[**Note**. ]{.note-before}#nl'",
-      @"~Remark   : .block before='[**Remark**. ]{.remark-before}#nl'",
-      @"~Proof    : .block before='[**Proof**. ]{.proof-before}#nl'",
+      @"~Note     : .block before='[**Note**. ]{.note-before}&nl;'",
+      @"~Remark   : .block before='[**Remark**. ]{.remark-before}&nl;'",
+      @"~Proof    : .block before='[**Proof**. ]{.proof-before}&nl;'",
 
       @"~Framed   : border-style=solid border-color=black border-width=1px",
       @"~Center   : .align-center",
@@ -183,7 +183,7 @@ function defaultMeta( options : options ) : string {
 function theorem( prose : string ) {
   name = prose.toLower
   "~" + prose + ": .block label='[@" + name + "]{." + name + "-label}' " +
-      "before='[**" + prose + "\\ #label.** ]{." + name + "-before}'"
+      "before='[**" + prose + "\\ &label;.** ]{." + name + "-before}'"
 }
 
 function heading( depth : int, headingDepth : int, tocDepth : int ) {
@@ -192,7 +192,7 @@ function heading( depth : int, headingDepth : int, tocDepth : int ) {
   "~h" + num + ": " + 
     (if (depth > 1) then headingCounter(depth) else "") + 
     " label='[" + label + "]{.heading-label}'" +
-    (if (depth > headingDepth) then "" else " before='[#label.&ensp;]{.heading-before}'") +
+    (if (depth > headingDepth) then "" else " before='[&label;.&ensp;]{.heading-before}'") +
     (if (depth > tocDepth) then "" else " toc")    
 }
 

@@ -109,16 +109,16 @@ function parseDefinitionsFull(
       counters.adjustCounter(counter,value,nested)
     }
 
-    // expand counters and #keys in label, before, and after
+    // expand counters and #keys in label
     attrsx = attrsd.expandCounters(counters,fcontext.inlineContext.metadata)
 
     // set label
     if (attrsx.name != "") then {
-      labels["#" + attrsx.name] := Label(bname,attrsx.label)   
+      labels[attrsx.name] := Label(bname,attrsx.label)   
       match (attrsx.hasKey("cite-label")) {
         Nothing -> ()
         Just(clabel) -> {
-          clabelx = clabel.expandKeys(attrsx.source,attrsx,fcontext.inlineContext.metadata)
+          clabelx = clabel.expandKeys(attrsx.source,attrsx,dict(),fcontext.inlineContext.metadata)
           labels["@" + attrsx.name] := Label(bname,clabelx)
         }
       }
@@ -192,9 +192,11 @@ function parseDefinitionsFull(
   }
   
   newblocks     = blocks.mapBlocks(parseDefBlock)
+  labelsDict    = labels.freeze()
+
   tocBlocks     = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                   (tocs.list.map fun(entry) {
-                     (entry.fst, createToc(entry.snd.reverse,fcontext.inlineContext.metadata))
+                     (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
                    }).dict
   footnoteBlock = if (isNil(footnoteItems)) then Empty 
                    else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes","madoko"]))  
@@ -203,7 +205,7 @@ function parseDefinitionsFull(
   secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
 
   (secblocks,                   
-   fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labels.freeze, 
+   fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labelsDict, 
                                           footnotes=footnotes.freeze, defaults=defaultAttrs ),
               tocBlocks, footnoteBlock )  )
 }
@@ -252,14 +254,14 @@ function mapBlocks( blocks : list<block>,
 function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block {
   match(block) {
     HLine(_)            -> HLine(xs)                           
-    Para( text )        -> Para(xs.transformText(text,fcontext.inlineContext.metadata),xs)
-    Heading(depth,text) -> Heading(depth,xs.transformText(text,fcontext.inlineContext.metadata),xs)
+    Para( text )        -> Para(xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
+    Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Div( content  )     -> transformDiv(content, xs, fcontext )
     Quote( content )    -> Quote(content, xs) 
     Code( text, lang)   -> {
       if (lang=="" && !(xs.input.isPre))
         then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext )
-        else Code(xs.transformText(text,fcontext.inlineContext.metadata),lang,xs)  
+        else Code(xs.transformText(text,dict(),fcontext.inlineContext.metadata),lang,xs)  
     }
     _                   -> block
   }
@@ -270,7 +272,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   //if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
   citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
-  txt = attrs.transformText(attrs.source,fcontext.inlineContext.metadata)
+  txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
       Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4).parseBlocks(citestyle),attrs)
@@ -315,7 +317,7 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
     }
     else {
       // label key
-      labels["#" + key] := Label("metadata",value)
+      labels[key] := Label("metadata",value)
     }
   }
 }
@@ -404,31 +406,31 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
 
 
 // Create a table of contents
-function createToc( headings : list<(int,attrs)>, metadata : dict<string> ) : div block 
+function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string> ) : div block 
 {
-  Div( [headings.tocItems(0,metadata).tocList], Attrs(name="toc",classes=["toc"],htmlelem="nav") )
+  Div( [headings.tocItems(0,labels,metadata).tocList], Attrs(name="toc",classes=["toc"],htmlelem="nav") )
 }
 
 function tocList( items : list<block> ) : block {
   if (items.isNil) then Empty else Div(items, Attrs(classes=["tocblock"]))
 }
 
-function tocItems( headings : list<(int,attrs)>, outerDepth : int, metadata : dict<string> ) : div list<block> {
+function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string> ) : div list<block> {
   match(headings) {
     Nil -> []
     Cons(hdr,hdrs) -> {
       val (depth,attrs) = hdr
       if (depth > outerDepth+1) then {
-        [tocItems(headings,outerDepth+1,metadata).tocList]
+        [tocItems(headings,outerDepth+1,labels,metadata).tocList]
       }
       else {
         val (subs,rest) = hdrs.span( fun(h) { h.fst > depth } )
-        txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,metadata)
+        txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         tocline = @"[\/" + txt + "](#" + attrs.name + ")"
         //trace("tocline: " + attrs.source)
         item = Div([Line(tocline)], Attrs(classes=["tocitem"], keyvals=[("toctarget",attrs.name), ("toclevel",depth.show)]))
-        subitems = tocItems(subs,depth,metadata).tocList 
-        Cons(item,Cons(subitems,tocItems(rest,outerDepth,metadata)))
+        subitems = tocItems(subs,depth,labels,metadata).tocList 
+        Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata)))
       }
     }
   }
@@ -440,7 +442,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, metadata : di
 
 // expand counters in label
 function expandCounters( attrs : attrs, counters : mdict<h,counter>, metadata : dict<string> ) : read<h> attrs {
-  val xlab = attrs.label.expandKeys(attrs.source,attrs,metadata).expand(counters)
+  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expand(counters)
   if (xlab != attrs.label)
    then attrs(label=xlab)
    else attrs
