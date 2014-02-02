@@ -272,9 +272,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
        "  });", 
        "</script>",
        "<script type=\"text/javascript\"",
-       "  src=\"" + (if (options.mathjax=="-")
-                      then "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-                      else options.mathjax.expand.escape) + "\">",
+       "  src=\"" + options.getMathjax.expand.escape + "\">",
        "</script>\n"
       ].join("\n  ")
    }) +

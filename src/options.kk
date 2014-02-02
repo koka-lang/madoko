@@ -72,30 +72,49 @@ public struct options(
   sectionMax    : int  = 0, // maximal depth for adding sections (0 = disable)
   sectionBase   : int  = 1, // starting section level.
   
-  mathmode      : mathmode = Static, // mode used to render math
-  mathjax       : string = "",  // mathjax scripts path (use "-" for default path)
-  mjext         : string = "",  // semicolon separated list of mathjax extensions
+  mathmode      : mathmode = Static,  // mode used to render math
+  mathjax       : string = "",        // mathjax scripts path (use "-" for default path)
+  mjext         : string = "",        // semicolon separated list of mathjax extensions
   
   mathImgDir    : string = "math",    // directory for static math images
-  mathScale     : int    = 108,  // math scaling in percentage
-  mathDpi       : int    = 300,  // math resolution 
-  mathEmbedLimit: int = 1024, // maximal embedded image size  
+  mathScale     : int    = 108,       // math scaling in percentage
+  mathDpi       : int    = 300,       // math resolution 
+  mathEmbedLimit: int    = 1024,      // maximal embedded image size  
   mathDocClass  : string = "[10pt]book",
-  mathPdflatex  : string = "",   // used when pdf is needed for snippets
-
+  
   highlight     : bool = True,
-  hilitelang    : string = "",  // semi-colon separated list
+  hilitelang    : string = "",        // semi-colon separated list
 
-  latex         : string = "latex",
-  dvipng        : string = "dvipng",
-  pdflatex      : string = "",  // defaults to 'pdf' + latex cmd
+  pdflatex      : string = "",        // defaults to 'xe' + latex cmd
   bibtex        : string = "bibtex",
-  convert       : string = "convert",   
+  mathconvert   : string = "",        // if non-empty, use cmd to post process math images
+  latex         : string = "latex",   // used to generate dvi for math
+  dvipng        : string = "dvipng",  // used to extract png images for math
+  
+  mathpdflatex  : string = "",        // if non-empty, used when pdf is needed for snippets. Use "-" for default program
+  dvips         : string = "dvips",   // used with ps2pdf when mathpdflatex is empty
+  ps2pdf        : string = "ps2pdf",
+  convert       : string = "convert", // used to extract png's from pdf for math that needs it
   
   metadata      : metadata = [],
-  mathdim       : dict<mathinfo> = dict(),
-  mathconvert   : string = ""   // use cmd to post process math images
-);               
+  mathdim       : dict<mathinfo> = dict()   // static math dimension information
+);
+
+public function getPdflatex( opts : options ) : string {
+  if (opts.pdflatex != "" && opts.pdflatex != "default") then opts.pdflatex 
+   else combine(opts.latex.dirname,"xe" + opts.latex.basename)
+}               
+
+public function getMathpdflatex( opts : options ) : string {
+  if (opts.mathpdflatex != "default") then opts.mathpdflatex 
+   else opts.getPdflatex
+}               
+
+public function getMathjax( opts : options ) : string {
+  if (opts.mathjax != "default") then opts.mathjax
+   else "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+}
+
 
 public struct commandOptions(
   showVersion : bool = False,
@@ -149,12 +168,21 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
       Option( "r", ["rebuild"],  oflag(fun(o,v) { o(rebuild=v) }),    "Force rebuild bibliography, math, etc."),
 
-      Option( "",  ["bibtex"],   oreq(fun(o,v) { o(bibtex = v) },"CMD"),   "bibtex command"),
-      Option( "",  ["pdflatex"], oreq(fun(o,v) { o(pdflatex = v)},"CMD"),  "pdflatex command"),
-      Option( "",  ["dvipng"],   oreq(fun(o,v) { o(dvipng = v) },"CMD"),   "dvipng command (for math)"),
-      Option( "",  ["latex"],    oreq(fun(o,v) { o(latex = v) },"CMD"),    "latex command (for math)"),            
-      Option( "",  ["convert"],  oreq(fun(o,v) { o(convert = v) },"CMD"),  "convert command (for math)"),
+      Option( "m", ["meta"],     oreq(setMeta, "key:value"), "Semi-colon separated list of metadata values")
     ]
+
+function setMeta( opts0 : options, value : string ) : options {
+  keyvals = value.split(";").list
+  keyvals.foldl(opts0) fun(opts : options,keyval) {
+    match(keyval.split(":",2).list) {
+      Cons(key,Cons(s,Nil)) -> opts(metadata = opts.metadata + [(key,s)] )
+      _ -> {
+        warning("illegal --meta option: " + value)
+        opts
+      }
+    }
+  }
+}
 
 // Parse the options from the command line given some extra arguments (default `""`).
 public function parseOptions( extra : string = "") : io maybe<commandOptions>

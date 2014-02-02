@@ -45,8 +45,7 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
 public function runPdfLaTeX( texFile : string, opts : options, content : string = "", continue : () -> io () ) {
   if (opts.verbose>=1) println("  running latex to generate pdf...")
   notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
-  pdfCmd = if (opts.pdflatex!="") then opts.pdflatex else "pdf" + opts.latex
-  runLaTeX( texFile, pdfCmd, opts, content, notfound, 0, True,
+  runLaTeX( texFile, opts.getPdflatex, opts, content, notfound, 0, True,
     function() { () }, continue )  
 }
 
@@ -118,11 +117,13 @@ public function mathStatic( math : string, texName : string, xopts : options, co
             ", MathImgDir: " + xopts.mathImgDir +
             ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
             ", MathDocClass: " + xopts.mathDocClass +
-            ", DviPng: " + xopts.dvipng + 
+            ", Dvipng: " + xopts.dvipng + 
             ", Latex: " + xopts.latex + 
-            ", Convert: " + xopts.convert + 
             ", MathConvert: " + xopts.mathconvert + 
-            ", MathPdfLatex: " + xopts.mathPdflatex + 
+            ", MathPdfLatex: " + xopts.mathpdflatex + 
+            ", Convert: " + xopts.convert + 
+            ", Dvips: " + xopts.dvips + 
+            ", Ps2pdf: " + xopts.ps2pdf + 
             "\n"
   outMath = outHdr + outTex
   if (outMath != oldMath || xopts.rebuild) {
@@ -141,10 +142,10 @@ public function mathStatic( math : string, texName : string, xopts : options, co
           continue(Just(xopts.mathdim))
         }
         _ -> {
-          mathSnippetsToDvi( texName, xopts, content, oldMath, dviPages ) {
+          mathSnippetsToDvi( texName, xopts, content, oldMath, dviPages, pdfPages ) {
             mathSnippetsToPdf( texName, xopts, content, oldMath, pdfPages ) {
               mathDviPdfToPng( texName.changeExt(".dvi"), xopts, dviPages, pdfPages ) {
-                mathConvertPng( texName, xopts, pages ) {
+                mathConvertPng( texName, xopts, dviPages ) {
                   mathDimAnalyse( texName.changeExt(".dimx"), xopts, dviPages, pdfPages) function(mbmath) {
                     if (mbmath.isJust) {
                       rename(texName,texFinalName); // save result to prevent rebuilds
@@ -209,10 +210,10 @@ val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet(Pdf)?}[\[\{]([a-fA-F0
 
 function mathSnippetsToDvi( texName : string, xopts : options, 
                             content : string, oldMath : string, 
-                            pages : pages,
+                            dviPages : pages, pdfPages : pages,
                            continue : () -> io () ) : io () 
 {  
-  if (pages.isNil) return continue()
+  if (dviPages.isNil && (xopts.mathpdflatex=="" || pdfPages.isNil)) return continue()
 
   if (xopts.verbose>=1) println("  running latex on math... (dvi mode)")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
@@ -227,15 +228,41 @@ function mathSnippetsToPdf( texName : string, xopts : options,
                            continue : () -> io () ) : io () 
 {  
   if (pages.isNil) return continue()
-
-  // use pdf mode
-  if (xopts.verbose>=1) println("  running latex on math... (pdf mode)")
-  notfound = "set either the 'Math Mode: Dynamic' or the 'Pdf Latex: <cmd>' key in the metadata"
-  texCmd = if (xopts.mathPdflatex != "") then xopts.mathPdflatex 
-           elif (xopts.pdflatex != "") then xopts.pdflatex 
-           else "pdf" + xopts.latex
-  runLaTeX( texName, texCmd, xopts, content, notfound, 0, False,
-    function () { () }, continue ) 
+  if (xopts.mathpdflatex != "") {
+    // re-run latex to get a pdf
+    if (xopts.verbose>=1) println("  running latex on math... (pdf mode)")
+    notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
+    texCmd = xopts.getMathpdflatex
+    runLaTeX( texName, texCmd, xopts, content, notfound, 0, False,
+      function () { () }, continue ) 
+  }
+  else {
+    // use dvips and ps2pdf to get a pdf
+    dir = texName.dirname
+    stem = texName.stemname
+    dvipsCmd = xopts.dvips + " -Ppdf -G0 " + stem + ".dvi"
+    ps2pdfCmd = xopts.ps2pdf + " " + stem + ".ps"
+    if (xopts.verbose>=1) println("  generating pdf from dvi...")
+    if (xopts.verbose>=3) println("  >" + dvipsCmd)
+    system(dvipsCmd,function(err,stdout,stderr) {
+      if (err != 0) {
+        println("> " + dvipsCmd)
+        println("error: failure while typesetting math: \n" + stdout + stderr)      
+      }
+      else {
+        if (xopts.verbose>=3) println("  >" + ps2pdfCmd)
+        system(ps2pdfCmd, function(err2,stdout2,stderr2) {
+          if (err2 != 0) {
+            println("> " + ps2pdfCmd)
+            println("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+          }
+          else {
+            continue()
+          }
+          },0,dir)
+      }
+    },0,dir)
+  }  
 }
 
 
@@ -407,13 +434,13 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 }
 
 
-function mathConvertPng( texName : string,xopts : options, pages : pages, continue : () -> io () ) : io () 
+function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
   if (xopts.mathconvert=="") then continue() else {
-    convertCmd = xopts.mathconvert + " " + texName.stemname + "-eq-%d.png" + 
-                          pages.convertPages + " " +
-                          texName.stemname + "-eqc" + pages.convertSuffix + ".png"
-    if (xopts.verbose>=1) println( "  converting math images..." )
+    convertCmd = xopts.mathconvert + " " + texName.stemname + "-dvi-%d.png" + 
+                          dviPages.convertPages + " " +
+                          texName.stemname + "-dvi-c" + dviPages.convertSuffix + ".png"
+    if (xopts.verbose>=1) println( "  converting math images... (dvi)" )
     if (xopts.verbose>=3) println( "  > " + convertCmd )
     system(convertCmd, function(err,stdout,stderr) {
       if (err!=0) {
@@ -464,7 +491,7 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
         digest = cap.groups[3]
         imageMod = (if (isPdf) then "-pdf-" else "-dvi-") +
                    (if (opts.mathconvert!="") then "c-" else "") +
-                   (if (isPdf) then (pageNo-1).show else pageNo.show)
+                   (if (isPdf || opts.mathconvert!="") then (pageNo-1).show else pageNo.show)
 
         imageName = combine(opts.mathImgDir, dimxFile.stemname + imageMod + ".png")
         imageFile = combine(dimxFile.dirname,imageName)

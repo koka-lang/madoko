@@ -171,7 +171,9 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   class  = "math-" + lkind
   attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
-  texcmd = context.fmtTexEnv("div",left + txt + right,attrsd)
+  texcmd = if (kind=="Inline")
+            then context.fmtTexCmd("span", left+txt+right, attrsd)
+            else context.fmtTexEnv("div",  left+txt+right, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {
