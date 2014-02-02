@@ -22,5 +22,6 @@ doc/*.html
 doc/*.pdf
 doc/*.sty
 doc/*.css
+doc/*.ps
 doc/math/*
 doc/Serif/*
