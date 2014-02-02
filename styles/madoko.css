@@ -17,12 +17,12 @@
 ----------------------------------------------------*/
 
 /* The table of contents */
-.toc>.tocblock .tocblock {
-  margin-left: 1.7em;
-}
-
 .toc>.tocblock .tocblock .tocblock {
   margin-left: 2.5em;
+}
+
+.toc>.tocblock .tocblock {
+  margin-left: 1.7em;
 }
 
 .toc>.tocblock>.tocitem {
