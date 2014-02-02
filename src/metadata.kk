@@ -77,7 +77,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="bibtex") options(bibtex=value)
     elif (key=="math-mode") options.setMathMode(value)
     elif (key=="math-convert") options(mathconvert=value)
-    elif (key=="convert") options(convert=if (lvalue=="true") then "convert" else value)
+    elif (key=="convert") options(convert=value)
     elif (key=="mathjax") then (if (value!="")
                                  then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "-" else value))
                                  else options(mathmode=Static, mathjax=""))
@@ -164,7 +164,7 @@ function defaultMeta( options : options ) : string {
       @"~MathDefs : input=mathdefs .hidden",
       @"~HtmlOnly : input=htmlonly",
       @"~TexOnly  : input=texonly",
-      @"~Snippet  : input=math .para-block .plain",
+      @"~Snippet  : input=math .para-block .snippet-block .snippet-needpdf",
 
       @"Madoko Version: " + version,
       @"Defaults  : True",

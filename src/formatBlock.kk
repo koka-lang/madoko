@@ -293,7 +293,7 @@ val rxDashes  = regex(@"^ *---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*
 val rxDDashes = regex(@"^ *===+ *[|+]*$")
 
 function deriveMathAttrs( parentAttrs : attrs ) {
-  Attrs( classes  = parentAttrs.classes.filter(fun(c) { c == "plain" } ),
+  Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") } ),
          keyvals  = parentAttrs.keyvals.filter( fun(kv) {
                       key = kv.fst
                       key.startsWith("color") || key.startsWith("font-")    

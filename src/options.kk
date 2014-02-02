@@ -81,6 +81,7 @@ public struct options(
   mathDpi       : int    = 300,  // math resolution 
   mathEmbedLimit: int = 1024, // maximal embedded image size  
   mathDocClass  : string = "[10pt]book",
+  mathPdflatex  : string = "",   // used when pdf is needed for snippets
 
   highlight     : bool = True,
   hilitelang    : string = "",  // semi-colon separated list
@@ -89,12 +90,11 @@ public struct options(
   dvipng        : string = "dvipng",
   pdflatex      : string = "",  // defaults to 'pdf' + latex cmd
   bibtex        : string = "bibtex",
+  convert       : string = "convert",   
   
   metadata      : metadata = [],
   mathdim       : dict<mathinfo> = dict(),
-  mathconvert   : string = "",   // use cmd to post process math images
-  convert       : string = "",   // use convert program instead of dvipng
-  mathPdflatex  : string = ""    // used when pdf is needed for snippets
+  mathconvert   : string = ""   // use cmd to post process math images
 );               
 
 public struct commandOptions(
@@ -153,7 +153,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["pdflatex"], oreq(fun(o,v) { o(pdflatex = v)},"CMD"),  "pdflatex command"),
       Option( "",  ["dvipng"],   oreq(fun(o,v) { o(dvipng = v) },"CMD"),   "dvipng command (for math)"),
       Option( "",  ["latex"],    oreq(fun(o,v) { o(latex = v) },"CMD"),    "latex command (for math)"),            
-      Option( "",  ["convert"],  oreq(fun(o,v) { o(convert = v) },"CMD"),  "convert command (for math)"),            
+      Option( "",  ["convert"],  oreq(fun(o,v) { o(convert = v) },"CMD"),  "convert command (for math)"),
     ]
 
 // Parse the options from the command line given some extra arguments (default `""`).

@@ -159,8 +159,14 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
 }
 
 public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone ) : string {
-  val (kind,leftx,rightx) = if (isDisplay) then ("Display","\\[","\\]") else ("Inline","$","$")
-  val (left,right) = if (attrs.hasClass("plain")) then ("","") else (leftx,rightx)
+  val (kind,left,right) = if (attrs.hasClass("snippet-inline")) 
+              then ("Inline","","")
+             elif (attrs.hasClass("snippet-block"))
+              then ("Display","","")
+            elif (isDisplay) 
+             then ("Display","\\[","\\]") 
+             else ("Inline","$","$")
+  val special = if (attrs.hasClass("snippet-needpdf")) then "Pdf" else "" 
   lkind  = kind.toLower
   class  = "math-" + lkind
   attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))
@@ -173,8 +179,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
       mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
       if (context.mathStatic) {
         digest = md5(txt)
-        log("math",@"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
-                      texcmd + "\n\\end{md" + kind + "Snippet}")
+        log("math",@"\begin{md" + kind + "Snippet" + special + "}[" + digest + "]%\n" + 
+                      texcmd + "\n\\end{md" + kind + "Snippet" + special + "}")
         match(context.mathinfos[digest]) {
           Nothing  -> mcmd
           Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
