@@ -134,28 +134,6 @@ function inlineBreak( cap : matched, context ) {
   }
 }
 
-function oldinlineEntity( cap : matched, context : inlineContext ) : string {
-  if (context.bench) return context.fmtText(cap.matched)  
-  name = cap.groups[1]
-  match(context.fmt) {
-    FmtHtml | !(name.startsWith("#")) -> context.fmtText(entityNameToNum(name))
-    _ -> context.fmtText(cap.matched)
-  }
-} 
-
-
-function oldinlineLabel( cap : matched, context : inlineContext ) : string {
-  key = cap.groups[1].definitionId
-  //trace("inlineLabel: " + key )
-  match(context.labels[key]) {
-    Nothing   -> {
-      //warning( "missing anchor: " + cap.groups[1])
-      context.fmtText(cap.matched)
-    }
-    Just(lab) -> formatInline(context,lab.labelText)
-  }
-}
-
 function inlineEntity( cap : matched, context : inlineContext ) : string {
   key = cap.groups[1]
   if (key.startsWith("#")) 
@@ -165,7 +143,6 @@ function inlineEntity( cap : matched, context : inlineContext ) : string {
     if (txt==cap.matched) 
      then context.fmtText(txt)
      else context.formatInline(txt)
-    //context.fmtText(expandKeyName(key,context.labels,context.metadata)) // should recurse?
   }
 } 
 
@@ -182,12 +159,13 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
 }
 
 public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone ) : string {
-  val (kind,left,right) = if (isDisplay) then ("Display","\\[","\\]") else ("Inline","$","$")
+  val (kind,leftx,rightx) = if (isDisplay) then ("Display","\\[","\\]") else ("Inline","$","$")
+  val (left,right) = if (attrs.hasClass("plain")) then ("","") else (leftx,rightx)
   lkind  = kind.toLower
   class  = "math-" + lkind
-  attrsd = context.formatAttrs(context.applyDefaults("span", (attrs(texelem="cssText")).addClass(class)))
+  attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
-  texcmd = context.fmtTexCmd("span",left + txt + right,attrsd)
+  texcmd = context.fmtTexEnv("div",left + txt + right,attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {

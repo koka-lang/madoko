@@ -87,12 +87,14 @@ public struct options(
 
   latex         : string = "latex",
   dvipng        : string = "dvipng",
-  pdflatex      : string = "",
+  pdflatex      : string = "",  // defaults to 'pdf' + latex cmd
   bibtex        : string = "bibtex",
   
   metadata      : metadata = [],
   mathdim       : dict<mathinfo> = dict(),
-  mathconvert   : string = ""
+  mathconvert   : string = "",   // use cmd to post process math images
+  convert       : string = "",   // use convert program instead of dvipng
+  mathPdflatex  : string = ""    // used when pdf is needed for snippets
 );               
 
 public struct commandOptions(
@@ -151,6 +153,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["pdflatex"], oreq(fun(o,v) { o(pdflatex = v)},"CMD"),  "pdflatex command"),
       Option( "",  ["dvipng"],   oreq(fun(o,v) { o(dvipng = v) },"CMD"),   "dvipng command (for math)"),
       Option( "",  ["latex"],    oreq(fun(o,v) { o(latex = v) },"CMD"),    "latex command (for math)"),            
+      Option( "",  ["convert"],  oreq(fun(o,v) { o(convert = v) },"CMD"),  "convert command (for math)"),            
     ]
 
 // Parse the options from the command line given some extra arguments (default `""`).

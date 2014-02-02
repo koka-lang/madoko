@@ -117,8 +117,13 @@ public function mathStatic( math : string, texName : string, xopts : options, co
   outHdr = "% MathDpi: " + xopts.mathDpi.show + 
             ", MathImgDir: " + xopts.mathImgDir +
             ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
+            ", MathDocClass: " + xopts.mathDocClass +
+            ", DviPng: " + xopts.dvipng + 
+            ", Latex: " + xopts.latex + 
+            ", Convert: " + xopts.convert + 
             ", MathConvert: " + xopts.mathconvert + 
-            ", MathDocClass: " + xopts.mathDocClass + "\n"
+            ", MathPdfLatex: " + xopts.mathPdflatex + 
+            "\n"
   outMath = outHdr + outTex
   if (outMath != oldMath || xopts.rebuild) {
     if (xopts.verbose>=1) println("  typesetting math...")
@@ -127,48 +132,74 @@ public function mathStatic( math : string, texName : string, xopts : options, co
       continue(Nothing)
     }
     else {
-      mathSnippetsToDvi( texName, xopts, content, oldMath ) {
-        pages = match(oldMath.find(rxHdr)) {
-                  Just(cap) | cap.matched==outHdr -> mathAnalyseChanged( outMath, xopts.mathdim,xopts.rebuild )
-                  _ -> (1,mathAnalyseChanged(outMath,dict(),xopts.rebuild).snd) 
+      doRebuild = xopts.rebuild || (oldMath.find(rxHdr).maybe("",fun(cap){cap.matched}) != outHdr)
+      pages = mathAnalyseChanged(outMath,xopts.mathdim,doRebuild) 
+      match(pages) {
+        Nil -> {
+          if (xopts.verbose>=1) println("  no changes")
+          rename(texName,texFinalName); // save result to prevent rebuilds
+          continue(Just(xopts.mathdim))
+        }
+        _ -> {
+          mathSnippetsToDvi( texName, xopts, content, oldMath ) {
+            mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
+              mathConvertPng( texName, xopts, pages ) {
+                mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages) function(mbmath) {
+                  if (mbmath.isJust) {
+                    rename(texName,texFinalName); // save result to prevent rebuilds
+                  }
+                  continue(mbmath)
                 }
-        mathDviToPng( texName.changeExt(".dvi"), xopts, pages ) {
-          mathConvertPng( texName.changeExt(".dvi"), xopts, pages ) {
-            mathDimAnalyse( texName.changeExt(".dimx"), xopts, pages ) fun(mbmath) {
-              if (mbmath.isJust) {
-                rename(texName,texFinalName); // save result to prevent rebuilds
               }
-              continue(mbmath)
-            }
+            }      
           }
-        }      
-      }
+        }
+      }      
     }
   }
   else continue(Nothing)
 }
 val rxHdr = regex(@"^.*\n")
 
-function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : (int,int) {
-  var page := 1
-  var pageLo := 1
-  var pageHi := 0
-  
-  digests = snippets.findAll(rxDigest).list.map( fun(cap) { cap.groups[1] })
-  if (rebuild) return (1,digests.length.max(1))
+alias pages = list<(int,int)>
 
-  digests.map fun(digest) {
-    match(dim[digest]) {
-      Nothing  -> {
-        pageHi := page
-      }
-      Just(_) -> {
-        if (page==pageLo) then pageLo := page + 1
-      } 
+function range(lo,n) { if (lo<=0) then [] else [(lo,lo+n)] }
+  
+function compress( pages : list<int>, lo : int = -1, n : int = 0 ) : pages {
+  match(pages) {
+    Nil -> range(lo,n)
+    Cons(p,ps) -> {
+      if (p==lo+n+1) 
+       then compress(ps,lo,n+1) 
+       else range(lo,n) + compress(ps,p,0)
     }
-    page := page + 1
   }
-  (pageLo,pageHi)
+}
+
+function inside( page : int, pages : pages ) : bool {
+  match(pages) {
+    Nil -> False
+    Cons((lo,hi),ps) -> {
+      (lo <= page && page <= hi) || inside(page,ps)
+    }    
+  }
+}
+
+function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : pages 
+{  
+  digests = snippets.findAll(rxDigest).list.map( fun(cap) { cap.groups[1] })
+  maxPage = digests.length
+  idigests = zip(digests,list(1,maxPage))
+  if (rebuild) then return [(1,maxPage)]
+  
+  pages = idigests.concat fun(idigest) {
+            val (digest,current) = idigest
+            match(dim[digest]) {
+              Nothing  -> [current]
+              Just(_)  -> [] // if (mi.page==current) then [] else [current]
+            }
+          }
+  pages.compress
 }
 
 val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
@@ -176,10 +207,21 @@ val rxDigest = regex(@"\\begin{\w+?Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 
 function mathSnippetsToDvi( texName : string, xopts : options, 
                             content : string, oldMath : string, continue : () -> io () ) : io () {
-  if (xopts.verbose>=1) println("  running latex on math...")
-  notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
-  runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
-    function () { () }, continue ) 
+  if (xopts.convert=="") {
+    // use dvipng mode
+    if (xopts.verbose>=1) println("  running latex on math... (dvi mode)")
+    notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
+    runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
+      function () { () }, continue ) 
+  }
+  else {
+    // use pdf mode
+    if (xopts.verbose>=1) println("  running latex on math... (pdf mode)")
+    notfound = "set either the 'Math Mode: Dynamic' or the 'Pdf Latex: <cmd>' key in the metadata"
+    texCmd = if (xopts.pdflatex != "") then xopts.pdflatex else "pdf" + xopts.latex
+    runLaTeX( texName, texCmd, xopts, content, notfound, 0, False,
+      function () { () }, continue ) 
+  }
 }
 
 function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
@@ -273,20 +315,54 @@ function latexGetLine( src : vector<string>, lineNo : int ) : string
   }
 }
 
-        
+function pagesShow( pages : pages ) : string {
+  pages.map( fun(rng) {
+    val (lo,hi) = rng
+    lo.show + (if (lo>=hi) then "" else "-" + hi.show)
+    }).join(",")
+}        
 
-function mathDviToPng( dviName : string, xopts : options, pages : (int,int), continue : () -> io () ) : io () 
+function dvipngPages( pages : pages ) : string {
+  pages.map( fun(rng) {
+    val (lo,hi) = rng
+    "-pp " + lo.show + (if (lo>=hi) then "" else "-" + hi.show)
+    }).join(" ")
+}        
+
+function convertPages( pages : pages ) : string {
+  "[" + pages.map( fun(rng) {
+    val (lo,hi) = rng
+    (lo-1).show + (if (lo>=hi) then "" else "-" + (hi-1).show)
+    }).join(",") + "]"
+}
+
+function convertSuffix( pages : pages ) : string {
+  match(pages) {
+    Cons((lo,hi)) | lo==hi -> "-" + (lo-1).show
+    _ -> ""
+  }
+}        
+
+function mathDviToPng( dviName : string, xopts : options, pages : pages, continue : () -> io () ) : io () 
 {  
-  val (pageLo,pageHi) = pages
-  if (pageHi < pageLo) then return continue()
   stem = dviName.stemname
+  basepng = combine(xopts.mathImgDir,stem) + "-eq"
   
-  dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
+  dvipngCmd = if (xopts.convert=="") then {
+                // use dvipng
+                xopts.dvipng + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
-                                      (if (pageLo==0) then "" 
-                                        else " -p" + pageLo.show + " -l" + pageHi.show) + 
-                                      " -o " + combine(xopts.mathImgDir,stem + "-eq-%d.png") +
+                                      " " + dvipngPages(pages) + 
+                                      " -o " + basepng + "-%d.png" +
                                       " " + dviName.basename
+              }
+              else {
+                // use convert
+                xopts.convert + " -trim -density " + xopts.mathDpi.show + " " +
+                  stem + ".pdf" + pages.convertPages + " " +
+                  basepng + pages.convertSuffix + ".png"
+              }
+
   // make sure the output directory exists
   outDir = combine(dviName.dirname,xopts.mathImgDir)
   if (!(fexists(outDir))) {
@@ -294,12 +370,12 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
     mkdirp(outDir)
   }                                      
   // run dvipng
-  if (xopts.verbose>=1) println("  generating math images... (" + pageLo.show + "-" + pageHi.show + ")")
+  if (xopts.verbose>=1) println("  generating math images... (" + pages.pagesShow + ")")
   if (xopts.verbose>=3) println("  > " + dvipngCmd)
   system(dvipngCmd,function(err2,stdout2,stderr2) {
     if (err2 != 0) {
       println("> " + dvipngCmd)
-      println("error: dvipng failed while typesetting math: \n" + stdout2 + stderr2)      
+      println("error: failure while typesetting math: \n" + stdout2 + stderr2)      
     }
     else {
       continue()
@@ -307,13 +383,12 @@ function mathDviToPng( dviName : string, xopts : options, pages : (int,int), con
   },0,dirname(dviName))
 }
 
-function mathConvertPng( dviName : string,xopts : options, pages : (int,int), continue : () -> io () ) : io () 
+function mathConvertPng( texName : string,xopts : options, pages : pages, continue : () -> io () ) : io () 
 {
   if (xopts.mathconvert=="") then continue() else {
-    val (pageLo,pageHi) = pages
-    convertCmd = xopts.mathconvert + " " + dviName.stemname + "-eq-%d.png[" + 
-                          pageLo.show + "-" + pageHi.show + "]" +
-                          " -scene " + pageLo.show + " " + dviName.stemname + "-eqc.png"
+    convertCmd = xopts.mathconvert + " " + texName.stemname + "-eq-%d.png" + 
+                          pages.convertPages + " " +
+                          texName.stemname + "-eqc" + pages.convertSuffix + ".png"
     if (xopts.verbose>=1) println( "  converting math images..." )
     if (xopts.verbose>=3) println( "  > " + convertCmd )
     system(convertCmd, function(err,stdout,stderr) {
@@ -322,11 +397,11 @@ function mathConvertPng( dviName : string,xopts : options, pages : (int,int), co
         println("  warning: conversion failed: \n" + stdout + stderr )
       }
       continue()
-    },0,combine(dirname(dviName),xopts.mathImgDir))
+    },0,combine(dirname(texName),xopts.mathImgDir))
   }
 }
 
-function mathDimAnalyse( dimxName : string, xopts : options, pages : (int,int), continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
+function mathDimAnalyse( dimxName : string, xopts : options, pages : pages, continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
   dims2 = extendDim(pages, dimxName, xopts )
   mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
@@ -348,9 +423,8 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
   }
 }
 
-function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io string
+function extendDim( pages : pages, dimxFile : string, opts : options  ) : io string
 {
-  val (pageLo,pageHi) = pages
   var imageSize := 0  
   var imageCount := 0
   var embedSize := 0
@@ -369,12 +443,12 @@ function extendDim( pages : (int,int), dimxFile : string, opts : options  ) : io
                 
         val (pxwidth,pxheight,size,embed) 
           = match(dim[digest]) {
-              Just(mi) | (pageNo < pageLo || (pageHi > 0 && pageNo > pageHi)) 
+              Just(mi) | !(pageNo.inside(pages)) 
                 -> {                  
                   //trace("known image: " + digest)
                   (mi.pxwidth,mi.pxheight,mi.size,mi.imageData)
                 }
-              _ -> {
+              _ -> { 
                 match( tryReadFileSync( imageFile )) {
                   Nothing   -> {
                     warning("cannot read; " + imageFile)
@@ -450,6 +524,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
   scale = imgScale.double / 100.0
   txt.findAll(rxDimLine).foreach fun(cap) {
     imageName = imgPrefix + "/math-" + cap.groups[3] + ".png"
+    page      = cap.groups[2].parseInt.maybe(0,id)
     ptwidth   = dimension(cap.groups[4],cap.groups[5])
     ptheight  = dimension(cap.groups[6],cap.groups[7])
     ptdepth   = dimension(cap.groups[8],cap.groups[9])
@@ -464,7 +539,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
     depth  = ptdepth * (height / ptheight)
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
-    mi[cap.groups[3]] := Mathinfo(imageName,scale*height,scale*width,scale*depth,
+    mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,scale*depth,
                                     pxwidth,pxheight,size,cap.groups[14])
   }
   return mi.freeze()

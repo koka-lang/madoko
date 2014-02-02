@@ -93,7 +93,7 @@ function processContent( inName : string, outName : string, content : string,
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options
-    opts1  = opts0(metadata=opts0.metadata + [("filename",inName)])              
+    opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])              
     mmopts = if (opts1.xmp) then opts1
               else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
     mdim   = if (!(mmopts.mathmode.isStatic))

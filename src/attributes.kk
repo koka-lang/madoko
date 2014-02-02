@@ -438,9 +438,9 @@ private function expandKeys( p0 : peano, txt : string, source : string,
     Succ(p) -> {
       txt.replaceAll(rxkey) fun(cap) {
         rawkey = cap.groups[1]
-        key = rawkey.definitionId // TODO: normalizeId?
-        if (key=="") then cap.matched  // no key was matched
-        elif (key=="&") then "&"       // special in replacements
+        key = rawkey.normalizeId // TODO: normalizeId?
+        if (rawkey=="") then cap.matched  // no key was matched
+        elif (rawkey=="&") then "&"       // special in replacements
         elif (key=="label" && !(attrs.empty)) then attrs.label
         elif (key=="id" && !(attrs.empty)) then attrs.name 
         elif (key=="class" && !(attrs.empty)) then attrs.classes.join(" ") 
@@ -456,7 +456,7 @@ private function expandKeys( p0 : peano, txt : string, source : string,
                 // todo? full static scoping: clear out attributes and labels..
                 //expandKeys(p,value,"",attrsNone,dict(),metadata,notFound)              
               }
-              Nothing -> match(entityNameAsNum(key)) {
+              Nothing -> match(entityNameAsNum(rawkey)) {
                 Just(value) -> value
                 Nothing     -> notFound(key,cap.matched)
                 //entityNameToNum(key)

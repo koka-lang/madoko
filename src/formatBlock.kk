@@ -293,10 +293,11 @@ val rxDashes  = regex(@"^ *---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*
 val rxDDashes = regex(@"^ *===+ *[|+]*$")
 
 function deriveMathAttrs( parentAttrs : attrs ) {
-  Attrs( keyvals = parentAttrs.keyvals.filter( fun(kv) {
-    key = kv.fst
-    key.startsWith("color") || key.startsWith("font-")    
-  }))
+  Attrs( classes  = parentAttrs.classes.filter(fun(c) { c == "plain" } ),
+         keyvals  = parentAttrs.keyvals.filter( fun(kv) {
+                      key = kv.fst
+                      key.startsWith("color") || key.startsWith("font-")    
+                    }))
 }
 
 function formatRows( cells : list<list<string>>, 

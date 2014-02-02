@@ -11,8 +11,11 @@ Script		: reference.js
 Bib			: reference
 Package*	: fontspec
 Package		: [curve]xypic
-Math Embed  : 64
+Math Embed  : 63
 
+Package 	: tikz
+
+Math Dpi    : 300
 MathJax Ext : AMScd
 Package		: amscd
 MathJax Ext : mhchem
@@ -910,9 +913,9 @@ be typeset between `$`\ characters, while block equations should use the
 `Equation` block syntax.
 
 ~~ Sample
-A famous equation is $E = mc^2$, but another famous one is:
+A famous equation is $E =  mc^2$, but another famous one is:
 ~ Equation 	{#eq-gaussian}
-  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+  \int_{-\infty}^\infty  e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
 ~
 and we can refer to Equation [#eq-gaussian] like any heading.
 ~~
@@ -960,7 +963,7 @@ With this package, we can draw very complex diagrams:
 \entrymodifiers={++[o][F-]}
 \SelectTips{cm}{}
 \xymatrix @-0.25em {
-*\txt{start} \ar[r]
+*\txt{start} \ar[r] 
 & 0 \ar@(r,u)[]^b \ar[r]_a
 & 1 \ar[r]^b \ar@(r,d)[]_a
 & 2 \ar[r]^b
@@ -1006,6 +1009,93 @@ underneath. See the package [user guide][xypic] for more examples.
 1 }\mathit{Answer}
 ~
 ~~
+-->
+
+<!--
+~ Begin Snippet
+\begin{tikzpicture}[scale=0.8,level/.style={sibling distance=60mm/#1}]
+\node [circle,draw] (z){$n$}
+  child {node [circle,draw] (a) {$\frac{n}{2}$}
+    child {node [circle,draw] (b) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}
+        child {node [circle,draw] (d) {$\frac{n}{2^k}$}}
+        child {node [circle,draw] (e) {$\frac{n}{2^k}$}}
+      } 
+      child {node {$\vdots$}}
+    }
+    child {node [circle,draw] (g) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}}
+      child {node {$\vdots$}}
+    }
+  }
+  child {node [circle,draw] (j) {$\frac{n}{2}$}
+    child {node [circle,draw] (k) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}}
+      child {node {$\vdots$}}
+    }
+  child {node [circle,draw] (l) {$\frac{n}{2^2}$}
+    child {node {$\vdots$}}
+    child {node (c){$\vdots$}
+      child {node [circle,draw] (o) {$\frac{n}{2^k}$}}
+      child {node [circle,draw] (p) {$\frac{n}{2^k}$}
+        child [grow=right] {node (q) {$=$} edge from parent[draw=none]
+          child [grow=right] {node (q) {$O_{k = \lg n}(n)$} edge from parent[draw=none]
+            child [grow=up] {node (r) {$\vdots$} edge from parent[draw=none]
+              child [grow=up] {node (s) {$O_2(n)$} edge from parent[draw=none]
+                child [grow=up] {node (t) {$O_1(n)$} edge from parent[draw=none]
+                  child [grow=up] {node (u) {$O_0(n)$} edge from parent[draw=none]}
+                }
+              }
+            }
+            child [grow=down] {node (v) {$O(n \cdot \lg n)$}edge from parent[draw=none]}
+          }
+        }
+      }
+    }
+  }
+};
+\path (a) -- (j) node [midway] {+};
+\path (b) -- (g) node [midway] {+};
+\path (k) -- (l) node [midway] {+};
+\path (k) -- (g) node [midway] {+};
+\path (d) -- (e) node [midway] {+};
+\path (o) -- (p) node [midway] {+};
+\path (o) -- (e) node (x) [midway] {$\cdots$}
+  child [grow=down] {
+    node (y) {$O\left(\displaystyle\sum_{i = 0}^k 2^i \cdot \frac{n}{2^i}\right)$}
+    edge from parent[draw=none]
+  };
+\path (q) -- (r) node [midway] {+};
+\path (s) -- (r) node [midway] {+};
+\path (s) -- (t) node [midway] {+};
+\path (s) -- (l) node [midway] {=};
+\path (t) -- (u) node [midway] {+};
+\path (z) -- (u) node [midway] {=};
+\path (j) -- (t) node [midway] {=};
+\path (y) -- (x) node [midway] {$\Downarrow$};
+\path (v) -- (y)
+  node (w) [midway] {$O\left(\displaystyle\sum_{i = 0}^k n\right) = O(k \cdot n)$};
+\path (q) -- (v) node [midway] {=};
+\path (e) -- (x) node [midway] {+};
+\path (o) -- (x) node [midway] {+};
+\path (y) -- (w) node [midway] {$=$};
+\path (v) -- (w) node [midway] {$\Leftrightarrow$};
+\path (r) -- (c) node [midway] {$\cdots$};
+\end{tikzpicture}
+~ End Snippet
+--> 
+
+<!--
+\documentclass{article}
+\usepackage{pstricks-add}
+
+\begin{document}
+    \begin{pspicture}[showgrid=false](11,5)
+        \psset{linestyle=dashed,fillstyle=solid,opacity=0.5}
+        \psTextFrame[fillcolor=red](0,0)(5,5){Counter}
+        \psTextFrame[fillcolor=blue](6,0)(11,5){Terrorist}
+    \end{pspicture}
+\end{document}
 -->
 
 ### Math commands   { #sec-mathdefs }
@@ -1058,6 +1148,8 @@ You can view and experiment with the different rendering modes in the online
 
 [mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.html
 [mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
+
+
 
 <!--
 As an example, here are some complex drawing examples using the
@@ -1495,37 +1587,63 @@ For LaTeX output, the following keys are relevant:
 
 ### Entities		{ #sec-entity }
 
-An extension of Madoko is the use of _hash names_. If Madoko finds a name
-prefixed by a hash (#) character, it looks up the name. If there is a block
-element with that _id_, the hash name is replaced by the _label_ value of that block
+Madoko uses entities extensively. If Madoko finds an entity name (`&`_name_`;`)
+it looks up the name in various places: if there is a block
+element with that _id_, the entity name is replaced by the _label_ value of that block
 (see Section [#sec-ids-labels]). If there is no block with that identity, 
 Madoko looks if there is a metadata value with that name, and replaces the
-hash name with its value: 
+entity name with its value: 
+
 ~ Sample
-The title of this document is "&title;".
-And this section has label &sec-entity;.
+The title of this document is "&title;".\
+And this section has label &sec-entity;.\
+Regular named entities are looked up last &Delta;&hArr;&delta;.
 ~
-A hash-name can consist of letters, underscores, minus signs, and digits.
-If you want to follow the name directly with one of such symbols, the
-hash name can be terminated with a semi-colon (or empty escape sequence `\/`).
-Note that if values contain themselves hash names, these are expanded
-recursively (up to a certain limit) which can provide a powerful abstraction
+
+Entity names for labels and metadata values, can consist of letters, underscores, 
+minus signs, and digits. In contrast to regular HTML entity names, Madoko compares
+the entity name for labels and metadata in a case-insensitive way.
+
+Note that if label or metadata values contain themselves hash names, these are 
+expanded recursively (up to a certain limit) which can provide a powerful abstraction
 mechanism. For example, if we define a metadata value `Title2`:
 
 	Title2: (&Title;,&Title;)
 
-then the hashname `&Title2;` expands to "&Title2;".
+then the entity `&Title2;` expands to "&Title2;". 
 
-Section [#sec-ids-labels] explains the use of hash names for identities and
-referencing in more detail.
-
-If hash names are used inside [attributes][#sec-attr], Madoko first
+If entity names are used inside [attributes][#sec-attr], Madoko first
 looks for the name as one of the attribute key values. For example, you can
 use names like `&id;`, `&class;`, and `&label;`. 
-Two special available keys are `&nl;` 
-which always expands to a newline character, and `&source;` that expands to the
-literal source of a block element. For some examples of their usage, see 
-Sections [#sec-replace] and [#sec-reset].
+
+Some predefined metadata keys are quite useful as entities:
+
+* `&date;`. The current (compilation) date in [ISO 8601] international format.
+* `&time;`. The current (compilation) time in [ISO 8601] international format.
+* `&madoko-version`. The version of the Madoko compiler.
+* `&docname;`. The file name of the document without extension and directory.
+* `&filename;`. The full file name of the document.
+
+There are also a few special entity names:
+
+* `&nl;`. Expands to the newline character.
+* `&br;`. Expands to a forced line break (i.e. `<br>`).
+* `&null;`. Expands to an empty string.
+* `&source;`. Inside attributes, expands to the literal content of the element.
+* `&&;`. Expands to the literal `&` character. This is necessary
+	sometimes since entity expansion is done recursively without regard for other
+	formatting attributes. For example, if you have a metadata value `Foo` that
+	needs to expand to `` `&amp;` ``, you would need to write it as:
+	```
+	Foo: `&&;amp;`
+	```
+	or otherwise the `&amp;` part would get expanded even within the back ticks.
+	The reason why Madoko expands regardless of other formatting is to allow powerful
+	abstraction where we can for example build up regular expressions from smaller parts.
+
+For some examples of the usage of these elements, see Sections [#sec-replace] and [#sec-reset].
+
+[ISO 8601]: http://en.wikipedia.org/wiki/ISO_8601
 
 ### Metadata rules			{ #sec-rules }
 
@@ -2805,7 +2923,7 @@ formatting).
 ```
 ~Equation: label='[(@equation)]{.equation-label}' 
   		   replace='[&label;]{.equation-before}&nl;\
-  		            ~ Begin Math&nl;#source&nl;~ End Math&nl;' 
+  		            ~ Begin Math&nl;&source;&nl;~ End Math&nl;' 
            .align-center tight .para-block
 ~Figure  : label='[@figure]{.figure-label}' .align-center 
 		   after='&nl;********* {.figureline}&nl;\
@@ -2829,9 +2947,11 @@ formatting).
 ~Framed: border-style=solid border-color=black border-width=1px
 ~Center: .align-center
 
-~Pre   : input=pre .para-block
-~Code  : input=pre
-      
+~Pre      : input=pre .para-block
+~Code  	  : input=pre
+~Hr       : .madoko",
+~Table    : .madoko",
+
 ~Tex      : input=tex
 ~TexRaw   : input=texraw
 ~HtmlRaw  : input=htmlraw
@@ -2840,6 +2960,10 @@ formatting).
 ~MathDefs : input=mathdefs .hidden
 ~HtmlOnly : input=htmlonly
 ~TexOnly  : input=texonly
+
+~Date     : ...,
+~Time     : ...,
+~Madoko Version: ...,
 
 ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
     before='[**Theorem\ &label;.** ]{.Theorem-before}'
@@ -2855,11 +2979,11 @@ formatting).
     before='[**Definition\ &label;.** ]{.Definition-before}'
 
 ~H1: label='[@h1]{.heading-label}' toc
-     before='[&label;.\ \ \ ]{.heading-before}'     
+     before='[&label;.&ensp;]{.heading-before}'     
 ~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' toc
-     before='[&label;.\ \ \ ]{.heading-before}'     
+     before='[&label;.&ensp;]{.heading-before}'     
 ~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
-     before='[&label;.\ \ \ ]{.heading-before}' toc
+     before='[&label;.&ensp;]{.heading-before}' toc
 ~H4: @h1-h2-h3-h4 
   label='[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}'
 ...

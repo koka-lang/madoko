@@ -127,12 +127,13 @@
         },
 
 
-        { "begin": "^\\s*(~+)\\s*(?i:(Equation|TexRaw|TeX|MathDefs))\\b(.*)(\\n|$)" 
-        , "end": "^[ \\t]*\\1\\s*$" 
+        { "begin": "^\\s*(~+)\\s*(?i:(Begin)\\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs))\\b(.*)(\\n|$)" 
+        , "end": "^[ \\t]*\\1\\s*(?i:End[ \\t]+\\3)?\\s*$" 
         , "beginCaptures": { 
             "1": { "name": "entity.name.class markup.block.madoko" },
             "2": { "name": "entity.name.class markup.block.madoko" },
-            "3": { "name": "comment meta.tag.preprocessor.xml" }
+            "3": { "name": "entity.name.class markup.block.madoko" },
+            "4": { "name": "comment meta.tag.preprocessor.xml" }
           }
         , "endCaptures": { 
             "0": { "name": "entity.name.class markup.block.madoko" }
