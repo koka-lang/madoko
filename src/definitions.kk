@@ -357,11 +357,14 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
     ncontent = content.sections(nsecinfo)
     match(h) {
       Heading(d,txt,attrs) -> {
+        val (skvs,hkvs) = attrs.keyvals.partition(fun(kv) { kv.fst.startsWith("data-") })
+        val (scls,hcls) = attrs.classes.partition(fun(c) { c.startsWith("section-") })
         secattrs = "html-elem=section .section" + d.show +
                      (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
         hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
         sattrs = secattrs.parseAttrs("section")
-        [Div(Cons(Heading(d,txt,hattrs),ncontent), (secinfo.secDefaults)(sattrs))]
+        divattrs = (secinfo.secDefaults)(sattrs.addClasses(scls).addKeyvals(skvs))
+        [Div(Cons(Heading(d,txt,hattrs(classes=hcls,keyvals=hkvs)),ncontent),divattrs)]
       }
       _ -> [h].sectionMap(nsecinfo) + ncontent
     }
@@ -389,8 +392,8 @@ function findHeading( blocks : list<block>, secinfo : secinfo ) : maybe<(list<bl
 
 function headingLevel( block : block, default : int, defaultSection : int = default ) : int {
   match(block) {
-    Heading(d)   -> d
-    Div(_,attrs) | attrs.hasClass("section") -> {
+    Heading(d,_,attrs)  | !(attrs.hasClass("no-section")) -> d
+    Div(_,attrs)        | attrs.hasClass("section") -> {
       match(attrs.hasKey("data-level")) {
         Just(value) -> value.parseInt.maybe(defaultSection,id)
         Nothing     -> defaultSection
