@@ -455,8 +455,8 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 
 
 An implicit link such as `[#myheader]` is a shorthand for an explicit link of
-the form `[&myheader;](#myheader)`, i.e. it links to the local reference
-`#myheader` and it displays the entity `&myheader;`. In Madoko, an entity
+the form `[&myheader;](#myheader)`, i.e. a local reference
+to `#myheader` which displays the entity `&myheader;`. In Madoko, an entity
 name like `&myheader;` is replaced by the _label_
 value of the referred block (see Section  [#sec-entity]). 
 For headers, this is by default the header number
@@ -917,7 +917,7 @@ be typeset between `$`\ characters, while block equations should use the
 ~~ Sample
 A famous equation is $E =  mc^2$, but another famous one is:
 ~ Equation 	{#eq-gaussian}
-  \int_{-\infty}^\infty  e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+ \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
 ~
 and we can refer to Equation [#eq-gaussian] like any heading.
 ~~
@@ -1082,12 +1082,15 @@ to typeset a the graph of the natural logarithm[^ex-log]:
 ~~ Snippet
 \psset{unit=2cm}
 \begin{pspicture*}(-0.5,-1.5)(4,2)
-  \psgrid[subgriddiv=5,gridcolor=black!20,gridlabels=0pt](1,0)(3,1.2)
+  \psgrid[subgriddiv=5,gridcolor=black!20%
+         ,gridlabels=0pt](1,0)(3,1.2)
   \psaxes{->}(0,0)(0,-1)(3.2,1.5)
   \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
   \pscircle*[linecolor=red](! Euler 1){3pt}
-  \psline[linecolor=red,linestyle=dashed](! Euler 0)(! Euler 1)
-  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]{->}(! Euler 1)(0, 1)
+  \psline[linecolor=red,linestyle=dashed]%
+  		 (! Euler 0)(! Euler 1)
+  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]%
+         {->}(! Euler 1)(0, 1)
   \uput[-90](! Euler 0){\color{red}$e$}
   \pscircle*[linecolor=blue](1,0){3pt}
   \psplot[linewidth=1pt]{0.2}{3}{ x ln }
@@ -1104,7 +1107,8 @@ The next two figures, Figure [#fig-oblique] and Figure [#fig-mergesort] use
 the [TikZ] package which we included as:
 ```
 Package 	: tikz
-Tex Header  : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}
+Tex Header  : \usetikzlibrary{decorations.pathreplacing%
+	                         ,decorations.pathmorphing}
 ```
 Both examples come from the [TikZ example gallery].
 
@@ -1179,7 +1183,7 @@ Both examples come from the [TikZ example gallery].
 	[TikZ example](http://www.texample.net/tikz/examples/merge-sort-recursion-tree) \
 	by Manuel Kirsch of a merge sort recursion tree."}
 ~ Snippet
-\begin{tikzpicture}[scale=0.7,level/.style={sibling distance=60mm/#1}]
+\begin{tikzpicture}[scale=0.6,level/.style={sibling distance=60mm/#1}]
 \node [circle,draw] (z){$n$}
   child {node [circle,draw] (a) {$\frac{n}{2}$}
     child {node [circle,draw] (b) {$\frac{n}{2^2}$}
@@ -1352,9 +1356,9 @@ Section [#sec-replace]):
 
 ~~ Sample
 ~ MathPre   { replace="/->/\rightarrow/g" }
-random~ &: () -> ndet double
-print   &: string -> io ()
-error   &: \forall\alpha. string -> exn a
+random &: () -> ndet double
+print  &: string -> io ()
+error  &: \forall\alpha. string -> exn a
 ~
 ~~
 
@@ -1483,7 +1487,7 @@ Madoko defines quite a few common custom blocks.
 	Therefore $zH \subset xH$ and $xH \subset zH$, and thus
 	$xH = zH$.  Similarly $yH = zH$, and thus $xH = yH$,
 	as required. This concludes the proof of 
-	Lemma [#LeftCosetsDisjoint]. [&#9633;]{float=right}
+	Lemma [#LeftCosetsDisjoint]. [&box;]{float=right}
 	~
 	~~ 
 Of course, each of the predefined blocks can be customized further using attributes and rules.
@@ -1684,10 +1688,10 @@ For LaTeX output, the following keys are relevant:
 	Package*: fontspec
 	```
 
-* `Tex Header`: The value is included literally before
+* `Tex Header`: The value is included as is before
 	the `\begin{document}` command of the LaTeX output.	
 
-* `Tex Header*`: The value is included literally before
+* `Tex Header*`: The value is included as is before
 	the `\begin{document}` command of the LaTeX output but excluded
 	when rendering mathematics.	
 
@@ -1704,7 +1708,7 @@ entity name with its value:
 ~ Sample
 The title of this document is "&title;".\
 And this section has label &sec-entity;.\
-Regular named entities are looked up last &Delta;&hArr;&delta;.
+Standard entities are looked up last &Delta;&hArr;&delta;.
 ~
 
 Entity names for labels and metadata values, can consist of letters, underscores, 
@@ -3030,7 +3034,8 @@ formatting).
 ```
 ~Equation: label='[(@equation)]{.equation-label}' 
   		   replace='[&label;]{.equation-before}&nl;\
-  		            ~ Begin Math&nl;&source;&nl;~ End Math&nl;' 
+  		            ~ Begin Math&nl;&source;\
+  		            &nl;~ End Math&nl;' 
            .align-center tight .para-block
 ~Figure  : label='[@figure]{.figure-label}' .align-center 
 		   after='&nl;********* {.figureline}&nl;\
@@ -3056,8 +3061,8 @@ formatting).
 
 ~Pre      : input=pre .para-block
 ~Code  	  : input=pre
-~Hr       : .madoko",
-~Table    : .madoko",
+~Hr       : .madoko,
+~Table    : .madoko,
 
 ~Tex      : input=tex
 ~TexRaw   : input=texraw

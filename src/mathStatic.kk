@@ -75,7 +75,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
             Just(cap) -> {          
               texContent = readTextFileDef(texFile,"")
               match (content.findLatexLine(cap.matched,texContent)) {
-                Just(lineNo) -> println("error: source line: " + lineNo.show)
+                Just(lineNo) -> println("error: source line: " + lineNo)
                 Nothing -> ()
               }
               println(cap.matched)
@@ -95,7 +95,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
         runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, onError, onSuccess)
       }
       else {
-        if (showWarnings) then latexShowWarnings(texFile,logout,opts)
+        if (showWarnings) then latexShowWarnings(texFile,logout,content,opts)
         onSuccess()
       }
     }
@@ -266,7 +266,7 @@ function mathSnippetsToPdf( texName : string, xopts : options,
 }
 
 
-function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<int> {
+function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<string> {
   match(texerr.find(rxLatexLineNum)) {
     Nothing -> Nothing
     Just(cap) -> {
@@ -279,21 +279,33 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
                       _          -> lineStart0
                     }
                   }
-      if (lineStart.trim.length < 3) then Nothing else { // ensure at least 3 chars for more reliable match
-        ilines = src.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
-        match(ilines.find(fun(iline){ iline.snd.contains(lineStart)})) {
-          Nothing -> Nothing
-          Just(iline) -> Just(iline.fst+1)
-        }
-      }
+      latexFindLineByMatch(lineStart,src)
     }
   }
 }
 val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
 val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
 
+public function latexStrip( s : string ) : string
+{
+  s.replaceAll(rxStrip,"").toLower
+}
 
-function latexShowWarnings(texFile:string,logout:string,opts:options) : io () 
+val rxStrip = regex(@"(\\[\w/\-]*(\[[^\]\n]*\])?|[^a-zA-Z_;'""!\*()/\-\+=/\.,~:])+")
+
+public function latexFindLineByMatch( texLine : string, source : string ) : maybe<string> {
+  stripLine = texLine.latexStrip
+  if (stripLine.length < 3) then Nothing else {
+    ilines = source.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
+    match(ilines.filter(fun(iline){ iline.snd.latexStrip.contains(stripLine) })) {
+      Cons(iline,rest) -> Just((iline.fst+1).show + (if (rest.isNil) then "" else " (?)"))
+      _ -> Nothing
+    }
+  }
+}
+
+
+function latexShowWarnings(texFile:string,logout:string, content:string,opts:options) : io () 
 {
   if (opts.verbose<2) then return ()
   warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { (cap.index,cap.matched) })
@@ -305,6 +317,7 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
     warning = warning0.replace(rxLatexBrackets,"")
     warn = match(warning.find(rxLatexLine)) {
       Nothing   -> {
+        // no line no: try to display page
         match(warning.find(rxLatexOutputActive)) { 
           Just -> {  // find a page
             match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
@@ -316,9 +329,17 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
         }
       }
       Just(cap) -> {
-        lineNo = cap.groups[1].parseInt.maybe(0,id)
-        line = texlines.latexFindLine(lineNo)
-        if (line!="") then (warning + "\n> " + line.substr(0,76)) else warning
+        line = if (cap.groups[2] != "") then cap.groups[2] 
+                else {
+                  lineNo = cap.groups[1].parseInt.maybe(0,id)
+                  texlines.latexFindLine(lineNo)
+                }                
+        pre = match(latexFindLineByMatch(line,content)) {
+          Nothing -> "" // "unable to find line: \n> " + line + "\n> " + line.latexStrip + "\n"
+          Just(srcLineNo) -> "> warning: source line: " + srcLineNo+ "\n"
+        }
+
+        pre + warning + (if (cap.groups[2]=="" && line!="") then "\n> " + line.substr(0,76) else "")
       }
     }
     println(warn + "\n")
@@ -329,7 +350,7 @@ function latexShowWarnings(texFile:string,logout:string,opts:options) : io ()
   }
 }
 
-val rxLatexLine = regex(@"lines?[\s:]*(\d+).*$") // only match single line warnings
+val rxLatexLine = regex(@"lines?[\s:]*(\d+).*(?:\r?\n(.*))?") 
 val rxLatexOutputActive = regex(@"\output is active\s*$") // only match single line 
 val rxLatexPage = regex(@"\s\[(\d+)\]")
 val rxLatexOutput = regex(@"^Output written on .*", multiline=True)
