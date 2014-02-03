@@ -438,7 +438,7 @@ private function expandKeys( p0 : peano, txt : string, source : string,
     Succ(p) -> {
       txt.replaceAll(rxkey) fun(cap) {
         rawkey = cap.groups[1]
-        key = rawkey.normalizeId // TODO: normalizeId?
+        key = rawkey.normalizeId 
         if (rawkey=="") then cap.matched  // no key was matched
         elif (rawkey=="&") then "&"       // special in replacements
         elif (key=="label" && !(attrs.empty)) then attrs.label

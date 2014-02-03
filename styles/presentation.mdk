@@ -28,9 +28,9 @@ Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
 Document Class: beamer
-Css  		  : #reveal-url/css/reveal.min.css
-Script        : #reveal-url/lib/js/head.min.js
-Script        : #reveal-url/js/reveal.min.js
+Css  		  : &reveal-url;/css/reveal.min.css
+Script        : &reveal-url;/lib/js/head.min.js
+Script        : &reveal-url;/js/reveal.min.js
 Header Depth  : 0
 Toc Depth     : 2
 Section Base  : 2
@@ -40,24 +40,24 @@ Math Dpi	  : 400
 .Author		  : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
-~Body         : before="~ Begin Reveal#nl;~ Begin Slides#nl;"
-                after="~ End Slides#nl;~ End Reveal#nl;" 
+~Body         : before="~ Begin Reveal&nl;~ Begin Slides&nl;"
+                after="~ End Slides&nl;~ End Reveal&nl;" 
 ~Slide        : .section html-elem=section tex-elem=mdSection
 ~Vertical     : .section html-elem=section
 @tex ~Notes	  : display=none
 @tex ~Vertical: notag
 Tex Header*   :
-	\usetheme[#beamer-theme-options]{#beamer-theme}
+	\usetheme[&beamer-theme-options;]{&beamer-theme;}
 Html Header   : 		
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<link rel="stylesheet" href="#reveal-url/css/theme/#reveal-theme.css" id="theme">
+	<link rel="stylesheet" href="&reveal-url;/css/theme/&reveal-theme;.css" id="theme">
 	<script>
-		document.write( '<link rel="stylesheet" href="#reveal-url/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		document.write( '<link rel="stylesheet" href="&reveal-url;/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
 	</script>
 	<!--[if lt IE 9]>
-	<script src="#reveal-url/lib/js/html5shiv.js"></script>
+	<script src="&reveal-url;/lib/js/html5shiv.js"></script>
 	<![endif]-->
 	<style>
 	body.madoko {
@@ -92,7 +92,7 @@ Html Header   :
 	</style>
 	<script>	
 	// Full list of configuration options available here:
-	// https://github.com/hakimel/reveal.js##configuration
+	// https://github.com/hakimel/reveal.js#configuration
 	var revealConfig = {
 		controls: true,
 		progress: true,
@@ -102,9 +102,9 @@ Html Header   :
 		transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
 		// Optional libraries used to extend on reveal.js
 		dependencies: [
-			{ src: '#reveal-url/lib/js/classList.js', condition: function() { return !document.body.classList; } },
-			{ src: '#reveal-url/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
-			{ src: '#reveal-url/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+			{ src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+			{ src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+			{ src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
 		]
 	};
 	document.addEventListener("DOMContentLoaded", function(event) {

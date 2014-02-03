@@ -225,18 +225,18 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     match (metadata[name]) {
       Nothing -> []
       Just(value) -> {
-        evalue = value.escape
+        evalue = value.expand.escape
         ["name=\"" + name.escape + "\" content=\"" + 
           (if (sep=="") then evalue else evalue.replaceAll(";",sep)) + "\""]
       }
     }
   }
 
-  extensions = options.mjext.splitPaths.map(fun(path) { 
+  extensions = options.mjext.expand.splitPaths.map(fun(path) { 
       "\"" + (if (path.endsWith(".js")) then path else path + ".js") +"\"" 
     }).join(",")
 
-  meta = options.htmlMeta.splitPaths + 
+  meta = options.htmlMeta.expand.splitPaths + 
           makeMeta("copyright") +
           makeMeta("license") +
           makeMeta("keywords",",") + 
@@ -250,12 +250,12 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
    (if (options.title=="") then "" else
       "  <title>" + escape(options.title.expand) + "</title>\n") +
    (if (options.css == "") then "" else {
-      links = options.css.splitPaths
-      links.map(fun(link) { "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link.expand) + "\">\n" }).join 
+      links = options.css.expand.splitPaths
+      links.map(fun(link) { "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n" }).join 
     }) +
    (if (options.scripts == "") then "" else {
-      links = options.scripts.splitPaths
-      links.map(fun(link) { "  <script src=\"" + escape(link.expand) + "\"></script>\n" }).join 
+      links = options.scripts.expand.splitPaths
+      links.map(fun(link) { "  <script src=\"" + escape(link) + "\"></script>\n" }).join 
     }) +
    (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
       ["  <script type=\"text/x-mathjax-config\">",
@@ -264,7 +264,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
        @"     TeX: { ",
        @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1] },",
        if (extensions=="") then "" 
-        else @"       extensions: [" + extensions.expand.escape + "]",
+        else @"       extensions: [" + extensions.escape + "]",
        @"     }",
        "  });",
        "  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { ",
