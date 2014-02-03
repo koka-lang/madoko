@@ -61,7 +61,7 @@ public function fmtTexCode( context : inlineContext, env : string,
 {
   lang = attrs.hasKey("language").maybe("",id)
   lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang],keyvals=[("language",lang)])
-  plain = txt.texText.preSpace
+  plain = txt.htmlEscape(False).texText.preSpace
   content = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then plain 
              else match(txt.hilite(lang)) {
                     Just(hl) -> hl.texText.unspan.preSpace
@@ -115,6 +115,11 @@ val specials = [
   (@"\",@"{\textbackslash}"),  // must come last, see rxSpecial that appends a "\"
 ]
 
+val rxNamedEntity = regex(@"&(\w+);")
+
+function escapeEntity( s : string ) : string {
+  s.replaceAll(rxNamedEntity,"&amp;$1;")
+}
 
 function texSpecial( cap : matched ) : string {
   match(specials.find(fun(kv){ kv.fst == cap.matched })) {
@@ -241,8 +246,8 @@ function texAttrsX( attrs : attrs = attrsNone ) : string {
   if (attrs.empty) then "" else {
     txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
             if (attrs.name=="") then [] else ["id=" + attrs.name],
-            if (attrs.label=="") then [] else ["label={" + attrs.label.texText + "}"],
-            if (attrs.elem=="") then [] else ["elem={" + attrs.elem.texText + "}"],
+            if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
+            if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
             attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
               kv.fst.normalizeId + "={" + kv.snd.normalizeVal + "}" 
             }),          
@@ -262,7 +267,7 @@ function normalizeVal( v : string ) : string {
     Just(cap) -> "0." + cap.groups[1] + "\\linewidth"
     Nothing -> match(v.find(rxPixels)) {
       Just(cap) -> cap.groups[1] + "\\cssPixel"
-      Nothing   -> texText(v).replaceAll(regex("\n"),"\\\\")
+      Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
     }
   }
 }
