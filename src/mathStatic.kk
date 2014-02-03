@@ -540,15 +540,15 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
 
                     embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
                              then pngprefix + base64 else ""
+                    imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
+                    tryUnlink(imageDigestFile)                              
                     size  = if (embed=="") then {
                               // give robust name  
-                              imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
-                              tryUnlink(imageDigestFile)
                               rename(imageFile,imageDigestFile)
                               buf.length 
                             }
                             else {
-                              //tryUnlink(imageFile) // delete the image
+                              tryUnlink(imageFile) // delete the image
                               embed.length
                             }
                     (pxwidth,pxheight,size,embed)
