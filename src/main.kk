@@ -106,6 +106,10 @@ function processContent( inName : string, outName : string, content : string,
     xopts  = opts1(mathdim=mdim)
     mopts  = mmopts(mathdim=mdim)  
 
+    if (mopts.verbose>=4) {
+      println(mopts.metadata.map(fun(kv) { kv.fst + ": " + kv.snd }).join("\n"))
+    }
+
     // register languages for highlighting
     mopts.hilitelang.split(";").foreach fun(lang) { registerLanguage(lang) }
 

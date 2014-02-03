@@ -164,18 +164,20 @@ val optionsDesc : list<option<commandOptions>>
       Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }), "Generate a full html/latex document"),
       Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }), "Always escape or suppress user defined html"),
       Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }), "Pedantic mode"),
-      Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, footnotes, etc."),
+      Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, etc."),
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
       Option( "r", ["rebuild"],  oflag(fun(o,v) { o(rebuild=v) }),    "Force rebuild bibliography, math, etc."),
 
-      Option( "m", ["meta"],     oreq(setMeta, "key:value"), "Semi-colon separated list of metadata values")
+      Option( "m", ["meta"],     oreq(setMeta, "key:val"), "Semi-colon separated list of metadata values")
     ]
 
 function setMeta( opts0 : options, value : string ) : options {
   keyvals = value.split(";").list
   keyvals.foldl(opts0) fun(opts : options,keyval) {
     match(keyval.split(":",2).list) {
-      Cons(key,Cons(s,Nil)) -> opts(metadata = opts.metadata + [(key,s)] )
+      Cons(key,Cons(s,Nil)) -> {
+        opts(metadata = opts.metadata + [(key,s)] )
+      }
       _ -> {
         warning("illegal --meta option: " + value)
         opts

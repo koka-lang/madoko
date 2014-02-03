@@ -63,31 +63,31 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
     logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
-      println("error while running: " + latexCmd)
+      println("error while running: \n  > " + latexCmd)
       //println(stdout + stderr)
-      match(logout.find(rxLatexErr)) {
-        Just(cap) -> {          
-          texContent = readTextFileDef(texFile,"")
-          match (content.findLatexLine(cap.matched,texContent)) {
-            Just(lineNo) -> println("error: source line: " + lineNo.show)
-            Nothing -> ()
-          }
-          println(cap.matched)
+      system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
+        if (errx!=0) {
+          println("could not find latex: \"" + texCmd + "\"")
+          if (notfound != "") println(notfound)
         }
-        Nothing -> {
-          system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
-            if (errx!=0) {
-              println("could not find latex: \"" + texCmd + "\"")
-              if (notfound != "") println(notfound)
+        else {
+          match(logout.find(rxLatexErr)) {
+            Just(cap) -> {          
+              texContent = readTextFileDef(texFile,"")
+              match (content.findLatexLine(cap.matched,texContent)) {
+                Just(lineNo) -> println("error: source line: " + lineNo.show)
+                Nothing -> ()
+              }
+              println(cap.matched)
             }
-            else {
-              println(stdout + stderr)
+            Nothing -> {
+              println(stdout + stderr)    
             }
-          }
-        }
+          } 
+          println("log written at: " + texFile.changeExt(".log"))
+        }      
+        onError()        
       }
-      println("log written at: " + texFile.changeExt(".log"))
-      onError()
     }
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
@@ -213,7 +213,7 @@ function mathSnippetsToDvi( texName : string, xopts : options,
                             dviPages : pages, pdfPages : pages,
                            continue : () -> io () ) : io () 
 {  
-  if (dviPages.isNil && (xopts.mathpdflatex=="" || pdfPages.isNil)) return continue()
+  if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue()
 
   if (xopts.verbose>=1) println("  running latex on math... (dvi mode)")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
@@ -500,7 +500,7 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
           = match(dim[digest]) {
               Just(mi) | !(isPdf || pageNo.inside(dviPages)) 
                 -> {                  
-                  //trace("known image: " + digest)
+                  //trace("known image: " + pageNo.show + ": " + imageFile + ": " + digest)
                   (mi.pxwidth,mi.pxheight,mi.size,mi.imageData)
                 }
               _ -> { 
@@ -510,6 +510,7 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
                     (0,0,0,"") // should not happen?
                   }
                   Just(buf) -> {
+                    //trace("read image: " + pageNo.show + ": " + imageFile + ": " + digest)
                     base64 = buf.string("base64")
                     pxwidth = buf.readInt4(16)
                     pxheight = buf.readInt4(20)

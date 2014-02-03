@@ -1013,8 +1013,105 @@ underneath. See the package [user guide][xypic] for more examples.
 ~~
 -->
 
+### Math commands   { #sec-mathdefs }
 
-~ Begin Snippet
+For math-heavy documents, it is convenient to define LaTeX commands for 
+common operations. Such command definitions can be directly understood by LaTeX
+but need to be handled specially if the math is rendered dynamically in a HTML page. 
+Madoko defines the custom block `MathDefs` to support mathematics definitions 
+transparently across modes:
+
+~~ Sample
+~ MathDefs
+\newcommand{\infer}[3]{#1 \vdash #2\,:#3}
+~ 
+We infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
+~~
+
+Often it is convenient to put all such definitions in a separate `.tex` file and
+include it in the document as:
+
+	~ MathDefs
+	[INCLUDE="mathdefs.tex"]
+	~
+
+### Mathematics in HTML
+
+To typeset mathematics in HTML, Madoko can either typeset the math
+statically or dynamically:
+
+* `static`: In the default static mode, Madoko uses LaTeX to generate static images 
+	for each formula. This is generally preferred because pages load fast, 
+	and it requires no javascript. The drawback is that you
+	need to have LaTeX installed on your system. See the 
+	[metadata section][#item-math]
+	for more information on fine-tuning static mathematics.
+
+* `dynamic`:  Madoko uses the [MathJax] JavaScript
+	library to render the math on the client-side. This means you do not
+	need LaTeX but it is generally quite slow for math-heavy documents and
+	not all of the LaTeX commands and packages are available. This mode can be
+	enabled in the metadata as:
+	```
+	Math Mode: dynamic
+	```
+	The [metadata section][#item-math] contains more information on customizing MathJax.
+
+You can view and experiment with the different rendering modes in the online
+[mathematics rendering demo][mathdemo].
+
+
+[mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.html
+[mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
+
+
+### Advanced: generic LaTeX snippets
+
+Besides just mathematics, you can include arbitrary LaTeX snippets using
+the custom `Snippet` block. 
+In static math mode such snippets get included in the web page as hi-res images.
+This makes it possible to use powerful packages like [TikZ] and [PSTricks].
+For the following example, we use PSTricks:
+```
+Package: pstricks
+Package: pst-plot
+```
+to typeset a the graph of the natural logarithm[^ex-log]:
+~ Begin Sample
+~ Center  {padding=1ex}
+~~ Snippet
+\psset{unit=2cm}
+\begin{pspicture*}(-0.5,-1.5)(4,2)
+  \psgrid[subgriddiv=5,gridcolor=black!20,gridlabels=0pt](1,0)(3,1.2)
+  \psaxes{->}(0,0)(0,-1)(3.2,1.5)
+  \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
+  \pscircle*[linecolor=red](! Euler 1){3pt}
+  \psline[linecolor=red,linestyle=dashed](! Euler 0)(! Euler 1)
+  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]{->}(! Euler 1)(0, 1)
+  \uput[-90](! Euler 0){\color{red}$e$}
+  \pscircle*[linecolor=blue](1,0){3pt}
+  \psplot[linewidth=1pt]{0.2}{3}{ x ln }
+  \rput(1.6,-0.5){\color{blue}\fbox{$f(x)=\ln(x)$}}
+\end{pspicture*}
+~~
+~ 
+~ End Sample
+
+[^ex-log]: Example comes from the 
+	[PSTricks example gallery](http://tug.org/PSTricks/main.cgi?file=pst-plot/FunctionExamples#paraplot).
+
+The next two figures, Figure [#fig-oblique] and Figure [#fig-mergesort] use
+the [TikZ] package which we included as:
+```
+Package 	: tikz
+Tex Header  : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}
+```
+Both examples come from the [TikZ example gallery].
+
+~ Begin Figure { #fig-oblique caption="\
+	[TikZ example](http://www.texample.net/tikz/examples/oblique-incidence) \
+	by Edgar Fuentes of reflection and refraction of electromagnetic waves."}
+~ Snippet
 \begin{tikzpicture}[
     media/.style={font={\footnotesize\sffamily}},
     wave/.style={
@@ -1075,11 +1172,14 @@ underneath. See the package [user guide][xypic] for more examples.
     % Internally the to path is translated to a similar bezier curve,
     % but the to path syntax hides the complexity from the user. 
 \end{tikzpicture}
-~ End Snippet
+~ 
+~ End Figure
 
-
-~ Begin Snippet
-\begin{tikzpicture}[scale=0.8,level/.style={sibling distance=60mm/#1}]
+~ Begin Figure {#fig-mergesort caption="\
+	[TikZ example](http://www.texample.net/tikz/examples/merge-sort-recursion-tree) \
+	by Manuel Kirsch of a merge sort recursion tree."}
+~ Snippet
+\begin{tikzpicture}[scale=0.7,level/.style={sibling distance=60mm/#1}]
 \node [circle,draw] (z){$n$}
   child {node [circle,draw] (a) {$\frac{n}{2}$}
     child {node [circle,draw] (b) {$\frac{n}{2^2}$}
@@ -1148,74 +1248,13 @@ underneath. See the package [user guide][xypic] for more examples.
 \path (v) -- (w) node [midway] {$\Leftrightarrow$};
 \path (r) -- (c) node [midway] {$\cdots$};
 \end{tikzpicture}
-~ End Snippet
-
-~ Begin Snippet
-\psset{unit=3}
-\begin{pspicture*}(-0.2,-1.05)(3.4,1.7)
-  \psgrid[subgriddiv=5,gridcolor=black!20,gridlabels=0pt](1,0)(3,1.2)
-  \psaxes{->}(0,0)(0,-1)(3.2,1.5)
-  \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
-  \pscircle*[linecolor=red](! Euler 1){3pt}
-  \psline[linecolor=red,linestyle=dashed](! Euler 0)(! Euler 1)
-  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]{->}(! Euler 1)(0, 1)
-  \uput[-90](! Euler 0){\color{red}$e$}
-  \pscircle*[linecolor=blue](1,0){3pt}
-  \psplot[linewidth=1pt]{0.2}{3}{ x ln }
-  \rput(1.6,-0.5){\color{blue}\fbox{$f(x)=\ln(x)$}}
-\end{pspicture*}
-~ End Snippet
-
-### Math commands   { #sec-mathdefs }
-
-For math-heavy documents, it is convenient to define LaTeX commands for 
-common operations. Such command definitions can be directly understood by LaTeX
-but need to be handled specially if the math is rendered dynamically in a HTML page. 
-Madoko defines the custom block `MathDefs` to support mathematics definitions 
-transparently across modes:
-
-~~ Sample
-~ MathDefs
-\newcommand{\infer}[3]{#1 \vdash #2\,:#3}
 ~ 
-We infer $\infer{\Gamma}{e}{\tau}$ for such expression $e$.
-~~
-
-Often it is convenient to put all such definitions in a separate `.tex` file and
-include it in the document as:
-
-	~ MathDefs
-	[INCLUDE="mathdefs.tex"]
-	~
-
-### Mathematics in HTML
-
-To typeset mathematics in HTML, Madoko can either typeset the math
-statically or dynamically:
-
-* `static`: In the default static mode, Madoko uses LaTeX to generate static images 
-	for each formula. This is generally preferred because pages load fast, 
-	and it requires no javascript. The drawback is that you
-	need to have LaTeX installed on your system. See the 
-	[metadata section][#item-math]
-	for more information on fine-tuning static mathematics.
-
-* `dynamic`:  Madoko uses the [MathJax] JavaScript
-	library to render the math on the client-side. This means you do not
-	need LaTeX but it is generally quite slow for math-heavy documents and
-	not all of the LaTeX commands and packages are available. This mode can be
-	enabled in the metadata as:
-	```
-	Math Mode: dynamic
-	```
-	The [metadata section][#item-math] contains more information on customizing MathJax.
-
-You can view and experiment with the different rendering modes in the online
-[mathematics rendering demo][mathdemo].
+~ End Figure
 
 
-[mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.html
-[mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
+[TikZ]: 		http://www.ctan.org/pkg/pgf
+[PSTricks]: 	http://ctan.sharelatex.com/tex-archive/graphics/pstricks/base/doc/pstricks-doc.pdf
+[TikZ Example Gallery]: http://www.texample.net/tikz/examples/
 
 
 

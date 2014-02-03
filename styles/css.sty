@@ -107,12 +107,12 @@
 % Save footnotes inside mdframed and minipage environments
 %-------------------------------------------------------------
 \newif\if@saveFootnotes
-\newcommand{\@saveFootnotes}%
+\newcommand{\cssSaveFootnotes}%
 	{\if@saveFootnotes\else%
 		\let\footnote\tablefootnote%
 	 \fi%
 	 \@saveFootnotestrue}%
-\newcommand{\@restoreFootnotes}%	 
+\newcommand{\cssRestoreFootnotes}%	 
 	{\if@saveFootnotes\else%
  		\tfn@tablefootnoteprintout% 
  		\gdef\tfn@fnt{0}%
@@ -290,11 +290,11 @@
 		\else
 			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
 		\fi
-		\cssDoBefore{\@saveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
+		\cssDoBefore{\cssSaveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
 		%note: DoAfter prepends, so in opposite order
 		\ifdim\cssMarginBottom=0pt\else\cssDoAfter{\vspace{\cssMarginBottom}}\fi
 		\ifdim\cssMarginRight=0pt\else\cssDoAfter{\hspace*{\cssMarginRight}}\fi
-		\cssDoAfter{\end{minipage}\@restoreFootnotes}%
+		\cssDoAfter{\end{minipage}\cssRestoreFootnotes}%
 	\else
 		% no height/width: trivlist
 		\@hasdimfalse
@@ -386,7 +386,7 @@
 	\ifdim\cssPaddingRight=0pt\else\@needframetrue\fi
 	\expandafter\lowercase\expandafter{\expandafter\def\expandafter\bcolor\expandafter{\cssBackgroundColor}}%
 	\if@needframe%		
-		\cssDoAfter{\@restoreFootnotes}% first, because post commands are pre-pended
+		\cssDoAfter{\cssRestoreFootnotes}% first, because post commands are pre-pended
 		\renewcommand{\@cssFramedArgs}{%
 			innertopmargin=\the\cssPaddingTop,%
 			innerbottommargin=\the\cssPaddingBottom,%
@@ -420,7 +420,7 @@
 			%note: DoAfter prepends, so in opposite order
 			\cssDoAfter{\end{minipage}}%
 		\fi    
-		\cssDoBefore{\@saveFootnotes}%
+		\cssDoBefore{\cssSaveFootnotes}%
 	\fi
 }
 

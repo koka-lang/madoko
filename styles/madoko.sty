@@ -453,9 +453,11 @@
   {\eifstrequal{\cssPageAlign}{here}%
     {\def\@pagealign{h}}%
     {\def\@pagealign{tbp}}}}% default tbp
+  %\cssDoAfter{\cssRestoreFootnotes}%
   \cssIfHasClass{wide}%
     {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
     {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}\cssDoAfter{\end{figure}}}%
+  %\cssDoBefore{\cssSaveFootnotes}%
 }
 
 \newlength{\mdCaptionlen}

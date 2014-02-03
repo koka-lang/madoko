@@ -21,10 +21,16 @@ import options
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
   val (mdata2,rest) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
-  options = options0.fromMeta(mdata2)
-  mdata1  = if (options.bench || options.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) then Nil 
-             else parsePlainMeta(defaultMeta(options), fmt, verbose=options0.verbose >= 4).fst
-  mdata = options.metadata + mdata1 + mdata2             
+  options1 = options0.fromMeta(mdata2)
+  val (options,mdata1) = 
+    if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
+      then (options1,Nil) 
+      else { 
+        mdatax = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst
+        (options1.fromMeta(options0.metadata + mdatax),mdatax)
+      }
+
+  mdata = options.metadata + mdata1 + mdata2
   (options(metadata = mdata),rest)  
 }
 
