@@ -27,7 +27,7 @@ Reveal Url    : reveal.js
 Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
-Document Class: beamer
+Document Class: [xcolor=table]beamer
 Css  		  : &reveal-url;/css/reveal.min.css
 Script        : &reveal-url;/lib/js/head.min.js
 Script        : &reveal-url;/js/reveal.min.js
