@@ -2,7 +2,7 @@
   "scopeName": "source.madoko",
   "fileTypes": ["mdk","md","madoko","markdown"],
   "author": "Daan Leijen",
-  "firstLineMatch": "\\s*(?i:(Title|Author))\\s*:",
+  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright))\\s*:",
   "foldingStartMarker": "^(~+)\\w+\\b.*$",
   "foldingStopMarker": "^\\1\\s*$",
   "patterns": [
@@ -57,15 +57,46 @@
   ],
   "repository": {
     "metadata":
-      { "begin": "^(Title|Author)\\s*:"
-      , "end": "^(?!\\s)(?![\\w\\.#~][\\w\\-\\.#~, \\t\\*]*:)"
+      { "begin": "^(Title|Author|Description|License|Copyright)\\s*:"
+      , "end": "^(?!\\s)(?!@(tex|html)|[\\w\\.#~][\\w\\-\\.#~, \\t\\*]*:)"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
       , "patterns": [
-          { "begin": "^([\\.~#][\\w\\-\\.#~,\\s]*):"
+          { "begin": "^(?i:HTML Header)\\s*:"
           , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.html"        
           , "beginCaptures": {
               "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "text.html.basic" }
+            ]
+          },
+          { "begin": "^(?i:Tex Header\\*?)\\s*:"
+          , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.latex"        
+          , "beginCaptures": {
+              "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "text.tex.latex" }
+            ]
+          },
+          { "begin": "^(?i:Description|Comment)\\s*:"
+          , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.madoko"
+          , "beginCaptures": {
+              "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "#embedded" }
+            ]
+          },
+          { "begin": "^(@(?i:tex|html)\\s+)?(([\\.~#][\\w\\-\\.#~,\\s]*):)"
+          , "end": "^(?![ \\t])"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
             }
           , "patterns": [
               { "match": "([^\\\\]|\\\\.)*"
@@ -76,8 +107,11 @@
               }
             ]
           },
-          { "match": "^\\w[\\w\\-\\.#~,\\s\\*]*:"
-          , "name": "entity.name.function meta.tag.preprocessor.madoko" 
+          { "match": "^(@(?i:tex|html)\\s+)?(\\w[\\w\\-\\.#~,\\s\\*]*:)"
+          , "captures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
           }
         ]
       },

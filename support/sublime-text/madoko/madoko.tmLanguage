@@ -12,7 +12,7 @@
 		<string>markdown</string>
 	</array>
 	<key>firstLineMatch</key>
-	<string>\s*(?i:(Title|Author))\s*:</string>
+	<string>\s*(?i:(Title|Author|Description|License|Copyright))\s*:</string>
 	<key>foldingStartMarker</key>
 	<string>^(~+)\w+\b.*$</string>
 	<key>foldingStopMarker</key>
@@ -569,7 +569,7 @@
 		<key>metadata</key>
 		<dict>
 			<key>begin</key>
-			<string>^(Title|Author)\s*:</string>
+			<string>^(Title|Author|Description|License|Copyright)\s*:</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>0</key>
@@ -579,17 +579,91 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>^(?!\s)(?![\w\.#~][\w\-\.#~, \t\*]*:)</string>
+			<string>^(?!\s)(?!@(tex|html)|[\w\.#~][\w\-\.#~, \t\*]*:)</string>
 			<key>name</key>
 			<string>markup.metadata.madoko</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>begin</key>
-					<string>^([\.~#][\w\-\.#~,\s]*):</string>
+					<string>^(?i:HTML Header)\s*:</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>source.embedded.html</string>
+					<key>end</key>
+					<string>^(?![ \t])</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>text.html.basic</string>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^(?i:Tex Header\*?)\s*:</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>source.embedded.latex</string>
+					<key>end</key>
+					<string>^(?![ \t])</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>text.tex.latex</string>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^(?i:Description|Comment)\s*:</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>source.embedded.madoko</string>
+					<key>end</key>
+					<string>^(?![ \t])</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#embedded</string>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^(@(?i:tex|html)\s+)?(([\.~#][\w\-\.#~,\s]*):)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword</string>
+						</dict>
+						<key>2</key>
 						<dict>
 							<key>name</key>
 							<string>entity.name.function meta.tag.preprocessor.madoko</string>
@@ -614,10 +688,21 @@
 					</array>
 				</dict>
 				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+					</dict>
 					<key>match</key>
-					<string>^\w[\w\-\.#~,\s\*]*:</string>
-					<key>name</key>
-					<string>entity.name.function meta.tag.preprocessor.madoko</string>
+					<string>^(@(?i:tex|html)\s+)?(\w[\w\-\.#~,\s\*]*:)</string>
 				</dict>
 			</array>
 		</dict>
