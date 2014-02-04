@@ -291,19 +291,49 @@ public function latexStrip( s : string ) : string
   s.replaceAll(rxStrip,"").toLower
 }
 
-val rxStrip = regex(@"(\\[\w/\-]*(\[[^\]\n]*\])?|[^a-zA-Z_;'""!\*()/\-\+=/\.,~:])+")
+val rxStrip = regex(@"(\\[\w/\-\r\n]*(\[[^\]\r\n]*\])?|\^\^.|'\w*|\}\{[lrct]\}|\]\{[^\]\r\n]*\}|[^a-zA-Z])+") // ;""!\*()/\+=/,~:
 
 public function latexFindLineByMatch( texLine : string, source : string ) : maybe<string> {
   stripLine = texLine.latexStrip
   if (stripLine.length < 3) then Nothing else {
+    match (source.findLines(stripLine)) {
+      Cons(lineNo,rest) -> Just(lineNo.show + (if (rest.isNil) then "" else " (?)"))
+      _ -> Nothing      
+    }
+    /*
     ilines = source.lines.list.mapIndexed(fun(idx,line) { (idx,line) })
     match(ilines.filter(fun(iline){ iline.snd.latexStrip.contains(stripLine) })) {
       Cons(iline,rest) -> Just((iline.fst+1).show + (if (rest.isNil) then "" else " (?)"))
       _ -> Nothing
     }
+    */
   }
 }
 
+function findLines( source : string, pat : string ) : list<int> {
+  slines  = source.lines.list.map(fun(line) { line.latexStrip })
+  slens   = slines.map(fun(s){ s.length })
+  offsets = findOffsets( slines.join, pat )
+  offsets.map fun(ofs) {
+    var total := 0
+    var current := 1
+    slens.foreachUntil fun(len) {
+      total := total + len
+      if (total > ofs) then return Just(current) 
+      current := current + 1
+      Nothing
+    }
+    current
+  }
+}
+
+function findOffsets( source : string, pat : string ) : list<int> {
+  i0 = source.indexOf(pat)
+  i1 = source.lastIndexOf(pat)
+  if (i0 < 0) then []
+  elif (i0 == i1) then [i0]
+  else [i0,i1]
+}
 
 function latexShowWarnings(texFile:string,logout:string, content:string,opts:options) : io () 
 {
@@ -312,30 +342,36 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
   if (warnings.isNil) then return () 
 
   texlines = readTextFileDef(texFile,"").lines
+  println("")
   warnings.foreach fun(iw) {
     val (index,warning0) = iw
     warning = warning0.replace(rxLatexBrackets,"")
     warn = match(warning.find(rxLatexLine)) {
       Nothing   -> {
         // no line no: try to display page
-        match(warning.find(rxLatexOutputActive)) { 
-          Just -> {  // find a page
-            match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
-              Cons(pcap,_) -> warning + "\n> page " + pcap.groups[1]               
-              Nil -> warning
-            }  
-          } 
-          Nothing -> warning 
-        }
+        pre = match(warning.find(rxLatexOutputActive)) { 
+                Just -> {  // find a page
+                  page = match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
+                    Cons(pcap,_) -> (pcap.groups[1].parseInt.maybe(0,id)+1).show 
+                    Nil -> "1"
+                  }  
+                  "> warning: page " + page + "\n"
+                } 
+                Nothing -> "" 
+              }
+        pre + warning
       }
       Just(cap) -> {
-        line = if (cap.groups[2] != "") then cap.groups[2] 
+        line = if (cap.groups[2].latexStrip != "") then cap.groups[2] 
                 else {
                   lineNo = cap.groups[1].parseInt.maybe(0,id)
                   texlines.latexFindLine(lineNo)
                 }                
         pre = match(latexFindLineByMatch(line,content)) {
-          Nothing -> "" // "unable to find line: \n> " + line + "\n> " + line.latexStrip + "\n"
+          Nothing -> {
+            if (opts.verbose >= 4) then println("unable to find line: \n> " + line.latexStrip + "\n")
+            ""
+          }
           Just(srcLineNo) -> "> warning: source line: " + srcLineNo+ "\n"
         }
 
@@ -352,7 +388,7 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
 
 val rxLatexLine = regex(@"lines?[\s:]*(\d+).*(?:\r?\n(.*))?") 
 val rxLatexOutputActive = regex(@"\output is active\s*$") // only match single line 
-val rxLatexPage = regex(@"\s\[(\d+)\]")
+val rxLatexPage = regex(@"\s\[(\d+)\s*\]")
 val rxLatexOutput = regex(@"^Output written on .*", multiline=True)
 val rxLatexBrackets = regex(@"(\s|[\[\]])+$")
 val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *$", multiline=True)
@@ -360,16 +396,19 @@ val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *
 function latexFindLine( src : vector<string>, lineNo : int, direction : int = 0 ) : div string
 {
   line = latexGetLine(src,lineNo)
-  if (line.startsWith(@"\end") && direction <= 0) {
+  if (line.contains(rxEnd) && direction <= 0) {
     latexFindLine(src,lineNo-1,-1)
   }
-  elif (line.startsWith(@"\begin") && direction >= 0) {
+  elif (line.contains(rxBegin) && direction >= 0) {
     latexFindLine(src,lineNo+1,1)
   }
   else {
     line
   }
 }
+
+val rxEnd = regex(@"^\\end|^\s*(\\?\}\s*)*$",multiline=True)
+val rxBegin = regex(@"^\\begin|^\s*(\\?\{})*$",multiline=True)
 
 function latexGetLine( src : vector<string>, lineNo : int ) : string
 {
