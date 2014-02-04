@@ -233,7 +233,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
   }
 
   extensions = options.mjext.expand.splitPaths.map(fun(path) { 
-      "\"" + (if (path.endsWith(".js")) then path else path + ".js") +"\"" 
+      htmlQuote( (if (path.endsWith(".js")) then path else path + ".js") )
     }).join(",")
 
   meta = options.htmlMeta.expand.splitPaths + 
@@ -262,9 +262,11 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
        "  MathJax.Hub.Config({",
        "    tex2jax: {inlineMath: [['$','$']]},",
        @"     TeX: { ",
-       @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1] },",
+       @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],",
+       @"                 mathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mathindent: ['\\hspace{#1ex}',1], mathbr: ['\\\\'],",
+       @"               },",
        if (extensions=="") then "" 
-        else @"       extensions: [" + extensions.escape + "]",
+        else @"       extensions: [" + extensions + "]",
        @"     }",
        "  });",
        "  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { ",
