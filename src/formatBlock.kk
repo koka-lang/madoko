@@ -211,7 +211,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
             FmtTex  -> mtxt
             FmtHtml -> {
               if (context.inlineContext.mathStatic) {
-                log("math","% math definitions\n" + txt + "\n")
+                log("math-dvi","% math definitions\n" + txt + "\n")
+                log("math-pdf","% math definitions\n" + txt + "\n")
                 ""
               }
               else "\\[" + mtxt + "\\]"

@@ -99,7 +99,7 @@ function processContent( inName : string, outName : string, content : string,
     mdim   = if (!(mmopts.mathmode.isStatic))
               then dict()
               else {
-                dims = outName.changeExt(".math.dimx").readTextFileDef("")
+                dims = outName.changeExt(".dimx").readTextFileDef("")
                 dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
               }
 
@@ -146,14 +146,13 @@ function process( inName : string, outName : string, content : string, icontent 
   function phaseHtml() 
   {
     // markdown to html          
-    val (math,(warns,(logs, html))) = 
-                               withLog("math") {
-                                withLog("warning") { 
-                                 withLog("aux") { 
-                                  markdown(icontent,xopts) 
-                                 }
-                                }
-                               }
+    val (mathDvi,(mathPdf,(warns,(logs, html)))) = 
+                               withLog("math-dvi") {
+                                withLog("math-pdf") {
+                                 withLog("warning") { 
+                                  withLog("aux") { 
+                                   markdown(icontent,xopts) 
+                                 }}}}
 
     // write html result
     if (!(tryWriteTextFile(outName,html))) {
@@ -186,7 +185,7 @@ function process( inName : string, outName : string, content : string, icontent 
       if (mopts.tex) {
         if (mopts.verbose > 0) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-        if (texwarns != "" && mopts.verbose >= 2) print(texwarns) 
+        if (texwarns != "" && mopts.verbose>=3) print(texwarns) 
         //trace(tex)
         if (!(tryWriteTextFile(outTexName,tex))) {
           println("error: unable to write: " + outTexName) 
@@ -194,8 +193,8 @@ function process( inName : string, outName : string, content : string, icontent 
       }
 
       // possibly typeset math using latex
-      if (math != "" && mopts.mathmode.isStatic) {
-        mathStatic( math, outName.changeExt(".math.tex"), mopts, content ) fun(mbmdim2) {
+      if ((mathDvi != "" || mathPdf != "") && mopts.mathmode.isStatic) {
+        mathStatic( mathDvi, mathPdf, outName, mopts, content ) fun(mbmdim2) {
           match(mbmdim2) {
             Just(mdim2) -> {
               // write html again

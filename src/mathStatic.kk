@@ -105,13 +105,16 @@ val rxLatexErr = regex(@"^\*\* ERROR .*|^![\s\S]*?(?=^\s*(?:Here is how much of 
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
-public function mathStatic( math : string, texName : string, xopts : options, content : string, 
-                            continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
+
+function formatMath( mode :string, math : string, outName : string, xopts : options ) : (string,string,string)
 {
+  texName = outName.appendStem("-math-" + mode).changeExt(".tex")
   texFinalName = texName.changeExt(".final.tex")
-  oldMath = readTextFileDef(texFinalName,"")
+  
   body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-  outTex = fmtTexMathFull(body,if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
+  outTex = fmtTexMathFull(mode=="dvi",
+                          body,
+                          if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
 
   outHdr = "% MathDpi: " + xopts.mathDpi.show + 
             ", MathImgDir: " + xopts.mathImgDir +
@@ -126,41 +129,71 @@ public function mathStatic( math : string, texName : string, xopts : options, co
             ", Ps2pdf: " + xopts.ps2pdf + 
             "\n"
   outMath = outHdr + outTex
-  if (outMath != oldMath || xopts.rebuild) {
-    if (xopts.verbose>=1) println("  typesetting math...")
-    if (!(tryWriteTextFile(texName,outMath))) {
-      println("error: unable to write: " + texName)
-      continue(Nothing)
-    }
-    else {
-      doRebuild = xopts.rebuild || (oldMath.find(rxHdr).maybe("",fun(cap){cap.matched}) != outHdr)
-      val (pages,dviPages,pdfPages) = mathAnalyseChanged(outMath,xopts.mathdim,doRebuild) 
-      match(pages) {
-        Nil -> {
-          if (xopts.verbose>=1) println("  no changes")
-          rename(texName,texFinalName); // save result to prevent rebuilds
-          continue(Just(xopts.mathdim))
-        }
-        _ -> {
-          mathSnippetsToDvi( texName, xopts, content, oldMath, dviPages, pdfPages ) {
-            mathSnippetsToPdf( texName, xopts, content, oldMath, pdfPages ) {
-              mathDviPdfToPng( texName.changeExt(".dvi"), xopts, dviPages, pdfPages ) {
-                mathConvertPng( texName, xopts, dviPages ) {
-                  mathDimAnalyse( texName.changeExt(".dimx"), xopts, dviPages, pdfPages) function(mbmath) {
-                    if (mbmath.isJust) {
-                      rename(texName,texFinalName); // save result to prevent rebuilds
-                    }
-                    continue(mbmath)
-                  }
-                }
-              }
-            }      
-          }
-        }
-      }      
-    }
+  (texName,texFinalName,outMath)
+}
+
+public function mathStatic( mathDvi : string, mathPdf : string,  
+                            outName : string, xopts : options, content : string, 
+                            continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
+{
+  val (texNameDvi,texNameFinalDvi,outMathDvi) = formatMath("dvi",mathDvi,outName,xopts)
+  val (texNamePdf,texNameFinalPdf,outMathPdf) = formatMath("pdf",mathPdf,outName,xopts)
+
+  oldMathDvi = readTextFileDef(texNameFinalDvi,"")
+  oldMathPdf = readTextFileDef(texNameFinalPdf,"")
+   
+  if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
+   then return continue(Nothing)
+
+  if (xopts.verbose>=1) println("  typesetting math...")
+  if (!(tryWriteTextFile(texNameDvi,outMathDvi))) {
+    println("error: unable to write: " + texNameDvi)
+    return continue(Nothing)
   }
-  else continue(Nothing)
+  if (!(tryWriteTextFile(texNamePdf,outMathPdf))) {
+    println("error: unable to write: " + texNamePdf)
+    return continue(Nothing)
+  }
+  
+  rebuildDvi = oldMathDvi.getHeader != outMathDvi.getHeader
+  rebuildPdf = oldMathPdf.getHeader != outMathPdf.getHeader
+  dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
+  pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
+
+  if (xopts.verbose>=1) {
+    if (dviPages.isNil) println("  no changes (dvi)")
+    if (pdfPages.isNil) println("  no changes (pdf)")
+  }
+  if (dviPages.isNil && pdfPages.isNil) then {
+    rename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
+    rename(texNamePdf,texNameFinalPdf); 
+    return continue(Nothing)
+  }
+    
+  mathSnippetsToDvi( texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages ) {
+    mathSnippetsToPdf( texNamePdf, xopts, content, oldMathPdf, pdfPages ) {
+      mathDviPdfToPng( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
+        mathConvertPng( texNameDvi, xopts, dviPages ) {
+          mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
+            function(mbmath) {
+              if (mbmath.isJust) {
+                rename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
+                rename(texNamePdf,texNameFinalPdf);
+              }
+              continue(mbmath)
+            }
+        }
+      }
+    }      
+  }
+}
+
+function getHeader( src : string ) : string
+{
+  match (src.find(rxHdr)) {
+    Just(cap) -> cap.matched
+    Nothing   -> ""
+  }
 }
 val rxHdr = regex(@"^.*\n")
 
@@ -168,10 +201,10 @@ alias pages = list<(int,int)>
 
 function range(lo,n) { if (lo<=0) then [] else [(lo,lo+n)] }
   
-function compress( pages : list<(a,int)>, lo : int = -1, n : int = 0 ) : pages {
+function compress( pages : list<int>, lo : int = -1, n : int = 0 ) : pages {
   match(pages) {
     Nil -> range(lo,n)
-    Cons((_,p),ps) -> {
+    Cons(p,ps) -> {
       if (p==lo+n+1) 
        then compress(ps,lo,n+1) 
        else range(lo,n) + compress(ps,p,0)
@@ -188,24 +221,22 @@ function inside( page : int, pages : pages ) : bool {
   }
 }
 
-function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : (pages,pages,pages) 
+function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : pages
 {  
-  digests = snippets.findAll(rxDigest).list.map( fun(cap) { (cap.groups[1]!="", cap.groups[2]) })
+  digests = snippets.findAll(rxDigest).list.mapIndexed( fun(idx,cap) { (idx+1,cap.groups[1]) })
   maxPage = digests.length
-  idigests = zip(digests,list(1,maxPage))
   
-  pages = idigests.concat fun(idigest) {
-            val ((needPdf,digest),current) = idigest
+  pages = digests.concat fun(idigest) {
+            val (current,digest) = idigest
             match(dim[digest]) {
               Just(_)  | !rebuild -> []
-              _ -> [(needPdf,current)]
+              _ -> [current]
             }
           }
-  val (pdfPages,dviPages) = pages.partition( fst )          
-  (pages.compress,dviPages.compress,pdfPages.compress)
+  pages.compress
 }
 
-val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet(Pdf)?}[\[\{]([a-fA-F0-9]{32})[\}\]]")
+val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
 
 
 function mathSnippetsToDvi( texName : string, xopts : options, 
@@ -445,33 +476,31 @@ function convertSuffix( pages : pages ) : string {
   }
 }        
 
-function mathDviPdfToPng( dviName : string, xopts : options, 
+function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : options, 
                           dviPages : pages, pdfPages : pages,  
                           continue : () -> io () ) : io () 
 {  
-  stem = dviName.stemname
-  basepng = combine(xopts.mathImgDir,stem) 
-  
+  dviBasePng = combine(xopts.mathImgDir,texNameDvi.stemname) 
   dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
                                       " " + dvipngPages(dviPages) + 
-                                      " -o " + basepng + "-dvi-%d.png" +
-                                      " " + dviName.basename
+                                      " -o " + dviBasePng + "-%d.png" +
+                                      " " + texNameDvi.basename
+  pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
   pdfpngCmd = xopts.convert + " -trim -density " + xopts.mathDpi.show + " " +
-                  stem + ".pdf" + pdfPages.convertPages + " " +
-                  basepng + "-pdf" + pdfPages.convertSuffix + ".png"
+                  texNamePdf.basename + pdfPages.convertPages + " " +
+                  pdfBasePng + pdfPages.convertSuffix + ".png"
               
 
   // make sure the output directory exists
-  outDir = combine(dviName.dirname,xopts.mathImgDir)
+  outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
   if (!(fexists(outDir))) {
-    if (xopts.verbose>=1) println("  create: " + outDir)
+    if (xopts.verbose>=1) println("  create image directory: " + outDir)
     mkdirp(outDir)
   }                                      
   
-  dir = dviName.dirname
-  mathCmdToPng( dvipngCmd, dir, "dvi", dviPages, xopts) {
-    mathCmdToPng( pdfpngCmd, dir, "pdf", pdfPages, xopts, continue )
+  mathCmdToPng( dvipngCmd, texNameDvi.dirname, "dvi", dviPages, xopts) {
+    mathCmdToPng( pdfpngCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, continue )
   } 
 }
 
@@ -497,9 +526,9 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
   if (xopts.mathconvert=="") then continue() else {
-    convertCmd = xopts.mathconvert + " " + texName.stemname + "-dvi-%d.png" + 
+    convertCmd = xopts.mathconvert + " " + texName.stemname + "-%d.png" + 
                           dviPages.convertPages + " " +
-                          texName.stemname + "-dvi-c" + dviPages.convertSuffix + ".png"
+                          texName.stemname + "-c" + dviPages.convertSuffix + ".png"
     if (xopts.verbose>=1) println( "  converting math images... (dvi)" )
     if (xopts.verbose>=3) println( "  > " + convertCmd )
     system(convertCmd, function(err,stdout,stderr) {
@@ -512,9 +541,11 @@ function mathConvertPng( texName : string,xopts : options, dviPages : pages, con
   }
 }
 
-function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, pdfPages : pages, continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
+function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, pdfPages : pages,
+                         texNameDvi : string, texNamePdf : string,
+                         continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   if (xopts.verbose>=1) println("  analyse and embed math images...")
-  dims2 = extendDim(dviPages, pdfPages, dimxName, xopts )
+  dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
   mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( Just(mdim2) )
@@ -534,31 +565,34 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
   }
 }
 
-function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts : options  ) : io string
+function extendDim( dviPages : pages, pdfPages : pages, 
+                    texNameDvi : string, texNamePdf : string,
+                    dimxFile : string, opts : options  ) : io string
 {
   var imageSize := 0  
   var imageCount := 0
   var embedSize := 0
-  var embedCount := 0
+  var embedCount := 0  
   dim = opts.mathdim
-  dims = (readTextFileDef(dimxFile.changeExt(".dim"),"")).lines
-  dimsx = dims.map fun(line) {
+
+  function dimLine( isPdf : bool, pages : pages, line : string ) 
+  {
     match(line.find(rxDimLine)) {
       Nothing   -> line
       Just(cap) -> { 
         pageNo = cap.groups[2].parseInt.maybe(0,id)
-        isPdf  = pageNo.inside(pdfPages)
         digest = cap.groups[3]
-        imageMod = (if (isPdf) then "-pdf-" else "-dvi-") +
-                   (if (opts.mathconvert!="") then "c-" else "") +
-                   (if (isPdf || opts.mathconvert!="") then (pageNo-1).show else pageNo.show)
+        imageStem = (if (isPdf) then texNamePdf.stemname else texNameDvi.stemname) +
+                    (if (opts.mathconvert!="") then "-c" else "") + "-" +
+                    (if (isPdf || opts.mathconvert!="") then (pageNo-1).show else pageNo.show)
 
-        imageName = combine(opts.mathImgDir, dimxFile.stemname + imageMod + ".png")
+        imageName = combine(opts.mathImgDir, imageStem + ".png")
         imageFile = combine(dimxFile.dirname,imageName)
+        //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
         val (pxwidth,pxheight,size,embed) 
           = match(dim[digest]) {
-              Just(mi) | !(isPdf || pageNo.inside(dviPages)) 
+              Just(mi) | !(pageNo.inside(pages)) 
                 -> {                  
                   //trace("known image: " + pageNo.show + ": " + imageFile + ": " + digest)
                   (mi.pxwidth,mi.pxheight,mi.size,mi.imageData)
@@ -566,11 +600,11 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
               _ -> { 
                 match( tryReadFileSync( imageFile )) {
                   Nothing   -> {
-                    warning("cannot read; " + imageFile)
+                    println("  error: cannot read: " + imageFile)
                     (0,0,0,"") // should not happen?
                   }
                   Just(buf) -> {
-                    //trace("read image: " + pageNo.show + ": " + imageFile + ": " + digest)
+                    //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                     base64 = buf.string("base64")
                     pxwidth = buf.readInt4(16)
                     pxheight = buf.readInt4(20)
@@ -611,7 +645,14 @@ function extendDim( dviPages : pages, pdfPages : pages, dimxFile : string, opts 
       }
     }
   }
-  txt = dimsx.unlines
+
+  trace("texNameDvi: " + texNameDvi)
+  dviDims = readTextFileDef(texNameDvi.changeExt(".dim"),"")
+  pdfDims = readTextFileDef(texNamePdf.changeExt(".dim"),"")
+  dimsx   = dviDims.lines.list.map( fun(line) { dimLine(False,dviPages,line) }) +
+            pdfDims.lines.list.map( fun(line) { dimLine(True,pdfPages,line) })
+  
+  txt = dimsx.join("\n")
   tryWriteTextFile( dimxFile, txt )
   if (opts.verbose >= 2) {
     totalCount = imageCount + embedCount

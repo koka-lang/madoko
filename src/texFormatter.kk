@@ -335,8 +335,8 @@ public function fmtTexFull(body : string, options : options, metadata : dict<str
   fmtTexFullX(body,options,metadata,False)
 }
 
-public function fmtTexMathFull(body : string, options : options ) : string {
-  fmtTexFullX(body,options,dict(),True)
+public function fmtTexMathFull( requireDvi : bool, body : string, options : options ) : string {
+  fmtTexFullX(body,options,dict(), requireDvi )
 }
 
 function fmtTexFullX(body : string, options : options, metadata : dict<string>, snippets : bool = False) : string 

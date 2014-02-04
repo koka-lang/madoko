@@ -165,7 +165,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
     elif (isDisplay) 
      then ("Display","\\[","\\]") 
      else ("Inline","$","$")
-  val special = if (attrs.hasClass("snippet-needpdf")) then "Pdf" else "" 
+  val mode = if (attrs.hasClass("snippet-needpdf")) then "math-pdf" else "math-dvi" 
   lkind  = kind.toLower
   class  = "math-" + lkind
   attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))
@@ -180,8 +180,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
       mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
       if (context.mathStatic) {
         digest = md5(txt)
-        log("math",@"\begin{md" + kind + "Snippet" + special + "}[" + digest + "]%\n" + 
-                      texcmd + "\n\\end{md" + kind + "Snippet" + special + "}")
+        log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
+                      texcmd + "\n\\end{md" + kind + "Snippet}")
         match(context.mathinfos[digest]) {
           Nothing  -> mcmd
           Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
