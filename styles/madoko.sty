@@ -295,8 +295,10 @@
 \newcommand{\mathkw}[1]{\mathsf{{#1}}}
 \newcommand{\mathid}[1]{\mathit{#1}}
 
-\newcommand{\mathspace}[1]{\mskip#1\medmuskip}
-\newcommand{\mathindent}[1]{\mskip#1\thickmuskip}
+\newcommand{\smallstrut}{\mbox{\rule{0ex}{1ex}}}
+
+\newcommand{\mathspace}[1]{\mskip\numexpr4*#1\relax mu plus #1mu minus #1mu\smallstrut}
+\newcommand{\mathindent}[1]{\mskip\numexpr8*#1\relax mu\smallstrut}
 \newcommand{\mathbr}{\\}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)
