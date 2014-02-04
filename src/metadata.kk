@@ -173,7 +173,7 @@ function defaultMeta( options : options ) : string {
       @"~HtmlOnly : input=htmlonly",
       @"~TexOnly  : input=texonly",
 
-      @"~Snippet  : input=math .block .needpdf",
+      @"~Snippet  : input=math .block .snippet-needpdf",
 
       @"Madoko Version: " + version,
       @"Defaults  : True",
