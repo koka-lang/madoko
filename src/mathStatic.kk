@@ -288,13 +288,13 @@ val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
 
 public function latexStrip( s : string ) : string
 {
-  s.replaceAll(rxStrip,"").toLower
+  s.replaceAll(rxStrip,"")
 }
 
 val rxStrip = regex(@"(\\[\w/\-\r\n]*(\[[^\]\r\n]*\])?|\^\^.|'\w*|\}\{[lrct]\}|\]\{[^\]\r\n]*\}|[^a-zA-Z])+") // ;""!\*()/\+=/,~:
 
 public function latexFindLineByMatch( texLine : string, source : string ) : maybe<string> {
-  stripLine = texLine.latexStrip
+  stripLine = texLine.latexStrip.substr(0,16) // some arbitrary length... seems to work well in practice
   if (stripLine.length < 3) then Nothing else {
     match (source.findLines(stripLine)) {
       Cons(lineNo,rest) -> Just(lineNo.show + (if (rest.isNil) then "" else " (?)"))
@@ -386,7 +386,7 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
   }
 }
 
-val rxLatexLine = regex(@"lines?[\s:]*(\d+).*(?:\r?\n(.*))?") 
+val rxLatexLine = regex(@"lines?[\s:]*(\d+).*(?:\r?\n([\s\S]*))?") 
 val rxLatexOutputActive = regex(@"\output is active\s*$") // only match single line 
 val rxLatexPage = regex(@"\s\[(\d+)\s*\]")
 val rxLatexOutput = regex(@"^Output written on .*", multiline=True)
