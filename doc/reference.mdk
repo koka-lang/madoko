@@ -12,8 +12,12 @@ Bib			: reference
 Package*	: fontspec
 Package		: [curve]xypic
 Math Embed  : 64
+Math Pdf Latex: XeLaTeX
 
 Package 	: tikz
+Package     : pgfplots
+Package     : pgfplotstable
+
 Package		: pstricks
 Package 	: pst-plot
 
@@ -22,7 +26,7 @@ Package		: amscd
 MathJax Ext : mhchem
 Package		: [version=3]mhchem
 
-Tex Header  : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}
+Tex Header  : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}			  	
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
@@ -1183,7 +1187,7 @@ Both examples come from the [TikZ example gallery].
 	[TikZ example](http://www.texample.net/tikz/examples/merge-sort-recursion-tree) \
 	by Manuel Kirsch of a merge sort recursion tree."}
 ~ Snippet
-\begin{tikzpicture}[scale=0.6,level/.style={sibling distance=60mm/#1}]
+\begin{tikzpicture}[scale=0.8,level/.style={sibling distance=60mm/#1}]
 \node [circle,draw] (z){$n$}
   child {node [circle,draw] (a) {$\frac{n}{2}$}
     child {node [circle,draw] (b) {$\frac{n}{2^2}$}
@@ -1255,6 +1259,73 @@ Both examples come from the [TikZ example gallery].
 ~ 
 ~ End Figure
 
+The final examples in Figure [#fig-barchart] use the TikZ `pgfplots` library:
+
+	Package: pgfplots
+	Package: pgfplotstable
+
+[bchart1]: http://stackoverflow.com/questions/4902147/latex-bar-chart
+[bchart2]: http://tex.stackexchange.com/questions/99832/how-to-draw-bar-chart-using-tikz
+
+~ Begin Figure { #fig-barchart caption="Bar chart examples by [Matt B.][bchart1] and [Jake][bchart2] using `pgfplots`."}
+~ Begin Columns
+~ Begin Column
+~ Snippet
+\begin{tikzpicture}
+\begin{axis}[%
+scale only axis,
+width=3in,
+height=2.5in,
+xmin=-3, xmax=3,
+ymin=0, ymax=1,
+axis on top]
+\addplot[
+  ybar,
+  bar width=0.075in, 
+  bar shift=0in,
+  fill=red,
+  draw=black] 
+  plot coordinates{ 
+    (-2.9,0.00022263) (-2.7,0.000682328) (-2.5,0.00193045) (-2.3,0.00504176)
+    (-2.1,0.0121552) (-1.9,0.0270518) (-1.7,0.0555762) (-1.5,0.105399)
+    (-1.3,0.18452) (-1.1,0.298197) (-0.9,0.444858) (-0.7,0.612626)
+    (-0.5,0.778801) (-0.3,0.913931) (-0.1,0.99005) (0.1,0.99005)
+    (0.3,0.913931) (0.5,0.778801) (0.7,0.612626) (0.9,0.444858) 
+    (1.1,0.298197) (1.3,0.18452) (1.5,0.105399) (1.7,0.0555762)
+    (1.9,0.0270518) (2.1,0.0121552) (2.3,0.00504176) (2.5,0.00193045)
+    (2.7,0.000682328) (2.9,0.00022263)
+  };
+\end{axis}
+\end{tikzpicture}
+~ 
+~ End Column
+~ Begin Column { vertical-align=bottom padding-left=2em }
+~ Snippet
+\begin{tikzpicture}
+\pgfplotstableread{ % Read the data into a table macro
+Label   First   Second  Third
+10      0.1     0.3     0.3
+20      0.2     0.3     0.3
+30      0.3     0.4     0.5
+40      0.3     0.5     0.8
+160     0.5     0.9     1.5
+}\datatable
+\begin{axis}[
+	width=3in,
+    xbar stacked,   % Stacked horizontal bars
+    xmin=0,         % Start x axis at 0
+    ytick=data,     % Use as many tick labels as y coordinates
+    yticklabels from table={\datatable}{Label}  % Get the labels from the Label column of the \datatable
+]
+\addplot [fill=yellow] table [x=First, y expr=\coordindex] {\datatable};    % Plot the "First" column against the data index
+\addplot [fill=green!70!blue]table [x=Second, y expr=\coordindex] {\datatable};
+\addplot [fill=red!80!yellow] table [x=Third, y expr=\coordindex] {\datatable};
+\end{axis}
+\end{tikzpicture}
+~
+~ End Column
+~ End Columns
+~ End Figure
 
 [TikZ]: 		http://www.ctan.org/pkg/pgf
 [PSTricks]: 	http://ctan.sharelatex.com/tex-archive/graphics/pstricks/base/doc/pstricks-doc.pdf
