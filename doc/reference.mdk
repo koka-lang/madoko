@@ -12,7 +12,6 @@ Bib			: reference
 Package*	: fontspec
 Package		: [curve]xypic
 Math Embed  : 64
-MathJax     : True
 
 Package 	: tikz
 Package		: pstricks

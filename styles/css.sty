@@ -16,36 +16,36 @@
 \RequirePackage{verbatim}
 
 % Define CSS 17 standard colors
-\definecolor{red}{HTML}{FF0000}
-\definecolor{lime}{HTML}{00FF00}
-\definecolor{blue}{HTML}{0000FF}
+\definecolor{Red}{HTML}{FF0000}
+\definecolor{Lime}{HTML}{00FF00}
+\definecolor{Blue}{HTML}{0000FF}
 
-\definecolor{yellow}{HTML}{FFFF00}
-\definecolor{cyan}{HTML}{00FFFF}
-\definecolor{magenta}{HTML}{FF00FF}
+\definecolor{Yellow}{HTML}{FFFF00}
+\definecolor{Cyan}{HTML}{00FFFF}
+\definecolor{Magenta}{HTML}{FF00FF}
 
-\definecolor{navy}{HTML}{000080}
-\definecolor{maroon}{HTML}{800000}
-\definecolor{green}{HTML}{008000}
+\definecolor{Navy}{HTML}{000080}
+\definecolor{Maroon}{HTML}{800000}
+\definecolor{Green}{HTML}{008000}
 
-\definecolor{teal}{HTML}{008080}
-\definecolor{purple}{HTML}{800080}
-\definecolor{olive}{HTML}{808000}
+\definecolor{Teal}{HTML}{008080}
+\definecolor{Purple}{HTML}{800080}
+\definecolor{Olive}{HTML}{808000}
 
-\definecolor{black}{HTML}{000000}
-\definecolor{dimgray}{HTML}{696969}
-\definecolor{gray}{HTML}{808080}
-\definecolor{darkgray}{HTML}{A9A9A9}
-\definecolor{silver}{HTML}{C0C0C0}
-\definecolor{lightgray}{HTML}{D3D3D3}
-\definecolor{gainsboro}{HTML}{DCDCDC}
-\definecolor{floralwhite}{HTML}{FFFAF0}
-\definecolor{ivory}{HTML}{FFFFF0}
-\definecolor{white}{HTML}{FFFFFF}
+\definecolor{Black}{HTML}{000000}
+\definecolor{Dimgray}{HTML}{696969}
+\definecolor{Gray}{HTML}{808080}
+\definecolor{Darkgray}{HTML}{A9A9A9}
+\definecolor{Silver}{HTML}{C0C0C0}
+\definecolor{Lightgray}{HTML}{D3D3D3}
+\definecolor{Gainsboro}{HTML}{DCDCDC}
+\definecolor{Floralwhite}{HTML}{FFFAF0}
+\definecolor{Ivory}{HTML}{FFFFF0}
+\definecolor{White}{HTML}{FFFFFF}
 
-\definecolor{orange}{HTML}{FFA500}
-\definecolor{aqua}{HTML}{00FFFF}
-\definecolor{fuchsia}{HTML}{FF00FF}
+\definecolor{Orange}{HTML}{FFA500}
+\definecolor{Aqua}{HTML}{00FFFF}
+\definecolor{Fuchsia}{HTML}{FF00FF}
 
 \newcommand{\@swap}[2]{#2{#1}}
 \newcommand{\@expandafter}[2]{\expandafter\@swap\expandafter{#2}{#1}}
@@ -89,6 +89,16 @@
 	\edef\strhead{#1}%
 	\edef\strtail{#2}%
 }
+
+% normalize colors: to lowercase and then capitalize
+\newcommand{\cssDefNormalizeColor}[2]{%
+	\expandafter\@cssNormColor#2\empty{#1}\empty%
+}
+\def\@cssNormColor#1#2\empty#3\empty{%
+	\uppercase{\def\@hd{#1}}\lowercase{\def\@tl{#2}}%
+	\expandafter\global\expandafter\edef\csname #3\endcsname{\@hd\@tl}%
+}
+
 
 % ---------------------------------------------------
 % Some TeX stuff to compose functions
@@ -369,6 +379,7 @@
 	{\begin{mdframed}[#1]\@cssFixMathSpacing}%
 	{\@cssFixMathSpacing\end{mdframed}}
 
+
 \newif\if@needframe
 \newLength{\@cssPaddingLength}{0pt}
 \newcommand{\@cssFramedArgs}{}
@@ -384,7 +395,8 @@
 	\ifdim\cssPaddingBottom=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingLeft=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingRight=0pt\else\@needframetrue\fi
-	\expandafter\lowercase\expandafter{\expandafter\def\expandafter\bcolor\expandafter{\cssBackgroundColor}}%
+	\cssDefNormalizeColor{@bcolor}{\cssBackgroundColor}\edef\@@bcolor{\@bcolor}%
+	%\expandafter\lowercase\expandafter{\expandafter\def\expandafter\bcolor\expandafter{\cssBackgroundColor}}%	
 	\if@needframe%		
 		\cssDoAfter{\cssRestoreFootnotes}% first, because post commands are pre-pended
 		\renewcommand{\@cssFramedArgs}{%
@@ -394,7 +406,7 @@
 			innerrightmargin=\the\cssPaddingRight,%
 			linewidth=\the\cssBorderWidth,%
 			linecolor=\cssBorderColor,%
-			backgroundcolor=\bcolor%
+			backgroundcolor=\@@bcolor%
 		}%
 		\setlength{\cssBorderWidthTotal}{0pt}%
 		\eifstrequal{\cssBorderStyleTop}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
@@ -527,10 +539,10 @@
 
 
 \DeclareRobustCommand{\@robustColor}[1]{%
-	\lowercase{\def\clr{#1}}\color{\clr}%
+	\cssDefNormalizeColor{@fcolor}{#1}\color{\@fcolor}%
 }
 \DeclareRobustCommand{\@robustColorbox}[2]{%
-	\lowercase{\def\clr{#1}}\colorbox{\clr}{#2}%
+	\cssDefNormalizeColor{@fcolor}{#1}\colorbox{\@fcolor}{#2}%
 }
 
 
