@@ -146,6 +146,8 @@ a.localref:hover {
 
 .figure {
   padding: 0.5em;
+  margin-left: 0pt;
+  margin-right: 0pt;
 }
 
 .hidden {

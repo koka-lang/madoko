@@ -1274,7 +1274,6 @@ The final examples in Figure [#fig-barchart] use the TikZ `pgfplots` library:
 \begin{tikzpicture}
 \begin{axis}[%
 scale only axis,
-width=3in,
 height=2.5in,
 xmin=-3, xmax=3,
 ymin=0, ymax=1,

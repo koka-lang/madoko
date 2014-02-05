@@ -105,52 +105,58 @@ val rxLatexErr = regex(@"^\*\* ERROR .*|^![\s\S]*?(?=^\s*(?:Here is how much of 
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
+function mathHeader( xopts : options, mode : string ) : string 
+{
+  initial = ["% MathDpi: " + xopts.mathDpi.show,
+             "MathImgDir: " + xopts.mathImgDir,
+             "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
+             "MathDocClass: " + xopts.mathDocClass
+            ]
+  dviDeps = ["Dvipng: " + xopts.dvipng,
+             "Latex: " + xopts.latex, 
+             "MathConvert: " + xopts.mathconvert 
+            ]
+  pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
+             "PdfLatex: " + xopts.pdflatex, 
+             "Convert: " + xopts.convert,
+             "Dvips: " + xopts.dvips,
+             "Ps2pdf: " + xopts.ps2pdf 
+            ]
+  (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
+}
 
-function formatMath( mode :string, math : string, outName : string, xopts : options ) : (string,string,string)
+function mathContent( xopts : options, mode : string, body : string = "" ) : string {
+  opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
+  xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
+  opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
+}
+
+function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)
 {
   texName = outName.appendStem("-math-" + mode).changeExt(".tex")
-  texFinalName = texName.changeExt(".final.tex")
-  
-  body = "\\begin{mdSnippets}\n" + math + "\\end{mdSnippets}"
-  outTex = fmtTexMathFull(mode=="dvi",
-                          body,
-                          if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts)
-
-  outHdr = "% MathDpi: " + xopts.mathDpi.show + 
-            ", MathImgDir: " + xopts.mathImgDir +
-            ", MathEmbedLimit: " + xopts.mathEmbedLimit.show + 
-            ", MathDocClass: " + xopts.mathDocClass +
-            ", Dvipng: " + xopts.dvipng + 
-            ", Latex: " + xopts.latex + 
-            ", MathConvert: " + xopts.mathconvert + 
-            ", MathPdfLatex: " + xopts.mathpdflatex + 
-            ", Convert: " + xopts.convert + 
-            ", Dvips: " + xopts.dvips + 
-            ", Ps2pdf: " + xopts.ps2pdf + 
-            "\n"
-  outMath = outHdr + outTex
-  (texName,texFinalName,outMath)
+  texFinalName = texName.changeExt(".final.tex")  
+  (texName,texFinalName,mathContent(xopts,mode,math))
 }
 
 public function mathStatic( mathDvi : string, mathPdf : string,  
                             outName : string, xopts : options, content : string, 
                             continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
 {
-  val (texNameDvi,texNameFinalDvi,outMathDvi) = formatMath("dvi",mathDvi,outName,xopts)
-  val (texNamePdf,texNameFinalPdf,outMathPdf) = formatMath("pdf",mathPdf,outName,xopts)
+  val (texNameDvi,texNameFinalDvi,outMathDvi) = xopts.mathFormat("dvi",mathDvi,outName)
+  val (texNamePdf,texNameFinalPdf,outMathPdf) = xopts.mathFormat("pdf",mathPdf,outName)
 
-  oldMathDvi = readTextFileDef(texNameFinalDvi,"")
-  oldMathPdf = readTextFileDef(texNameFinalPdf,"")
+  oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"))
+  oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"))
    
   if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
    then return continue(Nothing)
 
-  if (xopts.verbose>=1) println("  typesetting math...")
-  if (!(tryWriteTextFile(texNameDvi,outMathDvi))) {
+  if (xopts.verbose>=1) println("  rendering math.")
+  if (mathDvi != oldMathDvi && !(tryWriteTextFile(texNameDvi,outMathDvi))) {
     println("error: unable to write: " + texNameDvi)
     return continue(Nothing)
   }
-  if (!(tryWriteTextFile(texNamePdf,outMathPdf))) {
+  if (mathPdf != oldMathPdf && !(tryWriteTextFile(texNamePdf,outMathPdf))) {
     println("error: unable to write: " + texNamePdf)
     return continue(Nothing)
   }
@@ -161,12 +167,12 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
   if (xopts.verbose>=1) {
-    if (dviPages.isNil) println("  no changes (dvi)")
-    if (pdfPages.isNil) println("  no changes (pdf)")
+    if (dviPages.isNil && mathDvi != "") println("  no changes (dvi)")
+    if (pdfPages.isNil && mathPdf != "") println("  no changes (pdf)")
   }
   if (dviPages.isNil && pdfPages.isNil) then {
-    rename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
-    rename(texNamePdf,texNameFinalPdf); 
+    tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
+    tryRename(texNamePdf,texNameFinalPdf); 
     return continue(Nothing)
   }
     
@@ -177,8 +183,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
           mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
             function(mbmath) {
               if (mbmath.isJust) {
-                rename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
-                rename(texNamePdf,texNameFinalPdf);
+                tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
+                tryRename(texNamePdf,texNameFinalPdf);
               }
               continue(mbmath)
             }
@@ -246,7 +252,7 @@ function mathSnippetsToDvi( texName : string, xopts : options,
 {  
   if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue()
 
-  if (xopts.verbose>=1) println("  running latex on math... (dvi mode)")
+  if (xopts.verbose>=1) println("  running " + xopts.latex.stemname + " on math...   (dvi)")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
               function () { () }, continue ) 
@@ -261,9 +267,9 @@ function mathSnippetsToPdf( texName : string, xopts : options,
   if (pages.isNil) return continue()
   if (xopts.mathpdflatex != "") {
     // re-run latex to get a pdf
-    if (xopts.verbose>=1) println("  running latex on math... (pdf mode)")
     notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
     texCmd = xopts.getMathpdflatex
+    if (xopts.verbose>=1) println("  running " + texCmd.stemname + " on math... (pdf)")
     runLaTeX( texName, texCmd, xopts, content, notfound, 0, False,
       function () { () }, continue ) 
   }
@@ -509,7 +515,7 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 {  
   if (pages.isNil) return continue()
 
-  if (xopts.verbose>=1) println("  generating math images... (" + mode + ") (" + pages.pagesShow + ")")
+  if (xopts.verbose>=1) println("  generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
   if (xopts.verbose>=3) println("  > " + cmd)
   system(cmd,function(err2,stdout2,stderr2) {
     if (err2 != 0) {
@@ -544,7 +550,7 @@ function mathConvertPng( texName : string,xopts : options, dviPages : pages, con
 function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, pdfPages : pages,
                          texNameDvi : string, texNamePdf : string,
                          continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
-  if (xopts.verbose>=1) println("  analyse and embed math images...")
+  if (xopts.verbose>=1) println("  analyse and embed math images.")
   dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
   mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
@@ -646,7 +652,6 @@ function extendDim( dviPages : pages, pdfPages : pages,
     }
   }
 
-  trace("texNameDvi: " + texNameDvi)
   dviDims = readTextFileDef(texNameDvi.changeExt(".dim"),"")
   pdfDims = readTextFileDef(texNamePdf.changeExt(".dim"),"")
   dimsx   = dviDims.lines.list.map( fun(line) { dimLine(False,dviPages,line) }) +

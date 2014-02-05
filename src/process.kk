@@ -80,3 +80,7 @@ public external mkdirp( dir : string, mode : int = 0x1FF ) : io () {
 public external rename( fnameOld : string, fnameNew : string ) : io () {
   js inline "fs.renameSync(#1,#2)"
 }
+
+public function tryRename( fnameOld : string, fnameNew : string ) : io () {
+  ignore( { rename(fnameOld,fnameNew) })
+}

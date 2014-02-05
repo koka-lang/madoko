@@ -356,8 +356,8 @@ function fmtTexFullX(body : string, options : options, metadata : dict<string>, 
    options.texHeader.expand,
    if (snippets) then "" else options.texHeaderx.expand,
    @"\begin{document}",
-   (if (options.title=="") then "" else
-      "\\title{" + texText(options.title.expand) + "}\n"),
+   //(if (options.title=="") then "" else
+   //   "\\title{" + texText(options.title.expand) + "}\n"),
    body, 
    @"\end{document}",""
    ].join("\n")
