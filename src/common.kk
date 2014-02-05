@@ -357,6 +357,11 @@ public function hasKey( attrs : attrs, key : string ) : maybe<string> {
   attrs.keyvals.find( fun(kv) { kv.fst == key }).maybe(Nothing,fun(kv){ Just(kv.snd) })
 }
 
+public function hasBoolKey( attrs : attrs, key : string ) : bool {
+  value = attrs.hasKey(key).maybe("",id).toLower
+  (attrs.hasClass(key) || value=="true" || value=="1")
+}
+
 public function hasClass( attrs : attrs, className : string ) : bool {
   attrs.classes.find( fun(cname) { cname==className }).bool
 } 

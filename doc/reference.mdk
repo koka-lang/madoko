@@ -9,24 +9,22 @@ Heading Base: 2
 Cite All	: True
 Script		: reference.js
 Bib			: reference
-Package*	: fontspec
-Package		: [curve]xypic
 Math Embed  : 64
-Math Pdf Latex: XeLaTeX
 
-Package 	: tikz
-Package     : pgfplots
-Package     : pgfplotstable
-
-Package		: pstricks
-Package 	: pst-plot
+Package*	: fontspec
+Package*	: [curve]xypic
+Package* 	: tikz
+Package*    : pgfplots
+Package*    : pgfplotstable
+Package*	: pstricks
+Package*	: pst-plot
 
 MathJax Ext : AMScd
 Package		: amscd
 MathJax Ext : mhchem
 Package		: [version=3]mhchem
 
-Tex Header  : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}			  	
+Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}			  	
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
@@ -964,7 +962,7 @@ document with the `curve` option:
 With this package, we can draw very complex diagrams:
 
 ~~ Sample
-~ Equation
+~ Equation { math-needpdf=true }
 \xyoption{tips}
 \entrymodifiers={++[o][F-]}
 \SelectTips{cm}{}
@@ -983,7 +981,7 @@ With this package, we can draw very complex diagrams:
 or:
 
 ~~ Sample
-~ Equation
+~ Equation { math-needpdf=true }
 \xymatrix @-0.5em{
 U \ar@/_/[ddr]_y \ar@/^/[drr]^x
 \ar@{.>}[dr]|-{(x,y)} \\

@@ -73,7 +73,7 @@ public struct options(
   sectionBase   : int  = 1, // starting section level.
   
   mathmode      : mathmode = Static,  // mode used to render math
-  mathjax       : string = "",        // mathjax scripts path (use "-" for default path)
+  mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
   mjext         : string = "",        // semicolon separated list of mathjax extensions
   
   mathImgDir    : string = "math",    // directory for static math images
@@ -91,7 +91,7 @@ public struct options(
   latex         : string = "latex",   // used to generate dvi for math
   dvipng        : string = "dvipng",  // used to extract png images for math
   
-  mathpdflatex  : string = "",        // if non-empty, used when pdf is needed for snippets. Use "-" for default program
+  mathpdflatex  : string = "default",        // if non-empty, used when pdf is needed for snippets. Use "default" for default program
   dvips         : string = "dvips",   // used with ps2pdf when mathpdflatex is empty
   ps2pdf        : string = "ps2pdf",
   convert       : string = "convert", // used to extract png's from pdf for math that needs it

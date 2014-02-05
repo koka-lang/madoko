@@ -136,7 +136,7 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" }&nl;&source;&nl;~ End Math&nl;' tight .para-block",
+  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" }&nl;&source;&nl;~ End Math&nl;' tight .para-block",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
       @"~Figure   : after='&nl;********* {.figureline}&nl;[[**Figure\ &label;.** ]\
                            {.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
@@ -173,7 +173,7 @@ function defaultMeta( options : options ) : string {
       @"~HtmlOnly : input=htmlonly",
       @"~TexOnly  : input=texonly",
 
-      @"~Snippet  : input=math .block .snippet-needpdf",
+      @"~Snippet  : input=math .block snippet-needpdf=true",
 
       @"Madoko Version: " + version,
       @"Defaults  : True",

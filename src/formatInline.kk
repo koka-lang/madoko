@@ -165,7 +165,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
     elif (isDisplay) 
      then ("Display","\\[","\\]") 
      else ("Inline","$","$")
-  val mode = if (attrs.hasClass("snippet-needpdf")) then "math-pdf" else "math-dvi" 
+  val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   lkind  = kind.toLower
   class  = "math-" + lkind
   attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))

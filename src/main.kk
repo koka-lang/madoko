@@ -156,7 +156,7 @@ function process( inName : string, outName : string, content : string, icontent 
 
     // write html result
     if (!(tryWriteTextFile(outName,html))) {
-      println("error: unable to write: " + outName) 
+      mopts.printErr("error: unable to write: " + outName) 
     }
 
     // write an aux file
@@ -183,12 +183,12 @@ function process( inName : string, outName : string, content : string, icontent 
       // generate tex
       outTexName = outName.changeExt(".tex")
       if (mopts.tex) {
-        if (mopts.verbose > 0) println("process: " + inName + " -> " + outTexName )        
+        if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
         if (texwarns != "" && mopts.verbose>=3) print(texwarns) 
         //trace(tex)
         if (!(tryWriteTextFile(outTexName,tex))) {
-          println("error: unable to write: " + outTexName) 
+          mopts.printErr("error: unable to write: " + outTexName) 
         }
       }
 
@@ -198,11 +198,11 @@ function process( inName : string, outName : string, content : string, icontent 
           match(mbmdim2) {
             Just(mdim2) -> {
               // write html again
-              if (mopts.verbose>=1) println("  re-aligning math in HTML.")
+              mopts.print("re-aligning math in HTML.")
               
               html2 = markdown(icontent,xopts(mathdim=mdim2))
               if (!(tryWriteTextFile(outName,html2))) {
-                println("error: unable to write: " + outName) 
+                mopts.printErr("error: unable to write: " + outName) 
               }
             }
             Nothing -> ()
@@ -236,7 +236,7 @@ function writeCitations( auxData : string, auxName : string, opts : options ) : 
             bibNames.map(fun(nm){ "\\bibdata{" + nm.noext + "}\n" }).join
 
   if (!(tryWriteTextFile(auxName, newData))) then {
-    println("error: unable to write citations: " + auxName )
+    opts.printErr("error: unable to write citations: " + auxName )
   }
 
   return (oldData != newData)
@@ -255,7 +255,7 @@ function include( txt : string, fast : bool, outName : string, dirs : list<strin
     else {
       match (trySearchReadTextFile(fname,dirs)) {
         Nothing -> {
-          println("warning: unable to read include: " + fname )
+          println("  warning: unable to read include: " + fname )
           ""
         }
         Just(content) -> content 

@@ -19,21 +19,56 @@ import options
 import texFormatter
 import process
 
+public function getDocName( opts : options ) : string {
+  match(opts.metadata.find(fun(kv) { kv.fst == "docname" })) {
+    Just(kv) -> kv.snd + ": "
+    Nothing  -> ""
+  }
+}
+
+public function indent( opts : options, s : string ) : string {
+  s.lines.map(fun(line) { "  " + line }).unlines
+}
+
+public function print( opts :options, msg : string, level : int = 1  ) {
+  if (opts.verbose >= level) println(opts.indent(opts.getDocName + msg))
+}
+
+public function printErr( opts :options, msg : string, level : int = 0  ) {
+  if (opts.verbose >= level) println(opts.indent(msg))
+}
+
+function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (int) -> io () ) : io () {
+  if (tasks.isNil) return continue(0)
+
+  var count   := tasks.length
+  var lasterr := 0
+
+  function taskContinue( err : int ) {
+    count := count-1
+    if (err != 0) lasterr := err
+    if (count<=0) continue(lasterr)
+  }
+
+  tasks.foreach fun(task) {
+    onFail( { count := count-1 }, { task(taskContinue) } )
+  }
+}
 
 public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
-  if (opts.verbose>=1) println("  running bibtex to generate bibliography...")
+  opts.print("running bibtex to generate bibliography...")
   bibtexCmd = opts.bibtex + " \"" + bibFile.basename + "\""
-  if (opts.verbose>=3) println("  > " + bibtexCmd)
+  opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
     if (err!=0) {
-      println("> " + bibtexCmd)
+      opts.printErr("> " + bibtexCmd)
       system(bibtexCmd + " -version") function(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          println("could not find BibTeX: \"" + bibtexCmd + "\"")
-          println("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
+          opts.printErr("could not find BibTeX: \"" + bibtexCmd + "\"")
+          opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
         }
         else {
-          println(stdout + stderr)
+          opts.printErr(stdout + stderr)
         }
         continue(True)
       }
@@ -43,11 +78,12 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
 }
 
 public function runPdfLaTeX( texFile : string, opts : options, content : string = "", continue : () -> io () ) {
-  if (opts.verbose>=1) println("  running latex to generate pdf...")
+  opts.print("running latex to generate pdf...")
   notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
   runLaTeX( texFile, opts.getPdflatex, opts, content, notfound, 0, True,
-    function() { () }, continue )  
+    function(err) { continue() } )  
 }
+
 
 
 function runLaTeX( texFile : string, texCmd : string, opts : options, 
@@ -55,48 +91,47 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
                     notfound : string,
                     runCount : int = 0,
                     showWarnings : bool = True,
-                    onError : () -> io (),
-                    onSuccess : () -> io () )
+                    continue : (err : int) -> io () )
 {
   latexCmd = texCmd + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
-  if (opts.verbose>=3) println("  > " + latexCmd)
+  opts.print("> " + latexCmd,3)
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
     logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
-      println("error while running: \n  > " + latexCmd)
+      opts.printErr("error while running: \n> " + latexCmd)
       //println(stdout + stderr)
       system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          println("could not find latex: \"" + texCmd + "\"")
-          if (notfound != "") println(notfound)
+          opts.printErr("could not find latex: \"" + texCmd + "\"")
+          if (notfound != "") opts.printErr(notfound)
         }
         else {
           match(logout.find(rxLatexErr)) {
             Just(cap) -> {          
               texContent = readTextFileDef(texFile,"")
               match (content.findLatexLine(cap.matched,texContent)) {
-                Just(lineNo) -> println("error: source line: " + lineNo)
+                Just(lineNo) -> opts.printErr("error: source line: " + lineNo)
                 Nothing -> ()
               }
-              println(cap.matched)
+              opts.printErr(cap.matched)
             }
             Nothing -> {
-              println(stdout + stderr)    
+              opts.printErr(stdout + stderr)    
             }
           } 
-          println("log written at: " + texFile.changeExt(".log"))
+          opts.printErr("log written at: " + texFile.changeExt(".log"))
         }      
-        onError()        
+        continue(err)       
       }
     }
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
-        if (opts.verbose >= 1) println("  rerun latex to resolve references...")
-        runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, onError, onSuccess)
+        opts.print("rerun latex to resolve references...")
+        runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, continue)
       }
       else {
         if (showWarnings) then latexShowWarnings(texFile,logout,content,opts)
-        onSuccess()
+        continue(0)
       }
     }
   },0,texFile.dirname)
@@ -151,13 +186,13 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
    then return continue(Nothing)
 
-  if (xopts.verbose>=1) println("  rendering math.")
+  xopts.print("rendering math.")
   if (mathDvi != oldMathDvi && !(tryWriteTextFile(texNameDvi,outMathDvi))) {
-    println("error: unable to write: " + texNameDvi)
+    xopts.printErr("error: unable to write: " + texNameDvi)
     return continue(Nothing)
   }
   if (mathPdf != oldMathPdf && !(tryWriteTextFile(texNamePdf,outMathPdf))) {
-    println("error: unable to write: " + texNamePdf)
+    xopts.printErr("error: unable to write: " + texNamePdf)
     return continue(Nothing)
   }
   
@@ -167,17 +202,21 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
   if (xopts.verbose>=1) {
-    if (dviPages.isNil && mathDvi != "") println("  no changes (dvi)")
-    if (pdfPages.isNil && mathPdf != "") println("  no changes (pdf)")
+    if (dviPages.isNil && mathDvi != "") xopts.print("no changes (dvi)")
+    if (pdfPages.isNil && mathPdf != "") xopts.print("no changes (pdf)")
   }
   if (dviPages.isNil && pdfPages.isNil) then {
     tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
     tryRename(texNamePdf,texNameFinalPdf); 
     return continue(Nothing)
   }
-    
-  mathSnippetsToDvi( texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages ) {
-    mathSnippetsToPdf( texNamePdf, xopts, content, oldMathPdf, pdfPages ) {
+  
+  concurrent([
+      fun(cont) { mathSnippetsToDvi( texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages, cont ) },
+      fun(cont) { mathSnippetsToPdf( texNamePdf, xopts, content, oldMathPdf, pdfPages, cont ) }
+    ], 
+    fun(err) {
+      if (err != 0) return continue(Nothing)
       mathDviPdfToPng( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
         mathConvertPng( texNameDvi, xopts, dviPages ) {
           mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
@@ -190,8 +229,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
             }
         }
       }
-    }      
-  }
+    }
+  )      
 }
 
 function getHeader( src : string ) : string
@@ -248,30 +287,29 @@ val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet}[\[\{]([a-fA-F0-9]{32
 function mathSnippetsToDvi( texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             dviPages : pages, pdfPages : pages,
-                           continue : () -> io () ) : io () 
+                           continue : (int) -> io () ) : io () 
 {  
-  if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue()
+  if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue(0)
 
-  if (xopts.verbose>=1) println("  running " + xopts.latex.stemname + " on math...   (dvi)")
+  xopts.print("running " + xopts.latex.stemname + " on math...   (dvi)")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
-              function () { () }, continue ) 
+              continue ) 
 }  
 
 
 function mathSnippetsToPdf( texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             pages : pages,
-                           continue : () -> io () ) : io () 
+                           continue : (int) -> io () ) : io () 
 {  
-  if (pages.isNil) return continue()
+  if (pages.isNil) return continue(0)
   if (xopts.mathpdflatex != "") {
     // re-run latex to get a pdf
     notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
     texCmd = xopts.getMathpdflatex
-    if (xopts.verbose>=1) println("  running " + texCmd.stemname + " on math... (pdf)")
-    runLaTeX( texName, texCmd, xopts, content, notfound, 0, False,
-      function () { () }, continue ) 
+    xopts.print("running " + texCmd.stemname + " on math... (pdf)")
+    runLaTeX( texName, texCmd, xopts, content, notfound, 0, False, continue )
   }
   else {
     // use dvips and ps2pdf to get a pdf
@@ -279,24 +317,26 @@ function mathSnippetsToPdf( texName : string, xopts : options,
     stem = texName.stemname
     dvipsCmd = xopts.dvips + " -Ppdf -G0 " + stem + ".dvi"
     ps2pdfCmd = xopts.ps2pdf + " " + stem + ".ps"
-    if (xopts.verbose>=1) println("  generating pdf from dvi...")
-    if (xopts.verbose>=3) println("  >" + dvipsCmd)
+    xopts.print("generating pdf from dvi...")
+    xopts.print(">" + dvipsCmd, 3)
     system(dvipsCmd,function(err,stdout,stderr) {
       if (err != 0) {
-        println("> " + dvipsCmd)
-        println("error: failure while typesetting math: \n" + stdout + stderr)      
+        xopts.printErr("> " + dvipsCmd)
+        xopts.printErr("error: failure while typesetting math: \n" + stdout + stderr)      
+        continue(err)
       }
       else {
-        if (xopts.verbose>=3) println("  >" + ps2pdfCmd)
+        xopts.print(">" + ps2pdfCmd, 3)
         system(ps2pdfCmd, function(err2,stdout2,stderr2) {
           if (err2 != 0) {
-            println("> " + ps2pdfCmd)
-            println("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+            xopts.printErr("> " + ps2pdfCmd)
+            xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+            continue(err2)
           }
           else {
-            continue()
+            continue(0)
           }
-          },0,dir)
+        },0,dir)
       }
     },0,dir)
   }  
@@ -406,7 +446,7 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
                 }                
         pre = match(latexFindLineByMatch(line,content)) {
           Nothing -> {
-            if (opts.verbose >= 4) then println("unable to find line: \n> " + line.latexStrip + "\n")
+            if (opts.verbose >= 4) then opts.printErr("unable to find line: \n> " + line.latexStrip + "\n")
             ""
           }
           Just(srcLineNo) -> "> warning: source line: " + srcLineNo+ "\n"
@@ -415,11 +455,11 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
         pre + warning + (if (cap.groups[2]=="" && line!="") then "\n> " + line.substr(0,76) else "")
       }
     }
-    println(warn + "\n")
+    opts.printErr(warn + "\n")
   }
   match(logout.find(rxLatexOutput)) {
-    Just(cap) -> println(cap.matched)
-    Nothing   -> if (warnings.isCons) println("end of latex warnings.")  
+    Just(cap) -> opts.printErr(cap.matched)
+    Nothing   -> if (warnings.isCons) opts.printErr("end of latex warnings.")  
   }
 }
 
@@ -501,30 +541,35 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
   // make sure the output directory exists
   outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
   if (!(fexists(outDir))) {
-    if (xopts.verbose>=1) println("  create image directory: " + outDir)
+    xopts.print("create image directory: " + outDir)
     mkdirp(outDir)
   }                                      
   
-  mathCmdToPng( dvipngCmd, texNameDvi.dirname, "dvi", dviPages, xopts) {
-    mathCmdToPng( pdfpngCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, continue )
-  } 
+  concurrent([
+      fun(cont) { mathCmdToPng( dvipngCmd, texNameDvi.dirname, "dvi", dviPages, xopts, cont) },
+      fun(cont) { mathCmdToPng( pdfpngCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, cont) } 
+    ], 
+    fun(err) {
+      if (err==0) {
+        continue()
+      }
+    }
+  )
 }
 
 function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
-                       continue : () -> io () ) : io () 
+                       continue : (int) -> io () ) : io () 
 {  
-  if (pages.isNil) return continue()
+  if (pages.isNil) return continue(0)
 
-  if (xopts.verbose>=1) println("  generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
-  if (xopts.verbose>=3) println("  > " + cmd)
+  xopts.print("generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
+  xopts.print("> " + cmd,3)
   system(cmd,function(err2,stdout2,stderr2) {
     if (err2 != 0) {
-      println("> " + cmd)
-      println("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+      xopts.printErr("> " + cmd)
+      xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
     }
-    else {
-      continue()
-    }
+    continue(err2)
   },0,dir)
 }
 
@@ -535,12 +580,12 @@ function mathConvertPng( texName : string,xopts : options, dviPages : pages, con
     convertCmd = xopts.mathconvert + " " + texName.stemname + "-%d.png" + 
                           dviPages.convertPages + " " +
                           texName.stemname + "-c" + dviPages.convertSuffix + ".png"
-    if (xopts.verbose>=1) println( "  converting math images... (dvi)" )
-    if (xopts.verbose>=3) println( "  > " + convertCmd )
+    xopts.print( "converting math images... (dvi)" )
+    xopts.print( "> " + convertCmd, 3 )
     system(convertCmd, function(err,stdout,stderr) {
       if (err!=0) {
-        println("  > " + convertCmd)
-        println("  warning: conversion failed: \n" + stdout + stderr )
+        xopts.printErr("> " + convertCmd)
+        xopts.printErr("warning: conversion failed: \n" + stdout + stderr )
       }
       continue()
     },0,combine(dirname(texName),xopts.mathImgDir))
@@ -550,7 +595,7 @@ function mathConvertPng( texName : string,xopts : options, dviPages : pages, con
 function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, pdfPages : pages,
                          texNameDvi : string, texNamePdf : string,
                          continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
-  if (xopts.verbose>=1) println("  analyse and embed math images.")
+  xopts.print("analyse and embed math images.")
   dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
   mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
@@ -606,7 +651,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
               _ -> { 
                 match( tryReadFileSync( imageFile )) {
                   Nothing   -> {
-                    println("  error: cannot read: " + imageFile)
+                    opts.printErr("error: cannot read: " + imageFile)
                     (0,0,0,"") // should not happen?
                   }
                   Just(buf) -> {
@@ -662,9 +707,9 @@ function extendDim( dviPages : pages, pdfPages : pages,
   if (opts.verbose >= 2) {
     totalCount = imageCount + embedCount
     totalSize = imageSize + embedSize
-    println("   math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize )
-    println("   math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize )
-    println("   math total   : " + totalCount.show.align(4) + " in " + totalSize.showSize )
+    opts.print(" math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize, 2 )
+    opts.print(" math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize, 2 )
+    opts.print(" math total   : " + totalCount.show.align(4) + " in " + totalSize.showSize, 2 )
   }
   txt
 }
