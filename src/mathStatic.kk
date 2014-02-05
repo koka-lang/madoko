@@ -26,8 +26,20 @@ public function getDocName( opts : options ) : string {
   }
 }
 
+// quote file and command names for shell execution
+function quote( s : string ) : string {
+  "\"" + s + "\""
+}
+
+function cutoff( s : string, n : int ) : string {
+  if (n<=1) return s
+  s.lines.map(fun(line) { 
+    if (line.length >= n) then line.substr(0,n-1) + "\n" + line.substr(n-1) else line
+  }).unlines
+}
+
 public function indent( opts : options, s : string ) : string {
-  s.lines.map(fun(line) { "  " + line }).unlines
+  s.cutoff(78).lines.map(fun(line) { "  " + line }).unlines
 }
 
 public function print( opts :options, msg : string, level : int = 1  ) {
@@ -57,14 +69,14 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
-  bibtexCmd = opts.bibtex + " \"" + bibFile.basename + "\""
+  bibtexCmd = opts.bibtex.quote + " \"" + bibFile.basename + "\""
   opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
     if (err!=0) {
       opts.printErr("> " + bibtexCmd)
       system(bibtexCmd + " -version") function(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          opts.printErr("could not find BibTeX: \"" + bibtexCmd + "\"")
+          opts.printErr("could not find bibtex: \"" + bibtexCmd + "\"")
           opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
         }
         else {
@@ -78,7 +90,7 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
 }
 
 public function runPdfLaTeX( texFile : string, opts : options, content : string = "", continue : () -> io () ) {
-  opts.print("running latex to generate pdf...")
+  opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
   notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
   runLaTeX( texFile, opts.getPdflatex, opts, content, notfound, 0, True,
     function(err) { continue() } )  
@@ -93,7 +105,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
                     showWarnings : bool = True,
                     continue : (err : int) -> io () )
 {
-  latexCmd = texCmd + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
+  latexCmd = texCmd.quote + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
   opts.print("> " + latexCmd,3)
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
     logout = readTextFileDef(texFile.changeExt(".log"),"")
@@ -102,7 +114,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
       //println(stdout + stderr)
       system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          opts.printErr("could not find latex: \"" + texCmd + "\"")
+          opts.printErr("could not find program: \"" + texCmd + "\"")
           if (notfound != "") opts.printErr(notfound)
         }
         else {
@@ -126,7 +138,7 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
     }
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
-        opts.print("rerun latex to resolve references...")
+        opts.print("rerun to resolve references...")
         runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, continue)
       }
       else {
@@ -202,8 +214,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
   if (xopts.verbose>=1) {
-    if (dviPages.isNil && mathDvi != "") xopts.print("no changes (dvi)")
-    if (pdfPages.isNil && mathPdf != "") xopts.print("no changes (pdf)")
+    if (dviPages.isNil && mathDvi.contains(rxDigest)) xopts.print("no changes (dvi)")
+    if (pdfPages.isNil && mathPdf.contains(rxDigest)) xopts.print("no changes (pdf)")
   }
   if (dviPages.isNil && pdfPages.isNil) then {
     tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
@@ -315,8 +327,8 @@ function mathSnippetsToPdf( texName : string, xopts : options,
     // use dvips and ps2pdf to get a pdf
     dir = texName.dirname
     stem = texName.stemname
-    dvipsCmd = xopts.dvips + " -Ppdf -G0 " + stem + ".dvi"
-    ps2pdfCmd = xopts.ps2pdf + " " + stem + ".ps"
+    dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + stem + ".dvi"
+    ps2pdfCmd = xopts.ps2pdf.quote + " " + stem + ".ps"
     xopts.print("generating pdf from dvi...")
     xopts.print(">" + dvipsCmd, 3)
     system(dvipsCmd,function(err,stdout,stderr) {
@@ -414,7 +426,16 @@ function findOffsets( source : string, pat : string ) : list<int> {
 
 function latexShowWarnings(texFile:string,logout:string, content:string,opts:options) : io () 
 {
-  if (opts.verbose<2) then return ()
+  if (opts.verbose<2) then {
+    if (opts.verbose>=1) {
+      match(logout.find(rxLatexOutput)) {
+        Just(cap) -> opts.print(cap.matched,1)
+        Nothing -> ()
+      }
+    }
+    return ()
+  }
+
   warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { (cap.index,cap.matched) })
   if (warnings.isNil) then return () 
 
@@ -452,7 +473,7 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
           Just(srcLineNo) -> "> warning: source line: " + srcLineNo+ "\n"
         }
 
-        pre + warning + (if (cap.groups[2]=="" && line!="") then "\n> " + line.substr(0,76) else "")
+        pre + warning + (if (cap.groups[2]=="" && line!="") then "\n> " + line.substr(0,74) else "")
       }
     }
     opts.printErr(warn + "\n")
@@ -527,13 +548,13 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
                           continue : () -> io () ) : io () 
 {  
   dviBasePng = combine(xopts.mathImgDir,texNameDvi.stemname) 
-  dvipngCmd = xopts.dvipng + " -T tight -z9 -bg Transparent" + 
+  dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
                                       " " + dvipngPages(dviPages) + 
                                       " -o " + dviBasePng + "-%d.png" +
                                       " " + texNameDvi.basename
   pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
-  pdfpngCmd = xopts.convert + " -trim -density " + xopts.mathDpi.show + " " +
+  pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
                   texNamePdf.basename + pdfPages.convertPages + " " +
                   pdfBasePng + pdfPages.convertSuffix + ".png"
               

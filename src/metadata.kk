@@ -122,7 +122,7 @@ public function parsePlainMeta( txt : string, fmt : formatter, metadata : metada
     Just(cap) -> {
       kvs = if (fmt.matchFmt(cap.groups[1])) then {
               value = cap.groups[4].joinLines.trim
-              if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
+              //if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
               if (cap.groups.matchedOn(3))
                then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
                else [(cap.groups[2].normalizeId, value)]

@@ -174,15 +174,16 @@ val optionsDesc : list<option<commandOptions>>
 function setMeta( opts0 : options, value : string ) : options {
   keyvals = value.split(";").list
   keyvals.foldl(opts0) fun(opts : options,keyval) {
-    match(keyval.split(":",2).list) {
-      Cons(key,Cons(s,Nil)) -> {
-        opts(metadata = opts.metadata + [(key,s)] )
-      }
-      _ -> {
-        warning("illegal --meta option: " + value)
-        opts
-      }
+    i = keyval.indexOf(":")
+    if (i > 0) {
+      key = keyval.substr(0,i).trim
+      s   = keyval.substr(i+1).trim
+      opts(metadata = opts.metadata + [(key,s)] )
     }
+    else {
+      warning("illegal --meta option: " + value)
+      opts
+    }    
   }
 }
 

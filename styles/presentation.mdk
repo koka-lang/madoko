@@ -47,7 +47,7 @@ Math Dpi	  : 400
 @tex ~Notes	  : display=none
 @tex ~Vertical: notag
 Tex Header*   :
-	\usetheme[&beamer-theme-options;]{&beamer-theme;}
+	\ifbeamer\usetheme[&beamer-theme-options;]{&beamer-theme;}\fi
 Html Header   : 		
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

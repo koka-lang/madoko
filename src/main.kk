@@ -70,7 +70,8 @@ public function markdownFiles(args : string, action : (string,string,string,opti
   match(mbopts) {
     Nothing -> ()
     Just(opts) -> {
-      opts.inputs.foreach fun(input) {
+      opts.inputs.foreach fun(input0) {
+        input   = if (input0.extname=="") then input0 + ".mdk" else input0
         outName = outputName(input,opts)    
         if (opts.options.verbose > 0) println("process: " + input + " -> " + outName )        
         match (input.tryReadTextFile()) {
