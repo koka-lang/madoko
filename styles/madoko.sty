@@ -22,16 +22,6 @@
 \RequirePackage{amssymb}
 \RequirePackage{stmaryrd}
 
-% hyperref
-\hypersetup{
-  colorlinks=true,linkcolor=Navy,urlcolor=Navy,filecolor=Maroon
-}
-
-% booktabs
-\setlength{\aboverulesep}{0pt}
-\setlength{\belowrulesep}{0pt}
-\setlength{\doublerulesep}{\heavyrulewidth}
-
 % conditionals
 \newif\ifmathmode
 \newif\ifbeamer
@@ -44,7 +34,17 @@
 % Setup packages 
 %-------------------------------------------------------------
 
-\newcommand{\mdLineNumber}[1]{\scriptsize #1.}
+
+% hyperref
+\hypersetup{
+  colorlinks=true,linkcolor=Navy,urlcolor=Navy,filecolor=Maroon
+}
+
+% booktabs
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\setlength{\doublerulesep}{\heavyrulewidth}
+
 
 %-------------------------------------------------------------
 % Character commands 
@@ -54,6 +54,9 @@
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 
+%\providecommand{\bigstrut}{-0.5\baselineskip}{0pt}{1.5\baselineskip}
+%\providecommand{\deepstrut}{-0.5\baselineskip}{0pt}{0.5\baselineskip}
+%\providecommand{\highstrut}{0pt}{0pt}{\baselineskip}
 
 
 % inserted for unknown html entities

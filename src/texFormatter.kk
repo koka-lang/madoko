@@ -199,21 +199,26 @@ function fmtRows( rows : list<row>, td : string, pre : string ) : string {
 }
 
 
-function fmtLine( lines : list<line>, row : row ) : string {
+function fmtLine( lines : list<line>, row : row ) : string 
+{
+  width = match(row.rowAttrs.hasKey("rule-width")) {
+            Just(wd) -> "[" + wd.normalizeVal + "]"
+            Nothing  -> ""
+          }
   line2 = if (!(lines.any(isDouble))) then "" else {
     fmtRowLineBreak + 
      zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       attrs = cell.cellAttrs
       if (!(line.isDouble)) then "" 
-       else "\\cmidrule{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cmidrule" + width + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
   }
   
-  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" else {
+  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width else {
     zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       attrs = cell.cellAttrs
       if (line.isNoLine) then "" 
-       else "\\cmidrule{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cmidrule" + width + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join
   }
   
@@ -224,8 +229,9 @@ function fmtRow( td : string, row : row, pre : string ) : string {
   rcolor = match (row.rowAttrs.hasKey("background-color")) {
              Nothing   -> ""
              Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
-           }
-  rcolor + row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") + "\\\\\n"
+           }     
+  rcolor + row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") 
+    + "\\\\\n"
 } 
 
 

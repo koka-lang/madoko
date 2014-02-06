@@ -56,8 +56,15 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
   if (rows.isNil) then return ""
   tagBlock(tbody,
     rows.map( fun(row) {
-      tag("tr", row.cells.map(fun(cell) { tag(td,cell.text,
-                                                cell.cellAttrs.htmlFormat(td,context.sanitize)) }).join, 
+      tag("tr", row.cells.map(fun(cell) { 
+                    cattrs1 = match(row.rowAttrs.hasKey("rule-width")) {
+                               Just(wd) -> cell.cellAttrs
+                                            .addKeyvalIfNotExist("border-top-width",wd)
+                                            .addKeyvalIfNotExist("border-bottom-width",wd)
+                               Nothing  -> cell.cellAttrs
+                             }
+                    tag(td,cell.text, cattrs1.htmlFormat(td,context.sanitize)) 
+                }).join, 
                 row.rowAttrs.htmlFormat("tr",context.sanitize)) 
     }).join("\n"))
 } 

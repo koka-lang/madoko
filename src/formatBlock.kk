@@ -305,16 +305,16 @@ function formatRows( rows : list<row>,
                       colstyles : list<attrs>, context : formatContext,
                       attrs : attrs, isBody : bool ) : list<row>
 {
-  function addBackgroundColor( key : string, test : bool ) : list<(string,string)> {
+  function addRowKey( target : string, key : string, test : bool ) : list<(string,string)> {
     if (!test) then [] else {
       match(attrs.hasKey(key)) {
         Nothing -> []
-        Just(value) -> [("background-color",value),("border-color",value)]
+        Just(value) -> [(target,value)]
       }
     }
   }
 
-  function formatRow( row : list<cell>, cols : list<attrs> ) : list<cell> {    
+  function formatRow( row : list<cell>, cols : list<attrs>, rowstyle : attrs ) : list<cell> {    
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
@@ -338,9 +338,18 @@ function formatRows( rows : list<row>,
                                     then (colstyle1.addClass("cell-line"), "")
                                    elif (txt1.contains(rxDDashes))
                                     then (colstyle1.addClass("cell-double-line"), "")
-                                    else (colstyle1,txt1) 
-            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
-            Cons(elem, formatRow(rs,cs1))        
+                                    else (colstyle1,txt1)
+            colstyle3 = match(rowstyle.hasKey("row-padding-top")) {
+                         Just(wd) -> colstyle2.addKeyvalIfNotExist("padding-top",wd)
+                         Nothing  -> colstyle2
+                        }
+            colstyle4 = match(rowstyle.hasKey("row-padding-bottom")) {
+                         Just(wd) -> colstyle3.addKeyvalIfNotExist("padding-bottom",wd)
+                         Nothing  -> colstyle3
+                        }
+ 
+            elem = Cell(context.inlineContext.formatInline(txt2), colstyle4)
+            Cons(elem, formatRow(rs,cs1, rowstyle))        
           }
           _ -> Nil
         }
@@ -352,16 +361,25 @@ function formatRows( rows : list<row>,
   if (rows.isNil) then return Nil
 
   var rowNum := 0
+  var rowCount := 0
   rows.map fun(row) {
+    rowCount := rowCount+1
     hasLine = row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
     if (!hasLine) then rowNum := rowNum+1  
     rowstyle = row.rowAttrs.addKeyvals( 
-                      addBackgroundColor("row-color", isBody) +
-                      addBackgroundColor("row-odd-color", isBody && (rowNum==0 || rowNum.odd)) +
-                      addBackgroundColor("row-even-color", isBody && (rowNum!=0 && rowNum.even)) +
-                      addBackgroundColor("row-head-color", !isBody)
+                      addRowKey("background-color", "row-color", isBody) +
+                      addRowKey("background-color", "row-odd-color", isBody && (rowNum==0 || rowNum.odd)) +
+                      addRowKey("background-color", "row-even-color", isBody && (rowNum!=0 && rowNum.even)) +
+                      addRowKey("background-color", "row-head-color", !isBody) +
+                      addRowKey("rule-width", "row-toprule-width", !isBody && rowNum==0 ) +
+                      addRowKey("rule-width", "row-headrule-width", isBody && rowNum==0 ) +
+                      addRowKey("rule-width", "row-bottomrule-width", isBody && hasLine && rowCount == rows.length ) +
+                      addRowKey("row-padding-top", "row-toprule-sep", !isBody && rowNum==1 ) +
+                      addRowKey("row-padding-top", "row-headrule-sep", isBody && rowNum==1 ) +
+                      addRowKey("row-padding-bottom", "row-headrule-sep", isBody && rowNum==1 ) +
+                      addRowKey("row-padding-bottom", "row-bottomrule-sep", isBody && !hasLine && rowCount == rows.length-1 ) 
                     )
-    Row(formatRow(row.cells,colstyles),rowstyle)
+    Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)
   }
 }
 val rxbars = regex(@"[|+]+$")

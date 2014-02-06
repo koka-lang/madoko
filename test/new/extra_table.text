@@ -1,5 +1,4 @@
 Title	  : Table example
-MathJax	: True
 Heading Base: 2
  
 
@@ -138,4 +137,6 @@ Row and column attributes:
 | ====== |                   |                                |===================|
 | 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
 | ------ | ----------------- |                                | ----------------- |
-{ row-odd-color=Gainsboro row-even-color=FloralWhite row-head-color=#00E0E0}
+{ row-odd-color=Gainsboro row-even-color=FloralWhite row-head-color=#00E0E0 \
+  row-toprule-width=2px row-bottomrule-width=2px \
+  row-toprule-sep=2px row-bottomrule-sep=2px row-headrule-sep=2px}
