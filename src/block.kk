@@ -30,7 +30,7 @@ public type block {
   List( tag : string, content : list<block>, attrs : attrs = attrsNone )
   Item( content : list<block>, attrs : attrs = attrsNone )
   Heading( depth : int, text : string, attrs : attrs = attrsNone )
-  Table( header: list<list<string>>, columnAttrs : list<attrs>, cells : list<list<string>>, attrs : attrs = attrsNone )
+  Table( header: list<row>, columnAttrs : list<attrs>, cells : list<row>, attrs : attrs = attrsNone )
   DefLink( id : string, link : link )
   DefFootnote( id : string, content : list<block> )
   Empty()
@@ -38,8 +38,6 @@ public type block {
   Source( text : string, input : input = Markdown(), parentAttrs : attrs = attrsNone )     // raw content
   Special( name : string, value : string = "" )  // Special blocks, like [TOC] or [FOOTNOTES]
 }
-
-
 
 /* --------------------------------------
  Block grammar 
@@ -277,7 +275,7 @@ val rxindent5x  = regex(@"^ {1,5}",multiline=True)
 
 function blockNpTable( cap : matched, _context ) : block {
   header = cap.groups[1].npcolumns
-  cols   = cap.groups[2].npcolumns.map(columnStyle)
+  cols   = cap.groups[2].npcolumns.cells.map(fun(c) { c.text.columnStyle } )
   cells  = cap.groups[3].rows.map(npcolumns)
   Table([header],cols,cells,cap.groups[4].parseAttrs)    
 }  
@@ -288,11 +286,11 @@ function blockTable( cap : matched, _context ) : block {
   cells   = cap.groups[4].rows.map(columns)
   // create a horizontal line after the headers?
   txts    = cols.map(source)
-  hline   = if (txts.all(fun(txt){txt==""})) then [] else [txts]
+  hline   = if (txts.all(fun(txt){txt==""})) then [] else [Row(txts.map(fun(t){ Cell(t) }))]
   Table(headers,cols,hline+cells,cap.groups[5].parseAttrs)    
 }  
 
-function npcolumns( row : string ) : list<string> {
+function npcolumns( row : string ) : row {
   ("|" + row + "|").columns
 }
 
@@ -301,12 +299,16 @@ function rows( body : string ) : list<string> {
 }
 
 // Split a row into cells, keeping final separators ("|" or "+") at the end of each cell.
-function columns( row : string ) : list<string> {
+function columns( row : string ) : row {
   // Note: we allow "+" to separate for dashed lines. So we carefully split on "+" too
   // as long as such "+" is followed by dashes or double-dash.
-  row.findAll(regex(@"(?:^ *(?:\||\+(?=[-=])))?((?:[^\\|+]|\\.|\+ *(?![-=]))+(?:[|]+|[+]+(?= *[-=])|$))"))
-    .list.map( fun(cap) { cap.groups[1] })
+  cells = row.findAll(rxCell).list.map( fun(cap) { Cell(cap.groups[1]) })
+  attrs = row.find(rxRowAttr).maybe(attrsNone, fun(cap) { cap.groups[1].parseAttrs("row")  })
+  Row(cells,attrs)
 }
+
+val rxCell = regex(@"(?:^ *(?:\||\+(?=[-=])))?((?:[^\\|+]|\\.|\+ *(?![-=]))+(?:[|]+|[+]+(?= *[-=])|$))")
+val rxRowAttr = regex(@"[\+\|]" + xattrs + "$")
 
 // split the separator row in cells, and include the separators for determining the column style
 function columnStyles( row : string ) : list<attrs> {

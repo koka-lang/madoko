@@ -294,25 +294,25 @@ val rxDashes  = regex(@"^ *---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*
 val rxDDashes = regex(@"^ *===+ *[|+]*$")
 
 function deriveMathAttrs( parentAttrs : attrs ) {
-  Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ),
+  common/Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ),
          keyvals  = parentAttrs.keyvals.filter( fun(kv) {
                       key = kv.fst
                       key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-")
                     }))
 }
 
-function formatRows( cells : list<list<string>>, 
-                      colstyles : list<attrs>, context : formatContext ) : list<list<(string,attrs)>>
+function formatRows( rows : list<row>, 
+                      colstyles : list<attrs>, context : formatContext ) : list<row>
 {
-  function formatRow( row : list<string>, cols : list<attrs> ) : list<(string,attrs)> {
+  function formatRow( row : list<cell>, cols : list<attrs> ) : list<cell> {
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
           Cons(colstyle,cs) -> {
             // span multiple columns?
-            val (txt1,colspan) = match(cell.find(rxbars)) {
-              Nothing   -> (cell,1)
-              Just(cap) -> (cell.substr(0,cap.index), cap.matched.length)
+            val (txt1,colspan) = match(cell.text.find(rxbars)) {
+              Nothing   -> (cell.text,1)
+              Just(cap) -> (cell.text.substr(0,cap.index), cap.matched.length)
             }
             // combine borders in case of a multi-column
             val (colstyle1,cs1) = if (colspan<=1) then (colstyle,cs) 
@@ -330,7 +330,7 @@ function formatRows( cells : list<list<string>>,
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1) 
                                     
-            elem = (context.inlineContext.formatInline(txt2), colstyle2)
+            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
             Cons(elem, formatRow(rs,cs1))        
           }
           _ -> Nil
@@ -340,9 +340,9 @@ function formatRows( cells : list<list<string>>,
     }
   }
   
-  if (cells.isNil) then return Nil
-  cells.map fun(row) {
-    formatRow(row,colstyles)
+  if (rows.isNil) then return Nil
+  rows.map fun(row) {
+    Row(formatRow(row.cells,colstyles),row.attrs)
   }
 }
 val rxbars = regex(@"[|+]+$")

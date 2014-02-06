@@ -49,7 +49,7 @@ public rectype inlineContext {
                  xfmtLink: (ctx:inlineContext,isImage : bool, link : link, content : string ) -> string,
                  xfmtFootnote: (context : inlineContext, id : string, fn : footnote ) -> string,
                  xfmtTitle: (context : inlineContext, titleinfo : titleinfo ) -> string,
-                 xfmtTable: (context : inlineContext, head : cells, body : cells, attrs : attrs ) -> string,
+                 xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCode : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  fmt : formatter

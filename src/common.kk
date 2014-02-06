@@ -313,6 +313,10 @@ public struct attrs  (
   keyvals : list<(string,string)> = []    // key=value pairs 
 )
 
+
+public struct row( cells : list<cell>, rowAttrs : attrs = attrsNone )
+public struct cell( text : string, cellAttrs : attrs = attrsNone )
+
 public function addClasses( attrs : attrs, classes : list<string> ) : attrs {
   classes.foldl(attrs,fun(acc,c) { acc.addClass(c) })
 }
