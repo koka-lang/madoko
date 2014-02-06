@@ -15,16 +15,22 @@
 \RequirePackage{css}
 \RequirePackage{array}
 \RequirePackage{longtable}
+\RequirePackage{booktabs}
 \RequirePackage{hyperref}
-\RequirePackage{listings}
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
 \RequirePackage{stmaryrd}
 
+% hyperref
 \hypersetup{
   colorlinks=true,linkcolor=Navy,urlcolor=Navy,filecolor=Maroon
 }
+
+% booktabs
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\setlength{\doublerulesep}{\heavyrulewidth}
 
 % conditionals
 \newif\ifmathmode
@@ -39,14 +45,6 @@
 %-------------------------------------------------------------
 
 \newcommand{\mdLineNumber}[1]{\scriptsize #1.}
-\lstset{
-  mathescape,                 % must be here as madoko uses it to escape $ and |
-  numbersep=1ex,              % ensures numbers stay within a frame
-  numberstyle=\mdLineNumber,  % typeset line numbers
-  basicstyle=\ttfamily,
-  columns=fullflexible,
-  keepspaces
-}
 
 %-------------------------------------------------------------
 % Character commands 

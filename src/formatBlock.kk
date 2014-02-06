@@ -309,12 +309,12 @@ function formatRows( rows : list<row>,
     if (!test) then [] else {
       match(attrs.hasKey(key)) {
         Nothing -> []
-        Just(value) -> [("background-color",value)]
+        Just(value) -> [("background-color",value),("border-color",value)]
       }
     }
   }
 
-  function formatRow( row : list<cell>, cols : list<attrs>, rowNum : int ) : list<cell> {    
+  function formatRow( row : list<cell>, cols : list<attrs> ) : list<cell> {    
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
@@ -339,16 +339,8 @@ function formatRows( rows : list<row>,
                                    elif (txt1.contains(rxDDashes))
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1) 
-            colstyle3 = if (rowNum <= 0) then colstyle2 else {
-                          colstyle2.addKeyvals( 
-                            addBackgroundColor("row-color", isBody) +
-                            addBackgroundColor("row-odd-color", isBody && rowNum.odd) +
-                            addBackgroundColor("row-even-color", isBody && rowNum.even) +
-                            addBackgroundColor("row-head-color", !isBody)
-                          )
-                      }
-            elem = Cell(context.inlineContext.formatInline(txt2), colstyle3)
-            Cons(elem, formatRow(rs,cs1,rowNum))        
+            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
+            Cons(elem, formatRow(rs,cs1))        
           }
           _ -> Nil
         }
@@ -359,11 +351,17 @@ function formatRows( rows : list<row>,
   
   if (rows.isNil) then return Nil
 
-  var rowNum := 1
+  var rowNum := 0
   rows.map fun(row) {
     hasLine = row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
-    if (!hasLine) then rowNum := rowNum+1
-    Row(formatRow(row.cells,colstyles,rowNum),row.rowAttrs)
+    if (!hasLine) then rowNum := rowNum+1  
+    rowstyle = row.rowAttrs.addKeyvals( 
+                      addBackgroundColor("row-color", isBody) +
+                      addBackgroundColor("row-odd-color", isBody && (rowNum==0 || rowNum.odd)) +
+                      addBackgroundColor("row-even-color", isBody && (rowNum!=0 && rowNum.even)) +
+                      addBackgroundColor("row-head-color", !isBody)
+                    )
+    Row(formatRow(row.cells,colstyles),rowstyle)
   }
 }
 val rxbars = regex(@"[|+]+$")

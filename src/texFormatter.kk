@@ -164,7 +164,7 @@ type line {
   NoLine
 }
 
-val fmtRowLineBreak = "\\\\[-\\mdTablelineskip]\n"
+val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 
 function fmtColorArg( clr : string ) : string {
   if (clr.startsWith("#")) 
@@ -200,22 +200,23 @@ function fmtRows( rows : list<row>, td : string, pre : string ) : string {
 
 
 function fmtLine( lines : list<line>, row : row ) : string {
-  line1 = if (!(lines.any(isNoLine))) then "\\hline" else {
-    zipWithIndexed(row.cells,lines,fun(i,cell,line) {
-      attrs = cell.cellAttrs
-      if (line.isNoLine) then "" 
-       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
-     }).join
-  }
-  line2 = if (!(lines.any(isDouble))) then "" 
-          elif (lines.all(isDouble)) then "\\\\ \\hline" else {
+  line2 = if (!(lines.any(isDouble))) then "" else {
     fmtRowLineBreak + 
      zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       attrs = cell.cellAttrs
       if (!(line.isDouble)) then "" 
-       else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cmidrule{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
   }
+  
+  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" else {
+    zipWithIndexed(row.cells,lines,fun(i,cell,line) {
+      attrs = cell.cellAttrs
+      if (line.isNoLine) then "" 
+       else "\\cmidrule{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+     }).join
+  }
+  
   line1 + line2
 }
 

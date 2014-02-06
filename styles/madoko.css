@@ -202,13 +202,14 @@ hr.madoko, .madoko hr {
 }
 
 
+
 /* Tables */
 table.madoko {
   border-collapse: collapse;
 }
 .madoko td, .madoko th {
-  padding-left: 1ex;
-  padding-right: 1ex;
+  padding: 0ex 1ex;
+  margin: 0pt;
   vertical-align: top;
 }
 
@@ -219,6 +220,7 @@ table.madoko {
   border-right: 1px solid black;
 }
 
+
 .madoko thead>tr:first-child>.cell-line,
 .madoko tbody:first-child>tr:first-child>.cell-line {
   border-top: 1px solid black;
@@ -227,10 +229,12 @@ table.madoko {
 
 .cell-line, .cell-double-line {
   border-bottom: 1px solid black;
+  border-top: none;
 }
 
 .cell-double-line {
   border-top: 1px solid black;
+  padding-top: 1px !important;
 }
 
 
