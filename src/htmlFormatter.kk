@@ -46,17 +46,19 @@ public function fmtHtmlFootnote(context : inlineContext, id : string, fn : footn
           " id=\"fnref-" + escape(id) + "\"" )
 }
 
-public function fmtHtmlTable( context : inlineContext, head : cells, body : cells, attrs : attrs  ) : string {
+public function fmtHtmlTable( context : inlineContext, head : list<row>, body : list<row>, attrs : attrs  ) : string {
   tag("table", 
     context.fmtRows("thead","th",head) + context.fmtRows("tbody","td",body),
     attrs.addClass("block").htmlFormat("table",context.sanitize))
 }
 
-function fmtRows( context : inlineContext, tbody : string, td : string, cells : cells ) : string {
-  if (cells.isNil) then return ""
+function fmtRows( context : inlineContext, tbody : string, td : string, rows : list<row> ) : string {
+  if (rows.isNil) then return ""
   tagBlock(tbody,
-    cells.map( fun(row) {
-      tag("tr", row.map(fun(cell) { tag(td,cell.fst,cell.snd.htmlFormat(td,context.sanitize)) }).join) 
+    rows.map( fun(row) {
+      tag("tr", row.cells.map(fun(cell) { tag(td,cell.text,
+                                                cell.cellAttrs.htmlFormat(td,context.sanitize)) }).join, 
+                row.rowAttrs.htmlFormat("tr",context.sanitize)) 
     }).join("\n"))
 } 
 

@@ -143,12 +143,12 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
 }
 
 
-public function fmtTexTable( context : inlineContext, head : cells, body : cells, attrs : attrs ) : string {
+public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, attrs : attrs ) : string {
   pre = "md"
-  cells = head + body
+  rows = head + body
   td = if (attrs.hasClass("columns")) then "column" else "td"
   table = if (attrs.hasClass("long")) then "LongTable" else "Table"
-  columns = cells.map(length).maximum
+  columns = rows.map(fun(r:row){ r.cells.length }).maximum
   "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + "{" + columns.show + "}{" + list(1,max(columns,1)).map(fun(i){"l"}).join + "}\n" +
     head.fmtRows("th",pre) + "\n" +
     body.fmtRows(td,pre) +
@@ -163,12 +163,12 @@ type line {
 
 val fmtRowLineBreak = "\\\\[-\\mdTablelineskip]\n"
 
-function fmtRows( cells : cells, td : string, pre : string ) : string {
+function fmtRows( rows : list<row>, td : string, pre : string ) : string {
   var lastIsLine := False
-  rows = cells.map fun(row) {
-    lineRow = row.map(fun(cell) { 
-                if (cell.snd.hasClass("cell-line")) then Single
-                elif (cell.snd.hasClass("cell-double-line")) then Double 
+  xrows = rows.map fun(row) {
+    lineRow = row.cells.map(fun(cell) { 
+                if (cell.cellAttrs.hasClass("cell-line")) then Single
+                elif (cell.cellAttrs.hasClass("cell-double-line")) then Double 
                 else NoLine 
               } )
     if (!(lineRow.all(isNoLine))) then { 
@@ -182,14 +182,14 @@ function fmtRows( cells : cells, td : string, pre : string ) : string {
       res
     }
   }
-  rows.join() + (if (lastIsLine) then "\n" else "")
+  xrows.join() + (if (lastIsLine) then "\n" else "")
 }
 
 
-function fmtLine( lines : list<line>, row : list<(string,attrs)> ) : string {
+function fmtLine( lines : list<line>, row : row ) : string {
   line1 = if (!(lines.any(isNoLine))) then "\\hline" else {
-    zipWithIndexed(row,lines,fun(i,cell,line) {
-      attrs = cell.snd
+    zipWithIndexed(row.cells,lines,fun(i,cell,line) {
+      attrs = cell.cellAttrs
       if (line.isNoLine) then "" 
        else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join
@@ -197,8 +197,8 @@ function fmtLine( lines : list<line>, row : list<(string,attrs)> ) : string {
   line2 = if (!(lines.any(isDouble))) then "" 
           elif (lines.all(isDouble)) then "\\\\ \\hline" else {
     fmtRowLineBreak + 
-     zipWithIndexed(row,lines,fun(i,cell,line) {
-      attrs = cell.snd
+     zipWithIndexed(row.cells,lines,fun(i,cell,line) {
+      attrs = cell.cellAttrs
       if (!(line.isDouble)) then "" 
        else "\\cline{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
@@ -206,8 +206,8 @@ function fmtLine( lines : list<line>, row : list<(string,attrs)> ) : string {
   line1 + line2
 }
 
-function fmtRow( td : string, row : list<(string,attrs)>, pre : string ) : string {
-  row.map(fun(cell) { fmtCell(td,cell.fst,cell.snd,pre) }).join("&") + "\\\\\n" 
+function fmtRow( td : string, row : row, pre : string ) : string {
+  row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") + "\\\\\n" 
 } 
 
 

@@ -61,7 +61,7 @@ function fmtTitle( context : formatContext ) : string {
   (context.inlineContext.xfmtTitle)(context.inlineContext,context.titleinfo)
 }
 
-function fmtTable( context : formatContext, head : cells, body : cells, attrs : attrs = attrsNone ) : string {
+function fmtTable( context : formatContext, head : list<row>, body : list<row>, attrs : attrs = attrsNone ) : string {
   (context.inlineContext.xfmtTable)(context.inlineContext,head,body,attrs)
 }
 
@@ -254,15 +254,15 @@ public function formatBlock( context : formatContext, block : block ) : div stri
             if (!(xs.hasClass("column"))) {
               warning( "a 'Columns' block should only contain 'Column' blocks")
             }  
-            (context.formatBlocksX(bs), xs)
+            Cell(context.formatBlocksX(bs), xs)
           }
           _ -> {
             warning( "a 'Columns' block can only contain 'Column' blocks")
-            (context.formatBlock(b), attrsNone)
+            Cell(context.formatBlock(b), attrsNone)
           }
         }
       }
-      context.fmtTable(Nil,[cols],attrs)
+      context.fmtTable(Nil,[Row(cols)],attrs)
     }    
     
     Div(content,attrs) -> {    
@@ -342,7 +342,7 @@ function formatRows( rows : list<row>,
   
   if (rows.isNil) then return Nil
   rows.map fun(row) {
-    Row(formatRow(row.cells,colstyles),row.attrs)
+    Row(formatRow(row.cells,colstyles),row.rowAttrs)
   }
 }
 val rxbars = regex(@"[|+]+$")
