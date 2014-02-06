@@ -1,7 +1,7 @@
 {
   "name"        : "madoko",
   "author"      : "Daan Leijen, Microsoft Corp.",
-  "version"     : "0.3.2-beta",
+  "version"     : "0.4.0-beta",
   "homepage"    : "http://madoko.codeplex.com",
   "description" : "Madoko is a fast scholarly Markdown processor written in Koka",
   "licenses": [{
@@ -28,12 +28,15 @@
   },
   "files": [
     "lib",
+    "styles",
     "doc/*.png",
     "doc/reference.pdf",
     "doc/reference.html",
     "doc/reference.bib",
     "doc/reference.js",
     "doc/reference.mdk",
+    "doc/mathdemo.pdf",
+    "doc/mathdemo.html",
     "doc/madoko.css",
     "Jakefile.js",
     "readme.md",
@@ -43,11 +46,14 @@
     "node": ">=0.10.0" 
   },
   "dependencies": {
-    "amdefine"   : ">=0.0.4",    
-    "requirejs"  : ">=2.1",
-    "request"    : ">=2",
-    "mkdirp"     : ">=0.3.5",
+    "amdefine"    : ">=0.0.4",    
+    "requirejs"   : ">=2.1",
+    "request"     : ">=2",
+    "mkdirp"      : ">=0.3.5",
     "highlight.js": ">=8.0.0"
+  },
+  "devDependencies": {
+    "jake"        : ">=0.7.6"
   },
   "repository": {
     "type": "hg", 
