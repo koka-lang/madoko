@@ -437,8 +437,8 @@
 \cssNewBlockElem{mdColumn}{column}{width=\mdDefaultColumnWidth}
 
 \newcommand{\mdTr}[2][]{\mdSpan[#1]{#2}}
-\newcommand{\mdTh}[2][]{\mdSpan[#1]{\mdCellstrut\textbf{#2}}}
 \newcommand{\mdTd}[2][]{\mdSpan[#1]{\mdCellstrut #2}}
+\newcommand{\mdTh}[2][]{\mdSpan[font-weight=bold,#1]{#2}}
 
 \newlength{\mdTablelineskip}
 \setlength{\mdTablelineskip}{2.4ex}

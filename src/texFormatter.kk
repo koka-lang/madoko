@@ -241,6 +241,7 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
   align   = if (attrs.hasClass("align-left")) then "l" 
             elif (attrs.hasClass("align-right")) then "r"
             elif (attrs.hasClass("align-center")) then "c"
+            elif (elem=="th") then "c"
             else "l" // attrs.lookupKey("align","left").substr(0,1) // l, c, or r
   bcolor  = match (attrs.hasKey("background-color")) {
               Nothing -> ""

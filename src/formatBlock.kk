@@ -290,8 +290,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
   }
 }
 val rxblank = regex(@"^\s*$")
-val rxDashes  = regex(@"^ *---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*$")
-val rxDDashes = regex(@"^ *===+ *[|+]*$")
+val rxDashes  = regex(@"^ *(\\/)?---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]*[|+]*$")
+val rxDDashes = regex(@"^ *(\\/)?===+ *[|+]*$")
 
 function deriveMathAttrs( parentAttrs : attrs ) {
   common/Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ),
@@ -374,9 +374,9 @@ function formatRows( rows : list<row>,
                       addRowKey("rule-width", "row-toprule-width", !isBody && rowNum==0 ) +
                       addRowKey("rule-width", "row-headrule-width", isBody && rowNum==0 ) +
                       addRowKey("rule-width", "row-bottomrule-width", isBody && hasLine && rowCount == rows.length ) +
-                      addRowKey("row-padding-top", "row-toprule-sep", !isBody && rowNum==1 ) +
-                      addRowKey("row-padding-top", "row-headrule-sep", isBody && rowNum==1 ) +
-                      addRowKey("row-padding-bottom", "row-headrule-sep", isBody && rowNum==1 ) +
+                      addRowKey("row-padding-top", "row-toprule-sep", !isBody && rowNum==1 && !hasLine ) +
+                      addRowKey("row-padding-top", "row-headrule-sep", isBody && rowNum==1 && !hasLine) +
+                      addRowKey("row-padding-bottom", "row-headrule-sep", !isBody && !hasLine && rowCount == rows.length ) +
                       addRowKey("row-padding-bottom", "row-bottomrule-sep", isBody && !hasLine && rowCount == rows.length-1 ) 
                     )
     Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)

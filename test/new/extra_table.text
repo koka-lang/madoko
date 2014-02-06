@@ -140,3 +140,17 @@ Row and column attributes:
 { row-odd-color=Gainsboro row-even-color=FloralWhite row-head-color=#00E0E0 \
   row-toprule-width=2px row-bottomrule-width=2px \
   row-toprule-sep=2px row-bottomrule-sep=2px row-headrule-sep=2px}
+
+|------------- | ----------- | --------- |
+|            Item           ||           |
+| \/---------- | ----------- |           |
+|    Animal    | Description | Price ($) |
+|--------------|-------------|----------:|
+| Gnat         | per gram    |     13.65 |
+|              | each        |      0.01 |
+| Gnu          | stuffed     |     92.50 |
+| Emu          | stuffed     |     33.33 |
+| Armadillo    | frozen      |      8.99 |
+| ------------ | ----------- | --------- |
+{ row-toprule-width=2px row-bottomrule-width=2px \
+  row-toprule-sep=2pt row-bottomrule-sep=2pt row-headrule-sep=2pt }
