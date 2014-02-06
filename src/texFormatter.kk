@@ -143,13 +143,16 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
 }
 
 
-public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, attrs : attrs ) : string {
+public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {
   pre = "md"
   rows = head + body
   td = if (attrs.hasClass("columns")) then "column" else "td"
   table = if (attrs.hasClass("long")) then "LongTable" else "Table"
-  columns = rows.map(fun(r:row){ r.cells.length }).maximum
-  "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + "{" + columns.show + "}{" + list(1,max(columns,1)).map(fun(i){"l"}).join + "}\n" +
+  columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
+  colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
+  "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + 
+      "{" + columns.show + "}" + 
+      "{" + colattrsx.map(fmtColumn).join + "}\n" +
     head.fmtRows("th",pre) + "\n" +
     body.fmtRows(td,pre) +
     "\\end{" + pre + table + "}\n"
@@ -162,6 +165,16 @@ type line {
 }
 
 val fmtRowLineBreak = "\\\\[-\\mdTablelineskip]\n"
+
+function fmtColorArg( clr : string ) : string {
+  if (clr.startsWith("#")) 
+    then "[HTML]{" + clr.substr(1) + "}"
+    else "{" + clr.substr(0,1).toUpper + clr.substr(1).toLower + "}"
+}
+
+function fmtColumn( colattr : attrs ) : string {
+  "l"
+}
 
 function fmtRows( rows : list<row>, td : string, pre : string ) : string {
   var lastIsLine := False
@@ -207,7 +220,11 @@ function fmtLine( lines : list<line>, row : row ) : string {
 }
 
 function fmtRow( td : string, row : row, pre : string ) : string {
-  row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") + "\\\\\n" 
+  rcolor = match (row.rowAttrs.hasKey("background-color")) {
+             Nothing   -> ""
+             Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
+           }
+  rcolor + row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") + "\\\\\n"
 } 
 
 
@@ -218,11 +235,15 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
             elif (attrs.hasClass("align-right")) then "r"
             elif (attrs.hasClass("align-center")) then "c"
             else "l" // attrs.lookupKey("align","left").substr(0,1) // l, c, or r
+  bcolor  = match (attrs.hasKey("background-color")) {
+              Nothing -> ""
+              Just(clr) -> "{\\cellcolor" + fmtColorArg(clr) + "}"
+            }            
   fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
             (if (attrs.hasClass("cell-border-right")) then "|" else "")
 
   attrs0  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
-                   keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" }))
+                   keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
 
   attrsx  = if (!(attrs0.hasKey("width").bool)) then attrs0
              else attrs0.addKeyvalIfNotExist("text-align",
@@ -236,7 +257,7 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
              else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
              
   if (colspan=="1" && fmt=="l") then content 
-   else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + content + "}"
+   else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
 }
 
 

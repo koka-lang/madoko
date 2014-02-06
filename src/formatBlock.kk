@@ -61,8 +61,8 @@ function fmtTitle( context : formatContext ) : string {
   (context.inlineContext.xfmtTitle)(context.inlineContext,context.titleinfo)
 }
 
-function fmtTable( context : formatContext, head : list<row>, body : list<row>, attrs : attrs = attrsNone ) : string {
-  (context.inlineContext.xfmtTable)(context.inlineContext,head,body,attrs)
+function fmtTable( context : formatContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs = attrsNone ) : string {
+  (context.inlineContext.xfmtTable)(context.inlineContext,head,body,colattrs,attrs)
 }
 
 function escapeMath( txt : string, fmt : formatter ) : string {
@@ -240,7 +240,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Table(header,colstyles,cells,attrs) -> {
       thead = formatRows(header,colstyles,context)
       tbody = formatRows(cells,colstyles,context)
-      context.fmtTable(thead,tbody, attrs.addClass("madoko"))  
+      context.fmtTable(thead,tbody, colstyles, attrs.addClass("madoko"))  
     }
 
     Div(Cons(Source(txt,Pre),Nil),attrs) | context.pedantic && attrs.elementName("div") == "pre" -> {
@@ -262,7 +262,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           }
         }
       }
-      context.fmtTable(Nil,[Row(cols)],attrs)
+      context.fmtTable(Nil,[Row(cols)],cols.map(fun(c){ attrsNone }),attrs)
     }    
     
     Div(content,attrs) -> {    

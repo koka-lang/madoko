@@ -46,7 +46,7 @@ public function fmtHtmlFootnote(context : inlineContext, id : string, fn : footn
           " id=\"fnref-" + escape(id) + "\"" )
 }
 
-public function fmtHtmlTable( context : inlineContext, head : list<row>, body : list<row>, attrs : attrs  ) : string {
+public function fmtHtmlTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs  ) : string {
   tag("table", 
     context.fmtRows("thead","th",head) + context.fmtRows("tbody","td",body),
     attrs.addClass("block").htmlFormat("table",context.sanitize))

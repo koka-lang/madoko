@@ -914,13 +914,11 @@ tables that can be broken over multiple pages.
 |   id   |        name       |    description      |  price |
 +:----:+---{background-color=Gainsboro}--+:------------:|---{background-color=Gainsboro}--:+
 | centered gizmos      || Take care of doo hickies |  1.99  |
-|   2  |    doodad      |     Collects *gizmos*    | 23.80  |{background-color=Gainsboro}
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |{background-color=Orange}
 |  10  |   dojigger     |            Foo           | 102.98 |
 | 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
-|------|----------------|--------------------------|--------|{font-weight=bold}
+|------|----------------|--------------------------|--------|
 ~
-
-Where is it?
 
 ## Mathematics   { #sec-math }
 

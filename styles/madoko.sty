@@ -433,9 +433,9 @@
 
 \newenvironment{mdThead}[1][]{}{}
 \newenvironment{mdTbody}[1][]{}{}
-\newenvironment{mdTr}[1][]{}{\\}
 \cssNewBlockElem{mdColumn}{column}{width=\mdDefaultColumnWidth}
 
+\newcommand{\mdTr}[2][]{\mdSpan[#1]{#2}}
 \newcommand{\mdTh}[2][]{\mdSpan[#1]{\mdCellstrut\textbf{#2}}}
 \newcommand{\mdTd}[2][]{\mdSpan[#1]{\mdCellstrut #2}}
 

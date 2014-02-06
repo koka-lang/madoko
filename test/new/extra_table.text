@@ -102,3 +102,15 @@ And finally a table with fixed width columns:
 |         10        |      do jigger       |              Foo               | 102.98 |
 |        1024       | thing a mabob&#8203; |     Self-explanatory, no?      |  0.99  |
 | ----------------- | -------------------- | ------------------------------ | ------ |
+
+
+Row and column attributes:
+
+| ------ | ----------------- | ------------------- | ------ |
+|   id   |        name       |    description      |  price |
++:----:+---{background-color=Gainsboro}--+:------------:|---{background-color=Gainsboro}--:+
+| centered gizmos      || Take care of doo hickies |  1.99  |
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |{background-color=Gainsboro}
+|  10  |   dojigger     |            Foo           | 102.98 |
+| 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |{background-color=#00D0D0}
+|------|----------------|--------------------------|--------|{font-weight=bold}
