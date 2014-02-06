@@ -238,8 +238,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Table(header,colstyles,cells,attrs) -> {
-      thead = formatRows(header,colstyles,context)
-      tbody = formatRows(cells,colstyles,context)
+      thead = formatRows(header,colstyles,context,attrs,False)
+      tbody = formatRows(cells,colstyles,context,attrs,True)
       context.fmtTable(thead,tbody, colstyles, attrs.addClass("madoko"))  
     }
 
@@ -302,9 +302,19 @@ function deriveMathAttrs( parentAttrs : attrs ) {
 }
 
 function formatRows( rows : list<row>, 
-                      colstyles : list<attrs>, context : formatContext ) : list<row>
+                      colstyles : list<attrs>, context : formatContext,
+                      attrs : attrs, isBody : bool ) : list<row>
 {
-  function formatRow( row : list<cell>, cols : list<attrs> ) : list<cell> {
+  function addBackgroundColor( key : string, test : bool ) : list<(string,string)> {
+    if (!test) then [] else {
+      match(attrs.hasKey(key)) {
+        Nothing -> []
+        Just(value) -> [("background-color",value)]
+      }
+    }
+  }
+
+  function formatRow( row : list<cell>, cols : list<attrs>, rowNum : int ) : list<cell> {    
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
@@ -329,9 +339,16 @@ function formatRows( rows : list<row>,
                                    elif (txt1.contains(rxDDashes))
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1) 
-                                    
-            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
-            Cons(elem, formatRow(rs,cs1))        
+            colstyle3 = if (rowNum <= 0) then colstyle2 else {
+                          colstyle2.addKeyvals( 
+                            addBackgroundColor("row-color", isBody) +
+                            addBackgroundColor("row-odd-color", isBody && rowNum.odd) +
+                            addBackgroundColor("row-even-color", isBody && rowNum.even) +
+                            addBackgroundColor("row-head-color", !isBody)
+                          )
+                      }
+            elem = Cell(context.inlineContext.formatInline(txt2), colstyle3)
+            Cons(elem, formatRow(rs,cs1,rowNum))        
           }
           _ -> Nil
         }
@@ -341,8 +358,12 @@ function formatRows( rows : list<row>,
   }
   
   if (rows.isNil) then return Nil
+
+  var rowNum := 1
   rows.map fun(row) {
-    Row(formatRow(row.cells,colstyles),row.rowAttrs)
+    hasLine = row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
+    if (!hasLine) then rowNum := rowNum+1
+    Row(formatRow(row.cells,colstyles,rowNum),row.rowAttrs)
   }
 }
 val rxbars = regex(@"[|+]+$")
