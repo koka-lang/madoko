@@ -97,12 +97,10 @@ function processContent( inName : string, outName : string, content : string,
     opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])              
     mmopts = if (opts1.xmp) then opts1
               else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
-    mdim   = if (!(mmopts.mathmode.isStatic))
-              then dict()
-              else {
-                dims = outName.changeExt(".dimx").readTextFileDef("")
-                dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
-              }
+    
+    // always read dims: even in dynamic mode some pdf math may exist
+    dims = outName.changeExt(".dimx").readTextFileDef("")
+    mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
 
     xopts  = opts1(mathdim=mdim)
     mopts  = mmopts(mathdim=mdim)  
@@ -194,7 +192,10 @@ function process( inName : string, outName : string, content : string, icontent 
       }
 
       // possibly typeset math using latex
-      if ((mathDvi != "" || mathPdf != "") && mopts.mathmode.isStatic) {
+      if ((mathDvi.containsSnippet && mopts.mathmode.isStatic) || mathPdf.containsSnippet) {
+        if (mopts.verbose>=1 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
+          mopts.print("warning: dynamic math mode but some math requires pdf")
+        }
         mathStatic( mathDvi, mathPdf, outName, mopts, content ) fun(mbmdim2) {
           match(mbmdim2) {
             Just(mdim2) -> {

@@ -178,7 +178,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
     _      -> {
       mtxt = left + txt.escapeMath(context.fmt) + right
       mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
-      if (context.mathStatic) {
+      if (context.mathStatic || mode=="math-pdf") {
         digest = md5(txt)
         log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
                       texcmd + "\n\\end{md" + kind + "Snippet}")

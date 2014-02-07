@@ -214,8 +214,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
   if (xopts.verbose>=1) {
-    if (dviPages.isNil && mathDvi.contains(rxDigest)) xopts.print("math unchanged (dvi)")
-    if (pdfPages.isNil && mathPdf.contains(rxDigest)) xopts.print("math unchanged (pdf)")
+    if (dviPages.isNil && mathDvi.containsSnippet) xopts.print("math unchanged (dvi)")
+    if (pdfPages.isNil && mathPdf.containsSnippet) xopts.print("math unchanged (pdf)")
   }
   if (dviPages.isNil && pdfPages.isNil) then {
     tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
@@ -291,6 +291,11 @@ function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : 
             }
           }
   pages.compress
+}
+
+
+public function containsSnippet( txt : string ) : bool {
+  txt.contains(rxDigest)
 }
 
 val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
