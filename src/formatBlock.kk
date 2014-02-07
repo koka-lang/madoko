@@ -325,13 +325,18 @@ function formatRows( rows : list<row>,
             }
             // combine borders in case of a multi-column
             val (colstyle1,cs1) = if (colspan<=1) then (colstyle0,cs) 
-                                   else match(cs.drop(colspan-2)) {
-                                     Cons(colstylex,csx) 
-                                         -> (colstyle0.addClasses(colstylex.classes.filter(noalign))
-                                                      .addKeyval("column-span",colspan.show), 
-                                             csx )
-                                     Nil -> (colstyle0.addKeyval("column-span",colspan.show),Nil)
-                                   }
+                                    else {
+                                      colstylex = colstyle0.addKeyval("column-span",colspan.show)
+                                      colstyley = if (isBody) then colstylex 
+                                                   else colstylex.addKeyval("text-align",rowstyle.hasKey("text-align").maybe("center",id))
+                                      match(cs.drop(colspan-2)) {
+                                       Cons(colstylez,csx) 
+                                           -> (colstyley.addClasses(colstylez.classes.filter(noalign))
+                                                        .addKeyval("column-span",colspan.show), 
+                                               csx )
+                                       Nil -> (colstyley.addKeyval("column-span",colspan.show),Nil)
+                                      }
+                                    }
             // horizontal line?
             val (colstyle2,txt2) = if (txt1.contains(rxDashes))
                                     then (colstyle1.addClass("cell-line"), "")

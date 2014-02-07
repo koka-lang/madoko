@@ -193,8 +193,8 @@ function process( inName : string, outName : string, content : string, icontent 
 
       // possibly typeset math using latex
       if ((mathDvi.containsSnippet && mopts.mathmode.isStatic) || mathPdf.containsSnippet) {
-        if (mopts.verbose>=1 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
-          mopts.print("warning: dynamic math mode but some math requires pdf")
+        if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
+          mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
         mathStatic( mathDvi, mathPdf, outName, mopts, content ) fun(mbmdim2) {
           match(mbmdim2) {

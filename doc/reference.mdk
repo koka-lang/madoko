@@ -10,7 +10,6 @@ Cite All	: True
 Script		: reference.js
 Bib			: reference
 Math Embed  : 64
-MathJax		: True
 
 Package*	: fontspec
 Package*	: [curve]xypic
