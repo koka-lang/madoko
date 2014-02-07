@@ -1,6 +1,9 @@
 Title	  : Table example
 Heading Base: 2
- 
+.booktable:  rule-top-width=2px rule-bottom-width=2px rule-mid-width=1.25px 
+			 rule-top-sep=2pt rule-bottom-sep=2pt rule-mid-sep=2pt 
+			 th-font-weight=normal th-padding-top=2pt th-padding-bottom=2pt  
+
 
 # Some examples of tables
 
@@ -46,7 +49,7 @@ We can get double lines simply by adding more rows with dashes.
 | ------ | ----------------- |                                | ----------------- |
 ~
 
-A table with no header and an outer border:
+A table with no mider and an outer border:
 
 +:--------------: | ----------- +:----------------------------:| -----: +
 | centered gizmos              || Takes care of the doohickies |  1.99  |
@@ -65,7 +68,7 @@ And a math table with just an inner block of lines:
 Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
 
 |              |           Grouping          ||
-| First Header | Second Header | Third Header |
+| First mider | Second mider | Third mider |
 | ------------ | :-----------: | -----------: |
 | Content      |         *Long Cell*         ||
 | Content      |    **Cell**   |         Cell |
@@ -91,7 +94,7 @@ An example from [TeX stackexchange](http://tex.stackexchange.com/questions/8549/
 +----+---+---+
 
 Note that we used an alignment colon in the first line so the first block does not become one
-big header.
+big mider.
 
 And finally a table with fixed width columns:
 
@@ -122,7 +125,7 @@ Row and column attributes:
 |  10  |   dojigger     |            Foo           | 102.98 |
 | 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
 |------|----------------|--------------------------|--------|
-{ row-odd-color=Gainsboro row-even-color=FloralWhite row-head-color=#00E0E0}
+{ tr-odd-background-color=Gainsboro tr-even-background-color=FloralWhite th-background-color=#00E0E0}
 
 | ------ | ----------------- | ------------------------------ | ----------------- |
 |   id   |        name       |          description           |       price       |
@@ -137,20 +140,19 @@ Row and column attributes:
 | ====== |                   |                                |===================|
 | 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
 | ------ | ----------------- |                                | ----------------- |
-{ row-odd-color=Gainsboro row-even-color=FloralWhite row-head-color=#00E0E0 \
-  row-toprule-width=2px row-bottomrule-width=2px \
-  row-toprule-sep=2px row-bottomrule-sep=2px row-headrule-sep=2px}
+{ tr-odd-background-color=Gainsboro tr-even-background-color=FloralWhite th-background-color=#00E0E0 \
+  rule-top-width=2px rule-bottom-width=2px \
+  rule-top-sep=2px rule-bottom-sep=2px rule-mid-sep=2px}
 
-|------------- | ----------- | --------- |
-|            Item           ||           |
-| \/---------- | ----------- |           |
-|    Animal    | Description | Price ($) |
-|--------------|-------------|----------:|
-| Gnat         | per gram    |     13.65 |
-|              | each        |      0.01 |
-| Gnu          | stuffed     |     92.50 |
-| Emu          | stuffed     |     33.33 |
-| Armadillo    | frozen      |      8.99 |
-| ------------ | ----------- | --------- |
-{ row-toprule-width=2px row-bottomrule-width=2px \
-  row-toprule-sep=2pt row-bottomrule-sep=2pt row-headrule-sep=2pt }
+| --------------- | ----------- | --------------- |
+|             Item             ||                 |
+| \/------------- | ----------- |                 |
+|      Animal     | Description | &ensp;Price ($) |{.align-left}
+| --------------- | ----------- | --------------: |
+| Gnat            | per gram    |           13.65 |
+|                 | each        |            0.01 |
+| Gnu             | stuffed     |           92.50 |
+| Emu             | stuffed     |           33.33 |
+| Armadillo&ensp; | frozen      |            8.99 |
+| --------------- | ----------- | --------------- |
+{ .booktable }

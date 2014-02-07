@@ -208,7 +208,7 @@ table.madoko {
   border-collapse: collapse;
 }
 .madoko td, .madoko th {
-  padding: 0ex 1ex;
+  padding: 0ex 0.5ex;
   margin: 0pt;
   vertical-align: top;
 }
@@ -234,7 +234,7 @@ table.madoko {
 
 .cell-double-line {
   border-top: 1px solid black;
-  padding-top: 1px !important;
+  padding-top: 1.5px !important;
 }
 
 

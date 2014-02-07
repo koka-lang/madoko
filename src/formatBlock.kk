@@ -14,6 +14,7 @@ import std/regex
 import std/dict
 import std/log
 import common
+import attributes // mergeDefault
 import block
 import inline
 import formatInline
@@ -305,33 +306,29 @@ function formatRows( rows : list<row>,
                       colstyles : list<attrs>, context : formatContext,
                       attrs : attrs, isBody : bool ) : list<row>
 {
-  function addRowKey( target : string, key : string, test : bool ) : list<(string,string)> {
-    if (!test) then [] else {
-      match(attrs.hasKey(key)) {
-        Nothing -> []
-        Just(value) -> [(target,value)]
-      }
-    }
-  }
+  if (rows.isNil) then return Nil
 
   function formatRow( row : list<cell>, cols : list<attrs>, rowstyle : attrs ) : list<cell> {    
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
           Cons(colstyle,cs) -> {
+            // merge with row style
+            colstyle0 = colstyle.mergeDefault(rowstyle)
+
             // span multiple columns?
             val (txt1,colspan) = match(cell.text.find(rxbars)) {
               Nothing   -> (cell.text,1)
               Just(cap) -> (cell.text.substr(0,cap.index), cap.matched.length)
             }
             // combine borders in case of a multi-column
-            val (colstyle1,cs1) = if (colspan<=1) then (colstyle,cs) 
+            val (colstyle1,cs1) = if (colspan<=1) then (colstyle0,cs) 
                                    else match(cs.drop(colspan-2)) {
                                      Cons(colstylex,csx) 
-                                         -> (colstyle.addClasses(colstylex.classes.filter(noalign))
-                                                     .addKeyval("column-span",colspan.show), 
+                                         -> (colstyle0.addClasses(colstylex.classes.filter(noalign))
+                                                      .addKeyval("column-span",colspan.show), 
                                              csx )
-                                     Nil -> (colstyle.addKeyval("column-span",colspan.show),Nil)
+                                     Nil -> (colstyle0.addKeyval("column-span",colspan.show),Nil)
                                    }
             // horizontal line?
             val (colstyle2,txt2) = if (txt1.contains(rxDashes))
@@ -339,16 +336,8 @@ function formatRows( rows : list<row>,
                                    elif (txt1.contains(rxDDashes))
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1)
-            colstyle3 = match(rowstyle.hasKey("row-padding-top")) {
-                         Just(wd) -> colstyle2.addKeyvalIfNotExist("padding-top",wd)
-                         Nothing  -> colstyle2
-                        }
-            colstyle4 = match(rowstyle.hasKey("row-padding-bottom")) {
-                         Just(wd) -> colstyle3.addKeyvalIfNotExist("padding-bottom",wd)
-                         Nothing  -> colstyle3
-                        }
- 
-            elem = Cell(context.inlineContext.formatInline(txt2), colstyle4)
+            
+            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
             Cons(elem, formatRow(rs,cs1, rowstyle))        
           }
           _ -> Nil
@@ -358,8 +347,33 @@ function formatRows( rows : list<row>,
     }
   }
   
-  if (rows.isNil) then return Nil
+  
+  function addRowKey( target : string, key : string, test : bool ) : list<(string,string)> {
+    if (!test) then [] else {
+      match(attrs.hasKey(key)) {
+        Nothing -> []
+        Just(value) -> [(target,value)]
+      }
+    }
+  }
 
+  function filterKeyvals( keyvals : list<(string,string)>, pre : string ) : list<(string,string)> {
+    keyvals.filterMap fun(kv) {
+      val (key,value) = kv
+      if (key.startsWith(pre)) then Just( (key.substr(pre.length), value) ) else Nothing
+    }
+  }
+
+  function defaultKeyvals( hasLine :  bool, rowNum : int ) : list<(string,string)> {
+    mod = if (rowNum.even && rowNum != 0) then "even-" else "odd-"
+    kvs = attrs.keyvals.filterKeyvals("cell-") +
+           attrs.keyvals.filterKeyvals(if (isBody) then "tr-" else "th-") +
+            attrs.keyvals.filterKeyvals((if (isBody) then "tr-" else "th-") + mod) 
+    if (hasLine)
+     then kvs.filter(fun(kv){kv.fst.startsWith("background-color") || kv.fst.startsWith("rule") })
+     else kvs
+  }
+         
   var rowNum := 0
   var rowCount := 0
   rows.map fun(row) {
@@ -367,18 +381,16 @@ function formatRows( rows : list<row>,
     hasLine = row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
     if (!hasLine) then rowNum := rowNum+1  
     rowstyle = row.rowAttrs.addKeyvals( 
-                      addRowKey("background-color", "row-color", isBody) +
-                      addRowKey("background-color", "row-odd-color", isBody && (rowNum==0 || rowNum.odd)) +
-                      addRowKey("background-color", "row-even-color", isBody && (rowNum!=0 && rowNum.even)) +
-                      addRowKey("background-color", "row-head-color", !isBody) +
-                      addRowKey("rule-width", "row-toprule-width", !isBody && rowNum==0 ) +
-                      addRowKey("rule-width", "row-headrule-width", isBody && rowNum==0 ) +
-                      addRowKey("rule-width", "row-bottomrule-width", isBody && hasLine && rowCount == rows.length ) +
-                      addRowKey("row-padding-top", "row-toprule-sep", !isBody && rowNum==1 && !hasLine ) +
-                      addRowKey("row-padding-top", "row-headrule-sep", isBody && rowNum==1 && !hasLine) +
-                      addRowKey("row-padding-bottom", "row-headrule-sep", !isBody && !hasLine && rowCount == rows.length ) +
-                      addRowKey("row-padding-bottom", "row-bottomrule-sep", isBody && !hasLine && rowCount == rows.length-1 ) 
+                      addRowKey("rule-width", "rule-top-width", !isBody && rowNum==0 ) +
+                      addRowKey("rule-width", "rule-mid-width", isBody && rowNum==0 ) +
+                      addRowKey("rule-width", "rule-bottom-width", isBody && hasLine && rowCount == rows.length ) +
+                      addRowKey("rule-width", "rule-width", True ) +
+                      addRowKey("padding-top", "rule-top-sep", !isBody && rowNum==1 && !hasLine ) +
+                      addRowKey("padding-top", "rule-mid-sep", isBody && rowNum==1 && !hasLine) +
+                      addRowKey("padding-bottom", "rule-mid-sep", !isBody && !hasLine && rowCount == rows.length ) +
+                      addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && rowCount == rows.length-1 ) 
                     )
+                    .addKeyvals( defaultKeyvals(hasLine,rowNum) )
     Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)
   }
 }

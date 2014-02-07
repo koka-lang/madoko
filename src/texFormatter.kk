@@ -201,24 +201,27 @@ function fmtRows( rows : list<row>, td : string, pre : string ) : string {
 
 function fmtLine( lines : list<line>, row : row ) : string 
 {
-  width = match(row.rowAttrs.hasKey("rule-width")) {
-            Just(wd) -> "[" + wd.normalizeVal + "]"
-            Nothing  -> ""
-          }
+  function width( cattrs : attrs ) {
+    match(cattrs.hasKey("rule-width")) {
+      Just(wd) -> "[" + wd.normalizeVal + "]"
+      Nothing  -> ""
+    }
+  }
+
   line2 = if (!(lines.any(isDouble))) then "" else {
     fmtRowLineBreak + 
      zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       attrs = cell.cellAttrs
       if (!(line.isDouble)) then "" 
-       else "\\cmidrule" + width + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
   }
   
-  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width else {
+  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width(row.rowAttrs) else {
     zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       attrs = cell.cellAttrs
       if (line.isNoLine) then "" 
-       else "\\cmidrule" + width + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join
   }
   
@@ -226,11 +229,13 @@ function fmtLine( lines : list<line>, row : row ) : string
 }
 
 function fmtRow( td : string, row : row, pre : string ) : string {
+  /*
   rcolor = match (row.rowAttrs.hasKey("background-color")) {
              Nothing   -> ""
              Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
            }     
-  rcolor + row.cells.map(fun(cell) { fmtCell(td,cell.text,cell.cellAttrs,pre) }).join("&") 
+  rcolor + */
+  row.cells.map(fun(cell) { fmtCell(td,cell.text.trim,cell.cellAttrs,pre) }).join("&") 
     + "\\\\\n"
 } 
 
@@ -301,7 +306,7 @@ function normalizeVal( v : string ) : string {
   }
 }
 val rxPerc = regex(@"\s*(\d\d?)%\s*")
-val rxPixels = regex(@"\s*(\d+)px\s*")
+val rxPixels = regex(@"\s*(\d+(?:\.\d+)?)px\s*")
 
 function capitalize( s : string ) : string {
   s.substr(0,1).toUpper + s.substr(1)

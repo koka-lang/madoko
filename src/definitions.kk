@@ -256,6 +256,7 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
+    Table(h,cattrs,cells) -> Table(h,cattrs,cells,xs)
     Div( content  )     -> transformDiv(content, xs, fcontext )
     Quote( content )    -> Quote(content, xs) 
     Code( text, lang)   -> {

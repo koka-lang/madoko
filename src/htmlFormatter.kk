@@ -57,7 +57,7 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
   tagBlock(tbody,
     rows.map( fun(row) {
       tag("tr", row.cells.map(fun(cell) { 
-                    cattrs1 = match(row.rowAttrs.hasKey("rule-width")) {
+                    cattrs1 = match(cell.cellAttrs.hasKey("rule-width")) {
                                Just(wd) -> cell.cellAttrs
                                             .addKeyvalIfNotExist("border-top-width",wd)
                                             .addKeyvalIfNotExist("border-bottom-width",wd)
@@ -65,7 +65,8 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
                              }
                     tag(td,cell.text, cattrs1.htmlFormat(td,context.sanitize)) 
                 }).join, 
-                row.rowAttrs.htmlFormat("tr",context.sanitize)) 
+                //row.rowAttrs.htmlFormat("tr",context.sanitize)
+                "") 
     }).join("\n"))
 } 
 
