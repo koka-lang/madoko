@@ -45,6 +45,7 @@ rrb			: &#10215;
 
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 
+
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
@@ -800,8 +801,23 @@ by hand without using BibTeX.
 ## Tables { #sec-table }
 
 Madoko significantly extends the table syntax of basic Markdown. In particular,
-it is easy to add horizontal or vertical lines, and to control cell alignment,
-multiple column spans, and the width of the columns.
+it is easy to add horizontal or vertical lines, to control cell alignment,
+use multiple column spans, colorize rows, etc.
+The basic rules for formatting a table are:
+
+* Every line of the table should start and end with a `|` (or `+`) and columns are 
+	separated by `|` (or `+`) too. If you need a `|` character in cell content, use 
+	an escaped bar instead (`\|`).
+* Every row can be on one line only, and there can be no blank lines.
+* The table can optionally start with one or more _header_ rows.
+* A cell can span multiple columns by using multiple bars to end the cell, like 
+	`||` in the previous example.
+* The table should always have a *column specifier* row that separates
+	the header from the body of the table (or marks the start of the body in case
+	there is no header). The content of each cell in the separator is just
+	dashes (`-`) or tildes (`~`)
+
+
 Here is an example of a plain table from "[Just a
 Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
 ~ Sample
@@ -812,23 +828,11 @@ Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
 | 10   |  dojigger  |            Foo             |  102.98 |
 | 1024 | Self-explanatory, no?                  ||    0.99 |
 ~
-The basic rules for formatting a table are:
 
-* Every line of the table should start and end with a `|` (or `+`) and columns are 
-	separated by `|` (or `+`) too. If you need a `|` character in cell content, use 
-	an escaped bar instead (`\|`).
-* Every row can be on one line only, and there can be no blank lines.
-* The table can optionally start with one or more _header_ rows.
-* A cell can span multiple columns by using multiple bars to end the cell, like 
-	`||` in the previous example.
-* The table should always have an initial *column specifier* row that separates
-	the header from the body of the table (or marks the start of the body in case
-	there is no header). The content of each column specifier cell is just
-	dashes (`-`) or tildes (`~`)
+The column specifier row is the second row in the previous example,
+and it determines column alignment and vertical lines in a table:
 
-The column specifier row determines alignment and vertical lines in a table:
-
-* Columns can be aligned by using a `:` in the column specifier: one on the
+* Columns can be aligned by using a `:` in a separator row column: one on the
 	right or left aligns to the right or left, while a colon on both sides will
 	center the column.
 * If a column specifier uses a plus (`+`) instead of a bar (`|`) to separate
@@ -839,11 +843,11 @@ The column specifier row determines alignment and vertical lines in a table:
 	tildes (`~`) instead, no line is drawn for that column specifier cell.  
 
 In the next example, we suppress the horizontal line after the header, but add 
-vertical lines on the outsides. Also, we use two header rows.
+some vertical lines. Also, we use two header rows.
 ~ Sample
 |    grouped       ||                            |         |
 |  id  |    name    |      description           |  price  |
-+:~~~~:|:~~~~~~~~~~:| ~~~~~~~~~~~~~~~~~~~~~~~~~~ |~~~~~~~~:+
++:~~~~~|:~~~~~~~~~~:| ~~~~~~~~~~~~~~~~~~~~~~~~~~ +~~~~~~~~:+
 | 1    |   gizmo    | Takes care of doohickies   |   1.99  |
 | 2    |   doodad   |     Collects *gizmos*      |  23.80  |
 | 10   |  dojigger  |           Foo              |  102.98 |
@@ -853,8 +857,8 @@ vertical lines on the outsides. Also, we use two header rows.
 ### Horizontal lines
 
 We can draw horizontal lines in a table by using a row where
-every cell just contains dashes (`-`). By using more then one 
-row of dashes, we get double horizontal lines. Here is a
+every cell just contains dashes (`-`). By using equal signs (`=`)
+we get a double horizontal line. Here is a
 a table with no header and an outer border:
 ~ Sample
 +:----:|-------------+:--------------------------:|-------:+
@@ -877,8 +881,7 @@ multiple column spans and horizontal lines[^funfn].
 | 1      | gizmo                                          |||
 |        | ----------------------------------------       |||
 | 2      | doodad            | Collect *gizmos*    | 23.80  |
-| ------ | ----------------- | ------------------- |        |
-| ------ |                   | ------------------- | ------ |
+| ====== | ----------------- | =================== |--------|
 | 1024   | thingamabob       | Self-explanatory    | 0.99   |
 | ------ | ----------------- |                     | ------ |
 ~
@@ -909,16 +912,70 @@ be followed by an attribute declaration that sets the `.long` class. This is
 used in LaTeX output to switch to a `longtable` environment which supports
 tables that can be broken over multiple pages.
 
+### Colors 
+
+Often we need to colorize certain rows or columns for clarity. 
+Just like `width` we can specify a background color for a column
+in the column specifier row.
+Moreover, we can specify after the table more attributes that
+can style the table further. In particular, any attributes starting
+with `th-` or `tr-` apply to the header or body rows respectively.
+Moreover, we can add `even-` or `odd-` to only apply to even or 
+odd rows. The following example shows this in action:
+
 ~ Sample
-| ------ | ----------------- | ------------------- | ------ |
-|   id   |        name       |    description      |  price |
-+:----:+---{background-color=Gainsboro}--+:------------:|---{background-color=Gainsboro}--:+
+| ---- | -------------- | ------------------------ | ------ |
+|   id |     name       |    description           |  price |
++:----:+--{background-color=Ivory}---+:-----------:|-------:+
 | centered gizmos      || Take care of doo hickies |  1.99  |
-|   2  |    doodad      |     Collects *gizmos*    | 23.80  |{background-color=Orange}
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |
 |  10  |   dojigger     |            Foo           | 102.98 |
 | 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
 |------|----------------|--------------------------|--------|
+{ tr-odd-background-color=Gainsboro \
+  tr-even-background-color=Floralwhite }
 ~
+
+### Book tables { #sec-booktable }
+
+For producing high quality tables, there are some general guidelines that
+need to be observed, in particular, it is considered good practice to:
+
+1. Never use vertical rules in a table, and,
+2. Never use double horizontal rules.
+
+To make tables look good in this manner, we generally need rules
+of varying thickness to distinguish the top rule, from the mid- and bottom 
+rules in a table. By using the `.booktable` class, the rule widths 
+and rule separation is set automatically. Here is an example from
+the [Booktable] package documentation:
+
+~ Sample
+An example of publication quality table:
+
+| --------------- | ----------- | --------------- |
+|             Item             ||                 |
+| \/------------- | ----------- |                 |
+| Animal          | Description | &ensp;Price ($) |
+| :-------------- | ----------- | --------------: |
+| Gnat            | per gram    |           13.65 |
+|                 | each        |            0.01 |
+| Gnu             | stuffed     |           92.50 |
+| Emu             | stuffed     |           33.33 |
+| Armadillo&ensp; | frozen      |            8.99 |
+| --------------- | ----------- | --------------- |
+{ .booktable }
+~
+
+Note how we need to use the empty escape sequence `\/` in front of 
+the second dashed row in the header, or otherwise Madoko would interpret 
+that row as the column specification row. The `.booktable` class 
+ensures more vertical space between the rules, and a heavier top, mid-,
+and bottom rule. The exact styling is specified using a (built-in) 
+[metadata rule][#sec-rules] which is shown in Appendix [#app-custom].
+
+
+[booktable]: http://mirror.hmc.edu/ctan/macros/latex/contrib/booktabs/booktabs.pdf
 
 ## Mathematics   { #sec-math }
 
@@ -3155,6 +3212,12 @@ formatting).
 ~Date     : ...,
 ~Time     : ...,
 ~Madoko Version: ...,
+
+.booktable:  
+	rule-top-width=2px rule-bottom-width=2px 
+	rule-mid-width=1.35px th-font-weight=normal 	
+	rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
+	th-padding-top=3pt th-padding-bottom=3pt  	
 
 ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
     before='[**Theorem\ &label;.** ]{.Theorem-before}'
