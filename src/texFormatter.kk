@@ -243,27 +243,19 @@ function fmtRow( td : string, row : row, pre : string ) : string {
 
 function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : string {
   colspan = attrs.lookupKey("column-span","1")
-  align   = if (attrs.hasClass("align-left")) then "l" 
-            elif (attrs.hasClass("align-right")) then "r"
-            elif (attrs.hasClass("align-center")) then "c"
-            elif (elem=="th") then "c"
-            else "l" // attrs.lookupKey("align","left").substr(0,1) // l, c, or r
+  align   = match(attrs.hasKey("text-align")) {
+              Just(alignment) -> alignment.substr(0,1)
+              Nothing -> if (elem=="th") then "c" else "l" 
+            }
   bcolor  = match (attrs.hasKey("background-color")) {
-              Nothing -> ""
+              Nothing   -> ""
               Just(clr) -> "{\\cellcolor" + fmtColorArg(clr) + "}"
             }            
   fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
             (if (attrs.hasClass("cell-border-right")) then "|" else "")
 
-  attrs0  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
+  attrsx  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
                    keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
-
-  attrsx  = if (!(attrs0.hasKey("width").bool)) then attrs0
-             else attrs0.addKeyvalIfNotExist("text-align",
-                    if (attrs.hasClass("align-center")) then "center"
-                    elif (attrs.hasClass("align-right")) then "right"
-                    elif (attrs.hasClass("align-left")) then "left"
-                    else "left") // "justify")
 
   content = if (elem=="column") 
              then texEnv(elem,body,attrsx)

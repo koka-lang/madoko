@@ -1,8 +1,8 @@
 Title	  : Table example
 Heading Base: 2
-.booktable:  rule-top-width=2px rule-bottom-width=2px rule-mid-width=1.25px 
-			 rule-top-sep=2pt rule-bottom-sep=2pt rule-mid-sep=2pt 
-			 th-font-weight=normal th-padding-top=2pt th-padding-bottom=2pt  
+.booktable:  rule-top-width=2px rule-bottom-width=2px rule-mid-width=1.35px 
+			 rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
+			 th-font-weight=normal th-padding-top=3pt th-padding-bottom=3pt  
 
 
 # Some examples of tables
@@ -68,7 +68,7 @@ And a math table with just an inner block of lines:
 Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
 
 |              |           Grouping          ||
-| First mider | Second mider | Third mider |
+| First column | Second column | Third column |
 | ------------ | :-----------: | -----------: |
 | Content      |         *Long Cell*         ||
 | Content      |    **Cell**   |         Cell |
@@ -147,7 +147,7 @@ Row and column attributes:
 | --------------- | ----------- | --------------- |
 |             Item             ||                 |
 | \/------------- | ----------- |                 |
-|      Animal     | Description | &ensp;Price ($) |{.align-left}
+|      Animal     | Description | &ensp;Price ($) |{text-align=left}
 | --------------- | ----------- | --------------: |
 | Gnat            | per gram    |           13.65 |
 |                 | each        |            0.01 |

@@ -320,8 +320,8 @@ function columnStyle( style : string ) : attrs {
     Nothing    -> attrsNone // should not happen?
     Just(ccap) -> {
       align = if (ccap.groups.matchedOn(2))
-               then (if (ccap.groups.matchedOn(6)) then " .align-center" else " .align-left")
-               else (if (ccap.groups.matchedOn(6)) then " .align-right" else "")
+               then (if (ccap.groups.matchedOn(6)) then " text-align=center" else " text-align=left")
+               else (if (ccap.groups.matchedOn(6)) then " text-align=right" else "")
       borders = (if (ccap.groups[1]!="+") then "" else " .cell-border-left") +
                 (if (ccap.groups[7]!="+") then "" else " .cell-border-right")
       c = (ccap.groups[3] + ccap.groups[5]).trim.substr(0,1)
