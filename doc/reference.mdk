@@ -412,21 +412,21 @@ and below the line.
 
 Madoko has extensive support for numbering and referencing elements in a document.
 Elements are given an identity using attributes (see Section [#sec-attr]).
-For example, here we give an identifier `myheader` to a header:
+For example, here we give an identifier `myheading` to a heading:
 
 ~ Sample 
-### A named header { #myheader }
+### A named heading { #myheading }
 
 And we can refer to it
 
-* Using an explicit [link](#myheader) 
-	(or [reference][#myheader]).
-* Or using an implicit link to Section [#myheader].
-* Or we can just see its label, namely &myheader;.
+* Using an explicit [link](#myheading) 
+	(or [reference][#myheading]).
+* Or using an implicit link to Section [#myheading].
+* Or we can just see its label, namely &myheading;.
 ~
 
 Using an implicit link is generally recommended. 
-When type setting a reference such as Section [#myheader], Madoko automatically
+When type setting a reference such as Section [#myheading], Madoko automatically
 inserts a non-breakable space between "Section" and the reference[^refsp]. 
 Unlike LaTeX there is no need to insert such non-breakable space yourself. 
 
@@ -448,20 +448,20 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 ~~
 
 
-An implicit link such as `[#myheader]` is a shorthand for an explicit link of
-the form `[&myheader;](#myheader)`, i.e. a local reference
-to `#myheader` which displays the entity `&myheader;`. In Madoko, an entity
-name like `&myheader;` is replaced by the _label_
-value of the referred block (see Section  [#sec-entity]). 
+An implicit link such as `[#myheading]` is a shorthand for an explicit link of
+the form `[&myheading;](#myheading)`, i.e. a local reference
+to `#myheading` which displays the entity `&myheading;`. In Madoko, an entity
+name like `&myheading;` is replaced by the _label_
+value of the referred block (see Section [#sec-entity]). 
 For headers, this is by default the header number
 (as we will see in Section [#sec-numbering])  but you can set any label you'd
 like. Using a minus\ (`-`) in the attributes clears all attributes, which is
 used in the following example to suppress the default numbering:
 
 ~ Sample
-### An unnumbered header { - }
-### A labeled header     { - #myheader1 label="my label" }
-Let's refer to Section [#myheader1].
+### An unnumbered heading { - }
+### A labeled heading     { - #myheading1 label="my label" }
+Let's refer to Section [#myheading1].
 ~
 
 ## Figures and images { #sec-figure }
@@ -562,7 +562,6 @@ You can write preformatted code simply by indenting the code with a tab
 character or at least four spaces. For example:
 
 ~ Sample
-	function hi() { return "hi world" }
 	<a href="foo.com">a link in html</a>
 ~
 
@@ -608,6 +607,10 @@ to set it as the default language using a metadata rule. For example:
 If you want to disable syntax highlighting for a particular code fragment,
 you can set the language key to empty. To disable highlighting completely,
 set the `Highlight` metadata key to `False`.
+
+It is also possible to use dynamic syntax highlighting with the
+[Prettify][GPretty] library, see Appendix [#sec-gpretty] for more
+information.
 
 ### Advanced: Custom syntax highlighting
 
@@ -668,175 +671,6 @@ dynamically when a user views your document.
 [highlight.js]: http://highlightjs.org/
 [hljsapi]: http://highlightjs.readthedocs.org/en/latest/language-guide.html
 
-### Advanced: Using prettify
-
-If you are not fond of static highlighting, you can also highlight syntax
-dynamically using [Google Prettify][GPretty]. Of course, this only works HTML
-output, PDF output is still highlighted using Madoko.  To enable prettify,
-first include the Google script in the metadata (see Section [#sec-metadata]):
-
-``` 
-Script: https://google-code-prettify.googlecode.com\
-		/svn/loader/run_prettify.js
-```
-
-and add the `.prettyprint` class using attributes:
-
-~ Sample
-``` javascript	{ .prettyprint .linenums  }
-function hi() { 
-  return "hi"; 
-}
-```
-~
-
-Note that Madoko automatically disables static syntax highlighting in the HTML
-output if the `.prettyprint` class is present.
-
-[GPretty]: http://code.google.com/p/google-code-prettify
-
-
-## Table of contents  { #sec-toc }
-
-Generating a table of contents is easy, just include the special element
-`[TOC]` anywhere in your document and it will expand to a table of contents.
-You an use the metadata value `Toc Depth` to set how many levels deep the
-table of contents goes (by default 3).
-
-You can also a create a list of figures, by using `[TOC=tof]`. This will list
-all the `~Figure` block elements.
-
-### Advanced: Custom tables of contents
-
-Custom tables of contents can be generated using the `toc` attribute.  The
-`toc-depth` attribute specifies the depth of the element (by default 1), while
-the `toc-line` specifies the contents of the line displayed in the table of
-contents. For example, using [metadata rules][#sec-rules] we can generate a
-table of contents for equations:
-
-	~Equation: toc=equations toc-line="&caption;"
-
-Here we assume that the user adds a `caption` attribute when denoting
-equations (which will get expanded inside the `toc-line`). We can then render
-the table of equations anywhere in the document as:
-
-	[TOC=equations]
-
-## Bibliography and Citations		{ #sec-bib }
-
-One of Madoko's main design goals is to enable the creation of high-quality
-scholarly articles. As such, Madoko integrates closely with the standard 
-[BibTeX] tool to generate bibliographies and references inside a document.
-Usually, BibTeX comes standard with any LaTeX installation.
-
-You can simply use any existing BibTeX bibliography file (`.bib`). You can
-specify which bibliography files are to be used using  `Bib` 
-[metadata](#sec-metadata) entries:
-
-	Bib:  ../mybib1
-	Bib:  mybib2
- 
-As an example, you can view the bibliography for this document [here](reference.bib).
-Entries in the bibliography files can now be referenced using semi-colon separated 
-references (as in [Pandoc]), for example 
-
-~ Sample
-Read about LaTeX and TeX [@Knuth:Tex; @Lamport:Latex].
-~
-
-Note that unlike LaTeX there is no need to explicitly insert an unbreakable
-space between the text and the citation, Madoko automatically takes care of this
-(as described in Section [#sec-ids-labels]).
-If necessary, you can also include extra text for each entry:
-
-~ Sample
-Read more [The book @Knuth:Tex;\ @Lamport:Latex (chapter 4)]. 
-~
-
-When Madoko finds such references, it writes them to a `.bib.aux` file
-(together with the needed bibliography files) that are read by BibTeX to
-generate the bibliography entries. BibTeX is called automatically by Madoko
-whenever the citations change. The generated bibliography entries are included
-in your document using the special `[BIB]` element, for example:
-
-	## References	{-}
-	[BIB]
-
-which you can see at the [end of this document][#sec-references].
-
-### Bibliography styles  { #sec-bibstyle }
-
-The style of the bibliography entries is determined using the `Bib Style` key
-and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.html)
-(by default `plainnat`):
-
-	Bib Style: abbrvnat
-
-Madoko uses a very simple LaTeX parser to format the bibliography entries in
-Markdown. It can handle things like special characters and accents quite well
-and recognizes many formatting commands. Even though it is sufficient for
-bibliography entries in general, the Madoko LaTeX parser may not work for more
-fancy LaTeX commands in bibliography entries. However, we strive to make it
-work for any bibliograpy style and entries, so please [file a bug report][issues] 
-if you encounter situations where it does not work correctly.
-
-Bibliography styles tested with Madoko include the following author-year
-styles: `apa`, `apalike`, `plainnat`, `abbrvnat`, `unsrtnat`, `newapa`,
-`chicago`, `named`,  `agsm`, `dcu`, `kluwer`, `astron`, `bbs`, `cbe`,
-`humannat`, `humanbio`, `jtb`, `apsrev4-1`, `aipauth4-1` and others. 
-Also, the following numeric styles
-have been tested: `eptcs`,  `abbrv`, `plain`, `ieeetr`, `acm`, `unsrt`,
-`alpha`, `siam`, `apsrmp4-1`, `aipnum4-1` and others.
-Since tools like BibTeX and Madoko make numbering and linking automatic,  it
-is generally preferred for modern documents to use a numeric citations style.
-
-[bibtex]: http://en.wikipedia.org/wiki/BibTeX
-[issues]: http://madoko.codeplex.com/workitem/list/basic
-
-
-### Citation styles   { #sec-cite }
-
-The citation style defaults to a _numeric_ style. However, it can be set
-explicitly using the `Cite Style` metadata key:
-
-	Cite Style: natural
-
-Valid citation styles are _natural_, _textual_, _super_,
-and _numeric_ (default). The natural and textual style use author-year style
-citations, while the super and numeric styles use numbers.
-
-| ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
-| _natural_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=natural}  | (default for author-year citations) |
-| _textual_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=textual}  |                                     |
-| _numeric_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=numeric}  | (default for numeric citations)     |
-| _super_     | [@Lamport:Latex;@Knuth:Tex]{cite-style=super}    |                                     |
-
-Note that numeric citations are sorted (and compressed) by default.
-Also full author-year style citations only work with BibTeX styles that
-support this, i.e. generally any style that works with the `natbib` package
-like `plainnat`. With author-year citations we can use modifiers to change how 
-the citation is shown. For example, assuming a _natural_ style:
-
-| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
-| `[@Goo93]`                    | [@Goo93]{cite-style=natural}          | Natural                         |
-| `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}         | Long -- all authors             |
-| `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}         | Short -- just year              |
-
-Moreover, if you leave out the brackets, you force a _textual_ style:
-
-| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
-| `@Goo93`                      | [@Goo93]{cite-style=natural .textual}  | Textual style                   |
-| `+@Goo93`                     | [+@Goo93]{cite-style=natural .textual} | Long -- all authors             |
-| `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual} | Short -- just year              |
-| `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual} | Just authors                    |
-
-In a numeric style, most of these attibutes have no effect and all the 
-bracketed cases are displayed as "[@Goo93]". 
-For the four cases in textual style, we get  "@Goo93", "+@Goo93", "-@Goo93", and "!@Goo93".
-
-See Appendix [#sec-custom-cite] on how to customize citations styles further,
-and Appendix [#sec-custom-bib] on how to write your bibliography entries
-by hand without using BibTeX.
 
 ## Tables { #sec-table }
 
@@ -894,9 +728,9 @@ some vertical lines. Also, we use two header rows.
 | 1024 | Self-explanatory, no?                  ||    0.99 |
 ~
 
-### Horizontal lines
+### Horizontal rules
 
-We can draw horizontal lines in a table by using a row where
+We can draw horizontal rules in a table by using a row where
 every cell just contains dashes (`-`). By using equal signs (`=`)
 we get a double horizontal line. Here is a
 a table with no header and an outer border:
@@ -908,18 +742,17 @@ a table with no header and an outer border:
 | 1024 | thingamabob |  Self-explanatory, no?     |  0.99  |
 |------|-------------|----------------------------|--------|
 ~
-And finally a complex table with all kinds of alignment, 
-multiple column spans and horizontal lines[^funfn].
 
-[^funfn]: For fun, try to draw this example table in LaTeX
-	without consulting the manual :-).
+And finally a complex table with all kinds of alignment,  multiple column
+spans and horizontal rules -- imagine trying to draw this example table in
+HTML or LaTeX without consulting the manual.
 
 ~ Sample
 | ------ | ----------------- | ------------------- | ------ |
 |   id   |        name       |    description      |  price |
 +--------+-------------------+:-------------------:+~~~~~~~:+
 | 1      | gizmo                                          |||
-|        | ----------------------------------------       |||
+|        | -----------------------------------------------|||
 | 2      | doodad            | Collect *gizmos*    | 23.80  |
 | ====== | ----------------- | =================== |--------|
 | 1024   | thingamabob       | Self-explanatory    | 0.99   |
@@ -927,6 +760,13 @@ multiple column spans and horizontal lines[^funfn].
 ~
 Note how we started the previous table with a horizontal line, 
 where the column specifier row is on the third line. 
+
+### Long tables
+
+If a table is expected to be long and cross multiple pages, the table should
+be followed by an attribute declaration that sets the `.long` class. This is
+used in LaTeX output to switch to a `longtable` environment which supports
+tables that can be broken over multiple pages.
 
 ### The width of columns
 
@@ -937,7 +777,7 @@ of fixed width, and one of a relative with with respect to
 the overall width of the table.
 
 ~ Sample
-+:----:|---{width=2cm}--+:-----{width=33%}--------:|-------:+
++:----:|---{width=2cm}--+:-----{width=60%}--------:+-------:+
 | centered gizmos      || Take care of doo hickies |  1.99  |
 |   2  |    doodad      |     Collects *gizmos*    | 23.80  |
 |  10  |   dojigger     |            Foo           | 102.98 |
@@ -945,28 +785,22 @@ the overall width of the table.
 |------|----------------|--------------------------|--------|
 ~
 
-### Long tables
-
-If a table is expected to be long and cross multiple pages, the table should
-be followed by an attribute declaration that sets the `.long` class. This is
-used in LaTeX output to switch to a `longtable` environment which supports
-tables that can be broken over multiple pages.
-
 ### Colors 
 
 Often we need to colorize certain rows or columns for clarity. 
 Just like `width` we can specify a background color for a column
 in the column specifier row.
+
 Moreover, we can specify after the table more attributes that
 can style the table further. In particular, any attributes starting
 with `th-` or `tr-` apply to the header or body rows respectively.
-Moreover, we can add `even-` or `odd-` to only apply to even or 
+When we add `even-` or `odd-` the attribute only applies to even or 
 odd rows. The following example shows this in action:
 
 ~ Sample
 | ---- | -------------- | ------------------------ | ------ |
 |   id |     name       |    description           |  price |
-+:----:+--{background-color=Ivory}---+:-----------:|-------:+
++:----:+--{background-color=Silver}--+:-----------:|-------:+
 | centered gizmos      || Take care of doo hickies |  1.99  |
 |   2  |    doodad      |     Collects *gizmos*    | 23.80  |
 |  10  |   dojigger     |            Foo           | 102.98 |
@@ -975,6 +809,9 @@ odd rows. The following example shows this in action:
 { tr-odd-background-color=Gainsboro \
   tr-even-background-color=Floralwhite }
 ~
+
+Colors are standard CSS colors and can be specified as described
+in Section [#sec-css].
 
 ### Book tables { #sec-booktable }
 
@@ -991,7 +828,7 @@ and rule separation is set automatically. Here is an example from
 the [Booktable] package documentation:
 
 ~ Sample
-An example of publication quality table:
+An example of a `book table':
 
 | --------------- | ----------- | --------------- |
 |             Item             ||                 |
@@ -1007,7 +844,7 @@ An example of publication quality table:
 { .booktable }
 ~
 
-Note how we need to use the empty escape sequence `\/` in front of 
+Note how we used the empty escape sequence `\/` in front of 
 the second dashed row in the header, or otherwise Madoko would interpret 
 that row as the column specification row. The `.booktable` class 
 ensures more vertical space between the rules, and a heavier top, mid-,
@@ -1036,8 +873,7 @@ using the standard LaTeX `$$` characters on separate lines. However, the
 `Equation` block is preferred as it takes care of numbering, alignment, etc.
 See also Section [#sec-custom] on custom blocks that support mathematics,
 like `Theorem`, `Lemma`, `Proof`, etc. Madoko does not support the `\(` and
-`\[` commands to enclose mathematics since those are escape sequences.
-
+`\[` commands to enclose mathematics since those are escape sequences in Madoko.
 
 ### Using packages
 
@@ -1067,29 +903,10 @@ document with the `curve` option:
 
 	Package: [curve]xypic
 
-With this package, we can draw very complex diagrams:
+With this package, we can draw more complex diagrams:
 
 ~~ Sample
-~ Equation { math-needpdf=true }
-\xyoption{tips}
-\entrymodifiers={++[o][F-]}
-\SelectTips{cm}{}
-\xymatrix @-0.25em {
-*\txt{start} \ar[r] 
-& 0 \ar@(r,u)[]^b \ar[r]_a
-& 1 \ar[r]^b \ar@(r,d)[]_a
-& 2 \ar[r]^b
-\ar `dr_l[l] `_ur[l] _(.2)a [l]
-&*++[o][F=]{3}
-\ar `ur^l[lll]`^dr[lll]^b [lll]
-\ar `dr_l[ll] `_ur[ll] [ll] }
-~
-~~
-
-or:
-
-~~ Sample
-~ Equation { math-needpdf=true }
+~ Equation 
 \xymatrix @-0.5em{
 U \ar@/_/[ddr]_y \ar@/^/[drr]^x
 \ar@{.>}[dr]|-{(x,y)} \\
@@ -1102,26 +919,6 @@ U \ar@/_/[ddr]_y \ar@/^/[drr]^x
 As a hint to understand the above code, note that `\ar@/_/[ddr]_y` denotes an arrow,
 left curved (`@/_/`), going down, down, right (`[ddr]`), with a label `y`
 underneath. See the package [user guide][xypic] for more examples.
-
-<!--
-~~ Sample
-~ Equation
-\xymatrix @W=3pc @H=1pc @R=0pc @*[F-] {%
-: \save+<-4pc,1pc>*\hbox{\textit{root}}
-\ar[]\restore\\
-{\bullet}
-\save*{}
-\ar`r[dd]+/r4pc/`[dd][dd]
-\restore\\
-{\bullet}
-\save*{}
-\ar`r[d]+/r3pc/`[d]+/d2pc/
-`[uu]+/l3pc/`[uu][uu]
-\restore\\
-1 }\mathit{Answer}
-~
-~~
--->
 
 ### Math commands   { #sec-mathdefs }
 
@@ -1175,14 +972,13 @@ You can view and experiment with the different rendering modes in the online
 [mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
 
 
-### Advanced: generic LaTeX snippets
+### Advanced: Generic LaTeX snippets { #sec-snippets }
 
-Besides just mathematics, you can include arbitrary LaTeX snippets using
-the custom `Snippet` block. 
-In static math mode such snippets get included in the web page as hi-res images.
-This makes it possible to use powerful packages like [TikZ] and [PSTricks].
-To extract the hi-res images, Madoko uses [ImageMagick's Convert][convert] program that 
-should be installed on your system.
+Besides just mathematics, you can include arbitrary LaTeX snippets using the
+custom `Snippet` block.  In static math mode such snippets get included in the
+web page as hi-res images. This makes it possible to use powerful packages
+like [TikZ] and [PSTricks]. To extract the images, Madoko uses [ImageMagick's
+Convert][convert] program that  should be installed on your system ([download][convert]).
 
 [convert]: http://www.imagemagick.org/script/binary-releases.php
 
@@ -1437,58 +1233,29 @@ Label   First   Second  Third
 ~ End Columns
 ~ End Figure
 
+### Advanced: Efficiency of math rendering
+
+Madoko is quite optimized to render mathematics efficiently, especially
+for math heavy documents which can easily contain thousands of small 
+mathematics fragments. Madoko carefully processes only those fragments
+that need recompilation. If needed you can give the `-r` flag to rebuild
+everything from scratch. 
+
+Usually, Madoko uses plain `latex` to generate a `.dvi` file, and then
+uses `dvipng` to extract hi-resolution images, automatically taking care
+of proper baseline alignment. 
+
+However, certain snippets cannot work with plain `.dvi` and need postscript
+or PDF primitives, like the TikZ and PSTricks packages. In such cases,
+Madoko will render these snippets using `xelatex` to generate a `.pdf`
+file, and [ImageMagick's Convert][convert] program to extract images. However, this
+is not done by default since this method is much (much!) slower than extracting
+from the `.dvi` file. The `.pdf` method is done automatically for any `Snippet`,
+and also for any equation that sets `math-needspdf=true` in its attributes.
+
 [TikZ]: 		http://www.ctan.org/pkg/pgf
 [PSTricks]: 	http://ctan.sharelatex.com/tex-archive/graphics/pstricks/base/doc/pstricks-doc.pdf
 [TikZ Example Gallery]: http://www.texample.net/tikz/examples/
-
-
-
-<!--
-As an example, here are some complex drawing examples using the
-[`xypic`][xyjax] package. This is MathJax version is beta software, and we
-need to include those extensions from a different server. Moreover, on the
-LaTeX side the package `mathrsfs` is required since the `\mathscr` command is
-available by default on MathJaX but not in LaTeX:
-
-	MathJax Ext : http://sonoisa.github.io/xyjax/extensions/fp.js
-	MathJax Ext : http://sonoisa.github.io/xyjax/extensions/TeX/xypic.js
-	Package     : xypic
-	Package     : mathrsfs
-
-We can now program fancy mathematical diagrams like co-variant functors:
-
-~~ Sample
-~ Equation
-\begin{xy}
-\xymatrix {
-{\mathscr{C}} & 
-  a \ar[r]^f \ar[dr]_{g \circ f} & 
-  b \ar[d]^g & 
-  \ar@{~>}[r]^F & &
-  Fa \ar[r]^{Ff} \ar[dr]_*[l]{
-  	\hspace{-4em}\scriptstyle F(g\circ f) = Fg\circ Ff} & 
-  Fb \ar[d]^{Fg} & {\mathscr{D}} \\
-&& c & \ar@{~>}[r]^F &&& Fc
-}
-\end{xy}
-~
-~~
-
-or some other complex commutative diagram:
-
-~~ Sample
-~ Equation
-\begin{xy}
-\xymatrix {
-U \ar@/_/[ddr]_y \ar@{.>}[dr]|
-	{\langle x,y \rangle} \ar@/^/[drr]^x \\
- & X \times_Z Y \ar[d]^q \ar[r]_p & X \ar[d]_f \\
- & Y \ar[r]^g & Z
-}
-\end{xy}
-~ 
-~~
--->
 
 [mhchem]: http://www.ctan.org/pkg/mhchem
 [amscd]: http://www.ctan.org/pkg/amscd
@@ -1559,6 +1326,149 @@ in the earlier scientific article, the document starts with the following
 These set both block- and inline-code to the `mathpre` input mode and define a set of
 useful replacements.
 
+
+## Table of contents  { #sec-toc }
+
+Generating a table of contents is easy, just include the special element
+`[TOC]` anywhere in your document and it will expand to a table of contents.
+You an use the metadata value `Toc Depth` to set how many levels deep the
+table of contents goes (by default 3).
+
+You can also a create a list of figures, by using `[TOC=tof]`. This will list
+all the `~Figure` block elements.
+
+### Advanced: Custom tables of contents
+
+Custom tables of contents can be generated using the `toc` attribute.  The
+`toc-depth` attribute specifies the depth of the element (by default 1), while
+the `toc-line` specifies the contents of the line displayed in the table of
+contents. For example, using [metadata rules][#sec-rules] we can generate a
+table of contents for equations:
+
+	~Equation: toc=equations toc-line="&caption;"
+
+Here we assume that the user adds a `caption` attribute when denoting
+equations (which will get expanded inside the `toc-line`). We can then render
+the table of equations anywhere in the document as:
+
+	[TOC=equations]
+
+## Bibliography and Citations		{ #sec-bib }
+
+One of Madoko's main design goals is to enable the creation of high-quality
+scholarly articles. As such, Madoko integrates closely with the standard 
+[BibTeX] tool to generate bibliographies and references inside a document.
+Usually, BibTeX comes standard with any LaTeX installation.
+
+You can simply use any existing BibTeX bibliography file (`.bib`). You can
+specify which bibliography files are to be used using  `Bib` 
+[metadata](#sec-metadata) entries:
+
+	Bib:  ../mybib1
+	Bib:  mybib2
+ 
+As an example, you can view the bibliography for this document [here](reference.bib).
+Entries in the bibliography files can now be referenced using semi-colon separated 
+references (as in [Pandoc]), for example 
+
+~ Sample
+Read about LaTeX and TeX [@Knuth:Tex; @Lamport:Latex].
+~
+
+Note that unlike LaTeX there is no need to explicitly insert an unbreakable
+space between the text and the citation, Madoko automatically takes care of this
+(as described in Section [#sec-ids-labels]).
+If necessary, you can also include extra text for each entry:
+
+~ Sample
+Read more [The book @Knuth:Tex;\ @Lamport:Latex (chapter 4)]. 
+~
+
+When Madoko finds such references, it writes them to a `.bib.aux` file
+(together with the needed bibliography files) that are read by BibTeX to
+generate the bibliography entries. BibTeX is called automatically by Madoko
+whenever the citations change. The generated bibliography entries are included
+in your document using the special `[BIB]` element, for example:
+
+	## References	{-}
+	[BIB]
+
+which you can see at the [end of this document][#sec-references].
+
+### Bibliography styles  { #sec-bibstyle }
+
+The style of the bibliography entries is determined using the `Bib Style` key
+and can be any [BibTeX style](http://web.reed.edu/cis/help/latex/bibtexstyles.html)
+(by default `plainnat`):
+
+	Bib Style: abbrvnat
+
+Madoko uses a very simple LaTeX parser to format the bibliography entries in
+Markdown. It can handle things like special characters and accents quite well
+and recognizes many formatting commands. Even though it is sufficient for
+bibliography entries in general, the Madoko LaTeX parser may not work for more
+fancy LaTeX commands in bibliography entries. However, we strive to make it
+work for any bibliograpy style and entries, so please [file a bug report][issues] 
+if you encounter situations where it does not work correctly.
+
+Bibliography styles tested with Madoko include the following author-year
+styles: `apa`, `apalike`, `plainnat`, `abbrvnat`, `unsrtnat`, `newapa`,
+`chicago`, `named`,  `agsm`, `dcu`, `kluwer`, `astron`, `bbs`, `cbe`,
+`humannat`, `humanbio`, `jtb`, `apsrev4-1`, `aipauth4-1` and others. 
+Also, the following numeric styles
+have been tested: `eptcs`,  `abbrv`, `plain`, `ieeetr`, `acm`, `unsrt`,
+`alpha`, `siam`, `apsrmp4-1`, `aipnum4-1` and others.
+Since tools like BibTeX and Madoko make numbering and linking automatic,  it
+is generally preferred for modern documents to use a numeric citations style.
+
+[bibtex]: http://en.wikipedia.org/wiki/BibTeX
+[issues]: http://madoko.codeplex.com/workitem/list/basic
+
+
+### Citation styles   { #sec-cite }
+
+The citation style defaults to a _numeric_ style. However, it can be set
+explicitly using the `Cite Style` metadata key:
+
+	Cite Style: natural
+
+Valid citation styles are _natural_, _textual_, _super_,
+and _numeric_ (default). The natural and textual style use author-year style
+citations, while the super and numeric styles use numbers.
+
+| ~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| _natural_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=natural}  | (default for author-year citations) |
+| _textual_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=textual}  |                                     |
+| _numeric_   | [@Lamport:Latex;@Knuth:Tex]{cite-style=numeric}  | (default for numeric citations)     |
+| _super_     | [@Lamport:Latex;@Knuth:Tex]{cite-style=super}    |                                     |
+
+Note that numeric citations are sorted (and compressed) by default.
+Also full author-year style citations only work with BibTeX styles that
+support this, i.e. generally any style that works with the `natbib` package
+like `plainnat`. With author-year citations we can use modifiers to change how 
+the citation is shown. For example, assuming a _natural_ style:
+
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| `[@Goo93]`                    | [@Goo93]{cite-style=natural}          | Natural                         |
+| `[+@Goo93]`                   | [+@Goo93]{cite-style=natural}         | Long -- all authors             |
+| `[-@Goo93]`                   | [-@Goo93]{cite-style=natural}         | Short -- just year              |
+
+Moreover, if you leave out the brackets, you force a _textual_ style:
+
+| ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ |
+| `@Goo93`                      | [@Goo93]{cite-style=natural .textual}  | Textual style                   |
+| `+@Goo93`                     | [+@Goo93]{cite-style=natural .textual} | Long -- all authors             |
+| `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual} | Short -- just year              |
+| `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual} | Just authors                    |
+
+In a numeric style, most of these attibutes have no effect and all the 
+bracketed cases are displayed as "[@Goo93]". 
+For the four cases in textual style, we get  "@Goo93", "+@Goo93", "-@Goo93", and "!@Goo93".
+
+See Appendix [#sec-custom-cite] on how to customize citations styles further,
+and Appendix [#sec-custom-bib] on how to write your bibliography entries
+by hand without using BibTeX.
+
 ## Custom blocks    { #sec-custom }
 
 Madoko custom blocks are similar to the `div` element in HTML and allow the
@@ -1625,9 +1535,10 @@ Here is a slanted note.
 
 ### Predefined custom blocks  { #sec-predef-custom }
 
-Madoko defines quite a few common custom blocks.
+Madoko defines quite a few common custom blocks. Their exact 
+definitions can be found in Appendix [#app-custom]. 
 
-* `Figure`: This is used to define figures (see Section [#sec-figure]. 
+* `Figure`: This is used to define figures (see Section [#sec-figure]). 
 	Recognizes the following attributes:
 	- `caption=`_caption_: specify the caption of a figure.
 	- `.wide`: if the class `wide` is set, the figure will span the width of a page 
@@ -1637,6 +1548,8 @@ Madoko defines quite a few common custom blocks.
 
 * `Equation`: Specify mathematical equations. See Section [#sec-math] for its usage.
 
+* `Snippet`: Generic LaTeX snippets, see Section [#sec-snippets].
+
 * `Bibitem`, `Bibliography`: Used for writing bibliography entries by hand. See Section [#sec-bib] 
 	for more information.
 * `Note`, `Remark`, `Proof`: Used for notes, remarks, and proofs.
@@ -1645,9 +1558,12 @@ Madoko defines quite a few common custom blocks.
 	block around its content.
 * `Center`: A block that centers its contents horizontally on the page. 
 * `TexRaw`: A block for raw TeX content that is passed directly to LaTeX.
+* `Section`: Starts an explicit section. In the HTML5 backend expands to a `<section>` element.
+	This is mainly used inside presentations using `reveal.js`. 
+* `Article`, `Aside`, `Nav`: Expand to the corresponding HTML5 elements.
 * `HtmlRaw`: A block with raw HTML content that is pasted directly into the HTML output.
 * `TexOnly`: A markdown block that is only processed for LaTeX output (and not shown in HTML output).
-* `HtmlOnly`: A markdown block that is only processed for Html output (and no shown in LaTeX output).
+* `HtmlOnly`: A markdown block that is only processed for Html output (and not shown in LaTeX output).
 * `MathPre`: A block with preformatted math (Section [#sec-mathpre]).
 * `MathDefs`: A block with LaTeX math definitions (Section [#sec-mathdefs]).
 *   `Theorem`, `Lemma`, `Proposition`, `Corollary`, `Example`, `Definition`: Each of these blocks
@@ -1677,6 +1593,37 @@ an italic style instead of bold:
 ```
 ~Proof: before="[_Proof_. ]{.proof-before}"
 ```
+
+## Special block elements { #sec-special }
+
+Madoko supports some special block elements that get expanded automatically.
+
+* `[TITLE]`: Expands to a title element generated from the [metadata][#sec-metadata] 
+	keys _title_,
+	_subtitle_, _title date_ and author info (_author_, _affiliation_, and _email_).
+	In the LaTeX backend this will invoke the `\maketitle` command.
+
+* `[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
+
+* `[FOOTNOTES]`: Expands to the defined footnotes. If there are footnotes and this element
+	is not present, the footnotes are automatically included at the end of the document.
+	In the LaTeX backend, footnotes always appear at page footers.
+
+* `[INCLUDE=`_file_`]`: Expands to the contents of _file_. Include elements are
+	processed before any other processing happens and can for example be used to
+	include meta data elements.
+	```
+	[INCLUDE="presentation.mdk"]
+	```
+
+* `[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
+	expands to:
+	```
+	~ Begin TeX 
+	[INCLUDE="myfile.bbl"]		
+	~ End TeX	
+	```
+	See also Section [#sec-bib].
 
 # Syntax: Metadata and Styling
 
@@ -1877,7 +1824,7 @@ For LaTeX output, the following keys are relevant:
 	when rendering basic mathematics.	
 
 
-### Entities		{ #sec-entity }
+## Entities		{ #sec-entity }
 
 Madoko uses entities extensively. If Madoko finds an entity name (`&`_name_`;`)
 it looks up the name in various places: if there is a block
@@ -1937,59 +1884,17 @@ For some examples of the usage of these elements, see Sections [#sec-replace] an
 
 [ISO 8601]: http://en.wikipedia.org/wiki/ISO_8601
 
-### Metadata rules			{ #sec-rules }
-
-Often, we need to apply specific attributes and formatting to certain elements
-or custom blocks. This can be done using _metadata rules_. These rules
-function much like regular CSS rules except that they are quite a bit more
-limited. A rule starts with a tilde (`~`), dot (`.`), or hash character (`#`)
-for matching a custom block, class name, or id respectively. The value of
-a rule are attributes that get applied to any matching block.
-Here are some examples:
-	
-	~Blockquote : font-style=oblique
-	.bold       : font-weight=bold
-	#myblock    : border-width=1px border-style=solid
-
-This would typeset a block quotes in an oblique font, any block with 
-a `bold` class in bold, and the block with the `myblock` id with a solid border.
-You can also use a comma separated list of matches that apply to all.
-For example, we can give all code, inline or as a block, the class `mycode` as:
-
-	~Pre,~Code: .mycode
 
 
-## Special elements { #sec-special }
+## Attributes and Styling		{ #sec-styling }
 
-Madoko supports some special block elements that get expanded automatically.
+Writing Madoko documents is clearly about content: the main advantage of using
+a markdown format is that it allows the writer to concentrate on prose and
+content instead of formatting. However, in the final stages it is desirable to
+_style_ a document to make it look good. This section describes some tricks
+and tips that can help doing this well. 
 
-* `[TITLE]`: Expands to a title element generated from the metadata keys _title_,
-	_subtitle_, _title date_ and author info (_author_, _affiliation_, and _email_).
-	In the LaTeX backend this will invoke the `\maketitle` command.
-
-* `[TOC]`, `[TOC=`_name_`]`: Expands to a table of contents. See also Section [#sec-toc].
-
-* `[FOOTNOTES]`: Expands to the defined footnotes. If there are footnotes and this element
-	is not present, the footnotes are automatically included at the end of the document.
-	In the LaTeX backend, footnotes always appear at page footers.
-
-* `[INCLUDE=`_file_`]`: Expands to the contents of _file_. Include elements are
-	processed before any other processing happens and can for example be used to
-	include meta data elements.
-	```
-	[INCLUDE="presentation.mdk"]
-	```
-
-* `[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
-	expands to:
-	```
-	~ Begin TeX 
-	[INCLUDE="myfile.bbl"]		
-	~ End TeX	
-	```
-	See also Section [#sec-bib].
-
-## Attributes and Formatting		{ #sec-attr }
+### Attributes 	{ #sec-attr }
 
 An essential addition of Madoko is good support for attributes. The syntax is
 similar to attribute definitions in [Kramdown], [Pandoc], and [MultiMarkdown],
@@ -2012,15 +1917,6 @@ This is a paragraph in small-caps.
 
 For fenced code blocks, custom blocks, and headers, the attributes are specified on the first 
 line.
-
-~ Sample
-### This header is not bold    { font-weight=normal }
-```javascript   { .prettyprint .linenums  }
-function one { 
-	return "a one"; 
-}
-``` 
-~ 
 
 For inline elements, you can follow links, images, code, and bracketed text (between
 `[` and `]`) with attributes. Bracketed text with attributes become a `<span>` in 
@@ -2053,7 +1949,7 @@ caption, we could write it as:
 
 To get a literal line break inside an attribute string, use the hashname `&nl;` instead.
 
-### Recognized formatting attributes  { #sec-css }
+### CSS formatting attributes  { #sec-css }
 
 Attributes that are not special to Madoko (as described in Section [#sec-specialattr]),
 are passed as CSS style attributes in the HTML backend. For the LaTeX backend,
@@ -2088,8 +1984,8 @@ commands that are recognized are:
 * `page-align=`(`top`|`bottom`|`here`). Used for `Figure` custom blocks 
 	(see Section [#sec-predef-custom]).
 
-Note that the syntax at this point is quite a bit more restrictive than plain CSS.
-For example, we cannot just say:
+Note that the syntax at this point, the syntax is quite a bit more restrictive
+than plain CSS. For example, we cannot just say:
 
 	{ border="solid 1px" }
 
@@ -2105,39 +2001,40 @@ The recognized named colors are the basic CSS colors shown in
 Figure [#fig-colors].
 
 ~ Figure { #fig-colors caption="The basic CSS colors"}
-| name               | rgb value   | color                                  |
-| ------------------ | ----------- | :----------------------------------:   |
+| Name               | Hex value   | Color                                  |
+| :----------------- | :---------- | :----------------------------------:   |
 |                    |             |                                        |
-| Red                | \#FF0000    | []{.cbox background-color=red}         |
-| Lime               | \#00FF00    | []{.cbox background-color=lime}        |
-| Blue               | \#0000FF    | []{.cbox background-color=blue}        |
-| Yellow             | \#FFFF00    | []{.cbox background-color=yellow}      |
-| Cyan,Aqua          | \#00FFFF    | []{.cbox background-color=cyan}        |
-| Magenta,Fuchsia    | \#FF00FF    | []{.cbox background-color=magenta}     |
-| Maroon             | \#800000    | []{.cbox background-color=maroon}      |
-| Green              | \#008000    | []{.cbox background-color=green}       |
-| Navy               | \#000080    | []{.cbox background-color=navy}        |
-| Olive              | \#808000    | []{.cbox background-color=olive}       |
-| Teal               | \#008080    | []{.cbox background-color=teal}        |
-| Purple             | \#800080    | []{.cbox background-color=purple}      |
-| Orange             | \#FFA500    | []{.cbox background-color=orange}      |
-| Black              | \#000000    | []{.cbox background-color=black}       |
-| DimGray            | \#696969    | []{.cbox background-color=dimgray}     |
-| Gray               | \#808080    | []{.cbox background-color=gray}        |
-| DarkGray           | \#A9A9A9    | []{.cbox background-color=darkgray}    |
-| Silver             | \#C0C0C0    | []{.cbox background-color=silver}      |
-| LightGray          | \#D3D3D3    | []{.cbox background-color=lightgray}   |
-| White              | \#FFFFFF    | []{.cbox background-color=white}       |
-| Gainsboro          | \#DCDCDC    | []{.cbox background-color=gainsboro}   |
-| FloralWhite        | \#FFFAF0    | []{.cbox background-color=FloralWhite} |
-| Ivory              | \#FFFFF0    | []{.cbox background-color=ivory}       |
+| Red                | #FF0000     | []{.cbox background-color=red}         |
+| Lime               | #00FF00     | []{.cbox background-color=lime}        |
+| Blue               | #0000FF     | []{.cbox background-color=blue}        |
+| Yellow             | #FFFF00     | []{.cbox background-color=yellow}      |
+| Cyan,Aqua          | #00FFFF     | []{.cbox background-color=cyan}        |
+| Magenta,Fuchsia    | #FF00FF     | []{.cbox background-color=magenta}     |
+| Maroon             | #800000     | []{.cbox background-color=maroon}      |
+| Green              | #008000     | []{.cbox background-color=green}       |
+| Navy               | #000080     | []{.cbox background-color=navy}        |
+| Olive              | #808000     | []{.cbox background-color=olive}       |
+| Teal               | #008080     | []{.cbox background-color=teal}        |
+| Purple             | #800080     | []{.cbox background-color=purple}      |
+| Orange             | #FFA500     | []{.cbox background-color=orange}      |
+| Black              | #000000     | []{.cbox background-color=black}       |
+| DimGray            | #696969     | []{.cbox background-color=dimgray}     |
+| Gray               | #808080     | []{.cbox background-color=gray}        |
+| DarkGray           | #A9A9A9     | []{.cbox background-color=darkgray}    |
+| Silver             | #C0C0C0     | []{.cbox background-color=silver}      |
+| LightGray          | #D3D3D3     | []{.cbox background-color=lightgray}   |
+| White              | #FFFFFF     | []{.cbox background-color=white}       |
+| Gainsboro          | #DCDCDC     | []{.cbox background-color=gainsboro}   |
+| FloralWhite        | #FFFAF0     | []{.cbox background-color=FloralWhite} |
+| Ivory              | #FFFFF0     | []{.cbox background-color=ivory}       |
+{.booktable}
 ~
 
-If you wish to use any other standard HTML color, you can use a `TeXRaw` block
-to define the color name in LaTeX:
+If you wish to use any other named HTML color, you can use a `TeXRaw` block
+to also make the color name available in LaTeX:
 
 	~ TeXRaw
-	\definecolor{aliceblue}{HTML}{F0F8FF}
+	\definecolor{Aliceblue}{HTML}{F0F8FF}
 	~
 
 In general, it is hard to emulate a complex CSS layout in LaTeX so some
@@ -2159,6 +2056,74 @@ terrible had happened to him.
  padding=1ex background-color=FloralWhite}
 ~
 
+This is rendered in LaTeX as:
+
+![aargh]
+{text-indent=1em}
+
+
+[aargh]: aargh.png "PDF screen capture of the Aargh example." { width=19em }
+
+## Metadata rules			{ #sec-rules }
+
+Often, we need to apply specific attributes and formatting to certain elements
+or custom blocks. This can be done using _metadata rules_. These rules
+function much like regular CSS rules except that they are quite a bit more
+limited. A rule starts with a tilde (`~`), dot (`.`), or hash character (`#`)
+for matching a custom block, class name, or id respectively. The value of
+a rule are attributes that get applied to any matching block.
+Here are some examples:
+	
+	~Blockquote : font-style=oblique
+	.bold       : font-weight=bold
+	#myblock    : border-width=1px border-style=solid
+
+This would typeset a block quotes in an oblique font, any block with 
+a `bold` class in bold, and the block with the `myblock` id with a solid border.
+You can also use a comma separated list of matches that apply to all.
+For example, we can give all code, inline or as a block, the class `prettyprint` as:
+
+	~Pre,~Code: .prettyprint
+
+Most standard Madoko block elements, like lists or block quotes, can also be
+targeted by rules. Their element names are the standard HTML names, namely:
+
+~ Center
+| Element              | Name          |
+| :----------          | :-----        |
+| Paragraph            | `p`           |
+| Code block           | `pre`         |
+| Code inline          | `code`        |
+| Block quote          | `blockquote`  |
+| List                 | `ul`          |
+| Numbered list        | `ol`          |
+| List item            | `li`          |
+| Horizontal rule      | `hr`          |
+| Table                | `table`       |
+| Heading              | `h1`,...,`h6` |
+| Unnamed custom block | `div`         |
+| Named custom block   | _name_        |
+{.booktable}
+~
+
+Note that every custom block _blockname_ automatically also gets the class
+_blockname_ and is thus matched by both `~`_blockname_ and `.`_blockname_ rules.
+This can be also be useful when applying styles in CSS rules.
+
+### Advanced: Styling in CSS 
+
+Sometimes we only want to apply certain styling to just HTML.
+For HTML, styling through classes works best: we can simply write some CSS
+(and include it through the `Css` metadata or directly within `<style>`
+tags.). For example,
+	
+	<style>
+	.slanted { font-style: oblique; font-family: Cambria }
+	</style>
+
+For styling in LaTeX, or when certain CSS keys are not yet processed in
+LaTeX, see Appendix [#sec-latex-style].
+
 
 ## Numbering	{ #sec-numbering }
 
@@ -2166,7 +2131,7 @@ For larger documents, numbering sections, figures, tables, images, etc. is
 quite important and Madoko supports this well. By default, Madoko will number
 headers, figures, and equations. Numbering for headers is by default up to 3
 levels, but it can be set for the document using the `Heading depth` meta
-variable. If it is set to zero, it suppresses numbering for headings completely:
+variable. If it is set to zero, it suppresses numbering for headings completely:	
 
 	Heading Depth: 0 
 
@@ -2251,45 +2216,6 @@ set the display mode here and not a specific value.
 
 
 
-## Styling the document { #sec-styling }
-
-Writing Madoko documents is clearly about content: the main advantage of using
-a markdown format is that it allows the writer to concentrate on prose and
-content instead of formatting. However, in the final stages it is desirable to
-_style_ a document to make it look good. This section describes some tricks
-and tips that can help doing this well. 
-
-The main tool for styling in Madoko are class attributes and metadata rules.
-For example, through a metadata rule, we can style all code blocks in a 
-smaller font, and all content that has a `.slanted` class in a slanted font:
-
-	~Pre    : font-size=small
-	.Slanted: font-style=oblique
-
-Such rules are nice since, just like CSS, they allow us to separate styling from
-the content, where the main document contains as few style elements as
-possible. We already saw the `Sample` custom block example (Section 
-[#sec-replace]) used in this document: the main document just contains sample
-fragments in `Sample` blocks while the styling is done completely through
-metadata rules.
-
-For a full list of CSS formatting attributes that are supported in both 
-HTML and LaTex, see Section [#sec-css].
-
-### Styling in CSS 
-
-Sometimes though, we only want to apply certain styling to just HTML.
-For HTML, styling through classes works best: we can simply write some CSS
-(and include it through the `Css` metadata or directly within `<style>`
-tags.). For example,
-	
-	<style>
-	.slanted { font-style: oblique; font-family: Cambria }
-	</style>
-
-For styling in LaTeX, or when certain CSS keys are not yet processed in
-LaTeX, see Appendix [#sec-latex-style].
-
 
 ## Advanced: Replacement { #sec-replace }
 
@@ -2325,7 +2251,7 @@ regular markdown block. In a simplified form, it is defined as:
 
 
 
-### Regular expression replacement	{ #sec-regex }
+### Advanced: Regular expression replacement	{ #sec-regex }
 
 A `replace` attribute can also define a general [regular expression][regex] replacement
 of the form `/`_regex_`/`_replacer_`/`(`g`|`i`|`m`|`c`)?. The regular expression _regex_
@@ -2446,24 +2372,24 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-| short |         long         |                  description                   |
-|-------|----------------------|------------------------------------------------|
-|       | `--version`          | Display version information.                   |
-| `-v`  | `--verbose`          | Be more verbose.                               |
-|       | `--odir=`_dir_       | Write output files to the specified directory. |
-|       | `--xmp`              | Only process markdown between `<xmp>` tags.    |
-|       | `--tex`              | Output a LaTeX file too.                       |
-|       | `--pdf`              | Generate a PDF file (implies `--tex`).         |
-| `-f`  | `--full`             | Generate a full html/latex document.           |
-|       | `--sanitize`         | Always escape or suppress user defined html.   |
-|       | `--pedantic`         | Pedantic mode.                                 |
-|       | `--bench`            | For benchmarking: turn off numbering,  etc.    |
-|       | `--installdir=`_dir_ | Set installation directory explicitly.         |
-|       | `--bibtex=`_cmd_     | command to run bibtex.                         |
-|       | `--pdflatex=`_cmd_   | command to run pdflatex.                       |
-|       | `--latex=`_cmd_      | command to run latex (for static math).        |
-|       | `--dvipng=`_cmd_     | command to run dvipng (for static math).       |
-|       |                      |                                                |
+|-------------------|------------------------|------------------------------------------------|
+|       Short       |          Long          |                  Description                   |
+|-------------------|------------------------|------------------------------------------------|
+|                   | `--version`            | Display version information.                   |
+| `-v`              | `--verbose`            | Be more verbose.                               |
+|                   | `--odir=`_dir_         | Write output files to the specified directory. |
+|                   | `--xmp`                | Only process markdown between `<xmp>` tags.    |
+|                   | `--tex`                | Output a LaTeX file too.                       |
+|                   | `--pdf`                | Generate a PDF file (implies `--tex`).         |
+| `-f`              | `--full`               | Generate a full html/latex document.           |
+|                   | `--sanitize`           | Always escape or suppress user defined html.   |
+|                   | `--pedantic`           | Pedantic mode.                                 |
+|                   | `--bench`              | For benchmarking: turn off numbering,  etc.    |
+|                   | `--installdir=`_dir_   | Set installation directory explicitly.         |
+| `-r`              | `--rebuild`            | Force rebuild bibliography, math, etc.         |
+| `-m`_key_`:`_val_ | `--meta=`_key_`:`_val_ | Semi-colon separated list of metadata values   |
+|-------------------|------------------------|------------------------------------------------|
+{.booktable}
 
 All the boolean flags can be negated by prefixing them with `no`, for example
 to suppress LaTeX output, use `--notex`.
@@ -2484,7 +2410,7 @@ The `--xmp` option instructs Madoko to only process content between
 `<xmp>` and `</xmp>` tags. This can be useful if the main body of your document is
 in HTML and only some parts are written in Madoko. 
 
-Finally, the `--full` flag forces Madoko to generate a _full_ document. A full
+The `--full` flag forces Madoko to generate a _full_ document. A full
 document is self sufficient and contains for example for HTML proper `<head>`
 and `<body>` elements instead of just the markup for the content. Similarly,
 for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
@@ -2494,6 +2420,9 @@ following [metadata][#sec-metadata] keys is present in the document: `Title`,
 `Css`, `Script`, `Package`, `HTML Header` or `Tex Header`. In most stand-alone
 documents this is the case.
 
+The `-m` flag can be used to set metadata values. For example, when specifying
+what command to use to invoke LaTeX, we can say `-mpdflatex:/foo/bar/xelatex`
+for example.
 
 ## Advanced: Customizing citations { #sec-custom-cite }
 
@@ -2609,6 +2538,33 @@ which can be used to easily draw chemical formulas:
 In the previous examples, it may seem superfluous to specify both a MathJaX extension
 and LaTeX package but not in all cases the names or package functionality happens to
 be exactly the same.
+
+## Advanced: Using Prettify to highlight code { #sec-gpretty }
+
+If you are not fond of static highlighting, you can also highlight syntax
+dynamically using [Google Prettify][GPretty]. Of course, this only works HTML
+output, PDF output is still highlighted using Madoko.  To enable prettify,
+first include the Google script in the metadata (see Section [#sec-metadata]):
+
+``` 
+Script: https://google-code-prettify.googlecode.com\
+		/svn/loader/run_prettify.js
+```
+
+and add the `.prettyprint` class using attributes:
+
+~ Sample
+``` javascript	{ .prettyprint .linenums  }
+function hi() { 
+  return "hi"; 
+}
+```
+~
+
+Note that Madoko automatically disables static syntax highlighting in the HTML
+output if the `.prettyprint` class is present.
+
+[GPretty]: http://code.google.com/p/google-code-prettify
 
 
 ## Advanced styling in LaTeX  { #sec-latex-style }
