@@ -34,7 +34,6 @@ public function hilite( src : string, lang : string = "auto") : maybe<string>
          })
 }
 
-
 external xregisterLanguage( name : string, fname : string ) : io () {
   js inline "hljs.registerLanguage(#1,require(#2))"
 }
@@ -42,6 +41,7 @@ external xregisterLanguage( name : string, fname : string ) : io () {
 public function registerLanguage( fname : string ) : io () {
   if (fname=="") return ()
   name = fname.basename.noext.toLower
-  catch( { trace("register: " + name + ": " + fname); xregisterLanguage(name,fname) }, 
-         fun(exn) { warning("could not register language: " + name ) } )
+  catch( { //trace("register: " + name + ": " + fname); 
+           xregisterLanguage(name,fname) }, 
+         fun(exn) { println("error: could not register language: " + fname  + "\n" + exn.show ) } )
 }

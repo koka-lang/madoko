@@ -44,7 +44,8 @@ llb			: &#10214;
 rrb			: &#10215;
 
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
-
+Highlight Language: ./doc/javascript5.js
+Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
@@ -61,19 +62,6 @@ rrb			: &#10215;
 # Table of contents { - #toc-header }
 
 [TOC]
-
-~TexRaw
-% The LaTeX lstlisting package does not know the 'javascript' language
-% so we define some limited one here based on Java.
-\definecolor{dark-blue}{rgb}{0,0.08,0.45}
-\definecolor{string-purple}{rgb}{0.49,0,0.47}
-
-\lstdefinelanguage{javascript}[]{Java}{
-	morekeywords={function},
-	keywordstyle=\color{dark-blue},
-	stringstyle=\color{string-purple}
-}
-~
 
 # Overview of Madoko
 
@@ -574,7 +562,8 @@ You can write preformatted code simply by indenting the code with a tab
 character or at least four spaces. For example:
 
 ~ Sample
-	<b>some html code</b>
+	function hi() { return "hi world" }
+	<a href="foo.com">a link in html</a>
 ~
 
 Another way to write code is to used _fenced_ code blocks. These start with at
@@ -583,18 +572,109 @@ same number of backticks. Moreover, you can include the language name after
 the backticks:
 
 ~ Sample
-``` javascript 
-function hi() { return "hi"; }
+``` html 
+<a href="foo.com">a link in html</a>
 ```
 ~
 
-### Advanced: Syntax highlighting
+### Syntax highlighting
 
-For the previous example, Madoko will automatically add the `lang-javascript`
-class for HTML output, and the option `language=javascript` to the LaTeX
-[listings] package. This can be used to  enable syntax highlighting. For
-example, to highlight the above example using  [Google Prettify][GPretty] we
-should include the Google script in the metadata (see Section [#sec-metadata]):
+As we can see from the previous example, Madoko will automatically perform
+(static) syntax highlighting for any code fragment that has the `language` key
+set. For a fenced code block, Madoko automatically adds the `language` key
+when the language is specified.
+
+Internally, Madoko uses the [Highlight.js] library to do syntax highlighting.
+This means that also the PDF output through LaTeX will be fully highlighted
+(oh what a joy to no longer having to remember the vagaries of the `listing`
+package). The standard Highlight.js library contains more than 60 default
+language definitions, for example:
+
+~ Sample
+``` Haskell
+-- The not quite sieve of Eratosthenes in Haskell
+primes :: [Integer]
+primes = sieve [2..]
+  where
+    sieve (p:xs) = p : sieve [x | x <- xs, x `mod` p > 0]
+```
+~
+
+If you use a particular language a lot in your document, you may want
+to set it as the default language using a metadata rule. For example:
+
+	~Pre,~Code: language=JavaScript
+
+If you want to disable syntax highlighting for a particular code fragment,
+you can set the language key to empty. To disable highlighting completely,
+set the `Highlight` metadata key to `False`.
+
+### Advanced: Custom syntax highlighting
+
+Madoko can actually load syntax specifications dynamically to perform
+syntax highlighting. For example, suppose you are a blogger that is writing
+about the new Javascript module proposal, and you would like 
+to highlight the new `module` or `export` keywords. 
+Unfortunately, regular Javascript highlighting does no such thing:
+
+``` JavaScript
+// Javascript 5 modules
+module Math {
+  export function sum(x, y) {
+    return x + y;
+  } 
+  export var pi = 3.141593;
+}
+```
+
+In Madoko, you can add your own syntax highlighter quite easily. First, register 
+your new language definition in the metadata:
+
+	Highlight Language: ./javascript5.js
+
+The filename determines also the name of your language.
+The new file `javascript5.js` contains the new language definition:
+
+``` javascript
+module.exports = function(hljs) {
+  var js  = hljs.getLanguage("javascript"); // extend language
+  var js5 = hljs.inherit(js);               // shallow copy
+  js5.keywords = hljs.inherit(js.keywords); // shallow copy
+  js5.keywords.keyword += " module export"; // add keywords  
+  return js5;
+}
+```
+
+This is generally all that is needed in most situations, but if you like
+to get fancy, there is extensive [documentation][hljsapi] about writing syntax extensions.
+Et voil&agrave;, we can properly highlight our previous example:
+
+~ Sample
+``` JavaScript5
+// Javascript 5 modules
+module Math {
+  export function sum(x, y) {
+    return x + y;
+  } 
+  export var pi = 3.141593;
+}
+```
+~
+
+As an aside, note that even though the the language definition is written in
+Javascript, it is still executed statically as part of Madoko, and not
+dynamically when a user views your document.
+
+[highlight.js]: http://highlightjs.org/
+[hljsapi]: http://highlightjs.readthedocs.org/en/latest/language-guide.html
+
+### Advanced: Using prettify
+
+If you are not fond of static highlighting, you can also highlight syntax
+dynamically using [Google Prettify][GPretty]. Of course, this only works HTML
+output, PDF output is still highlighted using Madoko.  To enable prettify,
+first include the Google script in the metadata (see Section [#sec-metadata]):
+
 ``` 
 Script: https://google-code-prettify.googlecode.com\
 		/svn/loader/run_prettify.js
@@ -603,61 +683,18 @@ Script: https://google-code-prettify.googlecode.com\
 and add the `.prettyprint` class using attributes:
 
 ~ Sample
-``` javascript	{ .prettyprint .linenums }
+``` javascript	{ .prettyprint .linenums  }
 function hi() { 
   return "hi"; 
 }
 ```
 ~
 
-Note how the sample shows line numbers using the `.linenums` class. You can
-start numbering at a specific line using a colon followed by the line number,
-for example: `.linenums:10`. Of course, you can use a [metadata rule][#sec-rules] 
-to enable pretty printed code for all code blocks:
-
-	~Pre: .prettyprint .linenums
-
-In LaTeX the code is typeset using the [listings] package. Unfortunately,
-this package does not predefine the JavaScript language so we  need to define
-it ourselves. This can be done at the start of the document using a `TexRaw`
-custom block (see Section [#sec-custom]). For example, in this document we
-used:
-
-``` tex	{ .prettyprint language=TeX }
-~ TexRaw
-\definecolor{dark-blue}{rgb}{0,0.08,0.45}
-\definecolor{string-purple}{rgb}{0.49,0,0.47}
-
-\lstdefinelanguage{javascript}[]{Java}{
-	morekeywords={function,let},
-	keywordstyle=\color{dark-blue},
-	stringstyle=\color{string-purple}
-}
-~
-```
-
-Madoko will automatically pass the `language` key to the listings package, and
-also include line numbers if the `.linenums` class is present. Use the
-`.showspaces` class to show spaces and tabs in the code. 
-
-In some cases, the listings package does not work correctly in certain
-contexts, like tables or command arguments, due to the fragility of LaTeX
-parsing[^listings].  In such cases, you can switch to a robust verbatim mode
-using the `.plain` class.
-
-~ Sample
-+-----------------------+
-|`function foo`{.plain} |
-+-----------------------+
-~
+Note that Madoko automatically disables static syntax highlighting in the HTML
+output if the `.prettyprint` class is present.
 
 [GPretty]: http://code.google.com/p/google-code-prettify
-[listings]: http://www.ctan.org/pkg/listings
 
-[^listings]: The way the [listings] package and other verbatim environments
- 	work in LaTeX makes them inherently fragile. It is not possible to fix this
- 	robustly. You can read more about this on 
- 	[stack exchange](http://tex.stackexchange.com/questions/29971/why-can-lstlisting-not-be-saved-in-a-command).
 
 ## Table of contents  { #sec-toc }
 
@@ -2633,7 +2670,7 @@ where `text-indent` is stored in `\cssTextIndent`, or `border-style-left` as
 As an advanced example, here is how `madoko.sty` defines the rules for the 
 `Figure` custom block:
 
-```latex  { language=TeX }
+``` tex
 \cssNewKey{css}{page-align}{\cssPageAlign}{}
 \cssElemRuleDo{figure}{%
   \eifstrequal{\cssPageAlign}{top}%
@@ -2781,7 +2818,7 @@ You can define your own definition for it using the
 LaTeX `\mdDefineUnicode` command in a `TexRaw` block at the start of the
 document. For example:
 
-```latex	{ .prettyprint language=TeX }
+```tex	
 ~ TeXRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}

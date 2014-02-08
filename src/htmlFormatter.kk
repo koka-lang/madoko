@@ -93,7 +93,7 @@ public function fmtHtmlCode( context : inlineContext, env : string,
   
   plain = txt.escapePre
   val (pattrs,content)
-    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then (attrs,plain) 
+    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) then (attrs,plain) 
        else match( txt.hilite(lang) ) {
               Just(html) -> (attrs.addClass("hljs"),html)
               Nothing    -> (attrs,plain)  // as is..

@@ -171,7 +171,7 @@ function parseDefinitionsFull(
       Para(attrs=xs)  -> xs
       Code(_,lang,xs)  -> {
         if (lang=="") then xs else {
-          xs.addKeyvalIfNotExist("language",lang).addClass("language-" + lang)
+          xs.addKeyval("language",lang).addClass("language-" + lang)
         }
       }
       Quote(attrs=xs) -> xs

@@ -94,10 +94,11 @@ function processContent( inName : string, outName : string, content : string,
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options
-    opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])              
+    opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])
+
     mmopts = if (opts1.xmp) then opts1
-              else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst // get bibdata,bibstyle,mathimg
-    
+              else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
+
     // always read dims: even in dynamic mode some pdf math may exist
     dims = outName.changeExt(".dimx").readTextFileDef("")
     mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
@@ -110,7 +111,12 @@ function processContent( inName : string, outName : string, content : string,
     }
 
     // register languages for highlighting
-    mopts.hilitelang.split(";").foreach fun(lang) { registerLanguage(lang) }
+    curdir = cwd()
+    mopts.hilitelang.split(";").foreach fun(lang) { 
+      fname = if (curdir=="") then lang else lang.replace(rxCurDir,curdir)
+      registerLanguage(fname) 
+    }
+
 
     // copy early since async latex may start for math
     tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
@@ -129,6 +135,8 @@ function processContent( inName : string, outName : string, content : string,
       }
   }
 }
+
+val rxCurDir = regex(@"^(\.)(?=[\\/])")
 
 function process( inName : string, outName : string, content : string, icontent : string, 
                   xopts : options, mopts : options, firstTime : bool,
