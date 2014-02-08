@@ -140,7 +140,7 @@ function formatKeyval( key : string, value : string, tag : string ) {
   elif ((key=="colspan" || key=="column-span") && (tag=="td" || tag=="th")) {
     "colspan=" + value.htmlQuote
   }
-  elif (((key=="width") && (tag=="td" || tag=="th")) ||
+  elif ( // ((key=="width") && (tag=="td" || tag=="th")) ||
         (key=="target" && tag=="a") ||
         (key=="start" && tag=="ol"))
   {
