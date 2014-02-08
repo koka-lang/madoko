@@ -380,22 +380,28 @@ function formatRows( rows : list<row>,
      then kvs.filter(fun(kv){kv.fst.startsWith("background-color") || kv.fst.startsWith("rule") })
      else kvs
   }
+
+  function containsDashes( row : row ) : bool {
+    row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
+  }
          
   var rowNum := 0
   var rowCount := 0
+  firstHasLine = rows.take(1).all(containsDashes)
+  lastHasLine  = rows.reverse.take(1).all(containsDashes)
   rows.map fun(row) {
     rowCount := rowCount+1
-    hasLine = row.cells.any( fun(cell) { cell.text.contains(rxDashes) || cell.text.contains(rxDDashes) })
+    hasLine = row.containsDashes
     if (!hasLine) then rowNum := rowNum+1  
     rowstyle = row.rowAttrs.addKeyvals( 
                       addRowKey("rule-width", "rule-top-width", !isBody && rowNum==0 ) +
                       addRowKey("rule-width", "rule-mid-width", isBody && rowNum==0 ) +
                       addRowKey("rule-width", "rule-bottom-width", isBody && hasLine && rowCount == rows.length ) +
                       addRowKey("rule-width", "rule-width", True ) +
-                      addRowKey("padding-top", "rule-top-sep", !isBody && rowNum==1 && !hasLine ) +
+                      addRowKey("padding-top", "rule-top-sep", !isBody && firstHasLine && rowNum==1 && !hasLine ) +
                       addRowKey("padding-top", "rule-mid-sep", isBody && rowNum==1 && !hasLine) +
                       addRowKey("padding-bottom", "rule-mid-sep", !isBody && !hasLine && rowCount == rows.length ) +
-                      addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && rowCount == rows.length-1 ) 
+                      addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && lastHasLine && rowCount == rows.length-1 ) 
                     )
                     .addKeyvals( defaultKeyvals(hasLine,rowNum) )
     Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)
