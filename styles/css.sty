@@ -7,13 +7,20 @@
 %---------------------------------------------------------------------------
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 
+\RequirePackage{iftex}
 \RequirePackage{etoolbox}
 \RequirePackage{xkeyval}
 \RequirePackage[table]{xcolor}
 \RequirePackage{mdframed}
 \RequirePackage{graphicx}
 \RequirePackage{tablefootnote}
-\RequirePackage{verbatim}
+
+% font selection
+\ifXeTeX\RequirePackage{fontspec}\else
+\ifLuaTeX\RequirePackage{fontspec}\else
+\providecommand{\fontspec}[2][]{}
+\fi\fi
+
 
 % Define CSS 17 standard colors
 \definecolor{Red}{HTML}{FF0000}
@@ -595,7 +602,7 @@
 
 \newcommand{\@cssProcessFont}{%
 	% font family
-	\def\@fontFamily{\cssFontFamily}%
+	\edef\@fontFamily{\cssFontFamily}%
 	\@for\@ii:=\cssFontFamily\do{%  find the last argument in a comma separated list
 		\edef\@fontFamily{\@ii}%
 	}%
@@ -608,7 +615,8 @@
 		{\cssDoBefore\sffamily}%
 	{\eifstrequal{\@fontFamily}{normal}%
 		{\cssDoBefore\rmfamily}%
-		{}}}}}%
+		{\cssDoBefore{\fontspec{\@fontFamily}}}%
+	}}}}%
 	%
   	\eifstrequal{\cssFontWeight}{bold}%
     	{\cssDoBefore\bfseries}%

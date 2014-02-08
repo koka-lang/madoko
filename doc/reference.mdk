@@ -11,7 +11,6 @@ Script		: reference.js
 Bib			: reference
 Math Embed  : 64
 
-Package*	: fontspec
 Package*	: [curve]xypic
 Package* 	: tikz
 Package*    : pgfplots
@@ -37,24 +36,18 @@ Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing
 ~Fib    	: replace='/^x?$/y/' replace='/xx(x*)/~Fib&nl;x\1&nl;~&nl;~Fib&nl;\1&nl;~/' 
 			  notag tight 
 
-XScript		: https://google-code-prettify.googlecode.com\
-				/svn/loader/run_prettify.js?lang=scm&lang=latex
 Title2		: (&Title;,&Title;)
 llb			: &#10214;
 rrb			: &#10215;
 
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 Highlight Language: ./doc/javascript5.js
-Script: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
 \cssClassRule{sampleblock}{padding-bottom=1ex}
-
-\renewcommand{\mdUnicodeChar}[1]{{\fontspec{MS Gothic}\char#1}}
-\newcommand{\hiragana}[1]{{\fontspec{MS Gothic}#1}}
-\cssClassRuleCmd{hiragana}{\hiragana}
 ~
 
 [TITLE]
@@ -1813,7 +1806,7 @@ For LaTeX output, the following keys are relevant:
 	In that case, you can exclude the package when typesetting basic math by 
 	using the star option:
 	```
-	Package*: fontspec
+	Package*: pgfplots
 	```
 
 * `Tex Header`: The value is included as is before
@@ -1977,7 +1970,7 @@ commands that are recognized are:
 * `font-variant=`(`small-caps`|`normal`)
 * `font-weight=`(`bold`|`normal`)
 * `font-size=`(`xx-small`|`x-small`|`small`|`medium`|`large`|`x-large`|`xx-large`)
-* `font-family=`(`monospace`|`serif`|`sans-serif`|`normal`)
+* `font-family=`(`monospace`|`serif`|`sans-serif`|`normal`|_family_)
 * `color=`_color_
 * `background-color`=_color_.
 * `penalty=`_number_
@@ -1995,6 +1988,16 @@ as in CSS, but need to state each property separately as:
 
 Also, _length_\/s must use common units, such as `10ex`, `5em`, `4px`, `2cm`,
 or `-6pt` for example. Percentages only work for width's.
+
+A font family can be a comma separated list of fonts. However, in LaTeX
+only the last font in the list is used. If it is not one of the standard
+font families, it is selected using the `\fontspec` command.
+
+~~ Sample
+~ { font-family=Georgia }
+This is in the Georgia font.
+~
+~~
 
 A _color_ must be either a named color or use the HTML `#rrggbb` format. 
 The recognized named colors are the basic CSS colors shown in
@@ -2030,13 +2033,6 @@ Figure [#fig-colors].
 {.booktable}
 ~
 
-If you wish to use any other named HTML color, you can use a `TeXRaw` block
-to also make the color name available in LaTeX:
-
-	~ TeXRaw
-	\definecolor{Aliceblue}{HTML}{F0F8FF}
-	~
-
 In general, it is hard to emulate a complex CSS layout in LaTeX so some
 particular combinations may not work as expected in LaTeX. We strive to make
 it work seamlessly though so please [report any issues][issues].
@@ -2056,7 +2052,7 @@ terrible had happened to him.
  padding=1ex background-color=FloralWhite}
 ~
 
-This is rendered in LaTeX as:
+This is rendered in LaTeX as shown by the following screenshot:
 
 ![aargh]
 {text-indent=1em}
@@ -2316,14 +2312,15 @@ greek daan.
 ~
 ~ Hiragana {replace="//ko/&#12371;//ni/&#12395;//\
 	        \\(.)/\1//chi/&#12385;//ha/&#12399;//\
-	        n/&#12435;//g"}
+	        n/&#12435;//g" \
+	        font-family="MS Gothic" }
 konnichiha is Japa\nese.
 ~
 ~~
 
-Note that the previous example generally needs some extra work
-in LaTeX to display correctly since Japanese characters are not
-in the standard font. See Appendix [#sec-unicode] for more information. 
+Note that the previous example generally needs a `font-family` specification
+to display correctly in LaTeX since Japanese characters are not in the
+standard font. See Appendix [#sec-unicode] for more information.
 
 ### Advanced recursion and replacement
 
@@ -2705,6 +2702,11 @@ Some attributes have a special meaning to Madoko. In particular:
 * `cite-style=`_style_: Sets the citation style for a citation (Section [#sec-cite]).
 * `sticky`: The attributes for this element will stick to apply to all of the same
 	elements that follow in the document.
+* `html-`_name_: use _name_ as an HTML attribute only in the HTML backend. For example,
+	you can use `html-target=_top` for links inside frames.
+* `tex-`_name_: use _name_ as an attribute only in the LaTeX backend.
+* `data-`_name_: in the HTML backend uses a HTML attribute `data-`_name_ instead of a
+	CSS style attribute.
 * `-`: clear any attributes that have been set before (usually through metadata rules).
 * `input=`_input_. Sets the input mode of this block which determines how the content
 	of this block is processed. One of:
@@ -2791,70 +2793,27 @@ to directly select the glyph from the current font.
 The previous examples works fine if only some unicode characters are used, 
 but becomes cumbersome if you need many unicode characters, for example,
 when writing Japanese or Chinese characters as shown in our previous example
-in Section [#sec-map]:
-~ Sample
+in Section [#sec-map]. In this case, we need to select a font family in LaTeX
+that supports the glyphs directly. For example, `MS Gothic` or `SimSun`:
+~~ Sample
+~ { font-family="MS Gothic"}
 &#12371;&#12435;&#12395;&#12385;&#12399; is Japanese.
 ~
-
-In this case, declaring all unicode characters by hand for each character
-would be too cumbersome. Instead, we are going to redefine `\mdUnicodeChar`
-command which is called whenever a unicode character is not declared.
-
-First, we need a unicode aware LaTex, like [XeLaTeX] or [LuaLaTeX] instead of
-the usual [pdfLaTeX]. Both of these variants usually come standard in your
-LaTeX distribution. You can enable this using:
-
-	Pdf Latex: xelatex
-
-With these LaTeX variants, we can use  the `fontspec`
-package, which we included in this document using `Package` metadata:
-
-	Package*: fontspec
-
-Note that we appended a star to the `Package` key to exclude it when typesetting
-mathematics since `fontspec` fails to load under regular LaTeX.
-Next, we redefine the `\mdUnicodeChar` command to select a specific
-character (using the `\char` command) from a font that contains Hiragana,
-namely `MS Gothic` in  our case. There exist many other fonts too, like
-`SimSun`. Consult the XeLaTeX documentation for more information:
-
-	~ TexRaw
-	\renewcommand{\mdUnicodeChar}[1]{{\fontspec{MS Gothic}\char#1}}
-	~
-
-Using the above magic, we translated this document using XeLaTeX into a PDF file:
-
-* `madoko --pdf -v reference.mdk`
-
-or more explicitly as:
-
-* `madoko --tex -v reference.mdk`
-* `xelatex reference.tex`
-
-which shows the Japanese characters as intended.
+~~
 
 Instead of using explicit unicode characters, you can also directly
 use UTF8 text files with the characters shown directly. For example:
 
 ~ Sample
-Directly in unicode: [こんにちは]{.hiragana} 
+Directly in unicode: [こんにちは]{font-family="MS Gothic"} 
 (probably not visible in LaTeX monospace fonts)
 ~
 
-Again, these characters only show up in LaTeX if we select the correct
-font that contains these characters. In this case, we attributed the
-Japanese text the `.hiragana` class. We can now write some LaTeX 
-class rule that selects the right font for Japanese text:
-
-	~ TexRaw
-	\newcommand{\hiragana}[1]{{\fontspec{MS Gothic}#1}}
-	\cssClassRuleCmd{hiragana}{\hiragana}
-	~	
-
 If most of your document is using such characters, the `\setmainfont` command
- of the `fontspec` package can set
-the default for the entire document instead of using attributes.
+of the `fontspec` package can set the default for the entire document instead
+of using attributes. See the package [documentation][fontspec] for more information.
 
+[fontspec]: http://ftp.math.purdue.edu/mirrors/ctan.org/macros/latex/contrib/fontspec/fontspec.pdf
 [XeLaTeX]: http://en.wikipedia.org/wiki/XeTeX
 [pdflatex]: http://en.wikipedia.org/wiki/PdfTeX
 [LuaLaTeX]: http://en.wikipedia.org/wiki/LuaTeX
