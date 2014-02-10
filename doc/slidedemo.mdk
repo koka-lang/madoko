@@ -4,6 +4,7 @@ Sub Title	  : In both HTML and PDF
 Author		  : Daan Leijen
 Affiliation	: Microsoft Research
 Email 		  : daan@microsoft.com
+Reveal Url  : ../contrib/reveal.js
 Reveal Theme: solarized
 Beamer Theme: singapore
 Package 	  : pstricks

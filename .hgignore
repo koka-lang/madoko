@@ -10,6 +10,10 @@ syntax:glob
 *.dim
 *.dimx
 *.dvi
+*.nav
+*.snm
+*.toc
+contrib/*
 lib/*
 libnet/*
 libdoc/*
