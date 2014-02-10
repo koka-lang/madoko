@@ -146,6 +146,7 @@ task("publish", [], function () {
                                  .include(path.join("doc","*.mdk"));
   copyFiles("doc",files.toArray(),doclocal);
   fs.renameSync(path.join(doclocal,"reference.mdk"),path.join(doclocal,"reference.mdk.txt"));
+  fs.renameSync(path.join(doclocal,"slidedemo.mdk"),path.join(doclocal,"slidedemo.mdk.txt"));
 },{async:false});
 
 //-----------------------------------------------------
