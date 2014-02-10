@@ -285,7 +285,7 @@ function texAttrsX( attrs : attrs = attrsNone ) : string {
 
 function nosuppressKey( kv : (string,string) ) : bool {
   key = kv.fst
-  (key != "source" && !(key.startsWith("html-")))
+  (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
 }
 
 function normalizeVal( v : string ) : string {

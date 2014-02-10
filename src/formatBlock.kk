@@ -46,7 +46,7 @@ function fmtEnv( context : formatContext, env : string, txt : string, attrs : at
 
 function fmtCmd( context : formatContext, cmd : string, txt : string, attrs : attrs = attrsNone ) : string {
   match(context.fmt) {
-    FmtHtml -> tagEnv(cmd, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
+    FmtHtml | context.inlineContext.bench -> tagEnv(cmd, txt, attrs, context.inlineContext.sanitize) // inline for efficiency
     _ -> (context.inlineContext.xfmtCmd)(context.inlineContext,cmd,txt,attrs)
   }
 }

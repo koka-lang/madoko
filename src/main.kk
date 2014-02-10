@@ -90,7 +90,7 @@ function processContent( inName : string, outName : string, content : string,
                           continue : (string,string,string,options) -> <io|e> () ) : <io|e> () 
 {
   styleDir = opts.installDir + "/../styles"
-  content.include(False, outName, [styleDir,outName.dirname]) fun(icontent) {
+  content.include(False, outName, [".",inName.dirname,outName.dirname,styleDir]) fun(icontent) {
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
               then (opts.options)(xmp = True) else opts.options

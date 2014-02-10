@@ -137,6 +137,9 @@ function formatKeyval( key : string, value : string, tag : string ) {
   elif (key.startsWith("data-")) {
     key + "=" + value.htmlQuote
   }
+  elif (key.startsWith("css-")) {
+    key.substr(4).escape + ":" + value.cssQuote
+  }
   elif ((key=="colspan" || key=="column-span") && (tag=="td" || tag=="th")) {
     "colspan=" + value.htmlQuote
   }

@@ -412,6 +412,14 @@ function peano(n : int ) : peano {
 
 val peanoN = peano(100)
 
+public function expand( attrs : attrs, metadata : dict<string>, labels : dict<label> = dict() ) : attrs {
+  if (attrs.empty) return attrs 
+
+  attrs( keyvals = attrs.keyvals.map fun(kv) {
+    (kv.fst, kv.snd.expandKeys( attrs.source, attrs, labels, metadata ))
+  })
+}
+
 public function expandKeys( txt : string, metadata : dict<string> ) : string {  
   expandKeys(peanoN,txt,"",attrsNone,dict(),metadata)
 }
@@ -446,7 +454,10 @@ private function expandKeys( p0 : peano, txt : string, source : string,
         elif (key=="class" && !(attrs.empty)) then attrs.classes.join(" ") 
         elif (key=="source" && !(attrs.empty)) then source // attrs.source 
         else match (attrs.keyvals.find(fun(kv){ kv.fst == key })) {
-          Just(kv) -> kv.snd          
+          Just(kv) -> {
+            if (txt == kv.snd) then kv.snd
+             else expandKeys(p,kv.snd,source,attrs,dict(),metadata,notFound)                
+          }
           Nothing  -> match(labels[key]) {
             Just(label) -> label.labelText // already expanded
             Nothing -> match(metadata[key]) {

@@ -39,6 +39,7 @@ Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing
 Title2		: (&Title;,&Title;)
 llb			: &#10214;
 rrb			: &#10215;
+Indigo      : #4B0082
 
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 Highlight Language: ./doc/javascript5.js
@@ -76,7 +77,7 @@ documents. But for more serious use Markdown falls short in several areas,
 and Madoko provides many essential additions:
 
 * Extensive support for labeling and in-document [references][#sec-ids-labels].
-* [Tables][#sec-table] with custom borders, column alignment and width, multicolumn spans etc.
+* [Tables][#sec-table] with custom borders, column alignment, multicolumn spans, colors etc.
 * Extensive [citation][#sec-bib] support, using standard BibTeX entries and BibTeX styles.
 * Automatic and customizable [numbering][#sec-numbering] of sections, figures, etc. 
 * Title page and table-of-contents [generation][#sec-special].
@@ -84,19 +85,21 @@ and Madoko provides many essential additions:
 * Styling for both HTML and LaTeX output through [standard CSS attributes][#sec-css].
 * Powerful styling through [attributes][#sec-attr], [metadata rules][#sec-rules] and 
 	[replacement rules][#sec-replace].
-* Support for [syntax highlighting][#sec-code] and code with [mathematical formatting][#sec-mathpre].
+* Support for static [syntax highlighting][#sec-code] and 
+	code with [mathematical formatting][#sec-mathpre].
+* Excellent support for advanced [mathematics][#sec-math] and powerful packages like
+	TikZ and PSTricks with hi-resolution images in web pages.
+* Create great [presentations][#sec-presentations] for both the web and in print.
 * Compatible with most common Markdown extensions, such as [footnotes][#sec-footnotes], 
-	[mathematics][#sec-math], etc. Tries to be as compatible as possible with
-	existing Markdown implemenations like [Markdown Extra], [PanDoc], [Kramdown], or [MultiMarkdown].
+	[mathematics][#sec-math], etc. 
 
 Instead of a plethora of backends, Madoko concentrates on generating either
 HTML or high-quality PDF files through [LaTeX]. There has been a lot of effort
 in Madoko to make the LaTeX generation robust and customizable while
 integrating well with the various academic document- and bibliography styles.
 This makes it possible to write articles using just Madoko and get both a
-high-quality print format (PDF) and a good looking HTML page. Look at this
-scientific article for an example[^fn-slow-load] (generated with a rather old
-version of Madoko):
+high-quality print format (PDF) and a great looking HTML page. Look at this
+scientific article for an example[^fn-slow-load] 
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
@@ -105,8 +108,18 @@ version of Madoko):
 |                                |                                  |                              |
 ~
 
+or this slide-show presentation:
+
+~ Center
+| :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
+| LaTeX/PDF                      | HTML                             | Madoko source                |
+| [![slidedemo-pdf]][slide-pdf] | [![slidedemo-html]][slide] | [![slidedemo-mdk]][slide-mdk] |
+|                                |                                  |                              |
+~
+
 Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this document.
 In the future, we plan to support e-books through the [ePub] format too.
+
 
 [^scholarly]:
 	There is actually an effort to define 
@@ -120,9 +133,14 @@ In the future, we plan to support e-books through the [ePub] format too.
 
 [epub]: http://en.wikipedia.org/wiki/EPUB
 
-[doc-pdf]: 		koka-doc-pdf.png 	{width=200px vertical-align=top } 
-[doc-html]: 	koka-doc-html.png 	{width=200px vertical-align=top }
-[doc-md]: 		koka-doc-md.png 	{width=200px vertical-align=top }
+[doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
+[doc-html]: 	koka-doc-html.png 	{width=250px vertical-align=top }
+[doc-md]: 		koka-doc-md.png 	{width=250px vertical-align=top }
+
+[slidedemo-pdf]: 	slidedemo-pdf.png 	{width=250px vertical-align=top } 
+[slidedemo-html]: 	slidedemo-html.png 	{width=250px vertical-align=top }
+[slidedemo-mdk]: 	slidedemo-mdk.png 	{width=250px vertical-align=top }
+
 
 [koka-article-pdf]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.pdf
 [koka-article-html]: 	http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.html
@@ -132,6 +150,7 @@ In the future, we plan to support e-books through the [ePub] format too.
 [this-mdk]: reference.mdk.txt
 
 [latex]: http://en.wikibooks.org/wiki/LaTeX
+
 
 ## Performance
 
@@ -172,14 +191,15 @@ and you are done. Translating a markdown document is done simply as:
 which generates `mydoc.html`. The `-v` flag gives more verbose output.
 To also generate a PDF file, use:
 
-* `madoko --pdf -v mydoc`
+* `madoko --pdf -vv mydoc`
 
 To generate a PDF, you need to have LaTeX installed on your system,
 which is also required for mathematics and bibliographies.
 Popular LaTeX systems include [MikTeX] for Windows, and [MacTeX] for MacOSX. 
 
-A full
-description of all command line options can be found in  Appendix [#sec-commandline]
+For PDF output, we added an extra verbose flag in order to see any warnings
+LaTeX produces. A full description of all command line options can be found in
+Appendix [#sec-commandline].
 
 [MikTeX]: http://miktex.org/
 [MacTeX]: http://tug.org/mactex/
@@ -297,8 +317,9 @@ We can also [Change the text][Google].
 ~
 
 Note how `[Google]` is simply a shorthand for `[Google][Google]`. The title in
-double quotes in the link definition is optional.  See also Section 
-[#sec-attr] on how to include attributes in link  definitions.
+double quotes in the link definition is optional. Link definitions do not
+have to follow the text immediately and can be defined anywhere in the
+document.
 
 ## Images	   { #sec-image }
 
@@ -657,7 +678,7 @@ module Math {
 ```
 ~
 
-As an aside, note that even though the the language definition is written in
+As an aside, note that even though the language definition is written in
 Javascript, it is still executed statically as part of Madoko, and not
 dynamically when a user views your document.
 
@@ -1550,6 +1571,9 @@ definitions can be found in Appendix [#app-custom].
 * `Framed`: A block with a solid border. Use the `tight` attribute to suppress a paragraph
 	block around its content.
 * `Center`: A block that centers its contents horizontally on the page. 
+* `Columns`, `Column`: Put `Column` blocks inside a `Columns` block, to typeset block elements
+	next to each other on a page. Use the `width` attribute to control the width of each
+	column.
 * `TexRaw`: A block for raw TeX content that is passed directly to LaTeX.
 * `Section`: Starts an explicit section. In the HTML5 backend expands to a `<section>` element.
 	This is mainly used inside presentations using `reveal.js`. 
@@ -1608,6 +1632,9 @@ Madoko supports some special block elements that get expanded automatically.
 	```
 	[INCLUDE="presentation.mdk"]
 	```
+	Include files are first searched relative to the current directory, then
+	the directory of the input file, followed by the output directory, and finally
+	the `styles` directory in the installation directory of Madoko.
 
 * `[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
 	expands to:
@@ -1675,6 +1702,14 @@ Any metadata key and value can be given (and referred to using
 	Heading Base: 2
 	```
 	the top headings will map to `<h2>` or `\section` elements instead.
+
+* `Section Base` (=1): Specify at what heading level (and lower) Madoko will
+	wrap `<section>` elements around the content. This is especially useful
+	for presentations where each slide is generally represented by a `Section`
+	(see Appendix [#sec-presentations]).
+
+* `Section Depth` (=0): Maximal heading level where section elements are wrapped
+	around the content. The default value ensure no section wrapping takes place.
 
 * `Bib` or `Bibliography`: Specify a bibliography (`.bib`) file to be used by
 	the BibTeX tool to generate a list of references (see Section [#sec-bib]).
@@ -1836,7 +1871,7 @@ Entity names for labels and metadata values, can consist of letters, underscores
 minus signs, and digits. In contrast to regular HTML entity names, Madoko compares
 the entity name for labels and metadata in a case-insensitive way.
 
-Note that if label or metadata values contain themselves hash names, these are 
+Note that if label or metadata values contain themselves entities, these are 
 expanded recursively (up to a certain limit) which can provide a powerful abstraction
 mechanism. For example, if we define a metadata value `Title2`:
 
@@ -1940,7 +1975,7 @@ caption, we could write it as:
 	...
 	~
 
-To get a literal line break inside an attribute string, use the hashname `&nl;` instead.
+To get a literal line break inside an attribute string, use the entity `&nl;` instead.
 
 ### CSS formatting attributes  { #sec-css }
 
@@ -2031,6 +2066,17 @@ Figure [#fig-colors].
 | FloralWhite        | #FFFAF0     | []{.cbox background-color=FloralWhite} |
 | Ivory              | #FFFFF0     | []{.cbox background-color=ivory}       |
 {.booktable}
+~
+
+If you would like to use another named color that is not one of the above,
+you can often just define an entity in the metadata:
+
+	Indigo: #4B0082
+
+and use Madoko's expansion to use it inside an attribute:
+
+~ Sample
+This is "[Indigo]{color=&Indigo;}".
 ~
 
 In general, it is hard to emulate a complex CSS layout in LaTeX so some
@@ -2329,6 +2375,7 @@ calculate  [fibonacci numbers][fib]. In the following sample, _n_ number of
 `x` characters are replaced by _fib(n)_ `y` characters: 
 
 ~~ Sample 
+How many `y`'s is the Fibonacci of 5 `x`'s?
 ~ Fib 
 xxxxx
 ~  
@@ -2421,6 +2468,70 @@ The `-m` flag can be used to set metadata values. For example, when specifying
 what command to use to invoke LaTeX, we can say `-mpdflatex:/foo/bar/xelatex`
 for example.
 
+## Slide shows and presentations { #sec-presentations }
+
+Madoko can generate excellent slide shows using either the 
+[reveal.js] library in HTML or the [Beamer] package in LaTeX. 
+
+Start a slide show with including the `Presentation` style at
+the start of the document:
+
+	[INCLUDE=presentation.mdk]
+
+Slides are now automatically started on a level 1 (`#`) or 2 (`##`) header, or
+by using a `~Slide` custom block explicitly. Use the `.fragment` class on any
+element to create overlays that appear one by one. The `.fragmented` class can
+be used on a list to have each item appear in order. For example:
+
+``` madoko 
+# my first slide
+
+And some content
+
+# and my second slide
+
+* with
+* a list
+* in it
+{.fragmented}
+```
+
+The HTML slide shows support the `~Notes` custom block for speaker notes,
+and the `~Vertical` custom block to create a set of vertical slides.
+
+Here is a small [example slide show][slide] written in Madoko
+ ([html][slide], [pdf][slide-pdf], [source][slide-mdk]).
+
+[slide]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.html
+[slide-pdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.pdf
+[slide-mdk]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.mdk.txt
+
+### Using Reveal.js
+
+The HTML backend works with the [reveal.js] library:
+
+* It expects the reveal.js library to be in a subdirectory "reveal.js".
+  You can use another url by setting the `Reveal Url` metadata key.
+* Select another default theme by setting the `Reveal Theme`, like `sky` for example.
+* Use the `data-background` attribute on headers to set the background color or
+	background image for a slide.
+* The Javascript `revealConfig` variable contains the default configuration options
+	and can be extended inside `<script>` tags.
+
+### Using Beamer
+
+The LaTeX backend uses the [Beamer] package: 
+
+* Set the `Beamer Theme` metadata key to select another theme, like `singapore` for example.
+* Set the `Beamer Theme Options` for different options for the theme.
+* Use the `.pause` class to insert pauses anywhere in a slide.
+
+[Reveal.js]: http://lab.hakim.se/reveal-js/#/
+[Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
+
+
+
+
 ## Advanced: Customizing citations { #sec-custom-cite }
 
 For each citation, you can actually change how it is displayed by setting
@@ -2506,7 +2617,6 @@ For author-year citations, the entry should have an explicit `cite-label`:
 A `cite-label` should have the form _authors_`(`_year_`)`_longauthors_,
 where the _longauthors_ are optional. Madoko parses these labels to
 correctly format citations. 
-
 
 ## Advanced: packages in dynamic math mode { #sec-mathext }
 
@@ -2704,6 +2814,8 @@ Some attributes have a special meaning to Madoko. In particular:
 	elements that follow in the document.
 * `html-`_name_: use _name_ as an HTML attribute only in the HTML backend. For example,
 	you can use `html-target=_top` for links inside frames.
+* `css-`_name_: use _name_ as a CSS attribute only in the HTML backend. For example,
+	you can use `css-font-family=Cambria` for setting a font family only in the web page.
 * `tex-`_name_: use _name_ as an attribute only in the LaTeX backend.
 * `data-`_name_: in the HTML backend uses a HTML attribute `data-`_name_ instead of a
 	CSS style attribute.
@@ -2763,7 +2875,7 @@ convenient to define a shorthand for it in the metadata:
 	llb: &#10214;
 	rrb: &#10215;
 
-and then use the hash-names instead. For example:
+and then use those entity names instead. For example:
 
 ~ Sample 
 &llb;hi&rrb;.

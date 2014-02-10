@@ -89,7 +89,7 @@ function parseDefinitionsFull(
   // initialize defaults from metadata
   val mdefaultAttrs = mdict()
   mdata.initializeDefaults(mdefaultAttrs,labels,counters,nested)
-  val defaultAttrs = mdefaultAttrs.freeze()
+  val defaultAttrs : dict<string> = mdefaultAttrs.freeze()
 
   // process attributes 
   function process( attrs : attrs, previousIsPar : bool, block : block ) : <div,st<_h>> block {
@@ -109,8 +109,9 @@ function parseDefinitionsFull(
       counters.adjustCounter(counter,value,nested)
     }
 
-    // expand counters and #keys in label
-    attrsx = attrsd.expandCounters(counters,fcontext.inlineContext.metadata)
+    // expand counters in label
+    cmdata = fcontext.inlineContext.metadata
+    attrsx = attrsd.expandCounters(counters,cmdata).expand(cmdata)
 
     // set label
     if (attrsx.name != "") then {
@@ -191,9 +192,8 @@ function parseDefinitionsFull(
     attrs.process( previousIsPar, block )
   }
   
-  newblocks     = blocks.mapBlocks(parseDefBlock)
-  labelsDict    = labels.freeze()
-
+  newblocks  = blocks.mapBlocks(parseDefBlock)
+  labelsDict = labels.freeze()
   tocBlocks     = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                   (tocs.list.map fun(entry) {
                      (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
@@ -318,7 +318,8 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
     }
     else {
       // label key
-      labels[key] := Label("metadata",value)
+      // labels[key] := Label("metadata",value)
+      ()
     }
   }
 }
@@ -419,7 +420,7 @@ function tocList( items : list<block> ) : block {
   if (items.isNil) then Empty else Div(items, Attrs(classes=["tocblock"]))
 }
 
-function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string> ) : div list<block> {
+function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string> ) : div list<block> {    
   match(headings) {
     Nil -> []
     Cons(hdr,hdrs) -> {
@@ -444,16 +445,16 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
 // counters
 //--------------------------------------------------------
 
-// expand counters in label
+// expand counters in label,
 function expandCounters( attrs : attrs, counters : mdict<h,counter>, metadata : dict<string> ) : read<h> attrs {
-  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expand(counters)
+  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expandCounter(counters) 
   if (xlab != attrs.label)
    then attrs(label=xlab)
    else attrs
 }
 
 // expand the counters in a string
-function expand(lab : string, counters : mdict<h,counter> ) : read<h> string
+function expandCounter(lab : string, counters : mdict<h,counter> ) : read<h> string
 {
   lab.replaceAll(rxcounter) fun(cap) {
     //trace("expand: " + lab + ": found: " + cap.groups[1] + " = " + counters[cap.groups[1]].string)

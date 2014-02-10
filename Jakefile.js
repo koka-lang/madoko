@@ -125,7 +125,7 @@ task("bench", [], function() {
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
 task("doc", [], function() {
   args = Array.prototype.slice.call(arguments).join(" ");
-  mdCmd = "node lib/cli.js -v " + args + " doc/reference.mdk doc/mathdemo.mdk";
+  mdCmd = "node lib/cli.js -v " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
     complete();

@@ -136,13 +136,13 @@ function inlineBreak( cap : matched, context ) {
 
 function inlineEntity( cap : matched, context : inlineContext ) : string {
   key = cap.groups[1]
-  if (key.startsWith("#")) 
+  if (key.startsWith("#")) // character code 
    then context.fmtText(cap.matched) 
    else {
     txt = expandKeyName(key,context.labels,context.metadata)
-    if (txt==cap.matched) 
+    if (txt==cap.matched)             // prevent obvious infinite loop
      then context.fmtText(txt)
-     else context.formatInline(txt)
+     else context.formatInline(txt)   // format the expansion
   }
 } 
 
@@ -516,12 +516,13 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
               Cons(cname,_) -> cname
               _             -> "span"
             } //attrs.elementName("span")
-  attrsd  = if (!(attrs.defaults)) then attrs 
+  attrsx  = if (!(attrs.defaults)) then attrs 
              else context.defaults.matchRules(sname,attrs)
+  attrsd  = context.formatAttrs(attrsx)            
 
   txt = attrsd.transformText(txt0,context.labels,context.metadata)
   match(attrsd.input) {
-    Pre      -> context.fmtCode(sname, txt, attrs) // todo: sname as env name?
+    Pre      -> context.fmtCode(sname, txt, attrsd) // todo: sname as env name?
     Math     -> context.fmtMath(False,txt,attrsd)
     MathPre  -> context.fmtMath(False,txt.mathPre,attrsd)
     Raw(monly) -> {
@@ -694,7 +695,7 @@ val rxEtAl       = regex(@"\bet(?: |&nbsp;|\\ )al.(?!_)")
 
 // Format attributes
 function formatAttrs( context : inlineContext, attrs : attrs ) : attrs {
-  attrs( label = context.formatInline(attrs.label) )
+  attrs( label = context.formatInline(attrs.label) ).expand(context.metadata )
 }
 
 // Apply defaults
