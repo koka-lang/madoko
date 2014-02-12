@@ -96,7 +96,7 @@ function processContent( inName : string, outName : string, content : string,
               then (opts.options)(xmp = True) else opts.options
     opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])
 
-    mmopts = if (opts1.xmp) then opts1
+    mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
               else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist

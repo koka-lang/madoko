@@ -219,7 +219,7 @@ function escapeMath( txt : string, fmt : formatter ) : string {
 
 
 function inlineQuot( cap : matched, context ) : string {
-  context.fmtText(if (cap.matched=="\"") then "&quot;" else "&#39;")
+  context.formatInline(if (cap.matched=="\"") then "&quot;" else "&apos;")
 }
 
 function inlineStrong( cap : matched, context ) : string {
@@ -289,21 +289,21 @@ function escapeTexPre( txt : string ) : string {
 }
 
 function inlineDashes( cap : matched, context ) : string {
-  context.fmtText(if (cap.groups[1] != "") then "&mdash;" else "&ndash;")
+  context.formatInline(if (cap.groups[1] != "") then "&mdash;" else "&ndash;")
 }
 
 
 function inlineQuotes( cap : matched, context : inlineContext ) : string {
   quote = cap.matched.substr(0,1)
   if (quote == "'") 
-   then context.fmtText("&lsquo;") + context.formatInline(cap.groups[1]) + context.fmtText("&rsquo;")
+   then context.formatInline("&lsquo;" + cap.groups[1] + "&rsquo;")
   elif (quote=="<")
-   then context.fmtText("&laquo;") + context.formatInline(cap.groups[1]) + context.fmtText("&raquo;")
-   else context.fmtText("&ldquo;") + context.formatInline(cap.groups[2]) + context.fmtText("&rdquo;")
+   then context.formatInline("&laquo;" + cap.groups[1] + "&raquo;")
+   else context.formatInline("&ldquo;" + cap.groups[2] + "&rdquo;")
 }
 
 function inlineDots( cap : matched, context ) : string {
-  context.fmtText("&hellip;")
+  context.formatInline("&hellip;")
 }
 
 function inlineOther( cap : matched, context ) : string {
@@ -313,7 +313,7 @@ function inlineOther( cap : matched, context ) : string {
 
 function inlineEscape( cap : matched, context : inlineContext ) : string {
   txt = cap.groups[1]
-  if (txt==" ") then context.fmtText("&nbsp;")
+  if (txt==" ") then context.formatInline("&nbsp;")
   elif (txt=="\n") then inlineBreak(cap,context)
   elif (txt=="/") then ""
   elif (context.sanitize) then context.fmtEscape(txt) 

@@ -1,15 +1,15 @@
 [INCLUDE=presentation.mdk]
-Title		    : Demo presentation in Madoko
+Title		  : Demo presentation in Madoko
 Sub Title	  : In both HTML and PDF
 Author		  : Daan Leijen
-Affiliation	: Microsoft Research
+Affiliation	  : Microsoft Research
 Email 		  : daan@microsoft.com
-Reveal Url  : ../contrib/reveal.js
-Reveal Theme: solarized
-Beamer Theme: singapore
+Reveal Url    : ../contrib/reveal.js
+Reveal Theme  : solarized
+Beamer Theme  : singapore
 Package 	  : pstricks
 Package		  : pst-plot
-Math Embed  : 64
+Math Embed    : 64
 @html .Math-Inline, .Math-Display: color=#586e75
 
 
@@ -21,7 +21,7 @@ Math Embed  : 64
 
 # Madoko Presentations
 
-Using Madoko it is easy to create beautiful presentations.
+Using [Madoko] it is easy to create beautiful presentations.
 
 * [html][slide]\
   Uses the `Reveal.js` library by [Hakim El Hattab](http://hakim.se).\
@@ -31,6 +31,8 @@ Using Madoko it is easy to create beautiful presentations.
 * [source][slide-mdk]\
   Click to see the source of this presentation.
 
+
+[madoko]: http://madoko.codeplex.com
 
 ## Reveal.js
 

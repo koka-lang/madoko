@@ -7,10 +7,6 @@
 %---------------------------------------------------------------------------
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 
-\RequirePackage[T1]{fontenc}
-\RequirePackage{textcomp}
-\RequirePackage{pifont}
-
 \RequirePackage{css}
 \RequirePackage{array}
 \RequirePackage{longtable}
@@ -20,6 +16,8 @@
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
 \RequirePackage{stmaryrd}
+\RequirePackage{textcomp}
+\RequirePackage{pifont}
 
 % conditionals
 \newif\ifmathmode
@@ -79,7 +77,7 @@
 
 % allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \newcommand{\mdDefineUnicode}[2]{%
-  \protected@edef\mdUnicode##1{\protect\ifnum##1=#1 {#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
+  \protected@edef\mdUnicode##1{\protect\ifnum##1=#1{#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
 }
 
 \mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\hspace{0.1em}\ding{51}}}
@@ -579,6 +577,10 @@
 % Math snippets for static image generation
 % ---------------------------------------------------
 
+% re-define some symbols
+\renewcommand{\notin}{\not\in}  %turns out the baseline for 'notin' is wrong
+
+% boxes and lengths
 \newsavebox{\@snippetBox}
 \newlength{\@snippetWidth}
 \newlength{\@snippetHeight}

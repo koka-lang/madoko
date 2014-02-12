@@ -11,7 +11,7 @@ Script		: reference.js
 Bib			: reference
 Math Embed  : 64
 
-Package*	: [curve]xypic
+Package 	: [curve]xypic
 Package* 	: tikz
 Package*    : pgfplots
 Package*    : pgfplotstable
@@ -44,6 +44,12 @@ Indigo      : #4B0082
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 Highlight Language: ./doc/javascript5.js
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+
+Copyright	: Copyright 2013, Daan Leijen, Microsoft Corporation.
+License		: This is free software; you can redistribute it and/or modify it under the
+			  terms of the Apache License, Version 2.0. A copy of the License can be
+			  found in the file "license.txt" at the root of this distribution.
+
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
@@ -99,7 +105,7 @@ in Madoko to make the LaTeX generation robust and customizable while
 integrating well with the various academic document- and bibliography styles.
 This makes it possible to write articles using just Madoko and get both a
 high-quality print format (PDF) and a great looking HTML page. Look at this
-scientific article for an example[^fn-slow-load] 
+scientific article for an example: 
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
@@ -126,11 +132,6 @@ In the future, we plan to support e-books through the [ePub] format too.
 	[scholarly markdown](http://blog.martinfenner.org/2013/06/17/what-is-scholarly-markdown/).
 
 
-[^fn-slow-load]:
-	Note that the example article loads somewhat slowly in the browser. This is
-	because it is a long article that uses _a lot_ of math which takes a while to
-	render in [MathJax].
-
 [epub]: http://en.wikipedia.org/wiki/EPUB
 
 [doc-pdf]: 		koka-doc-pdf.png 	{width=250px vertical-align=top } 
@@ -152,12 +153,14 @@ In the future, we plan to support e-books through the [ePub] format too.
 [latex]: http://en.wikibooks.org/wiki/LaTeX
 
 
-## Performance
+## Performance and License
 
 Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
 then [Marked] \(one of the fastest Javascript markdown implementations), and
 about 6 to 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
 available as a .NET executable on windows.
+
+Madoko is free software available under the [Apache 2.0 license] at [madoko.codeplex.com].
 
 [Koka]: 		http://koka.codeplex.com
 [Markdown]: 	http://daringfireball.net/projects/markdown/syntax
@@ -172,6 +175,9 @@ available as a .NET executable on windows.
 [PanDoc]:			http://johnmacfarlane.net/pandoc
 [MultiMarkdown]:	http://fletcherpenney.net/multimarkdown
 [Kramdown]:			http://kramdown.gettalong.org
+
+[Apache 2.0 license]: https://madoko.codeplex.com/license
+[madoko.codeplex.com]: http://madoko.codeplex.com
 
 # Installation and usage
 
@@ -293,6 +299,26 @@ _em dash_ which is even longer and sometimes used for
 quotation attribution. --- Oscar Wilde.  
 Three dots ... should be close together.
 ~
+
+### Advanced: changing quotes
+
+When replacing quotes, Madoko just inserts the right entity, like
+an `&ldquo;` for a left double quote (&ldquo;). As described in Section [#sec-entity]
+we can redefine entities, and use that to change the quotes. For example,
+in some obscure countries, like the Netherlands, people like to start a 
+quotation at &bdquo;the bottom&rdquo; instead. You can get this behaviour
+by adding the following [metadata][#sec-metadata] rule:
+
+	ldquo: &bdquo;
+
+Or Japanese style:
+
+	lsquo: &#12300;
+	rsquo: &#12301;
+	ldquo: &#12302;
+	rdquo: &#12303;
+
+to single quote [&#12300;like this&#12301;]{tex-font-family="MS Gothic"}.
 
 ## Links  { #sec-links }
 
@@ -2098,11 +2124,12 @@ terrible had happened to him.
  padding=1ex background-color=FloralWhite}
 ~
 
+~ HtmlOnly
 This is rendered in LaTeX as shown by the following screenshot:
 
 ![aargh]
 {text-indent=1em}
-
+~
 
 [aargh]: aargh.png "PDF screen capture of the Aargh example." { width=19em }
 
@@ -2180,11 +2207,11 @@ variable. If it is set to zero, it suppresses numbering for headings completely:
 
 ### Advanced: Custom numbering
 
-The numbering can be completely customized though. Numbers are introduced
+The numbering can be completely customized though. Counters are introduced
 using `@`_name_ syntax in attributes. When such counter name occurs, it is
 automatically incremented. If the value of a _label_ contains a counter name,
 it is replaced by its current value. For example, the default attributes for
-equations contain[^fn-autocounter]:
+equations contain:
 
 	{ @equation label="(@equation)" }
 
@@ -2194,12 +2221,16 @@ parenthesis. Similarly, the default label for main sections is defined as:
 
 	{ @h1 label="@h1" }
 
+Actually, Madoko automatically increments counters with the same name as the block,
+so in the previous two cases, we should leave out `@equation` and `@h1` or we
+do double increments. 
+
 Of course, for headers we like to display the label by default in front of the
 header text. This can be done using the [before][#sec-replace] attribute where
 we use the [`&label;`][#sec-entity] key to insert the value of the label. So,
-the full definition for the main sections is:
+the full definition for level 1 headings is:
 
-	{ @h1 label="@h1" before="&label;.&ensp;" }
+	{ label="@h1" before="&label;.&ensp;" }
 
 
 ### Advanced: Reset counters { #sec-reset }
@@ -2216,8 +2247,8 @@ counter `@h1` or `@h1-h2`.
 
 ### Advanced: Display format 
 
-The counters above are displayed as numbers but sometimes we would like to
-number using other formats. When you assign a single letter to a counter, it
+The counters above are displayed as arabic numbers but sometimes we would like to
+display a number using other formats. When you assign a single letter to a counter, it
 will continue counting using letters. This is nice for example when starting
 the appendix where each section is generally numbered using letters:
 
@@ -2248,15 +2279,6 @@ counter name `@h1`  being read as `@h1-`). Note that because this is a
 metadata rule, we could not  use the assignment `@h1-figure="a"` here, or
 otherwise every figure would get numbered as `a`. In this case we just want to
 set the display mode here and not a specific value.
-
-[^fn-autocounter]: 
-	Actually, Madoko automatically creates and increments counters for any block
-	element using the same name as that block element. Therefore, in a [metadata
-	rule][#sec-rules] we should not add the `@equation` counter explicitly since
-	it  is already done automatically by Madoko for any `Equation` block. If it is
-	added, it will effectively increment the `@equation` counter twice.
-
-
 
 
 ## Advanced: Replacement { #sec-replace }
@@ -2939,298 +2961,298 @@ recognizes some extra named entities, like _bar_, _bslash_,
 _pagebreak_, _strut_, etc. These are denoted in the table with a star. The
 full list of predefined entities is:
 
-|--------|-------------|----------|
-| number |     name    |  glyph   |
-|--------|-------------|----------|
-|     34 | quot        | &#34;    |
-|     35 | hash*       | &#35;    |
-|     36 | dollar*     | &#36;    |
-|     37 | perc*       | &#37;    |
-|     38 | amp         | &#38;    |
-|     39 | apos        | &#39;    |
-|     40 | lpar*       | &#40;    |
-|     41 | rpar*       | &#41;    |
-|     42 | ast*        | &#42;    |
-|     43 | plus*       | &#43;    |
-|     47 | fslash*     | &#47;    |
-|     60 | lt          | &#60;    |
-|     62 | gt          | &#62;    |
-|     92 | bslash*     | &#92;    |
-|     94 | caret*      | &#94;    |
-|     95 | underscore* | &#95;    |
-|     96 | grave*      | &#96;    |
-|    123 | lcurly*     | &#123;   |
-|    124 | bar*        | &#124;   |
-|    125 | rcurly*     | &#125;   |
-|    126 | tilde*      | &#126;   |
-|    160 | nbsp        | &#160;   |
-|    161 | iexcl       | &#161;   |
-|    162 | cent        | &#162;   |
-|    163 | pound       | &#163;   |
-|    164 | curren      | &#164;   |
-|    165 | yen         | &#165;   |
-|    166 | brvbar      | &#166;   |
-|    167 | sect        | &#167;   |
-|    168 | uml         | &#168;   |
-|    169 | copy        | &#169;   |
-|    170 | ordf        | &#170;   |
-|    171 | laquo       | &#171;   |
-|    172 | not         | &#172;   |
-|    173 | shy         | &#173;   |
-|    174 | reg         | &#174;   |
-|    175 | macr        | &#175;   |
-|    176 | deg         | &#176;   |
-|    177 | plusmn      | &#177;   |
-|    178 | sup2        | &#178;   |
-|    179 | sup3        | &#179;   |
-|    180 | acute       | &#180;   |
-|    181 | micro       | &#181;   |
-|    182 | para        | &#182;   |
-|    183 | middot      | &#183;   |
-|    184 | cedil       | &#184;   |
-|    185 | sup1        | &#185;   |
-|    186 | ordm        | &#186;   |
-|    187 | raquo       | &#187;   |
-|    188 | frac14      | &#188;   |
-|    189 | frac12      | &#189;   |
-|    190 | frac34      | &#190;   |
-|    191 | iquest      | &#191;   |
-|    192 | Agrave      | &#192;   |
-|    193 | Aacute      | &#193;   |
-|    194 | Acirc       | &#194;   |
-|    195 | Atilde      | &#195;   |
-|    196 | Auml        | &#196;   |
-|    197 | Aring       | &#197;   |
-|    198 | AElig       | &#198;   |
-|    199 | Ccedil      | &#199;   |
-|    200 | Egrave      | &#200;   |
-|    201 | Eacute      | &#201;   |
-|    202 | Ecirc       | &#202;   |
-|    203 | Euml        | &#203;   |
-|    204 | Igrave      | &#204;   |
-|    205 | Iacute      | &#205;   |
-|    206 | Icirc       | &#206;   |
-|    207 | Iuml        | &#207;   |
-|    208 | ETH         | &#208;   |
-|    209 | Ntilde      | &#209;   |
-|    210 | Ograve      | &#210;   |
-|    211 | Oacute      | &#211;   |
-|    212 | Ocirc       | &#212;   |
-|    213 | Otilde      | &#213;   |
-|    214 | Ouml        | &#214;   |
-|    215 | times       | &#215;   |
-|    216 | Oslash      | &#216;   |
-|    217 | Ugrave      | &#217;   |
-|    218 | Uacute      | &#218;   |
-|    219 | Ucirc       | &#219;   |
-|    220 | Uuml        | &#220;   |
-|    221 | Yacute      | &#221;   |
-|    222 | THORN       | &#222;   |
-|    223 | szlig       | &#223;   |
-|    224 | agrave      | &#224;   |
-|    225 | aacute      | &#225;   |
-|    226 | acirc       | &#226;   |
-|    227 | atilde      | &#227;   |
-|    228 | auml        | &#228;   |
-|    229 | aring       | &#229;   |
-|    230 | aelig       | &#230;   |
-|    231 | ccedil      | &#231;   |
-|    232 | egrave      | &#232;   |
-|    233 | eacute      | &#233;   |
-|    234 | ecirc       | &#234;   |
-|    235 | euml        | &#235;   |
-|    236 | igrave      | &#236;   |
-|    237 | iacute      | &#237;   |
-|    238 | icirc       | &#238;   |
-|    239 | iuml        | &#239;   |
-|    240 | eth         | &#240;   |
-|    241 | ntilde      | &#241;   |
-|    242 | ograve      | &#242;   |
-|    243 | oacute      | &#243;   |
-|    244 | ocirc       | &#244;   |
-|    245 | otilde      | &#245;   |
-|    246 | ouml        | &#246;   |
-|    247 | divide      | &#247;   |
-|    248 | oslash      | &#248;   |
-|    249 | ugrave      | &#249;   |
-|    250 | uacute      | &#250;   |
-|    251 | ucirc       | &#251;   |
-|    252 | uuml        | &#252;   |
-|    253 | yacute      | &#253;   |
-|    254 | thorn       | &#254;   |
-|    255 | yuml        | &#255;   |
-|    321 | lstroke     | &#321;   |
-|    322 | Lstroke     | &#322;   |
-|    338 | OElig       | &#338;   |
-|    339 | oelig       | &#339;   |
-|    352 | Scaron      | &#352;   |
-|    353 | scaron      | &#353;   |
-|    376 | Yuml        | &#376;   |
-|    402 | fnof        | &#402;   |
-|    710 | circ        | &#710;   |
-|    732 | tilde       | &#732;   |
-|    913 | Alpha       | &#913;   |
-|    914 | Beta        | &#914;   |
-|    915 | Gamma       | &#915;   |
-|    916 | Delta       | &#916;   |
-|    917 | Epsilon     | &#917;   |
-|    918 | Zeta        | &#918;   |
-|    919 | Eta         | &#919;   |
-|    920 | Theta       | &#920;   |
-|    921 | Iota        | &#921;   |
-|    922 | Kappa       | &#922;   |
-|    923 | Lambda      | &#923;   |
-|    924 | Mu          | &#924;   |
-|    925 | Nu          | &#925;   |
-|    926 | Xi          | &#926;   |
-|    927 | Omicron     | &#927;   |
-|    928 | Pi          | &#928;   |
-|    929 | Rho         | &#929;   |
-|    931 | Sigma       | &#931;   |
-|    932 | Tau         | &#932;   |
-|    933 | Upsilon     | &#933;   |
-|    934 | Phi         | &#934;   |
-|    935 | Chi         | &#935;   |
-|    936 | Psi         | &#936;   |
-|    937 | Omega       | &#937;   |
-|    945 | alpha       | &#945;   |
-|    946 | beta        | &#946;   |
-|    947 | gamma       | &#947;   |
-|    948 | delta       | &#948;   |
-|    949 | epsilon     | &#949;   |
-|    950 | zeta        | &#950;   |
-|    951 | eta         | &#951;   |
-|    952 | theta       | &#952;   |
-|    953 | iota        | &#953;   |
-|    954 | kappa       | &#954;   |
-|    955 | lambda      | &#955;   |
-|    956 | mu          | &#956;   |
-|    957 | nu          | &#957;   |
-|    958 | xi          | &#958;   |
-|    959 | omicron     | &#959;   |
-|    960 | pi          | &#960;   |
-|    961 | rho         | &#961;   |
-|    962 | sigmaf      | &#962;   |
-|    963 | sigma       | &#963;   |
-|    964 | tau         | &#964;   |
-|    965 | upsilon     | &#965;   |
-|    966 | phi         | &#966;   |
-|    967 | chi         | &#967;   |
-|    968 | psi         | &#968;   |
-|    969 | omega       | &#969;   |
-|    977 | thetasym    | &#977;   |
-|    978 | upsih       | &#978;   |
-|    982 | piv         | &#982;   |
-|   8194 | ensp        | &#8194;  |
-|   8195 | emsp        | &#8195;  |
-|   8195 | quad*       | &#8195;  |
-|   8196 | thicksp*    | &#8196;  |
-|   8197 | medsp*      | &#8197;  |
-|   8201 | thinsp      | &#8201;  |
-|   8203 | strut*      | &#8203;  |
-|   8203 | pagebreak*  | &#8203;  |
-|   8204 | zwnj        | &#8204;  |
-|   8205 | zwj         | &#8205;  |
-|   8206 | lrm         | &#8206;  |
-|   8207 | rlm         | &#8207;  |
-|   8211 | ndash       | &#8211;  |
-|   8212 | mdash       | &#8212;  |
-|   8216 | lsquo       | &#8216;  |
-|   8217 | rsquo       | &#8217;  |
-|   8218 | sbquo       | &#8218;  |
-|   8220 | ldquo       | &#8220;  |
-|   8221 | rdquo       | &#8221;  |
-|   8222 | bdquo       | &#8222;  |
-|   8224 | dagger      | &#8224;  |
-|   8225 | Dagger      | &#8225;  |
-|   8226 | bull        | &#8226;  |
-|   8230 | hellip      | &#8230;  |
-|   8240 | permil      | &#8240;  |
-|   8242 | prime       | &#8242;  |
-|   8243 | Prime       | &#8243;  |
-|   8249 | lsaquo      | &#8249;  |
-|   8250 | rsaquo      | &#8250;  |
-|   8254 | oline       | &#8254;  |
-|   8260 | frasl       | &#8260;  |
-|   8364 | euro        | &#8364;  |
-|   8465 | image       | &#8465;  |
-|   8472 | weierp      | &#8472;  |
-|   8476 | real        | &#8476;  |
-|   8482 | trade       | &#8482;  |
-|   8501 | alefsym     | &#8501;  |
-|   8592 | larr        | &#8592;  |
-|   8593 | uarr        | &#8593;  |
-|   8594 | rarr        | &#8594;  |
-|   8595 | darr        | &#8595;  |
-|   8596 | harr        | &#8596;  |
-|   8629 | crarr       | &#8629;  |
-|   8656 | lArr        | &#8656;  |
-|   8657 | uArr        | &#8657;  |
-|   8658 | rArr        | &#8658;  |
-|   8659 | dArr        | &#8659;  |
-|   8660 | hArr        | &#8660;  |
-|   8704 | forall      | &#8704;  |
-|   8706 | part        | &#8706;  |
-|   8707 | exist       | &#8707;  |
-|   8709 | empty       | &#8709;  |
-|   8711 | nabla       | &#8711;  |
-|   8712 | isin        | &#8712;  |
-|   8713 | notin       | &#8713;  |
-|   8715 | ni          | &#8715;  |
-|   8719 | prod        | &#8719;  |
-|   8721 | sum         | &#8721;  |
-|   8722 | minus       | &#8722;  |
-|   8727 | lowast      | &#8727;  |
-|   8730 | radic       | &#8730;  |
-|   8733 | prop        | &#8733;  |
-|   8734 | infin       | &#8734;  |
-|   8736 | ang         | &#8736;  |
-|   8743 | and         | &#8743;  |
-|   8744 | or          | &#8744;  |
-|   8745 | cap         | &#8745;  |
-|   8746 | cup         | &#8746;  |
-|   8747 | int         | &#8747;  |
-|   8756 | there4      | &#8756;  |
-|   8764 | sim         | &#8764;  |
-|   8773 | cong        | &#8773;  |
-|   8776 | asymp       | &#8776;  |
-|   8800 | ne          | &#8800;  |
-|   8801 | equiv       | &#8801;  |
-|   8804 | le          | &#8804;  |
-|   8805 | ge          | &#8805;  |
-|   8834 | sub         | &#8834;  |
-|   8835 | sup         | &#8835;  |
-|   8836 | nsub        | &#8836;  |
-|   8838 | sube        | &#8838;  |
-|   8839 | supe        | &#8839;  |
-|   8853 | oplus       | &#8853;  |
-|   8855 | otimes      | &#8855;  |
-|   8869 | perp        | &#8869;  |
-|   8901 | sdot        | &#8901;  |
-|   8942 | vellip      | &#8942;  |
-|   8968 | lceil       | &#8968;  |
-|   8969 | rceil       | &#8969;  |
-|   8970 | lfloor      | &#8970;  |
-|   8971 | rfloor      | &#8971;  |
-|   9001 | lang        | &#9001;  |
-|   9002 | rang        | &#9002;  |
-|   9674 | loz         | &#9674;  |
-|   9824 | spades      | &#9824;  |
-|   9827 | clubs       | &#9827;  |
-|   9829 | hearts      | &#9829;  |
-|   9830 | diams       | &#9830;  |
-|   8617 | hooklarr*   | &#8617;  |
-|   8718 | bbox*       | &#8718;  |
-|   9633 | box*        | &#9633;  |
-|   9744 | ballotbox*  | &#9744;  |
-|   9745 | ballotc*    | &#9745;  |
-|   9746 | ballotx*    | &#9746;  |
-|  10003 | checkmark*  | &#10003; |
-|  10004 | bcheckmark* | &#10004; |
-|  10007 | xmark*      | &#10007; |
-|  10008 | bxmark*     | &#10008; |
-|--------|-------------|----------|
-{ .long }
+|--------|-------------|----------|-----------------------|
+| number |     name    |  glyph   |         remark        |
+|--------|-------------|----------|-----------------------|
+|     34 | quot        | &#34;    |                       |
+|     35 | hash*       | &#35;    |                       |
+|     36 | dollar*     | &#36;    |                       |
+|     37 | perc*       | &#37;    |                       |
+|     38 | amp         | &#38;    |                       |
+|     39 | apos        | &#39;    |                       |
+|     40 | lpar*       | &#40;    |                       |
+|     41 | rpar*       | &#41;    |                       |
+|     42 | ast*        | &#42;    |                       |
+|     43 | plus*       | &#43;    |                       |
+|     47 | fslash*     | &#47;    |                       |
+|     60 | lt          | &#60;    |                       |
+|     62 | gt          | &#62;    |                       |
+|     92 | bslash*     | &#92;    |                       |
+|     94 | caret*      | &#94;    |                       |
+|     95 | underscore* | &#95;    |                       |
+|     96 | grave*      | &#96;    |                       |
+|    123 | lcurly*     | &#123;   |                       |
+|    124 | bar*        | &#124;   |                       |
+|    125 | rcurly*     | &#125;   |                       |
+|    126 | tilde*      | &#126;   |                       |
+|    160 | nbsp        | &#160;   | `~` in LaTeX          |
+|    161 | iexcl       | &#161;   |                       |
+|    162 | cent        | &#162;   |                       |
+|    163 | pound       | &#163;   |                       |
+|    164 | curren      | &#164;   |                       |
+|    165 | yen         | &#165;   |                       |
+|    166 | brvbar      | &#166;   |                       |
+|    167 | sect        | &#167;   |                       |
+|    168 | uml         | &#168;   |                       |
+|    169 | copy        | &#169;   |                       |
+|    170 | ordf        | &#170;   |                       |
+|    171 | laquo       | &#171;   |                       |
+|    172 | not         | &#172;   |                       |
+|    173 | shy         | &#173;   |                       |
+|    174 | reg         | &#174;   |                       |
+|    175 | macr        | &#175;   |                       |
+|    176 | deg         | &#176;   |                       |
+|    177 | plusmn      | &#177;   |                       |
+|    178 | sup2        | &#178;   |                       |
+|    179 | sup3        | &#179;   |                       |
+|    180 | acute       | &#180;   |                       |
+|    181 | micro       | &#181;   |                       |
+|    182 | para        | &#182;   |                       |
+|    183 | middot      | &#183;   |                       |
+|    184 | cedil       | &#184;   |                       |
+|    185 | sup1        | &#185;   |                       |
+|    186 | ordm        | &#186;   |                       |
+|    187 | raquo       | &#187;   |                       |
+|    188 | frac14      | &#188;   |                       |
+|    189 | frac12      | &#189;   |                       |
+|    190 | frac34      | &#190;   |                       |
+|    191 | iquest      | &#191;   |                       |
+|    192 | Agrave      | &#192;   |                       |
+|    193 | Aacute      | &#193;   |                       |
+|    194 | Acirc       | &#194;   |                       |
+|    195 | Atilde      | &#195;   |                       |
+|    196 | Auml        | &#196;   |                       |
+|    197 | Aring       | &#197;   |                       |
+|    198 | AElig       | &#198;   |                       |
+|    199 | Ccedil      | &#199;   |                       |
+|    200 | Egrave      | &#200;   |                       |
+|    201 | Eacute      | &#201;   |                       |
+|    202 | Ecirc       | &#202;   |                       |
+|    203 | Euml        | &#203;   |                       |
+|    204 | Igrave      | &#204;   |                       |
+|    205 | Iacute      | &#205;   |                       |
+|    206 | Icirc       | &#206;   |                       |
+|    207 | Iuml        | &#207;   |                       |
+|    208 | ETH         | &#208;   |                       |
+|    209 | Ntilde      | &#209;   |                       |
+|    210 | Ograve      | &#210;   |                       |
+|    211 | Oacute      | &#211;   |                       |
+|    212 | Ocirc       | &#212;   |                       |
+|    213 | Otilde      | &#213;   |                       |
+|    214 | Ouml        | &#214;   |                       |
+|    215 | times       | &#215;   |                       |
+|    216 | Oslash      | &#216;   |                       |
+|    217 | Ugrave      | &#217;   |                       |
+|    218 | Uacute      | &#218;   |                       |
+|    219 | Ucirc       | &#219;   |                       |
+|    220 | Uuml        | &#220;   |                       |
+|    221 | Yacute      | &#221;   |                       |
+|    222 | THORN       | &#222;   |                       |
+|    223 | szlig       | &#223;   |                       |
+|    224 | agrave      | &#224;   |                       |
+|    225 | aacute      | &#225;   |                       |
+|    226 | acirc       | &#226;   |                       |
+|    227 | atilde      | &#227;   |                       |
+|    228 | auml        | &#228;   |                       |
+|    229 | aring       | &#229;   |                       |
+|    230 | aelig       | &#230;   |                       |
+|    231 | ccedil      | &#231;   |                       |
+|    232 | egrave      | &#232;   |                       |
+|    233 | eacute      | &#233;   |                       |
+|    234 | ecirc       | &#234;   |                       |
+|    235 | euml        | &#235;   |                       |
+|    236 | igrave      | &#236;   |                       |
+|    237 | iacute      | &#237;   |                       |
+|    238 | icirc       | &#238;   |                       |
+|    239 | iuml        | &#239;   |                       |
+|    240 | eth         | &#240;   |                       |
+|    241 | ntilde      | &#241;   |                       |
+|    242 | ograve      | &#242;   |                       |
+|    243 | oacute      | &#243;   |                       |
+|    244 | ocirc       | &#244;   |                       |
+|    245 | otilde      | &#245;   |                       |
+|    246 | ouml        | &#246;   |                       |
+|    247 | divide      | &#247;   |                       |
+|    248 | oslash      | &#248;   |                       |
+|    249 | ugrave      | &#249;   |                       |
+|    250 | uacute      | &#250;   |                       |
+|    251 | ucirc       | &#251;   |                       |
+|    252 | uuml        | &#252;   |                       |
+|    253 | yacute      | &#253;   |                       |
+|    254 | thorn       | &#254;   |                       |
+|    255 | yuml        | &#255;   |                       |
+|    321 | lstroke     | &#321;   |                       |
+|    322 | Lstroke     | &#322;   |                       |
+|    338 | OElig       | &#338;   |                       |
+|    339 | oelig       | &#339;   |                       |
+|    352 | Scaron      | &#352;   |                       |
+|    353 | scaron      | &#353;   |                       |
+|    376 | Yuml        | &#376;   |                       |
+|    402 | fnof        | &#402;   |                       |
+|    710 | circ        | &#710;   |                       |
+|    732 | tilde       | &#732;   |                       |
+|    913 | Alpha       | &#913;   |                       |
+|    914 | Beta        | &#914;   |                       |
+|    915 | Gamma       | &#915;   |                       |
+|    916 | Delta       | &#916;   |                       |
+|    917 | Epsilon     | &#917;   |                       |
+|    918 | Zeta        | &#918;   |                       |
+|    919 | Eta         | &#919;   |                       |
+|    920 | Theta       | &#920;   |                       |
+|    921 | Iota        | &#921;   |                       |
+|    922 | Kappa       | &#922;   |                       |
+|    923 | Lambda      | &#923;   |                       |
+|    924 | Mu          | &#924;   |                       |
+|    925 | Nu          | &#925;   |                       |
+|    926 | Xi          | &#926;   |                       |
+|    927 | Omicron     | &#927;   |                       |
+|    928 | Pi          | &#928;   |                       |
+|    929 | Rho         | &#929;   |                       |
+|    931 | Sigma       | &#931;   |                       |
+|    932 | Tau         | &#932;   |                       |
+|    933 | Upsilon     | &#933;   |                       |
+|    934 | Phi         | &#934;   |                       |
+|    935 | Chi         | &#935;   |                       |
+|    936 | Psi         | &#936;   |                       |
+|    937 | Omega       | &#937;   |                       |
+|    945 | alpha       | &#945;   |                       |
+|    946 | beta        | &#946;   |                       |
+|    947 | gamma       | &#947;   |                       |
+|    948 | delta       | &#948;   |                       |
+|    949 | epsilon     | &#949;   |                       |
+|    950 | zeta        | &#950;   |                       |
+|    951 | eta         | &#951;   |                       |
+|    952 | theta       | &#952;   |                       |
+|    953 | iota        | &#953;   |                       |
+|    954 | kappa       | &#954;   |                       |
+|    955 | lambda      | &#955;   |                       |
+|    956 | mu          | &#956;   |                       |
+|    957 | nu          | &#957;   |                       |
+|    958 | xi          | &#958;   |                       |
+|    959 | omicron     | &#959;   |                       |
+|    960 | pi          | &#960;   |                       |
+|    961 | rho         | &#961;   |                       |
+|    962 | sigmaf      | &#962;   |                       |
+|    963 | sigma       | &#963;   |                       |
+|    964 | tau         | &#964;   |                       |
+|    965 | upsilon     | &#965;   |                       |
+|    966 | phi         | &#966;   |                       |
+|    967 | chi         | &#967;   |                       |
+|    968 | psi         | &#968;   |                       |
+|    969 | omega       | &#969;   |                       |
+|    977 | thetasym    | &#977;   |                       |
+|    978 | upsih       | &#978;   |                       |
+|    982 | piv         | &#982;   |                       |
+|   8194 | ensp        | &#8194;  | 0.5em space in LaTeX  |
+|   8195 | emsp        | &#8195;  | 1em space in LaTeX    |
+|   8195 | quad*       | &#8195;  | `\quad` in LaTeX      |
+|   8196 | thicksp*    | &#8196;  | `\;` in LaTeX         |
+|   8197 | medsp*      | &#8197;  | `\:` in LaTeX         |
+|   8201 | thinsp      | &#8201;  | `\,` in LaTeX         |
+|   8203 | strut*      | &#8203;  | `\strut` in LaTeX     |
+|   8203 | pagebreak*  | &#8203;  | `\clearpage` in LaTeX |
+|   8204 | zwnj        | &#8204;  |                       |
+|   8205 | zwj         | &#8205;  |                       |
+|   8206 | lrm         | &#8206;  |                       |
+|   8207 | rlm         | &#8207;  |                       |
+|   8211 | ndash       | &#8211;  |                       |
+|   8212 | mdash       | &#8212;  |                       |
+|   8216 | lsquo       | &#8216;  |                       |
+|   8217 | rsquo       | &#8217;  |                       |
+|   8218 | sbquo       | &#8218;  |                       |
+|   8220 | ldquo       | &#8220;  |                       |
+|   8221 | rdquo       | &#8221;  |                       |
+|   8222 | bdquo       | &#8222;  |                       |
+|   8224 | dagger      | &#8224;  |                       |
+|   8225 | Dagger      | &#8225;  |                       |
+|   8226 | bull        | &#8226;  |                       |
+|   8230 | hellip      | &#8230;  |                       |
+|   8240 | permil      | &#8240;  |                       |
+|   8242 | prime       | &#8242;  |                       |
+|   8243 | Prime       | &#8243;  |                       |
+|   8249 | lsaquo      | &#8249;  |                       |
+|   8250 | rsaquo      | &#8250;  |                       |
+|   8254 | oline       | &#8254;  |                       |
+|   8260 | frasl       | &#8260;  |                       |
+|   8364 | euro        | &#8364;  |                       |
+|   8465 | image       | &#8465;  |                       |
+|   8472 | weierp      | &#8472;  |                       |
+|   8476 | real        | &#8476;  |                       |
+|   8482 | trade       | &#8482;  |                       |
+|   8501 | alefsym     | &#8501;  |                       |
+|   8592 | larr        | &#8592;  |                       |
+|   8593 | uarr        | &#8593;  |                       |
+|   8594 | rarr        | &#8594;  |                       |
+|   8595 | darr        | &#8595;  |                       |
+|   8596 | harr        | &#8596;  |                       |
+|   8629 | crarr       | &#8629;  |                       |
+|   8656 | lArr        | &#8656;  |                       |
+|   8657 | uArr        | &#8657;  |                       |
+|   8658 | rArr        | &#8658;  |                       |
+|   8659 | dArr        | &#8659;  |                       |
+|   8660 | hArr        | &#8660;  |                       |
+|   8704 | forall      | &#8704;  |                       |
+|   8706 | part        | &#8706;  |                       |
+|   8707 | exist       | &#8707;  |                       |
+|   8709 | empty       | &#8709;  |                       |
+|   8711 | nabla       | &#8711;  |                       |
+|   8712 | isin        | &#8712;  |                       |
+|   8713 | notin       | &#8713;  |                       |
+|   8715 | ni          | &#8715;  |                       |
+|   8719 | prod        | &#8719;  |                       |
+|   8721 | sum         | &#8721;  |                       |
+|   8722 | minus       | &#8722;  |                       |
+|   8727 | lowast      | &#8727;  |                       |
+|   8730 | radic       | &#8730;  |                       |
+|   8733 | prop        | &#8733;  |                       |
+|   8734 | infin       | &#8734;  |                       |
+|   8736 | ang         | &#8736;  |                       |
+|   8743 | and         | &#8743;  |                       |
+|   8744 | or          | &#8744;  |                       |
+|   8745 | cap         | &#8745;  |                       |
+|   8746 | cup         | &#8746;  |                       |
+|   8747 | int         | &#8747;  |                       |
+|   8756 | there4      | &#8756;  |                       |
+|   8764 | sim         | &#8764;  |                       |
+|   8773 | cong        | &#8773;  |                       |
+|   8776 | asymp       | &#8776;  |                       |
+|   8800 | ne          | &#8800;  |                       |
+|   8801 | equiv       | &#8801;  |                       |
+|   8804 | le          | &#8804;  |                       |
+|   8805 | ge          | &#8805;  |                       |
+|   8834 | sub         | &#8834;  |                       |
+|   8835 | sup         | &#8835;  |                       |
+|   8836 | nsub        | &#8836;  |                       |
+|   8838 | sube        | &#8838;  |                       |
+|   8839 | supe        | &#8839;  |                       |
+|   8853 | oplus       | &#8853;  |                       |
+|   8855 | otimes      | &#8855;  |                       |
+|   8869 | perp        | &#8869;  |                       |
+|   8901 | sdot        | &#8901;  |                       |
+|   8942 | vellip      | &#8942;  |                       |
+|   8968 | lceil       | &#8968;  |                       |
+|   8969 | rceil       | &#8969;  |                       |
+|   8970 | lfloor      | &#8970;  |                       |
+|   8971 | rfloor      | &#8971;  |                       |
+|   9001 | lang        | &#9001;  |                       |
+|   9002 | rang        | &#9002;  |                       |
+|   9674 | loz         | &#9674;  |                       |
+|   9824 | spades      | &#9824;  |                       |
+|   9827 | clubs       | &#9827;  |                       |
+|   9829 | hearts      | &#9829;  |                       |
+|   9830 | diams       | &#9830;  |                       |
+|   8617 | hooklarr*   | &#8617;  |                       |
+|   8718 | bbox*       | &#8718;  |                       |
+|   9633 | box*        | &#9633;  |                       |
+|   9744 | ballotbox*  | &#9744;  |                       |
+|   9745 | ballotc*    | &#9745;  |                       |
+|   9746 | ballotx*    | &#9746;  |                       |
+|  10003 | checkmark*  | &#10003; |                       |
+|  10004 | bcheckmark* | &#10004; |                       |
+|  10007 | xmark*      | &#10007; |                       |
+|  10008 | bxmark*     | &#10008; |                       |
+|--------|-------------|----------|-----------------------|
+{ .long .booktable }
 
 
 ## Definitions of predefined custom blocks { #app-custom }
@@ -3268,9 +3290,14 @@ formatting).
 ~Center: .align-center
 
 ~Pre      : input=pre .para-block
-~Code  	  : input=pre
+~Code     : input=pre
 ~Hr       : .madoko,
 ~Table    : .madoko,
+
+~Article  : html-elem='article'
+~Section  : html-elem='section' tex-elem='mdSection'
+~Aside    : html-elem='aside'
+~Nav      : html-elem='nav'
 
 ~Tex      : input=tex
 ~TexRaw   : input=texraw
