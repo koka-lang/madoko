@@ -63,12 +63,15 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="author") {
       if (value=="") then options(author="") else {
         options(author=options.author + ";" + value, 
-                affiliation=options.affiliation + ";", email=options.email + ";")
+                affiliation=options.affiliation + ";", 
+                email=options.email + ";",
+                authorNotes=options.authorNotes + ";")
       }
     }
-    elif (key=="affiliation" || key=="institute") options(affiliation=if (value=="") then "" else options.affiliation + value)
+    elif (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then "" else options.affiliation + value)
     elif (key=="email") options(email=if (value=="") then "" else options.email + value)    
-    elif (key=="title-date") options(titleDate=value)
+    elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then "" else options.authorNotes + value)    
+    elif (key=="title-note" || key=="title-date") options(titleNote=value)
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
     elif (key=="math-mode") options.setMathMode(value)

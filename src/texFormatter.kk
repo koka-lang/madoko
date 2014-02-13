@@ -344,12 +344,13 @@ val rxCmdSpecial = regex(@"[^a-zA-Z0-9]")
 public function fmtTexTitle(context : inlineContext, titleinfo : titleinfo ) : string {
   [@"\mdTitle{" + context.formatInline(titleinfo.title) + "}",
    if (titleinfo.subtitle=="") then "" else @"\mdSubtitle{" + context.formatInline(titleinfo.subtitle) + "}",
-   titleinfo.authors.map(fun(aae) {
-     @"\mdAuthor{" + context.formatInline(aae.fst) + "}{" + 
-                      context.formatInline(aae.snd) + "}{" + 
-                      context.formatInline(aae.thd) + "}"
+   titleinfo.authors.map(fun(author) {
+     @"\mdAuthor{" + context.formatInline(author.name) + "}{" + 
+                      context.formatInline(author.address) + "}{" + 
+                      context.formatInline(author.email) + "}{" +
+                      context.formatInline(author.note) + "}"
    }).join("\n"),
-   @"\mdMaketitle{" + titleinfo.date + "}",""].join("\n")
+   @"\mdMaketitle{" + context.formatInline(titleinfo.note) + "}",""].join("\n")
 }
 
 

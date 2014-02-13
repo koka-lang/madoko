@@ -93,19 +93,22 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
 
 function titleInfo( options : options, metadata : dict<string> ) : titleinfo {
   function expand(s) { s.expandKeys(metadata) }  
-  authors = zip(options.author.expand.splitPaths, options.affiliation.expand.splitPaths, 
-                  options.email.expand.splitPaths) 
-  Titleinfo(options.title.expand, options.subtitle.expand, authors, options.titleDate.expand)
+  authors = zipAuthors(options.author.expand.splitPaths, options.affiliation.expand.splitPaths, 
+                  options.email.expand.splitPaths, options.authorNotes.expand.splitPaths) 
+  Titleinfo(options.title.expand, options.subtitle.expand, authors, options.titleNote.expand)
 }
 
-function zip(xs,ys,zs,acc=[]) : list<(string,string,string)> {
+function zipAuthors(xs,ys,zs,qs,acc=[]) : list<authorinfo> {
   match(xs) {
     Nil -> acc.reverse
     Cons(x,xx) -> match(ys) {
-      Nil -> zip(xx,ys,zs,Cons((x,"",""),acc))
+      Nil -> zipAuthors(xx,ys,zs,qs,Cons(Authorinfo(x,"","",""),acc))
       Cons(y,yy) -> match(zs) {
-        Nil -> zip(xx,yy,zs,Cons((x,y,""),acc))
-        Cons(z,zz) -> zip(xx,yy,zz,Cons((x,y,z),acc))
+        Nil -> zipAuthors(xx,yy,zs,qs,Cons(Authorinfo(x,y,"",""),acc))
+        Cons(z,zz) -> match(qs) {
+          Nil -> zipAuthors(xx,yy,zz,qs,Cons(Authorinfo(x,y,z,""),acc))
+          Cons(q,qq) -> zipAuthors(xx,yy,zz,qq,Cons(Authorinfo(x,y,z,q),acc))
+        }                 
       }
     }
   }

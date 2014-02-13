@@ -96,7 +96,6 @@
 % Title and subtitle 
 %-------------------------------------------------------------
 
-\providecommand{\subtitle}[1]{\edef\oldtitle{\@title}\title{\oldtitle\\{\Large #1}}} 
 
 \ifdef\titlerunning%
   {\newcommand{\mdTitlerunning}[1]{\titlerunning{#1}}}% llncs
@@ -163,15 +162,23 @@
 \cssClassRuleCmd{inst}{\mdInst}
 
 
-\newcommand{\mdTitle}[1]{\title{#1}\mdTitlerunning{#1}}
-\newcommand{\mdSubtitle}[1]{\subtitle{#1}}
-\newcommand{\mdAuthor}[3]{\authorinfo{#1}{#2}{#3}}
+\newcommand{\mdTitle}[1]{\gdef\@mdTitle{#1}\title{\@mdTitle}\mdTitlerunning{#1}}
+\newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
+\newcommand{\mdAuthor}[4]{%
+  \edef\@note{#2\ifx#4\relax\else\\#4\fi}%
+  \authorinfo{#1}{\@note}{#3}%
+}
 \newcommand{\mdMaketitle}[1]{%  
   \ifnum\value{@mdAuthorcount}>0%
     \author{\@mdauthors}%
     \ifdef\inst{\ifdef\institute{\institute{\@mdinsts}}{}}{}%
   \fi
-  \ifx#1\relax\else\date{#1}\fi%
+  \ifx#1\relax\else%
+    \ifdef\titlenote% some styles disregard the date command...
+      {%\gappto\@mdTitle{\titlenote{#1}}\title{\@mdTitle}}
+       \mdSubtitle{\normalfont\normalsize #1}}%
+      {\date{#1}}%
+  \fi%
   \maketitle%
 }
 

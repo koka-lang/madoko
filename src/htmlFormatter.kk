@@ -216,12 +216,15 @@ public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : 
      if (titleinfo.subtitle=="") then "" else tag("h2",context.formatInline(titleinfo.subtitle)," class='subtitle'"),
      tag("table",
       tag("tr", 
-       titleinfo.authors.map(fun(aae) {
-        tag("td", context.formatInline("[" + aae.fst + "]{.author}<br>[" + aae.snd + "]{.affiliation}<br>[" +
-                                              aae.thd + "]{.email}" )
+       titleinfo.authors.map(fun(author) {
+        tag("td", context.formatInline("[" + author.name + "]{.author}<br>[" + 
+                                             author.address + "]{.affiliation .address}<br>[" +
+                                             author.email + "]{.email}" +
+                                             (if (author.note=="") then "" else 
+                                             "[" + author.note + "]{.note}") )
            ," class='authorblock align-center'")
        }).join("\n"))),
-     if (titleinfo.date=="") then "" else "<div class=date>" + context.formatInline(titleinfo.date) + "</div>"
+     if (titleinfo.note=="") then "" else "<div class=note>" + context.formatInline(titleinfo.note) + "</div>"
     ].join("\n"),
     " class='titleblock align-center'")
    

@@ -20,7 +20,7 @@ import std/date
 import common 
 
 // Do not edit the version, it is set in the Jakefile from package.json
-public val version = "0.4.2-beta" 
+public val version = "0.4.3-beta" 
 
 // Metadata is just a string to string map.
 public alias metadata = list<(string,string)>
@@ -63,7 +63,8 @@ public struct options(
   author   : string = "",
   affiliation: string = "",
   email    : string = "",
-  titleDate: string = "",
+  authorNotes : string = "",
+  titleNote: string = "",
 
   citestyle     : citestyle = citeNumeric,     
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
