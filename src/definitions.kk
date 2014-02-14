@@ -478,9 +478,10 @@ function adjustCounter(counters : mdict<h,counter>,name : string, value : string
 // increment or set a count to a value
 function increment(counter :counter, xvalue : string) : counter {
   v = xvalue.toLower
-  if (v=="upper-case") then counter(counter.value+1,Uppercase)
-  elif (v=="lower-case") then counter(counter.value+1,Lowercase)
-  elif (v=="arabic") then counter(counter.value+1,Arabic)
+  if (v=="upper-case") then counter(counter.value,Uppercase)
+  elif (v=="lower-case") then counter(counter.value,Lowercase)
+  elif (v=="arabic") then counter(counter.value,Arabic)
+  elif (v=="arabic0") then counter(counter.value,Arabic0)
   elif (v=="") then counter(value=counter.value+1)
   else match(xvalue.list) {
     Cons(d,Nil) | d >= 'a' && d <= 'z' -> Counter((d-'a').int+1,Lowercase)
@@ -537,6 +538,7 @@ function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st
 
 // The display format of a counter
 type format {
+  Arabic0     // start at 0
   Arabic
   Uppercase
   Lowercase
@@ -549,6 +551,7 @@ function show( counter : counter ) : string {
   match(counter.format) {
     Uppercase -> counter.value.showLetterBase('A')
     Lowercase -> counter.value.showLetterBase('a')
+    Arabic0   -> (counter.value-1).show
     _ -> counter.value.show
   }
 }
