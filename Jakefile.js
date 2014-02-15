@@ -115,15 +115,16 @@ task("bench", [], function() {
 //-----------------------------------------------------
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
 task("doc", [], function() {
+  var docout = path.join("doc","out")
   args = Array.prototype.slice.call(arguments).join(" ");
-  mdCmd = "node lib/cli.js -v --odir=doc/out " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
+  mdCmd = "node lib/cli.js -v --odir=" + docout + " " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
-    var files = new jake.FileList().include(path.join("doc","*.png"))
-                                   .include(path.join("doc","*.bib"))
-                                   .include(path.join("doc","*.js"))
-                                   .include(path.join("doc","*.mdk"));
-    copyFiles("doc",files.toArray(),"doc/out");
+    var files = ["reference","mathdemo","slidedemo"];
+    var htmls = files.map( function(fname) { return path.join(docout,fname + ".html") });
+    var pdfs  = files.map( function(fname) { return path.join(docout,fname + ".pdf") });
+    var outfiles = htmls.concat(args.indexOf("--pdf") < 0 ? [] : pdfs)
+    copyFiles(docout,outfiles,"doc");
     complete();
   }, {interactive:true});
 });
@@ -133,7 +134,7 @@ var doclocal = (process.env.doclocal || "\\\\research\\root\\web\\external\\en-u
 desc("publish documentation")
 task("publish", [], function () {
   // copy to website
-  var docout = "doc/out"
+  var docout = "doc"
   var files = new jake.FileList().include(path.join(docout,"*.html"))
                                  .include(path.join(docout,"*.css"))
                                  .include(path.join(docout,"*.pdf"))
