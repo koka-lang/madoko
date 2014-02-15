@@ -83,16 +83,7 @@ task("clean", function() {
   jake.rmRf(outputDir);
   jake.rmRf(outputDir + "net");
   jake.rmRf(outputDir + "doc");
-  var files = new jake.FileList().include(path.join("doc","*.aux"))
-                               .include(path.join("doc","*.log"))
-                               .include(path.join("doc","*.blg"))
-                               .include(path.join("doc","*.bbl"))
-                               .include(path.join("doc","*.tex"))
-                               .include(path.join("doc","*.out"));
-  files.toArray().map( function(file) {
-    jake.log("rm -f " + file )
-    fs.unlink(file);
-  });
+  jake.rmRf("doc/out");
 });
 
 //-----------------------------------------------------
@@ -125,9 +116,14 @@ task("bench", [], function() {
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
 task("doc", [], function() {
   args = Array.prototype.slice.call(arguments).join(" ");
-  mdCmd = "node lib/cli.js -v " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
+  mdCmd = "node lib/cli.js -v --odir=doc/out " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
+    var files = new jake.FileList().include(path.join("doc","*.png"))
+                                   .include(path.join("doc","*.bib"))
+                                   .include(path.join("doc","*.js"))
+                                   .include(path.join("doc","*.mdk"));
+    copyFiles("doc",files.toArray(),"doc/out");
     complete();
   }, {interactive:true});
 });
@@ -137,14 +133,15 @@ var doclocal = (process.env.doclocal || "\\\\research\\root\\web\\external\\en-u
 desc("publish documentation")
 task("publish", [], function () {
   // copy to website
-  var files = new jake.FileList().include(path.join("doc","*.html"))
-                                 .include(path.join("doc","*.css"))
-                                 .include(path.join("doc","*.pdf"))
-                                 .include(path.join("doc","*.png"))
-                                 .include(path.join("doc","*.bib"))
-                                 .include(path.join("doc","*.js"))
-                                 .include(path.join("doc","*.mdk"));
-  copyFiles("doc",files.toArray(),doclocal);
+  var docout = "doc/out"
+  var files = new jake.FileList().include(path.join(docout,"*.html"))
+                                 .include(path.join(docout,"*.css"))
+                                 .include(path.join(docout,"*.pdf"))
+                                 .include(path.join(docout,"*.png"))
+                                 .include(path.join(docout,"*.bib"))
+                                 .include(path.join(docout,"*.js"))
+                                 .include(path.join(docout,"*.mdk"));
+  copyFiles(docout,files.toArray(),doclocal);
   fs.renameSync(path.join(doclocal,"reference.mdk"),path.join(doclocal,"reference.mdk.txt"));
   fs.renameSync(path.join(doclocal,"slidedemo.mdk"),path.join(doclocal,"slidedemo.mdk.txt"));
 },{async:false});

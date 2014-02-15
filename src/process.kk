@@ -11,6 +11,9 @@ external import {
 external import {
   js "mkdirp"
 }
+external import {
+  js "path"
+}
 
 public external cwd() : io string {
   js inline "process.cwd()"
@@ -87,4 +90,8 @@ public external rename( fnameOld : string, fnameNew : string ) : io () {
 
 public function tryRename( fnameOld : string, fnameNew : string ) : io () {
   ignore( { rename(fnameOld,fnameNew) })
+}
+
+public external relative( from : string, to : string ) : io string {
+  js inline "path.relative(#1,#2)"
 }

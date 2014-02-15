@@ -1,0 +1,16 @@
+[INCLUDE=zero]
+Description : Some fun replacements
+Title		: A code replacement test
+~Pre,~Code	: replace="//=>/\(&rArr;\)//!=/\(&ne;\)\
+					   //\bforall /\(&forall;\)//\bexist /\(&exist;\)\
+                       //\*\*/\(&bull;\)//<(?![<=])/\(&lang;\)//>(?![>=])/\(&rang;\)\
+                       //\balpha\b/\(&alpha;\)//\bbeta\b/\(&beta;\)//g"
+              language=javascript
+
+# Testing
+
+Here is some code:
+
+	forall alpha beta ** exist c => return (Stream<T> != 0)
+
+Nice!
