@@ -30,7 +30,7 @@ public function fmtTexEnv(context : inlineContext, env : string, txt : string, a
 public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
   if (cmd=="") then texText(txt) 
   elif (cmd=="br") then "\\mdBr\n" 
-  elif (cmd=="code") then "\\lstinline|" + txt + "|" 
+  // elif (cmd=="code") then "\\lstinline|" + txt + "|" 
   else texCmd(cmd,txt,attrs)
 }
 
@@ -54,6 +54,19 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
     texCmd("a",texText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
       "{" + content + "}"    
   }
+}
+
+public function fmtTexCodePlain( context : inlineContext, txt : string ) : string 
+{
+  txt.htmlEscape(False).texText.preSpace
+}
+
+public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) : (string,maybe<hilitemode>) 
+{
+  match (txt.hilitePartial(lang,mode)) {
+    Nothing -> (fmtTexCodePlain(context,txt),mode)
+    Just((hl,next)) -> (hl.texText.unspan.preSpace, Just(next))
+  }  
 }
 
 public function fmtTexCode( context : inlineContext, env : string, 

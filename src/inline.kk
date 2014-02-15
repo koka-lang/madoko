@@ -13,6 +13,7 @@ import std/dict
 import std/string
 import std/regex
 import common
+import hilite  // hilitemode
 
 public function pick(fmt : formatter, htmlElem, texElem ) {
   match(fmt) {
@@ -51,7 +52,8 @@ public rectype inlineContext {
                  xfmtTitle: (context : inlineContext, titleinfo : titleinfo ) -> string,
                  xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, colattrs: list<attrs>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
-                 xfmtCode : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
+                 xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
+                 xfmtCodeHilite : (context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) -> (string,maybe<hilitemode>),
                  fmt : formatter
                )                 
 }
@@ -82,8 +84,12 @@ public function fmtEnv( context : inlineContext, env : string, txt : string, att
   (context.xfmtEnv)(context,env,txt,attrs)
 }
 
-public function fmtCode( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
-  (context.xfmtCode)(context,env,txt,attrs)
+public function fmtCodePlain( context : inlineContext, txt : string ) : string {
+  (context.xfmtCodePlain)(context,txt)
+}
+
+public function fmtCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
+  (context.xfmtCodeHilite)(context,txt,lang,mode)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {
@@ -128,13 +134,14 @@ public function copy( self : inlineContext,
                        xfmtTitle = self.xfmtTitle,
                        xfmtTable = self.xfmtTable,
                        xfmtEnv = self.xfmtEnv,
-                       xfmtCode = self.xfmtCode,
+                       xfmtCodePlain = self.xfmtCodePlain,
+                       xfmtCodeHilite = self.xfmtCodeHilite,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
-                 xfmtEnv, xfmtCode,fmt )
+                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite,fmt )
 }
 
 public function sanitize( context : inlineContext ) : bool {

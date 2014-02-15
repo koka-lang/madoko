@@ -17,10 +17,22 @@ external import {
   js hljs "highlight.js"
 }
 
-// Highlight using highlight.js
-external xhilite( src : string, lang : string = "auto") : string {
-  js inline "(#2!='auto'?hljs.highlight(#2,#1,true):hljs.highlightAuto(#1)).value"
+// hilite mode. abstract.
+public type hilitemode;
+
+// struct
+struct hilite( highlighted : string, finalMode : hilitemode )
+
+// Highlight using highlight.js. Use 'auto' for automatic language detection
+external xhilite( src : string, lang : string, mode : hilitemode ) : hilite {
+  js inline "(function(){ var res = (#2!='auto'? hljs.highlight(#2,#1,true,#3) : hljs.highlightAuto(#1)); return Hilite(res.value,res.top) })()"
 } 
+
+external xinitialMode() : hilitemode {
+  js inline "null"
+}
+
+val initialMode = xinitialMode()
 
 // Syntax highlight code. 
 // If "lang" is the empty string, returns Nothing. 
@@ -28,10 +40,26 @@ external xhilite( src : string, lang : string = "auto") : string {
 public function hilite( src : string, lang : string = "auto") : maybe<string> 
 {
   if (lang=="") return Nothing
-  catch( { Just(xhilite(src,lang.toLower))  }, fun(exn) { 
+  catch( { Just(xhilite(src,lang.toLower,initialMode).highlighted)  }, fun(exn) { 
            warning("could not highlight: " + exn.show)
            Nothing
          })
+}
+
+// Syntax highlight code. 
+// If "lang" is the empty string, returns Nothing. 
+// Use `auto` for automatic language detection.
+public function hilitePartial( src : string, lang : string, mode : maybe<hilitemode> = Nothing) : maybe<(string,hilitemode)>
+{
+  if (lang=="") return Nothing
+  catch( { 
+    res = xhilite(src,lang.toLower,mode.maybe(initialMode,id))
+    Just( (res.highlighted,res.finalMode) )
+   }, 
+   fun(exn) { 
+     warning("could not highlight: " + exn.show)
+     Nothing
+   })
 }
 
 external xregisterLanguage( name : string, fname : string ) : io () {

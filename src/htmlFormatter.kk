@@ -85,6 +85,20 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
   }
 }
 
+
+public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : string 
+{
+  txt.escapePre  
+}
+
+public function fmtHtmlCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) : (string,maybe<hilitemode>) 
+{
+  match( txt.hilitePartial(lang,mode) ) {
+    Nothing -> (context.fmtHtmlCodePlain(txt),mode)
+    Just((hl,next)) -> (hl,Just(next))
+  }
+}
+
 public function fmtHtmlCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 
 {

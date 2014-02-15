@@ -25,11 +25,12 @@ Package		: [version=3]mhchem
 
 Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}			  	
 
+
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
 				border-style=solid border-width=1px 
 ~Sample		: margin-bottom=2ex 
 			  replace="~ Begin SampleBlock&nl;\
-			           ````` {.SampleSource}&nl;\
+			           ````` {.SampleSource replace=clear}&nl;\
 				       &source;&nl;`````&nl;-------- { width=50% text-align=left }&nl;\
 				       &source;&nl;~ End SampleBlock&nl;"
 ~Slanted	: font-style=oblique
@@ -41,7 +42,9 @@ llb			: &#10214;
 rrb			: &#10215;
 Indigo      : #4B0082
 
+~Pre,~Code	: replace="/==>/\(&rArr;\)/g"
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
+
 Highlight Language: ./doc/javascript5.js
 Script		: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
@@ -49,9 +52,6 @@ Copyright	: Copyright 2013, Daan Leijen, Microsoft Corporation.
 License		: This is free software; you can redistribute it and/or modify it under the
 			  terms of the Apache License, Version 2.0. A copy of the License can be
 			  found in the file "license.txt" at the root of this distribution.
-
-[INCLUDE=zero.mdk]
-
 
 ~ TexRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
@@ -650,9 +650,48 @@ If you want to disable syntax highlighting for a particular code fragment,
 you can set the language key to empty. To disable highlighting completely,
 set the `Highlight` metadata key to `False`.
 
-It is also possible to use dynamic syntax highlighting with the
+For HTML, it is also possible to use dynamic syntax highlighting with the
 [Prettify][GPretty] library, see Appendix [#sec-gpretty] for more
 information.
+
+### Escaped code
+
+Madoko allows you to escape back to inline madoko syntax inside code 
+by bracketing inside `\(` and `\)`. This can be nice to insert
+special looking symbols in the code while maintaining full automatic
+syntax highlighting for all the surrounding code:
+
+~ Sample
+```javascript
+function sqr( x ) {
+  var \(&pi;\) = 3.141593;
+  return x*x  /* ensures \(_result_ $\ge$ 0\) on return.*/
+}
+```
+~
+
+This is especially powerful in combination with replacer attribute (Section [#sec-replace]).
+For example, in this document, we have the following metadata rules:
+```{replace=clear}
+~Pre,~Code: replace="/==>/\(&rArr;\)/g"
+```
+
+which makes it easy to insert an implication symbol in code:
+
+~ Sample
+Look at implication (1) in the following code:
+```javascript	
+function implies(x,y) { x ==> y }  \((**1**)\)
+```
+~
+
+Each escaped piece of code is wrapped in a `code-escaped` element. 
+This can be used to for example render all escaped text in a serif font:
+
+	~code-escaped: font-family=serif
+
+Finally, you can use the `.noescape` class to suppress escaping.
+
 
 ### Advanced: Custom syntax highlighting
 
@@ -2165,6 +2204,7 @@ targeted by rules. Their element names are the standard HTML names, namely:
 | Paragraph            | `p`           |
 | Code block           | `pre`         |
 | Code inline          | `code`        |
+| Code escaped text    | `code-escaped`|
 | Block quote          | `blockquote`  |
 | List                 | `ul`          |
 | Numbered list        | `ol`          |

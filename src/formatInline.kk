@@ -21,6 +21,7 @@ import texFormatter
 import texParser   // rxAuthorYear
 import md5
 import entity
+import hilite // inlineMode
 
 /* --------------------------------------
   Inline grammar 
@@ -117,7 +118,8 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlTitle,fmtTexTitle),
                  fmt.pick(fmtHtmlTable,fmtTexTable),
                  fmt.pick(fmtHtmlEnv,fmtTexEnv),
-                 fmt.pick(fmtHtmlCode,fmtTexCode),
+                 fmt.pick(fmtHtmlCodePlain,fmtTexCodePlain),
+                 fmt.pick(fmtHtmlCodeHilite,fmtTexCodeHilite),
                  fmt 
                )
 }
@@ -271,6 +273,41 @@ function inlineCode( cap : matched, context ) : string {
    then context.fmtCode( "",txt,attrs)
    else context.fmtSpan( txt, attrs.addClass("code") ) // can be overridden by the user
 }
+
+public function fmtCode( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
+  lang   = attrs.hasKey("language").maybe("",id)
+  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
+  
+  val (pattrs,content)
+    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) 
+       then (attrs, context.fmtCodePlain(txt))
+       else (attrs.addClass("hljs"), context.fmtCodeEx(lang,txt,attrs))
+
+  if (env=="" || env=="code") 
+   then context.fmtCmd("code", content, pattrs.mergeDefault(lattrs))
+   else context.fmtEnv(env, context.fmtCmd("code", content, lattrs), pattrs)
+}
+
+function fmtCodeEx( context : inlineContext, lang : string, txt : string, attrs : attrs ) : string 
+{
+  if (attrs.hasClass("noescape")) return context.fmtCodeHilite(txt,lang).fst
+
+  function hiliteX( src : string, mode : maybe<hilitemode> ) : string {
+    match( src.find(rxCodeEscaped)) {
+      Nothing   -> context.fmtCodeHilite(src,lang,mode).fst
+      Just(cap) -> {
+        val (fmt1,mode1) = context.fmtCodeHilite(src.substr(0,cap.index),lang,mode)
+        fmt2 = context.fmtCmd("span", context.formatInline(cap.groups[1]), 
+                                context.formatDefaults(attrsNone.addClass("code-escaped")))  
+        fmt1 + fmt2 + hiliteX(src.substr1(cap.next),mode1)
+      }
+    }
+  }
+
+  hiliteX(txt,Nothing)
+}
+
+val rxCodeEscaped = regex(@"\\\(((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
 
 /*
 function fmtCode( context : inlineContext, tag : string, txt : string, attrs : attrs = attrsNone) : string {
@@ -508,6 +545,19 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
 }
 
 val rxCanBeRef = regex(@"^#?[A-Za-z_][\w-]*$")
+
+// get and format default attributes
+function formatDefaults( context : inlineContext, attrs : attrs ) : attrs {
+  if (!(attrs.defaults)) return attrs
+
+  sname   = if (attrs.elem != "") then attrs.elem
+            else match (attrs.classes) {
+              Cons(cname,_) -> cname
+              _             -> "span"
+            } //attrs.elementName("span")
+  attrsx  = context.defaults.matchRules(sname,attrs)
+  context.formatAttrs(attrsx)
+}
 
 // Format a span element
 function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : string {
