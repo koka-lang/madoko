@@ -756,7 +756,7 @@ function applyDefaults( context : inlineContext, sname : string, attrs : attrs )
 function inlineFootnote( cap : matched, context : inlineContext ) : string {
   id = cap.groups[1].definitionId
   match( context.footnotes[id] ) {
-    Just(fn) -> context.fmtFootnote(id,fn)      
+    Just(fn:footnote) -> context.fmtFootnote(id,fn(footnoteNum = context.formatInline(fn.footnoteNum)))
     Nothing -> {
       warning( "missing footnote definition: " + cap.groups[1])
       context.fmtText("[^" + formatInline(context,cap.groups[1]) + "]") // leave as plain text?

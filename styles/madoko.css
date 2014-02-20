@@ -61,6 +61,15 @@ a.localref:hover {
   text-align: left;
 }
 
+.footnote { 
+  margin-left: 1em;
+}
+.footnote-before {
+  margin-left: -1em;
+  width: 1em;
+  display: inline-block;
+}
+
 /* Abstract */
 .abstract>p:before {
   content: "Abstract. ";

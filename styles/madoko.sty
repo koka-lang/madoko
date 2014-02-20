@@ -217,11 +217,17 @@
 \cssNewInlineElem{\mdStrong}{strong}{font-weight=bold}
 \cssNewInlineElem{\mdDel}{del}{color=gray}  % not great but strike-out is just not well supported on LaTeX...
 
-\newcommand{\mdFootnote}[2][]{\footnote{#2}} % no cssInline since footnotes can contain block elements
+\cssNewKey{css}{label}{\cssLabel}{}
+
+\newcommand{\mdFootnote}[2][]{%
+  \mdSpan[#1]{\gdef\@thefnmark{\cssLabel}\@footnotemark}\@footnotetext{#2}%  
+  %\footnote{#2}} % no cssInline since footnotes can contain block elements
+}
 \newcommand{\mdSub}[2][]{\ensuremath{_{\mbox{\scriptsize\cssInline[elem=sub,#1]{#2}}}}}
 \newcommand{\mdSup}[2][]{\ensuremath{^{\mbox{\scriptsize\cssInline[elem=sup,#1]{#2}}}}}
 
 \cssClassRule{footnote-backref}{display=hidden}
+\cssClassRule{footnote-before}{display=hidden}
 
 \newcommand{\@mdHyperref}[2]{\hyperref[#1]{#2}}
 \newcommand{\@mdMakeA}[2]{%

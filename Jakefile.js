@@ -121,9 +121,10 @@ task("doc", [], function() {
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
     var files = ["reference","mathdemo","slidedemo"];
+    var styles= [path.join(docout,"madoko.css")];
     var htmls = files.map( function(fname) { return path.join(docout,fname + ".html") });
     var pdfs  = files.map( function(fname) { return path.join(docout,fname + ".pdf") });
-    var outfiles = htmls.concat(args.indexOf("--pdf") < 0 ? [] : pdfs)
+    var outfiles = htmls.concat(args.indexOf("--pdf") < 0 ? [] : pdfs,styles)
     copyFiles(docout,outfiles,"doc");
     complete();
   }, {interactive:true});

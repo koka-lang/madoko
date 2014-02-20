@@ -43,7 +43,7 @@ public function fmtTexEscape( context : inlineContext, txt : string, allowEntity
 }
 
 public function fmtTexFootnote(context : inlineContext, id : string, fn : footnote ) : string {
-  "\\mdFootnote[id=fnref-" + id + "]{" + ((fn.footnoteContent)(context)) + "}"
+  "\\mdFootnote[id=back-fn-" + id + ",label={" + fn.footnoteNum + "}]{" + ((fn.footnoteContent)(context)) + "}"
 }
 
 public function fmtTexLink( context : inlineContext, isImage : bool, link : link, content : string ) {

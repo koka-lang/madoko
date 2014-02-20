@@ -43,7 +43,7 @@ public function fmtHtmlEscape(context : inlineContext, txt : string, allowEntity
 public function fmtHtmlFootnote(context : inlineContext, id : string, fn : footnote ) : string {
   tag("sup", 
     tag("a", fn.footnoteNum, " href=\"#fn-" + escape(id) + "\" class=\"footnote-ref localref\"" ),
-          " id=\"fnref-" + escape(id) + "\"" )
+          " id=\"back-fn-" + escape(id) + "\"" )
 }
 
 public function fmtHtmlTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs  ) : string {

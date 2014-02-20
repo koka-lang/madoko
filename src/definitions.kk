@@ -165,9 +165,9 @@ function parseDefinitionsFull(
       DefFootnote(id,content) -> {
         footnoteCount := footnoteCount+1
         ncontent = content.mapBlocks(parseDefBlock)
-        footnotes[id] := Footnote(footnoteCount.show, fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) })
-        footnoteItems := Cons(Item(content,Attrs(name="fn-" + id)),footnoteItems)        
-        attrsNone
+        footnotes[id] := Footnote("&fn-" + id + ";", fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) })
+        footnoteItems := Cons(ncontent,footnoteItems)        
+        attrsNone                
       }
       Para(attrs=xs)  -> xs
       Code(_,lang,xs)  -> {
@@ -199,7 +199,7 @@ function parseDefinitionsFull(
                      (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
                    }).dict
   footnoteBlock = if (isNil(footnoteItems)) then Empty 
-                   else Div([HLine(), List("ol", footnoteItems.reverse)],Attrs(classes=["footnotes","madoko"]))  
+                   else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
   fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
   secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
@@ -245,6 +245,7 @@ function mapBlocks( blocks : list<block>,
       Quote(content,xs)    -> Quote(content.mapBlocks(action),xs)
       List(tag,content,xs) -> List(tag,content.mapBlocks(action),xs)
       Item(content,xs)     -> Item(content.mapBlocks(action),xs)
+      //DefFootnote(id,content) -> DefFootnote(id,content.mapBlocks(action))
       _ -> nblock
     }
   }

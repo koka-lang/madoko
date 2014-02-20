@@ -201,8 +201,9 @@ function blockDiv( cap : matched, context : blockContext ) : block {
 
 function blockDefFootnote( cap : matched, context : blockContext ) :  block {
   id  = cap.groups[1].definitionId
-  txt = cap.groups[2].replaceAll(rxindent4,"") + 
-          "\n[&#8617;](#fnref-" + id + "){.footnote-backref}"
+  txt = "~ Begin Footnote { id='fn-" + id + "' }\n" +
+           cap.groups[2].replaceAll(rxindent4,"") + "\n" +
+        "~ End Footnote"
   DefFootnote(id, parseBlocks(context,txt))
 }
 
@@ -214,7 +215,7 @@ function blockList( cap : matched, context : blockContext ) : block {
   // we should merge any text blocks into a paragraph for a loose list
   // in sane mode, we only make text blocks paragraphs if they are followed by a blank line
   icontext = context(grammar = // context.grammar.filter( fun(r) { !(r.name.startsWith("paragraph")) }), 
-                               context.listGrammar,
+                     context.listGrammar,
                      loose = loose) // if (context.sane) then False else loose)
 
 

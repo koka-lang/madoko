@@ -1,11 +1,14 @@
+Title: Footnotes.
+~Footnote: @footnote=arabic0
+
 This file tests support for footnotes in [Markdown Extra][]. The output
 adheres to what John Gruber describes at [Daring Fireball][Footnotes].
 
 [Markdown Extra]: http://michelf.ca/projects/php-markdown/extra#footnotes
 [Footnotes]: http://daringfireball.net/2005/07/footnotes
 
-That's some text with a footnote.[^1] and 
-another footnote [^test], and a duplicate[^1].
+That's some text with a footnote.[^1]^,^[^2] and 
+another footnote[^test], and a duplicate[^1].
 
 [^1]: And that's the footnote.
 
@@ -18,8 +21,8 @@ another footnote [^test], and a duplicate[^1].
 
     And more text.
 
-[^1]: 
-    Second definition overrides
+[^2]: 
+    A definition 
 
         with code
         in  it

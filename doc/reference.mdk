@@ -670,7 +670,7 @@ function sqr( x ) {
 ```
 ~
 
-This is especially powerful in combination with replacer attribute (Section [#sec-replace]).
+This is especially powerful in combination with replace attributes (Section [#sec-replace]).
 For example, in this document, we have the following metadata rules:
 ```{replace=clear}
 ~Pre,~Code: replace="/==>/\(&rArr;\)/g"
@@ -909,7 +909,7 @@ and rule separation is set automatically. Here is an example from
 the [Booktable] package documentation:
 
 ~ Sample
-An example of a `book table':
+An example of a 'book table':
 
 | --------------- | ----------- | --------------- |
 |             Item             ||                 |
@@ -2303,8 +2303,9 @@ the appendix where each section is generally numbered using letters:
 	This section will be numbered as 'B'
 
 The display format of a counter can also be set independently of setting its
-value. Currently, Madoko supports `arabic`, `upper-case`, and `lower-case`
-display. Assigning a single letter, like `@h1="A"` in the previous example is
+value. Currently, Madoko supports `arabic`, `arabic0`, `upper-case`, and `lower-case`
+display, where `arabic0` starts counting at 0. 
+Assigning a single letter, like `@h1="A"` in the previous example is
 just a shorthand for:
 
 	{ @h1=upper-case @h1=1 }
