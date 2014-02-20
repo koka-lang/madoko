@@ -1,14 +1,14 @@
 [INCLUDE=presentation.mdk]
-Title		  : Demo presentation in Madoko
-Sub Title	  : In both HTML and PDF
-Author		  : Daan Leijen
-Affiliation	  : Microsoft Research
-Email 		  : daan@microsoft.com
+Title         : Demo presentation in Madoko
+Sub Title     : In both HTML and PDF
+Author        : Daan Leijen
+Affiliation   : Microsoft Research
+Email         : daan@microsoft.com
 Reveal Url    : ../contrib/reveal.js
 Reveal Theme  : solarized
 Beamer Theme  : singapore
-Package 	  : pstricks
-Package		  : pst-plot
+Package       : pstricks
+Package       : pst-plot
 Math Embed    : 64
 @html .Math-Inline, .Math-Display: color=#586e75
 
@@ -46,7 +46,7 @@ And any Madoko features just work. Here is some math.
 A famous equation is $E = mc^2$, but this one is 
 famous too:
 
-~ Equation 	{#eq-gaussian}
+~ Equation  {#eq-gaussian}
   \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
 ~
 ~ End Framed
@@ -69,7 +69,7 @@ With the PSTricks package we create do cool images, like:
   \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
   \pscircle*[linecolor=red](! Euler 1){3pt}
   \psline[linecolor=red,linestyle=dashed]%
-  		 (! Euler 0)(! Euler 1)
+         (! Euler 0)(! Euler 1)
   \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]%
          {->}(! Euler 1)(0, 1)
   \uput[-90](! Euler 0){\color{red}$e$}

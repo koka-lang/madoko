@@ -279,7 +279,7 @@ function include( txt : string, fast : bool, outName : string, dirs : list<strin
   }
   action(itxt)
 }
-val rxInclude = regex(@"^ *\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
+val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "" ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext)) {
