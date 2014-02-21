@@ -8,6 +8,7 @@ Title Date  : &date; (version &madoko-version;)
 Heading Base: 2
 Cite All    : True
 Script      : reference.js
+XScript      : madoko.js
 Bib         : reference
 Math Embed  : 64
 

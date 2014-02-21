@@ -197,7 +197,7 @@ val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|)(?:[:](sort|nosor
  Links 
 ---------------------------------------- */
 // A url link.
-public struct link( href : string, title : string = "", linkattrs : attrs = attrsNone)
+public struct link( href : string, title : string = "", linkattrs : attrs = attrsNone )
 
 // A definition identifier is always lower case and sequences of spaces are replaced by a single space.
 // Used for links for example.
@@ -284,7 +284,7 @@ public function showFormatter( f : formatter ) {
 }
 
 // A label is created for every element with an id.
-public struct label( element : string, labelText : string )
+public struct label( element : string, labelText : string, labelCaption : string )
 
 public function show( attrs : attrs ) : string {
   "{" + attrs.text.substr(0,40) + "... }"
@@ -373,10 +373,14 @@ public function hasClass( attrs : attrs, className : string ) : bool {
 
 // Generate a fresh id if it is not specified
 public function generateHeaderId( attrs : attrs, heading : string ) : attrs {
-  if (attrs.name!="") then attrs else {
+  attrs1 = if (attrs.name!="") then attrs else {
     newid = heading.normalizeId
     newname = if (newid=="") then "section" else newid
     attrs(text=attrs.text + " id='" + newname + "'", name = newname, empty=False)
+  }
+  match (attrs1.hasKey("caption")) {
+    Nothing -> attrs1.addKeyval("caption",heading)
+    Just()  -> attrs1
   }
 }
 

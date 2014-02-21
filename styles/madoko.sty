@@ -18,6 +18,7 @@
 \RequirePackage{stmaryrd}
 \RequirePackage{textcomp}
 \RequirePackage{pifont}
+\RequirePackage{pdfcomment}
 
 % conditionals
 \newif\ifmathmode
@@ -80,8 +81,11 @@
   \protected@edef\mdUnicode##1{\protect\ifnum##1=#1{#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
 }
 
+% ballot boxes
 \mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\hspace{0.1em}\ding{51}}}
 \mdDefineUnicode{9746}{\rlap{$\square$}{\hspace{0.1em}\ding{55}}}
+% magnifying glass
+\mdDefineUnicode{128270}{\hspace{-0.75ex}\raisebox{-0.25ex}{$\arrownot$}\hspace{1.05ex}\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
 
 % break and nbsp
 \newcommand{\mdBr}{\\}
@@ -229,6 +233,15 @@
 \cssClassRule{footnote-backref}{display=hidden}
 \cssClassRule{footnote-before}{display=hidden}
 
+\newcommand{\mdTooltip}[2]{%
+  #2%
+  \eifstrequal{#1}{}{}{%
+    \hbox to 0pt{\raisebox{1ex}{\tiny%
+      \pdfmarkupcomment[color=White,author=Title]{}{#1}%
+    }}%
+  }%
+}
+
 \newcommand{\@mdHyperref}[2]{\hyperref[#1]{#2}}
 \newcommand{\@mdMakeA}[2]{%
   \cssIfHasClass{localref}%
@@ -237,7 +250,7 @@
     {\href{#1}{#2}}%
 }
 
-\newcommand{\mdA}[3][]{\cssInlineCmd[#1]{\@mdMakeA{#2}}{#3}}
+\newcommand{\mdA}[4][]{\mdTooltip{#3}{\cssInlineCmd[#1]{\@mdMakeA{#2}}{#4}}}
 
 %-------------------------------------------------------------
 % Headers

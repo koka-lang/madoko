@@ -124,6 +124,7 @@ function processContent( inName : string, outName : string, content : string,
 
     // copy early since async latex may start for math
     tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
+    tryCopyTextFileFromTo( "madoko.js", styleDir, outName.dirname)
     if (xopts.tex || xopts.mathmode.isStatic) {
       tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
       tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)

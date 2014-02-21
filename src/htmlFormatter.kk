@@ -42,8 +42,10 @@ public function fmtHtmlEscape(context : inlineContext, txt : string, allowEntity
 
 public function fmtHtmlFootnote(context : inlineContext, id : string, fn : footnote ) : string {
   tag("sup", 
-    tag("a", fn.footnoteNum, " href=\"#fn-" + escape(id) + "\" class=\"footnote-ref localref\"" ),
-          " id=\"back-fn-" + escape(id) + "\"" )
+    tag("a", fn.footnoteNum, " href=\"#fn-" + escape(id) + "\" " +
+          "title=\"" + fn.footnoteCaption.extractText.escape + "\" " +
+          "class=\"footnote-ref localref\" " ),
+          " id=\"back-fn-" + escape(id) + "\" " )
 }
 
 public function fmtHtmlTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs  ) : string {
@@ -73,18 +75,23 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
     "<img src=\"" + link.href.escape + "\"" +
-      (if (link.title != "") then " title=\"" + link.title.escape + "\"" else "") +
+      (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       (if (content != "") then " alt=\"" + content.escape + "\"" else "") +
       link.linkattrs.htmlFormat("img",context.sanitize) + ">"
   }
   else {
     "<a href=\"" + link.href.escape + "\"" +
-      (if (link.title != "") then " title=\"" + link.title.escape + "\"" else "") +
+      (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       link.linkattrs.htmlFormat("a",context.sanitize) + ">" + 
       content + "</a>"
   }
 }
 
+function extractText( s : string ) : string {
+  s.replaceAll(rxTag,"")
+}
+
+val rxTag = regex(@"<[^\n>]*>")
 
 public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : string 
 {

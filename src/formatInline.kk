@@ -379,12 +379,14 @@ function inlineImg( cap : matched, context : inlineContext ) : string {
 function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) : string {
   // cap.groups = 1:optional spaces, 2:txt, 3:everything after it, 
   //               AND 4:href, 5:href-title, OR 6: linkid, AND 7:span attributes
-  attrs = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
+  attrs  = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
+  
   nbsp = if (cap.groups[1] != "" && cap.groups[1].list.all(fun(c){c==' '})) 
           then context.fmtText("&nbsp;") else cap.groups[1]
   if (cap.groups.matchedOn(4)) {
     // direct url link:  [text](url title){attrs}
-    nbsp + context.fmtLink(isImage, newLink(cap.groups[4],cap.groups[5],attrs,bench=context.bench), 
+    attrsd = context.defaults.matchRules("a",attrs)
+    nbsp + context.fmtLink(isImage, newLink(cap.groups[4],cap.groups[5],attrsd,bench=context.bench), 
                                context.formatInline(cap.groups[2]))
   }
   elif (context.bench || cap.groups.matchedOn(6)) {
@@ -466,8 +468,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
   if (citationss.isCons && citationss.all(isCons)) {
     // Citations link: set defaults as "citations" block
     attrsc = attrs.addKeyval("target-element","bibitem")
-    attrsd = if (!(attrsc.defaults)) then attrsc 
-              else context.defaults.matchRules("citations",attrsc)
+    attrsd = context.defaults.matchRules("citations",attrsc)
     nbsp + context.fmtCite(citationss.concat,attrsd)
   } 
   else {
@@ -498,7 +499,8 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
   id = if (ref != "") then ref.definitionId else txt.definitionId
   match(context.links[id]) {
     Just(link) -> {
-      xlink = if (attrs.empty) then link else link( linkattrs = attrs.mergeDefault(link.linkattrs) )
+      attrsd = context.defaults.matchRules("a",attrs)
+      xlink = if (attrs.empty) then link else link( linkattrs = attrsd.mergeDefault(link.linkattrs) )
       nbsp + context.fmtLink(isImage, xlink, context.formatInline(txt))         
     }
     Nothing -> {
@@ -507,8 +509,9 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
       match(context.labels[labelId]) {
         Just(lab) -> {
           // Label reference
-          lattrs = attrs.addKeyval("target-element",lab.element)
-          llink  = newLink(id,"",lattrs,bench=context.bench)
+          attrsd = context.defaults.matchRules("a",attrs)
+          lattrs = attrsd.addKeyval("target-element",lab.element)
+          llink  = newLink(id,context.formatInline(lab.labelCaption),lattrs,bench=context.bench)
           nbsp + context.fmtLink(isImage,llink,context.formatInline(
                                  if (ref=="") then "&" + labelId + ";" else txt)) 
         }      
@@ -566,8 +569,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
               Cons(cname,_) -> cname
               _             -> "span"
             } //attrs.elementName("span")
-  attrsx  = if (!(attrs.defaults)) then attrs 
-             else context.defaults.matchRules(sname,attrs)
+  attrsx  = context.defaults.matchRules(sname,attrs)
   attrsd  = context.formatAttrs(attrsx)            
 
   txt = attrsd.transformText(txt0,context.labels,context.metadata)
@@ -750,13 +752,14 @@ function formatAttrs( context : inlineContext, attrs : attrs ) : attrs {
 
 // Apply defaults
 function applyDefaults( context : inlineContext, sname : string, attrs : attrs ) : attrs {
-  if (!(attrs.defaults)) then attrs else context.defaults.matchRules(sname,attrs)
+  context.defaults.matchRules(sname,attrs)
 }
 
 function inlineFootnote( cap : matched, context : inlineContext ) : string {
   id = cap.groups[1].definitionId
   match( context.footnotes[id] ) {
-    Just(fn:footnote) -> context.fmtFootnote(id,fn(footnoteNum = context.formatInline(fn.footnoteNum)))
+    Just(fn:footnote) -> context.fmtFootnote(id,fn(footnoteNum = context.formatInline(fn.footnoteNum),
+                                                   footnoteCaption = context.formatInline(fn.footnoteCaption)))
     Nothing -> {
       warning( "missing footnote definition: " + cap.groups[1])
       context.fmtText("[^" + formatInline(context,cap.groups[1]) + "]") // leave as plain text?

@@ -115,12 +115,13 @@ function parseDefinitionsFull(
 
     // set label
     if (attrsx.name != "") then {
-      labels[attrsx.name] := Label(bname,attrsx.label)   
+      labelCaption = attrsx.hasKey("caption").maybe("",id)
+      labels[attrsx.name] := Label(bname,attrsx.label,labelCaption)   
       match (attrsx.hasKey("cite-label")) {
         Nothing -> ()
         Just(clabel) -> {
           clabelx = clabel.expandKeys(attrsx.source,attrsx,dict(),fcontext.inlineContext.metadata)
-          labels["@" + attrsx.name] := Label(bname,clabelx)
+          labels["@" + attrsx.name] := Label(bname,clabelx,labelCaption)
         }
       }
     }
@@ -165,7 +166,9 @@ function parseDefinitionsFull(
       DefFootnote(id,content) -> {
         footnoteCount := footnoteCount+1
         ncontent = content.mapBlocks(parseDefBlock)
-        footnotes[id] := Footnote("&fn-" + id + ";", fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) })
+        footnotes[id] := Footnote("&fn-" + id + ";", 
+                                   fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) },
+                                   extractCaption(ncontent))
         footnoteItems := Cons(ncontent,footnoteItems)        
         attrsNone                
       }
@@ -321,6 +324,27 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
       // label key
       // labels[key] := Label("metadata",value)
       ()
+    }
+  }
+}
+
+function extractCaption( blocks : list<block> ) : string
+{
+  match(blocks) {
+    Nil -> ""
+    Cons(block,rest) -> {
+      post = if (rest.isNil) then "" else "&nl;..."
+      match(block) {
+        Heading(_,txt) -> txt + post
+        Line(txt)  -> txt+post
+        Para(txt)  -> txt+post
+        Code(txt)  -> txt+post
+        Quote(bs)  -> extractCaption(bs)
+        List(_,bs) -> extractCaption(bs)
+        Item(bs)   -> extractCaption(bs)
+        Div(bs)    -> extractCaption(bs)
+        _          -> extractCaption(rest)        
+      }
     }
   }
 }

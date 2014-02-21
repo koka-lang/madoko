@@ -147,6 +147,12 @@ a.localref:hover {
 .bibliography {
 }
 
+.bibsearch {
+  font-size: x-small;
+  text-decoration:none;
+  color: black;
+}
+
 /* General */
 .block, .figure, .bibitem, .equation {
   margin-top: 1ex;

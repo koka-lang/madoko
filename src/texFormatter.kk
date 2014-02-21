@@ -52,9 +52,16 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
   }
   else {
     texCmd("a",texText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
+      "{" + (if (link.linkattrs.hasClass("tex-tooltip")) then extractText(link.title) else "") + "}" +
       "{" + content + "}"    
   }
 }
+
+function extractText( s : string ) : string {
+  s.replaceAll(regxTexCmd," ")
+}
+
+val regxTexCmd = regex(rxTexCmd)
 
 public function fmtTexCodePlain( context : inlineContext, txt : string ) : string 
 {

@@ -55,8 +55,9 @@ task("madoko", [], function(rebuild) {
 },{async:true});
 
 desc("interactive madoko.");
-task("interactive", [], function(rebuild) {
-  var cmd = kokaCmd + " -e -p " + maincli
+task("interactive", [], function(mainmod) {
+  mainmod = mainmod || maincli
+  var cmd = kokaCmd + " -e -p " + mainmod
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { complete(); })
 },{async:true});

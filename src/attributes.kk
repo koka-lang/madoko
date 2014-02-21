@@ -28,6 +28,7 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 
 public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
 {
+  if (!(attrs.common/defaults)) return attrs;
   def = (attrs.classes.map( fun(cname) { defaults["." + cname] } ) +
          [defaults["#" + attrs.name], defaults["~" + elementName]]).filter(isJust).map(string).join(" ")
   if (def=="") then attrs else {
@@ -244,7 +245,7 @@ val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
 val rxcond  = regex(@"^\?if\s+(" + rxescapedc + @"+)\s*\?then\s+(" + rxescapedc + @"*)\s*(?:\?else\s+(" + rxescapedc + @"*)\s*)?$")
-val rxescapedc = @"(?:[^\\\s?]|\\.|\s+(?!$|[\s?]))"
+val rxescapedc = @"(?:[^\\\s?]|\\.|\?(?!then|else|fi|if)|\s+(?!$|[\s?]))"
 
 function evalCondition( cond : string ) : bool {
   match(cond.find(rxcompare)) {
@@ -253,8 +254,8 @@ function evalCondition( cond : string ) : bool {
       cond!=""
     }
     Just(cap) -> {
-      s = cap.groups[1]
-      t = cap.groups[3]
+      s = cap.groups[1].trim
+      t = cap.groups[3].trim
       op = cap.groups[2]
       //trace("condition: " + s.show + " " + op + " " + t.show )
       
@@ -271,6 +272,8 @@ function evalCondition( cond : string ) : bool {
       }
       else {
         if (op=="==") then (s==t)
+        elif (op=="&&") then (s!="" && t!="")        
+        elif (op=="||") then (s!="" || t!="")
         elif (op=="!=") then (s!=t)
         else False
       }
@@ -280,7 +283,7 @@ function evalCondition( cond : string ) : bool {
 val rxcompare = regex(@"^(" + rxesc + @"*)\s*(" + rxop + @")\s*(" + rxesc + @"*)$")
 
 val rxesc = @"(?:(?!" + rxop + @")[^\\]|\\.)"
-val rxop  = @"(?:==|!=|>=|<=|<|>)"
+val rxop  = @"(?:==|!=|>=|<=|<|>|&&|\|\|)"
 
 // remove all grouping from a regular expression
 function ungroup( r : string ) : string {

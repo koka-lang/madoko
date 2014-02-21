@@ -29,7 +29,8 @@ val special = @"\\{}~*_\[\]#\$`";
 
 
 function texnest(s:string)  = @"(?:" + texval + @"|(?:\{" + s + @"\}))"
-val texval   = @"(?:[^\\{}]|\\[@a-zA-Z]+\b\s*|\\.\s*)"
+val texcmd   = @"\\[@a-zA-Z]+\b\s*"
+val texval   = @"(?:[^\\{}]|" + texcmd + @"|\\.\s*)"
 val texarg0  = texval + "*"
 val texarg1  = texnest(texarg0) + "*"
 val texarg2  = texnest(texarg1) + "*"
@@ -42,6 +43,9 @@ val optargs  = optarg + @"*"
 val texenv1  = @"(thebibliography)"
 val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
+
+// captures most tex commands
+public val rxTexCmd = @"(?:\\(?:begin|end)\b\s*" + optargs + texarg + "|" + texcmd + optargs + ")"
 
 val texGrammar : grammar<string,texContext> = [
   Rule("texnormal",   regex(@"^(?:[^" + special + "])+"), texNormal ),
@@ -268,14 +272,29 @@ function texBibitem( cap : matched, context : texContext ) : string {
 function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
   key = keyx.unbrace
   lab = labx.unbrace.parseTexX(context,True)  
+  md  = content.parseTexX(context)
+  val (authors,title) = match(md.find(rxAuthorTitle)) {
+              Just(cap) -> (cap.groups[1],cap.groups[2])
+              Nothing   -> ("",md)
+            }
+  caption = (authors + "\n" + title).replaceAll("\n","&nl;").replaceAll("'","&apos;").replaceAll("\\","&bslash;")
+  search  = (title + "+" + authors).replaceAll(rxSpaces,"+").replaceAll(rxNonSearch,"%20")
+
   //trace("bibitem: lab: " + labx + " -> " + lab)
   "~ Begin Bibitem { id='" + key.definitionId + "' " + 
                   (if (lab=="") then "" else "cite-label='" + lab + "' " ) +
                   (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label='" + lab + "' " else "") +
+                   "caption='" + caption + "' searchterm='" + search + "' " +
                   "}\n" +
-   content.parseTexX(context) + 
+   md + 
    "\n~ End Bibitem\n"
 }
+
+
+val rxSpaces = regex(@"\s+")
+val rxNonSearch = regex(@"(&#?\w+;|" + rxTexCmd + @"|[^\w\+\-])+")
+
+val rxAuthorTitle = regex(@"^\s*(.*?)(?:\n?\[\]\{\.newblock\}\s*|\n\s*)(.*?)(?:\n?\[\]\{\.newblock\}|\n)")
 
 public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
 

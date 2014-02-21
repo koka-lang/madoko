@@ -73,7 +73,9 @@ public struct authorinfo (
 )
 
 public rectype footnote {
-  Footnote( footnoteNum : string, footnoteContent : (inlineContext) -> string  )
+  Footnote( footnoteNum : string, 
+            footnoteContent : (inlineContext) -> string,
+            footnoteCaption : string  )
 }
 
 public function fmtCmd( context : inlineContext, cmd : string, txt : string, attrs : attrs = attrsNone ) : string {
