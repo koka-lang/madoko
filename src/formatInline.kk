@@ -574,7 +574,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
 
   txt = attrsd.transformText(txt0,context.labels,context.metadata)
   match(attrsd.input) {
-    Pre      -> context.fmtCode(sname, txt, attrsd) // todo: sname as env name?
+    Pre      -> context.fmtCode("", txt, attrsd) // todo: use sname as env name?
     Math     -> context.fmtMath(False,txt,attrsd)
     MathPre  -> context.fmtMath(False,txt.mathPre,attrsd)
     Raw(monly) -> {

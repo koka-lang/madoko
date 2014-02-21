@@ -16,6 +16,8 @@ Email       : http://foobar.com/~someone
 Bib Search Url: www.google.com
 ~a: .tex-tooltip
 
+.mono: input=pre language="" 
+
 [TITLE]
 
 ## Contents			{-}
@@ -24,7 +26,7 @@ Bib Search Url: www.google.com
 
 ## Abstract 		{-}
 
-We propose a programming model where effects are treated in a disciplined way, 
+We propose a [programming]{.mono} model where effects are treated in a disciplined way, 
 and where the potential side-effects of a function are apparent in its type
 signature. The type and effect of expressions can also be inferred
 automatically, and we describe a polymorphic type inference system based on
