@@ -277,8 +277,10 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
               Just(cap) -> (cap.groups[1],cap.groups[2])
               Nothing   -> ("",md)
             }
-  caption = (authors + "\n" + title).replaceAll("\n","&nl;").replaceAll("'","&apos;").replaceAll("\\","&bslash;")
-  search  = (title + "+" + authors).replaceAll(rxSpaces,"+").replaceAll(rxNonSearch,"%20")
+  caption = (authors + "\n" + title).replaceAll(rxNewblock,"&nl;")
+                .replaceAll("\n"," ").replaceAll("'","&apos;").replaceAll("\\","&bslash;")
+                .replaceAll(rxSpaces," ").trim
+  search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
 
   //trace("bibitem: lab: " + labx + " -> " + lab)
   "~ Begin Bibitem { id='" + key.definitionId + "' " + 
@@ -291,10 +293,11 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
 }
 
 
+val rxNewblock = regex(@"\[\s*\]\{\s*\.newblock\s*\}\s*")
 val rxSpaces = regex(@"\s+")
-val rxNonSearch = regex(@"(&#?\w+;|" + rxTexCmd + @"|[^\w\+\-])+")
+val rxNonSearch = regex(@"(&#?\w+;|\]\{[^\}]*\}|[^\w\+\-])+|\b(?:\d\w+|[\w\+\-]{1,3}\b)")
 
-val rxAuthorTitle = regex(@"^\s*(.*?)(?:\n?\[\]\{\.newblock\}\s*|\n\s*)(.*?)(?:\n?\[\]\{\.newblock\}|\n)")
+val rxAuthorTitle = regex(@"^\s*(.*?(?:\n?\[\]\{\.newblock\}\s*))(.*?)(?:\n?\[\]\{\.newblock\})")
 
 public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
 
