@@ -374,5 +374,6 @@ val entities : list<entity> = [
   Entity("bcheckmark", 10004, @"\ding{52}", False ),   
   Entity("xmark", 10007, @"\ding{55}", False ),
   Entity("bxmark", 10008, @"\ding{56}", False ),   
+  Entity("mglass", 128270, @"\mdUnicode{128270}", False )
 ]
 
