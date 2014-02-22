@@ -230,8 +230,10 @@ function mapBlocks( blocks : list<block>,
     nblock = action(previousIsPar,block)
   
     match(nblock) {
-      Para -> previousIsPar := True
-      Div  | nblock.blockName == "figure" -> ()  // leave as is
+      Para        -> previousIsPar := True
+      Div(_,xs)   | nblock.blockName == "figure" || xs.hasClass("float") -> ()  // leave as is
+      Div(_,xs)   | xs.hasClass("para-end") -> previousIsPar := True
+      Code(_,_,xs)| xs.hasClass("para-end") -> previousIsPar := True
       DefLink     -> ()
       DefFootnote -> ()
       _    -> previousIsPar := False
