@@ -489,7 +489,6 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 [Euler]: http://en.wikipedia.org/wiki/Euler's_number
 ~~
 
-
 An implicit link such as `[#myheading]` is a shorthand for an explicit link of
 the form `[&myheading;](#myheading)`, i.e. a local reference
 to `#myheading` which displays the entity `&myheading;`. In Madoko, an entity
@@ -505,6 +504,11 @@ used in the following example to suppress the default numbering:
 ### A labeled heading     { - #myheading1 label="my label" }
 Let's refer to Section [#myheading1].
 ~
+
+Also, any local link, like "Section [#myheading]" or a citation like
+"[@Goo93]", displays a tooltip when hovering above it. The tooltip content
+is determined by the `caption` attribute of the target element.
+For headings, this is by default the heading text.
 
 ## Figures and images { #sec-figure }
 
@@ -1549,6 +1553,35 @@ For the four cases in textual style, we get  "@Goo93", "+@Goo93", "-@Goo93", and
 See Appendix [#sec-custom-cite] on how to customize citations styles further,
 and Appendix [#sec-custom-bib] on how to write your bibliography entries
 by hand without using BibTeX.
+
+### Bibliography tooltips and searches
+
+By default, the HTML backend shows a tooltip when hovering over  a citation
+(try it [@Goo93]). This functionality is by default disabled in the LaTeX
+backend. However, you can enable tooltips in PDF too by setting the
+`.tex-tooltip` class through a metadata rule:
+
+    ~a: .tex-tooltip
+
+This will display a small yellow text baloon in the PDF file that shows a
+tooltip when hovering above it:
+
+~ Center
+![tooltip].
+~
+
+[tooltip]: tooltip.png "A citation tooltip in PDF" { width=300px }
+
+Moreover, Madoko adds to each bibliography entry a magnifying glass icon 
+([&mglass;](http://www.google.com/search?q=Goossens+Mittelbach+Samarin+Latex+Companion){.bibsearch}) 
+that links to a web search for that reference. You can customize the search 
+engine that is used by setting the `Bib Search Url` metadata key:
+
+    Bib Search Url: www.google.com
+
+If you set the `Bib Search Url` to `false` (or empty), Madoko will disable search icons.
+Again, this functionality is disabled by default in the LaTeX backend unless you 
+set the `Bib Search Url` key explicitly.
 
 ## Custom blocks    { #sec-custom }
 
@@ -2658,6 +2691,19 @@ block, you can put `Bibitem` blocks for each bibliography entry. For example:
     ACM Trans. Comput. Logic, 4(1):1--32, 2003.
     ~~
 
+Moreover, you can add a `caption` that is displayed when hovering over a
+citation, and a `searchterm` that is used when the user clicks on the
+magnifying glass icon:
+
+    ~~ Bibitem { #WadlerThiemann03 \
+       caption="Wadler and Thiemann: \
+                The marriage of effects and monads" \
+       searchterm="Wadler+Thiemann+Marriage+Effects+Monads" }
+    Philip Wadler and Peter Thiemann.
+    _The marriage of effects and monads._
+    ACM Trans. Comput. Logic, 4(1):1--32, 2003.
+    ~~
+
 The above example is for numeric style citations.
 For author-year citations, the entry should have an explicit `cite-label`:
 
@@ -3294,6 +3340,7 @@ full list of predefined entities is:
 |  10004 | bcheckmark* | &#10004; |                       |
 |  10007 | xmark*      | &#10007; |                       |
 |  10008 | bxmark*     | &#10008; |                       |
+|  128270| mglass*     | &#128270;|                       |
 |--------|-------------|----------|-----------------------|
 { .long .booktable }
 
@@ -3358,8 +3405,14 @@ formatting).
 .booktable:  
     rule-top-width=2px rule-bottom-width=2px 
     rule-mid-width=1.35px th-font-weight=normal     
-    rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
+    rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt
     th-padding-top=3pt th-padding-bottom=3pt    
+
+~Bibitem: replace='?if &bib-search-url; && &searchterm;\
+                   ?then &source; [&mglass;]\
+                         (http://&bib-search-url;/search\
+                          ?q=&searchterm;){.bibsearch}'"
+@html Bib Search Url: www.bing.com"
 
 ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
     before='[**Theorem\ &label;.** ]{.Theorem-before}'

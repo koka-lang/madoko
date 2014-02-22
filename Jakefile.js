@@ -118,6 +118,8 @@ desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTe
 task("doc", [], function() {
   var docout = path.join("doc","out")
   args = Array.prototype.slice.call(arguments).join(" ");
+  var pngs = new jake.FileList().include(path.join("doc","*.png"));
+  copyFiles("doc",pngs.toArray(),docout);  
   mdCmd = "node lib/cli.js -v --odir=" + docout + " " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
   jake.log("> " + mdCmd);
   jake.exec(mdCmd, function() {
