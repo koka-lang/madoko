@@ -1,0 +1,29 @@
+Title	: Examples
+
+<style>
+p { margin: 0pt; }
+p.indent { text-indent: 1em; }
+</style>
+
+# Examples
+
+Here is some code:
+```
+function foo();
+```
+and another paragraph.
+
+and another paragraph.
+``` { .para-end }
+function bar();
+```
+and the paragraphs following with an indent.
+{.indent}
+
+and another paragraph.
+With cleared code:
+``` { .para-end }
+function bar();
+```
+and the paragraphs following.
+
