@@ -86,20 +86,19 @@ and Madoko provides many essential additions:
 
 * Extensive support for labeling and in-document [references][#sec-ids-labels].
 * [Tables][#sec-table] with custom borders, column alignment, multicolumn spans, colors etc.
-* Extensive [citation][#sec-bib] support, using standard BibTeX entries and BibTeX styles.
-* Automatic and customizable [numbering][#sec-numbering] of sections, figures, etc. 
-* Title page and table-of-contents [generation][#sec-special].
-* Support for [custom text elements][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
+* Great [citation][#sec-bib] support, using standard BibTeX entries and styles.
+* Excellent support for static [syntax highlighting][#sec-code] code fragments.
+* Automatic [numbering][#sec-numbering] of sections, figures, etc. 
+* Title page and [table-of-contents][#sec-special] generation.
+* Support for [custom blocks][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
 * Styling for both HTML and LaTeX output through [standard CSS attributes][#sec-css].
-* Powerful styling through [attributes][#sec-attr], [metadata rules][#sec-rules] and 
+* Powerful styling through attributes, [metadata rules][#sec-rules] and 
     [replacement rules][#sec-replace].
-* Support for static [syntax highlighting][#sec-code] and 
-    code with [mathematical formatting][#sec-mathpre].
-* Excellent support for advanced [mathematics][#sec-math] and powerful packages like
+* Excellent support for [advanced mathematics][#sec-math] and powerful packages like
     TikZ and PSTricks with hi-resolution images in web pages.
 * Create great [presentations][#sec-presentations] for both the web and in print.
 * Compatible with most common Markdown extensions, such as [footnotes][#sec-footnotes], 
-    [mathematics][#sec-math], etc. 
+    [mathematics][#sec-math], [attributes][#sec-attr], etc. 
 
 Instead of a plethora of backends, Madoko concentrates on generating either
 HTML or high-quality PDF files through [LaTeX]. There has been a lot of effort
@@ -185,11 +184,12 @@ Madoko is free software available under the [Apache 2.0 license] at [madoko.code
 
 The easiest way to use Madoko is as a command line tool using Node.js (which
 works on many platforms, like Windows, MacOSX, Linux etc). Madoko can also run
-inside a web browser or as a .NET executable. To install under Node.js is very
+inside a web browser or as a .NET executable. Installation under Node.js is very
 easy:
 
-* Ensure you have [Node.js] installed on your system.
-* Open a command line window and run:\
+* Ensure you have [Node.js] installed on your system (and ensure that the
+    Node installation directory is in your `PATH`).
+* Open a command line window and run the Node package manager to install Madoko:\
   `npm install madoko -g`
 
 and you are done. Translating a markdown document is done simply as:
@@ -211,7 +211,6 @@ Appendix [#sec-commandline].
 
 [MikTeX]: http://miktex.org/
 [MacTeX]: http://tug.org/mactex/
-
 
 # Syntax: Inline elements
 
@@ -1100,7 +1099,7 @@ to typeset a the graph of the natural logarithm[^ex-log]:
     [PSTricks example gallery](http://tug.org/PSTricks/main.cgi?file=pst-plot/FunctionExamples#paraplot).
 
 The next two figures, Figure [#fig-oblique] and Figure [#fig-mergesort] use
-the [TikZ] package which we included as:
+the modern [TikZ/Pgf][TikZ] package which we included as:
 ```
 Package     : tikz
 Tex Header  : \usetikzlibrary{decorations.pathreplacing%
@@ -1251,10 +1250,47 @@ Both examples come from the [TikZ example gallery].
 ~ 
 ~ End Figure
 
-The final examples in Figure [#fig-barchart] use the TikZ `pgfplots` library:
+The `pgfplots` library is an extension of TikZ/Pgf to display plots:
 
     Package: pgfplots
+
+Drawing plots can be done either using math formulas or by giving direct data points:
+
+~ Begin Sample
+Using the `pgfplots` package we can draw nice plots:
+~ Snippet
+\begin{tikzpicture}
+\begin{axis}[
+  height=8cm,
+  width=8cm,
+  grid=major,
+]
+% math plot
+\addplot {-x^5 - 242}; 
+\addlegendentry{model}
+% data plot
+\addplot coordinates {
+(-4.77778,2027.60977)
+(-3.55556,347.84069)
+(-2.33333,22.58953)
+(-1.11111,-493.50066)
+(0.11111,46.66082)
+(1.33333,-205.56286)
+(2.55556,-341.40638)
+(3.77778,-1169.24780)
+(5.00000,-3269.56775)
+};
+\addlegendentry{estimate}
+\end{axis}
+\end{tikzpicture}
+~
+~ End Sample
+
+The final examples in Figure [#fig-barchart] also use the `pgfplotstable` library:
+
     Package: pgfplotstable
+
+to display bar charts.
 
 [bchart1]: http://stackoverflow.com/questions/4902147/latex-bar-chart
 [bchart2]: http://tex.stackexchange.com/questions/99832/how-to-draw-bar-chart-using-tikz
@@ -1803,13 +1839,13 @@ Any metadata key and value can be given (and referred to using
     ```
     the top headings will map to `<h2>` or `\section` elements instead.
 
-* `Section Base` (=1): Specify at what heading level (and lower) Madoko will
-    wrap `<section>` elements around the content. This is especially useful
-    for presentations where each slide is generally represented by a `Section`
-    (see Appendix [#sec-presentations]).
+* `Section Depth` (=0): Maximal heading level where `<section>` elements are wrapped
+    around the content. The default value ensures no section wrapping takes place.
 
-* `Section Depth` (=0): Maximal heading level where section elements are wrapped
-    around the content. The default value ensure no section wrapping takes place.
+* `Section Base` (=1): All headings at `Section Base` and lower are treated
+    as equal for the purpose of wrapping `<section>` elements around the content.
+    This is especially useful for presentations where we would like to start
+    slides equally for headings at level 1 and 2 (see Appendix [#sec-presentations]).
 
 * `Bib` or `Bibliography`: Specify a bibliography (`.bib`) file to be used by
     the BibTeX tool to generate a list of references (see Section [#sec-bib]).
@@ -2608,10 +2644,13 @@ Here is a small [example slide show][slide] written in Madoko
 
 The HTML backend works with the [reveal.js] library:
 
-* It expects the reveal.js library to be in a subdirectory "reveal.js".
-  You can use another url by setting the `Reveal Url` metadata key.
+* It expects the reveal.js [library][github-reveal] to be in a subdirectory "reveal.js".
+  You can use another url by setting the `Reveal Url` metadata key, for example:
+  ```
+  Reveal Url: http://lab.hakim.se/reveal-js
+  ```
 * Select another default theme by setting the `Reveal Theme`, like `sky` for example.
-* Use the `data-background` attribute on headers to set the background color or
+* Use the `data-background` attribute on headings to set the background color or
     background image for a slide.
 * The Javascript `revealConfig` variable contains the default configuration options
     and can be extended inside `<script>` tags.
@@ -2626,7 +2665,7 @@ The LaTeX backend uses the [Beamer] package:
 
 [Reveal.js]: http://lab.hakim.se/reveal-js/#/
 [Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
-
+[Github-reveal]: https://github.com/hakimel/reveal.js/releases
 
 
 
