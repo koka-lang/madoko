@@ -4,6 +4,7 @@ Heading Base: 2
 
 Doc Class	  : article
 Bib       	: ../test
+Pdf Latex   : pdflatex
 
 Author      : Daan Leijen
 Affiliation : Microsoft Research
