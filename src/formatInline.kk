@@ -530,7 +530,7 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
               if (txt.startsWith("#")) {
                 warning( "reference to missing id: " + txt)
               }
-              elif (context.labels[("#"+txt).definitionId].isJust) {
+              elif (context.labels[id].isJust) {
                 warning( "possibly forgot '#' to reference id: " + txt)
               }
               else {
