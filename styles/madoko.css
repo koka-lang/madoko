@@ -355,7 +355,7 @@ body.madoko {
 }
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt {
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace;
   font-size: 0.85em;
 }
@@ -367,6 +367,16 @@ body.madoko {
 .madoko ol.linenums li {
   background-color: white;
   list-style-type: decimal;
+}
+
+/* ---------------------------------------------------
+   Print settings
+----------------------------------------------------*/
+
+@media print {
+  body.madoko {
+    font-size: 10pt;
+  }
 }
 
 /* ---------------------------------------------------
