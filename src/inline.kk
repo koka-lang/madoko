@@ -44,6 +44,7 @@ public rectype inlineContext {
                  verbose    : int,
                  mathStatic : bool,
                  highlight  : bool,
+                 starBold   : bool,
 
                  xfmtCmd : (ctx:inlineContext,cmd:string,body:string,attrs:attrs) -> string,
                  xfmtEscape : (ctx:inlineContext,body:string,allowEntity:bool) -> string,
@@ -129,6 +130,7 @@ public function copy( self : inlineContext,
                        verbose : int = self.verbose,
                        mathStatic : bool = self.mathStatic,
                        highlight : bool = self.highlight,
+                       starBold : bool = self.starBold,
                        xfmtCmd = self.xfmtCmd,
                        xfmtEscape = self.xfmtEscape,
                        xfmtLink = self.xfmtLink,
@@ -141,7 +143,7 @@ public function copy( self : inlineContext,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,
-                 citestyle,sanitize,bench,verbose,mathStatic,highlight,
+                 citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
                  xfmtEnv, xfmtCodePlain, xfmtCodeHilite,fmt )
 }

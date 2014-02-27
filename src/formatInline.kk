@@ -106,11 +106,12 @@ public function inlineContext( fmt : formatter,
                                bench: bool = False,
                                verbose : int = 0,
                                mathStatic : bool = False,
-                               highlight : bool = True ) : inlineContext
+                               highlight : bool = True,
+                               starBold : bool = False ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
                  metadata, mathinfos, 
-                 citestyle, sanitize, bench, verbose, mathStatic, highlight,
+                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 
@@ -228,11 +229,13 @@ function inlineQuot( cap : matched, context ) : string {
 }
 
 function inlineStrong( cap : matched, context ) : string {
-  context.fmtCmd("strong", formatInline(context,cap.groups[1]))  
+  tag = if (context.starBold && cap.matched.startsWith("_")) then "em" else "strong"
+  context.fmtCmd(tag, formatInline(context,cap.groups[1]))
 } 
 
-function inlineEmph( cap : matched, context ) : string {
-  context.fmtCmd("em", formatInline(context,cap.groups[1]))  
+function inlineEmph( cap : matched, context ) : string {  
+  tag = if (context.starBold && cap.matched.startsWith("*")) then "strong" else "em"
+  context.fmtCmd(tag, formatInline(context,cap.groups[1]))  
 } 
 
 function inlineSup( cap : matched, context ) : string {

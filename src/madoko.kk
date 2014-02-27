@@ -63,7 +63,7 @@ function markdownNormal( src0 : string, options0 : options = Options(), fmt : fo
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
                                     options.mathmode.isStatic,
-                                    options.highlight) 
+                                    options.highlight,options.starBold) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseBody(initialFormatContext(icontext,options.titleInfo(icontext.metadata),

@@ -72,6 +72,7 @@ public struct options(
   headingBase   : int  = 1, // heading level for #
   sectionMax    : int  = 0, // maximal depth for adding sections (0 = disable)
   sectionBase   : int  = 1, // starting section level.
+  starBold      : bool = False, // use * for bold?
   
   mathmode      : mathmode = Static,  // mode used to render math
   mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
