@@ -26,16 +26,20 @@
 			<string>#metadata</string>
 		</dict>
 		<dict>
-			<key>captures</key>
-			<dict>
-				<key>2</key>
-				<dict>
-					<key>name</key>
-					<string>string source.embedded</string>
-				</dict>
-			</dict>
-			<key>match</key>
-			<string>^(    |\t)(.*)$</string>
+			<key>begin</key>
+			<string>\n\n(    |\t)</string>
+			<key>contentName</key>
+			<string>string source.embedded</string>
+			<key>end</key>
+			<string>^(?!(    |\t))</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>\n\n(    |\t)</string>
+			<key>contentName</key>
+			<string>string source.embedded</string>
+			<key>end</key>
+			<string>^(?!(    |\t))</string>
 		</dict>
 		<dict>
 			<key>match</key>
@@ -207,7 +211,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^\s*(~+)\s*(?i:(Begin)\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs))\b(.*)(\n|$)</string>
+					<string>^\s*(~+)\s*(?i:(Begin)\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs|Graph))\b(.*)(\n|$)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>
@@ -364,6 +368,14 @@
 				<dict>
 					<key>begin</key>
 					<string>^ {0,3}&lt;!--(?!.*?--&gt;)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment</string>
+						</dict>
+					</dict>
 					<key>contentName</key>
 					<string>comment</string>
 					<key>end</key>

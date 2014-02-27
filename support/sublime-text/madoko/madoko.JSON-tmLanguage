@@ -8,10 +8,14 @@
   "patterns": [
     { "include": "#metadata" },
 
-    { "match": "^(    |\\t)(.*)$"
-    , "captures": {
-        "2": { "name": "string source.embedded" }
-      }
+    { "begin": "\\n\\n(    |\\t)"
+    , "end": "^(?!(    |\\t))"
+    , "contentName": "string source.embedded"
+    },
+
+    { "begin": "\\n\\n(    |\\t)"
+    , "end": "^(?!(    |\\t))"
+    , "contentName": "string source.embedded" 
     },
 
     { "match": "^\\s*#+\\s[^{]+"
@@ -161,7 +165,7 @@
         },
 
 
-        { "begin": "^\\s*(~+)\\s*(?i:(Begin)\\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs))\\b(.*)(\\n|$)" 
+        { "begin": "^\\s*(~+)\\s*(?i:(Begin)\\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs|Graph))\\b(.*)(\\n|$)" 
         , "end": "^[ \\t]*\\1\\s*(?i:End[ \\t]+\\3)?\\s*$" 
         , "beginCaptures": { 
             "1": { "name": "entity.name.class markup.block.madoko" },
@@ -218,6 +222,9 @@
         { "begin": "^ {0,3}<!--(?!.*?-->)"
         , "end": "^.*?-->\\s*$\\n?"
         , "contentName": "comment"
+        , "beginCaptures": {
+           "0": { "name": "comment" }
+          }
         , "endCaptures": {
            "0": { "name": "comment" }
           }
