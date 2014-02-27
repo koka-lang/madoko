@@ -238,9 +238,9 @@ public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : 
      tag("table",
       tag("tr", 
        titleinfo.authors.map(fun(author) {
-        tag("td", context.formatInline("[" + author.name + "]{.author}<br>[" + 
-                                             author.address + "]{.affiliation .address}<br>[" +
-                                             author.email + "]{.email}" +
+        tag("td", context.formatInline("[" + author.name + "]{.author}" + 
+                                        (if (author.address!="") then "<br>[" + author.address + "]{.affiliation .address}" else "") +
+                                        (if (author.email!="") then "<br>[" + author.email + "]{.email}" else "") +
                                              (if (author.note=="") then "" else 
                                              "[" + author.note + "]{.note}") )
            ," class='authorblock align-center'")
