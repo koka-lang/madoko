@@ -153,11 +153,14 @@ function inlineNormal( cap : matched, context : inlineContext ) : string {
 } 
 
 function inlineMath( cap : matched, context : inlineContext ) : string {
-  context.fmtMath(False,cap.groups[1],cap.groups[2].parseAttrs)
+  attrs = cap.groups[2].parseAttrs
+  attrsd = context.defaults.matchRules("math-inline",attrs)
+  context.fmtMath(False,cap.groups[1],attrsd)
 }
 
 function inlineMathBlock( cap : matched, context : inlineContext ) : string {
-  context.fmtMath(True,cap.groups[1])
+  attrsd = context.defaults.matchRules("math-display",attrsNone)
+  context.fmtMath(True,cap.groups[1],attrsd)
 }
 
 public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone ) : string {
@@ -170,7 +173,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   lkind  = kind.toLower
   class  = "math-" + lkind
-  attrsd = context.formatAttrs(context.applyDefaults("div", attrs.addClass(class)))
+  attrsd = attrs.addClass(class)
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   texcmd = if (kind=="Inline")
             then context.fmtTexCmd("span", left+txt+right, attrsd)
