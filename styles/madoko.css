@@ -336,7 +336,8 @@ body.madoko {
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
 }
 
-.madoko p {
+.madoko p,
+.madoko li {
   text-align: justify;
 }
 
