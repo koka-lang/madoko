@@ -138,7 +138,7 @@
         , "name": "keyword markup.heading.madoko"
         },
 
-        { "begin": "^(\\s*)([*+\\-]|\\d+\\.)\\s"
+        { "begin": "^(\\s*)([\\*\\+\\-]|\\d+\\.)\\s"
         , "end": "^[ ]{0,3}(?!([ \\t]|$))"
         , "beginCaptures": {
             "0": { "name": "keyword markup.heading.madoko" }
@@ -148,7 +148,7 @@
           ]
         },
 
-        { "match": "^\\s*([*+\\-]|\\d+\\.)\\s"
+        { "match": "^\\s*([\\*\\+\\-]|\\d+\\.)\\s"
         , "name": "keyword markup.heading.madoko"
         },
 

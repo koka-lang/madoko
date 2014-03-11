@@ -224,6 +224,6 @@ function check( cmdOptions : commandOptions ) : io commandOptions
   date = now()
   cmdOptions(installDir=if (cmdOptions.installDir=="") then programPath().dirname else cmdOptions.installDir,
              options=(cmdOptions.options)(metadata=cmdOptions.options.metadata + 
-                                                   [("date",date.isoDate),("time",date.isoTime)]))
+                                                   [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))]))
 }
 

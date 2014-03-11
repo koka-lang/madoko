@@ -1,4 +1,4 @@
-`/*---------------------------------------------------------------------------
+/*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
@@ -268,7 +268,8 @@ div.input-mathpre {
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
-.madoko pre.hljs {
+.madoko pre.hljs,
+.hljs-identifier {
   background-color: white;
   color: black;
 }
@@ -306,7 +307,8 @@ div.input-mathpre {
   font-style: italic;
 }
 
-.hljs-preprocessor, .hljs-preprocessor .hljs-keyword, .hljs-pragma, .hljs-shebang, .hljs-symbol, .hljs-symbol .hljs-string, .diff .hljs-change, .hljs-special, .hljs-attr_selector, .hljs-subst, .hljs-cdata, .clojure .hljs-title, .css .hljs-pseudo, .hljs-header, .hljs-link_label {
+.hljs-preprocessor, .hljs-preprocessor .hljs-keyword, .hljs-pragma, .hljs-shebang, .hljs-symbol, .hljs-symbol .hljs-string, .diff .hljs-change, .hljs-special, .hljs-attr_selector, .hljs-subst, .hljs-cdata, .clojure .hljs-title, .css .hljs-pseudo, .hljs-header, .hljs-link_label,
+.hljs-escape {
   color: gray;
 }
 
@@ -376,6 +378,9 @@ body.madoko {
 @media print {
   body.madoko {
     font-size: 10pt;
+  }
+  @page {
+    margin: 1in 1.5in;
   }
 }
 
