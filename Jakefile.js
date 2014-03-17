@@ -300,6 +300,7 @@ function fileExist(fileName) {
 // i.e. copyFiles('A',['A/B/c.txt'],'D')  creates 'D/B/c.txt'
 function copyFiles(rootdir,files,destdir) {
   rootdir = rootdir || "";
+  jake.mkdirP(destdir);        
   files.forEach(function(filename) {
     // make relative
     var destname = path.join(destdir,(rootdir && filename.lastIndexOf(rootdir,0)===0 ? filename.substr(rootdir.length) : filename));
