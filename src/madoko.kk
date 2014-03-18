@@ -28,13 +28,13 @@ import attributes       // expandKeys
 ---------------------------------------- */
 
 // Takes source markdown input and returns formatted html
-public function markdown( src : string, options : options = initialOptions, fmt : formatter = FmtHtml ) : pure string
+public function markdown( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
 {
   if (options.xmp) then markdownXmp(src,options,fmt) else markdownNormal(src,options,fmt)
 }
 
 // Process only markdown between <xmp> tags 
-function markdownXmp( src : string, options : options = initialOptions, fmt : formatter = FmtHtml ) : pure string
+function markdownXmp( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
 {
   src.replaceAll( rxxmp ) fun(cap) {
     // trace("xmp: " + cap.groups[1])
@@ -49,7 +49,7 @@ public function normalizeSource( src : string ) : string {
 }
 
 // Takes source markdown input and returns formatted html
-function markdownNormal( src0 : string, options0 : options = Options(), fmt : formatter = FmtHtml ) : pure string
+function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
 {  
   // first normalize the input: all tabs to 4 spaces.
   val (options,src) = parseMeta(options0,fmt,src0.normalizeSource)
@@ -126,7 +126,11 @@ function zipAuthors(xs,ys,zs,qs,acc=[]) : div list<authorinfo> {
 
 
 // Export initial options for JavaScript usage
-public val initialOptions = Options()
+public val initialOptions0 = initialOptions();
+
+public function initialOptions() {
+  return Options();
+}
 
 public function traceRuleHist() {
   common/traceRuleHist()

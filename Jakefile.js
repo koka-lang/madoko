@@ -20,6 +20,8 @@ var main      = "madoko";
 var maincli   = "main";
 var sourceDir = "src";
 var outputDir = "lib";
+var web       = "web";
+var webclient = path.join(web,"client");
 
 var kokaDir   = "../koka"
 var libraryDir= path.join(kokaDir,"lib")
@@ -86,6 +88,47 @@ task("clean", function() {
   jake.rmRf(outputDir + "doc");
   jake.rmRf("doc/out");
 });
+
+//-----------------------------------------------------
+// Tasks: web 
+//-----------------------------------------------------
+desc("setup web");
+task("web", ["madoko"], function() {
+  var js = new jake.FileList().include(path.join(outputDir,"*.js"));
+
+  jake.mkdirP(path.join(webclient,"lib","languages"));
+  copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
+  
+  // generate highlight.js web module
+  console.log("adapt highlight.js");    
+  var text = fs.readFileSync("node_modules/highlight.js/lib/highlight.js", {encoding:"utf8"});
+  var hdr = "// do not edit: generated from highlight.js module\n" +
+            "if (typeof define !== 'function') { var define = require('amdefine')(module) }\n" +
+            "define([],function() {\n";
+  var ftr = "return new Highlight();\n});";
+  var content = hdr + text.replace(/ *module\.exports\s*=\s*Highlight;/m, ftr);
+  fs.writeFileSync(path.join(webclient,"highlight.js"), content);
+
+  // and do that for a bunch of languages too
+  var languages = ["bash","clojure","coffeescript","cpp","cs","css","d","erlang"
+                  ,"fsharp","go","haml","haskell","http","java","javascript","json"
+                  ,"lisp","lua","makefile","markdown","mathematica","matlab","objectivec"
+                  ,"ocaml","perl","php","python","r","ruby","rust","scala","sql"
+                  ,"tex","vbnet","vbscript","xml"
+                  ];
+  languages.forEach( function(lang) {
+    console.log("language: " + lang);
+    text = fs.readFileSync("node_modules/highlight.js/lib/languages/" + lang + ".js", {encoding:"utf8"});
+    hdr = "// do not edit: generated from highlight.js module\n" + 
+          "define(['highlight.js'],function(hilite) {\n" +
+          "  hilite.registerLanguage('" + lang + "', function(hljs) {";
+    ftr = "\n  });\n});\n";
+    content = text.replace(/^module\.exports\s*=\s*function\(hljs\) {$/m, hdr)
+                  .replace(/\n\r?};\s*$/, ftr );
+    fs.writeFileSync(path.join(webclient,"lib/languages/" + lang + ".js"), content, {encoding: "utf8"});
+  });
+}); 
+
 
 //-----------------------------------------------------
 // Tasks: test 

@@ -13,13 +13,13 @@ import std/log
 import std/dict
 import std/string
 import std/regex
+import std/crypto
 import common
 import attributes
 import inline
 import htmlFormatter
 import texFormatter
 import texParser   // rxAuthorYear
-import md5
 import entity
 import hilite // inlineMode
 

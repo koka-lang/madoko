@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- madoko style -->
+<link rel="stylesheet" type="text/css" href="../../styles/madoko.css">
+
+<!-- just mathjax stuff for dynamic math type setting.
+     later we will use static images instead generated on the server
+-->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [['$','$']]},
+     TeX: { 
+       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],
+                 mathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mathindent: ['\\hspace{#1ex}',1], mathbr: ['\\\\'],
+               },
+
+     }
+  });
+  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { 
+    MathJax.InputJax.TeX.Definitions.environment['mdMathprearray'] = ['AMSarray',null,null,null,'l','0em','0em'];
+  });
+</script>
+<script type="text/javascript"
+  src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- import madoko -->
+<script data-main='lib/madoko' src='lib/require.js'></script>
+
+<!-- install a handler that calls madoko to typeset -->
+<script>
+var languages = ["javascript","cpp","css","cs","xml","r","markdown","xml"
+                ,"haskell","go","fsharp"]
+                .map(function(name){ return "languages/" + name; });
+
+require(["highlight.js","madoko"].concat(languages), function(hljs,madoko) 
+{
+  var source = document.getElementById("source");
+  var target = document.getElementById("target");
+
+  var text0 = "";
+  var stale = true;
+  function update() {
+    var text = source.value;
+    if (text != text0) {   // set stale but do not update yet (as long as the user types)
+      stale = true;
+      text0 = text;
+    }
+    else if (stale) {      // now update
+      var content = madoko.markdown(text);
+      target.innerHTML = content;
+      MathJax.Hub.Queue(["Typeset",MathJax.Hub,"target"]); // schedule mathjax
+      stale = false;
+    }
+  }
+
+  update();
+  setInterval(update, 500);
+});
+</script>
+
+<!-- styles -->
+<style>
+#target {
+  border: 1px solid black;
+  padding: 0.5em 1em;
+  margin-top: 0.15em;
+}
+
+td {
+  vertical-align: top;
+}
+</style>
+</head>
+
+<body class="madoko">
+<table>
+<tr><td>Edit</td><td>View</td></tr>
+<tr>
+<td>
+<div>
+<textarea id="source" cols=70 rows=30>
+Heading base: 2
+
+# An example   { #example }
+
+Here is a famous equation:
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+And we can refer to Equation [#euler] in Section [#example].
+
+Or to a website like [bing](http://www.bing.com).
+
+```javascript 
+function hi() {
+  return "hello world";
+}
+```
+</textarea>	
+</div>
+</td>
+<td>
+<div id="target">
+</div>
+</td>
+</tr>
+</table>
+</body>
+</html>
