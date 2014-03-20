@@ -1,0 +1,6 @@
+Test `code \/ \a \\ done <test>`.
+Finally, the escape sequence `\/` translates to nothing; this can be very 
+useful to separate certain constructs. For example, emphasis is suppressed
+if the underscores appear inside a word, as in my_example_here. Using the
+empty escape sequence we can emphasize inside words too: to get
+my\/_example_\/here, we can simply write `my\/_example_\/here`.

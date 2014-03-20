@@ -32,8 +32,8 @@
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
-var languages = ["javascript","cpp","css","cs","xml","r","markdown","xml"
-                ,"haskell","go","fsharp"]
+var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
+                ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
 require(["highlight.js","madoko"].concat(languages), function(hljs,madoko) 

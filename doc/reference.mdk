@@ -1073,7 +1073,7 @@ Package: pst-plot
 ```
 to typeset a the graph of the natural logarithm[^ex-log]:
 ~ Begin Sample
-~ Center  {padding=1ex}
+~ Center  {padding=1ex} 
 ~~ Snippet
 \psset{unit=2cm}
 \begin{pspicture*}(-0.5,-1.5)(4,2)

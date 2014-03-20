@@ -319,7 +319,7 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
   function replaceGroups( cap : matched ) {
     i = cap.groups.firstMatchedOn(1,entries.length)
     if (i<=0) return ""
-    match(entries.drop(i-1)) {
+    subst = match(entries.drop(i-1)) {
       Nil -> cap.matched // should never happen
       Cons(entry) -> {
         val (rx,repl) = entry
@@ -331,8 +331,9 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
             repl.replaceAll(rxCaptureGroup, fun(gcap) {
               if (gcap.groups.matchedOn(1)) {
                 j = gcap.groups[1].parseInt.maybe(0,id)
-                // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
-                rcap.groups[j].replaceAll(if (convCase) then rxCaseEsc else rxRegEsc,@"\\$2$1")  
+                if (convCase)
+                 then rcap.groups[j].replaceAll(rxCaseEsc,@"\\$2$1") // escape replacement
+                 else rcap.groups[j]  
               }
               else {
                 gcap.matched
@@ -342,14 +343,15 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
         }
       }
     }
+    if (convCase)
+     then subst.caseConvert // unescape replacement
+     else subst
   }
   
   gtxt = if (flags.contains("g")) 
           then txt.replaceAll(rexp,replaceGroups) 
           else txt.replace(rexp,replaceGroups)
-  if (convCase)
-   then gtxt.caseConvert
-   else gtxt.replaceAll(rxRegEsc,"$1")
+  gtxt
 }
 
 // "?#caption?/././"
@@ -361,34 +363,36 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
   convCase = flags.contains("c")
 
   function replaceGroups( cap : matched ) {
-    rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
+    repl = rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
       if (gcap.groups.matchedOn(1)) {
         i = gcap.groups[1].parseInt.maybe(0,id)
-        // escape \(\|[/ulULE]) to \\(\\|[/uLULE])
-        cap.groups[i].replaceAll(if (convCase) then rxCaseEsc else rxRegEsc,@"\\$2$1")  
+        if (convCase) 
+         then cap.groups[i].replaceAll( rxCaseEsc, @"\\$2$1" ) // escape replacement
+         else cap.groups[i]   
       }
       else {
         gcap.matched
       }
     })
+    if (convCase)
+     then repl.caseConvert  // do case conversion (and unescape replacements)
+     else repl
   }  
   gtxt = if (flags.contains("g")) 
           then txt.replaceAll(rexp,replaceGroups) 
           else txt.replace(rexp,replaceGroups)
   //trace("replace (" + rxText.substr(0,20) + "): '" + txt + "' to '" + gtxt + "'")    
-  if (convCase)
-   then gtxt.caseConvert
-   else gtxt.replaceAll(rxRegEsc,"$1")
+  gtxt
 }
 
 val rxCaptureGroup = regex(@"\\(?:(\d)|\\)")
 val rxCaseEsc = regex(@"\\((\\)|[/ulULE])")
-val rxRegEsc  = regex(@"\\((\\)|[/])")
+//val rxRegEsc  = regex(@"\\((\\)|[/])")
 
 function caseConvert( txt : string ) : string {
   txt.replaceAll(regex(@"\\([\\/E])|\\([ul])(.)|\\([UL])([\s\S]*?)(\\E|$)"), fun(cap) {
     if (cap.groups.matchedOn(1)) {
-      cap.groups[1]
+      cap.groups[1] // unescape
     }
     elif (cap.groups.matchedOn(2)) {
       if (cap.groups[2]=="u") then cap.groups[3].toUpper else cap.groups[3].toLower      
