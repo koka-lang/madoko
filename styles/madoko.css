@@ -42,6 +42,15 @@ p.para-continue {
   margin-top: 0pt;
 }
 
+ul.para-block, ol.para-block {
+  margin-top: 0pt;
+  margin-bottom: 0pt;
+}
+
+ul.para-end, ol.para-end {
+  margin-bottom: 1em;
+}
+
 /* Local page links do not get an underline unless hovering */
 a.localref {
   text-decoration: none;
@@ -358,7 +367,7 @@ body.madoko {
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
 .madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace {
-  font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace;
+  font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
   font-size: 0.85em;
 }
 .madoko pre code {

@@ -1354,7 +1354,7 @@ Label   First   Second  Third
 ~ End Columns
 ~ End Figure
 
-### Advanced: Efficiency of math rendering
+### Advanced: Efficiency of math rendering  { #sec-mathefficiency }
 
 Madoko is quite optimized to render mathematics efficiently, especially
 for math heavy documents which can easily contain thousands of small 
@@ -1371,8 +1371,10 @@ or PDF primitives, like the TikZ and PSTricks packages. In such cases,
 Madoko will render these snippets using `xelatex` to generate a `.pdf`
 file, and [ImageMagick's Convert][convert] program to extract images. However, this
 is not done by default since this method is much (much!) slower than extracting
-from the `.dvi` file. The `.pdf` method is done automatically for any `Snippet`,
-and also for any equation that sets `math-needspdf=true` in its attributes.
+from the `.dvi` file. The `.pdf` method is done automatically for any `Snippet`.
+You can force a `Snippet` to use the `dvi` method by setting `snippet-needspdf=false`
+in its attributes, and dually, you can force the `pdf` method for any
+equation by setting `math-needspdf=true`.
 
 [TikZ]:         http://www.ctan.org/pkg/pgf
 [PSTricks]:     http://ctan.sharelatex.com/tex-archive/graphics/pstricks/base/doc/pstricks-doc.pdf
@@ -2948,6 +2950,10 @@ Some attributes have a special meaning to Madoko. In particular:
     Section [#sec-replace].
 * `start=`_num_: Gives the start number for an ordered list (Section [#sec-lists]).
 * `target=`_frame_: Gives the HTML frame target for a link. 
+* `math-needspdf`: If `true`, forces the `pdf` conversion method for an equation (instead
+    of using `dvi`). This is needed when using fancy LaTeX math using TikZ for example.
+* `snippet-needspdf`: If `false`, uses the `dvi` conversion method for a snippet (instead
+    of using `pdf`). This can improve performance of image extraction. (Section [#sec-mathefficiency]).
 * `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
     block.
 * `id=`_id_: Sets the _id_ of an element. Usually this is done using a hash name directly
@@ -2995,7 +3001,11 @@ Some class attributes are treated specially by Madoko. In particular:
     This is for example done for the `Equation` block since equations are part
     of a paragraph. This improves typography significantly, especially for
     the LaTeX backend. Madoko will also assign the `para-continue` class to the
-    paragraph preceding a `.para-block` element.
+    paragraph preceding a `.para-block` element. 
+* `.para-end`: Normally, equations have a `.para-block` class and are thus 
+    considered part of the paragraph. If you would like such block to be the
+    end of a paragraph, you should assign the `.para-end` class to end it explicitly.
+    In the LaTeX backend this will cause the next paragraph to be indented.    
 * `.indent`. This class is automatically added by Madoko to any paragraph that
     follows other paragraphs or `.para-block`s (and is not inside a list). 
     This can be used to switch
