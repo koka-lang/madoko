@@ -1,3 +1,10 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
 module process 
 
 import std/path
@@ -15,9 +22,6 @@ external import {
   js "path"
 }
 
-public external cwd() : io string {
-  js inline "process.cwd()"
-}
 
 public external system( cmd : string, callback : (int,string,string) -> <io|e> (), timeout : int = 0, cwd : string = "") : <io|e> () {
   js inline "child_process.exec(#1,{timeout:#3,cwd:(#4!=''?#4:null),windowsVerbatimArguments:true},function(err,stdout,stderr) { (#2)(err?err.code:0,stdout,stderr); });"
@@ -49,13 +53,6 @@ public function tryReadFileSync( fname : string ) : io maybe<buffer> {
   onExn( Nothing, { b = readFileSync(fname); Just(b) } )
 }
 
-public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
-  fnames = Cons("",dirs).map(fun(dir){ combine(dir,fname) })
-  fnames.foreachUntil fun(f) {
-    if (f.fexists) then Just(f) else Nothing
-  }
-}
-
 
 public external readFileSync( fileName : string ) : io buffer
 {
@@ -72,18 +69,6 @@ public function tryUnlink( fname : string ) : io ()
   ignore( { fname.unlink } )
 }
 
-public external fexists( fname : string ) : io bool {
-  js inline "(fs.existsSync(#1) != 0)"
-}
-
-public external mkdir( dir : string, mode : int = 0x1FF ) : io () {
-  js inline "fs.mkdirSync(#1,#2)"
-}
-
-public external mkdirp( dir : string, mode : int = 0x1FF ) : io () {
-  js inline "require('mkdirp').sync(#1,#2)"
-}
-
 public external rename( fnameOld : string, fnameNew : string ) : io () {
   js inline "fs.renameSync(#1,#2)"
 }
@@ -92,6 +77,3 @@ public function tryRename( fnameOld : string, fnameNew : string ) : io () {
   ignore( { rename(fnameOld,fnameNew) })
 }
 
-public external relative( from : string, to : string ) : io string {
-  js inline "path.relative(#1,#2)"
-}

@@ -227,3 +227,29 @@ function check( cmdOptions : commandOptions ) : io commandOptions
                                                    [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))]))
 }
 
+
+public function getDocName( opts : options ) : string {
+  match(opts.metadata.find(fun(kv) { kv.fst == "docname" })) {
+    Just(kv) -> kv.snd + ": "
+    Nothing  -> ""
+  }
+}
+
+function cutoff( s : string, n : int ) : string {
+  if (n<=1) return s
+  s.lines.map(fun(line) { 
+    if (line.length >= n) then line.substr(0,n-1) + "\n" + line.substr(n-1) else line
+  }).unlines
+}
+
+public function indent( opts : options, s : string ) : string {
+  s.cutoff(78).lines.map(fun(line) { "  " + line }).unlines
+}
+
+public function print( opts :options, msg : string, level : int = 1  ) {
+  if (opts.verbose >= level) println(opts.indent(opts.getDocName + msg))
+}
+
+public function printErr( opts :options, msg : string, level : int = 0  ) {
+  if (opts.verbose >= level) println(opts.indent(msg))
+}
