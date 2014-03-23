@@ -36,14 +36,19 @@ var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
-require(["highlight.js","webmain"].concat(languages), function(hljs,madoko) 
+require(["highlight.js","std_core","std_path","storage","webmain"].concat(languages), 
+          function(hljs,stdcore,stdpath,storage,madoko) 
 {
   var options = madoko.initialOptions();
+  var images  = {};
+  options.imginfos = images;
+
   var source = document.getElementById("source");
   var target = document.getElementById("target");
 
   var text0 = "";
   var stale = true;
+
   function update() {
     var text = source.value;
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
@@ -61,8 +66,44 @@ require(["highlight.js","webmain"].concat(languages), function(hljs,madoko)
 
   update();
   setInterval(update, 500);
+
+  function documentAppend( txt ) {
+    source.value = source.value + txt;
+  }
+
+  function handleUploadImages(evt) {
+    var files = evt.target.files; // FileList object
+
+    // files is a FileList of File objects. List some properties.
+    for (var i = 0, f; f = files[i]; i++) {
+        // Only process image files.
+        if (!f.type.match('image.*')) {
+          continue;
+        }
+    
+        var reader = new FileReader();
+
+        // Closure to capture the file information.
+        reader.onload = (function(file) {
+          return function(loadEvt) {
+            var title = file.name;
+            var content = loadEvt.target.result;
+            stdcore.println("image: " + file.name);
+            options.imginfos = madoko.addImage(options.imginfos,file.name,content);
+            documentAppend( "\n[" + stdpath.stemname(file.name) + "]: " + file.name );
+            //madoko.writeTextFile(file.name,content);
+          };
+        })(f);
+
+        // Read in the image file as a data URL.
+        reader.readAsDataURL(f);
+    }
+  }
+
+  document.getElementById('uploadImages').addEventListener('change', handleUploadImages, false);
 });
 </script>
+
 
 <!-- styles -->
 <style>
@@ -97,6 +138,8 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 
 And we can refer to Equation [#euler] in Section [#example].
 
+Here is an image ![arborbw-small].
+
 Or to a website like [bing](http://www.bing.com).
 
 ```javascript 
@@ -104,6 +147,7 @@ function hi() {
   return "hello world";
 }
 ```
+
 </textarea>	
 </div>
 </td>
@@ -113,5 +157,11 @@ function hi() {
 </td>
 </tr>
 </table>
+
+<p>
+Add images:
+<input type="file" id="uploadImages" name="files[]" multiple title="Add images"></input>
+</p>
+
 </body>
 </html>

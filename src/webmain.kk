@@ -13,6 +13,7 @@ import std/dict
 import common
 import options
 import driver
+import storage
 
 public function initialOptions( args : string = "" ) : io options {
   if (args=="") return Options()
@@ -22,6 +23,17 @@ public function initialOptions( args : string = "" ) : io options {
 
 val coptions = CommandOptions()
 
+public function writeTextFile( fileName : string, content : string ) : io () {
+  storage/writeTextFileSync( fileName, content )
+}
+
+public function addImage( images : dict<imginfo>, imageName : string, data : string ) : dict<imginfo> {
+  images + dict([(imageName,Imginfo(imageName,data))])
+}
+
+public function println( content : string ) : io () {
+  std/core/println( content )
+}
 public function markdown( inputName : string, input : string, options : options,
                           continue: (output:string,options:options) -> io () ) : io () 
 { 
