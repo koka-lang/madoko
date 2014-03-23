@@ -5,6 +5,25 @@
 <!-- madoko style -->
 <link rel="stylesheet" type="text/css" href="../../styles/madoko.css">
 
+<!-- monaco style -->
+<style type="text/css">
+  #editor {
+    position: relative;
+    border: 1px solid black;
+    height: 60ex;
+  }
+</style>
+
+<!-- Theme CSS must be loaded statically for now -->
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" src="lib/vs/loader.js"></script>
+<script>
+  require.config({
+    baseUrl: "lib"
+  });
+</script>
 
 <!-- just mathjax stuff for dynamic math type setting.
      later we will use static images instead generated on the server
@@ -28,8 +47,6 @@
 </script>
 
 
-<!-- import madoko -->
-<script data-main='lib/webmain' src='lib/require.js'></script>
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
@@ -37,15 +54,23 @@ var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
-require(["highlight.js","std_core","std_path","storage","webmain"].concat(languages), 
+require(["highlight.js",
+         "std_core","std_path","storage","webmain",
+         "vs/editor/editor.main"].concat(languages), 
           function(hljs,stdcore,stdpath,storage,madoko) 
-{
+{  
   var options = madoko.initialOptions();
   var images  = {};
   options.imginfos = images;
 
-  var source = document.getElementById("source");
-  var target = document.getElementById("target");
+  var initial = document.getElementById("initial");
+  var view = document.getElementById("view");
+
+  var editor = Monaco.Editor.create(document.getElementById("editor"), {
+    value: initial.innerText,
+    mode: "text/x-web-markdown"
+  });
+
 
   var text0 = "";
   var stale = true;
@@ -54,14 +79,14 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
   var imgDir  = "img";
 
   function serverRun() {
-    var text = source.value;
+    var text = editor.getValue();
     // TODO: schedule run on server
     // send: document, and other files (like .bib and include files (but not images))    
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
   }
 
   function update() {
-    var text = source.value;
+    var text = editor.getValue();
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
       stale = true;
       text0 = text;
@@ -69,21 +94,22 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
     else if (stale) {      // now update
       stale = false;
       madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
-        target.innerHTML = content;
+        view.innerHTML = content;
         if (runOnServer) {
           serverRun();
         }
-        MathJax.Hub.Queue(["Typeset",MathJax.Hub,"target"]); // schedule mathjax
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax
       });
     }
   }
 
   function documentInsert( txt ) {
-    var content = source.value;
-    var i = source.selectionStart;
-    var pre = content.substr(0,i-1);
-    var post = content.substr(i);
-    source.value = pre + txt + post;
+    var pos = editor.viewModel.cursors.lastCursorPositionChangedEvent.position;
+    editor.model._insertText([],pos,txt);
+    //var content = editor.getValue();
+    //var pre = content.substr(0,i-1);
+    //var post = content.substr(i);
+    //editor.setValue( pre + txt + post );
   }
 
   function handleUploadImages(evt) {
@@ -105,7 +131,6 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
             var fileName = imgDir + "/" + file.name;
             var name     = stdpath.stemname(file.name); 
             stdcore.println("image: " + fileName);
-            stdcore.println("index: " + source.selectionStart );
             options.imginfos = madoko.addImage(options.imginfos,fileName,content);
             documentInsert( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n' );
             //madoko.writeTextFile(file.name,content);
@@ -127,25 +152,55 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
 
 <!-- styles -->
 <style>
-#target {
+#view {
   border: 1px solid black;
   padding: 0.5em 1em;
   margin-top: 0.15em;
+  height: 60ex;
 }
 
 td {
   vertical-align: top;
 }
+
+table#editview {
+  width: 100%;
+}
+
+td#editor-cell, td#view-cell {
+  width: 50%;
+}
+
+#koka-console {
+  height: 10ex;
+}
 </style>
 </head>
 
-<body class="madoko">
-<table>
+<body>
+
+<p>
+Insert image:
+<input type="file" id="uploadImages" name="files[]" title="Add images" accept="image/*"></input>
+</p>
+
+<table id="editview">
 <tr><td>Edit</td><td>View</td></tr>
 <tr>
+<td id="editor-cell">
+<div id="editor"></div>
+</td>
+<td id="view-cell">
+<div id="view">
+</div>
+</td>
+</tr>
 <td>
-<div>
-<textarea id="source" cols=70 rows=30>
+<div id="koka-console" class="monospace"></div>
+</td>
+</table>
+
+<div id="initial" style="display:none">
 Heading base: 2
 
 # An example   { #example }
@@ -167,21 +222,7 @@ function hi() {
   return "hello world";
 }
 ```
-
-</textarea>	
-</div>
-</td>
-<td>
-<div id="target">
-</div>
-</td>
-</tr>
-</table>
-
-<p>
-Insert image:
-<input type="file" id="uploadImages" name="files[]" title="Add images" accept="image/*"></input>
-</p>
+</div>  
 
 </body>
 </html>
