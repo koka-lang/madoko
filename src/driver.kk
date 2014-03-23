@@ -32,7 +32,7 @@ public struct runners(
 public function processContent( inName : string, outName : string, content : string, 
                           opts : commandOptions, firstTime : bool = False,
                           runners : runners,
-                          continue : (string,string,string,options) -> io () ) : io () 
+                          continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
 {
   styleDir = opts.installDir + "/../styles"
   content.include(False, outName, [".",inName.dirname,outName.dirname,styleDir]) fun(icontent) {

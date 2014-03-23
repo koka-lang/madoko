@@ -28,7 +28,7 @@
 
 
 <!-- import madoko -->
-<script data-main='lib/madoko' src='lib/require.js'></script>
+<script data-main='lib/webmain' src='lib/require.js'></script>
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
@@ -36,8 +36,9 @@ var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
-require(["highlight.js","madoko"].concat(languages), function(hljs,madoko) 
+require(["highlight.js","webmain"].concat(languages), function(hljs,madoko) 
 {
+  var options = madoko.initialOptions();
   var source = document.getElementById("source");
   var target = document.getElementById("target");
 
@@ -50,10 +51,11 @@ require(["highlight.js","madoko"].concat(languages), function(hljs,madoko)
       text0 = text;
     }
     else if (stale) {      // now update
-      var content = madoko.markdown(text);
-      target.innerHTML = content;
-      MathJax.Hub.Queue(["Typeset",MathJax.Hub,"target"]); // schedule mathjax
       stale = false;
+      madoko.markdown("document",text,options, function(content,options1) {
+        target.innerHTML = content;
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub,"target"]); // schedule mathjax
+      });
     }
   }
 

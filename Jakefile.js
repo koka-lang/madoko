@@ -37,9 +37,6 @@ var kokaCmd = kokaExe + " " + kokaFlags + " -c -o" + outputDir + " --outname=" +
 //-----------------------------------------------------
 task("default",["madoko"]);
 
-
-
-
 desc(["build madoko.",
       "  madoko[--target=cs] # generate .NET binary."].join("\n"));
 task("madoko", [], function(rebuild) {
@@ -92,8 +89,18 @@ task("clean", function() {
 //-----------------------------------------------------
 // Tasks: web 
 //-----------------------------------------------------
+desc("build web madoko")
+task("web", [], function() {
+  var args = Array.prototype.slice.call(arguments).join(" ")
+  var cmd = kokaCmd + " -v -l " + args + " " + "web" + maincli
+  jake.logger.log("> " + cmd);
+  jake.exec(cmd, {interactive: true}, function(err) {
+    complete();
+  });
+},{async:true})
+
 desc("setup web");
-task("web", ["madoko"], function() {
+task("webcopy", ["web"], function() {
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
 
   jake.mkdirP(path.join(webclient,"lib","languages"));

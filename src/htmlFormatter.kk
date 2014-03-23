@@ -74,7 +74,11 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
-    "<img src=\"" + link.href.escape + "\"" +
+    val href = match (context.imginfos[link.href]) {
+      Just(info) | info.imageData != "" -> info.imageData 
+      _          -> link.href.escape
+    }
+    "<img src=\"" + href + "\"" +
       (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       (if (content != "") then " alt=\"" + content.escape + "\"" else "") +
       link.linkattrs.htmlFormat("img",context.sanitize) + ">"

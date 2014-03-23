@@ -99,7 +99,8 @@ public struct options(
   convert       : string = "convert", // used to extract png's from pdf for math that needs it
   
   metadata      : metadata = [],
-  mathdim       : dict<mathinfo> = dict()   // static math dimension information
+  mathdim       : dict<mathinfo> = dict(),  // static math dimension information
+  imginfos      : dict<imginfo> = dict()    // image data, used in a browser
 );
 
 public function getPdflatex( opts : options ) : string {
