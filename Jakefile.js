@@ -20,6 +20,7 @@ var main      = "madoko";
 var maincli   = "main";
 var sourceDir = "src";
 var outputDir = "lib";
+var styleDir  = "styles";
 var web       = "web";
 var webclient = path.join(web,"client");
 
@@ -101,10 +102,15 @@ task("web", [], function() {
 
 desc("setup web");
 task("webcopy", ["web"], function() {
+  // copy all madoko sources
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
-
   jake.mkdirP(path.join(webclient,"lib","languages"));
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
+  
+  // copy style files
+  var js = new jake.FileList().include(path.join(styleDir,"*"));
+  jake.mkdirP(path.join(webclient,styleDir));
+  copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   
   // generate highlight.js web module
   console.log("adapt highlight.js");    

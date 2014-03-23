@@ -3,16 +3,7 @@
 <head>
 
 <!-- madoko style -->
-<link rel="stylesheet" type="text/css" href="../../styles/madoko.css">
-
-<!-- monaco style -->
-<style type="text/css">
-  #editor {
-    position: relative;
-    border: 1px solid black;
-    height: 60ex;
-  }
-</style>
+<link rel="stylesheet" type="text/css" href="styles/madoko.css">
 
 <!-- Theme CSS must be loaded statically for now -->
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
@@ -60,24 +51,38 @@ require(["highlight.js",
           function(hljs,stdcore,stdpath,storage,madoko) 
 {  
   var options = madoko.initialOptions();
-  var images  = {};
-  options.imginfos = images;
-
-  var initial = document.getElementById("initial");
-  var view = document.getElementById("view");
-
-  var editor = Monaco.Editor.create(document.getElementById("editor"), {
-    value: initial.innerText,
+  var view    = document.getElementById("view");
+  var editor  = Monaco.Editor.create(document.getElementById("editor"), {
+    value: document.getElementById("initial").innerText,
     mode: "text/x-web-markdown"
   });
 
 
-  var text0 = "";
-  var stale = true;
+  // TODO: fix this in the std core library
+  stdcore.println("ready.")
+  var cons = document.getElementById("koka-console-out");
+  cons.wrap = "soft";
+  cons.style.height = "10ex";
+  cons.style.whiteSpace = "pre-wrap";
+    
+  var text0 = "";     // text from the previous round
+  var stale = true;   // is the view stale with respect to the current text?
 
   var docName = "document";
   var imgDir  = "img";
 
+  // Call for messages
+  function message( txt ) {
+    stdcore.println(txt);
+  }
+
+  // Called whenever the server needs to run madoko. The server can run:
+  // - bibtex: generates a document.bbl file on the server with typeset bibliographies.
+  //           for this to work, we need to send over a ".bib" file and potentially
+  //           a bibliography style file ".bst".
+  // - latex: formulas are typeset using latex. This generates a "document.dimx" file
+  //           containing all typeset formulas. For this to work, we may need to 
+  //           send extra style files (".sty") or class files (".cls"). 
   function serverRun() {
     var text = editor.getValue();
     // TODO: schedule run on server
@@ -85,6 +90,9 @@ require(["highlight.js",
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
   }
 
+  // Called whenever the text buffer changes.
+  // TODO: can we run this invoked by the editor instead of an interval?
+  // and should we run in a worker perhaps?
   function update() {
     var text = editor.getValue();
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
@@ -93,26 +101,27 @@ require(["highlight.js",
     }
     else if (stale) {      // now update
       stale = false;
-      madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
-        view.innerHTML = content;
-        if (runOnServer) {
-          serverRun();
-        }
-        MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax
+      message( "working..." );
+      setTimeout(function() {
+        madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
+          view.innerHTML = content;
+          if (runOnServer) {
+            serverRun();
+          }
+          MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax
+        }, 1);
       });
     }
   }
 
+  // Insert some text in the document 
   function documentInsert( txt ) {
     var pos = editor.viewModel.cursors.lastCursorPositionChangedEvent.position;
     editor.model._insertText([],pos,txt);
-    //var content = editor.getValue();
-    //var pre = content.substr(0,i-1);
-    //var post = content.substr(i);
-    //editor.setValue( pre + txt + post );
   }
 
-  function handleUploadImages(evt) {
+  // Called when a user selects an image to insert.
+  function insertImages(evt) {
     var files = evt.target.files; // FileList object
 
     // files is a FileList of File objects. List some properties.
@@ -127,10 +136,10 @@ require(["highlight.js",
         // Closure to capture the file information.
         reader.onload = (function(file) {
           return function(loadEvt) {
-            var content = loadEvt.target.result;
+            var content  = loadEvt.target.result;
             var fileName = imgDir + "/" + file.name;
             var name     = stdpath.stemname(file.name); 
-            stdcore.println("image: " + fileName);
+            //stdcore.println("image: " + fileName);
             options.imginfos = madoko.addImage(options.imginfos,fileName,content);
             documentInsert( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n' );
             //madoko.writeTextFile(file.name,content);
@@ -142,16 +151,22 @@ require(["highlight.js",
     }
   }
 
-
+  // Initialize
   update();
-  setInterval(update, 500);
-  document.getElementById('uploadImages').addEventListener('change', handleUploadImages, false);
+  setInterval(update, 250);
+  document.getElementById('insertImages').addEventListener('change', insertImages, false);
 });
 </script>
 
 
 <!-- styles -->
 <style>
+#editor {
+  position: relative;
+  border: 1px solid black;
+  height: 60ex;
+}
+
 #view {
   border: 1px solid black;
   padding: 0.5em 1em;
@@ -166,7 +181,6 @@ td {
 table#editview {
   width: 100%;
 }
-
 td#editor-cell, td#view-cell {
   width: 50%;
 }
@@ -174,6 +188,7 @@ td#editor-cell, td#view-cell {
 #koka-console {
   height: 10ex;
 }
+
 </style>
 </head>
 
@@ -181,7 +196,7 @@ td#editor-cell, td#view-cell {
 
 <p>
 Insert image:
-<input type="file" id="uploadImages" name="files[]" title="Add images" accept="image/*"></input>
+<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"></input>
 </p>
 
 <table id="editview">
