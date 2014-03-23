@@ -35,10 +35,12 @@ public function println( content : string ) : io () {
   std/core/println( content )
 }
 public function markdown( inputName : string, input : string, options : options,
-                          continue: (output:string,options:options) -> io () ) : io () 
+                          continue: (output:string,needRerun:bool,options:options) -> io () ) : io () 
 { 
   copts = coptions(options = options)
   outName = outputName(inputName,copts)
+
+  var rerun := False;
 
   function runPdfLatex( texFile : string, opts : options, content : string, cont : () -> io () ) : io () 
   {
@@ -48,7 +50,7 @@ public function markdown( inputName : string, input : string, options : options,
 
   function runBibtex( bibFile : string, opts : options, cont : bool -> io () ) : io () 
   {
-    // todo: flag that we contact the server
+    rerun := True
     cont(False)
   } 
 
@@ -56,13 +58,13 @@ public function markdown( inputName : string, input : string, options : options,
                             outputName : string, xopts : options, content : string, 
                             cont : (maybe<dict<mathinfo>>) -> io () ) : io () 
   {
-    // todo: contact the server
+    rerun := True
     cont(Nothing)
   }
 
   runners = Runners(runPdfLatex, runBibtex, runMathStatic )
 
   processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
-    continue(output,options1)
+    continue(output,rerun,options1)
   })
 }

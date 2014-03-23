@@ -5,6 +5,7 @@
 <!-- madoko style -->
 <link rel="stylesheet" type="text/css" href="../../styles/madoko.css">
 
+
 <!-- just mathjax stuff for dynamic math type setting.
      later we will use static images instead generated on the server
 -->
@@ -49,6 +50,16 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
   var text0 = "";
   var stale = true;
 
+  var docName = "document";
+  var imgDir  = "img";
+
+  function serverRun() {
+    var text = source.value;
+    // TODO: schedule run on server
+    // send: document, and other files (like .bib and include files (but not images))    
+    // receive back: document.dimx file (math content) and document.bbl (bibliography)
+  }
+
   function update() {
     var text = source.value;
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
@@ -57,18 +68,22 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
     }
     else if (stale) {      // now update
       stale = false;
-      madoko.markdown("document",text,options, function(content,options1) {
+      madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
         target.innerHTML = content;
+        if (runOnServer) {
+          serverRun();
+        }
         MathJax.Hub.Queue(["Typeset",MathJax.Hub,"target"]); // schedule mathjax
       });
     }
   }
 
-  update();
-  setInterval(update, 500);
-
-  function documentAppend( txt ) {
-    source.value = source.value + txt;
+  function documentInsert( txt ) {
+    var content = source.value;
+    var i = source.selectionStart;
+    var pre = content.substr(0,i-1);
+    var post = content.substr(i);
+    source.value = pre + txt + post;
   }
 
   function handleUploadImages(evt) {
@@ -86,11 +101,13 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
         // Closure to capture the file information.
         reader.onload = (function(file) {
           return function(loadEvt) {
-            var title = file.name;
             var content = loadEvt.target.result;
-            stdcore.println("image: " + file.name);
-            options.imginfos = madoko.addImage(options.imginfos,file.name,content);
-            documentAppend( "\n[" + stdpath.stemname(file.name) + "]: " + file.name );
+            var fileName = imgDir + "/" + file.name;
+            var name     = stdpath.stemname(file.name); 
+            stdcore.println("image: " + fileName);
+            stdcore.println("index: " + source.selectionStart );
+            options.imginfos = madoko.addImage(options.imginfos,fileName,content);
+            documentInsert( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n' );
             //madoko.writeTextFile(file.name,content);
           };
         })(f);
@@ -100,6 +117,9 @@ require(["highlight.js","std_core","std_path","storage","webmain"].concat(langua
     }
   }
 
+
+  update();
+  setInterval(update, 500);
   document.getElementById('uploadImages').addEventListener('change', handleUploadImages, false);
 });
 </script>
@@ -159,8 +179,8 @@ function hi() {
 </table>
 
 <p>
-Add images:
-<input type="file" id="uploadImages" name="files[]" multiple title="Add images"></input>
+Insert image:
+<input type="file" id="uploadImages" name="files[]" title="Add images" accept="image/*"></input>
 </p>
 
 </body>
