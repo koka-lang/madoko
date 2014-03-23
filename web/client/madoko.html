@@ -93,6 +93,7 @@ require(["highlight.js",
   // Called whenever the text buffer changes.
   // TODO: can we run this invoked by the editor instead of an interval?
   // and should we run in a worker perhaps?
+  var updateCount = 0;
   function update() {
     var text = editor.getValue();
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
@@ -101,10 +102,14 @@ require(["highlight.js",
     }
     else if (stale) {      // now update
       stale = false;
-      message( "working..." );
+      var t0 = new Date();
+      updateCount++;
+      message( "update " + updateCount.toString() + " ..." );
       setTimeout(function() {
         madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
           view.innerHTML = content;
+          var t1 = new Date();
+          message( "  " + (t1.getTime() - t0.getTime()).toString() + "ms" );
           if (runOnServer) {
             serverRun();
           }
