@@ -11,7 +11,7 @@
 // operations only provide accesss to a global object of files which is
 // *not* persistent. This code is mainly to ensure we can share as much
 // code as possible between client and server.
-var onServer = ($std_core.getHost() !== "browser");
+var onServer = ($std_core.getHost() === "nodejs");
 
 var $readFileSync;
 var $writeFileSync;

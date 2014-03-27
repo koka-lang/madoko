@@ -10,6 +10,7 @@
 module webmain
 
 import std/dict
+import std/log
 import common
 import options
 import driver
@@ -35,8 +36,12 @@ public function println( content : string ) : io () {
   std/core/println( content )
 }
 public function markdown( inputName : string, input : string, options : options,
-                          continue: (output:string,needRerun:bool,options:options) -> io () ) : io () 
+                          continue: (md:string,stdout:string,needRerun:bool,options:options) -> io () ) : io () 
 { 
+  printRedirect( fun(s) {
+    log("stdout",s)
+  });
+
   copts = coptions(options = options)
   outName = outputName(inputName,copts)
 
@@ -64,7 +69,12 @@ public function markdown( inputName : string, input : string, options : options,
 
   runners = Runners(runPdfLatex, runBibtex, runMathStatic )
 
-  processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
-    continue(output,rerun,options1)
+  withLog("stdout", {
+    processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
+      stdout = getLog("stdout")
+      continue(output,stdout,rerun,options1)
+    })
   })
+
+  ()
 }

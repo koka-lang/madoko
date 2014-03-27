@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="styles/madoko.css">
 
 <!-- Theme CSS must be loaded statically for now -->
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
 
 <!-- use the monaco loader to implement "require" -->
@@ -37,8 +38,6 @@
   src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 
-
-
 <!-- install a handler that calls madoko to typeset -->
 <script>
 var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
@@ -46,30 +45,10 @@ var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 .map(function(name){ return "languages/" + name; });
 
 require(["highlight.js",
-         "std_core","std_path","storage","webmain",
+         "std_core","std_path","madoko",
          "vs/editor/editor.main"].concat(languages), 
-          function(hljs,stdcore,stdpath,storage,madoko) 
-{  
-  var options = madoko.initialOptions();
-  var view    = document.getElementById("view");
-  var editor  = Monaco.Editor.create(document.getElementById("editor"), {
-    value: document.getElementById("initial").innerText,
-    mode: "text/x-web-markdown"
-  });
-
-
-  // TODO: fix this in the std core library
-  stdcore.println("ready.")
-  var cons = document.getElementById("koka-console-out");
-  cons.wrap = "soft";
-  cons.style.height = "10ex";
-  cons.style.whiteSpace = "pre-wrap";
-    
-  var text0 = "";     // text from the previous round
-  var stale = true;   // is the view stale with respect to the current text?
-
-  var docName = "document";
-  var imgDir  = "img";
+          function(hljs,stdcore,stdpath,madoko) 
+{ 
 
   // Call for messages
   function message( txt ) {
@@ -90,31 +69,81 @@ require(["highlight.js",
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
   }
 
+  var options = madoko.initialOptions();
+  var view    = document.getElementById("view");
+
+  var madokoWorker = new Worker("madoko-worker.js");
+  var lastRound = 0;
+  madokoWorker.addEventListener("message", function(ev) {
+    var res = ev.data;
+    if (res.message) {
+      message(" " + res.message);
+    }
+    if (res.content) {
+      view.innerHTML = res.content;
+      //MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax    
+    }
+    if (res.runOnServer) {
+      serverRun();
+    }
+    if (res.time) {
+      message(" time: " + res.time + "ms" );
+    }
+    lastRound = res.round;
+  });
+  
+
+  var editor  = Monaco.Editor.create(document.getElementById("editor"), {
+    value: document.getElementById("initial").textContent,
+    mode: "text/x-web-markdown",
+    theme: "vs-dark",
+    lineNumbers: false
+  });
+
+
+  // TODO: fix this in the std core library
+  stdcore.println("ready.")
+  var cons = document.getElementById("koka-console-out");
+  cons.wrap = "soft";
+  cons.style.height = "100%";
+  cons.style.whiteSpace = "pre-wrap";
+  //cons.style.borderStyle = "none";
+  //cons.style.height = "100%";
+  //cons.style.marginTop = "1ex";
+  cons.style.height = "98%";
+  cons.style.margin = "1% 0ex";
+  
+    
+  var text0 = "";     // text from the previous round
+  var stale = true;   // is the view stale with respect to the current text?
+
+  var docName = "document";
+  var imgDir  = "img";
+  var refreshRate = 500;
+  var refreshContinuous = true;
+  
   // Called whenever the text buffer changes.
   // TODO: can we run this invoked by the editor instead of an interval?
   // and should we run in a worker perhaps?
-  var updateCount = 0;
+  var round = lastRound;
+  var staleTime = Date.now();
   function update() {
     var text = editor.getValue();
     if (text != text0) {   // set stale but do not update yet (as long as the user types)
-      stale = true;
+      stale = true;      
+      staleTime = Date.now();
       text0 = text;
+      if (!refreshContinuous) return;
     }
-    else if (stale) {      // now update
+    if (stale && (round == lastRound || Date.now() > staleTime + 5000)) {
       stale = false;
-      var t0 = new Date();
-      updateCount++;
-      message( "update " + updateCount.toString() + " ..." );
-      setTimeout(function() {
-        madoko.markdown(docName,text,options, function(content,runOnServer,options1) {
-          view.innerHTML = content;
-          var t1 = new Date();
-          message( "  " + (t1.getTime() - t0.getTime()).toString() + "ms" );
-          if (runOnServer) {
-            serverRun();
-          }
-          MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax
-        }, 1);
+      round++;
+      message( "update " + round.toString() + " ..." );
+        madokoWorker.postMessage( {
+        content: text,
+        name   : docName,
+        options: options,
+        round  : round
       });
     }
   }
@@ -157,41 +186,75 @@ require(["highlight.js",
   }
 
   // Initialize
-  update();
-  setInterval(update, 250);
+  setInterval(update, refreshRate);
   document.getElementById('insertImages').addEventListener('change', insertImages, false);
+  document.getElementById('checkContinuous').onchange = function(ev) { 
+    refreshContinuous = ev.target.checked; 
+  };
 });
 </script>
 
 
 <!-- styles -->
 <style>
-#editor {
-  position: relative;
+#editorpane {
+  float: left;
   border: 1px solid black;
-  height: 60ex;
+  margin: 0em;
+  height: 92%;
+  width:  50%;
+}
+
+#editor {
+  height: 100%;
+}
+
+#viewpane {
+  float: right;
+  width: 49%;
+  height: 92%;
 }
 
 #view {
   border: 1px solid black;
-  padding: 0.5em 1em;
-  margin-top: 0.15em;
-  height: 60ex;
-}
-
-td {
-  vertical-align: top;
-}
-
-table#editview {
-  width: 100%;
-}
-td#editor-cell, td#view-cell {
-  width: 50%;
+  height: 90%;
+  margin: 0em;
+  padding: 0em 1ex;
+  overflow: scroll;
+  background-color: white;
 }
 
 #koka-console {
-  height: 10ex;
+  margin: 0em;
+  height: 8%;
+  padding: 0em; 
+}
+
+html,body,#app {
+  height: 100%;
+  padding: 0pt;
+  margin: 0pt;
+}
+
+#app {
+  padding: 0ex 1ex;
+}
+
+
+body {
+  background-color: #3A4150;
+  background-color: #FFFAF4;
+}
+
+#menubar {
+  margin: 0ex 0ex 1ex 0ex;
+  padding: 0em;
+}
+
+#logo {
+  padding: 0pt; 
+  width: 17px;
+  vertical-align: bottom;
 }
 
 </style>
@@ -199,29 +262,7 @@ td#editor-cell, td#view-cell {
 
 <body>
 
-<p>
-Insert image:
-<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"></input>
-</p>
-
-<table id="editview">
-<tr><td>Edit</td><td>View</td></tr>
-<tr>
-<td id="editor-cell">
-<div id="editor"></div>
-</td>
-<td id="view-cell">
-<div id="view">
-</div>
-</td>
-</tr>
-<td>
-<div id="koka-console" class="monospace"></div>
-</td>
-</table>
-
-<div id="initial" style="display:none">
-Heading base: 2
+<div id="initial" style="display:none; white-space:pre">Heading base: 2
 
 # An example   { #example }
 
@@ -243,6 +284,21 @@ function hi() {
 }
 ```
 </div>  
-
+<div id="app">
+<div id="menubar">
+<img src="images/monarch-34px.png" id="logo"></img>
+insert image:
+<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
+continuous:
+<input type="checkbox" id="checkContinuous" checked=1 />
+</div>
+<div id="editorpane">
+<div id="editor"></div>
+</div>
+<div id="viewpane">
+<div id="view"></div>
+<div id="koka-console" class="monospace"></div>
+</div>
+</div>
 </body>
 </html>
