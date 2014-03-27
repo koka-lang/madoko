@@ -4,7 +4,11 @@ require.config({
   baseUrl: "lib",
 });
 
-require(["webmain"], function(madoko) {
+var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
+                ,"haskell","go","fsharp","r","cs","scala"]
+                .map(function(name){ return "languages/" + name; });
+
+require(["webmain","highlight.js"].concat(languages), function(madoko) {
   self.addEventListener( "message", function(ev) {
     try {    
       var req = ev.data;

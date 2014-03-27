@@ -40,14 +40,8 @@
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
-var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
-                ,"haskell","go","fsharp","r","cs","scala"]
-                .map(function(name){ return "languages/" + name; });
-
-require(["highlight.js",
-         "std_core","std_path","madoko",
-         "vs/editor/editor.main"].concat(languages), 
-          function(hljs,stdcore,stdpath,madoko) 
+require(["std_core","std_path","madoko","vs/editor/editor.main"],
+          function(stdcore,stdpath,madoko) 
 { 
 
   // Call for messages
