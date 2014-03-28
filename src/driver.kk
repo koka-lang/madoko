@@ -13,6 +13,7 @@ import std/log
 import std/regex
 import std/path
 import std/dict
+import std/date
 import common
 import options
 import metadata
@@ -36,9 +37,13 @@ public function processContent( inName : string, outName : string, content : str
   styleDir = opts.installDir + "/../styles"
   content.include(False, outName, [".",inName.dirname,outName.dirname,styleDir]) fun(icontent) {
     // set up options
-    opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp")) 
+    opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
               then (opts.options)(xmp = True) else opts.options
-    opts1  = opts0(metadata=opts0.metadata + [("docname",inName.stemname),("filename",inName)])
+               
+    date   = now()                             
+    opts1  = opts0(metadata=opts0.metadata 
+                    + [("docname",inName.stemname),("filename",inName)]
+                    + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))] )
 
     mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
               else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg

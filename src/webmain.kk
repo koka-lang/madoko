@@ -57,6 +57,7 @@ public function markdown( inputName : string, input : string, options : options,
   function runBibtex( bibFile : string, opts : options, cont : bool -> io () ) : io () 
   {
     rerun := True
+    trace("bibtex rerun")
     cont(False)
   } 
 
@@ -67,6 +68,7 @@ public function markdown( inputName : string, input : string, options : options,
                           xopts : options, cont : (maybe<dict<mathinfo>>) -> io () ) : io ()
   {
     rerun := True
+    trace("math rerun")
     cont(Nothing)
   }
 

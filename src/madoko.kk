@@ -22,6 +22,7 @@ import definitions
 import htmlFormatter    // for full
 import texFormatter     // for full
 import attributes       // expandKeys
+import std/log
 
 /* --------------------------------------
   Main library entry point 
@@ -56,6 +57,8 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
 
   if (options.verbose>=4) then trace("parse blocks")
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
+
+  if (options.citeAll) then log("aux",@"\citation{*}");
   
   // parse definitions
   val icontext  = inlineContext(fmt,options.metadata.dict,

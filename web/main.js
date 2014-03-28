@@ -73,7 +73,8 @@ function readFiles( userpath, docname, fnames, cont ) {
   if (!fnames || (fnames instanceof Array && fnames.length == 0)) {
     var ext = path.extname(docname);
     var stem = docname.substr(0, docname.length - ext.length );
-    fnames = [stem + ".dimx", stem + "-bib.bbl"];
+    fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
+              stem + "-bib.bbl"];
   }
   console.log(fnames);
   var files = {};

@@ -48,6 +48,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 { 
   var docName = "document";
   var files = {};
+  var allowServer = true;
 
   // Get the properties of an object.
   function properties(obj) {
@@ -81,6 +82,8 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   //           containing all typeset formulas. For this to work, we may need to 
   //           send extra style files (".sty") or class files (".cls"). 
   function serverRun() {
+    if (!allowServer) return;
+
     var text = editor.getValue();
     // TODO: schedule run on server
     // send: document, and other files (like .bib and include files (but not images))    
@@ -229,6 +232,9 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   document.getElementById('checkContinuous').onchange = function(ev) { 
     refreshContinuous = ev.target.checked; 
   };
+  document.getElementById('checkAllowServer').onchange = function(ev) { 
+    allowServer = ev.target.checked; 
+  };
 });
 </script>
 
@@ -329,6 +335,8 @@ insert image:
 <input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
 continuous:
 <input type="checkbox" id="checkContinuous" checked=1 />
+enable server:
+<input type="checkbox" id="checkAllowServer" checked=1 />
 </div>
 <div id="editorpane">
 <div id="editor"></div>

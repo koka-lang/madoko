@@ -22,16 +22,16 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
 {
   val (mdata2,rest) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
   options1 = options0.fromMeta(mdata2)
-  val (options,mdata1) = 
-    if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
-      then (options1,Nil) 
-      else { 
-        mdatax = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst
-        (options1.fromMeta(options0.metadata + mdatax),mdatax)
-      }
+  options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
+    then options1(metadata = options1.metadata + mdata2) 
+    else { 
+      mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst      
+      mdataFull = mdataDef + options0.metadata + mdata2
+      options2  = options0.fromMeta(mdataFull)
+      options2( metadata = mdataFull)
+    }
 
-  mdata = options.metadata + mdata1 + mdata2
-  (options(metadata = mdata),rest)  
+  (options,rest)  
 }
 
 public function fromMeta( opts : options, mdata : metadata ) : options {
@@ -73,7 +73,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then "" else options.authorNotes + value)    
     elif (key=="title-note" || key=="title-date") options(titleNote=value)
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
-    elif (key=="cite-all" && value!="") { log("aux",@"\citation{*}"); options } 
+    elif (key=="cite-all") options(citeAll=(value!="")) 
     elif (key=="math-mode") options.setMathMode(value)
     elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (lvalue=="true") then "math" else value)
     elif (key=="math-scale") options(mathScale=ivalue)

@@ -16,7 +16,6 @@ import std/flags
 import std/regex
 import std/string
 import std/path
-import std/date
 import common 
 
 // Do not edit the version, it is set in the Jakefile from package.json
@@ -67,6 +66,7 @@ public struct options(
   titleNote: string = "",
 
   citestyle     : citestyle = citeNumeric,     
+  citeAll       : bool = False,
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth  : int  = 3, // default depth where headings are numbered
   headingBase   : int  = 1, // heading level for #
@@ -222,10 +222,7 @@ public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOpt
 // sanitize options
 function check( cmdOptions : commandOptions ) : io commandOptions 
 {
-  date = now()
-  cmdOptions(installDir=if (cmdOptions.installDir=="") then programPath().dirname else cmdOptions.installDir,
-             options=(cmdOptions.options)(metadata=cmdOptions.options.metadata + 
-                                                   [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))]))
+  cmdOptions(installDir=if (cmdOptions.installDir=="") then programPath().dirname else cmdOptions.installDir)
 }
 
 
