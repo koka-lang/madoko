@@ -45,7 +45,7 @@ Indigo      : #4B0082
 ~Pre,~Code  : replace="/==>/\(&rArr;\)/g"
 .cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
 
-Highlight Language: ./doc/javascript5.js
+XHighlight Language: ./doc/javascript5.js
 Script      : https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
 Copyright   : Copyright 2013, Daan Leijen, Microsoft Corporation.

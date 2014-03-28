@@ -20,13 +20,12 @@ import madoko
 import storage
 import hilite
 import mathParse
+import mathStatic
 
 public struct runners(
   runPdfLatex : ( texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
   runBibtex : ( bibFile : string, opts : options, continue : bool -> io ()) -> io (),
-  runMathStatic : ( mathDvi : string, mathPdf : string,  
-                            outName : string, xopts : options, content : string, 
-                            continue : (maybe<dict<mathinfo>>) -> io () ) -> io () 
+  runMathStatic : runMathStaticFun
 )
 
 public function processContent( inName : string, outName : string, content : string, 
@@ -149,7 +148,7 @@ function process( inName : string, outName : string, content : string, icontent 
         if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
           mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
-        (runners.runMathStatic)( mathDvi, mathPdf, outName, mopts, content ) fun(mbmdim2) {
+        mathStatic( mathDvi, mathPdf, outName, mopts, content, runners.runMathStatic ) fun(mbmdim2) {
           match(mbmdim2) {
             Just(mdim2) -> {
               // write html again

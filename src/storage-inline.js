@@ -15,6 +15,7 @@ var onServer = ($std_core.getHost() === "nodejs");
 
 var $readFileSync;
 var $writeFileSync;
+var $renameSync;
 var $fexistsSync;
 var $relative;
 var $mkdirp;
@@ -32,6 +33,7 @@ if (onServer) {
   $relative = function(dir,p) { return path.relative(dir,p); }
   $cwd = function() { return process.cwd(); }
   $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); }
+  $renameSync = function(oldname,newname) { return fs.renameSync(oldname,newname); }
 }
 else {
   $readFileSync = function(fname) {
@@ -58,5 +60,9 @@ else {
 
   $mkdirp = function(dir,mode) {
     // do nothing
+  }
+
+  $renameSync = function(oldname,newname) {
+    $writeFileSync( newname, $readFileSync(oldname) );
   }
 }

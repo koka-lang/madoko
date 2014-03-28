@@ -15,6 +15,7 @@ import common
 import options
 import driver
 import storage
+import mathStatic
 
 public function initialOptions( args : string = "" ) : io options {
   if (args=="") return Options()
@@ -59,9 +60,11 @@ public function markdown( inputName : string, input : string, options : options,
     cont(False)
   } 
 
-  function runMathStatic( mathDvi : string, mathPdf : string,  
-                            outputName : string, xopts : options, content : string, 
-                            cont : (maybe<dict<mathinfo>>) -> io () ) : io () 
+  function runMathStatic( content : string, outputname : string,
+                          texNameDvi : string, texNamePdf : string,
+                          dviPages : pages, pdfPages : pages,
+                          oldMathDvi : string, oldMathPdf : string,
+                          xopts : options, cont : (maybe<dict<mathinfo>>) -> io () ) : io ()
   {
     rerun := True
     cont(Nothing)

@@ -83,3 +83,11 @@ public external mkdirp( dir : string, mode : int = 0x1FF ) : io () {
   js inline "$mkdirp(#1,#2)"
 }
 
+public external rename( fnameOld : string, fnameNew : string ) : io () {
+  cs inline "System.IO.File.Move(#1,#2)"
+  js inline "$renameSync(#1,#2)"
+}
+
+public function tryRename( fnameOld : string, fnameNew : string ) : io () {
+  ignore( { rename(fnameOld,fnameNew) })
+}
