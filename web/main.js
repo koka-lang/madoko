@@ -11,6 +11,12 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.cookieParser("@MadokoRocks!@!@!"));
 app.use(express.cookieSession({key:"madoko.sess"}));
+app.use(app.router);
+app.use(function(err, req, res, next){
+  if (!err) return next();
+  console.log(err);
+  res.send(500,err.toString());
+});
 
 var cookieAge = 20000; //24 * 60 * 60000;
 var userRoot = "users";
@@ -28,13 +34,20 @@ function properties(obj) {
   return attrs;
 }
 
+// extend target with all fields of obj.
+function extend(target, obj) {
+  properties(obj).forEach( function(prop) {
+    target[prop] = obj[prop];
+  });
+}
+
 // Get a unique user path for this session.
 function getUserPath( req,res ) {
   var userpath = req.signedCookies.userpath
   if (!userpath) {
     var unique = (new Date()).toString() + ":" + Math.random().toString;
     userCount++;
-    userpath = userCount.toString() + "-" + crypto.createHash('md5').update(unique).digest('hex').substr(0,userHashLimit);
+    userpath = "test"; // userCount.toString() + "-" + crypto.createHash('md5').update(unique).digest('hex').substr(0,userHashLimit);
     res.cookie("userpath", userpath, { signed: true, maxAge: cookieAge, httpOnly: true } );    
   }
   return userRoot + "/" + userpath;
@@ -55,28 +68,65 @@ function saveFiles( userPath, files, cont ) {
   }, cont );
 }
 
+// Read madoko generated files.
+function readFiles( userpath, docname, fnames, cont ) {
+  if (!fnames || (fnames instanceof Array && fnames.length == 0)) {
+    var ext = path.extname(docname);
+    var stem = docname.substr(0, docname.length - ext.length );
+    fnames = [stem + ".dimx", stem + "-bib.bbl"];
+  }
+  console.log(fnames);
+  var files = {};
+  async.each( fnames, function(fname,xcont) {
+    fs.readFile( path.join(userpath,fname), {encoding:"utf8"}, function(err,data) {
+      files["/" + fname] = (err ? "" : data);
+      xcont();
+    });
+  }, function(err) {
+    cont(err,files);
+  });
+}
+
 // run madoko
 function runMadoko( userPath, docname, flags, cont ) {
-  var command = "madoko -v " + flags + " " + docname;
+  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv " + flags + " " + docname;
   console.log("> " + command);
   cp.exec( command, {cwd: userPath, timeout: 10000 }, cont); 
 }
 
-app.post('/rest/process', function(req,res) {
-  var userPath = getUserPath(req,res);
+app.post('/rest/run', function(req,res) {
+  var userpath = getUserPath(req,res);
+  var docname = req.body.docname || "document.mdk";
+  var result = { userpath: userpath };
   console.log(properties(req.body));
-  saveFiles( userPath, req.body, function(err1) {
-    console.log("save files: " + err1);
-    var flags = "" + (req.body.pdf ? " --pdf" : "");
-    runMadoko( userPath, req.body.docname || "document.mdk", flags, function(err,stdout,stderr) {
-      res.send( { result: err,
-                  stdout: stdout,
-                  stderr: stderr,
-                  userpath: userPath });
+  saveFiles( userpath, req.body, function(err1) {
+    if (err1) {
+      result.err = err1.toString();
+      return res.send(403, result );
+    }
+    var flags = " -mmath-embed:256 " + (req.body.pdf ? " --pdf" : "");
+    runMadoko( userpath, docname, flags, function(err2,stdout,stderr) {
+      result.stdout = stdout;
+      result.stderr = stderr;
+      if (err2) {
+        result.err = err2.toString();
+        return res.send(403, result);
+      }
+      readFiles( userpath, docname, [], function(err3,files) {
+        if (err3) {
+          result.err = err3.toString();
+          return res.send(403, result);
+        }
+        console.log(result);
+        //console.log(files);
+        extend(result,files);
+        res.send( result );
+      });
     });
   });
 });
 
+/*
 app.get("/rest/ask", function(req,res) {
   var userpath = getUserPath(req,res);
   var name     = req.body.path || "document.mdk";
@@ -90,7 +140,7 @@ app.get("/rest/ask", function(req,res) {
     }
   });
 });
+*/
 
 app.use('/', express.static(__dirname + "/client"));
-
 app.listen(3000);

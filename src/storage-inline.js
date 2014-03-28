@@ -19,6 +19,7 @@ var $fexistsSync;
 var $relative;
 var $mkdirp;
 var $cwd;
+var vfs = {};
 
 if (onServer) {
   var fs = require("fs");
@@ -33,20 +34,18 @@ if (onServer) {
   $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); }
 }
 else {
-  var vfs = {};  // virtual file system
-
   $readFileSync = function(fname) {
-    var data = vfs["$" + fname];
+    var data = vfs["/" + fname];
     if (data === undefined) throw ("Could not read: " + fname);
     return data;
   }
 
   $writeFileSync = function(fname,data) {
-    vfs["$" + fname] = data;
+    vfs["/" + fname] = data;
   }
 
   $fexistsSync = function(fname) {
-    return (vfs["$" + fname] !== undefined);
+    return (vfs["/" + fname] !== undefined);
   }
 
   $relative = function(dir,p) {

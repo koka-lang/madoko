@@ -38,11 +38,35 @@
   src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 
+<!-- load jquery -->
+<script type="text/javascript" src="lib/jquery-2.1.0.js"></script>
+
 <!-- install a handler that calls madoko to typeset -->
 <script>
-require(["std_core","std_path","madoko","vs/editor/editor.main"],
+require(["std_core","std_path","webmain","vs/editor/editor.main"],
           function(stdcore,stdpath,madoko) 
 { 
+  var docName = "document";
+  var files = {};
+
+  // Get the properties of an object.
+  function properties(obj) {
+    var attrs = [];
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        attrs.push(key);
+      }
+    } 
+    return attrs;
+  }
+
+  // extend target with all fields of obj.
+  function extend(target, obj) {
+    properties(obj).forEach( function(prop) {
+      target[prop] = obj[prop];
+    });
+  }
+
 
   // Call for messages
   function message( txt ) {
@@ -61,9 +85,25 @@ require(["std_core","std_path","madoko","vs/editor/editor.main"],
     // TODO: schedule run on server
     // send: document, and other files (like .bib and include files (but not images))    
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
+    var params = {};    
+    params.docname = docName + ".mdk";
+    params["/" + params.docname] = text;
+
+    $.post( "rest/run", params, function(data,status,jqXHR) {
+      message(data.stdout + data.stderr);
+      properties(data).forEach(function(name) {
+        if (name.substr(0,1) !== "/") return;
+        //madoko.writeTextFile( name.substr(1), data[name] );
+        message("write: " + name.substr(1) );
+        files[name.substr(1)] = data[name];
+      })
+      //runMadoko(editor.getValue());
+      stale = true;
+    });
   }
 
   var options = madoko.initialOptions();
+  options.mathEmbedLimit = 256 * 1024;
   var view    = document.getElementById("view");
 
   var madokoWorker = new Worker("madoko-worker.js");
@@ -111,11 +151,22 @@ require(["std_core","std_path","madoko","vs/editor/editor.main"],
   var text0 = "";     // text from the previous round
   var stale = true;   // is the view stale with respect to the current text?
 
-  var docName = "document";
   var imgDir  = "img";
   var refreshRate = 500;
   var refreshContinuous = true;
   
+  function runMadoko(text) {
+    round++;
+    message( "update " + round.toString() + " ..." );
+    madokoWorker.postMessage( {
+      content: text,
+      name   : docName,
+      options: options,
+      round  : round,
+      files  : files
+    });
+  }
+
   // Called whenever the text buffer changes.
   // TODO: can we run this invoked by the editor instead of an interval?
   // and should we run in a worker perhaps?
@@ -131,14 +182,7 @@ require(["std_core","std_path","madoko","vs/editor/editor.main"],
     }
     if (stale && (round == lastRound || Date.now() > staleTime + 5000)) {
       stale = false;
-      round++;
-      message( "update " + round.toString() + " ..." );
-        madokoWorker.postMessage( {
-        content: text,
-        name   : docName,
-        options: options,
-        round  : round
-      });
+      runMadoko(text)
     }
   }
 
@@ -211,7 +255,7 @@ require(["std_core","std_path","madoko","vs/editor/editor.main"],
 
 #view {
   border: 1px solid black;
-  height: 90%;
+  height: 60%;
   margin: 0em;
   padding: 0em 1ex;
   overflow: scroll;
@@ -220,7 +264,7 @@ require(["std_core","std_path","madoko","vs/editor/editor.main"],
 
 #koka-console {
   margin: 0em;
-  height: 8%;
+  height: 38%;
   padding: 0em; 
 }
 

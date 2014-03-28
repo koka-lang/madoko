@@ -189,6 +189,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
         digest = md5(txt)
         log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
                       texcmd + "\n\\end{md" + kind + "Snippet}")
+        trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> mcmd
           Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
