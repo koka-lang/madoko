@@ -12,6 +12,7 @@ module htmlFormatter
 import std/dict
 import std/string
 import std/regex
+import std/log
 import common
 import inline
 import options
@@ -72,12 +73,20 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
     }).join("\n"))
 } 
 
+function relative( path : string ) : bool {
+  !(path.contains(rxProtocol));
+}
+val rxProtocol = regex(@"^\w+:");
+
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
     val href = match (context.imginfos[link.href]) {
       Just(info) | info.imageData != "" -> info.imageData 
-      _          -> link.href.escape
-    }
+      _          -> {
+        if (link.href.relative) then log("files",link.href);
+        link.href.escape
+      }
+    }    
     "<img src=\"" + href + "\"" +
       (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       (if (content != "") then " alt=\"" + content.escape + "\"" else "") +

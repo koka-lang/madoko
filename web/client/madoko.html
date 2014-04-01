@@ -49,7 +49,8 @@
 require(["std_core","std_path","webmain","vs/editor/editor.main"],
           function(stdcore,stdpath,madoko) 
 { 
-  var docName = "document";
+  var docName = "document.mdk";
+  var docInfo = {};
   var files = {};
   var allowServer = true;
 
@@ -72,6 +73,32 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   }
 
 
+  function changeExt( fname, newext ) {
+    var ext = extname(fname);
+    if (ext=="") {
+      return fname + newext;
+    }
+    else {
+      return fname.substr(0,fname.length - ext.length) + newext;
+    }
+  }
+
+  function extname( fname ) {
+    var match = /\.[^\\\/\.]+$/.exec(fname);
+    return (match ? match[0] : "");
+  }
+
+  function startsWith(s,pre) {
+    if (!pre) return true;
+    if (!s) return false;
+    return (s.substr(0,pre.length).indexOf(pre) === 0);
+  }
+
+  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
+  function hasImageExt(fname) {
+    return (imageExts.indexOf(extname(fname)) > 0);
+  }
+
   // Call for messages
   function message( txt ) {
     stdcore.println(txt);
@@ -92,10 +119,10 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     // send: document, and other files (like .bib and include files (but not images))    
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
     var params = {};    
-    params.docname = docName + ".mdk";
+    params.docname = docName;
     params["/" + params.docname] = text;
     if (files[docName + ".bib"]) {
-      params["/" + docName + ".bib"] = files[docName + ".bib"];
+      params["/" + changeExt(docName,".bib")] = files[changeExt(docName,".bib")];
     }
     if (files["reference.bib"]) {
       params["/" + "reference" + ".bib"] = files["reference.bib"];
@@ -135,9 +162,49 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     if (res.time) {
       message(" time: " + res.time + "ms" );
     }
+    if (res.filesRead && res.filesRead.length > 0) {
+      res.filesRead.forEach( function(file) {
+        if (hasImageExt(file)) {
+          loadImage(file);
+        }
+      });
+    }
     lastRound = res.round;
   });
+
+    // todo: abstract folderId and WL.getSession(). implement subdirectories.
+  function onedriveGetFileInfo( path, cont ) {  
+    folderId = docInfo.parent_id;
+    WL.api( { path: folderId + "/files", method: "GET" }).then(
+      function(res) {
+        var file = null;
+        if (res.data) {
+          for (var i = 0; i < res.data.length; i++) {
+            var f = res.data[i];
+            if (f.name == path) {
+              file = f;
+              break;
+            }
+          }
+        }
+        if (!file) return onedriveFail("unable to find: " + path);
+        cont(file);
+      },
+      onedriveFail );
+  }
+
+  function onedriveGetFileUrl( path, cont ) {
+    onedriveGetFileInfo( path, function(info) {
+      var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
+      cont(url);
+    })
+  }
   
+  function loadImage( fname ) {
+    onedriveGetFileUrl( fname, function(url) {
+      options.imginfos = madoko.addImage(options.imginfos,fname,url);
+    });
+  }
 
   var editor  = Monaco.Editor.create(document.getElementById("editor"), {
     value: document.getElementById("initial").textContent,
@@ -198,6 +265,10 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     }
   }
 
+  function editFile( text ) {
+    editor.model.setValue(text);
+  }
+
   // Insert some text in the document 
   function documentInsert( txt ) {
     var pos = editor.viewModel.cursors.lastCursorPositionChangedEvent.position;
@@ -235,7 +306,6 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     }
   }
 
-  WL.Event.subscribe("auth.login", onLogin);
   
   WL.init({
       client_id: "000000004C113E9D",
@@ -245,65 +315,11 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
       response_type: "token"
   });
 
-
-  function onLogin (session) {
-      if (!session.error) {
-          WL.api({
-              path: "me",
-              method: "GET"
-          }).then(
-              function (response) {
-                  message("Hello, " + response.first_name + " " + response.last_name + "!");
-              },
-              function (responseFailed) {
-                   message("Error calling API: " + responseFailed.error.message);
-              }
-          );
-      }
-      else {
-          message("Error signing in: " + session.error_description);
-      }
-  }
-  
-  WL.ui({
-    name: "skydrivepicker",
-    element: "skydrive-download",
-    mode: "open",
-    select: "multi",
-    onselected: onDownloadFileCompleted,
-    onerror: onDownloadFileError
-  });
-
-  function createCORSRequest(method, url) {
-    var xhr = new XMLHttpRequest();
-    if ("withCredentials" in xhr) {
-
-      // Check if the XMLHttpRequest object has a "withCredentials" property.
-      // "withCredentials" only exists on XMLHTTPRequest2 objects.
-      xhr.open(method, url, true);
-
-    } else if (typeof XDomainRequest != "undefined") {
-
-      // Otherwise, check if XDomainRequest.
-      // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
-      xhr = new XDomainRequest();
-      xhr.open(method, url);
-
-    } else {
-
-      // Otherwise, CORS is not supported by the browser.
-      xhr = null;
-
-    }
-    return xhr;
-  }
-
   function onedriveFail(res) {
     message("onedrive error: " + res);
   }
-
   
-  function onedriveGetFile( file, cont ) {
+  function onedriveGetFileContent( file, cont ) {
     $.get( "onedrive", { url: file.source }, cont);
     /*
     var domain = "https://apis.live.net/v5.0/";       
@@ -319,6 +335,8 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
     */
   }
+
+  var onedriveDomain = "https://apis.live.net/v5.0/"
   
   function onedriveGetFiles( fs ) {
     fs.forEach( function(file) {
@@ -329,6 +347,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
   }
 
+  
   function onedriveListFiles( folder, cont ) {
     WL.api( { path: folder.id + "/files", method: "GET" } )
      .then( function(res) {
@@ -338,10 +357,54 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
             f.path = f.name;
             files.push(f);
           };
+          if (f.type && f.type=="photo") {
+            var url = onedriveDomain + f.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
+            document.getElementById("testimg").src = url;
+            /*
+            $.ajax({
+              url: url,
+              success: function(data) {
+                console.log("yes!");
+              }
+            });
+            */
+          };
         });
         cont(files);
      },
      onedriveFail );
+  }
+
+  function endsWith(s,post) {
+    if (!post) return true;
+    if (!s) return false;
+    var i = s.indexOf(post);
+    return (i >= 0 && (s.length - post.length) == i);
+  }
+
+  function onedriveGetFileInfoFromId( file_id, cont ) {
+    WL.api( { path: file_id, method: "GET" } ).then(
+      function(res) {
+        cont(res);
+      },
+      function(resFail) { 
+        onedriveFail(resFail); 
+      } 
+    );
+  }
+
+  function onedrivePickFile( res ) {
+    console.log("pick");
+    if (!(res.data && res.data.files && res.data.files.length==1)) return onedriveFail("no file selected");
+    var file = res.data.files[0];
+    if (!endsWith(file.name,".mdk")) return onedriveFail("only .mdk files can be selected");
+    onedriveGetFileInfoFromId( file.id, function(info) {
+      onedriveGetFileContent(info, function(text) { 
+        docName = info.name;
+        docInfo = info;
+        editFile(text);
+      });
+    });
   }
 
   function onDownloadFileCompleted(response) {
@@ -375,10 +438,6 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     message("Selected folders/files:" + msg);
   };
 
-  function onDownloadFileError(responseFailed) {
-      message("Error getting folder/file info: " + responseFailed.error.message);
-  }
-
 
 
 
@@ -390,6 +449,12 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   };
   document.getElementById('checkAllowServer').onchange = function(ev) { 
     allowServer = ev.target.checked; 
+  };
+  document.getElementById("onedrive-download").onclick = function(ev) {
+    WL.fileDialog( {
+      mode: "open",
+      select: "single",
+    }).then( onedrivePickFile, onedriveFail );
   };
 });
 </script>
@@ -457,6 +522,15 @@ body {
   vertical-align: bottom;
 }
 
+#onedrive-download {
+  border: 1px solid black;
+  color: #00B;
+  background-color: white;
+  padding-right: 0.5ex;
+}
+#onedrive-download:hover {
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -493,8 +567,7 @@ continuous:
 <input type="checkbox" id="checkContinuous" checked=1 />
 enable server:
 <input type="checkbox" id="checkAllowServer" checked=1 />
-download:
-<span id="skydrive-download"></span>
+&nbsp; <span id="onedrive-download"><img src="images/onedrive-logo.png" style="width:25px; vertical-align:bottom" /> load from onedrive</span>
 </div>
 <div id="editorpane">
 <div id="editor"></div>

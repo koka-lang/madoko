@@ -31,7 +31,7 @@ require(["webmain","highlight.js"].concat(languages), function(madoko) {
       }
 
       var t0 = Date.now();            
-      madoko.markdown(req.name,req.content,req.options, function(md,stdout,runOnServer,options1) 
+      madoko.markdown(req.name,req.content,req.options, function(md,stdout,filesRead,runOnServer,options1) 
       {
         self.postMessage( {
           content: md,
@@ -39,7 +39,8 @@ require(["webmain","highlight.js"].concat(languages), function(madoko) {
           options: options1,
           runOnServer: runOnServer,
           message: stdout,
-          round: req.round
+          round: req.round,
+          filesRead: filesRead.split("\n"),
         });
       });
     }
