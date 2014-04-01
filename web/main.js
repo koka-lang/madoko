@@ -6,6 +6,9 @@ var path = require("path");
 var crypto = require("crypto");
 var express = require('express');
 var app = express();
+var qs = require("querystring");
+var https = require("https");
+var http = require("http");
 
 app.use(express.json());
 app.use(express.urlencoded());
@@ -127,6 +130,116 @@ app.post('/rest/run', function(req,res) {
   });
 });
 
+var callbackPage = 
+['<html>',
+'<head>',
+'  <title>Madoko Live Callback</title>',
+'</head>',
+'<body>',
+'  <script src="//js.live.net/v5.0/wl.js" type="text/javascript"></script>',
+'</body>',
+'</html>'
+].join("\n");
+
+app.get("/redirect", function(req,res) {
+  console.log("redirect GET");
+  res.send(callbackPage);
+});
+
+function onedriveGet(query,cont) {
+  http.get(query, function(res) {
+    //console.log("statusCode: ", res.statusCode);
+    //console.log("headers: ", res.headers);
+    var body = "";
+    res.on('data', function(d) {
+      body += d;
+    })
+    res.on('end', function() {
+      cont(body);
+    });
+  });  
+}
+
+app.get("/onedrive", function(req,res) {
+  //console.log("onedrive");
+  //console.log(req.query);
+  onedriveGet(req.query.url, function(body) {
+    //console.log("downloaded: " + body);
+    res.send(body);
+  });
+});
+
+/*
+
+var liveClientId = "000000004C113E9D";
+function liveGetAccessToken(code, cont) {
+  var oauthurl = "https://login.live.com/oauth20_token.srf";
+  var params = {
+    client_id:     liveClientId,
+    client_secret: "uZg0D-Mly-1UXtlyga5MQRsOH1PR0mL0",
+    redirect_uri:  "http://madoko.cloudapp.net:8080/redirect",
+    code:          code,
+    grant_type:    "authorization_code"
+  };
+  var query = oauthurl + "?" + qs.stringify(params);
+  console.log("GET: " + query);
+
+  https.get(query, function(res) {
+    console.log("statusCode: ", res.statusCode);
+    console.log("headers: ", res.headers);
+
+    var body = "";
+    res.on('data', function(d) {
+      body += d;
+    })
+    res.on('end', function() {
+      cont(0,JSON.parse(body));
+    });
+  });
+}
+
+var oauthCallbackPage = 
+['<html>',
+'<head>',
+'   <title>Madoko Live Callback</title>',
+'</head>',
+'<body>',
+'   <script src="//js.live.net/v5.0/wl.js" type="text/javascript">alert("hi");</script>',
+'</body>',
+'</html>'
+].join("\n");
+
+app.get("/redirect/oauth", function(req,res) {
+  var code = req.query.code;
+  console.log("req: " + req.query);
+  console.log("code: " + code);
+  //console.log("cookies: " + req.cookies);
+  if (!code) {
+  res.end(500);
+  }
+  liveGetAccessToken(code, function(err,info) {
+    console.log(req.host);
+    console.log(info);
+    var wl_auth = qs.parse(req.cookies.wl_auth);
+    console.log(wl_auth);
+    wl_auth.access_token = info.access_token;
+    wl_auth.authentication_token = info.authentication_token;
+    wl_auth.scope = info.scope;
+    wl_auth.expires_in = info.expires_in;
+    if (info.refresh_token) {
+      wl_auth.refresh_token = info.refresh_token;
+    }
+    console.log(wl_auth);
+    var age = parseInt(info.expires_in) * 1000;
+    //console.log("age: " + age);
+    console.log("set cookie: " + qs.stringify(wl_auth));
+    res.cookie("wl_auth", qs.stringify(wl_auth), { expire: 0 } );
+    res.send(callbackPage);
+    res.end();
+  });
+});
+*/
+
 /*
 app.get("/rest/ask", function(req,res) {
   var userpath = getUserPath(req,res);
@@ -144,4 +257,4 @@ app.get("/rest/ask", function(req,res) {
 */
 
 app.use('/', express.static(__dirname + "/client"));
-app.listen(3000);
+app.listen(8080);

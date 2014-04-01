@@ -41,6 +41,9 @@
 <!-- load jquery -->
 <script type="text/javascript" src="lib/jquery-2.1.0.js"></script>
 
+<!-- onedrive -->
+<script src="//js.live.net/v5.0/wl.debug.js"></script>
+
 <!-- install a handler that calls madoko to typeset -->
 <script>
 require(["std_core","std_path","webmain","vs/editor/editor.main"],
@@ -91,8 +94,14 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     var params = {};    
     params.docname = docName + ".mdk";
     params["/" + params.docname] = text;
+    if (files[docName + ".bib"]) {
+      params["/" + docName + ".bib"] = files[docName + ".bib"];
+    }
+    if (files["reference.bib"]) {
+      params["/" + "reference" + ".bib"] = files["reference.bib"];
+    }
 
-    $.post( "rest/run", params, function(data,status,jqXHR) {
+    $.post( "/rest/run", params, function(data,status,jqXHR) {
       message(data.stdout + data.stderr);
       properties(data).forEach(function(name) {
         if (name.substr(0,1) !== "/") return;
@@ -226,6 +235,153 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     }
   }
 
+  WL.Event.subscribe("auth.login", onLogin);
+  
+  WL.init({
+      client_id: "000000004C113E9D",
+      redirect_uri: "http://madoko.cloudapp.net:8080/redirect", //"https://login.live.com/oauth20_desktop.srf", 
+                    
+      scope: ["wl.signin","wl.skydrive"],
+      response_type: "token"
+  });
+
+
+  function onLogin (session) {
+      if (!session.error) {
+          WL.api({
+              path: "me",
+              method: "GET"
+          }).then(
+              function (response) {
+                  message("Hello, " + response.first_name + " " + response.last_name + "!");
+              },
+              function (responseFailed) {
+                   message("Error calling API: " + responseFailed.error.message);
+              }
+          );
+      }
+      else {
+          message("Error signing in: " + session.error_description);
+      }
+  }
+  
+  WL.ui({
+    name: "skydrivepicker",
+    element: "skydrive-download",
+    mode: "open",
+    select: "multi",
+    onselected: onDownloadFileCompleted,
+    onerror: onDownloadFileError
+  });
+
+  function createCORSRequest(method, url) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+
+      // Check if the XMLHttpRequest object has a "withCredentials" property.
+      // "withCredentials" only exists on XMLHTTPRequest2 objects.
+      xhr.open(method, url, true);
+
+    } else if (typeof XDomainRequest != "undefined") {
+
+      // Otherwise, check if XDomainRequest.
+      // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+      xhr = new XDomainRequest();
+      xhr.open(method, url);
+
+    } else {
+
+      // Otherwise, CORS is not supported by the browser.
+      xhr = null;
+
+    }
+    return xhr;
+  }
+
+  function onedriveFail(res) {
+    message("onedrive error: " + res);
+  }
+
+  
+  function onedriveGetFile( file, cont ) {
+    $.get( "onedrive", { url: file.source }, cont);
+    /*
+    var domain = "https://apis.live.net/v5.0/";       
+    var session = WL.getSession();     
+    //var url = domain + file.id + "/content?access_token=" + session.access_token + "&amp;callback=?";
+    //var url = file.source + "&amp;callback=?";
+    //jsonp(url,cont);
+    //$.getJSON( url, cont );
+    
+    $.ajax( {
+      url: file.source,
+      success: cont
+    });
+    */
+  }
+  
+  function onedriveGetFiles( fs ) {
+    fs.forEach( function(file) {
+      onedriveGetFile(file, function(body) {
+        //madoko.writeTextFile( file.path, body );
+        files[file.path] = body;
+      });
+    });
+  }
+
+  function onedriveListFiles( folder, cont ) {
+    WL.api( { path: folder.id + "/files", method: "GET" } )
+     .then( function(res) {
+        var files = [];
+        res.data.forEach( function(f) {
+          if (f.type && f.type=="file") {
+            f.path = f.name;
+            files.push(f);
+          };
+        });
+        cont(files);
+     },
+     onedriveFail );
+  }
+
+  function onDownloadFileCompleted(response) {
+    var msg = "";    
+    // For each folder selected...
+    if (response.data.folders && response.data.folders.length > 0) {
+        for (folder = 0; folder < response.data.folders.length; folder++) {
+            // Use folder IDs to iterate through child folders and files as needed.
+            msg += "\n" + response.data.folders[folder].id;
+            onedriveListFiles( response.data.folders[folder], onedriveGetFiles );
+        }
+    }
+    // For each file selected...
+    if (response.data.files && response.data.files.length > 0) {
+        for (file = 0; file < response.data.files.length; file++) {
+            // Use file IDs to iterate through files as needed.
+            msg += "\n" + response.data.files[file].id;
+            var f = response.data.files[file];
+            var srcUrl = f.source; //f.source.replace(/download&/,"");
+            /*
+            var session = WL.getSession();
+            var accessToken = session.access_token;
+            var sourceUrl = "https://apis.live.net/v5.0/";
+            var restUrl = sourceUrl + f.id + "/content?access_token=" + accessToken;  
+            $.get( "onedrive", { url: srcUrl }, function(data) {
+              console.log("did it: " + data);
+            } );
+            */
+        }
+    }
+    message("Selected folders/files:" + msg);
+  };
+
+  function onDownloadFileError(responseFailed) {
+      message("Error getting folder/file info: " + responseFailed.error.message);
+  }
+
+
+
+
   // Initialize
   setInterval(update, refreshRate);
   document.getElementById('insertImages').addEventListener('change', insertImages, false);
@@ -330,13 +486,15 @@ function hi() {
 </div>  
 <div id="app">
 <div id="menubar">
-<img src="images/monarch-34px.png" id="logo"></img>
+<img src="images/monarch-34px.png" id="logo"/>
 insert image:
 <input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
 continuous:
 <input type="checkbox" id="checkContinuous" checked=1 />
 enable server:
 <input type="checkbox" id="checkAllowServer" checked=1 />
+download:
+<span id="skydrive-download"></span>
 </div>
 <div id="editorpane">
 <div id="editor"></div>
