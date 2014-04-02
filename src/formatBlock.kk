@@ -153,7 +153,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Para(txt,attrs) -> {
       content = formatInline(context.inlineContext, txt)
       if (attrs.notag)
-       then content
+       then context.fmtEnv("div", content, attrs) // content
       elif (content.contains(rxblank)) then "" else 
        context.fmtEnv("p", content, attrs)      
        //"<p>" + formatInline(context.inlineContext,txt) + "</p>"

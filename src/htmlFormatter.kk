@@ -247,7 +247,7 @@ function tagBlock( tagName : string, body : string, attrs : string = "" ) : stri
 ---------------------------------------- */
 public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : string {
   tag("section", 
-    [tag("h1",context.formatInline(titleinfo.title)," class='title'"),
+    [tag("h1",context.formatInline(titleinfo.title)," class='title' data-line='1'"),
      if (titleinfo.subtitle=="") then "" else tag("h2",context.formatInline(titleinfo.subtitle)," class='subtitle'"),
      tag("table",
       tag("tr", 

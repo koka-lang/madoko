@@ -357,7 +357,7 @@ public function addKeyval( attrs : attrs, key : string, value : string ) : attrs
 }
 
 public function setLineNo( attrs : attrs, line : int ) : attrs {
-  attrs(lineNo=line, text=attrs.text + " line=" + line.show )
+  attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show )
 }
 
 function quote( s : string ) : string {

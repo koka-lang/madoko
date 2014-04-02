@@ -151,25 +151,35 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     lastRound = res.round;
   });
 
+  function onedriveGet( path, cont, errmsg ) {
+    WL.api( { path: path, method: "GET" }).then(cont, function(resFail) {
+      var msg = resFail;
+      if (resFail.error && resFail.error.message) {
+        msg = resFail.error.message + (resFail.error.code ? " (" + resFail.error.code + ")" : "");
+      }
+      onedriveFail( (errmsg ? errmsg + ": " : "") + msg );
+    });
+  }
+
     // todo: abstract folderId and WL.getSession(). implement subdirectories.
   function onedriveGetFileInfo( path, cont ) {  
     folderId = docInfo.parent_id;
-    WL.api( { path: folderId + "/files", method: "GET" }).then(
-      function(res) {
-        var file = null;
-        if (res.data) {
-          for (var i = 0; i < res.data.length; i++) {
-            var f = res.data[i];
-            if (f.name == path) {
-              file = f;
-              break;
-            }
+    if (!folderId) return;
+
+    onedriveGet( folderId + "/files", function(res) {
+      var file = null;
+      if (res.data) {
+        for (var i = 0; i < res.data.length; i++) {
+          var f = res.data[i];
+          if (f.name == path) {
+            file = f;
+            break;
           }
         }
-        if (!file) return onedriveFail("unable to find: " + path);
-        cont(file);
-      },
-      onedriveFail );
+      }
+      if (!file) return onedriveFail("unable to find: " + path);
+      cont(file);
+    }, "/files");
   }
 
   function onedriveGetFileUrl( path, cont ) {
@@ -185,19 +195,28 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
   }
 
+  var lastScroll = null;
   function syncView( startLine, endLine ) {
-    var elem = null;
+    var elem = $('#view').children(':first');
     $('#view *[data-line]').each( function() {
       var line = parseInt($(this).attr("data-line"));
-      if (elem===null || (line && !isNaN(line) && line <= startLine)) {
+      if ((line && !isNaN(line) && line <= startLine)) {
         elem=$(this);
       }
       if (line >= startLine) {
         return false;      
       } 
     });
-    if (elem) {
-      $("#view").scrollTop(elem.offset().top);
+    if (elem && elem[0] !== lastScroll) {
+      lastScroll = elem[0];
+      var topMargins = (elem.outerHeight(true) - elem.height())/2;
+      var ofs = elem.offset().top - $("#view").offset().top - topMargins;
+      var viewtop = $("#view").scrollTop();
+      var newtop = ofs + viewtop;
+      $("#view").animate({
+        scrollTop: newtop
+      }, 50 );
+      console.log("scroll: " + startLine + ": " + ofs + "px : " + viewtop + "px : " + newtop + "px : " + elem[0].tagName + ": " + elem.text().substr(0,40));
     }
   }
 
@@ -218,7 +237,8 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     syncView(rng.startLineNumber, rng.endLineNumber);    
   });
   editor.addListener("positionChanged", function (e) {
-    syncView(e.position.lineNumber);
+    //syncView(e.position.lineNumber);
+    console.log(e);
   });
 
   // TODO: fix this in the std core library
@@ -323,6 +343,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   });
 
   function onedriveFail(res) {
+    res = (res.error && res.error.message ? res.error.message : res);
     message("onedrive error: " + res);
   }
   

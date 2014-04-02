@@ -220,18 +220,21 @@ function blockList( cap : matched, context : blockContext ) : block {
                      loose = loose) // if (context.sane) then False else loose)
 
 
-  function parseItem( icap : matched ) :  block {
+  function parseItem( icap : matched, line : int ) :  block {
     item = icap.groups[4].replaceAll(if (icontext.pedantic) 
                                        then rxindent4
                                        else rxindent(icap.groups[1].length) ,"") 
     attrs = icap.groups[3].parseAttrs
-    Item(parseBlocks(icontext,item),attrs)
+    Item(parseBlocks(icontext,item,line), if (line <= 0) then attrs else attrs.setLineNo(line))
   }
 
-  function parseItems( src : string, acc : list<block> = Nil ) {
+  function parseItems( src : string, line : int, acc : list<block> = Nil ) {
     match (src.find(rxitem)) {
       Nothing    -> acc.reverse
-      Just(icap) -> parseItems( src.substr1(icap.next),Cons(parseItem(icap),acc))
+      Just(icap) -> {
+        val newline = if (line <= 0) then line else line + icap.matched.count("\n") 
+        parseItems( src.substr1(icap.next), newline, Cons(parseItem(icap,line),acc))
+      }
     }
   }
 
@@ -249,7 +252,7 @@ function blockList( cap : matched, context : blockContext ) : block {
             }
           } 
   // if loose then add a blank at the end of the last item so it has a Blank
-  items = parseItems( txt + (if (loose) then "\n\n" else "")) 
+  items = parseItems( txt + (if (loose) then "\n\n" else ""), context.lineNo ) 
   List(if (cap.groups[2].length > 1) then "ol" else "ul",items,attrs)
 }
 
@@ -351,12 +354,14 @@ public function parseBlocks( src : string, lineNo : int,
 }
 
 // Parse text into blocks
-function parseBlocks( context : blockContext, src : string ) : list<block>
+function parseBlocks( context : blockContext, src : string, line : int = 0 ) : list<block>
 {
-  val line = context.lineNo
-  if (line <= 0)
-   then parseBlocksAcc( context, Nil, src).reverse
-   else parseBlocksAccLine(context, Nil, line, src).reverse
+  bs = if (line > 0) 
+        then parseBlocksAccLine( context(lineNo = line), Nil, line, src )  
+       elif (context.lineNo > 0)
+        then parseBlocksAccLine(context, Nil, context.lineNo, src)
+        else parseBlocksAcc( context, Nil, src)
+  bs.reverse
 }
 
 
