@@ -70,12 +70,13 @@ public function combineRules( rules : list<rule<a,c>> ) : rule<a,c> {
 // Generic rule matcher: takes a list of rules and applies the action that matches
 // on the given "src". Returns the result of the action and the string following the
 // match.
-public function matchRules( rules : grammar<a,c>, context : c, src : string, def : string -> a ) : (a,int)
+public function matchRules( rules : grammar<a,c>, context : c, src : string, def : string -> a ) : (a,int,string)
 {  
   match(rules) {
     Nil -> {
       //trace("Unable to match any rule!")
-      (def(src.substr(0,1)), 1) //src.substr(1))
+      matched = src.substr(0,1)
+      (def(matched), 1, matched) //src.substr(1))
     }
     Cons(rule,rulesNext) -> {
       match (src.find(rule.regex)) {
@@ -83,7 +84,7 @@ public function matchRules( rules : grammar<a,c>, context : c, src : string, def
           //if (rule.name[0] != '.') then trace("match: " + rule.name.fill(12) + ": " + cap.matched.show )
           // Uncomment the next line to get a histogram of rule matches
           // ruleInc(rule.name)
-          ((rule.action)(cap,context), cap.next)//src.substr(cap.next)) 
+          ((rule.action)(cap,context), cap.next, cap.matched)//src.substr(cap.next)) 
         }
         Nothing -> {
           //stat("fail-" + rule.name)
@@ -313,6 +314,7 @@ public struct attrs  (
   name    : string = "",            // id, without "#" prefix
   label   : string = "",            // label: "1.2"
   source  : string = "",            // the original source (only set for certain elements)
+  lineNo  : int = 0,                // starting lineno of the element
   classes : list<string> = [],            // class, without "." prefix
   counters: list<(string,string)> = [],   // counters, without "@" prefix
   keyvals : list<(string,string)> = []    // key=value pairs 
@@ -352,6 +354,10 @@ public function addKeyvals( attrs : attrs, kvs : list<(string,string)> ) : attrs
 public function addKeyval( attrs : attrs, key : string, value : string ) : attrs {
   attrs(keyvals=attrs.keyvals.filter(fun(kv){ kv.fst != key }) + [(key,value)], 
         text=attrs.text+" "+key+"="+value.quote, empty=False)
+}
+
+public function setLineNo( attrs : attrs, line : int ) : attrs {
+  attrs(lineNo=line, text=attrs.text + " line=" + line.show )
 }
 
 function quote( s : string ) : string {

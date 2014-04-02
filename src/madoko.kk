@@ -72,6 +72,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   val (fblocks,fcontext) 
     = parseBody(initialFormatContext(icontext,options.titleInfo(icontext.metadata),
                                       options.headingBase,options.pedantic,fmt), 
+                options.lineNo,
                 src,
                 options.metadata, options.tocDepth,
                 options.sectionBase,options.sectionMax)

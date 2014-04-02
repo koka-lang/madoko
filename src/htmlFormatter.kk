@@ -147,7 +147,8 @@ public function htmlFormat( attrs : attrs, tag : string, sanitize : bool = True 
   (if (attrs.name=="") then "" else " id=\"" + escape(attrs.name) + "\"") +
    (if (attrs.classes.isNil) then "" 
      else " class=\"" + escape(attrs.classes.join(" ")) + "\"") 
-     + attrs.formatKeyvals(tag)
+   + attrs.formatKeyvals(tag)
+   + (if (attrs.lineNo <= 0) then "" else " data-line=" + attrs.lineNo.show)
    // (" input=" + attrs.input.maybe("?",showInput)) +
    //(attrs.htmlAttributes)
 }

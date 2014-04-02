@@ -339,7 +339,7 @@ val rxNl = regex(@"\n")
 function parseTexAcc( context : texContext, acc : builder<h>, txt : string ) : st<h> string
 {
   if (txt=="") return acc.string
-  val (s,next) = matchRules(context.grammar,context,txt,id)
+  val (s,next,_) = matchRules(context.grammar,context,txt,id)
   parseTexAcc(context, acc.append(s), txt.substr1(next))  
 }
 

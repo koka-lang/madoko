@@ -107,6 +107,15 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     elif (name=="notag") {
       acc(notag=value.toBool)
     }
+    elif (name=="line") {
+      match(value.parseInt()) {
+        Nothing -> {
+          warning("unrecognized line number: line=" + value )
+          acc
+        }
+        Just(n) -> acc(lineNo=n)
+      }
+    }
     elif (name=="replace") {
       acc(replacers = acc.replacers + [value])
     }    

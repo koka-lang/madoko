@@ -20,7 +20,7 @@ import options
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
-  val (mdata2,rest) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
+  val (mdata2,rest,lineCount) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
   options1 = options0.fromMeta(mdata2)
   options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
@@ -31,7 +31,9 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
       options2( metadata = mdataFull)
     }
 
-  (options,rest)  
+  if (options.lineNo > 0)
+   then (options(lineNo = options.lineNo + lineCount),rest)
+   else (options,rest)  
 }
 
 public function fromMeta( opts : options, mdata : metadata ) : options {
@@ -116,12 +118,12 @@ function setMathMode( options : options, value : string ) : options {
 }
 
 
-public function parsePlainMeta( txt : string, fmt : formatter, metadata : metadata = [], verbose : bool = False ) : (metadata,string) 
+public function parsePlainMeta( txt : string, fmt : formatter, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
 {
   match(txt.find(rxMeta)) {
     Nothing   -> {
       //if (metadata.isNil) trace("no metadata?: " + txt.substr(0,100))
-      (metadata.reverse,txt)
+      (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
       kvs = if (fmt.matchFmt(cap.groups[1])) then {
@@ -132,7 +134,8 @@ public function parsePlainMeta( txt : string, fmt : formatter, metadata : metada
                else [(cap.groups[2].normalizeId, value)]
             }
             else []
-      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose )
+      lines2 = txt.substr(0,cap.next).count("\n")
+      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose, lines+lines2 )
     }
   }
 } 

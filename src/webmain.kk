@@ -18,9 +18,9 @@ import storage
 import mathStatic
 
 public function initialOptions( args : string = "" ) : io options {
-  if (args=="") return Options()
-  val opts = parseOptions(args).maybe(CommandOptions(),id)
-  opts.options
+  val opts = if (args=="") then Options()
+                 else parseOptions(args).maybe(CommandOptions(),id).options
+  opts(lineNo=1,mathEmbedLimit=256*1024)                
 }
 
 val coptions = CommandOptions()

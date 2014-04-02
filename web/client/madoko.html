@@ -17,27 +17,6 @@
   });
 </script>
 
-<!-- just mathjax stuff for dynamic math type setting.
-     later we will use static images instead generated on the server
--->
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {inlineMath: [['$','$']]},
-     TeX: { 
-       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],
-                 mathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mathindent: ['\\hspace{#1ex}',1], mathbr: ['\\\\'],
-               },
-
-     }
-  });
-  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { 
-    MathJax.InputJax.TeX.Definitions.environment['mdMathprearray'] = ['AMSarray',null,null,null,'l','0em','0em'];
-  });
-</script>
-<script type="text/javascript"
-  src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
 <!-- load jquery -->
 <script type="text/javascript" src="lib/jquery-2.1.0.js"></script>
 
@@ -206,13 +185,41 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
   }
 
+  function syncView( startLine, endLine ) {
+    var elem = null;
+    $('#view *[data-line]').each( function() {
+      var line = parseInt($(this).attr("data-line"));
+      if (elem===null || (line && !isNaN(line) && line <= startLine)) {
+        elem=$(this);
+      }
+      if (line >= startLine) {
+        return false;      
+      } 
+    });
+    if (elem) {
+      $("#view").scrollTop(elem.offset().top);
+    }
+  }
+
   var editor  = Monaco.Editor.create(document.getElementById("editor"), {
     value: document.getElementById("initial").textContent,
     mode: "text/x-web-markdown",
     theme: "vs-dark",
-    lineNumbers: false
+    lineNumbers: true
   });
 
+
+
+
+  editor.addListener("scroll", function (e) {
+    var view = editor.getView();
+    var lines = view.viewLines;
+    var rng = lines._currentVisibleRange;
+    syncView(rng.startLineNumber, rng.endLineNumber);    
+  });
+  editor.addListener("positionChanged", function (e) {
+    syncView(e.position.lineNumber);
+  });
 
   // TODO: fix this in the std core library
   stdcore.println("ready.")

@@ -125,7 +125,8 @@ rectype blockContext {
                 citestyle : citestyle,
                 bench   : bool,
                 pedantic : bool,
-                loose   : bool = False
+                loose   : bool = False,
+                lineNo  : int = 0
               )
 }
 
@@ -339,28 +340,71 @@ function columnStyle( style : string ) : attrs {
 ---------------------------------------- */
 
 // Parse text into blocks
-public function parseBlocks( src : string,
+public function parseBlocks( src : string, lineNo : int,
                              citestyle : citestyle = citeAuto, 
                              bench : bool = False,
-                             pedantic : bool = False )  : list<block>
+                             pedantic : bool = False
+                             )  : list<block>
 {
-  bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,bench,pedantic, False)
+  bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,bench,pedantic, False, lineNo)
   parseBlocks(bcontext,src)
 }
 
 // Parse text into blocks
 function parseBlocks( context : blockContext, src : string ) : list<block>
 {
-  parseBlocksAcc(context, Nil, src).reverse
+  val line = context.lineNo
+  if (line <= 0)
+   then parseBlocksAcc( context, Nil, src).reverse
+   else parseBlocksAccLine(context, Nil, line, src).reverse
 }
+
 
 function parseBlocksAcc( context : blockContext,  acc : list<block>, src : string ) : list<block>
 {
   if (src=="") return acc;    
-  val (block,next) = matchRules(context.grammar,context,src,raw)
+  val (block,next,_) = matchRules(context.grammar,context,src,raw)
   parseBlocksAcc( context, Cons(block,acc), src.substr1(next) )
+} 
+
+function parseBlocksAccLine( context : blockContext,  acc : list<block>, line : int, src : string ) : list<block>
+{
+  if (src=="") return acc;    
+  val (block,next,matched) = matchRules(context.grammar,context(lineNo=line),src,raw)
+  val line2  = line + matched.count("\n")
+  val ofs    = match(matched.find(rxPreWhite)) {
+                 Nothing   -> 0
+                 Just(cap) -> cap.regex/matched.count("\n")
+               }
+  val block2 = block.adjustAttrs( fun(attrs:attrs) { attrs.setLineNo(line+ofs) } )
+  parseBlocksAccLine( context, Cons(block2,acc), line2, src.substr1(next) )
 }
+
+val rxPreWhite = regex(@"^\s+")
 
 function raw( s : string ) : block {
   Line(s)
+}
+
+
+function adjustAttrs( b : block, adjust : (attrs : attrs) -> attrs ) : block 
+{
+  match(b) {
+    HLine( attrs ) -> HLine(adjust(attrs))
+    Line( text,loose, attrs) -> Line(text,loose,adjust(attrs))
+    Para( text, attrs ) -> Para(text,adjust(attrs))
+    Code( text, language, attrs) -> Code( text, language, adjust(attrs))  
+    Quote( content, attrs) -> Quote( content, adjust(attrs))
+    List( tag, content, attrs) -> List( tag, content, adjust(attrs))
+    Item( content, attrs) -> Item( content, adjust(attrs))
+    Heading( depth, text, attrs) -> Heading( depth, text, adjust(attrs))
+    Table( header, columnAttrs, cells, attrs) -> Table( header, columnAttrs, cells, adjust(attrs))
+    Div( content, attrs) -> Div( content, adjust(attrs))
+    Source( text, input, attrs) -> Source( text, input, adjust(attrs))  
+    //DefLink( id, link) ->
+    //DefFootnote( id, content) ->
+    //Empty() ->    
+    //Special( name, value) ->  // Special blocks, like [TOC] or [FOOTNOTES]
+    _ -> b
+  }
 }

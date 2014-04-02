@@ -100,7 +100,8 @@ public struct options(
   
   metadata      : metadata = [],
   mathdim       : dict<mathinfo> = dict(),  // static math dimension information
-  imginfos      : dict<imginfo> = dict()    // image data, used in a browser
+  imginfos      : dict<imginfo> = dict(),   // image data, used in a browser
+  lineNo        : int = 0                    // emit line no's. used in a browser. 
 );
 
 public function getPdflatex( opts : options ) : string {

@@ -22,13 +22,14 @@ import texParser
 // Parse source into blocks (see "parseBlocks") and 
 // process all definitions (see "parseDefinitions").
 public function parseBody( fcontext : formatContext,
+                           lineNo : int,
                            src : string,
                            metadata : metadata, 
                            tocDepth : int,
                            secBase : int,
                            secDepth : int ) :  div (list<block>,formatContext)
 {
-  parseDefinitions(fcontext, [Div([],"notag".parseAttrs("body",src))], 
+  parseDefinitions(fcontext, [Div([],("notag line=" + lineNo.show).parseAttrs("body",src))], 
                    metadata,tocDepth,secBase,secDepth)
 }
 
@@ -282,12 +283,12 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
-      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4).parseBlocks(citestyle),attrs)
+      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4).parseBlocks(attrs.lineNo,citestyle),attrs)
     }
     Markdown(monly) -> {
       match(monly) {
         Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
-        _ -> Div(txt.parseBlocks(citestyle),attrs)
+        _ -> Div(txt.parseBlocks(attrs.lineNo,citestyle),attrs)
       }
     }
     input -> {
