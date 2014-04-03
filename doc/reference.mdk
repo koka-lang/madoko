@@ -278,7 +278,7 @@ and `>>`).
 ~ Sample
 "double quoted"  
 'single quoted'  
-<<guillemet quoted>>  
+<<guillemet-quoted>>  
 <http://www.google.com>
 ~
 

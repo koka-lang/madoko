@@ -5,11 +5,26 @@ require.config({
 });
 
 
+
+
 var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
 require(["webmain","highlight.js"].concat(languages), function(madoko) {
+  function nub( xs ) {
+    if (!xs || xs.length <= 0) return [];
+    var seen = {};
+    var ys = [];
+    for(var i = 0; i < xs.length; i++) {
+      if (!(seen["$" + xs[i]])) {
+        seen["$" + xs[i]] = true;
+        ys.push(xs[i]);
+      }
+    }
+    return ys;
+  }
+
   // Get the properties of an object.
   function properties(obj) {
     var attrs = [];
@@ -40,7 +55,7 @@ require(["webmain","highlight.js"].concat(languages), function(madoko) {
           runOnServer: runOnServer,
           message: stdout,
           round: req.round,
-          filesRead: filesRead.split("\n"),
+          filesRead: nub(filesRead.split("\n")),
         });
       });
     }
