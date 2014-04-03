@@ -237,10 +237,10 @@ table.madoko {
   vertical-align: top;
 }
 
-.cell-border-left {
+.madoko .cell-border-left {
   border-left: 1px solid black;
 }
-.cell-border-right {
+.madoko .cell-border-right {
   border-right: 1px solid black;
 }
 
@@ -251,12 +251,12 @@ table.madoko {
   border-bottom: none;
 }
 
-.cell-line, .cell-double-line {
+.madoko .cell-line, .madoko .cell-double-line {
   border-bottom: 1px solid black;
   border-top: none;
 }
 
-.cell-double-line {
+.madoko .cell-double-line {
   border-top: 1px solid black;
   padding-top: 1.5px !important;
 }

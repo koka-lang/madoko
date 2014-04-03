@@ -175,7 +175,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   lkind  = kind.toLower
   class  = "math-" + lkind
-  attrsd = attrs.addClass(class)
+  attrsd = context.applyDefaults("span",attrs.addClass(class))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   texcmd = if (kind=="Inline")
             then context.fmtTexCmd("span", left+txt+right, attrsd)

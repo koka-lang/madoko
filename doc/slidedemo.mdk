@@ -10,7 +10,7 @@ Beamer Theme  : singapore
 Package       : pstricks
 Package       : pst-plot
 Math Embed    : 64
-@html .Math-Inline, .Math-Display: color=#586e75
+@html .math-inline, .math-display: color=#586e75
 
 
 [TITLE]
@@ -43,7 +43,7 @@ its full glory.
 And any Madoko features just work. Here is some math.
 
 ~ Begin Framed { padding-right=1ex }
-A famous equation is $E = mc^2$, but this one is 
+A famous equation is $E = mmc^2$, but this one is 
 famous too:
 
 ~ Equation  {#eq-gaussian}
