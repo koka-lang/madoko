@@ -454,11 +454,11 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     scrollbar: {
       vertical: "auto",
       horizontal: "auto",
-      verticalHasArrows: true,
-      horizontalHasArrows: true,
-      verticalScrollbarSize: 8,
-      horizontalScrollbarSize: 8,
-      arrowSize: 8
+      verticalScrollbarSize: 6,
+      horizontalScrollbarSize: 6,
+      //verticalHasArrows: true,
+      //horizontalHasArrows: true,
+      //arrowSize: 10,
     }
   });
 
@@ -741,7 +741,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 <style>
 #editorpane {
   float: left;
-  border: 1px solid #AAA;
+  border: 1px solid black;
   margin: 0em;
   height: 94%;
   width:  50%;
@@ -758,7 +758,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 }
 
 #view {
-  border: 1px solid #AAA;
+  border: 1px solid black;
   height: 94%;
   margin: 0em;
   margin-bottom: 0.5%;
@@ -790,8 +790,6 @@ body {
 }
 
 #menubar {
-  margin: 0ex 0ex 1ex 0ex;
-  padding: 0em;
   font-family: "Segoe UI";
   font-size: x-small;
   color: #666;
@@ -837,6 +835,16 @@ body {
 #view p, #view li {
   text-align: justify;
 }
+.monaco-editor, .monaco-editor .lines-decorations {
+  background-color: #FFFAF4;
+}
+#view {
+  background-color: white;
+}
+body {
+  background-color: Gainsboro;
+}
+
 </style>
 </head>
 
@@ -871,10 +879,11 @@ function hi() {
 insert image:
 <input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
 -->
-<span id="onedrive-download" class="button"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load from onedrive</span>
-&nbsp;continuous:<input type="checkbox" id="checkContinuous" checked />
-&nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked />
-&nbsp;show console:<input type="checkbox" id="checkShowConsole"  />
+<img src="images/madoko-abslogo-xsmall.png" style="width:2em;vertical-align:-0.5ex;padding-right:2em"/>
+<span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
+&nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
+&nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
+&nbsp;show console:<input type="checkbox" id="checkShowConsole" title="Show the console window" />
 </div>
 <div id="editorpane"><div id="editor"></div></div>
 <div id="viewpane">
