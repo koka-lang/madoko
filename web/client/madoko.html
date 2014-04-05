@@ -375,7 +375,10 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   var options = madoko.initialOptions();
   options.mathEmbedLimit = 256 * 1024;
   var view    = document.getElementById("view");
-
+  var cons    = document.getElementById("koka-console-out");
+  var editpane = document.getElementById("editorpane");
+  var viewpane = document.getElementById("viewpane");
+    
   var madokoWorker = new Worker("madoko-worker.js");
   var lastRound = 0;
   madokoWorker.addEventListener("message", function(ev) {
@@ -754,13 +757,60 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     }).then( onedrivePickFile, onedriveFail );
   };
 
-  var buttonUpDown = document.getElementById("button-updown");
-  buttonUpDown.onclick = function(ev) {
-    var cons = document.getElementById("koka-console-out");
-    toggleClassName(cons,"short");
-    toggleClassName(view,"short");   
-    buttonUpDown.innerHTML = (hasClassName(cons,"short") ? "&#9650" : "&#9660;");
+  function toggleButton( elemName, text0, text1, action ) {
+    var button = (typeof elemName === "string" ? document.getElementById(elemName) : elemName);
+    var toggled = true;
+    function toggle() {
+      toggled = !toggled;
+      button.innerHTML = (toggled ? text1 : text0);
+    }
+    toggle();
+    button.onclick = function(ev) {
+      toggle();
+      action(ev,toggled);
+    }
   }
+
+  var buttonEditorNarrow = document.getElementById("button-editor-narrow");
+  var buttonEditorWide = document.getElementById("button-editor-wide");
+
+  var triLeft = "<div class='tri-left'></div>";
+  var triRight = "<div class='tri-right'></div>";
+  var triUp = "<div class='tri-up'></div>";
+  var triDown = "<div class='tri-down'></div>";
+ 
+  toggleButton( "button-updown", triUp, triDown, function(ev) {
+    toggleClassName(cons,"short");
+    toggleClassName(view,"short");       
+  });
+
+ 
+
+  toggleButton( buttonEditorNarrow, triLeft, triRight, function(ev,toggled) {
+    if (toggled) {
+      addClassName(viewpane,"wide");
+      addClassName(editpane,"narrow");
+      addClassName(buttonEditorWide,"hide");
+    }
+    else {
+      removeClassName(viewpane,"wide");
+      removeClassName(editpane,"narrow");
+      removeClassName(buttonEditorWide,"hide");
+    }
+  });
+
+  toggleButton( buttonEditorWide, triRight, triLeft, function(ev,toggled) {
+    if (toggled) {
+      addClassName(viewpane,"narrow");
+      addClassName(editpane,"wide");
+      addClassName(buttonEditorNarrow,"hide");
+    }
+    else {
+      removeClassName(viewpane,"narrow");
+      removeClassName(editpane,"wide");
+      removeClassName(buttonEditorNarrow,"hide");
+    }
+  });
 
   document.getElementById("checkShowConsole").onchange = function(ev) {
     var cons = document.getElementById("koka-console-out");
@@ -776,8 +826,6 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 
 
   document.getElementById("checkShowWide").onchange = function(ev) {
-    var editpane = document.getElementById("editorpane");
-    var viewpane = document.getElementById("viewpane");
     if (ev.target.checked) {
       addClassName(viewpane,"wide");
       addClassName(editpane,"narrow");
@@ -793,6 +841,20 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 
 <!-- styles -->
 <style>
+html,body,#app {
+  height: 100%;
+  padding: 0pt;
+  margin: 0pt;
+}
+
+#app {
+  padding: 0ex 1ex;
+}
+
+body {
+  background-color: #3A4150;
+  background-color: #FFFAF4;
+}
 
 .toppane {
   height: 1.5rem;
@@ -800,19 +862,29 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 
 .pane {
   height: calc(100% - 2rem);
-  width: calc(50% - 0.25rem);
+  width: calc(50% - 0.25rem - 2px);
 }
 
 .pane.wide {
-  width: calc(80% - 0.25rem);
+  width: calc(80% - 0.25rem - 2px);
 }
 .pane.narrow {
-  width: calc(20% - 0.25rem);
+  width: calc(20% - 0.25rem - 2px);
+}
+
+#buttonbar-vertical {
+  width: 0.5rem;
+  float: left;
+}
+
+#buttonbar-horizontal {
+  height: 0.5rem;
+  font-size: small;
 }
 
 #menubar {
   font-family: "Segoe UI";
-  font-size: x-small;
+  font-size: small;
   color: #666;
 }
 
@@ -823,9 +895,8 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   transition: width 0.8s;
 }
 
-
 #viewpane {
-  float: right;
+  float: left;
   transition: width 0.8s;
 }
 
@@ -847,13 +918,10 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   height: calc(50% - 2px);
 }
 
-#buttonbar-updown {
-  height: 1rem;
-}
-
 #koka-console-out {
-  height: calc(50% - 2rem);
-  overflow: scroll;
+  height: calc(50% - 1.5rem);
+  overflow-y: scroll;
+  overflow-x: hidden;
   font-size: 8pt;
   padding: 0.5rem;
   border: 1px solid black;
@@ -861,24 +929,11 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 }
 
 #koka-console-out.short {
-  height: calc(8% - 2rem);
+  height: calc(8% - 1.5rem);
 }
 
-
-html,body,#app {
-  height: 100%;
-  padding: 0pt;
-  margin: 0pt;
-}
-
-#app {
-  padding: 0ex 1ex;
-}
-
-
-body {
-  background-color: #3A4150;
-  background-color: #FFFAF4;
+#button-editor-wide {
+  margin-top: 1ex ;
 }
 
 
@@ -907,6 +962,10 @@ body {
   cursor: pointer;
 }
 
+.ibutton.hide {
+  display: none;
+}
+
 .monaco-editor .token.code {
   background-color: #EEE;
 }
@@ -933,6 +992,35 @@ body {
   background-color: Gainsboro;
 }
 
+
+.tri-left {
+  width: 0; 
+  height: 0; 
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;   
+  border-right:0.5rem solid black; 
+}
+.tri-right {
+  width: 0; 
+  height: 0; 
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;   
+  border-left:0.5rem solid black; 
+}
+.tri-down {
+  width: 0; 
+  height: 0; 
+  border-right: 0.3rem solid transparent;
+  border-left: 0.3rem solid transparent;   
+  border-top:0.5rem solid black; 
+}
+.tri-up {
+  width: 0; 
+  height: 0; 
+  border-right: 0.3rem solid transparent;
+  border-left: 0.3rem solid transparent;   
+  border-bottom:0.5rem solid black; 
+}
 </style>
 </head>
 
@@ -975,9 +1063,13 @@ insert image:
 &nbsp;show wide:<input type="checkbox" id="checkShowWide" title="Show the view window wide" />
 </div>
 <div id="editorpane" class="pane"><div id="editor"></div></div>
+<div id="buttonbar-vertical">
+<div id="button-editor-narrow" class="ibutton"></div>
+<div id="button-editor-wide" class="ibutton"></div>
+</div>
 <div id="viewpane" class="pane madoko">
 <div id="view"></div>
-<div id="buttonbar-updown"><span id="button-updown" class="ibutton">&#9650;</span></div>
+<div id="buttonbar-horizontal"><div id="button-updown" class="ibutton"></div></div>
 <div id="koka-console"></div>
 <div id="koka-console-out" class="monospace short"></div>
 </div>
