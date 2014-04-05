@@ -255,6 +255,50 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
   }
 
+  function contains( xs, s ) {
+    if (!xs) return false;
+    if (!s) return true;
+    if (xs instanceof Array) {
+      for(var i = 0; i < xs.length; i++) {
+        if (xs[i] === s) return true;
+      }
+    }
+    else if (typeof xs === "string") {
+      if (xs.indexOf(s) >= 0) return true;
+    }
+    return false;
+  }
+
+  function hasClassName( elem, cname ) {    
+    var names = elem.className.split(/\s+/);
+    return contains(names,cname);
+  }
+
+  function toggleClassName( elem, cname ) {
+    if (hasClassName(elem,cname)) {
+      removeClassName(elem,cname);
+    }
+    else {
+      addClassName(elem,cname);
+    }
+  }
+
+  function removeClassName( elem, cname ) {
+    var cnames = elem.className;
+    var names = cnames.split(/\s+/);
+    var newnames = names.filter( function(n) { return (n !== cname); });
+    if (names.length !== newnames.length) {
+      elem.className = newnames.join(" ");
+    }
+  }
+
+  function addClassName( elem, cname ) {
+    var cnames = elem.className;
+    var names = cnames.split(/\s+/);
+    if (!contains(names,cname)) {
+      elem.className = cnames + " " + cname;
+    }    
+  }
 
   function changeExt( fname, newext ) {
     var ext = extname(fname);
@@ -451,6 +495,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     mode: madokoMode,
     tabSize: 4,
     insertSpaces: false,
+    automaticLayout: true,
     scrollbar: {
       vertical: "auto",
       horizontal: "auto",
@@ -476,20 +521,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     console.log(e);
   });
 
-  // TODO: fix this in the std core library
   stdcore.println("ready.")
-  var cons = document.getElementById("koka-console-out");
-  cons.wrap = "soft";
-  cons.style.whiteSpace = "pre-wrap";
-  cons.style.borderStyle = "solid";
-  //cons.style.height = "100%";
-  //cons.style.marginTop = "1ex";
-  cons.style.height  = "70%";
-  cons.style.width  = "98.5%";
-  cons.style.margin  = "0ex";
-  cons.style.fontSize = "9px";
-  //cons.style.margin = "1% 0ex";
-  
     
   var text0 = "";     // text from the previous round
   var stale = true;   // is the view stale with respect to the current text?
@@ -722,15 +754,37 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     }).then( onedrivePickFile, onedriveFail );
   };
 
+  var buttonUpDown = document.getElementById("button-updown");
+  buttonUpDown.onclick = function(ev) {
+    var cons = document.getElementById("koka-console-out");
+    toggleClassName(cons,"short");
+    toggleClassName(view,"short");   
+    buttonUpDown.innerHTML = (hasClassName(cons,"short") ? "&#9650" : "&#9660;");
+  }
+
   document.getElementById("checkShowConsole").onchange = function(ev) {
-    var cons = document.getElementById("koka-console");
+    var cons = document.getElementById("koka-console-out");
     if (ev.target.checked) {
-      cons.style.height = "38%";
-      view.style.height = "60%";
+      addClassName(view,"short");
+      removeClassName(cons,"short");
     }
     else {
-      cons.style.height = "5%";
-      view.style.height = "93%";      
+      addClassName(cons,"short");
+      removeClassName(view,"short");
+    }
+  };
+
+
+  document.getElementById("checkShowWide").onchange = function(ev) {
+    var editpane = document.getElementById("editorpane");
+    var viewpane = document.getElementById("viewpane");
+    if (ev.target.checked) {
+      addClassName(viewpane,"wide");
+      addClassName(editpane,"narrow");
+    }
+    else {
+      removeClassName(viewpane,"wide");
+      removeClassName(editpane,"narrow");
     }
   };
 });
@@ -739,39 +793,77 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
 
 <!-- styles -->
 <style>
+
+.toppane {
+  height: 1.5rem;
+}
+
+.pane {
+  height: calc(100% - 2rem);
+  width: calc(50% - 0.25rem);
+}
+
+.pane.wide {
+  width: calc(80% - 0.25rem);
+}
+.pane.narrow {
+  width: calc(20% - 0.25rem);
+}
+
+#menubar {
+  font-family: "Segoe UI";
+  font-size: x-small;
+  color: #666;
+}
+
 #editorpane {
   float: left;
   border: 1px solid black;
   margin: 0em;
-  height: 94%;
-  width:  50%;
+  transition: width 0.8s;
+}
+
+
+#viewpane {
+  float: right;
+  transition: width 0.8s;
 }
 
 #editor {
   height: 100%;
 }
 
-#viewpane {
-  float: right;
-  width: 49%;
-  height: 94%;
-}
-
 #view {
-  border: 1px solid black;
-  height: 94%;
-  margin: 0em;
-  margin-bottom: 0.5%;
-  padding: 0em 1ex;
+  height: calc(92% - 2px);
+  margin: 0px;
+  padding: 0px 1ex;
   overflow: scroll;
   background-color: white;
+  border: 1px solid black;
+  transition: height 0.8s;
 }
 
-#koka-console {
-  margin: 0em;
-  height: 5%;
-  padding: 0em; 
+#view.short {
+  height: calc(50% - 2px);
 }
+
+#buttonbar-updown {
+  height: 1rem;
+}
+
+#koka-console-out {
+  height: calc(50% - 2rem);
+  overflow: scroll;
+  font-size: 8pt;
+  padding: 0.5rem;
+  border: 1px solid black;
+  transition: height 0.8s;
+}
+
+#koka-console-out.short {
+  height: calc(8% - 2rem);
+}
+
 
 html,body,#app {
   height: 100%;
@@ -789,11 +881,6 @@ body {
   background-color: #FFFAF4;
 }
 
-#menubar {
-  font-family: "Segoe UI";
-  font-size: x-small;
-  color: #666;
-}
 
 #menubar input {
   width: 1.5ex;
@@ -815,7 +902,8 @@ body {
 .button {
   border: 1px solid #AAA;
 }
-.button:hover {
+
+.button:hover, .ibutton:hover {
   cursor: pointer;
 }
 
@@ -850,8 +938,7 @@ body {
 
 <body>
 
-<div id="initial" style="display:none; white-space:pre">Heading base: 2
-
+<div id="initial" style="display:none; white-space:pre">
 # An example   { #example }
 
 Here is a famous equation:
@@ -862,9 +949,10 @@ e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 
 And we can refer to Equation [#euler] in Section [#example].
 
-Here is an image ![arborbw-small].
+Or to a websites like [Bing] or [Google]
 
-Or to a website like [bing](http://www.bing.com).
+[bing]: http://www.bing.com "Bing it"
+[google]: http://www.google.com 
 
 ```javascript 
 function hi() {
@@ -873,7 +961,7 @@ function hi() {
 ```
 </div>  
 <div id="app">
-<div id="menubar">
+<div id="menubar" class="toppane">
 <!--
 <img src="images/monarch-34px.png" id="logo"/>
 insert image:
@@ -884,11 +972,14 @@ insert image:
 &nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
 &nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
 &nbsp;show console:<input type="checkbox" id="checkShowConsole" title="Show the console window" />
+&nbsp;show wide:<input type="checkbox" id="checkShowWide" title="Show the view window wide" />
 </div>
-<div id="editorpane"><div id="editor"></div></div>
-<div id="viewpane">
+<div id="editorpane" class="pane"><div id="editor"></div></div>
+<div id="viewpane" class="pane madoko">
 <div id="view"></div>
-<div id="koka-console" class="monospace"></div>
+<div id="buttonbar-updown"><span id="button-updown" class="ibutton">&#9650;</span></div>
+<div id="koka-console"></div>
+<div id="koka-console-out" class="monospace short"></div>
 </div>
 </div>
 </body>
