@@ -98,17 +98,17 @@ function formatBlocksAcc( context : formatContext, blocks : list<block>, acc : b
         // (because adjacent nested lists otherwise become part of a paragraph)
         // Here we re-discover paragraphs by treating lines that are ended by
         // a blank line as a paragraph again.
-        Line(txt,loose) -> {
+        Line(txt,loose,attrs) -> {
           val (lines,rest2) = rest.span(isLine)
           val content = txt + lines.map(lineText).join
           match(rest2) {
             Cons(Blank(_),rest3) -> {
-              formatBlocksAcc(context,rest3,acc.append(formatBlock(context,Para(content))))
+              formatBlocksAcc(context,rest3,acc.append(formatBlock(context,Para(content,attrs))))
             }
             _ -> {
               // This is to emulate fully pedantic list mode where we always
               // combine text lines as a paragraph in a loose list
-              newblock = if (loose) then Para(content) else Line(content,loose)
+              newblock = if (loose) then Para(content,attrs) else Line(content,loose,attrs)
               formatBlocksAcc(context,rest2,acc.append(formatBlock(context,newblock)))
             }
           }
