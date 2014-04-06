@@ -1,15 +1,17 @@
 define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
         function(util,onedrive,madokoMode) {
 
-  var runMadoko;
-  var editor;
+  var editor = null;
   var refreshContinuous = true;
   var allowServer = true;
+  var runMadoko = function(text) {};
+  var onDocumentLoad = function() {};
 
-  function init( _runMadoko ) {
+  function init( _runMadoko, _onDocumentLoad ) {
     runMadoko = _runMadoko;
+    onDocumentLoad = _onDocumentLoad;
 
-    editor  = Monaco.Editor.create(document.getElementById("editor"), {
+    editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: document.getElementById("initial").textContent,
       mode: "text/x-web-markdown",
       theme: "vs",
@@ -56,8 +58,12 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
       onedrivePickFile();
     };
 
+    var view     = document.getElementById("view");
+    var cons     = document.getElementById("koka-console-out");
+    var editpane = document.getElementById("editorpane");
+    var viewpane = document.getElementById("viewpane");
     var buttonEditorNarrow = document.getElementById("button-editor-narrow");
-    var buttonEditorWide = document.getElementById("button-editor-wide");
+    var buttonEditorWide   = document.getElementById("button-editor-wide");
 
     var triLeft   = "<div class='tri-left'></div>";
     var triRight  = "<div class='tri-right'></div>";
@@ -97,6 +103,10 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
 
   }
 
+  function setEditText( text ) {
+    editor.model.setValue(text);
+  }
+
   // Called whenever the text buffer changes.
   // TODO: can we run this invoked by the editor instead of an interval?
   // and should we run in a worker perhaps?
@@ -123,16 +133,8 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
     }
   }
 
-  function completed( r ) {
-    lastRound = r;
-  }
-
-  function setStale() {
-    stale = true;
-  }
-
-  function editFile( text ) {
-    editor.model.setValue(text);
+  function completed( rnd ) {
+    lastRound = rnd;
   }
 
   // Insert some text in the document 
@@ -201,9 +203,8 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
     onedrive.fileDialog( function(fname,info) {
       if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
       onedrive.readFile(info, function(text) { 
-        docName = fname;
-        docInfo = info;
-        editFile(text);
+        setEditText(text);
+        onDocumentLoad(fname,info,text);
       });
     });
   }
@@ -211,9 +212,10 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
   
   return {
     init: init,
-    allowServer: function() { allowServer; },
-    editFile: editFile,
-    setStale: setStale,
-    completed: completed
+    completed: completed,
+    setStale   : function() { stale = true; },
+    allowServer: function() { return allowServer; },
+    setEditText: setEditText,
+    getEditText: function() { return editor.getValue(); }
   };  
 });

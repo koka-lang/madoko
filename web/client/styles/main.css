@@ -1,0 +1,188 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
+html,body,#app {
+  height: 100%;
+  padding: 0pt;
+  margin: 0pt;
+}
+
+#app {
+  padding: 0ex 1ex;
+}
+
+body {
+  background-color: #3A4150;
+  background-color: #FFFAF4;
+}
+
+.toppane {
+  height: 1.5rem;
+}
+
+.pane {
+  height: calc(100% - 2rem);
+  width: calc(50% - 0.25rem - 2px);
+}
+
+.pane.wide {
+  width: calc(80% - 0.25rem - 2px);
+}
+.pane.narrow {
+  width: calc(20% - 0.25rem - 2px);
+}
+
+#buttonbar-vertical {
+  width: 0.5rem;
+  float: left;
+}
+
+#buttonbar-horizontal {
+  height: 0.5rem;
+  font-size: small;
+}
+
+#menubar {
+  font-family: "Segoe UI";
+  font-size: small;
+  color: #666;
+}
+
+#editorpane {
+  float: left;
+  border: 1px solid black;
+  margin: 0em;
+  transition: width 0.8s;
+}
+
+#viewpane {
+  float: left;
+  transition: width 0.8s;
+}
+
+#editor {
+  height: 100%;
+}
+
+#view {
+  height: calc(92% - 2px);
+  margin: 0px;
+  padding: 0px 1ex;
+  overflow: scroll;
+  background-color: white;
+  border: 1px solid black;
+  transition: height 0.8s;
+}
+
+#view.short {
+  height: calc(50% - 2px);
+}
+
+#koka-console-out {
+  height: calc(50% - 1.5rem);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  font-size: 8pt;
+  padding: 0.5rem;
+  border: 1px solid black;
+  transition: height 0.8s;
+}
+
+#koka-console-out.short {
+  height: calc(8% - 1.5rem);
+}
+
+#button-editor-wide {
+  margin-top: 1ex ;
+}
+
+
+#menubar input {
+  width: 1.5ex;
+  height: 1.5ex;
+}
+
+#logo {
+  padding: 0pt; 
+  width: 17px;
+  vertical-align: bottom;
+}
+
+#onedrive-download {
+  /* color: #00B; */
+  background-color: white;
+  padding-right: 0.5ex;
+}
+
+.button {
+  border: 1px solid #AAA;
+}
+
+.button:hover, .ibutton:hover {
+  cursor: pointer;
+}
+
+.ibutton.hide {
+  display: none;
+}
+
+.monaco-editor .token.code {
+  background-color: #EEE;
+}
+.monaco-editor .token.code.keyword {
+  color: navy;
+}
+.monaco-editor .token.metadata {
+  color: navy;
+}
+.monaco-editor .token.string.escape {
+  color: gray;
+}
+
+#view p, #view li {
+  text-align: justify;
+}
+.monaco-editor, .monaco-editor .lines-decorations {
+  background-color: #FFFAF4;
+}
+#view {
+  background-color: white;
+}
+body {
+  background-color: Gainsboro;
+}
+
+
+.tri-left {
+  width: 0; 
+  height: 0; 
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;   
+  border-right:0.5rem solid black; 
+}
+.tri-right {
+  width: 0; 
+  height: 0; 
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;   
+  border-left:0.5rem solid black; 
+}
+.tri-down {
+  width: 0; 
+  height: 0; 
+  border-right: 0.3rem solid transparent;
+  border-left: 0.3rem solid transparent;   
+  border-top:0.5rem solid black; 
+}
+.tri-up {
+  width: 0; 
+  height: 0; 
+  border-right: 0.3rem solid transparent;
+  border-left: 0.3rem solid transparent;   
+  border-bottom:0.5rem solid black; 
+}

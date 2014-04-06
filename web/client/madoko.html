@@ -2,15 +2,15 @@
 <html>
 <head>
 
+<!-- Theme CSS must be loaded statically for now -->
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
+
 <!-- madoko style -->
 <link rel="stylesheet" type="text/css" href="styles/madoko.css">
 
 <!-- main style -->
 <link rel="stylesheet" type="text/css" href="styles/main.css">
-
-<!-- Theme CSS must be loaded statically for now -->
-<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
-<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
 
 <!-- use the monaco loader to implement "require" -->
 <script type="text/javascript" src="lib/vs/loader.js"></script>
@@ -25,6 +25,8 @@
 
 <!-- onedrive -->
 <script src="//js.live.net/v5.0/wl.debug.js"></script>
+
+
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
@@ -41,14 +43,7 @@ require(["std_core","std_path","webmain",
 
   var options = madoko.initialOptions();
   options.mathEmbedLimit = 256 * 1024;
-  var view    = document.getElementById("view");
-  var cons    = document.getElementById("koka-console-out");
-  var editpane = document.getElementById("editorpane");
-  var viewpane = document.getElementById("viewpane");
     
-  var madokoWorker = new Worker("madoko-worker.js");
-  
-
   var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
   function hasImageExt(fname) {
     return util.contains(imageExts,util.extname(fname));
@@ -70,7 +65,8 @@ require(["std_core","std_path","webmain",
   function serverRun() {
     if (!ui.allowServer()) return;
 
-    var text = editor.getValue();
+    var text = ui.getEditText();
+
     // TODO: schedule run on server
     // send: document, and other files (like .bib and include files (but not images))    
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
@@ -96,6 +92,21 @@ require(["std_core","std_path","webmain",
     });
   }
 
+  function loadImage( fname ) {
+    onedrive.getImageUrl( docInfo, fname, function(url) {
+      options.imginfos = madoko.addImage(options.imginfos,fname,url);
+    });
+  }
+
+  function loadText( fname ) {
+    onedrive.getFileInfo( docInfo, fname, function(info) {
+      onedrive.readFile( info, function(data) {
+        files[fname] = data;
+      });
+    });
+  }
+
+  var madokoWorker = new Worker("madoko-worker.js");
   madokoWorker.addEventListener("message", function(ev) {
     var res = ev.data;
     if (res.message) {
@@ -126,26 +137,8 @@ require(["std_core","std_path","webmain",
     }
     ui.completed(res.round);
   });
-
   
-  function loadImage( fname ) {
-    onedrive.getImageUrl( docInfo, fname, function(url) {
-      options.imginfos = madoko.addImage(options.imginfos,fname,url);
-    });
-  }
 
-  function loadText( fname ) {
-    onedrive.getFileInfo( docInfo, fname, function(info) {
-      onedrive.readFile( info, function(data) {
-        console.log("read: " + fname);
-        files[fname] = data;
-      });
-    });
-  }
-
-    
-  var imgDir      = "img";
-  
   function runMadoko(text,round) {
     util.message( "update " + round.toString() + " ..." );
     madokoWorker.postMessage( {
@@ -157,7 +150,12 @@ require(["std_core","std_path","webmain",
     });
   }
 
-  ui.init(runMadoko);
+  function onDocumentLoad( fname, info, text ) {
+    docName = fname;
+    docInfo = info;
+  }
+
+  ui.init(runMadoko, onDocumentLoad);
   util.message("ready.")  
 });
 </script>
