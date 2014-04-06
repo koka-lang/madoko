@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<!-- Theme CSS must be loaded statically for now -->
+<!-- Editor themes -->
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
 
@@ -24,20 +24,18 @@
 <script type="text/javascript" src="lib/jquery-2.1.0.js"></script>
 
 <!-- onedrive -->
-<script src="//js.live.net/v5.0/wl.debug.js"></script>
-
-
+<script src="//js.live.net/v5.0/wl.debug.js"></script> 
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
-require(["std_core","std_path","webmain",
-          "../scripts/util","../scripts/onedrive",
-          "../scripts/ui","../scripts/runner",
+require([ "../scripts/util",
+          "../scripts/ui",
+          "../scripts/runner",
           "vs/editor/editor.main"],
-          function(stdcore,stdpath,madoko,util,onedrive,ui,runner) 
+          function(util,ui,runner) 
 { 
-  var runMadoko = runner.init(ui);
-  ui.init(runMadoko);
+  var run = new runner.Runner(ui);
+  ui.init( function(text,ctx) { return run.runMadoko(text,ctx); } );
   util.message("ready.")  
 });
 </script>
