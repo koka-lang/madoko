@@ -2,6 +2,9 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
         function(util,onedrive,madokoMode) {
 
   var editor = null;
+  var docName = "document.mdk";
+  var docInfo = {};
+
   var refreshContinuous = true;
   var allowServer = true;
   var runMadoko = function(text) {};
@@ -64,13 +67,14 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
     var viewpane = document.getElementById("viewpane");
     var buttonEditorNarrow = document.getElementById("button-editor-narrow");
     var buttonEditorWide   = document.getElementById("button-editor-wide");
+    var buttonUpDown       = document.getElementById("button-updown");
 
     var triLeft   = "<div class='tri-left'></div>";
     var triRight  = "<div class='tri-right'></div>";
     var triUp     = "<div class='tri-up'></div>";
     var triDown   = "<div class='tri-down'></div>";
    
-    util.toggleButton( "button-updown", triUp, triDown, function(ev) {
+    util.toggleButton( buttonUpDown, triUp, triDown, function(ev) {
       util.toggleClassName(cons,"short");
       util.toggleClassName(view,"short");       
     });
@@ -129,12 +133,12 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
     if (stale && (round == lastRound || Date.now() > staleTime + 5000)) {
       stale = false;
       round++;
-      runMadoko(text,round)
+      if (runMadoko) runMadoko(text,{ round: round, docName: docName, docInfo: docInfo })
     }
   }
 
-  function completed( rnd ) {
-    lastRound = rnd;
+  function completed( ctx ) {
+    lastRound = ctx.round;
   }
 
   // Insert some text in the document 
@@ -204,7 +208,9 @@ define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
       if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
       onedrive.readFile(info, function(text) { 
         setEditText(text);
-        onDocumentLoad(fname,info,text);
+        docName = fname;
+        docInfo = info;
+        if (onDocumentLoad) onDocumentLoad(fname,info,text);
       });
     });
   }

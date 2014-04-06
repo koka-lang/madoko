@@ -4,14 +4,12 @@ require.config({
   baseUrl: "lib",
 });
 
-
-
-
 var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
-require(["webmain","highlight.js"].concat(languages), function(madoko) {
+require(["webmain","highlight.js"].concat(languages), function(madoko) 
+{
   function nub( xs ) {
     if (!xs || xs.length <= 0) return [];
     var seen = {};
@@ -54,7 +52,7 @@ require(["webmain","highlight.js"].concat(languages), function(madoko) {
           options: options1,
           runOnServer: runOnServer,
           message: stdout,
-          round: req.round,
+          ctx: req.ctx,
           filesRead: nub(filesRead.split("\n")),
         });
       });

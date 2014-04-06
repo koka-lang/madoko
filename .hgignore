@@ -15,6 +15,7 @@ syntax:regexp
 ^doc/\w+\.(html|pdf|css)
 ^node_modules/
 ^web/client/lib/
+^web/client/styles/
 ^web/client/jquery-ui/
 ^web/client/highlight.js$
 ^web/users$
