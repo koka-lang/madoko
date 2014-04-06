@@ -5,6 +5,9 @@
 <!-- madoko style -->
 <link rel="stylesheet" type="text/css" href="styles/madoko.css">
 
+<!-- main style -->
+<link rel="stylesheet" type="text/css" href="styles/main.css">
+
 <!-- Theme CSS must be loaded statically for now -->
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
@@ -25,352 +28,16 @@
 
 <!-- install a handler that calls madoko to typeset -->
 <script>
-var madokoMode = 
-    {
-      displayName: 'Madoko',
-      name: 'mdk',
-      mimeTypes: ['text/x-madoko'],
-      fileExtensions: ['mdk'],
-      editorOptions: { tabSize: 4, insertSpaces: true },
-      ignoreCase: true,
-    
-      autoClosingPairs: [ ['"','"'],["'","'"] ],
-      noindentBrackets: "~+",
-      
-      // escape codes 
-      escapes:  /\\[^a-zA-Z0-9]/,  
-    
-      // escape codes for javascript/CSS strings
-      jsescapes:  /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
-      
-      metakey: /(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( [\w\-]+)?\\*?\*?) *[:]/,  
-      
-      // non matched elements
-      empty: [
-        'area', 'base', 'basefont', 'br', 'col', 'frame', 
-        'hr', 'img', 'input', 'isindex', 'link', 'meta', 'param'
-      ],
-    
-      tokenizer: {
-        root: [
-          // metadata
-          //val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-          //val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
-          [/^(@metakey)/, { token: "namespace.metadata.key", next: "metadata" } ],
-          
-          // headers
-          [/^(\s{0,3})(#+)((?:[^\\#\{]|@escapes)+)((?:#+)?)/, ['white','keyword.$1','keyword.$1','keyword.$1']],
-          [/^\s{0,3}(=+|\-+)\s*$/, 'keyword.header'],      
-          [/^\s{0,3}((\*[ ]?)+)\s*$/, 'keyword.header'],
-          [/^\s{0,3}(~+)\s*(?:begin\s+(\w+)\s*|end\s+(\w+)\s*|(\w+)\s*)?(?=(?:\{[^}]+\}\s*)?$)/, {
-            cases: {
-              "$2": { token: 'keyword.header.custom.$2', bracket: "@open" },
-              "$3": { token: 'keyword.header.custom.$3', bracket: "@close" },
-              "$4~(equation|texraw)": { token: 'keyword.header.custom.$1', bracket: "@open", next: "@latexblock" },
-              "$4": { token: 'keyword.header.custom.$1', bracket: "@open" },
-              "@default": { token: 'keyword.header.custom.$1', bracket: "@close" }
-            }}],      
-          // code & quote     
-          [/^\s{0,3}>+/, 'string.quote' ],  
-          [/^(\t|[ ]{4})\S.*$/, { token: 'namespace.code', next: '@codeblock' } ], // code line
-          //[/^\s*~+\s*$/, { token: 'namespace.code', bracket: '@open', next: '@codeblock' }],
-          
-          // github style code blocks
-          [/^\s*(```+)\s*(?:([^\s\{]+)\s*)?(?:\{[^}]+\}\s*)?$/, { cases: {
-            //"$2==javascript": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.javascript', nextEmbedded: 'text/javascript' },
-            //"$2==json": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.json', nextEmbedded: 'application/json' },
-            //"$2~\\w+/.*": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.$2', nextEmbedded: '$2' },
-            //"$2": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.x-$2', nextEmbedded: 'text/x-$2' },
-            "@default": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1' }
-          }}],
-          // [/^\s*```+\s*((?:\w|[\/\-])+)\s*$/, { token: 'namespace.code', bracket: '@open', next: '@codeblockgh', nextEmbedded: '$1' }],
-          
-          // list
-          [/^\s([\*\-+:]|\d\.)/, 'string.list'],
-          
-          // markup within lines
-          { include: '@linecontent' },
-        ],
-        
-        metadata: [
-          [/^(@metakey)/, { token: "@rematch", next: "@pop" } ],
-          [/^(?!\s\s\s)/, { token: "@rematch", next: "@pop" }],
-          [/.+/, "string.escape" ]
-        ],
-        
-        
-        latexblock: [
-          [/\s*\{[^\}]*\}/, 'string.escape' ],
-          [/./, { token: "@rematch", switchTo: "latexblockcontent.$S2" } ]      
-        ],
-        
-        latexblockcontent: [
-          [/^\s*~+\s*$/, { cases: {
-            "$1==$S2": { token: 'keyword.header.custom.latex', bracket: '@close', next: '@pop' },
-            "@default": "code.latex" 
-          }}],
-          [/\\[a-zA-Z]+|\\.?/, "code.keyword.latex" ],
-          [/[^\\]+/, 'code.latex' ],      
-        ],
-        
-        codeblock: [      
-          [/^(\t|[ ]{4}).*$/, 'namespace.code' ], // code line
-          [/./, { token: "@rematch", next: "@pop"} ]
-        ],
-    
-        // github style code blocks
-        codeblockgh: [      
-          [/(```+)\s*$/, { cases: {
-            "$1==$S2": { cases: {
-              "$S3": { token: '@rematch', bracket: '@close', switchTo: '@codeblockghend', nextEmbedded: '@pop' },
-              "@default": { token: '@rematch', bracket: '@close', switchTo: '@codeblockghend' }
-            }},
-            "@default": "namespace.code" 
-          }} ],
-          [/[^`]*$/, 'namespace.code' ],
-        ],
-        
-        codeblockghend: [
-          [/\s*```+/, { token: 'keyword.header.codeblock', bracket: '@close', next: '@pop' } ],
-          [/./, '@rematch', '@pop'], 
-        ],
-        
-        linecontent: [      
-          // [/\s(?=<(\w+)[^>]*>)/, {token: 'html', next: 'html.$1', nextEmbedded: 'text/html' } ],
-          // [/<(\w+)[^>]*>/, {token: '@rematch', next: 'html.$1', nextEmbedded: 'text/html' } ],
-          
-          // escapes
-          [/&\w+;/, 'string.escape'],      
-          [/@escapes/, 'escape' ],
-          
-          // various markup
-          [/\b__([^\\_]|@escapes|_(?!_))+__\b/, 'strong'],
-          [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, 'strong'],
-          [/\b_[^_]+_\b/, 'emphasis'],
-          [/\*([^\\*]|@escapes)+\*/, 'emphasis'],
-          [/`([^\\`]|@escapes)+`/, 'namespace.code'],
-          [/(\$)([^\\$]+)(\$)/, ['keyword','namespace.code.latex','keyword'] ],
-          
-          // links
-          [/\{[^}]+\}/, 'string.escape'],
-          [/(!?\[)((?:[^\]\\]|@escapes)+)(\]\([^\)]+\))/, ['string.link', '', 'string.link' ]],
-          [/(!?\[)((?:[^\]\\]|@escapes)+)(\])/, 'string.link'],
-          
-          // or html
-          { include: 'html' },
-        ],
-        
-        html: [
-          // html tags
-          [/<(\w+)\/>/, 'tag.tag-$1' ],
-          [/<(\w+)\s+/,  {cases: { '@empty':   { token: 'tag.tag-$1', next: '@tag.$1' },
-                                '@default': { token: 'tag.tag-$1', bracket: '@open', next: '@tag.$1' } }}],
-          [/<\/(\w+)\s*>/,  { token: 'tag.tag-$1', bracket: '@close', next: '@pop' } ],
-          
-          // whitespace      
-          { include: '@whitespace' },      
-        ],
-        
-        
-        // whitespace and (html style) comments
-        whitespace: [
-          [/[ ]{2}$/, 'invalid'],
-          [/[ \t\r\n]+/, 'white'],
-          [/<!--/, 'comment', '@comment']
-        ],
-        
-        comment: [
-          [/[^<\-]+/, 'comment.content' ],
-          [/-->/, 'comment', '@pop' ],
-          [/<!--/, 'comment.content.invalid'],
-          [/[<\-]/, 'comment.content' ]
-        ],
-            
-        // Almost full HTML tag matching, complete with embedded scripts & styles        
-        tag: [
-          [/[ \t\r\n]+/, 'white' ],
-          [/(type)(\s*=\s*)(")([^"]+)(")/, [ 'attribute.name', 'delimiter', 'attribute.value',
-                                             {token: 'attribute.value', switchTo: '@tag.$S2.$4' },
-                                             'attribute.value'] ], 
-          [/(type)(\s*=\s*)(')([^']+)(')/, [ 'attribute.name', 'delimiter', 'attribute.value',
-                                             {token: 'attribute.value', switchTo: '@tag.$S2.$4' },
-                                             'attribute.value'] ], 
-          [/(\w+)(\s*=\s*)("[^"]*"|'[^']*')/, ['attribute.name','delimiter','attribute.value']],
-          [/\w+/, 'attribute.name' ],      
-          [/\/>/, 'tag.tag-$S2', '@pop'],
-          [/>/, { cases: { '$S2==style' : { token: 'tag.tag-$S2', switchTo: '@embedded.$S2', nextEmbedded: 'text/css'},
-                           '$S2==script': { cases: { '$S3'     : { token: 'tag.tag-$S2', switchTo: '@embedded.$S2', nextEmbedded: '$S3' },
-                                                     '@default': { token: 'tag.tag-$S2', switchTo: '@embedded.$S2', nextEmbedded: 'text/javascript' } } },
-                           '@default'   : { token: 'tag.tag-$S2', switchTo: 'html' } } }],
-        ],
-        
-        embedded: [
-          [/[^"'<]+/, ''],
-          [/<\/(\w+)\s*>/, { cases: { '$1==$S2' : { token: '@rematch', switchTo: '@html', nextEmbedded: '@pop' },
-                                      '@default': '' } }],
-          [/"([^"\\]|\\.)*$/, 'string.invalid' ],  // non-teminated string
-          [/'([^'\\]|\\.)*$/, 'string.invalid' ],  // non-teminated string
-          [/"/, 'string', '@string."' ],
-          [/'/, 'string', '@string.\'' ],
-          [/</, '']
-        ],
-        
-        // scan embedded strings in javascript or css
-        string: [
-          [/[^\\"']+/, 'string'], // "'
-          [/@jsescapes/, 'string.escape'],
-          [/\\./,      'string.escape.invalid'],
-          [/["']/,     { cases: { '$#==$S2' : { token: 'string', next: '@pop' },
-                                  '@default': 'string' }} ]
-        ],
-    
-      },
-    };
-</script>
-
-<script>
-require(["std_core","std_path","webmain","vs/editor/editor.main"],
-          function(stdcore,stdpath,madoko) 
+require(["std_core","std_path","webmain",
+          "../scripts/util","../scripts/onedrive",
+          "../scripts/ui",
+          "vs/editor/editor.main"],
+          function(stdcore,stdpath,madoko,util,onedrive,ui) 
 { 
-  var docName = "document.mdk";
-  var docInfo = {};
-  var files = {};
+  var docName     = "document.mdk";
+  var docInfo     = {};
+  var files       = {};
   var allowServer = true;
-
-  // Get the properties of an object.
-  function properties(obj) {
-    var attrs = [];
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        attrs.push(key);
-      }
-    } 
-    return attrs;
-  }
-
-  // extend target with all fields of obj.
-  function extend(target, obj) {
-    properties(obj).forEach( function(prop) {
-      target[prop] = obj[prop];
-    });
-  }
-
-  function contains( xs, s ) {
-    if (!xs) return false;
-    if (!s) return true;
-    if (xs instanceof Array) {
-      for(var i = 0; i < xs.length; i++) {
-        if (xs[i] === s) return true;
-      }
-    }
-    else if (typeof xs === "string") {
-      if (xs.indexOf(s) >= 0) return true;
-    }
-    return false;
-  }
-
-  function hasClassName( elem, cname ) {    
-    var names = elem.className.split(/\s+/);
-    return contains(names,cname);
-  }
-
-  function toggleClassName( elem, cname ) {
-    if (hasClassName(elem,cname)) {
-      removeClassName(elem,cname);
-    }
-    else {
-      addClassName(elem,cname);
-    }
-  }
-
-  function removeClassName( elem, cname ) {
-    var cnames = elem.className;
-    var names = cnames.split(/\s+/);
-    var newnames = names.filter( function(n) { return (n !== cname); });
-    if (names.length !== newnames.length) {
-      elem.className = newnames.join(" ");
-    }
-  }
-
-  function addClassName( elem, cname ) {
-    var cnames = elem.className;
-    var names = cnames.split(/\s+/);
-    if (!contains(names,cname)) {
-      elem.className = cnames + " " + cname;
-    }    
-  }
-
-  function changeExt( fname, newext ) {
-    var ext = extname(fname);
-    if (ext=="") {
-      return fname + newext;
-    }
-    else {
-      return fname.substr(0,fname.length - ext.length) + newext;
-    }
-  }
-
-  function extname( fname ) {
-    var match = /\.[^\\\/\.]+$/.exec(fname);
-    return (match ? match[0] : "");
-  }
-
-  function startsWith(s,pre) {
-    if (!pre) return true;
-    if (!s) return false;
-    return (s.substr(0,pre.length).indexOf(pre) === 0);
-  }
-
-  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
-  function hasImageExt(fname) {
-    return (imageExts.indexOf(extname(fname)) > 0);
-  }
-
-  var textExts = ["",".bib",".mdk",".md",".txt"].join(";");
-  function hasTextExt(fname) {
-    return (textExts.indexOf(extname(fname)) > 0);
-  }
-
-  // Call for messages
-  function message( txt ) {
-    stdcore.println(txt);
-  }
-
-  // Called whenever the server needs to run madoko. The server can run:
-  // - bibtex: generates a document.bbl file on the server with typeset bibliographies.
-  //           for this to work, we need to send over a ".bib" file and potentially
-  //           a bibliography style file ".bst".
-  // - latex: formulas are typeset using latex. This generates a "document.dimx" file
-  //           containing all typeset formulas. For this to work, we may need to 
-  //           send extra style files (".sty") or class files (".cls"). 
-  function serverRun() {
-    if (!allowServer) return;
-
-    var text = editor.getValue();
-    // TODO: schedule run on server
-    // send: document, and other files (like .bib and include files (but not images))    
-    // receive back: document.dimx file (math content) and document.bbl (bibliography)
-    var params = {};    
-    params.docname = docName;
-    params["/" + params.docname] = text;
-    properties(files).forEach( function(fname) {
-      if (hasTextExt(fname)) {
-        params["/" + fname] = files[fname];
-      }
-    })
-
-    $.post( "/rest/run", params, function(data,status,jqXHR) {
-      message(data.stdout + data.stderr);
-      properties(data).forEach(function(name) {
-        if (name.substr(0,1) !== "/") return;
-        //madoko.writeTextFile( name.substr(1), data[name] );
-        message("write: " + name.substr(1) );
-        files[name.substr(1)] = data[name];
-      })
-      //runMadoko(editor.getValue());
-      stale = true;
-    });
-  }
 
   var options = madoko.initialOptions();
   options.mathEmbedLimit = 256 * 1024;
@@ -380,11 +47,59 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
   var viewpane = document.getElementById("viewpane");
     
   var madokoWorker = new Worker("madoko-worker.js");
-  var lastRound = 0;
+  
+
+  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
+  function hasImageExt(fname) {
+    return util.contains(imageExts,util.extname(fname));
+  }
+
+  var textExts = ["",".bib",".mdk",".md",".txt"].join(";");
+  function hasTextExt(fname) {
+    return util.contains(textExts,util.extname(fname));
+  }
+
+
+  // Called whenever the server needs to run madoko. The server can run:
+  // - bibtex: generates a document.bbl file on the server with typeset bibliographies.
+  //           for this to work, we need to send over a ".bib" file and potentially
+  //           a bibliography style file ".bst".
+  // - latex: formulas are typeset using latex. This generates a "document.dimx" file
+  //           containing all typeset formulas. For this to work, we may need to 
+  //           send extra style files (".sty") or class files (".cls"). 
+  function serverRun() {
+    if (!ui.allowServer()) return;
+
+    var text = editor.getValue();
+    // TODO: schedule run on server
+    // send: document, and other files (like .bib and include files (but not images))    
+    // receive back: document.dimx file (math content) and document.bbl (bibliography)
+    var params = {};    
+    params.docname = docName;
+    params["/" + params.docname] = text;
+    util.properties(files).forEach( function(fname) {
+      if (hasTextExt(fname)) {
+        params["/" + fname] = files[fname];
+      }
+    })
+
+    $.post( "/rest/run", params, function(data,status,jqXHR) {
+      util.message(data.stdout + data.stderr);
+      util.properties(data).forEach(function(name) {
+        if (name.substr(0,1) !== "/") return;
+        //madoko.writeTextFile( name.substr(1), data[name] );
+        util.message("write: " + name.substr(1) );
+        files[name.substr(1)] = data[name];
+      })
+      //runMadoko(editor.getValue());
+      ui.setStale();
+    });
+  }
+
   madokoWorker.addEventListener("message", function(ev) {
     var res = ev.data;
     if (res.message) {
-      message(" " + res.message);
+      util.message(" " + res.message);
     }
     if (res.content) {
       view.innerHTML = res.content;
@@ -394,7 +109,7 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
       serverRun();
     }
     if (res.time) {
-      message(" time: " + res.time + "ms" );
+      util.message(" time: " + res.time + "ms" );
     }
     if (res.filesRead && res.filesRead.length > 0) {
       //message("files read:\n  " + res.filesRead.join("\n  "));
@@ -409,133 +124,30 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
         }
       });
     }
-    lastRound = res.round;
+    ui.completed(res.round);
   });
 
-  function onedriveGet( path, cont, errmsg ) {
-    WL.api( { path: path, method: "GET" }).then(cont, function(resFail) {
-      var msg = resFail;
-      if (resFail.error && resFail.error.message) {
-        msg = resFail.error.message + (resFail.error.code ? " (" + resFail.error.code + ")" : "");
-      }
-      onedriveFail( (errmsg ? errmsg + ": " : "") + msg );
-    });
-  }
-
-    // todo: abstract folderId and WL.getSession(). implement subdirectories.
-  function onedriveGetFileInfo( path, cont ) {  
-    folderId = docInfo.parent_id;
-    if (!folderId) return;
-
-    onedriveGet( folderId + "/files", function(res) {
-      var file = null;
-      if (res.data) {
-        for (var i = 0; i < res.data.length; i++) {
-          var f = res.data[i];
-          if (f.name == path) {
-            file = f;
-            break;
-          }
-        }
-      }
-      if (!file) return onedriveFail("unable to find: " + path);
-      cont(file);
-    }, "/files");
-  }
-
-  function onedriveGetFileUrl( path, cont ) {
-    onedriveGetFileInfo( path, function(info) {
-      var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-      cont(url);
-    })
-  }
   
   function loadImage( fname ) {
-    onedriveGetFileUrl( fname, function(url) {
+    onedrive.getImageUrl( docInfo, fname, function(url) {
       options.imginfos = madoko.addImage(options.imginfos,fname,url);
     });
   }
 
   function loadText( fname ) {
-    onedriveGetFileInfo( fname, function(info) {
-      onedriveGetFileContent( info, function(data) {
+    onedrive.getFileInfo( docInfo, fname, function(info) {
+      onedrive.readFile( info, function(data) {
         console.log("read: " + fname);
         files[fname] = data;
       });
     });
   }
 
-  var lastScroll = null;
-  function syncView( startLine, endLine ) {
-    var elem = $('#view').children(':first');
-    $('#view *[data-line]').each( function() {
-      var line = parseInt($(this).attr("data-line"));
-      if ((line && !isNaN(line) && line <= startLine)) {
-        elem=$(this);
-      }
-      if (line >= startLine) {
-        return false;      
-      } 
-    });
-    if (elem && elem[0] !== lastScroll) {
-      lastScroll = elem[0];
-      var topMargins = (elem.outerHeight(true) - elem.height())/2;
-      var ofs = elem.offset().top - $("#view").offset().top - topMargins;
-      var viewtop = $("#view").scrollTop();
-      var newtop = ofs + viewtop;
-      $("#view").animate({
-        scrollTop: newtop
-      }, 50 );
-      console.log("scroll: " + startLine + ": " + ofs + "px : " + viewtop + "px : " + newtop + "px : " + elem[0].tagName + ": " + elem.text().substr(0,40));
-    }
-  }
-
-  var editor  = Monaco.Editor.create(document.getElementById("editor"), {
-    value: document.getElementById("initial").textContent,
-    mode: "text/x-web-markdown",
-    theme: "vs",
-    lineNumbers: false,
-    mode: madokoMode,
-    tabSize: 4,
-    insertSpaces: false,
-    automaticLayout: true,
-    scrollbar: {
-      vertical: "auto",
-      horizontal: "auto",
-      verticalScrollbarSize: 6,
-      horizontalScrollbarSize: 6,
-      //verticalHasArrows: true,
-      //horizontalHasArrows: true,
-      //arrowSize: 10,
-    }
-  });
-
-
-
-
-  editor.addListener("scroll", function (e) {
-    var view = editor.getView();
-    var lines = view.viewLines;
-    var rng = lines._currentVisibleRange;
-    syncView(rng.startLineNumber, rng.endLineNumber);    
-  });
-  editor.addListener("positionChanged", function (e) {
-    //syncView(e.position.lineNumber);
-    console.log(e);
-  });
-
-  stdcore.println("ready.")
     
-  var text0 = "";     // text from the previous round
-  var stale = true;   // is the view stale with respect to the current text?
-
-  var imgDir  = "img";
-  var refreshRate = 500;
-  var refreshContinuous = true;
+  var imgDir      = "img";
   
-  function runMadoko(text) {
-    round++;
-    message( "update " + round.toString() + " ..." );
+  function runMadoko(text,round) {
+    util.message( "update " + round.toString() + " ..." );
     madokoWorker.postMessage( {
       content: text,
       name   : docName,
@@ -545,483 +157,12 @@ require(["std_core","std_path","webmain","vs/editor/editor.main"],
     });
   }
 
-  // Called whenever the text buffer changes.
-  // TODO: can we run this invoked by the editor instead of an interval?
-  // and should we run in a worker perhaps?
-  var round = lastRound;
-  var staleTime = Date.now();
-  function update() {
-    var text = editor.getValue();
-    if (text != text0) {   // set stale but do not update yet (as long as the user types)
-      stale = true;      
-      staleTime = Date.now();
-      text0 = text;
-      if (!refreshContinuous) return;
-    }
-    if (stale && (round == lastRound || Date.now() > staleTime + 5000)) {
-      stale = false;
-      runMadoko(text)
-    }
-  }
-
-  function editFile( text ) {
-    editor.model.setValue(text);
-  }
-
-  // Insert some text in the document 
-  function documentInsert( txt ) {
-    var pos = editor.viewModel.cursors.lastCursorPositionChangedEvent.position;
-    editor.model._insertText([],pos,txt);
-  }
-
-  // Called when a user selects an image to insert.
-  function insertImages(evt) {
-    var files = evt.target.files; // FileList object
-
-    // files is a FileList of File objects. List some properties.
-    for (var i = 0, f; f = files[i]; i++) {
-        // Only process image files.
-        if (!f.type.match('image.*')) {
-          continue;
-        }
-    
-        var reader = new FileReader();
-
-        // Closure to capture the file information.
-        reader.onload = (function(file) {
-          return function(loadEvt) {
-            var content  = loadEvt.target.result;
-            var fileName = imgDir + "/" + file.name;
-            var name     = stdpath.stemname(file.name); 
-            //stdcore.println("image: " + fileName);
-            options.imginfos = madoko.addImage(options.imginfos,fileName,content);
-            documentInsert( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n' );
-            //madoko.writeTextFile(file.name,content);
-          };
-        })(f);
-
-        // Read in the image file as a data URL.
-        reader.readAsDataURL(f);
-    }
-  }
-
-  
-  WL.init({
-      client_id: "000000004C113E9D",
-      redirect_uri: "http://madoko.cloudapp.net:8080/redirect", //"https://login.live.com/oauth20_desktop.srf", 
-                    
-      scope: ["wl.signin","wl.skydrive"],
-      response_type: "token"
-  });
-
-  function onedriveFail(res) {
-    res = (res.error && res.error.message ? res.error.message : res);
-    message("onedrive error: " + res);
-  }
-  
-  function onedriveGetFileContent( file, cont ) {
-    $.get( "onedrive", { url: file.source }, cont);
-    /*
-    var domain = "https://apis.live.net/v5.0/";       
-    var session = WL.getSession();     
-    //var url = domain + file.id + "/content?access_token=" + session.access_token + "&amp;callback=?";
-    //var url = file.source + "&amp;callback=?";
-    //jsonp(url,cont);
-    //$.getJSON( url, cont );
-    
-    $.ajax( {
-      url: file.source,
-      success: cont
-    });
-    */
-  }
-
-  var onedriveDomain = "https://apis.live.net/v5.0/"
-  
-  function onedriveGetFiles( fs ) {
-    fs.forEach( function(file) {
-      onedriveGetFileContent(file, function(body) {
-        //madoko.writeTextFile( file.path, body );
-        files[file.path] = body;
-      });
-    });
-  }
-
-  
-  function onedriveListFiles( folder, cont ) {
-    WL.api( { path: folder.id + "/files", method: "GET" } )
-     .then( function(res) {
-        var files = [];
-        res.data.forEach( function(f) {
-          if (f.type && f.type=="file") {
-            f.path = f.name;
-            files.push(f);
-          };
-          if (f.type && f.type=="photo") {
-            var url = onedriveDomain + f.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-            document.getElementById("testimg").src = url;
-            /*
-            $.ajax({
-              url: url,
-              success: function(data) {
-                console.log("yes!");
-              }
-            });
-            */
-          };
-        });
-        cont(files);
-     },
-     onedriveFail );
-  }
-
-  function endsWith(s,post) {
-    if (!post) return true;
-    if (!s) return false;
-    var i = s.indexOf(post);
-    return (i >= 0 && (s.length - post.length) == i);
-  }
-
-  function onedriveGetFileInfoFromId( file_id, cont ) {
-    WL.api( { path: file_id, method: "GET" } ).then(
-      function(res) {
-        cont(res);
-      },
-      function(resFail) { 
-        onedriveFail(resFail); 
-      } 
-    );
-  }
-
-  function onedrivePickFile( res ) {
-    console.log("pick");
-    if (!(res.data && res.data.files && res.data.files.length==1)) return onedriveFail("no file selected");
-    var file = res.data.files[0];
-    if (!endsWith(file.name,".mdk")) return onedriveFail("only .mdk files can be selected");
-    onedriveGetFileInfoFromId( file.id, function(info) {
-      onedriveGetFileContent(info, function(text) { 
-        docName = info.name;
-        docInfo = info;
-        editFile(text);
-      });
-    });
-  }
-
-  function onDownloadFileCompleted(response) {
-    var msg = "";    
-    // For each folder selected...
-    if (response.data.folders && response.data.folders.length > 0) {
-        for (folder = 0; folder < response.data.folders.length; folder++) {
-            // Use folder IDs to iterate through child folders and files as needed.
-            msg += "\n" + response.data.folders[folder].id;
-            onedriveListFiles( response.data.folders[folder], onedriveGetFiles );
-        }
-    }
-    // For each file selected...
-    if (response.data.files && response.data.files.length > 0) {
-        for (file = 0; file < response.data.files.length; file++) {
-            // Use file IDs to iterate through files as needed.
-            msg += "\n" + response.data.files[file].id;
-            var f = response.data.files[file];
-            var srcUrl = f.source; //f.source.replace(/download&/,"");
-            /*
-            var session = WL.getSession();
-            var accessToken = session.access_token;
-            var sourceUrl = "https://apis.live.net/v5.0/";
-            var restUrl = sourceUrl + f.id + "/content?access_token=" + accessToken;  
-            $.get( "onedrive", { url: srcUrl }, function(data) {
-              console.log("did it: " + data);
-            } );
-            */
-        }
-    }
-    message("Selected folders/files:" + msg);
-  };
-
-
-
-
-  // Initialize
-  setInterval(update, refreshRate);
-  //document.getElementById('insertImages').addEventListener('change', insertImages, false);
-  document.getElementById('checkContinuous').onchange = function(ev) { 
-    refreshContinuous = ev.target.checked; 
-  };
-  document.getElementById('checkAllowServer').onchange = function(ev) { 
-    allowServer = ev.target.checked; 
-  };
-  document.getElementById("onedrive-download").onclick = function(ev) {
-    WL.fileDialog( {
-      mode: "open",
-      select: "single",
-    }).then( onedrivePickFile, onedriveFail );
-  };
-
-  function toggleButton( elemName, text0, text1, action ) {
-    var button = (typeof elemName === "string" ? document.getElementById(elemName) : elemName);
-    var toggled = true;
-    function toggle() {
-      toggled = !toggled;
-      button.innerHTML = (toggled ? text1 : text0);
-    }
-    toggle();
-    button.onclick = function(ev) {
-      toggle();
-      action(ev,toggled);
-    }
-  }
-
-  var buttonEditorNarrow = document.getElementById("button-editor-narrow");
-  var buttonEditorWide = document.getElementById("button-editor-wide");
-
-  var triLeft = "<div class='tri-left'></div>";
-  var triRight = "<div class='tri-right'></div>";
-  var triUp = "<div class='tri-up'></div>";
-  var triDown = "<div class='tri-down'></div>";
- 
-  toggleButton( "button-updown", triUp, triDown, function(ev) {
-    toggleClassName(cons,"short");
-    toggleClassName(view,"short");       
-  });
-
- 
-
-  toggleButton( buttonEditorNarrow, triLeft, triRight, function(ev,toggled) {
-    if (toggled) {
-      addClassName(viewpane,"wide");
-      addClassName(editpane,"narrow");
-      addClassName(buttonEditorWide,"hide");
-    }
-    else {
-      removeClassName(viewpane,"wide");
-      removeClassName(editpane,"narrow");
-      removeClassName(buttonEditorWide,"hide");
-    }
-  });
-
-  toggleButton( buttonEditorWide, triRight, triLeft, function(ev,toggled) {
-    if (toggled) {
-      addClassName(viewpane,"narrow");
-      addClassName(editpane,"wide");
-      addClassName(buttonEditorNarrow,"hide");
-    }
-    else {
-      removeClassName(viewpane,"narrow");
-      removeClassName(editpane,"wide");
-      removeClassName(buttonEditorNarrow,"hide");
-    }
-  });
-
-  document.getElementById("checkShowConsole").onchange = function(ev) {
-    var cons = document.getElementById("koka-console-out");
-    if (ev.target.checked) {
-      addClassName(view,"short");
-      removeClassName(cons,"short");
-    }
-    else {
-      addClassName(cons,"short");
-      removeClassName(view,"short");
-    }
-  };
-
-
-  document.getElementById("checkShowWide").onchange = function(ev) {
-    if (ev.target.checked) {
-      addClassName(viewpane,"wide");
-      addClassName(editpane,"narrow");
-    }
-    else {
-      removeClassName(viewpane,"wide");
-      removeClassName(editpane,"narrow");
-    }
-  };
+  ui.init(runMadoko);
+  util.message("ready.")  
 });
 </script>
 
 
-<!-- styles -->
-<style>
-html,body,#app {
-  height: 100%;
-  padding: 0pt;
-  margin: 0pt;
-}
-
-#app {
-  padding: 0ex 1ex;
-}
-
-body {
-  background-color: #3A4150;
-  background-color: #FFFAF4;
-}
-
-.toppane {
-  height: 1.5rem;
-}
-
-.pane {
-  height: calc(100% - 2rem);
-  width: calc(50% - 0.25rem - 2px);
-}
-
-.pane.wide {
-  width: calc(80% - 0.25rem - 2px);
-}
-.pane.narrow {
-  width: calc(20% - 0.25rem - 2px);
-}
-
-#buttonbar-vertical {
-  width: 0.5rem;
-  float: left;
-}
-
-#buttonbar-horizontal {
-  height: 0.5rem;
-  font-size: small;
-}
-
-#menubar {
-  font-family: "Segoe UI";
-  font-size: small;
-  color: #666;
-}
-
-#editorpane {
-  float: left;
-  border: 1px solid black;
-  margin: 0em;
-  transition: width 0.8s;
-}
-
-#viewpane {
-  float: left;
-  transition: width 0.8s;
-}
-
-#editor {
-  height: 100%;
-}
-
-#view {
-  height: calc(92% - 2px);
-  margin: 0px;
-  padding: 0px 1ex;
-  overflow: scroll;
-  background-color: white;
-  border: 1px solid black;
-  transition: height 0.8s;
-}
-
-#view.short {
-  height: calc(50% - 2px);
-}
-
-#koka-console-out {
-  height: calc(50% - 1.5rem);
-  overflow-y: scroll;
-  overflow-x: hidden;
-  font-size: 8pt;
-  padding: 0.5rem;
-  border: 1px solid black;
-  transition: height 0.8s;
-}
-
-#koka-console-out.short {
-  height: calc(8% - 1.5rem);
-}
-
-#button-editor-wide {
-  margin-top: 1ex ;
-}
-
-
-#menubar input {
-  width: 1.5ex;
-  height: 1.5ex;
-}
-
-#logo {
-  padding: 0pt; 
-  width: 17px;
-  vertical-align: bottom;
-}
-
-#onedrive-download {
-  /* color: #00B; */
-  background-color: white;
-  padding-right: 0.5ex;
-}
-
-.button {
-  border: 1px solid #AAA;
-}
-
-.button:hover, .ibutton:hover {
-  cursor: pointer;
-}
-
-.ibutton.hide {
-  display: none;
-}
-
-.monaco-editor .token.code {
-  background-color: #EEE;
-}
-.monaco-editor .token.code.keyword {
-  color: navy;
-}
-.monaco-editor .token.metadata {
-  color: navy;
-}
-.monaco-editor .token.string.escape {
-  color: gray;
-}
-
-#view p, #view li {
-  text-align: justify;
-}
-.monaco-editor, .monaco-editor .lines-decorations {
-  background-color: #FFFAF4;
-}
-#view {
-  background-color: white;
-}
-body {
-  background-color: Gainsboro;
-}
-
-
-.tri-left {
-  width: 0; 
-  height: 0; 
-  border-top: 0.3rem solid transparent;
-  border-bottom: 0.3rem solid transparent;   
-  border-right:0.5rem solid black; 
-}
-.tri-right {
-  width: 0; 
-  height: 0; 
-  border-top: 0.3rem solid transparent;
-  border-bottom: 0.3rem solid transparent;   
-  border-left:0.5rem solid black; 
-}
-.tri-down {
-  width: 0; 
-  height: 0; 
-  border-right: 0.3rem solid transparent;
-  border-left: 0.3rem solid transparent;   
-  border-top:0.5rem solid black; 
-}
-.tri-up {
-  width: 0; 
-  height: 0; 
-  border-right: 0.3rem solid transparent;
-  border-left: 0.3rem solid transparent;   
-  border-bottom:0.5rem solid black; 
-}
-</style>
 </head>
 
 <body>
@@ -1059,8 +200,6 @@ insert image:
 <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
 &nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
 &nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
-&nbsp;show console:<input type="checkbox" id="checkShowConsole" title="Show the console window" />
-&nbsp;show wide:<input type="checkbox" id="checkShowWide" title="Show the view window wide" />
 </div>
 <div id="editorpane" class="pane"><div id="editor"></div></div>
 <div id="buttonbar-vertical">
