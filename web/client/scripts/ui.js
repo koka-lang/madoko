@@ -44,7 +44,7 @@ function UI( runner )
     value: document.getElementById("initial").textContent,
     mode: "text/x-web-markdown",
     theme: "vs",
-    lineNumbers: false,
+    lineNumbers: true,
     mode: madokoMode.mode,
     tabSize: 4,
     insertSpaces: false,
@@ -216,8 +216,14 @@ UI.prototype.completed = function( ctx ) {
 
 function findLine( elem, line ) 
 {
-  var current = null;
+  if (!elem || !line || line < 0) return null;
+
   var children = elem.children; 
+  var current  = 0;
+  var currentLine = 0;
+  var next     = children.length;
+  var nextLine = line;
+  var found    = false;
   for(var i = 0; i < children.length; i++) {
     var child = children[i];
     var dataline = child.getAttribute("data-line");
@@ -225,19 +231,44 @@ function findLine( elem, line )
       var cline = parseInt(dataline);
       if (!isNaN(cline)) {
         if (cline <= line) {
-          current = child;
+          found = true;
+          currentLine = cline;
+          current = i;
         }
         if (cline > line) {
+          found = true;
+          nextLine = cline;
+          next = i;
           break;
         }
       }
     }
   }
-  if (current && current.children && current.children.length>0) {
-    var ccurrent = findLine(current,line);
-    if (ccurrent) current = ccurrent;
+
+  // go through all children of our found range
+  var res = { elem: children[current], elemLine: currentLine, next: children[next], nextLine: nextLine };
+  for(var i = current; i < next; i++) {
+    var child = children[i];
+    if (child.children && child.children.length > 0) {
+      var cres = findLine(child,line);
+      if (cres) {
+        found = true;
+        res.elem = cres.elem;
+        res.elemLine = cres.elemLine;
+        if (cres.nextLine > line) { // && cres.nextLine <= res.nextLine) {
+          res.next = cres.next;
+          res.nextLine = cres.nextLine;
+        } 
+      }
+    }
   }
-  return current;
+
+  if (!found) return null; // no data-line at all.
+  return res;
+}
+
+function offsetTopBorder(elem) {
+  return elem.offsetTop - (elem.style ? util.px(elem.style.marginTop) : 0);
 }
 
 UI.prototype.syncView = function( startLine, endLine ) 
@@ -253,42 +284,22 @@ UI.prototype.syncView = function( startLine, endLine )
     endLine = rng.endLineNumber;
   }
 
-  var elem = findLine( self.view, startLine );
-  if (!elem) {
-    elem = self.view.firstChild;
-    if (!elem) return;
-  }
+  var res = findLine( self.view, startLine );
+  if (!res) return;
   
-  self.lastScroll = elem;
-  var topMargins = (!elem.style ? 0 : util.px(elem.style.paddingTop) + util.px(elem.style.marginTop) + util.px(elem.style.borderTopWidth));
-  var ofs = elem.offsetTop - self.view.offsetTop - topMargins;
-  if (ofs !== self.lastScrollTop) {
-    util.animate( self.view, { scrollTop: ofs }, 500 );
+  var scrollTop0 = offsetTopBorder(res.elem) - self.view.offsetTop;
+  var scrollTop = scrollTop0
+  
+  if (res.elemLine < startLine && res.elemLine < res.nextLine) {
+    var scrollTop1 = offsetTopBorder(res.next) - self.view.offsetTop;
+    var delta = (startLine - res.elemLine) / (res.nextLine - res.elemLine);
+    scrollTop += ((scrollTop1 - scrollTop0) * delta);
   }
 
-  /*
-  var elem = $('#view').children(':first');
-  $('#view *[data-line]').each( function() {
-    var line = parseInt($(this).attr("data-line"));
-    if ((line && !isNaN(line) && line <= startLine)) {
-      elem=$(this);
-    }
-    if (line >= startLine) {
-      return false;      
-    } 
-  });
-  if (elem && elem[0] !== self.lastScroll) {
-    self.lastScroll = elem[0];
-    var topMargins = (elem.outerHeight(true) - elem.height())/2;
-    var ofs = elem.offset().top - $("#view").offset().top - topMargins;
-    var viewtop = $("#view").scrollTop();
-    var newtop = ofs + viewtop;
-    $("#view").animate({
-      scrollTop: newtop
-    }, 50 );
-    console.log("scroll: " + startLine + ": " + ofs + "px : " + viewtop + "px : " + newtop + "px : " + elem[0].tagName + ": " + elem.text().substr(0,40));
+  if (scrollTop !== self.lastScrollTop) {
+    self.lastScrollTop = scrollTop;
+    util.animate( self.view, { scrollTop: scrollTop }, 500 );
   }
-  */
 }
 
 UI.prototype.onedrivePickFile = function() {
