@@ -118,7 +118,7 @@ Runner.prototype.serverRun = function(ctx) {
     if (hasTextExt(fname)) {
       params["/" + fname] = self.files[fname];
     }
-  })
+  });
 
   $.post( "/rest/run", params, function(data,status,jqXHR) {
     util.message(data.stdout + data.stderr);

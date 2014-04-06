@@ -9,6 +9,19 @@
 define(["../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
         function(util,onedrive,madokoMode) {
 
+
+var ie = (function(){
+  var ua = window.navigator.userAgent;
+  var msie = ua.indexOf('MSIE ');
+  var trident = ua.indexOf('Trident/');
+  return (msie > 0 || trident > 0);
+})();
+
+var supportTransitions = (function() {
+  return (!ie && document.body.style.transition=="");
+})();
+
+
 function UI( runner )
 {
   var self = this;
@@ -48,10 +61,7 @@ function UI( runner )
   });
 
   self.editor.addListener("scroll", function (e) {
-    var view  = self.editor.getView();
-    var lines = view.viewLines;
-    var rng = lines._currentVisibleRange;
-    self.syncView(rng.startLineNumber, rng.endLineNumber);    
+    self.syncView();    
   });
 
   onedrive.init({
@@ -80,6 +90,12 @@ function UI( runner )
   var buttonEditorWide   = document.getElementById("button-editor-wide");
   var buttonUpDown       = document.getElementById("button-updown");
 
+  //viewpane.addEventListener( 'webkitTransitionEnd', function( event ) {  self.syncView(); }, false );
+  viewpane.addEventListener('transitionend', function( event ) { 
+    self.syncView(); 
+  }, false);
+  
+
   var triLeft   = "<div class='tri-left'></div>";
   var triRight  = "<div class='tri-right'></div>";
   var triUp     = "<div class='tri-up'></div>";
@@ -95,11 +111,13 @@ function UI( runner )
       util.addClassName(viewpane,"wide");
       util.addClassName(editpane,"narrow");
       util.addClassName(buttonEditorWide,"hide");
+      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
     else {
       util.removeClassName(viewpane,"wide");
       util.removeClassName(editpane,"narrow");
       util.removeClassName(buttonEditorWide,"hide");
+      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
   });
 
@@ -225,19 +243,28 @@ function findLine( elem, line )
 UI.prototype.syncView = function( startLine, endLine ) 
 {
   var self = this;
-  if (self.lastScroll===undefined) self.lastScroll = null;
+  if (self.lastScrollTop===undefined) self.lastScrollTop = null;
+
+  if (startLine==null) {
+    var view  = self.editor.getView();
+    var lines = view.viewLines;
+    var rng = lines._currentVisibleRange;
+    startLine = rng.startLineNumber;
+    endLine = rng.endLineNumber;
+  }
 
   var elem = findLine( self.view, startLine );
   if (!elem) {
     elem = self.view.firstChild;
     if (!elem) return;
   }
-  if (elem === self.lastScroll) return;
   
   self.lastScroll = elem;
   var topMargins = (!elem.style ? 0 : util.px(elem.style.paddingTop) + util.px(elem.style.marginTop) + util.px(elem.style.borderTopWidth));
-  var ofs = elem.offsetTop - view.offsetTop - topMargins;
-  util.animate( view, { scrollTop: ofs }, 500 );
+  var ofs = elem.offsetTop - self.view.offsetTop - topMargins;
+  if (ofs !== self.lastScrollTop) {
+    util.animate( self.view, { scrollTop: ofs }, 500 );
+  }
 
   /*
   var elem = $('#view').children(':first');
