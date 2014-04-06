@@ -2,6 +2,14 @@
 <html>
 <head>
 
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
 <!-- Editor themes -->
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
@@ -32,10 +40,10 @@ require([ "../scripts/util",
           "../scripts/ui",
           "../scripts/runner",
           "vs/editor/editor.main"],
-          function(util,ui,runner) 
+          function(util,UI,Runner) 
 { 
-  var run = new runner.Runner(ui);
-  ui.init( function(text,ctx) { return run.runMadoko(text,ctx); } );
+  var ui     = new UI(  function(text,ctx) { runner.runMadoko(text,ctx); }  );
+  var runner = new Runner( ui );
   util.message("ready.")  
 });
 </script>

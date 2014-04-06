@@ -1,3 +1,11 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
 define(["../scripts/util","../scripts/onedrive","webmain"],
         function(util,onedrive,madoko) {
 
@@ -96,9 +104,9 @@ Runner.prototype.loadText = function( docInfo, fname ) {
 //           send extra style files (".sty") or class files (".cls"). 
 Runner.prototype.serverRun = function(ctx) {
   var self = this;
-  if (!self.ui.allowServer()) return;
+  if (!self.ui.allowServer) return;
 
-  var text = this.ui.getEditText();
+  var text = self.ui.getEditText();
 
   // TODO: schedule run on server
   // send: document, and other files (like .bib and include files (but not images))    
@@ -126,8 +134,6 @@ Runner.prototype.serverRun = function(ctx) {
 }
 
   
-return {
-  Runner: Runner,
-};  
+return Runner;
 
 });

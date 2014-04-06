@@ -1,3 +1,11 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
 define(["std_core"],function(stdcore) {
 
   // Call for messages
@@ -111,7 +119,41 @@ define(["std_core"],function(stdcore) {
     }
   }
 
+  function px(s) {
+    if (typeof s === "number") return s;
+    var i = parseInt(s);
+    return (isNaN(i) ? 0 : i);
+  }
 
+  function animate( elem, props, duration, steps ) {
+    var ival = (steps ? duration / steps : 50);
+    steps = (duration / ival) | 0;
+    if (steps <= 0) steps = 1;
+    var elem0 = {};
+    properties(props).forEach( function(prop) {
+      elem0[prop] = elem[prop];
+    });
+    var n = 0;
+    if (elem.animate) {
+      clearInterval(elem.animate);
+    }
+    elem.animate = setInterval( function() {
+      n++;
+      if (n >= steps) {
+        clearInterval(elem.animate);
+        elem.animate = undefined;
+        properties(props).forEach(function(prop) {
+          elem[prop] = props[prop];
+        });
+      }
+      else {
+        properties(props).forEach(function(prop) {
+          var x = elem0[prop] + ((props[prop] - elem0[prop]) * (n/steps));
+          elem[prop] = x;
+        });
+      }
+    }, ival);
+  }
 
   return {
     properties: properties,
@@ -127,5 +169,7 @@ define(["std_core"],function(stdcore) {
     endsWith: endsWith,
     toggleButton: toggleButton,
     message: message,
+    px: px,
+    animate: animate,
   }
 });
