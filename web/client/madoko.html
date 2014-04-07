@@ -39,7 +39,7 @@ require([ "../scripts/util",
           "vs/editor/editor.main"],
           function(util,UI,Runner) 
 { 
-  var ui     = new UI(  function(text,ctx,cont) { runner.runMadoko(text,ctx,cont); }  );
+  var ui     = new UI();
   var runner = new Runner( ui );
   util.message("ready.");
 });
@@ -74,28 +74,6 @@ insert image:
 <div id="koka-console-out" class="monospace short"></div>
 </div>
 </div>
-
-<div id="initialx" style="display:none; white-space:pre"># An example   { #example }
-
-Here is a famous equation:
-
-~ Equation { #euler }
-e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
-~
-
-And we can refer to Equation [#euler] in Section [#example].
-
-Or to a websites like [Bing] or [Google]
-
-[bing]: http://www.bing.com "Bing it"
-[google]: http://www.google.com 
-
-```javascript 
-function hi() {
-  return "hello world";
-}
-```
-</div>  
 
 <div id="initial" style="display:none; white-space:pre">
 Title         : Welcome to Madoko

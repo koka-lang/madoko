@@ -14,12 +14,34 @@ var Runner = (function() {
   function Runner(ui) {
     var self = this;
     self.ui    = ui;
-    self.files = new util.Map();
+    //self.files = new util.Map();
     self.sendFiles = [];
+    self.storage = null;
 
     self.options = madoko.initialOptions();
     self.options.mathEmbedLimit = 256 * 1024;
-    self.madokoWorker = new util.ContWorker("madoko-worker.js");  
+    self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
+
+    self.ui.setRunner( self ); 
+  }
+
+  Runner.prototype.setStorage = function( storage ) {
+    var self = this;
+    if (self.storage) {
+      self.storage.clearEventListener(self);
+    }
+    self.storage = storage;
+    if (self.storage) {
+      self.storage.addEventListener("update",self);
+    }
+  }
+
+  Runner.prototype.handleEvent = function(ev) {
+    if (!ev || !ev.type) return;
+    var self = this;
+    if (ev.type === "update") {
+      self.sendFiles.push( { name: ev.path, content: ev.content });
+    }
   }
 
   Runner.prototype.onMadokoComplete = function(res,ctx,cont) 
@@ -38,19 +60,18 @@ var Runner = (function() {
     if (res.time) {
       util.message(" time: " + res.time + "ms" );
     }
-    if (ctx && ctx.storage) {
-      //message("files read:\n  " + res.filesRead.join("\n  "));
-      res.filesRead.forEach( function(file) {
-        if (!(self.files.contains(file)) && hasTextExt(file)) {
-          self.loadText(ctx.storage, file);
-        }        
-      });
-      res.filesReferred.forEach( function(file) {
-        if (hasImageExt(file)) {
-          self.loadImage(ctx.storage, file);
-        }
-      });
-    }
+    
+    res.filesRead.forEach( function(file) {
+      if (hasTextExt(file)) {
+        self.loadText(file);
+      }        
+    });
+    res.filesReferred.forEach( function(file) {
+      if (hasImageExt(file)) {
+        self.loadImage(file);
+      }
+    });
+
     if (cont) cont(ctx);
   }
 
@@ -84,22 +105,24 @@ var Runner = (function() {
     return util.contains(textExts,ext);
   }
 
-  Runner.prototype.loadImage = function( storage, fname ) {
+  Runner.prototype.loadImage = function( fname ) {
     var self = this;
-    storage.getImageUrl( fname, function(err,url) {
+    if (!self.storage) return;
+    self.storage.getImageUrl( fname, function(err,url) {
       if (err) return util.message(err);
       util.message("storage provided reference: " + fname);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
     });
   }
 
-  Runner.prototype.loadText = function( storage, fname ) {
+  Runner.prototype.loadText = function(fname ) {
     var self = this;
-    storage.readTextFile( fname, function(err,data) {
+    if (!self.storage) return;
+    self.storage.readTextFile( fname, function(err,content) {
       if (err) return util.message(err);
       util.message("storage sent: " + fname);      
-      self.files.set(fname,data);
-      self.sendFiles.push({ name: fname, content: data });
+      //self.files.set(fname,content);
+      //self.sendFiles.push({ name: fname, content: content });
     });
   }
 
@@ -122,20 +145,29 @@ var Runner = (function() {
     var params = {};    
     params.docname = ctx.docname;
     params["/" + params.docname] = text;
-    self.files.forEach( function(fname,content) {
-      params["/" + fname] = content;
-    });
+    
+    if (self.storage) {
+      self.storage.forEachTextFile( function(fname,content) {
+        params["/" + fname] = content;
+      });
+    }
 
     $.post( "/rest/run", params, function(data,status,jqXHR) {
       util.message(data.stdout + data.stderr);
       util.properties(data).forEach(function(name) {
         if (name.substr(0,1) !== "/") return;
         //madoko.writeTextFile( name.substr(1), data[name] );
-        var fname = name.substr(1); 
+        var fname   = name.substr(1); 
         var content = data[name];
         util.message("server sent: " + fname );
-        self.files.set(fname,content);
-        self.sendFiles.push({name:fname, content: content})
+        if (self.storage) {
+          self.storage.writeTextFile(fname,content);
+        }
+        else {
+          // happens when there is no connection to onedrive etc.
+          //self.files.set(fname,content);
+          self.sendFiles.push({name:fname, content: content})
+        }
       })
       //runMadoko(editor.getValue());
       self.ui.setStale();

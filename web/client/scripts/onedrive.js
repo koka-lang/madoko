@@ -87,27 +87,95 @@ define(["../scripts/util"], function(util) {
       var self = this;
       self.folderId = folderId;
       self.files = new util.Map();
+      self.listeners = [];
+      self.unique = 1;
     }
 
+    /* Generic */
+    Storage.prototype.createTextFile = function(fpath,content) {
+      var self = this;
+      self.writeTextFile(fpath,content,true);
+    }
+
+    Storage.prototype.forEachTextFile = function( action ) {
+      var self = this;
+      self.files.forEach( function(file) {
+        if (!file.url) {
+          action(file.path, file.content);
+        }
+      });
+    }
+
+    Storage.prototype.writeTextFile = function( fpath, content, localOnly ) {
+      var self = this;
+      var file = self.files.get(fpath);
+
+      self.updateFile( fpath, {
+        info     : (file ? file.info : null),
+        content  : content,
+        localOnly: (file ? file.localOnly : localOnly),
+        written  : (content !== "")
+      });
+    }
+
+    Storage.prototype.addEventListener = function( type, listener ) {
+      if (!listener) return;
+      var self = this;
+      var id = self.unique++;
+      var entry = { type: type, id: id };
+      if (typeof listener === "object" && listener.handleEvent) {
+        entry.listener = listener;
+      }
+      else {
+        entry.action = listener;
+      }
+      self.listeners.push( entry );
+      return id;
+    }
+
+    Storage.prototype.clearEventListener = function( id ) {
+      var self = this;
+      self.listeners = self.listeners.filter( function(listener) {
+        return (listener && 
+                  (typeof id === "object" ? listener.listener !== id : listener.id !== id));
+      });
+    }
+
+    // private
+    Storage.prototype.updateFile = function( fpath, info ) {
+      var self = this;
+      info.path = fpath;
+      self.files.set(fpath,info);
+      self.fireEvent("update", { path: fpath, content: info.content });
+    }
+
+    Storage.prototype.fireEvent = function( type, obj ) {
+      var self = this;
+      self.listeners.forEach( function(listener) {
+        if (listener) {
+          if (!obj.type) obj.type = type;
+          if (listener.listener) {
+            listener.listener.handleEvent(obj);
+          }
+          else if (listener.action) {
+            listener.action(obj);
+          }
+        }
+      });
+    }
+
+    /* Specific for Onedrive */
+    // private
     Storage.prototype.getFileInfo = function( fpath, cont ) {  
       var self = this;
       onedriveGetFileInfo( self.folderId, fpath, cont );
     }
 
-    Storage.prototype.createLocalFile = function(fpath,content) {
-      var self = this;
-      self.files.set(fpath,{
-        info     : null,
-        content  : content,
-        localOnly: true,
-        written  : false,
-      });
-    }
-
+    /* Interface */
     Storage.prototype.readTextFile = function( fpath, cont ) {
       var self = this;
       var file = self.files.get(fpath);
-      if (file) return cont(file.content);
+      if (file) return cont(null, file.content);
       
       self.getFileInfo( fpath, function(err,info) {
         if (err) {
@@ -116,7 +184,7 @@ define(["../scripts/util"], function(util) {
         }
         else {
           $.get( "onedrive", { url: info.source }, function(content) {
-            self.files.set( fpath, { 
+            self.updateFile( fpath, { 
               info     : info, 
               content  : content,
               localOnly: false,
@@ -139,7 +207,7 @@ define(["../scripts/util"], function(util) {
         self.getFileInfo( fpath, function(err,info) {
           if (err) return cont(err,"");
           var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-          self.files.set( fpath, {
+          self.updateFile( fpath, {
             info     : info,
             content  : "",
             url      : url,

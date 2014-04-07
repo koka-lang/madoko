@@ -115,8 +115,36 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
 
   function px(s) {
     if (typeof s === "number") return s;
-    var i = parseInt(s);
-    return (isNaN(i) ? 0 : i);
+    var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
+    if (!cap) return 0;
+    var i = parseInt(cap[1]);
+    if (isNaN(i)) return 0;
+    if (cap[2] && cap[2] !== "px") {
+      var dpi = 96;
+      var empx = 12;
+      if (cap[2]==="em") {
+        i = (i * empx);
+      }
+      else if (cap[2]==="ex") {
+        i = (i * empx * 0.5);
+      }
+      else if (cap[2]==="pt") {
+        i = (i/72) * dpi;
+      }
+      else if (cap[2]==="pc") {
+        i = (i/6) * dpi;
+      }
+      else if (cap[2]==="in") {
+        i = i * dpi;
+      }
+      else if (cap[2]==="mm") {
+        i = (i/25.6) * dpi;
+      }
+      else if (cap[2]==="cm") {
+        i = (i/2.56) * dpi;
+      }
+    }
+    return i;
   }
 
   function animate( elem, props, duration, steps ) {

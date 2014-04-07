@@ -35,8 +35,12 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
   // split a string of files (one per line) into an array of files
   function fileList( files ) {
     if (!files) return [];
-    return nub(files.split("\n").filter(function(s) { return (s != null && s !== ""); }))
+    return nub(files.split("\n").filter(function(s) { 
+      return (s != null && s !== "" && !local.contains(s)); 
+    }));
   }
+
+  var local = new util.Map();
 
   self.addEventListener( "message", function(ev) {
     try {    
@@ -44,6 +48,7 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
       if (req.files) {
         req.files.forEach( function(f) {
           madoko.writeTextFile(f.name,f.content);  
+          local.set(f.name,true);
         });
       }
 

@@ -51,7 +51,7 @@ function localLoad( fname ) {
 
 var UI = (function() {
 
-  function UI( runner )
+  function UI()
   {
     var self = this;
     self.editor  = null;
@@ -61,7 +61,7 @@ var UI = (function() {
     self.refreshContinuous = true;
     self.refreshRate = 250;
     self.allowServer = true;
-    self.runner = runner;
+    self.runner = null;
 
     self.stale = true;
     self.staleTime = Date.now();
@@ -183,6 +183,14 @@ var UI = (function() {
     }
   }
 
+  UI.prototype.setRunner = function( runner ) {
+    var self = this;
+    if (self.runner) {
+      self.runner.setStorage(null); // TODO: better clean up?
+    }
+    self.runner = runner;     
+  }
+
   UI.prototype.update = function() {
     var self = this;
     if (!self.runner) return;
@@ -200,7 +208,7 @@ var UI = (function() {
       self.stale = false;
       self.round++;
       if (self.runner) {
-        self.runner(text, {docname: self.docName, storage: self.storage, round: self.round }, function(ctx) {
+        self.runner.runMadoko(text, {docname: self.docName, round: self.round }, function(ctx) {
           self.lastRound = ctx.round;
         });
       }
@@ -294,7 +302,8 @@ var UI = (function() {
           if (cres.nextLine > line) { // && cres.nextLine <= res.nextLine) {
             res.next = cres.next;
             res.nextLine = cres.nextLine;
-          } 
+          }
+          break; 
         }
       }
     }
@@ -303,8 +312,15 @@ var UI = (function() {
     return res;
   }
 
-  function offsetTopBorder(elem) {
-    return elem.offsetTop - (elem.style ? util.px(elem.style.marginTop) : 0);
+  function offsetOuterTop(elem) {
+    var delta = 0;
+    if (window.getComputedStyle) {
+      var style = window.getComputedStyle(elem);
+      if (style) {
+        delta = util.px(style.marginTop) + util.px(style.paddingTop) + util.px(style.borderTopWidth);
+      }   
+    }
+    return (elem.offsetTop - delta);
   }
 
   UI.prototype.syncView = function( startLine, endLine ) 
@@ -318,17 +334,17 @@ var UI = (function() {
       var rng = lines._currentVisibleRange;
       startLine = rng.startLineNumber;
       endLine = rng.endLineNumber;
-      //console.log("scroll: start: " + startLine)
+      console.log("scroll: start: " + startLine)
     }
 
     var res = findElemAtLine( self.view, startLine );
     if (!res) return;
     
-    var scrollTop = offsetTopBorder(res.elem) - self.view.offsetTop;
+    var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;
     
     // adjust for line offset
     if (res.elemLine < startLine && res.elemLine < res.nextLine) {
-      var scrollTopNext = offsetTopBorder(res.next) - self.view.offsetTop;
+      var scrollTopNext = offsetOuterTop(res.next) - self.view.offsetTop;
       if (scrollTopNext > scrollTop) {
         var delta = (startLine - res.elemLine) / (res.nextLine - res.elemLine);
         scrollTop += ((scrollTopNext - scrollTop) * delta);
@@ -347,6 +363,9 @@ var UI = (function() {
       if (err) return util.message(err);
       if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
       self.storage = storage;
+      if (self.runner) {
+        self.runner.setStorage(self.storage);
+      }
       self.storage.readTextFile(fname, function(err,text) { 
         if (err) return util.message(err);
         self.setEditText(text);
