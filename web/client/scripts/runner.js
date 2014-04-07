@@ -86,7 +86,8 @@ var Runner = (function() {
 
   Runner.prototype.loadImage = function( storage, fname ) {
     var self = this;
-    storage.getImageUrl( fname, function(url) {
+    storage.getImageUrl( fname, function(err,url) {
+      if (err) return util.message(err);
       util.message("storage provided reference: " + fname);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
     });
@@ -94,7 +95,8 @@ var Runner = (function() {
 
   Runner.prototype.loadText = function( storage, fname ) {
     var self = this;
-    storage.readTextFile( fname, function(data) {
+    storage.readTextFile( fname, function(err,data) {
+      if (err) return util.message(err);
       util.message("storage sent: " + fname);      
       self.files.set(fname,data);
       self.sendFiles.push({ name: fname, content: data });

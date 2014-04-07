@@ -70,7 +70,7 @@ var UI = (function() {
     self.text0 = "";
     
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
-      value: localLoad(self.docName),
+      value: localLoad(self.docName) || document.getElementById("initial").textContent,
       mode: "text/x-web-markdown",
       theme: "vs",
       lineNumbers: true,
@@ -252,11 +252,14 @@ var UI = (function() {
     if (!elem || !line || line < 0) return null;
 
     var children = elem.children; 
+    if (!children || children.length <= 0) return null;
+
     var current  = 0;
     var currentLine = 0;
-    var next     = children.length;
+    var next     = children.length-1;
     var nextLine = line;
     var found    = false;
+    
     for(var i = 0; i < children.length; i++) {
       var child = children[i];
       var dataline = child.getAttribute("data-line");
@@ -280,7 +283,7 @@ var UI = (function() {
 
     // go through all children of our found range
     var res = { elem: children[current], elemLine: currentLine, next: children[next], nextLine: nextLine };
-    for(var i = current; i < next; i++) {
+    for(var i = current; i <= next; i++) {
       var child = children[i];
       if (child.children && child.children.length > 0) {
         var cres = findElemAtLine(child,line);
@@ -340,10 +343,12 @@ var UI = (function() {
 
   UI.prototype.onedrivePickFile = function() {
     var self = this;
-    onedrive.fileDialog( function(storage,fname) {
+    onedrive.fileDialog( function(err,storage,fname) {
+      if (err) return util.message(err);
       if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
       self.storage = storage;
-      self.storage.readTextFile(fname, function(text) { 
+      self.storage.readTextFile(fname, function(err,text) { 
+        if (err) return util.message(err);
         self.setEditText(text);
         self.docName = fname;
       });

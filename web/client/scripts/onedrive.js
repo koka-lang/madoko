@@ -7,25 +7,41 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/util"], function(util) {
+  
+  function onedriveError( obj, premsg ) {
+    msg = "onedrive: " + (premsg ? premsg + ": " : "")
+    if (obj && obj.error && obj.error.message) {
+      msg = msg + obj.error.message + (obj.error.code ? " (" + obj.error.code + ")" : "");
+    }
+    else if (obj && typeof obj === "string") {
+      msg = msg + obj;
+    }
+    else {
+      msg = msg + "unknown error";
+    }
+    console.log(msg);
+    return msg;
+  }
 
-  function onedriveFail(res) {
-    res = (res.error && res.error.message ? res.error.message : res);
-    util.message("onedrive error: " + res);
+  function onedriveCont( call, cont, premsg ) {
+    call.then( 
+      function(res) {
+        cont(null,res);
+      },
+      function(resFail) {
+        cont(onedriveError(resFail,premsg),resFail)
+      }
+    );
   }
 
   function onedriveGet( path, cont, errmsg ) {
-    WL.api( { path: path, method: "GET" }).then(cont, function(resFail) {
-      var msg = resFail;
-      if (resFail.error && resFail.error.message) {
-        msg = resFail.error.message + (resFail.error.code ? " (" + resFail.error.code + ")" : "");
-      }
-      onedriveFail( (errmsg ? errmsg + ": " : "") + msg );
-    });
+    onedriveCont( WL.api( { path: path, method: "GET" }), cont, errmsg );
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
   function onedriveGetFileInfo( folderId, path, cont ) {  
-    onedriveGet( folderId + "/files", function(res) {
+    onedriveGet( folderId + "/files", function(err, res) {
+      if (err) cont(err,res);
       var file = null;
       if (res.data) {
         for (var i = 0; i < res.data.length; i++) {
@@ -36,37 +52,34 @@ define(["../scripts/util"], function(util) {
           }
         }
       }
-      if (!file) return onedriveFail("unable to find: " + path);
-      cont(file);
-    }, "/files");
+      if (!file) return cont( onedriveError("unable to find: " + path), file )
+      cont( null, file);
+    }, "get files");
   }
 
   function onedriveGetFileInfoFromId( file_id, cont ) {
-    WL.api( { path: file_id, method: "GET" } ).then(
-      function(res) {
-        cont(res);
-      },
-      function(resFail) { 
-        onedriveFail(resFail); 
-      } 
-    );
+    onedriveGet( file_id, cont );
   }
 
   var onedriveDomain = "https://apis.live.net/v5.0/"
 
   function fileDialog(cont) {
-    WL.fileDialog( {
+    onedriveCont( WL.fileDialog( {
       mode: "open",
       select: "single",
-    }).then( function(res) 
-    {
-      if (!(res.data && res.data.files && res.data.files.length==1)) return onedriveFail("no file selected");
+    }), 
+    function(err,res) {
+      if (err) cont(err);
+      if (!(res.data && res.data.files && res.data.files.length==1)) {
+        return cont(onedriveError("no file selected"));
+      }
       var file = res.data.files[0];
-      onedriveGetFileInfoFromId( file.id, function(info) {
+      onedriveGetFileInfoFromId( file.id, function(err2,info) {
+        if (err2) cont(err2);
         var storage = new Storage(info.parent_id);
-        cont( storage, file.name );
+        cont( null, storage, file.name );
       });
-    }, onedriveFail );
+    });
   }      
     
   var Storage = (function() {
@@ -81,25 +94,61 @@ define(["../scripts/util"], function(util) {
       onedriveGetFileInfo( self.folderId, fpath, cont );
     }
 
+    Storage.prototype.createLocalFile = function(fpath,content) {
+      var self = this;
+      self.files.set(fpath,{
+        info     : null,
+        content  : content,
+        localOnly: true,
+        written  : false,
+      });
+    }
+
     Storage.prototype.readTextFile = function( fpath, cont ) {
       var self = this;
       var file = self.files.get(fpath);
       if (file) return cont(file.content);
       
-      self.getFileInfo( fpath, function(info) {
-        $.get( "onedrive", { url: info.source }, function(content) {
-          self.files.set( fpath, { info: info, content: content });
-          cont( content );
-        });
+      self.getFileInfo( fpath, function(err,info) {
+        if (err) {
+          self.createLocalFile(fpath,"");  
+          cont(err,"");
+        }
+        else {
+          $.get( "onedrive", { url: info.source }, function(content) {
+            self.files.set( fpath, { 
+              info     : info, 
+              content  : content,
+              localOnly: false,
+              written  : false            
+            });
+            cont( null, content );
+          });
+        }
       });
     }
 
     Storage.prototype.getImageUrl = function( fpath, cont ) {
       var self = this;
-      self.getFileInfo( fpath, function(info) {
-        var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-        cont(url);
-      });
+      var file = self.files.get(fpath);
+      if (file) {
+        if (!file.url) return cont("not an image: " + fpath, ""); 
+        cont(null,file.url);
+      }
+      else {
+        self.getFileInfo( fpath, function(err,info) {
+          if (err) return cont(err,"");
+          var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
+          self.files.set( fpath, {
+            info     : info,
+            content  : "",
+            url      : url,
+            localOnly: false,
+            written  : false,
+          });
+          cont(null,url);
+        });
+      }
     }
 
     return Storage;

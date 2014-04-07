@@ -77,7 +77,6 @@ body {
   background-color: white;
   border: 1px solid black;
   transition: height 0.8s;
-  transition: scrollTop 0.5s;
 }
 
 #view.short {
