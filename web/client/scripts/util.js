@@ -11,6 +11,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
   // Call for messages
   function message( txt ) {
     stdcore.println(txt);
+    console.log(txt);
   }
 
   // Get the properties of an object.
@@ -152,11 +153,11 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     function Map() { };
 
     Map.prototype.set = function( name, value ) {
-      this["$" + name] = value;
+      this["/" + name] = value;
     }
 
     Map.prototype.get = function( name ) {
-      return this["$" + name];
+      return this["/" + name];
     }
 
     Map.prototype.contains = function( name ) {
@@ -165,6 +166,15 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
 
     Map.prototype.delete = function( name ) {
       this.set(name,undefined);
+    }
+
+    Map.prototype.forEach = function( action ) {
+      var self = this;
+      properties(self).forEach( function(name) {
+        if (name.substr(0,1) === "/") {
+          return action(name.substr(1), self[name]);
+        }
+      });
     }
 
     return Map;

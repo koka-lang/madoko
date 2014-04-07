@@ -48,7 +48,7 @@ require([ "../scripts/util",
     redirect_uri: "http://madoko.cloudapp.net:8080/redirect", 
     scope       : ["wl.signin","wl.skydrive"],
   });  
-  var ui     = new UI(  function(text,name,ctx) { runner.runMadoko(text,name,ctx); }  );
+  var ui     = new UI(  function(text,ctx,cont) { runner.runMadoko(text,ctx,cont); }  );
   var runner = new Runner( ui );
   util.message("ready.")  
 });

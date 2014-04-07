@@ -37,7 +37,7 @@ public function println( content : string ) : io () {
   std/core/println( content )
 }
 public function markdown( inputName : string, input : string, options : options,
-                          continue: (md:string,stdout:string,files:string,needRerun:bool,options:options) -> io () ) : io () 
+                          continue: (md:string,stdout:string,needRerun:bool,options:options,files:string,filesRefer:string) -> io () ) : io () 
 { 
   printRedirect( fun(s) {
     log("stdout",s)
@@ -76,11 +76,14 @@ public function markdown( inputName : string, input : string, options : options,
 
   withLog("stdout") {
     withLog("files") {
-      processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
-        stdout = getLog("stdout")
-        files  = getLog("files")
-        continue(output,stdout,files,rerun,options1)
-      })
+      withLog("filesRefer") {
+        processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
+            stdout = getLog("stdout")
+            files  = getLog("files")
+            filesRefer  = getLog("filesRefer")
+            continue(output,stdout,rerun,options1,files,filesRefer)
+          })
+      }
     }
   }
   ()

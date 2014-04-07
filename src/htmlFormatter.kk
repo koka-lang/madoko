@@ -83,7 +83,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
     val href = match (context.imginfos[link.href]) {
       Just(info) | info.imageData != "" -> info.imageData 
       _          -> {
-        if (link.href.relative) then log("files",link.href);
+        if (link.href.relative) then log("filesRefer",link.href);
         link.href.escape
       }
     }    
@@ -302,11 +302,17 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       "  <title>" + escape(options.title.expand) + "</title>\n") +
    (if (options.css == "") then "" else {
       links = options.css.expand.splitPaths
-      links.map(fun(link) { "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n" }).join 
+      links.map(fun(link) { 
+        if (link.relative) then log("filesRefer",link);
+        "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n" 
+      }).join 
     }) +
    (if (options.scripts == "") then "" else {
       links = options.scripts.expand.splitPaths
-      links.map(fun(link) { "  <script src=\"" + escape(link) + "\"></script>\n" }).join 
+      links.map(fun(link) { 
+        if (link.relative) then log("filesRefer",link);
+        "  <script src=\"" + escape(link) + "\"></script>\n" 
+      }).join 
     }) +
    (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
       ["  <script type=\"text/x-mathjax-config\">",

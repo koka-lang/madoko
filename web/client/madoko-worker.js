@@ -16,8 +16,9 @@ var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });
 
-require(["webmain","highlight.js"].concat(languages), function(madoko) 
+require(["../scripts/util","webmain","highlight.js"].concat(languages), function(util,madoko) 
 {
+  // remove duplicates
   function nub( xs ) {
     if (!xs || xs.length <= 0) return [];
     var seen = {};
@@ -31,45 +32,41 @@ require(["webmain","highlight.js"].concat(languages), function(madoko)
     return ys;
   }
 
-  // Get the properties of an object.
-  function properties(obj) {
-    var attrs = [];
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        attrs.push(key);
-      }
-    } 
-    return attrs;
+  // split a string of files (one per line) into an array of files
+  function fileList( files ) {
+    if (!files) return [];
+    return nub(files.split("\n").filter(function(s) { return (s != null && s !== ""); }))
   }
 
   self.addEventListener( "message", function(ev) {
     try {    
       var req = ev.data;
       if (req.files) {
-        properties(req.files).forEach( function(fname) {
-          madoko.writeTextFile(fname,req.files[fname]);  
+        req.files.forEach( function(f) {
+          madoko.writeTextFile(f.name,f.content);  
         });
       }
 
       var t0 = Date.now();            
-      madoko.markdown(req.name,req.content,req.options, function(md,stdout,filesRead,runOnServer,options1) 
+      madoko.markdown(req.name,req.content,req.options, 
+                       function(md,stdout,runOnServer,options1,filesRead,filesReferred) 
       {
         self.postMessage( {
-          messageId  : req.messageId,
+          messageId  : req.messageId, // message id is required to call the right continuation
           content    : md,
           time       : (Date.now() - t0).toString(),
           options    : options1,
           runOnServer: runOnServer,
           message    : stdout,
-          filesRead  : nub(filesRead.split("\n").filter(function(s) { return (s != null && s !== ""); })),
+          filesRead  : fileList(filesRead),         
+          filesReferred: fileList(filesReferred)
         });
       });
     }
     catch(exn) {
       self.postMessage( {
         messageId: req.messageId,
-        message  : exn.toString(),
-        round    : req.round
+        message  : exn.toString()
       });
     }
   });
