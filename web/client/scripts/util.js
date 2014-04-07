@@ -6,13 +6,12 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["std_core"],function(stdcore) {
+define(["std_core","std_path"],function(stdcore,stdpath) {
 
   // Call for messages
   function message( txt ) {
     stdcore.println(txt);
   }
-
 
   // Get the properties of an object.
   function properties(obj) {
@@ -31,6 +30,15 @@ define(["std_core"],function(stdcore) {
       target[prop] = obj[prop];
     });
   }
+
+
+  var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+  };
+
 
   function contains( xs, s ) {
     if (!xs) return false;
@@ -75,21 +83,6 @@ define(["std_core"],function(stdcore) {
     if (!contains(names,cname)) {
       elem.className = cnames + " " + cname;
     }    
-  }
-
-  function changeExt( fname, newext ) {
-    var ext = extname(fname);
-    if (ext=="") {
-      return fname + newext;
-    }
-    else {
-      return fname.substr(0,fname.length - ext.length) + newext;
-    }
-  }
-
-  function extname( fname ) {
-    var match = /\.[^\\\/\.]+$/.exec(fname);
-    return (match ? match[0] : "");
   }
 
   function startsWith(s,pre) {
@@ -155,21 +148,84 @@ define(["std_core"],function(stdcore) {
     }, ival);
   }
 
+  var Map = (function() {
+    function Map() { };
+
+    Map.prototype.set = function( name, value ) {
+      this["$" + name] = value;
+    }
+
+    Map.prototype.get = function( name ) {
+      return this["$" + name];
+    }
+
+    Map.prototype.contains = function( name ) {
+      return (this.get(name) !== undefined);
+    }
+
+    Map.prototype.delete = function( name ) {
+      this.set(name,undefined);
+    }
+
+    return Map;
+  })();
+
+  var ContWorker = (function() {
+    function ContWorker( scriptName ) {
+      var self = this;
+      self.continuations = {};
+      self.unique = 1;
+
+      self.worker = new Worker("madoko-worker.js");
+      self.worker.addEventListener("message", function(ev) {
+        var res = ev.data;
+        self.onComplete(res);
+      });
+    }
+
+    ContWorker.prototype.postMessage = function( info, cont ) {
+      var self = this;
+      var id = self.unique++;
+      info.messageId = id; 
+      self.continuations[id] = cont;
+      self.worker.postMessage( info );
+    }
+
+    ContWorker.prototype.onComplete = function( info ) {
+      var self = this;
+      if (!info || !info.messageId) return;
+      var cont = self.continuations[info.messageId];
+      self.continuations[info.messageId] = undefined;
+      if (!cont) return;
+      cont(info);
+    }
+
+    return ContWorker;
+  })();
+
   return {
     properties: properties,
     extend: extend,
+    message: message,
+    
+    changeExt: stdpath.changeExt,
+    extname: stdpath.extname,
+    basename: stdpath.basename,
+    dirname: stdpath.dirname,
+
+    startsWith: startsWith,
+    endsWith: endsWith,
     contains: contains,
+    
     hasClassName: hasClassName,
     toggleClassName: toggleClassName,
     removeClassName: removeClassName,
-    addClassName:addClassName,
-    changeExt: changeExt,
-    extname: extname,
-    startsWith: startsWith,
-    endsWith: endsWith,
+    addClassName:addClassName,    
     toggleButton: toggleButton,
-    message: message,
     px: px,
     animate: animate,
-  }
+
+    Map: Map,
+    ContWorker: ContWorker,
+  };
 });

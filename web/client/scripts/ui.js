@@ -22,13 +22,40 @@ var supportTransitions = (function() {
 })();
 
 
+function localSave( fname, text ) {
+  if (!localStorage) {
+    util.message("cannot save locally: " + fname + "\n  upgrade your browser." );
+    return;
+  }
+  try {
+    localStorage.setItem( "local/" + fname, text );
+  }
+  catch(e) {
+    util.message("failed to save locally: " + fname + "\n  " + e.toString());
+  }
+}
+
+function localLoad( fname ) {
+ if (!localStorage) {
+    util.message("cannot load locally: " + fname + "\n  upgrade your browser." );
+    return "";
+  }
+  try {
+    var res = localStorage.getItem( "local/" + fname );
+    return (res ? res : "");
+  }
+  catch(e) {
+    return "";
+  } 
+}
+
 function UI( runner )
 {
   var self = this;
   self.editor  = null;
   self.docName = "document.mdk";
-  self.docInfo = {};
-
+  self.storage = null;
+  
   self.refreshContinuous = true;
   self.refreshRate = 250;
   self.allowServer = true;
@@ -41,7 +68,7 @@ function UI( runner )
   self.text0 = "";
   
   self.editor = Monaco.Editor.create(document.getElementById("editor"), {
-    value: document.getElementById("initial").textContent,
+    value: localLoad(self.docName),
     mode: "text/x-web-markdown",
     theme: "vs",
     lineNumbers: true,
@@ -60,14 +87,15 @@ function UI( runner )
     }
   });
 
-  self.editor.addListener("scroll", function (e) {
-    self.syncView();    
-  });
-
-  onedrive.init({
-    client_id   : "000000004C113E9D",
-    redirect_uri: "http://madoko.cloudapp.net:8080/redirect", //"https://login.live.com/oauth20_desktop.srf",                     
-    scope       : ["wl.signin","wl.skydrive"],
+  self.syncTimeout = 0;
+  self.editor.addListener("scroll", function (e) {    
+    // use timeout so the start line number is correct.
+    if (!self.syncTimeout) {
+      self.syncTimeout = setTimeout( function() { 
+        self.syncView(); 
+        self.syncTimeout = 0;        
+      }, 10 );     
+    }
   });
    
   document.getElementById('checkContinuous').onchange = function(ev) { 
@@ -158,6 +186,8 @@ UI.prototype.update = function() {
   if (!self.runner) return;
 
   var text = self.getEditText();
+  localSave(self.docName,text);
+
   if (text != self.text0) {   // set stale but do not update yet (as long as the user types)
     self.stale     = true;      
     self.staleTime = Date.now();
@@ -167,7 +197,7 @@ UI.prototype.update = function() {
   if (self.stale && (self.round === self.lastRound || Date.now() > self.staleTime + 5000)) {
     self.stale = false;
     self.round++;
-    if (self.runner) self.runner(text,{ round: self.round, docName: self.docName, docInfo: self.docInfo })
+    if (self.runner) self.runner(text,self.docName, {docName: self.docName, storage: self.storage, round: self.round } );
   }
 }
 
@@ -214,7 +244,7 @@ UI.prototype.completed = function( ctx ) {
   }
 */
 
-function findLine( elem, line ) 
+function findElemAtLine( elem, line ) 
 {
   if (!elem || !line || line < 0) return null;
 
@@ -250,7 +280,7 @@ function findLine( elem, line )
   for(var i = current; i < next; i++) {
     var child = children[i];
     if (child.children && child.children.length > 0) {
-      var cres = findLine(child,line);
+      var cres = findElemAtLine(child,line);
       if (cres) {
         found = true;
         res.elem = cres.elem;
@@ -282,18 +312,21 @@ UI.prototype.syncView = function( startLine, endLine )
     var rng = lines._currentVisibleRange;
     startLine = rng.startLineNumber;
     endLine = rng.endLineNumber;
+    console.log("scroll: start: " + startLine)
   }
 
-  var res = findLine( self.view, startLine );
+  var res = findElemAtLine( self.view, startLine );
   if (!res) return;
   
-  var scrollTop0 = offsetTopBorder(res.elem) - self.view.offsetTop;
-  var scrollTop = scrollTop0
+  var scrollTop = offsetTopBorder(res.elem) - self.view.offsetTop;
   
+  // adjust for line offset
   if (res.elemLine < startLine && res.elemLine < res.nextLine) {
-    var scrollTop1 = offsetTopBorder(res.next) - self.view.offsetTop;
-    var delta = (startLine - res.elemLine) / (res.nextLine - res.elemLine);
-    scrollTop += ((scrollTop1 - scrollTop0) * delta);
+    var scrollTopNext = offsetTopBorder(res.next) - self.view.offsetTop;
+    if (scrollTopNext > scrollTop) {
+      var delta = (startLine - res.elemLine) / (res.nextLine - res.elemLine);
+      scrollTop += ((scrollTopNext - scrollTop) * delta);
+    }
   }
 
   if (scrollTop !== self.lastScrollTop) {
@@ -304,12 +337,12 @@ UI.prototype.syncView = function( startLine, endLine )
 
 UI.prototype.onedrivePickFile = function() {
   var self = this;
-  onedrive.fileDialog( function(fname,info) {
+  onedrive.fileDialog( function(storage,fname) {
     if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
-    onedrive.readFile(info, function(text) { 
+    self.storage = storage;
+    self.storage.readTextFile(fname, function(text) { 
       self.setEditText(text);
       self.docName = fname;
-      self.docInfo = info;
     });
   });
 }

@@ -13,7 +13,7 @@ define(["../scripts/util"], function(util) {
     util.message("onedrive error: " + res);
   }
 
-  function get( path, cont, errmsg ) {
+  function onedriveGet( path, cont, errmsg ) {
     WL.api( { path: path, method: "GET" }).then(cont, function(resFail) {
       var msg = resFail;
       if (resFail.error && resFail.error.message) {
@@ -23,12 +23,9 @@ define(["../scripts/util"], function(util) {
     });
   }
 
-    // todo: abstract folderId and WL.getSession(). implement subdirectories.
-  function getFileInfo( parentInfo, path, cont ) {  
-    folderId = parentInfo.parent_id;
-    if (!folderId) return;
-
-    get( folderId + "/files", function(res) {
+    // todo: abstract WL.getSession(). implement subdirectories.
+  function onedriveGetFileInfo( folderId, path, cont ) {  
+    onedriveGet( folderId + "/files", function(res) {
       var file = null;
       if (res.data) {
         for (var i = 0; i < res.data.length; i++) {
@@ -44,20 +41,7 @@ define(["../scripts/util"], function(util) {
     }, "/files");
   }
 
-  function getImageUrl( parentInfo, path, cont ) {
-    getFileInfo( parentInfo, path, function(info) {
-      var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-      cont(url);
-    })
-  }
-
-  function readFile( finfo, cont ) {
-    $.get( "onedrive", { url: finfo.source }, cont);
-  }
-
-  var onedriveDomain = "https://apis.live.net/v5.0/"
-
-  function getFileInfoFromId( file_id, cont ) {
+  function onedriveGetFileInfoFromId( file_id, cont ) {
     WL.api( { path: file_id, method: "GET" } ).then(
       function(res) {
         cont(res);
@@ -68,7 +52,9 @@ define(["../scripts/util"], function(util) {
     );
   }
 
-  function fileDialog( cont ) {
+  var onedriveDomain = "https://apis.live.net/v5.0/"
+
+  function fileDialog(cont) {
     WL.fileDialog( {
       mode: "open",
       select: "single",
@@ -76,44 +62,49 @@ define(["../scripts/util"], function(util) {
     {
       if (!(res.data && res.data.files && res.data.files.length==1)) return onedriveFail("no file selected");
       var file = res.data.files[0];
-      getFileInfoFromId( file.id, function(info) {
-        cont(info.name,info);
+      onedriveGetFileInfoFromId( file.id, function(info) {
+        var storage = new Storage(info.parent_id);
+        cont( storage, file.name );
       });
     }, onedriveFail );
-  }
+  }      
+    
+  var Storage = (function() {
+    function Storage( folderId ) {
+      var self = this;
+      self.folderId = folderId;
+      self.files = new util.Map();
+    }
 
-  
-  /*
-  function onedriveGetFiles( fs ) {
-    fs.forEach( function(file) {
-      onedriveGetFileContent(file, function(body) {
-        //madoko.writeTextFile( file.path, body );
-        files[file.path] = body;
-      });
-    });
-  }
+    Storage.prototype.getFileInfo = function( fpath, cont ) {  
+      var self = this;
+      onedriveGetFileInfo( self.folderId, fpath, cont );
+    }
 
-  
-  function onedriveListFiles( folder, cont ) {
-    WL.api( { path: folder.id + "/files", method: "GET" } )
-     .then( function(res) {
-        var files = [];
-        res.data.forEach( function(f) {
-          if (f.type && f.type=="file") {
-            f.path = f.name;
-            files.push(f);
-          };
-          if (f.type && f.type=="photo") {
-            var url = onedriveDomain + f.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
-            document.getElementById("testimg").src = url;
-          };
+    Storage.prototype.readTextFile = function( fpath, cont ) {
+      var self = this;
+      var file = self.files.get(fpath);
+      if (file) return cont(file.content);
+      
+      self.getFileInfo( fpath, function(info) {
+        $.get( "onedrive", { url: info.source }, function(content) {
+          self.files.set( fpath, { info: info, content: content });
+          cont( content );
         });
-        cont(files);
-     },
-     onedriveFail );
-  }
-  */
+      });
+    }
 
+    Storage.prototype.getImageUrl = function( fpath, cont ) {
+      var self = this;
+      self.getFileInfo( fpath, function(info) {
+        var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
+        cont(url);
+      });
+    }
+
+    return Storage;
+  })();
+  
   function init(options) {
     if (!options.response_type) options.response_type = "token";
     if (!options.scope) options.scope = ["wl.signin","wl.skydrive"];
@@ -122,9 +113,6 @@ define(["../scripts/util"], function(util) {
 
   return {
     init: init,
-    getFileInfo: getFileInfo,
-    getImageUrl: getImageUrl,
-    readFile: readFile, 
     fileDialog: fileDialog,
   }
 });

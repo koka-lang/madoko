@@ -55,20 +55,21 @@ require(["webmain","highlight.js"].concat(languages), function(madoko)
       madoko.markdown(req.name,req.content,req.options, function(md,stdout,filesRead,runOnServer,options1) 
       {
         self.postMessage( {
-          content: md,
-          time: (Date.now() - t0).toString(),
-          options: options1,
+          messageId  : req.messageId,
+          content    : md,
+          time       : (Date.now() - t0).toString(),
+          options    : options1,
           runOnServer: runOnServer,
-          message: stdout,
-          ctx: req.ctx,
-          filesRead: nub(filesRead.split("\n")),
+          message    : stdout,
+          filesRead  : nub(filesRead.split("\n").filter(function(s) { return (s != null && s !== ""); })),
         });
       });
     }
     catch(exn) {
       self.postMessage( {
-        message: exn.toString(),
-        round: ev.data.round
+        messageId: req.messageId,
+        message  : exn.toString(),
+        round    : req.round
       });
     }
   });
