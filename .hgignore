@@ -18,4 +18,6 @@ syntax:regexp
 ^web/client/styles/
 ^web/client/jquery-ui/
 ^web/client/highlight.js$
-^web/users$
+^web/client/madoko.css$
+^web/users/
+^web/ssl/

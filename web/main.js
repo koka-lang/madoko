@@ -98,6 +98,7 @@ function runMadoko( userPath, docname, flags, cont ) {
   cp.exec( command, {cwd: userPath, timeout: 10000 }, cont); 
 }
 
+
 app.post('/rest/run', function(req,res) {
   var userpath = getUserPath(req,res);
   var docname = req.body.docname || "document.mdk";
@@ -148,7 +149,7 @@ app.get("/redirect", function(req,res) {
 });
 
 function onedriveGet(query,cont) {
-  http.get(query, function(res) {
+  https.get(query, function(res) {
     //console.log("statusCode: ", res.statusCode);
     //console.log("headers: ", res.headers);
     var body = "";
@@ -167,6 +168,18 @@ app.get("/onedrive", function(req,res) {
   onedriveGet(req.query.url, function(body) {
     //console.log("downloaded: " + body);
     res.send(body);
+  });
+});
+
+app.get('/rest/download/:fname', function(req,res) {
+  var userpath = getUserPath(req,res);
+  var fname  = req.params.fname;
+  console.log("download: " + req.path + ": " + fname);
+  fs.readFile( path.join(userpath,fname), function(err,data) {
+    console.log("download result: " + err);
+    if (err) return res.send(403); // TODO: improve error result;
+    res.attachment(fname);
+    res.send(data);
   });
 });
 
@@ -258,4 +271,12 @@ app.get("/rest/ask", function(req,res) {
 */
 
 app.use('/', express.static(__dirname + "/client"));
-app.listen(8080);
+//app.listen(8080);
+var sslOptions = {
+  key: fs.readFileSync('./ssl/madoko-server.key'),
+  cert: fs.readFileSync('./ssl/madoko-server.crt'),
+  ca: fs.readFileSync('./ssl/daan-ca.crt'),
+  requestCert: true,
+  rejectUnauthorized: false
+};
+https.createServer(sslOptions, app).listen(8080);

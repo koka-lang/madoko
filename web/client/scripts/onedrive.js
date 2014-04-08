@@ -203,6 +203,11 @@ define(["../scripts/util"], function(util) {
           cont(err,"");
         }
         else {
+          //var urlpath = info.id + "/content"; //self.folderId + "/files/" + fpath; // + "?access_token=" + WL.getSession().access_token;
+          //var url = onedriveDomain + urlpath + "?access_token=" + WL.getSession().access_token;
+          //onedriveGet(  urlpath,
+          //var url = info.source + "&access_token=" + WL.getSession().access_token;
+          //util.requestGET( url, {}, 
           util.requestGET( "onedrive", { url: info.source }, function(errGet,content) {
             if (errGet) return cont(errGet,content);
             self.updateFile( fpath, { 

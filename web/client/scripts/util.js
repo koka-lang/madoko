@@ -363,6 +363,43 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     req.send(content);
   }
 
+  function downloadFile(url) 
+  {
+    window.open(url + "?download");
+    /*
+    var userAgent = navigator.userAgent.toLowerCase();
+    //If in Chrome or Safari - download via virtual link click
+    if ((contains(userAgent,"chrome") || contains(userAgent,"safari")) && document.createEvent) {
+      var link = document.createElement('a');
+      link.href = url;
+
+      if (link.download !== undefined){
+        //Set HTML5 download attribute. This will prevent file from opening if supported.
+        link.download = stdpath.basename(url);
+      }
+
+      var ev = document.createEvent('MouseEvents');
+      ev.initEvent('click' ,true ,true);
+      link.dispatchEvent(ev);
+    }
+    else {
+      window.open(url + "?download");
+    }
+    */
+  }
+
+  /*
+w = window.open();
+doc = w.document;
+doc.open( mimetype,'replace');
+doc.charset = "utf-8";
+doc.write(data);
+doc.close();
+doc.execCommand("SaveAs", null, filename)
+*/
+
+   
+  
   return {
     properties: properties,
     extend: extend,
@@ -389,6 +426,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     requestPOST: requestPOST,
     requestPUT: requestPUT,
     requestGET: requestGET,
+    downloadFile: downloadFile,
 
     Map: Map,
     ContWorker: ContWorker,
