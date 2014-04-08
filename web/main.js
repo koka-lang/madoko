@@ -162,8 +162,8 @@ function onedriveGet(query,cont) {
 }
 
 app.get("/onedrive", function(req,res) {
-  //console.log("onedrive");
-  //console.log(req.query);
+  console.log("onedrive");
+  console.log(req.query);
   onedriveGet(req.query.url, function(body) {
     //console.log("downloaded: " + body);
     res.send(body);

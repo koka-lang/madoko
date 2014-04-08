@@ -265,17 +265,36 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     return ContWorker;
   })();
 
-  
-  function requestPUT( url, content, cont ) {
-    requestPOST( { method: "PUT", url: url, contentType: ";" }, content, cont );
+
+  function urlEncode( obj ) {
+    var vals = [];
+    properties(obj).forEach( function(prop) {
+      vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] ? obj[prop].toString() : "") );
+    });
+    return vals.join("&");
   }
 
-  function requestPOST( reqparam, params, cont ) {
-    if (typeof reqparam === "string") {
-      reqparam = { url: reqparam, method: "POST" };
-    }
+  function requestGET( opts, params, cont ) {
+    var reqparam = (typeof opts === "string" ? { url: opts } : opts);
+    if (!reqparam.method) reqparam.method = "GET";
+
+    reqparam.url = reqparam.url + "?" + urlEncode(params);
+    reqparam.contentType = null;
+    
+    requestPOST( reqparam, "", cont );
+  }
+  
+  function requestPUT( opts, params, cont ) {
+    var reqparam = (typeof opts === "string" ? { url: opts } : opts);
+    if (!reqparam.method) reqparam.method = "PUT";
+
+    requestPOST( reqparam, params, cont );
+  }
+
+  function requestPOST( opts, params, cont ) {
+    var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
-    req.open(reqparam.method, reqparam.url, true );
+    req.open(reqparam.method || "POST", reqparam.url, true );
     
     function onError() {
       var msg = req.statusText;
@@ -283,9 +302,14 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       var type = req.getResponseHeader("Content-Type");
       if (req.responseText && startsWith(type,"application/json;")) {
         var res = JSON.parse(req.responseText);
-        if (res.message) msg = msg + ": " + res.message;
+        if (res.error && res.error.message) {
+          msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
+        }      
       }
-      cont(msg, res, req.responseText);
+      else {
+        msg = msg + ": " + req.responseText;
+      }
+      cont(msg, res, req.response);
     }
 
     req.onload = function(ev) {
@@ -298,7 +322,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
         else {
           res = req.responseText;
         }
-        cont(0,res,req.responseText);
+        cont(0,res,req.response);
       }
       else {
         onError();
@@ -309,20 +333,33 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     }
 
     var contentType = "text/plain";
-    var content = "";
+    var content = null;
 
     if (typeof params === "string") {
       contentType = "text/plain";
       content = params;
     } 
+    // object: use url-encoded for GET and json for POST/PUT      
+    else if (reqparam.method==="GET") {
+      contentType = "application/x-www-form-urlencoded";
+      content = urlEncode(params);
+    }
     else {
       contentType = "application/json";
       content = JSON.stringify(params);
     }
-    if (reqparam.contentType != null) {
+    
+    // override content type?
+    if (reqparam.contentType !== undefined) {
       contentType = reqparam.contentType;
     }
-    req.setRequestHeader("Content-Type", contentType);    
+    // override response type?
+    if (reqparam.responseType != null) {
+      req.overrideMimeType(reqparam.responseType);
+      req.responseType = reqparam.responseType;
+    }
+    
+    if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
     req.send(content);
   }
 
@@ -351,6 +388,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
 
     requestPOST: requestPOST,
     requestPUT: requestPUT,
+    requestGET: requestGET,
 
     Map: Map,
     ContWorker: ContWorker,

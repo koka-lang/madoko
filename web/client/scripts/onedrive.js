@@ -203,7 +203,8 @@ define(["../scripts/util"], function(util) {
           cont(err,"");
         }
         else {
-          $.get( "onedrive", { url: info.source }, function(content) {
+          util.requestGET( "onedrive", { url: info.source }, function(errGet,content) {
+            if (errGet) return cont(errGet,content);
             self.updateFile( fpath, { 
               info     : info, 
               content  : content,
@@ -265,8 +266,9 @@ define(["../scripts/util"], function(util) {
                 console.log("save to server: " + file.path);
                 //var url = info.upload_location + "?access_token=" + WL.getSession().access_token;
                 var url = onedriveDomain + self.folderId + "/files/" + file.path + "?access_token=" + WL.getSession().access_token;
-                return util.requestPUT( url, file.content, function(errPut,resp) {
-                  console.log("saved: " + file.path);
+                return util.requestPUT( {url:url,contentType:";"}, file.content, function(errPut,resp) {
+                  if (errPut) util.message("failed to save: " + file.path + ": " + errPut);
+                         else util.message("saved: " + file.path);
                   fcont(errPut,file.path);
                 })
               }
