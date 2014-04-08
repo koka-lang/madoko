@@ -113,7 +113,7 @@ body {
   vertical-align: bottom;
 }
 
-#onedrive-download {
+#onedrive-download, #sync {
   /* color: #00B; */
   background-color: white;
   padding-right: 0.5ex;

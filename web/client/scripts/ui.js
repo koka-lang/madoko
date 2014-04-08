@@ -111,6 +111,12 @@ var UI = (function() {
     document.getElementById("onedrive-download").onclick = function(ev) {
       self.onedrivePickFile();
     };
+   
+    document.getElementById("sync").onclick = function(ev) {
+      if (self.storage) {
+        self.storage.sync();
+      }
+    };
 
     self.view    = document.getElementById("view");
     var cons     = document.getElementById("koka-console-out");
@@ -197,6 +203,9 @@ var UI = (function() {
 
     var text = self.getEditText();
     localSave(self.docName,text);
+    if (self.storage) {
+      self.storage.writeTextFile(self.docName,text);
+    }
 
     if (text != self.text0) {   // set stale but do not update yet (as long as the user types)
       self.stale     = true;      

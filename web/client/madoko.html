@@ -59,6 +59,7 @@ insert image:
 -->
 <img src="images/madoko-abslogo-xsmall.png" style="width:2em;vertical-align:-0.5ex;padding-right:2em"/>
 <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
+<span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> sync</span>
 &nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
 &nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
 </div>
@@ -114,7 +115,7 @@ require([ "../scripts/onedrive" ], function(onedrive)
   onedrive.init({
     client_id   : "000000004C113E9D",
     redirect_uri: "http://madoko.cloudapp.net:8080/redirect", 
-    scope       : ["wl.signin","wl.skydrive"],
+    scope       : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   });  
 });
 </script>

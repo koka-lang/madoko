@@ -147,6 +147,21 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     return i;
   }
 
+  function asyncForEach( xs, asyncAction, cont ) {
+    if (!xs || xs.length===0) return cont(0,[]);
+    var count = xs.length;
+    var objs  = [];
+    var err   = null;
+    xs.forEach( function(x) {
+      asyncAction(x, function(xerr,obj) {
+        objs.push(obj);
+        if (xerr) err = xerr;
+        count--;
+        if (count <= 0) cont(err,objs);
+      });
+    });
+  }
+
   function animate( elem, props, duration, steps ) {
     var ival = (steps ? duration / steps : 50);
     steps = (duration / ival) | 0;
@@ -205,6 +220,15 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       });
     }
 
+    Map.prototype.elems = function() {
+      var self = this;
+      var res = [];
+      self.forEach( function(name,elem) {
+        res.push(elem);
+      });
+      return res;
+    }
+
     return Map;
   })();
 
@@ -241,6 +265,67 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     return ContWorker;
   })();
 
+  
+  function requestPUT( url, content, cont ) {
+    requestPOST( { method: "PUT", url: url, contentType: ";" }, content, cont );
+  }
+
+  function requestPOST( reqparam, params, cont ) {
+    if (typeof reqparam === "string") {
+      reqparam = { url: reqparam, method: "POST" };
+    }
+    var req = new XMLHttpRequest();
+    req.open(reqparam.method, reqparam.url, true );
+    
+    function onError() {
+      var msg = req.statusText;
+      var res = req.responseText;
+      var type = req.getResponseHeader("Content-Type");
+      if (req.responseText && startsWith(type,"application/json;")) {
+        var res = JSON.parse(req.responseText);
+        if (res.message) msg = msg + ": " + res.message;
+      }
+      cont(msg, res, req.responseText);
+    }
+
+    req.onload = function(ev) {
+      if (req.readyState === 4 && req.status === 200) {
+        var type = req.getResponseHeader("Content-Type");
+        var res;
+        if (startsWith(type,"application/json;")) {
+          res = JSON.parse(req.responseText);
+        }
+        else {
+          res = req.responseText;
+        }
+        cont(0,res,req.responseText);
+      }
+      else {
+        onError();
+      }
+    }
+    req.onerror = function(ev) {
+      onError();
+    }
+
+    var contentType = "text/plain";
+    var content = "";
+
+    if (typeof params === "string") {
+      contentType = "text/plain";
+      content = params;
+    } 
+    else {
+      contentType = "application/json";
+      content = JSON.stringify(params);
+    }
+    if (reqparam.contentType != null) {
+      contentType = reqparam.contentType;
+    }
+    req.setRequestHeader("Content-Type", contentType);    
+    req.send(content);
+  }
+
   return {
     properties: properties,
     extend: extend,
@@ -262,8 +347,13 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     toggleButton: toggleButton,
     px: px,
     animate: animate,
+    asyncForEach: asyncForEach,
+
+    requestPOST: requestPOST,
+    requestPUT: requestPUT,
 
     Map: Map,
     ContWorker: ContWorker,
+
   };
 });

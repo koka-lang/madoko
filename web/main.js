@@ -102,6 +102,7 @@ app.post('/rest/run', function(req,res) {
   var userpath = getUserPath(req,res);
   var docname = req.body.docname || "document.mdk";
   var result = { userpath: userpath };
+  //console.log(req.body);
   console.log(properties(req.body));
   saveFiles( userpath, req.body, function(err1) {
     if (err1) {

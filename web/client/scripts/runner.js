@@ -152,7 +152,8 @@ var Runner = (function() {
       });
     }
 
-    $.post( "/rest/run", params, function(data,status,jqXHR) {
+    util.requestPOST( "/rest/run", params, function(err,data) {
+      if (err) return util.message(err);
       util.message(data.stdout + data.stderr);
       util.properties(data).forEach(function(name) {
         if (name.substr(0,1) !== "/") return;

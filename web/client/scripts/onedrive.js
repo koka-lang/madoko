@@ -61,6 +61,10 @@ define(["../scripts/util"], function(util) {
     onedriveGet( file_id, cont );
   }
 
+  function onedriveGetWriteAccess( cont ) {
+    onedriveCont( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), cont );
+  }
+
   var onedriveDomain = "https://apis.live.net/v5.0/"
 
   function fileDialog(cont) {
@@ -113,7 +117,7 @@ define(["../scripts/util"], function(util) {
       self.updateFile( fpath, {
         info     : (file ? file.info : null),
         content  : content,
-        localOnly: (file ? file.localOnly : localOnly),
+        localOnly: (file ? file.localOnly : (localOnly != null)),
         written  : (content !== "")
       });
     }
@@ -144,7 +148,23 @@ define(["../scripts/util"], function(util) {
     // private
     Storage.prototype.updateFile = function( fpath, info ) {
       var self = this;
+      
+      // finish info with path and created 
       info.path = fpath;
+      if (!info.created) {
+        if (info.info) {
+          info.created = info.info.updated_time;
+        }
+        else {
+          info.created = Date.now(); 
+        }
+      }
+      
+      // check same content
+      var file = self.files.get(fpath);
+      if (file && file.content === info.content) return;
+
+      // update
       self.files.set(fpath,info);
       self.fireEvent("update", { path: fpath, content: info.content });
     }
@@ -219,13 +239,68 @@ define(["../scripts/util"], function(util) {
       }
     }
 
+    Storage.prototype.sync = function( cont ) {
+      var self = this;
+      var remotes = new util.Map();
+
+      onedriveGetWriteAccess( function(errAccess) {
+        if (errAccess) return util.message("cannot get write permission. sync failed.");
+
+        util.asyncForEach( self.files.elems(), function(file, fcont) {
+          // only text files
+          if (file.url || (file.localOnly && !file.content)) return fcont(null,file.path);
+
+          self.getFileInfo( file.path, function(errInfo,info) {
+            if (errInfo) {
+              if (!file.localOnly) return fcont(errInfo,file.path);
+              info = null;  
+            }
+
+            var modified = (info ? info.updated_time : file.created);
+            if (file.written) {
+              if (file.created !== modified) {
+                console.log("modified on server and client!")
+              }
+              else {
+                console.log("save to server: " + file.path);
+                //var url = info.upload_location + "?access_token=" + WL.getSession().access_token;
+                var url = onedriveDomain + self.folderId + "/files/" + file.path + "?access_token=" + WL.getSession().access_token;
+                return util.requestPUT( url, file.content, function(errPut,resp) {
+                  console.log("saved: " + file.path);
+                  fcont(errPut,file.path);
+                })
+              }
+            }
+            else if (file.created !== modified) {
+              console.log("re-upload: " + file.path);
+            }
+            else {
+              console.log("unmodified: " + file.path);
+            }
+
+            fcont(null,file.path)
+          });
+        },
+        function(err,xs) {
+          if (err) {
+            util.message(err);
+            util.message("unable to sync!!")
+          }
+        });
+      });
+    }
+
     return Storage;
   })();
   
   function init(options) {
     if (!options.response_type) options.response_type = "token";
     if (!options.scope) options.scope = ["wl.signin","wl.skydrive"];
-    WL.init(options);
+    WL.init(options).then( function(res) {
+      console.log("success");
+    }, function(resFail) {
+      console.log("failure");
+    });
   }
 
   return {
