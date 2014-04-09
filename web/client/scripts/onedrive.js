@@ -35,6 +35,7 @@ define(["../scripts/util"], function(util) {
   }
 
   function onedriveGet( path, cont, errmsg ) {
+    if (!WL) return cont( onedriveError("no connection",errmsg), {} );
     onedriveCont( WL.api( { path: path, method: "GET" }), cont, errmsg );
   }
 
@@ -62,20 +63,28 @@ define(["../scripts/util"], function(util) {
   }
 
   function onedriveGetWriteAccess( cont ) {
+    if (!WL) return cont( onedriveError("no connection"), {} );
     onedriveCont( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), cont );  
+  }
+
+  function onedriveAccessToken() {
+    if (!WL) return "";
+    var session = WL.getSession();
+    if (!session || !session.access_token) return "";
+    return "access_token=" + session.access_token;
   }
 
   function onedriveWriteFile( folderId, path, content, overwrite, cont ) {
     // TODO: resolve sub-directories
     var url = onedriveDomain + folderId + "/files/" + path + "?" +
-                (overwrite ? "" : "overwrite=false&") +
-                "access_token=" + WL.getSession().access_token;
+                (overwrite ? "" : "overwrite=false&") + onedriveAccessToken();
     util.requestPUT( {url:url,contentType:";" }, content, cont );
   }
 
   var onedriveDomain = "https://apis.live.net/v5.0/"
 
   function fileDialog(cont) {
+    if (!WL) return cont( onedriveError("no connection"), null, "" );
     onedriveCont( WL.fileDialog( {
       mode: "open",
       select: "single",
@@ -252,6 +261,8 @@ define(["../scripts/util"], function(util) {
       else {
         self.getFileInfo( fpath, function(err,info) {
           if (err) return cont(err,"");
+          if (!info) return cont("image not found","");
+          if (!WL) return cont("no connection");
           var url = onedriveDomain + info.id + "/picture?type=full&access_token=" + WL.getSession().access_token;
           self.updateFile( fpath, {
             info     : info,
@@ -270,7 +281,7 @@ define(["../scripts/util"], function(util) {
       var remotes = new util.Map();
 
       onedriveGetWriteAccess( function(errAccess) {
-        if (errAccess) return util.message("cannot get write permission. sync failed.");
+        if (errAccess) return cont("onedrive: cannot get write permission.",[]);
 
         util.asyncForEach( self.files.elems(), function(file, xfcont) {
           function fcont(err,action) {
@@ -282,10 +293,11 @@ define(["../scripts/util"], function(util) {
           if (file.url || (file.localOnly && !file.content)) return fcont(null,"skip");
 
           self.getFileInfo( file.path, function(errInfo,info) {
-            if (errInfo) {
-              // file is deleted on server, or just not there
-              file.info = null; // clear info, so we do not overwrite
-              info = null;  
+            if (errInfo) return fcont(errInfo,"<unknown>");
+
+            if (!info) {
+              // file is deleted on server?
+              file.info = null; // clear stale info, so we do not overwrite
             }
 
             var modifiedTime = (info ? info.updated_time : file.created);
@@ -321,11 +333,7 @@ define(["../scripts/util"], function(util) {
           xs.forEach( function(msg) {
             util.message(msg);
           })
-          if (err) {
-            util.message(err);
-            util.message("unable to sync!!")
-          }
-          cont(err);
+          if (cont) cont(err);
         });
       });
     }
@@ -334,12 +342,16 @@ define(["../scripts/util"], function(util) {
   })();
   
   function init(options) {
+    if (typeof WL === "undefined") {
+      WL = null;
+      return;
+    }
     if (!options.response_type) options.response_type = "token";
-    if (!options.scope) options.scope = ["wl.signin","wl.skydrive"];
+    if (!options.scope) options.scope = ["wl.signin","wl.skydrive"];    
     WL.init(options).then( function(res) {
-      console.log("success");
+      console.log("initialized onedrive");
     }, function(resFail) {
-      console.log("failure");
+      console.log("failed to initialize onedrive");
     });
   }
 

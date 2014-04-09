@@ -48,34 +48,49 @@ function convertDiff(side,d) {
     mstart : d.modifiedStartLineNumber,
     mend   : d.modifiedEndLineNumber,
   };
-  if (diff.oend < diff.ostart) diff.oend = diff.ostart-1;
-  if (diff.mend < diff.mstart) diff.mend = diff.mstart-1;
+  if (diff.oend < diff.ostart) {
+    diff.ostart++;  // we consider insertion after the line
+    diff.oend = diff.ostart-1;
+  }
+  if (diff.mend < diff.mstart) {
+    //diff.mstart++;
+    diff.mend = diff.mstart-1;
+  }
+  return diff;
 }
 
-function merge3x( original, m1, m2, diff1, diff2 ) {
-  console.log("merge3x");
+function narrowDiff(target, d) {
+  target.mstart = Math.min( d.mstart, target.mstart );
+  target.mend   = Math.max( d.mend, target.mend );
+  target.ostart = Math.min( d.ostart, target.ostart );
+  target.oend   = Math.max( d.oend, target.oend );
+}
 
-  var olines = original.split("\n");
-  var alines = m1.split("\n");
-  var blines = m2.split("\n");
+var testO  = "line 1\nline2\nx3\nend4";
+var testA  = "line 1\nline2c\nx3\nAddition\nend4";
+var testB  = "line 1\nline 2b\nx3\nOther\nend4";
+
+function diffChunks( olen, alen, blen, adiff, bdiff ) {
+  console.log("merge3x");
 
   // create a sorted list of diffs.
   var diffs = [];
   var j = 0;
-  for(var i = 0; i < diff1.length; i++) {
-    var d1 = diff1[i];
-    while( j < diff2.length && 
-            (diff2[j].originalStartLineNumber < d1.originalStartLineNumber ||
-             (diff2[j].originalStartLineNumber === d1.originalStartLineNumber && 
-                diff2[j].originalEndLineNumber < d1.originalEndLineNumber)))
+  for(var i = 0; i < adiff.length; i++) {
+    var d1 = adiff[i];
+    while( j < bdiff.length && 
+            (bdiff[j].originalStartLineNumber < d1.originalStartLineNumber ||
+             (bdiff[j].originalStartLineNumber === d1.originalStartLineNumber && 
+                (//d1.originalEndLineNumber === 0 ||
+                 bdiff[j].originalEndLineNumber < d1.originalEndLineNumber))))
     {
-      diffs.push( convertDiff(Side.B,diff2[j]) );      
+      diffs.push( convertDiff(Side.B,bdiff[j]) );      
       j++;
     }
     diffs.push(convertDiff(Side.A,d1));
   }
-  for( ; j < diff2.length; j++) {
-    diffs.push(convertDiff(Side.B,diff2[j]));
+  for( ; j < bdiff.length; j++) {
+    diffs.push(convertDiff(Side.B,bdiff[j]));
   }
 
   var chunks = []; 
@@ -89,7 +104,7 @@ function merge3x( original, m1, m2, diff1, diff2 ) {
   }
 
   for(i = 0; i < diffs.length; ) {
-    var d = diffs[i];
+    var d     = diffs[i];
     var start = d.ostart;
     var end   = d.oend;
 
@@ -112,66 +127,114 @@ function merge3x( original, m1, m2, diff1, diff2 ) {
     }
     else {
       // overlap
-      var adiff = { mstart: alines.length, mend: -1, ostart: olines.length, oend: -1 };
-      var bdiff = { mstart: blines.length, mend: -1, ostart: olines.length, oend: -1 };
+      var ad = { mstart: alen, mend: -1, ostart: olen, oend: -1 };
+      var bd = { mstart: blen, mend: -1, ostart: olen, oend: -1 };
 
       // determine maximal diff for each side
       for(var h = i; h < j; h++) {
         d = diffs[h];
         
         if (d.side===Side.A) {
-
+          narrowDiff(ad,d);          
         }
-        var r = regions[d.side];
-        r.mstart = Math.min( d.mstart, r.mstart );
-        r.mend   = Math.max( d.mend, r.mend );
-        r.ostart = Math.min( d.ostart, r.ostart );
-        r.oend   = Math.max( d.oend, r.oend );
+        else {
+          narrowDiff(bd,d);
+        }
       }
 
+      // adjust (because each may have started or ended at another point in the original)
+      var astart = ad.mstart + (start - ad.ostart);
+      var aend   = ad.mend + (end - ad.oend);
+      var bstart = bd.mstart + (start - bd.ostart);
+      var bend   = bd.mend + (end - bd.oend);
 
-
-
-      var regions = {};
-      regions[Side.A] = { mstart: lines1.length, mend: -1, ostart: olines.length, oend: -1  };
-      regions[Side.B] = { mstart: lines2.length, mend: -1, ostart: olines.length, oend: -1  };
-      
-      for(var h = i; h < j; h++) {
-        d = diffs[h];
-        
-        var r = regions[d.side];
-        r.mstart = Math.min( d.mstart, r.mstart );
-        r.mend   = Math.max( d.mend, r.mend );
-        r.ostart = Math.min( d.ostart, r.ostart );
-        r.oend   = Math.max( d.oend, r.oend );
+      if (aend < astart && bend >= bstart) {
+        chunks.push( { side: Side.B, start: bstart, end: bend } );
+      }
+      else if (bend < bstart && aend >= astart) {
+        chunks.push( { side: Side.A, start: astart, end: aend } );
+      }
+      else if (bend < bstart && aend < astart) {
+        /* both deleted */
+      }
+      else {
+        /* real conflict */
+        chunks.push( { 
+            side: Side.None, 
+            astart: astart, aend: aend, 
+            ostart: start, oend: end, 
+            bstart: bstart, bend : bend 
+        });
       }
 
-      var astart = regions[Side.A].mstart + (start - regions[Side.A].ostart);
-      var aend   = regions[Side.A].mend + (end - regions[Side.A].oend);
-      var bstart = regions[Side.B].mstart + (start - regions[Side.B].ostart);
-      var bend   = regions[Side.B].mend + (end - regions[Side.B].oend);
-
-      chunks.push( { 
-          side: Side.None, 
-          astart: astart, aend: aend, 
-          ostart: start, oend: end, 
-          bstart: bstart, bend : bend 
-      });
-    
-      originalStart = Math.max(start,end)+1;
-      i = j;
+      originalStart = end+1;
     }
-    pushOriginal( olines.length )
+
+    i = j;
   }
-  console.log(diffs.length)
+
+  pushOriginal( olen );
+  return chunks;
 }
 
-function merge3( editor, original, m1, m2, cont ) {
-  createDiff(editor, original, m1, function(err1,diff1) {
+function subarr( xs, start, end ) {
+  if (!xs) return [];
+  end--;
+  start--;
+  end   = (end >= xs.length ? xs.length-1 : end);
+  start = (start < 0 ? 0 : start);
+
+  var ys = [];
+  for(var i = start; i <= end; i++) {
+    ys.push(xs[i]);
+  }
+  return ys;
+}
+
+function mergeChunks( markers, olines, alines, blines, chunks ) {
+  var merge = [];
+  var lines = {};
+  lines[Side.A] = alines;
+  lines[Side.B] = blines;
+  lines[Side.O] = olines;
+
+  chunks.forEach( function(c) {
+    if (c.side !== Side.None) {
+      var ls = lines[c.side];
+      merge.push( subarr(ls, c.start, c.end ).join("\n") );
+    }
+    else {
+      if (markers.start) merge.push( markers.start );
+      merge.push( subarr( lines[Side.A], c.astart, c.aend ).join("\n") );
+      if (markers.mid) merge.push( markers.mid );
+      merge.push(subarr( lines[Side.B], c.bstart, c.bend ).join("\n") );
+      if (markers.end) merge.push( markers.end );      
+    }
+  });
+
+  return [].concat.apply([],merge).join("\n");
+}
+
+function merge3( editor, markers, original, m1, m2, cont ) {
+  if (!markers) {
+    markers = {
+      start: "<!-- begin merge -->\n~ Begin Remote",
+      mid: "~ End Remote",
+      end: "<!-- end merge -->"
+    };
+  }
+  createDiff(editor, original, m1, function(err1,adiff) {
     if (err1) return cont(err1,[]);
-    createDiff(editor, original, m2, function(err2,diff2) {
+    createDiff(editor, original, m2, function(err2,bdiff) {
       if (err2) return cont(err2,[]);
-      cont(0, merge3x( original, m1, m2, diff1, diff2))
+      var olines = original.split("\n");
+      var olen   = olines.length;
+      var alines = m1.split("\n");
+      var alen   = alines.length;
+      var blines = m2.split("\n");
+      var blen   = blines.length;
+      var txt = mergeChunks( markers, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
+      cont(0, txt)
     });
   });
 }
@@ -267,15 +330,20 @@ var UI = (function() {
     };
    
     document.getElementById("sync").onclick = function(ev) {      
-      var original = "line 1\nline2\n";
-      var m1       = "line 1\nline2\nAddition\n";
-      var m2       = "line 1\nline 2b\n";
 
-      //merge3( self.editor, original, m1, m2, function(err,merge) {
-      //  console.log("merge:\n" + merge);
-      //});
+      merge3( self.editor, null, testO, testA, testB, function(err,merge) {
+        console.log("merge:\n" + merge);
+      });
       if (self.storage) {
-        self.storage.sync();
+        self.storage.sync( function(err,fs) {
+          if (err) {
+            util.message( err );
+            util.message("sync failed!!!");
+          }
+          else {
+            util.message("sync succeeded");
+          }
+        });
       }
     };
 
