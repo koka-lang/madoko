@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
+<!-- Editor themes -->
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
+
+<!-- madoko style -->
+<link rel="stylesheet" type="text/css" href="styles/madoko.css">
+
+<!-- main style -->
+<link rel="stylesheet" type="text/css" href="styles/main.css">
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" src="lib/vs/loader.js"></script>
+<script>
+  require.config({
+    baseUrl: "lib"
+  });
+</script>
+
+<!-- install a handler that calls madoko to typeset -->
+<script>
+require([ "../scripts/util",
+          "../scripts/merge",
+          "../scripts/madokoMode",
+          "vs/editor/editor.main"],
+          function(util,merge,madokoMode) 
+{ 
+  var editor = {};
+  ["O","A","B","D"].forEach( function(name) {
+    editor[name] = Monaco.Editor.create(document.getElementById("editor-" + name), {
+      value: document.getElementById("initial").textContent,
+      mode: "text/x-web-markdown",
+      theme: "vs",
+      lineNumbers: true,
+      mode: madokoMode.mode,
+      tabSize: 4,
+      insertSpaces: false,
+      automaticLayout: true,
+      readOnly: (name == "D"),
+      scrollbar: {
+        vertical: "auto",
+        horizontal: "auto",
+        verticalScrollbarSize: 6,
+        horizontalScrollbarSize: 6,
+        //verticalHasArrows: true,
+        //horizontalHasArrows: true,
+        //arrowSize: 10,
+      }
+    });
+  });
+  util.message("ready.");
+
+  function createDiff( editr, original, modified, cont ) {
+    var diffSupport = editr.getModel().getMode().diffSupport;
+    var originalModel = Monaco.Editor.createModel(original, "text/plain");
+    var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+    var diff = diffSupport.computeDiff( 
+                  originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
+    function(res) {
+      cont(0,res);
+    }, 
+    function(err) {
+      cont("unable to create diff: " + err.toString(),[]);
+    });
+  }
+
+  function domerge() {
+    function diff(original,modified,cont) {
+      createDiff(editor["O"],original,modified,cont);
+    };
+
+    var textO = editor["O"].getValue();
+    var textA = editor["A"].getValue();
+    var textB = editor["B"].getValue();
+
+    merge.merge3( diff, null, textO, textA, textB, function(err,merged) {
+      if (err) {
+        merged = err;
+      }
+      editor["D"].getModel().setValue(merged);
+    });
+
+  }
+
+  setInterval( domerge, 5000 );
+});
+</script>
+
+<style>
+#diff {
+  width: 100%;
+}
+#diff td {
+  border: 1px black solid;
+  width: 20em;
+}
+
+
+#editor-O, #editor-A, #editor-B, #editor-D {
+  height: 40em;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="app">
+<div id="menubar" class="toppane">
+<!--
+<img src="images/monarch-34px.png" id="logo"/>
+insert image:
+<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
+-->
+<img src="images/madoko-abslogo-xsmall.png" style="width:2em;vertical-align:-0.5ex;padding-right:2em"/>
+<span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
+<span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> sync</span>
+&nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
+&nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
+</div>
+<table id="diff">
+<tr>
+<td><div id="editor-O"></div></td>
+<td><div id="editor-A"></div></td>
+<td><div id="editor-B"></div></td>
+<td><div id="editor-D"></div></td>
+</tr>
+</table>
+<div>
+<div id="koka-console"></div>
+<div id="koka-console-out" class="monospace short"></div>
+</div>
+</div>
+
+<div id="initial" style="display:none; white-space:pre">
+Title         : Welcome to Madoko
+Heading Base  : 2
+Author        : You
+Email         : you@anywhere.com
+
+[TITLE]
+
+# Various Madoko features       {#sec-features}
+
+Here is a famous equation:
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+Let's define a list:
+
+* And refer to Equation [#euler] in Section [#sec-features].
+* Or search for [euler] instead?
+
+```javascript 
+function hi() {
+  return "hello world";
+}
+```
+
+[euler]: http://www.bing.com/search?q=euler "Bing Euler"
+</div>
+
+<!-- onedrive -->
+<script src="//js.live.net/v5.0/wl.debug.js"></script> 
+
+<script>
+require([ "../scripts/onedrive" ], function(onedrive) 
+{ 
+  onedrive.init({
+    client_id   : "000000004C113E9D",
+    redirect_uri: "https://madoko.cloudapp.net:8080/redirect", 
+    scope       : ["wl.signin","wl.skydrive","wl.skydrive_update"],
+  });  
+});
+
+</script>
+</body>
+</html>
