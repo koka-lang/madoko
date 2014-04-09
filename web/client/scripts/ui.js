@@ -22,6 +22,160 @@ var supportTransitions = (function() {
 })();
 
 
+function createDiff( editor, original, modified, cont ) {
+  var diffSupport = editor.getModel().getMode().diffSupport;
+  var originalModel = Monaco.Editor.createModel(original, "text/plain");
+  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+  var diff = diffSupport.computeDiff( 
+                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
+  function(res) {
+    cont(0,res);
+  }, 
+  function(err) {
+    cont("unable to create diff",[]);
+  });
+}
+
+var Side = { A:"a", B:"b", O:"o", None:"none" };
+var Change = { Add: "add", Delete: "del", Change: "chg" };
+
+
+function convertDiff(side,d) {
+  var diff = { 
+    side: side, 
+    ostart : d.originalStartLineNumber,
+    oend   : d.originalEndLineNumber,
+    mstart : d.modifiedStartLineNumber,
+    mend   : d.modifiedEndLineNumber,
+  };
+  if (diff.oend < diff.ostart) diff.oend = diff.ostart-1;
+  if (diff.mend < diff.mstart) diff.mend = diff.mstart-1;
+}
+
+function merge3x( original, m1, m2, diff1, diff2 ) {
+  console.log("merge3x");
+
+  var olines = original.split("\n");
+  var alines = m1.split("\n");
+  var blines = m2.split("\n");
+
+  // create a sorted list of diffs.
+  var diffs = [];
+  var j = 0;
+  for(var i = 0; i < diff1.length; i++) {
+    var d1 = diff1[i];
+    while( j < diff2.length && 
+            (diff2[j].originalStartLineNumber < d1.originalStartLineNumber ||
+             (diff2[j].originalStartLineNumber === d1.originalStartLineNumber && 
+                diff2[j].originalEndLineNumber < d1.originalEndLineNumber)))
+    {
+      diffs.push( convertDiff(Side.B,diff2[j]) );      
+      j++;
+    }
+    diffs.push(convertDiff(Side.A,d1));
+  }
+  for( ; j < diff2.length; j++) {
+    diffs.push(convertDiff(Side.B,diff2[j]));
+  }
+
+  var chunks = []; 
+  var originalStart = 1;
+
+  function pushOriginal(end) {
+    if (end >= originalStart) {
+      chunks.push( { side: Side.O, start: originalStart, end: end } );
+      originalStart = end+1;
+    }
+  }
+
+  for(i = 0; i < diffs.length; ) {
+    var d = diffs[i];
+    var start = d.ostart;
+    var end   = d.oend;
+
+    j = i+1;
+    while(j < diffs.length) {
+      if (diffs[j].ostart > end) break;
+      util.assert(diffs[j].oend >= end); // because of ordering
+      end = diffs[j].oend;
+      j++;
+    }
+
+    // copy common lines 
+    pushOriginal(start-1);
+
+    if (i === j+1) {
+      // no overlap
+      if (d.mend >= d.mstart) { // and there is something added or changed
+        chunks.push( { side: d.side, start: d.mstart, end: d.mend } );
+      }
+    }
+    else {
+      // overlap
+      var adiff = { mstart: alines.length, mend: -1, ostart: olines.length, oend: -1 };
+      var bdiff = { mstart: blines.length, mend: -1, ostart: olines.length, oend: -1 };
+
+      // determine maximal diff for each side
+      for(var h = i; h < j; h++) {
+        d = diffs[h];
+        
+        if (d.side===Side.A) {
+
+        }
+        var r = regions[d.side];
+        r.mstart = Math.min( d.mstart, r.mstart );
+        r.mend   = Math.max( d.mend, r.mend );
+        r.ostart = Math.min( d.ostart, r.ostart );
+        r.oend   = Math.max( d.oend, r.oend );
+      }
+
+
+
+
+      var regions = {};
+      regions[Side.A] = { mstart: lines1.length, mend: -1, ostart: olines.length, oend: -1  };
+      regions[Side.B] = { mstart: lines2.length, mend: -1, ostart: olines.length, oend: -1  };
+      
+      for(var h = i; h < j; h++) {
+        d = diffs[h];
+        
+        var r = regions[d.side];
+        r.mstart = Math.min( d.mstart, r.mstart );
+        r.mend   = Math.max( d.mend, r.mend );
+        r.ostart = Math.min( d.ostart, r.ostart );
+        r.oend   = Math.max( d.oend, r.oend );
+      }
+
+      var astart = regions[Side.A].mstart + (start - regions[Side.A].ostart);
+      var aend   = regions[Side.A].mend + (end - regions[Side.A].oend);
+      var bstart = regions[Side.B].mstart + (start - regions[Side.B].ostart);
+      var bend   = regions[Side.B].mend + (end - regions[Side.B].oend);
+
+      chunks.push( { 
+          side: Side.None, 
+          astart: astart, aend: aend, 
+          ostart: start, oend: end, 
+          bstart: bstart, bend : bend 
+      });
+    
+      originalStart = Math.max(start,end)+1;
+      i = j;
+    }
+    pushOriginal( olines.length )
+  }
+  console.log(diffs.length)
+}
+
+function merge3( editor, original, m1, m2, cont ) {
+  createDiff(editor, original, m1, function(err1,diff1) {
+    if (err1) return cont(err1,[]);
+    createDiff(editor, original, m2, function(err2,diff2) {
+      if (err2) return cont(err2,[]);
+      cont(0, merge3x( original, m1, m2, diff1, diff2))
+    });
+  });
+}
+
 function localSave( fname, text ) {
   if (!localStorage) {
     util.message("cannot save locally: " + fname + "\n  upgrade your browser." );
@@ -112,7 +266,14 @@ var UI = (function() {
       self.onedrivePickFile();
     };
    
-    document.getElementById("sync").onclick = function(ev) {
+    document.getElementById("sync").onclick = function(ev) {      
+      var original = "line 1\nline2\n";
+      var m1       = "line 1\nline2\nAddition\n";
+      var m2       = "line 1\nline 2b\n";
+
+      //merge3( self.editor, original, m1, m2, function(err,merge) {
+      //  console.log("merge:\n" + merge);
+      //});
       if (self.storage) {
         self.storage.sync();
       }

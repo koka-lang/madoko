@@ -14,6 +14,12 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     console.log(txt);
   }
 
+  function assert( pred, msg ) {
+    if (!pred) {
+      console.log("assertion failed: " + msg);
+    }
+  }
+
   // Get the properties of an object.
   function properties(obj) {
     var attrs = [];
@@ -153,12 +159,18 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     var objs  = [];
     var err   = null;
     xs.forEach( function(x) {
-      asyncAction(x, function(xerr,obj) {
+      function localCont(xerr,obj) {
         objs.push(obj);
         if (xerr) err = xerr;
         count--;
         if (count <= 0) cont(err,objs);
-      });
+      }
+      try {
+        asyncAction(x, localCont );
+      }
+      catch(exn) {
+        localCont(exn);
+      }
     });
   }
 
@@ -404,6 +416,7 @@ doc.execCommand("SaveAs", null, filename)
     properties: properties,
     extend: extend,
     message: message,
+    assert: assert,
     
     changeExt: stdpath.changeExt,
     extname: stdpath.extname,

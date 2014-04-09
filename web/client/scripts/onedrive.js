@@ -52,7 +52,7 @@ define(["../scripts/util"], function(util) {
           }
         }
       }
-      if (!file) return cont( onedriveError("unable to find: " + path), file )
+      // if (!file) return cont( onedriveError("unable to find: " + path), file )
       cont( null, file);
     }, "get files");
   }
@@ -62,7 +62,15 @@ define(["../scripts/util"], function(util) {
   }
 
   function onedriveGetWriteAccess( cont ) {
-    onedriveCont( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), cont );
+    onedriveCont( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), cont );  
+  }
+
+  function onedriveWriteFile( folderId, path, content, overwrite, cont ) {
+    // TODO: resolve sub-directories
+    var url = onedriveDomain + folderId + "/files/" + path + "?" +
+                (overwrite ? "" : "overwrite=false&") +
+                "access_token=" + WL.getSession().access_token;
+    util.requestPUT( {url:url,contentType:";" }, content, cont );
   }
 
   var onedriveDomain = "https://apis.live.net/v5.0/"
@@ -191,6 +199,18 @@ define(["../scripts/util"], function(util) {
       onedriveGetFileInfo( self.folderId, fpath, cont );
     }
 
+    Storage.prototype.pushFile = function( file, cont ) {
+      var self = this;
+      onedriveWriteFile( self.folderId, file.path, file.content, file.info != null, function(errPut,resp) {
+        if (errPut) return cont(errPut,file.path);
+        onedriveGetFileInfoFromId( resp.id, function(errInfo,info) {
+          if (errInfo) return cont(errInfo,file.path);
+          file.info = info; // update id and time
+          cont(null,file.path);
+        });
+      });
+    }
+
     /* Interface */
     Storage.prototype.readTextFile = function( fpath, cont ) {
       var self = this;
@@ -198,7 +218,7 @@ define(["../scripts/util"], function(util) {
       if (file) return cont(null, file.content);
       
       self.getFileInfo( fpath, function(err,info) {
-        if (err) {
+        if (err || info==null) {
           self.createLocalFile(fpath,"");  
           cont(err,"");
         }
@@ -252,47 +272,60 @@ define(["../scripts/util"], function(util) {
       onedriveGetWriteAccess( function(errAccess) {
         if (errAccess) return util.message("cannot get write permission. sync failed.");
 
-        util.asyncForEach( self.files.elems(), function(file, fcont) {
+        util.asyncForEach( self.files.elems(), function(file, xfcont) {
+          function fcont(err,action) {
+            action = file.path + (action ? ": " + action : "");
+            xfcont( (err ? file.path + ": " + err.toString() : null), action);
+          }
+
           // only text files
-          if (file.url || (file.localOnly && !file.content)) return fcont(null,file.path);
+          if (file.url || (file.localOnly && !file.content)) return fcont(null,"skip");
 
           self.getFileInfo( file.path, function(errInfo,info) {
             if (errInfo) {
-              if (!file.localOnly) return fcont(errInfo,file.path);
+              // file is deleted on server, or just not there
+              file.info = null; // clear info, so we do not overwrite
               info = null;  
             }
 
-            var modified = (info ? info.updated_time : file.created);
+            var modifiedTime = (info ? info.updated_time : file.created);
             if (file.written) {
-              if (file.created !== modified) {
-                console.log("modified on server and client!")
+              if (file.created !== modifiedTime) {
+                // modified on client and server
+                fcont( "modified on server!", "merge from server" );
               }
               else {
-                console.log("save to server: " + file.path);
-                //var url = info.upload_location + "?access_token=" + WL.getSession().access_token;
-                var url = onedriveDomain + self.folderId + "/files/" + file.path + "?access_token=" + WL.getSession().access_token;
-                return util.requestPUT( {url:url,contentType:";"}, file.content, function(errPut,resp) {
-                  if (errPut) util.message("failed to save: " + file.path + ": " + errPut);
-                         else util.message("saved: " + file.path);
-                  fcont(errPut,file.path);
-                })
+                // write back the client changes
+                self.pushFile( file, function(errPush,resp) {
+                  fcont(errPush,"save to server");  
+                });
               }
             }
-            else if (file.created !== modified) {
-              console.log("re-upload: " + file.path);
+            else if (file.created !== modifiedTime) {
+              // update from sever
+              self.files.delete(file.path);
+              self.readTextFile(file.path, function(errRead,content) {
+                if (errRead) {
+                  self.files.set(file.path,file); // restore
+                }
+                fcont(errRead,"update from server");
+              });
             }
             else {
-              console.log("unmodified: " + file.path);
+              // nothing to do
+              fcont(null,"up-to-date");
             }
-
-            fcont(null,file.path)
           });
         },
         function(err,xs) {
+          xs.forEach( function(msg) {
+            util.message(msg);
+          })
           if (err) {
             util.message(err);
             util.message("unable to sync!!")
           }
+          cont(err);
         });
       });
     }
