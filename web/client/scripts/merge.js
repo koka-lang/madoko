@@ -12,6 +12,7 @@ function convertDiff(side,d) {
     mstart : d.modifiedStartLineNumber,
     mend   : d.modifiedEndLineNumber,
   };
+  if (diff.ostart===0) diff.ostart = 1;
   if (diff.oend < diff.ostart) {
     diff.ostart++;  // we consider insertion after the line
     diff.oend = diff.ostart-1;
@@ -36,17 +37,21 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
   var diffs = [];
   var j = 0;
   for(var i = 0; i < adiff.length; i++) {
-    var d1 = adiff[i];
-    while( j < bdiff.length && 
-            (bdiff[j].originalStartLineNumber < d1.originalStartLineNumber ||
+    var d1 = convertDiff(Side.A, adiff[i]);
+    while( j < bdiff.length )  
+/*            (bdiff[j].originalStartLineNumber < d1.originalStartLineNumber ||
              (bdiff[j].originalStartLineNumber === d1.originalStartLineNumber && 
-                (//d1.originalEndLineNumber === 0 ||
-                 bdiff[j].originalEndLineNumber < d1.originalEndLineNumber))))
+                (bdiff[j].originalEndLineNumber !== 0 &&
+                 (d1.orginalEndLineNumber === 0 || bdiff[j].originalEndLineNumber < d1.originalEndLineNumber)))))
+*/                 
     {
-      diffs.push( convertDiff(Side.B,bdiff[j]) );      
+      var d2 = convertDiff(Side.B, bdiff[j]);
+      if (d2.ostart > d1.ostart) break;
+      if (d2.oend > d1.oend) break;
+      diffs.push(d2);      
       j++;
     }
-    diffs.push(convertDiff(Side.A,d1));
+    diffs.push(d1);
   }
   for( ; j < bdiff.length; j++) {
     diffs.push(convertDiff(Side.B,bdiff[j]));
@@ -55,9 +60,26 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
   var chunks = []; 
   var originalStart = 1;
 
+  function chunksPush( c ) {
+    chunks.push(c);
+    // maintain order
+    /*
+    if (c.start > c.end) {
+      var i = chunks.length-2;
+      while( i >= 0 && 
+             ((chunks[i].start > c.start) || 
+              (chunks[i].start === start && chunks[i].start <= chunks[i].end))) {
+        chunks[i+1] = chunks[i];
+        chunks[i] = c;
+        i--;
+      }
+    }
+    */
+  }
+
   function pushOriginal(end) {
     if (end >= originalStart) {
-      chunks.push( { side: Side.O, start: originalStart, end: end } );
+      chunksPush( { side: Side.O, start: originalStart, end: end } );
       originalStart = end+1;
     }
   }
@@ -70,19 +92,18 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
 
     j = i+1;
     while(j < diffs.length) {
-      if (diffs[j].ostart > end) break;
-      //util.assert(diffs[j].oend >= end); // because of ordering
-      end = diffs[j].oend;
+      if (diffs[j].ostart > end) break; //  && diffs[j].oend > end
+      end = Math.max(end,diffs[j].oend);
       j++;
     }
 
     // copy common lines 
     pushOriginal(start-1);
 
-    if (i === j+1) {
+    if (i+1 === j) {
       // no overlap
       if (d.mend >= d.mstart) { // and there is something added or changed
-        chunks.push( { side: d.side, start: d.mstart, end: d.mend } );
+        chunksPush( { side: d.side, start: d.mstart, end: d.mend } );
       }
     }
     else {
@@ -108,6 +129,7 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
       var bstart = bd.mstart + (start - bd.ostart);
       var bend   = bd.mend + (end - bd.oend);
 
+      /*
       if (aend < astart && bend >= bstart) {
         // addition at b
         chunks.push( { side: Side.B, start: bstart, end: bend } );
@@ -117,21 +139,22 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
         chunks.push( { side: Side.A, start: astart, end: aend } );
       }
       else if (bend < bstart && aend < astart) {
-        /* both deleted */
+        // both deleted 
       }
-      else {
+      
+      else */
+      {
         /* possible conflict: resolved in the next phase where we compare content */
-        chunks.push( { 
+        chunksPush( { 
             side: Side.None, 
             astart: astart, aend: aend, 
-            ostart: start, oend: end, 
+            start: start, end: end, 
             bstart: bstart, bend : bend 
         });
       }
-
-      originalStart = end+1;
     }
 
+    originalStart = end+1;
     i = j;
   }
 
@@ -166,7 +189,7 @@ function mergeChunks( markers, olines, alines, blines, chunks ) {
       merge.push( subarr(ls, c.start, c.end ).join("\n") );
     }
     else {
-      var otxt = subarr( lines[Side.O], c.ostart, c.oend ).join("\n");
+      var otxt = subarr( lines[Side.O], c.start, c.end ).join("\n");
       var atxt = subarr( lines[Side.A], c.astart, c.aend ).join("\n");
       var btxt = subarr( lines[Side.B], c.bstart, c.bend ).join("\n");
       if (otxt === btxt) {
@@ -177,6 +200,12 @@ function mergeChunks( markers, olines, alines, blines, chunks ) {
       }
       else if (atxt === btxt) {
         merge.push( atxt ); // false conflict
+      }
+      else if (c.aend < c.astart && c.bend >= c.bstart) {
+        merge.push( btxt ); // deletion in A, change in B
+      }
+      else if (c.bend < c.bstart && c.aend >= c.astart) {
+        merge.push( atxt ); // deletion in B, change in A
       }
       else {
         if (markers.start) merge.push( markers.start );
