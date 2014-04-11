@@ -83,11 +83,12 @@ require([ "../scripts/util",
     var textO = editor["O"].getValue();
     var textA = editor["A"].getValue();
     var textB = editor["B"].getValue();
+    var posB = editor["B"].getPosition();
 
-    merge.merge3( diff, null, textO, textA, textB, function(err,merged) {
+    merge.merge3( diff, null, posB.lineNumber, textO, textA, textB, function(err,merged,cursorline) {
       if (err) {
         merged = err;
-      }
+      }      
       editor["D"].getModel().setValue(merged);
     });
 

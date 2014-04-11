@@ -1,8 +1,17 @@
 define( [], function() {
 
 var Side = { A:"a", B:"b", O:"o", None:"none" };
-var Change = { Add: "add", Delete: "del", Change: "chg" };
 
+function lineCount(txt) {
+  if (!txt) return 0;
+  var i = txt.indexOf("\n");
+  var n = 0;
+  while( i >= 0 ) {
+    n++;
+    i = txt.indexOf("\n", i+1);
+  }
+  return n;
+}
 
 function convertDiff(side,d) {
   var diff = { 
@@ -12,14 +21,18 @@ function convertDiff(side,d) {
     mstart : d.modifiedStartLineNumber,
     mend   : d.modifiedEndLineNumber,
   };
-  if (diff.ostart===0) diff.ostart = 1;
   if (diff.oend < diff.ostart) {
-    diff.ostart++;  // we consider insertion after the line
-    diff.oend = diff.ostart-1;
+    diff.ostart++;              // we consider insertion before the line (instead of after)
+    diff.oend = diff.ostart-1;  // and end should be at most one less, (not a special value like 0)
+  }
+  else if (diff.ostart <= 0) {  // some diff algorithms return ostart=0, oend=0 for the first line
+    diff.ostart = 1;            // again, we consider insertion before the line
   }
   if (diff.mend < diff.mstart) {
-    //diff.mstart++;
-    diff.mend = diff.mstart-1;
+    diff.mend = diff.mstart-1;  // if end is less, it should be one less than the start
+  }
+  else if (diff.mstart <= 0) {
+    diff.mstart = 1;            // again, fix if the start value happens to be 0
   }
   return diff;
 }
@@ -39,15 +52,10 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
   for(var i = 0; i < adiff.length; i++) {
     var d1 = convertDiff(Side.A, adiff[i]);
     while( j < bdiff.length )  
-/*            (bdiff[j].originalStartLineNumber < d1.originalStartLineNumber ||
-             (bdiff[j].originalStartLineNumber === d1.originalStartLineNumber && 
-                (bdiff[j].originalEndLineNumber !== 0 &&
-                 (d1.orginalEndLineNumber === 0 || bdiff[j].originalEndLineNumber < d1.originalEndLineNumber)))))
-*/                 
     {
       var d2 = convertDiff(Side.B, bdiff[j]);
       if (d2.ostart > d1.ostart) break;
-      if (d2.oend > d1.oend) break;
+      if (d2.ostart === d1.ostart && d2.oend >= d1.oend) break;
       diffs.push(d2);      
       j++;
     }
@@ -57,24 +65,12 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
     diffs.push(convertDiff(Side.B,bdiff[j]));
   }
 
+  // build up a sorted list of change 'chunks'
   var chunks = []; 
   var originalStart = 1;
 
   function chunksPush( c ) {
     chunks.push(c);
-    // maintain order
-    /*
-    if (c.start > c.end) {
-      var i = chunks.length-2;
-      while( i >= 0 && 
-             ((chunks[i].start > c.start) || 
-              (chunks[i].start === start && chunks[i].start <= chunks[i].end))) {
-        chunks[i+1] = chunks[i];
-        chunks[i] = c;
-        i--;
-      }
-    }
-    */
   }
 
   function pushOriginal(end) {
@@ -90,6 +86,7 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
     var start = d.ostart;
     var end   = d.oend;
 
+    // add overlapping diff ranges
     j = i+1;
     while(j < diffs.length) {
       if (diffs[j].ostart > end) break; //  && diffs[j].oend > end
@@ -107,7 +104,7 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
       }
     }
     else {
-      // overlap
+      // overlap among diffs
       var ad = { mstart: alen, mend: -1, ostart: olen, oend: -1 };
       var bd = { mstart: blen, mend: -1, ostart: olen, oend: -1 };
 
@@ -124,60 +121,57 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
       }
 
       // adjust (because each may have started or ended at another point in the original)
-      var astart = ad.mstart + (start - ad.ostart);
+      var astart = Math.max(1, ad.mstart + (start - ad.ostart));
       var aend   = ad.mend + (end - ad.oend);
-      var bstart = bd.mstart + (start - bd.ostart);
+      var bstart = Math.max(1, bd.mstart + (start - bd.ostart));
       var bend   = bd.mend + (end - bd.oend);
 
-      /*
-      if (aend < astart && bend >= bstart) {
-        // addition at b
-        chunks.push( { side: Side.B, start: bstart, end: bend } );
-      }
-      else if (bend < bstart && aend >= astart) {
-        // addition at a
-        chunks.push( { side: Side.A, start: astart, end: aend } );
-      }
-      else if (bend < bstart && aend < astart) {
-        // both deleted 
-      }
-      
-      else */
-      {
-        /* possible conflict: resolved in the next phase where we compare content */
-        chunksPush( { 
-            side: Side.None, 
-            astart: astart, aend: aend, 
-            start: start, end: end, 
-            bstart: bstart, bend : bend 
-        });
-      }
+      /* possible conflict: resolved in the next phase where we compare content */
+      chunksPush( { 
+          side: Side.None, 
+          astart: astart, aend: aend, 
+          start: start, end: end, 
+          bstart: bstart, bend : bend 
+      });
     }
 
     originalStart = end+1;
     i = j;
   }
 
+  // push any remaining content
   pushOriginal( olen );
   return chunks;
 }
 
-function subarr( xs, start, end ) {
+function subtxt( xs, start, end ) {
   if (!xs) return [];
-  end--;
+  end--;    // line number to array index
   start--;
   end   = (end >= xs.length ? xs.length-1 : end);
   start = (start < 0 ? 0 : start);
-
-  var ys = [];
-  for(var i = start; i <= end; i++) {
-    ys.push(xs[i]);
-  }
-  return ys;
+  var ys = xs.slice(start,end+1);  // +1 because slice is up-to but not including 'end'
+  return ys.join("\n");
 }
 
-function mergeChunks( markers, olines, alines, blines, chunks ) {
-  var merge = [];
+function mergeChunks( markers, cursorLine, olines, alines, blines, chunks ) 
+{  
+  var conflicts  = false;  // are there real conflicts?
+  var merge      = [];     // array of text fragments that will be the merged text
+  var mergeLines = 0;      // current line count of the merged content
+  var newCursorLine = cursorLine; // the cursor line in the merged content.
+
+  function mergePush( s ) {
+    merge.push(s);
+    mergeLines += (1 + lineCount(s));
+  }
+
+  function adjustCursor( start, end ) {
+    if (start <= cursorLine && end >= cursorLine) {
+      newCursorLine = mergeLines - (end - cursorLine);  // adjust downward as we call adjust after push
+    }
+  }
+
   var lines = {};
   lines[Side.A] = alines;
   lines[Side.B] = blines;
@@ -185,48 +179,67 @@ function mergeChunks( markers, olines, alines, blines, chunks ) {
 
   chunks.forEach( function(c) {
     if (c.side !== Side.None) {
-      var ls = lines[c.side];
-      merge.push( subarr(ls, c.start, c.end ).join("\n") );
+      mergePush( subtxt(lines[c.side], c.start, c.end ) );
+      if (c.side === Side.B) adjustCursor( c.start, c.end );      
     }
     else {
-      var otxt = subarr( lines[Side.O], c.start, c.end ).join("\n");
-      var atxt = subarr( lines[Side.A], c.astart, c.aend ).join("\n");
-      var btxt = subarr( lines[Side.B], c.bstart, c.bend ).join("\n");
-      if (otxt === btxt) {
-        merge.push( atxt ); // just a change in A        
-      }
-      else if (otxt === atxt) {
-        merge.push( btxt ); // just a change in B
-      }
-      else if (atxt === btxt) {
-        merge.push( atxt ); // false conflict
+      var otxt = subtxt( lines[Side.O], c.start, c.end );
+      var atxt = subtxt( lines[Side.A], c.astart, c.aend );
+      var btxt = subtxt( lines[Side.B], c.bstart, c.bend );
+      if (c.aend < c.astart && c.bend < c.bstart) {
+        /* both deleted */
       }
       else if (c.aend < c.astart && c.bend >= c.bstart) {
-        merge.push( btxt ); // deletion in A, change in B
+        mergePush( btxt ); // deletion in A, change in B
+        adjustCursor( c.bstart, c.bend );      
       }
       else if (c.bend < c.bstart && c.aend >= c.astart) {
-        merge.push( atxt ); // deletion in B, change in A
+        mergePush( atxt ); // deletion in B, change in A
+      }
+      else if (otxt === btxt) {
+        mergePush( atxt ); // just a change in A        
+      }
+      else if (otxt === atxt) {
+        mergePush( btxt ); // just a change in B
+        adjustCursor( c.bstart, c.bend );      
+      }
+      else if (atxt === btxt) {
+        mergePush( atxt ); // false conflict
+        adjustCursor( c.bstart, c.bend );      
       }
       else {
-        if (markers.start) merge.push( markers.start );
-        merge.push( atxt );
-        if (markers.mid) merge.push( markers.mid );
-        merge.push( btxt );
-        if (markers.end) merge.push( markers.end );      
+        // real conflict
+        conflicts = true;
+        if (markers.start) mergePush( markers.start );
+        mergePush( atxt );
+        if (markers.mid) mergePush( markers.mid );
+        mergePush( btxt );
+        adjustCursor( c.bstart, c.bend );      
+        if (markers.end) mergePush( markers.end );      
       }
     }
   });
 
-  return [].concat.apply([],merge).join("\n");
+  return { merged: merge.join("\n"), cursorLine: newCursorLine, conflicts: conflicts };
 }
 
 // Perform a three-way merge.
 // diff: ( original: string, modified: string, cont: (err, difference: IDiff[] ) -> void ) -> void
 //        interface IDiff { originalStartLineNumber, originalEndLineNumber, modifiedStartLineNumber, modifiedEndLineNumber : int }
-// markers: optional change markers: { start, mid, end : string }
-// original, m1, m2: string
-// cont: (err, merged:string) -> void
-function merge3( diff, markers, original, m1, m2, cont ) {
+//   diff algorithm to call. The IDiff should use:
+//   - line numbers start at 1
+//   - end line numbers can be 0 to signify empty ranges
+//   - if an original range is empty, it siginifies the modified content is inserted *after* the original start line
+//   - the original start line can be 0 if the end line is 0 too (empty range). 
+// markers: { start, mid, end: string } 
+//   optional change markers inserted around real conflicts in the merge
+// cursorLine: 
+//   cursor line in the modified2 content; corresponding line in the final merge gets returned.
+// original, m1, m2: string: 
+//   original, and modified content.
+// cont: (err, merged:string, conflicts:bool, newCursorLine:int) -> void
+//   called afterwards. conflicts is true if there were any real merge conflicts. 
+function merge3( diff, markers, cursorLine, original, m1, m2, cont ) {
   if (!markers) {
     markers = {
       start: "<!-- begin merge -->\n~ Begin Remote",
@@ -235,9 +248,9 @@ function merge3( diff, markers, original, m1, m2, cont ) {
     };
   }
   diff( original, m1, function(err1, adiff) {
-    if (err1) cont(err1,null);
+    if (err1) cont(err1,null,cursorLine);
     diff( original, m2, function(err2, bdiff) {
-      if (err2) cont(err2,null);
+      if (err2) cont(err2,null,cursorLine);
       try {
         var olines = original.split("\n");
         var olen   = olines.length;
@@ -245,11 +258,11 @@ function merge3( diff, markers, original, m1, m2, cont ) {
         var alen   = alines.length;
         var blines = m2.split("\n");
         var blen   = blines.length;
-        var txt = mergeChunks( markers, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
-        cont(0, txt)
+        var res = mergeChunks( markers, cursorLine, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
+        cont(0, res.merged, res.cursorLine, res.conflicts );
       }
       catch(exn) {
-        cont(exn, "");
+        cont(exn, "", cursorLine);
       }
     });
   });
