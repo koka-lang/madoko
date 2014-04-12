@@ -259,7 +259,7 @@ function merge3( diff, markers, cursorLine, original, m1, m2, cont ) {
         var blines = m2.split("\n");
         var blen   = blines.length;
         var res = mergeChunks( markers, cursorLine, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
-        cont(0, res.merged, res.cursorLine, res.conflicts );
+        cont(0, res.merged, res.conflicts, res.cursorLine );
       }
       catch(exn) {
         cont(exn, "", cursorLine);

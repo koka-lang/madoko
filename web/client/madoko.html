@@ -47,6 +47,7 @@ require([ "../scripts/util",
 
 <body>
 
+
 <div id="app">
 <div id="menubar" class="toppane">
 <!--
@@ -54,22 +55,34 @@ require([ "../scripts/util",
 insert image:
 <input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
 -->
-<img src="images/madoko-abslogo-xsmall.png" style="width:2em;vertical-align:-0.5ex;padding-right:2em"/>
-<span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
-<span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> sync</span>
+<img src="images/madoko-abslogo-xsmall.png" style="width:1.5em;vertical-align:-0.5ex;padding-right:2em"/>
 &nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
 &nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
+&nbsp;line numbers:<input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor" />
 </div>
-<div id="editorpane" class="pane"><div id="editor"></div></div>
-<div id="buttonbar-vertical">
-<div id="button-editor-narrow" class="ibutton"></div>
-<div id="button-editor-wide" class="ibutton"></div>
+<div id="editorpane" class="pane">
+  <div id="editor-header" class="pane-header">
+    <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="height: 0.5rem" /> load</span><span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="height: 0.5rem" /> sync</span>
+    <img id="button-editor-wide" class="ibutton" src="images/tri-right.svg" />
+    <!-- <img class="spinner" src="images/spinner-line.svg"/> -->
+  </div>
+  <div class="pane-content">
+    <div id="editor"></div>
+  </div>
 </div>
-<div id="viewpane" class="pane madoko">
-<div id="view"></div>
-<div id="buttonbar-horizontal"><div id="button-updown" class="ibutton"></div></div>
-<div id="koka-console"></div>
-<div id="koka-console-out" class="monospace short"></div>
+<div id="viewpane" class="pane">
+  <div id="view-header" class="pane-header">
+    <img id="button-editor-narrow" class="ibutton" src="images/tri-left.svg" />
+    &nbsp;
+    <!-- <img class="spinner" src="images/spinner.svg" alt="spinner"/> -->
+  </div>
+  <div class="pane-content">
+    <div id="view" class="madoko"></div>
+    <!-- <div id="buttonbar-horizontal"><div id="button-updown" class="ibutton"></div></div> -->
+    <div id="koka-console">
+      <div id="koka-console-out" class="monospace short"></div>
+    </div>
+  </div>
 </div>
 </div>
 

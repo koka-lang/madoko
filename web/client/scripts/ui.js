@@ -90,11 +90,13 @@ var UI = (function() {
     self.lastRound = 0;
     self.text0 = "";
     
+    self.checkLineNumbers = document.getElementById('checkLineNumbers');
+
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: localLoad(self.docName) || document.getElementById("initial").textContent,
       mode: "text/x-web-markdown",
       theme: "vs",
-      lineNumbers: true,
+      lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       mode: madokoMode.mode,
       tabSize: 4,
       insertSpaces: false,
@@ -102,22 +104,29 @@ var UI = (function() {
       scrollbar: {
         vertical: "auto",
         horizontal: "auto",
-        verticalScrollbarSize: 6,
-        horizontalScrollbarSize: 6,
+        verticalScrollbarSize: 10,
+        horizontalScrollbarSize: 10,
         //verticalHasArrows: true,
         //horizontalHasArrows: true,
         //arrowSize: 10,
       }
     });
 
-    self.syncTimeout = 0;
+    // synchronize on scrolling
+    self.syncInterval = 0;
     self.editor.addListener("scroll", function (e) {    
-      // use timeout so the start line number is correct.
-      if (!self.syncTimeout) {
-        self.syncTimeout = setTimeout( function() { 
-          self.syncView(); 
-          self.syncTimeout = 0;        
-        }, 10 );     
+      function scroll() { 
+        var scrolled = self.syncView(); 
+        if (!scrolled) {
+          clearInterval(self.syncInterval);
+          self.syncInterval = 0;
+        }      
+      }
+
+      // use interval since the editor is asynchronous, this way  the start line number can stabilize.
+      if (!self.syncInterval) {
+        self.syncInterval = setInterval(scroll, 25);
+        //scroll();
       }
     });
      
@@ -127,6 +136,12 @@ var UI = (function() {
 
     document.getElementById('checkAllowServer').onchange = function(ev) { 
       self.allowServer = ev.target.checked; 
+    };
+
+    document.getElementById('checkLineNumbers').onchange = function(ev) { 
+      if (self.editor) {
+        self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
+      }
     };
 
     document.getElementById("onedrive-download").onclick = function(ev) {
@@ -162,52 +177,43 @@ var UI = (function() {
     var viewpane = document.getElementById("viewpane");
     var buttonEditorNarrow = document.getElementById("button-editor-narrow");
     var buttonEditorWide   = document.getElementById("button-editor-wide");
-    var buttonUpDown       = document.getElementById("button-updown");
 
-    //viewpane.addEventListener( 'webkitTransitionEnd', function( event ) {  self.syncView(); }, false );
     viewpane.addEventListener('transitionend', function( event ) { 
       self.syncView(); 
     }, false);
     
-
-    var triLeft   = "<div class='tri-left'></div>";
-    var triRight  = "<div class='tri-right'></div>";
-    var triUp     = "<div class='tri-up'></div>";
-    var triDown   = "<div class='tri-down'></div>";
-   
-    util.toggleButton( buttonUpDown, triUp, triDown, function(ev) {
-      util.toggleClassName(cons,"short");
-      util.toggleClassName(self.view,"short");       
-    });
-
-    util.toggleButton( buttonEditorNarrow, triLeft, triRight, function(ev,toggled) {
-      if (toggled) {
-        util.addClassName(viewpane,"wide");
-        util.addClassName(editpane,"narrow");
-        util.addClassName(buttonEditorWide,"hide");
-        if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
-      }
-      else {
+    var wideness = 0; // < 0 = editor narrow, > 0 = editor wide
+    buttonEditorWide.onclick = function(ev) {
+      if (wideness < 0) {
         util.removeClassName(viewpane,"wide");
         util.removeClassName(editpane,"narrow");
-        util.removeClassName(buttonEditorWide,"hide");
-        if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
-      }
-    });
-
-    util.toggleButton( buttonEditorWide, triRight, triLeft, function(ev,toggled) {
-      if (toggled) {
-        util.addClassName(viewpane,"narrow");
-        util.addClassName(editpane,"wide");
-        util.addClassName(buttonEditorNarrow,"hide");
+        util.removeClassName(buttonEditorNarrow,"hide");
+        wideness = 0;
       }
       else {
+        util.addClassName(viewpane,"narrow");
+        util.addClassName(editpane,"wide");
+        util.addClassName(buttonEditorWide,"hide");      
+        wideness = 1;
+      }
+      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+    }
+    buttonEditorNarrow.onclick = function(ev) {
+      if (wideness > 0) {
         util.removeClassName(viewpane,"narrow");
         util.removeClassName(editpane,"wide");
-        util.removeClassName(buttonEditorNarrow,"hide");
+        util.removeClassName(buttonEditorWide,"hide");
+        wideness = 0;
       }
-    });
-
+      else {
+        util.addClassName(viewpane,"wide");
+        util.addClassName(editpane,"narrow");
+        util.addClassName(buttonEditorNarrow,"hide");      
+        wideness = -1;
+      }
+      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+    }
+    
     setInterval( function() { self.update(); }, self.refreshRate );
   }
 
@@ -381,11 +387,11 @@ var UI = (function() {
       var rng = lines._currentVisibleRange;
       startLine = rng.startLineNumber;
       endLine = rng.endLineNumber;
-      console.log("scroll: start: " + startLine)
+      //console.log("scroll: start: " + startLine)
     }
 
     var res = findElemAtLine( self.view, startLine );
-    if (!res) return;
+    if (!res) return false;
     
     var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;
     
@@ -398,10 +404,11 @@ var UI = (function() {
       }
     }
 
-    if (scrollTop !== self.lastScrollTop) {
-      self.lastScrollTop = scrollTop;
-      util.animate( self.view, { scrollTop: scrollTop }, 500 );
-    }
+    if (scrollTop === self.lastScrollTop) return false;
+
+    self.lastScrollTop = scrollTop;
+    util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+    return true;
   }
 
   UI.prototype.onedrivePickFile = function() {

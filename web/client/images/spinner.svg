@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <circle cx="440" cy="250" r="30"/>
+  <circle cx="250" cy="440" r="40"/>
+  <circle cx="60"  cy="250" r="50"/>
+  <circle cx="250" cy="60"  r="60"/>
+  <circle cx="384.3" cy="115.7" r="25"/>
+  <circle cx="384.3" cy="384.3" r="35"/>
+  <circle cx="115.7" cy="384.3" r="45"/>
+  <circle cx="115.7" cy="115.7" r="55"/>
+</svg>

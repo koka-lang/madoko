@@ -110,7 +110,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     var toggled = true;
     function toggle() {
       toggled = !toggled;
-      button.innerHTML = (toggled ? text1 : text0);
+      if (text0) button.innerHTML = (toggled ? text1 : text0);
     }
     toggle();
     button.onclick = function(ev) {

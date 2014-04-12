@@ -84,12 +84,13 @@ require([ "../scripts/util",
     var textA = editor["A"].getValue();
     var textB = editor["B"].getValue();
     var posB = editor["B"].getPosition();
-
-    merge.merge3( diff, null, posB.lineNumber, textO, textA, textB, function(err,merged,cursorline) {
+    document.getElementById("cursor-line-b").innerHTML = posB.lineNumber.toString();
+    merge.merge3( diff, null, posB.lineNumber, textO, textA, textB, function(err,merged,conflicts,cursorline) {
       if (err) {
         merged = err;
       }      
       editor["D"].getModel().setValue(merged);
+      document.getElementById("cursor-line").innerHTML = cursorline.toString();
     });
 
   }
@@ -119,18 +120,15 @@ require([ "../scripts/util",
 
 <div id="app">
 <div id="menubar" class="toppane">
-<!--
-<img src="images/monarch-34px.png" id="logo"/>
-insert image:
-<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
--->
-<img src="images/madoko-abslogo-xsmall.png" style="width:2em;vertical-align:-0.5ex;padding-right:2em"/>
-<span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> load</span>
-<span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="width:2em; vertical-align:-1ex" /> sync</span>
-&nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
-&nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
+Merge testing tool.
 </div>
 <table id="diff">
+<tr>
+<td>Original</td>
+<td>A (remote)</td>
+<td>B (current) (cursor line: <span id="cursor-line-b"></span>)</td>
+<td>Merged (cursor line: <span id="cursor-line"></span>)</td>
+</tr>
 <tr>
 <td><div id="editor-O"></div></td>
 <td><div id="editor-A"></div></td>
@@ -143,7 +141,9 @@ insert image:
 <div id="koka-console-out" class="monospace short"></div>
 </div>
 </div>
-<div id="initial" style="display:none; white-space:pre">line 1</div>
+<div id="initial" style="display:none; white-space:pre">line 1
+line 2
+line 3</div>
 <div id="initialx" style="display:none; white-space:pre">
 Title         : Welcome to Madoko
 Heading Base  : 2
