@@ -24,22 +24,20 @@ body {
 /* panes */
 
 .toppane {
-  height: 1.5rem;
+  text-align: right;
 }
 
 .pane {
   height: calc(100% - 2rem);
-  width: calc(50% - 0.125rem - 2px);
-  float: left;
-  margin-right: 0.25rem;
+  width: calc(50% - 0.125rem);
   transition: width 0.8s;
 }
 
 .pane.wide {
-  width: calc(80% - 0.25rem - 2px);
+  width: calc(80% - 0.125rem);
 }
 .pane.narrow {
-  width: calc(20% - 0.25rem - 2px);
+  width: calc(20% - 0.125rem);
 }
 .pane-header {
   border: 1px solid black;
@@ -48,6 +46,13 @@ body {
 .pane-content {
   border: 1px solid black;
   height: calc(100% - 1.5rem - 4px);
+}
+
+.pane.right {
+  float: right;
+}
+.pane.left {
+  float: left;
 }
 
 #menubar, .pane-header {
@@ -73,32 +78,19 @@ body {
   height: calc(50% - 2px - 1.4rem);
 }
 
-#buttonbar-vertical {
-  width: 0.5rem;
-  float: left;
-}
 
 #buttonbar-horizontal {
   height: 0.5rem;
   font-size: small;
 }
 
-#koka-console {
-  display: none;
-}
-
 #koka-console-out {
-  height: calc(50% - 1.5rem - 2px);
   overflow-y: scroll;
-  overflow-x: hidden;
+  overflow-x: scroll;
   font-size: 8pt;
   padding: 0.5rem;
-  border: 1px solid black;
   transition: height 0.8s;
-}
-
-#koka-console-out.short {
-  height: calc(8% - 1.5rem - 2px);
+  height: calc(100% - 17px);
 }
 
 #menubar input {
@@ -107,23 +99,22 @@ body {
 }
 
 #logo {
-  padding: 0pt; 
-  width: 17px;
-  vertical-align: bottom;
+  height: 1em;
+  float: left;
+  margin: 0.15em;
+}
+
+.onedrive-logo {
+  height: 0.9em;
 }
 
 #sync-spinner {
 }
 
-#onedrive-download, #sync {
-  /* color: #00B; */
-  background-color: white;
-  padding-right: 0.5ex;
-}
-
 .button {
   border-right: 1px solid black;
   padding: 0pt 0.2em;
+  background-color: white;
  }
 
 .button:hover, .ibutton:hover {
@@ -135,10 +126,9 @@ body {
   margin: 0.15em;
 }
 
-.ibutton.hide {
-  display: none;
+.hide {
+  visibility: hidden;
 }
-
 
 #editor-header .ibutton {
   float: right;
@@ -146,6 +136,24 @@ body {
 
 #view-header .ibutton {
   float: left;
+}
+
+#warning {
+  height: 1em;
+}
+
+#view-spinner {
+  float: right;
+  margin-top: 0.15em; 
+}
+
+#menu-settings ul {
+  margin: 0;
+  padding: 0;
+}
+#menu-settings li {
+  padding-left: 1ex;
+  list-style-type: none;
 }
 
 
@@ -168,6 +176,7 @@ body {
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
 }
+
 #view {
   background-color: white;
 }
@@ -209,9 +218,15 @@ body {
 .spinner {
   width: 1em;
   height: 1em;
-  -webkit-animation: spinner-rotate 2s infinite linear;
-  animation: spinner-rotate 2s infinite linear;  
+  visibility: hidden;
 }
+
+.spinner.spin {
+  visibility: visible;
+  -webkit-animation: spinner-rotate 2s infinite linear;
+  animation: spinner-rotate 2s infinite linear;
+}
+
 @-webkit-keyframes spinner-rotate {
   from { -webkit-transform:rotate(0deg); }
   to   { -webkit-transform:rotate(360deg); }
@@ -219,4 +234,49 @@ body {
 @keyframes spinner-rotate {
   from { transform:rotate(0deg); }
   to   { transform:rotate(360deg); }
+}
+
+.popup {
+  position: relative;
+  float: right;
+  width: 50%;
+}
+
+.popup > div {
+  transition: height 0.8s; 
+}
+
+.popup > div {
+  display: none;
+  height: 0;
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+  top: 1.1rem;
+  left: 0;
+  background-color: white;
+  border: 1px solid black;
+}
+
+.popup:hover > div {
+  display: block;
+}
+
+#menu-settings.popup {
+  width: 1em;  
+}
+
+#view-message.popup {
+  border-left: 1px solid black;
+  background-color: white;
+}
+.popup:hover > div#koka-console {
+  height: 10em;
+  border: 1px solid black;
+}
+
+.popup:hover > div#menu-settings-content {
+  height: 5em;
+  width: 15em;
+  left: -13em;
 }

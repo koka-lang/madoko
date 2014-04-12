@@ -75,4 +75,6 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
       });
     }
   });
+
+  self.postMessage( { messageId: 0 }); // signal we are ready
 });

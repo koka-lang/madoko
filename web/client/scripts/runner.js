@@ -47,11 +47,12 @@ var Runner = (function() {
   Runner.prototype.onMadokoComplete = function(res,ctx,cont) 
   {
     var self = this;
+    //console.log( "  update done.");
     if (res.message) {
       util.message(" " + res.message);
     }
     if (res.content) {
-      view.innerHTML = res.content;
+      self.ui.viewHTML( res.content );
       //MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax    
     }
     if (res.runOnServer) {
@@ -78,7 +79,7 @@ var Runner = (function() {
   Runner.prototype.runMadoko = function(text,ctx,cont) 
   {
     var self = this;
-    util.message( "update " + ctx.round.toString() + " ..." );
+    util.message( "update " + ctx.round.toString() + ", " + ctx.docname + ", " + text.substr(0,20) + " ..." );
     self.madokoWorker.postMessage( {
       content: text,
       name   : ctx.docname,

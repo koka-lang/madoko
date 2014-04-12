@@ -249,6 +249,10 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       var self = this;
       self.continuations = {};
       self.unique = 1;
+      
+      // collect message while the worker starts up
+      self.ready = false;
+      self.postqueue = []; 
 
       self.worker = new Worker("madoko-worker.js");
       self.worker.addEventListener("message", function(ev) {
@@ -257,21 +261,38 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       });
     }
 
+    ContWorker.prototype.isReady = function() {
+      return self.ready;
+    }
+
     ContWorker.prototype.postMessage = function( info, cont ) {
       var self = this;
-      var id = self.unique++;
-      info.messageId = id; 
-      self.continuations[id] = cont;
-      self.worker.postMessage( info );
+      if (!self.ready) {
+        self.postqueue.push( { info: info, cont: cont });
+      }
+      else {
+        var id = self.unique++;
+        info.messageId = id; 
+        self.continuations[id] = cont;
+        self.worker.postMessage( info );
+      }
     }
 
     ContWorker.prototype.onComplete = function( info ) {
       var self = this;
-      if (!info || !info.messageId) return;
-      var cont = self.continuations[info.messageId];
-      self.continuations[info.messageId] = undefined;
-      if (!cont) return;
-      cont(info);
+      if (!info || typeof info.messageId === "undefined") return;
+      if (info.messageId === 0) {
+        self.ready = true;
+        self.postqueue.forEach( function(elem) {  // post delayed messages
+          self.postMessage( elem.info, elem.cont );
+        });
+      }
+      else {
+        var cont = self.continuations[info.messageId];
+        self.continuations[info.messageId] = undefined;
+        if (!cont) return;
+        cont(info);
+      }
     }
 
     return ContWorker;

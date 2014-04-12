@@ -172,6 +172,7 @@ var UI = (function() {
     };
 
     self.view    = document.getElementById("view");
+    self.viewSpinner = document.getElementById("view-spinner");
     var cons     = document.getElementById("koka-console-out");
     var editpane = document.getElementById("editorpane");
     var viewpane = document.getElementById("viewpane");
@@ -233,6 +234,10 @@ var UI = (function() {
     }
   }
 
+  UI.prototype.viewHTML = function( html ) {
+    self.view.innerHTML = html;
+  }
+
   UI.prototype.setRunner = function( runner ) {
     var self = this;
     if (self.runner) {
@@ -261,8 +266,13 @@ var UI = (function() {
       self.stale = false;
       self.round++;
       if (self.runner) {
-        self.runner.runMadoko(text, {docname: self.docName, round: self.round }, function(ctx) {
+        round = self.round;
+        setTimeout( function() {
+          if (self.lastRound < round) util.addClassName(self.viewSpinner,"spin");
+        }, 500);
+        self.runner.runMadoko(text, {docname: self.docName, round: round }, function(ctx) {
           self.lastRound = ctx.round;
+          util.removeClassName(self.viewSpinner,"spin");
         });
       }
     }

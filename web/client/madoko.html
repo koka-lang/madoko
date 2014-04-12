@@ -55,33 +55,47 @@ require([ "../scripts/util",
 insert image:
 <input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
 -->
-<img src="images/madoko-abslogo-xsmall.png" style="width:1.5em;vertical-align:-0.5ex;padding-right:2em"/>
-&nbsp;continuous:<input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/>
-&nbsp;enable server:<input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" />
-&nbsp;line numbers:<input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor" />
+<img id="logo" src="images/madoko-abslogo-xsmall.png"/> 
+<!--<img id="logo" src="images/madoko-logo.svg"/>-->
+&nbsp;
 </div>
-<div id="editorpane" class="pane">
+<div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" style="height: 0.5rem" /> load</span><span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" style="height: 0.5rem" /> sync</span>
+    <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" class="onedrive-logo" /> load</span><span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" class="onedrive-logo" /> sync</span>
     <img id="button-editor-wide" class="ibutton" src="images/tri-right.svg" />
+    <div id="menu-settings" class="popup">
+      <img class="ibutton" src="images/settings.svg" />
+      <div id="menu-settings-content">
+        <ul>
+          <li><input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/> continuous update</li>
+          <li><input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" /> enable server</li>
+          <li><input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor" /> show line numbers</li>
+        </ul>
+      </div>
+    </div>
     <!-- <img class="spinner" src="images/spinner-line.svg"/> -->
   </div>
   <div class="pane-content">
     <div id="editor"></div>
   </div>
 </div>
-<div id="viewpane" class="pane">
+<div id="viewpane" class="pane right">
   <div id="view-header" class="pane-header">
     <img id="button-editor-narrow" class="ibutton" src="images/tri-left.svg" />
     &nbsp;
-    <!-- <img class="spinner" src="images/spinner.svg" alt="spinner"/> -->
+    <div id="view-message" class="popup">
+      <img id="warning" class="hide" src="images/warn.svg"/>
+      <span class="popup-header"></span>
+      <div id="koka-console">
+        <div id="koka-console-out" class="monospace short"></div>
+      </div>
+    </div>
+    <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="spinner"/>
   </div>
   <div class="pane-content">
     <div id="view" class="madoko"></div>
     <!-- <div id="buttonbar-horizontal"><div id="button-updown" class="ibutton"></div></div> -->
-    <div id="koka-console">
-      <div id="koka-console-out" class="monospace short"></div>
-    </div>
+    
   </div>
 </div>
 </div>
