@@ -34,10 +34,10 @@ body {
 }
 
 .pane.wide {
-  width: calc(80% - 0.125rem);
+  width: calc(70% - 0.125rem);
 }
 .pane.narrow {
-  width: calc(20% - 0.125rem);
+  width: calc(30% - 0.125rem);
 }
 .pane-header {
   border: 1px solid black;
@@ -149,6 +149,7 @@ body {
 
 #menu-settings ul {
   margin: 0;
+  margin-top: 0.5ex;
   padding: 0;
 }
 #menu-settings li {
@@ -168,6 +169,28 @@ body {
 }
 .monaco-editor .token.string.escape {
   color: gray;
+}
+
+.msg-status {
+}
+.msg-error, .msg-exception {
+  color: red;
+}
+.msg-warning {
+  color: maroon;
+}
+div.msg-tool, div.msg-normal {
+  background-color: FloralWhite;
+}
+.msg-section {
+  border-bottom: 1px gray dotted;
+}
+
+#status {
+  padding-left: 1ex;
+}
+#warning.hide {
+  display: none;
 }
 
 #view p, #view li {
@@ -278,5 +301,5 @@ body {
 .popup:hover > div#menu-settings-content {
   height: 5em;
   width: 15em;
-  left: -13em;
+  left: -1em;
 }

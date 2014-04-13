@@ -49,7 +49,7 @@ var Runner = (function() {
     var self = this;
     //console.log( "  update done.");
     if (res.message) {
-      util.message(" " + res.message);
+      util.message(res.message, util.Msg.Tool );
     }
     if (res.content) {
       self.ui.viewHTML( res.content );
@@ -59,7 +59,7 @@ var Runner = (function() {
       self.serverRun(ctx);
     }
     if (res.time) {
-      util.message(" time: " + res.time + "ms" );
+      util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
     }
     
     res.filesRead.forEach( function(file) {
@@ -73,13 +73,13 @@ var Runner = (function() {
       }
     });
 
-    if (cont) cont(ctx);
+    if (cont) cont(null,ctx);
   }
 
   Runner.prototype.runMadoko = function(text,ctx,cont) 
   {
     var self = this;
-    util.message( "update " + ctx.round.toString() + ", " + ctx.docname + ", " + text.substr(0,20) + " ..." );
+    util.message( "update " + ctx.round + " start", util.Msg.Trace );
     self.madokoWorker.postMessage( {
       content: text,
       name   : ctx.docname,
@@ -161,7 +161,7 @@ var Runner = (function() {
         //madoko.writeTextFile( name.substr(1), data[name] );
         var fname   = name.substr(1); 
         var content = data[name];
-        util.message("server sent: " + fname );
+        util.message("server sent: " + fname, util.Msg.Trace );
         if (self.storage) {
           self.storage.writeTextFile(fname,content);
         }

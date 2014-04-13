@@ -38,7 +38,7 @@ require([ "../scripts/util",
 { 
   var ui     = new UI();
   var runner = new Runner( ui );
-  util.message("ready.");
+  util.message("ready", util.Msg.Status );
 });
 </script>
 
@@ -67,9 +67,9 @@ insert image:
       <img class="ibutton" src="images/settings.svg" />
       <div id="menu-settings-content">
         <ul>
-          <li><input type="checkbox" id="checkContinuous" checked title="Update on each keypress"/> continuous update</li>
-          <li><input type="checkbox" id="checkAllowServer" checked title="Use server to run LaTeX and BibTeX" /> enable server</li>
-          <li><input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor" /> show line numbers</li>
+          <li><input type="checkbox" id="checkDelayedUpdate" title="Do not update the view until there is a pause in typing. This setting increases performance with large documents or slow browsers."/>delayed view update</li>
+          <li><input type="checkbox" id="checkDisableServer" title="Do not use the Madoko server to typeset mathematics and the bibliography"/>disable server</li>
+          <li><input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor"/>show line numbers</li>
         </ul>
       </div>
     </div>
@@ -85,7 +85,7 @@ insert image:
     &nbsp;
     <div id="view-message" class="popup">
       <img id="warning" class="hide" src="images/warn.svg"/>
-      <span class="popup-header"></span>
+      <span id="status"></span>
       <div id="koka-console">
         <div id="koka-console-out" class="monospace short"></div>
       </div>

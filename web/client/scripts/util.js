@@ -8,10 +8,64 @@
 
 define(["std_core","std_path"],function(stdcore,stdpath) {
 
+  var Msg = { 
+    Normal: "normal", 
+    Info: "info", 
+    Warning: "warning", 
+    Error: "error", 
+    Exn: "exception",
+    Status: "status",
+    Tool: "tool",
+    Trace: "trace",
+  };
+
+  var warning;
+  var status;
+  var consoleOut;
+  if (typeof document !== "undefined") {
+    warning    = document.getElementById("warning");
+    status     = document.getElementById("status");
+    consoleOut = document.getElementById("koka-console-out");
+  }
+
+  var escapes = {
+      '&': '&amp;', // & first!
+      '<': '&lt;',
+      '>': '&gt;',
+      '\'': '&apos;',
+      '"': '&quot;',
+      '\n': '<br>',
+      '\r': '',
+      ' ': '&nbsp;',
+  };
+  var escapes_regex = new RegExp("[" + Object.keys(escapes).join("") + "]", "g");
+
+  function html_escape(txt) {
+    return txt.replace(escapes_regex, function (s) {
+      var r = escapes[s];
+      return (r ? r : "");
+    });
+  }
+
   // Call for messages
-  function message( txt ) {
-    stdcore.println(txt);
-    console.log(txt);
+  function message( txt, kind ) {
+    if (!kind) kind = Msg.Normal;
+    // stdcore.println(txt);
+    console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
+    if (kind !== Msg.Trace && consoleOut && status && warning) {
+      var html = "<span class='msg-" + kind + "'>" + html_escape(txt) + "</span>";
+      //consoleOut.print_html(html);
+      consoleOut.innerHTML = "<div class='msg-section msg-" + kind + "'>" + html + "</div>" + consoleOut.innerHTML;
+
+      if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
+        status.innerHTML = html;
+        removeClassName(warning,"hide");
+      }
+      else if (kind===Msg.Status) {
+        status.innerHTML = html;
+        addClassName(warning,"hide");
+      }
+    }
   }
 
   function assert( pred, msg ) {
@@ -299,6 +353,75 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
   })();
 
 
+  var AsyncRunner = (function() {
+    function AsyncRunner( refreshRate, spinner, isStale, action ) {
+      var self = this;
+      self.spinner = spinner;
+      self.isStale = isStale;
+      self.action = action;
+      self.ival = 0;
+      self.round = 0;
+      self.lastRound = 0;
+      self.stale = false;
+      self.refreshRate = refreshRate || 1000;
+      self.resume(refreshRate);
+    }
+    
+    AsyncRunner.prototype.resume = function(refreshRate) {
+      var self = this;
+      if (!self.ival) {
+        self.refreshRate = refreshRate || self.refreshRate;
+        self.ival = setInterval( function(){ self.update(); }, refreshRate );
+      }
+    }
+
+    AsyncRunner.prototype.pause = function() {
+      var self = this;
+      if (self.ival) {
+        clearInterval(self.ival);
+        self.ival = 0;
+      }
+    }
+
+    AsyncRunner.prototype.setStale = function() {
+      var self = this;
+      self.stale = true;
+      self.run();
+    }
+
+    AsyncRunner.prototype.update = function() {
+      var self = this;
+      if (!self.stale && self.isStale) {
+        self.stale = self.isStale();
+      }
+      self.run();
+    }
+
+    AsyncRunner.prototype.run = function() {
+      var self = this;
+      if (self.stale && self.round <= self.lastRound) {
+        self.stale = false;
+        self.round++;
+        var round = self.round;
+        setTimeout( function() {
+          if (self.lastRound < round && self.spinner) self.spinner(true);
+        }, 500);
+        self.action( self.round, function() {
+          if (self.lastRound < round) {
+            self.lastRound = round;          
+            if (self.spinner) self.spinner(false);
+          }
+        });
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    return AsyncRunner;
+  })();
+
   function urlEncode( obj ) {
     var vals = [];
     properties(obj).forEach( function(prop) {
@@ -438,6 +561,7 @@ doc.execCommand("SaveAs", null, filename)
     extend: extend,
     message: message,
     assert: assert,
+    Msg: Msg,
     
     changeExt: stdpath.changeExt,
     extname: stdpath.extname,
@@ -464,6 +588,6 @@ doc.execCommand("SaveAs", null, filename)
 
     Map: Map,
     ContWorker: ContWorker,
-
+    AsyncRunner: AsyncRunner,
   };
 });

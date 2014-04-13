@@ -84,11 +84,15 @@ var UI = (function() {
     self.allowServer = true;
     self.runner = null;
 
+
     self.stale = true;
     self.staleTime = Date.now();
     self.round = 0;
     self.lastRound = 0;
     self.text0 = "";
+    
+    self.spinners = 0;
+    self.spinner = document.getElementById("view-spinner");
     
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
 
@@ -130,12 +134,12 @@ var UI = (function() {
       }
     });
      
-    document.getElementById('checkContinuous').onchange = function(ev) { 
-      self.refreshContinuous = ev.target.checked; 
+    document.getElementById('checkDelayedUpdate').onchange = function(ev) { 
+      self.refreshContinuous = !ev.target.checked; 
     };
 
-    document.getElementById('checkAllowServer').onchange = function(ev) { 
-      self.allowServer = ev.target.checked; 
+    document.getElementById('checkDisableServer').onchange = function(ev) { 
+      self.allowServer = !ev.target.checked; 
     };
 
     document.getElementById('checkLineNumbers').onchange = function(ev) { 
@@ -215,7 +219,7 @@ var UI = (function() {
       if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
     
-    setInterval( function() { self.update(); }, self.refreshRate );
+    self.initRunners();
   }
 
   UI.prototype.setEditText = function( text ) {
@@ -228,14 +232,14 @@ var UI = (function() {
 
   UI.prototype.setStale = function() {
     var self = this;
-    if (!self.stale) {
-      self.stale = true;
-      self.staleTime = Date.now();
-    }
+    self.stale = true;
+    self.asyncMadoko.setStale();    
   }
 
   UI.prototype.viewHTML = function( html ) {
+    var self = this;
     self.view.innerHTML = html;
+    self.syncView();
   }
 
   UI.prototype.setRunner = function( runner ) {
@@ -246,36 +250,46 @@ var UI = (function() {
     self.runner = runner;     
   }
 
-  UI.prototype.update = function() {
+  UI.prototype.showSpinner = function(enable) {
+    if (enable && self.spinners === 0) {
+      util.removeClassName(self.spinner,"hide")          
+    }
+    else if (!enable && self.spinners === 1) {
+      util.addClassName(self.spinner,"hide");
+    }
+    if (enable) self.spinners++;
+    else if (self.spinners > 0) self.spinners--;
+  }
+
+  UI.prototype.initRunners = function() {
     var self = this;
-    if (!self.runner) return;
+    self.asyncMadoko = new util.AsyncRunner( self.refreshRate, self.showSpinner, 
+      function() {
+        var text = self.getEditText();
+        localSave(self.docName,text);
+        if (self.storage) {
+          self.storage.writeTextFile(self.docName,text);
+        }
 
-    var text = self.getEditText();
-    localSave(self.docName,text);
-    if (self.storage) {
-      self.storage.writeTextFile(self.docName,text);
-    }
+        if (text != self.text0) {   
+          self.stale = true;
+          self.text0 = text;
+          if (!self.refreshContinuous) return false; // set stale, but wait until the user stops typing..
+        }
 
-    if (text != self.text0) {   // set stale but do not update yet (as long as the user types)
-      self.stale     = true;      
-      self.staleTime = Date.now();
-      self.text0     = text;
-      if (!self.refreshContinuous) return;
-    }
-    if (self.stale && (self.round === self.lastRound || Date.now() > self.staleTime + 5000)) {
-      self.stale = false;
-      self.round++;
-      if (self.runner) {
-        round = self.round;
-        setTimeout( function() {
-          if (self.lastRound < round) util.addClassName(self.viewSpinner,"spin");
-        }, 500);
-        self.runner.runMadoko(text, {docname: self.docName, round: round }, function(ctx) {
-          self.lastRound = ctx.round;
-          util.removeClassName(self.viewSpinner,"spin");
+        return self.stale;
+      },
+      function(round,cont) {
+        self.stale = false;
+        if (!self.runner) return cont();
+        self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, function(err,ctx) {
+          if (err) {
+            util.message(err,util.Msg.Exn);
+          }
+          cont();
         });
       }
-    }
+    );
   }
 
 
