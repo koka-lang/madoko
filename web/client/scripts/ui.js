@@ -72,7 +72,7 @@ var testB  = "line 1\nline 2b\nx3\nOther\nend4";
 
 var UI = (function() {
 
-  function UI()
+  function UI( runner )
   {
     var self = this;
     self.editor  = null;
@@ -81,9 +81,9 @@ var UI = (function() {
     
     self.refreshContinuous = true;
     self.refreshRate = 250;
+    self.serverRefreshRate = 1000;
     self.allowServer = true;
-    self.runner = null;
-
+    self.runner = runner;
 
     self.stale = true;
     self.staleTime = Date.now();
@@ -242,14 +242,6 @@ var UI = (function() {
     self.syncView();
   }
 
-  UI.prototype.setRunner = function( runner ) {
-    var self = this;
-    if (self.runner) {
-      self.runner.setStorage(null); // TODO: better clean up?
-    }
-    self.runner = runner;     
-  }
-
   UI.prototype.showSpinner = function(enable) {
     if (enable && self.spinners === 0) {
       util.removeClassName(self.spinner,"hide")          
@@ -282,10 +274,31 @@ var UI = (function() {
       function(round,cont) {
         self.stale = false;
         if (!self.runner) return cont();
-        self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, function(err,ctx) {
+        self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, 
+          function(err,ctx,content,needServerRun) {
           if (err) {
             util.message(err,util.Msg.Exn);
           }
+          else {
+            self.viewHTML(content);
+            if (needServerRun && self.allowServer && self.asyncServer) {
+              self.asyncServer.setStale();
+            }
+          }
+          cont();
+        });
+      }
+    );
+
+    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, self.showSpinner, 
+      function() { return false; },
+      function(round,cont) {
+        self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}, function(err,ctx) {
+          if (err) {
+            util.message(err,util.Msg.Exn);
+          }
+          self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
+          self.asyncMadoko.setStale();   // run madoko locally
           cont();
         });
       }

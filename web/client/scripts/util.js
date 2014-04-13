@@ -389,6 +389,11 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       self.run();
     }
 
+    AsyncRunner.prototype.clearStale = function() {
+      var self = this;
+      self.stale = false;
+    }
+
     AsyncRunner.prototype.update = function() {
       var self = this;
       if (!self.stale && self.isStale) {

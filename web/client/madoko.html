@@ -36,8 +36,8 @@ require([ "../scripts/util",
           "vs/editor/editor.main"],
           function(util,UI,Runner) 
 { 
-  var ui     = new UI();
-  var runner = new Runner( ui );
+  var runner = new Runner();
+  var ui     = new UI(runner);
   util.message("ready", util.Msg.Status );
 });
 </script>
@@ -86,7 +86,7 @@ insert image:
     <div id="view-message" class="popup">
       <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
-      <div id="koka-console">
+      <div id="koka-console" class="madoko">
         <div id="koka-console-out" class="monospace short"></div>
       </div>
     </div>

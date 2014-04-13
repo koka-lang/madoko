@@ -11,9 +11,9 @@ define(["../scripts/util","webmain"],
 
 var Runner = (function() {
 
-  function Runner(ui) {
+  function Runner() {
     var self = this;
-    self.ui    = ui;
+    
     //self.files = new util.Map();
     self.sendFiles = [];
     self.storage = null;
@@ -21,8 +21,6 @@ var Runner = (function() {
     self.options = madoko.initialOptions();
     self.options.mathEmbedLimit = 256 * 1024;
     self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
-
-    self.ui.setRunner( self ); 
   }
 
   Runner.prototype.setStorage = function( storage ) {
@@ -51,13 +49,10 @@ var Runner = (function() {
     if (res.message) {
       util.message(res.message, util.Msg.Tool );
     }
-    if (res.content) {
-      self.ui.viewHTML( res.content );
-      //MathJax.Hub.Queue(["Typeset",MathJax.Hub,"view"]); // schedule mathjax    
-    }
-    if (res.runOnServer) {
-      self.serverRun(ctx);
-    }
+    
+    //if (res.runOnServer) {
+    //  self.serverRun(ctx);
+    //}
     if (res.time) {
       util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
     }
@@ -73,7 +68,7 @@ var Runner = (function() {
       }
     });
 
-    if (cont) cont(null,ctx);
+    if (cont) cont(null,ctx,res.content,res.runOnServer);
   }
 
   Runner.prototype.runMadoko = function(text,ctx,cont) 
@@ -134,12 +129,9 @@ var Runner = (function() {
   // - latex: formulas are typeset using latex. This generates a "document.dimx" file
   //           containing all typeset formulas. For this to work, we may need to 
   //           send extra style files (".sty") or class files (".cls"). 
-  Runner.prototype.serverRun = function(ctx) {
+  Runner.prototype.runMadokoServer = function(text,ctx,cont) {
     var self = this;
-    if (!self.ui.allowServer) return;
-
-    var text = self.ui.getEditText();
-
+    
     // TODO: schedule run on server
     // send: document, and other files (like .bib and include files (but not images))    
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
@@ -152,10 +144,11 @@ var Runner = (function() {
         params["/" + fname] = content;
       });
     }
-
+    var t0 = Date.now();
     util.requestPOST( "/rest/run", params, function(err,data) {
-      if (err) return util.message(err);
-      util.message(data.stdout + data.stderr);
+      if (err) return cont(util.message(err),ctx);
+      var time = (Date.now() - t0).toString() + "ms";
+      util.message(data.stdout + data.stderr, util.Msg.Tool);
       util.properties(data).forEach(function(name) {
         if (name.substr(0,1) !== "/") return;
         //madoko.writeTextFile( name.substr(1), data[name] );
@@ -171,8 +164,8 @@ var Runner = (function() {
           self.sendFiles.push({name:fname, content: content})
         }
       })
-      //runMadoko(editor.getValue());
-      self.ui.setStale();
+      util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
+      cont(null,ctx);
     });
   }  
 
