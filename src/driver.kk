@@ -199,7 +199,11 @@ function writeCitations( auxData : string, auxName : string, docName : string, o
     opts.printErr("error: unable to write citations: " + auxName )
   }
 
-  return (oldData != newData)
+  oldCites = oldData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
+  newCites = newData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
+  //trace("oldCites: " + oldCites)
+  //trace("newCites: " + newCites)
+  return (oldCites != newCites)
 }
 val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")

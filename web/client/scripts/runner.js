@@ -31,6 +31,9 @@ var Runner = (function() {
     self.storage = storage;
     if (self.storage) {
       self.storage.addEventListener("update",self);
+      self.storage.forEachTextFile( function(path,content) {
+        self.sendFiles.push( { name: path, content: content });
+      });
     }
   }
 

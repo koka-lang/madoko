@@ -78,7 +78,7 @@ var UI = (function() {
     self.serverRefreshRate = 1000;
     self.allowServer = true;
     self.runner = runner;
-    self.runner.setStorage(self.storage);
+    //self.runner.setStorage(self.storage);
 
     self.stale = true;
     self.staleTime = Date.now();

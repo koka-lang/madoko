@@ -260,7 +260,7 @@ var Storage = (function() {
 
   Storage.prototype.forEachTextFile = function( action ) {
     var self = this;
-    self.files.forEach( function(file) {
+    self.files.forEach( function(fname,file) {
       if (!file.url) {
         action(file.path, file.content);
       }
