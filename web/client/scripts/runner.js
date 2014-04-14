@@ -106,7 +106,7 @@ var Runner = (function() {
     if (!self.storage) return;
     self.storage.getImageUrl( fname, function(err,url) {
       if (err) return util.message(err);
-      util.message("storage provided reference: " + fname);      
+      util.message("storage provided reference: " + fname, util.Msg.Trace);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
     });
   }
@@ -114,9 +114,9 @@ var Runner = (function() {
   Runner.prototype.loadText = function(fname ) {
     var self = this;
     if (!self.storage) return;
-    self.storage.readTextFile( fname, function(err,content) {
+    self.storage.readTextFile( fname, true, function(err,content) {
       if (err) return util.message(err);
-      util.message("storage sent: " + fname);      
+      util.message("storage sent: " + fname, util.Msg.Trace);      
       //self.files.set(fname,content);
       //self.sendFiles.push({ name: fname, content: content });
     });

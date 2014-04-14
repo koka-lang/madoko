@@ -258,8 +258,20 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     }, ival);
   }
 
+  function unpersistMap(obj) {
+    var map = new Map();
+    properties(obj).forEach( function(prop) {
+      map[prop] = obj[prop];
+    });
+    return map;
+  }
+
   var Map = (function() {
     function Map() { };
+
+    Map.prototype.persist = function() {
+      return this;
+    };
 
     Map.prototype.set = function( name, value ) {
       this["/" + name] = value;
@@ -592,6 +604,7 @@ doc.execCommand("SaveAs", null, filename)
     downloadFile: downloadFile,
 
     Map: Map,
+    unpersistMap: unpersistMap,
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,
   };

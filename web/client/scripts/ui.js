@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/merge","../scripts/util","../scripts/onedrive","../scripts/madokoMode"],
-        function(merge,util,onedrive,madokoMode) {
+define(["../scripts/merge","../scripts/util","../scripts/storage","../scripts/madokoMode"],
+        function(merge,util,storage,madokoMode) {
 
 
 var ie = (function(){
@@ -39,36 +39,32 @@ function createDiff( editor, original, modified, cont ) {
   });
 }
 
-function localSave( fname, text ) {
+function localStorageSave( fname, obj ) {
   if (!localStorage) {
-    util.message("cannot save locally: " + fname + "\n  upgrade your browser." );
+    util.message("cannot save locally: " + fname + ": upgrade your browser.", util.Msg.Error );
     return;
   }
   try {
-    localStorage.setItem( "local/" + fname, text );
+    localStorage.setItem( "local/" + fname, JSON.stringify(obj) );
   }
   catch(e) {
-    util.message("failed to save locally: " + fname + "\n  " + e.toString());
+    util.message("failed to save locally: " + fname + "\n  " + e.toString(), util.Msg.Error );
   }
 }
 
-function localLoad( fname ) {
+function localStorageLoad( fname ) {
  if (!localStorage) {
     util.message("cannot load locally: " + fname + "\n  upgrade your browser." );
-    return "";
+    return null;
   }
   try {
     var res = localStorage.getItem( "local/" + fname );
-    return (res ? res : "");
+    return (res ? JSON.parse(res) : null);
   }
   catch(e) {
-    return "";
+    return null;
   } 
 }
-
-var testO  = "line 1\nline2\nx3\nend4";
-var testA  = "line 1\nline2c\nx3\nAddition\nend4";
-var testB  = "line 1\nline 2b\nx3\nOther\nend4";
 
 var UI = (function() {
 
@@ -76,31 +72,47 @@ var UI = (function() {
   {
     var self = this;
     self.editor  = null;
-    self.docName = "document.mdk";
-    self.storage = null;
     
     self.refreshContinuous = true;
     self.refreshRate = 250;
     self.serverRefreshRate = 1000;
     self.allowServer = true;
     self.runner = runner;
+    self.runner.setStorage(self.storage);
 
     self.stale = true;
     self.staleTime = Date.now();
     self.round = 0;
     self.lastRound = 0;
     self.text0 = "";
-    
-    self.spinners = 0;
-    self.spinner = document.getElementById("view-spinner");
-    
-    self.checkLineNumbers = document.getElementById('checkLineNumbers');
 
+    self.localLoad();
+    self.storage.readTextFile(self.docName, true, function(err,content) {
+      if (err) {
+        util.message(err,util.Msg.Trace)
+      }
+      if (!content) content = "";
+      self.initUIElements(content);
+    });
+
+  }
+
+  UI.prototype.initUIElements = function(content) {
+    var self = this;
+
+    // common elements
+    self.spinners = 0;
+    self.spinner = document.getElementById("view-spinner");    
+    self.view    = document.getElementById("view");
+    self.viewSpinner = document.getElementById("view-spinner");
+
+    // start editor
+    var checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
-      value: localLoad(self.docName) || document.getElementById("initial").textContent,
+      value: content,
       mode: "text/x-web-markdown",
       theme: "vs",
-      lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
+      lineNumbers: (checkLineNumbers ? checkLineNumbers.checked : false),
       mode: madokoMode.mode,
       tabSize: 4,
       insertSpaces: false,
@@ -134,6 +146,7 @@ var UI = (function() {
       }
     });
      
+    // Buttons and checkboxes
     document.getElementById('checkDelayedUpdate').onchange = function(ev) { 
       self.refreshContinuous = !ev.target.checked; 
     };
@@ -142,7 +155,7 @@ var UI = (function() {
       self.allowServer = !ev.target.checked; 
     };
 
-    document.getElementById('checkLineNumbers').onchange = function(ev) { 
+    checkLineNumbers.onchange = function(ev) { 
       if (self.editor) {
         self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
       }
@@ -175,9 +188,8 @@ var UI = (function() {
       }
     };
 
-    self.view    = document.getElementById("view");
-    self.viewSpinner = document.getElementById("view-spinner");
-    var cons     = document.getElementById("koka-console-out");
+    
+    // narrow and wide editor panes
     var editpane = document.getElementById("editorpane");
     var viewpane = document.getElementById("viewpane");
     var buttonEditorNarrow = document.getElementById("button-editor-narrow");
@@ -218,7 +230,8 @@ var UI = (function() {
       }
       if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
-    
+
+    // Initialize madoko and madoko-server runner    
     self.initRunners();
   }
 
@@ -258,11 +271,7 @@ var UI = (function() {
     self.asyncMadoko = new util.AsyncRunner( self.refreshRate, self.showSpinner, 
       function() {
         var text = self.getEditText();
-        localSave(self.docName,text);
-        if (self.storage) {
-          self.storage.writeTextFile(self.docName,text);
-        }
-
+        
         if (text != self.text0) {   
           self.stale = true;
           self.text0 = text;
@@ -272,6 +281,7 @@ var UI = (function() {
         return self.stale;
       },
       function(round,cont) {
+        self.localSave();
         self.stale = false;
         if (!self.runner) return cont();
         self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, 
@@ -305,6 +315,32 @@ var UI = (function() {
     );
   }
 
+  UI.prototype.localSave = function() {
+    var self = this;
+    var text = self.getEditText();
+    self.storage.writeTextFile( self.docName, text );
+    var json = { docName: self.docName, storage: self.storage.persist() };
+    localStorageSave("local", json);      
+  }
+
+
+  UI.prototype.localLoad = function() {
+    var self = this;
+    var json = localStorageLoad("local");      
+    if (json!=null) {
+      // we ran before
+      self.docName = json.docName;
+      self.storage = storage.unpersistStorage(json.storage);
+    }
+    else {
+      // initialize fresh
+      self.docName = "document.mdk";
+      self.storage = new storage.Storage(new storage.NullRemote());
+      var content = document.getElementById("initial").textContent;
+      self.storage.writeTextFile(self.docName, content);
+    }    
+    self.runner.setStorage(self.storage);
+  }
 
   /*
     // Insert some text in the document 
@@ -457,7 +493,7 @@ var UI = (function() {
       if (self.runner) {
         self.runner.setStorage(self.storage);
       }
-      self.storage.readTextFile(fname, function(err,text) { 
+      self.storage.readTextFile(fname, false, function(err,text) { 
         if (err) return util.message(err);
         self.setEditText(text);
         self.docName = fname;
