@@ -119,6 +119,7 @@ body {
 
 .button:hover, .ibutton:hover {
   cursor: pointer;
+  background-color: Floralwhite;
 }
 
 .ibutton {
@@ -143,7 +144,6 @@ body {
 }
 
 #view-spinner {
-  float: right;
   margin-top: 0.15em; 
 }
 
@@ -157,6 +157,33 @@ body {
   list-style-type: none;
 }
 
+#edit-select {
+  background-color: white;
+  border-right: 1px solid black;
+  width: 50%;
+  padding: 0 1ex;
+  float: left;
+}
+
+#edit-select-content {
+  padding: 0 1ex;
+}
+
+.popup .item:hover, .popup li:hover {
+  background-color: Floralwhite;
+}
+
+#load {
+  border-left: 1px solid black;
+}
+#load .content, #save .content {
+  width: 8em;
+}
+
+.menu.button {
+  border: none;
+  padding: 0.25ex 1ex;
+}
 
 .monaco-editor .token.code {
   background-color: #EEE;
@@ -261,9 +288,8 @@ body {
 
 .popup {
   position: relative;
-  float: right;
-  width: 50%;
 }
+
 
 .popup > div {
   transition: height 0.8s; 
@@ -271,7 +297,6 @@ body {
 
 .popup > div {
   display: none;
-  height: 0;
   width: 100%;
   position: absolute;
   z-index: 1;
@@ -286,12 +311,15 @@ body {
 }
 
 #menu-settings.popup {
-  width: 1em;  
+  width: 1.5em;  
+  float: right;
 }
 
 #view-message.popup {
   border-left: 1px solid black;
   background-color: white;
+  float: right;
+  width: 50%;
 }
 .popup:hover > div#koka-console {
   height: 10em;
@@ -299,7 +327,7 @@ body {
 }
 
 .popup:hover > div#menu-settings-content {
-  height: 5em;
   width: 15em;
   left: -1em;
 }
+

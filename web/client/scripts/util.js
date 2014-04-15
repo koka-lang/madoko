@@ -40,7 +40,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
   };
   var escapes_regex = new RegExp("[" + Object.keys(escapes).join("") + "]", "g");
 
-  function html_escape(txt) {
+  function htmlEscape(txt) {
     return txt.replace(escapes_regex, function (s) {
       var r = escapes[s];
       return (r ? r : "");
@@ -53,7 +53,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
     if (kind !== Msg.Trace && consoleOut && status && warning) {
-      var html = "<span class='msg-" + kind + "'>" + html_escape(txt) + "</span>";
+      var html = "<span class='msg-" + kind + "'>" + htmlEscape(txt) + "</span>";
       //consoleOut.print_html(html);
       consoleOut.innerHTML = "<div class='msg-section msg-" + kind + "'>" + html + "</div>" + consoleOut.innerHTML;
 
@@ -90,6 +90,55 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     properties(obj).forEach( function(prop) {
       target[prop] = obj[prop];
     });
+  }
+
+  function copy(src ) {
+    return clone(src,false);
+  }
+
+  function clone(src, deep, _visited) 
+  {
+    deep = (deep===undefined ? true : deep);
+
+    if (src==null || typeof(src)!=="object") {
+      return src;
+    }
+    if (deep) {
+      if (typeof _visited===undefined) {
+        _visited = [];
+      }
+      else {
+        var i,len = _visited.length;
+        for(i=0; i<len; i++) {
+          if (_visited[i]===src) return src;
+        }
+      }
+      _visited.push(src);
+    }
+
+    if (typeof src.clone === "function") {
+      return src.clone(true);
+    }
+    else if (src instanceof Date){
+      return new Date(src.getTime());
+    }
+    else if(src instanceof RegExp){
+      return new RegExp(src);
+    }
+    else if(src.nodeType && typeof src.cloneNode == 'function'){
+      return src.cloneNode(true);
+    }
+    else {
+      var proto = (Object.getPrototypeOf ? Object.getPrototypeOf(src): src.__proto__);
+      if (!proto) {
+        proto = src.constructor.prototype;
+      }
+      var dest = Object.create(proto);
+      for(var key in src){
+        dest[key] = (deep ? clone(src[key],true,_visited) : src[key]);
+      }
+      return dest;
+    }
   }
 
 
@@ -158,6 +207,22 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     var i = s.indexOf(post);
     return (i >= 0 && (s.length - post.length) == i);
   }
+
+
+  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
+  function hasImageExt(fname) {
+    var ext = stdpath.extname(fname);
+    if (!ext) return false;
+    return contains(imageExts,ext);
+  }
+
+  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls"].join(";");
+  function hasTextExt(fname) {
+    var ext = stdpath.extname(fname);
+    if (!ext) return false;
+    return (contains(textExts,ext) && !endsWith(fname,".final.tex"));
+  }
+
 
   function toggleButton( elemName, text0, text1, action ) {
     var button = (typeof elemName === "string" ? document.getElementById(elemName) : elemName);
@@ -420,9 +485,10 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
         self.stale = false;
         self.round++;
         var round = self.round;
-        setTimeout( function() {
-          if (self.lastRound < round && self.spinner) self.spinner(true);
-        }, 500);
+        //setTimeout( function() {
+        //  if (self.lastRound < round && self.spinner) 
+        self.spinner(true);
+        //}, 200);
         self.action( self.round, function() {
           if (self.lastRound < round) {
             self.lastRound = round;          
@@ -576,14 +642,19 @@ doc.execCommand("SaveAs", null, filename)
   return {
     properties: properties,
     extend: extend,
+    copy: copy,
     message: message,
     assert: assert,
+    escape: htmlEscape,
     Msg: Msg,
     
     changeExt: stdpath.changeExt,
     extname: stdpath.extname,
     basename: stdpath.basename,
     dirname: stdpath.dirname,
+
+    hasImageExt: hasImageExt,
+    hasTextExt: hasTextExt,
 
     startsWith: startsWith,
     endsWith: endsWith,

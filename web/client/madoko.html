@@ -61,18 +61,44 @@ insert image:
 </div>
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <span id="onedrive-download" class="button" title="Load a document from OneDrive"><img src="images/onedrive-logo.png" class="onedrive-logo" /> load</span><span id="sync" class="button" title="Synchronize all changes with OneDrive"><img src="images/onedrive-logo.png" class="onedrive-logo" /> sync</span>
     <img id="button-editor-wide" class="ibutton" src="images/tri-right.svg" />
     <div id="menu-settings" class="popup">
       <img class="ibutton" src="images/settings.svg" />
       <div id="menu-settings-content">
         <ul>
-          <li><input type="checkbox" id="checkDelayedUpdate" title="Do not update the view until there is a pause in typing. This setting increases performance with large documents or slow browsers."/>delayed view update</li>
-          <li><input type="checkbox" id="checkDisableServer" title="Do not use the Madoko server to typeset mathematics and the bibliography"/>disable server</li>
-          <li><input type="checkbox" id="checkLineNumbers" title="Show line numbers in the editor"/>show line numbers</li>
-        </ul>
+          <li title="Do not update the view until there is a pause in typing. This setting increases performance with large documents or slow browsers."><input type="checkbox" id="checkDelayedUpdate"/>delayed view update</li>
+          <li title="Do not use the Madoko server to typeset mathematics and the bibliography"><input type="checkbox" id="checkDisableServer"/>disable server</li>
+          <li title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/>show line numbers</li>
+          <li id="clear-local" class="button">clear local storage</li>
+       </ul>
       </div>
     </div>
+    <div id="edit-select" class="popup">
+      <span class="header">test</span>
+      <div id="edit-select-content">
+        <ul class="content">
+          <li>document.mdk</li>
+          <li>document.bib</li>
+        </ul>
+      </div>
+    </div>    
+    &nbsp;
+    <span id="load" class="button popup">
+      <span>load</span>
+      <div class="content">
+        <div id="load-local" class="menu button" title="Load document from browser local storage">local storage</div>
+        <div id="load-onedrive" class="menu button" title="Load document from Onedrive cloud storage"><img src="images/onedrive-logo.png" class="onedrive-logo" /> onedrive</div>
+      </div>
+    </span
+    ><span id="syncTo" class="button popup">
+      <span>sync to</span>
+      <div class="content">
+        <div id="sync-local" class="menu button" title="Save workspace to browser local storage">local storage</div>
+        <div id="sync-onedrive" class="menu button"><img src="images/onedrive-logo.png" class="onedrive-logo" /> onedrive</div>
+      </div>
+    </span
+    ><span id="sync" class="button" title="Synchronize changes">sync</span
+    >
     <!-- <img class="spinner" src="images/spinner-line.svg"/> -->
   </div>
   <div class="pane-content">
@@ -83,6 +109,7 @@ insert image:
   <div id="view-header" class="pane-header">
     <img id="button-editor-narrow" class="ibutton" src="images/tri-left.svg" />
     &nbsp;
+    <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="spinner"/>    
     <div id="view-message" class="popup">
       <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
@@ -90,7 +117,6 @@ insert image:
         <div id="koka-console-out" class="monospace short"></div>
       </div>
     </div>
-    <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="spinner"/>
   </div>
   <div class="pane-content">
     <div id="view" class="madoko"></div>
@@ -134,9 +160,9 @@ function hi() {
 <script src="//js.live.net/v5.0/wl.debug.js"></script> 
 
 <script>
-require([ "../scripts/onedrive" ], function(onedrive) 
+require([ "../scripts/storage" ], function(storage) 
 { 
-  onedrive.init({
+  storage.onedriveInit({
     client_id   : "000000004C113E9D",
     redirect_uri: "https://madoko.cloudapp.net:8080/redirect", 
     scope       : ["wl.signin","wl.skydrive","wl.skydrive_update"],

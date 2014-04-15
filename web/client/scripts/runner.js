@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/util","webmain"],
-        function(util,madoko) {
+define(["../scripts/util","../scripts/storage","webmain"],
+        function(util,storage,madoko) {
 
 var Runner = (function() {
 
@@ -61,12 +61,12 @@ var Runner = (function() {
     }
     
     res.filesRead.forEach( function(file) {
-      if (hasTextExt(file)) {
+      if (util.hasTextExt(file)) {
         self.loadText(file);
       }        
     });
     res.filesReferred.forEach( function(file) {
-      if (hasImageExt(file)) {
+      if (util.hasImageExt(file)) {
         self.loadImage(file);
       }
     });
@@ -90,19 +90,6 @@ var Runner = (function() {
   }
 
     
-  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
-  function hasImageExt(fname) {
-    var ext = util.extname(fname);
-    if (!ext) return false;
-    return util.contains(imageExts,ext);
-  }
-
-  var textExts = ["",".bib",".mdk",".md",".txt"].join(";");
-  function hasTextExt(fname) {
-    var ext = util.extname(fname);
-    if (!ext) return false;
-    return util.contains(textExts,ext);
-  }
 
   Runner.prototype.loadImage = function( fname ) {
     var self = this;
@@ -117,7 +104,7 @@ var Runner = (function() {
   Runner.prototype.loadText = function(fname ) {
     var self = this;
     if (!self.storage) return;
-    self.storage.readTextFile( fname, true, function(err,content) {
+    self.storage.readTextFile( fname, storage.File.fromPath(fname), function(err,content) {
       if (err) return util.message(err);
       util.message("storage sent: " + fname, util.Msg.Trace);      
       //self.files.set(fname,content);
@@ -159,7 +146,7 @@ var Runner = (function() {
         var content = data[name];
         util.message("server sent: " + fname, util.Msg.Trace );
         if (self.storage) {
-          self.storage.writeTextFile(fname,content);
+          self.storage.writeTextFile(fname,content,storage.File.Generated);
         }
         else {
           // happens when there is no connection to onedrive etc.

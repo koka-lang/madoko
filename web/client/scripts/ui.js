@@ -104,8 +104,7 @@ var UI = (function() {
     self.spinners = 0;
     self.spinner = document.getElementById("view-spinner");    
     self.view    = document.getElementById("view");
-    self.viewSpinner = document.getElementById("view-spinner");
-
+    
     // start editor
     var checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
@@ -147,6 +146,12 @@ var UI = (function() {
     });
      
     // Buttons and checkboxes
+    checkLineNumbers.onchange = function(ev) { 
+      if (self.editor) {
+        self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
+      }
+    };
+
     document.getElementById('checkDelayedUpdate').onchange = function(ev) { 
       self.refreshContinuous = !ev.target.checked; 
     };
@@ -155,34 +160,44 @@ var UI = (function() {
       self.allowServer = !ev.target.checked; 
     };
 
-    checkLineNumbers.onchange = function(ev) { 
-      if (self.editor) {
-        self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
-      }
+    document.getElementById("load-onedrive").onclick = function(ev) {
+      self.openFile( function(cont) { storage.onedriveOpenFile(cont); } );
     };
 
-    document.getElementById("onedrive-download").onclick = function(ev) {
-      self.onedrivePickFile();
+    document.getElementById("load-local").onclick = function(ev) {
+      self.openFile( function(cont) { storage.localOpenFile(cont); } );
+    };
+
+    document.getElementById("sync-local").onclick = function(ev) {
+      self.syncTo( function(cont) { 
+        storage.syncToLocal(self.storage,cont); 
+      });
+    };
+
+    document.getElementById("clear-local").onclick = function(ev) {
+      util.properties(localStorage).forEach( function(prop) {
+        localStorage[prop] = undefined;
+      });
+      self.syncTo( function(cont) { 
+        storage.syncToLocal(self.storage,cont); 
+      });
+    };
+
+    document.getElementById("edit-select").onmouseover = function(ev) {
+      var div = document.getElementById("edit-select-content");
+      self.editSelect(div);
     };
    
     document.getElementById("sync").onclick = function(ev) 
     {      
-      function diff(original,modified,cont) {
-        createDiff(self.editor,original,modified,cont);
-      };
-
-      merge.merge3( diff, null, testO, testA, testB, function(err,merged) {
-        console.log("merge:\n" + merged);
-      });
-
       if (self.storage) {
         self.storage.sync( function(err,fs) {
           if (err) {
             util.message( err );
-            util.message("sync failed!!!");
+            util.message("sync failed!!!", util.Msg.Error);
           }
           else {
-            util.message("sync succeeded");
+            util.message("sync succeeded", util.Msg.Status);
           }
         });
       }
@@ -256,11 +271,14 @@ var UI = (function() {
   }
 
   UI.prototype.showSpinner = function(enable) {
+    var self = this;
     if (enable && self.spinners === 0) {
-      util.removeClassName(self.spinner,"hide")          
+      setTimeout( function() {
+        if (self.spinners >= 1) util.addClassName(self.spinner,"spin");
+      }, 500 );
     }
     else if (!enable && self.spinners === 1) {
-      util.addClassName(self.spinner,"hide");
+      util.removeClassName(self.spinner,"spin");
     }
     if (enable) self.spinners++;
     else if (self.spinners > 0) self.spinners--;
@@ -268,7 +286,11 @@ var UI = (function() {
 
   UI.prototype.initRunners = function() {
     var self = this;
-    self.asyncMadoko = new util.AsyncRunner( self.refreshRate, self.showSpinner, 
+    function showSpinner(enable) {
+      self.showSpinner(enable);
+    }
+
+    self.asyncMadoko = new util.AsyncRunner( self.refreshRate, showSpinner, 
       function() {
         var text = self.getEditText();
         
@@ -300,7 +322,7 @@ var UI = (function() {
       }
     );
 
-    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, self.showSpinner, 
+    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
       function(round,cont) {
         self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}, function(err,ctx) {
@@ -340,6 +362,22 @@ var UI = (function() {
       self.storage.writeTextFile(self.docName, content);
     }    
     self.runner.setStorage(self.storage);
+  }
+
+  UI.prototype.editSelect = function(div) {
+    var self = this;
+    var files = [];
+    var images = [];
+    self.storage.forEachFile( function(file) {
+      if (file) {
+        var icon = "<span class='icon'>" + (file.written ? "&bull;" : "") + "</span>";
+        var line = "<div class='item file'>" + util.escape(file.path) + icon + "</div>";
+        if (file.url) images.push(line); else files.push(line);
+      }
+    });
+    div.innerHTML = 
+      files.join("\n") + 
+      (images.length > 0 ? "<div class='binaries'>" + images.join("\n") + "</div>" : "");
   }
 
   /*
@@ -484,16 +522,29 @@ var UI = (function() {
     return true;
   }
 
-  UI.prototype.onedrivePickFile = function() {
+  UI.prototype.syncTo = function(syncTo, cont) {
     var self = this;
-    onedrive.fileDialog( function(err,storage,fname) {
-      if (err) return util.message(err);
-      if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected");
+    syncTo( function(err,storage) {
+      if (err) return util.message(err,util.Msg.Error);
       self.storage = storage;
       if (self.runner) {
         self.runner.setStorage(self.storage);
       }
+    });
+  }
+
+  UI.prototype.openFile = function(pickFile) {
+    var self = this;
+    pickFile( function(err,storage,fname) {
+      if (err) return util.message(err,util.Msg.Error);
+      if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);
+      self.storage = storage;
+      if (self.runner) {
+        self.runner.setStorage(self.storage);
+      }
+      self.showSpinner(true);    
       self.storage.readTextFile(fname, false, function(err,text) { 
+        self.showSpinner(false );    
         if (err) return util.message(err);
         self.setEditText(text);
         self.docName = fname;

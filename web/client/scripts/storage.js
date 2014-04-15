@@ -37,7 +37,7 @@ function onedriveCont( call, cont, premsg ) {
 
 
 function onedriveGet( path, cont, errmsg ) {
-  if (!WL) return cont( onedriveError("no connection",errmsg), {} );
+  if (typeof WL === "undefined" || !WL) return cont( onedriveError("no connection",errmsg), {} );
   onedriveCont( WL.api( { path: path, method: "GET" }), cont, errmsg );
 }
 
@@ -58,7 +58,8 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.persist = function() {
-    return { folderId: folderId };
+    var self = this;
+    return { remoteType: "Onedrive", folderId: self.folderId };
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
@@ -110,14 +111,15 @@ var Onedrive = (function() {
       if (errPut) return cont(errPut,file.path);
       onedriveGetFileInfoFromId( resp.id, function(errInfo,info) {
         if (errInfo) return cont(errInfo,file.path);
-        file.info = info; // update id and time
-        file.remoteTime = info.updated_time;
-        cont(null,file);
+        var newFile = util.copy(file);
+        newFile.info = info; // update id and time
+        newFile.createdTime = info.updated_time;
+        cont(null,newFile);
       });
     });
   }
 
-  Onedrive.prototype.pullTextFile = function( fpath, cont ) {
+  Onedrive.prototype.pullTextFile = function( fpath, kind, cont ) {
     var self = this;
     self.getFileInfo( fpath, function(errInfo, info) {
       if (errInfo) return cont(errInfo,null);      
@@ -125,18 +127,29 @@ var Onedrive = (function() {
         if (errGet) return cont(errGet,null);
         var file = {
           info: info,
+          kind: kind || File.Text,
           path: fpath,
           content: content,
           url: "",
-          createdTime: Date.now(),                    
-          remoteTime: info.updated_time,
+          createdTime: info.updated_time,                    
+          written: false,
         };
         cont(null,file);
       });
     }); 
   }
 
+  Onedrive.prototype.getRemoteTime = function( fpath, cont ) {    
+    var self = this;
+    self.getFileInfo( fpath, function(err,info) {
+      if (err) return cont(err,null);
+      if (!info) return cont(null,null);
+      cont(null,info.updated_time);
+    });
+  }
+
   Onedrive.prototype.getImageUrl = function( fpath, cont ) {    
+    var self = this;
     self.getFileInfo( fpath, function(err,info) {
       if (err)   return cont(err,"");
       if (!info) return cont("image not found","");
@@ -145,10 +158,11 @@ var Onedrive = (function() {
       var file = {
         info: info,
         path: fpath,
+        kind: File.Image,
         url : url,
         content: "",
-        createdTime: Date.now(),
-        remoteTime: info.updated_time
+        createdTime: info.updated_time,
+        written: false,
       };
       cont(null,file);
     });
@@ -178,7 +192,6 @@ function onedriveOpenFile(cont) {
     });
   });
 }      
-
 function onedriveInit(options) {
   if (typeof WL === "undefined") {
     WL = null;
@@ -195,11 +208,14 @@ function onedriveInit(options) {
 
 
 var NullRemote = (function() {
-  function NullRemote() {    
+  function NullRemote(folder) {    
+    var self = this;
+    self.folder = folder || "remote/";
   }
 
   NullRemote.prototype.persist = function() {
-    return null;
+    var self = this;
+    return { remoteType: "NullRemote", folder: self.folder };
   }
 
   NullRemote.prototype.getWriteAccess = function( cont ) {
@@ -207,25 +223,77 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.pushFile = function( file, cont ) {
-    cont(null,file);
+    var self = this;
+    var obj  = { modifiedTime: new Date().toISOString(), content: file.content, kind: file.kind }
+    if (!localStorage) return cont("no local storage: " + file.path, null);
+    localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
+    var newFile = util.copy(file);
+    newFile.createdTime = obj.modifiedTime;
+    cont(null,newFile);
   }
 
-  NullRemote.prototype.pullTextFile = function( fpath, cont ) {
-    cont("no remote storage",null);
+  NullRemote.prototype.pullTextFile = function( fpath, kind, cont ) {
+    var self = this;
+    if (!localStorage) return cont("no local storage",null);
+    try { 
+      var json = localStorage.getItem(self.folder + fpath);
+      var obj = JSON.parse(json);
+      if (!obj || !obj.modifiedTime) return cont("local storage: unable to read: " + fpath, null);
+      var file = {
+        path: fpath,
+        kind: obj.kind || kind,
+        content: obj.content,
+        createdTime: obj.modifiedTime,
+        written: false,
+        url: "",
+      };
+      cont(null,file);
+    }
+    catch(exn) {
+      util.message(exn.toString(), util.Msg.Trace);
+      cont("local storage unavailable: " + fpath,null);
+    }
   }
 
   NullRemote.prototype.getImageUrl = function( fpath, cont ) {
-    cont("no remote storage",null);
+    cont("local storage cannot store images",null);
+  }
+
+  NullRemote.prototype.getRemoteTime = function( fpath, cont ) {
+    var self = this;
+    if (!localStorage) return cont("no local storage",null);
+    try { 
+      var json = localStorage.getItem(self.folder + fpath);
+      var obj = JSON.parse(json);
+      if (!obj || !obj.modifiedTime) return cont(null, null);
+      cont(null,obj.modifiedTime);
+    }
+    catch(exn) {
+      cont(null,null);
+    }    
   }
 
   return NullRemote;
 })();
 
+
+function localOpenFile(cont) {
+  if (!localStorage) return cont( "no local storage available, upgrade your browser", null, "");
+  var local = new NullRemote();
+  cont(null, new Storage(local), "document.mdk" );
+}
+
+
 function unpersistRemote(obj) {
-  if (obj && obj.folderId) {
-    return unpersistOnedrive(obj);
+  if (obj && obj.remoteType) {
+    if (obj.remoteType==="Onedrive") {
+      return unpersistOnedrive(obj);
+    }
+    else if (obj.remoteType=="NullRemote") {
+      return new NullRemote(obj.folder);
+    }
   }
-  else return new NullRemote();
+  return new NullRemote();
 }
   
 function unpersistStorage( obj ) {
@@ -233,7 +301,40 @@ function unpersistStorage( obj ) {
   var storage = new Storage(remote);
   storage.files = util.unpersistMap( obj.files );
   return storage;
+}
+
+function syncToLocal( storage, cont ) {
+  var local = new Storage(new NullRemote());
+  storage.forEachFile( function(file0) {
+    var file = util.copy(file0);
+    file.info = null;
+    local.files.set( file.path, file );
+  });
+  local.sync( function(err) {
+    cont(err,local);
+  });
 }  
+
+var File = { 
+  Text:"text", Image:"image", Generated:"generated",
+
+
+  fromPath: function(path) {
+    // absolute paths should never be created
+    if (util.contains(path,":") || util.startsWith(path,".")) return null;
+
+    if (util.hasTextExt(path)) {
+      return File.Text;      
+    }
+    else if (util.hasImageExt(path)) {
+      return File.Image;
+    }
+    else {
+      return null;
+    }
+  }
+};
+
 
 var Storage = (function() {
   function Storage( remote ) {
@@ -253,29 +354,48 @@ var Storage = (function() {
   };
 
   /* Generic */
-  Storage.prototype.createTextFile = function(fpath,content) {
+  Storage.prototype.createTextFile = function(fpath,content,kind) {
     var self = this;
+    kind = kind || File.Text;
     self.writeTextFile(fpath,content);
   }
 
   Storage.prototype.forEachTextFile = function( action ) {
     var self = this;
     self.files.forEach( function(fname,file) {
-      if (!file.url) {
+      if (file.kind === File.Text) {
         action(file.path, file.content);
       }
     });
   }
 
-  Storage.prototype.writeTextFile = function( fpath, content) {
+  Storage.prototype.forEachFile = function( action ) {
     var self = this;
+    self.files.forEach( function(fname,file) {
+      action(file);
+    });
+  }
+
+  Storage.prototype.writeTextFile = function( fpath, content, kind) {
+    var self = this;
+    kind = kind || File.Text;
     var file = self.files.get(fpath);
 
-    self.updateFile( fpath, {
-      info     : (file ? file.info : null),
-      content  : content,
-      written  : (content !== ""),      
-    });
+    if (file) {
+      file.kind = kind;
+      file.written = file.written || (content != file.content);
+      file.content = content;
+      self.updateFile(file);
+    }
+    else {
+      self.updateFile( {
+        path     : fpath,
+        kind     : kind,
+        info     : null,
+        content  : content,
+        written  : (content !== ""),
+      });
+    }
   }
 
   Storage.prototype.addEventListener = function( type, listener ) {
@@ -302,26 +422,23 @@ var Storage = (function() {
   }
 
   // private
-  Storage.prototype.updateFile = function( fpath, finfo ) {
+  Storage.prototype.updateFile = function( finfo ) {
     var self = this;
     
-    // finish info with path and created 
-    finfo.path = fpath;
-    if (!finfo.createdTime) {
-      if (finfo.remoteTime) {
-        finfo.createdTime = finfo.remoteTime;
-      }
-      else {
-        finfo.createdTime = Date.now(); 
-      }
-    }
+    finfo.path    = finfo.path || "unknown.mdk";
+    finfo.url     = finfo.url || "";
+    finfo.content = finfo.content || "";
+    finfo.info    = finfo.info || null;
+    finfo.kind    = finfo.kind || File.Text;
+    finfo.createdTime = finfo.createdTime || new Date().toISOString();
+      
     
     // check same content
     // var file = self.files.get(fpath);
     // if (file && file.content === finfo.content) return;
 
     // update
-    self.files.set(fpath,finfo);
+    self.files.set(finfo.path,finfo);
     self.fireEvent("update", { path: finfo.path, content: finfo.content });
   }
 
@@ -342,15 +459,15 @@ var Storage = (function() {
 
   
   /* Interface */
-  Storage.prototype.readTextFile = function( fpath, createOnErr, cont ) {
+  Storage.prototype.readTextFile = function( fpath, createOnErrKind, cont ) {
     var self = this;
     var file = self.files.get(fpath);
     if (file) return cont(null, file.content);
 
-    self.remote.pullTextFile( fpath, function(err,file) {
+    self.remote.pullTextFile( fpath, createOnErrKind, function(err,file) {
       if (err) {
-        if (createOnErr) {
-          self.createTextFile(fpath,"");
+        if (createOnErrKind) {
+          self.createTextFile(fpath,"",createOnErrKind);
           cont(null,"");
         }
         else {
@@ -358,7 +475,7 @@ var Storage = (function() {
         }
       }
       else {
-        self.updateFile( fpath, file );
+        self.updateFile( file );
         cont(null,file.content);
       }
     });    
@@ -368,13 +485,13 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     if (file) {
-      if (!file.url) return cont("not an image: " + fpath, ""); 
+      if (file.kind === File.Image) return cont("not an image: " + fpath, ""); 
       cont(null,file.url);
     }
     else {
       self.remote.getImageUrl( fpath, function(err, file) {
-        if (err) cont(err,"")  
-        self.updateFile( fpath, file );
+        if (err) return cont(err,"")  
+        self.updateFile( file );
         cont(null,file.url);
       });
     }
@@ -394,7 +511,7 @@ var Storage = (function() {
         }
 
         // only text files
-        if (file.url || (!file.info && !file.content)) return fcont(null,"skip");
+        if (file.kind === File.Image) return fcont(null,"skip");
 
         self.remote.getRemoteTime( file.path, function(errInfo,remoteTime) {
           if (errInfo) return fcont(errInfo,"<unknown>");
@@ -406,19 +523,22 @@ var Storage = (function() {
           }
 
           if (file.written) {
-            if (file.createdTime !== remoteTime) {
+            if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
               // modified on client and server
               fcont( "modified on server!", "merge from server" );
             }
             else {
               // write back the client changes
-              self.pushFile( file, function(errPush,resp) {
-                fcont(errPush,"save to server");  
+              self.remote.pushFile( file, file.kind, function(errPush, newFile) {
+                if (errPush) return fcont(errPush,"save to server");
+                newFile.written = false;
+                self.updateFile(newFile);
+                fcont(null,"save to server"); 
               });
             }
           }
           else if (file.createdTime !== remoteTime) {
-            // update from sever
+            // update from server
             self.files.delete(file.path);
             self.readTextFile(file.path, false, function(errRead,content) {
               if (errRead) {
@@ -435,7 +555,7 @@ var Storage = (function() {
       },
       function(err,xs) {
         xs.forEach( function(msg) {
-          util.message(msg);
+          if (msg) util.message(msg, util.Msg.Trace);
         })
         if (cont) cont(err);
       });
@@ -449,9 +569,12 @@ var Storage = (function() {
 return {
   onedriveInit: onedriveInit,
   onedriveOpenFile: onedriveOpenFile,
+  localOpenFile: localOpenFile,
+  syncToLocal: syncToLocal,
   Onedrive: Onedrive,
   NullRemote: NullRemote,
   Storage: Storage,
+  File: File,
   unpersistStorage: unpersistStorage,
 }
 });
