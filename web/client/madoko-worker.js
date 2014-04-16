@@ -36,8 +36,24 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
   function fileList( files ) {
     if (!files) return [];
     return nub(files.split("\n").filter(function(s) { 
-      return (s != null && s !== "" && !local.contains(s)); 
+      return (s && !local.contains(s)); 
     }));
+  }
+
+  function fileWriteKeep(fname) {
+    return (util.endsWith(fname,"-bib.aux"));
+  }
+
+  function fileWriteList(files) {
+    if (!files) return [];
+    var written = nub(files.split("\n").filter(function(fname) {
+      return (fname && fileWriteKeep(fname));
+    }));
+    return written.map( function(fname) {
+      var content = madoko.readTextFile(fname);
+      local.set(fname,content);
+      return { path: fname, content: content };
+    });
   }
 
   var local = new util.Map();
@@ -54,7 +70,7 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
 
       var t0 = Date.now();            
       madoko.markdown(req.name,req.content,req.options, 
-                       function(md,stdout,runOnServer,options1,filesRead,filesReferred) 
+                       function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite) 
       {
         self.postMessage( {
           messageId  : req.messageId, // message id is required to call the right continuation
@@ -64,14 +80,17 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
           runOnServer: runOnServer,
           message    : stdout,
           filesRead  : fileList(filesRead),         
-          filesReferred: fileList(filesReferred)
+          filesReferred: fileList(filesReferred),
+          filesWritten: fileWriteList(filesWrite),
+          err        : null,
         });
       });
     }
     catch(exn) {
       self.postMessage( {
         messageId: req.messageId,
-        message  : exn.toString()
+        message  : exn.toString(),
+        err      : exn.toString(),
       });
     }
   });

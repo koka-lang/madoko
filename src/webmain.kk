@@ -20,7 +20,7 @@ import mathStatic
 public function initialOptions( args : string = "" ) : io options {
   val opts = if (args=="") then Options()
                  else parseOptions(args).maybe(CommandOptions(),id).options
-  opts(lineNo=1,mathEmbedLimit=256*1024)                
+  opts(lineNo=1,mathEmbedLimit=256*1024,copyStyles=False)                
 }
 
 val coptions = CommandOptions()
@@ -29,15 +29,18 @@ public function writeTextFile( fileName : string, content : string ) : io () {
   storage/writeTextFileSync( fileName, content )
 }
 
+public function readTextFile( fname : string ) : io string {
+  return readTextFileSync( fname );
+}
+
 public function addImage( images : dict<imginfo>, imageName : string, data : string ) : dict<imginfo> {
   images + dict([(imageName,Imginfo(imageName,data))])
 }
 
-public function println( content : string ) : io () {
-  std/core/println( content )
-}
+
 public function markdown( inputName : string, input : string, options : options,
-                          continue: (md:string,stdout:string,needRerun:bool,options:options,files:string,filesRefer:string) -> io () ) : io () 
+                          continue: (md:string,stdout:string,needRerun:bool,options:options,
+                                      files:string,filesRefer:string,filesWrite:string) -> io () ) : io () 
 { 
   printRedirect( fun(s) {
     log("stdout",s)
@@ -77,12 +80,15 @@ public function markdown( inputName : string, input : string, options : options,
   withLog("stdout") {
     withLog("files") {
       withLog("filesRefer") {
-        processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
+        withLog("filesWrite") {
+          processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
             stdout = getLog("stdout")
             files  = getLog("files")
             filesRefer  = getLog("filesRefer")
-            continue(output,stdout,rerun,options1,files,filesRefer)
+            filesWrite  = getLog("filesWrite")
+            continue(output,stdout,rerun,options1,files,filesRefer,filesWrite)
           })
+        }
       }
     }
   }

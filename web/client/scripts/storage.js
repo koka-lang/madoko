@@ -321,7 +321,7 @@ var File = {
 
   fromPath: function(path) {
     // absolute paths should never be created
-    if (util.contains(path,":") || util.startsWith(path,".")) return null;
+    if (util.contains(path,":") || util.startsWith(path,".") || util.startsWith(path,"/")) return null;
 
     if (util.hasTextExt(path)) {
       return File.Text;      
@@ -360,10 +360,10 @@ var Storage = (function() {
     self.writeTextFile(fpath,content);
   }
 
-  Storage.prototype.forEachTextFile = function( action ) {
+  Storage.prototype.forEachFileKind = function( kinds, action ) {
     var self = this;
     self.files.forEach( function(fname,file) {
-      if (file.kind === File.Text) {
+      if (util.contains(kinds,file.kind)) {
         action(file.path, file.content);
       }
     });
@@ -424,7 +424,7 @@ var Storage = (function() {
   // private
   Storage.prototype.updateFile = function( finfo ) {
     var self = this;
-    
+    util.assert(typeof finfo==="object");
     finfo.path    = finfo.path || "unknown.mdk";
     finfo.url     = finfo.url || "";
     finfo.content = finfo.content || "";

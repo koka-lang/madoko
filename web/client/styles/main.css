@@ -135,6 +135,11 @@ body {
   float: right;
 }
 
+#view-header {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
 #view-header .ibutton {
   float: left;
 }
@@ -169,6 +174,10 @@ body {
   padding: 0 1ex;
 }
 
+#edit-select-content .binaries {
+  border-top: 1px dotted black;
+}
+
 .popup .item:hover, .popup li:hover {
   background-color: Floralwhite;
 }
@@ -176,7 +185,7 @@ body {
 #load {
   border-left: 1px solid black;
 }
-#load .content, #save .content {
+#load .content, #syncTo .content {
   width: 8em;
 }
 
@@ -184,6 +193,8 @@ body {
   border: none;
   padding: 0.25ex 1ex;
 }
+
+
 
 .monaco-editor .token.code {
   background-color: #EEE;
@@ -223,6 +234,9 @@ div.msg-tool, div.msg-normal {
 #view p, #view li {
   text-align: justify;
 }
+
+
+
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
 }

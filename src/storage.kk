@@ -22,16 +22,16 @@ external include {
 
 // Try to read a text file; return a default value in case of an error.
 public function readTextFileDef( fileName : string, def : string ) : io string {
-  match (fileName.tryReadTextFile()) {
+  match (fileName.tryReadTextFile(False)) {
     Left(_exn) -> def
     Right(content) -> content
   }
 }
 
 // Try to a text file synchronously (using UTF8 encoding)
-public function tryReadTextFile( fileName : string ) : io either<exception,string> 
+public function tryReadTextFile( fileName : string, required : bool = True ) : io either<exception,string> 
 {
-  catch( { Right(readTextFileSync(fileName)) }, fun(exn) { Left(exn) }) 
+  catch( { Right(readTextFileSync(fileName,required)) }, fun(exn) { Left(exn) }) 
 }
 
 
@@ -44,9 +44,9 @@ public function searchFileSync( dirs : list<string>, fname : string ) : io maybe
 }
 
 // Read a text file synchronously (using UTF8 encoding)
-public function readTextFileSync( fileName : string ) : io string
+public function readTextFileSync( fileName : string, required : bool = True ) : io string
 {
-  log("files",fileName);
+  if (required) log("files",fileName);
   xreadTextFileSync(fileName);
 }
 
@@ -64,7 +64,12 @@ public function tryWriteTextFile( fileName : string, content : string )  : io bo
 }
 
 // Write a text file synchronously (using UTF8 encoding)
-public external writeTextFileSync( fileName : string, content : string )  : io () {
+public function writeTextFileSync( fileName : string, content : string ) : io () {
+  log("filesWrite", fileName);
+  xwriteTextFileSync(fileName, content);
+}
+
+external xwriteTextFileSync( fileName : string, content : string )  : io () {
   cs inline "System.IO.File.WriteAllText(#1,#2,System.Text.Encoding.UTF8)"
   js inline "$writeFileSync(#1,#2)"
 }

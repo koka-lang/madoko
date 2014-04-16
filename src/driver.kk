@@ -68,11 +68,13 @@ public function processContent( inName : string, outName : string, content : str
 
 
     // copy early since async latex may start for math
-    tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
-    if (xopts.tex || xopts.mathmode.isStatic) {
-      tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
-      tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
-      ()
+    if (mopts.copyStyles) {
+      tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
+      if (xopts.tex || xopts.mathmode.isStatic) {
+        tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
+        tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
+        ()
+      }
     }
 
     process( inName, outName, content, icontent, xopts, mopts, firstTime, runners) 
@@ -119,7 +121,7 @@ function process( inName : string, outName : string, content : string, icontent 
     bibAux = outName.appendStem("-bib").changeExt(".aux")
     bibChanged =
       if (logs == "") then False else {
-        // write the log to an aux file (both for latex, and one to track changes)
+        // write the log to an aux file (one for latex, and one to track changes)
         writeCitations( logs, outName.changeExt(".aux"), inName, mopts )
         writeCitations( logs, bibAux, inName, mopts )                
       }
@@ -195,10 +197,12 @@ function writeCitations( auxData : string, auxName : string, docName : string, o
             "\n\\bibstyle{" + bibStyleName + "}\n" +
             bibNames.map(fun(nm){ "\\bibdata{" + combine(relative(auxName.dirname,docName.dirname),nm.noext) + "}\n" }).join
 
-  if (!(tryWriteTextFile(auxName, newData))) then {
-    opts.printErr("error: unable to write citations: " + auxName )
+  if (newData != oldData) {
+    if (!(tryWriteTextFile(auxName, newData))) then {
+      opts.printErr("error: unable to write citations: " + auxName )
+    }
   }
-
+  
   oldCites = oldData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
   newCites = newData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
   //trace("oldCites: " + oldCites)
@@ -264,7 +268,7 @@ function tryCopyTextFileFromTo( fname, srcDir, outDir ) {
 }
 
 function tryCopyTextFile( fileName : string, outName : string ) : io bool {
-  match(tryReadTextFile( fileName )) {
+  match(tryReadTextFile( fileName, False )) {
     Left -> False
     Right(txt) -> tryWriteTextFile(outName,txt)
   }

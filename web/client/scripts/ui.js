@@ -183,10 +183,10 @@ var UI = (function() {
       });
     };
 
-    document.getElementById("edit-select").onmouseover = function(ev) {
+    document.getElementById("edit-select").onmouseenter = function(ev) {
       var div = document.getElementById("edit-select-content");
       self.editSelect(div);
-    };
+    };   
    
     document.getElementById("sync").onclick = function(ev) 
     {      
@@ -307,12 +307,15 @@ var UI = (function() {
         self.stale = false;
         if (!self.runner) return cont();
         self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, 
-          function(err,ctx,content,needServerRun) {
+          function(err,ctx,content,runAgain,needServerRun) {
           if (err) {
             util.message(err,util.Msg.Exn);
           }
           else {
             self.viewHTML(content);
+            if (runAgain) {
+              self.stale=true;              
+            }
             if (needServerRun && self.allowServer && self.asyncServer) {
               self.asyncServer.setStale();
             }
@@ -368,16 +371,20 @@ var UI = (function() {
     var self = this;
     var files = [];
     var images = [];
+    var generated = [];
     self.storage.forEachFile( function(file) {
       if (file) {
         var icon = "<span class='icon'>" + (file.written ? "&bull;" : "") + "</span>";
         var line = "<div class='item file'>" + util.escape(file.path) + icon + "</div>";
-        if (file.url) images.push(line); else files.push(line);
+        if (file.kind === storage.File.Image) images.push(line); 
+        else if (file.kind === storage.File.Text) files.push(line);
+        else generated.push(line)
       }
     });
     div.innerHTML = 
       files.join("\n") + 
-      (images.length > 0 ? "<div class='binaries'>" + images.join("\n") + "</div>" : "");
+      (images.length > 0 || generated.length > 0 ? 
+          "<div class='binaries'>" + images.join("\n") + generated.join("\n") + "</div>" : "");
   }
 
   /*
