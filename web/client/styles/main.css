@@ -58,7 +58,6 @@ body {
 #menubar, .pane-header {
   font-family: "Segoe UI";
   font-size: small;
-  color: #666;
 }
 
 #editor {
@@ -175,7 +174,7 @@ body {
 }
 
 #edit-select-content .binaries {
-  border-top: 1px dotted black;
+  color: gray;
 }
 
 .popup .item:hover, .popup li:hover {

@@ -41,7 +41,7 @@ var Runner = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update") {
-      self.sendFiles.push( { name: ev.path, content: ev.content });
+      self.sendFiles.push( { name: ev.file.path, content: ev.file.content });
     }
   }
 
@@ -121,10 +121,10 @@ var Runner = (function() {
   Runner.prototype.loadText = function(fname,cont) {
     var self = this;
     if (!self.storage) return;
-    self.storage.readTextFile( fname, storage.File.fromPath(fname), function(err,content) {
-      if (err) return cont(err,content);
+    self.storage.readTextFile( fname, storage.File.fromPath(fname), function(err,file) {
+      if (err) return cont(err,"");
       util.message("storage sent: " + fname, util.Msg.Trace);      
-      cont(null,content);
+      cont(null,file.content);
       //self.files.set(fname,content);
       //self.sendFiles.push({ name: fname, content: content });
     });

@@ -86,15 +86,13 @@ var UI = (function() {
     self.lastRound = 0;
     self.text0 = "";
 
-    self.localLoad();
-    self.storage.readTextFile(self.docName, true, function(err,content) {
-      if (err) {
-        util.message(err,util.Msg.Trace)
-      }
-      if (!content) content = "";
-      self.initUIElements(content);
+    self.initUIElements("");
+    
+    self.localLoad( function(err) {
+      if (err) util.message(err, util.Msg.Error);
+      // Initialize madoko and madoko-server runner    
+      self.initRunners();
     });
-
   }
 
   UI.prototype.initUIElements = function(content) {
@@ -104,6 +102,7 @@ var UI = (function() {
     self.spinners = 0;
     self.spinner = document.getElementById("view-spinner");    
     self.view    = document.getElementById("view");
+    self.editSelectHeader = document.getElementById("edit-select-header");
     
     // start editor
     var checkLineNumbers = document.getElementById('checkLineNumbers');
@@ -246,22 +245,23 @@ var UI = (function() {
       if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
 
-    // Initialize madoko and madoko-server runner    
-    self.initRunners();
   }
 
   UI.prototype.setEditText = function( text ) {
-    this.editor.model.setValue(text);
+    var self = this;
+    self.editor.model.setValue(text);
+    self.setStale();
   }
 
   UI.prototype.getEditText = function() { 
-    return this.editor.getValue(); 
+    var self = this;
+    return self.editor.getValue(); 
   }
 
   UI.prototype.setStale = function() {
     var self = this;
     self.stale = true;
-    self.asyncMadoko.setStale();    
+    if (self.asyncMadoko) self.asyncMadoko.setStale();    
   }
 
   UI.prototype.viewHTML = function( html ) {
@@ -348,23 +348,61 @@ var UI = (function() {
     localStorageSave("local", json);      
   }
 
-
-  UI.prototype.localLoad = function() {
+  UI.prototype.setStorage = function( storage, docName, cont ) {
     var self = this;
-    var json = localStorageLoad("local");      
+    if (storage == null) {
+      // initialize fresh
+      docName = "document.mdk";
+      storage = new storage.Storage(new storage.NullRemote());
+      var content = document.getElementById("initial").textContent;
+      storage.writeTextFile(docName, content);
+    } 
+    self.showSpinner(true);    
+    storage.readTextFile(docName, false, function(err,file) { 
+      self.showSpinner(false );    
+      if (err) return cont(err);
+        
+      if (self.storage) {
+        self.storage.clearEventListener(self);
+      }
+      self.storage = storage;
+      self.docName = docName;
+      self.storage.addEventListener("update",self);
+      self.runner.setStorage(self.storage);    
+      self.setEditText(file ? file.content : "");
+      self.onFileUpdate(file); 
+      cont(null);
+    });
+  }
+
+  UI.prototype.localLoad = function(cont) {
+    var self = this;
+    var json = localStorageLoad("local");
     if (json!=null) {
       // we ran before
-      self.docName = json.docName;
-      self.storage = storage.unpersistStorage(json.storage);
+      var docName = json.docName;
+      var stg = storage.unpersistStorage(json.storage);
+      self.setStorage( stg, docName, cont );          
     }
     else {
-      // initialize fresh
-      self.docName = "document.mdk";
-      self.storage = new storage.Storage(new storage.NullRemote());
-      var content = document.getElementById("initial").textContent;
-      self.storage.writeTextFile(self.docName, content);
-    }    
-    self.runner.setStorage(self.storage);
+      self.setStorage( null, null, cont );
+    }
+  }
+
+  UI.prototype.openFile = function(pickFile) {
+    var self = this;
+    pickFile( function(err,storage,fname) {
+      if (err) return util.message(err,util.Msg.Error);
+      if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
+      self.setStorage( storage, fname, function() { } );
+    });
+  }
+
+
+  UI.prototype.displayFile = function(file) {
+    var icon = "<span class='icon'>" + (file.written ? "&bull;" : "") + "</span>";
+    var span = "<span class='file " + file.kind + "'>" + util.escape(file.path) + icon + "</span>";
+    return span;
   }
 
   UI.prototype.editSelect = function(div) {
@@ -373,18 +411,17 @@ var UI = (function() {
     var images = [];
     var generated = [];
     self.storage.forEachFile( function(file) {
-      if (file) {
-        var icon = "<span class='icon'>" + (file.written ? "&bull;" : "") + "</span>";
-        var line = "<div class='item file'>" + util.escape(file.path) + icon + "</div>";
+      if (file && file.path !== self.docName) {
+        var line = "<div class='item'>" + self.displayFile(file) + "</div>";
         if (file.kind === storage.File.Image) images.push(line); 
         else if (file.kind === storage.File.Text) files.push(line);
         else generated.push(line)
       }
     });
     div.innerHTML = 
-      files.join("\n") + 
+      files.sort().join("\n") + 
       (images.length > 0 || generated.length > 0 ? 
-          "<div class='binaries'>" + images.join("\n") + generated.join("\n") + "</div>" : "");
+          "<div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
   /*
@@ -540,23 +577,20 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.openFile = function(pickFile) {
+
+  UI.prototype.handleEvent = function(ev) {
     var self = this;
-    pickFile( function(err,storage,fname) {
-      if (err) return util.message(err,util.Msg.Error);
-      if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);
-      self.storage = storage;
-      if (self.runner) {
-        self.runner.setStorage(self.storage);
-      }
-      self.showSpinner(true);    
-      self.storage.readTextFile(fname, false, function(err,text) { 
-        self.showSpinner(false );    
-        if (err) return util.message(err);
-        self.setEditText(text);
-        self.docName = fname;
-      });
-    });
+    if (!ev || !ev.type) return;
+    if (ev.type === "update" && ev.file) {
+      self.onFileUpdate(ev.file);
+    }
+  }
+
+  UI.prototype.onFileUpdate = function(file) {
+    var self = this;
+    if (file.path===self.docName) {
+      self.editSelectHeader.innerHTML = self.displayFile(file);
+    }
   }
 
   // object    

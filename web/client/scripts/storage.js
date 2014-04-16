@@ -439,7 +439,7 @@ var Storage = (function() {
 
     // update
     self.files.set(finfo.path,finfo);
-    self.fireEvent("update", { path: finfo.path, content: finfo.content });
+    self.fireEvent("update", { file: finfo });
   }
 
   Storage.prototype.fireEvent = function( type, obj ) {
@@ -462,7 +462,7 @@ var Storage = (function() {
   Storage.prototype.readTextFile = function( fpath, createOnErrKind, cont ) {
     var self = this;
     var file = self.files.get(fpath);
-    if (file) return cont(null, file.content);
+    if (file) return cont(null, file);
 
     self.remote.pullTextFile( fpath, createOnErrKind, function(err,file) {
       if (err) {
@@ -540,7 +540,7 @@ var Storage = (function() {
           else if (file.createdTime !== remoteTime) {
             // update from server
             self.files.delete(file.path);
-            self.readTextFile(file.path, false, function(errRead,content) {
+            self.readTextFile(file.path, false, function(errRead,newfile) {
               if (errRead) {
                 self.files.set(file.path,file); // restore
               }
