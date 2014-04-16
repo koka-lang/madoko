@@ -6,7 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/util"], function(util) {
+define(["../scripts/util", "../scripts/merge"], function(util,merge) {
 
 function onedriveError( obj, premsg ) {
   msg = "onedrive: " + (premsg ? premsg + ": " : "")
@@ -57,9 +57,13 @@ var Onedrive = (function() {
     self.folderId = folderId;
   }
 
+  Onedrive.prototype.type = function() {
+    return "Onedrive";
+  }
+
   Onedrive.prototype.persist = function() {
     var self = this;
-    return { remoteType: "Onedrive", folderId: self.folderId };
+    return { folderId: self.folderId };
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
@@ -207,22 +211,26 @@ function onedriveInit(options) {
 }
 
 
-var NullRemote = (function() {
-  function NullRemote(folder) {    
+var LocalRemote = (function() {
+  function LocalRemote(folder) {    
     var self = this;
     self.folder = folder || "remote/";
   }
 
-  NullRemote.prototype.persist = function() {
-    var self = this;
-    return { remoteType: "NullRemote", folder: self.folder };
+  LocalRemote.prototype.type = function() {
+    return "local";
   }
 
-  NullRemote.prototype.getWriteAccess = function( cont ) {
+  LocalRemote.prototype.persist = function() {
+    var self = this;
+    return { folder: self.folder };
+  }
+
+  LocalRemote.prototype.getWriteAccess = function( cont ) {
     cont(null);
   }
 
-  NullRemote.prototype.pushFile = function( file, cont ) {
+  LocalRemote.prototype.pushFile = function( file, cont ) {
     var self = this;
     var obj  = { modifiedTime: new Date().toISOString(), content: file.content, kind: file.kind }
     if (!localStorage) return cont("no local storage: " + file.path, null);
@@ -232,7 +240,7 @@ var NullRemote = (function() {
     cont(null,newFile);
   }
 
-  NullRemote.prototype.pullTextFile = function( fpath, kind, cont ) {
+  LocalRemote.prototype.pullTextFile = function( fpath, kind, cont ) {
     var self = this;
     if (!localStorage) return cont("no local storage",null);
     try { 
@@ -255,11 +263,11 @@ var NullRemote = (function() {
     }
   }
 
-  NullRemote.prototype.getImageUrl = function( fpath, cont ) {
+  LocalRemote.prototype.getImageUrl = function( fpath, cont ) {
     cont("local storage cannot store images",null);
   }
 
-  NullRemote.prototype.getRemoteTime = function( fpath, cont ) {
+  LocalRemote.prototype.getRemoteTime = function( fpath, cont ) {
     var self = this;
     if (!localStorage) return cont("no local storage",null);
     try { 
@@ -273,38 +281,38 @@ var NullRemote = (function() {
     }    
   }
 
-  return NullRemote;
+  return LocalRemote;
 })();
 
 
 function localOpenFile(cont) {
   if (!localStorage) return cont( "no local storage available, upgrade your browser", null, "");
-  var local = new NullRemote();
+  var local = new LocalRemote();
   cont(null, new Storage(local), "document.mdk" );
 }
 
 
-function unpersistRemote(obj) {
-  if (obj && obj.remoteType) {
-    if (obj.remoteType==="Onedrive") {
+function unpersistRemote(remoteType,obj) {
+  if (obj && remoteType) {
+    if (remoteType===Onedrive.prototype.type()) {
       return unpersistOnedrive(obj);
     }
-    else if (obj.remoteType=="NullRemote") {
-      return new NullRemote(obj.folder);
+    else if (remoteType==LocalRemote.prototype.type()) {
+      return new LocalRemote(obj.folder);
     }
   }
-  return new NullRemote();
+  return new LocalRemote();
 }
   
 function unpersistStorage( obj ) {
-  var remote = unpersistRemote( obj.remote );
+  var remote = unpersistRemote( obj.remoteType, obj.remote );
   var storage = new Storage(remote);
   storage.files = util.unpersistMap( obj.files );
   return storage;
 }
 
 function syncToLocal( storage, cont ) {
-  var local = new Storage(new NullRemote());
+  var local = new Storage(new LocalRemote());
   storage.forEachFile( function(file0) {
     var file = util.copy(file0);
     file.info = null;
@@ -349,6 +357,7 @@ var Storage = (function() {
     var self = this;
     return { 
       remote: self.remote.persist(), 
+      remoteType: self.remote.type(),
       files: self.files.persist() 
     };
   };
@@ -393,6 +402,7 @@ var Storage = (function() {
         kind     : kind,
         info     : null,
         content  : content,
+        original : content,
         written  : (content !== ""),
       });
     }
@@ -468,15 +478,16 @@ var Storage = (function() {
       if (err) {
         if (createOnErrKind) {
           self.createTextFile(fpath,"",createOnErrKind);
-          cont(null,"");
+          cont(null,self.files.get(fpath));
         }
         else {
-          cont(err,"");
+          cont(err,{path:fpath,content:""});
         }
       }
       else {
+        file.original = file.content;
         self.updateFile( file );
-        cont(null,file.content);
+        cont(null,file);
       }
     });    
   }
@@ -497,7 +508,9 @@ var Storage = (function() {
     }
   }
 
-  Storage.prototype.sync = function( cont ) {
+  var rxStartMerge = /^ *<!-- *begin +merge +.*?--> *$/im;
+
+  Storage.prototype.sync = function( diff, cursors, cont ) {
     var self = this;
     var remotes = new util.Map();
 
@@ -522,16 +535,53 @@ var Storage = (function() {
             remoteTime = file.createdTime;
           }
 
-          if (file.written) {
-            if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
+          if (file.written) 
+          {
+            if (rxStartMerge.test(file.content)) {
+              fcont( "cannot save to server: resolve merge conflicts first!", "save to server");
+            }
+            else if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
               // modified on client and server
-              fcont( "modified on server!", "merge from server" );
+              if (!diff) {
+                fcont( "modified on server!", "merge from server" );
+              }
+              else {
+                self.remote.pullTextFile(file.path, null, function(errPull,remoteFile) {
+                  if (errPull) return fcont(errPull,"merge from server");
+                  var original = (file.original != null ? file.original : file.content);
+                  merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+                                original, remoteFile.content, file.content,
+                                  function(errMerge,merged,conflicts,newCursorLine) {
+                    if (cursors["/" + file.path]) {
+                      cursors["/" + file.path] = newCursorLine;
+                    }
+                    if (conflicts) {
+                      // don't save if there were real conflicts
+                      remoteFile.original = file.orginal; // so next merge does not get too confused
+                      remoteFile.content  = merged;
+                      remoteFile.written = true;
+                      self.updateFile(remoteFile);
+                      fcont("merged from server but cannot save: resolve merge conflicts first!", "merge from server");
+                    }
+                    else {
+                      // write back merged result
+                      self.remote.pushFile(remoteFile, function(errPush, newFile) {
+                        newFile.written = false;
+                        newFile.original = newFile.content;
+                        self.updateFile(newFile);
+                        fcont(null, "merge from server");      
+                      });
+                    }
+                  });  
+                });
+              }
             }
             else {
               // write back the client changes
-              self.remote.pushFile( file, file.kind, function(errPush, newFile) {
+              self.remote.pushFile( file, function(errPush, newFile) {
                 if (errPush) return fcont(errPush,"save to server");
                 newFile.written = false;
+                newFile.original = newFile.content;
                 self.updateFile(newFile);
                 fcont(null,"save to server"); 
               });
@@ -571,8 +621,6 @@ return {
   onedriveOpenFile: onedriveOpenFile,
   localOpenFile: localOpenFile,
   syncToLocal: syncToLocal,
-  Onedrive: Onedrive,
-  NullRemote: NullRemote,
   Storage: Storage,
   File: File,
   unpersistStorage: unpersistStorage,

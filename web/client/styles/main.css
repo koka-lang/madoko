@@ -151,6 +151,12 @@ body {
   margin-top: 0.15em; 
 }
 
+#remote-logo {
+  height: 1em;
+  margin-top: 0.15em;
+  float: right;
+}
+
 #menu-settings ul {
   margin: 0;
   margin-top: 0.5ex;

@@ -49,20 +49,31 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
 
   // Call for messages
   function message( txt, kind ) {
+    if (typeof txt === "object") {
+      if (txt.message) 
+        txt = txt.message;
+      else
+        txt = txt.toString();
+    }
     if (!kind) kind = Msg.Normal;
     // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
     if (kind !== Msg.Trace && consoleOut && status && warning) {
-      var html = "<span class='msg-" + kind + "'>" + htmlEscape(txt) + "</span>";
-      //consoleOut.print_html(html);
-      consoleOut.innerHTML = "<div class='msg-section msg-" + kind + "'>" + html + "</div>" + consoleOut.innerHTML;
+      function span(s,n) {
+        if (n && s.length > n-2) {
+          s = s.substr(0,n) + "...";
+        }
+        return "<span class='msg-" + kind + "'>" + htmlEscape(s) + "</span>";
+      }
 
+      consoleOut.innerHTML = "<div class='msg-section'>" + span(txt) + "</span></div>" + consoleOut.innerHTML;
+      
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        status.innerHTML = html;
+        status.innerHTML = span(txt,35);
         removeClassName(warning,"hide");
       }
       else if (kind===Msg.Status) {
-        status.innerHTML = html;
+        status.innerHTML = span(txt,35);
         addClassName(warning,"hide");
       }
     }

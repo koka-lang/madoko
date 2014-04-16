@@ -21,9 +21,19 @@ var supportTransitions = (function() {
   return (!ie && document.body.style.transition=="");
 })();
 
-var testO  = "line 1\nline2\nx3\nend4";
-var testA  = "line 1\nline2c\nx3\nAddition\nend4";
-var testB  = "line 1\nline 2b\nx3\nOther\nend4";
+function diff( original, modified, cont ) {
+  var originalModel = Monaco.Editor.createModel(original, "text/plain");
+  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+  var diffSupport   = modifiedModel.getMode().diffSupport;
+  var diff = diffSupport.computeDiff( 
+                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
+  function(res) {
+    cont(0,res);
+  }, 
+  function(err) {
+    cont("unable to create diff: " + err.toString(),[]);
+  });
+}
 
 function createDiff( editor, original, modified, cont ) {
   var diffSupport = editor.getModel().getMode().diffSupport;
@@ -103,6 +113,7 @@ var UI = (function() {
     self.spinner = document.getElementById("view-spinner");    
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
+    self.remoteLogo = document.getElementById("remote-logo");
     
     // start editor
     var checkLineNumbers = document.getElementById('checkLineNumbers');
@@ -190,13 +201,18 @@ var UI = (function() {
     document.getElementById("sync").onclick = function(ev) 
     {      
       if (self.storage) {
-        self.storage.sync( function(err,fs) {
+        var cursors = {};
+        var pos = self.editor.getPosition();
+        cursors["/" + self.docName] = pos.lineNumber;
+        self.storage.sync( diff, cursors, function(err,fs) {
           if (err) {
-            util.message( err );
-            util.message("sync failed!!!", util.Msg.Error);
+            util.message( err, util.Msg.Error );
           }
           else {
-            util.message("sync succeeded", util.Msg.Status);
+            pos.lineNumber = cursors["/" + self.docName];
+            self.editor.setPosition(pos);
+            util.message("synced", util.Msg.Status);
+            self.localSave();
           }
         });
       }
@@ -371,6 +387,11 @@ var UI = (function() {
       self.runner.setStorage(self.storage);    
       self.setEditText(file ? file.content : "");
       self.onFileUpdate(file); 
+      var remoteType = self.storage.remote.type();
+      var remoteExt = (remoteType==="local" ? ".svg" : ".png");
+      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+      self.remoteLogo.src = "images/" + remoteType + "-logo" + remoteExt;
+      self.remoteLogo.title = "Connected to " + remoteMsg + " storage";
       cont(null);
     });
   }

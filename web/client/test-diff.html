@@ -61,10 +61,10 @@ require([ "../scripts/util",
   });
   util.message("ready.");
 
-  function createDiff( editr, original, modified, cont ) {
-    var diffSupport = editr.getModel().getMode().diffSupport;
+  function createDiff( original, modified, cont ) {
     var originalModel = Monaco.Editor.createModel(original, "text/plain");
     var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+    var diffSupport   = modifiedModel.getMode().diffSupport;
     var diff = diffSupport.computeDiff( 
                   originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
     function(res) {
@@ -77,7 +77,7 @@ require([ "../scripts/util",
 
   function domerge() {
     function diff(original,modified,cont) {
-      createDiff(editor["O"],original,modified,cont);
+      createDiff(original,modified,cont);
     };
 
     var textO = editor["O"].getValue();

@@ -242,7 +242,7 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
 function merge3( diff, markers, cursorLine, original, m1, m2, cont ) {
   if (!markers) {
     markers = {
-      start: "<!-- begin merge -->\n~ Begin Remote",
+      start: "<!-- begin merge (remove this line to resolve the conflict) -->\n~ Begin Remote",
       mid: "~ End Remote",
       end: "<!-- end merge -->"
     };
