@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/util","../scripts/storage","webmain"],
-        function(util,storage,madoko) {
+define(["../scripts/util","../scripts/promise","../scripts/storage","webmain"],
+        function(util,Promise,storage,madoko) {
 
 var Runner = (function() {
 
@@ -37,10 +37,9 @@ var Runner = (function() {
 
     if (oldStorage) {
       oldStorage.clearEventListener(self);
-      self.madokoWorker.postMessage( { type: "clear" }, function(res) { 
+      self.madokoWorker.postMessage( { type: "clear" } ).then( function(res) { 
         util.message("cleared storage: " + res, util.Msg.Trace);
-        cont(null);
-      } );
+      });
     }
     else {
       cont(null);
@@ -115,7 +114,7 @@ var Runner = (function() {
       name   : ctx.docname,
       options: self.options,
       files  : self.sendFiles      
-    }, function(res) {
+    }).then( function(res) {
       self.onMadokoComplete(res,ctx,cont);
     });
     self.sendFiles = [];

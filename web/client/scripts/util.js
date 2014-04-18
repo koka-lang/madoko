@@ -6,7 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["std_core","std_path"],function(stdcore,stdpath) {
+define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Promise) {
 
   var Msg = { 
     Normal: "normal", 
@@ -389,7 +389,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
   var ContWorker = (function() {
     function ContWorker( scriptName ) {
       var self = this;
-      self.continuations = {};
+      self.promises = {};
       self.unique = 1;
       
       // collect message while the worker starts up
@@ -399,41 +399,43 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
       self.worker = new Worker("madoko-worker.js");
       self.worker.addEventListener("message", function(ev) {
         var res = ev.data;
-        self.onComplete(res);
+        self._onComplete(res);
       });
     }
 
-    ContWorker.prototype.isReady = function() {
+    ContWorker.prototype._isReady = function() {
       return self.ready;
     }
 
-    ContWorker.prototype.postMessage = function( info, cont ) {
+    ContWorker.prototype.postMessage = function( info ) {
       var self = this;
+      var promise = new Promise();
       if (!self.ready) {
-        self.postqueue.push( { info: info, cont: cont });
+        self.postqueue.push( { info: info, promise: promise });
       }
       else {
         var id = self.unique++;
         info.messageId = id; 
-        self.continuations[id] = cont;
+        self.promises[id] = promise;
         self.worker.postMessage( info );
       }
+      return promise;
     }
 
-    ContWorker.prototype.onComplete = function( info ) {
+    ContWorker.prototype._onComplete = function( info ) {
       var self = this;
       if (!info || typeof info.messageId === "undefined") return;
       if (info.messageId === 0) {
         self.ready = true;
         self.postqueue.forEach( function(elem) {  // post delayed messages
-          self.postMessage( elem.info, elem.cont );
+          self.postMessage( elem.info ).then(elem.promise);
         });
       }
       else {
-        var cont = self.continuations[info.messageId];
-        self.continuations[info.messageId] = undefined;
-        if (!cont) return;
-        cont(info);
+        var promise = self.promises[info.messageId];
+        self.promises[info.messageId] = undefined;
+        if (!promise) return;
+        promise.resolve(info);
       }
     }
 
@@ -549,7 +551,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     var timeout = 0;
 
 
-    function onError() {
+    function reject() {
       if (timeout) clearTimeout(timeout);
       var msg = req.statusText;
       var res = req.responseText;
@@ -580,11 +582,11 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
         cont(0,res,req.response);
       }
       else {
-        onError();
+        reject();
       }
     }
-    req.onerror = function(ev) {
-      onError();
+    req.reject = function(ev) {
+      reject();
     }
     
     var contentType = "text/plain";
@@ -697,5 +699,6 @@ doc.execCommand("SaveAs", null, filename)
     unpersistMap: unpersistMap,
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,
+    Promise: Promise,
   };
 });
