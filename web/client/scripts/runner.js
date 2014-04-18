@@ -54,14 +54,14 @@ var Runner = (function() {
     }
   }
 
-  Runner.prototype.onMadokoComplete = function(res,ctx,cont) 
+  Runner.prototype.onMadokoComplete = function(res,ctx) 
   {
     var self = this;
     //console.log( "  update done.");
     if (res.message) {
       util.message(res.message, util.Msg.Tool );
     }
-    if (res.err) return cont(res.err, ctx, res.content, false);
+    if (res.err) return Promise.rejected( res.err );
     
     //if (res.runOnServer) {
     //  self.serverRun(ctx);
@@ -76,48 +76,51 @@ var Runner = (function() {
       }
     });
     
-    util.asyncForEach( res.filesRead, 
-      function(file,xcont) {
-        self.loadText(ctx.round, file, function(err,content) {
+    var reads = Promise.when( res.filesRead.map( function(file) {
+      return self.loadText(ctx.round, file).then( 
+        function(content) { return 1; },
+        function(err) {
           if (err) util.message("unable to read from storage: " + file, (util.hasTextExt(file) ? util.Msg.Exn : util.Msg.Trace));
-          xcont(null,(err ? 0 : 1));
-        });
-      },
-      function(err,filesRead) {
-        var readCount = 0;
-        if (filesRead) filesRead.forEach( function(n) { readCount += n; });
-
-        var runAgain    = readCount > 0;
-        var runOnServer = res.runOnServer && !runAgain 
-
-        if (!runAgain) {
-          res.filesWritten.forEach( function(file) {
-            util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-            self.storage.writeTextFile(file.path,file.content,storage.File.Generated);
-            runAgain = true;
-            runOnServer = false;
-          });
+          return 0;
         }
+      );
+    }));
 
-        if (cont) cont(null,ctx,res.content,runAgain,runOnServer);
+    return reads.then( function(filesRead) {
+      var readCount = 0;
+      if (filesRead) filesRead.forEach( function(n) { readCount += n; });
+
+      var runAgain    = readCount > 0;
+      var runOnServer = res.runOnServer && !runAgain 
+
+      if (!runAgain) {
+        res.filesWritten.forEach( function(file) {
+          util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
+          self.storage.writeTextFile(file.path,file.content,storage.File.Generated);
+          runAgain = true;
+          runOnServer = false;
+        });
       }
-    );
+
+      return { content: res.content, ctx: ctx, runAgain: runAgain, runOnServer: runOnServer };      
+    });
   }
 
-  Runner.prototype.runMadoko = function(text,ctx,cont) 
+  Runner.prototype.runMadoko = function(text,ctx) 
   {
     var self = this;
     util.message( "update " + ctx.round + " start", util.Msg.Trace );
-    self.madokoWorker.postMessage( {
+    var msg = {
       type   : "run",
       content: text,
       name   : ctx.docname,
       options: self.options,
       files  : self.sendFiles      
-    }).then( function(res) {
-      self.onMadokoComplete(res,ctx,cont);
-    });
+    };
     self.sendFiles = [];
+    return self.madokoWorker.postMessage( msg ).then( function(res) {
+      return self.onMadokoComplete(res,ctx);
+    });
   }
 
     
@@ -132,16 +135,18 @@ var Runner = (function() {
     });
   }
 
-  Runner.prototype.loadText = function(round,fname,cont) {
+  Runner.prototype.loadText = function(round,fname) {
     var self = this;
     if (!self.storage) return;
-    self.storage.readTextFile( fname, storage.File.fromPath(fname), function(err,file) {
-      if (err) return cont(err,"");
-      util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
-      cont(null,file.content);
-      //self.files.set(fname,content);
-      //self.sendFiles.push({ name: fname, content: content });
-    });
+    return new Promise( function(cont) { 
+        self.storage.readTextFile( fname, storage.File.fromPath(fname), cont);
+      })
+      .then( function(file) {
+        util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
+        return file.content;
+        //self.files.set(fname,content);
+        //self.sendFiles.push({ name: fname, content: content });
+      });
   }
 
   // Called whenever the server needs to run madoko. The server can run:

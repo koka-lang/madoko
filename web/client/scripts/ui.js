@@ -319,22 +319,23 @@ var UI = (function() {
         self.localSave();
         self.stale = false;
         if (!self.runner) return cont();
-        self.runner.runMadoko(self.text0, {docname: self.docName, round: round }, 
-          function(err,ctx,content,runAgain,needServerRun) {
-          if (err) {
-            util.message(err,util.Msg.Exn);
-          }
-          else {
-            self.viewHTML(content);
-            if (runAgain) {
-              self.stale=true;              
-            }
-            if (needServerRun && self.allowServer && self.asyncServer) {
-              self.asyncServer.setStale();
-            }
-          }
-          cont();
-        });
+        self.runner.runMadoko(self.text0, {docname: self.docName, round: round })
+          .then(
+            function(res) { 
+              self.viewHTML(res.content);
+              if (res.runAgain) {
+                self.stale=true;              
+              }
+              if (res.runOnServer && self.allowServer && self.asyncServer) {
+                self.asyncServer.setStale();
+              }
+            },
+            function(err) {
+              util.message( err, util.Msg.Exn);
+            })
+          .then( function() { 
+            cont(); 
+          } );        
       }
     );
 

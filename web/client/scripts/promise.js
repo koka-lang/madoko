@@ -30,9 +30,10 @@ define([],function() {
     }
     else {      
       for(var i = 0; i < total; i++) {
-        result[i] = undefined;
-        ps[i].then( function(res) {
-          results[i] = res; 
+        var id = i;
+        result[id] = undefined;
+        ps[id].then( function(res) {
+          result[id] = res; 
           done();
         }, function(err) {
           error = err; 
@@ -75,6 +76,19 @@ define([],function() {
 
     Promise.when = promiseWhen;
 
+    Promise.rejected = function(err) {
+      var promise = new Promise();
+      delayed( function() { promise.reject(err); });
+      return promise;
+    }
+
+    Promise.resolved = function() {
+      var args = Array.prototype.slice(arguments);
+      var promise = new Promise();
+      delayed( function() { promise.resolve.apply(promise,args); });
+      return promise;
+    }
+
     Promise.prototype.then = function( onSuccess, onError, onProgress ) {
       var self = this;
       var listener;
@@ -82,7 +96,7 @@ define([],function() {
       if (onSuccess && onSuccess.then) {
         // propagate to a promise
         listener = {
-          continuation: (onSuccess instanceof Promise ? onSuccess : new Promise(onSuccess));
+          continuation: (onSuccess instanceof Promise ? onSuccess : new Promise(onSuccess))
           // no handlers: will propagate immediately to the onSucces promise
         }
       } 
@@ -122,6 +136,10 @@ define([],function() {
               else if (typeof res !== "undefined") {
                 // if a regular value is returned, immediately invoke the success handler
                 continuation.resolve(res);
+              }
+              else {
+                // otherwise, invoke the continuation without any arguments
+                continuation.resolve();
               }
             }
           }
