@@ -20,6 +20,7 @@ var $fexistsSync;
 var $relative;
 var $mkdirp;
 var $cwd;
+var $clear;
 var vfs = {};
 
 if (onServer) {
@@ -29,11 +30,12 @@ if (onServer) {
 
   $readFileSync = function(fname) { return fs.readFileSync(fname,{encoding:'utf8'}); };
   $writeFileSync = function(fname,data) { return fs.writeFileSync(fname,data,{encoding:'utf8'}); };
-  $fexistsSync = function(fname) { return (fs.existsSync(fname) != 0);}
-  $relative = function(dir,p) { return path.relative(dir,p); }
-  $cwd = function() { return process.cwd(); }
-  $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); }
-  $renameSync = function(oldname,newname) { return fs.renameSync(oldname,newname); }
+  $fexistsSync = function(fname) { return (fs.existsSync(fname) != 0);};
+  $relative = function(dir,p) { return path.relative(dir,p); };
+  $cwd = function() { return process.cwd(); };
+  $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); };
+  $renameSync = function(oldname,newname) { return fs.renameSync(oldname,newname); };
+  $clear = function() { };
 }
 else {
   $readFileSync = function(fname) {
@@ -64,5 +66,9 @@ else {
 
   $renameSync = function(oldname,newname) {
     $writeFileSync( newname, $readFileSync(oldname) );
+  }
+
+  $clear = function() {
+    vfs = {};
   }
 }

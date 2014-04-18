@@ -86,8 +86,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   val (texNameDvi,texNameFinalDvi,outMathDvi) = xopts.mathFormat("dvi",mathDvi,outName)
   val (texNamePdf,texNameFinalPdf,outMathPdf) = xopts.mathFormat("pdf",mathPdf,outName)
 
-  oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"))
-  oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"))
+  oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"),True)
+  oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"),True)
   
   if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
    then return continue(Nothing)

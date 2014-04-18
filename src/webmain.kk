@@ -33,6 +33,10 @@ public function readTextFile( fname : string ) : io string {
   return readTextFileSync( fname );
 }
 
+public function clearStorage() : io () {
+  clear();
+}
+
 public function addImage( images : dict<imginfo>, imageName : string, data : string ) : dict<imginfo> {
   images + dict([(imageName,Imginfo(imageName,data))])
 }

@@ -546,7 +546,11 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     var req = new XMLHttpRequest();
     req.open(reqparam.method || "POST", reqparam.url, true );
     
+    var timeout = 0;
+
+
     function onError() {
+      if (timeout) clearTimeout(timeout);
       var msg = req.statusText;
       var res = req.responseText;
       var type = req.getResponseHeader("Content-Type");
@@ -564,6 +568,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
 
     req.onload = function(ev) {
       if (req.readyState === 4 && req.status === 200) {
+        if (timeout) clearTimeout(timeout);
         var type = req.getResponseHeader("Content-Type");
         var res;
         if (startsWith(type,"application/json;")) {
@@ -581,7 +586,7 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     req.onerror = function(ev) {
       onError();
     }
-
+    
     var contentType = "text/plain";
     var content = null;
 
@@ -611,6 +616,9 @@ define(["std_core","std_path"],function(stdcore,stdpath) {
     
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
     req.send(content);
+    timeout = setTimeout( function() { 
+      req.abort(); 
+    }, reqparam.timeout || 5000);
   }
 
   function downloadFile(url) 

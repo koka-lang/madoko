@@ -21,8 +21,8 @@ external include {
 }
 
 // Try to read a text file; return a default value in case of an error.
-public function readTextFileDef( fileName : string, def : string ) : io string {
-  match (fileName.tryReadTextFile(False)) {
+public function readTextFileDef( fileName : string, def : string, required : bool = False ) : io string {
+  match (fileName.tryReadTextFile(required)) {
     Left(_exn) -> def
     Right(content) -> content
   }
@@ -101,5 +101,11 @@ public external rename( fnameOld : string, fnameNew : string ) : io () {
 }
 
 public function tryRename( fnameOld : string, fnameNew : string ) : io () {
-  ignore( { rename(fnameOld,fnameNew) })
+  ignore( { rename(fnameOld,fnameNew) });
+}
+
+// In the browser, removes all files.
+public external clear() : io () {
+  cs inline "0"
+  js inline "$clear()"
 }

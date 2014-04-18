@@ -218,7 +218,6 @@ hr.madoko, .madoko hr {
 .authorblock .author {
   display: block;
   font-size: large;
-  margin-bottom: -1.9ex;
 }
 
 .authorblock .email {

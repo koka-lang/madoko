@@ -177,6 +177,7 @@ body {
 
 #edit-select-content {
   padding: 0 1ex;
+  min-height: 1em;
 }
 
 #edit-select-content .binaries {

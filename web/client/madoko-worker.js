@@ -61,32 +61,43 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
   self.addEventListener( "message", function(ev) {
     try {    
       var req = ev.data;
-      if (req.files) {
-        req.files.forEach( function(f) {
-          madoko.writeTextFile(f.name,f.content);  
-          local.set(f.name,true);
+      if (req.type === "clear") {
+        local = new util.Map();
+        madoko.clearStorage();
+        self.postMessage( {
+          messageId: req.messageId,
+          err: null,
         });
       }
+      else {
+        if (req.files) {
+          req.files.forEach( function(f) {
+            madoko.writeTextFile(f.name,f.content);  
+            local.set(f.name,true);
+          });
+        }
 
-      var t0 = Date.now();            
-      madoko.markdown(req.name,req.content,req.options, 
-                       function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite) 
-      {
-        self.postMessage( {
-          messageId  : req.messageId, // message id is required to call the right continuation
-          content    : md,
-          time       : (Date.now() - t0).toString(),
-          options    : options1,
-          runOnServer: runOnServer,
-          message    : stdout,
-          filesRead  : fileList(filesRead),         
-          filesReferred: fileList(filesReferred),
-          filesWritten: fileWriteList(filesWrite),
-          err        : null,
+        var t0 = Date.now();            
+        madoko.markdown(req.name,req.content,req.options, 
+                         function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite) 
+        {
+          self.postMessage( {
+            messageId  : req.messageId, // message id is required to call the right continuation
+            content    : md,
+            time       : (Date.now() - t0).toString(),
+            options    : options1,
+            runOnServer: runOnServer,
+            message    : stdout,
+            filesRead  : fileList(filesRead),         
+            filesReferred: fileList(filesReferred),
+            filesWritten: fileWriteList(filesWrite),
+            err        : null,
+          });
         });
-      });
+      }
     }
     catch(exn) {
+      throw(exn);
       self.postMessage( {
         messageId: req.messageId,
         message  : exn.toString(),

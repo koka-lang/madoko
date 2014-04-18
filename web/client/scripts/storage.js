@@ -99,14 +99,15 @@ var Onedrive = (function() {
     return "access_token=" + session.access_token;
   }
 
-  var onedriveDomain = "https://apis.live.net/v5.0/"
+  var onedriveDomain = "https://apis.live.net/v5.0/";
   
   Onedrive.prototype.writeFile = function( file, cont ) {
     // TODO: resolve sub-directories
     var self = this;
     var url = onedriveDomain + self.folderId + "/files/" + file.path + "?" +
-                (file.info != null ? "" : "overwrite=false&") + onedriveAccessToken();
-    util.requestPUT( {url:url,contentType:";" }, content, cont );
+                //(file.info != null ? "" : "overwrite=false&") + 
+                onedriveAccessToken();
+    util.requestPUT( {url:url,contentType:";" }, file.content, cont );
   }
 
   Onedrive.prototype.pushFile = function( file, cont ) {
@@ -127,11 +128,12 @@ var Onedrive = (function() {
     var self = this;
     self.getFileInfo( fpath, function(errInfo, info) {
       if (errInfo) return cont(errInfo,null);      
+      if (!info || !info.source) return cont("file not found: " + fpath, null);
       util.requestGET( "onedrive", { url: info.source }, function(errGet,content) {
         if (errGet) return cont(errGet,null);
         var file = {
           info: info,
-          kind: kind || File.Text,
+          kind: kind || (util.hasTextExt(fpath) ? File.Text : File.Generated),
           path: fpath,
           content: content,
           url: "",
@@ -531,7 +533,7 @@ var Storage = (function() {
 
           if (!remoteTime) {
             // file is deleted on server?
-            file.info = null; // clear stale info, so we do not overwrite
+            // file.info = null; // clear stale info, so we do not overwrite
             remoteTime = file.createdTime;
           }
 
@@ -622,6 +624,7 @@ return {
   localOpenFile: localOpenFile,
   syncToLocal: syncToLocal,
   Storage: Storage,
+  LocalRemote: LocalRemote,
   File: File,
   unpersistStorage: unpersistStorage,
 }

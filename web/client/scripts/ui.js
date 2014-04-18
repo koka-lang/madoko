@@ -181,16 +181,13 @@ var UI = (function() {
     document.getElementById("sync-local").onclick = function(ev) {
       self.syncTo( function(cont) { 
         storage.syncToLocal(self.storage,cont); 
+      }, function() { 
+        util.message("sync'd to local storage", util.Msg.Status);
       });
     };
 
     document.getElementById("clear-local").onclick = function(ev) {
-      util.properties(localStorage).forEach( function(prop) {
-        localStorage[prop] = undefined;
-      });
-      self.syncTo( function(cont) { 
-        storage.syncToLocal(self.storage,cont); 
-      });
+      localStorage.clear();
     };
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
@@ -364,35 +361,37 @@ var UI = (function() {
     localStorageSave("local", json);      
   }
 
-  UI.prototype.setStorage = function( storage, docName, cont ) {
+  UI.prototype.setStorage = function( stg, docName, cont ) {
     var self = this;
-    if (storage == null) {
+    if (stg == null) {
       // initialize fresh
       docName = "document.mdk";
-      storage = new storage.Storage(new storage.NullRemote());
+      stg = new storage.Storage(new storage.LocalRemote());
       var content = document.getElementById("initial").textContent;
-      storage.writeTextFile(docName, content);
+      stg.writeTextFile(docName, content);
     } 
     self.showSpinner(true);    
-    storage.readTextFile(docName, false, function(err,file) { 
+    stg.readTextFile(docName, false, function(err,file) { 
       self.showSpinner(false );    
       if (err) return cont(err);
         
       if (self.storage) {
         self.storage.clearEventListener(self);
       }
-      self.storage = storage;
+      self.storage = stg;
       self.docName = docName;
       self.storage.addEventListener("update",self);
-      self.runner.setStorage(self.storage);    
-      self.setEditText(file ? file.content : "");
-      self.onFileUpdate(file); 
-      var remoteType = self.storage.remote.type();
-      var remoteExt = (remoteType==="local" ? ".svg" : ".png");
-      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-      self.remoteLogo.src = "images/" + remoteType + "-logo" + remoteExt;
-      self.remoteLogo.title = "Connected to " + remoteMsg + " storage";
-      cont(null);
+      self.runner.setStorage(self.storage, function(errStg) {    
+        if (errStg) return cont(errStg);
+        self.setEditText(file ? file.content : "");
+        self.onFileUpdate(file); 
+        var remoteType = self.storage.remote.type();
+        var remoteExt = (remoteType==="local" ? ".svg" : ".png");
+        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+        self.remoteLogo.src = "images/" + remoteType + "-logo" + remoteExt;
+        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";
+        cont(null);
+      });
     });
   }
 
@@ -591,10 +590,18 @@ var UI = (function() {
     var self = this;
     syncTo( function(err,storage) {
       if (err) return util.message(err,util.Msg.Error);
+      self.setStorage( storage, cont );
+      /*
       self.storage = storage;
       if (self.runner) {
-        self.runner.setStorage(self.storage);
+        self.runner.setStorage(self.storage, function(errStg) {
+          cont(errStg);
+        });
       }
+      else {
+        cont(null);
+      }
+      */
     });
   }
 

@@ -23,17 +23,27 @@ var Runner = (function() {
     self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
   }
 
-  Runner.prototype.setStorage = function( stg ) {
+  Runner.prototype.setStorage = function( stg, cont ) {
     var self = this;
-    if (self.storage) {
-      self.storage.clearEventListener(self);
-    }
+    var oldStorage = self.storage;
+
     self.storage = stg;
     if (self.storage) {
       self.storage.addEventListener("update",self);
       self.storage.forEachFileKind( [storage.File.Text,storage.File.Generated], function(path,content) {
         self.sendFiles.push( { name: path, content: content });
       });
+    }
+
+    if (oldStorage) {
+      oldStorage.clearEventListener(self);
+      self.madokoWorker.postMessage( { type: "clear" }, function(res) { 
+        util.message("cleared storage: " + res, util.Msg.Trace);
+        cont(null);
+      } );
+    }
+    else {
+      cont(null);
     }
   }
 
@@ -61,21 +71,16 @@ var Runner = (function() {
       util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
     }
 
-    res.filesWritten.forEach( function(file) {
-      util.message("worker generated: " + file.path, util.Msg.Trace );
-      self.storage.writeTextFile(file.path,file.content,storage.File.Generated);
-    });
-
     res.filesReferred.forEach( function(file) {
       if (util.hasImageExt(file)) {
-        self.loadImage(file);
+        self.loadImage(ctx.round, file);
       }
     });
     
     util.asyncForEach( res.filesRead, 
       function(file,xcont) {
-        self.loadText(file, function(err,content) {
-          if (err) util.message("unable to read from storage: " + file, util.Msg.Exn);
+        self.loadText(ctx.round, file, function(err,content) {
+          if (err) util.message("unable to read from storage: " + file, (util.hasTextExt(file) ? util.Msg.Exn : util.Msg.Trace));
           xcont(null,(err ? 0 : 1));
         });
       },
@@ -85,6 +90,15 @@ var Runner = (function() {
 
         var runAgain    = readCount > 0;
         var runOnServer = res.runOnServer && !runAgain 
+
+        if (!runAgain) {
+          res.filesWritten.forEach( function(file) {
+            util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
+            self.storage.writeTextFile(file.path,file.content,storage.File.Generated);
+            runAgain = true;
+            runOnServer = false;
+          });
+        }
 
         if (cont) cont(null,ctx,res.content,runAgain,runOnServer);
       }
@@ -96,6 +110,7 @@ var Runner = (function() {
     var self = this;
     util.message( "update " + ctx.round + " start", util.Msg.Trace );
     self.madokoWorker.postMessage( {
+      type   : "run",
       content: text,
       name   : ctx.docname,
       options: self.options,
@@ -108,22 +123,22 @@ var Runner = (function() {
 
     
 
-  Runner.prototype.loadImage = function( fname ) {
+  Runner.prototype.loadImage = function( round, fname ) {
     var self = this;
     if (!self.storage) return;
     self.storage.getImageUrl( fname, function(err,url) {
       if (err) return util.message(err);
-      util.message("storage provided reference: " + fname, util.Msg.Trace);      
+      util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
     });
   }
 
-  Runner.prototype.loadText = function(fname,cont) {
+  Runner.prototype.loadText = function(round,fname,cont) {
     var self = this;
     if (!self.storage) return;
     self.storage.readTextFile( fname, storage.File.fromPath(fname), function(err,file) {
       if (err) return cont(err,"");
-      util.message("storage sent: " + fname, util.Msg.Trace);      
+      util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
       cont(null,file.content);
       //self.files.set(fname,content);
       //self.sendFiles.push({ name: fname, content: content });
