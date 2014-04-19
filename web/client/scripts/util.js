@@ -316,7 +316,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     if (elem.animate) {
       clearInterval(elem.animate);
     }
-    elem.animate = setInterval( function() {
+    var action = function() {
       n++;
       if (n >= steps) {
         clearInterval(elem.animate);
@@ -331,7 +331,10 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           elem[prop] = x;
         });
       }
-    }, ival);
+    };
+
+    elem.animate = setInterval( action, ival);
+    action(); // perform one step right away
   }
 
   function unpersistMap(obj) {

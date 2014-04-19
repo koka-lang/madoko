@@ -584,6 +584,8 @@ var UI = (function() {
 
     self.lastScrollTop = scrollTop;
     util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+
+    //util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
     return true;
   }
 
