@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/merge","../scripts/util","../scripts/storage","../scripts/madokoMode"],
-        function(merge,util,storage,madokoMode) {
+define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode"],
+        function(merge,Promise,util,storage,madokoMode) {
 
 
 var ie = (function(){
@@ -21,32 +21,13 @@ var supportTransitions = (function() {
   return (!ie && document.body.style.transition=="");
 })();
 
-function diff( original, modified, cont ) {
+function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
   var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
   var diffSupport   = modifiedModel.getMode().diffSupport;
   var diff = diffSupport.computeDiff( 
-                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
-  function(res) {
-    cont(0,res);
-  }, 
-  function(err) {
-    cont("unable to create diff: " + err.toString(),[]);
-  });
-}
-
-function createDiff( editor, original, modified, cont ) {
-  var diffSupport = editor.getModel().getMode().diffSupport;
-  var originalModel = Monaco.Editor.createModel(original, "text/plain");
-  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
-  var diff = diffSupport.computeDiff( 
-                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() ).then( 
-  function(res) {
-    cont(0,res);
-  }, 
-  function(err) {
-    cont("unable to create diff: " + err.toString(),[]);
-  });
+                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
+  return new Promise(diff); // wrap promise
 }
 
 function localStorageSave( fname, obj ) {
@@ -98,11 +79,17 @@ var UI = (function() {
 
     self.initUIElements("");
     
-    self.localLoad( function(err) {
-      if (err) util.message(err, util.Msg.Error);
+    self.localLoad().then( function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();
+    }).then( function() { }, function(err) {
+      util.message(err, util.Msg.Error);          
     });
+  }
+
+  UI.prototype.onError  = function(err) {
+    var self = this;
+    util.message( err, util.Msg.Error );
   }
 
   UI.prototype.initUIElements = function(content) {
@@ -171,19 +158,19 @@ var UI = (function() {
     };
 
     document.getElementById("load-onedrive").onclick = function(ev) {
-      self.openFile( function(cont) { storage.onedriveOpenFile(cont); } );
+      storage.onedriveOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
+        .then( undefined, function(err){ self.onError(err); } );
     };
 
     document.getElementById("load-local").onclick = function(ev) {
-      self.openFile( function(cont) { storage.localOpenFile(cont); } );
+      storage.localOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
+        .then( undefined, function(err){ self.onError(err); } );
     };
 
     document.getElementById("sync-local").onclick = function(ev) {
-      self.syncTo( function(cont) { 
-        storage.syncToLocal(self.storage,cont); 
-      }, function() { 
-        util.message("sync'd to local storage", util.Msg.Status);
-      });
+      storage.syncToLocal(self.storage).then( function(){ 
+        return self.syncTo();
+      }).then( undefined, function(err){ self.onError(err); } );
     };
 
     document.getElementById("clear-local").onclick = function(ev) {
@@ -201,17 +188,12 @@ var UI = (function() {
         var cursors = {};
         var pos = self.editor.getPosition();
         cursors["/" + self.docName] = pos.lineNumber;
-        self.storage.sync( diff, cursors, function(err,fs) {
-          if (err) {
-            util.message( err, util.Msg.Error );
-          }
-          else {
-            pos.lineNumber = cursors["/" + self.docName];
-            self.editor.setPosition(pos);
-            util.message("synced", util.Msg.Status);
-            self.localSave();
-          }
-        });
+        self.storage.sync( diff, cursors ).then( function() {
+          pos.lineNumber = cursors["/" + self.docName];
+          self.editor.setPosition(pos);
+          util.message("synced", util.Msg.Status);
+          self.localSave();
+        }).then( undefined, function(err){ self.onError(err); } );
       }
     };
 
@@ -329,25 +311,26 @@ var UI = (function() {
               if (res.runOnServer && self.allowServer && self.asyncServer) {
                 self.asyncServer.setStale();
               }
+              cont();
             },
             function(err) {
-              util.message( err, util.Msg.Exn);
-            })
-          .then( function() { 
-            cont(); 
-          } );        
+              self.onError(err);
+              cont();
+            }
+          );
       }
     );
 
     self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
       function(round,cont) {
-        self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}, function(err,ctx) {
-          if (err) {
-            util.message(err,util.Msg.Exn);
-          }
+        self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}).then( function(ctx) {
           self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
           self.asyncMadoko.setStale();   // run madoko locally
+          cont();
+        },
+        function(err) {
+          self.onError(err);
           cont();
         });
       }
@@ -362,7 +345,7 @@ var UI = (function() {
     localStorageSave("local", json);      
   }
 
-  UI.prototype.setStorage = function( stg, docName, cont ) {
+  UI.prototype.setStorage = function( stg, docName ) {
     var self = this;
     if (stg == null) {
       // initialize fresh
@@ -372,9 +355,8 @@ var UI = (function() {
       stg.writeTextFile(docName, content);
     } 
     self.showSpinner(true);    
-    stg.readTextFile(docName, false, function(err,file) { 
+    return stg.readTextFile(docName, false).then( function(file) { 
       self.showSpinner(false );    
-      if (err) return cont(err);
         
       if (self.storage) {
         self.storage.clearEventListener(self);
@@ -382,41 +364,36 @@ var UI = (function() {
       self.storage = stg;
       self.docName = docName;
       self.storage.addEventListener("update",self);
-      self.runner.setStorage(self.storage, function(errStg) {    
-        if (errStg) return cont(errStg);
+      return self.runner.setStorage(self.storage).then( function() {    
         self.setEditText(file ? file.content : "");
         self.onFileUpdate(file); 
         var remoteType = self.storage.remote.type();
         var remoteExt = (remoteType==="local" ? ".svg" : ".png");
         var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
         self.remoteLogo.src = "images/" + remoteType + "-logo" + remoteExt;
-        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";
-        cont(null);
+        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
       });
     });
   }
 
-  UI.prototype.localLoad = function(cont) {
+  UI.prototype.localLoad = function() {
     var self = this;
     var json = localStorageLoad("local");
     if (json!=null) {
       // we ran before
       var docName = json.docName;
       var stg = storage.unpersistStorage(json.storage);
-      self.setStorage( stg, docName, cont );          
+      return self.setStorage( stg, docName );          
     }
     else {
-      self.setStorage( null, null, cont );
+      return self.setStorage( null, null );
     }
   }
 
-  UI.prototype.openFile = function(pickFile) {
+  UI.prototype.openFile = function(storage,fname) {
     var self = this;
-    pickFile( function(err,storage,fname) {
-      if (err) return util.message(err,util.Msg.Error);
-      if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
-      self.setStorage( storage, fname, function() { } );
-    });
+    if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
+    return self.setStorage( storage, fname );
   }
 
 
@@ -589,23 +566,9 @@ var UI = (function() {
     return true;
   }
 
-  UI.prototype.syncTo = function(syncTo, cont) {
+  UI.prototype.syncTo = function(storage) {
     var self = this;
-    syncTo( function(err,storage) {
-      if (err) return util.message(err,util.Msg.Error);
-      self.setStorage( storage, cont );
-      /*
-      self.storage = storage;
-      if (self.runner) {
-        self.runner.setStorage(self.storage, function(errStg) {
-          cont(errStg);
-        });
-      }
-      else {
-        cont(null);
-      }
-      */
-    });
+    return self.setStorage( storage );
   }
 
 

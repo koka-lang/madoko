@@ -23,7 +23,7 @@ var Runner = (function() {
     self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
   }
 
-  Runner.prototype.setStorage = function( stg, cont ) {
+  Runner.prototype.setStorage = function( stg ) {
     var self = this;
     var oldStorage = self.storage;
 
@@ -37,12 +37,12 @@ var Runner = (function() {
 
     if (oldStorage) {
       oldStorage.clearEventListener(self);
-      self.madokoWorker.postMessage( { type: "clear" } ).then( function(res) { 
+      return self.madokoWorker.postMessage( { type: "clear" } ).then( function(res) { 
         util.message("cleared storage: " + res, util.Msg.Trace);
       });
     }
     else {
-      cont(null);
+      return Promise.resolved();
     }
   }
 
@@ -70,6 +70,7 @@ var Runner = (function() {
       util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
     }
 
+    // todo: wait for url resolving?
     res.filesReferred.forEach( function(file) {
       if (util.hasImageExt(file)) {
         self.loadImage(ctx.round, file);
@@ -128,7 +129,7 @@ var Runner = (function() {
   Runner.prototype.loadImage = function( round, fname ) {
     var self = this;
     if (!self.storage) return;
-    self.storage.getImageUrl( fname, function(err,url) {
+    return self.storage.getImageUrl( fname ).then( function(url) {
       if (err) return util.message(err);
       util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
@@ -138,9 +139,7 @@ var Runner = (function() {
   Runner.prototype.loadText = function(round,fname) {
     var self = this;
     if (!self.storage) return;
-    return new Promise( function(cont) { 
-        self.storage.readTextFile( fname, storage.File.fromPath(fname), cont);
-      })
+    return self.storage.readTextFile( fname, storage.File.fromPath(fname) )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
         return file.content;
@@ -156,7 +155,7 @@ var Runner = (function() {
   // - latex: formulas are typeset using latex. This generates a "document.dimx" file
   //           containing all typeset formulas. For this to work, we may need to 
   //           send extra style files (".sty") or class files (".cls"). 
-  Runner.prototype.runMadokoServer = function(text,ctx,cont) {
+  Runner.prototype.runMadokoServer = function(text,ctx) {
     var self = this;
     
     // TODO: schedule run on server
@@ -172,8 +171,7 @@ var Runner = (function() {
       });
     }
     var t0 = Date.now();
-    util.requestPOST( "/rest/run", params, function(err,data) {
-      if (err) return cont(util.message(err),ctx);
+    return util.requestPOST( "/rest/run", params).then( function(data) {
       var time = (Date.now() - t0).toString() + "ms";
       util.message(data.stdout + data.stderr, util.Msg.Tool);
       util.properties(data).forEach(function(name) {
@@ -192,7 +190,7 @@ var Runner = (function() {
         }
       })
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
-      cont(null,ctx);
+      return ctx;
     });
   }  
 

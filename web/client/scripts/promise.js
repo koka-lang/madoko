@@ -5,7 +5,7 @@ define([],function() {
   }
 
   function promiseWhen() {
-    var ps = (arguments.length > 1 ? Array.prototype.slice(arguments) : arguments[0]);
+    var ps = (arguments.length > 1 ? Array.prototype.slice.call(arguments) : (arguments[0] ? arguments[0] : []));
     var total = ps ? ps.length : 0;
     var count = 0;
     var result = [];
@@ -83,7 +83,7 @@ define([],function() {
     }
 
     Promise.resolved = function() {
-      var args = Array.prototype.slice(arguments);
+      var args = Array.prototype.slice.call(arguments);
       var promise = new Promise();
       delayed( function() { promise.resolve.apply(promise,args); });
       return promise;

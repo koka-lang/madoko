@@ -1,4 +1,4 @@
-define( [], function() {
+define( ["../scripts/promise"], function(Promise) {
 
 var Side = { A:"a", B:"b", O:"o", None:"none" };
 
@@ -239,7 +239,7 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
 //   original, and modified content.
 // cont: (err, merged:string, conflicts:bool, newCursorLine:int) -> void
 //   called afterwards. conflicts is true if there were any real merge conflicts. 
-function merge3( diff, markers, cursorLine, original, m1, m2, cont ) {
+function merge3( diff, markers, cursorLine, original, m1, m2 ) {
   if (!markers) {
     markers = {
       start: "<!-- begin merge (remove this line to resolve the conflict) -->\n~ Begin Remote",
@@ -247,23 +247,16 @@ function merge3( diff, markers, cursorLine, original, m1, m2, cont ) {
       end: "<!-- end merge -->"
     };
   }
-  diff( original, m1, function(err1, adiff) {
-    if (err1) cont(err1,null,cursorLine);
-    diff( original, m2, function(err2, bdiff) {
-      if (err2) cont(err2,null,cursorLine);
-      try {
-        var olines = original.split("\n");
-        var olen   = olines.length;
-        var alines = m1.split("\n");
-        var alen   = alines.length;
-        var blines = m2.split("\n");
-        var blen   = blines.length;
-        var res = mergeChunks( markers, cursorLine, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
-        cont(0, res.merged, res.conflicts, res.cursorLine );
-      }
-      catch(exn) {
-        cont(exn, "", cursorLine);
-      }
+  return diff( original, m1 ).then( function(adiff) {
+    return diff( original, m2 ).then( function(bdiff) {
+      var olines = original.split("\n");
+      var olen   = olines.length;
+      var alines = m1.split("\n");
+      var alen   = alines.length;
+      var blines = m2.split("\n");
+      var blen   = blines.length;
+      var res = mergeChunks( markers, cursorLine, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
+      return { merged: res.merged, conflicts: res.conflicts, cursorLine: res.cursorLine };      
     });
   });
 }

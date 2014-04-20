@@ -50,6 +50,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   // Call for messages
   function message( txt, kind ) {
     if (typeof txt === "object") {
+      if (txt.stack) {
+        console.log(txt.stack);
+      }
       if (txt.message) 
         txt = txt.message;
       else
@@ -529,30 +532,30 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return vals.join("&");
   }
 
-  function requestGET( opts, params, cont ) {
+  function requestGET( opts, params ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "GET";
 
     reqparam.url = reqparam.url + "?" + urlEncode(params);
     reqparam.contentType = null;
     
-    requestPOST( reqparam, "", cont );
+    return requestPOST( reqparam, "" );
   }
   
-  function requestPUT( opts, params, cont ) {
+  function requestPUT( opts, params ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "PUT";
 
-    requestPOST( reqparam, params, cont );
+    return requestPOST( reqparam, params );
   }
 
-  function requestPOST( opts, params, cont ) {
+  function requestPOST( opts, params ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
     req.open(reqparam.method || "POST", reqparam.url, true );
     
-    var timeout = 0;
-
+    var timeout = 0;  // timeout handler id.
+    var promise = new Promise();
 
     function reject() {
       if (timeout) clearTimeout(timeout);
@@ -568,7 +571,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       else {
         msg = msg + ": " + req.responseText;
       }
-      cont(msg, res, req.response);
+      //cont(msg, res, req.response);
+      promise.reject(msg);
     }
 
     req.onload = function(ev) {
@@ -582,7 +586,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         else {
           res = req.responseText;
         }
-        cont(0,res,req.response);
+        promise.resolve(res,req.response);
       }
       else {
         reject();
@@ -621,9 +625,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
     req.send(content);
-    timeout = setTimeout( function() { 
-      req.abort(); 
-    }, reqparam.timeout || 5000);
+    if (reqparam.timeout !== 0) {
+      timeout = setTimeout( function() { 
+        req.abort(); 
+      }, reqparam.timeout || 10000);
+    }
+
+    return promise;
   }
 
   function downloadFile(url) 

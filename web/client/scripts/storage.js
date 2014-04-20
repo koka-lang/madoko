@@ -6,7 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/util", "../scripts/merge"], function(util,merge) {
+define(["../scripts/promise","../scripts/util", "../scripts/merge"], function(Promise,util,merge) {
 
 function onedriveError( obj, premsg ) {
   msg = "onedrive: " + (premsg ? premsg + ": " : "")
@@ -24,26 +24,31 @@ function onedriveError( obj, premsg ) {
 }
 
 
-function onedriveCont( call, cont, premsg ) {
+function onedrivePromise( call, premsg ) {
+  var promise = new Promise();
   call.then( 
     function(res) {
-      cont(null,res);
+      promise.resolve(res);
     },
     function(resFail) {
-      cont(onedriveError(resFail,premsg),resFail)
+      promise.reject(onedriveError(resFail,premsg),resFail);
+    },
+    function(prog) {
+      promise.progress(prog);
     }
   );
+  return promise;
 }
 
 
-function onedriveGet( path, cont, errmsg ) {
-  if (typeof WL === "undefined" || !WL) return cont( onedriveError("no connection",errmsg), {} );
-  onedriveCont( WL.api( { path: path, method: "GET" }), cont, errmsg );
+function onedriveGet( path, errmsg ) {
+  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection",errmsg), {} );
+  return onedrivePromise( WL.api( { path: path, method: "GET" }), errmsg );
 }
 
 
-function onedriveGetFileInfoFromId( file_id, cont ) {
-  onedriveGet( file_id, cont );
+function onedriveGetFileInfoFromId( file_id ) {
+  return onedriveGet( file_id );
 }
 
 function unpersistOnedrive( obj ) {
@@ -67,10 +72,9 @@ var Onedrive = (function() {
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
-  Onedrive.prototype.getFileInfo = function( path, cont ) {  
+  Onedrive.prototype.getFileInfo = function( path ) {  
     var self = this;
-    onedriveGet( self.folderId + "/files", function(err, res) {
-      if (err) cont(err,res);
+    return onedriveGet( self.folderId + "/files", "get files").then( function(res) {
       var file = null;
       if (res.data) {
         for (var i = 0; i < res.data.length; i++) {
@@ -82,14 +86,14 @@ var Onedrive = (function() {
         }
       }
       // if (!file) return cont( onedriveError("unable to find: " + path), file )
-      cont( null, file);
-    }, "get files");
+      return file;
+    });
   }
 
 
-  Onedrive.prototype.getWriteAccess = function( cont ) {
-    if (!WL) return cont( onedriveError("no connection"), {} );
-    onedriveCont( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), cont );  
+  Onedrive.prototype.getWriteAccess = function() {
+    if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
+    return onedrivePromise( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), "get write access" );  
   }
 
   function onedriveAccessToken() {
@@ -101,36 +105,32 @@ var Onedrive = (function() {
 
   var onedriveDomain = "https://apis.live.net/v5.0/";
   
-  Onedrive.prototype.writeFile = function( file, cont ) {
+  Onedrive.prototype.writeFile = function( file ) {
     // TODO: resolve sub-directories
     var self = this;
     var url = onedriveDomain + self.folderId + "/files/" + file.path + "?" +
                 //(file.info != null ? "" : "overwrite=false&") + 
                 onedriveAccessToken();
-    util.requestPUT( {url:url,contentType:";" }, file.content, cont );
+    return util.requestPUT( {url:url,contentType:";" }, file.content );
   }
 
-  Onedrive.prototype.pushFile = function( file, cont ) {
+  Onedrive.prototype.pushFile = function( file ) {
     var self = this;
-    self.writeFile( file, function(errPut,resp) {
-      if (errPut) return cont(errPut,file.path);
-      onedriveGetFileInfoFromId( resp.id, function(errInfo,info) {
-        if (errInfo) return cont(errInfo,file.path);
-        var newFile = util.copy(file);
-        newFile.info = info; // update id and time
-        newFile.createdTime = info.updated_time;
-        cont(null,newFile);
-      });
+    return self.writeFile( file ).then( function(resp) {
+      return onedriveGetFileInfoFromId( resp.id );
+    }).then( function(info) {
+      var newFile = util.copy(file);
+      newFile.info = info; // update id and time
+      newFile.createdTime = info.updated_time;
+      return newFile;
     });
   }
 
-  Onedrive.prototype.pullTextFile = function( fpath, kind, cont ) {
+  Onedrive.prototype.pullTextFile = function( fpath, kind ) {
     var self = this;
-    self.getFileInfo( fpath, function(errInfo, info) {
-      if (errInfo) return cont(errInfo,null);      
-      if (!info || !info.source) return cont("file not found: " + fpath, null);
-      util.requestGET( "onedrive", { url: info.source }, function(errGet,content) {
-        if (errGet) return cont(errGet,null);
+    return self.getFileInfo( fpath ).then( function(info) {
+      if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
+      return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
         var file = {
           info: info,
           kind: kind || (util.hasTextExt(fpath) ? File.Text : File.Generated),
@@ -140,25 +140,22 @@ var Onedrive = (function() {
           createdTime: info.updated_time,                    
           written: false,
         };
-        cont(null,file);
+        return file;
       });
-    }); 
-  }
-
-  Onedrive.prototype.getRemoteTime = function( fpath, cont ) {    
-    var self = this;
-    self.getFileInfo( fpath, function(err,info) {
-      if (err) return cont(err,null);
-      if (!info) return cont(null,null);
-      cont(null,info.updated_time);
     });
   }
 
-  Onedrive.prototype.getImageUrl = function( fpath, cont ) {    
+  Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
-    self.getFileInfo( fpath, function(err,info) {
-      if (err)   return cont(err,"");
-      if (!info) return cont("image not found","");
+    return self.getFileInfo( fpath ).then( function(info) {
+      return (info ? info.updated_time : null);
+    });
+  }
+
+  Onedrive.prototype.getImageUrl = function( fpath ) {    
+    var self = this;
+    return self.getFileInfo( fpath ).then( function (info) {
+      if (!info) return Promise.rejected("image not found");
       //if (!WL)   return cont("no connection");
       var url = onedriveDomain + info.id + "/picture?type=full&" + onedriveAccessToken();
       var file = {
@@ -170,7 +167,7 @@ var Onedrive = (function() {
         createdTime: info.updated_time,
         written: false,
       };
-      cont(null,file);
+      return file;
     });
   }
 
@@ -178,26 +175,25 @@ var Onedrive = (function() {
 })();   
 
 
-function onedriveOpenFile(cont) {
-  if (!WL) return cont( onedriveError("no connection"), null, "" );
-  onedriveCont( WL.fileDialog( {
+function onedriveOpenFile() {
+  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
+  return onedrivePromise( WL.fileDialog( {
     mode: "open",
     select: "single",
-  }), 
-  function(err,res) {
-    if (err) cont(err);
+  })).then( function(res) {
     if (!(res.data && res.data.files && res.data.files.length==1)) {
-      return cont(onedriveError("no file selected"));
+      return Promise.rejected(onedriveError("no file selected"));
     }
-    var file = res.data.files[0];
-    onedriveGetFileInfoFromId( file.id, function(err2,info) {
-      if (err2) cont(err2);
+    return res.data.files[0];
+  }).then( function(file) {
+    return onedriveGetFileInfoFromId( file.id ).then( function(info) {
       //var storage = new Storage(info.parent_id);
       var onedrive = new Onedrive(info.parent_id);
-      cont( null, new Storage(onedrive), file.name );
+      return { storage: new Storage(onedrive), docName: file.name };
     });
   });
-}      
+}     
+
 function onedriveInit(options) {
   if (typeof WL === "undefined") {
     WL = null;
@@ -228,69 +224,63 @@ var LocalRemote = (function() {
     return { folder: self.folder };
   }
 
-  LocalRemote.prototype.getWriteAccess = function( cont ) {
-    cont(null);
+  LocalRemote.prototype.getWriteAccess = function() {
+    return Promise.resolved();
   }
 
-  LocalRemote.prototype.pushFile = function( file, cont ) {
+  LocalRemote.prototype.pushFile = function( file ) {
     var self = this;
     var obj  = { modifiedTime: new Date().toISOString(), content: file.content, kind: file.kind }
-    if (!localStorage) return cont("no local storage: " + file.path, null);
+    if (!localStorage) throw new Error("no local storage: " + file.path);
     localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
     var newFile = util.copy(file);
     newFile.createdTime = obj.modifiedTime;
-    cont(null,newFile);
+    return Promise.resolved(newFile);
   }
 
-  LocalRemote.prototype.pullTextFile = function( fpath, kind, cont ) {
+  LocalRemote.prototype.pullTextFile = function( fpath, kind ) {
     var self = this;
-    if (!localStorage) return cont("no local storage",null);
-    try { 
-      var json = localStorage.getItem(self.folder + fpath);
-      var obj = JSON.parse(json);
-      if (!obj || !obj.modifiedTime) return cont("local storage: unable to read: " + fpath, null);
-      var file = {
-        path: fpath,
-        kind: obj.kind || kind,
-        content: obj.content,
-        createdTime: obj.modifiedTime,
-        written: false,
-        url: "",
-      };
-      cont(null,file);
-    }
-    catch(exn) {
-      util.message(exn.toString(), util.Msg.Trace);
-      cont("local storage unavailable: " + fpath,null);
-    }
+    if (!localStorage) throw new Error("no local storage");
+    var json = localStorage.getItem(self.folder + fpath);
+    var obj = JSON.parse(json);
+    if (!obj || !obj.modifiedTime) return Promise.rejected( new Error("local storage: unable to read: " + fpath) );
+    var file = {
+      path: fpath,
+      kind: obj.kind || kind,
+      content: obj.content,
+      createdTime: obj.modifiedTime,
+      written: false,
+      url: "",
+    };
+    return Promise.resolved(file);
   }
 
-  LocalRemote.prototype.getImageUrl = function( fpath, cont ) {
-    cont("local storage cannot store images",null);
+  LocalRemote.prototype.getImageUrl = function( fpath ) {
+    return Promise.rejected( new Error("local storage cannot store images") );
   }
 
-  LocalRemote.prototype.getRemoteTime = function( fpath, cont ) {
+  LocalRemote.prototype.getRemoteTime = function( fpath ) {
     var self = this;
-    if (!localStorage) return cont("no local storage",null);
+    if (!localStorage) throw new Error("no local storage");
     try { 
       var json = localStorage.getItem(self.folder + fpath);
       var obj = JSON.parse(json);
       if (!obj || !obj.modifiedTime) return cont(null, null);
-      cont(null,obj.modifiedTime);
+      return Promise.resolved(obj.modifiedTime);
     }
     catch(exn) {
-      cont(null,null);
-    }    
+      return Promise.resolved(null);
+    }
   }
 
   return LocalRemote;
 })();
 
 
-function localOpenFile(cont) {
-  if (!localStorage) return cont( "no local storage available, upgrade your browser", null, "");
+function localOpenFile() {
+  if (!localStorage) throw new Error( "no local storage available, upgrade your browser");
   var local = new LocalRemote();
-  cont(null, new Storage(local), "document.mdk" );
+  return Promise.resolved( { storage: new Storage(local), docName: "document.mdk" } );
 }
 
 
@@ -313,16 +303,14 @@ function unpersistStorage( obj ) {
   return storage;
 }
 
-function syncToLocal( storage, cont ) {
+function syncToLocal( storage ) {
   var local = new Storage(new LocalRemote());
   storage.forEachFile( function(file0) {
     var file = util.copy(file0);
     file.info = null;
     local.files.set( file.path, file );
   });
-  local.sync( function(err) {
-    cont(err,local);
-  });
+  return local.sync().then( function(){ return local; } );
 }  
 
 var File = { 
@@ -396,10 +384,10 @@ var Storage = (function() {
       file.kind = kind;
       file.written = file.written || (content != file.content);
       file.content = content;
-      self.updateFile(file);
+      self._updateFile(file);
     }
     else {
-      self.updateFile( {
+      self._updateFile( {
         path     : fpath,
         kind     : kind,
         info     : null,
@@ -434,7 +422,7 @@ var Storage = (function() {
   }
 
   // private
-  Storage.prototype.updateFile = function( finfo ) {
+  Storage.prototype._updateFile = function( finfo ) {
     var self = this;
     util.assert(typeof finfo==="object");
     finfo.path    = finfo.path || "unknown.mdk";
@@ -451,10 +439,10 @@ var Storage = (function() {
 
     // update
     self.files.set(finfo.path,finfo);
-    self.fireEvent("update", { file: finfo });
+    self._fireEvent("update", { file: finfo });
   }
 
-  Storage.prototype.fireEvent = function( type, obj ) {
+  Storage.prototype._fireEvent = function( type, obj ) {
     var self = this;
     self.listeners.forEach( function(listener) {
       if (listener) {
@@ -471,146 +459,141 @@ var Storage = (function() {
 
   
   /* Interface */
-  Storage.prototype.readTextFile = function( fpath, createOnErrKind, cont ) {
+  Storage.prototype.readTextFile = function( fpath, createOnErrKind ) {  // : Promise<file>
     var self = this;
     var file = self.files.get(fpath);
-    if (file) return cont(null, file);
+    if (file) return Promise.resolved(file);
 
-    self.remote.pullTextFile( fpath, createOnErrKind, function(err,file) {
-      if (err) {
-        if (createOnErrKind) {
-          self.createTextFile(fpath,"",createOnErrKind);
-          cont(null,self.files.get(fpath));
-        }
-        else {
-          cont(err,{path:fpath,content:""});
-        }
-      }
-      else {
+    return self.remote.pullTextFile( fpath, createOnErrKind ).then( function(file) {
         file.original = file.content;
-        self.updateFile( file );
-        cont(null,file);
-      }
-    });    
+        self._updateFile( file );
+        return file;
+      },
+      (createOnErrKind ? 
+        function(err) {
+          self.createTextFile(fpath,"",createOnErrKind);
+          return self.files.get(fpath);
+        } :
+        undefined)
+    );    
   }
 
-  Storage.prototype.getImageUrl = function( fpath, cont ) {
+  Storage.prototype.getImageUrl = function( fpath ) {
     var self = this;
     var file = self.files.get(fpath);
     if (file) {
-      if (file.kind === File.Image) return cont("not an image: " + fpath, ""); 
-      cont(null,file.url);
+      if (file.kind === File.Image) throw new Error("not an image: " + fpath); 
+      return Promise.resolved(file.url);
     }
     else {
-      self.remote.getImageUrl( fpath, function(err, file) {
-        if (err) return cont(err,"")  
-        self.updateFile( file );
-        cont(null,file.url);
+      return self.remote.getImageUrl( fpath ).then( function(file) {
+        self._updateFile( file );
+        return file.url;
       });
     }
   }
 
   var rxStartMerge = /^ *<!-- *begin +merge +.*?--> *$/im;
 
-  Storage.prototype.sync = function( diff, cursors, cont ) {
+  Storage.prototype.sync = function( diff, cursors ) {
     var self = this;
     var remotes = new util.Map();
 
-    self.remote.getWriteAccess( function(errAccess) {
-      if (errAccess) return cont("cannot get write permission.",[]);
+    return self.remote.getWriteAccess().then( function() {      
+      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,file); } );
+      return Promise.when( syncs ).then( function(res) {
+        res.forEach( function(msg) {
+          if (msg) util.message(msg, util.Msg.Trace);
+        });
+      });
+    });
+  }
 
-      util.asyncForEach( self.files.elems(), function(file, xfcont) {
-        function fcont(err,action) {
-          action = file.path + (action ? ": " + action : "");
-          xfcont( (err ? file.path + ": " + err.toString() : null), action);
+  Storage.prototype._syncFile = function(diff,cursors,file) {  // : Promise<string>
+    var self = this;
+
+    function message(msg,action) {
+      return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
+    }
+
+    // only text files
+    if (file.kind === File.Image) return Promise.resolved(message("skip"));
+
+    return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
+      if (!remoteTime) {
+        // file is deleted on server?
+        // file.info = null; // clear stale info, so we do not overwrite
+        remoteTime = file.createdTime;
+      }
+
+      if (file.written) 
+      {
+        if (rxStartMerge.test(file.content)) {
+          throw new Error( message("cannot save to server: resolve merge conflicts first!", "save to server") );
         }
-
-        // only text files
-        if (file.kind === File.Image) return fcont(null,"skip");
-
-        self.remote.getRemoteTime( file.path, function(errInfo,remoteTime) {
-          if (errInfo) return fcont(errInfo,"<unknown>");
-
-          if (!remoteTime) {
-            // file is deleted on server?
-            // file.info = null; // clear stale info, so we do not overwrite
-            remoteTime = file.createdTime;
-          }
-
-          if (file.written) 
-          {
-            if (rxStartMerge.test(file.content)) {
-              fcont( "cannot save to server: resolve merge conflicts first!", "save to server");
-            }
-            else if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
-              // modified on client and server
-              if (!diff) {
-                fcont( "modified on server!", "merge from server" );
-              }
-              else {
-                self.remote.pullTextFile(file.path, null, function(errPull,remoteFile) {
-                  if (errPull) return fcont(errPull,"merge from server");
-                  var original = (file.original != null ? file.original : file.content);
-                  merge.merge3(diff, null, cursors["/" + file.path] || 1, 
-                                original, remoteFile.content, file.content,
-                                  function(errMerge,merged,conflicts,newCursorLine) {
-                    if (cursors["/" + file.path]) {
-                      cursors["/" + file.path] = newCursorLine;
-                    }
-                    if (conflicts) {
-                      // don't save if there were real conflicts
-                      remoteFile.original = file.orginal; // so next merge does not get too confused
-                      remoteFile.content  = merged;
-                      remoteFile.written = true;
-                      self.updateFile(remoteFile);
-                      fcont("merged from server but cannot save: resolve merge conflicts first!", "merge from server");
-                    }
-                    else {
-                      // write back merged result
-                      self.remote.pushFile(remoteFile, function(errPush, newFile) {
-                        newFile.written = false;
-                        newFile.original = newFile.content;
-                        self.updateFile(newFile);
-                        fcont(null, "merge from server");      
-                      });
-                    }
-                  });  
-                });
-              }
-            }
-            else {
-              // write back the client changes
-              self.remote.pushFile( file, function(errPush, newFile) {
-                if (errPush) return fcont(errPush,"save to server");
-                newFile.written = false;
-                newFile.original = newFile.content;
-                self.updateFile(newFile);
-                fcont(null,"save to server"); 
-              });
-            }
-          }
-          else if (file.createdTime !== remoteTime) {
-            // update from server
-            self.files.delete(file.path);
-            self.readTextFile(file.path, false, function(errRead,newfile) {
-              if (errRead) {
-                self.files.set(file.path,file); // restore
-              }
-              fcont(errRead,"update from server");
-            });
+        else if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
+          // modified on client and server
+          if (!diff) {
+            return message( "modified on server!", "merge from server" );
           }
           else {
-            // nothing to do
-            fcont(null,"up-to-date");
+            return self.remote.pullTextFile(file.path, null).then( function(remoteFile) {
+              var original = (file.original != null ? file.original : file.content);
+              return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+                                original, remoteFile.content, file.content
+                      ).then( function(res) {
+                  if (cursors["/" + file.path]) {
+                    cursors["/" + file.path] = res.cursorLine;
+                  }
+                  if (res.conflicts) {
+                    // don't save if there were real conflicts
+                    remoteFile.original = file.orginal; // so next merge does not get too confused
+                    remoteFile.content  = res.merged;
+                    remoteFile.written = true;
+                    self._updateFile(remoteFile);
+                    throw new Error( message("merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
+                  }
+                  else {
+                    // write back merged result
+                    remoteFile.content  = res.merged;
+                    return self.remote.pushFile(remoteFile).then( function(newFile) {
+                      newFile.written = false;
+                      newFile.original = newFile.content;
+                      self._updateFile(newFile);
+                      return message( "merge from server" );      
+                    });
+                  }
+                });  
+            });
           }
-        });
-      },
-      function(err,xs) {
-        xs.forEach( function(msg) {
-          if (msg) util.message(msg, util.Msg.Trace);
-        })
-        if (cont) cont(err);
-      });
+        }
+        else {
+          // write back the client changes
+          return self.remote.pushFile( file ).then( function(newFile) {
+            newFile.written = false;
+            newFile.original = newFile.content;
+            self._updateFile(newFile);
+            return message("save to server"); 
+          });
+        }
+      }
+      // not modified locally
+      else if (file.createdTime !== remoteTime) {
+        // update from server
+        self.files.delete(file.path);
+        return self.readTextFile(file.path, false ).then( function(newfile) {
+          return message("update from server");
+        },
+        function(err) {
+          self.files.set(file.path,file); // restore
+          throw err;
+        }
+        );
+      }
+      else {
+        // nothing to do
+        return message("up-to-date");
+      }
     });
   }
 
