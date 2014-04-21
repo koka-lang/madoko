@@ -116,6 +116,10 @@ html,body,#app {
   background-color: Gainsboro;
 }
 
+.button.disable:hover, .ibutton.disable:hover {
+  background-color: white;
+}
+
 .button:active, .ibutton:active {
   background-color: Gray;
 }
@@ -163,18 +167,8 @@ html,body,#app {
   margin-top: 0.15em;
 }
 
-.menu.disable {
+.disable {
   color: #BBB;
-}
-
-#menu-settings ul {
-  margin: 0;
-  margin-top: 0.5ex;
-  padding: 0;
-}
-#menu-settings li {
-  padding-left: 1ex;
-  list-style-type: none;
 }
 
 .boxed {
@@ -204,10 +198,6 @@ div.boxed {
   color: gray;
 }
 
-.popup .item:hover, .popup li:hover {
-  background-color: Gainsboro;
-}
-
 #document>span>img {
   vertical-align: middle;
   margin-top: 0.5ex;
@@ -215,17 +205,17 @@ div.boxed {
   height: 1.5ex;
 }
 
-#document .content {
-  width: 16em;
-}
 
 #rename {
   display: inline;
   width: 10em;
 }
 
-.menu.button {
+.menu .button {
   border: none;
+}
+
+.item {
   padding: 0.25ex 1ex;
 }
 
@@ -368,13 +358,17 @@ div.msg-tool, div.msg-normal {
   display: inline-block;
   text-align: left;
 }
-.popup:hover > div#koka-console {
+
+#koka-console {
   height: 10em;
   border: 1px solid black;
 }
 
-.popup:hover > div#menu-settings-content {
+#menu-settings-content {
   width: 15em;
   left: -1em;
 }
 
+#document-content {
+  width: 16em;
+}

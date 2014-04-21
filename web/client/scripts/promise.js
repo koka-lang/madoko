@@ -93,6 +93,12 @@ define([],function() {
       return Promise.resolved().then( function() { return action(); } );
     }
 
+    Promise.prototype.always = function( action ) {
+      var self = this;
+      self.then( function(){ action(); }, function(){ action(); });
+      return self;
+    }
+
     Promise.prototype.then = function( onSuccess, onError, onProgress ) {
       var self = this;
       var listener;

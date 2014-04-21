@@ -223,7 +223,7 @@ function include( txt : string, fast : bool, outName : string, dirs : list<strin
     else {
       match (trySearchReadTextFile(fname,dirs,".mdk")) {
         Nothing -> {
-          log("files",fname)
+          log("files", if (extname(fname)=="") then fname + ".mdk" else fname)
           println("  warning: unable to read include: " + fname )
           ""
         }

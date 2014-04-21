@@ -65,50 +65,48 @@ insert image:
     <img id="button-editor-wide" class="ibutton" src="images/tri-right.svg" />
     <div id="menu-settings" class="popup">
       <img class="ibutton" src="images/settings.svg" />
-      <div id="menu-settings-content" class="boxed">
-        <div class="menu button" 
+      <div id="menu-settings-content" class="menu boxed">
+        <div class="item button" 
              title="Do not update the view until there is a pause in typing. This setting increases performance with large documents or slow browsers.">
           <input type="checkbox" id="checkDelayedUpdate"/> Delayed view update</div>
-        <div class="menu button" 
+        <div class="item button" 
              title="Do not use the Madoko server to typeset mathematics and the bibliography">
           <input type="checkbox" id="checkDisableServer"/> Disable server</div>
-        <div class="menu button" title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
+        <div class="item button" title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
        <hr/>
-       <div id="clear-local" class="menu button">Clear local storage</div>
+       <div id="clear-local" class="item button">Clear local storage</div>
       </div>
     </div>
     <img id="sync-spinner" class="spinner" src="images/sync.svg" alt="synchonize spinner"/>    
     <span id="edit-select" class="popup boxed">
       <img id="remote-logo" src="images/null-logo.svg" class="logo" />
       <span id="edit-select-header" class="header">&nbsp;</span>
-      <div id="edit-select-content" class="boxed">
-        <ul class="content">
-        </ul>
+      <div id="edit-select-content" class="menu boxed">        
       </div>
     </span
     ><span id="document" class="popup"
       > <span class="button boxed"><img class="ibutton" src="images/tri-down.svg"/></span>
-      <div id="document-content" class="boxed content">
-        <div id="sync" class="menu button" title="Synchronize document"
+      <div id="document-content" class="menu boxed">
+        <div id="sync" class="item button" title="Synchronize document"
           ><img src="images/sync.svg" class="logo" /> Synchronize</div>
-        <div id="new-document" class="menu button" title="Create a new local document"
+        <div id="new-document" class="item button" title="Create a new local document"
           ><img src="images/null-logo.svg" class="logo" /> New local document</div>
         <hr/>
         <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
           ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
-        <div id="load-onedrive" class="menu button" title="Load document from Onedrive cloud storage"
+        <div id="load-onedrive" class="item button" title="Load document from Onedrive cloud storage"
           ><img src="images/onedrive-logo.png" class="logo" /> Load from onedrive</div>
-        <div id="load-dropbox" class="menu button disable" title="Load document from Dropbox cloud storage"
+        <div id="load-dropbox" class="item button disable" title="Load document from Dropbox cloud storage"
           ><img src="images/dropbox-logo.png" class="logo" /> Load from dropbox</div>
         <hr/>
-        <div class="menu button">
+        <div class="item">
           <span>Save as:&nbsp;&nbsp;<input id="rename" class="header" value="" type="text"/></span>
         </div>
         <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
           ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
-        <div id="sync-onedrive" class="menu button"
+        <div id="sync-onedrive" class="item button" title="Save document to Onedrive cloud storage"
           ><img src="images/onedrive-logo.png" class="onedrive-logo" /> To onedrive</div>
-        <div id="sync-dropbox" class="menu button disable"
+        <div id="sync-dropbox" class="item button disable" title="Save document to Dropbox cloud storage"
           ><img src="images/dropbox-logo.png" class="logo" /> To dropbox</div>
       </div>
     </span>
@@ -125,13 +123,13 @@ insert image:
     <span id="view-message" class="popup boxed">
       <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
-      <div id="koka-console" class="madoko boxed">
+      <div id="koka-console" class="madoko menu boxed">
         <div id="koka-console-out" class="monospace short"></div>
       </div>
     </span>
   </div>
   <div class="pane-content boxed">
-    <div id="view" class="madoko"></div>
+    <div id="view" class="madoko madoko-body"></div>
     <!-- <div id="buttonbar-horizontal"><div id="button-updown" class="ibutton"></div></div> -->    
   </div>
 </div>

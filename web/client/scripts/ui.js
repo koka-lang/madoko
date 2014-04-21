@@ -92,6 +92,23 @@ var UI = (function() {
     util.message( err, util.Msg.Error );
   }
 
+  UI.prototype.event = function( status, action ) {
+    var self = this;
+    try {
+      var res = action();
+      if (res && res.then) {
+        res.then( function() {
+          if (status) util.message( message, util.Msg.Status);
+        }, function(err) {
+          self.onError(err);
+        });
+      }
+    }
+    catch(exn) {
+      self.onError(exn);
+    }
+  }
+
   UI.prototype.initUIElements = function(content) {
     var self = this;
 
@@ -201,8 +218,7 @@ var UI = (function() {
     };
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
-      var div = document.getElementById("edit-select-content");
-      self.editSelect(div);
+      self.editSelect();
     };   
 
     self.inputRename = document.getElementById("rename");
@@ -210,6 +226,18 @@ var UI = (function() {
       self.inputRename.value = self.docName;
     };   
        
+    document.getElementById("edit-select-content").onclick = function(ev) {
+      self.event( null, function() {
+        var elem = ev.target;
+        while(elem && elem.nodeName !== "DIV") {
+          elem = elem.parentNode;
+        }
+        if (elem && elem.dataset && elem.dataset.file) {
+          var path = elem.dataset.file;
+          self.editFile(path).then(undefined, function(err){ self.onError(err); });
+        }
+      });
+    };   
    
     document.getElementById("sync").onclick = function(ev) 
     {      
@@ -279,7 +307,9 @@ var UI = (function() {
 
   UI.prototype.setEditText = function( text ) {
     var self = this;
-    self.editor.model.setValue(text);
+    self.editor.model.setValue(text);    
+    self.text0 = text;
+    self.text  = text;
     self.setStale();
   }
 
@@ -340,7 +370,10 @@ var UI = (function() {
         self.localSave();
         self.stale = false;
         if (!self.runner) return cont();
-        self.runner.runMadoko(self.text0, {docname: self.docName, round: round })
+        if (self.editName === self.docName) {
+          self.docText = self.text0;
+        }
+        self.runner.runMadoko(self.docText, {docname: self.docName, round: round })
           .then(
             function(res) { 
               self.viewHTML(res.content);
@@ -379,8 +412,8 @@ var UI = (function() {
   UI.prototype.localSave = function() {
     var self = this;
     var text = self.getEditText();
-    self.storage.writeTextFile( self.docName, text );
-    var json = { docName: self.docName, storage: self.storage.persist() };
+    self.storage.writeTextFile( self.editName, text );
+    var json = { docName: self.docName, editName: self.editName, storage: self.storage.persist() };
     localStorageSave("local", json);      
   }
 
@@ -402,9 +435,11 @@ var UI = (function() {
       }
       self.storage = stg;
       self.docName = docName;
+      self.editName = docName;
+      self.docText = file.content;
       self.storage.addEventListener("update",self);
-      return self.runner.setStorage(self.storage).then( function() {    
-        self.setEditText(file ? file.content : "");
+      return self.runner.setStorage(self.storage).then( function() {            
+        self.setEditText(self.docText);
         self.onFileUpdate(file); 
         var remoteLogo = self.storage.remote.logo();
         var remoteType = self.storage.remote.type();
@@ -412,6 +447,27 @@ var UI = (function() {
         self.remoteLogo.src = "images/" + remoteLogo;
         self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
       });
+    });
+  }
+
+  UI.prototype.spinWhile = function( elem, promise ) {
+    var self = this;
+    self.showSpinner(true,elem);
+    return promise.always( function() {
+      self.showSpinner(false,elem);
+    });
+  }
+
+  UI.prototype.editFile = function(fpath) {
+    var self = this;
+    return self.spinWhile(self.syncer, self.storage.readTextFile(fpath, false)).then( function(file) {       
+      if (self.editName === self.docName) {
+        self.docText = self.getEditText();
+      }
+      self.editName = file.path;
+      self.setEditText(file.content);
+      self.onFileUpdate(file); 
+      self.editSelect();
     });
   }
 
@@ -450,14 +506,19 @@ var UI = (function() {
     return span;
   }
 
-  UI.prototype.editSelect = function(div) {
+  UI.prototype.editSelect = function() {
     var self = this;
     var files = [];
     var images = [];
     var generated = [];
+    var div = document.getElementById("edit-select-content");
+      
     self.storage.forEachFile( function(file) {
-      if (file && file.path !== self.docName) {
-        var line = "<div class='item'>" + self.displayFile(file) + "</div>";
+      if (file) {
+        var disable = (file.kind === storage.File.Text && file.path !== self.editName ? "" : " disable");
+        var line = "<div data-file='" + util.escape(file.path) + "' " +
+                      "class='button item" + disable + "'>" + 
+                          self.displayFile(file) + "</div>";
         if (file.kind === storage.File.Image) images.push(line); 
         else if (file.kind === storage.File.Text) files.push(line);
         else generated.push(line)
@@ -629,7 +690,7 @@ var UI = (function() {
 
   UI.prototype.onFileUpdate = function(file) {
     var self = this;
-    if (file.path===self.docName) {
+    if (file.path===self.editName) {
       self.editSelectHeader.innerHTML = self.displayFile(file);
     }
   }

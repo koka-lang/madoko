@@ -340,10 +340,14 @@ div.input-mathpre {
 /* ---------------------------------------------------
    Styling for full documents
 ----------------------------------------------------*/
-body.madoko {
-  margin: 1em 16% 1em 12%;
+body.madoko, .madoko-body {
+  padding: 1em 16% 1em 12%;
   font-family: Cambria,Utopia,"Hoefler Text","Liberation Serif","Times New Roman",serif;
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
+}
+
+.madoko-body {
+  padding: 0em 8% 0em 8% !important;
 }
 
 .madoko p,
