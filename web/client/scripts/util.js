@@ -572,11 +572,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         msg = msg + ": " + req.responseText;
       }
       //cont(msg, res, req.response);
+      console.log(msg + "\n request: " + reqparam.method + ": " + reqparam.url );
       promise.reject(msg);
     }
 
     req.onload = function(ev) {
-      if (req.readyState === 4 && req.status === 200) {
+      if (req.readyState === 4 && req.status >= 200 && req.status <= 299) {
         if (timeout) clearTimeout(timeout);
         var type = req.getResponseHeader("Content-Type");
         var res;
@@ -684,6 +685,7 @@ doc.execCommand("SaveAs", null, filename)
     extname: stdpath.extname,
     basename: stdpath.basename,
     dirname: stdpath.dirname,
+    stemname: stdpath.stemname,
 
     hasImageExt: hasImageExt,
     hasTextExt: hasTextExt,

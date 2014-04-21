@@ -121,6 +121,11 @@ body {
   background-color: Floralwhite;
 }
 
+.button:active, .ibutton:active {
+  background-color: Gainsboro;
+}
+
+
 .ibutton {
   height: 1em;
   margin: 0.15em;
@@ -151,9 +156,13 @@ body {
   margin-top: 0.15em; 
 }
 
-#remote-logo {
+.logo {
   height: 1em;
+  width: 1.5em;
   margin-top: 0.15em;
+}
+
+#remote-logo {
   float: right;
 }
 
@@ -188,11 +197,15 @@ body {
   background-color: Floralwhite;
 }
 
-#load {
+#document, #sync {
   border-left: 1px solid black;
 }
-#load .content, #syncTo .content {
-  width: 8em;
+#document .content {
+  width: 16em;
+}
+
+#rename {
+  display: inline;
 }
 
 .menu.button {
@@ -320,7 +333,7 @@ body {
   width: 100%;
   position: absolute;
   z-index: 1;
-  top: 1.1rem;
+  top: 1rem;
   left: 0;
   background-color: white;
   border: 1px solid black;

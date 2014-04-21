@@ -89,6 +89,10 @@ define([],function() {
       return promise;
     }
 
+    Promise.do = function(action) {
+      return Promise.resolved().then( function() { return action(); } );
+    }
+
     Promise.prototype.then = function( onSuccess, onError, onProgress ) {
       var self = this;
       var listener;

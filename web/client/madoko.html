@@ -73,7 +73,7 @@ insert image:
        </ul>
       </div>
     </div>
-    <img id="remote-logo" src="images/local-logo.svg" />
+    <img id="remote-logo" src="images/local-logo.svg" class="logo" />
     <div id="edit-select" class="popup">
       <span id="edit-select-header" class="header">&nbsp;</span>
       <div id="edit-select-content">
@@ -84,21 +84,25 @@ insert image:
       </div>
     </div>    
     &nbsp;
-    <span id="load" class="button popup">
-      <span>load</span>
-      <div class="content">
-        <div id="load-local" class="menu button" title="Load document from browser local storage">local storage</div>
-        <div id="load-onedrive" class="menu button" title="Load document from Onedrive cloud storage"><img src="images/onedrive-logo.png" class="onedrive-logo" /> onedrive</div>
+    <span id="document" class="button popup">
+      <span>document</span>
+      <div id="document-content" class="content">
+        <div id="load-local" class="menu button" title="Load document from browser local storage"
+          ><img src="images/local-logo.svg" class="logo" /> load from local storage</div>
+        <div id="load-onedrive" class="menu button" title="Load document from Onedrive cloud storage"
+          ><img src="images/onedrive-logo.png" class="onedrive-logo" /> load from onedrive</div>
+        <hr/>
+        <div class="menu button">
+          <span>save as: <input id="rename" class="header" value="" type="text"/></span>
+        </div>
+        <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
+          ><img src="images/local-logo.svg" class="logo" /> to local storage</div>
+        <div id="sync-onedrive" class="menu button"
+          ><img src="images/onedrive-logo.png" class="onedrive-logo" /> to onedrive</div>
       </div>
-    </span
-    ><span id="syncTo" class="button popup">
-      <span>sync to</span>
-      <div class="content">
-        <div id="sync-local" class="menu button" title="Save workspace to browser local storage">local storage</div>
-        <div id="sync-onedrive" class="menu button"><img src="images/onedrive-logo.png" class="onedrive-logo" /> onedrive</div>
-      </div>
-    </span
-    ><span id="sync" class="button" title="Synchronize changes">sync</span
+    </span>
+    &nbsp;
+    <span id="sync" class="button" title="Synchronize changes">sync</span
     >
     <!-- <img class="spinner" src="images/spinner-line.svg"/> -->
   </div>

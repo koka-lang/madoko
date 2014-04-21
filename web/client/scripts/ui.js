@@ -168,10 +168,12 @@ var UI = (function() {
     };
 
     document.getElementById("sync-local").onclick = function(ev) {
-      storage.syncToLocal(self.storage).then( function(){ 
-        return self.syncTo();
-      }).then( undefined, function(err){ self.onError(err); } );
-    };
+      self.syncTo( storage.syncToLocal );
+    }
+
+    document.getElementById("sync-onedrive").onclick = function(ev) {
+      self.syncTo( storage.syncToOnedrive );
+    }
 
     document.getElementById("clear-local").onclick = function(ev) {
       localStorage.clear();
@@ -181,11 +183,17 @@ var UI = (function() {
       var div = document.getElementById("edit-select-content");
       self.editSelect(div);
     };   
+
+    self.inputRename = document.getElementById("rename");
+    document.getElementById("document").onmouseenter = function(ev) {
+      self.inputRename.value = self.docName;
+    };   
+       
    
     document.getElementById("sync").onclick = function(ev) 
     {      
       if (self.storage) {
-        var cursors = {};
+        var cursors = {};        
         var pos = self.editor.getPosition();
         cursors["/" + self.docName] = pos.lineNumber;
         self.storage.sync( diff, cursors ).then( function() {
@@ -422,6 +430,12 @@ var UI = (function() {
           "<div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
+  UI.prototype.rename = function( newName ) {
+    var self = this;   
+    if (newName===self.docName) return;
+
+  }
+
   /*
     // Insert some text in the document 
     function documentInsert( txt ) {
@@ -566,12 +580,6 @@ var UI = (function() {
     return true;
   }
 
-  UI.prototype.syncTo = function(storage) {
-    var self = this;
-    return self.setStorage( storage );
-  }
-
-
   UI.prototype.handleEvent = function(ev) {
     var self = this;
     if (!ev || !ev.type) return;
@@ -585,6 +593,21 @@ var UI = (function() {
     if (file.path===self.docName) {
       self.editSelectHeader.innerHTML = self.displayFile(file);
     }
+  }
+
+  UI.prototype.syncTo = function( storageSyncTo ) {
+    var self = this;
+    storageSyncTo(self.storage,util.stemname(self.docName),util.stemname(self.inputRename.value))
+    .then( function(res){ 
+      return self.setStorage(res.storage,res.docName).then( function() {
+        return res.docName;
+      }); 
+    })
+    .then( function(newDocName) {
+      util.message("saved: " + newDocName, util.Msg.Status);
+    }, function(err){ 
+      self.onError(err); 
+    });
   }
 
   // object    

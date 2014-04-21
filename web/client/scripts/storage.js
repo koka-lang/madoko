@@ -51,6 +51,12 @@ function onedriveGetFileInfoFromId( file_id ) {
   return onedriveGet( file_id );
 }
 
+function onedriveGetWriteAccess() {
+  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
+  return onedrivePromise( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), "get write access" );  
+}
+
+
 function unpersistOnedrive( obj ) {
   return new Onedrive(obj.folderId);
 }
@@ -92,8 +98,7 @@ var Onedrive = (function() {
 
 
   Onedrive.prototype.getWriteAccess = function() {
-    if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
-    return onedrivePromise( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), "get write access" );  
+    return onedriveGetWriteAccess();
   }
 
   function onedriveAccessToken() {
@@ -109,7 +114,6 @@ var Onedrive = (function() {
     // TODO: resolve sub-directories
     var self = this;
     var url = onedriveDomain + self.folderId + "/files/" + file.path + "?" +
-                //(file.info != null ? "" : "overwrite=false&") + 
                 onedriveAccessToken();
     return util.requestPUT( {url:url,contentType:";" }, file.content );
   }
@@ -120,7 +124,6 @@ var Onedrive = (function() {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
       var newFile = util.copy(file);
-      newFile.info = info; // update id and time
       newFile.createdTime = info.updated_time;
       return newFile;
     });
@@ -132,7 +135,6 @@ var Onedrive = (function() {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
         var file = {
-          info: info,
           kind: kind || (util.hasTextExt(fpath) ? File.Text : File.Generated),
           path: fpath,
           content: content,
@@ -159,7 +161,6 @@ var Onedrive = (function() {
       //if (!WL)   return cont("no connection");
       var url = onedriveDomain + info.id + "/picture?type=full&" + onedriveAccessToken();
       var file = {
-        info: info,
         path: fpath,
         kind: File.Image,
         url : url,
@@ -193,6 +194,20 @@ function onedriveOpenFile() {
     });
   });
 }     
+
+function onedriveOpenFolder() {
+  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
+  return onedrivePromise( WL.fileDialog( {
+    mode: "save",
+    select: "single",
+  })).then( function(res) {
+    if (!(res.data && res.data.folders && res.data.folders.length==1)) {
+      return Promise.rejected(onedriveError("no save folder selected"));
+    }
+    return new Storage(new Onedrive(res.data.folders[0].id) );
+  });
+}     
+
 
 function onedriveInit(options) {
   if (typeof WL === "undefined") {
@@ -303,14 +318,39 @@ function unpersistStorage( obj ) {
   return storage;
 }
 
-function syncToLocal( storage ) {
-  var local = new Storage(new LocalRemote());
-  storage.forEachFile( function(file0) {
-    var file = util.copy(file0);
-    file.info = null;
-    local.files.set( file.path, file );
-  });
-  return local.sync().then( function(){ return local; } );
+function syncToLocal( storage, docStem, newStem ) {
+  var local = new Storage(new LocalRemote());  
+  return syncTo( storage, local, docStem, newStem );
+}
+
+function syncToOnedrive( storage, docStem, newStem ) {
+  return onedriveOpenFolder().then( function(onedrive) {
+    return syncTo( storage, onedrive, docStem, newStem );
+  })
+}
+
+
+function syncTo(  storage, toStorage, docStem, newStem ) 
+{
+  var newName = (newStem ? newStem : docStem) + ".mdk";
+  return toStorage.readTextFile( newName, false ).then( 
+    function(file) {
+      throw new Error( "cannot save, document already exists: " + newName );
+    },
+    function(err) {
+      storage.forEachFile( function(file0) {
+        var file = util.copy(file0);
+        file.written = true;
+        if (newStem) {
+          file.path = file.path.replace( 
+                          new RegExp( "(?:^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
+                            newStem + "$2" );
+        }
+        toStorage.files.set( file.path, file );
+      });
+      return toStorage.sync().then( function(){ return {storage: toStorage, docName: newName }; } );
+    }
+  );
 }  
 
 var File = { 
@@ -390,7 +430,6 @@ var Storage = (function() {
       self._updateFile( {
         path     : fpath,
         kind     : kind,
-        info     : null,
         content  : content,
         original : content,
         written  : (content !== ""),
@@ -428,7 +467,6 @@ var Storage = (function() {
     finfo.path    = finfo.path || "unknown.mdk";
     finfo.url     = finfo.url || "";
     finfo.content = finfo.content || "";
-    finfo.info    = finfo.info || null;
     finfo.kind    = finfo.kind || File.Text;
     finfo.createdTime = finfo.createdTime || new Date().toISOString();
       
@@ -522,7 +560,6 @@ var Storage = (function() {
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
       if (!remoteTime) {
         // file is deleted on server?
-        // file.info = null; // clear stale info, so we do not overwrite
         remoteTime = file.createdTime;
       }
 
@@ -606,6 +643,7 @@ return {
   onedriveOpenFile: onedriveOpenFile,
   localOpenFile: localOpenFile,
   syncToLocal: syncToLocal,
+  syncToOnedrive: syncToOnedrive,  
   Storage: Storage,
   LocalRemote: LocalRemote,
   File: File,
