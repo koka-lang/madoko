@@ -371,11 +371,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       this.set(name,undefined);
     }
 
+    // apply action to each element. breaks early if action returns "false".
     Map.prototype.forEach = function( action ) {
       var self = this;
-      properties(self).forEach( function(name) {
+      properties(self).every( function(name) {
         if (name.substr(0,1) === "/") {
-          return action(name.substr(1), self[name]);
+          var res = action(name.substr(1), self[name]);
+          return (res===false ? false : true);
         }
       });
     }

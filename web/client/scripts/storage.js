@@ -460,8 +460,20 @@ var Storage = (function() {
   Storage.prototype.forEachFile = function( action ) {
     var self = this;
     self.files.forEach( function(fname,file) {
-      action(file);
+      return action(file);
     });
+  }
+
+  Storage.prototype.isSynced = function() {
+    var self = this;
+    var synced = true;
+    self.forEachFile( function(file) {
+      if (file.written) {
+        synced = false;
+        return false; // break
+      }
+    });
+    return synced;
   }
 
   Storage.prototype.writeTextFile = function( fpath, content, kind) {

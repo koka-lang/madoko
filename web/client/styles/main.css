@@ -106,9 +106,6 @@ html,body,#app {
   height: 0.9em;
 }
 
-#sync-spinner {
-}
-
 .button {
   padding: 0pt 0.2em 0em 0.2em;
   background-color: white;
@@ -151,9 +148,14 @@ html,body,#app {
   height: 1em;
 }
 
-#view-spinner {
+#view-spinner, #sync-spinner {
   margin-top: 0.15em; 
 }
+
+#sync-spinner {
+  float: right;
+}
+
 
 .logo {
   height: 1em;
@@ -320,6 +322,7 @@ div.msg-tool, div.msg-normal {
   -webkit-animation: spinner-rotate 2s infinite linear;
   animation: spinner-rotate 2s infinite linear;
 }
+
 
 @-webkit-keyframes spinner-rotate {
   from { -webkit-transform:rotate(0deg); }

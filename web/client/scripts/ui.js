@@ -96,8 +96,9 @@ var UI = (function() {
     var self = this;
 
     // common elements
-    self.spinners = 0;
     self.spinner = document.getElementById("view-spinner");    
+    self.syncer  = document.getElementById("sync-spinner");  
+    self.syncer.spinDelay = 1;  
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
@@ -158,12 +159,15 @@ var UI = (function() {
     };
 
     document.getElementById("load-onedrive").onclick = function(ev) {
-      storage.onedriveOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
-        .then( function() {
-            util.message("loaded: " + self.docName, util.Msg.Status);
-          }, 
-          function(err){ self.onError(err); } 
-        );
+      self.checkSynced().then( function() {
+        return storage.onedriveOpenFile();        
+      }).then( function(res) { 
+        return self.openFile(res.storage,res.docName); 
+      }).then( function() {
+        util.message("loaded: " + self.docName, util.Msg.Status);
+      }, function(err){ 
+        self.onError(err); 
+      });
     };
 
     document.getElementById("sync-onedrive").onclick = function(ev) {
@@ -171,13 +175,13 @@ var UI = (function() {
     }
 
     document.getElementById("new-document").onclick = function(ev) {
-      self.openFile(null,null)
-        .then( function() {
-            util.message("created new local document: " + self.docName, util.Msg.Status);
-          }, 
-          function(err){ self.onError(err); } 
-        );
-
+      self.checkSynced().then( function() {
+        return self.openFile(null,null);
+      }).then( function() {
+        util.message("created new local document: " + self.docName, util.Msg.Status);
+      }, function(err){ 
+        self.onError(err); 
+      });
     }
 
     /* document.getElementById("load-local").onclick = function(ev) {
@@ -213,12 +217,18 @@ var UI = (function() {
         var cursors = {};        
         var pos = self.editor.getPosition();
         cursors["/" + self.docName] = pos.lineNumber;
+        self.showSpinner(true,self.syncer);    
         self.storage.sync( diff, cursors ).then( function() {
           pos.lineNumber = cursors["/" + self.docName];
           self.editor.setPosition(pos);
-          util.message("synced", util.Msg.Status);
           self.localSave();
-        }).then( undefined, function(err){ self.onError(err); } );
+        }).then( function() {          
+          self.showSpinner(false,self.syncer);    
+          util.message("synced", util.Msg.Status);
+        }, function(err){ 
+          self.showSpinner(false,self.syncer);    
+          self.onError(err); 
+        });
       }
     };
 
@@ -290,18 +300,22 @@ var UI = (function() {
     self.syncView();
   }
 
-  UI.prototype.showSpinner = function(enable) {
+  UI.prototype.showSpinner = function(enable, elem) {
     var self = this;
-    if (enable && self.spinners === 0) {
+    if (!elem) elem = self.spinner; // default spinner
+    if (elem.spinners == null) elem.spinners = 0;
+    if (elem.spinDelay == null) elem.spinDelay = 500;
+
+    if (enable && elem.spinners === 0) {      
       setTimeout( function() {
-        if (self.spinners >= 1) util.addClassName(self.spinner,"spin");
-      }, 500 );
+        if (elem.spinners >= 1) util.addClassName(elem,"spin");
+      }, elem.spinDelay );
     }
-    else if (!enable && self.spinners === 1) {
-      util.removeClassName(self.spinner,"spin");
+    else if (!enable && elem.spinners === 1) {
+      util.removeClassName(elem,"spin");
     }
-    if (enable) self.spinners++;
-    else if (self.spinners > 0) self.spinners--;
+    if (enable) elem.spinners++;
+    else if (elem.spinners > 0) elem.spinners--;
   }
 
   UI.prototype.initRunners = function() {
@@ -413,6 +427,14 @@ var UI = (function() {
     else {
       return self.setStorage( null, null );
     }
+  }
+
+  UI.prototype.checkSynced = function() {
+    var self = this;
+    if (!self.storage || self.storage.isSynced()) return Promise.resolved();
+    var ok = window.confirm( "The current document has not been saved yet!\n\nDo you want to discard these changes?");
+    if (!ok) return Promise.rejected("the operation was cancelled");
+    return Promise.resolved();
   }
 
   UI.prototype.openFile = function(storage,fname) {
@@ -614,6 +636,7 @@ var UI = (function() {
 
   UI.prototype.syncTo = function( storageSyncTo ) {
     var self = this;
+    self.showSpinner(true,self.syncer);
     storageSyncTo(self.storage,util.stemname(self.docName),util.stemname(self.inputRename.value))
     .then( function(res){ 
       return self.setStorage(res.storage,res.docName).then( function() {
@@ -621,8 +644,10 @@ var UI = (function() {
       }); 
     })
     .then( function(newDocName) {
+      self.showSpinner(false,self.syncer);    
       util.message("saved: " + newDocName, util.Msg.Status);
     }, function(err){ 
+      self.showSpinner(false,self.syncer);    
       self.onError(err); 
     });
   }
