@@ -1,3 +1,10 @@
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 100">
   <path d="M 0 50 L 70 100 L 70 0 L 0 50" fill="black"/>
 </svg>
