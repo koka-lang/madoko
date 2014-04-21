@@ -161,8 +161,8 @@ html,body,#app {
   margin-top: 0.15em;
 }
 
-#remote-logo {
-  float: right;
+.menu.disable {
+  color: #BBB;
 }
 
 #menu-settings ul {

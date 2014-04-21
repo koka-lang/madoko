@@ -159,10 +159,28 @@ var UI = (function() {
 
     document.getElementById("load-onedrive").onclick = function(ev) {
       storage.onedriveOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
-        .then( undefined, function(err){ self.onError(err); } );
+        .then( function() {
+            util.message("loaded: " + self.docName, util.Msg.Status);
+          }, 
+          function(err){ self.onError(err); } 
+        );
     };
 
-    document.getElementById("load-local").onclick = function(ev) {
+    document.getElementById("sync-onedrive").onclick = function(ev) {
+      self.syncTo( storage.syncToOnedrive );
+    }
+
+    document.getElementById("new-document").onclick = function(ev) {
+      self.openFile(null,null)
+        .then( function() {
+            util.message("created new local document: " + self.docName, util.Msg.Status);
+          }, 
+          function(err){ self.onError(err); } 
+        );
+
+    }
+
+    /* document.getElementById("load-local").onclick = function(ev) {
       storage.localOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
         .then( undefined, function(err){ self.onError(err); } );
     };
@@ -170,13 +188,12 @@ var UI = (function() {
     document.getElementById("sync-local").onclick = function(ev) {
       self.syncTo( storage.syncToLocal );
     }
-
-    document.getElementById("sync-onedrive").onclick = function(ev) {
-      self.syncTo( storage.syncToOnedrive );
-    }
-
+    */
     document.getElementById("clear-local").onclick = function(ev) {
-      localStorage.clear();
+      if (localStorage) {
+        localStorage.clear();
+        util.message("local storage cleared", util.Msg.Status);
+      }
     };
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
@@ -358,7 +375,7 @@ var UI = (function() {
     if (stg == null) {
       // initialize fresh
       docName = "document.mdk";
-      stg = new storage.Storage(new storage.LocalRemote());
+      stg = new storage.Storage(new storage.NullRemote());
       var content = document.getElementById("initial").textContent;
       stg.writeTextFile(docName, content);
     } 
@@ -375,10 +392,10 @@ var UI = (function() {
       return self.runner.setStorage(self.storage).then( function() {    
         self.setEditText(file ? file.content : "");
         self.onFileUpdate(file); 
+        var remoteLogo = self.storage.remote.logo();
         var remoteType = self.storage.remote.type();
-        var remoteExt = (remoteType==="local" ? ".svg" : ".png");
         var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-        self.remoteLogo.src = "images/" + remoteType + "-logo" + remoteExt;
+        self.remoteLogo.src = "images/" + remoteLogo;
         self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
       });
     });
@@ -400,7 +417,7 @@ var UI = (function() {
 
   UI.prototype.openFile = function(storage,fname) {
     var self = this;
-    if (!util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
+    if (fname && !util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
     return self.setStorage( storage, fname );
   }
 

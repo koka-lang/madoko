@@ -77,8 +77,8 @@ insert image:
        <div id="clear-local" class="menu button">Clear local storage</div>
       </div>
     </div>
-    <img id="remote-logo" src="images/local-logo.svg" class="logo" />
     <span id="edit-select" class="popup boxed">
+      <img id="remote-logo" src="images/null-logo.svg" class="logo" />
       <span id="edit-select-header" class="header">&nbsp;</span>
       <div id="edit-select-content" class="boxed">
         <ul class="content">
@@ -90,19 +90,25 @@ insert image:
       <div id="document-content" class="boxed content">
         <div id="sync" class="menu button" title="Synchronize document"
           ><img src="images/sync.svg" class="logo" /> Synchronize</div>
+        <div id="new-document" class="menu button" title="Create a new local document"
+          ><img src="images/null-logo.svg" class="logo" /> New local document</div>
         <hr/>
-        <div id="load-local" class="menu button" title="Load document from browser local storage"
-          ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>
+        <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
+          ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
         <div id="load-onedrive" class="menu button" title="Load document from Onedrive cloud storage"
-          ><img src="images/onedrive-logo.png" class="onedrive-logo" /> Load from onedrive</div>
+          ><img src="images/onedrive-logo.png" class="logo" /> Load from onedrive</div>
+        <div id="load-dropbox" class="menu button disable" title="Load document from Dropbox cloud storage"
+          ><img src="images/dropbox-logo.png" class="logo" /> Load from dropbox</div>
         <hr/>
         <div class="menu button">
           <span>Save as:&nbsp;&nbsp;<input id="rename" class="header" value="" type="text"/></span>
         </div>
-        <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
-          ><img src="images/local-logo.svg" class="logo" /> To local storage</div>
+        <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
+          ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
         <div id="sync-onedrive" class="menu button"
           ><img src="images/onedrive-logo.png" class="onedrive-logo" /> To onedrive</div>
+        <div id="sync-dropbox" class="menu button disable"
+          ><img src="images/dropbox-logo.png" class="logo" /> To dropbox</div>
       </div>
     </span>
   </div>
@@ -130,8 +136,7 @@ insert image:
 </div>
 </div>
 
-<div id="initial" style="display:none; white-space:pre">
-Title         : Welcome to Madoko
+<div id="initial" style="display:none; white-space:pre">Title         : Welcome to Madoko
 Heading Base  : 2
 Author        : You
 Email         : you@anywhere.com

@@ -72,6 +72,10 @@ var Onedrive = (function() {
     return "Onedrive";
   }
 
+  Onedrive.prototype.logo = function() {
+    return "onedrive-logo.png";
+  }
+
   Onedrive.prototype.persist = function() {
     var self = this;
     return { folderId: self.folderId };
@@ -234,6 +238,10 @@ var LocalRemote = (function() {
     return "local";
   }
 
+  LocalRemote.prototype.logo = function() {
+    return "local-logo.svg";
+  }
+
   LocalRemote.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };
@@ -292,6 +300,47 @@ var LocalRemote = (function() {
 })();
 
 
+var NullRemote = (function() {
+  function NullRemote() {    
+  }
+
+  NullRemote.prototype.type = function() {
+    return "null";
+  }
+
+  NullRemote.prototype.logo = function() {
+    return "null-logo.svg";
+  }
+
+  NullRemote.prototype.persist = function() {
+    return { };
+  }
+
+  NullRemote.prototype.getWriteAccess = function() {
+    return Promise.resolved();
+  }
+
+  NullRemote.prototype.pushFile = function( file ) {
+    return Promise.rejected( new Error("not connected: cannot store files") );
+  }
+
+  NullRemote.prototype.pullTextFile = function( fpath, kind ) {
+    var self = this;
+    return Promise.rejected( new Error("not connected to storage: unable to read: " + fpath) );
+  }
+
+  NullRemote.prototype.getImageUrl = function( fpath ) {
+    return Promise.rejected( new Error("not connected: cannot store images") );
+  }
+
+  NullRemote.prototype.getRemoteTime = function( fpath ) {
+    return Promise.resolved(null);
+  }
+
+  return NullRemote;
+})();
+
+
 function localOpenFile() {
   if (!localStorage) throw new Error( "no local storage available, upgrade your browser");
   var local = new LocalRemote();
@@ -308,7 +357,7 @@ function unpersistRemote(remoteType,obj) {
       return new LocalRemote(obj.folder);
     }
   }
-  return new LocalRemote();
+  return new NullRemote();
 }
   
 function unpersistStorage( obj ) {
@@ -646,6 +695,7 @@ return {
   syncToOnedrive: syncToOnedrive,  
   Storage: Storage,
   LocalRemote: LocalRemote,
+  NullRemote: NullRemote,
   File: File,
   unpersistStorage: unpersistStorage,
 }
