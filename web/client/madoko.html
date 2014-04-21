@@ -74,7 +74,12 @@ insert image:
           <input type="checkbox" id="checkDisableServer"/> Disable server</div>
         <div class="item button" title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
        <hr/>
-       <div id="clear-local" class="item button">Clear local storage</div>
+       <div id="sync" class="item button" title="Synchronize document"
+          ><span class="icon"><img src="images/sync.svg"/></span>Synchronize</div>
+        <div id="new-document" class="item button" title="Create a new local document"
+          ><span class="icon"><img src="images/null-logo.svg"/></span>New local document</div>
+        <div id="clear-local" class="item button"
+          ><span class="icon"></span>Clear local storage</div>
       </div>
     </div>
     <img id="sync-spinner" class="spinner" src="images/sync.svg" alt="synchonize spinner"/>    
@@ -85,19 +90,15 @@ insert image:
       </div>
     </span
     ><span id="document" class="popup"
-      > <span class="button boxed"><img class="ibutton" src="images/tri-down.svg"/></span>
+      >&nbsp;<span class="button boxed"><img class="ibutton" src="images/tri-down.svg"/></span>
+       <!--<img class="ibutton" src="images/cloud-icon.png"/>-->
       <div id="document-content" class="menu boxed">
-        <div id="sync" class="item button" title="Synchronize document"
-          ><img src="images/sync.svg" class="logo" /> Synchronize</div>
-        <div id="new-document" class="item button" title="Create a new local document"
-          ><img src="images/null-logo.svg" class="logo" /> New local document</div>
-        <hr/>
         <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
           ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
         <div id="load-onedrive" class="item button" title="Load document from Onedrive cloud storage"
-          ><img src="images/onedrive-logo.png" class="logo" /> Load from onedrive</div>
+          ><span class="icon"><img src="images/onedrive-logo.png"/></span>Load from onedrive</div>
         <div id="load-dropbox" class="item button disable" title="Load document from Dropbox cloud storage"
-          ><img src="images/dropbox-logo.png" class="logo" /> Load from dropbox</div>
+          ><span class="icon"><img src="images/dropbox-logo.png"/></span>Load from dropbox</div>
         <hr/>
         <div class="item">
           <span>Save as:&nbsp;&nbsp;<input id="rename" class="header" value="" type="text"/></span>
@@ -105,9 +106,9 @@ insert image:
         <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
           ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
         <div id="sync-onedrive" class="item button" title="Save document to Onedrive cloud storage"
-          ><img src="images/onedrive-logo.png" class="onedrive-logo" /> To onedrive</div>
+          ><span class="icon"><img src="images/onedrive-logo.png"/></span>To onedrive</div>
         <div id="sync-dropbox" class="item button disable" title="Save document to Dropbox cloud storage"
-          ><img src="images/dropbox-logo.png" class="logo" /> To dropbox</div>
+          ><span class="icon"><img src="images/dropbox-logo.png"></span>To dropbox</div>
       </div>
     </span>
   </div>
@@ -118,7 +119,10 @@ insert image:
 <div id="viewpane" class="pane right">
   <div id="view-header" class="pane-header">
     <img id="button-editor-narrow" class="ibutton" src="images/tri-left.svg" />
-    &nbsp;
+    <img id="export-html" title="Export document as a web-page (HTML)"
+      class="ibutton" src="images/html-logo.png" alt="Download HTML"/>    
+    <img id="export-pdf" title="Export document as PDF"
+      class="ibutton" src="images/pdf-logo2.png" alt="Download PDF"/>    
     <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="view spinner"/>    
     <span id="view-message" class="popup boxed">
       <img id="warning" class="hide" src="images/warn.svg"/>

@@ -76,6 +76,8 @@ var UI = (function() {
     self.round = 0;
     self.lastRound = 0;
     self.text0 = "";
+    self.docText = "";
+    self.htmlText = "";
 
     self.initUIElements("");
     
@@ -199,6 +201,10 @@ var UI = (function() {
       }, function(err){ 
         self.onError(err); 
       });
+    }
+
+    document.getElementById("export-html").onclick = function(ev) {
+      util.downloadText(util.changeExt(util.basename(self.docName),".html"), self.htmlText);
     }
 
     /* document.getElementById("load-local").onclick = function(ev) {
@@ -375,7 +381,8 @@ var UI = (function() {
         }
         self.runner.runMadoko(self.docText, {docname: self.docName, round: round })
           .then(
-            function(res) { 
+            function(res) {
+              self.htmlText = res.content; 
               self.viewHTML(res.content);
               if (res.runAgain) {
                 self.stale=true;              

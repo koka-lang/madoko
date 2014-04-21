@@ -637,6 +637,23 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return promise;
   }
 
+  function downloadText(fname,text) {
+    /*
+    var pom = document.createElement('a');
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    pom.setAttribute('download', fname);
+    pom.click();
+    */
+    w = window.open();
+    doc = w.document;
+    doc.open( 'text/html','replace');
+    doc.charset = "utf-8";
+    doc.write(text);
+    doc.close();
+    w.scrollTo(0,0);
+    //doc.execCommand("SaveAs", null, fname)
+  }
+
   function downloadFile(url) 
   {
     window.open(url + "?download");
@@ -709,6 +726,7 @@ doc.execCommand("SaveAs", null, filename)
     requestPUT: requestPUT,
     requestGET: requestGET,
     downloadFile: downloadFile,
+    downloadText: downloadText,
 
     Map: Map,
     unpersistMap: unpersistMap,

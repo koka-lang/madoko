@@ -127,11 +127,19 @@ html,body,#app {
 
 .ibutton {
   height: 1em;
-  margin: 0.15em;
+  padding: 0em 0.25em;
 }
 
 .hide {
   visibility: hidden;
+}
+
+#document-content.menu {
+  padding-top: 0.25em;
+}
+.menu hr {
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
 }
 
 #editor-header>.ibutton {
@@ -161,10 +169,16 @@ html,body,#app {
 }
 
 
-.logo {
+.pane-header img, .item img {
   height: 1em;
-  width: 1.5em;
   margin-top: 0.15em;
+}
+
+.item .icon {
+  display: inline-block;
+  width: 1.5em;
+  text-align: center;
+  margin-right: 0.25em;
 }
 
 .disable {
@@ -209,6 +223,7 @@ div.boxed {
 #rename {
   display: inline;
   width: 10em;
+  color: #555;
 }
 
 .menu .button {
