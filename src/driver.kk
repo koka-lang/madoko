@@ -35,7 +35,8 @@ public function processContent( inName : string, outName : string, content : str
                           continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
 {
   styleDir = opts.installDir + "/../styles"
-  content.include(False, outName, [".",inName.dirname,outName.dirname,styleDir]) fun(icontent) {
+  searchDirs = [".",inName.dirname,outName.dirname,styleDir];
+  content.include(False, outName, searchDirs) fun(icontent) {
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
               then (opts.options)(xmp = True) else opts.options
@@ -63,7 +64,15 @@ public function processContent( inName : string, outName : string, content : str
     curdir = cwd()
     mopts.hilitelang.split(";").foreach fun(lang) { 
       fname = if (curdir=="") then lang else lang.replace(rxCurDir,curdir)
-      registerLanguage(fname) 
+      if (fname != "") {
+        match( trySearchReadTextFile(fname,searchDirs,".js")) {
+          Nothing -> {
+            log("files",if (extname(fname)=="") then fname + ".js" else fname)
+            mopts.printErr("warning: unable to read language definition: " + fname)
+          }
+          Just(definition) -> registerLanguage(fname.basename.noext.toLower,definition);
+        }
+      }
     }
 
 

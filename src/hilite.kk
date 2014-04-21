@@ -62,14 +62,17 @@ public function hilitePartial( src : string, lang : string, mode : maybe<hilitem
    })
 }
 
-external xregisterLanguage( name : string, fname : string ) : io () {
-  js inline "hljs.registerLanguage(#1,require(#2))"
+external xxregisterLanguage( name : string, definition : string ) : io () {
+  js inline "hljs.registerLanguage(#1,eval(#2))"
 }
 
-public function registerLanguage( fname : string ) : io () {
-  if (fname=="") return ()
-  name = fname.basename.noext.toLower
+function jsEscape(s : string) : string {
+  s.replaceAll(regex(@"[""\\]"),"\\$&").replaceAll(regex(@"\r?\n")," ")
+}
+
+public function registerLanguage( name : string, definition: string ) : io () {
+  fulldef = "(function(xhljs) { var module = {}; " + (definition) + "; return module.exports(xhljs); })"
   catch( { //trace("register: " + name + ": " + fname); 
-           xregisterLanguage(name,fname) }, 
-         fun(exn) { println("error: could not register language: " + fname  + "\n" + exn.show ) } )
+           xxregisterLanguage(name, fulldef) }, 
+         fun(exn) { println("error: could not register language: " + name  + "\n" + exn.show + "\n" + fulldef ) } )
 }

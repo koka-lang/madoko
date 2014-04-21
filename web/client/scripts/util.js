@@ -230,7 +230,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return contains(imageExts,ext);
   }
 
-  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls"].join(";");
+  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls",".js"].join(";");
   function hasTextExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
