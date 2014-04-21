@@ -16,11 +16,6 @@ html,body,#app {
   padding: 0ex 1ex;
 }
 
-body {
-  background-color: #3A4150;
-  background-color: #FFFAF4;
-}
-
 /* panes */
 
 .toppane {
@@ -28,7 +23,7 @@ body {
 }
 
 .pane {
-  height: calc(100% - 2rem);
+  height: calc(100% - 1rem);
   width: calc(50% - 0.125rem);
   transition: width 0.8s;
 }
@@ -40,12 +35,11 @@ body {
   width: calc(30% - 0.125rem);
 }
 .pane-header {
-  border: 1px solid black;
   margin-bottom: 0.25rem;
 }
 .pane-content {
-  border: 1px solid black;
-  height: calc(100% - 1.5rem - 4px);
+  height: calc(100% - 1.5rem - 6px);    
+  padding: 1px;
 }
 
 .pane.right {
@@ -60,6 +54,10 @@ body {
   font-size: small;
 }
 
+#menubar {
+  min-height: 0.8em;
+}
+
 #editor {
   height: 100%;
 }
@@ -72,6 +70,7 @@ body {
   background-color: white;
   transition: height 0.8s;
 }
+
 
 #view.short {
   height: calc(50% - 2px - 1.4rem);
@@ -100,7 +99,7 @@ body {
 #logo {
   height: 1em;
   float: left;
-  margin: 0.15em;
+  margin: 0.15em; 
 }
 
 .onedrive-logo {
@@ -111,18 +110,17 @@ body {
 }
 
 .button {
-  border-right: 1px solid black;
-  padding: 0pt 0.2em;
+  padding: 0pt 0.2em 0em 0.2em;
   background-color: white;
  }
 
 .button:hover, .ibutton:hover {
   cursor: pointer;
-  background-color: Floralwhite;
+  background-color: Gainsboro;
 }
 
 .button:active, .ibutton:active {
-  background-color: Gainsboro;
+  background-color: Gray;
 }
 
 
@@ -135,13 +133,14 @@ body {
   visibility: hidden;
 }
 
-#editor-header .ibutton {
+#editor-header>.ibutton {
   float: right;
 }
 
 #view-header {
   max-width: 100%;
   white-space: nowrap;
+  text-align: right;
 }
 
 #view-header .ibutton {
@@ -176,12 +175,22 @@ body {
   list-style-type: none;
 }
 
+.boxed {
+  border: 1px solid #888 !important;
+  border-radius: 5px;
+}
+.boxed div {
+  border-radius: 5px;
+}
+div.boxed {
+  padding: 1px;
+}
+
 #edit-select {
   background-color: white;
-  border-right: 1px solid black;
   width: 50%;
   padding: 0 1ex;
-  float: left;
+  display: inline-block;
 }
 
 #edit-select-content {
@@ -194,18 +203,23 @@ body {
 }
 
 .popup .item:hover, .popup li:hover {
-  background-color: Floralwhite;
+  background-color: Gainsboro;
 }
 
-#document, #sync {
-  border-left: 1px solid black;
+#document>span>img {
+  vertical-align: middle;
+  margin-top: 0.5ex;
+  width: auto;
+  height: 1.5ex;
 }
+
 #document .content {
   width: 16em;
 }
 
 #rename {
   display: inline;
+  width: 10em;
 }
 
 .menu.button {
@@ -262,9 +276,6 @@ div.msg-tool, div.msg-normal {
 
 #view {
   background-color: white;
-}
-body {
-  background-color: Gainsboro;
 }
 
 
@@ -336,7 +347,6 @@ body {
   top: 1rem;
   left: 0;
   background-color: white;
-  border: 1px solid black;
 }
 
 .popup:hover > div {
@@ -351,8 +361,9 @@ body {
 #view-message.popup {
   border-left: 1px solid black;
   background-color: white;
-  float: right;
   width: 50%;
+  display: inline-block;
+  text-align: left;
 }
 .popup:hover > div#koka-console {
   height: 10em;
