@@ -175,6 +175,11 @@ app.get('/rest/download/:fname', function(req,res) {
   var userpath = getUserPath(req,res);
   var fname  = req.params.fname;
   console.log("download: " + req.path + ": " + path.join(userpath,fname));
+
+  var url = "/temp/" + path.basename(userpath) + "/" + fname;
+  console.log("redirect to: " + url);
+  res.redirect(url);
+  /*
   fs.readFile( path.join(userpath,fname), function(err,data) {
     console.log("download result: " + err);
     if (err) return res.send(403); // TODO: improve error result;
@@ -183,6 +188,7 @@ app.get('/rest/download/:fname', function(req,res) {
     res.type(ext);
     res.send(data);
   });
+*/
 });
 
 /*
@@ -272,7 +278,11 @@ app.get("/rest/ask", function(req,res) {
 });
 */
 
+app.use('/temp/', express.static(__dirname + "/users/"));
+
 app.use('/', express.static(__dirname + "/client"));
+
+
 //app.listen(8080);
 var sslOptions = {
   key: fs.readFileSync('./ssl/madoko-server.key'),

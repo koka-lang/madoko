@@ -130,7 +130,6 @@ var Runner = (function() {
     var self = this;
     if (!self.storage) return;
     return self.storage.getImageUrl( fname ).then( function(url) {
-      if (err) return util.message(err);
       util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
     });
