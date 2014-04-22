@@ -37,13 +37,10 @@ public function clearStorage() : io () {
   clear();
 }
 
-public function addImage( images : dict<imginfo>, imageName : string, data : string ) : dict<imginfo> {
-  images + dict([(imageName,Imginfo(imageName,data))])
+public function addImage( embeds : dict<embedinfo>, imageName : string, data : string ) : dict<embedinfo> {
+  embeds + dict([(imageName,Embedinfo(imageName,data))])
 }
 
-public function hasImage( images : dict<imginfo>, imageName : string ) : bool {
-  images[imageName].bool
-}
 
 public function markdown( inputName : string, input : string, options : options,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,

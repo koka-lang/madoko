@@ -254,10 +254,10 @@ public struct mathinfo (
   imageData : string   // base64 encoding or ""
 )
 
-// Info for images. Used in a browser
-public struct imginfo (
-  imageName : string,
-  imageData : string  // data-url
+// Info for files to embed. Used in a browser
+public struct embedinfo (
+  embedName : string,
+  embedData : string  // data-url or text content
 )
 
 

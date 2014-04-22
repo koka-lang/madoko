@@ -154,7 +154,7 @@ app.post('/rest/run', function(req,res) {
       result.error = { message: err1.toString() };
       return res.send(401, result );
     }
-    var flags = " -mmath-embed:256 " + (req.body.pdf ? " --pdf" : "");
+    var flags = " -mmath-embed:512 -membed:512 " + (req.body.pdf ? " --pdf" : "");
     runMadoko( userpath, docname, flags, (req.body.pdf ? 30000 : 10000), function(err2,stdout,stderr) {
       result.stdout = stdout;
       result.stderr = stderr;

@@ -85,6 +85,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="math-scale") options(mathScale=ivalue)
     elif (key=="math-dpi") options(mathDpi=ivalue) 
     elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
+    elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)

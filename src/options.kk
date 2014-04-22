@@ -100,7 +100,8 @@ public struct options(
   
   metadata      : metadata = [],
   mathdim       : dict<mathinfo> = dict(),  // static math dimension information
-  imginfos      : dict<imginfo> = dict(),   // image data, used in a browser
+  embedinfos    : dict<embedinfo> = dict(),   // embed data, used in a browser
+  embedLimit    : int = 0,                    // limit for embedding data
   lineNo        : int = 0,                  // emit line no's. used in a browser. 
   copyStyles    : bool = True,              // copy standard style files
   lineMap       : lineMap = End             // keep track of line numbers in include files      

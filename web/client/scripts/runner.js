@@ -132,7 +132,7 @@ var Runner = (function() {
     if (!self.storage) return Promise.resolved(0);
     return self.storage.getImageUrl( fname ).then( function(url) {
       util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
-      self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
+      self.options.embedinfos = madoko.addImage(self.options.embedinfos,fname,url);
       return 1;
     }, function(err) {
       util.message(round.toString() + ": could not download image: " + fname, util.Msg.Trace);
