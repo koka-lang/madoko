@@ -538,7 +538,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "GET";
 
-    reqparam.url = reqparam.url + "?" + urlEncode(params);
+    var query = (params ? urlEncode(params) : "");
+    if (query) reqparam.url = reqparam.url + "?" + urlEncode(params);
     reqparam.contentType = null;
     
     return requestPOST( reqparam, "" );
@@ -598,6 +599,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     req.reject = function(ev) {
       reject();
     }
+    req.onerror = function(ev) {
+      reject();
+    }
+    req.ontimeout = function(ev) {
+      reject();
+    }
     
     var contentType = "text/plain";
     var content = null;
@@ -627,13 +634,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     }
     
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
+    if (reqparam.timeout != null) req.timeout = reqparam.timeout;
     req.send(content);
-    if (reqparam.timeout !== 0) {
-      timeout = setTimeout( function() { 
-        req.abort(); 
-      }, reqparam.timeout || 10000);
-    }
-
+    
     return promise;
   }
 

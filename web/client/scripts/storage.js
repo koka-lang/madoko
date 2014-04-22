@@ -581,7 +581,7 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     if (file) {
-      if (file.kind === File.Image) throw new Error("not an image: " + fpath); 
+      if (file.kind !== File.Image) throw new Error("not an image: " + fpath); 
       return Promise.resolved(file.url);
     }
     else {

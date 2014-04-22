@@ -71,13 +71,14 @@ var Runner = (function() {
     }
 
     // todo: wait for url resolving?
-    res.filesReferred.forEach( function(file) {
+    var images = res.filesReferred.map( function(file) {
       if (util.hasImageExt(file)) {
-        self.loadImage(ctx.round, file);
+        return self.loadImage(ctx.round, file);
       }
+      else return Promise.resolved(0);
     });
     
-    var reads = Promise.when( res.filesRead.map( function(file) {
+    var texts = res.filesRead.map( function(file) {
       return self.loadText(ctx.round, file).then( 
         function(content) { return 1; },
         function(err) {
@@ -85,9 +86,9 @@ var Runner = (function() {
           return 0;
         }
       );
-    }));
+    });
 
-    return reads.then( function(filesRead) {
+    return Promise.when([].concat(images,texts)).then( function(filesRead) {
       var readCount = 0;
       if (filesRead) filesRead.forEach( function(n) { readCount += n; });
 
@@ -128,10 +129,14 @@ var Runner = (function() {
 
   Runner.prototype.loadImage = function( round, fname ) {
     var self = this;
-    if (!self.storage) return;
+    if (!self.storage) return Promise.resolved(0);
     return self.storage.getImageUrl( fname ).then( function(url) {
       util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
       self.options.imginfos = madoko.addImage(self.options.imginfos,fname,url);
+      return 1;
+    }, function(err) {
+      util.message(round.toString() + ": could not download image: " + fname, util.Msg.Trace);
+      return 0;
     });
   }
 

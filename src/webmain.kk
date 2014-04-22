@@ -41,6 +41,9 @@ public function addImage( images : dict<imginfo>, imageName : string, data : str
   images + dict([(imageName,Imginfo(imageName,data))])
 }
 
+public function hasImage( images : dict<imginfo>, imageName : string ) : bool {
+  images[imageName].bool
+}
 
 public function markdown( inputName : string, input : string, options : options,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,

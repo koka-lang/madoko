@@ -11,6 +11,17 @@ define([],function() {
     var result = [];
     var error = null;
     var continuation = new Promise();
+
+    function setup(i) {
+      result[i] = undefined;
+      ps[i].then( function(res) {
+        result[i] = res; 
+        done();
+      }, function(err) {
+        error = err; 
+        done();
+      });    
+    }
     
     function done() {
       count++;
@@ -30,15 +41,7 @@ define([],function() {
     }
     else {      
       for(var i = 0; i < total; i++) {
-        var id = i;
-        result[id] = undefined;
-        ps[id].then( function(res) {
-          result[id] = res; 
-          done();
-        }, function(err) {
-          error = err; 
-          done();
-        });
+        setup(i);
       }
     }
 
