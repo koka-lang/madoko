@@ -309,15 +309,33 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
    (if (options.css == "") then "" else {
       links = options.css.expand.splitPaths
       links.map(fun(link) { 
-        if (link.relative) then log("filesRefer",link);
-        "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n" 
+        match(options.embedinfos[link]) {
+          Just(info) | info.embedData != "" -> 
+            "  <style>\n" + info.embedData + "\n  </style>\n"
+          _ -> {
+            if (link.relative) then {
+              log("filesRefer",link);
+              log("embed",link);
+            }
+            "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n"             
+          }
+        }
       }).join 
     }) +
    (if (options.scripts == "") then "" else {
       links = options.scripts.expand.splitPaths
       links.map(fun(link) { 
-        if (link.relative) then log("filesRefer",link);
-        "  <script src=\"" + escape(link) + "\"></script>\n" 
+        match(options.embedinfos[link]) {
+          Just(info) | info.embedData != "" -> 
+            "  <script>\n" + info.embedData + "\n  </script>\n"
+          _ -> {
+            if (link.relative) then {
+              log("filesRefer",link);
+              log("embed",link);
+            }
+            "  <script src=\"" + escape(link) + "\"></script>\n" 
+          }
+        }
       }).join 
     }) +
    (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {

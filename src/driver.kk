@@ -73,7 +73,7 @@ public function processContent( inName : string, outName : string, content : str
           }
           Just((_,definition)) -> {
             langName = fname.basename.noext.toLower
-            trace("register language: " + langName + ":\n" + definition )
+            //trace("register language: " + langName + ":\n" + definition )
             registerLanguage(langName,definition)
           }
         }
