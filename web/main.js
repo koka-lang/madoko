@@ -174,11 +174,13 @@ app.get("/onedrive", function(req,res) {
 app.get('/rest/download/:fname', function(req,res) {
   var userpath = getUserPath(req,res);
   var fname  = req.params.fname;
-  console.log("download: " + req.path + ": " + fname);
+  console.log("download: " + req.path + ": " + path.join(userpath,fname));
   fs.readFile( path.join(userpath,fname), function(err,data) {
     console.log("download result: " + err);
     if (err) return res.send(403); // TODO: improve error result;
-    res.attachment(fname);
+    //res.attachment(fname);
+    var ext = path.extname(fname);
+    res.type(ext);
     res.send(data);
   });
 });

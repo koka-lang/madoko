@@ -163,6 +163,7 @@ var Runner = (function() {
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
     var params = {};    
     params.docname = ctx.docname;
+    if (ctx.pdf) params.pdf = ctx.pdf;
     params["/" + params.docname] = text;
     
     if (self.storage) {

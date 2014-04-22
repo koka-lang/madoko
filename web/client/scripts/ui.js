@@ -204,7 +204,13 @@ var UI = (function() {
     }
 
     document.getElementById("export-html").onclick = function(ev) {
-      util.downloadText(util.changeExt(util.basename(self.docName),".html"), self.htmlText);
+      self.event( "HTML exported", function() { return self.generateHtml(); } );
+
+//      util.downloadText(util.changeExt(util.basename(self.docName),".html"), self.htmlText);
+    }
+
+    document.getElementById("export-pdf").onclick = function(ev) {
+      self.event( "PDF exported", function() { return self.generatePdf(); } );
     }
 
     /* document.getElementById("load-local").onclick = function(ev) {
@@ -225,11 +231,6 @@ var UI = (function() {
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
       self.editSelect();
-    };   
-
-    self.inputRename = document.getElementById("rename");
-    document.getElementById("document").onmouseenter = function(ev) {
-      self.inputRename.value = self.docName;
     };   
        
     document.getElementById("edit-select-content").onclick = function(ev) {
@@ -537,10 +538,22 @@ var UI = (function() {
           "<div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
-  UI.prototype.rename = function( newName ) {
-    var self = this;   
-    if (newName===self.docName) return;
+  UI.prototype.generatePdf = function() {
+    var self = this;
+    var ctx = { round: 0, docname: self.docName, pdf: true };
+    return self.spinWhile( self.viewSpinner, 
+      self.runner.runMadokoServer( self.docText, ctx ).then( function() {
+        return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".pdf"));
+      }));
+  }
 
+  UI.prototype.generateHtml = function() {
+    var self = this;
+    var ctx = { round: 0, docname: self.docName, pdf: false };
+    return self.spinWhile( self.viewSpinner, 
+      self.runner.runMadokoServer( self.docText, ctx ).then( function() {
+        return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".html"));
+      }));
   }
 
   /*

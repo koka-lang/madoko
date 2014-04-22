@@ -638,12 +638,6 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
   function downloadText(fname,text) {
-    /*
-    var pom = document.createElement('a');
-    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    pom.setAttribute('download', fname);
-    pom.click();
-    */
     w = window.open();
     doc = w.document;
     doc.open( 'text/html','replace');
@@ -656,8 +650,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
 
   function downloadFile(url) 
   {
-    window.open(url + "?download");
-    /*
+    window.open(url, "_newtab");    
+  }
+    //var frame = document.getElementById("download-frame");
+    //frame.src = url + "?download";
+  /*
     var userAgent = navigator.userAgent.toLowerCase();
     //If in Chrome or Safari - download via virtual link click
     if ((contains(userAgent,"chrome") || contains(userAgent,"safari")) && document.createEvent) {
@@ -672,13 +669,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       var ev = document.createEvent('MouseEvents');
       ev.initEvent('click' ,true ,true);
       link.dispatchEvent(ev);
+      //link.click();
     }
     else {
       window.open(url + "?download");
     }
-    */
   }
-
+*/
   /*
 w = window.open();
 doc = w.document;
