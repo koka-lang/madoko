@@ -14,6 +14,7 @@
 var onServer = ($std_core.getHost() === "nodejs");
 
 var $readFileSync;
+var $readBase64Sync;
 var $writeFileSync;
 var $renameSync;
 var $fexistsSync;
@@ -28,8 +29,8 @@ if (onServer) {
   var path = require("path");
   var xmkdirp = require('mkdirp');
 
-  $readFileSync = function(fname) { return fs.readFileSync(fname,{encoding:'utf8'}); };
-  $writeFileSync = function(fname,data) { return fs.writeFileSync(fname,data,{encoding:'utf8'}); };
+  $readFileSync = function(fname,enc) { return fs.readFileSync(fname,{encoding:enc}); };
+  $writeFileSync = function(fname,enc,data) { return fs.writeFileSync(fname,data,{encoding:enc}); };
   $fexistsSync = function(fname) { return (fs.existsSync(fname) != 0);};
   $relative = function(dir,p) { return path.relative(dir,p); };
   $cwd = function() { return process.cwd(); };
@@ -38,13 +39,13 @@ if (onServer) {
   $clear = function() { };
 }
 else {
-  $readFileSync = function(fname) {
+  $readFileSync = function(fname,enc) {
     var data = vfs["/" + fname];
     if (data === undefined) throw ("Could not read: " + fname);
     return data;
   }
 
-  $writeFileSync = function(fname,data) {
+  $writeFileSync = function(fname,enc,data) {
     vfs["/" + fname] = data;
   }
 

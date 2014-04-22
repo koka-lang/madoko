@@ -80,10 +80,16 @@ val rxProtocol = regex(@"^\w+:");
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
-    val href = match (context.imginfos[link.href]) {
-      Just(info) | info.imageData != "" -> info.imageData 
+    val href = match (context.embedinfos[link.href]) {
+      Just(info) | info.embedData != "" -> {
+        //trace("embedded: " + info.embedName)
+        info.embedData 
+      }
       _          -> {
-        if (link.href.relative) then log("filesRefer",link.href);
+        if (link.href.relative) then {
+          log("filesRefer",link.href);
+          log("embed", link.href);
+        }
         link.href.escape
       }
     }    

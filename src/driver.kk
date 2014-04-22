@@ -71,7 +71,11 @@ public function processContent( inName : string, outName : string, content : str
             log("files",if (extname(fname)=="") then fname + ".js" else fname)
             mopts.printErr("warning: unable to read language definition: " + fname)
           }
-          Just((_,definition)) -> registerLanguage(fname.basename.noext.toLower,definition);
+          Just((_,definition)) -> {
+            langName = fname.basename.noext.toLower
+            trace("register language: " + langName + ":\n" + definition )
+            registerLanguage(langName,definition)
+          }
         }
       }
     }
@@ -100,7 +104,7 @@ public function processContent( inName : string, outName : string, content : str
 val rxCurDir = regex(@"^(\.)(?=[\\/])")
 
 function process( inName : string, outName : string, content : string, icontent : string, 
-                  xopts : options, mopts : options, firstTime : bool, runners : runners,
+                  xopts0 : options, mopts : options, firstTime : bool, runners : runners,
                   redo : () -> io (),
                   continue : (string) -> io () ) : io () 
 {
@@ -110,22 +114,48 @@ function process( inName : string, outName : string, content : string, icontent 
     }        
   }
 
+  function embedFiles( opts: options, files : list<string>, html0 : string ) : io (options,string) {
+    if (mopts.embedLimit <= 0 || files.length == 0) return (opts,html0);
+
+    val infos = files.concat fun(fname) {
+                  mime = mimeFromExt(fname);
+                  data = if (mime.startsWith("text/") || mime.startsWith("application/")) 
+                              then readTextFileDef(fname,"")
+                            elif (mime.startsWith("image/"))
+                              then {
+                                //trace("embed image: " + fname)
+                                img = readBase64FileDef(combine(inName.dirname,fname),"")
+                                ("data:" + mime + ";base64," + img)
+                              }
+                            else ""
+                  if (data != "" && data.length < mopts.embedLimit) 
+                   then [(fname,Embedinfo(fname,data))]
+                  else {
+                    if (fname!="") {
+                      mopts.printErr("warning: unable to embed: " + fname + 
+                                       (if (data.length > 0) then " (too large)" else " (does not exist)"))
+                    }
+                    []
+                  }
+                }
+    if (infos.length == 0) return (opts,html0)
+      
+    val newopts = opts(embedinfos = opts.embedinfos + infos.dict)
+    val newhtml = markdown(icontent,newopts)
+    (newopts,newhtml)
+  }
 
   function phaseHtml() 
   {
     // markdown to html          
-    val (mathDvi,(mathPdf,(warns,(logs, html)))) = 
+    val (fileEmbed,(mathDvi,(mathPdf,(warns,(logs, html0))))) = 
+                              withLog("embed") {
                                withLog("math-dvi") {
                                 withLog("math-pdf") {
                                  withLog("warning") { 
                                   withLog("aux") { 
-                                   markdown(icontent,xopts) 
-                                 }}}}
-
-    // write html result
-    if (!(tryWriteTextFile(outName,html))) {
-      mopts.printErr("error: unable to write: " + outName) 
-    }
+                                   markdown(icontent,xopts0) 
+                                 }}}}}
 
     // write an aux file
     bibAux = outName.appendStem("-bib").changeExt(".aux")
@@ -143,6 +173,14 @@ function process( inName : string, outName : string, content : string, icontent 
       }
     }
     else {
+      // do embedding
+      val (xopts,html) = embedFiles(xopts0,fileEmbed.split("\n").list,html0);                                 
+
+      // write html result
+      if (!(tryWriteTextFile(outName,html))) {
+        mopts.printErr("error: unable to write: " + outName) 
+      }
+
       // show warnings
       if (warns != "" && mopts.verbose >= 1) {
         print(warns)
@@ -262,7 +300,7 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
           val (lcount,lmap,icontent) = processIncludes( content )
           lineMap := Include(lineNo,lcount,fileName,lmap,lineMap)
           lineCount := lineCount + lcount - 1
-          trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
+          //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
           icontent
         }
       }
@@ -316,5 +354,34 @@ function tryCopyTextFile( fileName : string, outName : string ) : io bool {
   }
 }
 
+val mimes = dict([
+  ("","text/plain"),
+  ("mdk","text/plain"),
+  ("txt","text/plain"),
+  ("css","text/css"),
+  ("html","text/html"),
+  ("htm","text/html"),
+  ("js","application/x-javascript"),
+  
+  ("tex","application/x-tex"),
+  ("sty","application/x-latex"),
+  ("cls","application/x-latex"),
+  ("bib","text/plain"),
+  ("bbl","text/plain"),
+  ("aux","text/plain"),
 
+  ("png","image/png"),
+  ("jpg","image/jpg"),
+  ("jpeg","image/jpg"),
+  ("gif","image/gif"),
+  ("svg","image/svg+xml")
+]);
+
+function mimeFromExt( fname : string ) : string {
+  ext = extname(fname).substr(1);
+  match(mimes[ext]) {
+    Just(mime) -> mime
+    Nothing    -> ""
+  }
+}
 

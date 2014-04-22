@@ -53,7 +53,7 @@ public function readTextFileSync( fileName : string, required : bool = True ) : 
 external xreadTextFileSync( fileName : string ) : io string
 {
   cs inline "System.IO.File.ReadAllText(#1,System.Text.Encoding.UTF8)"
-  js inline "$readFileSync(#1)"
+  js inline "$readFileSync(#1,'utf-8')"
 }
 
 // Try to write a text file synchronously (using UTF8 encoding). 
@@ -71,7 +71,7 @@ public function writeTextFileSync( fileName : string, content : string ) : io ()
 
 external xwriteTextFileSync( fileName : string, content : string )  : io () {
   cs inline "System.IO.File.WriteAllText(#1,#2,System.Text.Encoding.UTF8)"
-  js inline "$writeFileSync(#1,#2)"
+  js inline "$writeFileSync(#1,'utf-8',#2)"
 }
 
 
@@ -108,4 +108,32 @@ public function tryRename( fnameOld : string, fnameNew : string ) : io () {
 public external clear() : io () {
   cs inline "0"
   js inline "$clear()"
+}
+
+
+// Try to read a binary file in base64; return a default value in case of an error.
+public function readBase64FileDef( fileName : string, def : string, required : bool = False ) : io string {
+  match (fileName.tryReadBase64File(required)) {
+    Left(_exn) -> def
+    Right(content) -> content
+  }
+}
+
+// Try to a binary file synchronously (using base64 encoding)
+public function tryReadBase64File( fileName : string, required : bool = True ) : io either<exception,string> 
+{
+  catch( { Right(readBase64FileSync(fileName,required)) }, fun(exn) { Left(exn) }) 
+}
+
+// Read a binary file synchronously (using base64 encoding)
+public function readBase64FileSync( fileName : string, required : bool = True ) : io string
+{
+  if (required) log("files",fileName);
+  xreadBase64FileSync(fileName);
+}
+
+external xreadBase64FileSync( fileName : string ) : io string
+{
+  cs inline "Convert.ToBase64String(System.IO.File.ReadAllBytes(#1))"
+  js inline "$readFileSync(#1,'base64')"
 }

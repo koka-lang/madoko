@@ -101,7 +101,7 @@ function inlineGrammar( fmt : formatter, bench : bool = False ) {
 public function inlineContext( fmt : formatter, 
                                metadata : dict<string>,
                                mathinfos : dict<mathinfo>,
-                               imginfos : dict<imginfo>,
+                               embedinfos : dict<embedinfo>,
                                citestyle : citestyle = citeAuto,
                                sanitize : bool = False,
                                bench: bool = False,
@@ -111,7 +111,7 @@ public function inlineContext( fmt : formatter,
                                starBold : bool = False ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
-                 metadata, mathinfos, imginfos,
+                 metadata, mathinfos, embedinfos,
                  citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 

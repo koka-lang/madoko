@@ -63,7 +63,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   // parse definitions
   val icontext  = inlineContext(fmt,options.metadata.dict,
                                     options.mathdim,
-                                    options.imginfos, 
+                                    options.embedinfos, 
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
                                     options.mathmode.isStatic,
