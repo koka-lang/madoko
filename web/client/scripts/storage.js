@@ -139,7 +139,7 @@ var Onedrive = (function() {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
         var file = {
-          kind: kind || (util.hasTextExt(fpath) ? File.Text : File.Generated),
+          kind: kind || File.fromPath(fpath) || File.Generated,
           path: fpath,
           content: content,
           url: "",
@@ -160,6 +160,16 @@ var Onedrive = (function() {
 
   Onedrive.prototype.getImageUrl = function( fpath ) {    
     var self = this;
+    return self.pullTextFile( fpath, File.Image ).then(function(file) {
+      file.content = btoa(file.content);
+      var encoding = "image/png";
+      var ext = util.extname(fpath);
+      if (ext==="jpg") encoding = "image/jpg";
+      else if (ext==="gif") encoding = "image/gif"
+      file.url = "data:" + encoding + ";base64," + file.content;
+      return file;
+    });
+    /*
     return self.getFileInfo( fpath ).then( function (info) {
       if (!info) return Promise.rejected("image not found");
       //if (!WL)   return cont("no connection");
@@ -174,6 +184,7 @@ var Onedrive = (function() {
       };
       return file;
     });
+    */
   }
 
   return Onedrive;

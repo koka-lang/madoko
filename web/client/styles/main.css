@@ -23,7 +23,7 @@ html,body,#app {
 }
 
 .pane {
-  height: calc(100% - 1rem);
+  height: calc(100% - 1.25rem);
   width: calc(50% - 0.125rem);
   transition: width 0.8s;
 }

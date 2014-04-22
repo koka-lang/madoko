@@ -65,8 +65,8 @@ var UI = (function() {
     self.editor  = null;
     
     self.refreshContinuous = true;
-    self.refreshRate = 250;
-    self.serverRefreshRate = 1000;
+    self.refreshRate = 500;
+    self.serverRefreshRate = 2000;
     self.allowServer = true;
     self.runner = runner;
     //self.runner.setStorage(self.storage);
@@ -540,7 +540,7 @@ var UI = (function() {
 
   UI.prototype.generatePdf = function() {
     var self = this;
-    var ctx = { round: 0, docname: self.docName, pdf: true };
+    var ctx = { round: 0, docname: self.docName, pdf: true, includeImages: true };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
         return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".pdf"));
@@ -549,7 +549,7 @@ var UI = (function() {
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    var ctx = { round: 0, docname: self.docName, pdf: false };
+    var ctx = { round: 0, docname: self.docName, pdf: false, includeImages: true };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
         return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".html"));

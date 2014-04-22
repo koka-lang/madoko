@@ -10,8 +10,8 @@ var qs = require("querystring");
 var https = require("https");
 var http = require("http");
 
-app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.json({limit: "5mb"}));
+app.use(express.urlencoded({limit: "5mb"}));
 app.use(express.cookieParser("@MadokoRocks!@!@!"));
 app.use(express.cookieSession({key:"madoko.sess"}));
 app.use(app.router);
@@ -20,6 +20,7 @@ app.use(function(err, req, res, next){
   console.log(err);
   res.send(500,err.toString());
 });
+
 
 var cookieAge = 20000; //24 * 60 * 60000;
 var userRoot = "users";
@@ -56,17 +57,60 @@ function getUserPath( req,res ) {
   return userRoot + "/" + userpath;
 }
 
+function isValidFileName(fname) {
+  return (/^(?![\.\/])([\w\-]|\.\w|\/\w)+$/.test(fname));
+}
+
+// Download an image
+function downloadImage( fpath, url, cont ) {
+  https.get(url, function(res) {
+    res.setEncoding("binary");
+
+    var body = "";
+    res.on('data', function(d) {
+      body += d;
+    })
+    res.on('end', function() {
+      var obj = null;
+      try { obj = JSON.parse(body); } catch(exn) {};
+      if (obj) {
+        var msg = "error: could not download image: " + path.basename(fpath);
+        if (obj.error && obj.error.message) {
+          msg += "\n  " + obj.error.message;
+        }
+        console.log(msg);
+        return cont(msg);
+      }
+      console.log("image downloaded: " + fpath);
+      fs.writeFile( fpath, body, 'binary', cont );
+    });
+  }).on('error', function(err) {
+    console.log("error while downloading image: " + err);
+    cont(err);
+  });  
+}
+
 
 // Save files to be processed.
 function saveFiles( userPath, files, cont ) {
   async.each( properties(files),  function(fname,xcont) {
-    if (fname.substr(0,1) !== "/") return xcont();
-    var fpath = path.join(userPath,fname.substr(1)); // todo: check validity of the file name
-    console.log("file: " + fpath);
+    if (!fname || fname.substr(0,1) !== "/") return xcont();
+    var file = files[fname];
+    fname = fname.substr(1);
+    if (!isValidFileName(fname)) return xcont("Invalid file name: " + fname);
+    
+    var fpath = path.join(userPath,fname); 
+    console.log("writing file: " + fpath);
     var dir = path.dirname(fpath);
     mkdirp(dir, function(err) {
-      if (err) xcont(err);
-          else fs.writeFile( fpath, files[fname], {encoding:"utf8"}, xcont );
+      if (err) return xcont(err);
+      if (file.type === "text") {
+        return fs.writeFile( fpath, file.content, {encoding:file.encoding}, xcont );
+      }
+      if (file.type === "image") {
+        return fs.writeFile(fpath, file.content, {encoding:file.encoding}, xcont);
+      }
+      xcont(null);
     });
   }, cont );
 }
@@ -79,7 +123,7 @@ function readFiles( userpath, docname, fnames, cont ) {
     fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
               stem + "-bib.bbl"];
   }
-  console.log(fnames);
+  console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
   async.each( fnames, function(fname,xcont) {
     fs.readFile( path.join(userpath,fname), {encoding:"utf8"}, function(err,data) {
@@ -92,10 +136,10 @@ function readFiles( userpath, docname, fnames, cont ) {
 }
 
 // run madoko
-function runMadoko( userPath, docname, flags, cont ) {
+function runMadoko( userPath, docname, flags, timeout, cont ) {
   var command = /* "madoko */ "node ../../client/lib/cli.js -vvv " + flags + " " + docname;
   console.log("> " + command);
-  cp.exec( command, {cwd: userPath, timeout: 10000 }, cont); 
+  cp.exec( command, {cwd: userPath, timeout: timeout || 10000 }, cont); 
 }
 
 
@@ -107,21 +151,21 @@ app.post('/rest/run', function(req,res) {
   console.log(properties(req.body));
   saveFiles( userpath, req.body, function(err1) {
     if (err1) {
-      result.err = err1.toString();
-      return res.send(403, result );
+      result.error = { message: err1.toString() };
+      return res.send(401, result );
     }
     var flags = " -mmath-embed:256 " + (req.body.pdf ? " --pdf" : "");
-    runMadoko( userpath, docname, flags, function(err2,stdout,stderr) {
+    runMadoko( userpath, docname, flags, (req.body.pdf ? 30000 : 10000), function(err2,stdout,stderr) {
       result.stdout = stdout;
       result.stderr = stderr;
       if (err2) {
-        result.err = err2.toString();
-        return res.send(403, result);
+        result.error = { message: err2.toString() };
+        return res.send(401, result);
       }
       readFiles( userpath, docname, [], function(err3,files) {
         if (err3) {
-          result.err = err3.toString();
-          return res.send(403, result);
+          result.error = { message: err3.toString() };
+          return res.send(401, result);
         }
         console.log(result);
         //console.log(files);
@@ -150,6 +194,7 @@ app.get("/redirect", function(req,res) {
 
 function onedriveGet(query,cont) {
   https.get(query, function(res) {
+    res.setEncoding("binary");
     //console.log("statusCode: ", res.statusCode);
     //console.log("headers: ", res.headers);
     var body = "";
@@ -157,7 +202,7 @@ function onedriveGet(query,cont) {
       body += d;
     })
     res.on('end', function() {
-      cont(body);
+      cont(new Buffer(body) );
     });
   });  
 }

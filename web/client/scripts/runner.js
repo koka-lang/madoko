@@ -70,7 +70,7 @@ var Runner = (function() {
       util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
     }
 
-    // todo: wait for url resolving?
+    // todo: should we wait for image url resolving?
     var images = res.filesReferred.map( function(file) {
       if (util.hasImageExt(file)) {
         return self.loadImage(ctx.round, file);
@@ -171,8 +171,13 @@ var Runner = (function() {
     params["/" + params.docname] = text;
     
     if (self.storage) {
-      self.storage.forEachFileKind( [storage.File.Text], function(fname,content) {
-        params["/" + fname] = content;
+      self.storage.forEachFile(function(file) {
+        if (file.kind === storage.File.Text) {
+          params["/" + file.path] = { type: "text", content: file.content, encoding: "utf-8" };
+        }
+        else if (file.kind === storage.File.Image && ctx.includeImages) {
+          params["/" + file.path] = { type: "image", content: file.content, encoding: "base64" };          
+        }
       });
     }
     var t0 = Date.now();

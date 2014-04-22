@@ -653,7 +653,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
 
   function downloadFile(url) 
   {
-    window.open(url, "_newtab");    
+    window.open(url, "_newtab", "");    
   }
     //var frame = document.getElementById("download-frame");
     //frame.src = url + "?download";
