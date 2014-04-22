@@ -283,12 +283,13 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
-      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4).parseBlocks(attrs.lineNo,citestyle),attrs)
+      Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4)
+        .parseBlocks(attrs.lineNo,fcontext.lineMap,citestyle),attrs)
     }
     Markdown(monly) -> {
       match(monly) {
         Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
-        _ -> Div(txt.parseBlocks(attrs.lineNo,citestyle),attrs)
+        _ -> Div(txt.parseBlocks(attrs.lineNo,fcontext.lineMap,citestyle),attrs)
       }
     }
     input -> {

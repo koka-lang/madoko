@@ -148,7 +148,6 @@ public function htmlFormat( attrs : attrs, tag : string, sanitize : bool = True 
    (if (attrs.classes.isNil) then "" 
      else " class=\"" + escape(attrs.classes.join(" ")) + "\"") 
    + attrs.formatKeyvals(tag)
-   + (if (attrs.lineNo <= 0) then "" else " data-line=" + attrs.lineNo.show)
    // (" input=" + attrs.input.maybe("?",showInput)) +
    //(attrs.htmlAttributes)
 }
@@ -157,10 +156,11 @@ function formatKeyvals( attrs : attrs, tag : string ) {
   kvs = attrs.keyvals.map fun(kv) {
     formatKeyval(kv.fst,kv.snd,tag)
   }
-  val (hstyles,hattrs) = kvs.partition( fun(kv){ kv.contains(":") } )
+  val (hstyles,hattrs) = kvs.partition( fun(kv){ kv.contains(rxColon) } )
   (if (hattrs.isNil) then "" else " " + hattrs.join(" ")) + 
    (if (hstyles.isNil) then "" else " style='" + hstyles.join(";") + "'")
 }
+val rxColon = regex(@"^[\w\-]+\s*:")
 
 function formatKeyval( key : string, value : string, tag : string ) {
   if (key.startsWith("html-")) {

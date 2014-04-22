@@ -126,7 +126,8 @@ rectype blockContext {
                 bench   : bool,
                 pedantic : bool,
                 loose   : bool = False,
-                lineNo  : int = 0
+                lineNo  : int = 0,
+                lineMap : lineMap
               )
 }
 
@@ -225,7 +226,7 @@ function blockList( cap : matched, context : blockContext ) : block {
                                        then rxindent4
                                        else rxindent(icap.groups[1].length) ,"") 
     attrs = icap.groups[3].parseAttrs
-    Item(parseBlocks(icontext,item,line), if (line <= 0) then attrs else attrs.setLineNo(line))
+    Item(parseBlocks(icontext,item,line), if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))
   }
 
   function parseItems( src : string, line : int, acc : list<block> = Nil ) {
@@ -343,13 +344,13 @@ function columnStyle( style : string ) : attrs {
 ---------------------------------------- */
 
 // Parse text into blocks
-public function parseBlocks( src : string, lineNo : int,
+public function parseBlocks( src : string, lineNo : int, lineMap : lineMap,
                              citestyle : citestyle = citeAuto, 
                              bench : bool = False,
                              pedantic : bool = False
                              )  : list<block>
 {
-  bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,bench,pedantic, False, lineNo)
+  bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,bench,pedantic, False, lineNo, lineMap)
   parseBlocks(bcontext,src)
 }
 
@@ -381,7 +382,7 @@ function parseBlocksAccLine( context : blockContext,  acc : list<block>, line : 
                  Nothing   -> 0
                  Just(cap) -> cap.regex/matched.count("\n")
                }
-  val block2 = block.adjustAttrs( fun(attrs:attrs) { attrs.setLineNo(line+ofs) } )
+  val block2 = block.adjustAttrs( fun(attrs:attrs) { attrs.setLineNo(context.lineMap,line+ofs) } )
   parseBlocksAccLine( context, Cons(block2,acc), line2, src.substr1(next) )
 }
 
@@ -391,6 +392,23 @@ function raw( s : string ) : block {
   Line(s)
 }
 
+function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
+  srcline = translateLine(lineMap,lineNo)
+  return attrs.setLineNo(lineNo,srcline)
+}
+
+function translateLine( lineInfos: lineMap, lineNo : int ) : string {
+  match(lineInfos) {
+    End -> lineNo.show
+    Include(line,span,fileName,include,rest) -> {
+      if (lineNo < line) 
+       then lineNo.show
+      elif (lineNo >= line + span)
+       then translateLine( rest, lineNo - (span - 1))
+       else line.show + ";" + fileName + ":" + translateLine(include,lineNo - (line - 1)) 
+    }
+  }
+}
 
 function adjustAttrs( b : block, adjust : (attrs : attrs) -> attrs ) : block 
 {

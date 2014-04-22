@@ -582,7 +582,7 @@ var UI = (function() {
     }
   */
 
-  function findElemAtLine( elem, line ) 
+  function findElemAtLine( elem, line, fname ) 
   {
     if (!elem || !line || line < 0) return null;
 
@@ -599,6 +599,15 @@ var UI = (function() {
       var child = children[i];
       var dataline = child.getAttribute("data-line");
       if (dataline && !util.contains(child.style.display,"inline")) {
+        if (fname) {
+          var idx = dataline.indexOf(fname + ":");
+          if (idx >= 0) {
+            dataline = dataline.substr(idx + fname.length + 1)
+          }
+          else {
+            dataline = ""  // gives NaN to cline
+          }
+        }
         var cline = parseInt(dataline);
         if (!isNaN(cline)) {
           if (cline <= line) {
@@ -621,7 +630,7 @@ var UI = (function() {
     for(var i = current; i <= next; i++) {
       var child = children[i];
       if (child.children && child.children.length > 0) {
-        var cres = findElemAtLine(child,line);
+        var cres = findElemAtLine(child,line,fname);
         if (cres) {
           found = true;
           res.elem = cres.elem;
@@ -664,7 +673,7 @@ var UI = (function() {
       //console.log("scroll: start: " + startLine)
     }
 
-    var res = findElemAtLine( self.view, startLine );
+    var res = findElemAtLine( self.view, startLine, self.editName === self.docName ? null : self.editName );
     if (!res) return false;
     
     var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;

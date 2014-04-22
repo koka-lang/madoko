@@ -18,6 +18,7 @@ import common
 import options
 import metadata
 import madoko
+import block    // for lineMap
 import storage
 import hilite
 import mathParse
@@ -36,13 +37,13 @@ public function processContent( inName : string, outName : string, content : str
 {
   styleDir = opts.installDir + "/../styles"
   searchDirs = [".",inName.dirname,outName.dirname,styleDir];
-  content.include(False, outName, searchDirs) fun(icontent) {
+  content.include(False, outName, searchDirs) fun(icontent,lmap) {
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
               then (opts.options)(xmp = True) else opts.options
                
     date   = now()                             
-    opts1  = opts0(metadata=opts0.metadata 
+    opts1  = opts0(lineMap=lmap, metadata=opts0.metadata 
                     + [("docname",inName.stemname),("filename",inName)]
                     + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))] )
 
@@ -70,7 +71,7 @@ public function processContent( inName : string, outName : string, content : str
             log("files",if (extname(fname)=="") then fname + ".js" else fname)
             mopts.printErr("warning: unable to read language definition: " + fname)
           }
-          Just(definition) -> registerLanguage(fname.basename.noext.toLower,definition);
+          Just((_,definition)) -> registerLanguage(fname.basename.noext.toLower,definition);
         }
       }
     }
@@ -222,46 +223,77 @@ val rxCite = regex(@"^\\(citation|bibstyle|bibdata)\b.*$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
 
 
-function include( txt : string, fast : bool, outName : string, dirs : list<string>, action : (string) -> <io|e> a ) : <io|e> a {
-  itxt = if (fast) then txt else txt.replaceAll(rxInclude) fun(cap) {
-    fname = cap.groups.firstMatched
+function include( text : string, fast : bool, outName : string, dirs : list<string>, action : (string,lineMap) -> <io|e> a ) : <io|e> a {
+  if (fast) then return action(text,End) 
+
+  function readInclude( fname : string ) : io (string,string) 
+  {
     if (fname=="BIB") then {
-      bbl = readTextFileDef( outName.appendStem("-bib").changeExt(".bbl"), "", True)  
-      "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~"
+      fileName = outName.appendStem("-bib").changeExt(".bbl")
+      bbl = readTextFileDef( fileName, "", True)  
+      (fileName, "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~")
     }
     else {
       match (trySearchReadTextFile(fname,dirs,".mdk")) {
         Nothing -> {
-          log("files", if (extname(fname)=="") then fname + ".mdk" else fname)
+          fileName = if (extname(fname)=="") then fname + ".mdk" else fname
+          log("files", fileName)
           println("  warning: unable to read include: " + fname )
-          ""
+          (fileName,"")
         }
-        Just(content) -> content 
+        Just(res) -> res 
       }
     }
   }
-  action(itxt)
+
+  function processIncludes( txt : string) : io (int,lineMap,string)
+  {
+    var lineNo := 0;
+    var lineCount := 0;
+    var lineMap := End;
+    ls = txt.lines.map fun(line) {
+      lineNo := lineNo + 1;
+      lineCount := lineCount + 1;
+      match (line.find(rxInclude)) {
+        Nothing -> line
+        Just(cap) -> {
+          val fname = cap.groups.firstMatched
+          val (fileName,content) = readInclude(fname)
+          val (lcount,lmap,icontent) = processIncludes( content )
+          lineMap := Include(lineNo,lcount,fileName,lmap,lineMap)
+          lineCount := lineCount + lcount - 1
+          trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
+          icontent
+        }
+      }
+    }
+
+    (lineCount, lineMap.reverse, ls.unlines)
+  }
+
+  val (_lcount,lmap,content) = processIncludes(text)
+  action(content,lmap)
 }
 val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "" ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext)) {
     Nothing -> def
-    Just(content) -> content
+    Just((_,content)) -> content
   } 
 }
 
-function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "" ) : io maybe<string> {
+function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "" ) : io maybe<(string,string)> {
   match(searchFileSync(dirs,fname)) {
     Nothing -> {
       if (ext=="" || fname.extname != "") then Nothing else {
         match (searchFileSync(dirs,fname.changeExt(ext))) {
           Nothing -> Nothing
-          Just(fullname) -> tryReadTextFile(fullname,True).maybe
+          Just(fullname) -> tryReadTextFile(fullname,True).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
         }
       }
     } 
-    Just(fullname) -> tryReadTextFile(fullname,True).maybe
+    Just(fullname) -> tryReadTextFile(fullname,True).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
   }
 }
 

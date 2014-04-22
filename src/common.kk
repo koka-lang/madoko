@@ -117,6 +117,33 @@ public function traceRuleHist() {
 }
 
 /* --------------------------------------
+ Line maps to track line numbers in include files 
+---------------------------------------- */
+
+public type lineMap  {
+  End
+  Include( 
+    line: int,        // line of the [INCLUDE] 
+    count: int,       // number of lines in the included text
+    fileName: string, // include file name
+    lineMap: lineMap, // lineMap of the included file
+    rest: lineMap 
+  )
+} 
+
+public function reverse( lineMap : lineMap ) : lineMap {
+  reverseAcc( lineMap, End)
+}
+
+function reverseAcc( lineMap : lineMap, acc : lineMap ) : lineMap {
+  match(lineMap) {
+    End -> acc
+    Include(line,count,fileName,lmap,rest)
+      -> reverseAcc( rest, Include(line,count,fileName,lmap,acc) )
+  }
+}
+
+/* --------------------------------------
  Citations styles 
 ---------------------------------------- */
 
@@ -356,8 +383,8 @@ public function addKeyval( attrs : attrs, key : string, value : string ) : attrs
         text=attrs.text+" "+key+"="+value.quote, empty=False)
 }
 
-public function setLineNo( attrs : attrs, line : int ) : attrs {
-  attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show )
+public function setLineNo( attrs : attrs, line : int, dataline: string ) : attrs {
+  attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show ).addKeyval("data-line",dataline)
 }
 
 function quote( s : string ) : string {

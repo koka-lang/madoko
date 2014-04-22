@@ -30,11 +30,13 @@ public struct formatContext(
   headingBase: int,
   langPrefix : string,
   pedantic : bool,
+  lineMap : lineMap,
   fmt : formatter = FmtHtml
 )
 
-public function initialFormatContext( icontext : inlineContext, titleinfo : titleinfo, headingBase : int, pedantic : bool, fmt : formatter ) {
-  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"language-",pedantic, fmt)
+public function initialFormatContext( icontext : inlineContext, lineMap: lineMap, titleinfo : titleinfo, 
+                                      headingBase : int, pedantic : bool, fmt : formatter ) {
+  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"language-",pedantic, lineMap, fmt)
 }
 
 function fmtEnv( context : formatContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
