@@ -169,7 +169,8 @@ var UI = (function() {
       }
     };
 
-    document.getElementById('checkDelayedUpdate').onchange = function(ev) { 
+    self.checkDelayedUpdate = document.getElementById("checkDelayedUpdate");
+    self.checkDelayedUpdate.onchange = function(ev) { 
       self.refreshContinuous = !ev.target.checked; 
     };
 
@@ -341,7 +342,7 @@ var UI = (function() {
     var self = this;
     if (!elem) elem = self.spinner; // default spinner
     if (elem.spinners == null) elem.spinners = 0;
-    if (elem.spinDelay == null) elem.spinDelay = 500;
+    if (elem.spinDelay == null) elem.spinDelay = self.refreshRate * 1.5;
 
     if (enable && elem.spinners === 0) {      
       setTimeout( function() {
@@ -390,6 +391,15 @@ var UI = (function() {
               }
               if (res.runOnServer && self.allowServer && self.asyncServer) {
                 self.asyncServer.setStale();
+              }
+              console.log("avg: " + res.avgTime + "ms");
+              if (res.avgTime > 300) {
+                self.refreshContinuous = false;
+                self.checkDelayedUpdate.checked = true;
+              }
+              else if (res.avgTime < 200) {
+                self.refreshContinuous = true;
+                self.checkDelayedUpdate.checked = false;
               }
               cont();
             },

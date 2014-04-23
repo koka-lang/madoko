@@ -21,11 +21,16 @@ var Runner = (function() {
     self.options = madoko.initialOptions();
     self.options.mathEmbedLimit = 256 * 1024;
     self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
+
+    self.times = [];
+    self.timesSamples = 10;
   }
 
   Runner.prototype.setStorage = function( stg ) {
     var self = this;
     var oldStorage = self.storage;
+
+    self.times = [200]; // clear previous times
 
     self.storage = stg;
     if (self.storage) {
@@ -68,6 +73,8 @@ var Runner = (function() {
     //}
     if (res.time) {
       util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
+      self.times.push(parseInt(res.time));
+      if (self.times.length > self.timesSamples) self.times.shift();
     }
 
     // todo: should we wait for image url resolving?
@@ -75,17 +82,14 @@ var Runner = (function() {
       if (util.hasImageExt(file)) {
         return self.loadImage(ctx.round, file);
       }
+      else if (util.hasEmbedExt(file)) {
+        return self.loadText(ctx.round, file);
+      }
       else return Promise.resolved(0);
     });
     
     var texts = res.filesRead.map( function(file) {
-      return self.loadText(ctx.round, file).then( 
-        function(content) { return 1; },
-        function(err) {
-          if (err) util.message("unable to read from storage: " + file, (util.hasTextExt(file) ? util.Msg.Exn : util.Msg.Trace));
-          return 0;
-        }
-      );
+      return self.loadText(ctx.round, file);
     });
 
     return Promise.when([].concat(images,texts)).then( function(filesRead) {
@@ -104,7 +108,8 @@ var Runner = (function() {
         });
       }
 
-      return { content: res.content, ctx: ctx, runAgain: runAgain, runOnServer: runOnServer };      
+      var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
+      return { content: res.content, ctx: ctx, avgTime: avg, runAgain: runAgain, runOnServer: runOnServer };      
     });
   }
 
@@ -146,9 +151,12 @@ var Runner = (function() {
     return self.storage.readTextFile( fname, storage.File.fromPath(fname) )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
-        return file.content;
+        return 1;
         //self.files.set(fname,content);
         //self.sendFiles.push({ name: fname, content: content });
+      }, function(err) {
+          util.message("unable to read from storage: " + fname, (util.hasTextExt(fname) ? util.Msg.Exn : util.Msg.Trace));
+          return 0;
       });
   }
 

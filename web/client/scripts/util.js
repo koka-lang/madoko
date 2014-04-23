@@ -230,13 +230,19 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return contains(imageExts,ext);
   }
 
-  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls",".js"].join(";");
+  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls",".js",".css",".bbl"].join(";");
   function hasTextExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
     return (contains(textExts,ext) && !endsWith(fname,".final.tex"));
   }
 
+  var embedExts = [".bbl",".js",".css"].join(";");
+  function hasEmbedExt(fname) {
+    var ext = stdpath.extname(fname);
+    if (!ext) return false;
+    return (contains(embedExts,ext) && fname !== "madoko.css");
+  }
 
   function toggleButton( elemName, text0, text1, action ) {
     var button = (typeof elemName === "string" ? document.getElementById(elemName) : elemName);
@@ -709,6 +715,7 @@ doc.execCommand("SaveAs", null, filename)
 
     hasImageExt: hasImageExt,
     hasTextExt: hasTextExt,
+    hasEmbedExt: hasEmbedExt,
 
     startsWith: startsWith,
     endsWith: endsWith,
