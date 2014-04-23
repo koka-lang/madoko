@@ -456,7 +456,7 @@ var Storage = (function() {
   Storage.prototype.createTextFile = function(fpath,content,kind) {
     var self = this;
     kind = kind || File.Text;
-    self.writeTextFile(fpath,content);
+    self.writeTextFile(fpath,content,kind);
   }
 
   Storage.prototype.forEachFileKind = function( kinds, action ) {
@@ -493,8 +493,9 @@ var Storage = (function() {
     var file = self.files.get(fpath);
 
     if (file) {
-      file.kind = kind;
-      file.written = file.written || (content != file.content);
+      if (file.content === content) return;
+      file.kind = file.kind || kind;
+      file.written = true; //file.written || (content !== file.content);
       file.content = content;
       self._updateFile(file);
     }
@@ -588,6 +589,21 @@ var Storage = (function() {
     );    
   }
 
+  Storage.prototype.collect = function( roots ) {
+    var self = this;
+    self.forEachFile( function(file) {
+      if (!file.content && !util.contains(roots,file.path)) {
+        self.files.remove(file.path);
+      }
+    });
+  }
+
+  Storage.prototype.existsLocal = function( fpath ) {
+    var self = this;
+    var file = self.files.get(fpath);
+    return (file != null);
+  }
+
   Storage.prototype.getImageUrl = function( fpath ) {
     var self = this;
     var file = self.files.get(fpath);
@@ -640,7 +656,7 @@ var Storage = (function() {
         if (rxStartMerge.test(file.content)) {
           throw new Error( message("cannot save to server: resolve merge conflicts first!", "save to server") );
         }
-        else if (file.kind !== File.Generated && file.createdTime !== remoteTime) {
+        else if (file.kind === File.Text && file.createdTime !== remoteTime) {
           // modified on client and server
           if (!diff) {
             return message( "modified on server!", "merge from server" );
@@ -676,7 +692,7 @@ var Storage = (function() {
             });
           }
         }
-        else {
+        else {          
           // write back the client changes
           return self.remote.pushFile( file ).then( function(newFile) {
             newFile.written = false;
@@ -689,14 +705,14 @@ var Storage = (function() {
       // not modified locally
       else if (file.createdTime !== remoteTime) {
         // update from server
-        self.files.delete(file.path);
+        self.files.remove(file.path);
         return self.readTextFile(file.path, false ).then( function(newfile) {
-          return message("update from server");
-        },
-        function(err) {
-          self.files.set(file.path,file); // restore
-          throw err;
-        }
+            return message("update from server");
+          },
+          function(err) {
+            self.files.set(file.path,file); // restore
+            throw err;
+          }
         );
       }
       else {

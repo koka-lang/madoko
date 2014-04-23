@@ -373,8 +373,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       return (this.get(name) !== undefined);
     }
 
-    Map.prototype.delete = function( name ) {
-      this.set(name,undefined);
+    Map.prototype.remove = function( name ) {
+      delete this["/" + name];
     }
 
     // apply action to each element. breaks early if action returns "false".
@@ -506,9 +506,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.run();
     }
 
-    AsyncRunner.prototype.run = function() {
+    AsyncRunner.prototype.run = function(force) {
       var self = this;
-      if (self.stale && self.round <= self.lastRound) {
+      if ((force || self.stale) && self.round <= self.lastRound) {
         self.stale = false;
         self.round++;
         var round = self.round;
@@ -516,16 +516,15 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         //  if (self.lastRound < round && self.spinner) 
         self.spinner(true);
         //}, 200);
-        self.action( self.round, function() {
+        return self.action( self.round ).always( function() {
           if (self.lastRound < round) {
             self.lastRound = round;          
             if (self.spinner) self.spinner(false);
           }
         });
-        return true;
       }
       else {
-        return false;
+        return Promise.resolved();
       }
     }
 

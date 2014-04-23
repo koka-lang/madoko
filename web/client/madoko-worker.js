@@ -36,7 +36,7 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
   function fileList( files ) {
     if (!files) return [];
     return nub(files.split("\n").filter(function(s) { 
-      return (s && !local.contains(s)); 
+      return (s); // && !local.contains(s)); 
     }));
   }
 
@@ -51,12 +51,12 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
     }));
     return written.map( function(fname) {
       var content = madoko.readTextFile(fname);
-      local.set(fname,content);
+      local.set(fname,true);
       return { path: fname, content: content };
     });
   }
 
-  var local = new util.Map();
+  var local = new util.Map(); // filename -> bool
 
   self.addEventListener( "message", function(ev) {
     try {    
@@ -97,7 +97,6 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
       }
     }
     catch(exn) {
-      throw(exn);
       self.postMessage( {
         messageId: req.messageId,
         message  : exn.toString(),

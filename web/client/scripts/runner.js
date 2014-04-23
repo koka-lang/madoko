@@ -35,8 +35,11 @@ var Runner = (function() {
     self.storage = stg;
     if (self.storage) {
       self.storage.addEventListener("update",self);
-      self.storage.forEachFileKind( [storage.File.Text,storage.File.Generated], function(path,content) {
-        self.sendFiles.push( { name: path, content: content });
+      self.storage.forEachFile( function(file) {
+        self.sendFiles.push( { 
+          name: file.path,
+          content: (file.kind === File.Image ? file.url : file.content) 
+        });
       });
     }
 
@@ -80,18 +83,22 @@ var Runner = (function() {
     // todo: should we wait for image url resolving?
     var images = res.filesReferred.map( function(file) {
       if (util.hasImageExt(file)) {
-        return self.loadImage(ctx.round, file);
+        return self.loadText(ctx.round, file, false);
       }
       else if (util.hasEmbedExt(file)) {
-        return self.loadText(ctx.round, file);
+        return self.loadText(ctx.round, file, true);
       }
       else return Promise.resolved(0);
     });
     
     var texts = res.filesRead.map( function(file) {
-      return self.loadText(ctx.round, file);
+      return self.loadText(ctx.round, file, false);
     });
 
+    // collect empty files no longer referred to
+    if (self.storage) self.storage.collect( res.filesReferred.concat(res.filesRead) );
+
+    // when we get all files from remote storage..
     return Promise.when([].concat(images,texts)).then( function(filesRead) {
       var readCount = 0;
       if (filesRead) filesRead.forEach( function(n) { readCount += n; });
@@ -134,10 +141,10 @@ var Runner = (function() {
 
   Runner.prototype.loadImage = function( round, fname ) {
     var self = this;
-    if (!self.storage) return Promise.resolved(0);
+    if (!self.storage || self.storage.existsLocal(fname)) return Promise.resolved(0);
     return self.storage.getImageUrl( fname ).then( function(url) {
       util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
-      self.options.embedinfos = madoko.addImage(self.options.embedinfos,fname,url);
+      //self.options.embedinfos = madoko.addImage(self.options.embedinfos,fname,url);
       return 1;
     }, function(err) {
       util.message(round.toString() + ": could not download image: " + fname, util.Msg.Trace);
@@ -145,17 +152,17 @@ var Runner = (function() {
     });
   }
 
-  Runner.prototype.loadText = function(round,fname) {
+  Runner.prototype.loadText = function(round,fname,referred) {
     var self = this;
-    if (!self.storage) return;
-    return self.storage.readTextFile( fname, storage.File.fromPath(fname) )
+    if (!self.storage || self.storage.existsLocal(fname)) return Promise.resolved(0);
+    return self.storage.readTextFile( fname, referred ? false : storage.File.fromPath(fname) )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
         return 1;
         //self.files.set(fname,content);
         //self.sendFiles.push({ name: fname, content: content });
       }, function(err) {
-          util.message("unable to read from storage: " + fname, (util.hasTextExt(fname) ? util.Msg.Exn : util.Msg.Trace));
+          util.message("unable to read from storage: " + fname, util.Msg.Info);
           return 0;
       });
   }

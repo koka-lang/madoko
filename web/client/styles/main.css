@@ -180,7 +180,7 @@ html,body,#app {
   margin-right: 0.25em;
 }
 
-.disable {
+.disable, .file.generated, .file.image {
   color: #BBB;
 }
 
@@ -209,6 +209,8 @@ div.boxed {
 
 #edit-select-content .binaries {
   color: gray;
+  margin-top: 1ex;
+  border-top: 1px dotted black;
 }
 
 #document>span>img {

@@ -57,6 +57,15 @@ function localStorageLoad( fname ) {
   } 
 }
 
+function getModeFromExt(ext) {
+  if (ext===".mdk") return "mdk";
+  else if (ext===".md") return "text/x-web-markdown";
+  else if (ext===".js") return "text/javascript";
+  else if (ext===".css") return "text/css";
+  else if (ext===".html") return "text/html";
+  else return "text/plain";
+}
+
 var UI = (function() {
 
   function UI( runner )
@@ -78,6 +87,8 @@ var UI = (function() {
     self.text0 = "";
     self.docText = "";
     self.htmlText = "";
+
+    Monaco.Editor.createCustomMode(madokoMode.mode);
 
     self.initUIElements("");
     
@@ -126,12 +137,13 @@ var UI = (function() {
     var checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
-      mode: "text/x-web-markdown",
+      mode: "mdk",
       theme: "vs",
       lineNumbers: (checkLineNumbers ? checkLineNumbers.checked : false),
-      mode: madokoMode.mode,
+      //mode: madokoMode.mode,
       tabSize: 4,
-      insertSpaces: false,
+      insertSpaces: true,
+      //wrappingColumn: 80,
       automaticLayout: true,
       scrollbar: {
         vertical: "auto",
@@ -313,9 +325,9 @@ var UI = (function() {
 
   }
 
-  UI.prototype.setEditText = function( text ) {
+  UI.prototype.setEditText = function( text, mode ) {
     var self = this;
-    self.editor.model.setValue(text);    
+    self.editor.model.setValue(text,mode);    
     self.text0 = text;
     self.text  = text;
     self.setStale();
@@ -374,14 +386,14 @@ var UI = (function() {
 
         return self.stale;
       },
-      function(round,cont) {
+      function(round) {
         self.localSave();
         self.stale = false;
         if (!self.runner) return cont();
         if (self.editName === self.docName) {
           self.docText = self.text0;
         }
-        self.runner.runMadoko(self.docText, {docname: self.docName, round: round })
+        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round })
           .then(
             function(res) {
               self.htmlText = res.content; 
@@ -401,11 +413,9 @@ var UI = (function() {
                 self.refreshContinuous = true;
                 self.checkDelayedUpdate.checked = false;
               }
-              cont();
             },
             function(err) {
               self.onError(err);
-              cont();
             }
           );
       }
@@ -413,16 +423,20 @@ var UI = (function() {
 
     self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
-      function(round,cont) {
-        self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}).then( function(ctx) {
-          self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
-          self.asyncMadoko.setStale();   // run madoko locally
-          cont();
-        },
-        function(err) {
-          self.onError(err);
-          cont();
-        });
+      function(round) {
+        return self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}).then( 
+          function(ctx) {
+            self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
+            self.allowServer = false;
+            // run madoko locally again using our generated files
+            return self.asyncMadoko.run(true).always( function(){
+              self.allowServer = true;
+            });               
+          },
+          function(err) {
+            self.onError(err);            
+          }
+        );
       }
     );
   }
@@ -483,7 +497,15 @@ var UI = (function() {
         self.docText = self.getEditText();
       }
       self.editName = file.path;
-      self.setEditText(file.content);
+      var mime = getModeFromExt(util.extname(file.path));
+      var options = {
+        readOnly: file.kind !== storage.File.Text,
+        mode: mime,
+        //wrappingColumn: (util.extname(file.path)===".mdk" ? 80 : 0)
+      };
+      self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
+      self.editor.updateOptions(options);
+      
       self.onFileUpdate(file); 
       self.editSelect();
     });
@@ -533,7 +555,7 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var disable = (file.kind === storage.File.Text && file.path !== self.editName ? "" : " disable");
+        var disable = (file.kind === storage.File.Text ? "" : " disable");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item" + disable + "'>" + 
                           self.displayFile(file) + "</div>";

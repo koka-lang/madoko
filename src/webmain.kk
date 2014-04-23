@@ -20,7 +20,10 @@ import mathStatic
 public function initialOptions( args : string = "" ) : io options {
   val opts = if (args=="") then Options()
                  else parseOptions(args).maybe(CommandOptions(),id).options
-  opts(lineNo=1,mathEmbedLimit=256*1024,copyStyles=False)                
+  opts(lineNo=1,
+       mathEmbedLimit=512*1024,   // must match server setting!
+       embedLimit=512*1024,
+       copyStyles=False)  
 }
 
 val coptions = CommandOptions()
