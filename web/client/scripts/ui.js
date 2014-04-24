@@ -356,10 +356,104 @@ var UI = (function() {
     if (self.asyncMadoko) self.asyncMadoko.setStale();    
   }
 
-  UI.prototype.viewHTML = function( html ) {
+  function findSpan( text, line0, col0, line1, col1 ) {
+    var pos0 = 0;
+    for( var line = 1; line < line0; line++) {
+      var i = text.indexOf("\n", pos0);
+      if (i >= 0) pos0 = i+1;
+    }
+    var pos1 = pos0;
+    for( ; line < line1; line++) {
+      var i = text.indexOf("\n", pos1 );
+      if (i >= 0) pos1 = i+1;
+    }
+    pos0 += (col0-1);
+    pos1 += (col1-1);
+    return {
+      pos0: pos0,
+      pos1: pos1,
+      text: text.substring(pos0,pos1),
+    };
+  }
+
+  function expandSpan( text, span ) {
+    while( span.pos0 > 0 ) {
+      var c = text[span.pos0-1];
+      if (c === ">") break;
+      if (c === "<") return false;
+      span.pos0--;
+    }
+    while( span.pos1 < text.length ) {
+      span.pos1++;
+      var c = text[span.pos1];
+      if (c === "<") break;
+      if (c === ">") return false;
+    }
+    span.text = text.substring(span.pos0, span.pos1);
+    return true;
+  }
+
+  function findTextNode( elem, text ) {
+    if (elem.nodeType===3) {
+      if (elem.textContent === text) return elem;      
+    }
+    else {
+      for( var child = elem.firstChild; child != null; child = child.nextSibling) {
+        var res = findTextNode(child,text);
+        if (res) return res;
+      }
+    }
+    return null;
+  }
+
+  UI.prototype.viewHTML = function( html, time0 ) {
     var self = this;
-    self.view.innerHTML = html;
-    self.syncView();
+    
+    function updateFull() {
+      self.html0 = html;
+      self.view.innerHTML = html;
+      self.syncView();
+    }
+
+    if (false && self.html0) {
+      diff(self.html0,html).then( function(changes) {
+        if (!changes || changes.length !== 1) return updateFull();
+        var change = changes[0];
+        if (!change || !change.charChanges || change.charChanges.length !== 1) return updateFull;
+        var charChange = change.charChanges[0];
+        if (charChange.originalStartLineNumber < 0 || charChange.modifiedStartLineNumber < 0) return updateFull();
+        if (charChange.originalStartLineNumber===0) {
+          charChange.originalStartLineNumber = charChange.modifiedStartLineNumber;
+          charChange.originalEndLineNumber = charChange.modifiedStartLineNumber;
+          charChange.originalStartColumn = charChange.modifiedStartColumn;
+          charChange.originalEndColumn = charChange.modifiedStartColumn;
+        }
+        if (charChange.modifiedStartLineNumber===0) {
+          charChange.modifiedStartLineNumber = charChange.originalStartLineNumber;
+          charChange.modifiedEndLineNumber = charChange.originalStartLineNumber;
+          charChange.modifiedStartColumn = charChange.originalStartColumn;
+          charChange.modifiedEndColumn = charChange.originalStartColumn;
+        }
+        var newSpan = findSpan( html, charChange.modifiedStartLineNumber, charChange.modifiedStartColumn,
+                                charChange.modifiedEndLineNumber, charChange.modifiedEndColumn );
+        var oldSpan = findSpan( self.html0, charChange.originalStartLineNumber, charChange.originalStartColumn,
+                                charChange.originalEndLineNumber, charChange.originalEndColumn );
+        if (!expandSpan(html,newSpan)) return updateFull();
+        if (!expandSpan(self.html0,oldSpan)) return updateFull();
+        var i = self.html0.indexOf(oldSpan.text);
+        if (i !== oldSpan.pos0) return updateFull();
+        // ok, we can identify a unique text node in the html
+        var elem = findTextNode( self.view, oldSpan.text );
+        if (!elem) return updateFull();
+        // yes!
+        console.log("quick update");
+        elem.textContent = newSpan.text;
+      });
+    }
+    else {
+      updateFull();
+    }  
+
   }
 
   UI.prototype.showSpinner = function(enable, elem) {
@@ -405,11 +499,11 @@ var UI = (function() {
         if (self.editName === self.docName) {
           self.docText = self.text0;
         }
-        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round })
+        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() })
           .then(
             function(res) {
               self.htmlText = res.content; 
-              self.viewHTML(res.content);
+              self.viewHTML(res.content, res.ctx.time0);
               if (res.runAgain) {
                 self.stale=true;              
               }
@@ -417,6 +511,7 @@ var UI = (function() {
                 self.asyncServer.setStale();
               }
               console.log("avg: " + res.avgTime + "ms");
+              
               if (res.avgTime > 300) {
                 self.refreshContinuous = false;
                 self.checkDelayedUpdate.checked = true;
@@ -424,7 +519,7 @@ var UI = (function() {
               else if (res.avgTime < 200) {
                 self.refreshContinuous = true;
                 self.checkDelayedUpdate.checked = false;
-              }
+              }              
             },
             function(err) {
               self.onError(err);
