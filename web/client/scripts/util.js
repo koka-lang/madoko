@@ -17,6 +17,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     Status: "status",
     Tool: "tool",
     Trace: "trace",
+    Prof: "prof",
   };
 
   var warning;
@@ -404,6 +405,15 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       return this;
     };
 
+    Map.prototype.copy = function() {
+      var self = this;
+      var map = new Map();
+      self.forEach( function(name,value) {
+        map.set(name,value);
+      });
+      return map;
+    }
+
     Map.prototype.set = function( name, value ) {
       this["/" + name] = value;
     }
@@ -511,12 +521,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.lastRound = 0;
       self.stale = false;
       self.refreshRate = refreshRate || 1000;
-      /*
+      
       self.minRefreshRate = 100;
-      self.maxRefreshRate = 5000;
+      self.maxRefreshRate = 1500;
+      
       self.times = [self.refreshRate];
-      self.timesSamples = 10;
-      */
+      self.timesSamples = 10;      
       self.resume(self.refreshRate);
     }
     
@@ -526,7 +536,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         self.pause();
       }
       self.refreshRate = refreshRate || self.refreshRate;
-      console.log("new refresh rate: " + self.refreshRate);
+      message("adjust refresh rate: " + self.refreshRate.toFixed(0) + "ms", Msg.Info);
       self.ival = setInterval( function(){ self.update(); }, self.refreshRate );
     }
 
@@ -564,26 +574,27 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         self.round++;
         var round = self.round;
         if (self.spinner) self.spinner(true);
-        //var time0 = Date.now();
-        return self.action( self.round ).always( function() {
-          if (self.lastRound < round) {
-            self.lastRound = round;          
-            if (self.spinner) self.spinner(false);
-            /*
+        var time0 = Date.now();
+        return self.action( self.round ).then( function(msg) {
             var time = Date.now() - time0;
             self.times.push( time );
             if (self.times.length > self.timesSamples) self.times.shift();
             var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
-            console.log("action avg: " + avg + "ms,  this action: " + time + "ms")
+            message( (msg ? msg + "\n" : "") + "  avg full: " + avg.toFixed(0) + "ms, this: " + time.toFixed(0) + "ms", Msg.Prof);
+            
             if (avg > 0.66 * self.refreshRate && self.refreshRate < self.maxRefreshRate) {
               self.resume( Math.min( self.maxRefreshRate, 1.5 * self.refreshRate ) );
             }
             else if (avg < 0.33*self.refreshRate && self.refreshRate > self.minRefreshRate) {
               self.resume( Math.max( self.minRefreshRate, 0.66 * self.refreshRate ) );
             }
-            */
-          }
-        });
+            
+          }).always( function() {
+            if (self.lastRound < round) {
+              self.lastRound = round;          
+              if (self.spinner) self.spinner(false);
+            }
+          });
       }
       else {
         return Promise.resolved();

@@ -73,8 +73,9 @@ var Runner = (function() {
     //if (res.runOnServer) {
     //  self.serverRun(ctx);
     //}
+    util.message("update: " + ctx.round + " done", util.Msg.Trace );
+      
     if (res.time) {
-      util.message("update: " + ctx.round + "\n  time: " + res.time + "ms", util.Msg.Info );
       self.times.push(parseInt(res.time));
       if (self.times.length > self.timesSamples) self.times.shift();
     }

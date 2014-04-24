@@ -37,16 +37,26 @@ function diff( original, modified ) {
   return new Promise(diff); // wrap promise
 }
 
-function localStorageSave( fname, obj ) {
+function localStorageSave( fname, obj, createMinimalObj ) {
+  var key = "local/" + fname;
   if (!localStorage) {
-    util.message("cannot save locally: " + fname + ": upgrade your browser.", util.Msg.Error );
-    return;
+    util.message("cannot make local backup: upgrade your browser.", util.Msg.Error );
+    return false;
   }
   try {
-    localStorage.setItem( "local/" + fname, JSON.stringify(obj) );
+    localStorage.setItem( key, JSON.stringify(obj) );
+    return true;
   }
   catch(e) {
-    util.message("failed to save locally: " + fname + "\n  " + e.toString(), util.Msg.Error );
+    if (createMinimalObj) {
+      try {
+        localStorage.setItem( key, JSON.stringify(createMinimalObj()) );
+        return true;
+      }
+      catch(e2) {};
+    }
+    util.message("failed to make local backup: " + e.toString(), util.Msg.Error );
+    return false;
   }
 }
 
@@ -96,6 +106,13 @@ var UI = (function() {
     self.htmlText = "";
 
     Monaco.Editor.createCustomMode(madokoMode.mode);
+    window.onbeforeunload = function(ev) { 
+      if (self.storage.isSynced()) return;
+      if (self.localSave()) return; 
+      var message = "Changes to current document have not been saved yet!\n\nIf you leave this page, any unsaved work will be lost.";
+      (ev || window.event).returnValue = message;
+      return message;
+    };
 
     self.initUIElements("");
     
@@ -386,7 +403,7 @@ var UI = (function() {
     var end1;
     var end0;
     if (text1.length >= text0.length ) {
-      end1 = i+25;
+      end1 = i+100;
       if (end1 >= text1.length) {
         end1 = text1.length-1;
         end0 = text0.length-1;
@@ -417,17 +434,20 @@ var UI = (function() {
   function expandSpan( text, span ) {
     while( span.pos0 > 0 ) {
       var c = text[span.pos0-1];
-      if (c === ">" || c===";") break;
-      if (c === "<" || c==="&") return false;
+      if (c === ">") break;
+      if (c === "<") return false;
       span.pos0--;
     }
     while( span.pos1 < text.length ) {
       span.pos1++;
       var c = text[span.pos1];
-      if (c === "<" || c==="&") break;
-      if (c === ">" || c===";") return false;
+      if (c === "<") break;
+      if (c === ">") return false;
     }
     span.text = text.substring(span.pos0, span.pos1);
+    span.textContent = span.text.replace(/&#(\d+);/g, function(m, n) {
+                          return String.fromCharCode(n);
+                        });
     return true;
   }
 
@@ -451,6 +471,7 @@ var UI = (function() {
       self.html0 = html;
       self.view.innerHTML = html;
       self.syncView();
+      return false;
     }
 
     if (self.html0) {      
@@ -463,12 +484,13 @@ var UI = (function() {
       var i = self.html0.indexOf(oldSpan.text);
       if (i !== oldSpan.pos0) return updateFull();
       // ok, we can identify a unique text node in the html
-      var elem = findTextNode( self.view, oldSpan.text );
+      var elem = findTextNode( self.view, oldSpan.textContent );
       if (!elem) return updateFull();
       // yes!
-      console.log("madoko: quick view update");
-      elem.textContent = newSpan.text;
+      //util.message("  quick view update", util.Msg.Info);
+      elem.textContent = newSpan.textContent;
       self.html0 = html;      
+      return true;
     }
     else {
       updateFull();
@@ -513,7 +535,7 @@ var UI = (function() {
         return self.stale;
       },
       function(round) {
-        self.localSave();
+        self.localSave(true); // minimal save
         self.stale = false;
         if (!self.runner) return cont();
         if (self.editName === self.docName) {
@@ -523,14 +545,25 @@ var UI = (function() {
           .then(
             function(res) {
               self.htmlText = res.content; 
-              self.viewHTML(res.content, res.ctx.time0);
+              var quick = self.viewHTML(res.content, res.ctx.time0);
               if (res.runAgain) {
                 self.stale=true;              
               }
               if (res.runOnServer && self.allowServer && self.asyncServer) {
                 self.asyncServer.setStale();
               }
-              util.message("  avg: " + res.avgTime + "ms", util.Msg.Info);              
+              
+              /*
+              if (res.avgTime > 1000 && self.refreshRate < 1000) {
+                self.refreshRate = 1000;
+                self.asyncMadoko.resume(self.refreshRate);
+              }
+              else if (res.avgTime < 750 && self.refreshRate >= 1000) {
+                self.refreshRate = 500;
+                self.asyncMadoko.resume(self.refreshRate);
+              }
+              */
+              
               if (res.avgTime > 300) {
                 self.refreshContinuous = false;
                 self.checkDelayedUpdate.checked = true;
@@ -538,10 +571,13 @@ var UI = (function() {
               else if (res.avgTime < 200) {
                 self.refreshContinuous = true;
                 self.checkDelayedUpdate.checked = false;
-              }                            
+              }
+              
+
+              return ("update: " + res.ctx.round + (quick ? "  (quick view update)" : "") + "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
             },
             function(err) {
-              self.onError(err);
+              self.onError(err);              
             }
           );
       }
@@ -567,12 +603,17 @@ var UI = (function() {
     );
   }
 
-  UI.prototype.localSave = function() {
+  UI.prototype.localSave = function(minimal) {
     var self = this;
     var text = self.getEditText();
+    var pos  = self.editor.getPosition();
     self.storage.writeFile( self.editName, text );
-    var json = { docName: self.docName, editName: self.editName, storage: self.storage.persist() };
-    localStorageSave("local", json);      
+    var json = { docName: self.docName, editName: self.editName, pos: pos, storage: self.storage.persist(minimal) };
+    return localStorageSave("local", json, 
+      (minimal ? undefined : function() {
+        json.storage = self.storage.persist(true); // persist minimally
+        return json;
+      }));
   }
 
   UI.prototype.setStorage = function( stg, docName ) {
@@ -616,26 +657,33 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.editFile = function(fpath) {
+  UI.prototype.editFile = function(fpath,pos) {
     var self = this;
-    if (fpath===self.editName) return Promise.resolved();
-    return self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
-      if (self.editName === self.docName) {
-        self.docText = self.getEditText();
+    var loadEditor;
+    if (fpath===self.editName) loadEditor = Promise.resolved() 
+     else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
+            if (self.editName === self.docName) {
+              self.docText = self.getEditText();
+            }
+            self.editName = file.path;
+            var mime = getModeFromExt(util.extname(file.path));
+            var options = {
+              readOnly: file.kind !== storage.File.Text,
+              mode: mime,
+              //wrappingColumn: (util.extname(file.path)===".mdk" ? 80 : 0)
+            };
+            self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
+            self.editor.updateOptions(options);
+            
+            self.onFileUpdate(file); 
+            self.editSelect();
+      });
+    return loadEditor.then( function() {      
+      if (pos) {
+        self.editor.setPosition(pos);
+        self.editor.revealPosition( pos, true, true );
       }
-      self.editName = file.path;
-      var mime = getModeFromExt(util.extname(file.path));
-      var options = {
-        readOnly: file.kind !== storage.File.Text,
-        mode: mime,
-        //wrappingColumn: (util.extname(file.path)===".mdk" ? 80 : 0)
-      };
-      self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
-      self.editor.updateOptions(options);
-      
-      self.onFileUpdate(file); 
-      self.editSelect();
-    });
+    });    
   }
 
   UI.prototype.localLoad = function() {
@@ -645,7 +693,9 @@ var UI = (function() {
       // we ran before
       var docName = json.docName;
       var stg = storage.unpersistStorage(json.storage);
-      return self.setStorage( stg, docName );          
+      return self.setStorage( stg, docName ).then( function() {
+        return self.editFile( json.editName, json.pos );
+      });
     }
     else {
       return self.setStorage( null, null );

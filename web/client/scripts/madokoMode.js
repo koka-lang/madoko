@@ -17,7 +17,7 @@ var madokoMode =
       editorOptions: { tabSize: 4, insertSpaces: true },
       ignoreCase: true,
     
-      autoClosingPairs: [ ['"','"'],["'","'"] ],
+      autoClosingPairs: [ ['"','"'],["{","}"],["[","]"],["(",")"] ],
       noindentBrackets: "~+",
       
       // escape codes 

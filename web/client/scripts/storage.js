@@ -441,12 +441,24 @@ var Storage = (function() {
     self.unique    = 1;
   }
 
-  Storage.prototype.persist = function() {
+  Storage.prototype.persist = function(minimal) {
     var self = this;
+    var pfiles;
+    if (minimal) {
+      var map = self.files.copy();
+      map.forEach( function(path,file) {
+        if (file.kind !== File.Text) map.remove(path);
+      });
+      pfiles = map.persist();
+    }
+    else {
+      pfiles = self.files.persist();
+    }
+
     return { 
       remote: self.remote.persist(), 
       remoteType: self.remote.type(),
-      files: self.files.persist() 
+      files: pfiles 
     };
   };
 
