@@ -82,7 +82,7 @@ var UI = (function() {
     
     self.refreshContinuous = true;
     self.refreshRate = 500;
-    self.serverRefreshRate = 2000;
+    self.serverRefreshRate = 2500;
     self.allowServer = true;
     self.runner = runner;
     //self.runner.setStorage(self.storage);
@@ -376,18 +376,56 @@ var UI = (function() {
     };
   }
 
+  function simpleDiff( text0, text1 ) {
+    if (!text0 || !text1) return null;
+    var i;
+    for(i = 0; i < text0.length; i++) {
+      if (text0[i] !== text1[i]) break;
+    }
+    if (i >= text0.length) return null;
+    var end1;
+    var end0;
+    if (text1.length >= text0.length ) {
+      end1 = i+25;
+      if (end1 >= text1.length) {
+        end1 = text1.length-1;
+        end0 = text0.length-1;
+      }
+      else {
+        var s = text1.substr(end1);
+        end0 = text0.indexOf(s,i);
+        if (end0 < 0) return null;      
+      }
+      while( end0 > i ) {
+        if (text0[end0] !== text1[end1]) break;
+        end0--;
+        end1--;
+      }
+    }
+    else {
+      return null;
+    }
+    return {
+      start: i,
+      end0: end0,
+      end1: end1,
+      text0: text0.substring(i,end0),
+      text1: text1.substring(i,end1),
+    }
+  }
+
   function expandSpan( text, span ) {
     while( span.pos0 > 0 ) {
       var c = text[span.pos0-1];
-      if (c === ">") break;
-      if (c === "<") return false;
+      if (c === ">" || c===";") break;
+      if (c === "<" || c==="&") return false;
       span.pos0--;
     }
     while( span.pos1 < text.length ) {
       span.pos1++;
       var c = text[span.pos1];
-      if (c === "<") break;
-      if (c === ">") return false;
+      if (c === "<" || c==="&") break;
+      if (c === ">" || c===";") return false;
     }
     span.text = text.substring(span.pos0, span.pos1);
     return true;
@@ -415,40 +453,22 @@ var UI = (function() {
       self.syncView();
     }
 
-    if (false && self.html0) {
-      diff(self.html0,html).then( function(changes) {
-        if (!changes || changes.length !== 1) return updateFull();
-        var change = changes[0];
-        if (!change || !change.charChanges || change.charChanges.length !== 1) return updateFull;
-        var charChange = change.charChanges[0];
-        if (charChange.originalStartLineNumber < 0 || charChange.modifiedStartLineNumber < 0) return updateFull();
-        if (charChange.originalStartLineNumber===0) {
-          charChange.originalStartLineNumber = charChange.modifiedStartLineNumber;
-          charChange.originalEndLineNumber = charChange.modifiedStartLineNumber;
-          charChange.originalStartColumn = charChange.modifiedStartColumn;
-          charChange.originalEndColumn = charChange.modifiedStartColumn;
-        }
-        if (charChange.modifiedStartLineNumber===0) {
-          charChange.modifiedStartLineNumber = charChange.originalStartLineNumber;
-          charChange.modifiedEndLineNumber = charChange.originalStartLineNumber;
-          charChange.modifiedStartColumn = charChange.originalStartColumn;
-          charChange.modifiedEndColumn = charChange.originalStartColumn;
-        }
-        var newSpan = findSpan( html, charChange.modifiedStartLineNumber, charChange.modifiedStartColumn,
-                                charChange.modifiedEndLineNumber, charChange.modifiedEndColumn );
-        var oldSpan = findSpan( self.html0, charChange.originalStartLineNumber, charChange.originalStartColumn,
-                                charChange.originalEndLineNumber, charChange.originalEndColumn );
-        if (!expandSpan(html,newSpan)) return updateFull();
-        if (!expandSpan(self.html0,oldSpan)) return updateFull();
-        var i = self.html0.indexOf(oldSpan.text);
-        if (i !== oldSpan.pos0) return updateFull();
-        // ok, we can identify a unique text node in the html
-        var elem = findTextNode( self.view, oldSpan.text );
-        if (!elem) return updateFull();
-        // yes!
-        console.log("quick update");
-        elem.textContent = newSpan.text;
-      });
+    if (self.html0) {      
+      var dif = simpleDiff(self.html0,html);
+      if (!dif || /[<>"]/.test(dif.text)) return updateFull();
+      var newSpan = { pos0: dif.start, pos1: dif.end1, text: dif.text1 };
+      var oldSpan = { pos0: dif.start, pos1: dif.end0, text: dif.text0 };
+      if (!expandSpan(html,newSpan)) return updateFull();
+      if (!expandSpan(self.html0,oldSpan)) return updateFull();
+      var i = self.html0.indexOf(oldSpan.text);
+      if (i !== oldSpan.pos0) return updateFull();
+      // ok, we can identify a unique text node in the html
+      var elem = findTextNode( self.view, oldSpan.text );
+      if (!elem) return updateFull();
+      // yes!
+      console.log("madoko: quick view update");
+      elem.textContent = newSpan.text;
+      self.html0 = html;      
     }
     else {
       updateFull();
@@ -510,8 +530,7 @@ var UI = (function() {
               if (res.runOnServer && self.allowServer && self.asyncServer) {
                 self.asyncServer.setStale();
               }
-              console.log("avg: " + res.avgTime + "ms");
-              
+              util.message("  avg: " + res.avgTime + "ms", util.Msg.Info);              
               if (res.avgTime > 300) {
                 self.refreshContinuous = false;
                 self.checkDelayedUpdate.checked = true;
@@ -519,7 +538,7 @@ var UI = (function() {
               else if (res.avgTime < 200) {
                 self.refreshContinuous = true;
                 self.checkDelayedUpdate.checked = false;
-              }              
+              }                            
             },
             function(err) {
               self.onError(err);

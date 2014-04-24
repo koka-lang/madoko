@@ -511,15 +511,23 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.lastRound = 0;
       self.stale = false;
       self.refreshRate = refreshRate || 1000;
-      self.resume(refreshRate);
+      /*
+      self.minRefreshRate = 100;
+      self.maxRefreshRate = 5000;
+      self.times = [self.refreshRate];
+      self.timesSamples = 10;
+      */
+      self.resume(self.refreshRate);
     }
     
     AsyncRunner.prototype.resume = function(refreshRate) {
       var self = this;
-      if (!self.ival) {
-        self.refreshRate = refreshRate || self.refreshRate;
-        self.ival = setInterval( function(){ self.update(); }, refreshRate );
+      if (self.ival) {
+        self.pause();
       }
+      self.refreshRate = refreshRate || self.refreshRate;
+      console.log("new refresh rate: " + self.refreshRate);
+      self.ival = setInterval( function(){ self.update(); }, self.refreshRate );
     }
 
     AsyncRunner.prototype.pause = function() {
@@ -555,14 +563,25 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         self.stale = false;
         self.round++;
         var round = self.round;
-        //setTimeout( function() {
-        //  if (self.lastRound < round && self.spinner) 
-        self.spinner(true);
-        //}, 200);
+        if (self.spinner) self.spinner(true);
+        //var time0 = Date.now();
         return self.action( self.round ).always( function() {
           if (self.lastRound < round) {
             self.lastRound = round;          
             if (self.spinner) self.spinner(false);
+            /*
+            var time = Date.now() - time0;
+            self.times.push( time );
+            if (self.times.length > self.timesSamples) self.times.shift();
+            var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
+            console.log("action avg: " + avg + "ms,  this action: " + time + "ms")
+            if (avg > 0.66 * self.refreshRate && self.refreshRate < self.maxRefreshRate) {
+              self.resume( Math.min( self.maxRefreshRate, 1.5 * self.refreshRate ) );
+            }
+            else if (avg < 0.33*self.refreshRate && self.refreshRate > self.minRefreshRate) {
+              self.resume( Math.max( self.minRefreshRate, 0.66 * self.refreshRate ) );
+            }
+            */
           }
         });
       }
