@@ -9,6 +9,13 @@
 define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode"],
         function(merge,Promise,util,storage,madokoMode) {
 
+/*
+
+editor.revealPosition({
+  lineNumber: 50,
+  column: 120
+}, shouldRevealLineInCenterOfViewport, shouldRevealColumn);
+*/
 
 var ie = (function(){
   var ua = window.navigator.userAgent;
@@ -190,6 +197,10 @@ var UI = (function() {
     self.checkDisableServer.onchange = function(ev) { 
       self.allowServer = !ev.target.checked; 
     };
+
+    view.ondblclick = function(ev) {
+      self.syncEditor(ev.target);
+    }
 
     document.getElementById("load-onedrive").onclick = function(ev) {
       self.checkSynced().then( function() {
@@ -493,6 +504,7 @@ var UI = (function() {
 
   UI.prototype.editFile = function(fpath) {
     var self = this;
+    if (fpath===self.editName) return Promise.resolved();
     return self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
       if (self.editName === self.docName) {
         self.docText = self.getEditText();
@@ -740,6 +752,35 @@ var UI = (function() {
 
     //util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
     return true;
+  }
+
+  function findLocation( root, elem ) {
+    while (elem && elem !== root) {
+      var dataline = elem.getAttribute("data-line");
+      if (dataline) {
+        cap = /(?:^|;)(?:([^:;]+):)?(\d+)$/.exec(dataline);
+        if (cap) {
+          var line = parseInt(cap[2]);
+          if (line && line !== NaN) {
+            return { path: cap[1], line: line };
+          }
+        }
+      }
+      elem = elem.parentNode;
+    }
+    return null;
+  }
+
+  UI.prototype.syncEditor = function(elem) {
+    var self = this;
+    var res = findLocation(self.view, elem);
+    if (!res) return;
+    return self.editFile( res.path ? res.path : self.docName ).then( function() {
+      self.editor.revealPosition({
+        lineNumber: res.line,
+        column: 0,
+      }, true, false );
+    });
   }
 
   UI.prototype.handleEvent = function(ev) {
