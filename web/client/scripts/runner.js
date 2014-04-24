@@ -19,7 +19,6 @@ var Runner = (function() {
     self.storage = null;
 
     self.options = madoko.initialOptions();
-    self.options.mathEmbedLimit = 256 * 1024;
     self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
 
     self.times = [];
@@ -38,7 +37,7 @@ var Runner = (function() {
       self.storage.forEachFile( function(file) {
         self.sendFiles.push( { 
           name: file.path,
-          content: (file.kind === File.Image ? file.url : file.content) 
+          content: file.content, //(file.kind === File.Image ? file.url : file.content) 
         });
       });
     }
@@ -83,16 +82,16 @@ var Runner = (function() {
     // todo: should we wait for image url resolving?
     var images = res.filesReferred.map( function(file) {
       if (util.hasImageExt(file)) {
-        return self.loadText(ctx.round, file, false);
+        return self.loadFile(ctx.round, file, false);
       }
       else if (util.hasEmbedExt(file)) {
-        return self.loadText(ctx.round, file, true);
+        return self.loadFile(ctx.round, file, true);
       }
       else return Promise.resolved(0);
     });
     
     var texts = res.filesRead.map( function(file) {
-      return self.loadText(ctx.round, file, false);
+      return self.loadFile(ctx.round, file, false);
     });
 
     // collect empty files no longer referred to
@@ -109,7 +108,7 @@ var Runner = (function() {
       if (!runAgain) {
         res.filesWritten.forEach( function(file) {
           util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-          self.storage.writeTextFile(file.path,file.content,storage.File.Generated);
+          self.storage.writeFile(file.path,file.content,storage.File.Generated);
           runAgain = true;
           runOnServer = false;
         });
@@ -138,29 +137,13 @@ var Runner = (function() {
   }
 
     
-
-  Runner.prototype.loadImage = function( round, fname ) {
+  Runner.prototype.loadFile = function(round,fname,referred) {
     var self = this;
     if (!self.storage || self.storage.existsLocal(fname)) return Promise.resolved(0);
-    return self.storage.getImageUrl( fname ).then( function(url) {
-      util.message(round.toString() + "storage provided reference: " + fname, util.Msg.Trace);      
-      //self.options.embedinfos = madoko.addImage(self.options.embedinfos,fname,url);
-      return 1;
-    }, function(err) {
-      util.message(round.toString() + ": could not download image: " + fname, util.Msg.Trace);
-      return 0;
-    });
-  }
-
-  Runner.prototype.loadText = function(round,fname,referred) {
-    var self = this;
-    if (!self.storage || self.storage.existsLocal(fname)) return Promise.resolved(0);
-    return self.storage.readTextFile( fname, referred ? false : storage.File.fromPath(fname) )
+    return self.storage.readFile( fname, referred ? false : storage.File.fromPath(fname) )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
         return 1;
-        //self.files.set(fname,content);
-        //self.sendFiles.push({ name: fname, content: content });
       }, function(err) {
           util.message("unable to read from storage: " + fname, util.Msg.Info);
           return 0;
@@ -206,7 +189,7 @@ var Runner = (function() {
         var content = data[name];
         util.message("server sent: " + fname, util.Msg.Trace );
         if (self.storage) {
-          self.storage.writeTextFile(fname,content,storage.File.Generated);
+          self.storage.writeFile(fname,content,storage.File.Generated);
         }
         else {
           // happens when there is no connection to onedrive etc.

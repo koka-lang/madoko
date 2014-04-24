@@ -222,19 +222,55 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (i >= 0 && (s.length - post.length) == i);
   }
 
-
-  var imageExts = ["",".jpg",".png",".gif",".svg"].join(";");
-  function hasImageExt(fname) {
-    var ext = stdpath.extname(fname);
-    if (!ext) return false;
-    return contains(imageExts,ext);
+  // no ".", "..", ":", or starting with "/"
+  function isRelative(fname) {
+    return (/^(?![\.\/])([\w\-]|\.\w|\/\w)+$/.test(fname));
   }
 
-  var textExts = ["",".bib",".mdk",".md",".txt",".tex",".sty",".cls",".js",".css",".bbl"].join(";");
-  function hasTextExt(fname) {
+
+
+  var mimeTypes = {    
+    mdk: "text/madoko",
+    md: "text/markdown",
+
+    txt: "text/plain",
+    css: "text/css",
+    html: "text/html",
+    htm: "text/html",
+    xml: "text/html",
+    js: "text/javascript",
+    
+    tex: "text/tex",
+    sty: "text/latex",
+    cls: "text/latex",
+    bib: "text/plain",
+    bbl: "text/plain",
+    aux: "text/plain",
+    dimx: "text/plain",
+
+    png: "image/png",
+    jpg: "image/jpg",
+    jpeg: "image/jpg",
+    gif:  "image/gif",
+    svg:  "image/svg+xml",
+  };
+
+  function mimeFromExt( fname ) {
     var ext = stdpath.extname(fname);
-    if (!ext) return false;
-    return (contains(textExts,ext) && !endsWith(fname,".final.tex"));
+    if (ext) {
+      var mime = mimeTypes[ext.substr(1)];
+      if (mime) return mime;
+    }
+    return "text/plain";
+  }
+
+
+  function hasImageExt(fname) {
+    return startsWith(mimeFromExt(fname),"image/");
+  }
+
+  function hasTextExt(fname) {
+    return startsWith(mimeFromExt(fname),"text/");
   }
 
   var embedExts = [".bbl",".js",".css"].join(";");
@@ -242,6 +278,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var ext = stdpath.extname(fname);
     if (!ext) return false;
     return (contains(embedExts,ext) && fname !== "madoko.css");
+  }
+
+  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf"].join(";");
+  function hasGeneratedExt(fname) {
+    var ext = stdpath.extname(fname);
+    if (!ext) return false;
+    return (contains(generatedExts,ext) || endsWith(fname,".final.tex"));
   }
 
   function toggleButton( elemName, text0, text1, action ) {
@@ -711,10 +754,13 @@ doc.execCommand("SaveAs", null, filename)
     basename: stdpath.basename,
     dirname: stdpath.dirname,
     stemname: stdpath.stemname,
+    isRelative: isRelative,
 
     hasImageExt: hasImageExt,
     hasTextExt: hasTextExt,
     hasEmbedExt: hasEmbedExt,
+    hasGeneratedExt: hasGeneratedExt,
+    mimeFromExt: mimeFromExt,
 
     startsWith: startsWith,
     endsWith: endsWith,

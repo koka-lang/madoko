@@ -89,6 +89,12 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"),True)
   oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"),True)
 
+  if (outMathDvi != oldMathDvi) {
+    trace("dvi differs!")
+    trace("old: " + oldMathDvi)
+    trace("new: " + outMathDvi)
+  }
+
   if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
    then return continue(Nothing)
 

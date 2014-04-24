@@ -119,7 +119,7 @@ function process( inName : string, outName : string, content : string, icontent 
 
     val infos = files.concat fun(fname) {
                   mime = mimeFromExt(fname);
-                  data = if (mime.startsWith("text/") || mime.startsWith("application/")) 
+                  data = if (mime.startsWith("text/")) 
                               then readTextFileDef(fname,"",False)
                             elif (mime.startsWith("image/"))
                               then {
@@ -361,11 +361,11 @@ val mimes = dict([
   ("css","text/css"),
   ("html","text/html"),
   ("htm","text/html"),
-  ("js","application/x-javascript"),
+  ("js","text/javascript"),
   
-  ("tex","application/x-tex"),
-  ("sty","application/x-latex"),
-  ("cls","application/x-latex"),
+  ("tex","text/tex"),
+  ("sty","text/latex"),
+  ("cls","text/latex"),
   ("bib","text/plain"),
   ("bbl","text/plain"),
   ("aux","text/plain"),

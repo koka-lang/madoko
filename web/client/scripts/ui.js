@@ -186,7 +186,8 @@ var UI = (function() {
       self.refreshContinuous = !ev.target.checked; 
     };
 
-    document.getElementById('checkDisableServer').onchange = function(ev) { 
+    self.checkDisableServer = document.getElementById('checkDisableServer');
+    self.checkDisableServer.onchange = function(ev) { 
       self.allowServer = !ev.target.checked; 
     };
 
@@ -427,10 +428,10 @@ var UI = (function() {
         return self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}).then( 
           function(ctx) {
             self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
-            self.allowServer = false;
+            self.allowServer = false; // TODO: hack to prevent continuous updates in case the server output it not as it should (say a latex error)
             // run madoko locally again using our generated files
             return self.asyncMadoko.run(true).always( function(){
-              self.allowServer = true;
+              self.allowServer = !self.checkDisableServer.checked;
             });               
           },
           function(err) {
@@ -444,7 +445,7 @@ var UI = (function() {
   UI.prototype.localSave = function() {
     var self = this;
     var text = self.getEditText();
-    self.storage.writeTextFile( self.editName, text );
+    self.storage.writeFile( self.editName, text );
     var json = { docName: self.docName, editName: self.editName, storage: self.storage.persist() };
     localStorageSave("local", json);      
   }
@@ -456,10 +457,10 @@ var UI = (function() {
       docName = "document.mdk";
       stg = new storage.Storage(new storage.NullRemote());
       var content = document.getElementById("initial").textContent;
-      stg.writeTextFile(docName, content);
+      stg.writeFile(docName, content);
     } 
     self.showSpinner(true);    
-    return stg.readTextFile(docName, false).then( function(file) { 
+    return stg.readFile(docName, false).then( function(file) { 
       self.showSpinner(false );    
         
       if (self.storage) {
@@ -492,7 +493,7 @@ var UI = (function() {
 
   UI.prototype.editFile = function(fpath) {
     var self = this;
-    return self.spinWhile(self.syncer, self.storage.readTextFile(fpath, false)).then( function(file) {       
+    return self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
       if (self.editName === self.docName) {
         self.docText = self.getEditText();
       }

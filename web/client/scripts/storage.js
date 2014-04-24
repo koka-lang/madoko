@@ -114,7 +114,7 @@ var Onedrive = (function() {
 
   var onedriveDomain = "https://apis.live.net/v5.0/";
   
-  Onedrive.prototype.writeFile = function( file ) {
+  Onedrive.prototype._writeFile = function( file ) {
     // TODO: resolve sub-directories
     var self = this;
     var url = onedriveDomain + self.folderId + "/files/" + file.path + "?" +
@@ -124,7 +124,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.pushFile = function( file ) {
     var self = this;
-    return self.writeFile( file ).then( function(resp) {
+    return self._writeFile( file ).then( function(resp) {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
       var newFile = util.copy(file);
@@ -133,18 +133,15 @@ var Onedrive = (function() {
     });
   }
 
-  Onedrive.prototype.pullTextFile = function( fpath, kind ) {
+  Onedrive.prototype.pullFile = function( fpath ) {
     var self = this;
     return self.getFileInfo( fpath ).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
         var file = {
-          kind: kind || File.fromPath(fpath) || File.Generated,
           path: fpath,
           content: content,
-          url: "",
-          createdTime: info.updated_time,                    
-          written: false,
+          createdTime: info.updated_time,
         };
         return file;
       });
@@ -158,7 +155,7 @@ var Onedrive = (function() {
     });
   }
 
-  Onedrive.prototype.getImageUrl = function( fpath ) {    
+  Onedrive.prototype._getImageUrl = function( fpath ) {    
     var self = this;
     return self.pullTextFile( fpath, File.Image ).then(function(file) {
       file.content = btoa(file.content);
@@ -272,7 +269,7 @@ var LocalRemote = (function() {
     return Promise.resolved(newFile);
   }
 
-  LocalRemote.prototype.pullTextFile = function( fpath, kind ) {
+  LocalRemote.prototype.pullFile = function( fpath ) {
     var self = this;
     if (!localStorage) throw new Error("no local storage");
     var json = localStorage.getItem(self.folder + fpath);
@@ -280,16 +277,14 @@ var LocalRemote = (function() {
     if (!obj || !obj.modifiedTime) return Promise.rejected( new Error("local storage: unable to read: " + fpath) );
     var file = {
       path: fpath,
-      kind: obj.kind || kind,
+      //kind: obj.kind || kind,
       content: obj.content,
       createdTime: obj.modifiedTime,
-      written: false,
-      url: "",
     };
     return Promise.resolved(file);
   }
 
-  LocalRemote.prototype.getImageUrl = function( fpath ) {
+  LocalRemote.prototype._getImageUrl = function( fpath ) {
     return Promise.rejected( new Error("local storage cannot store images") );
   }
 
@@ -335,12 +330,12 @@ var NullRemote = (function() {
     return Promise.rejected( new Error("not connected: cannot store files") );
   }
 
-  NullRemote.prototype.pullTextFile = function( fpath, kind ) {
+  NullRemote.prototype.pullFile = function( fpath ) {
     var self = this;
     return Promise.rejected( new Error("not connected to storage: unable to read: " + fpath) );
   }
 
-  NullRemote.prototype.getImageUrl = function( fpath ) {
+  NullRemote.prototype._getImageUrl = function( fpath ) {
     return Promise.rejected( new Error("not connected: cannot store images") );
   }
 
@@ -419,9 +414,12 @@ var File = {
 
   fromPath: function(path) {
     // absolute paths should never be created
-    if (util.contains(path,":") || util.startsWith(path,".") || util.startsWith(path,"/")) return null;
+    if (!(util.isRelative)) return null;
 
-    if (util.hasTextExt(path)) {
+    if (util.hasGeneratedExt(path)) {
+      return File.Generated;      
+    }
+    else if (util.hasTextExt(path)) {
       return File.Text;      
     }
     else if (util.hasImageExt(path)) {
@@ -453,19 +451,10 @@ var Storage = (function() {
   };
 
   /* Generic */
-  Storage.prototype.createTextFile = function(fpath,content,kind) {
+  Storage.prototype.createFile = function(fpath,content,kind) {
     var self = this;
     kind = kind || File.Text;
-    self.writeTextFile(fpath,content,kind);
-  }
-
-  Storage.prototype.forEachFileKind = function( kinds, action ) {
-    var self = this;
-    self.files.forEach( function(fname,file) {
-      if (util.contains(kinds,file.kind)) {
-        action(file.path, file.content);
-      }
-    });
+    self.writeFile(fpath,content,kind);
   }
 
   Storage.prototype.forEachFile = function( action ) {
@@ -487,7 +476,7 @@ var Storage = (function() {
     return synced;
   }
 
-  Storage.prototype.writeTextFile = function( fpath, content, kind) {
+  Storage.prototype.writeFile = function( fpath, content, kind) {
     var self = this;
     kind = kind || File.Text;
     var file = self.files.get(fpath);
@@ -540,7 +529,7 @@ var Storage = (function() {
     finfo.path    = finfo.path || "unknown.mdk";
     finfo.url     = finfo.url || "";
     finfo.content = finfo.content || "";
-    finfo.kind    = finfo.kind || File.Text;
+    finfo.kind    = finfo.kind || File.fromPath(finfo.path) || File.Text;
     finfo.createdTime = finfo.createdTime || new Date().toISOString();
       
     
@@ -570,19 +559,30 @@ var Storage = (function() {
 
   
   /* Interface */
-  Storage.prototype.readTextFile = function( fpath, createOnErrKind ) {  // : Promise<file>
+  Storage.prototype.readFile = function( fpath, createOnErrKind ) {  // : Promise<file>
     var self = this;
     var file = self.files.get(fpath);
     if (file) return Promise.resolved(file);
 
-    return self.remote.pullTextFile( fpath, createOnErrKind ).then( function(file) {
+    return self.remote.pullFile( fpath ).then( function(file) {
+        file.kind = file.kind || createOnErrKind || File.fromPath(fpath) || File.Text;
+        if (file.kind === File.Image) {
+          var mime = util.mimeFromExt(fpath);
+          file.content = btoa(file.content);
+          file.url = "data:" + mime + ";base64," + file.content;
+        }
+        else {
+          file.url = ""
+        }
+        file.path = file.path || fpath;
+        file.written = false;
         file.original = file.content;
         self._updateFile( file );
         return file;
       },
       (createOnErrKind ? 
         function(err) {
-          self.createTextFile(fpath,"",createOnErrKind);
+          self.createFile(fpath,"",createOnErrKind);
           return self.files.get(fpath);
         } :
         undefined)
@@ -602,21 +602,6 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     return (file != null);
-  }
-
-  Storage.prototype.getImageUrl = function( fpath ) {
-    var self = this;
-    var file = self.files.get(fpath);
-    if (file) {
-      if (file.kind !== File.Image) throw new Error("not an image: " + fpath); 
-      return Promise.resolved(file.url);
-    }
-    else {
-      return self.remote.getImageUrl( fpath ).then( function(file) {
-        self._updateFile( file );
-        return file.url;
-      });
-    }
   }
 
   var rxStartMerge = /^ *<!-- *begin +merge +.*?--> *$/im;
@@ -662,7 +647,7 @@ var Storage = (function() {
             return message( "modified on server!", "merge from server" );
           }
           else {
-            return self.remote.pullTextFile(file.path, null).then( function(remoteFile) {
+            return self.remote.pullFile(file.path).then( function(remoteFile) {
               var original = (file.original != null ? file.original : file.content);
               return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                                 original, remoteFile.content, file.content
@@ -675,6 +660,7 @@ var Storage = (function() {
                     remoteFile.original = file.orginal; // so next merge does not get too confused
                     remoteFile.content  = res.merged;
                     remoteFile.written = true;
+                    remoteFile.url     = "";
                     self._updateFile(remoteFile);
                     throw new Error( message("merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
                   }
@@ -706,7 +692,7 @@ var Storage = (function() {
       else if (file.createdTime !== remoteTime) {
         // update from server
         self.files.remove(file.path);
-        return self.readTextFile(file.path, false ).then( function(newfile) {
+        return self.readFile(file.path, false ).then( function(newfile) {
             return message("update from server");
           },
           function(err) {
