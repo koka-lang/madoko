@@ -8,5 +8,5 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <circle cx="50" cy="50" r="45" stroke="black" stroke-width="10" fill="none"/>  
-  <text x="27" y="75" font-family="Consolas,sans-serif" font-weight="bold" font-size="75" fill="black">?</text>
+  <text x="32" y="75" font-family="Consolas,sans-serif" font-weight="bold" font-size="75" fill="black">?</text>
 </svg>

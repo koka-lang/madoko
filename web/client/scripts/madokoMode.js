@@ -26,7 +26,7 @@ var madokoMode =
       // escape codes for javascript/CSS strings
       jsescapes:  /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
       
-      metakey: /(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( [\w\-]+)?\\*?\*?) *[:]/,  
+      metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( [\w\-]{0,2})*\\*?\*?) *[:]/,  
       
       // non matched elements
       empty: [
@@ -133,11 +133,12 @@ var madokoMode =
           [/\*([^\\*]|@escapes)+\*/, 'emphasis'],
           [/`([^\\`]|@escapes)+`/, 'namespace.code'],
           [/(\$)([^\\$]+)(\$)/, ['keyword','namespace.code.latex','keyword'] ],
+          [/<<|>>/, ''],
           
           // links
           [/\{[^}]+\}/, 'string.escape'],
           [/(!?\[)((?:[^\]\\]|@escapes)+)(\]\([^\)]+\))/, ['string.link', '', 'string.link' ]],
-          [/(!?\[)((?:[^\]\\]|@escapes)+)(\])/, 'string.link'],
+          [/(!?\[)((?:[^\]\\]|@escapes)+)(\])/, 'string.link'],          
           
           // or html
           { include: 'html' },

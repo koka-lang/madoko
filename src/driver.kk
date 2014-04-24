@@ -51,7 +51,7 @@ public function processContent( inName : string, outName : string, content : str
               else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
-    dims = outName.changeExt(".dimx").readTextFileDef("",False)
+    dims = outName.changeExt(".dimx").readTextFileDef("",True)
     mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
 
     xopts  = opts1(mathdim=mdim)

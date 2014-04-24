@@ -74,5 +74,5 @@ public function registerLanguage( name : string, definition: string ) : io () {
   fulldef = "(function(xhljs) { var module = {}; " + (definition) + "; return module.exports(xhljs); })"
   catch( { //trace("register: " + name + ": " + fname); 
            xxregisterLanguage(name, fulldef) }, 
-         fun(exn) { println("error: could not register language: " + name  + "\n" + exn.show + "\n" + fulldef ) } )
+         fun(exn) { println("error: could not register language: " + name  + "\n" + exn.show /* + "\n" + fulldef */ ) } )
 }

@@ -736,8 +736,10 @@ var UI = (function() {
     self.storage.forEachFile( function(file) {
       if (file) {
         var disable = (file.kind === storage.File.Text ? "" : " disable");
+        var main    = (file.path === self.docName ? " main" : "");
+        var hide    = (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
-                      "class='button item" + disable + "'>" + 
+                      "class='button item file" + disable + main + hide + "'>" + 
                           self.displayFile(file) + "</div>";
         if (file.kind === storage.File.Image) images.push(line); 
         else if (file.kind === storage.File.Text) files.push(line);
@@ -942,12 +944,7 @@ var UI = (function() {
     var self = this;
     var res = findLocation(self.view, elem);
     if (!res) return;
-    return self.editFile( res.path ? res.path : self.docName ).then( function() {
-      self.editor.revealPosition({
-        lineNumber: res.line,
-        column: 0,
-      }, true, false );
-    });
+    return self.editFile( res.path ? res.path : self.docName, { lineNumber: res.line, column: 0 } );
   }
 
   UI.prototype.handleEvent = function(ev) {
@@ -963,6 +960,7 @@ var UI = (function() {
     if (file.path===self.editName) {
       self.editSelectHeader.innerHTML = self.displayFile(file);
     }
+    self.editSelect();
   }
 
   UI.prototype.syncTo = function( storageSyncTo ) {
