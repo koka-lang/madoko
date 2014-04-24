@@ -156,7 +156,8 @@ var UI = (function() {
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
-    
+    self.inputRename = document.getElementById("rename");
+
     // start editor
     var checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
@@ -624,7 +625,7 @@ var UI = (function() {
       stg = new storage.Storage(new storage.NullRemote());
       var content = document.getElementById("initial").textContent;
       stg.writeFile(docName, content);
-    } 
+    }
     self.showSpinner(true);    
     return stg.readFile(docName, false).then( function(file) { 
       self.showSpinner(false );    
@@ -636,6 +637,8 @@ var UI = (function() {
       self.docName = docName;
       self.editName = docName;
       self.docText = file.content;
+      self.inputRename.value = self.docName; 
+    
       self.storage.addEventListener("update",self);
       return self.runner.setStorage(self.storage).then( function() {            
         self.setEditText(self.docText);

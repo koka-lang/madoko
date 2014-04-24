@@ -141,7 +141,7 @@ html,body,#app {
   margin-bottom: 0.25em;
 }
 
-#editor-header>.ibutton {
+#editor-header #button-editor-wide {
   float: right;
 }
 
@@ -149,6 +149,10 @@ html,body,#app {
   max-width: 100%;
   white-space: nowrap;
   text-align: right;
+}
+
+#editor-header .ibutton {
+  float: right;
 }
 
 #view-header .ibutton {
@@ -159,18 +163,11 @@ html,body,#app {
   height: 1em;
 }
 
-#view-spinner, #sync-spinner {
-  margin-top: 0.15em; 
-}
 
-#sync-spinner {
-  float: right;
-}
-
-
-.pane-header img, .item img {
+.pane-header img {
   height: 1em;
-  margin-top: 0.15em;
+  vertical-align: -0.15em;
+  margin-top: 0.3em;
 }
 
 .item .icon {
@@ -179,6 +176,7 @@ html,body,#app {
   text-align: center;
   margin-right: 0.25em;
 }
+
 
 .disable, .file.generated, .file.image {
   color: #BBB;
@@ -262,7 +260,12 @@ div.msg-tool, div.msg-normal {
   background-color: FloralWhite;
 }
 .msg-section {
-  border-bottom: 1px gray dotted;
+  border-bottom: 1px dotted Gainsboro;
+  border-radius: 0pt !important;
+  padding-bottom: 0.2em;
+}
+.msg-section:hover {
+  background-color: Gainsboro;
 }
 
 #status {
@@ -323,10 +326,15 @@ div.msg-tool, div.msg-normal {
   visibility: hidden;
 }
 
+#sync .spinner {
+  visibility: visible;
+}
+
 .spinner.spin {
   visibility: visible;
   -webkit-animation: spinner-rotate 2s infinite linear;
   animation: spinner-rotate 2s infinite linear;
+  background-color: white;
 }
 
 
@@ -341,6 +349,7 @@ div.msg-tool, div.msg-normal {
 
 .popup {
   position: relative;
+  display: inline-block;
 }
 
 
@@ -353,7 +362,7 @@ div.msg-tool, div.msg-normal {
   width: 100%;
   position: absolute;
   z-index: 1;
-  top: 1rem;
+  top: 1.25rem;
   left: 0;
   background-color: white;
 }
@@ -364,7 +373,6 @@ div.msg-tool, div.msg-normal {
 
 #menu-settings.popup {
   width: 1.5em;  
-  float: right;
 }
 
 #view-message.popup {
@@ -381,10 +389,19 @@ div.msg-tool, div.msg-normal {
 }
 
 #menu-settings-content {
-  width: 15em;
-  left: -1em;
+  width: 17em;
 }
 
 #document-content {
   width: 16em;
+}
+
+#help-content {
+  width: 20em;
+  padding: 1ex;
+}
+
+.notice {
+  font-size: small;
+  color: DimGray;
 }

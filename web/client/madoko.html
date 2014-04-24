@@ -62,35 +62,14 @@ insert image:
 </div>
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <img id="button-editor-wide" class="ibutton" src="images/tri-right.svg" />
-    <div id="menu-settings" class="popup">
-      <img class="ibutton" src="images/settings.svg" />
-      <div id="menu-settings-content" class="menu boxed">
-        <div class="item button" 
-             title="Do not update the view until there is a pause in typing. This setting increases performance with large documents or slow browsers.">
-          <input type="checkbox" id="checkDelayedUpdate"/> Delayed view update</div>
-        <div class="item button" 
-             title="Do not use the Madoko server to typeset mathematics and the bibliography">
-          <input type="checkbox" id="checkDisableServer"/> Disable server</div>
-        <div class="item button" title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
-       <hr/>
-       <div id="sync" class="item button" title="Synchronize document"
-          ><span class="icon"><img src="images/sync.svg"/></span>Synchronize</div>
-        <div id="new-document" class="item button" title="Create a new local document"
-          ><span class="icon"><img src="images/null-logo.svg"/></span>New local document</div>
-        <div id="clear-local" class="item button"
-          ><span class="icon"></span>Clear local storage</div>
-      </div>
-    </div>
-    <img id="sync-spinner" class="spinner" src="images/sync.svg" alt="synchonize spinner"/>    
     <span id="edit-select" class="popup boxed">
       <img id="remote-logo" src="images/null-logo.svg" class="logo" />
       <span id="edit-select-header" class="header">&nbsp;</span>
       <div id="edit-select-content" class="menu boxed">        
       </div>
     </span
-    ><span id="document" class="popup"
-      >&nbsp;<span class="button boxed"><img class="ibutton" src="images/tri-down.svg"/></span>
+    ><div id="document" class="popup"
+      >&nbsp;<span class="button boxed"><img class="icon" src="images/tri-down.svg"/></span>&nbsp;
        <!--<img class="ibutton" src="images/cloud-icon.png"/>-->
       <div id="document-content" class="menu boxed">
         <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
@@ -110,7 +89,56 @@ insert image:
         <div id="sync-dropbox" class="item button disable" title="Save document to Dropbox cloud storage"
           ><span class="icon"><img src="images/dropbox-logo.png"></span>To dropbox</div>
       </div>
-    </span>
+    </div>
+    <img id="button-editor-wide" class="ibutton" title="Make the editor view wider" src="images/tri-right.svg" />
+    <div id="help" class="ibutton popup">
+      <img class="ibutton" src="images/help.svg" alt="Help"/>
+      <div id="help-content" class="menu boxed">
+        <div>Read the 
+              <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html"
+              >reference manual</a>.
+        </div>
+        <div>Participate in a 
+              <a target="_blank" href="http://madoko.codeplex.com/discussions">discussion</a> 
+              or report an 
+              <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">issue</a>.
+        </div>
+        <hr/>
+        <div class="notice"
+        ><span id="version">Madoko version 0.1-beta</span><br>
+             Copyright (c) 2014, Microsoft Corporation<br>
+             Created at Microsoft Research by Daan Leijen.<br>
+             Madoko is free software and available under the Apache 2.0 license
+             on <a target="_blank" href="http://madoko.codeplex.com">codeplex.com</a>.
+        </div>
+      </div>
+    </div>
+    <div id="menu-settings" class="ibutton popup">
+      <img class="ibutton" src="images/settings.svg" />
+      <div id="menu-settings-content" class="menu boxed">
+        <div class="item button" 
+             title="Do not update the view until there is a pause in typing.
+This setting increases performance with large documents or slow browsers.">
+          <input type="checkbox" id="checkDelayedUpdate"/> Delayed view update</div>
+        <div class="item button" 
+             title="Do not update the view automatically.
+This setting can save energy or can be used on very slow browsers to increase responsiveness.">
+          <input type="checkbox" id="checkDisableViewUpdate"/> Disable automatic view updates</div>
+        <div class="item button" 
+             title="Do not use the Madoko server to typeset mathematics and the bibliography">
+          <input type="checkbox" id="checkDisableServer"/> Disable server</div>
+        <div class="item button" title="Show line numbers in the editor"><input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
+       <hr/>
+       <!--<div id="sync" class="item button" title="Synchronize document"
+          ><span class="icon"><img src="images/sync.svg"/></span>Synchronize</div>-->
+        <div id="new-document" class="item button" title="Create a new local document"
+          ><span class="icon"><img src="images/null-logo.svg"/></span>New local document</div>
+        <div id="clear-local" class="item button"
+          ><span class="icon"></span>Clear local storage</div>
+      </div>
+    </div>
+    <span id="sync"><img id="sync-spinner" class="ibutton spinner" src="images/sync.svg" alt="Synchronize" 
+      title="Synchronize with cloud storage" /></span>    
   </div>
   <div class="pane-content boxed">
     <div id="editor"></div>
@@ -118,7 +146,7 @@ insert image:
 </div>
 <div id="viewpane" class="pane right">
   <div id="view-header" class="pane-header">
-    <img id="button-editor-narrow" class="ibutton" src="images/tri-left.svg" />
+    <img id="button-editor-narrow" class="ibutton" title="Make the document view wider" src="images/tri-left.svg" />
     <img id="export-html" title="Export document as a web-page (HTML)"
       class="ibutton" src="images/html-logo.png" alt="Download HTML"/>    
     <img id="export-pdf" title="Export document as PDF"
