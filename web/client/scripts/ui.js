@@ -119,6 +119,11 @@ var UI = (function() {
     self.localLoad().then( function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();
+      // dispatch check box events so everything gets initialized
+      self.checkDisableAutoUpdate.dispatchEvent( new Event("change") ); 
+      self.checkDisableServer.dispatchEvent( new Event("change") );
+      self.checkLineNumbers.dispatchEvent( new Event("change") );
+
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
     });
@@ -159,12 +164,12 @@ var UI = (function() {
     self.inputRename = document.getElementById("rename");
 
     // start editor
-    var checkLineNumbers = document.getElementById('checkLineNumbers');
+    self.checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
       mode: "mdk",
       theme: "vs",
-      lineNumbers: (checkLineNumbers ? checkLineNumbers.checked : false),
+      lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       //mode: madokoMode.mode,
       tabSize: 4,
       insertSpaces: true,
@@ -200,7 +205,7 @@ var UI = (function() {
     });
      
     // Buttons and checkboxes
-    checkLineNumbers.onchange = function(ev) { 
+    self.checkLineNumbers.onchange = function(ev) { 
       if (self.editor) {
         self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
       }
@@ -214,6 +219,26 @@ var UI = (function() {
     self.checkDisableServer = document.getElementById('checkDisableServer');
     self.checkDisableServer.onchange = function(ev) { 
       self.allowServer = !ev.target.checked; 
+    };
+
+    self.checkDisableAutoUpdate = document.getElementById('checkDisableAutoUpdate');
+    self.checkDisableAutoUpdate.onchange = function(ev) { 
+      if (ev.target.checked) {
+        self.asyncMadoko.pause();
+      } 
+      else {
+        self.asyncMadoko.resume();
+      }
+    };
+
+    document.getElementById("menu-settings-content").onclick = function(ev) {
+      if (ev.target && util.contains(ev.target.className,"button")) {
+        var child = ev.target.children[0];
+        if (child && child.nodeName === "INPUT") {
+          child.checked = !child.checked;
+          child.dispatchEvent(new Event("change"));
+        }
+      }
     };
 
     view.ondblclick = function(ev) {
@@ -267,6 +292,10 @@ var UI = (function() {
     */
     document.getElementById("clear-local").onclick = function(ev) {
       if (localStorage) {
+        if (self.storage && !self.storage.isSynced()) {
+          var yes = window.confirm( "Clearing the local storage will discard any local changes!\nAre you sure?");
+          if (!yes) return;
+        }
         localStorage.clear();
         util.message("local storage cleared", util.Msg.Status);
       }
@@ -609,7 +638,15 @@ var UI = (function() {
     var text = self.getEditText();
     var pos  = self.editor.getPosition();
     self.storage.writeFile( self.editName, text );
-    var json = { docName: self.docName, editName: self.editName, pos: pos, storage: self.storage.persist(minimal) };
+    var json = { 
+      docName: self.docName, 
+      editName: self.editName, 
+      pos: pos, 
+      storage: self.storage.persist(minimal),
+      showLineNumbers: self.checkLineNumbers.checked,
+      disableServer: self.checkDisableServer.checked,
+      disableAutoUpdate: self.checkDisableAutoUpdate.checked,
+    };
     return localStorageSave("local", json, 
       (minimal ? undefined : function() {
         json.storage = self.storage.persist(true); // persist minimally
@@ -695,7 +732,10 @@ var UI = (function() {
     if (json!=null) {
       // we ran before
       var docName = json.docName;
-      var stg = storage.unpersistStorage(json.storage);
+      self.checkDisableAutoUpdate.checked = json.disableAutoUpdate;
+      self.checkDisableServer.checked = json.disableServer;
+      self.checkLineNumbers.checked = json.showLineNumbers;
+      var stg = storage.unpersistStorage(json.storage);      
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
       });

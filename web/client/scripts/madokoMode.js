@@ -26,7 +26,7 @@ var madokoMode =
       // escape codes for javascript/CSS strings
       jsescapes:  /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
       
-      metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( [\w\-]{0,2})*\\*?\*?) *[:]/,  
+      metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( +[\w\-]+){0,2}\\*?\*?) *[:]/,  
       
       // non matched elements
       empty: [

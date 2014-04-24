@@ -133,6 +133,10 @@ html,body,#app {
   visibility: hidden;
 }
 
+#editor.large .monaco-editor {
+  font-size: 16px !important;
+}
+
 #document-content.menu {
   padding-top: 0.25em;
 }
@@ -300,6 +304,11 @@ div.msg-tool, div.msg-normal {
 
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
+}
+
+
+.monaco-editor .line-numbers {
+  background-color: #DDD;
 }
 
 #view {
