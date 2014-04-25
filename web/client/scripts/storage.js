@@ -10,8 +10,13 @@ define(["../scripts/promise","../scripts/util", "../scripts/merge"], function(Pr
 
 function onedriveError( obj, premsg ) {
   msg = "onedrive: " + (premsg ? premsg + ": " : "")
-  if (obj && obj.error && obj.error.message) {
-    msg = msg + obj.error.message + (obj.error.code ? " (" + obj.error.code + ")" : "");
+  if (obj && obj.error) {
+    if (obj.error.message) {
+      msg = msg + obj.error.message + (obj.error.code ? " (" + obj.error.code + ")" : "");
+    }
+    else {
+      msg = msg + obj.error.toString();
+    }
   }
   else if (obj && typeof obj === "string") {
     msg = msg + obj;

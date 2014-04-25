@@ -49,11 +49,11 @@ html,body,#app {
   float: left;
 }
 
-#menubar, .pane-header {
+.pane-header {
   font-family: "Segoe UI";
 }
 
-#menubar {
+.toppane {
   min-height: 0.8em;
 }
 
@@ -63,91 +63,70 @@ html,body,#app {
 
 #view {
   height: 100%;
-  margin: 0px;
   padding: 0px 1ex;
   overflow: scroll;
   background-color: white;
   transition: height 0.8s;
 }
 
-
-#view.short {
-  height: calc(50% - 2px - 1.4rem);
-}
-
-
-#buttonbar-horizontal {
-  height: 0.5rem;
-  font-size: small;
-}
-
 #koka-console-out {
-  overflow-y: scroll;
-  overflow-x: scroll;
+  overflow: scroll;
   font-size: 8pt;
   padding: 0.5rem;
   transition: height 0.8s;
   height: calc(100% - 17px);
 }
 
-#menubar input {
-  width: 1.5ex;
-  height: 1.5ex;
-}
-
-#logo {
-  height: 1em;
-  float: left;
-  margin: 0.15em; 
-}
-
-.onedrive-logo {
-  height: 0.9em;
-}
+/* buttons */
 
 .button {
-  padding: 0pt 0.2em 0em 0.2em;
-  background-color: white;
+  padding: 0em 0.2em;
  }
 
-.button:hover, .ibutton:hover {
+.button:hover {
   cursor: pointer;
   background-color: Gainsboro;
 }
 
-.button.disable:hover, .ibutton.disable:hover {
+.button.disable:hover {
   background-color: white;
 }
 
-.button:active, .ibutton:active {
+.button:active {
   background-color: Gray;
 }
 
-
-.ibutton {
-  height: 1em;
-  padding: 0em 0.25em;
+#editor-header .buttons {
+  float: right;
 }
 
-.hide {
-  visibility: hidden;
+#view-header .buttons {
+  float: left;
 }
 
-#editor.large .monaco-editor {
-  font-size: 16px !important;
-}
 
-#document-content.menu {
-  padding-top: 0.25em;
-}
+/* menus */
+
 .menu hr {
   margin-top: 0.5em;
   margin-bottom: 0.25em;
 }
 
-#editor-header #button-editor-wide {
-  float: right;
+.menu div {
+  padding: 0.1em 0.2em;
 }
+.menu div img, .menu div input {
+  display   : inline-block;
+  width     : 1.5em;
+  text-align: center;
+  padding   : 0em 0.25em;
+}
+
+img#cloud {
+  width: 1.25em;
+}
+
+/* Pane headers */
 
 #view-header {
   max-width: 100%;
@@ -160,45 +139,12 @@ html,body,#app {
   padding-right: 0.25em;
 }
 
-#editor-header .ibutton {
-  float: right;
-}
-
-#view-header .ibutton {
-  float: left;
-}
-
-#warning {
-  height: 1em;
-}
-
-
 .pane-header img {
   height: 1em;
-  vertical-align: -0.15em;
-  margin-top: 0.3em;
+  vertical-align: middle;
 }
 
-.item .icon {
-  display: inline-block;
-  width: 1.5em;
-  text-align: center;
-  margin-right: 0.25em;
-}
-
-img#cloud {
-  width: 1.25em;
-  padding: 0em 0.25em;
-}
-
-img#clouddown {
-  width: auto;
-  height: 1.5ex;
-  padding: 0em 0.25em;
-  xmargin-left: -0.25em !important;
-}
-
-
+/* File items */
 
 .disable, .file.generated, .file.image {
   color: #BBB;
@@ -208,6 +154,12 @@ img#clouddown {
 }
 .file.hide {
   display: none;
+}
+
+/* Generic */
+
+.hide {
+  visibility: hidden;
 }
 
 .boxed {
@@ -221,40 +173,75 @@ div.boxed {
   padding: 1px;
 }
 
+/* Editor Header */
+
 #edit-select {
-  background-color: white;
   width: 50%;
   padding: 0 1ex;
-  display: inline-block;
+  margin-right: 0.25em;
 }
 
-#edit-select-content {
-  padding: 0 1ex;
-  min-height: 1em;
+#remote-logo, .menu img {
+  vertical-align: -0.15em;
 }
 
 #edit-select-content .binaries {
-  color: gray;
   margin-top: 1ex;
   border-top: 1px dotted black;
 }
 
-
 #rename {
-  display: inline;
   width: 10em;
-  color: #555;
+  color: DimGray;
 }
 
-.menu .button {
-  border: none;
+.notice {
+  font-size: small;
+  color: DimGray;
 }
 
-.item {
-  padding: 0.25ex 1ex;
+/* View header */
+
+#view-message {
+  width: 50%;
+  text-align: left;
+}
+
+#koka-console {
+  height: 10em;
+  border: 1px solid black;
+}
+
+.msg-status {
+}
+.msg-error, .msg-exception {
+  color: red;
+}
+.msg-warning {
+  color: maroon;
+}
+
+.msg-section {
+  border-bottom: 1px dotted Gainsboro;
+  border-radius: 0pt !important;
+  padding-bottom: 0.2em;
+}
+
+.msg-section:hover {
+  background-color: Gainsboro;
 }
 
 
+#status {
+  padding-left: 1ex;
+}
+
+#warning.hide {
+  display: none;
+}
+
+
+/* Monaco token classes */
 
 .monaco-editor .token.code {
   background-color: #EEE;
@@ -269,82 +256,16 @@ div.boxed {
   color: gray;
 }
 
-.msg-status {
-}
-.msg-error, .msg-exception {
-  color: red;
-}
-.msg-warning {
-  color: maroon;
-}
-div.msg-tool, div.msg-normal {
-  background-color: FloralWhite;
-}
-.msg-section {
-  border-bottom: 1px dotted Gainsboro;
-  border-radius: 0pt !important;
-  padding-bottom: 0.2em;
-}
-.msg-section:hover {
-  background-color: Gainsboro;
-}
-
-#status {
-  padding-left: 1ex;
-}
-#warning.hide {
-  display: none;
-}
-
-#view p, #view li {
-  text-align: justify;
-}
-
-
-
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
 }
 
-
 .monaco-editor .line-numbers {
-  background-color: #DDD;
-}
-
-#view {
-  background-color: white;
+  background-color: Gainsboro;
 }
 
 
-.tri-left {
-  width: 0; 
-  height: 0; 
-  border-top: 0.65em solid transparent;
-  border-bottom: 0.65em solid transparent;   
-  border-right:1em solid black; 
-}
-.tri-right {
-  width: 0; 
-  height: 0; 
-  border-top: 0.7em solid transparent;
-  border-bottom: 0.7em solid transparent;   
-  border-left:1em solid black; 
-}
-.tri-down {
-  width: 0; 
-  height: 0; 
-  border-right: 0.3rem solid transparent;
-  border-left: 0.3rem solid transparent;   
-  border-top:0.5rem solid black; 
-}
-.tri-up {
-  width: 0; 
-  height: 0; 
-  border-right: 0.3rem solid transparent;
-  border-left: 0.3rem solid transparent;   
-  border-bottom:0.5rem solid black; 
-}
-
+/* Generic Spinner */
 
 .spinner {
   width: 1em;
@@ -373,11 +294,12 @@ div.msg-tool, div.msg-normal {
   to   { transform:rotate(360deg); }
 }
 
+/* Generic Popup */
+
 .popup {
   position: relative;
   display: inline-block;
 }
-
 
 .popup > div {
   transition: height 0.8s; 
@@ -400,40 +322,20 @@ div.msg-tool, div.msg-normal {
   display: block;
 }
 
-#menu-settings.popup {
-  width: 1.5em;  
-}
-
-#view-message.popup {
-  border-left: 1px solid black;
-  background-color: white;
-  width: 50%;
-  display: inline-block;
-  text-align: left;
-}
-
-#koka-console {
-  height: 10em;
-  border: 1px solid black;
-}
+/* Widths of popup content */
 
 #menu-settings-content {
   width: 17em;
-  left: -1em;
+  left: -0.5em;
 }
 
 #document-content {
   width: 16em;
-  left: -1em;
+  left: -0.5em;
 }
 
 #help-content {
   width: 22em;
   padding: 1ex;
-  left: -1em;
-}
-
-.notice {
-  font-size: small;
-  color: DimGray;
+  left: -0.5em;
 }
