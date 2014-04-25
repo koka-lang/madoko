@@ -26,7 +26,7 @@ var madokoMode =
       // escape codes for javascript/CSS strings
       jsescapes:  /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
       
-      metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( +[\w\-]+){0,2}\\*?\*?) *[:]/,  
+      metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( +?[\w\-]+){0,2}\\*?\*?) *[:]/,  
       
       // non matched elements
       empty: [
@@ -131,8 +131,8 @@ var madokoMode =
           [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, 'strong'],
           [/\b_[^_]+_\b/, 'emphasis'],
           [/\*([^\\*]|@escapes)+\*/, 'emphasis'],
-          [/`([^\\`]|@escapes)+`/, 'namespace.code'],
-          [/(\$)([^\\$]+)(\$)/, ['keyword','namespace.code.latex','keyword'] ],
+          [/`([^`])+`/, 'namespace.code'],
+          [/(\$)((?:[^\\$]|\\.)+)(\$)/, ['','namespace.code.latex',''] ],
           [/<<|>>/, ''],
           
           // links
@@ -147,7 +147,7 @@ var madokoMode =
         html: [
           // html tags
           [/<(\w+)\/>/, 'tag.tag-$1' ],
-          [/<(\w+)\s+/,  {cases: { '@empty':   { token: 'tag.tag-$1', next: '@tag.$1' },
+          [/<(\w+)(?=\s*[\/>]|\s+\w)/,  {cases: { '@empty':   { token: 'tag.tag-$1', next: '@tag.$1' },
                                 '@default': { token: 'tag.tag-$1', bracket: '@open', next: '@tag.$1' } }}],
           [/<\/(\w+)\s*>/,  { token: 'tag.tag-$1', bracket: '@close', next: '@pop' } ],
           

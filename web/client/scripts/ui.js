@@ -499,7 +499,10 @@ var UI = (function() {
     
     function updateFull() {
       self.html0 = html;
+      var scrollTop = self.view.scrollTop; // remember scroll location
       self.view.innerHTML = html;
+      self.view.scrollTop = scrollTop; // and restore
+      document.dispatchEvent(new Event("MadokoViewLoaded"));
       self.syncView();
       return false;
     }
@@ -520,6 +523,7 @@ var UI = (function() {
       //util.message("  quick view update", util.Msg.Info);
       elem.textContent = newSpan.textContent;
       self.html0 = html;      
+      document.dispatchEvent(new Event("MadokoViewLoaded"));
       return true;
     }
     else {

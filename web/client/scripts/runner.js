@@ -108,10 +108,12 @@ var Runner = (function() {
 
       if (!runAgain) {
         res.filesWritten.forEach( function(file) {
-          util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-          self.storage.writeFile(file.path,file.content,storage.File.Generated);
-          runAgain = true;
-          runOnServer = false;
+          if (util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
+            util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
+            self.storage.writeFile(file.path,file.content,storage.File.Generated);
+            runAgain = true;
+            runOnServer = false;
+          }
         });
       }
 
