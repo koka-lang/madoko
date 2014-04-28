@@ -643,7 +643,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       var msg = req.statusText;
       var res = req.responseText;
       var type = req.getResponseHeader("Content-Type");
-      if (req.responseText && startsWith(type,"application/json;")) {
+      if (req.responseText && startsWith(type,"application/json")) {
         var res = JSON.parse(req.responseText);
         if (res.error && res.error.message) {
           msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
@@ -662,7 +662,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         if (timeout) clearTimeout(timeout);
         var type = req.getResponseHeader("Content-Type");
         var res;
-        if (startsWith(type,"application/json;")) {
+        if (startsWith(type,"application/json")) {
           res = JSON.parse(req.responseText);
         }
         else {

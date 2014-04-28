@@ -10,16 +10,13 @@ var qs = require("querystring");
 var https = require("https");
 var http = require("http");
 
-app.use(express.json({limit: "5mb"}));
-app.use(express.urlencoded({limit: "5mb"}));
-app.use(express.cookieParser("@MadokoRocks!@!@!"));
-app.use(express.cookieSession({key:"madoko.sess"}));
-app.use(app.router);
-app.use(function(err, req, res, next){
-  if (!err) return next();
-  console.log(err);
-  res.send(500,err.toString());
-});
+var bodyParser = require("body-parser");
+var cookieParser = require("cookie-parser");
+var cookieSession = require("cookie-session");
+
+app.use(bodyParser({limit: "5mb"}));
+app.use(cookieParser("@MadokoRocks!@!@!"));
+app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
 
 
 var cookieAge = 20000; //24 * 60 * 60000;
@@ -326,6 +323,13 @@ app.get("/rest/ask", function(req,res) {
 app.use('/temp/', express.static(__dirname + "/users/"));
 
 app.use('/', express.static(__dirname + "/client"));
+
+app.use(function(err, req, res, next){
+  if (!err) return next();
+  console.log(err);
+  res.send(500,err.toString());
+});
+
 
 
 //app.listen(8080);
