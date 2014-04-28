@@ -603,6 +603,9 @@ var UI = (function() {
               if (res.runOnServer && self.allowServer && self.asyncServer) {
                 self.asyncServer.setStale();
               }
+              if (!res.runAgain && !res.runOnServer && !self.stale) {
+                util.message("ready", util.Msg.Status);
+              }
               
               /*
               if (res.avgTime > 1000 && self.refreshRate < 1000) {
@@ -624,7 +627,6 @@ var UI = (function() {
                 self.checkDelayedUpdate.checked = false;
               }
               
-
               return ("update: " + res.ctx.round + (quick ? "  (quick view update)" : "") + "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
             },
             function(err) {
