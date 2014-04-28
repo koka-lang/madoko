@@ -120,11 +120,10 @@ var UI = (function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();
       // dispatch check box events so everything gets initialized
-      self.checkDisableAutoUpdate.dispatchEvent( new Event("change") ); 
-      self.checkDisableServer.dispatchEvent( new Event("change") );
-      self.checkLineNumbers.dispatchEvent( new Event("change") );
-      self.checkWrapLines.dispatchEvent( new Event("change") );
-
+      util.dispatchEvent( self.checkDisableAutoUpdate, "change" );
+      util.dispatchEvent( self.checkDisableServer, "change" );
+      util.dispatchEvent( self.checkLineNumbers, "change" );
+      util.dispatchEvent( self.checkWrapLines, "change" );
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
     });
@@ -253,7 +252,7 @@ var UI = (function() {
         var child = ev.target.children[0];
         if (child && child.nodeName === "INPUT") {
           child.checked = !child.checked;
-          child.dispatchEvent(new Event("change"));
+          util.dispatchEvent( child, "change" );
         }
       }
     };
@@ -328,9 +327,11 @@ var UI = (function() {
         while(elem && elem.nodeName !== "DIV") {
           elem = elem.parentNode;
         }
-        if (elem && elem.dataset && elem.dataset.file) {
-          var path = elem.dataset.file;
-          self.editFile(path).then(undefined, function(err){ self.onError(err); });
+        if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
+          var path = elem.getAttribute("data-file");
+          if (path) {
+            self.editFile(path).then(undefined, function(err){ self.onError(err); });
+          }
         }
       });
     };   
@@ -519,7 +520,7 @@ var UI = (function() {
       var scrollTop = self.view.scrollTop; // remember scroll location
       self.view.innerHTML = html;
       self.view.scrollTop = scrollTop; // and restore
-      document.dispatchEvent(new Event("MadokoViewLoaded"));
+      util.dispatchEvent(document,"MadokoViewLoaded");
       self.syncView();
       return false;
     }
@@ -540,7 +541,7 @@ var UI = (function() {
       //util.message("  quick view update", util.Msg.Info);
       elem.textContent = newSpan.textContent;
       self.html0 = html;      
-      document.dispatchEvent(new Event("MadokoViewLoaded"));
+      util.dispatchEvent(document,"MadokoViewLoaded");
       return true;
     }
     else {

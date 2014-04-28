@@ -46,9 +46,16 @@ require([ "../scripts/util",
 </head>
 
 <body>
-
-
-<div id="app">
+<noscript>
+<p>Madoko is a dynamic application that requires JavaScript.</p>
+<p>Please enable JavaScript in your browser and reload.</p>
+</noscript>
+<div id="oldbrowser" style="display:none; padding: 1ex">
+<p>Madoko uses HTML5 features and requires a recent browser version to work correctly.</p>
+<p>Please upgrade your browser to a more recent version.</p>
+<p>Madoko is known to work with IE 10+, Chrome version 31+, or Firefox version 27+.</p>
+</div>
+<div id="app" style="display:none">
 <div class="toppane">
 
 <!--
@@ -210,6 +217,17 @@ function hi() {
 [euler]: http://www.bing.com/search?q=euler "Bing Euler"
 </div>
 
+<script>
+// test browser features
+if (typeof Worker === "undefined") {
+  document.getElementById("oldbrowser").style.display = "block";
+}
+else {
+  document.getElementById("app").style.display = "block"; 
+}
+</script>
+
+
 <!-- onedrive -->
 <script src="//js.live.net/v5.0/wl.debug.js"></script> 
 
@@ -222,7 +240,7 @@ require([ "../scripts/storage" ], function(storage)
     scope       : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   });
 });
-
 </script>
+
 </body>
 </html>

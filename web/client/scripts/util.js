@@ -357,6 +357,32 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     });
   }
 
+  function dispatchEvent( elem, eventName ) {
+    var event;
+    // we should use "new Event(eventName)" for HTML5 but how to detect that?
+    if (document.createEvent) {
+        event = document.createEvent('HTMLEvents');
+        event.initEvent(eventName,true,true);
+    }
+    else if (document.createEventObject) { // IE < 9
+        event = document.createEventObject();
+        event.eventType = eventName;
+    }
+    event.eventName = eventName;
+    if (elem.dispatchEvent) {
+        elem.dispatchEvent(event);
+    }
+    else if (elem.fireEvent) { 
+        elem.fireEvent('on' + eventName, event);
+    }
+    else if (elem[eventName]) {
+        elem[eventName]();
+    } 
+    else if (elem['on' + eventName]) {
+        elem['on' + eventName]();
+    }
+  }
+
   function animate( elem, props, duration, steps ) {
     var ival = (steps ? duration / steps : 50);
     steps = (duration / ival) | 0;
@@ -803,6 +829,7 @@ doc.execCommand("SaveAs", null, filename)
     toggleButton: toggleButton,
     px: px,
     animate: animate,
+    dispatchEvent: dispatchEvent,
     asyncForEach: asyncForEach,
 
     requestPOST: requestPOST,
