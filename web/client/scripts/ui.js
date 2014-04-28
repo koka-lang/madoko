@@ -123,6 +123,7 @@ var UI = (function() {
       self.checkDisableAutoUpdate.dispatchEvent( new Event("change") ); 
       self.checkDisableServer.dispatchEvent( new Event("change") );
       self.checkLineNumbers.dispatchEvent( new Event("change") );
+      self.checkWrapLines.dispatchEvent( new Event("change") );
 
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
@@ -203,7 +204,16 @@ var UI = (function() {
         //scroll();
       }
     });
-     
+    
+    // synchronize on cursor position changes
+    // disabled for now, scroll events seem to be enough
+    /*
+    self.editor.addListener("positionChanged", function (e) {    
+      self.syncView();
+    });
+    */
+    
+
     // Buttons and checkboxes
     self.checkLineNumbers.onchange = function(ev) { 
       if (self.editor) {
@@ -943,47 +953,78 @@ var UI = (function() {
   UI.prototype.syncView = function( startLine, endLine, cursorLine ) 
   {
     var self = this;
-    if (self.lastScrollTop===undefined) self.lastScrollTop = null;
+    if (self.lastScrollTop===undefined) self.lastScrollTop = -1;
+    if (self.lastLineNo===undefined) self.lastLineNo = -1;
       
     if (cursorLine==null) {
       cursorLine = self.editor.getPosition().lineNumber;
     }
     if (startLine==null) {
-      var view  = self.editor.getView();
+      var view  = self.editor.getView();      
       var lines = view.viewLines;
       var rng = lines._currentVisibleRange;
       startLine = rng.startLineNumber;
       endLine = rng.endLineNumber;
       //console.log("scroll: start: " + startLine)
     }
-
     var lineNo = cursorLine;
     if (cursorLine < startLine || cursorLine > endLine) {
       // not a visible cursor -- use the middle of the viewed ranged
-      lineNo = startLine + ((endLine - startLine)/2);
+      lineNo = startLine + ((endLine - startLine + 1)/2);
     }
-    var res = findElemAtLine( self.view, lineNo, self.editName === self.docName ? null : self.editName );
+    // exit quickly if same line
+    if (lineNo === self.lastLineNo) return false;
+
+    // use physical textline; 
+    // start-, end-, cursor-, and lineNo are all view lines.
+    // if wrapping is enabled, this will not correspond to the actual text line
+    var textLine = lineNo;
+    var slines = null;
+    if (self.editor.configuration.getWrappingColumn() >= 0) {
+      // need to do wrapping column translation
+      view  = view || self.editor.getView();      
+      var slines = view.context.model.lines;
+      textLine = slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
+    }
+
+    // find the element in the view tree
+    var res = findElemAtLine( self.view, textLine, self.editName === self.docName ? null : self.editName );
     if (!res) return false;
     
     var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;
     
-    // adjust for line offset
-    if (res.elemLine < lineNo && res.elemLine < res.nextLine) {
+    // adjust for line delta: we only find the starting line of an
+    // element, here we adjust for it assuming even distribution up to the next element
+    if (res.elemLine < textLine && res.elemLine < res.nextLine) {
       var scrollTopNext = offsetOuterTop(res.next) - self.view.offsetTop;
       if (scrollTopNext > scrollTop) {
-        var delta = (lineNo - res.elemLine) / (res.nextLine - res.elemLine);
+        var delta = 0;
+        if (slines) {
+          // wrapping enabled, translate to view lines and calculate the offset
+          var elemViewLine = slines.convertInputPositionToOutputPosition(res.elemLine,0).lineNumber;
+          var nextViewLine = slines.convertInputPositionToOutputPosition(res.nextLine,0).lineNumber;
+          delta = (lineNo - elemViewLine) / (nextViewLine - elemViewLine + 1);
+        } 
+        else {
+          // no wrapping, directly calculate 
+          delta = (textLine - res.elemLine) / (res.nextLine - res.elemLine + 1);
+        }
+        if (delta < 0) delta = 0;
+        if (delta > 1) delta = 1;
         scrollTop += ((scrollTopNext - scrollTop) * delta);
       }
     }
 
     // we calculated to show the right part at the top of the view,
     // now adjust to actually scroll it to the middle of the view or the relative cursor position.
-    var relative = (lineNo - startLine) / (endLine - startLine);
+    var relative = (lineNo - startLine) / (endLine - startLine + 1);
     scrollTop = Math.max(0, scrollTop - self.view.offsetHeight * relative );
     
+    // exit if we are still at the same scroll position
     if (scrollTop === self.lastScrollTop) return false;
     self.lastScrollTop = scrollTop;
 
+    // otherwise, start scrolling
     util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
     return true;
   }
