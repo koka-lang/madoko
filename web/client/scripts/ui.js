@@ -173,7 +173,7 @@ var UI = (function() {
       //mode: madokoMode.mode,
       tabSize: 4,
       insertSpaces: true,
-      //wrappingColumn: 80,
+      wrappingColumn: false,
       automaticLayout: true,
       scrollbar: {
         vertical: "auto",
@@ -208,6 +208,13 @@ var UI = (function() {
     self.checkLineNumbers.onchange = function(ev) { 
       if (self.editor) {
         self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
+      }
+    };
+    
+    self.checkWrapLines = document.getElementById("checkWrapLines");
+    self.checkWrapLines.onchange = function(ev) { 
+      if (self.editor) {
+        self.editor.updateOptions( { wrappingColumn: (ev.target.checked ? 0 : false) } ); 
       }
     };
 
@@ -648,6 +655,7 @@ var UI = (function() {
       pos: pos, 
       storage: self.storage.persist(minimal),
       showLineNumbers: self.checkLineNumbers.checked,
+      wrapLines: self.checkWrapLines.checked,
       disableServer: self.checkDisableServer.checked,
       disableAutoUpdate: self.checkDisableAutoUpdate.checked,
     };
@@ -714,7 +722,8 @@ var UI = (function() {
             var options = {
               readOnly: file.kind !== storage.File.Text,
               mode: mime,
-              //wrappingColumn: (util.extname(file.path)===".mdk" ? 80 : 0)
+              lineNumbers: self.checkLineNumbers.checked,
+              wrappingColumn: self.checkWrapLines.checked ? 0 : false,
             };
             self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
             self.editor.updateOptions(options);
@@ -739,6 +748,7 @@ var UI = (function() {
       self.checkDisableAutoUpdate.checked = json.disableAutoUpdate;
       self.checkDisableServer.checked = json.disableServer;
       self.checkLineNumbers.checked = json.showLineNumbers;
+      self.checkWrapLines.checked = json.wrapLines;
       var stg = storage.unpersistStorage(json.storage);      
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
@@ -793,7 +803,7 @@ var UI = (function() {
     div.innerHTML = 
       files.sort().join("\n") + 
       (images.length > 0 || generated.length > 0 ? 
-          "<div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
+          "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
   UI.prototype.generatePdf = function() {
@@ -930,11 +940,14 @@ var UI = (function() {
     return (elem.offsetTop - delta);
   }
 
-  UI.prototype.syncView = function( startLine, endLine ) 
+  UI.prototype.syncView = function( startLine, endLine, cursorLine ) 
   {
     var self = this;
     if (self.lastScrollTop===undefined) self.lastScrollTop = null;
-
+      
+    if (cursorLine==null) {
+      cursorLine = self.editor.getPosition().lineNumber;
+    }
     if (startLine==null) {
       var view  = self.editor.getView();
       var lines = view.viewLines;
@@ -944,26 +957,34 @@ var UI = (function() {
       //console.log("scroll: start: " + startLine)
     }
 
-    var res = findElemAtLine( self.view, startLine, self.editName === self.docName ? null : self.editName );
+    var lineNo = cursorLine;
+    if (cursorLine < startLine || cursorLine > endLine) {
+      // not a visible cursor -- use the middle of the viewed ranged
+      lineNo = startLine + ((endLine - startLine)/2);
+    }
+    var res = findElemAtLine( self.view, lineNo, self.editName === self.docName ? null : self.editName );
     if (!res) return false;
     
     var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;
     
     // adjust for line offset
-    if (res.elemLine < startLine && res.elemLine < res.nextLine) {
+    if (res.elemLine < lineNo && res.elemLine < res.nextLine) {
       var scrollTopNext = offsetOuterTop(res.next) - self.view.offsetTop;
       if (scrollTopNext > scrollTop) {
-        var delta = (startLine - res.elemLine) / (res.nextLine - res.elemLine);
+        var delta = (lineNo - res.elemLine) / (res.nextLine - res.elemLine);
         scrollTop += ((scrollTopNext - scrollTop) * delta);
       }
     }
 
+    // we calculated to show the right part at the top of the view,
+    // now adjust to actually scroll it to the middle of the view or the relative cursor position.
+    var relative = (lineNo - startLine) / (endLine - startLine);
+    scrollTop = Math.max(0, scrollTop - self.view.offsetHeight * relative );
+    
     if (scrollTop === self.lastScrollTop) return false;
-
     self.lastScrollTop = scrollTop;
-    util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
 
-    //util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+    util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
     return true;
   }
 

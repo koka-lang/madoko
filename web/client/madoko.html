@@ -63,7 +63,7 @@ insert image:
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
     <div id="edit-select" class="popup boxed">
-      <img id="remote-logo" src="images/null-logo.svg" />
+      <img id="remote-logo" src="images/cloud.svg" />
       <span id="edit-select-header">&nbsp;</span>
       <div id="edit-select-content" class="menu boxed">        
       </div>
@@ -100,6 +100,8 @@ insert image:
             <input type="checkbox" id="checkAutoSync"/> Synchronize automatically</div>
           <div class="button" title="Show line numbers in the editor">
             <input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
+          <div class="button" title="Wrap lines in the editor">
+            <input type="checkbox" id="checkWrapLines"/> Wrap lines</div>
          <hr/>
           <div class="button" 
                title="Do not update the view until there is a pause in typing.
@@ -121,6 +123,18 @@ Do not use unless instructed to do so :-)"
             ><span class="icon"></span>Clear local storage</div>
         </div>
       </div>
+      
+      <img id="button-editor-wide" class="button" title="Make the editor view wider" src="images/tri-right.svg" />
+    </div>
+  </div>
+  <div class="pane-content boxed">
+    <div id="editor"></div>
+  </div>
+</div>
+<div id="viewpane" class="pane right">
+  <div id="view-header" class="pane-header">
+    <div class="buttons">
+      <img id="button-editor-narrow" class="button" title="Make the document view wider" src="images/tri-left.svg" />
       <div id="help" class="popup">
         <img class="button" src="images/help.svg" alt="Help"/>
         <div id="help-content" class="menu boxed">
@@ -142,30 +156,19 @@ Do not use unless instructed to do so :-)"
           </div>
         </div>
       </div>
-      <img id="button-editor-wide" class="button" title="Make the editor view wider" src="images/tri-right.svg" />
-    </div>
-  </div>
-  <div class="pane-content boxed">
-    <div id="editor"></div>
-  </div>
-</div>
-<div id="viewpane" class="pane right">
-  <div id="view-header" class="pane-header">
-    <div class="buttons">
-      <img id="button-editor-narrow" class="button" title="Make the document view wider" src="images/tri-left.svg" />
       <img id="export-html" title="Export document as a web-page (HTML)"
         class="button" src="images/html-logo.png" alt="Download HTML"/>    
       <img id="export-pdf" title="Export document as PDF"
         class="button" src="images/pdf-logo2.png" alt="Download PDF"/>    
     </div>
     <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="view spinner"/>    
-    <span id="view-message" class="popup boxed">
+    <div id="view-message" class="popup boxed">
       <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
       <div id="koka-console" class="madoko menu boxed">
         <div id="koka-console-out" class="monospace short"></div>
       </div>
-    </span>
+    </div>
   </div>
   <div class="pane-content boxed">
     <div id="view" class="madoko madoko-body"></div>

@@ -134,6 +134,9 @@ img#cloud {
   text-align: right;
   padding-left: 0.2em;
 }
+#view-header div {
+  text-align: left;
+}
 
 #editor-header {
   padding-right: 0.25em;
@@ -186,11 +189,6 @@ div.boxed {
   vertical-align: -0.15em;
 }
 
-#edit-select-content .binaries {
-  margin-top: 1ex;
-  border-top: 1px dotted black;
-}
-
 #rename {
   width: 8em;
   color: DimGray;
@@ -205,7 +203,6 @@ div.boxed {
 
 #view-message {
   width: 50%;
-  text-align: left;
 }
 
 #koka-console {

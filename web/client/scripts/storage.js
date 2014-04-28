@@ -320,7 +320,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.logo = function() {
-    return "null-logo.svg";
+    return "madoko-icon-100.png";
   }
 
   NullRemote.prototype.persist = function() {
