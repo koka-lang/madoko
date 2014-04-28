@@ -101,7 +101,6 @@ var UI = (function() {
     self.staleTime = Date.now();
     self.round = 0;
     self.lastRound = 0;
-    self.text0 = "";
     self.docText = "";
     self.htmlText = "";
 
@@ -203,6 +202,12 @@ var UI = (function() {
         //scroll();
       }
     });
+    
+    self.changed = false;
+    self.editor.addListener("change", function (e) {    
+      self.changed = true;
+    });
+    
     
     // synchronize on cursor position changes
     // disabled for now, scroll events seem to be enough
@@ -405,8 +410,6 @@ var UI = (function() {
   UI.prototype.setEditText = function( text, mode ) {
     var self = this;
     self.editor.model.setValue(text,mode);    
-    self.text0 = text;
-    self.text  = text;
     self.setStale();
   }
 
@@ -576,22 +579,18 @@ var UI = (function() {
 
     self.asyncMadoko = new util.AsyncRunner( self.refreshRate, showSpinner, 
       function() {
-        var text = self.getEditText();
-        
-        if (text != self.text0) {   
-          self.stale = true;
-          self.text0 = text;
-          if (!self.refreshContinuous) return false; // set stale, but wait until the user stops typing..
-        }
-
+        var changed = self.changed;
+        self.changed = false;
+        self.stale = self.stale || changed;
+        if (changed && !self.refreshContinuous) return false;
         return self.stale;
       },
       function(round) {
-        self.localSave(true); // minimal save
+        //self.localSave(true); // minimal save
         self.stale = false;
         if (!self.runner) return cont();
         if (self.editName === self.docName) {
-          self.docText = self.text0;
+          self.docText = self.getEditText();
         }
         return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() })
           .then(
@@ -640,7 +639,7 @@ var UI = (function() {
     self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
       function(round) {
-        return self.runner.runMadokoServer(self.text0, {docname: self.docName, round:round}).then( 
+        return self.runner.runMadokoServer(self.docText, {docname: self.docName, round:round}).then( 
           function(ctx) {
             self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             self.allowServer = false; // TODO: hack to prevent continuous updates in case the server output it not as it should (say a latex error)
@@ -1067,7 +1066,11 @@ var UI = (function() {
   UI.prototype.onFileUpdate = function(file) {
     var self = this;
     if (file.path===self.editName) {
-      self.editSelectHeader.innerHTML = self.displayFile(file);
+      var fileDisplay = self.displayFile(file);
+      if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
+        self.fileDisplay = fileDisplay;
+        self.editSelectHeader.innerHTML = fileDisplay;
+      }
     }
     self.editSelect();
   }

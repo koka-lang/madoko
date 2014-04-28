@@ -549,7 +549,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.refreshRate = refreshRate || 1000;
       
       self.minRefreshRate = 100;
-      self.maxRefreshRate = 1500;
+      self.maxRefreshRate = 1000;
       
       self.times = [self.refreshRate];
       self.timesSamples = 10;      

@@ -36,9 +36,10 @@ var madokoMode =
     
       tokenizer: {
         root: [
+          // recognize common sequences first for efficiency
+          [/(?!^)[\w\s\(\)\-,\.?;]+/,""],
+          
           // metadata
-          //val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-          //val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
           [/^(@metakey)/, { token: "namespace.metadata.key", next: "metadata" } ],
           
           // headers
