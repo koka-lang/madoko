@@ -56,7 +56,6 @@
   },
   "devDependencies": {
     "jake"        : ">=0.7.6",
-    "async"       : ">=0.7.0",
     "express"     : ">=4.1.1",
     "body-parser" : ">=1.0.2",
     "cookie-parser" : ">=1.0.1",

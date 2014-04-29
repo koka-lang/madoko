@@ -83,6 +83,37 @@ function getModeFromExt(ext) {
   else return "text/plain";
 }
 
+var origin = window.location.protocol + "//" + window.location.host;
+
+var syncScript = 
+  ["<script>",
+   "function findLocation( root, elem ) {",
+   "  while (elem && elem !== root) {",
+   "    var dataline = elem.getAttribute(\"data-line\");",
+   "    if (dataline) {",
+   "      cap = /(?:^|;)(?:([^:;]+):)?(\\d+)$/.exec(dataline);",
+   "      if (cap) {",
+   "        var line = parseInt(cap[2]);",
+   "        if (line && line !== NaN) {",
+   "          return { path: cap[1], line: line };",
+   "        }", 
+   "      }",
+   "    }",
+   "    elem = elem.parentNode;",
+   "  }",
+   "  return null;",
+   "}",
+   "document.body.ondblclick = function(ev) {",
+   "  var res = findLocation(document.body,ev.target);",
+   "  if (res) {",
+   "    res.eventName = 'sync';",
+   "    window.parent.postMessage(JSON.stringify(res),'" + origin + "');",
+   "    console.log('posted: ' + JSON.stringify(res));",
+   "  }",
+   "};",
+   "</script>"].join("\n");
+
+
 var UI = (function() {
 
   function UI( runner )
@@ -158,6 +189,7 @@ var UI = (function() {
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
     self.view    = document.getElementById("view");
+    self.setViewBody();      
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
     self.inputRename = document.getElementById("rename");
@@ -262,9 +294,12 @@ var UI = (function() {
       }
     };
 
-    view.ondblclick = function(ev) {
-      self.syncEditor(ev.target);
-    }
+    window.addEventListener('message', function(ev) {
+      if (ev.origin !== origin) return;
+      var res = JSON.parse(ev.data);
+      if (!res || !res.line) return;
+      self.editFile( res.path ? res.path : self.docName, { lineNumber: res.line, column: 0 } );
+    },false);
 
     document.getElementById("load-onedrive").onclick = function(ev) {
       self.checkSynced().then( function() {
@@ -512,7 +547,22 @@ var UI = (function() {
         if (res) return res;
       }
     }
-    return null;
+    return null;  
+  }
+
+  UI.prototype.setViewBody = function() {
+    var self = this;
+    var doc = self.view.contentWindow.document;
+
+    self.viewBody = doc.body;
+    var scrollTop = self.viewBody.scrollTop;
+    self.viewBody.scrollTop = scrollTop + 1;
+    if (self.viewBody.scrollTop === scrollTop + 1) {
+      self.viewBody.scrollTop = scrollTop;
+    }
+    else {
+      self.viewBody = doc.documentElement; // IE.
+    }
   }
 
   UI.prototype.viewHTML = function( html, time0 ) {
@@ -520,9 +570,15 @@ var UI = (function() {
     
     function updateFull() {
       self.html0 = html;
-      var scrollTop = self.view.scrollTop; // remember scroll location
-      self.view.innerHTML = html;
-      self.view.scrollTop = scrollTop; // and restore
+      self.setViewBody();      
+      var scrollTop = self.viewBody.scrollTop; // remember scroll location
+      //self.view.innerHTML = html;
+      self.view.contentWindow.document.open();
+      self.view.contentWindow.document.write(html);
+      self.view.contentWindow.document.write(syncScript);
+      self.view.contentWindow.document.close();
+      self.setViewBody();      
+      self.viewBody.scrollTop = scrollTop; // and restore
       util.dispatchEvent(document,"MadokoViewLoaded");
       self.syncView();
       return false;
@@ -538,7 +594,7 @@ var UI = (function() {
       var i = self.html0.indexOf(oldSpan.text);
       if (i !== oldSpan.pos0) return updateFull();
       // ok, we can identify a unique text node in the html
-      var elem = findTextNode( self.view, oldSpan.textContent );
+      var elem = findTextNode( self.viewBody, oldSpan.textContent );
       if (!elem) return updateFull();
       // yes!
       //util.message("  quick view update", util.Msg.Info);
@@ -600,7 +656,8 @@ var UI = (function() {
               if (res.runAgain) {
                 self.stale=true;              
               }
-              if (res.runOnServer && self.allowServer && self.asyncServer) {
+              if (res.runOnServer && self.allowServer && self.asyncServer 
+                    && self.lastMathDoc !== self.docText) { // prevents infinite math rerun on latex error
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
@@ -639,13 +696,14 @@ var UI = (function() {
     self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
       function(round) {
+        self.lastMathDoc = self.docText;
         return self.runner.runMadokoServer(self.docText, {docname: self.docName, round:round}).then( 
           function(ctx) {
             self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
-            self.allowServer = false; // TODO: hack to prevent continuous updates in case the server output it not as it should (say a latex error)
+            //self.allowServer = false; // TODO: hack to prevent continuous updates in case the server output it not as it should (say a latex error)
             // run madoko locally again using our generated files
             return self.asyncMadoko.run(true).always( function(){
-              self.allowServer = !self.checkDisableServer.checked;
+              //self.allowServer = !self.checkDisableServer.checked;
             });               
           },
           function(err) {
@@ -803,7 +861,7 @@ var UI = (function() {
       if (file) {
         var disable = (file.kind === storage.File.Text ? "" : " disable");
         var main    = (file.path === self.docName ? " main" : "");
-        var hide    = (util.extname(file.path) === ".dimx" ? " hide" : "");
+        var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item file" + disable + main + hide + "'>" + 
                           self.displayFile(file) + "</div>";
@@ -990,15 +1048,15 @@ var UI = (function() {
     }
 
     // find the element in the view tree
-    var res = findElemAtLine( self.view, textLine, self.editName === self.docName ? null : self.editName );
+    var res = findElemAtLine( self.viewBody, textLine, self.editName === self.docName ? null : self.editName );
     if (!res) return false;
     
-    var scrollTop = offsetOuterTop(res.elem) - self.view.offsetTop;
+    var scrollTop = offsetOuterTop(res.elem) - self.viewBody.offsetTop;
     
     // adjust for line delta: we only find the starting line of an
     // element, here we adjust for it assuming even distribution up to the next element
     if (res.elemLine < textLine && res.elemLine < res.nextLine) {
-      var scrollTopNext = offsetOuterTop(res.next) - self.view.offsetTop;
+      var scrollTopNext = offsetOuterTop(res.next) - self.viewBody.offsetTop;
       if (scrollTopNext > scrollTop) {
         var delta = 0;
         if (slines) {
@@ -1027,7 +1085,8 @@ var UI = (function() {
     self.lastScrollTop = scrollTop;
 
     // otherwise, start scrolling
-    util.animate( self.view, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+    util.animate( self.viewBody, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+    //self.viewBody.scrollTop = scrollTop;
     return true;
   }
 

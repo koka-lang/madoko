@@ -60,7 +60,7 @@ html,body,#app {
   float: left;
 }
 .pane.right .pane-content {
-  padding: 0 1ex;
+  padding: 1px 1ex;
 }
 
 .pane-header {
@@ -77,9 +77,10 @@ html,body,#app {
 
 #view {
   height: 100%;
+  width: 100%;
+  border: none;
   overflow: scroll;
   background-color: white;
-  transition: height 0.8s;
 }
 
 #koka-console-out {

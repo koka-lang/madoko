@@ -1,6 +1,5 @@
 var cp     = require("child_process");
 var mkdirp = require("mkdirp");
-var async = require("async");
 var fs    = require("fs");
 var path = require("path");
 var crypto = require("crypto");
@@ -88,16 +87,36 @@ function downloadImage( fpath, url, cont ) {
 }
 
 
+function asyncForEach( xs, asyncAction, cont ) {
+  if (!xs || xs.length===0) return cont(0,[]);
+  var count = xs.length;
+  var objs  = [];
+  var err   = null;
+  xs.forEach( function(x) {
+    function localCont(xerr,obj) {
+      objs.push(obj);
+      if (xerr) err = xerr;
+      count--;
+      if (count <= 0) cont(err,objs);
+    }
+    try {
+      asyncAction(x, localCont );
+    }
+    catch(exn) {
+      localCont(exn);
+    }
+  });
+}
+
 // Save files to be processed.
 function saveFiles( userPath, files, cont ) {
-  async.each( properties(files),  function(fname,xcont) {
+  asyncForEach( properties(files),  function(fname,xcont) {
     if (!fname || fname.substr(0,1) !== "/") return xcont();
     var file = files[fname];
     fname = fname.substr(1);
     if (!isValidFileName(fname)) return xcont("Invalid file name: " + fname);
-    
     var fpath = path.join(userPath,fname); 
-    console.log("writing file: " + fpath);
+    console.log("writing file: " + fname + " (" + file.encoding + ")");
     var dir = path.dirname(fpath);
     mkdirp(dir, function(err) {
       if (err) return xcont(err);
@@ -118,11 +137,11 @@ function readFiles( userpath, docname, fnames, cont ) {
     var ext = path.extname(docname);
     var stem = docname.substr(0, docname.length - ext.length );
     fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
-              stem + "-bib.bbl"];
+              stem + "-bib.bbl", "madoko.css"];
   }
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
-  async.each( fnames, function(fname,xcont) {
+  asyncForEach( fnames, function(fname,xcont) {
     fs.readFile( path.join(userpath,fname), {encoding:"utf8"}, function(err,data) {
       files["/" + fname] = (err ? "" : data);
       xcont();

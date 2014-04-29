@@ -169,10 +169,11 @@ var Runner = (function() {
     var params = {};    
     params.docname = ctx.docname;
     if (ctx.pdf) params.pdf = ctx.pdf;
-    params["/" + params.docname] = text;
+    params["/" + params.docname] = { type: "text", content: text, encoding: "utf-8" };
     
     if (self.storage) {
       self.storage.forEachFile(function(file) {
+        if (file.path === params.docname) return; // use the latest version
         if (file.kind === storage.File.Text) {
           params["/" + file.path] = { type: "text", content: file.content, encoding: "utf-8" };
         }
