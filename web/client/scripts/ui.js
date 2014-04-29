@@ -230,7 +230,7 @@ var UI = (function() {
 
       // use interval since the editor is asynchronous, this way  the start line number can stabilize.
       if (!self.syncInterval) {
-        self.syncInterval = setInterval(scroll, 25);
+        self.syncInterval = setInterval(scroll, 100);
         //scroll();
       }
     });
@@ -445,7 +445,7 @@ var UI = (function() {
   UI.prototype.setEditText = function( text, mode ) {
     var self = this;
     self.editor.model.setValue(text,mode);    
-    self.setStale();
+    // self.setStale();
   }
 
   UI.prototype.getEditText = function() { 
@@ -554,7 +554,7 @@ var UI = (function() {
     var self = this;
     var doc = self.view.contentWindow.document;
 
-    self.viewBody = doc.body;
+    self.viewBody = doc.body || doc.documentElement || doc;
     var scrollTop = self.viewBody.scrollTop;
     self.viewBody.scrollTop = scrollTop + 1;
     if (self.viewBody.scrollTop === scrollTop + 1) {

@@ -59,9 +59,6 @@ html,body,#app {
 .pane.left {
   float: left;
 }
-.pane.right .pane-content {
-  padding: 1px 1ex;
-}
 
 .pane-header {
   font-family: "Segoe UI";
