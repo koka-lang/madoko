@@ -137,7 +137,7 @@ function readFiles( userpath, docname, fnames, cont ) {
     var ext = path.extname(docname);
     var stem = docname.substr(0, docname.length - ext.length );
     fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
-              stem + "-bib.bbl", "madoko.css"];
+              stem + "-bib.bbl", stem + "-bib.aux", "madoko.css"];
   }
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};

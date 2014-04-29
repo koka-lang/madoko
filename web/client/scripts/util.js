@@ -383,6 +383,69 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     }
   }
 
+  function getScrollTop( elem ) {
+    if (!elem) return 0;
+    if (elem.contentWindow) {
+      // iframe
+      if (elem.contentWindow.pageYOffset) return elem.contentWindow.pageYOffset;
+      var doc = elem.contentDocument;
+      if (!doc) return 0;
+      return (doc.documentElement || doc.body.parentNode || doc.body).scrollTop;
+    }
+    else if (elem.pageYOffset) {
+      return elem.pageYOffset;
+    }
+    else {
+      return elem.scrollTop;
+    }
+  }
+
+  function setScrollTop( elem, top ) {
+    if (!elem) return;
+    if (elem.contentWindow) {
+      elem = elem.contentWindow;
+    }
+    if (elem.scroll) {
+      elem.scroll( elem.pageXOffset || 0, top );
+    }
+    else {
+      elem.scrollTop = top;
+    }
+  }
+
+  function animateScrollTop( elem, top, duration, steps ) {
+    var top0 = getScrollTop(elem);
+    if (top0 === top) return;
+    if (Math.abs(top - top0) <= 10) steps = 1;
+
+    var n = 0;
+    var action = function() {
+      n++;
+      var top1 = top;
+      if (n >= steps) {
+        if (elem.animate) {
+          clearInterval(elem.animate);
+          delete elem.animate;
+        }
+      }
+      else {
+        top1 = top0 + ((top - top0) * (n/steps));
+      }
+      setScrollTop(elem,top1);
+    };
+
+    var ival = (steps && steps > 0 ? duration / steps : 50);
+    steps = (duration / ival) | 0;
+    
+    action();    
+    if (steps > 1) {
+      if (elem.animate) {
+        clearInterval(elem.animate);
+      }    
+      elem.animate = setInterval( action, ival);    
+    }
+  }
+
   function animate( elem, props, duration, steps ) {
     var ival = (steps ? duration / steps : 50);
     steps = (duration / ival) | 0;
@@ -831,6 +894,10 @@ doc.execCommand("SaveAs", null, filename)
     animate: animate,
     dispatchEvent: dispatchEvent,
     asyncForEach: asyncForEach,
+
+    getScrollTop: getScrollTop,
+    setScrollTop: setScrollTop,
+    animateScrollTop: animateScrollTop,
 
     requestPOST: requestPOST,
     requestPUT: requestPUT,

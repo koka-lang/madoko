@@ -137,7 +137,7 @@ var UI = (function() {
 
     Monaco.Editor.createCustomMode(madokoMode.mode);
     window.onbeforeunload = function(ev) { 
-      if (self.storage.isSynced()) return;
+      //if (self.storage.isSynced()) return;
       if (self.localSave()) return; 
       var message = "Changes to current document have not been saved yet!\n\nIf you leave this page, any unsaved work will be lost.";
       (ev || window.event).returnValue = message;
@@ -189,7 +189,7 @@ var UI = (function() {
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
     self.view    = document.getElementById("view");
-    self.setViewBody();      
+    self.viewBody= null;      
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
     self.inputRename = document.getElementById("rename");
@@ -379,6 +379,7 @@ var UI = (function() {
     document.getElementById("sync").onclick = function(ev) 
     {      
       if (self.storage) {
+        self.localSave();
         var cursors = {};        
         var pos = self.editor.getPosition();
         cursors["/" + self.docName] = pos.lineNumber;
@@ -386,7 +387,7 @@ var UI = (function() {
         self.storage.sync( diff, cursors ).then( function() {
           pos.lineNumber = cursors["/" + self.docName];
           self.editor.setPosition(pos);
-          self.localSave();
+          //self.localSave();
         }).then( function() {          
           self.showSpinner(false,self.syncer);    
           util.message("synced", util.Msg.Status);
@@ -550,37 +551,28 @@ var UI = (function() {
     return null;  
   }
 
-  UI.prototype.setViewBody = function() {
-    var self = this;
-    var doc = self.view.contentWindow.document;
-
-    self.viewBody = doc.body || doc.documentElement || doc;
-    var scrollTop = self.viewBody.scrollTop;
-    self.viewBody.scrollTop = scrollTop + 1;
-    if (self.viewBody.scrollTop === scrollTop + 1) {
-      self.viewBody.scrollTop = scrollTop;
-    }
-    else {
-      self.viewBody = doc.documentElement; // IE.
-    }
-  }
-
   UI.prototype.viewHTML = function( html, time0 ) {
     var self = this;
     
     function updateFull() {
       self.html0 = html;
-      self.setViewBody();      
-      var scrollTop = self.viewBody.scrollTop; // remember scroll location
+      var scrollTop = util.getScrollTop(self.view); // remember scroll location
       //self.view.innerHTML = html;
+      self.viewBody = null;
+      
       self.view.contentWindow.document.open();
+      self.view.contentWindow.document.addEventListener("DOMContentLoaded", function(ev) {
+        self.viewBody = self.view.contentWindow.document.body;
+        util.setScrollTop(self.view,scrollTop); // and restore
+        self.syncView();
+        setTimeout( function() { 
+          self.syncView(); // and again after a time-out to let scripts run and settle layout
+        },100);
+      });
+
       self.view.contentWindow.document.write(html);
       self.view.contentWindow.document.write(syncScript);
-      self.view.contentWindow.document.close();
-      self.setViewBody();      
-      self.viewBody.scrollTop = scrollTop; // and restore
-      util.dispatchEvent(document,"MadokoViewLoaded");
-      self.syncView();
+      self.view.contentWindow.document.close();      
       return false;
     }
 
@@ -600,7 +592,6 @@ var UI = (function() {
       //util.message("  quick view update", util.Msg.Info);
       elem.textContent = newSpan.textContent;
       self.html0 = html;      
-      util.dispatchEvent(document,"MadokoViewLoaded");
       return true;
     }
     else {
@@ -622,6 +613,10 @@ var UI = (function() {
     }
     else if (!enable && elem.spinners === 1) {
       util.removeClassName(elem,"spin");
+      // for IE
+      var vis = elem.style.visibility;
+      elem.style.visibility="hidden";
+      elem.style.visibility=vis;
     }
     if (enable) elem.spinners++;
     else if (elem.spinners > 0) elem.spinners--;
@@ -642,7 +637,7 @@ var UI = (function() {
         return self.stale;
       },
       function(round) {
-        //self.localSave(true); // minimal save
+        self.localSave(true); // minimal save
         self.stale = false;
         if (!self.runner) return cont();
         if (self.editName === self.docName) {
@@ -1050,13 +1045,13 @@ var UI = (function() {
     // find the element in the view tree
     var res = findElemAtLine( self.viewBody, textLine, self.editName === self.docName ? null : self.editName );
     if (!res) return false;
-    
-    var scrollTop = offsetOuterTop(res.elem) - self.viewBody.offsetTop;
+
+    var scrollTop = offsetOuterTop(res.elem); 
     
     // adjust for line delta: we only find the starting line of an
     // element, here we adjust for it assuming even distribution up to the next element
     if (res.elemLine < textLine && res.elemLine < res.nextLine) {
-      var scrollTopNext = offsetOuterTop(res.next) - self.viewBody.offsetTop;
+      var scrollTopNext = offsetOuterTop(res.next); 
       if (scrollTopNext > scrollTop) {
         var delta = 0;
         if (slines) {
@@ -1078,15 +1073,15 @@ var UI = (function() {
     // we calculated to show the right part at the top of the view,
     // now adjust to actually scroll it to the middle of the view or the relative cursor position.
     var relative = (lineNo - startLine) / (endLine - startLine + 1);
-    scrollTop = Math.max(0, scrollTop - self.view.offsetHeight * relative );
+    scrollTop = Math.max(0, scrollTop - self.view.clientHeight * relative ) | 0; // round it
     
     // exit if we are still at the same scroll position
     if (scrollTop === self.lastScrollTop) return false;
     self.lastScrollTop = scrollTop;
 
     // otherwise, start scrolling
-    util.animate( self.viewBody, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
-    //self.viewBody.scrollTop = scrollTop;
+    //util.animate( self.viewBody, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
+    util.animateScrollTop(self.view, scrollTop, 500);
     return true;
   }
 
