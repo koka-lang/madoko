@@ -6,6 +6,12 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
+/*
+notes:
+  When using "calc" we give a non-calc argument first to support browsers
+  that do not support calc expressions.
+*/
+
 html,body,#app {
   height: 100%;
   padding: 0pt;
@@ -23,21 +29,26 @@ html,body,#app {
 }
 
 .pane {
+  height: 96%;
   height: calc(100% - 1.25rem);
+  width: 49%;
   width: calc(50% - 0.2rem);
   transition: width 0.8s;
 }
 
-.pane.wide {
+.pane.wide {  
+  width: 69%;
   width: calc(70% - 0.125rem);
 }
 .pane.narrow {
+  width: 29%;
   width: calc(30% - 0.125rem);
 }
 .pane-header {
   margin-bottom: 0.25rem;
 }
 .pane-content {
+  height: 95%;
   height: calc(100% - 1.5rem - 6px);    
   padding: 1px;
 }
@@ -47,6 +58,9 @@ html,body,#app {
 }
 .pane.left {
   float: left;
+}
+.pane.right .pane-content {
+  padding: 0 1ex;
 }
 
 .pane-header {
@@ -63,7 +77,6 @@ html,body,#app {
 
 #view {
   height: 100%;
-  padding: 0px 1ex;
   overflow: scroll;
   background-color: white;
   transition: height 0.8s;
@@ -74,6 +87,7 @@ html,body,#app {
   font-size: 8pt;
   padding: 0.5rem;
   transition: height 0.8s;
+  height: 95%;
   height: calc(100% - 17px);
 }
 
@@ -116,10 +130,12 @@ html,body,#app {
   padding: 0.1em 0.2em;
 }
 
-.menu div .icon {
+.menu div .icon, .menu div input {
   display: inline-block;
-  width: 1.5em;
+  width: 1.75em;
   text-align: center;
+  padding: 0;
+  margin: 0;
 } 
 
 img#cloud {
@@ -170,9 +186,6 @@ img#cloud {
   border: 1px solid #888 !important;
   border-radius: 5px;
 }
-.boxed div {
-  border-radius: 5px;
-}
 div.boxed {
   padding: 1px;
 }
@@ -203,6 +216,7 @@ div.boxed {
 
 #view-message {
   width: 50%;
+  padding: 0 1px;
 }
 
 #koka-console {
