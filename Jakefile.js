@@ -111,6 +111,7 @@ task("webcopy", ["web"], function() {
   var js = new jake.FileList().include(path.join(styleDir,"*"));
   jake.mkdirP(path.join(webclient,styleDir));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
+  jake.cpR(path.join(styleDir,"madoko.css"), webclient);
   
   // generate highlight.js web module
   console.log("adapt highlight.js");    

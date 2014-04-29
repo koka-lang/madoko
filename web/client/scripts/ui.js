@@ -186,9 +186,12 @@ var UI = (function() {
 
     // common elements
     self.spinner = document.getElementById("view-spinner");    
+    self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
-    self.view    = document.getElementById("view");
+    self.views   = [document.getElementById("view1"), document.getElementById("view2")];
+    self.activeView = 0;
+    self.view    = self.views[self.activeView];
     self.viewBody= null;      
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
@@ -558,21 +561,28 @@ var UI = (function() {
       self.html0 = html;
       var scrollTop = util.getScrollTop(self.view); // remember scroll location
       //self.view.innerHTML = html;
-      self.viewBody = null;
-      
-      self.view.contentWindow.document.open();
-      self.view.contentWindow.document.addEventListener("DOMContentLoaded", function(ev) {
-        self.viewBody = self.view.contentWindow.document.body;
-        util.setScrollTop(self.view,scrollTop); // and restore
-        self.syncView();
-        setTimeout( function() { 
-          self.syncView(); // and again after a time-out to let scripts run and settle layout
-        },100);
+      //self.viewBody = null;
+      var newView = self.views[self.activeView ? 0 : 1];
+      newView.contentWindow.document.open();
+      newView.contentWindow.document.addEventListener("DOMContentLoaded", function(ev) {
+        setTimeout( function() {
+          util.setScrollTop(newView,scrollTop); // restore scroll location
+          var height = self.view.clientHeight;
+          self.view = newView;
+          self.viewBody = self.view.contentWindow.document.body;
+          util.addClassName(self.viewBody,"preview");
+          //self.syncView({ duration: 0, clientHeight: height }); 
+          // now switch
+          self.views[self.activeView].style.display="none";
+          self.view.style.display="block";
+          self.activeView = self.activeView ? 0 : 1;
+          self.syncView({ duration: 0, force: true });           
+        },50);
       });
 
-      self.view.contentWindow.document.write(html);
-      self.view.contentWindow.document.write(syncScript);
-      self.view.contentWindow.document.close();      
+      newView.contentWindow.document.write(html);
+      newView.contentWindow.document.write(syncScript);
+      newView.contentWindow.document.close();      
       return false;
     }
 
@@ -604,7 +614,7 @@ var UI = (function() {
     var self = this;
     if (!elem) elem = self.spinner; // default spinner
     if (elem.spinners == null) elem.spinners = 0;
-    if (elem.spinDelay == null) elem.spinDelay = self.refreshRate * 1.5;
+    if (elem.spinDelay == null) elem.spinDelay = self.refreshRate * 2;
 
     if (enable && elem.spinners === 0) {      
       setTimeout( function() {
@@ -1005,18 +1015,19 @@ var UI = (function() {
     return (elem.offsetTop - delta);
   }
 
-  UI.prototype.syncView = function( startLine, endLine, cursorLine ) 
+  UI.prototype.syncView = function( options, startLine, endLine, cursorLine ) 
   {
     var self = this;
     if (self.lastScrollTop===undefined) self.lastScrollTop = -1;
     if (self.lastLineNo===undefined) self.lastLineNo = -1;
-      
+    if (!options) options = {};
+
     if (cursorLine==null) {
       cursorLine = self.editor.getPosition().lineNumber;
     }
     if (startLine==null) {
-      var view  = self.editor.getView();      
-      var lines = view.viewLines;
+      var editView  = self.editor.getView();      
+      var lines = editView.viewLines;
       var rng = lines._currentVisibleRange;
       startLine = rng.startLineNumber;
       endLine = rng.endLineNumber;
@@ -1037,8 +1048,8 @@ var UI = (function() {
     var slines = null;
     if (self.editor.configuration.getWrappingColumn() >= 0) {
       // need to do wrapping column translation
-      view  = view || self.editor.getView();      
-      var slines = view.context.model.lines;
+      editView  = editView || self.editor.getView();      
+      var slines = editView.context.model.lines;
       textLine = slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
     }
 
@@ -1073,15 +1084,15 @@ var UI = (function() {
     // we calculated to show the right part at the top of the view,
     // now adjust to actually scroll it to the middle of the view or the relative cursor position.
     var relative = (lineNo - startLine) / (endLine - startLine + 1);
-    scrollTop = Math.max(0, scrollTop - self.view.clientHeight * relative ) | 0; // round it
+    scrollTop = Math.max(0, scrollTop - (options.clientHeight ? options.clientHeight : self.view.clientHeight) * relative ) | 0; // round it
     
     // exit if we are still at the same scroll position
-    if (scrollTop === self.lastScrollTop) return false;
+    if (scrollTop === self.lastScrollTop && !options.force) return false;
     self.lastScrollTop = scrollTop;
 
     // otherwise, start scrolling
     //util.animate( self.viewBody, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
-    util.animateScrollTop(self.view, scrollTop, 500);
+    util.animateScrollTop(self.view, scrollTop, options.duration != null ? options.duration : 500);
     return true;
   }
 

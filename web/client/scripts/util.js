@@ -416,7 +416,10 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function animateScrollTop( elem, top, duration, steps ) {
     var top0 = getScrollTop(elem);
     if (top0 === top) return;
-    if (Math.abs(top - top0) <= 10) steps = 1;
+    if (duration <= 50 || Math.abs(top - top0) <= 10) {
+      duration = 1;
+      steps = 1;
+    }
 
     var n = 0;
     var action = function() {

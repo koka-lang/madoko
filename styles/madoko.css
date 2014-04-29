@@ -346,8 +346,8 @@ body.madoko, .madoko-body {
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
 }
 
-.madoko-body {
-  padding: 0em 8% 0em 8% !important;
+body.madoko.preview {
+  padding: 0em 5% 0em 5% !important;
 }
 
 .madoko p,
