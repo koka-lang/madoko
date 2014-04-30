@@ -629,7 +629,7 @@ var Storage = (function() {
   Storage.prototype.collect = function( roots ) {
     var self = this;
     self.forEachFile( function(file) {
-      if (!file.content && !util.contains(roots,file.path)) {
+      if (!util.contains(roots,file.path) && (!file.content || file.kind === File.Generated) ) {
         self.files.remove(file.path);
       }
     });

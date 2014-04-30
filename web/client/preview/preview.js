@@ -359,7 +359,5 @@ function dispatchEvent( elem, eventName ) {
     }
   });
 
-
-  document.body.className = document.body.className + " preview";
   //console.log("previewjs loaded: " + origin);
 })();

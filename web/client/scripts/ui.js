@@ -786,7 +786,9 @@ var UI = (function() {
         self.editor.setPosition(pos);
         self.editor.revealPosition( pos, true, true );
       }
-    }).always( function() { self.state = State.Normal; } );    
+    }).always( function() { 
+      self.state = State.Normal; 
+    });    
   }
 
   UI.prototype.localLoad = function() {
