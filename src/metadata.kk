@@ -86,16 +86,8 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="math-dpi") options(mathDpi=ivalue) 
     elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
     elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
-    elif (key=="latex") options(latex=if (value=="") then "latex" else value)
-    elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-    elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="bibtex") options(bibtex=value)
-    elif (key=="math-convert") options(mathconvert=value)
-    elif (key=="convert") options(convert=value)
-    elif (key=="ps2pdf") options(ps2pdf=value)
-    elif (key=="dvips") options(dvips=value)
+
     elif (key=="mathjax") then (if (value!="")
                                  then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "default" else value))
                                  else options(mathmode=Static, mathjax=""))
@@ -105,6 +97,22 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="highlight-language") options(hilitelang=if (value=="") then "" else options.hilitelang + ";" + value)
     elif (key=="rebuild") options(rebuild=(value != ""))
     elif (key=="star-bold") options(starBold=(value!=""))
+
+    // can only set program options if not running in a sandbox
+    elif (!(options.sandbox)) {
+      if (key=="latex") options(latex=if (value=="") then "latex" else value)
+      elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
+      elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
+      elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
+      elif (key=="bibtex") options(bibtex=value)
+      elif (key=="math-convert") options(mathconvert=value)
+      elif (key=="convert") options(convert=value)
+      elif (key=="ps2pdf") options(ps2pdf=value)
+      elif (key=="dvips") options(dvips=value)
+      else {
+        options
+      }
+    }
     else {
       //  if (options.verbose >= 3) warning("custom metadata key: " + key)
       options

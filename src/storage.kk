@@ -15,10 +15,28 @@ module storage
 
 import std/path
 import std/log
+import std/regex
 
 external include {
   js file "storage-inline.js"
 }
+
+val sandboxed = unsafeTotal { ref(False) }
+
+public function enforceSandbox() : io () {
+  sandboxed := True
+}
+
+public function checkSandbox( path : string ) : io () {
+  if (!sandboxed) {
+    if (!(path.contains(rxRootRelative))) {
+      error("cannot access files outside the sandbox")
+    }
+  }
+}
+
+val rxRootRelative = regex( @"^(?![\.\/])([\w\-]|\.\w|\/\w)+$" )
+
 
 // Try to read a text file; return a default value in case of an error.
 public function readTextFileDef( fileName : string, def : string, required : bool = False ) : io string {
@@ -46,6 +64,7 @@ public function searchFileSync( dirs : list<string>, fname : string ) : io maybe
 // Read a text file synchronously (using UTF8 encoding)
 public function readTextFileSync( fileName : string, required : bool = True ) : io string
 {
+  checkSandbox(fileName)
   if (required) log("files",fileName);
   xreadTextFileSync(fileName);
 }
@@ -65,6 +84,7 @@ public function tryWriteTextFile( fileName : string, content : string )  : io bo
 
 // Write a text file synchronously (using UTF8 encoding)
 public function writeTextFileSync( fileName : string, content : string ) : io () {
+  checkSandbox(fileName)
   log("filesWrite", fileName);
   xwriteTextFileSync(fileName, content);
 }
@@ -74,8 +94,14 @@ external xwriteTextFileSync( fileName : string, content : string )  : io () {
   js inline "$writeFileSync(#1,'utf-8',#2)"
 }
 
+public function fexistsSync( fileName : string ) : io bool {
+  catch( {
+    checkSandbox(fileName)
+    xfexistsSync(fileName)
+  }, fun(_) { False } )
+}
 
-public external fexistsSync( fileName : string ) : io bool {
+external xfexistsSync( fileName : string ) : io bool {
   cs inline "System.IO.File.Exists(#1)"
   js inline "$fexistsSync(#1)"
 }
@@ -90,12 +116,23 @@ public external cwd() : io string {
   js inline "$cwd()"
 }
 
-public external mkdirp( dir : string, mode : int = 0x1FF ) : io () {
+public function mkdirp( dir : string, mode : int = 0x1FF ) : io () {
+  checkSandbox(dir)
+  xmkdirp(dir,mode)
+}
+
+external xmkdirp( dir : string, mode : int = 0x1FF ) : io () {
   cs inline "System.IO.Directory.CreateDirectory(#1)"
   js inline "$mkdirp(#1,#2)"
 }
 
-public external rename( fnameOld : string, fnameNew : string ) : io () {
+public function rename( fnameOld : string, fnameNew : string ) : io () {
+  checkSandbox(fnameOld)
+  checkSandbox(fnameNew)
+  xrename(fnameOld,fnameNew)
+}
+
+external xrename( fnameOld : string, fnameNew : string ) : io () {
   cs inline "System.IO.File.Move(#1,#2)"
   js inline "$renameSync(#1,#2)"
 }
@@ -128,8 +165,9 @@ public function tryReadBase64File( fileName : string, required : bool = True ) :
 // Read a binary file synchronously (using base64 encoding)
 public function readBase64FileSync( fileName : string, required : bool = True ) : io string
 {
-  if (required) log("files",fileName);
-  xreadBase64FileSync(fileName);
+  checkSandbox(fileName)
+  if (required) log("files",fileName)
+  xreadBase64FileSync(fileName)
 }
 
 external xreadBase64FileSync( fileName : string ) : io string

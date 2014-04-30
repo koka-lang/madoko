@@ -42,6 +42,7 @@ public struct options(
   tex      : bool = False,  // generate latex file too
   pdf      : bool = False,  // generate pdf file too 
   rebuild  : bool = False,  // always rebuild bibtex, math etc.
+  sandbox  : bool = False,  // run in a sandbox: only allow reading/writing from a subdirectory
   
   title    : string = "",  // html title 
   subtitle : string = "",  // sub title 
@@ -170,6 +171,7 @@ val optionsDesc : list<option<commandOptions>>
       
       Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }), "Generate a full html/latex document"),
       Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }), "Always escape or suppress user defined html"),
+      Option( "" , ["sandbox"],  oflag(fun(o,v) { o(sandbox=v) }),    "Run in a sandbox for secure server execution"),
       Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }), "Pedantic mode"),
       Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, etc."),
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),

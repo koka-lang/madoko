@@ -36,6 +36,7 @@ public function processContent( inName : string, outName : string, content : str
                           runners : runners,
                           continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
 {
+  if (opts.options.sandbox) enforceSandbox()
   styleDir = opts.installDir + "/../styles"
   searchDirs = [".",inName.dirname,outName.dirname,styleDir];
   content.include(False, outName, searchDirs) fun(icontent,lmap) {
@@ -63,27 +64,28 @@ public function processContent( inName : string, outName : string, content : str
     }
 
     // register languages for highlighting
-    curdir = cwd()
-    mopts.hilitelang.split(";").foreach fun(lang) { 
-      fname = if (curdir=="") then lang else lang.replace(rxCurDir,curdir)
-      if (fname != "") {
-        match( trySearchReadTextFile(fname,searchDirs,".js")) {
-          Nothing -> {
-            log("files",if (extname(fname)=="") then fname + ".js" else fname)
-            mopts.printErr("warning: unable to read language definition: " + fname)
-          }
-          Just((_,definition)) -> {
-            langName = fname.basename.noext.toLower
-            //trace("register language: " + langName + ":\n" + definition )
-            registerLanguage(langName,definition)
+    if (!(xopts.sandbox)) {
+      curdir = cwd()
+      mopts.hilitelang.split(";").foreach fun(lang) { 
+        fname = if (curdir=="") then lang else lang.replace(rxCurDir,curdir)
+        if (fname != "") {
+          match( trySearchReadTextFile(fname,searchDirs,".js")) {
+            Nothing -> {
+              log("files",if (extname(fname)=="") then fname + ".js" else fname)
+              mopts.printErr("warning: unable to read language definition: " + fname)
+            }
+            Just((_,definition)) -> {
+              langName = fname.basename.noext.toLower
+              //trace("register language: " + langName + ":\n" + definition )
+              registerLanguage(langName,definition)
+            }
           }
         }
       }
     }
 
-
     // copy early since async latex may start for math
-    if (mopts.copyStyles) {
+    if (mopts.copyStyles && !(xopts.sandbox)) {
       tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
       if (xopts.tex || xopts.mathmode.isStatic) {
         tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)

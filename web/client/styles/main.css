@@ -98,6 +98,7 @@ html,body,#app {
 .button:hover {
   cursor: pointer;
   background-color: Gainsboro;
+  border-radius: 5px;
 }
 
 .button.disable:hover {
@@ -144,7 +145,6 @@ img#cloud {
 
 #view-header {
   max-width: 100%;
-  white-space: nowrap;
   text-align: right;
   padding-left: 0.2em;
 }
@@ -215,6 +215,7 @@ div.boxed {
 #view-message {
   width: 50%;
   padding: 0 1px;
+  white-space: nowrap;  
 }
 
 #koka-console {

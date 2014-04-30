@@ -139,7 +139,7 @@ function readFiles( userpath, docname, fnames, cont ) {
     var ext = path.extname(docname);
     var stem = docname.substr(0, docname.length - ext.length );
     fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
-              stem + "-bib.bbl", stem + "-bib.aux", "madoko.css"];
+              stem + "-bib.bbl", stem + "-bib.aux"];
   }
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
@@ -155,7 +155,7 @@ function readFiles( userpath, docname, fnames, cont ) {
 
 // run madoko
 function runMadoko( userPath, docname, flags, timeout, cont ) {
-  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv " + flags + " " + docname;
+  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv --sandbox " + flags + " " + docname;
   console.log("> " + command);
   cp.exec( command, {cwd: userPath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont); 
 }
