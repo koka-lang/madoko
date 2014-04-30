@@ -84,14 +84,17 @@ function getModeFromExt(ext) {
 }
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
-var previewOrigin = window.location.protocol + "//" + window.location.hostname + ":8181";
+var viewOrigin = window.location.protocol + "//" + window.location.hostname + ":8181";
+
+var State = { Normal:"normal", Loading:"loading", Init:"initializing" }
 
 var UI = (function() {
 
   function UI( runner )
   {
     var self = this;
-    self.editor  = null;
+    self.state  = State.Init;
+    self.editor = null;
     
     self.refreshContinuous = true;
     self.refreshRate = 500;
@@ -125,9 +128,11 @@ var UI = (function() {
       util.dispatchEvent( self.checkDisableAutoUpdate, "change" );
       util.dispatchEvent( self.checkDisableServer, "change" );
       util.dispatchEvent( self.checkLineNumbers, "change" );
-      util.dispatchEvent( self.checkWrapLines, "change" );
+      util.dispatchEvent( self.checkWrapLines, "change" );      
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
+    }).always( function() {
+      self.state = State.Normal;
     });
   }
 
@@ -161,8 +166,7 @@ var UI = (function() {
     self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
-    self.view    = document.getElementById("view1");
-    self.preview = self.view; //document.getElementById("view2");
+    self.view    = document.getElementById("view");
           
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
@@ -227,11 +231,11 @@ var UI = (function() {
     
     // listen to preview load messages
     window.addEventListener("message", function(ev) {
-      if (!(ev.origin === "null" || ev.origin === previewOrigin) || typeof ev.data !== "string") return;
+      if ((ev.origin !== "null" && ev.origin !== viewOrigin) || typeof ev.data !== "string") return;
       var info = JSON.parse(ev.data);
       if (!info || !info.eventType) return;
       if (info.eventType === "previewContentLoaded") {
-        self.swapViews();
+        self.viewLoaded();
       }
       else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
         self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
@@ -538,25 +542,8 @@ var UI = (function() {
     return null;  
   }
 
-  UI.prototype.swapViews = function() {
-    // we use 2 iframes for preview, so updates do not 'flicker'
-    // here we swap the two iframes
-    // - when reloading we set self.view to null (and save in self.staleView)
-    //   such that there is no scrolling taking place in view until we swap.
+  UI.prototype.viewLoaded = function() {
     var self = this;
-    if (!self.view) {
-      self.view = self.staleView;
-    }
-    /*
-    if (!self.staleView) {
-      self.staleView = self.view;
-    }
-    self.view = self.preview;
-    self.preview = self.staleView;
-    self.staleView = null;
-    self.preview.style.display="none";
-    self.view.style.display="block";
-    */
     self.syncView({ duration: 0, force: true });               
   }
 
@@ -575,9 +562,7 @@ var UI = (function() {
         oldText: oldText,
         newText: newText
       }
-      //self.staleView = self.view;
-      //self.view = null;
-      self.preview.contentWindow.postMessage(JSON.stringify(event),"*");
+      self.view.contentWindow.postMessage(JSON.stringify(event),"*");
       return false;
     }
 
@@ -776,6 +761,7 @@ var UI = (function() {
   UI.prototype.editFile = function(fpath,pos) {
     var self = this;
     var loadEditor;
+    self.state = State.Loading;            
     if (fpath===self.editName) loadEditor = Promise.resolved() 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
             if (self.editName === self.docName) {
@@ -789,8 +775,6 @@ var UI = (function() {
               lineNumbers: self.checkLineNumbers.checked,
               wrappingColumn: self.checkWrapLines.checked ? 0 : false,
             };
-            self.staleView = self.view;
-            self.view = null;
             self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
             self.editor.updateOptions(options);
             
@@ -802,7 +786,7 @@ var UI = (function() {
         self.editor.setPosition(pos);
         self.editor.revealPosition( pos, true, true );
       }
-    });    
+    }).always( function() { self.state = State.Normal; } );    
   }
 
   UI.prototype.localLoad = function() {
@@ -1012,7 +996,7 @@ var UI = (function() {
     try {
       if (self.lastLineNo===undefined) self.lastLineNo = -1;
       if (!options) options = {};
-      if (!self.view) return; // during loading of new content
+      if (!self.view || self.state !== State.Normal) return; // during loading of new content
 
       if (cursorLine==null) {
         cursorLine = self.editor.getPosition().lineNumber;
@@ -1059,7 +1043,7 @@ var UI = (function() {
       event.sourceName  = self.editName === self.docName ? null : self.editName;
       event.height      = self.view.clientHeight;
       
-      // post scroll message to preview iframe
+      // post scroll message to view iframe
       self.view.contentWindow.postMessage(JSON.stringify(event),"*");
       return true;
     }
