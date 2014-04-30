@@ -83,7 +83,7 @@ var Runner = (function() {
     // todo: should we wait for image url resolving?
     var images = res.filesReferred.map( function(file) {
       if (util.hasImageExt(file)) {
-        return self.loadFile(ctx.round, file, false);
+        return self.loadFile(ctx.round, file, true);
       }
       else if (util.hasEmbedExt(file)) {
         return self.loadFile(ctx.round, file, true);

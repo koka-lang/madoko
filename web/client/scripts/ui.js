@@ -841,7 +841,7 @@ var UI = (function() {
 
 
   UI.prototype.displayFile = function(file) {
-    var icon = "<span class='icon'>" + (file.written ? "&bull;" : "") + "</span>";
+    var icon = "<span class='file-status'>" + (file.written ? "&bull;" : "") + "</span>";
     var span = "<span class='file " + file.kind + "'>" + util.escape(file.path) + icon + "</span>";
     return span;
   }
@@ -855,14 +855,14 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var disable = (file.kind === storage.File.Text ? "" : " disable");
+        var disable = (file.kind === storage.File.Text && file.path!=="madoko.css" ? "" : " disable");
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item file" + disable + main + hide + "'>" + 
                           self.displayFile(file) + "</div>";
         if (file.kind === storage.File.Image) images.push(line); 
-        else if (file.kind === storage.File.Text) files.push(line);
+        else if (file.kind === storage.File.Text && !disable) files.push(line);
         else generated.push(line)
       }
     });

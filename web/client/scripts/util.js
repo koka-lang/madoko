@@ -286,7 +286,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function hasEmbedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
-    return (contains(embedExts,ext) && fname !== "madoko.css");
+    return (contains(embedExts,ext));
   }
 
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf"].join(";");

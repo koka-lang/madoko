@@ -352,6 +352,12 @@ var NullRemote = (function() {
 })();
 
 
+function serverGetInitialContent(fpath) {
+  if (!util.extname(fpath)) fpath = fpath + ".mdk";
+  if (!util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
+  return util.requestGET( "styles/" + fpath );
+}
+
 function localOpenFile() {
   if (!localStorage) throw new Error( "no local storage available, upgrade your browser");
   var local = new LocalRemote();
@@ -470,7 +476,7 @@ var Storage = (function() {
   /* Generic */
   Storage.prototype.createFile = function(fpath,content,kind) {
     var self = this;
-    kind = kind || File.Text;
+    kind = kind || File.fromPath(fpath) || File.Text;
     self.writeFile(fpath,content,kind);
   }
 
@@ -597,12 +603,26 @@ var Storage = (function() {
         self._updateFile( file );
         return file;
       },
-      (createOnErrKind ? 
-        function(err) {
-          self.createFile(fpath,"",createOnErrKind);
-          return self.files.get(fpath);
-        } :
-        undefined)
+      function(err) {
+        function noContent() {
+          if (createOnErrKind) {
+            self.createFile(fpath,"",createOnErrKind);
+            return self.files.get(fpath);            
+          }
+          else {
+            throw err; // throw original error;
+          }
+        }
+        // first try to find the file as a madoko standard style on the server..
+        return serverGetInitialContent(fpath).then( function(content) {
+            if (!content) return noContent();
+            self.createFile(fpath,content);
+            return self.files.get(fpath);
+          },
+          function(_err) {
+            return noContent();
+          });
+      }
     );    
   }
 
