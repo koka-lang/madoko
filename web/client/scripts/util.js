@@ -48,6 +48,14 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     });
   }
 
+  function stringEscape(txt) {
+    return txt.replace(/["'\\\n\r]/g, function(s) {
+      if (s==="\n") return "\\n";
+      else if (s==="\r") return "\\r";
+      else return "\\" + s;
+    });
+  }
+
   // Call for messages
   function message( txt, kind ) {
     if (typeof txt === "object") {
@@ -681,7 +689,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
               self.resume( Math.max( self.minRefreshRate, 0.66 * self.refreshRate ) );
             }
             
-          }).always( function() {
+          },
+          function(err) {
+            message( err, Msg.Exn );  
+          }
+          ).always( function() {
             if (self.lastRound < round) {
               self.lastRound = round;          
               if (self.spinner) self.spinner(false);
@@ -869,6 +881,7 @@ doc.execCommand("SaveAs", null, filename)
     message: message,
     assert: assert,
     escape: htmlEscape,
+    stringEscape: stringEscape,
     Msg: Msg,
     
     changeExt: stdpath.changeExt,

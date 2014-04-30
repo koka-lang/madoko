@@ -83,36 +83,8 @@ function getModeFromExt(ext) {
   else return "text/plain";
 }
 
-var origin = window.location.protocol + "//" + window.location.host;
-
-var syncScript = 
-  ["<script>",
-   "function findLocation( root, elem ) {",
-   "  while (elem && elem !== root) {",
-   "    var dataline = elem.getAttribute(\"data-line\");",
-   "    if (dataline) {",
-   "      cap = /(?:^|;)(?:([^:;]+):)?(\\d+)$/.exec(dataline);",
-   "      if (cap) {",
-   "        var line = parseInt(cap[2]);",
-   "        if (line && line !== NaN) {",
-   "          return { path: cap[1], line: line };",
-   "        }", 
-   "      }",
-   "    }",
-   "    elem = elem.parentNode;",
-   "  }",
-   "  return null;",
-   "}",
-   "document.body.ondblclick = function(ev) {",
-   "  var res = findLocation(document.body,ev.target);",
-   "  if (res) {",
-   "    res.eventName = 'sync';",
-   "    window.parent.postMessage(JSON.stringify(res),'" + origin + "');",
-   "    console.log('posted: ' + JSON.stringify(res));",
-   "  }",
-   "};",
-   "</script>"].join("\n");
-
+var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
+var previewOrigin = window.location.protocol + "//" + window.location.hostname + ":8181";
 
 var UI = (function() {
 
@@ -189,10 +161,9 @@ var UI = (function() {
     self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
-    self.views   = [document.getElementById("view1"), document.getElementById("view2")];
-    self.activeView = 0;
-    self.view    = self.views[self.activeView];
-    self.viewBody= null;      
+    self.view    = document.getElementById("view1");
+    self.preview = self.view; //document.getElementById("view2");
+          
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
     self.inputRename = document.getElementById("rename");
@@ -224,11 +195,13 @@ var UI = (function() {
     self.syncInterval = 0;
     self.editor.addListener("scroll", function (e) {    
       function scroll() { 
-        var scrolled = self.syncView(); 
-        if (!scrolled) {
-          clearInterval(self.syncInterval);
-          self.syncInterval = 0;
-        }      
+        self.event( "scroll", function() {
+          var scrolled = self.syncView(); 
+          if (!scrolled) {
+            clearInterval(self.syncInterval);
+            self.syncInterval = 0;
+          }      
+        });
       }
 
       // use interval since the editor is asynchronous, this way  the start line number can stabilize.
@@ -252,6 +225,18 @@ var UI = (function() {
     });
     */
     
+    // listen to preview load messages
+    window.addEventListener("message", function(ev) {
+      if (!(ev.origin === "null" || ev.origin === previewOrigin) || typeof ev.data !== "string") return;
+      var info = JSON.parse(ev.data);
+      if (!info || !info.eventType) return;
+      if (info.eventType === "previewContentLoaded") {
+        self.swapViews();
+      }
+      else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
+        self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
+      }
+    }, false);
 
     // Buttons and checkboxes
     self.checkLineNumbers.onchange = function(ev) { 
@@ -296,13 +281,6 @@ var UI = (function() {
         }
       }
     };
-
-    window.addEventListener('message', function(ev) {
-      if (ev.origin !== origin) return;
-      var res = JSON.parse(ev.data);
-      if (!res || !res.line) return;
-      self.editFile( res.path ? res.path : self.docName, { lineNumber: res.line, column: 0 } );
-    },false);
 
     document.getElementById("load-onedrive").onclick = function(ev) {
       self.checkSynced().then( function() {
@@ -512,12 +490,17 @@ var UI = (function() {
     else {
       return null;
     }
+
+    var diff0 = text0.substring(i,end0);
+    var diff1 = text1.substring(i,end1);
+    if (/[<>]/g.test(diff0) || /[<>]/g.test(diff1)) return null;
+
     return {
       start: i,
       end0: end0,
       end1: end1,
-      text0: text0.substring(i,end0),
-      text1: text1.substring(i,end1),
+      text0: diff0,
+      text1: diff1,
     }
   }
 
@@ -542,6 +525,7 @@ var UI = (function() {
   }
 
   function findTextNode( elem, text ) {
+    if (!elem || !text) return null;
     if (elem.nodeType===3) {
       if (elem.textContent === text) return elem;      
     }
@@ -554,35 +538,46 @@ var UI = (function() {
     return null;  
   }
 
+  UI.prototype.swapViews = function() {
+    // we use 2 iframes for preview, so updates do not 'flicker'
+    // here we swap the two iframes
+    // - when reloading we set self.view to null (and save in self.staleView)
+    //   such that there is no scrolling taking place in view until we swap.
+    var self = this;
+    if (!self.view) {
+      self.view = self.staleView;
+    }
+    /*
+    if (!self.staleView) {
+      self.staleView = self.view;
+    }
+    self.view = self.preview;
+    self.preview = self.staleView;
+    self.staleView = null;
+    self.preview.style.display="none";
+    self.view.style.display="block";
+    */
+    self.syncView({ duration: 0, force: true });               
+  }
+
   UI.prototype.viewHTML = function( html, time0 ) {
     var self = this;
     
     function updateFull() {
-      self.html0 = html;
-      var scrollTop = util.getScrollTop(self.view); // remember scroll location
-      //self.view.innerHTML = html;
-      //self.viewBody = null;
-      var newView = self.views[self.activeView ? 0 : 1];
-      newView.contentWindow.document.open();
-      newView.contentWindow.document.addEventListener("DOMContentLoaded", function(ev) {
-        setTimeout( function() {
-          util.setScrollTop(newView,scrollTop); // restore scroll location
-          var height = self.view.clientHeight;
-          self.view = newView;
-          self.viewBody = self.view.contentWindow.document.body;
-          util.addClassName(self.viewBody,"preview");
-          //self.syncView({ duration: 0, clientHeight: height }); 
-          // now switch
-          self.views[self.activeView].style.display="none";
-          self.view.style.display="block";
-          self.activeView = self.activeView ? 0 : 1;
-          self.syncView({ duration: 0, force: true });           
-        },50);
-      });
+      update();
+    }
 
-      newView.contentWindow.document.write(html);
-      newView.contentWindow.document.write(syncScript);
-      newView.contentWindow.document.close();      
+    function update(oldText,newText) {
+      self.html0 = html;
+      var event = {
+        eventType: "loadContent",
+        content: html,
+        oldText: oldText,
+        newText: newText
+      }
+      //self.staleView = self.view;
+      //self.view = null;
+      self.preview.contentWindow.postMessage(JSON.stringify(event),"*");
       return false;
     }
 
@@ -596,18 +591,12 @@ var UI = (function() {
       var i = self.html0.indexOf(oldSpan.text);
       if (i !== oldSpan.pos0) return updateFull();
       // ok, we can identify a unique text node in the html
-      var elem = findTextNode( self.viewBody, oldSpan.textContent );
-      if (!elem) return updateFull();
-      // yes!
-      //util.message("  quick view update", util.Msg.Info);
-      elem.textContent = newSpan.textContent;
-      self.html0 = html;      
+      update(oldSpan.textContent,newSpan.textContent);      
       return true;
     }
     else {
-      updateFull();
+      return updateFull();
     }  
-
   }
 
   UI.prototype.showSpinner = function(enable, elem) {
@@ -759,19 +748,19 @@ var UI = (function() {
       }
       self.storage = stg;
       self.docName = docName;
-      self.editName = docName;
       self.docText = file.content;
       self.inputRename.value = self.docName; 
     
       self.storage.addEventListener("update",self);
-      return self.runner.setStorage(self.storage).then( function() {            
-        self.setEditText(self.docText);
-        self.onFileUpdate(file); 
+      return self.runner.setStorage(self.storage).then( function() {
         var remoteLogo = self.storage.remote.logo();
         var remoteType = self.storage.remote.type();
         var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
         self.remoteLogo.src = "images/" + remoteLogo;
         self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+      }).then( function() {
+        self.editName = "";
+        return self.editFile(self.docName);
       });
     });
   }
@@ -800,6 +789,8 @@ var UI = (function() {
               lineNumbers: self.checkLineNumbers.checked,
               wrappingColumn: self.checkWrapLines.checked ? 0 : false,
             };
+            self.staleView = self.view;
+            self.view = null;
             self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
             self.editor.updateOptions(options);
             
@@ -1018,106 +1009,64 @@ var UI = (function() {
   UI.prototype.syncView = function( options, startLine, endLine, cursorLine ) 
   {
     var self = this;
-    if (self.lastScrollTop===undefined) self.lastScrollTop = -1;
-    if (self.lastLineNo===undefined) self.lastLineNo = -1;
-    if (!options) options = {};
+    try {
+      if (self.lastLineNo===undefined) self.lastLineNo = -1;
+      if (!options) options = {};
+      if (!self.view) return; // during loading of new content
 
-    if (cursorLine==null) {
-      cursorLine = self.editor.getPosition().lineNumber;
-    }
-    if (startLine==null) {
-      var editView  = self.editor.getView();      
-      var lines = editView.viewLines;
-      var rng = lines._currentVisibleRange;
-      startLine = rng.startLineNumber;
-      endLine = rng.endLineNumber;
-      //console.log("scroll: start: " + startLine)
-    }
-    var lineNo = cursorLine;
-    if (cursorLine < startLine || cursorLine > endLine) {
-      // not a visible cursor -- use the middle of the viewed ranged
-      lineNo = startLine + ((endLine - startLine + 1)/2);
-    }
-    // exit quickly if same line
-    if (lineNo === self.lastLineNo) return false;
-
-    // use physical textline; 
-    // start-, end-, cursor-, and lineNo are all view lines.
-    // if wrapping is enabled, this will not correspond to the actual text line
-    var textLine = lineNo;
-    var slines = null;
-    if (self.editor.configuration.getWrappingColumn() >= 0) {
-      // need to do wrapping column translation
-      editView  = editView || self.editor.getView();      
-      var slines = editView.context.model.lines;
-      textLine = slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
-    }
-
-    // find the element in the view tree
-    var res = findElemAtLine( self.viewBody, textLine, self.editName === self.docName ? null : self.editName );
-    if (!res) return false;
-
-    var scrollTop = offsetOuterTop(res.elem); 
-    
-    // adjust for line delta: we only find the starting line of an
-    // element, here we adjust for it assuming even distribution up to the next element
-    if (res.elemLine < textLine && res.elemLine < res.nextLine) {
-      var scrollTopNext = offsetOuterTop(res.next); 
-      if (scrollTopNext > scrollTop) {
-        var delta = 0;
-        if (slines) {
-          // wrapping enabled, translate to view lines and calculate the offset
-          var elemViewLine = slines.convertInputPositionToOutputPosition(res.elemLine,0).lineNumber;
-          var nextViewLine = slines.convertInputPositionToOutputPosition(res.nextLine,0).lineNumber;
-          delta = (lineNo - elemViewLine) / (nextViewLine - elemViewLine + 1);
-        } 
-        else {
-          // no wrapping, directly calculate 
-          delta = (textLine - res.elemLine) / (res.nextLine - res.elemLine + 1);
-        }
-        if (delta < 0) delta = 0;
-        if (delta > 1) delta = 1;
-        scrollTop += ((scrollTopNext - scrollTop) * delta);
+      if (cursorLine==null) {
+        cursorLine = self.editor.getPosition().lineNumber;
       }
-    }
-
-    // we calculated to show the right part at the top of the view,
-    // now adjust to actually scroll it to the middle of the view or the relative cursor position.
-    var relative = (lineNo - startLine) / (endLine - startLine + 1);
-    scrollTop = Math.max(0, scrollTop - (options.clientHeight ? options.clientHeight : self.view.clientHeight) * relative ) | 0; // round it
-    
-    // exit if we are still at the same scroll position
-    if (scrollTop === self.lastScrollTop && !options.force) return false;
-    self.lastScrollTop = scrollTop;
-
-    // otherwise, start scrolling
-    //util.animate( self.viewBody, { scrollTop: scrollTop }, 500 ); // multiple calls will cancel previous animation
-    util.animateScrollTop(self.view, scrollTop, options.duration != null ? options.duration : 500);
-    return true;
-  }
-
-  function findLocation( root, elem ) {
-    while (elem && elem !== root) {
-      var dataline = elem.getAttribute("data-line");
-      if (dataline) {
-        cap = /(?:^|;)(?:([^:;]+):)?(\d+)$/.exec(dataline);
-        if (cap) {
-          var line = parseInt(cap[2]);
-          if (line && line !== NaN) {
-            return { path: cap[1], line: line };
-          }
-        }
+      if (startLine==null) {
+        var editView  = self.editor.getView();      
+        var lines = editView.viewLines;
+        var rng = lines._currentVisibleRange;
+        startLine = rng.startLineNumber;
+        endLine = rng.endLineNumber;
+        //console.log("scroll: start: " + startLine)
       }
-      elem = elem.parentNode;
-    }
-    return null;
-  }
+      var lineNo = cursorLine;
+      if (startLine === 1) {
+        lineNo = startLine;
+      }
+      else if (cursorLine < startLine || cursorLine > endLine) {
+        // not a visible cursor -- use the middle of the viewed ranged
+        lineNo = startLine + ((endLine - startLine + 1)/2);
+      }
+      // exit quickly if same line
+      if (lineNo === self.lastLineNo && !options.force) return false;
+      self.lastLineNo = lineNo;
 
-  UI.prototype.syncEditor = function(elem) {
-    var self = this;
-    var res = findLocation(self.view, elem);
-    if (!res) return;
-    return self.editFile( res.path ? res.path : self.docName, { lineNumber: res.line, column: 0 } );
+      // use physical textline; 
+      // start-, end-, cursor-, and lineNo are all view lines.
+      // if wrapping is enabled, this will not correspond to the actual text line
+      var textLine = lineNo;
+      var slines = null;
+      if (self.editor.configuration.getWrappingColumn() >= 0) {
+        // need to do wrapping column translation
+        editView  = editView || self.editor.getView();      
+        var slines = editView.context.model.lines;
+        textLine = slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
+      }
+
+      // find the element in the view tree
+      var event = options;
+      event.eventType   = "scrollToLine";
+      event.textLine    = textLine;
+      event.viewLine    = lineNo;
+      event.viewStartLine = startLine;
+      event.viewEndLine = endLine;
+      event.sourceName  = self.editName === self.docName ? null : self.editName;
+      event.height      = self.view.clientHeight;
+      
+      // post scroll message to preview iframe
+      self.view.contentWindow.postMessage(JSON.stringify(event),"*");
+      return true;
+    }
+    catch(exn) {
+      self.onError(exn);
+      return false;
+    }
   }
 
   UI.prototype.handleEvent = function(ev) {

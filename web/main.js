@@ -4,10 +4,12 @@ var fs    = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 var express = require('express');
-var app = express();
 var qs = require("querystring");
 var https = require("https");
 var http = require("http");
+
+var app = express();
+var previewApp = express();
 
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
@@ -360,3 +362,6 @@ var sslOptions = {
   rejectUnauthorized: false
 };
 https.createServer(sslOptions, app).listen(8080);
+
+previewApp.use('/preview', express.static(__dirname + "/client/preview"));
+https.createServer(sslOptions, previewApp).listen(8181);
