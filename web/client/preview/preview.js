@@ -9,7 +9,7 @@ function dispatchEvent( elem, eventName ) {
   var event;
   // we should use "new Event(eventName)" for HTML5 but how to detect that?
   if (document.createEvent) {
-      event = document.createEvent('HTMLEvents');
+      event = document.createEvent('Event');
       event.initEvent(eventName,true,true);
   }
   else if (document.createEventObject) { // IE < 9
@@ -34,9 +34,7 @@ function dispatchEvent( elem, eventName ) {
 (function() {
 
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
-  var script = document.getElementById("previewjs");
-  var madokoOrigin = (script ? script.getAttribute("data-origin") : "") || "";
-
+  
   function findLocation( root, elem ) {
     while (elem && elem !== root) {
       var dataline = elem.getAttribute("data-line");
@@ -58,7 +56,7 @@ function dispatchEvent( elem, eventName ) {
     var res = findLocation(document.body,ev.target);
     if (res) {
       res.eventType = 'previewSyncEditor';
-      window.parent.postMessage( JSON.stringify(res), madokoOrigin);
+      window.parent.postMessage( JSON.stringify(res), origin);
       console.log('posted: ' + JSON.stringify(res));
     }
   };
@@ -331,7 +329,7 @@ function dispatchEvent( elem, eventName ) {
   }
 
   document.addEventListener("load", function(ev) {
-    window.parent.postMessage(JSON.stringify({eventType:'previewContentLoaded'}),madokoOrigin);
+    window.parent.postMessage(JSON.stringify({eventType:'previewContentLoaded'}),origin);
     var refs = document.getElementsByTagName("a");
     for(var i = 0; i < refs.length; i++) {
       var ref = refs[i];
@@ -342,8 +340,10 @@ function dispatchEvent( elem, eventName ) {
   });
 
   window.addEventListener("message", function(ev) {
-    //console.log("message from: " + ev.origin);
-    if (ev.origin !== madokoOrigin) return;
+    // check origin and source element so no-one else can send us messages
+    if (ev.origin !== origin) return;
+    if (ev.source !== window.parent) return;
+
     var info = JSON.parse(ev.data);
     if (!info || !info.eventType) return;
     if (info.eventType==="scrollToLine") {
@@ -358,6 +358,35 @@ function dispatchEvent( elem, eventName ) {
       //ev.source.postMessage('contentLoaded',ev.origin);
     }
   });
+
+  /*
+  var req = new XMLHttpRequest();
+  var url = "https://madoko.cloudapp.net:8080/styles/madoko.css";
+  req.open("GET", url, true );
+  req.onload = function(res) {
+    console.log("WARNING: can access root domain!!");
+  };
+  req.onerror = function(res) {
+    console.log("OK: cannot access root domain");    
+  }
+  req.send(null);
+
+  try {
+    localStorage.getItem( "local/" + fname );
+    console.log("WARNING: can access local storage for root domain!!")
+  }
+  catch(exn) {
+    console.log("OK: cannot access local storage for root domain.")
+  }
+  
+  try {
+    var cookie = document.cookie;
+    console.log( "WARNING: could accesss cookie for root domain!!");
+  }
+  catch(exn) {
+    console.log("OK: cannot access cookies of root domain.")
+  }
+  */
 
   //console.log("previewjs loaded: " + origin);
 })();

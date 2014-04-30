@@ -84,7 +84,6 @@ function getModeFromExt(ext) {
 }
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
-var viewOrigin = window.location.protocol + "//" + window.location.hostname + ":8181";
 
 var State = { Normal:"normal", Loading:"loading", Init:"initializing" }
 
@@ -167,7 +166,6 @@ var UI = (function() {
     self.syncer  = document.getElementById("sync-spinner");  
     self.syncer.spinDelay = 1;  
     self.view    = document.getElementById("view");
-          
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
     self.inputRename = document.getElementById("rename");
@@ -220,7 +218,6 @@ var UI = (function() {
       self.changed = true;
     });
     
-    
     // synchronize on cursor position changes
     // disabled for now, scroll events seem to be enough
     /*
@@ -231,7 +228,9 @@ var UI = (function() {
     
     // listen to preview load messages
     window.addEventListener("message", function(ev) {
-      if ((ev.origin !== "null" && ev.origin !== viewOrigin) || typeof ev.data !== "string") return;
+      // check origin and source so no-one but our view can send messages
+      if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
+      if (ev.source !== self.view.contentWindow) return;      
       var info = JSON.parse(ev.data);
       if (!info || !info.eventType) return;
       if (info.eventType === "previewContentLoaded") {
@@ -562,7 +561,7 @@ var UI = (function() {
         oldText: oldText,
         newText: newText
       }
-      self.view.contentWindow.postMessage(JSON.stringify(event),"*");
+      self.dispatchViewEvent(event);
       return false;
     }
 
@@ -992,6 +991,14 @@ var UI = (function() {
     return (elem.offsetTop - delta);
   }
 
+  UI.prototype.dispatchViewEvent = function( ev ) {
+    var self = this;
+    // we use "*" since sandboxed iframes have a null origin
+    if (self.view) {
+      self.view.contentWindow.postMessage(JSON.stringify(ev),"*");
+    }
+  }
+
   UI.prototype.syncView = function( options, startLine, endLine, cursorLine ) 
   {
     var self = this;
@@ -1046,7 +1053,7 @@ var UI = (function() {
       event.height      = self.view.clientHeight;
       
       // post scroll message to view iframe
-      self.view.contentWindow.postMessage(JSON.stringify(event),"*");
+      self.dispatchViewEvent(event);
       return true;
     }
     catch(exn) {
