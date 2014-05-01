@@ -21,21 +21,30 @@ external include {
   js file "storage-inline.js"
 }
 
-val sandboxed = unsafeTotal { ref(False) }
+val sandboxed : ref<global,maybe<list<string>>> = unsafeTotal { ref(Nothing) }
 
-public function enforceSandbox() : io () {
-  sandboxed := True
+public function enforceSandbox( roots : list<string> = [""] ) : io () {
+  sandboxed := Just(roots)
 }
 
 public function checkSandbox( path : string ) : io () {
-  if (!sandboxed) {
-    if (!(path.contains(rxRootRelative))) {
-      error("cannot access files outside the sandbox")
+  match (!sandboxed) {
+    Nothing -> ()
+    Just(roots) -> {
+      if (!(path.under(roots))) {
+        error("cannot access files outside the sandbox")
+      }
     }
   }
 }
 
-val rxRootRelative = regex( @"^(?![\.\/])([\w\-]|\.\w|\/\w)+$" )
+function under( path : string, roots : list<string> ) : bool {  
+  roots.any fun(root) {
+    (path.startsWith(root) && path.substr(root.length).contains(rxRootRelative))
+  }
+}
+
+val rxRootRelative = regex( @"^(?![\/\\])(\.(?=[\/\\]))?([\w\-]|[\.\/\\]\w)+$" )
 
 
 // Try to read a text file; return a default value in case of an error.

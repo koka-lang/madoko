@@ -155,7 +155,7 @@ function readFiles( userpath, docname, fnames, cont ) {
 
 // run madoko
 function runMadoko( userPath, docname, flags, timeout, cont ) {
-  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv --sandbox " + flags + " " + docname;
+  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv " + flags + " --sandbox " + docname;
   console.log("> " + command);
   cp.exec( command, {cwd: userPath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont); 
 }
