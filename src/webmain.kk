@@ -45,7 +45,7 @@ public function addImage( embeds : dict<embedinfo>, imageName : string, data : s
 }
 
 
-public function markdown( inputName : string, input : string, options : options,
+public function markdown( inputName : string, input : string, outdir : string, options : options,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,
                                       files:string,filesRefer:string,filesWrite:string) -> io () ) : io () 
 { 
@@ -53,9 +53,9 @@ public function markdown( inputName : string, input : string, options : options,
     log("stdout",s)
   });
 
-  copts = coptions(options = options)
+  copts = coptions(options = options, outputDir = outdir)
   outName = outputName(inputName,copts)
-
+  
   var rerun := False;
 
   function runPdfLatex( texFile : string, opts : options, content : string, cont : () -> io () ) : io () 

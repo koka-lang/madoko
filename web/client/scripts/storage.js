@@ -87,9 +87,13 @@ var Onedrive = (function() {
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
-  Onedrive.prototype.getFileInfo = function( path ) {  
+  Onedrive.prototype._getFileInfo = function( path ) {  
     var self = this;
-    return onedriveGet( self.folderId + "/files", "get files").then( function(res) {
+    return onedriveGetFileInfo( self.folderId, path );
+  }
+
+  function onedriveGetFileInfoAt( folderId, path ) {
+    return onedriveGet( folderId + "/files", "get files").then( function(res) {
       var file = null;
       if (res.data) {
         for (var i = 0; i < res.data.length; i++) {
@@ -100,11 +104,22 @@ var Onedrive = (function() {
           }
         }
       }
-      // if (!file) return cont( onedriveError("unable to find: " + path), file )
+      //if (!file) console.log("onedrive: unable to find: " + path);
       return file;
     });
   }
 
+  function onedriveGetFileInfo( folderId, path ) {
+    var dir = util.dirname(path);
+    if (dir==="") return onedriveGetFileInfoAt(folderId,path);
+    // recurse
+    var subdir = util.firstdirname(path);
+    return onedriveGetFileInfoAt( folderId, subdir ).then( function(subFolder) {
+      if (!subFolder) return null;
+      return onedriveGetFileInfo( subFolder.id, path.substr(subdir.length+1) );
+    });
+  }
+  
 
   Onedrive.prototype.getWriteAccess = function() {
     return onedriveGetWriteAccess();
@@ -119,17 +134,47 @@ var Onedrive = (function() {
 
   var onedriveDomain = "https://apis.live.net/v5.0/";
   
-  Onedrive.prototype._writeFile = function( file ) {
+  function onedriveWriteFileAt( file, folderId ) {
     // TODO: resolve sub-directories
     var self = this;
-    var url = onedriveDomain + self.folderId + "/files/" + file.path + "?" +
+    var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
                 onedriveAccessToken();
     return util.requestPUT( {url:url,contentType:";" }, file.content );
   }
 
+  function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
+    return onedriveGetFileInfo( folderId, subFolderName ).then( function(folder) {
+      if (folder) return folder.id;
+      var url = onedriveDomain + folderId + "?" + onedriveAccessToken();
+      return util.requestPOST( url, { name: subFolderName, description: "" } ).then( function(newFolder) {
+          return newFolder.id;
+        }, function(err) {
+          if (!recurse && err && util.contains(err.toString(),"(resource_already_exists)")) {
+            // multiple requests can result in this error, try once more
+            return onedriveEnsureFolder( folderId, subFolderName, true );
+          }
+          else {
+            throw err; // re-throw
+          }
+        }
+      );
+    })
+  }
+
+  function onedriveWriteFile( file, folder, folderId ) {
+    var dir = util.dirname(file.path).substr(folder.length);    
+    if (dir === "") return onedriveWriteFileAt( file, folderId );
+    // we need to resolve the subdirectories.
+    var subdir = dir.replace( /[\/\\].*$/, ""); // take the first subdir
+    return onedriveEnsureFolder( folderId, subdir ).then( function(subId) {
+      return onedriveWriteFile( file, util.combine(folder,subdir), subId );
+    });
+  }
+
+
   Onedrive.prototype.pushFile = function( file ) {
     var self = this;
-    return self._writeFile( file ).then( function(resp) {
+    return onedriveWriteFile( file, "", self.folderId ).then( function(resp) {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
       var newFile = util.copy(file);
@@ -140,7 +185,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.pullFile = function( fpath ) {
     var self = this;
-    return self.getFileInfo( fpath ).then( function(info) {
+    return self._getFileInfo( fpath ).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
         var file = {
@@ -155,7 +200,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
-    return self.getFileInfo( fpath ).then( function(info) {
+    return self._getFileInfo( fpath ).then( function(info) {
       return (info ? info.updated_time : null);
     });
   }
@@ -355,7 +400,7 @@ var NullRemote = (function() {
 function serverGetInitialContent(fpath) {
   if (!util.extname(fpath)) fpath = fpath + ".mdk";
   if (!util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
-  return util.requestGET( "styles/" + fpath );
+  return util.requestGET( fpath );
 }
 
 function localOpenFile() {
@@ -614,10 +659,12 @@ var Storage = (function() {
           }
         }
         // first try to find the file as a madoko standard style on the server..
-        return serverGetInitialContent(fpath).then( function(content) {
+        var spath = "styles/" + fpath;
+        var opath = "out/" + fpath;
+        return serverGetInitialContent(spath).then( function(content) {
             if (!content) return noContent();
-            self.createFile(fpath,content);
-            return self.files.get(fpath);
+            self.createFile(opath,content,File.Generated);
+            return self.files.get(opath);
           },
           function(_err) {
             return noContent();
@@ -626,10 +673,19 @@ var Storage = (function() {
     );    
   }
 
+  function isRoot( fpath, roots ) {
+    if (util.contains(roots,fpath)) return true;
+    if (util.firstdirname(fpath) === "out") {  // so "madoko.css" is not collected
+      if (util.contains(roots,fpath.substr(4))) return true;
+    }
+    return false;
+  }
+
   Storage.prototype.collect = function( roots ) {
     var self = this;
     self.forEachFile( function(file) {
-      if (!util.contains(roots,file.path) && (!file.content || file.kind === File.Generated) ) {
+      if (!isRoot(file.path,roots) && 
+          (!file.content || file.kind === File.Generated) ) {
         self.files.remove(file.path);
       }
     });
@@ -685,6 +741,16 @@ var Storage = (function() {
           }
           else {
             return self.remote.pullFile(file.path).then( function(remoteFile) {
+              if (remoteFile.content === "" && file.content !== "") {
+                // do not merge an empty file
+                return self.remote.pushFile(file).then( function(newFile) {
+                  newFile.written = false;
+                  newFile.original = newFile.content;
+                  self._updateFile(newFile);
+                  return message( "merge from server was empty, wrote back changes" );
+                });
+              }
+
               var original = (file.original != null ? file.original : file.content);
               return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                                 original, remoteFile.content, file.content

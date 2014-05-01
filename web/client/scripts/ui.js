@@ -848,7 +848,7 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var disable = (file.kind === storage.File.Text && file.path!=="madoko.css" ? "" : " disable");
+        var disable = (file.kind === storage.File.Text ? "" : " disable");
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +

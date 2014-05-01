@@ -142,10 +142,12 @@ var Runner = (function() {
     
   Runner.prototype.loadFile = function(round,fname,referred) {
     var self = this;
-    if (!self.storage || self.storage.existsLocal(fname)) return Promise.resolved(0);
+    if (!self.storage || self.storage.existsLocal(fname) || self.storage.existsLocal("out/" + fname)) {
+      return Promise.resolved(0);
+    }
     return self.storage.readFile( fname, referred ? false : storage.File.fromPath(fname) )
       .then( function(file) {
-        util.message(round.toString() + ":storage sent: " + fname, util.Msg.Trace);      
+        util.message(round.toString() + ":storage sent: " + file.path, util.Msg.Trace);      
         return 1;
       }, function(err) {
           util.message("unable to read from storage: " + fname, util.Msg.Info);

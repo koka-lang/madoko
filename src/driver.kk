@@ -38,7 +38,7 @@ public function processContent( inName : string, outName : string, content : str
 {
   if (opts.options.sandbox) enforceSandbox()
   styleDir = opts.installDir + "/../styles"
-  searchDirs = [".",inName.dirname,outName.dirname,styleDir];
+  searchDirs = [inName.dirname,outName.dirname,styleDir];
   content.include(False, outName, searchDirs) fun(icontent,lmap) {
     // set up options
     opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
@@ -86,7 +86,7 @@ public function processContent( inName : string, outName : string, content : str
 
     // copy early since async latex may start for math
     if (mopts.copyStyles && !(xopts.sandbox)) {
-      tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname)
+      tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
       if (xopts.tex || xopts.mathmode.isStatic) {
         tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
         tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
@@ -124,7 +124,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     val infos = files.concat fun(fname) {
                   mime = mimeFromExt(fname);
                   data = if (mime.startsWith("text/")) 
-                              then readTextFileDef(fname,"",False)
+                              then searchReadTextFileDef(fname,"",searchDirs,"",False)
                             elif (mime.startsWith("image/"))
                               then {
                                 //trace("embed image: " + fname)
@@ -330,24 +330,24 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
 }
 val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
 
-function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "" ) : io string {
-  match(trySearchReadTextFile(fname,dirs,ext)) {
+function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
+  match(trySearchReadTextFile(fname,dirs,ext,required)) {
     Nothing -> def
     Just((_,content)) -> content
   } 
 }
 
-function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "" ) : io maybe<(string,string)> {
+function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "", required : bool = True  ) : io maybe<(string,string)> {
   match(searchFileSync(dirs,fname)) {
     Nothing -> {
       if (ext=="" || fname.extname != "") then Nothing else {
         match (searchFileSync(dirs,fname.changeExt(ext))) {
           Nothing -> Nothing
-          Just(fullname) -> tryReadTextFile(fullname,True).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
+          Just(fullname) -> tryReadTextFile(fullname,required).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
         }
       }
     } 
-    Just(fullname) -> tryReadTextFile(fullname,True).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
+    Just(fullname) -> tryReadTextFile(fullname,required).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
   }
 }
 

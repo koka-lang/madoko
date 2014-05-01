@@ -236,6 +236,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (/^(?![\.\/])([\w\-]|\.\w|\/\w)+$/.test(fname));
   }
 
+  function firstdirname(path) {
+    var dir = stdpath.dirname(path);
+    if (!dir) return "";
+    return dir.replace(/[\/\\].*$/, "");
+  }
 
 
   var mimeTypes = {    
@@ -895,6 +900,8 @@ doc.execCommand("SaveAs", null, filename)
     dirname: stdpath.dirname,
     stemname: stdpath.stemname,
     isRelative: isRelative,
+    combine: stdpath.combine,
+    firstdirname: firstdirname,
 
     hasImageExt: hasImageExt,
     hasTextExt: hasTextExt,

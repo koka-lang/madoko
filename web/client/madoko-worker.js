@@ -78,7 +78,7 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
         }
 
         var t0 = Date.now();            
-        madoko.markdown(req.name,req.content,req.options, 
+        madoko.markdown(req.name,req.content,"out",req.options, 
                          function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite) 
         {
           self.postMessage( {

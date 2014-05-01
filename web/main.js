@@ -25,6 +25,18 @@ var userRoot = "users";
 var userHashLimit = 8;
 var userCount = 0;
 
+function normalize(fpath) {
+  return path.normalize(fpath).replace(/\\/g,"/");
+}
+
+function combine() {
+  var p = "";
+  for(var i = 0; i < arguments.length; i++) {
+    p = path.join(p,arguments[i]);
+  }
+  return p;
+}
+
 // Get the properties of an object.
 function properties(obj) {
   var attrs = [];
@@ -41,6 +53,16 @@ function extend(target, obj) {
   properties(obj).forEach( function(prop) {
     target[prop] = obj[prop];
   });
+}
+
+// error response
+function sendError(res,err,code) {
+  var msg = (err ? err.toString() : "");
+  if (!msg) msg = "unknown error";
+  var result = {
+    error: { message: msg }
+  };
+  return res.send(code || 401, result);
 }
 
 // Get a unique user path for this session.
@@ -133,13 +155,16 @@ function saveFiles( userPath, files, cont ) {
   }, cont );
 }
 
+var outdir = "out";
+var stdflags = "--odir=" + outdir + " --sandbox";
+
 // Read madoko generated files.
 function readFiles( userpath, docname, fnames, cont ) {
   if (!fnames || (fnames instanceof Array && fnames.length == 0)) {
     var ext = path.extname(docname);
     var stem = docname.substr(0, docname.length - ext.length );
-    fnames = [stem + ".dimx", stem + "-math-dvi.final.tex", stem + "-math-pdf.final.tex", 
-              stem + "-bib.bbl", stem + "-bib.aux"];
+    fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
+              .map( function(s) { return (outdir ? outdir + "/" : "") + stem + s; });
   }
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
@@ -155,7 +180,7 @@ function readFiles( userpath, docname, fnames, cont ) {
 
 // run madoko
 function runMadoko( userPath, docname, flags, timeout, cont ) {
-  var command = /* "madoko */ "node ../../client/lib/cli.js -vvv " + flags + " --sandbox " + docname;
+  var command = /* "madoko */ "node ../../client/lib/cli.js " + flags + " " + stdflags + " "  + docname;
   console.log("> " + command);
   cp.exec( command, {cwd: userPath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont); 
 }
@@ -237,9 +262,10 @@ app.get("/onedrive", function(req,res) {
 app.get('/rest/download/:fname', function(req,res) {
   var userpath = getUserPath(req,res);
   var fname  = req.params.fname;
-  console.log("download: " + req.path + ": " + path.join(userpath,fname));
+  if (!isValidFileName(fname)) return sendError( res, "Invalid file name: " + fname);
+  console.log("download: " + req.path + ": " + combine(userpath,outdir,fname));
 
-  var url = "/temp/" + path.basename(userpath) + "/" + fname;
+  var url = combine("/temp", path.basename(userpath), outdir, fname);
   console.log("redirect to: " + url);
   res.redirect(url);
   /*
