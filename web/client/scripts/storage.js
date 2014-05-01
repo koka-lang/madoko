@@ -443,8 +443,9 @@ function syncToOnedrive( storage, docStem, newStem ) {
 
 function syncTo(  storage, toStorage, docStem, newStem ) 
 {
+  var newStem = (newStem === docStem ? "" : newStem);
   var newName = (newStem ? newStem : docStem) + ".mdk";
-  return toStorage.readTextFile( newName, false ).then( 
+  return toStorage.readFile( newName, false ).then( 
     function(file) {
       throw new Error( "cannot save, document already exists: " + newName );
     },
@@ -454,8 +455,8 @@ function syncTo(  storage, toStorage, docStem, newStem )
         file.written = true;
         if (newStem) {
           file.path = file.path.replace( 
-                          new RegExp( "(?:^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
-                            newStem + "$2" );
+                          new RegExp( "(^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
+                            "$1" + newStem + "$3" );
         }
         toStorage.files.set( file.path, file );
       });
