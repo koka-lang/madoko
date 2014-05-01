@@ -622,6 +622,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.stale = false;
       self.refreshRate = refreshRate || 1000;
       
+      self.dynamicRefreshRate = false;
       self.minRefreshRate = 100;
       self.maxRefreshRate = 1000;
       
@@ -680,15 +681,19 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
             self.times.push( time );
             if (self.times.length > self.timesSamples) self.times.shift();
             var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
-            message( (msg ? msg + "\n" : "") + "  avg full: " + avg.toFixed(0) + "ms, this: " + time.toFixed(0) + "ms", Msg.Prof);
+            message( (msg ? msg + "\n" : "") + 
+              "  avg full: " + avg.toFixed(0) + "ms, this: " + time.toFixed(0) + "ms" +
+              "  run rate: " + self.refreshRate.toFixed(0) + "ms", 
+              Msg.Prof);
             
-            if (avg > 0.66 * self.refreshRate && self.refreshRate < self.maxRefreshRate) {
-              self.resume( Math.min( self.maxRefreshRate, 1.5 * self.refreshRate ) );
+            if (self.dynamicRefreshRate) {
+              if (avg > 0.66 * self.refreshRate && self.refreshRate < self.maxRefreshRate) {
+                self.resume( Math.min( self.maxRefreshRate, 1.5 * self.refreshRate ) );
+              }
+              else if (avg < 0.33*self.refreshRate && self.refreshRate > self.minRefreshRate) {
+                self.resume( Math.max( self.minRefreshRate, 0.66 * self.refreshRate ) );
+              }
             }
-            else if (avg < 0.33*self.refreshRate && self.refreshRate > self.minRefreshRate) {
-              self.resume( Math.max( self.minRefreshRate, 0.66 * self.refreshRate ) );
-            }
-            
           },
           function(err) {
             message( err, Msg.Exn );  

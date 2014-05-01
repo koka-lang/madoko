@@ -128,6 +128,7 @@ var UI = (function() {
       util.dispatchEvent( self.checkDisableServer, "change" );
       util.dispatchEvent( self.checkLineNumbers, "change" );
       util.dispatchEvent( self.checkWrapLines, "change" );      
+      util.dispatchEvent( self.checkDelayedUpdate, "change" );
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
     }).always( function() {
@@ -643,6 +644,7 @@ var UI = (function() {
               }
               
               /*
+              // adjust refresh rate dynamically
               if (res.avgTime > 1000 && self.refreshRate < 1000) {
                 self.refreshRate = 1000;
                 self.asyncMadoko.resume(self.refreshRate);
@@ -653,6 +655,8 @@ var UI = (function() {
               }
               */
               
+              /*
+              // adjust delayed view update automatically
               if (res.avgTime > 300) {
                 self.refreshContinuous = false;
                 self.checkDelayedUpdate.checked = true;
@@ -661,8 +665,13 @@ var UI = (function() {
                 self.refreshContinuous = true;
                 self.checkDelayedUpdate.checked = false;
               }
+              */
               
-              return ("update: " + res.ctx.round + (quick ? "  (quick view update)" : "") + "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
+              return ("update: " + res.ctx.round + 
+                        (quick ? "  (quick view update)" : "") + 
+                        (self.refreshContinuous ? " (continuous)" : "") +
+                        //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
+                        "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
             },
             function(err) {
               self.onError(err);              
@@ -678,11 +687,8 @@ var UI = (function() {
         return self.runner.runMadokoServer(self.docText, {docname: self.docName, round:round}).then( 
           function(ctx) {
             self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
-            //self.allowServer = false; // TODO: hack to prevent continuous updates in case the server output it not as it should (say a latex error)
-            // run madoko locally again using our generated files
-            return self.asyncMadoko.run(true).always( function(){
-              //self.allowServer = !self.checkDisableServer.checked;
-            });               
+            // run madoko locally again using our generated files (and force a run)
+            return self.asyncMadoko.run(true);
           },
           function(err) {
             self.onError(err);            
@@ -706,6 +712,7 @@ var UI = (function() {
       wrapLines: self.checkWrapLines.checked,
       disableServer: self.checkDisableServer.checked,
       disableAutoUpdate: self.checkDisableAutoUpdate.checked,
+      delayedUpdate : self.checkDelayedUpdate.checked,
     };
     return localStorageSave("local", json, 
       (minimal ? undefined : function() {
@@ -800,6 +807,7 @@ var UI = (function() {
       self.checkDisableServer.checked = json.disableServer;
       self.checkLineNumbers.checked = json.showLineNumbers;
       self.checkWrapLines.checked = json.wrapLines;
+      self.checkDelayedUpdate.checked = json.delayedUpdate;
       var stg = storage.unpersistStorage(json.storage);      
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
