@@ -239,15 +239,21 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
 // Get hashes of bib files
 function createBibData( auxName : string, docName : string, searchDirs : list<string>, bibNames : list<string> ) : io string {
-  bibFiles = bibNames.map( fun(nm){ combine(relative(auxName.dirname,docName.dirname),nm.noext) } )
-  bibFiles.map( fun(bibName) {
-    "\\bibdata{" + bibName + "}\n" +
-     (match(trySearchReadTextFile(bibName,searchDirs,".bib")) {
-       Nothing -> ""
-       Just((_,content)) -> {
-         "%md5:" + md5(content) + "\n"
-       } 
-     })
+  bibNames.map( fun(bibName) {
+    match(trySearchReadTextFile(bibName,searchDirs,".bib")) {
+      Nothing -> {
+        println( "warning: unable to find bibliography file: " + bibName )
+        ""
+      }
+      Just((bibFile,content)) -> {
+        if (dirname(bibFile) != dirname(auxName)) {
+          if (!(tryWriteTextFile( combine(dirname(auxName),basename(bibFile)), content))) {
+            println("warning: unable to copy bibliography file to output directory: " + bibName)
+          }
+        }
+        "\\bibdata{" + stemname(bibFile) + "}\n%md5:" + md5(content) + "\n"
+      }
+    }
   }).join
 }
 

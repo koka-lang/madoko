@@ -46,7 +46,7 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
-  bibtexCmd = opts.bibtex.quote + " -quiet \"" + bibFile.basename + "\""
+  bibtexCmd = opts.bibtex.quote + " \"" + bibFile.basename + "\""
   opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
     if (err!=0) {
