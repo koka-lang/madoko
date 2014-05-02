@@ -192,12 +192,9 @@ app.post('/rest/run', function(req,res) {
   //console.log(req.body);
   console.log(properties(req.body));
   saveFiles( userpath, req.body, function(err1) {
-    if (err1) {
-      result.error = { message: err1.toString() };
-      return res.send(401, result );
-    }
+    if (err1) return sendError(res,err1.toString());
     var flags = " -mmath-embed:512 -membed:512 " + (req.body.pdf ? " --pdf" : "");
-    runMadoko( userpath, docname, flags, 30000, function(err2,stdout,stderr) {
+    runMadoko( userpath, docname, flags, (req.body.pdf ? 60000 : 30000), function(err2,stdout,stderr) {
       result.stdout = stdout;
       result.stderr = stderr;
       if (err2) {
