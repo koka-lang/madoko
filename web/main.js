@@ -56,12 +56,11 @@ function extend(target, obj) {
 }
 
 // error response
-function sendError(res,err,code) {
-  var msg = (err ? err.toString() : "");
+function sendError(res,err,result,code) {
+  var msg = (typeof err === "string" ? err : "");
   if (!msg) msg = "unknown error";
-  var result = {
-    error: { message: msg }
-  };
+  if (!result) result = {};
+  result.error = (typeof err === "object" ? err : { message: (err ? err.toString() : "unknown") });
   return res.send(code || 401, result);
 }
 
@@ -198,18 +197,15 @@ app.post('/rest/run', function(req,res) {
       return res.send(401, result );
     }
     var flags = " -mmath-embed:512 -membed:512 " + (req.body.pdf ? " --pdf" : "");
-    runMadoko( userpath, docname, flags, (req.body.pdf ? 30000 : 10000), function(err2,stdout,stderr) {
+    runMadoko( userpath, docname, flags, 30000, function(err2,stdout,stderr) {
       result.stdout = stdout;
       result.stderr = stderr;
       if (err2) {
-        result.error = { message: err2.toString() };
-        return res.send(401, result);
-      }
+        var msg = (err2.killed ? "server time-out" : err2.toString());
+        return sendError(res,msg,result);
+      } 
       readFiles( userpath, docname, [], function(err3,files) {
-        if (err3) {
-          result.error = { message: err3.toString() };
-          return res.send(401, result);
-        }
+        if (err3) return sendError(rs,err3.toString(),result);
         console.log(result);
         //console.log(files);
         extend(result,files);
