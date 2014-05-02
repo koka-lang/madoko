@@ -136,7 +136,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                   // write the file to the out directory
                   if (data != "" && (opts.pdf || data.length > mopts.embedLimit)) { 
                     newName = combine(outName.dirname,fname)
-                    trace("copying: " + fname + " to " + newName)
+                    //trace("copying: " + fname + " to " + newName)
                     mkdirp(newName.dirname)
                     if (mime.startsWith("text/")) {
                       tryWriteTextFile(newName,data);

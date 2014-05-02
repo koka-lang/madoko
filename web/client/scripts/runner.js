@@ -139,6 +139,22 @@ var Runner = (function() {
     });
   }
 
+  Runner.prototype.runMadokoLocal = function(docName,text) 
+  {
+    var self = this;
+    var ctx = { round: -1, includeImages: true, docname: docName };
+    return self.runMadoko( text, ctx ).then( function(res) {
+      if (res.runAgain) {
+        ctx.round = -2;
+        return self.runMadoko( text, ctx ). then( function(res2) {
+          return res2.content;
+        });
+      }
+      else {
+        return res.content;
+      }
+    });
+  }
     
   Runner.prototype.loadFile = function(round,fname,referred) {
     var self = this;

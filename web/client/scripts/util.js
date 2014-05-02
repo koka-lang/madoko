@@ -315,6 +315,41 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     }
   }
 
+
+  function decodeBase64Code(c) 
+  {
+    if (c > 64 && c < 91) return (c - 65);
+    else if (c > 96 && c < 123) return (c - 71);
+    else if (c > 47 && c < 58)  return (c + 4);
+    else if (c===43) return 62;
+    else if (c===47) return 63;
+    else return 0;
+  }
+
+  // convert base64 string to uint8array.
+  function decodeBase64( content ) {
+    var src = content.replace(/[^A-Za-z0-9\+\/]/g,""); // keep only relevant characters
+    var len = src.length; 
+    var destlen = (len>>2)*3 + (len&3);
+    var dest = new Uint8Array(destlen);
+
+    var acc = 0;
+    var desti = 0;
+    for( var i = 0; i < len; i++) {
+      // accumulate four 6-bit values
+      acc |= decodeBase64Code(src.charCodeAt(i)) << (18 - 6 * (i&3));
+      if ((i&3) === 3 || i === len-1) {
+        // write out accumulator to three 8-bit values
+        for(var j = 0; j < 3 && desti < destlen; j++) {
+          dest[desti] = (acc >>> ((2-j)*8)) & 255;
+          desti++;
+        }
+        acc = 0; // reset accumulator
+      }      
+    }
+    return dest;
+  }
+
   function px(s) {
     if (typeof s === "number") return s;
     var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
@@ -810,6 +845,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       contentType = "application/x-www-form-urlencoded";
       content = urlEncode(params);
     }
+    // array
+    else if (params instanceof Uint8Array) {
+      contentType = "application/octet-stream";
+      content = params;
+    }
+    // json
     else {
       contentType = "application/json";
       content = JSON.stringify(params);
@@ -912,6 +953,7 @@ doc.execCommand("SaveAs", null, filename)
     startsWith: startsWith,
     endsWith: endsWith,
     contains: contains,
+    decodeBase64: decodeBase64,
     
     hasClassName: hasClassName,
     toggleClassName: toggleClassName,

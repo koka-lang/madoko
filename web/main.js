@@ -158,18 +158,20 @@ var outdir = "out";
 var stdflags = "--odir=" + outdir + " --sandbox";
 
 // Read madoko generated files.
-function readFiles( userpath, docname, fnames, cont ) {
-  if (!fnames || (fnames instanceof Array && fnames.length == 0)) {
-    var ext = path.extname(docname);
-    var stem = docname.substr(0, docname.length - ext.length );
-    fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
-              .map( function(s) { return (outdir ? outdir + "/" : "") + stem + s; });
-  }
+function readFiles( userpath, docname, pdf, cont ) {
+  var ext = path.extname(docname);
+  var stem = docname.substr(0, docname.length - ext.length );
+  var fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
+            .concat( pdf ? [".pdf"] : [] )
+            .map( function(s) { return (outdir ? outdir + "/" : "") + stem + s; });
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
   asyncForEach( fnames, function(fname,xcont) {
-    fs.readFile( path.join(userpath,fname), {encoding:"utf8"}, function(err,data) {
-      files["/" + fname] = (err ? "" : data);
+    var enc = (path.extname(fname)===".pdf" ? "base64" : "utf8");
+    fs.readFile( path.join(userpath,fname), function(err,data) {
+      var content = (err ? "" : data.toString(enc));
+      console.log("send as " + enc + ": " + fname + ": " + (err ? err.toString() : "\nenc: " + content.substr(0,30) + "\norg: " + data.toString().substr(0,30) + "..."));
+      files["/" + fname] = (err ? "" : content);
       xcont();
     });
   }, function(err) {
@@ -201,7 +203,7 @@ app.post('/rest/run', function(req,res) {
         var msg = (err2.killed ? "server time-out" : err2.toString());
         return sendError(res,msg,result);
       } 
-      readFiles( userpath, docname, [], function(err3,files) {
+      readFiles( userpath, docname, req.body.pdf, function(err3,files) {
         if (err3) return sendError(rs,err3.toString(),result);
         console.log(result);
         //console.log(files);

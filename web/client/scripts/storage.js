@@ -139,7 +139,8 @@ var Onedrive = (function() {
     var self = this;
     var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
                 onedriveAccessToken();
-    return util.requestPUT( {url:url,contentType:";" }, file.content );
+    var content = (util.extname(file.path) === ".pdf" ? util.decodeBase64(file.content) : file.content);              
+    return util.requestPUT( {url:url,contentType:";" }, content );
   }
 
   function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
@@ -679,6 +680,7 @@ var Storage = (function() {
     if (util.firstdirname(fpath) === "out") {  // so "madoko.css" is not collected
       if (util.contains(roots,fpath.substr(4))) return true;
     }
+    if (util.extname(fpath) === ".pdf") return true;
     return false;
   }
 

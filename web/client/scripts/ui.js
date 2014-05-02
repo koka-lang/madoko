@@ -865,22 +865,52 @@ var UI = (function() {
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
+  function saveContent( name, mime, content ) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var saveBlob = navigator.saveBlob || navigator.msSaveBlob;
+    var link = document.createElement("a");
+    if ("download" in link) {
+      link.setAttribute("href",url);
+      link.setAttribute("download",name);
+      //util.dispatchEvent(link,"click");
+      var event = document.createEvent('MouseEvents');
+      event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+      link.dispatchEvent(event);
+    }
+    else if (window.saveAs) {
+      window.saveAs(blob, name);
+    }
+    else if (saveBlob) {
+      saveBlob.call(navigator, blob, name);
+    }
+    else {
+      window.open(url,name);
+    }
+  }
+
+
   UI.prototype.generatePdf = function() {
     var self = this;
     var ctx = { round: 0, docname: self.docName, pdf: true, includeImages: true };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
-        return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".pdf"));
-      }));
+        var name = util.changeExt(self.docName,".pdf");
+        return self.storage.readFile("out/" + name ).then( function(file) {
+          var content = util.decodeBase64(file.content);
+          saveContent( name, "application/pdf", content );          
+        });
+      })
+    );
   }
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    var ctx = { round: 0, docname: self.docName, pdf: false, includeImages: true };
     return self.spinWhile( self.viewSpinner, 
-      self.runner.runMadokoServer( self.docText, ctx ).then( function() {
-        return util.downloadFile("/rest/download/" + util.changeExt(self.docName,".html"));
-      }));
+      self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
+        saveContent( util.changeExt(self.docName,".html"), "text/html", content );
+      })
+    );
   }
 
   /*
