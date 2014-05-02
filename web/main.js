@@ -55,6 +55,48 @@ function extend(target, obj) {
   });
 }
 
+var mimeTypes = {    
+  mdk: "text/madoko",
+  md: "text/markdown",
+
+  txt: "text/plain",
+  css: "text/css",
+  html:"text/html",
+  htm: "text/html",
+  xml: "text/html",
+  js:  "text/javascript",
+  pdf: "application/pdf",
+  
+  tex: "text/tex",
+  sty: "text/latex",
+  cls: "text/latex",
+  bib: "text/plain",
+  bbl: "text/plain",
+  aux: "text/plain",
+  dimx: "text/plain",
+
+  png:  "image/png",
+  jpg:  "image/jpg",
+  jpeg: "image/jpg",
+  gif:  "image/gif",
+  svg:  "image/svg+xml",
+};
+
+function mimeFromExt( fname ) {
+  var ext = path.extname(fname);
+  if (ext) {
+    var mime = mimeTypes[ext.substr(1)];
+    if (mime) return mime;
+  }
+  return "text/plain";
+}
+
+function encodingFromExt(fname) {
+  var mime = mimeFromExt(fname);
+  return (mime.indexOf("text/") === 0 ? "utf-8" : "base64" );
+}
+
+
 // error response
 function sendError(res,err,result,code) {
   var msg = (typeof err === "string" ? err : "");
@@ -143,13 +185,7 @@ function saveFiles( userPath, files, cont ) {
     var dir = path.dirname(fpath);
     mkdirp(dir, function(err) {
       if (err) return xcont(err);
-      if (file.type === "text") {
-        return fs.writeFile( fpath, file.content, {encoding:file.encoding}, xcont );
-      }
-      if (file.type === "image") {
-        return fs.writeFile(fpath, file.content, {encoding:file.encoding}, xcont);
-      }
-      xcont(null);
+      return fs.writeFile( fpath, file.content, {encoding:file.encoding}, xcont );
     });
   }, cont );
 }
@@ -166,12 +202,15 @@ function readFiles( userpath, docname, pdf, cont ) {
             .map( function(s) { return (outdir ? outdir + "/" : "") + stem + s; });
   console.log("sending back:\n" + fnames.join("\n"));
   var files = {};
-  asyncForEach( fnames, function(fname,xcont) {
-    var enc = (path.extname(fname)===".pdf" ? "base64" : "utf8");
+  asyncForEach( fnames, function(fname,xcont) {    
     fs.readFile( path.join(userpath,fname), function(err,data) {
-      var content = (err ? "" : data.toString(enc));
-      console.log("send as " + enc + ": " + fname + ": " + (err ? err.toString() : "\nenc: " + content.substr(0,30) + "\norg: " + data.toString().substr(0,30) + "..."));
-      files["/" + fname] = (err ? "" : content);
+      var file = { 
+        encoding: encodingFromExt(fname),
+        mime: mimeFromExt(fname),
+      };
+      file.content = (err ? "" : data.toString(file.encoding));
+      console.log("send as " + file.encoding + ": " + fname);
+      files["/" + fname] = file;
       xcont();
     });
   }, function(err) {

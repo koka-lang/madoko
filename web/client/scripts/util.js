@@ -249,10 +249,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
 
     txt: "text/plain",
     css: "text/css",
-    html: "text/html",
+    html:"text/html",
     htm: "text/html",
     xml: "text/html",
-    js: "text/javascript",
+    js:  "text/javascript",
+    pdf: "application/pdf",
     
     tex: "text/tex",
     sty: "text/latex",
@@ -262,8 +263,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     aux: "text/plain",
     dimx: "text/plain",
 
-    png: "image/png",
-    jpg: "image/jpg",
+    png:  "image/png",
+    jpg:  "image/jpg",
     jpeg: "image/jpg",
     gif:  "image/gif",
     svg:  "image/svg+xml",

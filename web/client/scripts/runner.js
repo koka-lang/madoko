@@ -35,10 +35,14 @@ var Runner = (function() {
     if (self.storage) {
       self.storage.addEventListener("update",self);
       self.storage.forEachFile( function(file) {
-        self.sendFiles.push( { 
-          name: file.path,
-          content: file.content, //(file.kind === File.Image ? file.url : file.content) 
-        });
+        if (file.mime !== "application/pdf") {
+          self.sendFiles.push( { 
+            path: file.path,
+            encoding: file.encoding,
+            mime: file.mime,
+            content: file.content, //(file.kind === File.Image ? file.url : file.content) 
+          });
+        }
       });
     }
 
@@ -57,7 +61,12 @@ var Runner = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update") {
-      self.sendFiles.push( { name: ev.file.path, content: ev.file.content });
+      self.sendFiles.push( { 
+        path: ev.file.path, 
+        content: ev.file.content,
+        encoding: ev.file.encoding,
+        mime: ev.file.mime,
+      });
     }
   }
 
@@ -110,7 +119,7 @@ var Runner = (function() {
         res.filesWritten.forEach( function(file) {
           if (util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
             util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-            self.storage.writeFile(file.path,file.content,storage.File.Generated);
+            self.storage.writeFile(file.path, file.content, { generated: true });
             runAgain = true;
             runOnServer = false;
           }
@@ -161,7 +170,7 @@ var Runner = (function() {
     if (!self.storage || self.storage.existsLocal(fname) || self.storage.existsLocal("out/" + fname)) {
       return Promise.resolved(0);
     }
-    return self.storage.readFile( fname, referred ? false : storage.File.fromPath(fname) )
+    return self.storage.readFile( fname, !referred )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + file.path, util.Msg.Trace);      
         return 1;
@@ -187,16 +196,13 @@ var Runner = (function() {
     var params = {};    
     params.docname = ctx.docname;
     if (ctx.pdf) params.pdf = ctx.pdf;
-    params["/" + params.docname] = { type: "text", content: text, encoding: "utf-8" };
+    params["/" + params.docname] = { mime: util.mimeFromExt(ctx.docname), content: text, encoding: storage.Encoding.fromExt(ctx.docname) };
     
     if (self.storage) {
       self.storage.forEachFile(function(file) {
         if (file.path === params.docname) return; // use the latest version
-        if (file.kind === storage.File.Text) {
-          params["/" + file.path] = { type: "text", content: file.content, encoding: "utf-8" };
-        }
-        else if (file.kind === storage.File.Image && ctx.includeImages) {
-          params["/" + file.path] = { type: "image", content: file.content, encoding: "base64" };          
+        if (util.startsWith(file.mime, "text/") || (util.startsWith(file.mime, "image/") && ctx.includeImages)) {
+          params["/" + file.path] = { mime: file.mime, content: file.content, encoding: file.encoding };
         }
       });
     }
@@ -207,17 +213,14 @@ var Runner = (function() {
       util.properties(data).forEach(function(name) {
         if (name.substr(0,1) !== "/") return;
         //madoko.writeTextFile( name.substr(1), data[name] );
-        var fname   = name.substr(1); 
-        var content = data[name];
+        var fname = name.substr(1); 
+        var file  = (typeof data[name] === "object" ? data[name] : 
+                      { content: data[name], encoding: storage.Encoding.fromExt(fname), mime: util.mimeFromExt(fname) });
+        file.generated = true;        
         util.message("server sent: " + fname, util.Msg.Trace );
         if (self.storage) {
-          self.storage.writeFile(fname,content,storage.File.Generated);
-        }
-        else {
-          // happens when there is no connection to onedrive etc.
-          //self.files.set(fname,content);
-          self.sendFiles.push({name:fname, content: content})
-        }
+          self.storage.writeFile(fname,file.content,file);
+        }        
       })
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
       return ctx;

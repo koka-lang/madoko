@@ -11,8 +11,8 @@ define([],function() {
 var madokoMode = 
     {
       displayName: 'Madoko',
-      name: 'mdk',
-      mimeTypes: ['text/x-madoko'],
+      name: 'text/madoko',
+      mimeTypes: ['text/madoko'],
       fileExtensions: ['mdk'],
       editorOptions: { tabSize: 4, insertSpaces: true },
       ignoreCase: true,

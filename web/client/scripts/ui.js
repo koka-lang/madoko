@@ -75,12 +75,7 @@ function localStorageLoad( fname ) {
 }
 
 function getModeFromExt(ext) {
-  if (ext===".mdk") return "mdk";
-  else if (ext===".md") return "text/x-web-markdown";
-  else if (ext===".js") return "text/javascript";
-  else if (ext===".css") return "text/css";
-  else if (ext===".html") return "text/html";
-  else return "text/plain";
+  return util.mimeFromExt("doc" + ext);
 }
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
@@ -175,7 +170,7 @@ var UI = (function() {
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
-      mode: "mdk",
+      mode: "text/madoko",
       theme: "vs",
       lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       //mode: madokoMode.mode,
@@ -700,9 +695,9 @@ var UI = (function() {
 
   UI.prototype.localSave = function(minimal) {
     var self = this;
-    var text = self.getEditText();
     var pos  = self.editor.getPosition();
-    self.storage.writeFile( self.editName, text );
+    var text = self.getEditText();
+    self.storage.writeFile( self.editName, text ); // todo: not for readOnly 
     var json = { 
       docName: self.docName, 
       editName: self.editName, 
@@ -774,10 +769,9 @@ var UI = (function() {
               self.docText = self.getEditText();
             }
             self.editName = file.path;
-            var mime = getModeFromExt(util.extname(file.path));
             var options = {
-              readOnly: file.kind !== storage.File.Text,
-              mode: mime,
+              readOnly: (file.generated || !util.startsWith(file.mime,"text/")),
+              mode: file.mime,
               lineNumbers: self.checkLineNumbers.checked,
               wrappingColumn: self.checkWrapLines.checked ? 0 : false,
             };
@@ -835,7 +829,7 @@ var UI = (function() {
 
   UI.prototype.displayFile = function(file) {
     var icon = "<span class='file-status'>" + (file.written ? "&bull;" : "") + "</span>";
-    var span = "<span class='file " + file.kind + "'>" + util.escape(file.path) + icon + "</span>";
+    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + "'>" + util.escape(file.path) + icon + "</span>";
     return span;
   }
 
@@ -848,14 +842,14 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var disable = (file.kind === storage.File.Text ? "" : " disable");
+        var disable = (file.generated || !util.startsWith(file.mime,"text/") ? " disable" : "");
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item file" + disable + main + hide + "'>" + 
                           self.displayFile(file) + "</div>";
-        if (file.kind === storage.File.Image) images.push(line); 
-        else if (file.kind === storage.File.Text && !disable) files.push(line);
+        if (util.startsWith(file.mime,"image/")) images.push(line); 
+        else if (util.startsWith(file.mime,"text/") && !disable) files.push(line);
         else generated.push(line)
       }
     });
@@ -897,7 +891,7 @@ var UI = (function() {
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
         var name = util.changeExt(self.docName,".pdf");
         return self.storage.readFile("out/" + name ).then( function(file) {
-          var content = util.decodeBase64(file.content);
+          var content = storage.Encoding.decode(file.encoding, file.content);
           saveContent( name, "application/pdf", content );          
         });
       })

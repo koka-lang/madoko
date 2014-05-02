@@ -72,8 +72,8 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
       else {
         if (req.files) {
           req.files.forEach( function(f) {
-            madoko.writeTextFile(f.name,f.content);  
-            local.set(f.name,true);
+            madoko.writeTextFile(f.path,f.content);  
+            local.set(f.path,true);
           });
         }
 
