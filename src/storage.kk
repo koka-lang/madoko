@@ -184,3 +184,23 @@ external xreadBase64FileSync( fileName : string ) : io string
   cs inline "Convert.ToBase64String(System.IO.File.ReadAllBytes(#1))"
   js inline "$readFileSync(#1,'base64')"
 }
+
+// Try to write a binary file synchronously (using base64 encoding). 
+// Returns "True" if successful.
+public function tryWriteBase64File( fileName : string, content : string )  : io bool 
+{
+  catch( { writeBase64FileSync(fileName,content); True }, fun(_exn) { False } )
+}
+
+// Write a binary file synchronously (using base64 encoding)
+public function writeBase64FileSync( fileName : string, content : string ) : io () {
+  checkSandbox(fileName)
+  log("filesWrite", fileName);
+  xwriteBase64FileSync(fileName, content);
+}
+
+external xwriteBase64FileSync( fileName : string, content : string ) : io ()
+{
+  cs inline "System.IO.File.WriteAllBytes(#1,Convert.FromBase64String(#2))"
+  js inline "$writeFileSync(#1,'base64',#2)"
+}

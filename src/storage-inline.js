@@ -14,7 +14,6 @@
 var onServer = ($std_core.getHost() === "nodejs");
 
 var $readFileSync;
-var $readBase64Sync;
 var $writeFileSync;
 var $renameSync;
 var $fexistsSync;

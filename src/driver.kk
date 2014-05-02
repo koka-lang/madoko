@@ -119,7 +119,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   }
 
   function embedFiles( opts: options, files : list<string>, html0 : string ) : io (options,string) {
-    if (mopts.embedLimit <= 0 || files.length == 0) return (opts,html0);
+    if (files.length == 0) return (opts,html0);
 
     val infos = files.concat fun(fname) {
                   mime = mimeFromExt(fname);
@@ -132,10 +132,26 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                 ("data:" + mime + ";base64," + img)
                               }
                             else ""
+
+                  // write the file to the out directory
+                  if (data != "" && (opts.pdf || data.length > mopts.embedLimit)) { 
+                    newName = combine(outName.dirname,fname)
+                    trace("copying: " + fname + " to " + newName)
+                    mkdirp(newName.dirname)
+                    if (mime.startsWith("text/")) {
+                      tryWriteTextFile(newName,data);
+                    }
+                    else {
+                      tryWriteBase64File(newName,data.replace(regex(@"^data:[^;]*;base64,"),""));
+                    }
+                    ()
+                  }  
+                  
+                  // embed
                   if (data != "" && data.length < mopts.embedLimit) 
                    then [(fname,Embedinfo(fname,data))]
                   else {
-                    if (fname!="") {
+                    if (fname!="" && mopts.embedLimit > 0) {
                       mopts.printErr("warning: unable to embed: " + fname + 
                                        (if (data.length > 0) then " (too large)" else " (does not exist)"))
                     }
