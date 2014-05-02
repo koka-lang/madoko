@@ -96,6 +96,15 @@ function dispatchEvent( elem, eventName ) {
     return i;
   }
 
+  function bodyOffsetTop(elem) {
+    var offset = 0;
+    while( elem && elem.nodeName != "BODY") {
+      offset += elem.offsetTop;
+      elem = elem.offsetParent;
+    }
+    return offset;
+  }
+
   function offsetOuterTop(elem) {
     var delta = 0;
     if (window.getComputedStyle) {
@@ -104,7 +113,7 @@ function dispatchEvent( elem, eventName ) {
         delta = px(style.marginTop) + px(style.paddingTop) + px(style.borderTopWidth);
       }   
     }
-    return (elem.offsetTop - delta);
+    return (bodyOffsetTop(elem) - delta);
   }
 
   function getScrollTop( elem ) {
@@ -226,8 +235,10 @@ function dispatchEvent( elem, eventName ) {
         var cres = findElemAtLine(child,line,fname);
         if (cres) {
           found = true;
-          res.elem = cres.elem;
-          res.elemLine = cres.elemLine;
+          if (cres.elemLine >= res.elemLine) {
+            res.elem = cres.elem;
+            res.elemLine = cres.elemLine; // cres.elemLine can be 0 as part of a child search
+          }
           if (cres.nextLine > line) { // && cres.nextLine <= res.nextLine) {
             res.next = cres.next;
             res.nextLine = cres.nextLine;
