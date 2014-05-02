@@ -6,8 +6,9 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode"],
-        function(merge,Promise,util,storage,madokoMode) {
+define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
+        "vs/editor/core/range", "vs/editor/core/selection"],
+        function(merge,Promise,util,storage,madokoMode,range,selection) {
 
 /*
 
@@ -213,6 +214,51 @@ var UI = (function() {
     self.editor.addListener("change", function (e) {    
       self.changed = true;
     });
+
+    self.dropFiles = null;
+    self.editor.addListener("mousemove", function(ev) {
+      if (self.dropFiles) {
+        var files = self.dropFiles;
+        self.dropFiles = null;
+        var pos = ev.target.position;
+        pos.column = 1;
+        pos.lineNumber++;
+        self.insertImages(files,pos);
+      }
+    });
+    
+    self.editorPane = document.getElementById("editor");
+    self.editorPane.addEventListener("drop", function(ev) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      // try to figure out on which line the image was dropped.
+      var viewLine = ev.target;
+      while(viewLine && viewLine.nodeName !== "DIV" && !/\bview-line\b/.test(viewLine.className)) {
+        viewLine = viewLine.parentNode;
+      }
+      if (viewLine) {
+        var editView = self.editor.getView();      
+        var lines    = editView.viewLines;        
+        var posLine  = -1;
+        for(var i = 0; i < lines._lines.length; i++) {
+          if (lines._lines[i]._domNode === viewLine) {
+            posLine = lines._rendLineNumberStart + i;
+          }
+        }
+        if (posLine >= 0) {
+          self.insertImages( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
+          return;
+        }
+      }
+      // rely on mousemove event instead...
+      self.dropFiles = ev.dataTransfer.files;
+    }, false);
+
+    self.editorPane.addEventListener("dragover", function(ev) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+    }, false);
     
     // synchronize on cursor position changes
     // disabled for now, scroll events seem to be enough
@@ -907,44 +953,48 @@ var UI = (function() {
     );
   }
 
-  /*
-    // Insert some text in the document 
-    function documentInsert( txt ) {
-      var pos = editor.viewModel.cursors.lastCursorPositionChangedEvent.position;
-      editor.model._insertText([],pos,txt);
-    }
-
-    // Called when a user selects an image to insert.
-    function insertImages(evt) {
-      var files = evt.target.files; // FileList object
-
-      // files is a FileList of File objects. List some properties.
-      for (var i = 0, f; f = files[i]; i++) {
-          // Only process image files.
-          if (!f.type.match('image.*')) {
-            continue;
-          }
-      
-          var reader = new FileReader();
-
-          // Closure to capture the file information.
-          reader.onload = (function(file) {
-            return function(loadEvt) {
-              var content  = loadEvt.target.result;
-              var fileName = imgDir + "/" + file.name;
-              var name     = stdpath.stemname(file.name); 
-              //stdcore.println("image: " + fileName);
-              options.imginfos = madoko.addImage(options.imginfos,fileName,content);
-              documentInsert( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n' );
-              //madoko.writeTextFile(file.name,content);
-            };
-          })(f);
-
-          // Read in the image file as a data URL.
-          reader.readAsDataURL(f);
+  // Insert some text in the document 
+  UI.prototype.insertText = function( txt, pos ) {
+    var self = this;
+    if (!pos) pos = self.editor.getPosition(); 
+    var command = {
+      getEditOperations: function(model,builder) {
+        var self = this;
+        var selection = new range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
+        builder.addEditOperation( selection , txt );
+      },
+      computeCursorState: function(model,helper) {
+        var self = this;
+        var inverseEditOperations = helper.getInverseEditOperations();
+        var srcRange = inverseEditOperations[0].range;
+        return new selection.Selection(srcRange.endLineNumber, srcRange.endColumn, srcRange.endLineNumber, srcRange.endColumn);
       }
+    };
+    self.editor.executeCommand("madoko",command);
+  }
+
+  UI.prototype.insertImages = function(files,pos) {
+    var self = this;
+    if (!files) return;
+    for (var i = 0, f; f = files[i]; i++) {
+      if (!util.startsWith(f.type,"image/")) { // only images..
+        continue;
+      }
+  
+      var reader = new FileReader();
+      reader.onload = (function(file) {
+        return function(loadEvt) {
+          var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(loadEvt.target.result);
+          if (!cap) return;
+          var fileName = "images/" + file.name;
+          var name     = util.stemname(file.name); 
+          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false});
+          self.insertText( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n', pos );
+        };
+      })(f);
+      reader.readAsDataURL(f);
     }
-  */
+  }
 
   function findElemAtLine( elem, line, fname ) 
   {
