@@ -814,14 +814,18 @@ var UI = (function() {
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
-            self.editName = file.path;
             var options = {
               readOnly: (file.generated || !util.startsWith(file.mime,"text/")),
-              mode: file.mime,
+              //mode: file.mime,
               lineNumbers: self.checkLineNumbers.checked,
               wrappingColumn: self.checkWrapLines.checked ? 0 : false,
             };
-            self.setEditText(file.content, Monaco.Editor.getOrCreateMode(options.mode));
+            var mode = Monaco.Editor.getOrCreateMode(file.mime).then( function(md) {
+              if (md) return md;
+              return Monaco.Editor.getOrCreateMode("text/plain");
+            });
+            self.editName = file.path;
+            self.setEditText(file.content, mode);
             self.editor.updateOptions(options);
             
             self.onFileUpdate(file); 
@@ -874,8 +878,9 @@ var UI = (function() {
 
 
   UI.prototype.displayFile = function(file) {
+    var disable = (file.generated || !util.startsWith(file.mime,"text/") ? " disable" : "");
     var icon = "<span class='file-status'>" + (file.written ? "&bull;" : "") + "</span>";
-    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + "'>" + util.escape(file.path) + icon + "</span>";
+    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
     return span;
   }
 
@@ -988,7 +993,7 @@ var UI = (function() {
           if (!cap) return;
           var fileName = "images/" + file.name;
           var name     = util.stemname(file.name); 
-          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false});
+          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false,written:false});
           self.insertText( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n', pos );
         };
       })(f);

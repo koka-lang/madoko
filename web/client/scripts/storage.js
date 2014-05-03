@@ -532,7 +532,7 @@ var Storage = (function() {
       file.encoding  = file.encoding || opts.encoding;
       file.mime      = file.mime || opts.mime;
       file.generated = file.generated || opts.generated;
-      file.written   = true; //file.written || (content !== file.content);
+      file.written   = file.written || (content !== file.content) || (opts.written===true);
       file.content   = content;
       self._updateFile(file);
     }
@@ -544,7 +544,7 @@ var Storage = (function() {
         generated: opts.generated,
         content  : content,
         original : content,
-        written  : (content !== ""),
+        written  : (opts.written==null ? content !== "" : opts.written),
       });
     }
   }
@@ -623,7 +623,7 @@ var Storage = (function() {
     return self.remote.pullFile(fpath).then( function(file) {
       file.path      = file.path || fpath;
       file.mime      = opts.mime;
-      file.generated = opts.generated;
+      file.generated = opts.generated || util.hasGeneratedExt(fpath);
       file.encoding  = opts.encoding;
       file.written   = false;
       file.content   = Encoding.encode(opts.encoding,file.content);
@@ -672,7 +672,7 @@ var Storage = (function() {
 
   function isRoot( fpath, roots ) {
     if (util.contains(roots,fpath)) return true;
-    if (util.firstdirname(fpath) === "out") {  // so "madoko.css" is not collected
+    if (util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
       if (util.contains(roots,fpath.substr(4))) return true;
     }
     if (util.extname(fpath) === ".pdf" || util.extname(fpath) === ".html") return true;
@@ -722,6 +722,8 @@ var Storage = (function() {
     // if (file.kind === File.Image) return Promise.resolved(message("skip"));
 
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
+      var noRemote = (remoteTime==null);
+
       if (!remoteTime) {
         // file is deleted on server?
         remoteTime = file.createdTime;
@@ -800,6 +802,15 @@ var Storage = (function() {
             throw err;
           }
         );
+      }
+      else if (noRemote) {
+        // just present on our side, push to server
+        return self.remote.pushFile( file ).then( function(newFile) {
+          newFile.written = false;
+          newFile.original = newFile.content;
+          self._updateFile(newFile);
+          return message("(re)save to server"); 
+        });        
       }
       else {
         // nothing to do

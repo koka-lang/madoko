@@ -256,11 +256,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     pdf: "application/pdf",
     
     tex: "text/tex",
-    sty: "text/latex",
-    cls: "text/latex",
+    sty: "text/tex",
+    cls: "text/tex",
     bib: "text/plain",
-    bbl: "text/plain",
-    aux: "text/plain",
+    bbl: "text/tex",
+    aux: "text/tex",
     dimx: "text/plain",
 
     png:  "image/png",
@@ -295,7 +295,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (contains(embedExts,ext));
   }
 
-  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf"].join(";");
+  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html"].join(";");
   function hasGeneratedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
