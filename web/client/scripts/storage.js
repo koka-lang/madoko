@@ -208,7 +208,7 @@ var Onedrive = (function() {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
       var newFile = util.copy(file);
-      newFile.createdTime = info.updated_time;
+      newFile.createdTime = new Date(info.updated_time);
       return newFile;
     });
   }
@@ -221,7 +221,7 @@ var Onedrive = (function() {
         var file = {
           path: fpath,
           content: content,
-          createdTime: info.updated_time,
+          createdTime: new Date(info.updated_time),
         };
         return file;
       });
@@ -231,7 +231,7 @@ var Onedrive = (function() {
   Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return self._getFileInfo( fpath ).then( function(info) {
-      return (info ? info.updated_time : null);
+      return (info ? new Date(info.updated_time) : null);
     });
   }
 
@@ -312,7 +312,7 @@ var LocalRemote = (function() {
 
   LocalRemote.prototype.pushFile = function( file ) {
     var self = this;
-    var obj  = { modifiedTime: new Date().toISOString(), content: file.content, kind: file.kind }
+    var obj  = { modifiedTime: new Date(), content: file.content, kind: file.kind }
     if (!localStorage) throw new Error("no local storage: " + file.path);
     localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
     var newFile = util.copy(file);
@@ -426,6 +426,9 @@ function unpersistStorage( obj ) {
       file.generated = (file.kind==="generated");
       delete file.url;
     }
+    if (typeof file.createdTime === "string") {
+      file.createdTime = new Date(file.createdTime);
+    }
   });
   return storage;
 }
@@ -453,7 +456,7 @@ function syncTo(  storage, toStorage, docStem, newStem )
     function(err) {
       storage.forEachFile( function(file0) {
         var file = util.copy(file0);
-        file.written = true;
+        file.modified = true;
         if (newStem) {
           file.path = file.path.replace( 
                           new RegExp( "(^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
@@ -498,11 +501,6 @@ var Storage = (function() {
   };
 
   /* Generic */
-  Storage.prototype.createFile = function(fpath,content,opts) {
-    var self = this;
-    self.writeFile(fpath,content,opts);
-  }
-
   Storage.prototype.forEachFile = function( action ) {
     var self = this;
     self.files.forEach( function(fname,file) {
@@ -514,7 +512,7 @@ var Storage = (function() {
     var self = this;
     var synced = true;
     self.forEachFile( function(file) {
-      if (file.written) {
+      if (file.modified) {
         synced = false;
         return false; // break
       }
@@ -528,23 +526,26 @@ var Storage = (function() {
     opts = self._initFileOptions(fpath,opts);
     
     if (file) {
+      // modify existing file
       if (file.content === content) return;
       file.encoding  = file.encoding || opts.encoding;
       file.mime      = file.mime || opts.mime;
       file.generated = file.generated || opts.generated;
-      file.written   = file.written || (content !== file.content) || (opts.written===true);
+      file.modified   = file.modified || (content !== file.content);
       file.content   = content;
       self._updateFile(file);
     }
     else {
+      // create new file
       self._updateFile( {
-        path     : fpath,
-        encoding : opts.encoding,
-        mime     : opts.mime,
-        generated: opts.generated,
-        content  : content,
-        original : content,
-        written  : (opts.written==null ? content !== "" : opts.written),
+        path      : fpath,
+        encoding  : opts.encoding,
+        mime      : opts.mime,
+        generated : opts.generated,
+        content   : content,
+        original  : content,
+        createdTime: new Date(),
+        modified  : false,
       });
     }
   }
@@ -581,7 +582,7 @@ var Storage = (function() {
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || util.mimeFromExt(finfo.path);
     finfo.generated   = (finfo.generated === true);
-    finfo.createdTime = finfo.createdTime || new Date().toISOString();
+    finfo.createdTime = finfo.createdTime || new Date();
       
     
     // check same content
@@ -614,6 +615,7 @@ var Storage = (function() {
     if (!opts.encoding) opts.encoding = Encoding.fromExt(fpath);
     if (!opts.mime) opts.mime = util.mimeFromExt(fpath);
     if (opts.generated==null) opts.generated = false;
+    if (opts.searchDirs==null) opts.searchDirs = [];
     return opts;
   }
 
@@ -625,7 +627,7 @@ var Storage = (function() {
       file.mime      = opts.mime;
       file.generated = opts.generated || util.hasGeneratedExt(fpath);
       file.encoding  = opts.encoding;
-      file.written   = false;
+      file.modified  = false;
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       return file;
@@ -633,41 +635,53 @@ var Storage = (function() {
   }
   
   /* Interface */
+  Storage.prototype._pullFileSearch = function( fbase, opts, dirs ) {
+    var self = this;
+    if (!dirs || dirs.length===0) return null;
+    var dir = dirs.shift();
+    return self._pullFile( util.combine(dir,fbase), opts ).then( function(file) {
+        return file;
+      }, function(err) {
+        return self._pullFileSearch( fbase, opts, dirs );
+      });
+  }
+
   Storage.prototype.readFile = function( fpath, createOnErr, opts ) {  // : Promise<file>
     var self = this;
     var file = self.files.get(fpath);
     if (file) return Promise.resolved(file);
     opts = self._initFileOptions(fpath,opts);
-
-    return self._pullFile( fpath, opts ).then( function(file) {      
+    var dirs = [util.dirname(fpath)].concat(opts.searchDirs);
+    return self._pullFileSearch( util.basename(fpath), opts, dirs ).then( function(file) {      
+      if (file) {
         self._updateFile( file );
         return file;
-      },
-      function(err) {
+      }
+      else  {
         function noContent() {
           if (createOnErr) {
             opts.generated = true;
-            self.createFile(fpath,"",opts);
+            self.writeFile(fpath,"",opts);
             return self.files.get(fpath);            
           }
           else {
-            throw err; // throw original error;
+            throw new Error("cannot find file: " + fpath);
           }
         }
-        // first try to find the file as a madoko standard style on the server..
+        // try to find the file as a madoko standard style on the server..
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
         return serverGetInitialContent(spath).then( function(content) {
             if (!content) return noContent();
             opts.generated = true;
-            self.createFile(opath,content,opts);
+            self.writeFile(opath,content,opts);
             return self.files.get(opath);
           },
           function(_err) {
             return noContent();
           });
-      }
-    );    
+      }      
+    });    
   }
 
   function isRoot( fpath, roots ) {
@@ -695,7 +709,7 @@ var Storage = (function() {
     return (file != null);
   }
 
-  var rxStartMerge = /^ *<!-- *begin +merge +.*?--> *$/im;
+  var rxConflicts = /^ *<!-- *begin +merge +.*?--> *$/im;
 
   Storage.prototype.sync = function( diff, cursors ) {
     var self = this;
@@ -713,6 +727,101 @@ var Storage = (function() {
 
   Storage.prototype._syncFile = function(diff,cursors,file) {  // : Promise<string>
     var self = this;
+    return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
+      if (!remoteTime) remoteTime = new Date(0);
+      if (file.createdTime.getTime() < remoteTime.getTime()) {
+        return self._pullFile(file.path, file).then( function(remoteFile) {
+          return self._syncPull(diff,cursors,file,remoteFile);
+        });
+      }
+      else {
+        return self._syncPush(file,remoteTime);
+      }
+    });
+  }
+
+  Storage.prototype._syncPush = function(file,remoteTime) {
+    var self = this;
+    // file.createdTime >= remoteTime
+    if (file.createdTime.getTime() === remoteTime.getTime() && !file.modified) {
+      // nothing to do
+      return self._syncMsg(file,"up-to-date");
+    }
+    else if (util.startsWith(file.mime,"text/") && rxConflicts.test(file.content)) {
+      // don't save files with merge conflicts
+      throw new Error( self._syncMsg("cannot save to server: resolve merge conflicts first!", "save to server") );
+    }
+    else {
+      // write back the client changes
+      // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
+      return self.remote.pushFile( file ).then( function(newFile) {
+        newFile.modified = false;
+        newFile.original = newFile.content;
+        self._updateFile(newFile);
+        return self._syncMsg(file, "save to server"); 
+      });
+    }
+  }
+
+  Storage.prototype._syncPull = function(diff,cursors,file,remoteFile) {
+    var self = this;
+    var canMerge = util.startsWith(file.mime, "text/");
+    // file.createdTime < remoteFile.createdTime
+    if (file.modified && canMerge) {
+      if (rxConflicts.test(file.content)) {
+        throw new Error( self._syncMsg("cannot update from server: resolve merge conflicts first!", "update from server" ));
+      }
+      return self._syncMerge(diff,cursors,file,remoteFile);
+    }
+    else {
+      // overwrite with server content
+      if (!canMerge && file.modified) {
+        util.message( "warning: binary file modified on server and client, overwrite local one: " + file.path, util.Msg.Warning );
+      }
+      self._updateFile( remoteFile );
+      return self._syncMsg( remoteFile, "update from server");
+    }
+  }
+
+  Storage.prototype._syncMerge = function(diff,cursors,file,remoteFile) {
+    var self = this;
+    var original = (file.original != null ? file.original : file.content);
+    return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+                        original, remoteFile.content, file.content).then( 
+      function(res) {
+        if (cursors["/" + file.path]) {
+          cursors["/" + file.path] = res.cursorLine;
+        }
+        if (res.conflicts) {
+          // don't save if there were real conflicts
+          remoteFile.original = file.orginal; // so next merge does not get too confused
+          remoteFile.content  = res.merged;
+          remoteFile.modified = true;
+          self._updateFile(remoteFile);
+          throw new Error( self._syncMsg( file, "merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
+        }
+        else {
+          // write back merged result
+          remoteFile.content  = res.merged;
+          return self.remote.pushFile(remoteFile).then( function(newFile) {
+            newFile.modified= false;
+            newFile.original = newFile.content;
+            self._updateFile(newFile);
+            return self._syncMsg( file, "merge from server" );      
+          });
+        }
+      }
+    );
+  }
+
+  Storage.prototype._syncMsg = function( file, msg, action ) {
+    var self = this;
+    return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
+  }
+
+  /*
+  Storage.prototype._syncFileX = function(diff,cursors,file) {  // : Promise<string>
+    var self = this;
 
     function message(msg,action) {
       return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
@@ -729,7 +838,7 @@ var Storage = (function() {
         remoteTime = file.createdTime;
       }
 
-      if (file.written) 
+      if (file.modified) 
       {
         if (rxStartMerge.test(file.content)) {
           throw new Error( message("cannot save to server: resolve merge conflicts first!", "save to server") );
@@ -744,7 +853,7 @@ var Storage = (function() {
               if (remoteFile.content === "" && file.content !== "") {
                 // do not merge an empty file
                 return self.remote.pushFile(file).then( function(newFile) {
-                  newFile.written = false;
+                  newFile.modified= false;
                   newFile.original = newFile.content;
                   self._updateFile(newFile);
                   return message( "merge from server was empty, wrote back changes" );
@@ -762,7 +871,7 @@ var Storage = (function() {
                     // don't save if there were real conflicts
                     remoteFile.original = file.orginal; // so next merge does not get too confused
                     remoteFile.content  = res.merged;
-                    remoteFile.written = true;
+                    remoteFile.modified= true;
                     self._updateFile(remoteFile);
                     throw new Error( message("merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
                   }
@@ -770,7 +879,7 @@ var Storage = (function() {
                     // write back merged result
                     remoteFile.content  = res.merged;
                     return self.remote.pushFile(remoteFile).then( function(newFile) {
-                      newFile.written = false;
+                      newFile.modified= false;
                       newFile.original = newFile.content;
                       self._updateFile(newFile);
                       return message( "merge from server" );      
@@ -783,7 +892,7 @@ var Storage = (function() {
         else {          
           // write back the client changes
           return self.remote.pushFile( file ).then( function(newFile) {
-            newFile.written = false;
+            newFile.modified= false;
             newFile.original = newFile.content;
             self._updateFile(newFile);
             return message("save to server"); 
@@ -806,7 +915,7 @@ var Storage = (function() {
       else if (noRemote) {
         // just present on our side, push to server
         return self.remote.pushFile( file ).then( function(newFile) {
-          newFile.written = false;
+          newFile.modified= false;
           newFile.original = newFile.content;
           self._updateFile(newFile);
           return message("(re)save to server"); 
@@ -818,6 +927,7 @@ var Storage = (function() {
       }
     });
   }
+  */
 
   return Storage;
 })();

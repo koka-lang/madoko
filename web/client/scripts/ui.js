@@ -879,7 +879,7 @@ var UI = (function() {
 
   UI.prototype.displayFile = function(file) {
     var disable = (file.generated || !util.startsWith(file.mime,"text/") ? " disable" : "");
-    var icon = "<span class='file-status'>" + (file.written ? "&bull;" : "") + "</span>";
+    var icon = "<span class='file-status'>" + (file.modified? "&bull;" : "") + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
     return span;
   }
@@ -993,7 +993,7 @@ var UI = (function() {
           if (!cap) return;
           var fileName = "images/" + file.name;
           var name     = util.stemname(file.name); 
-          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false,written:false});
+          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false});
           self.insertText( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n', pos );
         };
       })(f);

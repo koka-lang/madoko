@@ -170,7 +170,7 @@ var Runner = (function() {
     if (!self.storage || self.storage.existsLocal(fname) || self.storage.existsLocal("out/" + fname)) {
       return Promise.resolved(0);
     }
-    return self.storage.readFile( fname, !referred )
+    return self.storage.readFile( fname, !referred, { searchDirs: ["out"] } )
       .then( function(file) {
         util.message(round.toString() + ":storage sent: " + file.path, util.Msg.Trace);      
         return 1;
