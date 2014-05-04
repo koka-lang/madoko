@@ -312,7 +312,7 @@ var LocalRemote = (function() {
 
   LocalRemote.prototype.pushFile = function( file ) {
     var self = this;
-    var obj  = { modifiedTime: new Date(), content: file.content, kind: file.kind }
+    var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding }
     if (!localStorage) throw new Error("no local storage: " + file.path);
     localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
     var newFile = util.copy(file);
@@ -330,6 +330,8 @@ var LocalRemote = (function() {
       path: fpath,
       content: obj.content, // still encoded
       createdTime: obj.modifiedTime,
+      encoding: obj.encoding || Encoding.fromExt(fpath),
+      mime: obj.mime || util.mimeFromExt(fpath),
     };
     return Promise.resolved(file);
   }
@@ -423,12 +425,12 @@ function unpersistStorage( obj ) {
     if (file.kind) {
       file.encoding = Encoding.fromExt(fpath);
       file.mime = util.mimeFromExt(fpath);
-      file.generated = (file.kind==="generated");
       delete file.url;
     }
     if (typeof file.createdTime === "string") {
       file.createdTime = new Date(file.createdTime);
     }
+    delete file.generated;
   });
   return storage;
 }
@@ -469,6 +471,9 @@ function syncTo(  storage, toStorage, docStem, newStem )
   );
 }  
 
+function isEditable(file) {
+  return (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path));
+}
 
 var Storage = (function() {
   function Storage( remote ) {
@@ -530,7 +535,6 @@ var Storage = (function() {
       if (file.content === content) return;
       file.encoding  = file.encoding || opts.encoding;
       file.mime      = file.mime || opts.mime;
-      file.generated = file.generated || opts.generated;
       file.modified   = file.modified || (content !== file.content);
       file.content   = content;
       self._updateFile(file);
@@ -541,7 +545,6 @@ var Storage = (function() {
         path      : fpath,
         encoding  : opts.encoding,
         mime      : opts.mime,
-        generated : opts.generated,
         content   : content,
         original  : content,
         createdTime: new Date(),
@@ -581,7 +584,6 @@ var Storage = (function() {
     finfo.content = finfo.content || "";
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || util.mimeFromExt(finfo.path);
-    finfo.generated   = (finfo.generated === true);
     finfo.createdTime = finfo.createdTime || new Date();
       
     
@@ -614,7 +616,6 @@ var Storage = (function() {
     if (!opts) opts = {};
     if (!opts.encoding) opts.encoding = Encoding.fromExt(fpath);
     if (!opts.mime) opts.mime = util.mimeFromExt(fpath);
-    if (opts.generated==null) opts.generated = false;
     if (opts.searchDirs==null) opts.searchDirs = [];
     return opts;
   }
@@ -625,7 +626,6 @@ var Storage = (function() {
     return self.remote.pullFile(fpath).then( function(file) {
       file.path      = file.path || fpath;
       file.mime      = opts.mime;
-      file.generated = opts.generated || util.hasGeneratedExt(fpath);
       file.encoding  = opts.encoding;
       file.modified  = false;
       file.content   = Encoding.encode(opts.encoding,file.content);
@@ -660,7 +660,6 @@ var Storage = (function() {
       else  {
         function noContent() {
           if (createOnErr) {
-            opts.generated = true;
             self.writeFile(fpath,"",opts);
             return self.files.get(fpath);            
           }
@@ -673,7 +672,6 @@ var Storage = (function() {
         var opath = "out/" + fpath;
         return serverGetInitialContent(spath).then( function(content) {
             if (!content) return noContent();
-            opts.generated = true;
             self.writeFile(opath,content,opts);
             return self.files.get(opath);
           },
@@ -697,7 +695,7 @@ var Storage = (function() {
     var self = this;
     self.forEachFile( function(file) {
       if (!isRoot(file.path,roots) && 
-          (!file.content || file.generated) ) {
+          (!file.content || util.hasGeneratedExt(file.path)) ) {
         self.files.remove(file.path);
       }
     });
@@ -944,5 +942,6 @@ return {
   NullRemote: NullRemote,
   Encoding: Encoding,
   unpersistStorage: unpersistStorage,
+  isEditable: isEditable,
 }
 });

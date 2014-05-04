@@ -119,7 +119,7 @@ var Runner = (function() {
         res.filesWritten.forEach( function(file) {
           if (util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
             util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-            self.storage.writeFile(file.path, file.content, { generated: true });
+            self.storage.writeFile(file.path, file.content );
             runAgain = true;
             runOnServer = false;
           }
@@ -216,7 +216,6 @@ var Runner = (function() {
         var fname = name.substr(1); 
         var file  = (typeof data[name] === "object" ? data[name] : 
                       { content: data[name], encoding: storage.Encoding.fromExt(fname), mime: util.mimeFromExt(fname) });
-        file.generated = true;        
         util.message("server sent: " + fname, util.Msg.Trace );
         if (self.storage) {
           self.storage.writeFile(fname,file.content,file);

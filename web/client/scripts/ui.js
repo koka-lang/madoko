@@ -815,7 +815,7 @@ var UI = (function() {
               self.docText = self.getEditText();
             }
             var options = {
-              readOnly: (file.generated || !util.startsWith(file.mime,"text/")),
+              readOnly: !storage.isEditable(file),
               //mode: file.mime,
               lineNumbers: self.checkLineNumbers.checked,
               wrappingColumn: self.checkWrapLines.checked ? 0 : false,
@@ -878,7 +878,7 @@ var UI = (function() {
 
 
   UI.prototype.displayFile = function(file) {
-    var disable = (file.generated || !util.startsWith(file.mime,"text/") ? " disable" : "");
+    var disable = (storage.isEditable(file) ? "" : " disable");
     var icon = "<span class='file-status'>" + (file.modified? "&bull;" : "") + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
     return span;
@@ -893,14 +893,14 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var disable = (file.generated || !util.startsWith(file.mime,"text/") ? " disable" : "");
+        var disable = (storage.isEditable(file) ? "": " disable");
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item file" + disable + main + hide + "'>" + 
                           self.displayFile(file) + "</div>";
         if (util.startsWith(file.mime,"image/")) images.push(line); 
-        else if (util.startsWith(file.mime,"text/") && !disable) files.push(line);
+        else if (!disable) files.push(line);
         else generated.push(line)
       }
     });
@@ -993,7 +993,7 @@ var UI = (function() {
           if (!cap) return;
           var fileName = "images/" + file.name;
           var name     = util.stemname(file.name); 
-          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1],generated:false});
+          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1]});
           self.insertText( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n', pos );
         };
       })(f);

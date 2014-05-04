@@ -299,7 +299,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function hasGeneratedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
-    return (contains(generatedExts,ext) || endsWith(fname,".final.tex"));
+    return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || stdpath.dirname(fname)==="out");
   }
 
   function toggleButton( elemName, text0, text1, action ) {
