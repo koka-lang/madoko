@@ -52,7 +52,7 @@ val comment     = @"!--[\s\S]*?-->"
 public val tagContent  = @"(?:""[^""]*""|'[^']*'|[^'"">])*"
 val closedTag   = @"(" + atag + @")[\s\S]+?</\1>"
 val soloTag     = @"" + atag + tagContent + ">"
-val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n{2,}|\s*$)"
+val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n+|\s*$)"
 
 // Attributes: allow escaped newline
 val rattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}" // allow optional colon for maraku compat
