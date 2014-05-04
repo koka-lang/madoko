@@ -312,7 +312,7 @@ var LocalRemote = (function() {
 
   LocalRemote.prototype.pushFile = function( file ) {
     var self = this;
-    var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding }
+    var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding, position: file.position }
     if (!localStorage) throw new Error("no local storage: " + file.path);
     localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
     var newFile = util.copy(file);
@@ -332,6 +332,7 @@ var LocalRemote = (function() {
       createdTime: obj.modifiedTime,
       encoding: obj.encoding || Encoding.fromExt(fpath),
       mime: obj.mime || util.mimeFromExt(fpath),
+      position: obj.position,
     };
     return Promise.resolved(file);
   }
@@ -475,6 +476,10 @@ function isEditable(file) {
   return (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path));
 }
 
+function getEditPosition(file) {
+  return (file.position || { lineNumber: 1, column: 1 });
+}
+
 var Storage = (function() {
   function Storage( remote ) {
     var self = this;
@@ -535,8 +540,9 @@ var Storage = (function() {
       if (file.content === content) return;
       file.encoding  = file.encoding || opts.encoding;
       file.mime      = file.mime || opts.mime;
-      file.modified   = file.modified || (content !== file.content);
+      file.modified  = file.modified || (content !== file.content);
       file.content   = content;
+      file.position  = opts.position || file.position;
       self._updateFile(file);
     }
     else {
@@ -549,6 +555,7 @@ var Storage = (function() {
         original  : content,
         createdTime: new Date(),
         modified  : false,
+        position  : opts.position,
       });
     }
   }
@@ -585,7 +592,6 @@ var Storage = (function() {
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
-      
     
     // check same content
     // var file = self.files.get(fpath);
@@ -620,6 +626,13 @@ var Storage = (function() {
     return opts;
   }
 
+  Storage.prototype.setEditPosition = function(fpath,pos) {
+    var self = this;
+    var file = self.files.get(fpath);
+    if (!file || !pos) return;
+    file.position = pos;    
+  }
+
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);
@@ -630,6 +643,7 @@ var Storage = (function() {
       file.modified  = false;
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
+      file.position  = file.position || opts.position;
       return file;
     });
   }
@@ -747,7 +761,7 @@ var Storage = (function() {
     }
     else if (util.startsWith(file.mime,"text/") && rxConflicts.test(file.content)) {
       // don't save files with merge conflicts
-      throw new Error( self._syncMsg("cannot save to server: resolve merge conflicts first!", "save to server") );
+      throw new Error( self._syncMsg(file,"cannot save to server: resolve merge conflicts first!", "save to server") );
     }
     else {
       // write back the client changes
@@ -767,7 +781,7 @@ var Storage = (function() {
     // file.createdTime < remoteFile.createdTime
     if (file.modified && canMerge) {
       if (rxConflicts.test(file.content)) {
-        throw new Error( self._syncMsg("cannot update from server: resolve merge conflicts first!", "update from server" ));
+        throw new Error( self._syncMsg(file, "cannot update from server: resolve merge conflicts first!", "update from server" ));
       }
       return self._syncMerge(diff,cursors,file,remoteFile);
     }
@@ -943,5 +957,6 @@ return {
   Encoding: Encoding,
   unpersistStorage: unpersistStorage,
   isEditable: isEditable,
+  getEditPosition: getEditPosition,
 }
 });

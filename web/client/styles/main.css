@@ -181,11 +181,11 @@ img#cloud {
 }
 
 .boxed {
-  border: 1px solid #888 !important;
+  border: 1px solid black !important;
   border-radius: 5px;
 }
 div.boxed {
-  padding: 1px;
+  padding: 1.4px;
 }
 
 /* Editor Header */
@@ -219,8 +219,7 @@ div.boxed {
 }
 
 #koka-console {
-  height: 10em;
-  border: 1px solid black;
+  height: 20em;
 }
 
 .msg-status {

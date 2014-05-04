@@ -177,7 +177,7 @@ var UI = (function() {
       //mode: madokoMode.mode,
       tabSize: 4,
       insertSpaces: true,
-      wrappingColumn: false,
+      //wrappingColumn: -1,
       automaticLayout: true,
       scrollbar: {
         vertical: "auto",
@@ -293,7 +293,7 @@ var UI = (function() {
     self.checkWrapLines = document.getElementById("checkWrapLines");
     self.checkWrapLines.onchange = function(ev) { 
       if (self.editor) {
-        self.editor.updateOptions( { wrappingColumn: (ev.target.checked ? 0 : false) } ); 
+        self.editor.updateOptions( { wrappingColumn: (ev.target.checked ? 0 : -1 ) } ); 
       }
     };
 
@@ -412,7 +412,7 @@ var UI = (function() {
         self.showSpinner(true,self.syncer);    
         self.storage.sync( diff, cursors ).then( function() {
           pos.lineNumber = cursors["/" + self.docName];
-          self.editor.setPosition(pos);
+          self.editor.setPosition(pos,true,true);
           //self.localSave();
         }).then( function() {          
           self.showSpinner(false,self.syncer);    
@@ -471,7 +471,15 @@ var UI = (function() {
 
   UI.prototype.setEditText = function( text, mode ) {
     var self = this;
-    self.editor.model.setValue(text,mode);    
+    var text0 = self.editor.getValue();
+    if (text0 !== text) {
+      var pos = self.editor.getPosition();
+      self.editor.model.setValue(text,mode);    
+      if (pos.lineNumber !== 1 && !mode) {
+        // set by a merge
+        self.editor.setPosition(pos,true,true);
+      }
+    }
     // self.setStale();
   }
 
@@ -658,6 +666,7 @@ var UI = (function() {
         var changed = self.changed;
         self.changed = false;
         self.stale = self.stale || changed;
+        self.storage.setEditPosition( self.editName, self.editor.getPosition() );
         if (changed && !self.refreshContinuous) return false;
         return self.stale;
       },
@@ -743,7 +752,7 @@ var UI = (function() {
     var self = this;
     var pos  = self.editor.getPosition();
     var text = self.getEditText();
-    self.storage.writeFile( self.editName, text ); // todo: not for readOnly 
+    self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly 
     var json = { 
       docName: self.docName, 
       editName: self.editName, 
@@ -809,32 +818,32 @@ var UI = (function() {
     var self = this;
     var loadEditor;
     self.state = State.Loading;            
-    if (fpath===self.editName) loadEditor = Promise.resolved() 
+    if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
-            var options = {
-              readOnly: !storage.isEditable(file),
-              //mode: file.mime,
-              lineNumbers: self.checkLineNumbers.checked,
-              wrappingColumn: self.checkWrapLines.checked ? 0 : false,
-            };
             var mode = Monaco.Editor.getOrCreateMode(file.mime).then( function(md) {
               if (md) return md;
               return Monaco.Editor.getOrCreateMode("text/plain");
             });
+            var options = {
+              readOnly: !storage.isEditable(file),
+              //mode: file.mime,
+              //mode: mode, // don't set the mode here or Monaco runs out-of-stack
+              lineNumbers: self.checkLineNumbers.checked,
+              wrappingColumn: self.checkWrapLines.checked ? 0 : -1,
+            };
             self.editName = file.path;
             self.setEditText(file.content, mode);
-            self.editor.updateOptions(options);
-            
-            self.onFileUpdate(file); 
-            self.editSelect();
+            self.onFileUpdate(file); // will cause reload of text
+            self.editor.updateOptions(options);            
+            return storage.getEditPosition(file);
       });
-    return loadEditor.then( function() {      
+    return loadEditor.then( function(pos) {      
       if (pos) {
-        self.editor.setPosition(pos);
-        self.editor.revealPosition( pos, true, true );
+        self.editor.setPosition(pos, true, true );
+        //self.editor.revealPosition( pos, true, true );
       }
     }).always( function() { 
       self.state = State.Normal; 
@@ -1165,6 +1174,7 @@ var UI = (function() {
         self.fileDisplay = fileDisplay;
         self.editSelectHeader.innerHTML = fileDisplay;
       }
+      self.setEditText(file.content);
     }
     self.editSelect();
   }
