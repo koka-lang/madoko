@@ -396,7 +396,13 @@ var UI = (function() {
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
           var path = elem.getAttribute("data-file");
           if (path) {
-            self.editFile(path).then(undefined, function(err){ self.onError(err); });
+            var mime = util.mimeFromExt(path);
+            if (mime==="application/pdf" || mime==="text/html" || util.startsWith(mime,"image/")) {
+              return self.openInWindow( path, mime );
+            }
+            else {
+              return self.editFile(path);            
+            }
           }
         }
       });
@@ -931,10 +937,24 @@ var UI = (function() {
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
-  function saveContent( name, mime, content ) {
+  function saveUserContent( name, mime, content, tryOpenFirst ) {
     var blob = new Blob([content], { type: mime });
     var url = URL.createObjectURL(blob);
-    var saveBlob = navigator.saveBlob || navigator.msSaveBlob;
+    setTimeout( function() { URL.revokeObjectURL(url); }, 250 );
+
+    if (tryOpenFirst) {
+      // IE will throw an exception,
+      // Chrome opens a window but does not allow the user to save the content
+      // Firefox works
+      try {
+        window.open(url,name);
+        return;
+      }
+      catch(exn) {}  
+    }
+
+    // The rest of the code handles all cases to allow saving the content locally
+    var saveBlob = navigator.saveOrOpenBlob || navigator.msSaveOrOpenBlob || navigator.saveBlob || navigator.msSaveBlob;
     var link = document.createElement("a");
     if ("download" in link) {
       link.setAttribute("href",url);
@@ -955,17 +975,22 @@ var UI = (function() {
     }
   }
 
+  UI.prototype.openInWindow = function( path, mime ) {
+    var self = this;
+    if (!mime) mime = util.mimeFromExt(path);            
+    return self.storage.readFile( path ).then( function(file) {
+      var content = storage.Encoding.decode(file.encoding, file.content);
+      saveUserContent( util.basename(path), mime, content );
+    });
+  }
 
   UI.prototype.generatePdf = function() {
     var self = this;
     var ctx = { round: 0, docname: self.docName, pdf: true, includeImages: true };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
-        var name = util.changeExt(self.docName,".pdf");
-        return self.storage.readFile("out/" + name ).then( function(file) {
-          var content = storage.Encoding.decode(file.encoding, file.content);
-          saveContent( name, "application/pdf", content );          
-        });
+        var name = "out/" + util.changeExt(self.docName,".pdf");
+        return self.openInWindow( name, "application/pdf" );
       })
     );
   }
@@ -974,9 +999,10 @@ var UI = (function() {
     var self = this;
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        var name = util.changeExt(self.docName,".html");
-        self.storage.writeFile("out/" + name, content );
-        saveContent( name, "text/html", content );
+        var name = "out/" + util.changeExt(self.docName,".html");
+        self.storage.writeFile( name, content );
+        return self.openInWindow( name, "text/html" );
+        //saveUserContent( name, "text/html", content );
       })
     );
   }
