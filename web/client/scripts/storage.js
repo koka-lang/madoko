@@ -207,9 +207,7 @@ var Onedrive = (function() {
     return onedriveWriteFile( file, "", self.folderId ).then( function(resp) {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
-      var newFile = util.copy(file);
-      newFile.createdTime = new Date(info.updated_time);
-      return newFile;
+      return util.dateFromISO(info.updated_time);
     });
   }
 
@@ -221,7 +219,7 @@ var Onedrive = (function() {
         var file = {
           path: fpath,
           content: content,
-          createdTime: new Date(info.updated_time),
+          createdTime: util.dateFromISO(info.updated_time),
         };
         return file;
       });
@@ -231,7 +229,7 @@ var Onedrive = (function() {
   Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return self._getFileInfo( fpath ).then( function(info) {
-      return (info ? new Date(info.updated_time) : null);
+      return (info ? util.dateFromISO(info.updated_time) : null);
     });
   }
 
@@ -315,9 +313,7 @@ var LocalRemote = (function() {
     var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding, position: file.position }
     if (!localStorage) throw new Error("no local storage: " + file.path);
     localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
-    var newFile = util.copy(file);
-    newFile.createdTime = obj.modifiedTime;
-    return Promise.resolved(newFile);
+    return Promise.resolved(obj.modifiedTime);
   }
 
   LocalRemote.prototype.pullFile = function( fpath ) {
@@ -430,6 +426,9 @@ function unpersistStorage( obj ) {
     }
     if (typeof file.createdTime === "string") {
       file.createdTime = new Date(file.createdTime);
+    }
+    else if (!file.createdTime) {
+      file.createdTime = new Date(0);
     }
     delete file.generated;
   });
@@ -604,9 +603,10 @@ var Storage = (function() {
 
   Storage.prototype._fireEvent = function( type, obj ) {
     var self = this;
+    if (!obj) obj = {};
+    if (!obj.type) obj.type = type;        
     self.listeners.forEach( function(listener) {
       if (listener) {
-        if (!obj.type) obj.type = type;
         if (listener.listener) {
           listener.listener.handleEvent(obj);
         }
@@ -767,12 +767,13 @@ var Storage = (function() {
       // write back the client changes
       // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
       var file0 = util.copy(file);
-      return self.remote.pushFile( file0 ).then( function(newFile) {
+      return self.remote.pushFile( file0 ).then( function(createdTime) {
         //newFile.modified = false;
         var file1 = self.files.get(file.path);
         if (file1) { // could be deleted in the mean-time?
-          file1.original = newFile.content;
+          file1.original = file0.content;
           file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
+          file1.createdTime = createdTime;
           self._updateFile(file1);
         }
         return self._syncMsg(file, "save to server"); 
@@ -807,6 +808,7 @@ var Storage = (function() {
     return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                         original, remoteFile.content, file.content).then( 
       function(res) {
+        self._fireEvent("flush", { path: file.path }); // save editor state
         if (content !== file.content) {
           // modified in the mean-time!
           throw new Error( self._syncMsg(file,"merged from server, but modified in the mean-time","merge from server"));
@@ -828,12 +830,12 @@ var Storage = (function() {
           file0.content  = res.merged;
           file0.modified = true;
           self._updateFile(file0);
-          return self.remote.pushFile(file0).then( function(newFile) {
+          return self.remote.pushFile(file0).then( function(createdTime) {
             var file1 = self.files.get(file.path);
             if (file1) { // could be deleted?
-              file1.modified = (file1.content !== file0.content);
-              file1.createdTime = newFile.createdTime;
-              file1.original    = newFile.content;
+              file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
+              file1.createdTime = createdTime;
+              file1.original    = file0.content;
               self._updateFile(file1);
             }
             return self._syncMsg( file, "merge from server" );
