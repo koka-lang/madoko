@@ -766,10 +766,15 @@ var Storage = (function() {
     else {
       // write back the client changes
       // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
-      return self.remote.pushFile( file ).then( function(newFile) {
-        newFile.modified = false;
-        newFile.original = newFile.content;
-        self._updateFile(newFile);
+      var file0 = util.copy(file);
+      return self.remote.pushFile( file0 ).then( function(newFile) {
+        //newFile.modified = false;
+        var file1 = self.files.get(file.path);
+        if (file1) { // could be deleted in the mean-time?
+          file1.original = newFile.content;
+          file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
+          self._updateFile(file1);
+        }
         return self._syncMsg(file, "save to server"); 
       });
     }
@@ -798,9 +803,14 @@ var Storage = (function() {
   Storage.prototype._syncMerge = function(diff,cursors,file,remoteFile) {
     var self = this;
     var original = (file.original != null ? file.original : file.content);
+    var content  = file.content;
     return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                         original, remoteFile.content, file.content).then( 
       function(res) {
+        if (content !== file.content) {
+          // modified in the mean-time!
+          throw new Error( self._syncMsg(file,"merged from server, but modified in the mean-time","merge from server"));
+        }
         if (cursors["/" + file.path]) {
           cursors["/" + file.path] = res.cursorLine;
         }
@@ -814,12 +824,19 @@ var Storage = (function() {
         }
         else {
           // write back merged result
-          remoteFile.content  = res.merged;
-          return self.remote.pushFile(remoteFile).then( function(newFile) {
-            newFile.modified= false;
-            newFile.original = newFile.content;
-            self._updateFile(newFile);
-            return self._syncMsg( file, "merge from server" );      
+          var file0 = util.copy(remoteFile);
+          file0.content  = res.merged;
+          file0.modified = true;
+          self._updateFile(file0);
+          return self.remote.pushFile(file0).then( function(newFile) {
+            var file1 = self.files.get(file.path);
+            if (file1) { // could be deleted?
+              file1.modified = (file1.content !== file0.content);
+              file1.createdTime = newFile.createdTime;
+              file1.original    = newFile.content;
+              self._updateFile(file1);
+            }
+            return self._syncMsg( file, "merge from server" );
           });
         }
       }
