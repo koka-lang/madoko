@@ -14,8 +14,7 @@ var Runner = (function() {
   function Runner() {
     var self = this;
     
-    //self.files = new util.Map();
-    self.sendFiles = [];
+    self.sendFiles = new util.Map();
     self.storage = null;
 
     self.options = madoko.initialOptions();
@@ -36,7 +35,7 @@ var Runner = (function() {
       self.storage.addEventListener("update",self);
       self.storage.forEachFile( function(file) {
         if (file.mime !== "application/pdf") {
-          self.sendFiles.push( { 
+          self.sendFiles.set( file.path, { 
             path: file.path,
             encoding: file.encoding,
             mime: file.mime,
@@ -61,7 +60,7 @@ var Runner = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update") {
-      self.sendFiles.push( { 
+      self.sendFiles.set( ev.file.path, { 
         path: ev.file.path, 
         content: ev.file.content,
         encoding: ev.file.encoding,
@@ -90,7 +89,13 @@ var Runner = (function() {
     }
 
     // todo: should we wait for image url resolving?
-    var images = res.filesReferred.map( function(file) {
+    var filesReferred = res.filesReferred.concat( [
+                          util.combine("out", util.changeExt(res.name, ".html")),
+                          util.combine("out", util.changeExt(res.name, ".pdf")) 
+                        ]);
+    var referred = filesReferred.map( function(file) {
+      return self.loadFile(ctx.round, file, true);
+      /*      
       if (util.hasImageExt(file)) {
         return self.loadFile(ctx.round, file, true);
       }
@@ -98,6 +103,7 @@ var Runner = (function() {
         return self.loadFile(ctx.round, file, true);
       }
       else return Promise.resolved(0);
+      */
     });
     
     var texts = res.filesRead.map( function(file) {
@@ -108,7 +114,7 @@ var Runner = (function() {
     if (self.storage) self.storage.collect( res.filesReferred.concat(res.filesRead) );
 
     // when we get all files from remote storage..
-    return Promise.when([].concat(images,texts)).then( function(filesRead) {
+    return Promise.when([].concat(referred,texts)).then( function(filesRead) {
       var readCount = 0;
       if (filesRead) filesRead.forEach( function(n) { readCount += n; });
 
@@ -131,7 +137,7 @@ var Runner = (function() {
     });
   }
 
-  Runner.prototype.runMadoko = function(text,ctx) 
+  Runner.prototype.runMadoko = function(text,ctx,options) 
   {
     var self = this;
     util.message( "update " + ctx.round + " start", util.Msg.Trace );
@@ -139,10 +145,10 @@ var Runner = (function() {
       type   : "run",
       content: text,
       name   : ctx.docname,
-      options: self.options,
-      files  : self.sendFiles      
+      options: options || self.options,
+      files  : self.sendFiles.elems(),      
     };
-    self.sendFiles = [];
+    self.sendFiles.clear();
     return self.madokoWorker.postMessage( msg ).then( function(res) {
       return self.onMadokoComplete(res,ctx);
     });
@@ -152,10 +158,12 @@ var Runner = (function() {
   {
     var self = this;
     var ctx = { round: -1, includeImages: true, docname: docName };
-    return self.runMadoko( text, ctx ).then( function(res) {
+    var options = util.copy(self.options);
+    options.lineNo = 0;
+    return self.runMadoko( text, ctx, options ).then( function(res) {
       if (res.runAgain) {
         ctx.round = -2;
-        return self.runMadoko( text, ctx ). then( function(res2) {
+        return self.runMadoko( text, ctx, options ). then( function(res2) {
           return res2.content;
         });
       }

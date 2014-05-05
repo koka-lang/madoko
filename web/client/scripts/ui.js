@@ -188,7 +188,7 @@ var UI = (function() {
         //horizontalHasArrows: true,
         //arrowSize: 10,
       }
-    });
+    });    
 
     // synchronize on scrolling
     self.syncInterval = 0;
@@ -475,6 +475,7 @@ var UI = (function() {
     if (text0 !== text) {
       var pos = self.editor.getPosition();
       self.editor.model.setValue(text,mode);    
+      self.editContent = text;
       if (pos.lineNumber !== 1 && !mode) {
         // set by a merge
         self.editor.setPosition(pos,true,true);
@@ -748,11 +749,22 @@ var UI = (function() {
     );
   }
 
-  UI.prototype.localSave = function(minimal) {
+  // Save editor text to storage
+  UI.prototype.flush = function(path) {
     var self = this;
+    if (path && path !== self.editName) return;
+
     var pos  = self.editor.getPosition();
     var text = self.getEditText();
-    self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly 
+    self.editContent = text;
+    self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly     
+  }
+
+  // save entire state to local disk
+  UI.prototype.localSave = function(minimal) {
+    var self = this;
+    self.flush();
+    var pos  = self.editor.getPosition();    
     var json = { 
       docName: self.docName, 
       editName: self.editName, 
@@ -836,7 +848,7 @@ var UI = (function() {
             };
             self.editName = file.path;
             self.setEditText(file.content, mode);
-            self.onFileUpdate(file); // will cause reload of text
+            self.onFileUpdate(file); // update display etc.
             self.editor.updateOptions(options);            
             return storage.getEditPosition(file);
       });
@@ -962,7 +974,9 @@ var UI = (function() {
     var self = this;
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        saveContent( util.changeExt(self.docName,".html"), "text/html", content );
+        var name = util.changeExt(self.docName,".html");
+        self.storage.writeFile("out/" + name, content );
+        saveContent( name, "text/html", content );
       })
     );
   }
@@ -1164,6 +1178,9 @@ var UI = (function() {
     if (ev.type === "update" && ev.file) {
       self.onFileUpdate(ev.file);
     }
+    else if (ev.type === "flush") {
+      self.flush( ev.path ); 
+    }
   }
 
   UI.prototype.onFileUpdate = function(file) {
@@ -1174,7 +1191,9 @@ var UI = (function() {
         self.fileDisplay = fileDisplay;
         self.editSelectHeader.innerHTML = fileDisplay;
       }
-      self.setEditText(file.content);
+      if (self.editContent !== file.content) { // only update edit text if content update 
+        self.setEditText(file.content);
+      }
     }
     self.editSelect();
   }

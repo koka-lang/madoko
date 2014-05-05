@@ -83,6 +83,7 @@ require(["../scripts/util","webmain","highlight.js"].concat(languages), function
         {
           self.postMessage( {
             messageId  : req.messageId, // message id is required to call the right continuation
+            name       : req.name,
             content    : md,
             time       : (Date.now() - t0).toString(),
             options    : options1,
