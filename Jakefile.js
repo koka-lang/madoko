@@ -108,7 +108,8 @@ task("webcopy", ["web"], function() {
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
   
   // copy style files
-  var js = new jake.FileList().include(path.join(styleDir,"*"));
+  var js = new jake.FileList().include(path.join(styleDir,"*.css"))
+                              .include(path.join(styleDir,"*.mdk"));
   jake.mkdirP(path.join(webclient,styleDir));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   //jake.cpR(path.join(styleDir,"madoko.css"), webclient);

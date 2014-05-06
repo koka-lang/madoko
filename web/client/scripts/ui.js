@@ -858,7 +858,8 @@ var UI = (function() {
             self.editor.updateOptions(options);            
             return storage.getEditPosition(file);
       });
-    return loadEditor.then( function(pos) {      
+    return loadEditor.then( function(posx) {      
+      if (!pos) pos = posx;
       if (pos) {
         self.editor.setPosition(pos, true, true );
         //self.editor.revealPosition( pos, true, true );
@@ -1248,4 +1249,4 @@ var UI = (function() {
 
 // module
 return UI;
-});
+}); 
