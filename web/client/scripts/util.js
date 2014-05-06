@@ -822,6 +822,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         if (res.error && res.error.message) {
           msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
         }      
+        else if (res.message) {
+          msg = msg + ": " + res.message;
+        }
       }
       else {
         msg = msg + ": " + req.responseText;

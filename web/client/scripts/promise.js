@@ -1,7 +1,21 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
+if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
   function delayed(action,delay) {
-    setTimeout( function(){ action(); }, delay || 1 );
+    if (!delay && typeof setImmediate !== "undefined") {
+      setImmediate( function(){ action(); } );  // on NodeJS
+    }
+    else { 
+      setTimeout( function(){ action(); }, delay || 0 );
+    }
   }
 
   function promiseWhen() {
@@ -77,7 +91,9 @@ define([],function() {
       }
     }
 
-    Promise.when = promiseWhen;
+    Promise.when = function(promises) { 
+      return promiseWhen(promises);
+    }
 
     Promise.rejected = function(err) {
       var promise = new Promise();

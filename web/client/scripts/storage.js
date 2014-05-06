@@ -681,6 +681,12 @@ var Storage = (function() {
             throw new Error("cannot find file: " + fpath);
           }
         }
+
+        // only try standard style if necessary
+        if (!util.hasEmbedExt(fpath)) {
+          return noContent();
+        }
+
         // try to find the file as a madoko standard style on the server..
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;

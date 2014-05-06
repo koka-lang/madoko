@@ -204,13 +204,24 @@ var Runner = (function() {
     var params = {};    
     params.docname = ctx.docname;
     if (ctx.pdf) params.pdf = ctx.pdf;
-    params["/" + params.docname] = { mime: util.mimeFromExt(ctx.docname), content: text, encoding: storage.Encoding.fromExt(ctx.docname) };
+    params.files = [];
+    params.files.push( { 
+      path: params.docname,
+      mime: util.mimeFromExt(ctx.docname), 
+      encoding: storage.Encoding.fromExt(ctx.docname),
+      content: text, 
+    });
     
     if (self.storage) {
       self.storage.forEachFile(function(file) {
         if (file.path === params.docname) return; // use the latest version
         if (util.startsWith(file.mime, "text/") || (util.startsWith(file.mime, "image/") && ctx.includeImages)) {
-          params["/" + file.path] = { mime: file.mime, content: file.content, encoding: file.encoding };
+          params.files.push( { 
+            path: file.path,
+            mime: file.mime, 
+            content: file.content, 
+            encoding: file.encoding 
+          });
         }
       });
     }
@@ -218,15 +229,13 @@ var Runner = (function() {
     return util.requestPOST( "/rest/run", params).then( function(data) {
       var time = (Date.now() - t0).toString() + "ms";
       util.message(data.stdout + data.stderr, util.Msg.Tool);
-      util.properties(data).forEach(function(name) {
-        if (name.substr(0,1) !== "/") return;
-        //madoko.writeTextFile( name.substr(1), data[name] );
-        var fname = name.substr(1); 
-        var file  = (typeof data[name] === "object" ? data[name] : 
-                      { content: data[name], encoding: storage.Encoding.fromExt(fname), mime: util.mimeFromExt(fname) });
-        util.message("server sent: " + fname, util.Msg.Trace );
+      data.files.forEach( function(file) {
+        util.message("server sent: " + file.path, util.Msg.Trace );
         if (self.storage) {
-          self.storage.writeFile(fname,file.content,file);
+          self.storage.writeFile( file.path, file.content, {
+            encoding: file.encoding,
+            mime: file.mime,
+          });
         }        
       })
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );

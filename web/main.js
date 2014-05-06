@@ -1,29 +1,114 @@
-var cp     = require("child_process");
-var mkdirp = require("mkdirp");
-var fs    = require("fs");
-var path = require("path");
-var crypto = require("crypto");
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
+var cp      = require("child_process");
+var mkdirp  = require("mkdirp");
+var fs      = require("fs");
+var path    = require("path");
+var crypto  = require("crypto");
 var express = require('express');
-var qs = require("querystring");
-var https = require("https");
-var http = require("http");
+var https   = require("https");
 
-var app = express();
-var previewApp = express();
+// -------------------------------------------------------------
+// Wrap promises
+// We use promises mostly to reliable catch exceptions 
+// -------------------------------------------------------------
+var Promise = require("./client/scripts/promise.js");
 
-var bodyParser = require("body-parser");
-var cookieParser = require("cookie-parser");
-var cookieSession = require("cookie-session");
+function ensureDir(dir) {
+  return new Promise( function(cont) { mkdirp(dir,cont); } );
+}
 
-app.use(bodyParser({limit: "5mb"}));
-app.use(cookieParser("@MadokoRocks!@!@!"));
-app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
+function writeFile( path, content, options ) {
+  return new Promise( function(cont) {
+    fs.writeFile( path, content, options, cont );
+  });
+}
 
+function readFile( path, options ) {
+  return new Promise( function(cont) {
+    fs.readFile( path, options, cont );
+  });
+}
+
+
+function onError(res,err) {
+  if (!err) err = "unknown error";
+  var result = {
+    message: err.message || (err.killed ? "server time-out" : err.toString()),
+    code: err.code || 0,
+  };
+  result.httpCode = err.httpCode || (startsWith(result.message,"unauthorized") ? 403 : 500);
+  if (err.stdout) result.stdout = err.stdout;
+  if (err.stderr) result.stderr = err.stderr;
+
+  console.log("error (" + result.httpCode.toString() + "): " + result.message);
+  res.send( result.httpCode, result );
+}
+
+function event( res, action ) {
+  try {
+    var x = action();
+    if (x && x.then) {
+      x.then( function(result) {
+        res.send(200,result);
+      }, function(err) {
+        onError(res,err);
+      });
+    }
+    else {
+      res.send(200,x);
+    }
+  }
+  catch(err) {
+    onError(res,err);
+  }
+}
+
+// -------------------------------------------------------------
+// Constants
+// -------------------------------------------------------------
 
 var cookieAge = 20000; //24 * 60 * 60000;
 var userRoot = "users";
 var userHashLimit = 8;
 var userCount = 0;
+
+// -------------------------------------------------------------
+// Set up server app 
+// -------------------------------------------------------------
+var app = express();
+
+var bodyParser = require("body-parser");
+var cookieParser = require("cookie-parser");
+var cookieSession = require("cookie-session");
+
+var limit = 5; // max file-size limit in mb
+
+app.use(bodyParser({limit: limit.toString() + "mb"}));
+app.use(cookieParser("@MadokoRocks!@!@!"));
+app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
+
+app.use(function(err, req, res, next){
+  if (!err) return next();
+  onError(res,err);
+});
+
+
+// -------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------
+
+function startsWith(s,pre) {
+  if (!pre) return true;
+  if (!s) return false;
+  return (s.substr(0,pre.length) === pre);
+}
 
 function normalize(fpath) {
   return path.normalize(fpath).replace(/\\/g,"/");
@@ -34,7 +119,7 @@ function combine() {
   for(var i = 0; i < arguments.length; i++) {
     p = path.join(p,arguments[i]);
   }
-  return p;
+  return normalize(p);
 }
 
 // Get the properties of an object.
@@ -97,14 +182,9 @@ function encodingFromExt(fname) {
 }
 
 
-// error response
-function sendError(res,err,result,code) {
-  var msg = (typeof err === "string" ? err : "");
-  if (!msg) msg = "unknown error";
-  if (!result) result = {};
-  result.error = (typeof err === "object" ? err : { message: (err ? err.toString() : "unknown") });
-  return res.send(code || 401, result);
-}
+// -------------------------------------------------------------
+// General server helpers
+// -------------------------------------------------------------
 
 // Get a unique user path for this session.
 function getUserPath( req,res ) {
@@ -118,142 +198,104 @@ function getUserPath( req,res ) {
   return userRoot + "/" + userpath;
 }
 
+// Check of a file names is root-relative (ie. relative and not able to go to a parent)
+// and that it contains only [A-Za-z0-9_\-] characters.
 function isValidFileName(fname) {
-  return (/^(?![\.\/])([\w\-]|\.\w|\/\w)+$/.test(fname));
-}
-
-// Download an image
-function downloadImage( fpath, url, cont ) {
-  https.get(url, function(res) {
-    res.setEncoding("binary");
-
-    var body = "";
-    res.on('data', function(d) {
-      body += d;
-    })
-    res.on('end', function() {
-      var obj = null;
-      try { obj = JSON.parse(body); } catch(exn) {};
-      if (obj) {
-        var msg = "error: could not download image: " + path.basename(fpath);
-        if (obj.error && obj.error.message) {
-          msg += "\n  " + obj.error.message;
-        }
-        console.log(msg);
-        return cont(msg);
-      }
-      console.log("image downloaded: " + fpath);
-      fs.writeFile( fpath, body, 'binary', cont );
-    });
-  }).on('error', function(err) {
-    console.log("error while downloading image: " + err);
-    cont(err);
-  });  
+  return (/^(?![\/\\])(\.(?=[\/\\]))?([\w\-]|[\.\/\\]\w)+$/.test(fname));
 }
 
 
-function asyncForEach( xs, asyncAction, cont ) {
-  if (!xs || xs.length===0) return cont(0,[]);
-  var count = xs.length;
-  var objs  = [];
-  var err   = null;
-  xs.forEach( function(x) {
-    function localCont(xerr,obj) {
-      objs.push(obj);
-      if (xerr) err = xerr;
-      count--;
-      if (count <= 0) cont(err,objs);
-    }
-    try {
-      asyncAction(x, localCont );
-    }
-    catch(exn) {
-      localCont(exn);
-    }
-  });
-}
-
-// Save files to be processed.
-function saveFiles( userPath, files, cont ) {
-  asyncForEach( properties(files),  function(fname,xcont) {
-    if (!fname || fname.substr(0,1) !== "/") return xcont();
-    var file = files[fname];
-    fname = fname.substr(1);
-    if (!isValidFileName(fname)) return xcont("Invalid file name: " + fname);
-    var fpath = path.join(userPath,fname); 
-    console.log("writing file: " + fname + " (" + file.encoding + ")");
-    var dir = path.dirname(fpath);
-    mkdirp(dir, function(err) {
-      if (err) return xcont(err);
-      return fs.writeFile( fpath, file.content, {encoding:file.encoding}, xcont );
-    });
-  }, cont );
-}
+// -------------------------------------------------------------
+// Madoko
+// -------------------------------------------------------------
 
 var outdir = "out";
 var stdflags = "--odir=" + outdir + " --sandbox";
 
+
+// Save files to be processed.
+function saveFiles( userpath, files ) {
+  return Promise.when( files.map( function(file) {
+    if (!isValidFileName(file.path)) return Promise.reject( new Error("unauthorized file name: " + file.path) );
+    var fpath = combine(userpath,file.path);
+    console.log("writing file: " + fpath + " (" + file.encoding + ")");
+    var dir = path.dirname(fpath);
+    return ensureDir(dir).then( function() {
+      return writeFile( fpath, file.content, {encoding: file.encoding} );
+    });
+  }));
+}
+
+
 // Read madoko generated files.
-function readFiles( userpath, docname, pdf, cont ) {
-  var ext = path.extname(docname);
-  var stem = docname.substr(0, docname.length - ext.length );
+function readFiles( userpath, docname, pdf ) {
+  var ext    = path.extname(docname);
+  var stem   = docname.substr(0, docname.length - ext.length );
   var fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
-            .concat( pdf ? [".pdf"] : [] )
-            .map( function(s) { return (outdir ? outdir + "/" : "") + stem + s; });
+                .concat( pdf ? [".pdf"] : [] )
+                .map( function(s) { return combine( outdir, stem + s ); });
   console.log("sending back:\n" + fnames.join("\n"));
-  var files = {};
-  asyncForEach( fnames, function(fname,xcont) {    
-    fs.readFile( path.join(userpath,fname), function(err,data) {
-      var file = { 
-        encoding: encodingFromExt(fname),
-        mime: mimeFromExt(fname),
-      };
-      file.content = (err ? "" : data.toString(file.encoding));
-      console.log("send as " + file.encoding + ": " + fname);
-      files["/" + fname] = file;
-      xcont();
-    });
-  }, function(err) {
-    cont(err,files);
-  });
+  return Promise.when( fnames.map( function(fname) {
+    // paranoia
+    if (!isValidFileName(fname)) return Promise.reject( new Error("unauthorized file name: " + fname) );
+    var fpath = combine(userpath,fname);
+    return readFile( fpath ).then( function(buffer) {
+        var encoding = encodingFromExt(fname);
+        return {
+          path: fname,
+          encoding: encoding,
+          mime: mimeFromExt(fname),
+          content: buffer.toString(encoding),
+        };
+      }, function(err) {
+        console.log("Unable to read: " + fpath);
+        return {
+          path: fname,
+          encoding: encodingFromExt(fname),
+          mime: mimeFromExt(fname),
+          content: "",
+        };
+      }
+    );
+  }));  
 }
 
-// run madoko
-function runMadoko( userPath, docname, flags, timeout, cont ) {
+// execute madoko program
+function madokoExec( userpath, docname, flags, timeout ) {
   var command = /* "madoko */ "node ../../client/lib/cli.js " + flags + " " + stdflags + " "  + docname;
-  console.log("> " + command);
-  cp.exec( command, {cwd: userPath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont); 
+  return new Promise( function(cont) {
+    console.log("> " + command);
+    cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
+  }); 
+}
+
+// Run madoko program
+function madokoRun( userpath, docname, files, pdf ) {
+  return saveFiles( userpath, files ).then( function() {
+    var flags = " -mmath-embed:512 -membed:512 " + (pdf ? " --pdf" : "");
+    return madokoExec( userpath, docname, flags, (pdf ? 60000 : 30000) ).then( function(stdout,stderr) {
+      return readFiles( userpath, docname, pdf ).then( function(filesOut) {
+        return {
+          files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
+          stdout: stdout,
+          stderr: stderr,
+        };
+      });
+    }, function(err,stdout,stderr) {
+      err.stdout = stdout;
+      err.stderr = stderr;
+      throw err;
+    });
+  });
 }
 
 
-app.post('/rest/run', function(req,res) {
-  var userpath = getUserPath(req,res);
-  var docname = req.body.docname || "document.mdk";
-  var result = { userpath: userpath };
-  //console.log(req.body);
-  console.log(properties(req.body));
-  saveFiles( userpath, req.body, function(err1) {
-    if (err1) return sendError(res,err1.toString());
-    var flags = " -mmath-embed:512 -membed:512 " + (req.body.pdf ? " --pdf" : "");
-    runMadoko( userpath, docname, flags, (req.body.pdf ? 60000 : 30000), function(err2,stdout,stderr) {
-      result.stdout = stdout;
-      result.stderr = stderr;
-      if (err2) {
-        var msg = (err2.killed ? "server time-out" : err2.toString());
-        return sendError(res,msg,result);
-      } 
-      readFiles( userpath, docname, req.body.pdf, function(err3,files) {
-        if (err3) return sendError(rs,err3.toString(),result);
-        console.log(result);
-        //console.log(files);
-        extend(result,files);
-        res.send( result );
-      });
-    });
-  });
-});
 
-var callbackPage = 
+// -------------------------------------------------------------
+// Live authentication redirection
+// -------------------------------------------------------------
+
+var liveCallbackPage = 
 ['<html>',
 '<head>',
 '  <title>Madoko Live Callback</title>',
@@ -264,156 +306,71 @@ var callbackPage =
 '</html>'
 ].join("\n");
 
-app.get("/redirect", function(req,res) {
-  console.log("redirect GET");
-  res.send(callbackPage);
-});
 
-function onedriveGet(query,cont) {
-  https.get(query, function(res) {
-    res.setEncoding("binary");
-    //console.log("statusCode: ", res.statusCode);
-    //console.log("headers: ", res.headers);
-    var body = "";
-    res.on('data', function(d) {
-      body += d;
-    })
-    res.on('end', function() {
-      cont(new Buffer(body) );
+// -------------------------------------------------------------
+// Onedrive request redirection:
+// Because onedrive does not support CORS we redirect all file
+// content request over our server
+// -------------------------------------------------------------
+
+function requestGET(query,encoding) {
+  return new Promise( function(cont) {
+    var req = https.get(query, function(res) {
+      if (encoding) res.setEncoding(encoding);
+      var body = "";
+      res.on('data', function(d) {
+        body += d;
+        if (body.length > limit * mb) {
+          req.abort();
+          cont("");
+        }
+      });
+      res.on('end', function() {
+        cont( (encoding ? new Buffer(body,encoding) : body) );
+      });
     });
   });  
 }
 
+
+
+// -------------------------------------------------------------
+// The server entry points
+// -------------------------------------------------------------
+
+app.post('/rest/run', function(req,res) {
+  event( res, function() {
+    var userpath = getUserPath(req,res);
+    console.log("run request: " + userpath);
+    var docname  = req.body.docname || "document.mdk";
+    var files    = req.body.files || [];
+    var pdf      = req.body.pdf || false;
+    return madokoRun( userpath, docname, files, pdf );  
+  });  
+});
+
+app.get("/redirect", function(req,res) {
+  //event( res, function() {
+    console.log("redirect authentication");
+    res.send(liveCallbackPage);
+  //});
+});
+
+
 app.get("/onedrive", function(req,res) {
-  console.log("onedrive");
-  console.log(req.query);
-  onedriveGet(req.query.url, function(body) {
-    //console.log("downloaded: " + body);
-    res.send(body);
+  event( res, function() {
+    console.log("onedrive get: " + req.query.url );
+    return requestGET( req.query.url, "binary" );
   });
 });
 
-app.get('/rest/download/:fname', function(req,res) {
-  var userpath = getUserPath(req,res);
-  var fname  = req.params.fname;
-  if (!isValidFileName(fname)) return sendError( res, "Invalid file name: " + fname);
-  console.log("download: " + req.path + ": " + combine(userpath,outdir,fname));
-
-  var url = combine("/temp", path.basename(userpath), outdir, fname);
-  console.log("redirect to: " + url);
-  res.redirect(url);
-  /*
-  fs.readFile( path.join(userpath,fname), function(err,data) {
-    console.log("download result: " + err);
-    if (err) return res.send(403); // TODO: improve error result;
-    //res.attachment(fname);
-    var ext = path.extname(fname);
-    res.type(ext);
-    res.send(data);
-  });
-*/
-});
-
-/*
-
-var liveClientId = "000000004C113E9D";
-function liveGetAccessToken(code, cont) {
-  var oauthurl = "https://login.live.com/oauth20_token.srf";
-  var params = {
-    client_id:     liveClientId,
-    client_secret: "uZg0D-Mly-1UXtlyga5MQRsOH1PR0mL0",
-    redirect_uri:  "http://madoko.cloudapp.net:8080/redirect",
-    code:          code,
-    grant_type:    "authorization_code"
-  };
-  var query = oauthurl + "?" + qs.stringify(params);
-  console.log("GET: " + query);
-
-  https.get(query, function(res) {
-    console.log("statusCode: ", res.statusCode);
-    console.log("headers: ", res.headers);
-
-    var body = "";
-    res.on('data', function(d) {
-      body += d;
-    })
-    res.on('end', function() {
-      cont(0,JSON.parse(body));
-    });
-  });
-}
-
-var oauthCallbackPage = 
-['<html>',
-'<head>',
-'   <title>Madoko Live Callback</title>',
-'</head>',
-'<body>',
-'   <script src="//js.live.net/v5.0/wl.js" type="text/javascript">alert("hi");</script>',
-'</body>',
-'</html>'
-].join("\n");
-
-app.get("/redirect/oauth", function(req,res) {
-  var code = req.query.code;
-  console.log("req: " + req.query);
-  console.log("code: " + code);
-  //console.log("cookies: " + req.cookies);
-  if (!code) {
-  res.end(500);
-  }
-  liveGetAccessToken(code, function(err,info) {
-    console.log(req.host);
-    console.log(info);
-    var wl_auth = qs.parse(req.cookies.wl_auth);
-    console.log(wl_auth);
-    wl_auth.access_token = info.access_token;
-    wl_auth.authentication_token = info.authentication_token;
-    wl_auth.scope = info.scope;
-    wl_auth.expires_in = info.expires_in;
-    if (info.refresh_token) {
-      wl_auth.refresh_token = info.refresh_token;
-    }
-    console.log(wl_auth);
-    var age = parseInt(info.expires_in) * 1000;
-    //console.log("age: " + age);
-    console.log("set cookie: " + qs.stringify(wl_auth));
-    res.cookie("wl_auth", qs.stringify(wl_auth), { expire: 0 } );
-    res.send(callbackPage);
-    res.end();
-  });
-});
-*/
-
-/*
-app.get("/rest/ask", function(req,res) {
-  var userpath = getUserPath(req,res);
-  var name     = req.body.path || "document.mdk";
-  var fpath    = path.join(userpath,name);
-  fs.readFile( fpath, {encoding:"utf8"}, function(err,data) {
-    if (err) {
-      res.send(404,"Could not find: " + name );
-    }
-    else {
-      res.send(data);
-    }
-  });
-});
-*/
-
-app.use('/temp/', express.static(__dirname + "/users/"));
-
-app.use('/', express.static(__dirname + "/client"));
-
-app.use(function(err, req, res, next){
-  if (!err) return next();
-  console.log(err);
-  res.send(500,err.toString());
-});
+app.use('/', express.static( combine(__dirname, "client") ));
 
 
+// -------------------------------------------------------------
+// Start listening
+// -------------------------------------------------------------
 
-//app.listen(8080);
 var sslOptions = {
   key: fs.readFileSync('./ssl/madoko-server.key'),
   cert: fs.readFileSync('./ssl/madoko-server.crt'),
@@ -422,6 +379,3 @@ var sslOptions = {
   rejectUnauthorized: false
 };
 https.createServer(sslOptions, app).listen(8080);
-
-previewApp.use('/preview', express.static(__dirname + "/client/preview"));
-https.createServer(sslOptions, previewApp).listen(8181);
