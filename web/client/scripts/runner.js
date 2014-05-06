@@ -204,6 +204,7 @@ var Runner = (function() {
     var params = {};    
     params.docname = ctx.docname;
     if (ctx.pdf) params.pdf = ctx.pdf;
+    if (ctx.round) params.round = ctx.round;
     params.files = [];
     params.files.push( { 
       path: params.docname,
