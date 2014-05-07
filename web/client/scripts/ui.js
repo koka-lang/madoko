@@ -81,7 +81,11 @@ function getModeFromExt(ext) {
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
 
-var State = { Normal:"normal", Loading:"loading", Init:"initializing" }
+var State = { Normal:"normal", 
+              Loading:"loading", 
+              Init:"initializing", 
+              Syncing:"syncing",
+              Exporting:"exporting" }
 
 var UI = (function() {
 
@@ -137,21 +141,44 @@ var UI = (function() {
     util.message( err, util.Msg.Error );
   }
 
-  UI.prototype.event = function( status, action ) {
+  UI.prototype.event = function( status, pre, state, action ) {
     var self = this;
+    if (state) {
+      if (self.state !== State.Normal) {
+        util.message( "sorry, cannot perform action while " + self.state, util.Msg.Status );
+        return;
+      }
+      else {
+        self.state = state;      
+      }
+    }
     try {
+      if (pre) util.message( pre, util.Msg.Status);
       var res = action();
       if (res && res.then) {
-        res.then( function() {
-          if (status) util.message( message, util.Msg.Status);
+        return res.then( function() {
+          if (state) self.state = State.Normal;
+          if (status) util.message( status, util.Msg.Status);
         }, function(err) {
+          if (state) self.state = State.Normal;
           self.onError(err);
         });
       }
+      else {
+        if (state) self.state = State.Normal;
+        if (status) util.message( status, util.Msg.Status);
+        return res;
+      }        
     }
     catch(exn) {
+      if (state) self.state = State.Normal;
       self.onError(exn);
     }
+  }
+
+  UI.prototype.anonEvent = function( action ) {
+    var self = this;
+    self.event( "","",null, action );
   }
 
   UI.prototype.initUIElements = function(content) {
@@ -194,7 +221,7 @@ var UI = (function() {
     self.syncInterval = 0;
     self.editor.addListener("scroll", function (e) {    
       function scroll() { 
-        self.event( "scroll", function() {
+        self.anonEvent( function() {
           var scrolled = self.syncView(); 
           if (!scrolled) {
             clearInterval(self.syncInterval);
@@ -217,41 +244,44 @@ var UI = (function() {
 
     self.dropFiles = null;
     self.editor.addListener("mousemove", function(ev) {
-      if (self.dropFiles) {
-        var files = self.dropFiles;
-        self.dropFiles = null;
-        var pos = ev.target.position;
-        pos.column = 1;
-        pos.lineNumber++;
-        self.insertImages(files,pos);
-      }
+      self.anonEvent( function() {
+        if (self.dropFiles) {
+          var files = self.dropFiles;
+          self.dropFiles = null;
+          var pos = ev.target.position;
+          pos.column = 1;
+          pos.lineNumber++;
+          self.insertImages(files,pos);
+        }
+      });
     });
     
     self.editorPane = document.getElementById("editor");
-    self.editorPane.addEventListener("drop", function(ev) {
+    self.editorPane.addEventListener("drop", function(ev) {      
       ev.stopPropagation();
       ev.preventDefault();
-      // try to figure out on which line the image was dropped.
-      var viewLine = ev.target;
-      while(viewLine && viewLine.nodeName !== "DIV" && !/\bview-line\b/.test(viewLine.className)) {
-        viewLine = viewLine.parentNode;
-      }
-      if (viewLine) {
-        var editView = self.editor.getView();      
-        var lines    = editView.viewLines;        
-        var posLine  = -1;
-        for(var i = 0; i < lines._lines.length; i++) {
-          if (lines._lines[i]._domNode === viewLine) {
-            posLine = lines._rendLineNumberStart + i;
+      self.anonEvent( function() {
+        // try to figure out on which line the image was dropped.
+        var viewLine = ev.target;
+        while(viewLine && viewLine.nodeName !== "DIV" && !/\bview-line\b/.test(viewLine.className)) {
+          viewLine = viewLine.parentNode;
+        }
+        if (viewLine) {
+          var editView = self.editor.getView();      
+          var lines    = editView.viewLines;        
+          var posLine  = -1;
+          for(var i = 0; i < lines._lines.length; i++) {
+            if (lines._lines[i]._domNode === viewLine) {
+              posLine = lines._rendLineNumberStart + i;
+            }
+          }
+          if (posLine >= 0) {
+            return self.insertImages( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
           }
         }
-        if (posLine >= 0) {
-          self.insertImages( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
-          return;
-        }
-      }
-      // rely on mousemove event instead...
-      self.dropFiles = ev.dataTransfer.files;
+        // rely on mousemove event instead...
+        self.dropFiles = ev.dataTransfer.files;
+      });
     }, false);
 
     self.editorPane.addEventListener("dragover", function(ev) {
@@ -270,17 +300,19 @@ var UI = (function() {
     
     // listen to preview load messages
     window.addEventListener("message", function(ev) {
-      // check origin and source so no-one but our view can send messages
-      if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
-      if (ev.source !== self.view.contentWindow) return;      
-      var info = JSON.parse(ev.data);
-      if (!info || !info.eventType) return;
-      if (info.eventType === "previewContentLoaded") {
-        self.viewLoaded();
-      }
-      else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
-        self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
-      }
+      self.anonEvent( function() {
+        // check origin and source so no-one but our view can send messages
+        if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
+        if (ev.source !== self.view.contentWindow) return;      
+        var info = JSON.parse(ev.data);
+        if (!info || !info.eventType) return;
+        if (info.eventType === "previewContentLoaded") {
+          return self.viewLoaded();
+        }
+        else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
+          return self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
+        }
+      });
     }, false);
 
     // Buttons and checkboxes
@@ -328,67 +360,61 @@ var UI = (function() {
     };
 
     document.getElementById("load-onedrive").onclick = function(ev) {
-      self.checkSynced().then( function() {
-        return storage.onedriveOpenFile();        
-      }).then( function(res) { 
-        return self.openFile(res.storage,res.docName); 
-      }).then( function() {
-        util.message("loaded: " + self.docName, util.Msg.Status);
-      }, function(err){ 
-        self.onError(err); 
+      self.event( "loaded from remote storage", "loading...", State.Loading, function() {
+        return self.checkSynced().then( function() {
+          return storage.onedriveOpenFile();        
+        }).then( function(res) { 
+          return self.openFile(res.storage,res.docName); 
+        });
       });
     };
 
     document.getElementById("sync-onedrive").onclick = function(ev) {
-      self.syncTo( storage.syncToOnedrive );
+      self.event( "synced to remote storage", "sync to...", State.Syncing, function() {
+        return self.syncTo( storage.syncToOnedrive );
+      });
     }
 
     document.getElementById("new-document").onclick = function(ev) {
-      self.checkSynced().then( function() {
-        return self.openFile(null,null);
-      }).then( function() {
-        util.message("created new local document: " + self.docName, util.Msg.Status);
-      }, function(err){ 
-        self.onError(err); 
+      self.event( "created new local document", "creating...", State.Loading, function() {
+        return self.checkSynced().then( function() {
+          return self.openFile(null,null);
+        });
       });
     }
 
     document.getElementById("export-html").onclick = function(ev) {
-      self.event( "HTML exported", function() { return self.generateHtml(); } );
-
-//      util.downloadText(util.changeExt(util.basename(self.docName),".html"), self.htmlText);
+      self.event( "HTML exported", "exporting...", State.Exporting, function() { 
+        return self.generateHtml(); 
+      });
     }
 
     document.getElementById("export-pdf").onclick = function(ev) {
-      self.event( "PDF exported", function() { return self.generatePdf(); } );
+      self.event( "PDF exported", "exporting...",  State.Exporting, function() { 
+        return self.generatePdf(); 
+      });
     }
 
-    /* document.getElementById("load-local").onclick = function(ev) {
-      storage.localOpenFile().then( function(res) { return self.openFile(res.storage,res.docName); } )
-        .then( undefined, function(err){ self.onError(err); } );
-    };
-
-    document.getElementById("sync-local").onclick = function(ev) {
-      self.syncTo( storage.syncToLocal );
-    }
-    */
     document.getElementById("clear-local").onclick = function(ev) {
-      if (localStorage) {
-        if (self.storage && !self.storage.isSynced()) {
-          var yes = window.confirm( "Clearing the local storage will discard any local changes!\nAre you sure?");
-          if (!yes) return;
+      self.event( "cleared local storage", "clearing...", State.Loading, function() {
+        if (localStorage) {
+          if (self.storage && !self.storage.isSynced()) {
+            var yes = window.confirm( "Clearing the local storage will discard any local changes!\nAre you sure?");
+            if (!yes) return;
+          }
+          localStorage.clear();
         }
-        localStorage.clear();
-        util.message("local storage cleared", util.Msg.Status);
-      }
+      });
     };
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
-      self.editSelect();
+      self.anonEvent( function() {
+        self.editSelect();
+      });
     };   
        
     document.getElementById("edit-select-content").onclick = function(ev) {
-      self.event( null, function() {
+      self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV") {
           elem = elem.parentNode;
@@ -397,12 +423,14 @@ var UI = (function() {
           var path = elem.getAttribute("data-file");
           if (path) {
             var mime = util.mimeFromExt(path);
-            if (mime==="application/pdf" || mime==="text/html" || util.startsWith(mime,"image/")) {
-              return self.openInWindow( path, mime );
-            }
-            else {
-              return self.editFile(path);            
-            }
+            return self.event( "loaded: " + path, "loading...", State.Loading, function() {
+              if (mime==="application/pdf" || mime==="text/html" || util.startsWith(mime,"image/")) {
+                return self.openInWindow( path, mime );
+              }
+              else {
+                return self.editFile(path);            
+              }
+            });
           }
         }
       });
@@ -410,24 +438,22 @@ var UI = (function() {
    
     document.getElementById("sync").onclick = function(ev) 
     {      
-      if (self.storage) {
-        self.localSave();
-        var cursors = {};        
-        var pos = self.editor.getPosition();
-        cursors["/" + self.docName] = pos.lineNumber;
-        self.showSpinner(true,self.syncer);    
-        self.storage.sync( diff, cursors ).then( function() {
-          pos.lineNumber = cursors["/" + self.docName];
-          self.editor.setPosition(pos,true,true);
-          //self.localSave();
-        }).then( function() {          
-          self.showSpinner(false,self.syncer);    
-          util.message("synced", util.Msg.Status);
-        }, function(err){ 
-          self.showSpinner(false,self.syncer);    
-          self.onError(err); 
-        });
-      }
+      self.event( "synced", "syncing...", State.Syncing, function() {
+        if (self.storage) {
+          self.localSave();
+          var cursors = {};        
+          var pos = self.editor.getPosition();
+          cursors["/" + self.docName] = pos.lineNumber;
+          self.showSpinner(true,self.syncer);    
+          return self.storage.sync( diff, cursors ).then( function() {
+            pos.lineNumber = cursors["/" + self.docName];
+            self.editor.setPosition(pos,true,true);
+            //self.localSave();
+          }).always( function() {          
+            self.showSpinner(false,self.syncer);    
+          });
+        }
+      });
     };
 
     
