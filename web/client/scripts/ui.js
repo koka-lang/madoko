@@ -7,8 +7,8 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/selection"],
-        function(merge,Promise,util,storage,madokoMode,range,selection) {
+        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
+        function(merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
 
 /*
 
@@ -240,6 +240,12 @@ var UI = (function() {
     self.changed = false;
     self.editor.addListener("change", function (e) {    
       self.changed = true;
+    });
+
+    self.keybinding = self.editor.getHandlerService().bind({
+      key: 'Alt-Q'
+    }, function(ev) { 
+      self.anonEvent( function() { self.onFormatPara(ev); } );
     });
 
     self.dropFiles = null;
@@ -1034,10 +1040,96 @@ var UI = (function() {
     );
   }
 
+  function breakLines(text, maxCol, hang0, hang ) {
+    var para    = hang0;
+    var col     = hang0.length;
+    var hangCol = col;
+    text = text.substr(col);
+        
+    var parts = text.split(/\s/);
+    parts.forEach( function(part) {
+      if (part && part !== "") {
+        var n = part.length;
+        if (col > 0 && col + n > maxCol) {
+          para += "\n" + hang;
+          col     = hang.length;
+          hangCol = col;
+        }
+        else if (col > hangCol) {
+          para += " ";
+          col++;
+        }
+        para += part;
+        col += n;
+      }
+    });
+
+    return para;
+  }
+
+  function reformatPara( lineNo, text ) {
+    function isBlank(line) {
+      return /^\s*$/.test(line);
+    }
+    function stopPara(line) {
+      return isBlank(line) || /^[ \t]*([\*\+\-]|\d\.)[ \t].*$/.test(line);
+    }
+
+    // split in lines
+    var lines = text.split("\n");
+    if (lineNo <= 0 || lineNo > lines.length || isBlank(lines[lineNo-1])) return null;
+
+    // find paragraph extent
+    var start = lineNo;
+    while( start > 1 && !isBlank(lines[start-2]) && !stopPara(lines[start-1])) {
+      start--;
+    }
+    var end = lineNo;
+    while( end < lines.length && !stopPara(lines[end]) ) {
+      end++;
+    }
+    var endColumn = lines[end-1].length+1;
+    var para      = lines.slice(start-1,end);
+    if (para.length <= 0) return null;
+
+    para = para.map( function(line) {
+      return line.replace(/\t/g, "    ");
+    });
+    var indents = para.map( function(line) {
+      var cap = /^(\s*)/.exec(line);
+      return (cap ? cap[1].length : 0);
+    });
+      
+    var hang0  = new Array(indents[0]+1).join(" ");
+    var indent = Math.max( indents[0], (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
+    var hang   = new Array(indent+1).join(" ");
+    
+    // reformat
+    var paraText = para.join(" ");
+    var paraBroken = breakLines(paraText, 70, hang0, hang);
+    return { text: paraBroken, startLine: start, endLine: end, endColumn: endColumn };
+  }
+
+  UI.prototype.onFormatPara = function(ev) {
+    var self = this;
+    var pos = self.editor.getPosition();
+    var text = self.getEditText();
+    var res = reformatPara( pos.lineNumber, text );
+    if (res) {
+      var rng = new range.Range( res.startLine, 0, res.endLine, res.endColumn );
+      var command = new replaceCommand.ReplaceCommandWithoutChangingPosition( rng, res.text );
+      self.editor.executeCommand("madoko",command);
+    }
+  }
+
   // Insert some text in the document 
   UI.prototype.insertText = function( txt, pos ) {
     var self = this;
     if (!pos) pos = self.editor.getPosition(); 
+    var rng = new range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
+    var command = new replaceCommand.ReplaceCommand( rng, txt );
+    self.editor.executeCommand("madoko",command);
+    /*
     var command = {
       getEditOperations: function(model,builder) {
         var self = this;
@@ -1052,6 +1144,7 @@ var UI = (function() {
       }
     };
     self.editor.executeCommand("madoko",command);
+    */
   }
 
   UI.prototype.insertImages = function(files,pos) {

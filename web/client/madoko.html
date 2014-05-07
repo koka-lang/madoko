@@ -31,14 +31,15 @@
 <!-- install a handler that calls madoko to typeset -->
 <script>
 require([ "../scripts/util",
-          "../scripts/ui",
           "../scripts/runner",
           "vs/editor/editor.main"],
-          function(util,UI,Runner) 
+          function(util,Runner) 
 { 
-  var runner = new Runner();
-  var ui     = new UI(runner);
-  util.message("ready", util.Msg.Status );
+  require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
+    var runner = new Runner();
+    var ui     = new UI(runner);
+    util.message("ready", util.Msg.Status );
+  });
 });
 </script>
 
