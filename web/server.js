@@ -24,6 +24,7 @@ var cookieSession = require("cookie-session");
 // We use promises mostly to reliable catch exceptions 
 // -------------------------------------------------------------
 var Promise = require("./client/scripts/promise.js");
+var Map     = require("./client/scripts/map.js");
 
 function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
@@ -58,7 +59,7 @@ function onError(req,res,err) {
   if (err.stdout) result.stdout = err.stdout;
   if (err.stderr) result.stderr = err.stderr;
 
-  console.log("error (" + result.httpCode.toString() + "): " + result.message);
+  console.log("*****\nerror (" + result.httpCode.toString() + "): " + result.message);
   if (logerr) logerr.entry( {
     error: result,
     user: res.user,
@@ -70,7 +71,39 @@ function onError(req,res,err) {
   res.send( result.httpCode, result );
 }
 
-function event( req, res, action ) {
+// -------------------------------------------------------------
+// Events 
+// -------------------------------------------------------------
+
+var users   = new Map();  // userid -> { requests: int }
+var domains = new Map();  // ip -> { requests: int, newUsers: int }
+
+function domainsGet(req) {
+  return domains.getOrCreate(req.ip, { requests: 0, newUsers: 0 });
+}
+
+function usersGet(req) {
+  return users.getOrCreate(req.ip, { requests: 0 });
+}
+
+// every hour, reset stats
+setInterval( function() {
+  users.forEach( function(id,user) {
+    if (user.requests <= 0) users.remove(id);
+  });
+  domains.forEach( function(ip,domain) {
+    if (domain.requests <= 0) {
+      domain.remove(ip);
+    }
+    else {
+      domain.newUsers = 0;
+    }
+  });
+}, 60 * 60 * 1000); 
+
+function event( req, res, action, maxRequests ) {
+  var domain = null;
+  if (!maxRequests) maxRequests = limits.requestsPerDomain;
   try {
     var entry =  {
       ip: req.ip,
@@ -79,23 +112,30 @@ function event( req, res, action ) {
       start: Date.now(),        
     };
     if (logev) logev.entry( entry );    
+    domain = domainsGet(req);
+    if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
+    domain.requests++;
     var x = action();
     if (x && x.then) {
       x.then( function(result) {
+        domain.requests--;
         entry.time = Date.now() - entry.start;
         if (logev) logev.entry(entry);
         res.send(200,result);
       }, function(err) {
+        domain.requests--;
         onError(req,res,err);
       });
     }
     else {
+      domain.requests--;
       entry.time = Date.now() - entry.start;
       if (logev) logev.entry(entry);
       res.send(200,x);
     }
   }
   catch(err) {
+    if (domain) domain.requests--;
     onError(req,res,err);
   }
 }
@@ -104,25 +144,28 @@ function event( req, res, action ) {
 // Constants
 // -------------------------------------------------------------
 
-var cookieAge = 60000; //24 * 60 * 60000;
-var userRoot  = "users";
-var userHashLimit = 16;
-var userCount = 0;
-var limit     = 5; // max file-size limit in mb
+var runDir = "run"
 var mb        = 1024*1024;
 
-var timeouts = {
-  pdf: 60000,     // timeout to create a full pdf
-  math: 30000,    // timeout to create math 
-  GET: 5000,      // timeout for GET requests (to onedrive)
-};
+var limits = {
+  requestsPerDomain: 10,
+  requestsPerUser: 2,
+  requestNewUser: 5,
+  maxProcesses: 10, 
+  hashLength: 16,
+  fileSize: 5,                // max file-size in mb
+  cookieAge: 24 * 60 * 60000, // 1 day for now
+  timeoutPDF: 60000,
+  timoutMath: 30000,
+  timeoutGET: 5000,
+}
 
 // -------------------------------------------------------------
 // Set up server app 
 // -------------------------------------------------------------
 var app = express();
 
-app.use(bodyParser({limit: limit.toString() + "mb"}));
+app.use(bodyParser({limit: limits.fileSize.toString() + "mb"}));
 app.use(cookieParser("@MadokoRocks!@!@!"));
 app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
 
@@ -215,7 +258,7 @@ function encodingFromExt(fname) {
 
 function uniqueHash() {
   var unique = (new Date()).toString() + ":" + Math.random().toString();
-  return crypto.createHash('md5').update(unique).digest('hex').substr(0,userHashLimit);
+  return crypto.createHash('md5').update(unique).digest('hex').substr(0,limits.hashLength);
 }
 
 
@@ -253,7 +296,7 @@ var Log = (function(){
     self.log = [];
     self.ival = setInterval( function() {
       var size = self.flush();
-      if (size > limit * mb) {
+      if (size > limits.fileSize * mb) {
         self.start(n+1);
       }
     }, 1000 );
@@ -268,7 +311,7 @@ var Log = (function(){
 
   Log.prototype.entry = function( obj ) {
     var self = this;
-    console.log( JSON.stringify(obj) );
+    console.log( JSON.stringify(obj) + "\n" );
     if (self.log[self.log.length-1] !== obj) {
       self.log.push( obj );
     }
@@ -286,17 +329,25 @@ var logev  = new Log("log-event");
 // General server helpers
 // -------------------------------------------------------------
 
+
+
 // Get a unique user path for this session.
 function getUser( req,res ) {
   var userid = req.signedCookies.userid;
   if (!userid) {
+    var domain = domainsGet(req);
+    if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
     userid = uniqueHash();
-    res.cookie("userid", userid, { signed: true, maxAge: cookieAge, httpOnly: true, secure: true } );
+    res.cookie("userid", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
+    domain.newUsers++;
   }
-  var userdir = combine(userRoot, userid);
+  var user = usersGet(userid);
+  if (user.requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
+
   return {
     id: userid,
-    path: userdir, //combine(userdir, uniqueHash()),
+    user: user,
+    path: combine(runDir, userid + "-" + uniqueHash()),
   };
 }
 
@@ -306,12 +357,13 @@ function withUser( req,res, action ) {
   if (req.body.docname) entry.docname = req.body.docname;
   if (req.body.pdf) entry.pdf = req.body.pdf;
   log.entry( entry );
+  user.user.requests++;
   return fstat(user.path).then( function(stats) {
-    if (stats) return Promise.rejected( new Error("can only run one process per user -- try again later") );
+    if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
     return ensureDir(user.path);
   }).then( function() {
     return action(user);    
-  }).always( function() {
+  }).always( function() {    
     entry.time = Date.now() - entry.start; 
     entry.files = req.body.files.map( function(file) {
       return { 
@@ -332,6 +384,7 @@ function withUser( req,res, action ) {
         }
       });
     }
+    user.user.requests--;
   });
 }
 
@@ -389,7 +442,7 @@ function readFiles( userpath, docname, pdf ) {
 
     return fstat( fpath ).then( function(stats) {
       if (!stats) return readError();
-      if (stats.size > limit*mb) return Promise.rejected( new Error("generated file too large: " + fname) );
+      if (stats.size > limits.fileSize*mb) return Promise.rejected( new Error("generated file too large: " + fname) );
       return readFile( fpath ).then( function(buffer) {
           var encoding = encodingFromExt(fname);
           return {
@@ -419,7 +472,7 @@ function madokoExec( userpath, docname, flags, timeout ) {
 function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
     var flags = " -mmath-embed:512 -membed:512 " + (pdf ? " --pdf" : "");
-    return madokoExec( userpath, docname, flags, (pdf ? timeouts.pdf : timeouts.html) ).then( function(stdout,stderr) {
+    return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       return readFiles( userpath, docname, pdf ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
@@ -464,13 +517,13 @@ function requestGET(query,encoding) {
     var req;
     var timeout = setTimeout( function() { 
       if (req) req.abort();
-    }, timeouts.GET );
+    }, limits.timeoutGET );
     req = https.get(query, function(res) {
       if (encoding) res.setEncoding(encoding);
       var body = "";
       res.on('data', function(d) {
         body += d;
-        if (body.length > limit * mb) {
+        if (body.length > limits.fileSize * mb) {
           req.abort();
         }
       });
@@ -492,14 +545,17 @@ function requestGET(query,encoding) {
 // The server entry points
 // -------------------------------------------------------------
 
+var runs = 0;
 app.post('/rest/run', function(req,res) {
   event( req, res, function() {
     return withUser(req, res, function(user) {
       console.log("run request: " + (req.body.round ? req.body.round.toString() + ": " : "") + user.path);
+      if (runs >= limits.maxProcesses) throw { httpCode: 503, message: "too many processes" };
+      runs++;
       var docname  = req.body.docname || "document.mdk";
       var files    = req.body.files || [];
       var pdf      = req.body.pdf || false;
-      return madokoRun( user.path, docname, files, pdf );  
+      return madokoRun( user.path, docname, files, pdf ).always( function() { runs--; } );  
     });
   });  
 });
@@ -516,7 +572,7 @@ app.get("/onedrive", function(req,res) {
   event( req, res, function() {
     console.log("onedrive get: " + req.query.url );
     return requestGET( req.query.url, "binary" );
-  });
+  }, 100 );
 });
 
 app.use('/', express.static( combine(__dirname, "client") ));
