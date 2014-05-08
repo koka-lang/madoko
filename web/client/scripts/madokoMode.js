@@ -19,6 +19,11 @@ var madokoMode =
     
       autoClosingPairs: [ ['"','"'],["{","}"],["[","]"],["(",")"] ],
       noindentBrackets: "~+",
+
+      // comments
+      lineComment: "",
+      blockCommentStart: "<!--\n",
+      blockCommentEnd:   "\n-->",
       
       // escape codes 
       escapes:  /\\[^a-zA-Z0-9]/,  

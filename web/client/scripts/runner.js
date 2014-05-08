@@ -111,7 +111,7 @@ var Runner = (function() {
     });
 
     // collect empty files no longer referred to
-    if (self.storage) self.storage.collect( res.filesReferred.concat(res.filesRead) );
+    if (self.storage) self.storage.collect( [res.name].concat(res.filesReferred,res.filesRead) );
 
     // when we get all files from remote storage..
     return Promise.when([].concat(referred,texts)).then( function(filesRead) {

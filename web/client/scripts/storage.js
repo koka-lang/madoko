@@ -715,7 +715,7 @@ var Storage = (function() {
     var self = this;
     self.forEachFile( function(file) {
       if (!isRoot(file.path,roots) && 
-          (!file.content || util.hasGeneratedExt(file.path)) ) {
+          (!file.content || !isEditable(file) || !file.modified) ) {
         self.files.remove(file.path);
       }
     });

@@ -257,7 +257,7 @@ var UI = (function() {
           var pos = ev.target.position;
           pos.column = 1;
           pos.lineNumber++;
-          self.insertImages(files,pos);
+          self.insertFiles(files,pos);
         }
       });
     });
@@ -282,7 +282,7 @@ var UI = (function() {
             }
           }
           if (posLine >= 0) {
-            return self.insertImages( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
+            return self.insertFiles( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
           }
         }
         // rely on mousemove event instead...
@@ -1046,7 +1046,7 @@ var UI = (function() {
     var hangCol = col;
     text = text.substr(col);
         
-    var parts = text.split(/\s/);
+    var parts = text.split(/\s(?!\s*\[)/);
     parts.forEach( function(part) {
       if (part && part !== "") {
         var n = part.length;
@@ -1067,7 +1067,7 @@ var UI = (function() {
     return para;
   }
 
-  function reformatPara( lineNo, text ) {
+  function reformatPara( lineNo, text, column ) {
     function isBlank(line) {
       return /^\s*$/.test(line);
     }
@@ -1106,7 +1106,7 @@ var UI = (function() {
     
     // reformat
     var paraText = para.join(" ");
-    var paraBroken = breakLines(paraText, 70, hang0, hang);
+    var paraBroken = breakLines(paraText, column || 75, hang0, hang);
     return { text: paraBroken, startLine: start, endLine: end, endColumn: endColumn };
   }
 
@@ -1122,51 +1122,97 @@ var UI = (function() {
     }
   }
 
+  function findMetaPos( text ) {
+    var lineNo = 1;
+    var reMeta = /^(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:].*\r?\n(?![ \t])/;
+    var cap;
+    while ((cap = reMeta.exec(text))) {
+      text = text.substr(cap[0].length);
+      lineNo++;
+    }
+    return lineNo;
+  }
+
   // Insert some text in the document 
   UI.prototype.insertText = function( txt, pos ) {
     var self = this;
     if (!pos) pos = self.editor.getPosition(); 
     var rng = new range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
-    var command = new replaceCommand.ReplaceCommand( rng, txt );
+    var command = new replaceCommand.ReplaceCommandWithoutChangingPosition( rng, txt );
     self.editor.executeCommand("madoko",command);
-    /*
-    var command = {
-      getEditOperations: function(model,builder) {
-        var self = this;
-        var selection = new range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
-        builder.addEditOperation( selection , txt );
-      },
-      computeCursorState: function(model,helper) {
-        var self = this;
-        var inverseEditOperations = helper.getInverseEditOperations();
-        var srcRange = inverseEditOperations[0].range;
-        return new selection.Selection(srcRange.endLineNumber, srcRange.endColumn, srcRange.endLineNumber, srcRange.endColumn);
-      }
-    };
-    self.editor.executeCommand("madoko",command);
-    */
   }
 
-  UI.prototype.insertImages = function(files,pos) {
+  UI.prototype.insertFile = function(file, content, encoding, mime, pos ) {
+    var self = this;
+    if (pos) pos.column = 0;
+    var ext  = util.extname(file.name);
+    var stem = util.stemname(file.name);
+    var name = util.basename(file.name);      
+    if (util.startsWith(mime,"image/")) name = "images/" + name;    
+    if (encoding===storage.Encoding.Base64) {
+      var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
+      if (!cap) return;
+      content = cap[3];  
+    }
+    self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
+    
+    var text = "";
+    if (util.startsWith(mime,"image/")) {
+      text = "![" + stem + "]\n\n[" + stem + "]: " + name + ' "' + stem + '"';
+    }
+    else if (ext===".mdk" || ext===".md") {
+      text = "[INCLUDE=\"" + name + "\"]";
+    }
+    else {
+      if (ext===".js") {
+        text="Highlight language: " + name;
+      }
+      else if (ext===".css") {
+        text="Css         : " + name;
+      }
+      else if (ext===".bib") {
+        text="Bibliography: " + name;
+      }
+      else if (ext===".bst") {
+        text="Bib Style   : " + util.stemname(name);
+      }
+      else if (ext===".cls") {
+        text="Doc Class   : " + util.stemname(name);
+      }
+      else if (ext===".sty" || ext===".tex") {
+        text="Package     : " + util.stemname(name);
+      }
+      else {
+        util.message( "unsupported drop file extension: " + ext, util.Msg.Info );
+        return;
+      }
+      var lineNo = findMetaPos(self.getEditText());      
+      if (lineNo > 0) pos = { lineNumber: lineNo, column: 0 };      
+    }
+    self.insertText( text + "\n", pos );
+  }
+
+  UI.prototype.insertFiles = function(files,pos) {
     var self = this;
     if (!files) return;
-    for (var i = 0, f; f = files[i]; i++) {
-      if (!util.startsWith(f.type,"image/")) { // only images..
+    for (var i = 0, f; f = files[i]; i++) {      
+      var encoding = storage.Encoding.fromExt(f.name);      
+      var mime = f.type || util.mimeFromExt(f.name);
+      if (!(util.startsWith(mime,"image/") || util.startsWith(mime,"text/"))) { // only images or text..
         continue;
       }
-  
+      
       var reader = new FileReader();
-      reader.onload = (function(file) {
+      reader.onload = (function(_file,_encoding,_mime) { 
         return function(loadEvt) {
-          var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(loadEvt.target.result);
-          if (!cap) return;
-          var fileName = "images/" + file.name;
-          var name     = util.stemname(file.name); 
-          self.storage.writeFile(fileName,cap[3],{encoding:cap[2],mime:cap[1]});
-          self.insertText( "![" + name + "]\n\n[" + name + "]: " + fileName + ' "' + name + '"\n', pos );
+          self.insertFile( _file, loadEvt.target.result, _encoding, _mime, pos );
         };
-      })(f);
-      reader.readAsDataURL(f);
+      })(f,encoding,mime);
+
+      if (encoding===storage.Encoding.Base64)
+        reader.readAsDataURL(f);
+      else 
+        reader.readAsText(f);
     }
   }
 

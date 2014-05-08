@@ -312,6 +312,15 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (contains(embedExts,ext));
   }
 
+
+  var dropExts = [".js",".css","mdk","md","bib","cls","sty","tex","png","jpg","jpeg","gif","svg"].join(";");
+  function hasDropExt(fname) {
+    var ext = stdpath.extname(fname);
+    if (!ext) return false;
+    return (contains(dropExts,ext));
+  }
+
+  
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html"].join(";");
   function hasGeneratedExt(fname) {
     var ext = stdpath.extname(fname);
@@ -976,6 +985,7 @@ doc.execCommand("SaveAs", null, filename)
     hasTextExt: hasTextExt,
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
+    hasDropExt: hasDropExt,
     mimeFromExt: mimeFromExt,
 
     startsWith: startsWith,
