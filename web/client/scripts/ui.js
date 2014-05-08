@@ -1070,8 +1070,11 @@ var UI = (function() {
     function isBlank(line) {
       return /^\s*$/.test(line);
     }
+    function endPara(line) {
+      return isBlank(line) || /^[ \t]*(```|[>#~])/.test(line);
+    }
     function stopPara(line) {
-      return isBlank(line) || /^[ \t]*([\*\+\-]|\d\.)[ \t].*$/.test(line);
+      return endPara(line) || /^[ \t]*(([\*\+\-]|\d\.)[ \t])/.test(line);
     }
 
     // split in lines
@@ -1080,7 +1083,7 @@ var UI = (function() {
 
     // find paragraph extent
     var start = lineNo;
-    while( start > 1 && !isBlank(lines[start-2]) && !stopPara(lines[start-1])) {
+    while( start > 1 && !endPara(lines[start-2]) && !stopPara(lines[start-1])) {
       start--;
     }
     var end = lineNo;
@@ -1105,7 +1108,7 @@ var UI = (function() {
     
     // reformat
     var paraText = para.join(" ");
-    var paraBroken = breakLines(paraText, column || 75, hang0, hang);
+    var paraBroken = breakLines(paraText, column || 70, hang0, hang);
     return { text: paraBroken, startLine: start, endLine: end, endColumn: endColumn };
   }
 

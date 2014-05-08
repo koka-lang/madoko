@@ -65,10 +65,10 @@ var madokoMode = {
           
           // github style code blocks
           [/^\s*(```+)\s*(?:([^\s\{]+)\s*)?(?:\{[^}]+\}\s*)?$/, { cases: {
-            "$2==javascript": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.javascript', nextEmbedded: 'text/javascript' },
-            "$2==json": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.json', nextEmbedded: 'application/json' },
-            "$2~\\w+/.*": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.$2', nextEmbedded: '$2' },
-            "$2": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.x-$2', nextEmbedded: 'text/x-$2' },
+            "$2==javascript": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1.javascript', nextEmbedded: 'text/javascript' },
+            "$2==json": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1.json', nextEmbedded: 'application/json' },
+            "$2~\\w+/.*": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1.$2', nextEmbedded: '$2' },
+            "$2": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1.x-$2', nextEmbedded: 'text/x-$2' },
             "@default": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1' }
           }}],
           // [/^\s*```+\s*((?:\w|[\/\-])+)\s*$/, { token: 'namespace.code', bracket: '@open', next: '@codeblockgh', nextEmbedded: '$1' }],
@@ -141,7 +141,7 @@ var madokoMode = {
           // [/<(\w+)[^>]*>/, {token: '@rematch', next: 'html.$1', nextEmbedded: 'text/html' } ],
           
           // escapes
-          [/&\w+;/, 'string.escape'],      
+          [/&#?\w+;/, 'string.escape'],      
           [/@escapes/, 'escape' ],
           
           // various markup

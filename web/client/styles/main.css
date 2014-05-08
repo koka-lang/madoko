@@ -32,7 +32,14 @@ html,body,#app {
   height: 96%;
   height: calc(100% - 1.25rem);
   width: 49%;
-  width: calc(50% - 0.2rem);
+}
+
+.pane.left {
+  width: calc(53% - 0.2rem);
+  transition: width 0.8s;
+}
+.pane.right {
+  width: calc(47% - 0.2rem);
   transition: width 0.8s;
 }
 

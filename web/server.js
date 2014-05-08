@@ -93,7 +93,7 @@ setInterval( function() {
   });
   domains.forEach( function(ip,domain) {
     if (domain.requests <= 0) {
-      domain.remove(ip);
+      domains.remove(ip);
     }
     else {
       domain.newUsers = 0;
@@ -186,7 +186,7 @@ var scriptSrc = "'self' https://apis.live.net https://js.live.net 'unsafe-inline
 app.use(function(req, res, next){
   var csp = ["script-src " + scriptSrc,
              "report-uri /report/csp"
-            ].join(";"));
+            ].join(";");
 
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
   res.setHeader("Content-Security-Policy-Report-Only",csp);
