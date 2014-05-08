@@ -26,10 +26,8 @@ var Runner = (function() {
 
   Runner.prototype.setStorage = function( stg ) {
     var self = this;
-    var oldStorage = self.storage;
 
-    self.times = [200]; // clear previous times
-
+    self.times = [200]; // clear previous run-time statistics
     self.storage = stg;
     if (self.storage) {
       self.storage.addEventListener("update",self);
@@ -44,16 +42,6 @@ var Runner = (function() {
         }
       });
     }
-
-    if (oldStorage) {
-      oldStorage.clearEventListener(self);
-      return self.madokoWorker.postMessage( { type: "clear" } ).then( function(res) { 
-        util.message("cleared storage: " + res, util.Msg.Trace);
-      });
-    }
-    else {
-      return Promise.resolved();
-    }
   }
 
   Runner.prototype.handleEvent = function(ev) {
@@ -66,6 +54,10 @@ var Runner = (function() {
         encoding: ev.file.encoding,
         mime: ev.file.mime,
       });
+    }
+    else if (ev.type === "destroy") {
+      self.madokoWorker.postMessage( { type: "clear" } );
+      self.storage = null;
     }
   }
 
@@ -125,7 +117,7 @@ var Runner = (function() {
         res.filesWritten.forEach( function(file) {
           if (util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
             util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
-            self.storage.writeFile(file.path, file.content );
+            if (self.storage) self.storage.writeFile(file.path, file.content );
             runAgain = true;
             runOnServer = false;
           }

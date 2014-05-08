@@ -486,6 +486,21 @@ var Storage = (function() {
     self.files     = new util.Map();
     self.listeners = [];
     self.unique    = 1;
+    // we only pull again from remote storage every minute or so..
+    self.pullFails = new util.Map();
+    self.pullIval  = setInterval( function() { 
+      self.pullFails.clear(); 
+    }, 60000 );
+  }
+
+  Storage.prototype.destroy = function() {
+    var self = this;
+    self._fireEvent("destroy");
+    self.listeners = [];
+    if (self.pullIval) {
+      clearInterval( self.pullIval );
+      self.pullIval = 0;
+    }
   }
 
   Storage.prototype.persist = function(minimal) {
@@ -651,11 +666,12 @@ var Storage = (function() {
   /* Interface */
   Storage.prototype._pullFileSearch = function( fbase, opts, dirs ) {
     var self = this;
-    if (!dirs || dirs.length===0) return null;
+    if (!dirs || dirs.length===0) return Promise.resolved(null);
     var dir = dirs.shift();
     return self._pullFile( util.combine(dir,fbase), opts ).then( function(file) {
         return file;
       }, function(err) {
+        if (dirs.length===0) return null;
         return self._pullFileSearch( fbase, opts, dirs );
       });
   }
@@ -664,6 +680,10 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     if (file) return Promise.resolved(file);
+
+    // prevent too many calls to remote storage... 
+    if (self.pullFails.contains(fpath)) return Promise.rejected(new Error("cannot find file: " + fpath));
+
     opts = self._initFileOptions(fpath,opts);
     var dirs = [util.dirname(fpath)].concat(opts.searchDirs);
     return self._pullFileSearch( util.basename(fpath), opts, dirs ).then( function(file) {      
@@ -678,6 +698,7 @@ var Storage = (function() {
             return self.files.get(fpath);            
           }
           else {
+            self.pullFails.set(fpath,true);
             throw new Error("cannot find file: " + fpath);
           }
         }

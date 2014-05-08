@@ -835,7 +835,8 @@ var UI = (function() {
       self.showSpinner(false );    
         
       if (self.storage) {
-        self.storage.clearEventListener(self);
+        self.storage.destroy(); // clears all event listeners
+        //self.storage.clearEventListener(self);
       }
       self.storage = stg;
       self.docName = docName;
@@ -843,16 +844,14 @@ var UI = (function() {
       self.inputRename.value = self.docName; 
     
       self.storage.addEventListener("update",self);
-      return self.runner.setStorage(self.storage).then( function() {
-        var remoteLogo = self.storage.remote.logo();
-        var remoteType = self.storage.remote.type();
-        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-        self.remoteLogo.src = "images/" + remoteLogo;
-        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
-      }).then( function() {
-        self.editName = "";
-        return self.editFile(self.docName);
-      });
+      self.runner.setStorage(self.storage);
+      var remoteLogo = self.storage.remote.logo();
+      var remoteType = self.storage.remote.type();
+      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+      self.remoteLogo.src = "images/" + remoteLogo;
+      self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+      self.editName = "";
+      return self.editFile(self.docName);
     });
   }
 
