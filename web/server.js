@@ -165,7 +165,14 @@ var limits = {
 // -------------------------------------------------------------
 var app = express();
 
-app.use(bodyParser({limit: limits.fileSize.toString() + "mb"}));
+app.use(function(req, res, next) {
+  if (req.headers['content-type']==="application/csp-report") {
+    req.headers['content-type'] = "application/json";
+  }
+  next();
+});
+
+app.use(bodyParser({limit: limits.fileSize.toString() + "mb", strict: false }));
 app.use(cookieParser("@MadokoRocks!@!@!"));
 app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
 
@@ -174,6 +181,18 @@ app.use(function(err, req, res, next){
   onError(req, res,err);
 });
 
+var scriptSrc = "'self' https://apis.live.net https://js.live.net 'unsafe-inline'";
+
+app.use(function(req, res, next){
+  var csp = ["script-src " + scriptSrc,
+             "report-uri /report/csp"
+            ].join(";"));
+
+  res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
+  res.setHeader("Content-Security-Policy-Report-Only",csp);
+  res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
+  next();
+});
 
 // -------------------------------------------------------------
 // Helpers
@@ -558,6 +577,13 @@ app.post('/rest/run', function(req,res) {
       return madokoRun( user.path, docname, files, pdf ).always( function() { runs--; } );  
     });
   });  
+});
+
+app.post("/report/csp", function(req,res) {
+  event(req,res, function() {
+    console.log(req.body);
+    logerr.entry( { 'csp-report': req.body['csp-report'], start: Date.now() } );
+  });
 });
 
 app.get("/redirect/live", function(req,res) {
