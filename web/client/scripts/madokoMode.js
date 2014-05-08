@@ -8,8 +8,7 @@
 
 define([],function() {
 
-var madokoMode = 
-    {
+var madokoMode = {
       displayName: 'Madoko',
       name: 'text/madoko',
       mimeTypes: ['text/madoko'],
@@ -66,19 +65,32 @@ var madokoMode =
           
           // github style code blocks
           [/^\s*(```+)\s*(?:([^\s\{]+)\s*)?(?:\{[^}]+\}\s*)?$/, { cases: {
-            //"$2==javascript": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.javascript', nextEmbedded: 'text/javascript' },
-            //"$2==json": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.json', nextEmbedded: 'application/json' },
-            //"$2~\\w+/.*": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.$2', nextEmbedded: '$2' },
-            //"$2": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.x-$2', nextEmbedded: 'text/x-$2' },
+            "$2==javascript": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.javascript', nextEmbedded: 'text/javascript' },
+            "$2==json": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.json', nextEmbedded: 'application/json' },
+            "$2~\\w+/.*": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.$2', nextEmbedded: '$2' },
+            "$2": { token: 'namespace.code', bracket: '@open', next: '@codeblockgh.$1.x-$2', nextEmbedded: 'text/x-$2' },
             "@default": { token: 'keyword.header.codeblock', bracket: '@open', next: '@codeblockgh.$1' }
           }}],
           // [/^\s*```+\s*((?:\w|[\/\-])+)\s*$/, { token: 'namespace.code', bracket: '@open', next: '@codeblockgh', nextEmbedded: '$1' }],
           
           // list
-          [/^\s([\*\-+:]|\d\.)/, 'string.list'],
+          [/^(\s*)([\*\-+:]|\d\.)(\s*)/, { token: 'keyword.list', next: "@list.$1 $3" } ],
           
           // markup within lines
           { include: '@linecontent' },
+        ],
+        
+        list: [
+          [/^(\s+)(?=\S|$)(?![>*+\-]|```|\d\.)/, { cases: {
+            "$1~$S2[ ]{4}": { token: 'namespace.code', next: '@codeline' },
+            "@default": { token: 'white' }, 
+          }}],
+          [/^\S/, { token: "@rematch", next: "@pop" }],
+          { include: '@root' },
+        ],
+        
+        codeline: [
+          [/.*/, { token: 'namespace.code', next: "@pop" } ]
         ],
         
         metadata: [
@@ -216,6 +228,7 @@ var madokoMode =
     
       },
     };
+
   
   return {
     mode: madokoMode
