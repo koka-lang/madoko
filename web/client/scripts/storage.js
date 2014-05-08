@@ -11,12 +11,10 @@ define(["../scripts/promise","../scripts/util", "../scripts/merge"], function(Pr
 function onedriveError( obj, premsg ) {
   msg = "onedrive: " + (premsg ? premsg + ": " : "")
   if (obj && obj.error) {
-    if (obj.error.message) {
-      msg = msg + obj.error.message + (obj.error.code ? " (" + obj.error.code + ")" : "");
-    }
-    else {
-      msg = msg + obj.error.toString();
-    }
+    var err = obj.error.message || obj.error.toString();
+    err = err.replace(/^WL\..*:\s*/,"").replace(/^.*?Detail:\s*/,"");
+    if (util.startsWith(err,"Cannot read property 'focus'")) err = "Cannot open dialog box. Enable pop-ups?";
+    msg = msg + err; // + (obj.error.code ? " (" + obj.error.code + ")" : "");
   }
   else if (obj && typeof obj === "string") {
     msg = msg + obj;

@@ -504,7 +504,7 @@ app.post('/rest/run', function(req,res) {
   });  
 });
 
-app.get("/redirect", function(req,res) {
+app.get("/redirect/live", function(req,res) {
   event( req, res, function() {
     console.log("redirect authentication");
     return liveCallbackPage;
@@ -533,4 +533,4 @@ var sslOptions = {
   requestCert: true,
   rejectUnauthorized: false
 };
-https.createServer(sslOptions, app).listen(8080);
+https.createServer(sslOptions, app).listen(443);
