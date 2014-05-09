@@ -634,31 +634,69 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       self.unique = 1;
       
       // collect message while the worker starts up
-      self.ready = false;
+      self.scriptName = scriptName;
       self.postqueue = []; 
+      self.restart();
 
-      self.worker = new Worker("madoko-worker.js");
+      // check heartbeat
+      self.lastBeat;
+      setInterval( function() {
+        if (self.lastBeat - self.heartbeat > 45000) {
+           self.restart(); 
+        }
+        self.lastBeat = Date.now();
+      }, 15000 );
+    }
+
+    ContWorker.prototype.restart = function() {
+      var self = this;
+
+      if (self.worker) {
+        util.message( "restarting worker", util.Msg.Info );
+        self.worker.terminate();        
+        for (var key in self.promises) {
+          if (self.promises.hasOwnProperty(key)) {
+            self._onComplete( { messageId: key, timedOut: true } );            
+          }
+        }
+      }
+      self.unique = 1;
+      self.ready = false;
+      self.worker = new Worker( self.scriptName );
       self.worker.addEventListener("message", function(ev) {
         var res = ev.data;
         self._onComplete(res);
       });
+      
+      self.heartbeat = Date.now();      
+    }
+
+    ContWorker.prototype._onHeartBeat = function( _heartbeat ) {
+      var self = this;
+      self.heartbeat = Date.now();
     }
 
     ContWorker.prototype._isReady = function() {
       return self.ready;
     }
 
-    ContWorker.prototype.postMessage = function( info ) {
+    ContWorker.prototype.postMessage = function( info, timeout ) {
       var self = this;
       var promise = new Promise();
       if (!self.ready) {
-        self.postqueue.push( { info: info, promise: promise });
+        self.postqueue.push( { info: info, promise: promise, timeout: timeout });
       }
       else {
         var id = self.unique++;
         info.messageId = id; 
-        self.promises[id] = promise;
-        self.worker.postMessage( info );
+        var timeoutId = 0;
+        if (timeout && timeout > 1) {
+          timeoutId = setTimeout( function() { 
+            self._onComplete( { messageId: id, timedOut: true } );            
+          }, timeout);
+        }
+        self.promises[id] = { promise: promise, timeoutId: timeoutId };
+        self.worker.postMessage( info );        
       }
       return promise;
     }
@@ -666,17 +704,21 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     ContWorker.prototype._onComplete = function( info ) {
       var self = this;
       if (!info || typeof info.messageId === "undefined") return;
-      if (info.messageId === 0) {
+      if (info.heartbeat) {
+        self._onHeartBeat( info.heartbeat );
+      }
+      else if (info.messageId === 0) {
         self.ready = true;
         self.postqueue.forEach( function(elem) {  // post delayed messages
-          self.postMessage( elem.info ).then(elem.promise);
+          self.postMessage( elem.info, elem.timeout ).then(elem.promise);
         });
       }
       else {
         var promise = self.promises[info.messageId];
-        self.promises[info.messageId] = undefined;
+        delete self.promises[info.messageId];
         if (!promise) return;
-        promise.resolve(info);
+        if (promise.timeoutId) clearTimeout(promise.timeoutId);
+        promise.promise.resolve(info);
       }
     }
 

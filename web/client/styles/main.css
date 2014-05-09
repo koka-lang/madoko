@@ -97,10 +97,9 @@ html,body,#app {
 }
 
 /* buttons */
-
-.button {
+.button, .buttons {
   padding: 0em 0.2em;
- }
+}
 
 .button:hover {
   cursor: pointer;
@@ -150,14 +149,10 @@ html,body,#app {
 #view-header {
   max-width: 100%;
   text-align: right;
-  padding-left: 0.2em;
-}
-#view-header div {
-  text-align: left;
 }
 
-#editor-header {
-  padding-right: 0.25em;
+#view-header div {
+  text-align: left;
 }
 
 .pane-header img {
@@ -340,16 +335,12 @@ div.boxed {
 
 #menu-settings-content {
   width: 17em;
-  left: -0.5em;
 }
 
 #document-content {
   width: 12em;
-  left: -0.5em;
 }
 
 #help-content {
   width: 21em;
-  padding: 1ex;
-  left: -0.5em;
 }

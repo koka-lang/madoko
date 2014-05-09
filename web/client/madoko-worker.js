@@ -12,6 +12,13 @@ require.config({
   baseUrl: "lib",
 });
 
+
+var heartbeat = 0;
+setInterval( function() {
+  heartbeat++;
+  self.postMessage( { messageId: -1, heartbeat: heartbeat } );
+}, 15000);
+
 var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
                 ,"haskell","go","fsharp","r","cs","scala"]
                 .map(function(name){ return "languages/" + name; });

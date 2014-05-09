@@ -141,7 +141,10 @@ var Runner = (function() {
       files  : self.sendFiles.elems(),      
     };
     self.sendFiles.clear();
-    return self.madokoWorker.postMessage( msg ).then( function(res) {
+    return self.madokoWorker.postMessage( msg, 30000 ).then( function(res) {
+      if (res.timedOut) {
+        throw new Error("madoko worker time-out");
+      }
       return self.onMadokoComplete(res,ctx);
     });
   }
