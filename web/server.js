@@ -189,8 +189,8 @@ app.use(function(req, res, next){
             ].join(";");
 
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
-  res.setHeader("Content-Security-Policy-Report-Only",csp);
-  res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
+  //res.setHeader("Content-Security-Policy-Report-Only",csp);
+  //res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
   next();
 });
 

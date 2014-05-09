@@ -652,7 +652,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       var self = this;
 
       if (self.worker) {
-        util.message( "restarting worker", util.Msg.Info );
+        message( "restarting worker", Msg.Info );
         self.worker.terminate();        
         for (var key in self.promises) {
           if (self.promises.hasOwnProperty(key)) {
