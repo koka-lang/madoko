@@ -50,15 +50,17 @@ function fstat( fpath ) {
 
 function onError(req,res,err) {
   if (!err) err = "unknown error";
+  console.log("*******");
+  console.log(err);
   var result = {
-    message: err.message || (err.killed ? "server time-out" : err.toString()),
+    message: err.killed ? "process time-out" : err.toString(),
     code: err.code || 0,
   };
   result.httpCode = err.httpCode || (startsWith(result.message,"unauthorized") ? 403 : 500);
   if (err.stdout) result.stdout = err.stdout;
   if (err.stderr) result.stderr = err.stderr;
 
-  console.log("*****\nerror (" + result.httpCode.toString() + "): " + result.message);
+  //console.log("*****\nerror (" + result.httpCode.toString() + "): " + result.message);
   if (logerr) logerr.entry( {
     error: result,
     user: res.user,
@@ -155,7 +157,7 @@ var limits = {
   fileSize: 5,                // max file-size in mb
   cookieAge: 24 * 60 * 60000, // 1 day for now
   timeoutPDF: 60000,
-  timoutMath: 30000,
+  timeoutMath: 30000,
   timeoutGET: 5000,
 }
 
@@ -393,6 +395,7 @@ function withUser( req,res, action ) {
     log.entry( entry );
     if (user.path) {
       //console.log("remove: " + user.path);      
+      /*
       rmdir( user.path, function(err) {
         if (err) {
           var eentry = { error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
@@ -400,6 +403,7 @@ function withUser( req,res, action ) {
           logerr.entry( eentry );
         }
       });
+    */
     }
     user.user.requests--;
   });
@@ -425,7 +429,7 @@ function saveFiles( userpath, files ) {
   return Promise.when( files.map( function(file) {
     if (!isValidFileName(file.path)) return Promise.rejected( new Error("unauthorized file name: " + file.path) );
     var fpath = combine(userpath,file.path);
-    //console.log("writing file: " + fpath + " (" + file.encoding + ")");
+    console.log("writing file: " + fpath + " (" + file.encoding + ")");
     var dir = path.dirname(fpath);
     return ensureDir(dir).then( function() {
       return writeFile( fpath, file.content, {encoding: file.encoding} );
@@ -490,6 +494,7 @@ function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
     var flags = " -mmath-embed:512 -membed:512 " + (pdf ? " --pdf" : "");
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
+      console.log("result: \n" + stdout + "\n" + stderr + "\n");
       return readFiles( userpath, docname, pdf ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
@@ -498,6 +503,8 @@ function madokoRun( userpath, docname, files, pdf ) {
         };
       });
     }, function(err,stdout,stderr) {
+      console.log("command error: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
+      console.log(err);
       err.stdout = stdout;
       err.stderr = stderr;
       throw err;

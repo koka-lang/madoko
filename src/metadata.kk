@@ -9,7 +9,6 @@
 // The parsing of metadata
 module metadata
 
-import std/log
 import std/dict
 import std/regex
 import std/string
@@ -57,10 +56,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif ((key=="heading-depth" || key=="header-depth") && ivalue >= 0) options(headingDepth = ivalue)
     elif ((key=="heading-base" || key=="header-base" || key=="base-header-level") && ivalue >= 0) options(headingBase = ivalue)
     elif (key=="document-class" || key=="doc-class") options(docClass=value)
-    elif (key=="bib" || key=="bibliography" || key=="bib-data") {
-        if (value!="") log("files", value.changeExt(".bib"))
-        options(bib=if (value=="") then "" else options.bib + ";" + value);
-      }
+    elif (key=="bib" || key=="bibliography" || key=="bib-data") options(bib=if (value=="") then "" else options.bib + ";" + value)
     elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
     elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
     elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader + "\n" + value)

@@ -173,6 +173,13 @@ html,body,#app {
   display: none;
 }
 
+.file-size {
+  display: inline-block;
+  float: right;
+  font-size: x-small;
+  padding-top: 0.5em;
+}
+
 /* Generic */
 
 .hide {

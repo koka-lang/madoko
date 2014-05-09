@@ -58,7 +58,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
   
   var rerun := False;
 
-  function runPdfLatex( texFile : string, opts : options, content : string, cont : () -> io () ) : io () 
+  function runPdfLatex( srcFile : string, texFile : string, opts : options, content : string, cont : () -> io () ) : io () 
   {
     options.printErr("cannot generate pdf in the browser")
     cont()
@@ -71,7 +71,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
     cont(False)
   } 
 
-  function runMathStatic( content : string, outputname : string,
+  function runMathStatic( content : string, inputName : string, outputname : string,
                           texNameDvi : string, texNamePdf : string,
                           dviPages : pages, pdfPages : pages,
                           oldMathDvi : string, oldMathPdf : string,

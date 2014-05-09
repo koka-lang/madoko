@@ -26,7 +26,7 @@ import mathParse
 import mathStatic
 
 public struct runners(
-  runPdfLatex : ( texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
+  runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
   runBibtex : ( bibFile : string, opts : options, continue : bool -> io ()) -> io (),
   runMathStatic : runMathStaticFun
 )
@@ -114,7 +114,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 {
   function genPdf(outTexName:string) {
     if (mopts.pdf) {
-      (runners.runPdfLatex)( outTexName, mopts, content, function() { () } )                  
+      (runners.runPdfLatex)( inName, outTexName, mopts, content, function() { () } )                  
     }        
   }
 
@@ -224,7 +224,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
         if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
           mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
-        mathStatic( mathDvi, mathPdf, outName, mopts, content, runners.runMathStatic ) fun(mbmdim2) {
+        mathStatic( mathDvi, mathPdf, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmdim2) {
           match(mbmdim2) {
             Just(mdim2) -> {
               // write html again

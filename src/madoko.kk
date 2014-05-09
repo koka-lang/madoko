@@ -92,6 +92,10 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   res = if (xfull) 
          then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options,fcontext.inlineContext.metadata)
          else body 
+  // emit file references if necessary
+  if (!xfull || !(fmt.isFmtHtml)) then fmtHtmlFull("",options,fcontext.inlineContext.metadata) else ""
+  if (!xfull || !(fmt.isFmtTex))  then fmtTexFull("",options,fcontext.inlineContext.metadata) else ""
+  
   if (options.verbose>=4) then trace("done")
   res           
 }

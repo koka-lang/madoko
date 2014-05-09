@@ -71,14 +71,14 @@ insert image:
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
     <div id="edit-select" class="popup boxed">
-      <img id="remote-logo" src="images/cloud.svg" />
+      <img id="remote-logo" src="images/madoko-icon-100.png" />
       <span id="edit-select-header">&nbsp;</span>
       <div id="edit-select-content" class="menu boxed">        
       </div>
     </div
     ><div id="document" class="popup"
       ><!--&nbsp;<span class="button boxed"><img class="icon" src="images/tri-down.svg"/></span>&nbsp;-->
-      <img id="cloud" class="button" src="images/cloud.png"/>
+      <img id="cloud" class="button" src="images/document.svg"/>
       <div id="document-content" class="menu boxed">
         <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
           ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
@@ -104,7 +104,7 @@ insert image:
       <div id="menu-settings" class="popup">
         <img class="button" src="images/settings.svg" />
         <div id="menu-settings-content" class="menu boxed">
-          <div class="button" title="Synchronize every 10 seconds with cloud storage">
+          <div class="button" title="Synchronize automatically with cloud storage (every 30 seconds)">
             <input type="checkbox" id="checkAutoSync"/> Synchronize automatically</div>
           <div class="button" title="Show line numbers in the editor">
             <input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
@@ -113,7 +113,6 @@ insert image:
          <hr/>
           <div class="button" 
                title="Do not update the view until there is a pause in typing.
-This setting is turned on or off automatically depending on your browser performance.
 Delaying the view update increases performance with large documents or slow browsers.">
             <input type="checkbox" id="checkDelayedUpdate"/> Delayed view update</div>
           <div class="button" 
@@ -123,12 +122,6 @@ This setting can save energy or can be used on very slow browsers to increase re
           <div class="button" 
                title="Do not use the Madoko server to typeset mathematics and/or the bibliography">
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
-         <hr/>
-         <!--<div id="sync" class="button" title="Synchronize document"
-            ><span class="icon"><img src="images/sync.svg"/></span>Synchronize</div>-->
-          <div id="clear-local" class="button" title="Clears local browser storage.
-Do not use unless instructed to do so :-)"
-            ><span class="icon"></span>Clear local storage</div>
         </div>
       </div>
       

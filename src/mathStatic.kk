@@ -71,7 +71,7 @@ function mathFormat( xopts : options, mode :string, math : string, outName : str
 }
 
 public alias runMathStaticFun 
-  = ( content : string, outName : string,
+  = ( content : string, inName : string, outName : string,
       texNameDvi : string, texNamePdf : string,
       dviPages : pages, pdfPages : pages,
       oldMathDvi : string, oldMathPdf : string,
@@ -79,7 +79,7 @@ public alias runMathStaticFun
 
 
 public function mathStatic( mathDvi : string, mathPdf : string,  
-                            outName : string, xopts : options, content : string, 
+                            inName : string, outName : string, xopts : options, content : string, 
                             runMathStatic : runMathStaticFun,  
                             continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
 {
@@ -125,7 +125,7 @@ public function mathStatic( mathDvi : string, mathPdf : string,
     return continue(Nothing)
   }
   
-  runMathStatic( content, outName, texNameDvi, texNamePdf, 
+  runMathStatic( content, inName, outName, texNameDvi, texNamePdf, 
                  dviPages, pdfPages, oldMathDvi, oldMathPdf,
                  xopts, continue )
 }

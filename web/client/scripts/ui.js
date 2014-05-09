@@ -240,6 +240,7 @@ var UI = (function() {
     self.changed = false;
     self.editor.addListener("change", function (e) {    
       self.changed = true;
+      self.lastEditChange = Date.now();
     });
 
     self.keybinding = self.editor.getHandlerService().bind({
@@ -400,18 +401,6 @@ var UI = (function() {
         return self.generatePdf(); 
       });
     }
-
-    document.getElementById("clear-local").onclick = function(ev) {
-      self.event( "cleared local storage", "clearing...", State.Loading, function() {
-        if (localStorage) {
-          if (self.storage && !self.storage.isSynced()) {
-            var yes = window.confirm( "Clearing the local storage will discard any local changes!\nAre you sure?");
-            if (!yes) return;
-          }
-          localStorage.clear();
-        }
-      });
-    };
 
     document.getElementById("edit-select").onmouseenter = function(ev) {
       self.anonEvent( function() {
@@ -706,7 +695,9 @@ var UI = (function() {
         self.changed = false;
         self.stale = self.stale || changed;
         self.storage.setEditPosition( self.editName, self.editor.getPosition() );
-        if (changed && !self.refreshContinuous) return false;
+        if (!self.refreshContinuous && self.lastEditChange) {
+          if (Date.now() - self.lastEditChange < 1000) return false;
+        }
         return self.stale;
       },
       function(round) {
@@ -936,11 +927,18 @@ var UI = (function() {
   }
 
 
-  UI.prototype.displayFile = function(file) {
+  UI.prototype.displayFile = function(file,extensive) {
     var disable = (storage.isEditable(file) ? "" : " disable");
     var icon = "<span class='file-status'>" + (file.modified? "&bull;" : "") + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
-    return span;
+    var extra = "";
+    if (extensive) {
+      var kb = (file.content.length + 1023)/1024;
+      if (kb > 200) {
+        extra = "<span class='file-size'>" + kb.toFixed(0) + "kb</span>";
+      }
+    }
+    return span + extra;
   }
 
   UI.prototype.editSelect = function() {
@@ -957,7 +955,7 @@ var UI = (function() {
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
                       "class='button item file" + disable + main + hide + "'>" + 
-                          self.displayFile(file) + "</div>";
+                          self.displayFile(file,true) + "</div>";
         if (util.startsWith(file.mime,"image/")) images.push(line); 
         else if (!disable) files.push(line);
         else generated.push(line)
@@ -1189,7 +1187,7 @@ var UI = (function() {
         return;
       }
       var lineNo = findMetaPos(self.getEditText());      
-      if (lineNo > 0) pos = { lineNumber: lineNo, column: 0 };      
+      if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
     }
     self.insertText( text + "\n", pos );
   }

@@ -26,6 +26,10 @@ function quote( s : string ) : string {
   "\"" + s + "\""
 }
 
+// normalize a file name: needed for latex 
+function norm( fname : string ) : string {
+  fname.replaceAll("\\", "/");
+}
 
 function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (int) -> io () ) : io () {
   if (tasks.isNil) return continue(0)
@@ -46,7 +50,7 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
-  bibtexCmd = opts.bibtex.quote + " \"" + bibFile.basename + "\""
+  bibtexCmd = opts.bibtex.quote + " " + bibFile.basename.quote
   opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
     if (err!=0) {
@@ -69,28 +73,33 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
   },0,bibFile.dirname)
 }
 
-public function runPdfLaTeX( texFile : string, opts : options, content : string, continue : () -> io () ) {
+public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
   opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
   notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
-  runLaTeX( texFile, opts.getPdflatex, opts, content, notfound, 0, True,
+  runLaTeX(srcName, texFile, opts.getPdflatex, opts, content, notfound, 0, True,
     function(err) { continue() } )  
 }
 
 
 
-function runLaTeX( texFile : string, texCmd : string, opts : options, 
+function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : options, 
                     content : string,
                     notfound : string,
                     runCount : int = 0,
                     showWarnings : bool = True,
                     continue : (err : int) -> io () )
 {
-  latexCmd = texCmd.quote + " -halt-on-error -interaction=batchmode \"" + texFile.basename + "\""
+  latexCmd = texCmd.quote + " -output-directory=" + texFile.dirname.norm.quote + 
+                " -halt-on-error -interaction=batchmode" + 
+                " " + texFile.norm.quote
+
   opts.print("> " + latexCmd,3)
+  
   system(latexCmd, function(err:int,stdout:string,stderr:string) {
     logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
       opts.printErr("error while running: \n> " + latexCmd)
+      trace("err: " + err.show + "\n" + stdout + stderr)
       //println(stdout + stderr)
       system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
@@ -119,14 +128,14 @@ function runLaTeX( texFile : string, texCmd : string, opts : options,
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
         opts.print("rerun to resolve references...")
-        runLaTeX( texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, continue)
+        runLaTeX( srcFile, texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, continue)
       }
       else {
         if (showWarnings) then latexShowWarnings(texFile,logout,content,opts)
         continue(0)
       }
     }
-  },0,texFile.dirname)
+  },0,srcFile.dirname)
 } 
 val rxLatexErr = regex(@"^\*\* ERROR .*|^![\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True)
 
@@ -165,15 +174,15 @@ function mathFormat( xopts : options, mode :string, math : string, outName : str
   (texName,texFinalName,mathContent(xopts,mode,math))
 }
 
-public function runMathStatic( content : string, outName : string,
+public function runMathStatic( content : string, inName: string, outName : string,
                         texNameDvi : string, texNamePdf : string,
                         dviPages : pages, pdfPages : pages,
                         oldMathDvi : string, oldMathPdf : string,
                         xopts : options, continue : (maybe<dict<mathinfo>>) -> io () ) : io ()
 {
   concurrent([
-      fun(cont) { mathSnippetsToDvi( texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages, cont ) },
-      fun(cont) { mathSnippetsToPdf( texNamePdf, xopts, content, oldMathPdf, pdfPages, cont ) }
+      fun(cont) { mathSnippetsToDvi( inName, texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages, cont ) },
+      fun(cont) { mathSnippetsToPdf( inName, texNamePdf, xopts, content, oldMathPdf, pdfPages, cont ) }
     ], 
     fun(err) {
       if (err != 0) return continue(Nothing)
@@ -196,7 +205,7 @@ public function runMathStatic( content : string, outName : string,
 }
 
 
-function mathSnippetsToDvi( texName : string, xopts : options, 
+function mathSnippetsToDvi( srcName :string, texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             dviPages : pages, pdfPages : pages,
                            continue : (int) -> io () ) : io () 
@@ -205,12 +214,12 @@ function mathSnippetsToDvi( texName : string, xopts : options,
 
   xopts.print("running " + xopts.latex.stemname + " on math...   (dvi)")
   notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
-  runLaTeX( texName, xopts.latex, xopts, content, notfound, 0, False,
+  runLaTeX( srcName, texName, xopts.latex, xopts, content, notfound, 0, False,
               continue ) 
 }  
 
 
-function mathSnippetsToPdf( texName : string, xopts : options, 
+function mathSnippetsToPdf( srcName: string, texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             pages : pages,
                            continue : (int) -> io () ) : io () 
@@ -221,7 +230,7 @@ function mathSnippetsToPdf( texName : string, xopts : options,
     notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
     texCmd = xopts.getMathpdflatex
     xopts.print("running " + texCmd.stemname + " on math... (pdf)")
-    runLaTeX( texName, texCmd, xopts, content, notfound, 0, False, continue )
+    runLaTeX( srcName, texName, texCmd, xopts, content, notfound, 0, False, continue )
   }
   else {
     // use dvips and ps2pdf to get a pdf
