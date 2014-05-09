@@ -54,7 +54,7 @@ var madokoMode = {
             cases: {
               "$2": { token: 'keyword.header.custom.$2', bracket: "@open" },
               "$3": { token: 'keyword.header.custom.$3', bracket: "@close" },
-              "$4~(equation|texraw)": { token: 'keyword.header.custom.$1', bracket: "@open", next: "@latexblock" },
+              "$4~(equation|texraw)": { token: 'keyword.header.custom.$1', bracket: "@open", next: "@latexblock.$1" },
               "$4": { token: 'keyword.header.custom.$1', bracket: "@open" },
               "@default": { token: 'keyword.header.custom.$1', bracket: "@close" }
             }}],      
@@ -102,12 +102,12 @@ var madokoMode = {
         
         latexblock: [
           [/\s*\{[^\}]*\}/, 'string.escape' ],
-          [/./, { token: "@rematch", switchTo: "latexblockcontent.$S2" } ]      
+          [/./, { token: "@rematch", switchTo: "@latexblockcontent.$S2" } ]      
         ],
         
         latexblockcontent: [
-          [/^\s*~+\s*$/, { cases: {
-            "$1==$S2": { token: 'keyword.header.custom.latex', bracket: '@close', next: '@pop' },
+          [/^\s*(~+)\s*$/, { cases: {
+            "$1==$S2": { token: 'keyword.header.custom.$1', bracket: '@close', next: '@pop' },
             "@default": "code.latex" 
           }}],
           [/\\[a-zA-Z]+|\\.?/, "code.keyword.latex" ],
