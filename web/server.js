@@ -17,7 +17,6 @@ var https   = require("https");
 var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
-var cookieSession = require("cookie-session");
 
 // -------------------------------------------------------------
 // Wrap promises
@@ -173,8 +172,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize.toString() + "mb", strict: false }));
-app.use(cookieParser("@MadokoRocks!@!@!"));
-app.use(cookieSession({key:"madoko.sess", keys:["madokoSecret1","madokoSecret2"]}));
+app.use(cookieParser(fs.readFileSync("ssl/madoko-cookie.txt",{encoding:"utf-8"})));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -352,12 +350,12 @@ var logev  = new Log("log-event");
 
 // Get a unique user path for this session.
 function getUser( req,res ) {
-  var userid = req.signedCookies.userid;
+  var userid = req.signedCookies.auth;
   if (!userid) {
     var domain = domainsGet(req);
     if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
     userid = uniqueHash();
-    res.cookie("userid", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
+    res.cookie("auth", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
     domain.newUsers++;
   }
   var user = usersGet(userid);
