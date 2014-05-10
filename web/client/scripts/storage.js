@@ -477,6 +477,10 @@ function getEditPosition(file) {
   return (file.position || { lineNumber: 1, column: 1 });
 }
 
+function pushAtomic( fpath, time ) {
+  return util.requestPOST( "rest/push-atomic", { name: fpath, time: time.toISOString() } );
+}
+
 var Storage = (function() {
   function Storage( remote ) {
     var self = this;
@@ -790,18 +794,22 @@ var Storage = (function() {
     }
     else {
       // write back the client changes
-      // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
-      var file0 = util.copy(file);
-      return self.remote.pushFile( file0 ).then( function(createdTime) {
-        //newFile.modified = false;
-        var file1 = self.files.get(file.path);
-        if (file1) { // could be deleted in the mean-time?
-          file1.original = file0.content;
-          file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
-          file1.createdTime = createdTime;
-          self._updateFile(file1);
-        }
-        return self._syncMsg(file, "save to server"); 
+      return pushAtomic( file.path, remoteTime ).then( function() {
+        // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
+        var file0 = util.copy(file);
+        return self.remote.pushFile( file0 ).then( function(createdTime) {
+          //newFile.modified = false;
+          var file1 = self.files.get(file.path);
+          if (file1) { // could be deleted in the mean-time?
+            file1.original = file0.content;
+            file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
+            file1.createdTime = createdTime;
+            self._updateFile(file1);
+          }
+          return self._syncMsg(file, "save to server"); 
+        });
+      }, function(err) {
+        throw new Error( self._syncMsg(file,"cannot save to server: file was saved concurrently by another user!", "save to server") );
       });
     }
   }
@@ -855,15 +863,19 @@ var Storage = (function() {
           file0.content  = res.merged;
           file0.modified = true;
           self._updateFile(file0);
-          return self.remote.pushFile(file0).then( function(createdTime) {
-            var file1 = self.files.get(file.path);
-            if (file1) { // could be deleted?
-              file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
-              file1.createdTime = createdTime;
-              file1.original    = file0.content;
-              self._updateFile(file1);
-            }
-            return self._syncMsg( file, "merge from server" );
+          return pushAtomic(file0.path, remoteFile.createdTime).then( function() {
+            return self.remote.pushFile(file0).then( function(createdTime) {
+              var file1 = self.files.get(file.path);
+              if (file1) { // could be deleted?
+                file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
+                file1.createdTime = createdTime;
+                file1.original    = file0.content;
+                self._updateFile(file1);
+              }
+              return self._syncMsg( file, "merge from server" );
+            });
+          }, function(err) {
+            throw new Error( self_syncMsg( file, "merged from server but cannot save: file was saved concurrently by another user", "merge from server" ) );
           });
         }
       }

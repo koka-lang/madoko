@@ -6,6 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
+var readline= require("readline");
 var cp      = require("child_process");
 var mkdirp  = require("mkdirp");
 var rmdir   = require("rimraf");
@@ -24,6 +25,7 @@ var cookieParser  = require("cookie-parser");
 // -------------------------------------------------------------
 var Promise = require("./client/scripts/promise.js");
 var Map     = require("./client/scripts/map.js");
+var date    = require("./client/scripts/date.js");
 
 function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
@@ -53,7 +55,7 @@ function onError(req,res,err) {
   console.log("*******");
   console.log(err);
   var result = {
-    message: err.killed ? "process time-out" : err.toString(),
+    message: err.killed ? "process time-out" : (err.message || err.toString()),
     code: err.code || 0,
   };
   result.httpCode = err.httpCode || (startsWith(result.message,"unauthorized") ? 403 : 500);
@@ -71,6 +73,17 @@ function onError(req,res,err) {
 
   res.send( result.httpCode, result );
 }
+
+// -------------------------------------------------------------
+// server mode 
+// -------------------------------------------------------------
+var Mode = {
+  Normal: "normal",
+  Maintenance: "maintenance",
+};
+
+var mode = Mode.maintenance;
+
 
 // -------------------------------------------------------------
 // Events 
@@ -100,12 +113,13 @@ setInterval( function() {
       domain.newUsers = 0;
     }
   });
-}, 60 * 60 * 1000); 
+}, hour); 
 
 function event( req, res, action, maxRequests ) {
   var domain = null;
   if (!maxRequests) maxRequests = limits.requestsPerDomain;
   try {
+    if (mode !== Mode.Normal) throw { httpCode: 503, message: "server is in " + mode + " mode" };
     var entry =  {
       ip: req.ip,
       url: req.url,
@@ -147,18 +161,22 @@ function event( req, res, action, maxRequests ) {
 
 var runDir = "run"
 var mb        = 1024*1024;
+var second    = 1000;
+var minute    = 60*second;
+var hour      = 60*minute;
 
 var limits = {
   requestsPerDomain: 10,
-  requestsPerUser: 2,
-  requestNewUser: 5,
+  requestsPerUser  : 2,
+  requestNewUser   : 5,
   maxProcesses: 10, 
-  hashLength: 16,
-  fileSize: 5,                // max file-size in mb
-  cookieAge: 24 * 60 * 60000, // 1 day for now
-  timeoutPDF: 60000,
-  timeoutMath: 30000,
-  timeoutGET: 5000,
+  hashLength  : 16,  
+  fileSize    : 5*mb,         
+  cookieAge   : 24 * hour,  // 1 day for now
+  timeoutPDF  : minute,
+  timeoutMath : 30*second,
+  timeoutGET  : 5*second,
+  atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
 }
 
 // -------------------------------------------------------------
@@ -173,7 +191,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser({limit: limits.fileSize.toString() + "mb", strict: false }));
+app.use(bodyParser({limit: limits.fileSize, strict: false }));
 app.use(cookieParser(fs.readFileSync("ssl/madoko-cookie.txt",{encoding:"utf-8"})));
 
 app.use(function(err, req, res, next){
@@ -315,7 +333,7 @@ var Log = (function(){
     self.log = [];
     self.ival = setInterval( function() {
       var size = self.flush();
-      if (size > limits.fileSize * mb) {
+      if (size > limits.fileSize) {
         self.start(n+1);
       }
     }, 1000 );
@@ -461,7 +479,7 @@ function readFiles( userpath, docname, pdf ) {
 
     return fstat( fpath ).then( function(stats) {
       if (!stats) return readError();
-      if (stats.size > limits.fileSize*mb) return Promise.rejected( new Error("generated file too large: " + fname) );
+      if (stats.size > limits.fileSize) return Promise.rejected( new Error("generated file too large: " + fname) );
       return readFile( fpath ).then( function(buffer) {
           var encoding = encodingFromExt(fname);
           return {
@@ -545,7 +563,7 @@ function requestGET(query,encoding) {
       var body = "";
       res.on('data', function(d) {
         body += d;
-        if (body.length > limits.fileSize * mb) {
+        if (body.length > limits.fileSize) {
           req.abort();
         }
       });
@@ -559,6 +577,52 @@ function requestGET(query,encoding) {
       })
     });
   });  
+}
+
+/* -------------------------------------------------------------
+   Enable atomic file push
+
+Since cloud storage like onedrive generally don't provide 
+atomic updates, we provide it. The idea is that a client 
+will push a file update together with the creation time it expects
+the file to be. 
+------------------------------------------------------------- */
+
+var atomics = new Map();
+
+// recycle locks after atomicDelay
+setInterval( function() {
+  var now = Date.now();
+  atomics.forEach( function(name,info) {
+    if (info.created + limits.atomicDelay < now) {
+      atomics.remove(name);
+    }
+  });
+}, limits.atomicDelay / 4 );
+
+function pushAtomic( name, time ) {
+  if (!name || typeof name !== "string") throw { httpCode: 400, message: "invalid request (no 'name')" };
+  if (!time) time = new Date(0);
+  else if (typeof time === "string") time = date.dateFromISO(time);
+  else if (!(time instanceof Date)) time = new Date(time.toString());
+
+  if (time.getTime() <= 0) {
+    atomics.remove(name);
+    return { message: "released" };
+  }
+  else {
+    var info = atomics.get(name);
+    var atime = (info ? info.time : new Date(0));
+    if (atime < time) {
+      // someone is pushing a more recent version: ok
+      atomics.set(name, { time: time, created: Date.now() });
+      return { message: "acquired" };
+    }
+    else {
+      // ouch. someone pushed a more recent version concurrently.
+      throw { httpCode: 503, message: "failed" };
+    }
+  }
 }
 
 
@@ -582,6 +646,12 @@ app.post('/rest/run', function(req,res) {
   });  
 });
 
+app.post('/rest/push-atomic', function(req,res) {
+  event( req, res, function() {
+    return pushAtomic( req.body.name, req.body.time );
+  });
+});
+
 app.post("/report/csp", function(req,res) {
   event(req,res, function() {
     console.log(req.body);
@@ -591,11 +661,10 @@ app.post("/report/csp", function(req,res) {
 
 app.get("/redirect/live", function(req,res) {
   event( req, res, function() {
-    console.log("redirect authentication");
+    console.log("live redirect authentication");
     return liveCallbackPage;
   });
 });
-
 
 app.get("/onedrive", function(req,res) {
   event( req, res, function() {
@@ -619,3 +688,36 @@ var sslOptions = {
   rejectUnauthorized: false
 };
 https.createServer(sslOptions, app).listen(443);
+console.log("listening...");
+
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+function listen() {
+  rl.question( "quit (q, q!), maintenance (m), or normal (n)? ", function(answer) {
+    if (answer==="m") {
+      mode = Mode.Maintenance;
+    }
+    else if (answer==="n") {
+      mode = Mode.Normal;
+    }
+    else if (answer==="q" || answer==="q!") {
+      mode = Mode.Maintenance;
+      secs = (answer==="q!" ? 3 : 60);
+      console.log("quitting in " + secs.toString() + " seconds...");
+      rl.close();
+      setTimeout( function() { process.exit(0); }, secs*second );
+      return;
+    }
+    else {
+      console.log("unknown command: " + answer);
+    }
+    console.log( mode + " mode." )
+    return listen();
+  });
+}
+
+mode = Mode.Normal;
+listen();

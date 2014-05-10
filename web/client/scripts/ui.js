@@ -84,7 +84,7 @@ var origin = window.location.origin ? window.location.origin : window.location.p
 var State = { Normal:"normal", 
               Loading:"loading", 
               Init:"initializing", 
-              Syncing:"syncing",
+              Syncing:"synchronizing",
               Exporting:"exporting" }
 
 var UI = (function() {
@@ -377,7 +377,7 @@ var UI = (function() {
     };
 
     document.getElementById("sync-onedrive").onclick = function(ev) {
-      self.event( "synced to remote storage", "sync to...", State.Syncing, function() {
+      self.event( "synchronized with remote storage", "synchronizing to...", State.Syncing, function() {
         return self.syncTo( storage.syncToOnedrive );
       });
     }
@@ -433,7 +433,7 @@ var UI = (function() {
    
     document.getElementById("sync").onclick = function(ev) 
     {      
-      self.event( "synced", "syncing...", State.Syncing, function() {
+      self.event( "synchronized", "synchronizing with remote storage...", State.Syncing, function() {
         if (self.storage) {
           self.localSave();
           var cursors = {};        
@@ -933,9 +933,20 @@ var UI = (function() {
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
-      var kb = (file.content.length + 1023)/1024;
-      if (kb > 200) {
-        extra = "<span class='file-size'>" + kb.toFixed(0) + "kb</span>";
+      if (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path)) {
+        var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
+        var words   = matches ? matches.length : 0;
+        if (words > 0) {
+          extra = "<span class='file-size'>" + words.toFixed(0) + " words</span>";
+        }
+      }
+      else {
+        var len = file.content.length;
+        if (file.encoding === storage.Encoding.Base64) len = (len/4)*3;
+        var kb = (len + 1023)/1024;
+        if (kb > 100) {
+          extra = "<span class='file-size'>" + kb.toFixed(0) + " kb</span>";
+        }
       }
     }
     return span + extra;
@@ -1124,7 +1135,7 @@ var UI = (function() {
 
   function findMetaPos( text ) {
     var lineNo = 1;
-    var reMeta = /^(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:].*\r?\n(?![ \t])/;
+    var reMeta = /^(?:@(\w+)[ \t]+)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, \t]*?\*?)[ \t]*[:].*\r?\n(?![ \t])/;
     var cap;
     while ((cap = reMeta.exec(text))) {
       text = text.substr(cap[0].length);
