@@ -177,6 +177,7 @@ var limits = {
   timeoutMath : 30*second,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
+  logFlush    : 1*minute,
 }
 
 // -------------------------------------------------------------
@@ -322,6 +323,12 @@ var Log = (function(){
     self.start( max+1 );
   }
 
+  function leftfill( s, n, fill ) {
+    if (!fill) fill = " ";
+    if (s.length >= n) return s;
+    return (new Array(n - s.length + 1).join(fill) + s); 
+  }
+
   Log.prototype.start = function( n ) {
     var self = this;
     if (self.ival) {
@@ -329,14 +336,15 @@ var Log = (function(){
       flush();
     }
     self.logNum = n;
-    self.logFile = combine("log", self.base + self.logNum.toString() + ".txt");
+    var logNumStr = self.logNum.toFixed(0);
+    self.logFile = combine("log", self.base + leftfill(self.logNum.toString(),4,"0") + ".txt");
     self.log = [];
     self.ival = setInterval( function() {
       var size = self.flush();
       if (size > limits.fileSize) {
         self.start(n+1);
       }
-    }, 1000 );
+    }, limits.logFlush );
   }
 
   Log.prototype.flush = function() {
@@ -660,10 +668,10 @@ app.post("/report/csp", function(req,res) {
 });
 
 app.get("/redirect/live", function(req,res) {
-  event( req, res, function() {
+  //event( req, res, function() {
     console.log("live redirect authentication");
-    return liveCallbackPage;
-  });
+    res.send(200,liveCallbackPage);
+  //});
 });
 
 app.get("/onedrive", function(req,res) {

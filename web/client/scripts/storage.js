@@ -44,10 +44,31 @@ function onedrivePromise( call, premsg ) {
 }
 
 
+function onedriveAccessToken() {
+  if (!WL) return "";
+  var session = WL.getSession();
+  if (!session || !session.access_token) return "";
+  return "access_token=" + session.access_token;
+}
+
+var onedriveDomain = "https://apis.live.net/v5.0/";
+
 function onedriveGet( path, errmsg ) {
   if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection",errmsg), {} );
-  return onedrivePromise( WL.api( { path: path, method: "GET" }), errmsg );
+  //return onedrivePromise( WL.api( { path: path, method: "GET" }), errmsg );
+  var url = onedriveDomain + path + "?" + onedriveAccessToken();
+  return util.requestGET( url );
 }
+
+function onedriveWriteFileAt( file, folderId ) {
+  // TODO: resolve sub-directories
+  var self = this;
+  var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
+              onedriveAccessToken();    
+  var content = Encoding.decode( file.encoding, file.content );              
+  return util.requestPUT( {url:url,contentType:";" }, content );
+}
+
 
 
 function onedriveGetFileInfoFromId( file_id ) {
@@ -152,23 +173,6 @@ var Onedrive = (function() {
     return onedriveGetWriteAccess();
   }
 
-  function onedriveAccessToken() {
-    if (!WL) return "";
-    var session = WL.getSession();
-    if (!session || !session.access_token) return "";
-    return "access_token=" + session.access_token;
-  }
-
-  var onedriveDomain = "https://apis.live.net/v5.0/";
-  
-  function onedriveWriteFileAt( file, folderId ) {
-    // TODO: resolve sub-directories
-    var self = this;
-    var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
-                onedriveAccessToken();    
-    var content = Encoding.decode( file.encoding, file.content );              
-    return util.requestPUT( {url:url,contentType:";" }, content );
-  }
 
   function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
     return onedriveGetFileInfo( folderId, subFolderName ).then( function(folder) {
@@ -532,6 +536,11 @@ var Storage = (function() {
     self.files.forEach( function(fname,file) {
       return action(file);
     });
+  }
+
+  Storage.prototype.isConnected = function() {
+    var self = this;
+    return (self.remote && self.remote.type !== "null");
   }
 
   Storage.prototype.isSynced = function() {

@@ -129,6 +129,7 @@ var UI = (function() {
       util.dispatchEvent( self.checkLineNumbers, "change" );
       util.dispatchEvent( self.checkWrapLines, "change" );      
       util.dispatchEvent( self.checkDelayedUpdate, "change" );
+      util.dispatchEvent( self.checkAutoSync, "change" );
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
     }).always( function() {
@@ -238,6 +239,7 @@ var UI = (function() {
     });
     
     self.changed = false;
+    self.lastEditChange = 0;
     self.editor.addListener("change", function (e) {    
       self.changed = true;
       self.lastEditChange = Date.now();
@@ -356,6 +358,26 @@ var UI = (function() {
       }
     };
 
+    self.autoSyncIval = 0;
+    self.checkAutoSync = document.getElementById('checkAutoSync');
+    self.checkAutoSync.onchange = function(ev) {
+      if (self.autoSyncIval) {
+        clearInterval(self.autoSyncIval);
+        self.autoSyncIval = 0;
+      }
+      if (ev.target.checked) {
+        self.autoSyncIval = setInterval( function() {
+          if (self.state === State.Normal && self.storage.isConnected()) { 
+            if (Date.now() - self.lastEditChange > 5000) {
+              self.synchronize();
+            }
+          }
+        }, 30000 );
+      }      
+    }
+    util.dispatchEvent( self.checkAutoSync, "change");
+
+
     document.getElementById("menu-settings-content").onclick = function(ev) {
       if (ev.target && util.contains(ev.target.className,"button")) {
         var child = ev.target.children[0];
@@ -431,25 +453,11 @@ var UI = (function() {
       });
     };   
    
-    document.getElementById("sync").onclick = function(ev) 
-    {      
-      self.event( "synchronized", "synchronizing with remote storage...", State.Syncing, function() {
-        if (self.storage) {
-          self.localSave();
-          var cursors = {};        
-          var pos = self.editor.getPosition();
-          cursors["/" + self.docName] = pos.lineNumber;
-          self.showSpinner(true,self.syncer);    
-          return self.storage.sync( diff, cursors ).then( function() {
-            pos.lineNumber = cursors["/" + self.docName];
-            self.editor.setPosition(pos,true,true);
-            //self.localSave();
-          }).always( function() {          
-            self.showSpinner(false,self.syncer);    
-          });
-        }
-      });
-    };
+    document.getElementById("sync").onclick = function(ev) {      
+      self.synchronize();
+    }
+
+
 
     
     // narrow and wide editor panes
@@ -804,6 +812,7 @@ var UI = (function() {
       disableServer: self.checkDisableServer.checked,
       disableAutoUpdate: self.checkDisableAutoUpdate.checked,
       delayedUpdate : self.checkDelayedUpdate.checked,
+      autoSync: self.checkAutoSync.checked,
     };
     return localStorageSave("local", json, 
       (minimal ? undefined : function() {
@@ -902,6 +911,7 @@ var UI = (function() {
       self.checkLineNumbers.checked = json.showLineNumbers;
       self.checkWrapLines.checked = json.wrapLines;
       self.checkDelayedUpdate.checked = json.delayedUpdate;
+      self.checkAutoSync.checked = json.autoSync;
       var stg = storage.unpersistStorage(json.storage);      
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
@@ -1417,6 +1427,29 @@ var UI = (function() {
       self.showSpinner(false,self.syncer);    
       self.onError(err); 
     });
+  }
+
+  UI.prototype.synchronize = function() {
+    var self = this;
+    self.event( "", "", State.Syncing, function() {
+      if (self.storage) {
+        self.localSave();
+        var cursors = {};        
+        var line0 = self.editor.getPosition().lineNumber;
+        cursors["/" + self.docName] = line0;
+        self.showSpinner(true,self.syncer);    
+        return self.storage.sync( diff, cursors ).then( function() {
+          var line1 = cursors["/" + self.docName];
+          var pos = self.editor.getPosition();
+          if (pos.lineNumber >= line0) {
+            pos.lineNumber += (line1 - line0);
+            self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
+           }
+        }).always( function() {          
+          self.showSpinner(false,self.syncer);    
+        });
+      }
+    });    
   }
 
   // object    
