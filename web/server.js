@@ -368,7 +368,7 @@ var Log = (function(){
 
 var log    = new Log();
 var logerr = new Log("log-err");
-var logev  = new Log("log-event");
+var logev  = log; // new Log("log-event");
 
 // -------------------------------------------------------------
 // General server helpers
@@ -628,7 +628,7 @@ function pushAtomic( name, time ) {
     }
     else {
       // ouch. someone pushed a more recent version concurrently.
-      throw { httpCode: 503, message: "failed" };
+      throw { httpCode: 409, message: "failed" };
     }
   }
 }

@@ -858,15 +858,16 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function requestPOST( opts, params ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
-    req.open(reqparam.method || "POST", reqparam.url, true );
+    var method = reqparam.method || "POST";
+    req.open( method, reqparam.url, true );
     
     var timeout = 0;  // timeout handler id.
     var promise = new Promise();
 
     function reject() {
       if (timeout) clearTimeout(timeout);
-      var msg = req.statusText;
-      var res = req.responseText;
+      var domain = reqparam.url.replace( /([^\/])\/(?:[^\/].*)?$/, "$1" );
+      var msg    = req.statusText || ("network request failed (" + domain + ")");
       var type = req.getResponseHeader("Content-Type");
       if (req.responseText && startsWith(type,"application/json")) {
         var res = JSON.parse(req.responseText);
@@ -877,12 +878,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           msg = msg + ": " + res.message;
         }
       }
-      else {
+      else if (req.responseText) {
         msg = msg + ": " + req.responseText;
       }
+      
       //cont(msg, res, req.response);
-      console.log(msg + "\n request: " + reqparam.method + ": " + reqparam.url );
-      promise.reject(msg);
+      console.log(msg + "\n request: " + method + ": " + reqparam.url );
+      promise.reject( { message: msg, httpCode: req.status } );
     }
 
     req.onload = function(ev) {

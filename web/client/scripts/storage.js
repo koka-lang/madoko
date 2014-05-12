@@ -818,7 +818,10 @@ var Storage = (function() {
           return self._syncMsg(file, "save to server"); 
         });
       }, function(err) {
-        throw new Error( self._syncMsg(file,"cannot save to server: file was saved concurrently by another user!", "save to server") );
+        if (err.httpCode == 409) 
+          throw new Error( self._syncMsg(file,"cannot save to server: file was saved concurrently by another user!", "save to server") );
+        else 
+          throw err;
       });
     }
   }
@@ -884,7 +887,10 @@ var Storage = (function() {
               return self._syncMsg( file, "merge from server" );
             });
           }, function(err) {
-            throw new Error( self_syncMsg( file, "merged from server but cannot save: file was saved concurrently by another user", "merge from server" ) );
+            if (err.httpCode == 409) 
+              throw new Error( self_syncMsg( file, "merged from server but cannot save: file was saved concurrently by another user", "merge from server" ) );
+            else 
+              throw err;
           });
         }
       }
