@@ -52,7 +52,7 @@ function localStorageSave( fname, obj, createMinimalObj ) {
     if (createMinimalObj) {
       try {
         localStorage.setItem( key, JSON.stringify(createMinimalObj()) );
-        util.message("full local backup is too large; using minimal backup instead", util.Msg.Info);
+        util.message("full local backup is too large; using minimal backup instead", util.Msg.Trace);
         return true;
       }
       catch(e2) {};

@@ -181,7 +181,7 @@ var Onedrive = (function() {
       return util.requestPOST( url, { name: subFolderName, description: "" } ).then( function(newFolder) {
           return newFolder.id;
         }, function(err) {
-          if (!recurse && err && util.contains(err.toString(),"(resource_already_exists)")) {
+          if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
             // multiple requests can result in this error, try once more
             return onedriveEnsureFolder( folderId, subFolderName, true );
           }
