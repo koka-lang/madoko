@@ -351,3 +351,8 @@ div.boxed {
 #help-content {
   width: 21em;
 }
+
+#koka-console {
+  width: 25em;
+  left: -6.5em;
+}
