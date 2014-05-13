@@ -14,6 +14,7 @@ var fs      = require("fs");
 var path    = require("path");
 var crypto  = require("crypto");
 var https   = require("https");
+var http    = require("http");
 
 var express       = require('express');
 var bodyParser    = require("body-parser");
@@ -689,7 +690,7 @@ app.use('/', express.static( combine(__dirname, "client") ));
 
 
 // -------------------------------------------------------------
-// Start listening
+// Start listening on https
 // -------------------------------------------------------------
 
 var sslOptions = {
@@ -701,6 +702,24 @@ var sslOptions = {
 };
 https.createServer(sslOptions, app).listen(443);
 console.log("listening...");
+
+
+// -------------------------------------------------------------
+// Set up http redirection
+// -------------------------------------------------------------
+
+var httpApp = express();
+
+httpApp.use(function(req, res, next) {
+  res.redirect("https://" + req.host + req.path);
+});
+
+http.createServer(httpApp).listen(80);
+
+
+// -------------------------------------------------------------
+// Listen on the console for commands
+// -------------------------------------------------------------
 
 var rl = readline.createInterface({
   input: process.stdin,
