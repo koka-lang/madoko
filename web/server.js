@@ -509,7 +509,7 @@ function readFiles( userpath, docname, pdf ) {
 
 // execute madoko program
 function madokoExec( userpath, docname, flags, timeout ) {
-  var command = /* "madoko */ "node ../../client/lib/cli.js " + flags + " " + stdflags + " "  + docname;
+  var command = /* "madoko */ "node ../../client/lib/cli.js " + flags + " " + stdflags + " \""  + docname + "\"";
   return new Promise( function(cont) {
     console.log("> " + command);
     cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
@@ -519,6 +519,7 @@ function madokoExec( userpath, docname, flags, timeout ) {
 // Run madoko program
 function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
+    if (!isValidFileName(docname)) return Promise.rejected( new Error("unauthorized document name: " + docname) );
     var flags = " -mmath-embed:512 -membed:512 -vv" + (pdf ? " --pdf" : "");
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       console.log("result: \n" + stdout + "\n" + stderr + "\n");
