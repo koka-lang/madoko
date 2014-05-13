@@ -577,7 +577,7 @@ function requestGET(query,encoding) {
       });
       res.on('end', function() {
         clearTimeout(timeout);
-        cont( null, (encoding ? new Buffer(body,encoding) : body) );
+        cont( null, body ); //(encoding ? new Buffer(body,encoding) : body) );
       });
       res.on('error', function(err) {
         clearTimeout(timeout);
