@@ -41,36 +41,23 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   };
   var escapes_regex = new RegExp("[" + Object.keys(escapes).join("") + "]", "g");
 
-  function dateFromISO(s) {
-    function parseNum(n) {
-      var i = parseInt(n,10);
-      return (isNaN(i) ? undefined : i);
-    }
-
-    var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d))?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
-    var cap = rxISO.exec( s.replace(/\s+/g, "") );
-    if (!cap) return new Date(0);    
-    var utc  = new Date( Date.UTC( parseNum(cap[1]), parseNum(cap[2])-1, parseNum(cap[3]),
-                                   parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]) ) );
-    if (!utc || isNaN(utc)) return new Date(0);
-    var tz = (cap[9]=="+" ? -1 : 0) * ((parseNum(cap[8])||0) * 60 + (parseNum(cap[9])||0));
-    if (tz !== 0) utc.setUTCMinutes( utc.getUTCMinutes + tz );
-    return utc;
-  }
-
   function htmlEscape(txt) {
     return txt.replace(escapes_regex, function (s) {
       var r = escapes[s];
       return (r ? r : "");
     });
   }
-
+  
   function stringEscape(txt) {
     return txt.replace(/["'\\\n\r]/g, function(s) {
       if (s==="\n") return "\\n";
       else if (s==="\r") return "\\r";
       else return "\\" + s;
     });
+  }
+
+  function spanLines(html,cls) {
+    return html.replace(/(^|<br>)(.*?)(?=<br>|$)/g, "$1<span class='" + cls + "'>$2</span>");
   }
 
   // Call for messages
@@ -92,7 +79,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         if (n && s.length > n-2) {
           s = s.substr(0,n) + "...";
         }
-        return "<span class='msg-" + kind + "'>" + htmlEscape(s) + "</span>";
+        return "<span class='msg-" + kind + "'>" + spanLines(htmlEscape(s),"msg-line") + "</span>";
       }
 
       consoleOut.innerHTML = "<div class='msg-section'>" + span(txt) + "</span></div>" + consoleOut.innerHTML;
@@ -188,6 +175,24 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     __.prototype = b.prototype;
     d.prototype = new __();
   };
+
+  function dateFromISO(s) {
+    function parseNum(n) {
+      var i = parseInt(n,10);
+      return (isNaN(i) ? undefined : i);
+    }
+
+    var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d))?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
+    var cap = rxISO.exec( s.replace(/\s+/g, "") );
+    if (!cap) return new Date(0);    
+    var utc  = new Date( Date.UTC( parseNum(cap[1]), parseNum(cap[2])-1, parseNum(cap[3]),
+                                   parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]) ) );
+    if (!utc || isNaN(utc)) return new Date(0);
+    var tz = (cap[9]=="+" ? -1 : 0) * ((parseNum(cap[8])||0) * 60 + (parseNum(cap[9])||0));
+    if (tz !== 0) utc.setUTCMinutes( utc.getUTCMinutes + tz );
+    return utc;
+  }
+
 
 
   function contains( xs, s ) {

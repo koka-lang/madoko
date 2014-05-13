@@ -454,10 +454,22 @@ var UI = (function() {
       });
     };
 
-    document.getElementById("koka-console-out").onclick = function(ev) {
+    document.getElementById("koka-console-out").ondblclick = function(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
-        console.log("clicked")
+        while(elem && elem.nodeName !== "DIV" && elem.className !== "msg-line") {
+          elem = elem.parentNode;
+        }
+        if (elem && elem.className==="msg-line") {
+          var line = elem.textContent;
+          var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/.exec(line);
+          if (cap) {
+            var lineNo = parseInt(cap[1]);
+            if (!isNaN(lineNo)) {
+              self.editor.setPosition( { lineNumber: lineNo, column: 1 }, true, true );
+            }
+          }
+        }
       });
     }
    
