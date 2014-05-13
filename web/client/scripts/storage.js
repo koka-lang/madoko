@@ -515,7 +515,7 @@ var Storage = (function() {
     if (minimal) {
       var map = self.files.copy();
       map.forEach( function(path,file) {
-        if (!util.startsWith(file.mime,"text/")) map.remove(path);
+        if (!util.startsWith(file.mime,"text/") || util.hasGeneratedExt(path)) map.remove(path);
       });
       pfiles = map.persist();
     }

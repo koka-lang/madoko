@@ -44,7 +44,7 @@ function localStorageSave( fname, obj, createMinimalObj ) {
     util.message("cannot make local backup: upgrade your browser.", util.Msg.Error );
     return false;
   }
-  try {
+  try {    
     localStorage.setItem( key, JSON.stringify(obj) );
     return true;
   }
@@ -52,6 +52,7 @@ function localStorageSave( fname, obj, createMinimalObj ) {
     if (createMinimalObj) {
       try {
         localStorage.setItem( key, JSON.stringify(createMinimalObj()) );
+        util.message("full local backup is too large; using minimal backup instead", util.Msg.Info);
         return true;
       }
       catch(e2) {};
@@ -815,7 +816,8 @@ var UI = (function() {
       autoSync: self.checkAutoSync.checked,
     };
     return localStorageSave("local", json, 
-      (minimal ? undefined : function() {
+      (//minimal ? undefined : 
+       function() {
         json.storage = self.storage.persist(true); // persist minimally
         return json;
       }));
