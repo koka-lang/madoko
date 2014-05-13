@@ -711,6 +711,7 @@ console.log("listening...");
 var httpApp = express();
 
 httpApp.use(function(req, res, next) {
+  console.log("http redirection: " + req.url );
   res.redirect("https://" + req.host + req.path);
 });
 
