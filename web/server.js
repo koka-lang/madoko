@@ -174,10 +174,11 @@ var limits = {
   fileSize    : 5*mb,         
   cookieAge   : 24 * hour,  // 1 day for now
   timeoutPDF  : minute,
-  timeoutMath : 30*second,
+  timeoutMath : 45*second,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
   logFlush    : 1*minute,
+  rmdirDelay  : 30*second,
 }
 
 // -------------------------------------------------------------
@@ -421,13 +422,15 @@ function withUser( req,res, action ) {
     log.entry( entry );
     if (user.path) {
       //console.log("remove: " + user.path);      
-      rmdir( user.path, function(err) {
-        if (err) {
-          var eentry = { error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
-          extend(eentry,entry);          
-          logerr.entry( eentry );
-        }
-      });    
+      setTimeout( function() {
+        rmdir( user.path, function(err) {
+          if (err) {
+            var eentry = { error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
+            extend(eentry,entry);          
+            logerr.entry( eentry );
+          }
+        });
+      }, limits.rmdirDelay );    
     }
     user.user.requests--;
   });
@@ -516,9 +519,9 @@ function madokoExec( userpath, docname, flags, timeout ) {
 // Run madoko program
 function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
-    var flags = " -mmath-embed:512 -membed:512 " + (pdf ? " --pdf" : "");
+    var flags = " -mmath-embed:512 -membed:512 -vv" + (pdf ? " --pdf" : "");
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
-      //console.log("result: \n" + stdout + "\n" + stderr + "\n");
+      console.log("result: \n" + stdout + "\n" + stderr + "\n");
       return readFiles( userpath, docname, pdf ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
