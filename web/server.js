@@ -178,7 +178,7 @@ var limits = {
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
   logFlush    : 1*minute,
-  rmdirDelay  : 30*second,
+  rmdirDelay  : 3*second,
 }
 
 // -------------------------------------------------------------
@@ -530,8 +530,8 @@ function madokoRun( userpath, docname, files, pdf ) {
         };
       });
     }, function(err,stdout,stderr) {
-      //console.log("command error: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
-      //console.log(err);
+      console.log("command error: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
+      console.log(err);
       err.stdout = stdout;
       err.stderr = stderr;
       throw err;
@@ -716,7 +716,7 @@ function listen() {
     }
     else if (answer==="q" || answer==="q!") {
       mode = Mode.Maintenance;
-      secs = (answer==="q!" ? 3 : 60);
+      secs = (answer==="q!" ? 10 : 60);
       console.log("quitting in " + secs.toString() + " seconds...");
       rl.close();
       setTimeout( function() { process.exit(0); }, secs*second );
