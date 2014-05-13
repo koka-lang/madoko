@@ -452,7 +452,14 @@ var UI = (function() {
           }
         }
       });
-    };   
+    };
+
+    document.getElementById("koka-console-out").onclick = function(ev) {
+      self.anonEvent( function() {
+        var elem = ev.target;
+        console.log("clicked")
+      });
+    }
    
     document.getElementById("sync").onclick = function(ev) {      
       self.synchronize();
