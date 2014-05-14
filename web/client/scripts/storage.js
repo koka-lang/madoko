@@ -258,6 +258,23 @@ function onedriveOpenFile() {
   });
 }     
 
+function dropboxOpenFile() {
+  return new Promise( function(cont) {
+    Dropbox.choose( {
+      success: function(files) {
+        console.log(files);
+        cont("success", {} );
+      },
+      cancel: function() {
+        cont("canceled");
+      },
+      linkType: "direct",
+      multiselect: false,
+      extensions: ["mdk","md","mkdn"],
+    });
+  });
+}
+
 function onedriveOpenFolder() {
   if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
   return onedrivePromise( WL.fileDialog( {
@@ -1019,6 +1036,7 @@ var Storage = (function() {
 return {
   onedriveInit: onedriveInit,
   onedriveOpenFile: onedriveOpenFile,
+  dropboxOpenFile: dropboxOpenFile,
   localOpenFile: localOpenFile,
   syncToLocal: syncToLocal,
   syncToOnedrive: syncToOnedrive,  

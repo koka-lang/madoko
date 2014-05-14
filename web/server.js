@@ -558,6 +558,16 @@ var liveCallbackPage =
 '</html>'
 ].join("\n");
 
+var dropboxCallbackPage = 
+['<html>',
+'<head>',
+'  <title>Madoko Dropbox Callback</title>',
+'</head>',
+'<body>',
+'  Dropbox callback',
+'</body>',
+'</html>'
+].join("\n");
 
 // -------------------------------------------------------------
 // Onedrive request redirection:
@@ -676,6 +686,15 @@ app.get("/redirect/live", function(req,res) {
   //event( req, res, function() {
     console.log("live redirect authentication");
     res.send(200,liveCallbackPage);
+  //});
+});
+
+app.get("/redirect/dropbox", function(req,res) {
+  //event( req, res, function() {
+    console.log("dropbox redirect authentication");
+    console.log(req.query);
+    console.log(req.url);
+    res.send(200,dropboxCallbackPage);
   //});
 });
 

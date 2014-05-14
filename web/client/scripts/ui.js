@@ -399,6 +399,16 @@ var UI = (function() {
       });
     };
 
+    document.getElementById("load-dropbox").onclick = function(ev) {
+      self.event( "loaded from remote storage", "loading...", State.Loading, function() {
+        return self.checkSynced().then( function() {
+          return storage.dropboxOpenFile();        
+        }).then( function(res) { 
+          return self.openFile(res.storage,res.docName); 
+        });
+      });
+    };
+
     document.getElementById("sync-onedrive").onclick = function(ev) {
       self.event( "synchronized with remote storage", "synchronizing to...", State.Syncing, function() {
         return self.syncTo( storage.syncToOnedrive );
