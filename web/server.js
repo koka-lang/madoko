@@ -694,11 +694,13 @@ app.use('/', express.static( combine(__dirname, "client") ));
 // -------------------------------------------------------------
 
 var sslOptions = {
-  key: fs.readFileSync('./ssl/madoko-server.key'),
-  cert: fs.readFileSync('./ssl/madoko-server.crt'),
-  ca: fs.readFileSync('./ssl/daan-ca.crt'),
-  requestCert: true,
-  rejectUnauthorized: false
+  pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
+  passphrase: fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
+  //key: fs.readFileSync('./ssl/madoko-server.key'),
+  //cert: fs.readFileSync('./ssl/madoko-server.crt'),
+  //ca: fs.readFileSync('./ssl/daan-ca.crt'),
+  //requestCert: true,
+  //rejectUnauthorized: false
 };
 https.createServer(sslOptions, app).listen(443);
 console.log("listening...");
