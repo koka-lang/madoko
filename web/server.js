@@ -686,7 +686,11 @@ app.get("/onedrive", function(req,res) {
   }, 100 );
 });
 
-app.use('/', express.static( combine(__dirname, "client") ));
+var staticClient      = express.static( combine(__dirname, "client"));
+var staticMaintenance = express.static( combine(__dirname, "maintenance"));
+app.use('/', function(req,res,next) {
+  return (mode===Mode.Maintenance ? staticMaintenance : staticClient)(req,res,next);
+});
 
 
 // -------------------------------------------------------------
@@ -713,7 +717,9 @@ console.log("listening...");
 var httpApp = express();
 
 httpApp.use(function(req, res, next) {
-  console.log("http redirection: " + req.url );
+  var date = new Date().toISOstring() ;
+  console.log("http redirection: " + req.url + "( " + date + ")" );
+  log.log( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
   res.redirect("https://" + req.host + req.path);
 });
 
