@@ -717,9 +717,9 @@ console.log("listening...");
 var httpApp = express();
 
 httpApp.use(function(req, res, next) {
-  var date = new Date().toISOstring() ;
+  var date = new Date().toISOString() ;
   console.log("http redirection: " + req.url + "( " + date + ")" );
-  log.log( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
+  log.entry( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
   res.redirect("https://" + req.host + req.path);
 });
 
