@@ -540,7 +540,7 @@ var Storage = (function() {
 
   Storage.prototype.isConnected = function() {
     var self = this;
-    return (self.remote && self.remote.type !== "null");
+    return (self.remote && self.remote.type() !== "null");
   }
 
   Storage.prototype.isSynced = function() {
