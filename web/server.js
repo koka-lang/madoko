@@ -20,6 +20,9 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
+var allowedIps = /^(131\.107\.).*$/;
+var blockedIps = null;
+
 // -------------------------------------------------------------
 // Wrap promises
 // We use promises mostly to reliable catch exceptions 
@@ -121,6 +124,8 @@ function event( req, res, action, maxRequests ) {
   if (!maxRequests) maxRequests = limits.requestsPerDomain;
   try {
     if (mode !== Mode.Normal) throw { httpCode: 503, message: "server is in " + mode + " mode" };
+    if (allowedIps && !allowedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access" };
+    if (blockedIps && blockedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is blocked" };
     var entry =  {
       ip: req.ip,
       url: req.url,
