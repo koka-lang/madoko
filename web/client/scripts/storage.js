@@ -452,9 +452,11 @@ function syncToLocal( storage, docStem, newStem ) {
 }
 
 function syncToOnedrive( storage, docStem, newStem ) {
-  return onedriveOpenFolder().then( function(onedrive) {
+  return onedriveGetWriteAccess().then( function() {
+    return onedriveOpenFolder();
+  }).then( function(onedrive) {
     return syncTo( storage, onedrive, docStem, newStem );
-  })
+  });
 }
 
 

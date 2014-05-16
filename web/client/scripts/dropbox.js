@@ -49,23 +49,29 @@ function logout() {
   _access_token = null;
 }
 
-function chooseFile() {
+function chooseOneFile() {
   return new Promise( function(cont) {
     window.Dropbox.choose( {
       success: function(files) {
         if (!files || !files.length || files.length !== 1) cont(new Error("Can only select a single file to open"));    
-        console.log(files);
-        var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(files[0].link);
-        if (!cap) cont(new Error("Can only select files in the " + appRoot + " folder"));
-        cont(null, cap[1] );
+        cont(null, files[0] );
       },
       cancel: function() {
         cont( new Error("dropbox dialog was canceled") );
       },
       linkType: "direct",
       multiselect: false,
-      extensions: ["mdk","md","mkdn"],
+      extensions: [".mdk",".md",".mkdn"],
     });
+  });
+}
+
+function chooseFile() {
+  return chooseOneFile().then( function(file) {
+    var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(file.link);
+    if (!cap) cont(new Error("Can only select files in the " + appRoot + " folder"));
+    console.log(file);
+    return cap[1];
   });
 }
 
