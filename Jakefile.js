@@ -45,8 +45,8 @@ task("madoko", [], function(rebuild) {
   if (args.indexOf("--target=cs") >= 0) {
     args.unshift("-o" + outputDir + "net")
   }
-  fixVersion()
-  var cmd = kokaCmd + " -v " + args + " " + maincli
+  fixVersion();
+  var cmd = kokaCmd + " -v " + args + " " + maincli;
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
@@ -94,6 +94,7 @@ task("clean", function() {
 //-----------------------------------------------------
 desc("build web madoko")
 task("web", [], function() {
+  fixVersion("web/client/index.html");
   var args = Array.prototype.slice.call(arguments).join(" ")
   var cmd = kokaCmd + " -v -l " + args + " " + "web" + maincli
   jake.logger.log("> " + cmd);
@@ -305,12 +306,13 @@ function getVersion() {
 
 
 function fixVersion(fname) {
-  fname = fname || "options.kk";
-  fname = path.join(sourceDir,fname);
+  fname = fname || path.join(sourceDir,"options.kk");
+  
   var version = getVersion();
   var content1 = fs.readFileSync(fname,{encoding: "utf8"});
   if (content1) {
     var content2 = content1.replace(/^(public\s*val\s*version\s*=\s*)"[^"\n]*"/m, "$1\"" + version + "\"")
+                           .replace(/(<span\s+id="version">)[^<\n]*(?=<\/span>)/, "$1" + version)
     if (content1 !== content2) {
       jake.logger.log("updating version string in '" + fname + "' to '" + version + "'")
       fs.writeFileSync(fname,content2,{encoding: "utf8"});
