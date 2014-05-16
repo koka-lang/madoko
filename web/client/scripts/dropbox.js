@@ -8,12 +8,12 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
-var appKey      = "wa7oudh2k832mhz";
+var appKey      = "3vj9witefc2z44w";
 var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
-var contentUrl  = "https://api-content.dropbox.com/1/files/sandbox/";
-var metadataUrl = "https://api.dropbox.com/1/metadata/sandbox/";
-var pushUrl     = "https://api-content.dropbox.com/1/files_put/sandbox/"
-var appRoot     = "Apps/Madoko/";
+var contentUrl  = "https://api-content.dropbox.com/1/files/dropbox/";
+var metadataUrl = "https://api.dropbox.com/1/metadata/dropbox/";
+var pushUrl     = "https://api-content.dropbox.com/1/files_put/dropbox/"
+var appRoot     = "";
 
 var _access_token = null;
 
@@ -54,7 +54,8 @@ function chooseFile() {
     window.Dropbox.choose( {
       success: function(files) {
         if (!files || !files.length || files.length !== 1) cont(new Error("Can only select a single file to open"));    
-        var cap = new RegExp("^https://" + ".*?/" + appRoot + "(.*)$").exec(files[0].link);
+        console.log(files);
+        var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(files[0].link);
         if (!cap) cont(new Error("Can only select files in the " + appRoot + " folder"));
         cont(null, cap[1] );
       },
