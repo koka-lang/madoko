@@ -13,6 +13,7 @@ var rmdir   = require("rimraf");
 var fs      = require("fs");
 var path    = require("path");
 var crypto  = require("crypto");
+var dns     = require("dns");
 var https   = require("https");
 var http    = require("http");
 
@@ -56,8 +57,8 @@ function fstat( fpath ) {
 
 function onError(req,res,err) {
   if (!err) err = "unknown error";
-  console.log("*******");
-  console.log(err);
+  //console.log("*******");
+  //console.log(err);
   var result = {
     message: err.killed ? "process time-out" : (err.message || err.toString()),
     code: err.code || 0,
@@ -67,13 +68,24 @@ function onError(req,res,err) {
   if (err.stderr) result.stderr = err.stderr;
 
   //console.log("*****\nerror (" + result.httpCode.toString() + "): " + result.message);
-  if (logerr) logerr.entry( {
-    error: result,
-    user: res.user,
-    ip: req.ip,
-    url: req.url,
-    start: Date.now(),
-  });
+  if (logerr) {
+    dns.reverse(req.ip, function(err,doms) {
+      if (err) {
+        doms = null;
+        console.log("unable to resolve ip: " + err.toString() );
+      }
+      var date = new Date();
+      logerr.entry( {
+        error: result,
+        user: res.user,
+        ip: req.ip,
+        domains: doms,    
+        url: req.url,
+        start: date.getTime(),
+        date: date.toISOString()
+      });
+    });
+  };
 
   res.send( result.httpCode, result );
 }
@@ -781,7 +793,10 @@ rl.question( "ssl passphrase: ", function(passphrase) {
   httpApp.use(function(req, res, next) {
     var date = new Date().toISOString() ;
     console.log("http redirection: " + req.url + "( " + date + ")" );
-    log.entry( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
+    dns.reverse( req.ip, function(err,doms) {
+      if (err) doms = null;
+      log.entry( { type: "http-redirect", ip: req.ip, url: req.url, domains: doms, date: date });
+    });
     res.redirect("https://" + req.host + req.path);
   });
 
