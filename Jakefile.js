@@ -50,6 +50,7 @@ task("madoko", [], function(rebuild) {
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
+    jake.cpR("contrib/monarch/monarch.js", outputDir);
     complete(); 
   })
 },{async:true});
@@ -85,6 +86,7 @@ task("clean", function() {
   jake.rmRf(outputDir + "net");
   jake.rmRf(outputDir + "doc");
   jake.rmRf("doc/out");
+  jake.rmRf("web/client/lib");
 });
 
 //-----------------------------------------------------
@@ -104,44 +106,15 @@ desc("setup web");
 task("webcopy", ["web"], function() {
   // copy all madoko sources
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
-  jake.mkdirP(path.join(webclient,"lib","languages"));
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
   
   // copy style files
   var js = new jake.FileList().include(path.join(styleDir,"*.css"))
-                              .include(path.join(styleDir,"*.mdk"));
-  jake.mkdirP(path.join(webclient,styleDir));
+                              .include(path.join(styleDir,"*.mdk"))
+                              .include(path.join(styleDir,"lang","*.json"));
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   //jake.cpR(path.join(styleDir,"madoko.css"), webclient);
-  
-  // generate highlight.js web module
-  console.log("adapt highlight.js");    
-  var text = fs.readFileSync("node_modules/highlight.js/lib/highlight.js", {encoding:"utf8"});
-  var hdr = "// do not edit: generated from highlight.js module\n" +
-            "if (typeof define !== 'function') { var define = require('amdefine')(module) }\n" +
-            "define([],function() {\n";
-  var ftr = "return new Highlight();\n});";
-  var content = hdr + text.replace(/ *module\.exports\s*=\s*Highlight;/m, ftr);
-  fs.writeFileSync(path.join(webclient,"highlight.js"), content);
-
-  // and do that for a bunch of languages too
-  var languages = ["bash","clojure","coffeescript","cpp","cs","css","d","erlang"
-                  ,"fsharp","go","haml","haskell","http","java","javascript","json"
-                  ,"lisp","lua","makefile","markdown","mathematica","matlab","objectivec"
-                  ,"ocaml","perl","php","python","r","ruby","rust","scala","sql"
-                  ,"tex","vbnet","vbscript","xml"
-                  ];
-  languages.forEach( function(lang) {
-    console.log("language: " + lang);
-    text = fs.readFileSync("node_modules/highlight.js/lib/languages/" + lang + ".js", {encoding:"utf8"});
-    hdr = "// do not edit: generated from highlight.js module\n" + 
-          "define(['highlight.js'],function(hilite) {\n" +
-          "  hilite.registerLanguage('" + lang + "', function(hljs) {";
-    ftr = "\n  });\n});\n";
-    content = text.replace(/^module\.exports\s*=\s*function\(hljs\) {$/m, hdr)
-                  .replace(/\n\r?};\s*$/, ftr );
-    fs.writeFileSync(path.join(webclient,"lib/languages/" + lang + ".js"), content, {encoding: "utf8"});
-  });
 }); 
 
 

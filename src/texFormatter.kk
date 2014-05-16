@@ -74,7 +74,7 @@ public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : 
 {
   match (txt.hilitePartial(lang,mode)) {
     Nothing -> (fmtTexCodePlain(context,txt),mode)
-    Just((hl,next)) -> (hl.texText.unspan.preSpace, Just(next))
+    Just((hl,next)) -> (hl.texText.unspan(lang).preSpace, Just(next))
   }  
 }
 
@@ -86,7 +86,7 @@ public function fmtTexCode( context : inlineContext, env : string,
   plain = txt.htmlEscape(False).texText.preSpace
   content = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then plain 
              else match(txt.hilite(lang)) {
-                    Just(hl) -> hl.texText.unspan.preSpace
+                    Just(hl) -> hl.texText.unspan(lang).preSpace
                     Nothing  -> plain
                   }
   if (env=="" || env=="code") 
@@ -94,12 +94,13 @@ public function fmtTexCode( context : inlineContext, env : string,
    else texEnv(env,texCmd("code",content,lattrs),attrs)
 }
 
-public function unspan( txt : string ) : string {
+public function unspan( txt : string, lang : string ) : string {
   txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan) fun(cap) {
-    classes=cap.groups[1].toLower.trim.split(rxSpaces).map fun(cname) {
+    classes=cap.groups[1].toLower.trim.split(rxSpaces).map(fun(cname) {
       if (cname.startsWith("hljs-")) then cname.substr(5) else cname
-    }
-    @"\mdToken{" + classes.join(",") + "}{"
+    }).list.filter( fun(cname) { cname != "token" && cname != lang } )
+    cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse
+    @"\mdToken{" + (classes + cclasses).join(",") + "}{"
   }  
 } 
 
@@ -109,7 +110,7 @@ val rxSpan = regex(@"{\\textless}span\s+.*?\bclass=['""]?([^""']+)['""]?[^{]*{\\
 public function preSpace( txt : string ) : string {
   txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
-     .replaceAll("\n","\\prebr{}\n")
+     .replaceAll("\n|{\\textless}br{\\textgreater}","\\prebr{}\n")
      .replaceAll("`","{`}")
 }
 val rxIndent = regex(@"^ +",multiLine=True)

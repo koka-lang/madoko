@@ -402,7 +402,10 @@
 	\ifdim\cssPaddingBottom=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingLeft=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingRight=0pt\else\@needframetrue\fi
-	\cssDefNormalizeColor{@bcolor}{\cssBackgroundColor}\edef\@@bcolor{\@bcolor}%
+	\strsplit{\cssBackgroundColor}%			
+	  \eifstrequal{\strhead}{\#}%
+	  {\definecolor{Temp}{HTML}{\strtail}\edef\@@bcolor{Temp}}%
+	  {\cssDefNormalizeColor{@bcolor}{\cssBackgroundColor}\edef\@@bcolor{\@bcolor}}%		
 	%\expandafter\lowercase\expandafter{\expandafter\def\expandafter\bcolor\expandafter{\cssBackgroundColor}}%	
 	\if@needframe%		
 		\cssDoAfter{\cssRestoreFootnotes}% first, because post commands are pre-pended

@@ -13,6 +13,7 @@ syntax:regexp
 ^test/scripts/
 ^doc/out/
 ^doc/\w+\.(html|pdf|css)
+^doc/contrib/
 ^node_modules/
 ^web/client/lib/
 ^web/client/styles/
@@ -21,3 +22,6 @@ syntax:regexp
 ^web/client/madoko.css$
 ^web/users/
 ^web/ssl/
+^web/log/
+^web/run/
+^test/new/out

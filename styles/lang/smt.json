@@ -1,0 +1,107 @@
+{
+  "displayName":    "SMT",
+  "name":           "smt",
+  "mimeTypes":      ["text/x-smt2"],
+  "fileExtensions": ["smt2"],
+  
+  "lineComment":      ";",
+ 
+  
+  
+
+  "keywords": [
+    "define-fun", "define-const", "assert", "push", "pop", "assert", "check-sat", 
+    "declare-const", "declare-fun", "get-model", "get-value", "declare-sort", 
+    "declare-datatypes", "reset", "eval", "set-logic", "help", "get-assignment",
+    "exit", "get-proof", "get-unsat-core", "echo", "let", "forall", "exists",
+    "define-sort", "set-option", "get-option", "set-info", "check-sat-using", "apply", "simplify", 
+    "display", "as", "!", "get-info", "declare-map", "declare-rel", "declare-var", "rule",
+    "query", "get-user-tactics"
+  ],
+
+ "operators": [
+    "=", ">", "<", "<=", ">=", "=>", "+", "-", "*", "/"
+  ], 
+    
+  "builtins": [    
+    "mod", "div", "rem", "^", "to_real", "and", "or", "not", "distinct",   
+    "to_int", "is_int", "~", "xor", "if", "ite", "true", "false", "root-obj", 
+    "sat", "unsat", "const", "map", "store", "select", "sat", "unsat",
+    "bit1", "bit0", "bvneg", "bvadd", "bvsub", "bvmul", "bvsdiv", "bvudiv", "bvsrem", 
+    "bvurem", "bvsmod",  "bvule", "bvsle", "bvuge", "bvsge", "bvult", 
+    "bvslt", "bvugt", "bvsgt", "bvand", "bvor", "bvnot", "bvxor", "bvnand", 
+    "bvnor", "bvxnor", "concat", "sign_extend", "zero_extend", "extract", 
+    "repeat", "bvredor", "bvredand", "bvcomp", "bvshl", "bvlshr", "bvashr", 
+    "rotate_left", "rotate_right", "get-assertions"
+  ],
+   
+  "brackets": [
+    ["(",")","delimiter.parenthesis"],
+    ["{","}","delimiter.curly"],
+    ["[","]","delimiter.square"]
+  ],
+  
+  
+  "symbols":  "[=><~&|+\\-*\\/%@#]+",
+  
+  
+  "escapes": "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
+  
+  
+  "tokenizer": {
+    "root": [
+      
+      ["[a-z_][\\w\\-\\.']*", { "cases": { "@builtins": "predefined.identifier",
+                                      "@keywords": "keyword",
+                                      "@default": "identifier" } }],
+      ["[A-Z][\\w\\-\\.']*", "type.identifier" ],
+      ["[:][\\w\\-\\.']*", "string.identifier" ],
+      ["[$?][\\w\\-\\.']*", "constructor.identifier" ],
+      
+      
+      { "include": "@whitespace" },
+      
+      
+      ["[()\\[\\]]", "@brackets"],
+      ["@symbols", { "cases": { "@operators": "predefined.operator", 
+                              "@default"  : "operator" } } ],
+
+      
+      
+      ["\\d*\\.\\d+([eE][\\-+]?\\d+)?", "number.float"],
+      ["0[xX][0-9a-fA-F]+", "number.hex"],
+      ["#[xX][0-9a-fA-F]+", "number.hex"],
+      ["#b[0-1]+", "number.binary"],
+      ["\\d+", "number"],
+
+      
+      ["[,.]", "delimiter"],
+      
+      
+      ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["\"",  { "token": "string.quote", "bracket": "@open", "next": "@string" } ],
+      
+      
+      ["\\{", { "token": "string.curly", "bracket": "@open", "next": "@uservalue" } ]
+    ],
+
+    "uservalue": [
+      ["[^\\\\\\}]+", "string" ],
+      ["\\}",       { "token": "string.curly", "bracket": "@close", "next": "@pop" } ],
+      ["\\\\\\}",     "string.escape"],
+      [".",        "string"]  
+    ],
+
+    "string": [
+      ["[^\\\\\"]+",  "string"],
+      ["@escapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["\"",        { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
+    ],
+    
+    "whitespace": [
+      ["[ \\t\\r\\n]+", "white"],
+      [";.*$",    "comment"]
+    ]
+  }
+}

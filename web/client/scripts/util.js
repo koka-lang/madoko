@@ -310,7 +310,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".bbl",".js",".css"].join(";");
+  var embedExts = [".bbl",".js",".css",".json"].join(";");
   function hasEmbedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
@@ -903,7 +903,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         else {
           res = req.responseText;
         }
-        promise.resolve(res,req.response);
+        promise.resolve(res,req);
       }
       else {
         reject();

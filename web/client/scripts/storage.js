@@ -217,10 +217,10 @@ var Onedrive = (function() {
     var self = this;
     return self._getFileInfo( fpath ).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
-      return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
+      return util.requestGET( "onedrive", { url: info.source } ).then( function(_content,req) {
         var file = {
           path: fpath,
-          content: content,
+          content: req.responseText,
           createdTime: util.dateFromISO(info.updated_time),
         };
         return file;
@@ -257,6 +257,23 @@ function onedriveOpenFile() {
     });
   });
 }     
+
+function dropboxOpenFile() {
+  return new Promise( function(cont) {
+    Dropbox.choose( {
+      success: function(files) {
+        console.log(files);
+        cont("success", {} );
+      },
+      cancel: function() {
+        cont("canceled");
+      },
+      linkType: "direct",
+      multiselect: false,
+      extensions: ["mdk","md","mkdn"],
+    });
+  });
+}
 
 function onedriveOpenFolder() {
   if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
@@ -722,7 +739,10 @@ var Storage = (function() {
         // try to find the file as a madoko standard style on the server..
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
-        return serverGetInitialContent(spath).then( function(content) {
+        if (util.extname(fpath) === ".json" && !util.dirname(fpath)) spath = "styles/lang/" + fpath;
+
+        return serverGetInitialContent(spath).then( function(_content,req) {
+            var content = req.responseText;
             if (!content) return noContent();
             self.writeFile(opath,content,opts);
             return self.files.get(opath);
@@ -1019,6 +1039,7 @@ var Storage = (function() {
 return {
   onedriveInit: onedriveInit,
   onedriveOpenFile: onedriveOpenFile,
+  dropboxOpenFile: dropboxOpenFile,
   localOpenFile: localOpenFile,
   syncToLocal: syncToLocal,
   syncToOnedrive: syncToOnedrive,  

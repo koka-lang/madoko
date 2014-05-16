@@ -14,7 +14,7 @@ import std/path
 import common
 
 external import {
-  js hljs "highlight.js"
+  js monarch "./monarch"
 }
 
 // hilite mode. abstract.
@@ -25,22 +25,20 @@ struct hilite( highlighted : string, finalMode : hilitemode )
 
 // Highlight using highlight.js. Use 'auto' for automatic language detection
 external xhilite( src : string, lang : string, mode : hilitemode ) : hilite {
-  js inline "(function(){ var res = (#2!='auto'? hljs.highlight(#2,#1,true,#3) : hljs.highlightAuto(#1)); return Hilite(res.value,res.top) })()"
+  js inline "(function(){ var res = monarch.highlightTextFragment(#3,#1); return Hilite(res.html,res.next); })()"
 } 
 
-external xinitialMode() : hilitemode {
-  js inline "null"
+external xinitialMode( lang : string) : hilitemode {
+  js inline "(function(){ var res = monarch.getInitialMode(#1); if (!res) throw new Error('unknown language: ' + #1); return res; })()"
 }
 
-val initialMode = xinitialMode()
 
 // Syntax highlight code. 
 // If "lang" is the empty string, returns Nothing. 
-// Use `auto` for automatic language detection.
-public function hilite( src : string, lang : string = "auto") : maybe<string> 
+public function hilite( src : string, lang : string ) : maybe<string> 
 {
   if (lang=="") return Nothing
-  catch( { Just(xhilite(src,lang.toLower,initialMode).highlighted)  }, fun(exn) { 
+  catch( { Just(xhilite(src,lang.toLower,xinitialMode(lang.toLower)).highlighted)  }, fun(exn) { 
            warning("could not highlight: " + exn.show)
            Nothing
          })
@@ -49,11 +47,15 @@ public function hilite( src : string, lang : string = "auto") : maybe<string>
 // Syntax highlight code. 
 // If "lang" is the empty string, returns Nothing. 
 // Use `auto` for automatic language detection.
-public function hilitePartial( src : string, lang : string, mode : maybe<hilitemode> = Nothing) : maybe<(string,hilitemode)>
+public function hilitePartial( src : string, lang : string, mbMode : maybe<hilitemode> = Nothing) : maybe<(string,hilitemode)>
 {
   if (lang=="") return Nothing
   catch( { 
-    res = xhilite(src,lang.toLower,mode.maybe(initialMode,id))
+    mode = match(mbMode) {
+      Nothing -> xinitialMode(lang.toLower)
+      Just(m) -> m
+    }
+    res = xhilite(src,lang.toLower,mode)
     Just( (res.highlighted,res.finalMode) )
    }, 
    fun(exn) { 
@@ -63,16 +65,11 @@ public function hilitePartial( src : string, lang : string, mode : maybe<hilitem
 }
 
 external xxregisterLanguage( name : string, definition : string ) : io () {
-  js inline "hljs.registerLanguage(#1,eval(#2))"
-}
-
-function jsEscape(s : string) : string {
-  s.replaceAll(regex(@"[""\\]"),"\\$&").replaceAll(regex(@"\r?\n")," ")
+  js inline "monarch.register(#2,#1)"
 }
 
 public function registerLanguage( name : string, definition: string ) : io () {
-  fulldef = "(function(xhljs) { var module = {}; " + (definition) + "; return module.exports(xhljs); })"
   catch( { //trace("register: " + name + ": " + fname); 
-           xxregisterLanguage(name, fulldef) }, 
+           xxregisterLanguage(name.toLower,definition) }, 
          fun(exn) { println("error: could not register language: " + name  + "\n" + exn.show /* + "\n" + fulldef */ ) } )
 }
