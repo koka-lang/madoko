@@ -128,6 +128,11 @@ var Dropbox = (function() {
     return "dropbox-logo.png";
   }
 
+  Dropbox.prototype.getFolder = function() {
+    var self = this;
+    return self.folder;
+  }
+
   Dropbox.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };

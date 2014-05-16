@@ -82,7 +82,7 @@ function onedriveGetWriteAccess() {
 
 
 function unpersistOnedrive( obj ) {
-  return new Onedrive(obj.folderId);
+  return new Onedrive(obj.folderId, obj.folder || "");
 }
 
 var Encoding = {
@@ -114,11 +114,22 @@ var Encoding = {
   },
 };
 
+
+function onedriveGetPathFromId( id, path ) {
+  if (path == null) path = "";
+  if (id === null) return path;
+  return onedriveGetFileInfoFromId( id ).then( function(info) {
+    if (info.parent_id === null || info.name==="SkyDrive" || info.name==="OneDrive") return path;
+    return onedriveGetPathFromId( info.parent_id, (path ? util.combine(info.name,path) : info.name));
+  });
+}
+
 var Onedrive = (function() {
 
-  function Onedrive( folderId ) {
+  function Onedrive( folderId, folder ) {
     var self = this;
     self.folderId = folderId;
+    self.folder = folder;
   }
 
   Onedrive.prototype.type = function() {
@@ -131,7 +142,12 @@ var Onedrive = (function() {
 
   Onedrive.prototype.persist = function() {
     var self = this;
-    return { folderId: self.folderId };
+    return { folderId: self.folderId, folder: self.folder };
+  }
+
+  Onedrive.prototype.getFolder = function() {
+    var self = this;
+    return self.folder;
   }
 
     // todo: abstract WL.getSession(). implement subdirectories.
@@ -252,8 +268,10 @@ function onedriveOpenFile() {
   }).then( function(file) {
     return onedriveGetFileInfoFromId( file.id ).then( function(info) {
       //var storage = new Storage(info.parent_id);
-      var onedrive = new Onedrive(info.parent_id);
-      return { storage: new Storage(onedrive), docName: file.name };
+      return onedriveGetPathFromId(info.parent_id).then( function(folder) {
+        var onedrive = new Onedrive(info.parent_id, folder);
+        return { storage: new Storage(onedrive), docName: file.name };
+      });
     });
   });
 }     
@@ -369,6 +387,10 @@ var NullRemote = (function() {
 
   NullRemote.prototype.logo = function() {
     return "madoko-icon-100.png";
+  }
+
+  NullRemote.prototype.getFolder = function() {
+    return "Madoko/document";
   }
 
   NullRemote.prototype.persist = function() {
@@ -518,6 +540,11 @@ var Storage = (function() {
       clearInterval( self.pullIval );
       self.pullIval = 0;
     }
+  }
+
+  Storage.prototype.folder = function() {
+    var self = this;
+    return self.remote.getFolder();
   }
 
   Storage.prototype.persist = function(minimal) {

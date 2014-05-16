@@ -872,7 +872,7 @@ var UI = (function() {
       self.storage = stg;
       self.docName = docName;
       self.docText = file.content;
-      self.inputRename.value = self.docName; 
+      self.inputRename.value = util.combine(self.storage.folder(),self.docName); 
     
       self.storage.addEventListener("update",self);
       self.runner.setStorage(self.storage);
