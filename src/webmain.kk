@@ -71,7 +71,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
     cont(False)
   } 
 
-  function runMathStatic( content : string, inputName : string, outputname : string,
+  function runMathStatic( content : string, inpName : string, outputname : string,
                           texNameDvi : string, texNamePdf : string,
                           dviPages : pages, pdfPages : pages,
                           oldMathDvi : string, oldMathPdf : string,

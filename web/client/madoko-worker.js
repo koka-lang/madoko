@@ -19,11 +19,7 @@ setInterval( function() {
   self.postMessage( { messageId: -1, heartbeat: heartbeat } );
 }, 15000);
 
-var languages = ["javascript","cpp","css","xml","markdown","coffeescript","java"
-                ,"haskell","go","fsharp","r","cs","scala"]
-                .map(function(name){ return "languages/" + name; });
-
-require(["../scripts/util","webmain","highlight.js"].concat(languages), function(util,madoko) 
+require(["../scripts/util","webmain"], function(util,madoko) 
 {
   // remove duplicates
   function nub( xs ) {

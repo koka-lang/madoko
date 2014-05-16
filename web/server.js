@@ -713,39 +713,6 @@ app.use('/', function(req,res,next) {
 
 
 // -------------------------------------------------------------
-// Start listening on https
-// -------------------------------------------------------------
-
-var sslOptions = {
-  pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
-  passphrase: fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
-  //key: fs.readFileSync('./ssl/madoko-server.key'),
-  //cert: fs.readFileSync('./ssl/madoko-server.crt'),
-  //ca: fs.readFileSync('./ssl/daan-ca.crt'),
-  //requestCert: true,
-  //rejectUnauthorized: false
-};
-https.createServer(sslOptions, app).listen(443);
-console.log("listening...");
-
-
-// -------------------------------------------------------------
-// Set up http redirection
-// -------------------------------------------------------------
-
-var httpApp = express();
-
-httpApp.use(function(req, res, next) {
-  var date = new Date().toISOstring() ;
-  console.log("http redirection: " + req.url + "( " + date + ")" );
-  log.log( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
-  res.redirect("https://" + req.host + req.path);
-});
-
-http.createServer(httpApp).listen(80);
-
-
-// -------------------------------------------------------------
 // Listen on the console for commands
 // -------------------------------------------------------------
 
@@ -779,4 +746,43 @@ function listen() {
 }
 
 mode = Mode.Normal;
-listen();
+
+
+rl.question( "ssl passphrase: ", function(passphrase) {
+
+  // -------------------------------------------------------------
+  // Start listening on https
+  // -------------------------------------------------------------
+
+  var sslOptions = {
+    pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
+    passphrase: passphrase, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
+    //key: fs.readFileSync('./ssl/madoko-server.key'),
+    //cert: fs.readFileSync('./ssl/madoko-server.crt'),
+    //ca: fs.readFileSync('./ssl/daan-ca.crt'),
+    //requestCert: true,
+    //rejectUnauthorized: false
+  };
+  https.createServer(sslOptions, app).listen(443);
+  console.log("listening...");
+
+
+  // -------------------------------------------------------------
+  // Set up http redirection
+  // -------------------------------------------------------------
+
+  var httpApp = express();
+
+  httpApp.use(function(req, res, next) {
+    var date = new Date().toISOString() ;
+    console.log("http redirection: " + req.url + "( " + date + ")" );
+    log.entry( { type: "http-redirect", ip: req.ip, url: req.url, date: date });
+    res.redirect("https://" + req.host + req.path);
+  });
+
+  http.createServer(httpApp).listen(80);
+
+  // and listen to console commands
+  listen();
+});
+

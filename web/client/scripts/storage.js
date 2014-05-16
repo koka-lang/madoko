@@ -217,10 +217,10 @@ var Onedrive = (function() {
     var self = this;
     return self._getFileInfo( fpath ).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
-      return util.requestGET( "onedrive", { url: info.source } ).then( function(content) {
+      return util.requestGET( "onedrive", { url: info.source } ).then( function(_content,req) {
         var file = {
           path: fpath,
-          content: content,
+          content: req.responseText,
           createdTime: util.dateFromISO(info.updated_time),
         };
         return file;
@@ -739,7 +739,10 @@ var Storage = (function() {
         // try to find the file as a madoko standard style on the server..
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
-        return serverGetInitialContent(spath).then( function(content) {
+        if (util.extname(fpath) === ".json" && !util.dirname(fpath)) spath = "styles/lang/" + fpath;
+
+        return serverGetInitialContent(spath).then( function(_content,req) {
+            var content = req.responseText;
             if (!content) return noContent();
             self.writeFile(opath,content,opts);
             return self.files.get(opath);
