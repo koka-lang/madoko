@@ -64,25 +64,7 @@ public function processContent( inName : string, outName : string, content : str
     }
 
     // register languages for highlighting
-    if (!(xopts.sandbox)) {
-      curdir = cwd()
-      mopts.hilitelang.split(";").foreach fun(lang) { 
-        fname = if (curdir=="") then lang else lang.replace(rxCurDir,curdir)
-        if (fname != "") {
-          match( trySearchReadTextFile(fname,searchDirs,".js")) {
-            Nothing -> {
-              log("files",if (extname(fname)=="") then fname + ".js" else fname)
-              mopts.printErr("warning: unable to read language definition: " + fname)
-            }
-            Just((_,definition)) -> {
-              langName = fname.basename.noext.toLower
-              //trace("register language: " + langName + ":\n" + definition )
-              registerLanguage(langName,definition)
-            }
-          }
-        }
-      }
-    }
+    registerColorizers(mopts, searchDirs, icontent);
 
     // copy early since async latex may start for math
     if (mopts.copyStyles && !(xopts.sandbox)) {
@@ -252,6 +234,37 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
   phaseHtml()
 }
+
+// Register colorizers
+function registerColorizers( opts : options, searchDirs : list<string>, content : string ) : io ()
+{
+  searchDirsEx = searchDirs.concat( fun(dir) { [dir,combine(dir,"lang")] } )
+  registered = mdict()
+  langs1 = opts.hilitelang.split(";").list
+  langs2 = content.findAll(regex(@"^ *```+ *([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
+  (langs1 + langs2).foreach fun(lang) {
+    match (registered[lang]) {
+      Just -> ()
+      Nothing -> {
+        registered[lang] := True
+        if (lang != "") {
+          match( trySearchReadTextFile(lang,searchDirsEx,".json")) {
+            Nothing -> {
+              log("files", changeExt(lang,".json"))
+              opts.printErr("warning: unable to read language definition: " + lang)
+            }
+            Just((_,definition)) -> {
+              langName = lang.basename.noext.toLower
+              //trace("register language: " + langName + ":\n" + definition )
+              registerLanguage(langName,definition)
+            }
+          }
+        }
+      }
+    }
+  }         
+}
+
 
 // Get hashes of bib files
 function createBibData( auxName : string, docName : string, searchDirs : list<string>, bibNames : list<string> ) : io string {

@@ -1,0 +1,5 @@
+{
+  "extend":        "text/javascript",  
+  "extraKeywords": [ "module", "export"
+  ] 
+}

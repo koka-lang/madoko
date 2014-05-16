@@ -94,8 +94,8 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
                                  else options(mathmode=Static, mathjax=""))
     elif (key=="section-depth") options(sectionMax=ivalue)
     elif (key=="section-base") options(sectionBase=ivalue)
-    elif (key=="highlight") options(highlight=if (value=="") then False else True)
-    elif (key=="highlight-language") options(hilitelang=if (value=="") then "" else options.hilitelang + ";" + value)
+    elif (key=="highlight" || key=="colorize") options(highlight=if (value=="") then False else True)
+    elif (key=="highlight-language" || key=="colorizer") options(hilitelang=if (value=="") then "" else options.hilitelang + ";" + value)
     elif (key=="rebuild") options(rebuild=(value != ""))
     elif (key=="star-bold") options(starBold=(value!=""))
 

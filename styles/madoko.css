@@ -337,6 +337,38 @@ div.input-mathpre {
 }
 
 
+
+.highlighted .token.identifier      { }
+.highlighted .token.operators       { }
+.highlighted .token.keyword         { color: blue }
+.highlighted .token.string          { color: maroon } 
+.highlighted .token.string.escape   { color: gray }
+.highlighted .token.comment         { color: darkgreen }
+.highlighted .token.comment.doc     { font-style: normal }
+.highlighted .token.constant        { color: purple; }
+.highlighted .token.entity          {  }
+.highlighted .token.tag             { color: blue }
+.highlighted .token.info-token      { color: black }
+.highlighted .token.warn-token      { color: black }
+.highlighted .token.error-token     { color: darkred }
+.highlighted .token.debug-token     { color: gray }
+.highlighted .token.regexp          { color: maroon }
+.highlighted .token.attribute.name  { color: navy }
+.highlighted .token.attribute.value { color: maroon }
+.highlighted .token.constructor     { color: purple }
+.highlighted .token.namespace       { color: navy }
+.highlighted .token.header          { color: navy }
+.highlighted .token.type            { color: teal } 
+.highlighted .token.type.delimiter  { color: teal; } 
+.highlighted .token.predefined      { color: navy }
+.highlighted .token.invalid         { color: border-bottom: red dotted 1px }
+
+.highlighted .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+.highlighted .token.number      {  }    /* .[hex,octal,binary,float] */
+.highlighted .token.variable    {  }  /* .[name,value]  */
+.highlighted .token.meta        { color: navy }      /* .[content] */
+
+
 /* ---------------------------------------------------
    Styling for full documents
 ----------------------------------------------------*/

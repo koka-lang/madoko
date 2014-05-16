@@ -289,7 +289,7 @@ public function fmtCode( context : inlineContext, env : string, txt : string, at
   val (pattrs,content)
     = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) 
        then (attrs, context.fmtCodePlain(txt))
-       else (attrs.addClass("hljs"), context.fmtCodeEx(lang,txt,attrs))
+       else (attrs.addClass("highlighted"), context.fmtCodeEx(lang,txt,attrs))
 
   if (env=="" || env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(lattrs))

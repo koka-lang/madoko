@@ -50,6 +50,7 @@ task("madoko", [], function(rebuild) {
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
+    jake.cpR("contrib/monarch/monarch.js", outputDir);
     complete(); 
   })
 },{async:true});

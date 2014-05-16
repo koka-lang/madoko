@@ -21,3 +21,6 @@ syntax:regexp
 ^web/client/madoko.css$
 ^web/users/
 ^web/ssl/
+^web/log/
+^web/run/
+^test/new/out
