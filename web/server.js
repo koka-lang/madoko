@@ -21,7 +21,7 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = /^(131\.107\.).*$/;
+var allowedIps = /^((131\.107\.).*|127.0.0.1)$/;
 var blockedIps = null;
 
 // -------------------------------------------------------------
@@ -579,6 +579,7 @@ var dropboxCallbackPage =
 ['<html>',
 '<head>',
 '  <title>Madoko Dropbox Callback</title>',
+'  <script src="../scripts/auth-dropbox.js" type="text/javascript"></script>',
 '</head>',
 '<body>',
 '  Dropbox callback',

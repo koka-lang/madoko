@@ -6,7 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util", "../scripts/merge"], function(Promise,util,merge) {
+define(["../scripts/promise","../scripts/util", 
+        "../scripts/merge", "../scripts/dropbox"], function(Promise,util,merge,dropbox) {
 
 function onedriveError( obj, premsg ) {
   msg = "onedrive: " + (premsg ? premsg + ": " : "")
@@ -60,12 +61,11 @@ function onedriveGet( path, errmsg ) {
   return util.requestGET( url );
 }
 
-function onedriveWriteFileAt( file, folderId ) {
+function onedriveWriteFileAt( file, folderId, content ) {
   // TODO: resolve sub-directories
   var self = this;
   var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
               onedriveAccessToken();    
-  var content = Encoding.decode( file.encoding, file.content );              
   return util.requestPUT( {url:url,contentType:";" }, content );
 }
 
@@ -193,20 +193,20 @@ var Onedrive = (function() {
     })
   }
 
-  function onedriveWriteFile( file, folder, folderId ) {
+  function onedriveWriteFile( file, folder, folderId, content ) {
     var dir = util.dirname(file.path).substr(folder.length);    
-    if (dir === "") return onedriveWriteFileAt( file, folderId );
+    if (dir === "") return onedriveWriteFileAt( file, folderId, content );
     // we need to resolve the subdirectories.
     var subdir = dir.replace( /[\/\\].*$/, ""); // take the first subdir
     return onedriveEnsureFolder( folderId, subdir ).then( function(subId) {
-      return onedriveWriteFile( file, util.combine(folder,subdir), subId );
+      return onedriveWriteFile( file, util.combine(folder,subdir), subId, content );
     });
   }
 
 
-  Onedrive.prototype.pushFile = function( file ) {
+  Onedrive.prototype.pushFile = function( file, content ) {
     var self = this;
-    return onedriveWriteFile( file, "", self.folderId ).then( function(resp) {
+    return onedriveWriteFile( file, "", self.folderId, content ).then( function(resp) {
       return onedriveGetFileInfoFromId( resp.id );
     }).then( function(info) {
       return util.dateFromISO(info.updated_time);
@@ -259,19 +259,8 @@ function onedriveOpenFile() {
 }     
 
 function dropboxOpenFile() {
-  return new Promise( function(cont) {
-    Dropbox.choose( {
-      success: function(files) {
-        console.log(files);
-        cont("success", {} );
-      },
-      cancel: function() {
-        cont("canceled");
-      },
-      linkType: "direct",
-      multiselect: false,
-      extensions: ["mdk","md","mkdn"],
-    });
+  return dropbox.openFile().then( function(info) {
+    return {storage: new Storage(info.dropbox), docName: info.docName };
   });
 }
 
@@ -327,7 +316,7 @@ var LocalRemote = (function() {
     return Promise.resolved();
   }
 
-  LocalRemote.prototype.pushFile = function( file ) {
+  LocalRemote.prototype.pushFile = function( file, content ) {
     var self = this;
     var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding, position: file.position }
     if (!localStorage) throw new Error("no local storage: " + file.path);
@@ -343,7 +332,7 @@ var LocalRemote = (function() {
     if (!obj || !obj.modifiedTime) return Promise.rejected( new Error("local storage: unable to read: " + fpath) );
     var file = {
       path: fpath,
-      content: obj.content, // still encoded
+      content: obj.content, 
       createdTime: obj.modifiedTime,
       encoding: obj.encoding || Encoding.fromExt(fpath),
       mime: obj.mime || util.mimeFromExt(fpath),
@@ -390,7 +379,7 @@ var NullRemote = (function() {
     return Promise.resolved();
   }
 
-  NullRemote.prototype.pushFile = function( file ) {
+  NullRemote.prototype.pushFile = function( file, content ) {
     return Promise.rejected( new Error("not connected: cannot store files") );
   }
 
@@ -424,6 +413,9 @@ function unpersistRemote(remoteType,obj) {
   if (obj && remoteType) {
     if (remoteType===Onedrive.prototype.type()) {
       return unpersistOnedrive(obj);
+    }
+    else if (remoteType===dropbox.type()) {
+      return dropbox.unpersist(obj);
     }
     else if (remoteType==LocalRemote.prototype.type()) {
       return new LocalRemote(obj.folder);
@@ -810,6 +802,11 @@ var Storage = (function() {
     });
   }
 
+  Storage.prototype.pushFile = function( file ) {
+    var self = this;
+    return self.remote.pushFile(file, Encoding.decode( file.encoding, file.content ));
+  }
+
   Storage.prototype._syncPush = function(file,remoteTime) {
     var self = this;
     // file.createdTime >= remoteTime
@@ -826,7 +823,7 @@ var Storage = (function() {
       return pushAtomic( file.path, remoteTime ).then( function() {
         // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
         var file0 = util.copy(file);
-        return self.remote.pushFile( file0 ).then( function(createdTime) {
+        return self.pushFile( file0 ).then( function(createdTime) {
           //newFile.modified = false;
           var file1 = self.files.get(file.path);
           if (file1) { // could be deleted in the mean-time?
@@ -896,7 +893,7 @@ var Storage = (function() {
           file0.modified = true;
           self._updateFile(file0);
           return pushAtomic(file0.path, remoteFile.createdTime).then( function() {
-            return self.remote.pushFile(file0).then( function(createdTime) {
+            return self.pushFile(file0).then( function(createdTime) {
               var file1 = self.files.get(file.path);
               if (file1) { // could be deleted?
                 file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time

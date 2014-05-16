@@ -463,6 +463,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     }
   }
 
+  function getCookie(name) {
+    var rx = RegExp("\\b" + name + "=([^;&]*)");
+    var cap = rx.exec(document.cookie);
+    return (cap ? cap[1] : null);
+  }
+
   function getScrollTop( elem ) {
     if (!elem) return 0;
     if (elem.contentWindow) {
@@ -878,6 +884,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         var res = JSON.parse(req.responseText);
         if (res.error && res.error.message) {
           msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
+        }
+        else if (res.error && typeof res.error === "string") {
+          msg = msg + ": " + res.error;
         }      
         else if (res.message) {
           msg = msg + ": " + res.message;
@@ -1042,6 +1051,7 @@ doc.execCommand("SaveAs", null, filename)
     contains: contains,
     decodeBase64: decodeBase64,
     dateFromISO: dateFromISO,
+    getCookie: getCookie,
     
     hasClassName: hasClassName,
     toggleClassName: toggleClassName,
