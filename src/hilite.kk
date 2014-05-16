@@ -14,7 +14,7 @@ import std/path
 import common
 
 external import {
-  js monarch "./monarch.js"
+  js monarch "./monarch"
 }
 
 // hilite mode. abstract.
