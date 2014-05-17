@@ -124,6 +124,53 @@ function onedriveGetPathFromId( id, path ) {
   });
 }
 
+function onedriveGetFileInfoAt( folderId, path ) {
+  return onedriveGet( folderId + "/files", "get files").then( function(res) {
+    var file = null;
+    if (res.data) {
+      for (var i = 0; i < res.data.length; i++) {
+        var f = res.data[i];
+        if (f.name == path) {
+          file = f;
+          break;
+        }
+      }
+    }
+    //if (!file) console.log("onedrive: unable to find: " + path);
+    return file;
+  });
+}
+
+function onedriveGetFileInfo( folderId, path ) {
+  var dir = util.dirname(path);
+  if (dir==="") return onedriveGetFileInfoAt(folderId,path);
+  // recurse
+  var subdir = util.firstdirname(path);
+  return onedriveGetFileInfoAt( folderId, subdir ).then( function(subFolder) {
+    if (!subFolder) return null;
+    return onedriveGetFileInfo( subFolder.id, path.substr(subdir.length+1) );
+  });
+}
+
+function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
+  return onedriveGetFileInfo( folderId, subFolderName ).then( function(folder) {
+    if (folder) return folder.id;
+    var url = onedriveDomain + folderId + "?" + onedriveAccessToken();
+    return util.requestPOST( url, { name: subFolderName, description: "" } ).then( function(newFolder) {
+        return newFolder.id;
+      }, function(err) {
+        if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
+          // multiple requests can result in this error, try once more
+          return onedriveEnsureFolder( folderId, subFolderName, true );
+        }
+        else {
+          throw err; // re-throw
+        }
+      }
+    );
+  })
+}
+
 var Onedrive = (function() {
 
   function Onedrive( folderId, folder ) {
@@ -156,58 +203,12 @@ var Onedrive = (function() {
     return onedriveGetFileInfo( self.folderId, path );
   }
 
-  function onedriveGetFileInfoAt( folderId, path ) {
-    return onedriveGet( folderId + "/files", "get files").then( function(res) {
-      var file = null;
-      if (res.data) {
-        for (var i = 0; i < res.data.length; i++) {
-          var f = res.data[i];
-          if (f.name == path) {
-            file = f;
-            break;
-          }
-        }
-      }
-      //if (!file) console.log("onedrive: unable to find: " + path);
-      return file;
-    });
-  }
-
-  function onedriveGetFileInfo( folderId, path ) {
-    var dir = util.dirname(path);
-    if (dir==="") return onedriveGetFileInfoAt(folderId,path);
-    // recurse
-    var subdir = util.firstdirname(path);
-    return onedriveGetFileInfoAt( folderId, subdir ).then( function(subFolder) {
-      if (!subFolder) return null;
-      return onedriveGetFileInfo( subFolder.id, path.substr(subdir.length+1) );
-    });
-  }
-  
 
   Onedrive.prototype.getWriteAccess = function() {
     return onedriveGetWriteAccess();
   }
 
 
-  function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
-    return onedriveGetFileInfo( folderId, subFolderName ).then( function(folder) {
-      if (folder) return folder.id;
-      var url = onedriveDomain + folderId + "?" + onedriveAccessToken();
-      return util.requestPOST( url, { name: subFolderName, description: "" } ).then( function(newFolder) {
-          return newFolder.id;
-        }, function(err) {
-          if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
-            // multiple requests can result in this error, try once more
-            return onedriveEnsureFolder( folderId, subFolderName, true );
-          }
-          else {
-            throw err; // re-throw
-          }
-        }
-      );
-    })
-  }
 
   function onedriveWriteFile( file, folder, folderId, content ) {
     var dir = util.dirname(file.path).substr(folder.length);    
@@ -481,14 +482,24 @@ function syncToOnedrive( storage, docStem, newStem ) {
   });
 }
 
+function newOnedriveAt( folder ) {
+  return onedriveEnsureFolder( "me/skydrive", folder ).then( function(folderId) {
+    return new Onedrive(folderId,folder);
+  });
+}
 
-function syncTo(  storage, toStorage, docStem, newStem ) 
+function newDropboxAt( folder ) {
+  return Promise.resolved( new dropbox.Dropbox(folder) );
+}
+
+function saveTo(  storage, toRemote, docStem, newStem ) 
 {
   var newStem = (newStem === docStem ? "" : newStem);
   var newName = (newStem ? newStem : docStem) + ".mdk";
+  var toStorage = new Storage(toRemote);
   return toStorage.readFile( newName, false ).then( 
     function(file) {
-      throw new Error( "cannot save, document already exists: " + newName );
+      throw new Error( "cannot save, document already exists: " + util.combine(toStorage.folder(), newName) );
     },
     function(err) {
       storage.forEachFile( function(file0) {
@@ -1067,8 +1078,9 @@ return {
   onedriveOpenFile: onedriveOpenFile,
   dropboxOpenFile: dropboxOpenFile,
   localOpenFile: localOpenFile,
-  syncToLocal: syncToLocal,
-  syncToOnedrive: syncToOnedrive,  
+  newOnedriveAt: newOnedriveAt,
+  newDropboxAt: newDropboxAt,
+  saveTo: saveTo,  
   Storage: Storage,
   LocalRemote: LocalRemote,
   NullRemote: NullRemote,
@@ -1076,5 +1088,6 @@ return {
   unpersistStorage: unpersistStorage,
   isEditable: isEditable,
   getEditPosition: getEditPosition,
+
 }
 });

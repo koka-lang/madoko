@@ -86,11 +86,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
         status.innerHTML = span(txt,35);
-        removeClassName(warning,"hide");
+        //removeClassName(warning,"hide");
       }
       else if (kind===Msg.Status) {
         status.innerHTML = span(txt,35);
-        addClassName(warning,"hide");
+        //addClassName(warning,"hide");
       }
     }
   }

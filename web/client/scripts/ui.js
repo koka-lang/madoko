@@ -194,7 +194,7 @@ var UI = (function() {
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
-    self.inputRename = document.getElementById("rename");
+    self.saveFolder = document.getElementById("save-folder");
 
     // start editor
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
@@ -409,9 +409,15 @@ var UI = (function() {
       });
     };
 
-    document.getElementById("sync-onedrive").onclick = function(ev) {
-      self.event( "synchronized with remote storage", "synchronizing to...", State.Syncing, function() {
-        return self.syncTo( storage.syncToOnedrive );
+    document.getElementById("save-onedrive").onclick = function(ev) {
+      self.event( "","", State.Syncing, function() {
+        return self.saveTo( storage.newOnedriveAt );
+      });
+    }
+
+    document.getElementById("save-dropbox").onclick = function(ev) {
+      self.event( "","", State.Syncing, function() {
+        return self.saveTo( storage.newDropboxAt );
       });
     }
 
@@ -872,7 +878,7 @@ var UI = (function() {
       self.storage = stg;
       self.docName = docName;
       self.docText = file.content;
-      self.inputRename.value = util.combine(self.storage.folder(),self.docName); 
+      self.saveFolder.value = self.storage.folder(); 
     
       self.storage.addEventListener("update",self);
       self.runner.setStorage(self.storage);
@@ -1442,16 +1448,18 @@ var UI = (function() {
     self.editSelect();
   }
 
-  UI.prototype.syncTo = function( storageSyncTo ) {
+  UI.prototype.saveTo = function( newStorageAt ) {
     var self = this;
     self.showSpinner(true,self.syncer);
-    storageSyncTo(self.storage,util.stemname(self.docName),util.stemname(self.inputRename.value))
-    .then( function(res){ 
+    var folder = self.saveFolder.value;
+    var newstem = (folder ? util.basename(folder) : "document");
+    return newStorageAt(folder).then( function(toStorage) {
+      return storage.saveTo(self.storage, toStorage, util.stemname(self.docName), newstem);
+    }).then( function(res){ 
       return self.setStorage(res.storage,res.docName).then( function() {
         return res.docName;
       }); 
-    })
-    .then( function(newDocName) {
+    }).then( function(newDocName) {
       self.showSpinner(false,self.syncer);    
       util.message("saved: " + newDocName, util.Msg.Status);
     }, function(err){ 

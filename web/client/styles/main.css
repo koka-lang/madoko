@@ -206,7 +206,7 @@ div.boxed {
   vertical-align: -0.15em;
 }
 
-#rename {
+#save-folder {
   width: 8em;
   color: DimGray;
 }
@@ -345,7 +345,7 @@ div.boxed {
 }
 
 #document-content {
-  width: 12em;
+  width: 14em;
 }
 
 #help-content {
