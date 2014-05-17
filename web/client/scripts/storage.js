@@ -152,23 +152,38 @@ function onedriveGetFileInfo( folderId, path ) {
   });
 }
 
-function onedriveEnsureFolder( folderId, subFolderName, recurse ) {
-  return onedriveGetFileInfo( folderId, subFolderName ).then( function(folder) {
-    if (folder) return folder.id;
+function onedriveEnsureDirs( folderId, dirs, recurse ) {
+  if (dirs.length === 0) return folderId;
+  var dir = dirs.shift();
+  return onedriveGetFileInfoAt( folderId, dir ).then( function(dirInfo) {
+    if (dirInfo) return onedriveEnsureDirs( dirInfo.id, dirs );
     var url = onedriveDomain + folderId + "?" + onedriveAccessToken();
-    return util.requestPOST( url, { name: subFolderName, description: "" } ).then( function(newFolder) {
-        return newFolder.id;
-      }, function(err) {
-        if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
-          // multiple requests can result in this error, try once more
-          return onedriveEnsureFolder( folderId, subFolderName, true );
-        }
-        else {
-          throw err; // re-throw
-        }
+    return util.requestPOST( url, { name: dir, description: "" } ).then( function(newInfo) {
+      return onedriveEnsureDirs( newInfo.id, dirs );
+    }, function(err) {
+      if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
+        // multiple requests can result in this error, try once more
+        dirs.unshift(dir);
+        return onedriveEnsureDirs( folderId, dirs, true );
       }
-    );
-  })
+      else {
+        throw err; // re-throw
+      }    
+    });
+  });
+}
+
+function onedriveEnsureFolder( folderId, subFolderName ) {
+  if (!subFolderName) return Promise.resolved(folderId);
+  return onedriveEnsureDirs( folderId, subFolderName.split("/"));
+}
+
+
+function onedriveGetRootId() {
+  var url = onedriveDomain + "me/skydrive?" + onedriveAccessToken();
+  return util.requestGET( url, {} ).then( function(info) {
+    return info.id;
+  });
 }
 
 var Onedrive = (function() {
@@ -483,7 +498,9 @@ function syncToOnedrive( storage, docStem, newStem ) {
 }
 
 function newOnedriveAt( folder ) {
-  return onedriveEnsureFolder( "me/skydrive", folder ).then( function(folderId) {
+  return onedriveGetRootId().then( function(rootId) {
+    return onedriveEnsureFolder( rootId, folder );
+  }).then( function(folderId) {
     return new Onedrive(folderId,folder);
   });
 }
