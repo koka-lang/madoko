@@ -57,52 +57,50 @@ require([ "../scripts/util",
 <p>Madoko is known to work with IE 10+, Chrome version 31+, or Firefox version 27+.</p>
 </div>
 <div id="app" style="display:none">
-<div class="toppane">
-
-<!--
-<img src="images/monarch-34px.png" id="logo"/>
-insert image:
-<input type="file" id="insertImages" name="files[]" title="Add images" accept="image/*"/>
--->
-<!--<img id="logo" src="images/madoko-logo.svg"/>-->
-<!-- <img id="logo" src="images/madoko-abslogo-xsmall.png"/> -->
-
-</div>
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <div id="edit-select" class="popup boxed">
-      <img id="remote-logo" src="images/madoko-icon-100.png" />
-      <span id="edit-select-header">&nbsp;</span>
-      <div id="edit-select-content" class="menu boxed">        
+    <div class="menubar">
+      <div id="document" class="popup">
+        <img id="cloud" class="button" src="images/button-document.svg"/>
+        <div id="document-content" class="menu boxed">
+          <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
+            ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
+          <div id="load-dropbox" class="button" title="Load document from Dropbox cloud storage"
+            ><span class="icon"><img src="images/icon-dropbox.png"/></span>Load from dropbox</div>
+          <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
+            ><span class="icon"><img src="images/icon-onedrive.png"/></span>Load from onedrive</div>
+          <div id="new-document" class="button" title="Create a new local document"
+            ><span class="icon"><span class="icon"><img src="images/icon-local.svg"/></span></span>New local document</div>
+          <hr/>
+            <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
+          <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
+            ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
+          <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
+            ><span class="icon"><img src="images/icon-dropbox.png"/></span>On dropbox</div>
+          <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
+            ><span class="icon"><img src="images/icon-onedrive.png"/></span>On onedrive</div>
+          <hr/>
+          <div id="export-html" class="button" title="Export document as a web-page (HTML)">
+          <span class="icon"><img src="images/icon-html.png" title="Download HTML"/></span>Export to HTML</div>
+          <div id="export-pdf" class="button" title="Export document as PDF">
+          <span class="icon"><img src="images/icon-pdf.png" title="Download PDF"/></span>Export to PDF</div>
+        </div>
       </div>
-    </div
-    ><div id="document" class="popup"
-      ><!--&nbsp;<span class="button boxed"><img class="icon" src="images/tri-down.svg"/></span>&nbsp;-->
-      <img id="cloud" class="button" src="images/document.svg"/>
-      <div id="document-content" class="menu boxed">
-        <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
-          ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
-        <div id="load-dropbox" class="button" title="Load document from Dropbox cloud storage"
-          ><span class="icon"><img src="images/dropbox-logo.png"/></span>Load from dropbox</div>
-        <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
-          ><span class="icon"><img src="images/onedrive-logo.png"/></span>Load from onedrive</div>
-        <div id="new-document" class="button" title="Create a new local document"
-          ><span class="icon"><span class="icon"><img src="images/madoko-icon-100.png"/></span></span>New local document</div>
-        <hr/>
-          <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
-        <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
-          ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
-        <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
-          ><span class="icon"><img src="images/dropbox-logo.png"/></span>On dropbox</div>
-        <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
-          ><span class="icon"><img src="images/onedrive-logo.png"/></span>On onedrive</div>
+      <!--
+      <div id="export" class="popup">
+        <img class="button" src="images/button-export.svg" />
+        <div id="export-content" class="menu boxed">
+          <div id="export-html" class="button" title="Export document as a web-page (HTML)">
+          <span class="icon"><img src="images/icon-html.png" title="Download HTML"/></span>Export to HTML</div>
+          <div id="export-pdf" class="button" title="Export document as PDF">
+          <span class="icon"><img src="images/icon-pdf.png" title="Download PDF"/></span>Export to PDF</div>
+        </div>
       </div>
-    </div>
-    <div class="buttons">
-      <span id="sync"><img id="sync-spinner" class="button spinner" src="images/sync.svg" alt="Synchronize" 
-        title="Synchronize with cloud storage" /></span>    
+      -->
+      <img id="sync-spinner" class="button spinner" src="images/button-sync.svg" alt="Synchronize" 
+      title="Synchronize with cloud storage"/>
       <div id="menu-settings" class="popup">
-        <img class="button" src="images/settings.svg" />
+        <img class="button" src="images/button-settings.svg" />
         <div id="menu-settings-content" class="menu boxed">
           <div class="button" title="Synchronize automatically with cloud storage (every 30 seconds)">
             <input type="checkbox" id="checkAutoSync" checked/> Synchronize automatically</div>
@@ -124,29 +122,13 @@ This setting can save energy or can be used on very slow browsers to increase re
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
         </div>
       </div>
-      
-      <img id="button-editor-wide" class="button" title="Make the editor view wider" src="images/tri-right.svg" />
-    </div>
-  </div>
-  <div class="pane-content boxed" >
-    <div id="editor"></div>
-  </div>
-</div>
-<div id="viewpane" class="pane right">
-  <div id="view-header" class="pane-header">
-    <div class="buttons">
-      <img id="button-editor-narrow" class="button" title="Make the document view wider" src="images/tri-left.svg" />
       <div id="help" class="popup">
-        <img class="button" src="images/help.svg" alt="Help"/>
+        <img class="button" src="images/button-help.svg" alt="About"/>
         <div id="help-content" class="menu boxed">
-          <div>The <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html"
-                >reference manual</a> is a great place to start.
-          </div>
-          <div>Participate in a 
-                <a target="_blank" href="http://madoko.codeplex.com/discussions">discussion</a> 
-                or report an 
-                <a target="_blank" href="http://madoko.codeplex.com/work/list/basic">issue</a>.
-          </div>
+          <a target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown cheat sheet</a>
+          <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">Madoko reference manual</a>
+          <a target="_blank" href="http://madoko.codeplex.com/discussions">Participate in a discussion</a> 
+          <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">Report an issue</a>
           <hr/>
           <div class="notice"
           >Madoko, version <span id="version">0.6-beta</span><br>
@@ -157,13 +139,22 @@ This setting can save energy or can be used on very slow browsers to increase re
           </div>
         </div>
       </div>
-      <img id="export-html" title="Export document as a web-page (HTML)"
-        class="button" src="images/html-logo.png" alt="Download HTML"/>    
-      <img id="export-pdf" title="Export document as PDF"
-        class="button" src="images/pdf-logo2.png" alt="Download PDF"/>    
+    </div>  
+    <div id="edit-select" class="popup">
+      <img id="remote-logo" src="images/icon-local.svg" />
+      <span id="edit-select-header">&nbsp;</span>
+      <div id="edit-select-content" class="menu boxed">        
+      </div>
     </div>
+  </div>
+  <div class="pane-content" >
+    <div id="editor"></div>
+  </div>
+</div>
+<div id="viewpane" class="pane right">
+  <div id="view-header" class="pane-header">
     <img id="view-spinner" class="spinner" src="images/spinner-line.svg" alt="view spinner"/>    
-    <div id="view-message" class="popup boxed">
+    <div id="view-message" class="popup output">
       <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
       <div id="koka-console" class="madoko menu boxed">
@@ -171,10 +162,8 @@ This setting can save energy or can be used on very slow browsers to increase re
       </div>
     </div>
   </div>
-  <div class="pane-content boxed" id="view-container">
-    <!-- <div id="view" class="madoko madoko-body"></div> -->
-    <iframe id="view" class="view" sandbox="allow-scripts allow-popups" 
-            src="preview/preview.html"></iframe>
+  <div class="pane-content" id="view-container">
+    <iframe id="view" class="view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
   </div>
 </div>
 </div>

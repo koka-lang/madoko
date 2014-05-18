@@ -19,7 +19,8 @@ html,body,#app {
 }
 
 #app {
-  padding: 0ex 1ex;
+  background-color: Gainsboro;  
+  padding: 0px 2px;
 }
 
 /* panes */
@@ -30,34 +31,38 @@ html,body,#app {
 
 .pane {
   height: 96%;
-  height: calc(100% - 1.25rem);
+  height: calc(100% - 1px);
   width: 49%;
 }
 
 .pane.left {
-  width: calc(53% - 0.2rem);
+  width: calc(53%);
   transition: width 0.8s;
 }
 .pane.right {
-  width: calc(47% - 0.2rem);
+  width: calc(47% - 2px );
   transition: width 0.8s;
 }
 
 .pane.wide {  
   width: 69%;
-  width: calc(70% - 0.125rem);
+  width: calc(70%);
 }
 .pane.narrow {
   width: 29%;
-  width: calc(30% - 0.125rem);
+  width: calc(30% - 2px);
 }
 .pane-header {
-  margin-bottom: 0.25rem;
+  height: 2rem; 
+  padding: 0.4rem 0px 0rem 0px;
+}
+.pane-header img {
+  height: 1.5rem;
+  vertical-align: middle;
 }
 .pane-content {
   height: 95%;
-  height: calc(100% - 1.5rem - 6px);    
-  padding: 1px;
+  height: calc(100% - 2.4rem - 4px);    
 }
 
 .pane.right {
@@ -97,14 +102,20 @@ html,body,#app {
 }
 
 /* buttons */
+.buttons {
+  display: none;
+}
 .button, .buttons {
   padding: 0em 0.2em;
 }
 
 .button:hover {
   cursor: pointer;
-  background-color: Gainsboro;
-  border-radius: 5px;
+  background-color: #EEE;
+}
+
+.button img {
+  vertical-align: -0.25ex !important;
 }
 
 .button.disable:hover {
@@ -155,12 +166,6 @@ html,body,#app {
   text-align: left;
 }
 
-.pane-header img {
-  height: 1em;
-  max-width: 1.5em;
-  vertical-align: middle;
-}
-
 /* File items */
 
 .disable, .file.generated, .file.image {
@@ -188,10 +193,14 @@ html,body,#app {
 
 .boxed {
   border: 1px solid black !important;
-  border-radius: 5px;
+  /* border-radius: 5px; */
 }
 div.boxed {
   padding: 1.4px;
+}
+
+.output {
+  background-color: #E8E8E8;
 }
 
 /* Editor Header */
@@ -200,20 +209,31 @@ div.boxed {
   width: 50%;
   padding: 0 1ex;
   margin-right: 0.25em;
+  margin-left: 0.25em;
 }
 
-#remote-logo, .menu img {
-  vertical-align: -0.15em;
+.menu img {
+  height: 1.2em;
+}
+
+#remote-logo {
+  height: 1.2em;
+  vertical-align: -0.15ex;
 }
 
 #save-folder {
-  width: 8em;
+  width: 11em;
   color: DimGray;
 }
 
 .notice {
   font-size: small;
   color: DimGray;
+}
+
+.menubar {
+  display: inline-block;
+  float: right;
 }
 
 /* View header */
@@ -283,21 +303,20 @@ div.boxed {
 
 /* Generic Spinner */
 
-.spinner {
+.right .spinner {
   width: 1em;
   height: 1em;
   visibility: hidden;
 }
 
-#sync .spinner {
-  visibility: visible;
+.left .spinner {
 }
 
 .spinner.spin {
   visibility: visible;
   -webkit-animation: spinner-rotate 2s infinite linear;
   animation: spinner-rotate 2s infinite linear;
-  background-color: white;
+  background-color: Gainsboro;
 }
 
 
@@ -331,7 +350,7 @@ div.boxed {
   background-color: white;
   max-height: 20rem;
   overflow-y: auto;
-  padding: 1px;
+  padding: 0.5ex;
 }
 
 .popup:hover > div {
@@ -345,14 +364,28 @@ div.boxed {
 }
 
 #document-content {
-  width: 14em;
+  width: 17em;
 }
 
 #help-content {
-  width: 21em;
+  width: 17em;
+}
+
+#export-content {
+  width: 10em;
 }
 
 #koka-console {
-  width: 25em;
-  left: -6.5em;
+  width: 124%;
+  left: -25%;
+}
+
+#help-content>a {
+  display: block;
+  color: black;
+  text-decoration: none;
+}
+
+#help-content>a:hover {
+  background-color: Gainsboro;
 }

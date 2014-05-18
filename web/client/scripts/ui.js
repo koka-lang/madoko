@@ -489,7 +489,7 @@ var UI = (function() {
       });
     }
    
-    document.getElementById("sync").onclick = function(ev) {      
+    self.syncer.onclick = function(ev) {      
       self.synchronize();
     }
 
@@ -499,13 +499,12 @@ var UI = (function() {
     // narrow and wide editor panes
     var editpane = document.getElementById("editorpane");
     var viewpane = document.getElementById("viewpane");
-    var buttonEditorNarrow = document.getElementById("button-editor-narrow");
-    var buttonEditorWide   = document.getElementById("button-editor-wide");
 
     viewpane.addEventListener('transitionend', function( event ) { 
       self.syncView(); 
     }, false);
     
+    /*
     var wideness = 0; // < 0 = editor narrow, > 0 = editor wide
     buttonEditorWide.onclick = function(ev) {
       if (wideness < 0) {
@@ -537,6 +536,7 @@ var UI = (function() {
       }
       if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
+    */
 
   }
 

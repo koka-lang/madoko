@@ -199,7 +199,7 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.logo = function() {
-    return "onedrive-logo.png";
+    return "icon-onedrive.png";
   }
 
   Onedrive.prototype.persist = function() {
@@ -338,7 +338,7 @@ var LocalRemote = (function() {
   }
 
   LocalRemote.prototype.logo = function() {
-    return "local-logo.svg";
+    return "icon-local.png";
   }
 
   LocalRemote.prototype.persist = function() {
@@ -402,7 +402,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.logo = function() {
-    return "madoko-icon-100.png";
+    return "icon-local.svg";
   }
 
   NullRemote.prototype.getFolder = function() {

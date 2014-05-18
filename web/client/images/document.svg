@@ -7,6 +7,6 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 140">
   <rect x="0" y="10" width="80" height="120"/> 
-  <rect x="35" y="5" width="45" height="50" fill="black" stroke="white" stroke-width="10"/> 
-  <path d="M 45 0 L 80 45 L 80 0 L 30 0" fill="white"/> 
+  <rect x="35" y="5" width="45" height="50" fill="black" stroke="gainsboro" stroke-width="10"/> 
+  <path d="M 45 0 L 80 45 L 80 0 L 30 0" fill="gainsboro"/> 
 </svg>
