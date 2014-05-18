@@ -1,0 +1,15 @@
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"
+       fill="none" stroke="black" stroke-width="8">
+  <circle cx="50" cy="50" r="45"/>
+  <g transform="translate(20,20) scale(0.6)">
+    <circle cx="50" cy="50" r="45" stroke-width="16" stroke-dasharray="17.67 17.67"/>
+    <circle cx="50" cy="50" r="33" stroke-width="12"/> 
+  </g>
+</svg>

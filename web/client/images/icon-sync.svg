@@ -1,0 +1,16 @@
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 125"
+  stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="black" stroke-width="8">
+  <g>
+    <circle r="40" cx="60" cy="60" fill="none" stroke-width="18" stroke="black"    
+       stroke-dasharray="70 56.4" stroke-dashoffset="35" stroke-linecap="round" />
+    <path transform="translate(20,6) rotate(-35) scale(0.55)" d="M 0 0 L 70 50 L 0 100 L 0 0" fill="black"/>
+    <path transform="translate(100,114) rotate(145) scale(0.55)" d="M 0 0 L 70 50 L 0 100 L 0 0" fill="black"/>
+  </g>
+</svg>
