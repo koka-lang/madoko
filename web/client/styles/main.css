@@ -34,9 +34,6 @@ html,body,#app {
 .view {
   background-color: white;
 }
-div {
-  scrollbar-track-color: gainsboro;
-}
 
 .theme-grey #app, .theme-grey .spinner.spin {
   background-color: gainsboro;  
