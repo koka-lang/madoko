@@ -20,11 +20,9 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     Prof: "prof",
   };
 
-  var warning;
   var status;
   var consoleOut;
   if (typeof document !== "undefined") {
-    warning    = document.getElementById("warning");
     status     = document.getElementById("status");
     consoleOut = document.getElementById("koka-console-out");
   }
@@ -76,7 +74,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     if (!kind) kind = Msg.Normal;
     // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
-    if (kind !== Msg.Trace && consoleOut && status && warning) {
+    if (kind !== Msg.Trace && consoleOut && status) {
       function span(s,n) {
         if (n && s.length > n-2) {
           s = s.substr(0,n) + "...";
@@ -288,6 +286,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     xml: "text/html",
     js:  "text/javascript",
     pdf: "application/pdf",
+    json:"application/json",
     
     tex: "text/tex",
     sty: "text/tex",

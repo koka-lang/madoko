@@ -97,7 +97,7 @@ require([ "../scripts/util",
           <div class="button" 
                title="Do not update the view until there is a pause in typing.
 Delaying the view update increases performance with large documents or slow browsers.">
-            <input type="checkbox" id="checkDelayedUpdate"/> Delayed view update</div>
+            <input type="checkbox" id="checkDelayedUpdate"/> Delayed view updates</div>
           <div class="button" 
                title="Do not update the view automatically.
 This setting can save energy or can be used on very slow browsers to increase responsiveness.">
@@ -140,7 +140,6 @@ This setting can save energy or can be used on very slow browsers to increase re
   <div id="view-header" class="pane-header">
     <img id="view-spinner" class="spinner" src="images/icon-spinner.svg" alt="view spinner"/>    
     <div id="view-message" class="popup output">
-      <img id="warning" class="hide" src="images/warn.svg"/>
       <span id="status"></span>
       <div id="koka-console" class="madoko menu boxed">
         <div id="koka-console-out" class="monospace short"></div>
@@ -190,6 +189,9 @@ include:
 * `Shift-Alt-A`: Put a block comment around the selection.
 * You can drag&drop images, include files, LaTeX document classes,
   and bibliography files right into the edit pane.
+* Start working with larger documents: use the `[INCLUDE=my-chapter]`
+  element and in the upper-left file menu you can start editing the
+  `my-chapter` include file.
 
 To learn more about markdown and Madoko's extensions, see:
 

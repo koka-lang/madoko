@@ -286,6 +286,8 @@ var UI = (function() {
             }
           }
           if (posLine >= 0) {
+            posLine = self.viewToTextLine(posLine);
+
             return self.insertFiles( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
           }
         }
@@ -1223,8 +1225,8 @@ var UI = (function() {
       text = "[INCLUDE=\"" + name + "\"]";
     }
     else {
-      if (ext===".js") {
-        text="Highlight language: " + name;
+      if (ext===".json") {
+        text="Colorizer   : " + name;
       }
       else if (ext===".css") {
         text="Css         : " + name;
@@ -1257,7 +1259,7 @@ var UI = (function() {
     for (var i = 0, f; f = files[i]; i++) {      
       var encoding = storage.Encoding.fromExt(f.name);      
       var mime = f.type || util.mimeFromExt(f.name);
-      if (!(util.startsWith(mime,"image/") || util.startsWith(mime,"text/"))) { // only images or text..
+      if (!(util.startsWith(mime,"image/") || util.startsWith(mime,"text/") || mime === "application/json")) { // only images or text..
         continue;
       }
       
@@ -1275,88 +1277,24 @@ var UI = (function() {
     }
   }
 
-  function findElemAtLine( elem, line, fname ) 
-  {
-    if (!elem || !line || line < 0) return null;
-
-    var children = elem.children; 
-    if (!children || children.length <= 0) return null;
-
-    var current  = 0;
-    var currentLine = 0;
-    var next     = children.length-1;
-    var nextLine = line;
-    var found    = false;
-    
-    for(var i = 0; i < children.length; i++) {
-      var child = children[i];
-      var dataline = child.getAttribute("data-line");
-      if (dataline && !util.contains(child.style.display,"inline")) {
-        if (fname) {
-          var idx = dataline.indexOf(fname + ":");
-          if (idx >= 0) {
-            dataline = dataline.substr(idx + fname.length + 1)
-          }
-          else {
-            dataline = ""  // gives NaN to cline
-          }
-        }
-        var cline = parseInt(dataline);
-        if (!isNaN(cline)) {
-          if (cline <= line) {
-            found = true;
-            currentLine = cline;
-            current = i;
-          }
-          if (cline > line) {
-            found = true;
-            nextLine = cline;
-            next = i;
-            break;
-          }
-        }
-      }
-    }
-
-    // go through all children of our found range
-    var res = { elem: children[current], elemLine: currentLine, next: children[next], nextLine: nextLine };
-    for(var i = current; i <= next; i++) {
-      var child = children[i];
-      if (child.children && child.children.length > 0) {
-        var cres = findElemAtLine(child,line,fname);
-        if (cres) {
-          found = true;
-          res.elem = cres.elem;
-          res.elemLine = cres.elemLine;
-          if (cres.nextLine > line) { // && cres.nextLine <= res.nextLine) {
-            res.next = cres.next;
-            res.nextLine = cres.nextLine;
-          }
-          break; 
-        }
-      }
-    }
-
-    if (!found) return null; // no data-line at all.
-    return res;
-  }
-
-  function offsetOuterTop(elem) {
-    var delta = 0;
-    if (window.getComputedStyle) {
-      var style = window.getComputedStyle(elem);
-      if (style) {
-        delta = util.px(style.marginTop) + util.px(style.paddingTop) + util.px(style.borderTopWidth);
-      }   
-    }
-    return (elem.offsetTop - delta);
-  }
-
+  
   UI.prototype.dispatchViewEvent = function( ev ) {
     var self = this;
     // we use "*" since sandboxed iframes have a null origin
     if (self.view) {
       self.view.contentWindow.postMessage(JSON.stringify(ev),"*");
+    }
+  }
+
+  UI.prototype.viewToTextLine = function( lineNo ) {
+    var self = this;
+    // translate view line to text line (for when lines are wrapped)
+    if (self.editor.configuration.getWrappingColumn() >= 0) {
+      var slines = self.editor.getView().context.model.lines;
+      return slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
+    }
+    else {
+      return lineNo;
     }
   }
 
@@ -1398,15 +1336,9 @@ var UI = (function() {
       // use physical textline; 
       // start-, end-, cursor-, and lineNo are all view lines.
       // if wrapping is enabled, this will not correspond to the actual text line
-      var textLine = lineNo;
+      var textLine = self.viewToTextLine(lineNo);
       var slines = null;
-      if (self.editor.configuration.getWrappingColumn() >= 0) {
-        // need to do wrapping column translation
-        editView  = editView || self.editor.getView();      
-        var slines = editView.context.model.lines;
-        textLine = slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
-      }
-
+      
       // find the element in the view tree
       var event = options;
       event.eventType   = "scrollToLine";
