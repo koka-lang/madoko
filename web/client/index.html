@@ -59,12 +59,10 @@ require([ "../scripts/util",
 <div id="app" style="display:none">
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <div class="menubar">
-      <div id="document" class="popup">
+    <div class="menubar"
+      ><div id="document" class="popup">
         <img id="cloud" class="button" src="images/button-document.svg"/>
         <div id="document-content" class="menu boxed">
-          <!--<div id="load-local" class="menu button" title="Load document from browser local storage"
-            ><img src="images/local-logo.svg" class="logo" /> Load from local storage</div>-->
           <div id="load-dropbox" class="button" title="Load document from Dropbox cloud storage"
             ><span class="icon"><img src="images/icon-dropbox.png"/></span>Load from dropbox</div>
           <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
@@ -73,8 +71,6 @@ require([ "../scripts/util",
             ><span class="icon"><span class="icon"><img src="images/icon-local.svg"/></span></span>New local document</div>
           <hr/>
             <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
-          <!-- <div id="sync-local" class="menu button" title="Save workspace to browser local storage"
-            ><img src="images/local-logo.svg" class="logo" /> To local storage</div> -->
           <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
             ><span class="icon"><img src="images/icon-dropbox.png"/></span>On dropbox</div>
           <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
@@ -85,21 +81,10 @@ require([ "../scripts/util",
           <div id="export-pdf" class="button" title="Export document as PDF">
           <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document</div>
         </div>
-      </div>
-      <!--
-      <div id="export" class="popup">
-        <img class="button" src="images/button-export.svg" />
-        <div id="export-content" class="menu boxed">
-          <div id="export-html" class="button" title="Export document as a web-page (HTML)">
-          <span class="icon"><img src="images/icon-html.png" title="Download HTML"/></span>Export to HTML</div>
-          <div id="export-pdf" class="button" title="Export document as PDF">
-          <span class="icon"><img src="images/icon-pdf.png" title="Download PDF"/></span>Export to PDF</div>
-        </div>
-      </div>
-      -->
-      <img id="sync-spinner" class="button spinner" src="images/button-sync.svg" alt="Synchronize" 
-      title="Synchronize with cloud storage"/>
-      <div id="menu-settings" class="popup">
+      </div
+      ><div class="popup"><img id="sync-spinner" class="button spinner" src="images/button-sync.svg" alt="Synchronize" 
+      title="Synchronize with cloud storage"/
+      ></div><div id="menu-settings" class="popup">
         <img class="button" src="images/button-settings.svg" />
         <div id="menu-settings-content" class="menu boxed">
           <div class="button" title="Synchronize automatically with cloud storage (every 30 seconds)">
@@ -121,8 +106,8 @@ This setting can save energy or can be used on very slow browsers to increase re
                title="Do not use the Madoko server to typeset mathematics and/or the bibliography">
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
         </div>
-      </div>
-      <div id="help" class="popup">
+      </div
+      ><div id="help" class="popup">
         <img class="button" src="images/button-help.svg" alt="About"/>
         <div id="help-content" class="menu boxed">
           <a target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown cheat sheet</a>
