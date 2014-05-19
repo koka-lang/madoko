@@ -60,6 +60,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return html.replace(/(^|<br>)(.*?)(?=<br>|$)/g, "$1<span class='" + cls + "'>$2</span>");
   }
 
+  var maxConsole = 12*1024;
+
   // Call for messages
   function message( txt, kind ) {
     if (typeof txt === "object") {
@@ -82,7 +84,17 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         return "<span class='msg-" + kind + "'>" + spanLines(htmlEscape(s),"msg-line") + "</span>";
       }
 
-      consoleOut.innerHTML = "<div class='msg-section'>" + span(txt) + "</span></div>" + consoleOut.innerHTML;
+      var prefix  = "<div class=\"msg-section\">";
+      var current = consoleOut.innerHTML;
+      if (current.length > 1.25*maxConsole) {
+        var rx = new RegExp(prefix,"gi");
+        rx.lastIndex = maxConsole;
+        var cap = rx.exec(current);
+        if (cap) {
+          current = current.substr(0,cap.index);
+        }
+      }
+      consoleOut.innerHTML = prefix + span(txt) + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
         status.innerHTML = span(txt,35);
