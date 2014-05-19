@@ -329,8 +329,10 @@ function dispatchEvent( elem, eventName ) {
         return;
       }
     }
-    // do a full update otherwise
-    document.body.innerHTML = info.content;
+    // do a full update otherwise 
+    // note: add a final element to help the scrolling to the end.
+    var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
+    document.body.innerHTML = info.content + finalElem;
     // append script to detect onload event
     var loaded = document.createElement("script");
     loaded.type = "text/javascript";

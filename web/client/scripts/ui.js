@@ -681,7 +681,8 @@ var UI = (function() {
         eventType: "loadContent",
         content: html,
         oldText: oldText,
-        newText: newText
+        newText: newText,
+        lineCount: self.editor.getModel().getLineCount(),
       }
       self.dispatchViewEvent(event);
       return false;
@@ -1378,9 +1379,13 @@ var UI = (function() {
         endLine = rng.endLineNumber;
         //console.log("scroll: start: " + startLine)
       }
+      var lineCount = self.editor.getModel().getLineCount();
       var lineNo = cursorLine;
       if (startLine === 1) {
         lineNo = startLine;
+      }
+      else if (endLine === lineCount) {
+        lineNo = endLine;
       }
       else if (cursorLine < startLine || cursorLine > endLine) {
         // not a visible cursor -- use the middle of the viewed ranged
@@ -1409,6 +1414,7 @@ var UI = (function() {
       event.viewLine    = lineNo;
       event.viewStartLine = startLine;
       event.viewEndLine = endLine;
+      event.lineCount   = lineCount;
       event.sourceName  = self.editName === self.docName ? null : self.editName;
       event.height      = self.view.clientHeight;
       
