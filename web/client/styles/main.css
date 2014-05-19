@@ -57,10 +57,12 @@ html,body,#app {
   padding: 0.4rem 0px 0rem 0px;
   border-bottom: solid 1px #BBB;
 }
+
 .pane-header img {
   height: 1.5rem;
   vertical-align: middle;
 }
+
 .pane-content {
   height: 95%;
   height: calc(100% - 2.3rem - 4px);    
@@ -115,8 +117,8 @@ html,body,#app {
   background-color: #EEE;
 }
 
-.button img {
-  vertical-align: -0.25ex !important;
+.menu img {
+  height: 1.2em;
 }
 
 .button.disable:hover {
@@ -139,12 +141,12 @@ html,body,#app {
 /* menus */
 
 .menu hr {
-  margin-top: 0.5em;
+  margin-top: 0.2em;
   margin-bottom: 0.25em;
 }
 
 .menu div {
-  padding: 0.1em 0.2em;
+  padding: 0.1em 0em;
 }
 
 .menu div .icon, .menu div input {
@@ -308,6 +310,7 @@ div.boxed {
 .monaco-editor .line-numbers {
   background-color: Gainsboro;
 }
+
 
 
 /* Generic Spinner */
