@@ -283,6 +283,7 @@ var mimeTypes = {
   xml: "text/html",
   js:  "text/javascript",
   pdf: "application/pdf",
+  json: "application/json",
   
   tex: "text/tex",
   sty: "text/latex",

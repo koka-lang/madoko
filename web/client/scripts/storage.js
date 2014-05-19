@@ -110,7 +110,7 @@ var Encoding = {
 
   fromExt: function(fpath) {
     var mime = util.mimeFromExt(fpath);
-    return (util.startsWith(mime,"text/") ? Encoding.Utf8 : Encoding.Base64);
+    return (util.isTextMime(mime) ? Encoding.Utf8 : Encoding.Base64);
   },
 };
 
