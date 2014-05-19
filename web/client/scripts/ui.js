@@ -1127,7 +1127,7 @@ var UI = (function() {
       return /^\s*$/.test(line);
     }
     function endPara(line) {
-      return isBlank(line) || /^[ \t]*(```|[>#~])/.test(line);
+      return isBlank(line) || /^[ \t]*(```|[>#~])|.*(\\|  )$/.test(line);
     }
     function stopPara(line) {
       return endPara(line) || /^[ \t]*(([\*\+\-]|\d\.)[ \t])/.test(line);

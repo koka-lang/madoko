@@ -55,6 +55,7 @@ html,body,#app {
 .pane-header {
   height: 2rem; 
   padding: 0.4rem 0px 0rem 0px;
+  border-bottom: solid 1px #BBB;
 }
 .pane-header img {
   height: 1.5rem;
@@ -169,8 +170,12 @@ html,body,#app {
 /* File items */
 
 .disable, .file.generated, .file.image {
-  color: #BBB;
+  color: #AAA;
 }
+#edit-select-header .disable {
+  color: #888;
+}
+
 .file.main {
   font-weight: bold;
 }
@@ -304,8 +309,7 @@ div.boxed {
 /* Generic Spinner */
 
 .right .spinner {
-  width: 1em;
-  height: 1em;
+  height: 1.2em;
   visibility: hidden;
 }
 
@@ -376,8 +380,12 @@ div.boxed {
 }
 
 #koka-console {
-  width: 124%;
+  width: 122%;
   left: -25%;
+}
+
+#help-content>a:before {
+  content: " - ";
 }
 
 #help-content>a {
