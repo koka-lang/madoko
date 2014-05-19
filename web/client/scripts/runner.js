@@ -211,7 +211,7 @@ var Runner = (function() {
     if (self.storage) {
       self.storage.forEachFile(function(file) {
         if (file.path === params.docname) return; // use the latest version
-        if (util.startsWith(file.mime, "text/") || (util.startsWith(file.mime, "image/") && ctx.includeImages)) {
+        if (util.isTextMime(file.mime) || (util.startsWith(file.mime, "image/") && ctx.includeImages)) {
           params.files.push( { 
             path: file.path,
             mime: file.mime, 

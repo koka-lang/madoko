@@ -336,6 +336,10 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (contains(dropExts,ext));
   }
 
+  function isTextMime( mime ) {
+    return (startsWith(mime,"text/") || mime==="application/json");
+  }
+
   
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html"].join(";");
   function hasGeneratedExt(fname) {
@@ -1056,6 +1060,7 @@ doc.execCommand("SaveAs", null, filename)
     hasGeneratedExt: hasGeneratedExt,
     hasDropExt: hasDropExt,
     mimeFromExt: mimeFromExt,
+    isTextMime: isTextMime,
 
     startsWith: startsWith,
     endsWith: endsWith,
