@@ -246,7 +246,8 @@ div.boxed {
 #remote-logo,
 #sync-spinner {
   float: right;
-  margin-top: 0.2em;
+  margin-top: 0.25em;
+  height:0.8em;
 }
 
 #save-folder {
@@ -407,7 +408,7 @@ div.boxed {
 
 /* Widths of popup content */
 #edit-select-content {
-  width: 80%;
+  width: 50%;
 }
 
 #help-content,
