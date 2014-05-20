@@ -56,7 +56,7 @@ require([ "../scripts/util",
 <p>Please upgrade your browser to a more recent version.</p>
 <p>Madoko is known to work with IE 10+, Chrome version 31+, or Firefox version 27+.</p>
 </div>
-<div id="app" style="display:none">
+<div id="app" class="view-normal" style="display:none">
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
     <div id="document" class="popup">
@@ -93,7 +93,7 @@ require([ "../scripts/util",
     <div id="editor"></div>
   </div>
 </div>
-<div id="viewpane" class="pane right">
+<div id="viewpane" class="pane right normal">
   <div id="view-header" class="pane-header">
     <img id="view-spinner" class="spinner" src="images/dark/icon-spinner.png" alt="view spinner"/>          
     <div id="Xview-message" class="popup output">
@@ -127,9 +127,9 @@ This setting can save energy or can be used on very slow browsers to increase re
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
          <hr/>
          <div>&nbsp;View:&nbsp; 
-          <span class="button"><img src="images/icon-view-narrow.png"/>&thinsp;Narrow</span>
-          <span class="button"><img class="button" src="images/icon-view-normal.png"/>Normal</span>
-          <span class="button"><img class="button" src="images/icon-view-wide.png"/>Wide</span>
+          <span id="view-narrow" class="button"><img src="images/icon-view-narrow.png"/>&thinsp;Narrow</span>
+          <span id="view-normal" class="button"><img class="button" src="images/icon-view-normal.png"/>Normal</span>
+          <span id="view-wide" class="button"><img class="button" src="images/icon-view-wide.png"/>Wide</span>
          </div>
         </div>
       </div

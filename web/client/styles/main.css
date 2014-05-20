@@ -98,23 +98,23 @@ html,body,#app {
   width: 49%;
 }
 
-.pane.left {
-  width: calc(53%);
-  transition: width 0.8s;
-}
-.pane.right {
-  width: calc(47%);
-  transition: width 0.8s;
+.pane {
+  transition: width 1s;
 }
 
-.pane.wide {  
-  width: 69%;
-  width: calc(70%);
+.view-normal .pane.left {
+  width: calc(53%);
 }
-.pane.narrow {
-  width: 29%;
-  width: calc(30% - 2px);
+.view-normal .pane.right {
+  width: calc(47%);
 }
+.view-wide .pane.right, .view-narrow .pane.left {  
+  width: 70%;
+}
+.view-narrow .pane.right, .view-wide .pane.left {
+  width: 30%;
+}
+
 .pane-header {
   height: 1.5rem; 
   padding: 0.2rem 0px 0rem 0px;

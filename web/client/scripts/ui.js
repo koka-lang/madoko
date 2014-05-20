@@ -500,47 +500,28 @@ var UI = (function() {
 
     
     // narrow and wide editor panes
-    var editpane = document.getElementById("editorpane");
-    var viewpane = document.getElementById("viewpane");
-
-    viewpane.addEventListener('transitionend', function( event ) { 
-      self.syncView(); 
-    }, false);
+    var app = document.getElementById("app");
     
-    /*
-    var wideness = 0; // < 0 = editor narrow, > 0 = editor wide
-    buttonEditorWide.onclick = function(ev) {
-      if (wideness < 0) {
-        util.removeClassName(viewpane,"wide");
-        util.removeClassName(editpane,"narrow");
-        util.removeClassName(buttonEditorNarrow,"hide");
-        wideness = 0;
-      }
-      else {
-        util.addClassName(viewpane,"narrow");
-        util.addClassName(editpane,"wide");
-        util.addClassName(buttonEditorWide,"hide");      
-        wideness = 1;
-      }
-      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+    //viewpane.addEventListener('transitionend', function( event ) { 
+    //  self.syncView(); 
+    //}, false);
+    
+    document.getElementById("view-narrow").onclick = function(ev) {
+      util.removeClassName(app,"view-wide");
+      util.removeClassName(app,"view-normal");
+      util.addClassName(app,"view-narrow");
     }
-    buttonEditorNarrow.onclick = function(ev) {
-      if (wideness > 0) {
-        util.removeClassName(viewpane,"narrow");
-        util.removeClassName(editpane,"wide");
-        util.removeClassName(buttonEditorWide,"hide");
-        wideness = 0;
-      }
-      else {
-        util.addClassName(viewpane,"wide");
-        util.addClassName(editpane,"narrow");
-        util.addClassName(buttonEditorNarrow,"hide");      
-        wideness = -1;
-      }
-      if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+    document.getElementById("view-normal").onclick = function(ev) {
+      util.removeClassName(app,"view-wide");
+      util.removeClassName(app,"view-narrow");
+      util.addClassName(app,"view-normal");
     }
-    */
-
+    document.getElementById("view-wide").onclick = function(ev) {
+      util.removeClassName(app,"view-narrow");
+      util.removeClassName(app,"view-normal");
+      util.addClassName(app,"view-wide");
+      //if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+    }    
   }
 
   UI.prototype.setEditText = function( text, mode ) {
