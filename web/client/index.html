@@ -137,13 +137,13 @@ This setting can save energy or can be used on very slow browsers to increase re
         <img class="button" src="images/dark/button-help.png" alt="About"/>
         <div id="help-content" class="menu boxed">
           <a target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"/>
-            <img src="images/icon-link.png"/>Markdown cheat sheet</a>
+            Markdown cheat sheet <img src="images/icon-link.png"/></a>
           <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">
-            <img src="images/icon-link.png"/>Madoko reference manual</a>
+            Madoko reference manual <img src="images/icon-link.png"/></a>
           <a target="_blank" href="http://madoko.codeplex.com/discussions">
-            <img src="images/icon-link.png"/>Participate in a discussion</a> 
+            Participate in a discussion <img src="images/icon-link.png"/></a> 
           <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">
-            <img src="images/icon-link.png"/>Report an issue</a>
+            Report an issue <img src="images/icon-link.png"/></a>
           <hr/>
           <div class="notice"
           >Madoko, version <span id="version">0.6-beta</span><br>
@@ -160,7 +160,12 @@ This setting can save energy or can be used on very slow browsers to increase re
   </div>
 </div>
 </div>
+<div id="app-footer">
+<a href="http://go.microsoft.com/fwlink/?LinkId=386394">Terms Of Use</a> | 
+<a href="http://go.microsoft.com/fwlink/?LinkID=286687">Privacy &amp; Cookies</a> | 
+&copy; 2014 Microsoft Research&nbsp;</div>
 
+<div style="display:none">
 <div id="initial" style="display:none; white-space:pre">Title         : Welcome to Madoko
 Heading Base  : 2
 Author        : You
@@ -291,9 +296,8 @@ function hello() {
 [^onedrive]: "_Creating, updating, or deleting files in a folder that is
     shared with the signed-in user is not supported by the OneDrive
     API._", [link][onedrive-sharing]
-</div>
-
-<script>
+</div
+><script>
 // test browser features
 if (typeof Worker === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
@@ -301,14 +305,10 @@ if (typeof Worker === "undefined") {
 else {
   document.getElementById("app").style.display = "block"; 
 }
-</script>
-
-<!-- dropbox -->
+</script><!-- dropbox -->
 <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>
-
 <!-- onedrive -->
-<script src="//js.live.net/v5.0/wl.debug.js"></script> 
-
+<script src="//js.live.net/v5.0/wl.debug.js"></script>
 <script>
 require([ "../scripts/storage" ], function(storage) 
 { 
@@ -319,6 +319,6 @@ require([ "../scripts/storage" ], function(storage)
   });
 });
 </script>
-
+</div>
 </body>
 </html>

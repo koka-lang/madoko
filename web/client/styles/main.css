@@ -38,7 +38,7 @@ html,body,#app {
 .theme-grey #app {
   background-color: white;      
 }
-.theme-grey .pane-header, .theme-grey .spinner.spin, .theme-grey .output {
+.theme-grey .pane-header, .theme-grey .spinner.spin, .theme-grey .output, .theme-grey #app-footer {
   background-color: #444;
   border-style: none;
   color: white;
@@ -52,36 +52,49 @@ html,body,#app {
 
 .theme-grey .menubar>div>img.button:hover,
 .theme-grey .popup:hover,
-.theme-grey .popup>.button:hover {
+.theme-grey .popup>.button:hover,
+.theme-grey #app-footer a:hover {
   background-color: #888;
 }
 
 .theme-dark #app {
   background-color: white;      
 }
-.theme-dark .pane-header, .theme-dark .spinner.spin, .theme-dark .output {
-  background-color: black;
+.theme-dark .pane-header, 
+.theme-dark .spinner.spin, 
+.theme-dark .output,
+.theme-dark #app-footer {
+  background-color: #000;
   border-style: none;
   color: white;
 }
 .theme-dark .pane-header .popup div {
   color: black;
 }
-
+.theme-dark .monaco-editor.vs .clnr {
+  color: #666;
+}
 .theme-dark .menubar>div>img.button:hover,
 .theme-dark .popup:hover,
-.theme-dark .popup>.button:hover {
+.theme-dark .popup>.button:hover,
+.theme-dark #app-footer a:hover {
   background-color: #666;
 }
 
 /* Application panes */
 
 #app {
+  height: 100%;
+  margin-bottom: -1rem;
+}
+
+#app-footer {
+  height: 1rem;
 }
 
 .pane {
   height: 96%;
-  height: calc(100% - 1px);
+  height: calc(100% - 1em);
   width: 49%;
 }
 
@@ -115,7 +128,7 @@ html,body,#app {
 
 .pane-content {
   height: 95%;
-  height: calc(100% - 1.7rem - 4px);    
+  height: calc(100% - 1.7rem - 0.5px); /* -0.5px for error in editor pixel rounding */    
 }
 
 .pane.right {
@@ -126,7 +139,7 @@ html,body,#app {
   float: left;
 }
 
-.pane-header {
+.pane-header, #app-footer {
   font-family: "Segoe UI";
 }
 
@@ -139,6 +152,15 @@ html,body,#app {
   text-align: left;
 }
 
+#app-footer {
+  font-size: x-small;
+  text-align: right;
+}
+
+#app-footer a {
+  color: white;
+  text-decoration: none;
+}
 
 /* Main elements in panes */
 

@@ -202,6 +202,7 @@ var UI = (function() {
       value: content,
       mode: "text/madoko",
       theme: "vs",
+      roundedSelection: false,
       lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       //mode: madokoMode.mode,
       tabSize: 4,
