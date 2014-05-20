@@ -35,30 +35,43 @@ html,body,#app {
   background-color: white;
 }
 
-.theme-grey #app, .theme-grey .spinner.spin {
-  background-color: Gainsboro;  
-}
-.theme-grey .output {
-  background-color: #E8E8E8;
-  border-style: none;
-}
-
-.theme-black #app {
+.theme-grey #app {
   background-color: white;      
 }
-.theme-black .pane-header, .theme-black .spinner.spin, .theme-black .output {
-  background-color: #000;
+.theme-grey .pane-header, .theme-grey .spinner.spin, .theme-grey .output {
+  background-color: #444;
   border-style: none;
   color: white;
 }
-.theme-black .pane-header .popup div {
+.theme-grey .pane-header {
+  border-bottom: 1px solid 000;
+}
+.theme-grey .pane-header .popup div {
   color: black;
 }
 
-.theme-black .menubar>div>img.button:hover,
-.theme-black .popup:hover,
-.theme-black .popup>.button:hover {
-  background-color: #444;
+.theme-grey .menubar>div>img.button:hover,
+.theme-grey .popup:hover,
+.theme-grey .popup>.button:hover {
+  background-color: #888;
+}
+
+.theme-dark #app {
+  background-color: white;      
+}
+.theme-dark .pane-header, .theme-dark .spinner.spin, .theme-dark .output {
+  background-color: black;
+  border-style: none;
+  color: white;
+}
+.theme-dark .pane-header .popup div {
+  color: black;
+}
+
+.theme-dark .menubar>div>img.button:hover,
+.theme-dark .popup:hover,
+.theme-dark .popup>.button:hover {
+  background-color: #666;
 }
 
 /* Application panes */
@@ -246,7 +259,7 @@ div.boxed {
 #remote-logo,
 #sync-spinner {
   float: right;
-  margin-top: 0.25em;
+  margin-top: 0.3em;
   height:0.8em;
 }
 
@@ -408,7 +421,7 @@ div.boxed {
 
 /* Widths of popup content */
 #edit-select-content {
-  width: 50%;
+  width: 70%;
 }
 
 #help-content,
