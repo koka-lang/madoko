@@ -873,24 +873,25 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "GET";
 
-    var query = (params ? urlEncode(params) : "");
-    if (query) reqparam.url = reqparam.url + "?" + urlEncode(params);
-    reqparam.contentType = null;
-    
-    return requestPOST( reqparam, "" );
+    reqparam.contentType = null; //"application/x-www-form-urlencoded";     
+    return requestPOST( reqparam, params, null );
   }
   
-  function requestPUT( opts, params ) {
+  function requestPUT( opts, params, body ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "PUT";
 
-    return requestPOST( reqparam, params );
+    return requestPOST( reqparam, params, body );
   }
 
-  function requestPOST( opts, params ) {
+  function requestPOST( opts, params, body ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
     var method = reqparam.method || "POST";
+
+    var query = (params ? urlEncode(params) : "");
+    if (query) reqparam.url = reqparam.url + "?" + urlEncode(params);
+
     req.open( method, reqparam.url, true );
     
     var timeout = 0;  // timeout handler id.
@@ -948,44 +949,47 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     req.ontimeout = function(ev) {
       reject();
     }
+    if (reqparam.timeout != null) req.timeout = reqparam.timeout;
     
+    
+    // Encode content
     var contentType = "text/plain";
     var content = null;
 
-    if (typeof params === "string") {
-      contentType = "text/plain";
-      content = params;
-    } 
-    // object: use url-encoded for GET and json for POST/PUT      
-    else if (reqparam.method==="GET") {
-      contentType = "application/x-www-form-urlencoded";
-      content = urlEncode(params);
+    if (body) {
+      if (typeof body === "string") {
+        contentType = "text/plain";
+        content = body;
+      } 
+      // object: use url-encoded for GET and json for POST/PUT      
+      //else if (reqparam.method==="GET") {
+      //  contentType = "application/x-www-form-urlencoded";
+      //  content = urlEncode(params);
+      //}
+      // array
+      else if (body instanceof Uint8Array) {
+        contentType = "application/octet-stream";
+        content = body;
+      }
+      // json
+      else {
+        contentType = "application/json";
+        content = JSON.stringify(body);
+      }      
     }
-    // array
-    else if (params instanceof Uint8Array) {
-      contentType = "application/octet-stream";
-      content = params;
-    }
-    // json
-    else {
-      contentType = "application/json";
-      content = JSON.stringify(params);
-    }
-    
     // override content type?
     if (reqparam.contentType !== undefined) {
       contentType = reqparam.contentType;
     }
+
     // override response type?
     if (reqparam.responseType != null) {
       req.overrideMimeType(reqparam.responseType);
       req.responseType = reqparam.responseType;
     }
-    
+
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
-    if (reqparam.timeout != null) req.timeout = reqparam.timeout;
     req.send(content);
-    
     return promise;
   }
 

@@ -9,10 +9,12 @@
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
-var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
-var contentUrl  = "https://api-content.dropbox.com/1/files/dropbox/";
-var metadataUrl = "https://api.dropbox.com/1/metadata/dropbox/";
-var pushUrl     = "https://api-content.dropbox.com/1/files_put/dropbox/"
+var root        = "dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/" + root + "/";
+var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
+var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
+var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
+var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var appRoot     = "";
 
 var _access_token = null;
@@ -88,11 +90,26 @@ function fileInfo(fname) {
 }
 
 function pushFile(fname,content) {
-  var url = pushUrl + fname + "?access_token=" + getAccessToken().toString();
-  return Util.requestPOST( url, content ).then( function(info) {
+  var url = pushUrl + fname;
+  return Util.requestPOST( url, { access_token: getAccessToken() }, content ).then( function(info) {
+    if (!info) throw new Error("dropbox: could not push file: " + fname);
     return (typeof info === "string" ? JSON.parse(info) : info);
   }, function(err) {
     console.log(err);
+  });
+}
+
+function createFolder( dirname ) {
+  var url = fileopsUrl + "create_folder";
+  return Util.requestPOST( url, { 
+    access_token: getAccessToken(),
+    root: root, 
+    path: dirname,
+  }).then( function(info) {
+    return dirname;
+  }, function(err) {
+    if (err.httpCode === 403) return null;
+    throw err;
   });
 }
 
@@ -120,12 +137,16 @@ var Dropbox = (function() {
     self.folder = folder;
   }
 
+  Dropbox.prototype.createNewAt = function(folder) {
+    return new Dropbox(folder);
+  }
+
   Dropbox.prototype.type = function() {
     return type();
   }
 
   Dropbox.prototype.logo = function() {
-    return "dark/icon-dropbox.png";
+    return "icon-dropbox.png";
   }
 
   Dropbox.prototype.getFolder = function() {
@@ -145,6 +166,11 @@ var Dropbox = (function() {
 
   Dropbox.prototype.getWriteAccess = function() {
     return login();
+  }
+
+  Dropbox.prototype.createSubFolder = function(dirname) {
+    var self = this;
+    return createFolder(self.fullPath(dirname));
   }
 
   Dropbox.prototype.pushFile = function( file, content ) {

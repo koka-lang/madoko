@@ -444,13 +444,19 @@ var UI = (function() {
       });
     }
 
+    document.getElementById("snapshot").onclick = function(ev) {
+      self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() { 
+        return self.storage.createSnapshot(); 
+      });
+    }
+
     document.getElementById("edit-select").onmouseenter = function(ev) {
       self.anonEvent( function() {
         self.editSelect();
       });
     };   
        
-    document.getElementById("edit-select-content").onclick = function(ev) {
+    document.getElementById("edit-select-files").onclick = function(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV") {
@@ -870,7 +876,7 @@ var UI = (function() {
       var remoteLogo = self.storage.remote.logo();
       var remoteType = self.storage.remote.type();
       var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-      self.remoteLogo.src = "images/" + remoteLogo;
+      self.remoteLogo.src = "images/dark/" + remoteLogo;
       self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
       self.editName = "";
       return self.editFile(self.docName);
@@ -989,7 +995,7 @@ var UI = (function() {
     var files = [];
     var images = [];
     var generated = [];
-    var div = document.getElementById("edit-select-content");
+    var div = document.getElementById("edit-select-files");
       
     self.storage.forEachFile( function(file) {
       if (file) {
@@ -1004,6 +1010,14 @@ var UI = (function() {
         else generated.push(line)
       }
     });
+
+    /*
+    var dir = document.getElementById("edit-select-directory");
+    if (dir) {
+      dir.innerHTML = "<img src='images/" + self.storage.remote.logo() + "'/> " + 
+                        util.escape( self.storage.folder() ) + "<hr/>";
+    }
+    */
     div.innerHTML = 
       files.sort().join("\n") + 
       (images.length > 0 || generated.length > 0 ? 

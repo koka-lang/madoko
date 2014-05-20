@@ -222,7 +222,7 @@ var Runner = (function() {
       });
     }
     var t0 = Date.now();
-    return util.requestPOST( "/rest/run", params).then( function(data) {
+    return util.requestPOST( "/rest/run", {}, params).then( function(data) {
       var time = (Date.now() - t0).toString() + "ms";
       util.message(data.stdout + data.stderr, util.Msg.Tool);
       data.files.forEach( function(file) {

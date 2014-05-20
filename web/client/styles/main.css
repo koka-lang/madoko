@@ -81,6 +81,10 @@ html,body,#app {
   background-color: #666;
 }
 
+#edit-select-directory {
+  display: none;
+}
+
 /* Application panes */
 
 #app {
@@ -231,8 +235,17 @@ html,body,#app {
 .disable, .file.generated, .file.image {
   color: #AAA;
 }
+
 #edit-select-header .disable {
   color: #888;
+}
+
+.theme-dark #edit-select-header .disable {
+  color: #BBB;
+}
+
+#edit-select-directory img {
+  float: right;
 }
 
 .file.main {
@@ -445,6 +458,7 @@ div.boxed {
 #edit-select-content {
   width: 70%;
 }
+
 
 #help-content,
 #menu-settings-content,

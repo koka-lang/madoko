@@ -49,7 +49,7 @@ function onedriveAccessToken() {
   if (!WL) return "";
   var session = WL.getSession();
   if (!session || !session.access_token) return "";
-  return "access_token=" + session.access_token;
+  return session.access_token;
 }
 
 var onedriveDomain = "https://apis.live.net/v5.0/";
@@ -57,16 +57,15 @@ var onedriveDomain = "https://apis.live.net/v5.0/";
 function onedriveGet( path, errmsg ) {
   if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection",errmsg), {} );
   //return onedrivePromise( WL.api( { path: path, method: "GET" }), errmsg );
-  var url = onedriveDomain + path + "?" + onedriveAccessToken();
-  return util.requestGET( url );
+  var url = onedriveDomain + path;
+  return util.requestGET( url, { access_token: onedriveAccessToken() } );
 }
 
 function onedriveWriteFileAt( file, folderId, content ) {
   // TODO: resolve sub-directories
   var self = this;
-  var url = onedriveDomain + folderId + "/files/" + util.basename(file.path) + "?" +
-              onedriveAccessToken();    
-  return util.requestPUT( {url:url,contentType:";" }, content );
+  var url = onedriveDomain + folderId + "/files/" + util.basename(file.path);                  
+  return util.requestPUT( {url:url, contentType:";" }, { access_token: onedriveAccessToken() }, content );
 }
 
 
@@ -157,8 +156,8 @@ function onedriveEnsureDirs( folderId, dirs, recurse ) {
   var dir = dirs.shift();
   return onedriveGetFileInfoAt( folderId, dir ).then( function(dirInfo) {
     if (dirInfo) return onedriveEnsureDirs( dirInfo.id, dirs );
-    var url = onedriveDomain + folderId + "?" + onedriveAccessToken();
-    return util.requestPOST( url, { name: dir, description: "" } ).then( function(newInfo) {
+    var url = onedriveDomain + folderId;
+    return util.requestPOST( url, { access_token: onedriveAccessToken() }, { name: dir, description: "" } ).then( function(newInfo) {
       return onedriveEnsureDirs( newInfo.id, dirs );
     }, function(err) {
       if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
@@ -180,8 +179,8 @@ function onedriveEnsureFolder( folderId, subFolderName ) {
 
 
 function onedriveGetRootId() {
-  var url = onedriveDomain + "me/skydrive?" + onedriveAccessToken();
-  return util.requestGET( url, {} ).then( function(info) {
+  var url = onedriveDomain + "me/skydrive";
+  return util.requestGET( url, { access_token: onedriveAccessToken() } ).then( function(info) {
     return info.id;
   });
 }
@@ -199,7 +198,7 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.logo = function() {
-    return "dark/icon-onedrive.png";
+    return "icon-onedrive.png";
   }
 
   Onedrive.prototype.persist = function() {
@@ -402,7 +401,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.logo = function() {
-    return "dark/icon-local.png";
+    return "icon-local.png";
   }
 
   NullRemote.prototype.getFolder = function() {
@@ -534,6 +533,39 @@ function saveTo(  storage, toRemote, docStem, newStem )
   );
 }  
 
+function createSnapshotFolder(remote, stem, num ) {
+  if (!stem) {
+    var now = new Date();
+    var month = now.getUTCMonth()+1;
+    var day   = now.getUTCDate();
+            
+    stem = ["snapshot",
+            now.getUTCFullYear().toString(),
+            (month < 10 ? "0" : "") + month.toString(),
+            (day < 10 ? "0" : "") + day.toString()
+           ].join("-");
+  }
+  var folder = stem + (num ? "-" + num.toString() : "");
+
+  return remote.createSubFolder(folder).then( function(info) {
+    if (info) return (info);
+    return createSnapshotFolder(remote,stem, (num ? num+1 : 1));
+  });
+}
+
+function createSnapshot( storage ) {
+  return createSnapshotFolder( storage.remote ).then( function(info) {
+    var toRemote = storage.remote.createNewAt( info );
+    var toStorage = new Storage(toRemote);
+    storage.forEachFile( function(file0) {
+      var file = util.copy(file0);
+      file.modified = true;
+      toStorage.files.set( file.path, file );
+    });
+    return toStorage.sync();
+  });
+}
+
 function isEditable(file) {
   return (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path));
 }
@@ -543,7 +575,7 @@ function getEditPosition(file) {
 }
 
 function pushAtomic( fpath, time ) {
-  return util.requestPOST( "rest/push-atomic", { name: fpath, time: time.toISOString() } );
+  return util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString() } );
 }
 
 var Storage = (function() {
@@ -595,6 +627,11 @@ var Storage = (function() {
       files: pfiles 
     };
   };
+
+  Storage.prototype.createSnapshot = function() {
+    var self = this;
+    return createSnapshot(self);
+  }
 
   /* Generic */
   Storage.prototype.forEachFile = function( action ) {
@@ -1105,6 +1142,5 @@ return {
   unpersistStorage: unpersistStorage,
   isEditable: isEditable,
   getEditPosition: getEditPosition,
-
 }
 });

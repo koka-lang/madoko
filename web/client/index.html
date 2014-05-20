@@ -67,17 +67,20 @@ require([ "../scripts/util",
         <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
           ><span class="icon"><img src="images/icon-onedrive.png"/></span>Load from onedrive</div>
         <div id="new-document" class="button" title="Create a new local document"
-          ><span class="icon"><span class="icon"><img src="images/icon-local.png"/></span></span>New local document</div>
+          ><span class="icon"><img src="images/icon-local.png"/></span>New local document</div>
+        <hr/>      
+        <div id="snapshot" class="button" title="Save a full copy of the current document in a 'snapshot-<date>' sub-folder on the cloud storage"
+          ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot</div>
         <hr/>
           <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
-        <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
+        <div id="save-dropbox" class="button" title="Save the full document to the specified folder on Dropbox, and continue editing at the new location"
           ><span class="icon"><img src="images/icon-dropbox.png"/></span>On dropbox</div>
-        <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
+        <div id="save-onedrive" class="button" title="Save the full document to the specified folder on  Onedrive, and continue editing at the new location"
           ><span class="icon"><img src="images/icon-onedrive.png"/></span>On onedrive</div>
         <hr/>
-        <div id="export-html" class="button" title="Export document as a web-page (HTML)">
+        <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
-        <div id="export-pdf" class="button" title="Export document as PDF">
+        <div id="export-pdf" class="button" title="Export the document as PDF">
         <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document</div>
       </div>
     </div
@@ -85,7 +88,9 @@ require([ "../scripts/util",
       <span id="edit-select-header">&nbsp;</span>
       <img id="remote-logo" src="images/icon-empty.png"/>
       <img id="sync-spinner" class="button spinner" src="images/dark/button-sync.png" title="Synchronize with cloud storage"/>
-      <div id="edit-select-content" class="menu boxed">        
+      <div id="edit-select-content" class="menu boxed">
+        <div id="edit-select-directory"></div>
+        <div id="edit-select-files"></div>        
       </div
     ></div
   ></div>
