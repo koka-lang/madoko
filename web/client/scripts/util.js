@@ -22,9 +22,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
 
   var status;
   var consoleOut;
+  var iconOk;
+  var iconWarn;
   if (typeof document !== "undefined") {
     status     = document.getElementById("status");
     consoleOut = document.getElementById("koka-console-out");
+    iconOk     = document.getElementById("console-ok");
+    iconWarn   = document.getElementById("console-warn");
   }
 
   var escapes = {
@@ -74,7 +78,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     if (!kind) kind = Msg.Normal;
     // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
-    if (kind !== Msg.Trace && consoleOut && status) {
+    if (kind !== Msg.Trace && consoleOut) {
       function span(s,n) {
         if (n && s.length > n-2) {
           s = s.substr(0,n) + "...";
@@ -95,12 +99,14 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       consoleOut.innerHTML = prefix + span(txt) + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        status.innerHTML = span(txt,35);
-        //removeClassName(warning,"hide");
+        //status.innerHTML = span(txt,35);
+        addClassName(iconOk,"hide");
+        removeClassName(iconWarn,"hide");
       }
       else if (kind===Msg.Status) {
-        status.innerHTML = span(txt,35);
-        //addClassName(warning,"hide");
+        //status.innerHTML = span(txt,35);
+        addClassName(iconWarn,"hide");
+        removeClassName(iconOk,"hide");
       }
     }
   }

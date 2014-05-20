@@ -36,13 +36,30 @@ html,body,#app {
 }
 
 .theme-grey #app, .theme-grey .spinner.spin {
-  background-color: gainsboro;  
+  background-color: Gainsboro;  
 }
 .theme-grey .output {
   background-color: #E8E8E8;
   border-style: none;
 }
 
+.theme-black #app {
+  background-color: white;      
+}
+.theme-black .pane-header, .theme-black .spinner.spin, .theme-black .output {
+  background-color: #000;
+  border-style: none;
+  color: white;
+}
+.theme-black .pane-header .popup div {
+  color: black;
+}
+
+.theme-black .menubar>div>img.button:hover,
+.theme-black .popup:hover,
+.theme-black .popup>.button:hover {
+  background-color: #444;
+}
 
 /* Application panes */
 
@@ -56,7 +73,7 @@ html,body,#app {
 }
 
 .pane.left {
-  width: calc(53% - 1px);
+  width: calc(53%);
   transition: width 0.8s;
 }
 .pane.right {
@@ -73,19 +90,19 @@ html,body,#app {
   width: calc(30% - 2px);
 }
 .pane-header {
-  height: 1.7rem; 
-  padding: 0.3rem 0px 0rem 0px;
+  height: 1.5rem; 
+  padding: 0.2rem 0px 0rem 0px;
   border-bottom-style: solid;
 }
 
 .pane-header img {
-  height: 1.2em;
-  vertical-align: -0.2em;
+  height: 1em;
+  vertical-align: -0.1em;
 }
 
 .pane-content {
   height: 95%;
-  height: calc(100% - 2rem - 4px);    
+  height: calc(100% - 1.7rem - 4px);    
 }
 
 .pane.right {
@@ -140,7 +157,10 @@ html,body,#app {
 
 .button:hover {
   cursor: pointer;
-  background-color: #EEE;
+}
+
+.button:hover {
+  background-color: Gainsboro;
 }
 
 .button.disable:hover {
@@ -199,7 +219,7 @@ html,body,#app {
 /* Generic */
 
 .hide {
-  visibility: hidden;
+  display: none;
 }
 
 .boxed {
@@ -212,25 +232,38 @@ div.boxed {
 
 
 /* Editor Header */
-
+#document {
+  width: 2em;
+  margin-left: 0.25em;
+}
 #edit-select {
-  width: 50%;
-  margin-left: 0.5ex;
+  width: calc(100% - 3em);
+}
+#edit-select-header {
+  padding: 0em 0.25em;
 }
 
+#remote-logo,
+#sync-spinner {
+  float: right;
+  margin-top: 0.2em;
+}
 
 #save-folder {
   width: 11em;
   color: DimGray;
 }
 
-.notice {
+#help .notice {
   font-size: small;
   color: DimGray;
 }
 
-#help-content>a:before {
-  content: " - ";
+#help-content a img {
+  height: 0.5em;
+  margin-right: 0.1em;
+  margin-left: 0.1em;
+  vertical-align: 0.1em;
 }
 
 #help-content>a {
@@ -247,17 +280,20 @@ div.boxed {
 
 .menubar {
   display: inline-block;
-  float: right;
 }
 
 /* this rule is necessary for IE */
 .menubar .popup {
-  width: 2em; 
+  width: 1.5em; 
 }
 
 
 
 /* View header */
+
+.right .pane-header>div>img {
+  margin: 0em 0.25em;
+}
 
 #view-message {
   width: 50%;
@@ -295,7 +331,7 @@ div.boxed {
 /* Monaco token classes */
 
 .monaco-editor .token.code {
-  background-color: #EEE;
+  background-color: Gainsboro;
 }
 .monaco-editor .token.code.keyword {
   color: navy;
@@ -319,7 +355,7 @@ div.boxed {
 
 /* Generic Spinner */
 
-.right .spinner {
+.spinner {
   visibility: hidden;
 }
 
@@ -370,25 +406,27 @@ div.boxed {
 
 
 /* Widths of popup content */
-
-#menu-settings-content {
-  width: 17em;
+#edit-select-content {
+  width: 80%;
 }
 
+#help-content,
+#menu-settings-content,
 #document-content {
-  width: 17em;
+  width: 18em;
 }
 
-#help-content {
-  width: 17em;
+#help-content,
+#menu-settings-content {
+  left: -16.75em;
 }
 
-#export-content {
-  width: 10em;
+#help {
+  margin-right: 0.5em;
 }
 
 #koka-console {
-  width: 122%;
-  left: -25%;
+  width: 24em;
+  left: -22.75em;
 }
 

@@ -46,7 +46,7 @@ require([ "../scripts/util",
 
 </head>
 
-<body class="theme-grey" >
+<body class="theme-black" >
 <noscript>
 <p>Madoko is a dynamic application that requires JavaScript.</p>
 <p>Please enable JavaScript in your browser and reload.</p>
@@ -59,33 +59,53 @@ require([ "../scripts/util",
 <div id="app" style="display:none">
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
-    <div class="menubar"
-      ><div id="document" class="popup">
-        <img id="cloud" class="button" src="images/button-document.svg"/>
-        <div id="document-content" class="menu boxed">
-          <div id="load-dropbox" class="button" title="Load document from Dropbox cloud storage"
-            ><span class="icon"><img src="images/icon-dropbox.png"/></span>Load from dropbox</div>
-          <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
-            ><span class="icon"><img src="images/icon-onedrive.png"/></span>Load from onedrive</div>
-          <div id="new-document" class="button" title="Create a new local document"
-            ><span class="icon"><span class="icon"><img src="images/icon-local.svg"/></span></span>New local document</div>
-          <hr/>
-            <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
-          <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
-            ><span class="icon"><img src="images/icon-dropbox.png"/></span>On dropbox</div>
-          <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
-            ><span class="icon"><img src="images/icon-onedrive.png"/></span>On onedrive</div>
-          <hr/>
-          <div id="export-html" class="button" title="Export document as a web-page (HTML)">
-          <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
-          <div id="export-pdf" class="button" title="Export document as PDF">
-          <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document</div>
-        </div>
+    <div id="document" class="popup">
+      <img id="cloud" class="button" src="images/dark/button-document.png"/>
+      <div id="document-content" class="menu boxed">
+        <div id="load-dropbox" class="button" title="Load document from Dropbox cloud storage"
+          ><span class="icon"><img src="images/icon-dropbox.png"/></span>Load from dropbox</div>
+        <div id="load-onedrive" class="button" title="Load document from Onedrive cloud storage"
+          ><span class="icon"><img src="images/icon-onedrive.png"/></span>Load from onedrive</div>
+        <div id="new-document" class="button" title="Create a new local document"
+          ><span class="icon"><span class="icon"><img src="images/icon-local.png"/></span></span>New local document</div>
+        <hr/>
+          <span>&nbsp;Save to folder:&nbsp;&nbsp;<input id="save-folder" class="header" value="" type="text"/></span>
+        <div id="save-dropbox" class="button" title="Save document to Dropbox cloud storage"
+          ><span class="icon"><img src="images/icon-dropbox.png"/></span>On dropbox</div>
+        <div id="save-onedrive" class="button" title="Save document to Onedrive cloud storage"
+          ><span class="icon"><img src="images/icon-onedrive.png"/></span>On onedrive</div>
+        <hr/>
+        <div id="export-html" class="button" title="Export document as a web-page (HTML)">
+        <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
+        <div id="export-pdf" class="button" title="Export document as PDF">
+        <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document</div>
+      </div>
+    </div
+    ><div id="edit-select" class="popup" >
+      <span id="edit-select-header">&nbsp;</span>
+      <img id="remote-logo" src="images/icon-empty.png"/>
+      <img id="sync-spinner" class="button spinner" src="images/dark/button-sync.png" title="Synchronize with cloud storage"/>
+      <div id="edit-select-content" class="menu boxed">        
       </div
-      ><div class="popup"><img id="sync-spinner" class="button spinner" src="images/button-sync.svg" alt="Synchronize" 
-      title="Synchronize with cloud storage"/
-      ></div><div id="menu-settings" class="popup">
-        <img class="button" src="images/button-settings.svg" />
+    ></div
+  ></div>
+  <div class="pane-content" >
+    <div id="editor"></div>
+  </div>
+</div>
+<div id="viewpane" class="pane right">
+  <div id="view-header" class="pane-header">
+    <img id="view-spinner" class="spinner" src="images/dark/icon-spinner.png" alt="view spinner"/>          
+    <div id="Xview-message" class="popup output">
+      <img id="console-ok" class="button" src="images/dark/button-console.png"/>    
+      <img id="console-warn" class="button hide" src="images/dark/button-console-warn.png"/>    
+      <span id="statusx"></span>
+      <div id="koka-console" class="madoko menu boxed">
+        <div id="koka-console-out" class="monospace short"></div>
+      </div>
+    </div>
+      <div id="menu-settings" class="popup">
+        <img class="button" src="images/dark/button-settings.png" />
         <div id="menu-settings-content" class="menu boxed">
           <div class="button" title="Synchronize automatically with cloud storage (every 30 seconds)">
             <input type="checkbox" id="checkAutoSync" checked/> Synchronize automatically</div>
@@ -105,15 +125,25 @@ This setting can save energy or can be used on very slow browsers to increase re
           <div class="button" 
                title="Do not use the Madoko server to typeset mathematics and/or the bibliography">
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
+         <hr/>
+         <div>&nbsp;View:&nbsp; 
+          <span class="button"><img src="images/icon-view-narrow.png"/>&thinsp;Narrow</span>
+          <span class="button"><img class="button" src="images/icon-view-normal.png"/>Normal</span>
+          <span class="button"><img class="button" src="images/icon-view-wide.png"/>Wide</span>
+         </div>
         </div>
       </div
       ><div id="help" class="popup">
-        <img class="button" src="images/button-help.svg" alt="About"/>
+        <img class="button" src="images/dark/button-help.png" alt="About"/>
         <div id="help-content" class="menu boxed">
-          <a target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown cheat sheet</a>
-          <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">Madoko reference manual</a>
-          <a target="_blank" href="http://madoko.codeplex.com/discussions">Participate in a discussion</a> 
-          <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">Report an issue</a>
+          <a target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"/>
+            <img src="images/icon-link.png"/>Markdown cheat sheet</a>
+          <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">
+            <img src="images/icon-link.png"/>Madoko reference manual</a>
+          <a target="_blank" href="http://madoko.codeplex.com/discussions">
+            <img src="images/icon-link.png"/>Participate in a discussion</a> 
+          <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">
+            <img src="images/icon-link.png"/>Report an issue</a>
           <hr/>
           <div class="notice"
           >Madoko, version <span id="version">0.6-beta</span><br>
@@ -124,27 +154,6 @@ This setting can save energy or can be used on very slow browsers to increase re
           </div>
         </div>
       </div>
-    </div>  
-    <div id="edit-select" class="popup">
-      <img id="remote-logo" src="images/icon-local.svg" />
-      <span id="edit-select-header">&nbsp;</span>
-      <div id="edit-select-content" class="menu boxed">        
-      </div>
-    </div>
-  </div>
-  <div class="pane-content" >
-    <div id="editor"></div>
-  </div>
-</div>
-<div id="viewpane" class="pane right">
-  <div id="view-header" class="pane-header">
-    <img id="view-spinner" class="spinner" src="images/icon-spinner.svg" alt="view spinner"/>    
-    <div id="view-message" class="popup output">
-      <span id="status"></span>
-      <div id="koka-console" class="madoko menu boxed">
-        <div id="koka-console-out" class="monospace short"></div>
-      </div>
-    </div>
   </div>
   <div class="pane-content" id="view-container">
     <iframe id="view" class="view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>

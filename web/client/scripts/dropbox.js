@@ -125,7 +125,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.logo = function() {
-    return "icon-dropbox.png";
+    return "dark/icon-dropbox.png";
   }
 
   Dropbox.prototype.getFolder = function() {
