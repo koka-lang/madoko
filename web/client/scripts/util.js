@@ -87,6 +87,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       }
 
       var prefix  = "<div class=\"msg-section\">";
+
       var current = consoleOut.innerHTML;
       if (current.length > 1.25*maxConsole) {
         var rx = new RegExp(prefix,"gi");
@@ -96,8 +97,11 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           current = current.substr(0,cap.index);
         }
       }
+
+      var date = new Date();
+      var dprefix = "<span class='msg-time'>(" + lpad(date.getHours().toString(),2,"0") + ":" + lpad(date.getMinutes().toString(),2,"0") + ":" + lpad(date.getSeconds().toString(),2,"0") + ") </span>"
       
-      consoleOut.innerHTML = prefix + span(txt) + "</span></div>" + current;
+      consoleOut.innerHTML = prefix + dprefix + span(txt) + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
         status.innerHTML = span(txt,35);

@@ -376,6 +376,12 @@ div.boxed {
   background-color: Gainsboro;
 }
 
+.msg-time {
+  display: inline-block;
+  float: right;
+  color: #888;
+}
+
 #status {
   padding-left: 0.5ex;
 }
