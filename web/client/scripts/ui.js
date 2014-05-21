@@ -479,7 +479,7 @@ var UI = (function() {
       });
     };
 
-    document.getElementById("koka-console-out").ondblclick = function(ev) {
+    document.getElementById("console-out").ondblclick = function(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV" && elem.className !== "msg-line") {

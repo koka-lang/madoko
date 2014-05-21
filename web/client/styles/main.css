@@ -89,16 +89,16 @@ html,body,#app {
 
 #app {
   height: 100%;
-  margin-bottom: -1rem;
+  margin-bottom: -1.2rem;
 }
 
 #app-footer {
-  height: 1rem;
+  height: 1.2rem;
 }
 
 .pane {
   height: 96%;
-  height: calc(100% - 1em);
+  height: calc(100% - 1.2rem);
   width: 49%;
 }
 
@@ -130,6 +130,11 @@ html,body,#app {
   vertical-align: -0.1em;
 }
 
+#app-footer img {
+  height: 1.4em;
+  vertical-align: -0.2em;
+}
+
 .pane-content {
   height: 95%;
   height: calc(100% - 1.7rem - 0.5px); /* -0.5px for error in editor pixel rounding */    
@@ -157,13 +162,24 @@ html,body,#app {
 }
 
 #app-footer {
-  font-size: x-small;
+  font-size: small;
   text-align: right;
+}
+
+.ms-notice {
+  font-size: x-small;
 }
 
 #app-footer a {
   color: white;
   text-decoration: none;
+}
+
+#app-footer #view-message {
+  float: left;
+  text-align: left;
+  margin-left: 0.25em;
+  width: 50%;
 }
 
 /* Main elements in panes */
@@ -179,13 +195,14 @@ html,body,#app {
   overflow: scroll;
 }
 
-#koka-console-out {
+#console-out {
   overflow: scroll;
   font-size: 8pt;
   padding: 0.5rem;
   transition: height 0.8s;
-  height: 95%;
-  height: calc(100% - 17px);
+  height: calc(100% - 1rem);
+  color: black;
+  white-space: nowrap;  
 }
 
 
@@ -283,19 +300,16 @@ div.boxed {
 #document {
   width: 2em;
   margin-left: 0.25em;
+  margin-right: 0.3em;
 }
 #edit-select {
   width: calc(100% - 3em);
 }
-#edit-select-header {
-  padding: 0em 0.25em;
-}
 
-#remote-logo,
 #sync-spinner {
   float: right;
-  margin-top: 0.3em;
   height:0.8em;
+  margin-top: 0.3em;
 }
 
 #save-folder {
@@ -344,16 +358,6 @@ div.boxed {
   margin: 0em 0.25em;
 }
 
-#view-message {
-  width: 50%;
-  padding: 0 1px;
-  white-space: nowrap;  
-  margin-right: 0.5ex;
-}
-
-#koka-console {
-  height: 20em;
-}
 
 .msg-error, .msg-exception {
   color: red;
@@ -475,8 +479,9 @@ div.boxed {
   margin-right: 0.5em;
 }
 
-#koka-console {
-  width: 24em;
-  left: -22.75em;
+#console {
+  width: 100%;
+  top: -20rem;
+  height: 20rem;
+  padding: 0pt;
 }
-

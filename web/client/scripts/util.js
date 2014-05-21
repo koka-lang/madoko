@@ -26,7 +26,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   var iconWarn;
   if (typeof document !== "undefined") {
     status     = document.getElementById("status");
-    consoleOut = document.getElementById("koka-console-out");
+    consoleOut = document.getElementById("console-out");
     iconOk     = document.getElementById("console-ok");
     iconWarn   = document.getElementById("console-warn");
   }
@@ -96,15 +96,16 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           current = current.substr(0,cap.index);
         }
       }
+      
       consoleOut.innerHTML = prefix + span(txt) + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        //status.innerHTML = span(txt,35);
+        status.innerHTML = span(txt,35);
         addClassName(iconOk,"hide");
         removeClassName(iconWarn,"hide");
       }
       else if (kind===Msg.Status) {
-        //status.innerHTML = span(txt,35);
+        status.innerHTML = span(txt,35);
         addClassName(iconWarn,"hide");
         removeClassName(iconOk,"hide");
       }
