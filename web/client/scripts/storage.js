@@ -11,7 +11,8 @@ define(["../scripts/promise","../scripts/util",
         "../scripts/remote-null",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
-        ], function(Promise,util,merge,NullRemote,Dropbox,Onedrive) {
+        "../scripts/remote-http",
+        ], function(Promise,util,merge,NullRemote,Dropbox,Onedrive,HttpRemote) {
 
 
 var Encoding = {
@@ -56,6 +57,12 @@ function dropboxOpenFile() {
   });
 }
 
+function httpOpenFile(url,doc) {  
+  return HttpRemote.openFile(url).then( function(remote) {
+    return { storage: new Storage(remote), docName: doc };
+  });
+}
+
 function createNullStorage() {
   return new Storage( new NullRemote.NullRemote() );
 }
@@ -73,6 +80,9 @@ function unpersistRemote(remoteType,obj) {
     }
     else if (remoteType===Dropbox.type()) {
       return Dropbox.unpersist(obj);
+    }
+    else if (remoteType===HttpRemote.type()) {
+      return HttpRemote.unpersist(obj);
     }
   }
   return NullRemote.unpersist();
@@ -249,7 +259,7 @@ var Storage = (function() {
 
   Storage.prototype.isConnected = function() {
     var self = this;
-    return (self.remote && self.remote.type() !== "null");
+    return (self.remote && self.remote.type() !== NullRemote.type() && self.remote.type() !== HttpRemote.type() );
   }
 
   Storage.prototype.isSynced = function() {
@@ -627,6 +637,7 @@ var Storage = (function() {
 return {
   onedriveOpenFile: onedriveOpenFile,
   dropboxOpenFile : dropboxOpenFile,
+  httpOpenFile    : httpOpenFile,
   createNullStorage: createNullStorage,
   newOnedriveAt   : newOnedriveAt,
   newDropboxAt    : newDropboxAt,

@@ -121,7 +121,7 @@ var UI = (function() {
 
     self.initUIElements("");
     
-    self.localLoad().then( function() {
+    self.loadFromHash().then( function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();
       // dispatch check box events so everything gets initialized
@@ -411,6 +411,10 @@ var UI = (function() {
         });
       });
     };
+
+    window.addEventListener("hashchanged", function(ev) {
+      self.loadFromHash();
+    });
 
     document.getElementById("save-onedrive").onclick = function(ev) {
       self.event( "","", State.Syncing, function() {
@@ -849,6 +853,29 @@ var UI = (function() {
       }));
   }
 
+  UI.prototype.loadFromHash = function() {
+    var self = this;
+    var cap = /[#&]url=(https?:\/\/[^=&#;]+)/.exec(window.location.hash);
+    if (cap) {
+      var url = util.dirname(cap[1]);
+      var doc = util.basename(cap[1]);
+      return self.checkSynced().then( function() {
+        return storage.httpOpenFile(url,doc);        
+      }).then( function(res) { 
+        return self.openFile(res.storage,res.docName); 
+      }).then( function() {
+        return true;
+      }, function(err) {
+        util.message(err, util.Msg.Error);
+        util.message("failed to load hash url: " + cap[1], util.Msg.Error);
+        return self.localLoad();
+      });
+    }
+    else {
+      return self.localLoad();
+    }
+  }
+
   UI.prototype.setStorage = function( stg, docName ) {
     var self = this;
     if (stg == null) {
@@ -960,7 +987,7 @@ var UI = (function() {
 
   UI.prototype.openFile = function(storage,fname) {
     var self = this;
-    if (fname && !util.endsWith(fname,".mdk")) return util.message("only .mdk files can be selected",util.Msg.Error);      
+    if (fname && !(util.endsWith(fname,".mdk") || util.endsWith(fname,".mdk.txt")) ) return util.message("only .mdk files can be selected",util.Msg.Error);      
     return self.setStorage( storage, fname );
   }
 

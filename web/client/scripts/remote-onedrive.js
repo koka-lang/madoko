@@ -301,7 +301,7 @@ var Onedrive = (function() {
     }).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       // onedrive does not do CORS on content so we need to use our server to get it.. :-(
-      return Util.requestGET( "onedrive", { url: info.source } ).then( function(_content,req) {
+      return Util.requestGET( "remote/onedrive", { url: info.source } ).then( function(_content,req) {
         var file = {
           path: fpath,
           content: req.responseText,

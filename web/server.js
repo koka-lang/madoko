@@ -600,7 +600,7 @@ function requestGET(query,encoding) {
     var timeout = setTimeout( function() { 
       if (req) req.abort();
     }, limits.timeoutGET );
-    req = https.get(query, function(res) {
+    req = (startsWith(query,"http://") ? http : https).get(query, function(res) {
       if (encoding) res.setEncoding(encoding);
       var body = "";
       res.on('data', function(d) {
@@ -717,12 +717,29 @@ app.get("/redirect/dropbox", function(req,res) {
   //});
 });
 
-app.get("/onedrive", function(req,res) {
+app.get("/remote/onedrive", function(req,res) {
   event( req, res, function() {
-    console.log("onedrive get: " + req.query.url );
+    if (!/https:\/\/[\w\-\.]+?\.livefilestore\.com\//.test(req.query.url)) {
+      throw { httpCode: 403, message: "illegal onedrive url: " + req.query.url };
+    }
     return requestGET( req.query.url, "binary" );
   }, 100 );
 });
+
+app.get("/remote/http", function(req,res) {
+  event( req, res, function() {
+    console.log("remote http get: " + req.query.url );
+    return requestGET( req.query.url, "binary" ).then( function(content) {
+      res.set('Content-Disposition',';');
+      if (!/\.html?$/.test(req.query.url) && /^\s*<! *DOCTYPE\b/.test(content)) {
+        console.log(content.substr(0,40));
+        throw { httpCode: 404, message: "not found: " + req.query.url };
+      }
+      return content;
+    });
+  }, 100 );
+});
+
 
 var staticClient      = express.static( combine(__dirname, "client"));
 var staticMaintenance = express.static( combine(__dirname, "maintenance"));
