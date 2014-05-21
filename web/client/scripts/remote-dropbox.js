@@ -94,9 +94,10 @@ function pushFile(fname,content) {
   return Util.requestPOST( url, { access_token: getAccessToken() }, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return (typeof info === "string" ? JSON.parse(info) : info);
-  }, function(err) {
-    console.log(err);
   });
+  //, function(err) {
+  //  throw new Error("dropbox: could not push file: " + fname + ": " + err.toString());
+  //});
 }
 
 function createFolder( dirname ) {
@@ -176,14 +177,17 @@ var Dropbox = (function() {
 
   Dropbox.prototype.createSubFolder = function(dirname) {
     var self = this;
-    return createFolder(self.fullPath(dirname));
+    var folder = self.fullPath(dirname);
+    return createFolder(folder).then( function(created) {
+      return { folder: folder, created: created };
+    });
   }
 
   Dropbox.prototype.pushFile = function( file, content ) {
     var self = this;
     return pushFile( self.fullPath(file.path), content ).then( function(info) {
       return new Date(info.modified);
-    })
+    });
   }
 
   Dropbox.prototype.pullFile = function( fpath ) {

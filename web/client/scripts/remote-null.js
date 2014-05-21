@@ -54,7 +54,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.createSubFolder = function( path ) {
-    return Promise.resolved(true);
+    return Promise.resolved({folder: path, created: true });
   }
 
   return NullRemote;

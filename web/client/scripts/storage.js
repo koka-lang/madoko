@@ -137,20 +137,21 @@ function saveTo(  storage, toRemote, docStem, newStem )
 function createSnapshotFolder(remote, stem, num ) {
   if (!stem) {
     var now = new Date();
-    var month = now.getUTCMonth()+1;
-    var day   = now.getUTCDate();
+    var month = now.getMonth()+1;
+    var day   = now.getDate();
             
     stem = ["snapshot",
-            now.getUTCFullYear().toString(),
-            (month < 10 ? "0" : "") + month.toString(),
-            (day < 10 ? "0" : "") + day.toString()
+            now.getFullYear().toString(),
+            util.lpad( month.toString(), 2, "0" ),
+            util.lpad( day.toString(), 2, "0" ),
            ].join("-");
   }
-  var folder = stem + (num ? "-" + num.toString() : "");
+  var folder = stem + (num ? "-v" + num.toString() : "");
 
-  return remote.createSubFolder(folder).then( function(created) {
-    if (created) return folder;
-    return createSnapshotFolder(remote,stem, (num ? num+1 : 1));
+  return remote.createSubFolder(folder).then( function(info) {
+    if (info.created) return info.folder;
+    if (num && num >= 100) throw new Error("too many snapshot verions");  // don't loop forever...
+    return createSnapshotFolder(remote,stem, (num ? num+1 : 2));
   });
 }
 
@@ -164,7 +165,9 @@ function createSnapshot( storage ) {
       file.modified = true;
       toStorage.files.set( file.path, file );
     });
-    return toStorage.sync();
+    return toStorage.sync().then( function() {
+      util.message( "snapshot saved to: " + toStorage.folder(), util.Msg.Info );
+    });
   });
 }
 

@@ -210,7 +210,21 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return utc;
   }
 
+  function replicate(s,n) {
+    var acc = "";
+    for(var i = 0; i < n; i++) {
+      acc += s;
+    }
+    return acc;
+  }
 
+  function lpad(s,n,c) {
+    if (!c) c = "0";
+    if (!s) s = "";
+    if (!n) return s;
+    if (s.length >= n) return s;
+    return (replicate(c,n - s.length) + s);
+  }
 
   function contains( xs, s ) {
     if (!xs) return false;
@@ -1050,6 +1064,8 @@ doc.execCommand("SaveAs", null, filename)
     properties: properties,
     extend: extend,
     copy: copy,
+    replicate: replicate,
+    lpad: lpad,
     message: message,
     assert: assert,
     escape: htmlEscape,

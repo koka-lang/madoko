@@ -326,7 +326,7 @@ var Onedrive = (function() {
   Onedrive.prototype.createSubFolder = function(dirname) {
     var self = this;
     return ensureSubPath(self.folderId,dirname).then( function(folderId) {
-      return (folderId && folderId.created);
+      return { folder: Util.combine(self.folder,dirname), created: folderId && folderId.created };
     });
   }
 
