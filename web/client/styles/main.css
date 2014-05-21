@@ -12,7 +12,7 @@ notes:
   that do not support calc expressions.
 */
 
-html,body,#app {
+html,body,#fullapp,#app {
   height: 100%;
   padding: 0pt;
   margin: 0pt;

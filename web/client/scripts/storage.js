@@ -262,11 +262,11 @@ var Storage = (function() {
     return (self.remote && self.remote.type() !== NullRemote.type() && self.remote.type() !== HttpRemote.type() );
   }
 
-  Storage.prototype.isSynced = function() {
+  Storage.prototype.isSynced = function(full) {
     var self = this;
     var synced = true;
     self.forEachFile( function(file) {
-      if (file.modified) {
+      if (file.modified && (full || !util.hasGeneratedExt(file.path))) {
         synced = false;
         return false; // break
       }

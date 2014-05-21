@@ -20,30 +20,6 @@
 <!-- main style -->
 <link rel="stylesheet" type="text/css" href="styles/main.css">
 
-<!-- use the monaco loader to implement "require" -->
-<script type="text/javascript" src="lib/vs/loader.js"></script>
-<script>
-  require.config({
-    baseUrl: "lib"
-  });
-</script>
-
-<!-- install a handler that calls madoko to typeset -->
-<script>
-require([ "../scripts/util",
-          "../scripts/runner",
-          "vs/editor/editor.main"],
-          function(util,Runner) 
-{ 
-  require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
-    var runner = new Runner();
-    var ui     = new UI(runner);
-    util.message("ready", util.Msg.Status );
-  });
-});
-</script>
-
-
 </head>
 
 <body class="theme-dark" >
@@ -56,7 +32,12 @@ require([ "../scripts/util",
 <p>Please upgrade your browser to a more recent version.</p>
 <p>Madoko is known to work with IE 10+, Chrome version 31+, or Firefox version 27+.</p>
 </div>
-<div id="app" class="view-normal" style="display:none">
+<div id="multibrowser" style="display:none; padding: 1ex">
+<p>Snap! You already have Madoko open in another window.</p>
+<p>Unfortunately, Madoko only works within a single browser window.</p>
+</div>
+<div id="fullapp" style="display:none">
+<div id="app" class="view-normal">
 <div id="editorpane" class="pane left">
   <div id="editor-header" class="pane-header">
     <div id="document" class="popup">
@@ -171,6 +152,7 @@ This setting can save energy or can be used on very slow browsers to increase re
     <a href="http://go.microsoft.com/fwlink/?LinkID=286687">privacy and cookies</a> |
     &copy; 2014 microsoft research&nbsp;
   </span>
+</div>
 </div>
 
 <div style="display:none">
@@ -307,17 +289,54 @@ function hello() {
 </div>
 
 <script>
-// test browser features
-if (typeof Worker === "undefined") {
+var goodToGo = false;
+
+// test browser features 
+if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
 }
+// test for multiple instances
+else if (localStorage.getItem("madoko")) {
+  document.getElementById("multibrowser").style.display = "block";
+}
+// we are good to go
 else {
-  document.getElementById("app").style.display = "block"; 
+  window.addEventListener("unload", function(ev) {
+    localStorage.setItem("madoko","");
+  });
+  localStorage.setItem("madoko","lock");
+  document.getElementById("fullapp").style.display = "block"; 
+  goodToGo = true;
+}
+</script>
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" src="lib/vs/loader.js"></script>
+
+<!-- install a handler that calls madoko to typeset -->
+<script>
+require.config({
+  baseUrl: "lib"
+});
+
+if (goodToGo) {
+  require([ "../scripts/util",
+            "../scripts/runner",
+            "vs/editor/editor.main"],
+            function(util,Runner) 
+  { 
+    require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
+      var runner = new Runner();
+      var ui     = new UI(runner);
+      util.message("ready", util.Msg.Status );
+    });
+  });
 }
 </script>
 
 <!-- dropbox -->
 <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>
+
 <!-- onedrive -->
 <script src="//js.live.net/v5.0/wl.debug.js"></script>
 

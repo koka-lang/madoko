@@ -12,12 +12,16 @@ function unpersist() {
   return new NullRemote();
 }
 
+function type() {
+  return "null";
+}
+
 var NullRemote = (function() {
   function NullRemote() {    
   }
 
   NullRemote.prototype.type = function() {
-    return "null";
+    return type();
   }
 
   NullRemote.prototype.logo = function() {
@@ -63,6 +67,7 @@ var NullRemote = (function() {
 
 return {
   unpersist : unpersist,
+  type      : type,
   NullRemote: NullRemote,
 }
 
