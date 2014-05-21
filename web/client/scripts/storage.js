@@ -483,6 +483,7 @@ var Storage = (function() {
         res.forEach( function(msg) {
           if (msg) util.message(msg, util.Msg.Trace);
         });
+        util.message("synchronized with cloud storage", util.Msg.Info );
       });
     });
   }
@@ -504,7 +505,7 @@ var Storage = (function() {
 
   Storage.prototype.pushFile = function( file ) {
     var self = this;
-    return self.remote.pushFile(file, Encoding.decode( file.encoding, file.content ));
+    return self.remote.pushFile(file.path, Encoding.decode( file.encoding, file.content ));
   }
 
   Storage.prototype._syncPush = function(file,remoteTime) {

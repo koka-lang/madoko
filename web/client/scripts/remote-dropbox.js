@@ -183,9 +183,9 @@ var Dropbox = (function() {
     });
   }
 
-  Dropbox.prototype.pushFile = function( file, content ) {
+  Dropbox.prototype.pushFile = function( fpath, content ) {
     var self = this;
-    return pushFile( self.fullPath(file.path), content ).then( function(info) {
+    return pushFile( self.fullPath(fpath), content ).then( function(info) {
       return new Date(info.modified);
     });
   }

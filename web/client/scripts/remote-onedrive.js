@@ -16,7 +16,7 @@ var onedriveOptions = {
   secure_cookie : true,
 };
 
-var onedriveUrl = "https://apis.live.net/v5.0/";
+var onedriveDomain = "https://apis.live.net/v5.0/";
 
 
 /* Helpers */
@@ -98,19 +98,21 @@ function _infoFromSubDirs( info, parts ) {
   });
 }
 
-function infoFromSubPath( info, path ) {
-  if (!path) return Promise.resolved(info);
-  return infoFromSubDirs( info, path.split("/") );
+function infoFromSubPath( folderId, path ) {
+  return infoFromId( folderId ).then(function(info) {
+    if (!path) return info;
+    return _infoFromSubDirs( info, path.split("/") );    
+  });
 }
 
 function infoFromPath( path ) {
   return rootInfo().then( function( info ) {
-    return infoFromSubPath( info, path );
+    return infoFromSubPath( info.id, path );
   });
 }
 
 function _ensureSubDirs( folderId, dirs, recurse ) {
-  if (dirs.length === 0) return folderId;
+  if (dirs.length === 0) return { id: folderId, created: false };
   var dir = dirs.shift();
   return _infoFromName( folderId, dir ).then( function(dirInfo) {
     if (dirInfo) return _ensureSubDirs( dirInfo.id, dirs );
@@ -119,9 +121,8 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
       name: dir, 
       description: "" 
     }).then( function(newInfo) {
-      var id = newInfo.id;
-      id.created = true;  // remember we created it for createSubFolder call.
-      return _ensureDirs( newInfo.id, dirs );
+      if (dirs.length===0) return { id: newInfo.id, created: true }; // remember we created it
+      return _ensureSubDirs( newInfo.id, dirs );
     }, function(err) {
       if (!recurse && err && Util.contains(err.message,"(resource_already_exists)")) {
         // multiple requests can result in this error, try once more
@@ -136,7 +137,7 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
 }
 
 function ensureSubPath( folderId, path ) {
-  if (!path) return Promise.resolved(folderId);
+  if (!path) return Promise.resolved( { id: folderId, created: false } );
   return _ensureSubDirs( folderId, path.split("/"));
 }
 
@@ -151,31 +152,24 @@ function ensurePath( path ) {
 
 var _access_token = null;
 function getAccessToken() {
-  if (!_access_token && typeof WL !== "undefined" && WL) {
-    try {
-      var session = WL.getSession();
-      if (session && session.access_token) {
-        _access_token = session.access_token;
-      }
-    }
-    catch(exn) { 
-      console.log(exn);
-    };
-  }
   return _access_token;
 }
 
 function login() {
   if (getAccessToken()) return Promise.resolved();
   return makePromise(WL.init(onedriveOptions)).then( function() {
-    getAccessToken();
-    WL.Event.subscribe("auth.sessionChange", function(ev) {
-      _access_token = null;
+    return makePromise(WL.login()).then( function() {
+      var session = WL.getSession();
+      if (session) _access_token = session.access_token;
+      WL.Event.subscribe("auth.sessionChange", function(ev) {
+        var xsession = WL.getSession();
+        if (xsession) _access_token = xsession.access_token;
+      });
+      WL.Event.subscribe("auth.logout", function(ev) {
+        _access_token = null;
+      });
+      return;
     });
-    WL.Event.subscribe("auth.logout", function(ev) {
-      _access_token = null;
-    });
-    return;
   });
 }
 
@@ -233,8 +227,8 @@ function _writeFileAt( folderId, name, content ) {
 }
 
 function writeFile( folderId, path, content ) {
-  return ensureSubPath( folderId, Util.dirname(path) ).then( function(subId) {
-    return _writeFileAt( subId, Util.basename(path), content );
+  return ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
+    return _writeFileAt( info.id, Util.basename(path), content );
   }).then( function(resp) {
     return infoFromId( resp.id );
   });
@@ -254,8 +248,8 @@ function type() {
 function createAt( folder ) {
   return login().then( function() {
     return ensurePath(folder);
-  }).then( function(folderId) {
-    return new Onedrive(folderId,folder);
+  }).then( function(info) {
+    return new Onedrive(info.id,folder);
   });
 }
 
@@ -293,16 +287,18 @@ var Onedrive = (function() {
     return createAt(folder);
   }
 
-  Onedrive.prototype.pushFile = function( file, content ) {
+  Onedrive.prototype.pushFile = function( fpath, content ) {
     var self = this;
-    return writeFile( self.folderId, file, content ).then( function(info) {
+    return writeFile( self.folderId, fpath, content ).then( function(info) {
       return Util.dateFromISO(info.updated_time);
     });
   }
 
   Onedrive.prototype.pullFile = function( fpath ) {
     var self = this;
-    return infoFromSubPath( self.folderId, fpath ).then( function(info) {
+    return login().then(function() {
+      return infoFromSubPath( self.folderId, fpath );
+    }).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       // onedrive does not do CORS on content so we need to use our server to get it.. :-(
       return Util.requestGET( "onedrive", { url: info.source } ).then( function(_content,req) {
@@ -325,8 +321,8 @@ var Onedrive = (function() {
 
   Onedrive.prototype.createSubFolder = function(dirname) {
     var self = this;
-    return ensureSubPath(self.folderId,dirname).then( function(folderId) {
-      return { folder: Util.combine(self.folder,dirname), created: folderId && folderId.created };
+    return ensureSubPath(self.folderId,dirname).then( function(info) {
+      return { folder: Util.combine(self.folder,dirname), created: info.created };
     });
   }
 

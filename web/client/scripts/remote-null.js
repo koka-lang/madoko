@@ -40,7 +40,7 @@ var NullRemote = (function() {
     return Promise.resolved( new NullRemote() );
   }
 
-  NullRemote.prototype.pushFile = function( file, content ) {
+  NullRemote.prototype.pushFile = function( fpath, content ) {
     return Promise.rejected( new Error("not connected: cannot store files") );
   }
 
