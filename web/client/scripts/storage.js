@@ -134,13 +134,13 @@ function saveTo(  storage, toRemote, docStem, newStem )
   );
 }  
 
-function createSnapshotFolder(remote, stem, num ) {
+function createSnapshotFolder(remote, docstem, stem, num ) {
   if (!stem) {
     var now = new Date();
     var month = now.getMonth()+1;
     var day   = now.getDate();
             
-    stem = ["snapshot",
+    stem = ["snapshot", docstem, 
             now.getFullYear().toString(),
             util.lpad( month.toString(), 2, "0" ),
             util.lpad( day.toString(), 2, "0" ),
@@ -155,8 +155,8 @@ function createSnapshotFolder(remote, stem, num ) {
   });
 }
 
-function createSnapshot( storage ) {
-  return createSnapshotFolder( storage.remote ).then( function(folder) {
+function createSnapshot( storage, docName ) {
+  return createSnapshotFolder( storage.remote, util.stemname(docName) ).then( function(folder) {
     return storage.remote.createNewAt( folder );
   }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);
@@ -234,9 +234,9 @@ var Storage = (function() {
     };
   };
 
-  Storage.prototype.createSnapshot = function() {
+  Storage.prototype.createSnapshot = function(docName) {
     var self = this;
-    return createSnapshot(self);
+    return createSnapshot(self,docName);
   }
 
   /* Generic */

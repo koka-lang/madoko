@@ -446,7 +446,7 @@ var UI = (function() {
 
     document.getElementById("snapshot").onclick = function(ev) {
       self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() { 
-        return self.storage.createSnapshot(); 
+        return self.storage.createSnapshot(self.docName); 
       });
     }
 
