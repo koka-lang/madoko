@@ -854,7 +854,7 @@ var UI = (function() {
     if (stg == null) {
       // initialize fresh
       docName = "document.mdk";
-      stg = new storage.Storage(new storage.NullRemote());
+      stg = storage.createNullStorage();
       var content = document.getElementById("initial").textContent;
       stg.writeFile(docName, content);
     }

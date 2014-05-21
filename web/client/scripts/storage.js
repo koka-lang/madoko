@@ -7,82 +7,12 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/promise","../scripts/util", 
-        "../scripts/merge", "../scripts/dropbox"], function(Promise,util,merge,dropbox) {
+        "../scripts/merge", 
+        "../scripts/remote-null",
+        "../scripts/remote-dropbox",
+        "../scripts/remote-onedrive",
+        ], function(Promise,util,merge,NullRemote,Dropbox,Onedrive) {
 
-function onedriveError( obj, premsg ) {
-  msg = "onedrive: " + (premsg ? premsg + ": " : "")
-  if (obj && obj.error) {
-    var err = obj.error.message || obj.error.toString();
-    err = err.replace(/^WL\..*:\s*/,"").replace(/^.*?Detail:\s*/,"");
-    if (util.startsWith(err,"Cannot read property 'focus'")) err = "Cannot open dialog box. Enable pop-ups?";
-    msg = msg + err; // + (obj.error.code ? " (" + obj.error.code + ")" : "");
-  }
-  else if (obj && typeof obj === "string") {
-    msg = msg + obj;
-  }
-  else {
-    msg = msg + "unknown error";
-  }
-  //console.log(msg);
-  return msg;
-}
-
-
-function onedrivePromise( call, premsg ) {
-  var promise = new Promise();
-  call.then( 
-    function(res) {
-      promise.resolve(res);
-    },
-    function(resFail) {
-      promise.reject(onedriveError(resFail,premsg),resFail);
-    },
-    function(prog) {
-      promise.progress(prog);
-    }
-  );
-  return promise;
-}
-
-
-function onedriveAccessToken() {
-  if (!WL) return "";
-  var session = WL.getSession();
-  if (!session || !session.access_token) return "";
-  return session.access_token;
-}
-
-var onedriveDomain = "https://apis.live.net/v5.0/";
-
-function onedriveGet( path, errmsg ) {
-  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection",errmsg), {} );
-  //return onedrivePromise( WL.api( { path: path, method: "GET" }), errmsg );
-  var url = onedriveDomain + path;
-  return util.requestGET( url, { access_token: onedriveAccessToken() } );
-}
-
-function onedriveWriteFileAt( file, folderId, content ) {
-  // TODO: resolve sub-directories
-  var self = this;
-  var url = onedriveDomain + folderId + "/files/" + util.basename(file.path);                  
-  return util.requestPUT( {url:url, contentType:";" }, { access_token: onedriveAccessToken() }, content );
-}
-
-
-
-function onedriveGetFileInfoFromId( file_id ) {
-  return onedriveGet( file_id );
-}
-
-function onedriveGetWriteAccess() {
-  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
-  return onedrivePromise( WL.login({ scope: ["wl.signin","wl.skydrive","wl.skydrive_update"]}), "get write access" );  
-}
-
-
-function unpersistOnedrive( obj ) {
-  return new Onedrive(obj.folderId, obj.folder || "");
-}
 
 var Encoding = {
   Base64: "base64",
@@ -114,324 +44,21 @@ var Encoding = {
 };
 
 
-function onedriveGetPathFromId( id, path ) {
-  if (path == null) path = "";
-  if (id === null) return path;
-  return onedriveGetFileInfoFromId( id ).then( function(info) {
-    if (info.parent_id === null || info.name==="SkyDrive" || info.name==="OneDrive") return path;
-    return onedriveGetPathFromId( info.parent_id, (path ? util.combine(info.name,path) : info.name));
-  });
-}
-
-function onedriveGetFileInfoAt( folderId, path ) {
-  return onedriveGet( folderId + "/files", "get files").then( function(res) {
-    var file = null;
-    if (res.data) {
-      for (var i = 0; i < res.data.length; i++) {
-        var f = res.data[i];
-        if (f.name == path) {
-          file = f;
-          break;
-        }
-      }
-    }
-    //if (!file) console.log("onedrive: unable to find: " + path);
-    return file;
-  });
-}
-
-function onedriveGetFileInfo( folderId, path ) {
-  var dir = util.dirname(path);
-  if (dir==="") return onedriveGetFileInfoAt(folderId,path);
-  // recurse
-  var subdir = util.firstdirname(path);
-  return onedriveGetFileInfoAt( folderId, subdir ).then( function(subFolder) {
-    if (!subFolder) return null;
-    return onedriveGetFileInfo( subFolder.id, path.substr(subdir.length+1) );
-  });
-}
-
-function onedriveEnsureDirs( folderId, dirs, recurse ) {
-  if (dirs.length === 0) return folderId;
-  var dir = dirs.shift();
-  return onedriveGetFileInfoAt( folderId, dir ).then( function(dirInfo) {
-    if (dirInfo) return onedriveEnsureDirs( dirInfo.id, dirs );
-    var url = onedriveDomain + folderId;
-    return util.requestPOST( url, { access_token: onedriveAccessToken() }, { name: dir, description: "" } ).then( function(newInfo) {
-      return onedriveEnsureDirs( newInfo.id, dirs );
-    }, function(err) {
-      if (!recurse && err && util.contains(err.message,"(resource_already_exists)")) {
-        // multiple requests can result in this error, try once more
-        dirs.unshift(dir);
-        return onedriveEnsureDirs( folderId, dirs, true );
-      }
-      else {
-        throw err; // re-throw
-      }    
-    });
-  });
-}
-
-function onedriveEnsureFolder( folderId, subFolderName ) {
-  if (!subFolderName) return Promise.resolved(folderId);
-  return onedriveEnsureDirs( folderId, subFolderName.split("/"));
-}
-
-
-function onedriveGetRootId() {
-  var url = onedriveDomain + "me/skydrive";
-  return util.requestGET( url, { access_token: onedriveAccessToken() } ).then( function(info) {
-    return info.id;
-  });
-}
-
-var Onedrive = (function() {
-
-  function Onedrive( folderId, folder ) {
-    var self = this;
-    self.folderId = folderId;
-    self.folder = folder;
-  }
-
-  Onedrive.prototype.type = function() {
-    return "Onedrive";
-  }
-
-  Onedrive.prototype.logo = function() {
-    return "icon-onedrive.png";
-  }
-
-  Onedrive.prototype.persist = function() {
-    var self = this;
-    return { folderId: self.folderId, folder: self.folder };
-  }
-
-  Onedrive.prototype.getFolder = function() {
-    var self = this;
-    return self.folder;
-  }
-
-    // todo: abstract WL.getSession(). implement subdirectories.
-  Onedrive.prototype._getFileInfo = function( path ) {  
-    var self = this;
-    return onedriveGetFileInfo( self.folderId, path );
-  }
-
-
-  Onedrive.prototype.getWriteAccess = function() {
-    return onedriveGetWriteAccess();
-  }
-
-
-
-  function onedriveWriteFile( file, folder, folderId, content ) {
-    var dir = util.dirname(file.path).substr(folder.length);    
-    if (dir === "") return onedriveWriteFileAt( file, folderId, content );
-    // we need to resolve the subdirectories.
-    var subdir = dir.replace( /[\/\\].*$/, ""); // take the first subdir
-    return onedriveEnsureFolder( folderId, subdir ).then( function(subId) {
-      return onedriveWriteFile( file, util.combine(folder,subdir), subId, content );
-    });
-  }
-
-
-  Onedrive.prototype.pushFile = function( file, content ) {
-    var self = this;
-    return onedriveWriteFile( file, "", self.folderId, content ).then( function(resp) {
-      return onedriveGetFileInfoFromId( resp.id );
-    }).then( function(info) {
-      return util.dateFromISO(info.updated_time);
-    });
-  }
-
-  Onedrive.prototype.pullFile = function( fpath ) {
-    var self = this;
-    return self._getFileInfo( fpath ).then( function(info) {
-      if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
-      return util.requestGET( "onedrive", { url: info.source } ).then( function(_content,req) {
-        var file = {
-          path: fpath,
-          content: req.responseText,
-          createdTime: util.dateFromISO(info.updated_time),
-        };
-        return file;
-      });
-    });
-  }
-
-  Onedrive.prototype.getRemoteTime = function( fpath ) {    
-    var self = this;
-    return self._getFileInfo( fpath ).then( function(info) {
-      return (info ? util.dateFromISO(info.updated_time) : null);
-    });
-  }
-
-  return Onedrive;
-})();   
-
-
 function onedriveOpenFile() {
-  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
-  return onedrivePromise( WL.fileDialog( {
-    mode: "open",
-    select: "single",
-  })).then( function(res) {
-    if (!(res.data && res.data.files && res.data.files.length==1)) {
-      return Promise.rejected(onedriveError("no file selected"));
-    }
-    return res.data.files[0];
-  }).then( function(file) {
-    return onedriveGetFileInfoFromId( file.id ).then( function(info) {
-      //var storage = new Storage(info.parent_id);
-      return onedriveGetPathFromId(info.parent_id).then( function(folder) {
-        var onedrive = new Onedrive(info.parent_id, folder);
-        return { storage: new Storage(onedrive), docName: file.name };
-      });
-    });
+  return Onedrive.openFile().then( function(info) {
+    return {storage: new Storage(info.remote), docName: info.docName };
   });
-}     
+}
 
 function dropboxOpenFile() {
-  return dropbox.openFile().then( function(info) {
-    return {storage: new Storage(info.dropbox), docName: info.docName };
+  return Dropbox.openFile().then( function(info) {
+    return {storage: new Storage(info.remote), docName: info.docName };
   });
 }
 
-function onedriveOpenFolder() {
-  if (typeof WL === "undefined" || !WL) return Promise.rejected( onedriveError("no connection") );
-  return onedrivePromise( WL.fileDialog( {
-    mode: "save",
-    select: "single",
-  })).then( function(res) {
-    if (!(res.data && res.data.folders && res.data.folders.length==1)) {
-      return Promise.rejected(onedriveError("no save folder selected"));
-    }
-    return new Storage(new Onedrive(res.data.folders[0].id) );
-  });
-}     
-
-
-function onedriveInit(options) {
-  if (typeof WL === "undefined") {
-    WL = null;
-    return;
-  }
-  if (!options.response_type) options.response_type = "token";
-  if (!options.scope) options.scope = ["wl.signin","wl.skydrive"];    
-  WL.init(options).then( function(res) {
-    console.log("initialized onedrive");
-  }, function(resFail) {
-    console.log("failed to initialize onedrive");
-  });
+function createNullStorage() {
+  return new Storage( new NullRemote.NullRemote() );
 }
-
-
-var LocalRemote = (function() {
-  function LocalRemote(folder) {    
-    var self = this;
-    self.folder = folder || "remote/";
-  }
-
-  LocalRemote.prototype.type = function() {
-    return "local";
-  }
-
-  LocalRemote.prototype.logo = function() {
-    return "icon-local.png";
-  }
-
-  LocalRemote.prototype.persist = function() {
-    var self = this;
-    return { folder: self.folder };
-  }
-
-  LocalRemote.prototype.getWriteAccess = function() {
-    return Promise.resolved();
-  }
-
-  LocalRemote.prototype.pushFile = function( file, content ) {
-    var self = this;
-    var obj  = { modifiedTime: new Date(), content: file.content, mime: file.mime, encoding: file.encoding, position: file.position }
-    if (!localStorage) throw new Error("no local storage: " + file.path);
-    localStorage.setItem( self.folder + file.path, JSON.stringify(obj) );
-    return Promise.resolved(obj.modifiedTime);
-  }
-
-  LocalRemote.prototype.pullFile = function( fpath ) {
-    var self = this;
-    if (!localStorage) throw new Error("no local storage");
-    var json = localStorage.getItem(self.folder + fpath);
-    var obj = JSON.parse(json);
-    if (!obj || !obj.modifiedTime) return Promise.rejected( new Error("local storage: unable to read: " + fpath) );
-    var file = {
-      path: fpath,
-      content: obj.content, 
-      createdTime: obj.modifiedTime,
-      encoding: obj.encoding || Encoding.fromExt(fpath),
-      mime: obj.mime || util.mimeFromExt(fpath),
-      position: obj.position,
-    };
-    return Promise.resolved(file);
-  }
-
-  LocalRemote.prototype.getRemoteTime = function( fpath ) {
-    var self = this;
-    if (!localStorage) throw new Error("no local storage");
-    try { 
-      var json = localStorage.getItem(self.folder + fpath);
-      var obj = JSON.parse(json);
-      if (!obj || !obj.modifiedTime) return cont(null, null);
-      return Promise.resolved(obj.modifiedTime);
-    }
-    catch(exn) {
-      return Promise.resolved(null);
-    }
-  }
-
-  return LocalRemote;
-})();
-
-
-var NullRemote = (function() {
-  function NullRemote() {    
-  }
-
-  NullRemote.prototype.type = function() {
-    return "null";
-  }
-
-  NullRemote.prototype.logo = function() {
-    return "icon-local.png";
-  }
-
-  NullRemote.prototype.getFolder = function() {
-    return "Madoko/document";
-  }
-
-  NullRemote.prototype.persist = function() {
-    return { };
-  }
-
-  NullRemote.prototype.getWriteAccess = function() {
-    return Promise.resolved();
-  }
-
-  NullRemote.prototype.pushFile = function( file, content ) {
-    return Promise.rejected( new Error("not connected: cannot store files") );
-  }
-
-  NullRemote.prototype.pullFile = function( fpath ) {
-    var self = this;
-    return Promise.rejected( new Error("not connected to storage: unable to read: " + fpath) );
-  }
-
-  NullRemote.prototype.getRemoteTime = function( fpath ) {
-    return Promise.resolved(null);
-  }
-
-  return NullRemote;
-})();
-
 
 function serverGetInitialContent(fpath) {
   if (!util.extname(fpath)) fpath = fpath + ".mdk";
@@ -439,26 +66,16 @@ function serverGetInitialContent(fpath) {
   return util.requestGET( fpath );
 }
 
-function localOpenFile() {
-  if (!localStorage) throw new Error( "no local storage available, upgrade your browser");
-  var local = new LocalRemote();
-  return Promise.resolved( { storage: new Storage(local), docName: "document.mdk" } );
-}
-
-
 function unpersistRemote(remoteType,obj) {
   if (obj && remoteType) {
-    if (remoteType===Onedrive.prototype.type()) {
-      return unpersistOnedrive(obj);
+    if (remoteType===Onedrive.type()) {
+      return Onedrive.unpersist(obj);
     }
-    else if (remoteType===dropbox.type()) {
-      return dropbox.unpersist(obj);
-    }
-    else if (remoteType==LocalRemote.prototype.type()) {
-      return new LocalRemote(obj.folder);
+    else if (remoteType===Dropbox.type()) {
+      return Dropbox.unpersist(obj);
     }
   }
-  return new NullRemote();
+  return NullRemote.unpersist();
 }
   
 function unpersistStorage( obj ) {
@@ -483,29 +100,13 @@ function unpersistStorage( obj ) {
   return storage;
 }
 
-function syncToLocal( storage, docStem, newStem ) {
-  var local = new Storage(new LocalRemote());  
-  return syncTo( storage, local, docStem, newStem );
-}
-
-function syncToOnedrive( storage, docStem, newStem ) {
-  return onedriveGetWriteAccess().then( function() {
-    return onedriveOpenFolder();
-  }).then( function(onedrive) {
-    return syncTo( storage, onedrive, docStem, newStem );
-  });
-}
 
 function newOnedriveAt( folder ) {
-  return onedriveGetRootId().then( function(rootId) {
-    return onedriveEnsureFolder( rootId, folder );
-  }).then( function(folderId) {
-    return new Onedrive(folderId,folder);
-  });
+  return Onedrive.createAt( folder );
 }
 
 function newDropboxAt( folder ) {
-  return Promise.resolved( new dropbox.Dropbox(folder) );
+  return Dropbox.createAt(folder);
 }
 
 function saveTo(  storage, toRemote, docStem, newStem ) 
@@ -547,15 +148,16 @@ function createSnapshotFolder(remote, stem, num ) {
   }
   var folder = stem + (num ? "-" + num.toString() : "");
 
-  return remote.createSubFolder(folder).then( function(info) {
-    if (info) return (info);
+  return remote.createSubFolder(folder).then( function(created) {
+    if (created) return folder;
     return createSnapshotFolder(remote,stem, (num ? num+1 : 1));
   });
 }
 
 function createSnapshot( storage ) {
-  return createSnapshotFolder( storage.remote ).then( function(info) {
-    var toRemote = storage.remote.createNewAt( info );
+  return createSnapshotFolder( storage.remote ).then( function(folder) {
+    return storage.remote.createNewAt( folder );
+  }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);
     storage.forEachFile( function(file0) {
       var file = util.copy(file0);
@@ -577,6 +179,7 @@ function getEditPosition(file) {
 function pushAtomic( fpath, time ) {
   return util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString() } );
 }
+
 
 var Storage = (function() {
   function Storage( remote ) {
@@ -1013,134 +616,22 @@ var Storage = (function() {
     return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
   }
 
-  /*
-  Storage.prototype._syncFileX = function(diff,cursors,file) {  // : Promise<string>
-    var self = this;
-
-    function message(msg,action) {
-      return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
-    }
-
-    // only text files
-    // if (file.kind === File.Image) return Promise.resolved(message("skip"));
-
-    return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
-      var noRemote = (remoteTime==null);
-
-      if (!remoteTime) {
-        // file is deleted on server?
-        remoteTime = file.createdTime;
-      }
-
-      if (file.modified) 
-      {
-        if (rxStartMerge.test(file.content)) {
-          throw new Error( message("cannot save to server: resolve merge conflicts first!", "save to server") );
-        }
-        else if (util.startsWith(file.mime,"text/") && file.createdTime !== remoteTime) {
-          // modified on client and server
-          if (!diff) {
-            return message( "modified on server!", "merge from server" );
-          }
-          else {
-            return self._pullFile(file.path,file).then( function(remoteFile) {
-              if (remoteFile.content === "" && file.content !== "") {
-                // do not merge an empty file
-                return self.remote.pushFile(file).then( function(newFile) {
-                  newFile.modified= false;
-                  newFile.original = newFile.content;
-                  self._updateFile(newFile);
-                  return message( "merge from server was empty, wrote back changes" );
-                });
-              }
-
-              var original = (file.original != null ? file.original : file.content);
-              return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
-                                original, remoteFile.content, file.content
-                      ).then( function(res) {
-                  if (cursors["/" + file.path]) {
-                    cursors["/" + file.path] = res.cursorLine;
-                  }
-                  if (res.conflicts) {
-                    // don't save if there were real conflicts
-                    remoteFile.original = file.orginal; // so next merge does not get too confused
-                    remoteFile.content  = res.merged;
-                    remoteFile.modified= true;
-                    self._updateFile(remoteFile);
-                    throw new Error( message("merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
-                  }
-                  else {
-                    // write back merged result
-                    remoteFile.content  = res.merged;
-                    return self.remote.pushFile(remoteFile).then( function(newFile) {
-                      newFile.modified= false;
-                      newFile.original = newFile.content;
-                      self._updateFile(newFile);
-                      return message( "merge from server" );      
-                    });
-                  }
-                });  
-            });
-          }
-        }
-        else {          
-          // write back the client changes
-          return self.remote.pushFile( file ).then( function(newFile) {
-            newFile.modified= false;
-            newFile.original = newFile.content;
-            self._updateFile(newFile);
-            return message("save to server"); 
-          });
-        }
-      }
-      // not modified locally
-      else if (file.createdTime !== remoteTime) {
-        // update from server
-        self.files.remove(file.path);
-        return self.readFile(file.path, false ).then( function(newfile) {
-            return message("update from server");
-          },
-          function(err) {
-            self.files.set(file.path,file); // restore
-            throw err;
-          }
-        );
-      }
-      else if (noRemote) {
-        // just present on our side, push to server
-        return self.remote.pushFile( file ).then( function(newFile) {
-          newFile.modified= false;
-          newFile.original = newFile.content;
-          self._updateFile(newFile);
-          return message("(re)save to server"); 
-        });        
-      }
-      else {
-        // nothing to do
-        return message("up-to-date");
-      }
-    });
-  }
-  */
-
   return Storage;
 })();
   
 
 return {
-  onedriveInit: onedriveInit,
   onedriveOpenFile: onedriveOpenFile,
-  dropboxOpenFile: dropboxOpenFile,
-  localOpenFile: localOpenFile,
-  newOnedriveAt: newOnedriveAt,
-  newDropboxAt: newDropboxAt,
-  saveTo: saveTo,  
-  Storage: Storage,
-  LocalRemote: LocalRemote,
-  NullRemote: NullRemote,
-  Encoding: Encoding,
-  unpersistStorage: unpersistStorage,
-  isEditable: isEditable,
-  getEditPosition: getEditPosition,
+  dropboxOpenFile : dropboxOpenFile,
+  createNullStorage: createNullStorage,
+  newOnedriveAt   : newOnedriveAt,
+  newDropboxAt    : newDropboxAt,
+  saveTo          : saveTo,  
+  Storage         : Storage,
+  unpersistStorage: unpersistStorage,  
+  Encoding        : Encoding,
+  isEditable      : isEditable,
+  getEditPosition : getEditPosition,
 }
+
 });

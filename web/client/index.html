@@ -209,7 +209,7 @@ include:
 
 * `Alt-Q`: Reformat the current paragraph to fit 75 characters.
 * `Shift-Alt-A`: Put a block comment around the selection.
-* You can drag&drop images, include files, LaTeX document classes,
+* You can drag&amp;drop images, include files, LaTeX document classes,
   and bibliography files right into the edit pane.
 * Start working with larger documents: use the `[INCLUDE=my-chapter]`
   element and in the upper-left file menu you can start editing the
@@ -304,8 +304,9 @@ function hello() {
 [^onedrive]: "_Creating, updating, or deleting files in a folder that is
     shared with the signed-in user is not supported by the OneDrive
     API._", [link][onedrive-sharing]
-</div
-><script>
+</div>
+
+<script>
 // test browser features
 if (typeof Worker === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
@@ -313,20 +314,13 @@ if (typeof Worker === "undefined") {
 else {
   document.getElementById("app").style.display = "block"; 
 }
-</script><!-- dropbox -->
+</script>
+
+<!-- dropbox -->
 <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>
 <!-- onedrive -->
 <script src="//js.live.net/v5.0/wl.debug.js"></script>
-<script>
-require([ "../scripts/storage" ], function(storage) 
-{ 
-  storage.onedriveInit({
-    client_id   : "000000004C113E9D",
-    redirect_uri: "https://www.madoko.net/redirect/live", 
-    scope       : ["wl.signin","wl.skydrive","wl.skydrive_update"],
-  });
-});
-</script>
+
 </div>
 </body>
 </html>

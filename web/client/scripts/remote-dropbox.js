@@ -106,9 +106,9 @@ function createFolder( dirname ) {
     root: root, 
     path: dirname,
   }).then( function(info) {
-    return dirname;
+    return true; // freshly created
   }, function(err) {
-    if (err.httpCode === 403) return null;
+    if (err.httpCode === 403) return false;
     throw err;
   });
 }
@@ -118,7 +118,7 @@ function openFile() {
   return login().then( function() {
     return chooseFile();
   }).then( function(fname) {
-    return { dropbox: new Dropbox(Util.dirname(fname)), docName: Util.basename(fname) };
+    return { remote: new Dropbox(Util.dirname(fname)), docName: Util.basename(fname) };
   });
 }
 
@@ -130,6 +130,12 @@ function type() {
   return "dropbox";
 }
 
+function createAt( folder ) {
+  return login().then( function() {
+    return new Dropbox(folder);
+  });
+}
+
 var Dropbox = (function() {
 
   function Dropbox( folder ) {
@@ -138,7 +144,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.createNewAt = function(folder) {
-    return new Dropbox(folder);
+    return createAt(folder);
   }
 
   Dropbox.prototype.type = function() {
@@ -211,6 +217,7 @@ var Dropbox = (function() {
 
 return {
   openFile: openFile,
+  createAt: createAt,
   login: login,
   logout: logout,
   unpersist: unpersist,
