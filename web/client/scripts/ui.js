@@ -1370,7 +1370,8 @@ var UI = (function() {
   UI.prototype.onFileUpdate = function(file) {
     var self = this;
     if (file.path===self.editName) {
-      var fileDisplay = self.displayFile(file);
+      var prefix = "<span class='folder'>" + self.storage.folder() + "/</span>";
+      var fileDisplay = prefix + self.displayFile(file);
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
         self.fileDisplay = fileDisplay;
         self.editSelectHeader.innerHTML = fileDisplay;

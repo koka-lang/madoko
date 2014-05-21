@@ -253,6 +253,10 @@ html,body,#app {
   color: #AAA;
 }
 
+#edit-select-header .folder {
+  padding-right: 0.15em;
+}
+
 #edit-select-header .disable {
   color: #888;
 }
