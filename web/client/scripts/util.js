@@ -1065,8 +1065,6 @@ doc.execCommand("SaveAs", null, filename)
     combine: stdpath.combine,
     firstdirname: firstdirname,
 
-    hasImageExt: hasImageExt,
-    hasTextExt: hasTextExt,
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
     hasDropExt: hasDropExt,

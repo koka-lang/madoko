@@ -971,7 +971,7 @@ var UI = (function() {
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
-      if (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path)) {
+      if (storage.isEditable(file)) {
         var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
         var words   = matches ? matches.length : 0;
         if (words > 0) {
@@ -1255,7 +1255,7 @@ var UI = (function() {
     for (var i = 0, f; f = files[i]; i++) {      
       var encoding = storage.Encoding.fromExt(f.name);      
       var mime = f.type || util.mimeFromExt(f.name);
-      if (!(util.startsWith(mime,"image/") || util.startsWith(mime,"text/") || mime === "application/json")) { // only images or text..
+      if (!(util.startsWith(mime,"image/") || util.isTextMime(mime))) { // only images or text..
         continue;
       }
       
@@ -1385,8 +1385,9 @@ var UI = (function() {
   UI.prototype.saveTo = function( newStorageAt ) {
     var self = this;
     self.showSpinner(true,self.syncer);
-    var folder = self.saveFolder.value;
-    var newstem = (folder ? util.basename(folder) : "document");
+    var folder = self.saveFolder.value.replace("\\","/");
+
+    var newstem = (folder ? util.stemname(folder) : "document");
     return newStorageAt(folder).then( function(toStorage) {
       return storage.saveTo(self.storage, toStorage, util.stemname(self.docName), newstem);
     }).then( function(res){ 

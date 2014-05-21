@@ -169,7 +169,7 @@ function createSnapshot( storage ) {
 }
 
 function isEditable(file) {
-  return (util.startsWith(file.mime,"text/") && !util.hasGeneratedExt(file.path));
+  return (util.isTextMime(file.mime) && !util.hasGeneratedExt(file.path));
 }
 
 function getEditPosition(file) {
@@ -216,7 +216,7 @@ var Storage = (function() {
     if (minimal) {
       var map = self.files.copy();
       map.forEach( function(path,file) {
-        if (!util.startsWith(file.mime,"text/") || util.hasGeneratedExt(path)) map.remove(path);
+        if (!util.isTextMime(file.mime) || util.hasGeneratedExt(path)) map.remove(path);
       });
       pfiles = map.persist();
     }
@@ -511,7 +511,7 @@ var Storage = (function() {
       // nothing to do
       return self._syncMsg(file,"up-to-date");
     }
-    else if (util.startsWith(file.mime,"text/") && rxConflicts.test(file.content)) {
+    else if (util.isTextMime(file.mime) && rxConflicts.test(file.content)) {
       // don't save files with merge conflicts
       throw new Error( self._syncMsg(file,"cannot save to server: resolve merge conflicts first!", "save to server") );
     }
@@ -542,7 +542,7 @@ var Storage = (function() {
 
   Storage.prototype._syncPull = function(diff,cursors,file,remoteFile) {
     var self = this;
-    var canMerge = util.startsWith(file.mime, "text/");
+    var canMerge = util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
     if (file.modified && canMerge) {
       if (rxConflicts.test(file.content)) {
