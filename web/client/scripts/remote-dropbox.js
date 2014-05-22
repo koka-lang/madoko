@@ -63,7 +63,7 @@ function chooseOneFile() {
       },
       linkType: "direct",
       multiselect: false,
-      extensions: [".mdk",".md",".mkdn"],
+      extensions: [".mdk",".md",".mkdn",".markdown"],
     });
   });
 }

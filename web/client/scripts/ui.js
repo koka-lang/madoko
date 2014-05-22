@@ -988,7 +988,8 @@ var UI = (function() {
 
   UI.prototype.openFile = function(storage,fname) {
     var self = this;
-    if (fname && !(util.endsWith(fname,".mdk") || util.endsWith(fname,".mdk.txt")) ) return util.message("only .mdk files can be selected",util.Msg.Error);      
+    var mime = util.mimeFromExt(fname);
+    if (fname && !(mime === "text/madoko" || mime==="text/markdown") ) return util.message("only markdown (.mdk) files can be selected",util.Msg.Error);      
     return self.setStorage( storage, fname );
   }
 

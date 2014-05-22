@@ -303,6 +303,8 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   var mimeTypes = {    
     mdk: "text/madoko",
     md: "text/markdown",
+    mkdn: "text/markdown",
+    markdown: "text/markdown",
 
     txt: "text/plain",
     css: "text/css",
