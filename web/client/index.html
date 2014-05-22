@@ -35,6 +35,8 @@
 <div id="multibrowser" style="display:none; padding: 1ex">
 <p>Snap! You already have Madoko open in another window.</p>
 <p>Unfortunately, Madoko only works within a single browser window.</p>
+<p></p>
+<p>(After a browser crash, you may have to wait up to a minute for this message to disappear)</p>
 </div>
 <div id="fullapp" style="display:none">
 <div id="app" class="view-normal">
@@ -296,15 +298,23 @@ if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
 }
 // test for multiple instances
-else if (localStorage.getItem("madoko")) {
+else if (/\bmadoko=([^&;]*)(?:[&;]|$)/.test(document.cookie)) {
   document.getElementById("multibrowser").style.display = "block";
 }
 // we are good to go
 else {
-  window.addEventListener("unload", function(ev) {
-    localStorage.setItem("madoko","");
+  // we detect multiple instances by keeping a cookie alive
+  // we use an expiring cookie so if the browser crashes we are ok (after cookieIval)
+  var cookie = "madoko=;path=/;secure;max-age=";
+  var cookieIval = 30; // in seconds
+  document.cookie = cookie + cookieIval.toString();
+  setInterval( function() {
+    document.cookie = cookie + cookieIval.toString();
+  }, cookieIval * (1000/2) );  // half the ival in ms 
+  window.addEventListener( "unload", function() {
+    document.cookie = cookie + "0";
   });
-  localStorage.setItem("madoko","lock");
+  
   document.getElementById("fullapp").style.display = "block"; 
   goodToGo = true;
 }
