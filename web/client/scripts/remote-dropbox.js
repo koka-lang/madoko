@@ -10,7 +10,7 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-var redirectUri = "https://www.madoko.net/redirect/dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -77,9 +77,9 @@ function chooseFile() {
   });
 }
 
-function pullFile(fname) {
-  var url = contentUrl + fname;
-  return Util.requestGET( url, { access_token: getAccessToken() });
+function pullFile(fname,binary) {
+  var opts = { url: contentUrl + fname, binary: binary };
+  return Util.requestGET( opts, { access_token: getAccessToken() });
 }
 
 function fileInfo(fname) {
@@ -190,14 +190,14 @@ var Dropbox = (function() {
     });
   }
 
-  Dropbox.prototype.pullFile = function( fpath ) {
+  Dropbox.prototype.pullFile = function( fpath, binary ) {
     var self = this;
     return self.getRemoteTime(fpath).then( function(date) {
       if (!date) return Promise.rejected("file not found: " + fpath);
-      return pullFile( self.fullPath(fpath) ).then( function(_content,req) {
+      return pullFile( self.fullPath(fpath), binary ).then( function(content,req) {
         var file = {
           path: fpath,
-          content: req.responseText,
+          content: content,
           createdTime: date,
         };
         return file;

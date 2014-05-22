@@ -422,6 +422,17 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return dest;
   }
 
+  // convert arraybuffer to base64 string
+  function encodeBase64( buffer ) {
+    var binary = ""
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] )
+    }
+    return window.btoa( binary );
+  }  
+
   function px(s) {
     if (typeof s === "number") return s;
     var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
@@ -951,7 +962,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           res = JSON.parse(req.responseText);
         }
         else {
-          res = req.responseText;
+          res = req.response;
         }
         promise.resolve(res,req);
       }
@@ -1001,10 +1012,19 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       contentType = reqparam.contentType;
     }
 
+    if (reqparam.responseType == null && reqparam.binary) {
+      reqparam.responseType = "arraybuffer";
+    }
+
     // override response type?
     if (reqparam.responseType != null) {
       req.overrideMimeType(reqparam.responseType);
       req.responseType = reqparam.responseType;
+    }
+
+    // override mime type
+    if (reqparam.mimeType != null) {
+      req.overrideMimeType(reqparam.mimeType);
     }
 
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
@@ -1095,6 +1115,7 @@ doc.execCommand("SaveAs", null, filename)
     endsWith: endsWith,
     contains: contains,
     decodeBase64: decodeBase64,
+    encodeBase64: encodeBase64,
     dateFromISO: dateFromISO,
     getCookie: getCookie,
     

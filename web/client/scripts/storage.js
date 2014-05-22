@@ -31,7 +31,10 @@ var Encoding = {
   encode: function( enc, data ) {
     if (!data) return "";
     if (enc===Encoding.Base64) {
-      return btoa(data);
+      if (data instanceof ArrayBuffer) 
+        return util.encodeBase64(data);
+      else
+        return window.btoa(data);
     }
     else {
       return data;
@@ -381,7 +384,7 @@ var Storage = (function() {
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);
-    return self.remote.pullFile(fpath).then( function(file) {
+    return self.remote.pullFile(fpath,opts.encoding !== Encoding.Utf8).then( function(file) {
       file.path      = file.path || fpath;
       file.mime      = opts.mime;
       file.encoding  = opts.encoding;

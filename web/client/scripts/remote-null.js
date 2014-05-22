@@ -48,7 +48,7 @@ var NullRemote = (function() {
     return Promise.rejected( new Error("not connected: cannot store files") );
   }
 
-  NullRemote.prototype.pullFile = function( fpath ) {
+  NullRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
     return Promise.rejected( new Error("not connected to storage: unable to read: " + fpath) );
   }

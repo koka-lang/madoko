@@ -20,18 +20,17 @@ function openFile(url) {
   return Promise.resolved( new HttpRemote(url) );
 }
 
-function pullFile(url) {
+function pullFile(url,binary) {
+  // no need for binary as our server sends binary by default
   return Util.requestGET( "remote/http", { url: url } ).then( function(_content,req) {
-    return req;
+    return req.repsonseText;
   }, function(err) {
     if (err.httpCode && err.httpCode===404) {
       return Util.requestGET("remote/http", { url: url + ".txt" } ).then( function(_content,req) {
-        return req;
+        return req.responseText;
       });
     }
     throw err;
-  }).then( function(req) {
-    return req.responseText;
   });
 }
 
@@ -72,9 +71,9 @@ var HttpRemote = (function() {
     return Promise.rejected( new Error("not connected: cannot store files on HTTP remote") );
   }
 
-  HttpRemote.prototype.pullFile = function( fpath ) {
+  HttpRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return pullFile( self.url + "/" + fpath ).then( function(content) {
+    return pullFile( self.url + "/" + fpath, binary ).then( function(content) {
       var file = {
         path: fpath,
         content: content,
