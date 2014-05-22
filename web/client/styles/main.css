@@ -60,11 +60,12 @@ html,body,#fullapp,#app {
 .theme-dark #app {
   background-color: white;      
 }
+.theme-dark #fullapp,
 .theme-dark .pane-header, 
 .theme-dark .spinner.spin, 
 .theme-dark .output,
 .theme-dark #app-footer {
-  background-color: #000;
+  background-color: #234;
   border-style: none;
   color: white;
 }
@@ -78,7 +79,7 @@ html,body,#fullapp,#app {
 .theme-dark .popup:hover,
 .theme-dark .popup>.button:hover,
 .theme-dark #app-footer a:hover {
-  background-color: #666;
+  background-color: #456;
 }
 
 #edit-select-directory {
@@ -86,23 +87,23 @@ html,body,#fullapp,#app {
 }
 
 /* Application panes */
+#fullapp {
+  padding: 0em 0.25em;
+}
 
 #app {
   height: 100%;
-  margin-bottom: -1.2rem;
+  margin-bottom: -1.5rem;
 }
 
 #app-footer {
-  height: 1.2rem;
+  height: 1.5rem;
 }
 
 .pane {
   height: 96%;
-  height: calc(100% - 1.2rem);
+  height: calc(100% - 1.5rem);
   width: 49%;
-}
-
-.pane {
   transition: width 1s;
 }
 
@@ -179,6 +180,7 @@ html,body,#fullapp,#app {
   float: left;
   text-align: left;
   margin-left: 0.25em;
+  margin-top: 0.15em;
   width: 50%;
 }
 
