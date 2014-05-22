@@ -951,7 +951,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
           res = JSON.parse(req.responseText);
         }
         else {
-          res = req.responseText;
+          res = req.response;
         }
         promise.resolve(res,req);
       }

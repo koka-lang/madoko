@@ -155,8 +155,9 @@ function getAccessToken() {
   return _access_token;
 }
 
-function login() {
+function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
+  if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
   return makePromise(WL.init(onedriveOptions)).then( function() {
     return makePromise(WL.login()).then( function() {
       var session = WL.getSession();
@@ -279,8 +280,8 @@ var Onedrive = (function() {
     return self.folder;
   }
 
-  Onedrive.prototype.getWriteAccess = function() {
-    return login();
+  Onedrive.prototype.connect = function(dontForce) {
+    return login(dontForce);
   }
 
   Onedrive.prototype.createNewAt = function(folder) {
@@ -296,7 +297,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.pullFile = function( fpath ) {
     var self = this;
-    return login().then(function() {
+    return login(true).then(function() {
       return infoFromSubPath( self.folderId, fpath );
     }).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);

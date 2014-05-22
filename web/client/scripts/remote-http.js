@@ -60,7 +60,7 @@ var HttpRemote = (function() {
     return { url: self.url };
   }
 
-  HttpRemote.prototype.getWriteAccess = function() {
+  HttpRemote.prototype.connect = function(dontForce) {
     return Promise.resolved();
   }
 

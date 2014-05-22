@@ -378,6 +378,11 @@ var Storage = (function() {
     file.position = pos;    
   }
 
+  Storage.prototype.connect = function(dontForce) {
+    var self = this;
+    return self.remote.connect(dontForce);
+  }
+
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);
@@ -487,7 +492,7 @@ var Storage = (function() {
     var self = this;
     var remotes = new util.Map();
 
-    return self.remote.getWriteAccess().then( function() {      
+    return self.connect(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,file); } );
       return Promise.when( syncs ).then( function(res) {
         res.forEach( function(msg) {

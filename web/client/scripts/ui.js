@@ -891,6 +891,7 @@ var UI = (function() {
         
       if (self.storage) {
         self.storage.destroy(); // clears all event listeners
+        self.viewHTML( "<p>Loading...</p>", Date.now() );
         //self.storage.clearEventListener(self);
       }
       self.storage = stg;

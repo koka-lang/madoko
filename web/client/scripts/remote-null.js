@@ -36,7 +36,7 @@ var NullRemote = (function() {
     return { };
   }
 
-  NullRemote.prototype.getWriteAccess = function() {
+  NullRemote.prototype.connect = function(dontForce) {
     return Promise.resolved();
   }
 
