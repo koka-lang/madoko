@@ -392,6 +392,18 @@ div.boxed {
   padding-left: 0.5ex;
 }
 
+.menu-label {
+  display: inline-block;
+  width: 3.5em;
+}
+
+.color-box {
+  display:inline-block;
+  border:1px solid black; 
+  height: 0.7em; 
+  width:0.7em; 
+  vertical-align:-0.4em;
+}
 
 /* Monaco token classes */
 
@@ -479,12 +491,12 @@ div.boxed {
 #help-content,
 #menu-settings-content,
 #document-content {
-  width: 18em;
+  width: 20em;
 }
 
 #help-content,
 #menu-settings-content {
-  left: -16.75em;
+  left: -18.5em;
 }
 
 #help {

@@ -537,7 +537,14 @@ var UI = (function() {
       util.removeClassName(app,"view-normal");
       util.addClassName(app,"view-wide");
       //if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
-    }    
+    }
+
+    document.getElementById("theme-ivory").onclick = function(ev) {
+      self.editor.updateOptions( { theme: "vs" } );
+    }
+    document.getElementById("theme-midnight").onclick = function(ev) {
+      self.editor.updateOptions( { theme: "vs-dark" } );
+    }
   }
 
   UI.prototype.setEditText = function( text, mode ) {
