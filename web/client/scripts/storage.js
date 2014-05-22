@@ -169,7 +169,9 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 }
 
 function createSnapshot( storage, docName ) {
-  return createSnapshotFolder( storage.remote, util.stemname(docName) ).then( function(folder) {
+  return storage.remote.connect().then( function() {
+    return createSnapshotFolder( storage.remote, util.stemname(docName) );
+  }).then( function(folder) {
     return storage.remote.createNewAt( folder );
   }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);

@@ -395,7 +395,9 @@ var UI = (function() {
     document.getElementById("load-onedrive").onclick = function(ev) {
       self.event( "loaded from remote storage", "loading...", State.Loading, function() {
         return self.checkSynced().then( function() {
-          return storage.onedriveOpenFile();        
+          return self.withSyncSpinner( function() {
+            return storage.onedriveOpenFile();        
+          });
         }).then( function(res) { 
           return self.openFile(res.storage,res.docName); 
         });
@@ -405,7 +407,9 @@ var UI = (function() {
     document.getElementById("load-dropbox").onclick = function(ev) {
       self.event( "loaded from remote storage", "loading...", State.Loading, function() {
         return self.checkSynced().then( function() {
-          return storage.dropboxOpenFile();        
+          return self.withSyncSpinner( function() {
+            return storage.dropboxOpenFile();  
+          });      
         }).then( function(res) { 
           return self.openFile(res.storage,res.docName); 
         });
@@ -450,7 +454,9 @@ var UI = (function() {
 
     document.getElementById("snapshot").onclick = function(ev) {
       self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() { 
-        return self.storage.createSnapshot(self.docName); 
+        return self.withSyncSpinner( function() {
+          return self.storage.createSnapshot(self.docName); 
+        });
       });
     }
 
@@ -907,7 +913,7 @@ var UI = (function() {
       self.remoteLogo.src = "images/dark/" + remoteLogo;
       self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
       self.editName = "";
-      return self.editFile(self.docName);
+      return self.editFile(self.docName).always( function() { self.setStale(); } );
     });
   }
 
@@ -1421,8 +1427,10 @@ var UI = (function() {
     var folder = self.saveFolder.value.replace("\\","/");
 
     var newstem = (folder ? util.stemname(folder) : "document");
-    return newStorageAt(folder).then( function(toStorage) {
-      return storage.saveTo(self.storage, toStorage, util.stemname(self.docName), newstem);
+    return self.withSyncSpinner( function() { 
+      return newStorageAt(folder).then( function(toStorage) {
+        return storage.saveTo(self.storage, toStorage, util.stemname(self.docName), newstem);
+      });
     }).then( function(res){ 
       return self.setStorage(res.storage,res.docName).then( function() {
         return res.docName;
@@ -1436,6 +1444,14 @@ var UI = (function() {
     });
   }
 
+  UI.prototype.withSyncSpinner = function( makePromise) {
+    var self = this;
+    self.showSpinner(true,self.syncer);
+    return makePromise().always( function() {
+      self.showSpinner(false,self.syncer);
+    });
+  }
+
   UI.prototype.synchronize = function() {
     var self = this;
     self.event( "", "", State.Syncing, function() {
@@ -1444,16 +1460,15 @@ var UI = (function() {
         var cursors = {};        
         var line0 = self.editor.getPosition().lineNumber;
         cursors["/" + self.docName] = line0;
-        self.showSpinner(true,self.syncer);    
-        return self.storage.sync( diff, cursors ).then( function() {
-          var line1 = cursors["/" + self.docName];
-          var pos = self.editor.getPosition();
-          if (pos.lineNumber >= line0) {
-            pos.lineNumber += (line1 - line0);
-            self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
-           }
-        }).always( function() {          
-          self.showSpinner(false,self.syncer);    
+        return self.withSyncSpinner( function() {
+          return self.storage.sync( diff, cursors ).then( function() {
+            var line1 = cursors["/" + self.docName];
+            var pos = self.editor.getPosition();
+            if (pos.lineNumber >= line0) {
+              pos.lineNumber += (line1 - line0);
+              self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
+             }
+          });
         });
       }
     });    
