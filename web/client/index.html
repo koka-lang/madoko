@@ -293,6 +293,12 @@ function hello() {
 <script>
 var goodToGo = false;
 
+var cookieIval = 30; // in seconds
+function updateCookie(inc) {
+  var date = new Date(Date.now() + (1000*inc));
+  return "madoko=1;expires=" + date.toGMTString();
+}
+  
 // test browser features 
 if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
@@ -300,19 +306,18 @@ if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
 // test for multiple instances
 else if (/\bmadoko=([^&;]*)(?:[&;]|$)/.test(document.cookie)) {
   document.getElementById("multibrowser").style.display = "block";
+  document.cookie=updateCookie(cookieIval); // just in case there is some stale cookie somehow..
 }
 // we are good to go
 else {
   // we detect multiple instances by keeping a cookie alive
   // we use an expiring cookie so if the browser crashes we are ok (after cookieIval)
-  var cookie = "madoko=;path=/;secure;max-age=";
-  var cookieIval = 30; // in seconds
-  document.cookie = cookie + cookieIval.toString();
+  document.cookie = updateCookie(cookieIval);
   setInterval( function() {
-    document.cookie = cookie + cookieIval.toString();
+    document.cookie = updateCookie(cookieIval);
   }, cookieIval * (1000/2) );  // half the ival in ms 
   window.addEventListener( "unload", function() {
-    document.cookie = cookie + "0";
+    document.cookie = updateCookie(0);
   });
   
   document.getElementById("fullapp").style.display = "block"; 
