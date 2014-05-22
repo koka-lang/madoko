@@ -1398,7 +1398,9 @@ var UI = (function() {
     var self = this;
     if (file.path===self.editName) {
       var folder = self.storage.folder();
+      if (folder.length > 35) folder = "..." + folder.substr(folder.length-35);
       var prefix = "<span class='folder'>" + folder + (folder ? "/" : "") + "</span>";
+      
       var fileDisplay = prefix + self.displayFile(file);
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
         self.fileDisplay = fileDisplay;
