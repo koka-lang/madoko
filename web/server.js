@@ -74,15 +74,14 @@ function onError(req,res,err) {
         doms = null;
         console.log("unable to resolve ip: " + err.toString() );
       }
-      var date = new Date();
+      
       logerr.entry( {
         error: result,
         user: res.user,
         ip: req.ip,
         domains: doms,    
         url: req.url,
-        start: date.getTime(),
-        date: date.toISOString()
+        date: new Date().toISOString()
       });
     });
   };
@@ -138,11 +137,12 @@ function event( req, res, action, maxRequests ) {
     if (mode !== Mode.Normal) throw { httpCode: 503, message: "server is in " + mode + " mode" };
     if (allowedIps && !allowedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access" };
     if (blockedIps && blockedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is blocked" };
+    var start = Date.now();
     var entry =  {
       ip: req.ip,
       url: req.url,
-      params: req.params,
-      start: Date.now(),        
+      params: req.params, 
+      date: new Date(start).toISOString(),        
     };
     if (logev) logev.entry( entry );    
     domain = domainsGet(req);
@@ -152,7 +152,7 @@ function event( req, res, action, maxRequests ) {
     if (x && x.then) {
       x.then( function(result) {
         domain.requests--;
-        entry.time = Date.now() - entry.start;
+        entry.time = Date.now() - start;
         if (logev) logev.entry(entry);
         res.send(200,result);
       }, function(err) {
@@ -162,7 +162,7 @@ function event( req, res, action, maxRequests ) {
     }
     else {
       domain.requests--;
-      entry.time = Date.now() - entry.start;
+      entry.time = Date.now() - start;
       if (logev) logev.entry(entry);
       res.send(200,x);
     }
@@ -390,6 +390,15 @@ var log    = new Log();
 var logerr = new Log("log-err");
 var logev  = log; // new Log("log-event");
 
+
+function logRequest(req,msg) {
+  var date = new Date().toISOString() ;
+  dns.reverse( req.ip, function(err,doms) {
+    if (err) doms = null;
+    log.entry( { type: msg, ip: req.ip, url: req.url, domains: doms, date: date });
+  });
+}
+
 // -------------------------------------------------------------
 // General server helpers
 // -------------------------------------------------------------
@@ -418,7 +427,8 @@ function getUser( req,res ) {
 
 function withUser( req,res, action ) {
   var user = getUser(req,res);
-  var entry = { user: user, url: req.url, ip: req.ip, start: Date.now() };
+  var start = Date.now();
+  var entry = { user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
   if (req.body.docname) entry.docname = req.body.docname;
   if (req.body.pdf) entry.pdf = req.body.pdf;
   log.entry( entry );
@@ -429,7 +439,7 @@ function withUser( req,res, action ) {
   }).then( function() {
     return action(user);    
   }).always( function() {    
-    entry.time = Date.now() - entry.start; 
+    entry.time = Date.now() - start; 
     entry.files = req.body.files.map( function(file) {
       return { 
         path: file.path,
@@ -697,7 +707,7 @@ app.post('/rest/push-atomic', function(req,res) {
 app.post("/report/csp", function(req,res) {
   event(req,res, function() {
     console.log(req.body);
-    logerr.entry( { 'csp-report': req.body['csp-report'], start: Date.now() } );
+    logerr.entry( { 'csp-report': req.body['csp-report'], date: new Date().toISOString() } );
   });
 });
 
@@ -743,7 +753,13 @@ app.get("/remote/http", function(req,res) {
 
 var staticClient      = express.static( combine(__dirname, "client"));
 var staticMaintenance = express.static( combine(__dirname, "maintenance"));
+var staticDirs = /\/(images(\/dark)?|scripts|styles(\/lang)?|lib(\/vs(\/.*)?)?|preview)?$/;
+
 app.use('/', function(req,res,next) {
+  var dir = path.dirname(req.path);
+  if (!staticDirs.test(dir)) {
+    logRequest(req,"static-scan");
+  }
   return (mode===Mode.Maintenance ? staticMaintenance : staticClient)(req,res,next);
 });
 
@@ -810,12 +826,7 @@ rl.question( "ssl passphrase: ", function(passphrase) {
   var httpApp = express();
 
   httpApp.use(function(req, res, next) {
-    var date = new Date().toISOString() ;
-    console.log("http redirection: " + req.url + "( " + date + ")" );
-    dns.reverse( req.ip, function(err,doms) {
-      if (err) doms = null;
-      log.entry( { type: "http-redirect", ip: req.ip, url: req.url, domains: doms, date: date });
-    });
+    logRequest(req,"http-redirection");
     res.redirect("https://" + req.host + req.path);
   });
 
