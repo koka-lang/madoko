@@ -395,24 +395,20 @@ var UI = (function() {
 
     document.getElementById("load-onedrive").onclick = function(ev) {
       self.event( "loaded from remote storage", "loading...", State.Loading, function() {
-        return self.checkSynced().then( function() {
-          return self.withSyncSpinner( function() {
-            return storage.onedriveOpenFile();        
+        return self.checkSynced( function() {
+          return storage.onedriveOpenFile().then( function(res) { 
+            return self.openFile(res.storage,res.docName); 
           });
-        }).then( function(res) { 
-          return self.openFile(res.storage,res.docName); 
         });
       });
     };
 
     document.getElementById("load-dropbox").onclick = function(ev) {
       self.event( "loaded from remote storage", "loading...", State.Loading, function() {
-        return self.checkSynced().then( function() {
-          return self.withSyncSpinner( function() {
-            return storage.dropboxOpenFile();  
-          });      
-        }).then( function(res) { 
-          return self.openFile(res.storage,res.docName); 
+        return self.checkSynced( function() {
+          return storage.dropboxOpenFile().then( function(res) { 
+            return self.openFile(res.storage,res.docName); 
+          });
         });
       });
     };
@@ -435,7 +431,7 @@ var UI = (function() {
 
     document.getElementById("new-document").onclick = function(ev) {
       self.event( "created new local document", "creating...", State.Loading, function() {
-        return self.checkSynced().then( function() {
+        return self.checkSynced( function() {
           return self.openFile(null,null);
         });
       });
@@ -877,7 +873,7 @@ var UI = (function() {
     if (cap) {
       var url = util.dirname(cap[1]);
       var doc = util.basename(cap[1]);
-      return self.checkSynced().then( function() {
+      return self.checkSynced( function() {
         return storage.httpOpenFile(url,doc);        
       }).then( function(res) { 
         return self.openFile(res.storage,res.docName); 
@@ -998,12 +994,13 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.checkSynced = function() {
+  UI.prototype.checkSynced = function( makePromise ) {
     var self = this;
-    if (!self.storage || self.storage.isSynced()) return Promise.resolved();
-    var ok = window.confirm( "The current document has not been saved yet!\n\nDo you want to discard these changes?");
-    if (!ok) return Promise.rejected("the operation was cancelled");
-    return Promise.resolved();
+    if (self.storage && !self.storage.isSynced()) {
+      var ok = window.confirm( "The current document has not been saved yet!\n\nDo you want to discard these changes?");
+      if (!ok) return Promise.rejected("the operation was cancelled");
+    }
+    return makePromise();
   }
 
   UI.prototype.openFile = function(storage,fname) {

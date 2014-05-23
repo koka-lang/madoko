@@ -11,6 +11,7 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
 var redirectUri = "https://www.madoko.net/redirect/dropbox";
+//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -26,14 +27,19 @@ function getAccessToken() {
   return _access_token;
 }
 
+/* ----------------------------------------------
+   Login 
+---------------------------------------------- */
+
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
   var url = "https://www.dropbox.com/1/oauth2/authorize?response_type=token&client_id=" + appKey + "&redirect_uri=" + redirectUri;
-  var w = window.open(url);
+  var w = Util.openAuthPopup(url,600);
+  if (!w) return Promise.rejected( new Error("dropbox: authorization popup was blocked") );
   return new Promise( function(cont) {
     var timer = setInterval(function() {   
-      if(w.closed) {  
+      if(w==null || w.closed) {  
         clearInterval(timer);  
         if (getAccessToken()) {
           cont(null);
@@ -47,7 +53,7 @@ function login(dontForce) {
 }
 
 function logout() {
-  document.cookie = "auth_dropbox=;secure;path=/;max-age=-1";
+  Util.setCookie("auth_dropbox","",0);
   _access_token = null;
 }
 
@@ -56,7 +62,7 @@ function chooseOneFile() {
     window.Dropbox.choose( {
       success: function(files) {
         if (!files || !files.length || files.length !== 1) cont(new Error("Can only select a single file to open"));    
-        cont(null, files[0] );
+        cont(null, files[0].link );
       },
       cancel: function() {
         cont( new Error("dropbox dialog was canceled") );
@@ -68,14 +74,25 @@ function chooseOneFile() {
   });
 }
 
-function chooseFile() {
-  return chooseOneFile().then( function(file) {
-    var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(file.link);
-    if (!cap) cont(new Error("Can only select files in the " + appRoot + " folder"));
-    console.log(file);
-    return cap[1];
+function loginAndChooseOneFile() {
+  Util.setCookie("dropbox-next","choose",60);
+  return login().then( function() {
+    Util.setCookie("dropbox-next","",0);  
+    var err  = Util.getCookie("dropbox-error");
+    if (err) {
+      throw new Error( decodeURIComponent(err) );
+    }
+    var link = Util.getCookie("dropbox-choose");
+    if (!link) {
+      throw new Error( "dropbox: could not read file selection -- try again" );
+    }
+    return decodeURIComponent(link);
   });
 }
+
+/* ----------------------------------------------
+  Basic file API
+---------------------------------------------- */
 
 function pullFile(fname,binary) {
   var opts = { url: contentUrl + fname, binary: binary };
@@ -114,14 +131,31 @@ function createFolder( dirname ) {
   });
 }
 
+/* ----------------------------------------------
+   Main entry points
+---------------------------------------------- */
 
 function openFile() {
-  return login().then( function() {
-    return chooseFile();
+  // carefully login so we avoid popup blockers but can still use dropbox's file picker
+  var choose = (getAccessToken() ? chooseOneFile : loginAndChooseOneFile);
+  return choose().then( function(fileLink) {
+    var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(fileLink);
+    if (!cap) throw (new Error("Can only select files in the " + appRoot + " folder"));
+    return cap[1];
   }).then( function(fname) {
     return { remote: new Dropbox(Util.dirname(fname)), docName: Util.basename(fname) };
   });
 }
+
+function createAt( folder ) {
+  return login().then( function() {
+    return new Dropbox(folder);
+  });
+}
+
+/* ----------------------------------------------
+   Remote interface
+---------------------------------------------- */
 
 function unpersist(obj) {
   return new Dropbox(obj.folder);
@@ -131,11 +165,6 @@ function type() {
   return "dropbox";
 }
 
-function createAt( folder ) {
-  return login().then( function() {
-    return new Dropbox(folder);
-  });
-}
 
 var Dropbox = (function() {
 

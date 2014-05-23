@@ -522,6 +522,12 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return (cap ? cap[1] : null);
   }
 
+  function setCookie( name, value, maxAge ) {
+    var date = new Date( Date.now() + maxAge * 1000 );
+    document.cookie = name + "=" + encodeURIComponent(value) + ";path=/;secure;expires=" + date.toGMTString();
+  }
+
+
   function getScrollTop( elem ) {
     if (!elem) return 0;
     if (elem.contentWindow) {
@@ -1084,6 +1090,31 @@ doc.close();
 doc.execCommand("SaveAs", null, filename)
 */
 
+  function openAuthPopup(url, width, height ) {
+    if (!width) width = 525;
+    if (!height) height = 525; 
+    var left  = (window.screenX || window.screenLeft) + ((window.outerWidth - width) / 2);
+    var top   = (window.screenY || window.screenTop) + (((window.outerHeight - height) / 2) - 30);
+
+    var features = [
+      "width=" + width.toFixed(0),
+      "height=" + height.toFixed(0),
+      "top=" + top.toFixed(0),
+      "left=" + left.toFixed(0),
+      "status=no",
+      "resizable=yes",
+      "toolbar=no",
+      "menubar=no",
+      "scrollbars=yes"];
+
+    var popup = window.open(url, "oauth", features.join(","));
+    if (popup) {
+      popup.focus();
+    }
+
+    return popup;
+  }
+
    
   
   return {
@@ -1120,6 +1151,7 @@ doc.execCommand("SaveAs", null, filename)
     encodeBase64: encodeBase64,
     dateFromISO: dateFromISO,
     getCookie: getCookie,
+    setCookie: setCookie,
     
     hasClassName: hasClassName,
     toggleClassName: toggleClassName,
@@ -1140,6 +1172,7 @@ doc.execCommand("SaveAs", null, filename)
     requestGET: requestGET,
     downloadFile: downloadFile,
     downloadText: downloadText,
+    openAuthPopup: openAuthPopup,
 
     Map: Map,
     unpersistMap: unpersistMap,

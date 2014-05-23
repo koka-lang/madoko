@@ -590,11 +590,20 @@ var dropboxCallbackPage =
 ['<html>',
 '<head>',
 '  <title>Madoko Dropbox Callback</title>',
-'  <script src="../scripts/auth-dropbox.js" type="text/javascript"></script>',
+'  <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>',
+'  <style>',
+'    body {',
+'      text-align: center;',
+'      font-family: "Segoe UI", sans-serif;',
+'      font-size: large',
+'    }',
+'  </style>',
 '</head>',
 '<body>',
-'  Dropbox callback',
+' <p>You successfully logged into Dropbox!</p>',
+' <div id="choose-container"></div>',
 '</body>',
+'<script src="../scripts/auth-dropbox.js" type="text/javascript"></script>',
 '</html>'
 ].join("\n");
 

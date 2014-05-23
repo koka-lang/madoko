@@ -18,7 +18,6 @@ var onedriveOptions = {
 
 var onedriveDomain = "https://apis.live.net/v5.0/";
 
-
 /* Helpers */
 
 function makeError( obj, premsg ) {
@@ -158,19 +157,26 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  return makePromise(WL.init(onedriveOptions)).then( function() {
-    return makePromise(WL.login()).then( function() {
-      var session = WL.getSession();
-      if (session) _access_token = session.access_token;
-      WL.Event.subscribe("auth.sessionChange", function(ev) {
-        var xsession = WL.getSession();
-        if (xsession) _access_token = xsession.access_token;
-      });
-      WL.Event.subscribe("auth.logout", function(ev) {
-        _access_token = null;
-      });
-      return;
+  try {
+    WL.init(onedriveOptions); // ignore the promise.. or we trigger popup blockers
+    if (console && console.log) {
+      // fix these or the live.js script will call the wrong entries
+      if (!console.error) console.error = console.log;
+      if (!console.warn) console.warn = console.log;
+    }
+  }
+  catch(exn) {}
+  return makePromise(WL.login()).then( function() {
+    var session = WL.getSession();
+    if (session) _access_token = session.access_token;
+    WL.Event.subscribe("auth.sessionChange", function(ev) {
+      var xsession = WL.getSession();
+      if (xsession) _access_token = xsession.access_token;
     });
+    WL.Event.subscribe("auth.logout", function(ev) {
+      _access_token = null;
+    });
+    return;
   });
 }
 
