@@ -753,7 +753,7 @@ app.get("/remote/http", function(req,res) {
 
 var staticClient      = express.static( combine(__dirname, "client"));
 var staticMaintenance = express.static( combine(__dirname, "maintenance"));
-var staticDirs = /\/(images(\/dark)?|scripts|styles(\/lang)?|lib(\/vs(\/.*)?)?|preview)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out))?|lib(\/vs(\/.*)?)?|preview(\/out)?)?$/;
 
 app.use('/', function(req,res,next) {
   var dir = path.dirname(req.path);
