@@ -195,13 +195,14 @@ var UI = (function() {
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
     self.saveFolder = document.getElementById("save-folder");
+    self.theme = "vs";
 
     // start editor
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
       mode: "text/madoko",
-      theme: "vs",
+      theme: self.theme,
       roundedSelection: false,
       lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       //mode: madokoMode.mode,
@@ -540,10 +541,12 @@ var UI = (function() {
     }
 
     document.getElementById("theme-ivory").onclick = function(ev) {
-      self.editor.updateOptions( { theme: "vs" } );
+      self.theme = "vs";
+      self.editor.updateOptions( { theme: self.theme } );
     }
     document.getElementById("theme-midnight").onclick = function(ev) {
-      self.editor.updateOptions( { theme: "vs-dark" } );
+      self.theme = "vs-dark";
+      self.editor.updateOptions( { theme: self.theme } );
     }
   }
 
@@ -846,10 +849,12 @@ var UI = (function() {
     var self = this;
     self.flush();
     var pos  = self.editor.getPosition();    
+    var theme = self.editor.getConfiguration().theme;
     var json = { 
       docName: self.docName, 
       editName: self.editName, 
       pos: pos, 
+      theme: theme,
       storage: self.storage.persist(minimal),
       showLineNumbers: self.checkLineNumbers.checked,
       wrapLines: self.checkWrapLines.checked,
@@ -947,6 +952,7 @@ var UI = (function() {
             });
             var options = {
               readOnly: !storage.isEditable(file),
+              theme: self.theme,
               //mode: file.mime,
               //mode: mode, // don't set the mode here or Monaco runs out-of-stack
               lineNumbers: self.checkLineNumbers.checked,
@@ -981,6 +987,7 @@ var UI = (function() {
       self.checkWrapLines.checked = json.wrapLines;
       self.checkDelayedUpdate.checked = json.delayedUpdate;
       self.checkAutoSync.checked = json.autoSync;
+      self.theme = json.theme || "vs";
       var stg = storage.unpersistStorage(json.storage);      
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
