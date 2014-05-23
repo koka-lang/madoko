@@ -314,8 +314,7 @@ div.boxed {
 
 #sync-spinner {
   float: right;
-  height:0.8em;
-  margin-top: 0.3em;
+  margin-top: 0.2em;  
 }
 
 #save-folder {
@@ -432,12 +431,15 @@ div.boxed {
 
 /* Generic Spinner */
 
-.spinner {
+.spinner, .gspinner {
   visibility: hidden;
 }
 
-.spinner.spin {
+.spinner.spin, .gspinner.spin {
   visibility: visible;
+}
+
+.spinner.spin {
   -webkit-animation: spinner-rotate 2s infinite linear;
   animation: spinner-rotate 2s infinite linear;
 }
