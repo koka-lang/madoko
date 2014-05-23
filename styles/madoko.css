@@ -336,8 +336,6 @@ div.input-mathpre {
   background: #EEE;
 }
 
-
-
 .highlighted .token.identifier      { }
 .highlighted .token.operators       { }
 .highlighted .token.keyword         { color: blue }
@@ -361,7 +359,8 @@ div.input-mathpre {
 .highlighted .token.type            { color: teal } 
 .highlighted .token.type.delimiter  { color: teal; } 
 .highlighted .token.predefined      { color: navy }
-.highlighted .token.invalid         { color: border-bottom: red dotted 1px }
+.highlighted .token.invalid         { border-bottom: red dotted 1px }
+.highlighted .token.code            { color: maroon }
 
 .highlighted .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
 .highlighted .token.number      {  }    /* .[hex,octal,binary,float] */

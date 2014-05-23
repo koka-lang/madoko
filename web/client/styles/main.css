@@ -407,7 +407,7 @@ div.boxed {
 /* Monaco token classes */
 
 .monaco-editor .token.code {
-  background-color: Gainsboro;
+  color: purple;
 }
 .monaco-editor .token.code.keyword {
   color: navy;
@@ -419,6 +419,18 @@ div.boxed {
   color: gray;
 }
 
+.monaco-editor.vs-dark .token.code {
+  color: #897;
+}
+.monaco-editor.vs-dark .token.code.keyword {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .token.metadata {
+  color: #BD5050;
+}
+.monaco-editor.vs-dark .token.string.escape {
+  color: #CE9178;
+}
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
 }

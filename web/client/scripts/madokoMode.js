@@ -149,7 +149,7 @@ var madokoMode = {
           [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, 'strong'],
           [/\b_[^_]+_\b/, 'emphasis'],
           [/\*([^\\*]|@escapes)+\*/, 'emphasis'],
-          [/`([^`])+`/, 'namespace.code'],
+          [/(`)((?:[^`])+)(`)/, ['','namespace.code',''] ],
           [/(\$)((?:[^\\$]|\\.)+)(\$)/, ['','namespace.code.latex',''] ],
           [/<<|>>/, ''],
           
