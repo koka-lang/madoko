@@ -49,7 +49,10 @@ function makePromise( call, premsg ) {
 }
 
 
-/* Id's, paths, and sub-directories are quite a hassle :-( */
+/* ----------------------------------------------
+   Id's, paths, and sub-directories are quite a hassle :-(
+---------------------------------------------- */
+
 
 function onedriveGet( path ) {
   return Util.requestGET( onedriveDomain + path, { access_token: getAccessToken() } );
@@ -146,17 +149,33 @@ function ensurePath( path ) {
   });
 }
 
+/* Write a file */
 
-/* Login */
+function _writeFileAt( folderId, name, content ) {
+  var url = onedriveDomain + folderId.toString() + "/files/" + name;                  
+  return Util.requestPUT( {url:url, contentType:";" }, { access_token: getAccessToken() }, content );
+}
+
+function writeFile( folderId, path, content ) {
+  return ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
+    return _writeFileAt( info.id, Util.basename(path), content );
+  }).then( function(resp) {
+    return infoFromId( resp.id );
+  });
+}
+
+
+/* ----------------------------------------------
+  login
+---------------------------------------------- */
 
 var _access_token = null;
 function getAccessToken() {
   return _access_token;
 }
 
-function login(dontForce) {
-  if (getAccessToken()) return Promise.resolved();
-  if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
+function init() {
+  if (getAccessToken()) return true;
   try {
     WL.init(onedriveOptions); // ignore the promise.. or we trigger popup blockers
     if (console && console.log) {
@@ -164,11 +183,6 @@ function login(dontForce) {
       if (!console.error) console.error = console.log;
       if (!console.warn) console.warn = console.log;
     }
-  }
-  catch(exn) {}
-  return makePromise(WL.login()).then( function() {
-    var session = WL.getSession();
-    if (session) _access_token = session.access_token;
     WL.Event.subscribe("auth.sessionChange", function(ev) {
       var xsession = WL.getSession();
       if (xsession) _access_token = xsession.access_token;
@@ -176,6 +190,20 @@ function login(dontForce) {
     WL.Event.subscribe("auth.logout", function(ev) {
       _access_token = null;
     });
+    return true;
+  }
+  catch(exn) {
+    return false;
+  }
+}
+
+function login(dontForce) {
+  if (getAccessToken()) return Promise.resolved();
+  if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
+  init();
+  return makePromise(WL.login()).then( function() {
+    var session = WL.getSession();
+    if (session) _access_token = session.access_token;
     return;
   });
 }
@@ -184,7 +212,6 @@ function logout() {
   WL.logout();
 }
 
-/* Open a file */
 
 function chooseFile() {
   return makePromise( WL.fileDialog( {
@@ -200,15 +227,27 @@ function chooseFile() {
   });
 }     
 
+/* ----------------------------------------------
+  Main entry points
+---------------------------------------------- */
+
 function openFile() {
-  return login().then( function() {
-    return chooseFile();
-  }).then( function(info) {
+  init();  // chooseFile will also login if necessary
+  return chooseFile().then( function(info) {
     return pathFromId( info.parent_id ).then( function(path) {
       return { remote: new Onedrive(info.parent_id, path), docName: Util.basename(info.name) };
     });
   });
 }
+
+function createAt( folder ) {
+  return login().then( function() {
+    return ensurePath(folder);
+  }).then( function(info) {
+    return new Onedrive(info.id,folder);
+  });
+}
+
 
 function openFolder() {
   return makePromise( WL.fileDialog( {
@@ -226,23 +265,10 @@ function openFolder() {
   });
 }     
 
-/* Write a file */
 
-function _writeFileAt( folderId, name, content ) {
-  var url = onedriveDomain + folderId.toString() + "/files/" + name;                  
-  return Util.requestPUT( {url:url, contentType:";" }, { access_token: getAccessToken() }, content );
-}
-
-function writeFile( folderId, path, content ) {
-  return ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
-    return _writeFileAt( info.id, Util.basename(path), content );
-  }).then( function(resp) {
-    return infoFromId( resp.id );
-  });
-}
-
-
-/* Onedrive interface */
+/* ----------------------------------------------
+  Remote interface
+---------------------------------------------- */
 
 function unpersist( obj ) {
   return new Onedrive(obj.folderId, obj.folder || "");
@@ -250,14 +276,6 @@ function unpersist( obj ) {
 
 function type() {
   return "Onedrive";
-}
-
-function createAt( folder ) {
-  return login().then( function() {
-    return ensurePath(folder);
-  }).then( function(info) {
-    return new Onedrive(info.id,folder);
-  });
 }
 
 var Onedrive = (function() {
