@@ -171,11 +171,15 @@ function writeFile( folderId, path, content ) {
 
 var _access_token = null;
 function getAccessToken() {
+  if (!_access_token && WL) {
+    var session = WL.getSession();
+    if (session) _access_token = session.access_token;
+  }
   return _access_token;
 }
 
 function init() {
-  if (getAccessToken()) return true;
+  if (_access_token) return true;
   try {
     WL.init(onedriveOptions); // ignore the promise.. or we trigger popup blockers
     if (console && console.log) {
