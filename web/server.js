@@ -21,7 +21,7 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = /^((131\.107\.).*|127.0.0.1)$/;
+var allowedIps = /^((131\.107\.)\d+|127\.0\.0\.1|64\.187\.160\.\d+)$/;
 var blockedIps = null;
 
 // -------------------------------------------------------------
