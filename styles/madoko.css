@@ -373,7 +373,7 @@ div.input-mathpre {
 ----------------------------------------------------*/
 body.madoko, .madoko-body {
   padding: 1em 16% 1em 12%;
-  font-family: Cambria,Utopia,"Hoefler Text","Liberation Serif","Times New Roman",serif;
+  font-family: Cambria,"Times New Roman","Liberation Serif","Times",serif;
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
 }
 
@@ -402,10 +402,10 @@ body.madoko.preview {
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
 .madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
-  font-size: 0.85em;
+  font-size: 0.80em;
 }
 .madoko pre code {
-  font-size: 0.95em;
+  font-size: 0.90em;
 }
 
 /* Code prettify */
