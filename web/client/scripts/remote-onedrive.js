@@ -176,8 +176,7 @@ function getAccessToken() {
 
 function init() {
   if (getAccessToken()) return true;
-  try {
-    WL.init(onedriveOptions); // ignore the promise.. or we trigger popup blockers
+  return makePromise(WL.init(onedriveOptions)).then( function() { // ignore the promise.. or we trigger popup blockers
     if (console && console.log) {
       // fix these or the live.js script will call the wrong entries
       if (!console.error) console.error = console.log;
@@ -191,16 +190,13 @@ function init() {
       _access_token = null;
     });
     return true;
-  }
-  catch(exn) {
-    return false;
-  }
+  });
 }
 
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  init();
+  //init();
   return makePromise(WL.login()).then( function() {
     var session = WL.getSession();
     if (session) _access_token = session.access_token;
@@ -232,7 +228,7 @@ function chooseFile() {
 ---------------------------------------------- */
 
 function openFile() {
-  init();  // chooseFile will also login if necessary
+  //init();  // chooseFile will also login if necessary
   return chooseFile().then( function(info) {
     return pathFromId( info.parent_id ).then( function(path) {
       return { remote: new Onedrive(info.parent_id, path), docName: Util.basename(info.name) };
@@ -367,6 +363,7 @@ return {
   unpersist : unpersist,
   type      : type,
   Onedrive  : Onedrive,
+  init      : init,
 }
 
 });

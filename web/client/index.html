@@ -350,13 +350,16 @@ require.config({
 if (goodToGo) {
   require([ "../scripts/util",
             "../scripts/runner",
+            "../scripts/remote-onedrive",
             "vs/editor/editor.main"],
-            function(Util,Runner) 
+            function(Util,Runner,Onedrive) 
   { 
     require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
-      var runner = new Runner();
-      var ui     = new UI(runner);
-      Util.message("ready", Util.Msg.Status );
+      Onedrive.init().then( function() {
+        var runner = new Runner();
+        var ui     = new UI(runner);
+        Util.message("ready", Util.Msg.Status );
+      });
     });
   }); 
 }
