@@ -544,6 +544,33 @@ var UI = (function() {
       self.theme = "vs-dark";
       self.editor.updateOptions( { theme: self.theme } );
     }
+
+    // emulate hovering by clicks for touch devices
+    self.hovering = null;
+    document.body.onclick = function(ev) {
+      if (self.hovering) {
+        util.removeClassName(self.hovering,"hover");
+        self.hovering = null;
+      }
+    }
+    var hoverElems = document.getElementsByClassName("popup");
+    for(var i = 0; i < hoverElems.length; i++) {
+      var elem = hoverElems[i];
+      elem.onclick = function(ev) {
+        ev.cancelBubble = true;                 
+        if (self.hovering) {
+          util.removeClassName(self.hovering, "hover");
+        }
+        if (self.hovering !== ev.currentTarget ||
+            (ev.currentTarget != ev.target && ev.currentTarget != ev.target.parentNode)) {          
+          self.hovering = ev.currentTarget;
+          util.addClassName(self.hovering,"hover");
+        }
+        else {
+          self.hovering = null;
+        }
+      }
+    }
   }
 
   UI.prototype.setEditText = function( text, mode ) {

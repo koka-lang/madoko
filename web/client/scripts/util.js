@@ -1115,8 +1115,6 @@ doc.execCommand("SaveAs", null, filename)
     return popup;
   }
 
-   
-  
   return {
     properties: properties,
     extend: extend,

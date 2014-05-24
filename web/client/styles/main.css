@@ -491,7 +491,8 @@ div.boxed {
   padding: 0.5ex;
 }
 
-.popup:hover > div {
+.popup:hover > div,
+.popup.hover > div {
   display: block;
 }
 
