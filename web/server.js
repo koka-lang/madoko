@@ -21,7 +21,7 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = /^((131\.107\.)\d+|127\.0\.0\.1|64\.187\.160\.\d+)$/;
+var allowedIps = /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+)$/;
 var blockedIps = null;
 
 // -------------------------------------------------------------
@@ -189,7 +189,7 @@ var limits = {
   requestNewUser   : 5,
   maxProcesses: 10, 
   hashLength  : 16,  
-  fileSize    : 5*mb,         
+  fileSize    : 8*mb,         
   cookieAge   : 24 * hour,  // 1 day for now
   timeoutPDF  : minute,
   timeoutMath : 45*second,
