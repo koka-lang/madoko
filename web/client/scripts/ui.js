@@ -553,6 +553,14 @@ var UI = (function() {
         self.hovering = null;
       }
     }
+    
+    function isDivParent(parent,elem) {
+      while( elem && elem !== parent && elem.nodeName !== "DIV") {
+        elem = elem.parentNode;
+      }
+      return (elem === parent);
+    }
+
     var hoverElems = document.getElementsByClassName("popup");
     for(var i = 0; i < hoverElems.length; i++) {
       var elem = hoverElems[i];
@@ -561,8 +569,10 @@ var UI = (function() {
         if (self.hovering) {
           util.removeClassName(self.hovering, "hover");
         }
-        if (self.hovering !== ev.currentTarget ||
-            (ev.currentTarget != ev.target && ev.currentTarget != ev.target.parentNode)) {          
+        var thisElem = isDivParent(ev.currentTarget,ev.target);
+        if ((self.hovering && self.hovering !== ev.currentTarget) ||
+            (self.hovering && !thisElem) ||
+            (!self.hovering && thisElem)) {          
           self.hovering = ev.currentTarget;
           util.addClassName(self.hovering,"hover");
         }
