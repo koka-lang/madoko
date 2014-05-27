@@ -268,6 +268,9 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
   match(texerr.find(rxLatexLineNum)) {
     Nothing -> Nothing
     Just(cap) -> {
+      lineNo = cap.groups[1].parseInt.maybe(0,id)
+      findLatexLineData(0, texSrc.lines.list.take(lineNo-1).reverse )
+      /*
       lineStart0 = cap.groups[2]
       lineStart = if (!(lineStart0.contains(rxLatexEndSnippet))) then lineStart0
                   else { // find line before it in the TeX source
@@ -278,11 +281,37 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
                     }
                   }
       latexFindLineByMatch(lineStart,src)
+      */
     }
   }
 }
 val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
 val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
+
+function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> {
+  match(lines) {
+    Nil -> Nothing
+    Cons(line,rest) -> {
+      match(line.find(rxLineData)) {
+        Nothing -> {
+          newDelta = if (line.contains(rxEndComment)) then delta else delta+1
+          findLatexLineData( newDelta, rest )
+        }
+        Just(cap) -> {
+          last = cap.groups[1].split(";").list.reverse.take(1).join()
+          match( last.find(rxLineNo) ) {
+            Nothing -> Nothing
+            Just(cap2) -> Just(cap2.groups[1]  + (cap2.groups[2].parseInt.maybe(0,id) + delta).show)
+          }
+        }
+      }
+    }
+  }
+}
+val rxLineData    = regex( @"^(?:[^\\%]|\\.)*% *data-line=\{([^\}]*)\} *$" )
+val rxLineNo      = regex( @"^([^:]*:)?(\d+)$" )
+val rxEndComment  = regex( @"^(?:[^\\%]|\\.)*%.*$" )
+
 
 public function latexStrip( s : string ) : string
 {

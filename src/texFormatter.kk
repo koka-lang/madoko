@@ -36,6 +36,10 @@ public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, a
   else texCmd(cmd,txt,attrs)
 }
 
+public function fmtTexLineInfo( context : inlineContext, lineInfo : string ) : string {
+  "% data-line={" + lineInfo + "}\n"
+}
+
 public function fmtTexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
   //texText(htmlEscape(txt,allowEntity))
   if (allowEntity)

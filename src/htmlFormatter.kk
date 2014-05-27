@@ -30,6 +30,11 @@ public function fmtHtmlCmd(context : inlineContext, cmd : string, txt : string, 
   if (cmd=="") then txt else tag(cmd.translate(attrs,context.sanitize),txt,attrs.htmlFormat(cmd,context.sanitize))
 }
 
+public function fmtHtmlLineInfo(context : inlineContext, lineInfo : string ) : string {
+  "<span data-line=\"" + lineInfo + "\"></span>"
+}
+
+
 function translate(tagName : string, attrs : attrs, sanitize : bool ) : string  {
   if (attrs.empty || sanitize) return tagName
   if (attrs.htmlelem != "") 

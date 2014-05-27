@@ -145,6 +145,13 @@ function lineText( b :  block ) {
   }
 }
 
+function getLineInfo( attrs : attrs ) {
+  match(attrs.hasKey("data-line")) {
+    Just(info) -> "% data-line={" + info + "}\n" 
+    Nothing    -> ""    
+  }
+}
+
 /* --------------------------------------
    Output a single block element 
 ---------------------------------------- */
@@ -153,7 +160,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
 {
   match(block) {
     Para(txt,attrs) -> {
-      content = formatInline(context.inlineContext, txt)
+      content = formatInline(context.inlineContext, txt, attrs)
       if (attrs.notag)
        then context.fmtEnv("div", content, attrs) // content
       elif (content.contains(rxblank)) then "" else 
@@ -161,8 +168,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
        //"<p>" + formatInline(context.inlineContext,txt) + "</p>"
     }
 
-    Line(txt) -> {
-      formatInline(context.inlineContext, txt)
+    Line(txt,_loose,attrs) -> {
+      formatInline(context.inlineContext, txt, attrs)
     }
 
     Blank -> {
@@ -185,7 +192,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Heading(d,txt,attrs) -> { 
-      context.fmtCmd("h" + (d + context.headingBase -1).show, formatInline(context.inlineContext,txt), attrs)
+      context.fmtCmd("h" + (d + context.headingBase -1).show, formatInline(context.inlineContext,txt,attrs), attrs)
     }
 
     HLine(attrs) -> {
@@ -202,20 +209,24 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
-          context.inlineContext.fmtMath(True,txt,parentAttrs.deriveMathAttrs)
+          // context.logLineInfo(parentAttrs)
+          context.inlineContext.fmtMath(True,txt,parentAttrs.deriveMathAttrs,getLineInfo(parentAttrs))
         }
         MathPre   -> {
           // ("\\[" + txt.mathPreBlock.escapeMath(context.fmt) + "\\]")
-          context.inlineContext.fmtMath(True,txt.mathPreBlock,parentAttrs.deriveMathAttrs)
+          // context.logLineInfo(parentAttrs)
+          context.inlineContext.fmtMath(True,txt.mathPreBlock,parentAttrs.deriveMathAttrs,getLineInfo(parentAttrs))
         }
         MathDefs  -> {
+          //context.logLineInfo(parentAttrs)
+          lineInfo = getLineInfo(parentAttrs)
           mtxt = txt.escapeMath(context.fmt)
           match(context.fmt) {
-            FmtTex  -> mtxt
+            FmtTex  -> lineInfo + mtxt
             FmtHtml -> {
-              log("math-pdf","% math definitions\n" + txt + "\n")
+              log("math-pdf","% math definitions\n" + lineInfo + txt + "\n")
               if (context.inlineContext.mathStatic) {
-                log("math-dvi","% math definitions\n" + txt + "\n")
+                log("math-dvi","% math definitions\n" + lineInfo + txt + "\n")
                 ""
               }
               else {
@@ -224,7 +235,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
             }
           }
         }
-        Markdown  -> context.inlineContext.formatInline(txt)
+        Markdown  -> context.inlineContext.formatInline(txt,parentAttrs)
         Raw(monly)-> {
           if (context.inlineContext.sanitize) then ""
           else match(monly) {
@@ -346,7 +357,7 @@ function formatRows( rows : list<row>,
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1)
             
-            elem = Cell(context.inlineContext.formatInline(txt2), colstyle2)
+            elem = Cell(context.inlineContext.formatInline(txt2,colstyle2), colstyle2)
             Cons(elem, formatRow(rs,cs1, rowstyle))        
           }
           _ -> Nil

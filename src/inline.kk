@@ -12,6 +12,7 @@ module inline
 import std/dict
 import std/string
 import std/regex
+import std/log
 import common
 import hilite  // hilitemode
 
@@ -56,6 +57,7 @@ public rectype inlineContext {
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
                  xfmtCodeHilite : (context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) -> (string,maybe<hilitemode>),
+                 xfmtLineInfo : (context : inlineContext, lineInfo : string ) -> string,
                  fmt : formatter
                )                 
 }
@@ -116,6 +118,11 @@ public function fmtFootnote(context : inlineContext, id : string, fn : footnote 
   (context.xfmtFootnote)(context,id,fn)
 }
 
+public function fmtLineInfo(context : inlineContext, lineInfo : string ) : string {
+  (context.xfmtLineInfo)(context,lineInfo)
+}
+
+
 // Copy an ":inlineContext"
 public function copy( self : inlineContext,
                        grammar : grammar<string,inlineContext> = self.grammar,
@@ -142,12 +149,13 @@ public function copy( self : inlineContext,
                        xfmtEnv = self.xfmtEnv,
                        xfmtCodePlain = self.xfmtCodePlain,
                        xfmtCodeHilite = self.xfmtCodeHilite,
+                       xfmtLineInfo = self.xfmtLineInfo,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
-                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite,fmt )
+                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtLineInfo, fmt )
 }
 
 public function sanitize( context : inlineContext ) : bool {
@@ -161,18 +169,31 @@ public function sanitize( context : inlineContext ) : bool {
 
 
 // Parse _inline_ markdown elements and return formatted html
-public function formatInline( context : inlineContext, txt : string ) : string
+public function formatInline( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string
 {
-  formatInlineAcc(context,builder(), txt)
+  val (linePrefix,lineNo) = match(attrs.lookupKey("data-line","").find(rxDataLine)) {
+    Nothing   -> ("",0)
+    Just(cap) -> (cap.groups[1],cap.groups[2].parseInt().maybe(0,id))
+  } 
+  formatInlineAcc(context,builder(), txt, lineNo, linePrefix )
 }
+val rxDataLine = regex( @"^(.*:)?(\d+)$")
 
 
-
-function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : string ) : st<h> string
+function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : string, 
+                          lineNo : int, linePrefix : string ) : st<h> string
 {
   if (txt=="") return acc.string
   val (s,next,_) = matchRules(context.grammar,context,txt,id)
-  formatInlineAcc(context, acc.append(s), txt.substr1(next))  
+  newLineNo = if (lineNo <= 0) then 0 else lineNo + txt.substr(0,next).count("\n")
+  location  = linePrefix + ":" + lineNo.show
+  lineInfo  = if (lineNo <= 0) then "" else context.fmtLineInfo( location )
+  if (lineNo > 0) {
+    texLineInfo = "% data-line={" + location + "}"
+    log("math-dvi", texLineInfo)
+    log("math-pdf", texLineInfo)
+  }
+  formatInlineAcc(context, acc.append(lineInfo).append(s), txt.substr1(next), newLineNo, linePrefix )  
 }
 
 

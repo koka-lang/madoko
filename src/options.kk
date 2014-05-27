@@ -103,7 +103,8 @@ public struct options(
   mathdim       : dict<mathinfo> = dict(),  // static math dimension information
   embedinfos    : dict<embedinfo> = dict(),   // embed data, used in a browser
   embedLimit    : int = 0,                    // limit for embedding data
-  lineNo        : int = 0,                  // emit line no's. used in a browser. 
+  lineNo        : int = 1,                  // emit line no's. Use 0 to suppress.
+  lineNoWeb     : bool = False,             // emit line no info in html pages. 
   copyStyles    : bool = True,              // copy standard style files
   lineMap       : lineMap = End             // keep track of line numbers in include files      
 );

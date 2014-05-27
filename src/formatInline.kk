@@ -122,6 +122,7 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlEnv,fmtTexEnv),
                  fmt.pick(fmtHtmlCodePlain,fmtTexCodePlain),
                  fmt.pick(fmtHtmlCodeHilite,fmtTexCodeHilite),
+                 fmt.pick(fmtHtmlLineInfo, fmtTexLineInfo),
                  fmt 
                )
 }
@@ -165,7 +166,7 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
   context.fmtMath(True,cap.groups[1],attrsd)
 }
 
-public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone ) : string {
+public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone, lineInfo : string = "" ) : string {
   val (kind,left,right) = 
     if (attrs.hasClass("snippet")) 
      then (if (isDisplay) then "Display" else "Inline","","")
@@ -178,8 +179,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   attrsd = context.applyDefaults("span",attrs.addClass(class))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   texcmd = if (kind=="Inline")
-            then context.fmtTexCmd("span", left+txt+right, attrsd)
-            else context.fmtTexEnv("div",  left+txt+right, attrsd)
+            then context.fmtTexCmd("span", left+lineInfo+txt+right, attrsd)
+            else context.fmtTexEnv("div",  left+lineInfo+txt+right, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {
