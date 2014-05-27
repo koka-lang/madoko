@@ -405,6 +405,15 @@ div.boxed {
 }
 
 /* Monaco token classes */
+.latex-error-line {
+  background-color: lightblue;
+}
+
+.latex-error {
+  background-color: red;
+  width: 5px !important;
+  left: 2px;
+}
 
 .monaco-editor .token.code {
   color: purple;

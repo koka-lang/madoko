@@ -224,7 +224,7 @@ var Runner = (function() {
     var t0 = Date.now();
     return util.requestPOST( "/rest/run", {}, params).then( function(data) {
       var time = (Date.now() - t0).toString() + "ms";
-      util.message(data.stdout + data.stderr, util.Msg.Tool);
+      util.message(data.stdout + data.stderr, util.Msg.Tool);      
       data.files.forEach( function(file) {
         util.message("server sent: " + file.path, util.Msg.Trace );
         if (self.storage) {
@@ -233,11 +233,36 @@ var Runner = (function() {
             mime: file.mime,
           });
         }        
-      })
+      });
+      if (ctx.showErrors) self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors);
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
       return ctx;
     });
   }  
+
+  Runner.prototype.showLatexMessages = function( output, show ) {
+    var self = this;
+    var errors = [];
+    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-;:\\\/]*).*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
+    var cap;
+    while ((cap = rx.exec(output)) != null) {
+      var location = cap[1];
+      var message  = cap[2];
+      var i = location.lastIndexOf(";");
+      if (i >= 0) location = location.substr(i+1);
+      var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
+      var line = parseInt(capl[2]);
+      var range = {
+        startLineNumber: line,
+        endLineNumber: line,
+        startColumn: 1,
+        endColumn: 1,
+        fileName: capl[1] || "",
+      };
+      errors.push( { type: "error", range: range, message: message } );  
+    }
+    show(errors);
+  }
 
   return Runner;
 })();

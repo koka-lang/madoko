@@ -6,9 +6,9 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
+define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
         "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
-        function(merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
+        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
 
 /*
 
@@ -210,6 +210,7 @@ var UI = (function() {
       insertSpaces: true,
       //wrappingColumn: -1,
       automaticLayout: true,
+      //glyphMargin: true,
       scrollbar: {
         vertical: "auto",
         horizontal: "auto",
@@ -254,6 +255,7 @@ var UI = (function() {
       self.anonEvent( function() { self.onFormatPara(ev); } );
     });
 
+    self.decorations = new Map();
     self.dropFiles = null;
     self.editor.addListener("mousemove", function(ev) {
       self.anonEvent( function() {
@@ -264,6 +266,9 @@ var UI = (function() {
           pos.column = 1;
           pos.lineNumber++;
           self.insertFiles(files,pos);
+        }
+        else if (ev.target.type === 4) {  // line-decorations
+          ev.target.element.title = self.getDecorationMessage(self.docName,ev.target.position.lineNumber);
         }
       });
     });
@@ -852,7 +857,12 @@ var UI = (function() {
       function() { return false; },
       function(round) {
         self.lastMathDoc = self.docText;
-        return self.runner.runMadokoServer(self.docText, {docname: self.docName, round:round}).then( 
+        var ctx = {
+          docname: self.docName, 
+          round:round,
+          showErrors: function(errs) { self.showErrors(errs); },
+        };
+        return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
             self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
@@ -976,6 +986,7 @@ var UI = (function() {
     self.state = State.Loading;            
     if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
+            self.removeDecorations();
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
@@ -1003,6 +1014,7 @@ var UI = (function() {
         self.editor.setPosition(pos, true, true );
         //self.editor.revealPosition( pos, true, true );
       }
+      self.showDecorations();
     }).always( function() { 
       self.state = State.Normal; 
     });    
@@ -1156,7 +1168,13 @@ var UI = (function() {
 
   UI.prototype.generatePdf = function() {
     var self = this;
-    var ctx = { round: 0, docname: self.docName, pdf: true, includeImages: true };
+    var ctx = { 
+      round: 0, 
+      docname: self.docName, 
+      pdf: true, 
+      includeImages: true,
+      showErrors: function(errs) { self.showErrors(errs); } 
+    };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
         var name = "out/" + util.changeExt(self.docName,".pdf");
@@ -1164,6 +1182,7 @@ var UI = (function() {
       })
     );
   }
+
 
   UI.prototype.generateHtml = function() {
     var self = this;
@@ -1354,6 +1373,66 @@ var UI = (function() {
       else 
         reader.readAsText(f);
     }
+  }
+
+  UI.prototype.removeDecorations = function() {
+    var self = this;
+    self.editor.changeDecorations(function(changeAccessor) {
+      self.decorations.forEach( function(fname,decorations) {
+        if (fname === self.editName) {
+          decorations.forEach( function(decoration) {
+            if (decoration.id) {
+              changeAccessor.removeDecoration(decoration.id);
+            }
+          });
+        }
+      });
+    });    
+    self.decorations = new Map();    
+  }
+
+  UI.prototype.showDecorations = function() {
+    var self = this;
+    self.editor.changeDecorations( function(changeAccessor) {
+      self.decorations.forEach( function(fname,decorations) {
+        if (fname === self.editName) {
+          decorations.forEach( function(decoration) {
+            decoration.id = changeAccessor.addDecoration( decoration.range, 
+              { isWholeLine: true,
+                //glyphMarginClassName: 'glyph-error'
+                linesDecorationsClassName: 'latex-error'
+              }
+            );            
+          });
+        }
+      });
+    });
+  }
+
+  UI.prototype.showErrors = function( errors ) {
+    var self = this;
+    self.removeDecorations();
+
+    errors.forEach( function(error) {
+      var decs = self.decorations.getOrCreate(error.range.fileName || self.editName, []);
+      decs.push( { id: null, message: error.message, range: error.range });
+    });
+
+    self.showDecorations();
+  }
+
+  UI.prototype.getDecorationMessage = function( fileName, lineNo ) {
+    var self = this;
+    if (!fileName) fileName = self.docName;
+    var decs = self.decorations.get(fileName);
+    if (decs) {
+      for (var i = 0; i < decs.length; i++) {
+        if (decs[i].range.startLineNumber <= lineNo && decs[i].range.endLineNumber >= lineNo) {
+          return decs[i].message;
+        }
+      }
+    }
+    return "";
   }
 
   
