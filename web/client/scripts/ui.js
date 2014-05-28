@@ -255,6 +255,13 @@ var UI = (function() {
       self.anonEvent( function() { self.onFormatPara(ev); } );
     });
 
+    self.keybinding = self.editor.getHandlerService().bind({
+      key: 'Ctrl-S'
+    }, function(ev) { 
+      ev.browserEvent.preventDefault();
+      self.synchronize();
+    });
+
     self.decorations = new Map();
     self.dropFiles = null;
     self.editor.addListener("mousemove", function(ev) {

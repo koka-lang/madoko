@@ -45,12 +45,12 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.pushFile = function( fpath, content ) {
-    return Promise.rejected( new Error("not connected: cannot store files") );
+    return Promise.rejected( new Error("not connected to cloud storage: cannot store files") );
   }
 
   NullRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return Promise.rejected( new Error("not connected to storage: unable to read: " + fpath) );
+    return Promise.rejected( new Error("not connected to cloud storage: unable to read: " + fpath) );
   }
 
   NullRemote.prototype.getRemoteTime = function( fpath ) {
