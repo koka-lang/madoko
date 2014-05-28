@@ -29,12 +29,16 @@
     "null",
     "=",":"
   ],
+  
+  "extraKeywords": [],
 
   "typeKeywords": [
     "bool", "byte", "char", "decimal", "double", "fixed", "float", 
     "int", "long","object","sbyte","short","string","uint","ulong",
     "ushort","void"
   ],
+  
+  "extraTypeKeywords": [],
   
   "keywordInType": [
     "struct","new","where","class"
@@ -54,6 +58,8 @@
     "+", "-", "*", "/", "%", "!", "~", "++", "--","+=", 
     "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=", ">>", "=>"
   ],
+  
+  "extraOperators": [],
 
   "symbols":  "[=><!~?:&|+\\-*\\/\\^%]+",
   
@@ -81,7 +87,9 @@
       ["[a-zA-Z_]\\w*", { "cases": {"@typeFollows": { "token": "keyword", "next": "@type" },
                                  "@namespaceFollows": { "token": "keyword", "next": "@namespace" }, 
                                  "@typeKeywords": { "token": "type.identifier", "next": "@qualified" },
+                                 "@extraTypeKeywords": { "token": "type.identifier", "next": "@qualified" },
                                  "@keywords": { "token": "keyword", "next": "@qualified" },
+                                 "@extraKeywords": { "token": "keyword", "next": "@qualified" },
                                  "@default": { "token": "identifier", "next": "@qualified" } } }],
       
       
@@ -91,6 +99,7 @@
       ["[{}()\\[\\]]", "@brackets"],
       ["[<>](?!@symbols)", "@brackets"],
       ["@symbols", { "cases": { "@operators": "operator", 
+                              "@extraOperators": "operator", 
                               "@default"  : "" } } ],
 
       
