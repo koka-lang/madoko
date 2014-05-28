@@ -225,5 +225,5 @@ public function mathPre( txt : string ) : string
 public function mathPreBlock( txt : string) : string
 {
   pre = mathPre(txt)
-  "\\begin{mdMathprearray}\n" + pre + "\n\\end{mdMathprearray}"     
+  "\\begin{mdMathprearray}%\n" + pre + "\n\\end{mdMathprearray}"     
 }
