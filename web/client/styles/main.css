@@ -405,11 +405,15 @@ div.boxed {
 }
 
 /* Monaco token classes */
-.latex-error-line {
+.xlatex-error-line {
   background-color: lightblue;
 }
 
-.latex-error {
+.monaco-editor .glyph-error.outdated {
+  background-color: orange !important;
+}
+
+.xlatex-error {
   background-color: red;
   width: 5px !important;
   left: 2px;

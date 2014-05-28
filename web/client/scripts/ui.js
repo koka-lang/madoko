@@ -210,7 +210,7 @@ var UI = (function() {
       insertSpaces: true,
       //wrappingColumn: -1,
       automaticLayout: true,
-      //glyphMargin: true,
+      glyphMargin: true,
       scrollbar: {
         vertical: "auto",
         horizontal: "auto",
@@ -267,8 +267,11 @@ var UI = (function() {
           pos.lineNumber++;
           self.insertFiles(files,pos);
         }
-        else if (ev.target.type === 4) {  // line-decorations
-          ev.target.element.title = self.getDecorationMessage(self.docName,ev.target.position.lineNumber);
+        else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
+                 && ev.target.position && ev.target.element) 
+        {
+          var msg = self.getDecorationMessage(self.docName,ev.target.position.lineNumber);
+          ev.target.element.title = msg;
         }
       });
     });
@@ -814,6 +817,7 @@ var UI = (function() {
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
                 util.message("ready", util.Msg.Status);
+                self.removeDecorations(false);
               }
               
               /*
@@ -860,7 +864,7 @@ var UI = (function() {
         var ctx = {
           docname: self.docName, 
           round:round,
-          showErrors: function(errs) { self.showErrors(errs); },
+          showErrors: function(errs) { self.showErrors(errs,false); },
         };
         return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
@@ -986,7 +990,7 @@ var UI = (function() {
     self.state = State.Loading;            
     if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
-            self.removeDecorations();
+            self.hideDecorations();
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
@@ -1173,7 +1177,7 @@ var UI = (function() {
       docname: self.docName, 
       pdf: true, 
       includeImages: true,
-      showErrors: function(errs) { self.showErrors(errs); } 
+      showErrors: function(errs) { self.showErrors(errs,true); } 
     };
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function() {
@@ -1375,20 +1379,47 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.removeDecorations = function() {
+  UI.prototype.removeDecorations = function(discardSticky) {
     var self = this;
     self.editor.changeDecorations(function(changeAccessor) {
+      self.decorations.forEach( function(fname,decorations) {
+        var newdecs = [];
+        decorations.forEach( function(decoration) {
+          if (decoration.id) {
+            decoration.outdated = true;
+            if (discardSticky || !decoration.sticky) {
+              changeAccessor.removeDecoration(decoration.id);
+              decoration.id = null;
+            }
+            else {
+              newdecs.push(decoration);
+              decoration.id = changeAccessor.changeDecorationOptions(decoration.id,{
+                isWholeLine: true,
+                glyphMarginClassName: 'glyph-error.outdated',
+                linesDecorationsClassName: 'latex-error.outdated',
+              });
+            }
+          }
+        });
+        if (newdecs.length > 0) self.decorations.set(fname, newdecs);
+                           else self.decorations.remove(fname);
+      });
+    });    
+  }
+
+  UI.prototype.hideDecorations = function() {
+    var self = this;
+    self.editor.changeDecorations( function(changeAccessor) {
       self.decorations.forEach( function(fname,decorations) {
         if (fname === self.editName) {
           decorations.forEach( function(decoration) {
             if (decoration.id) {
-              changeAccessor.removeDecoration(decoration.id);
+              changeAccessor.removeDecoration( decoration.id );
             }
           });
         }
       });
-    });    
-    self.decorations = new Map();    
+    });
   }
 
   UI.prototype.showDecorations = function() {
@@ -1397,10 +1428,11 @@ var UI = (function() {
       self.decorations.forEach( function(fname,decorations) {
         if (fname === self.editName) {
           decorations.forEach( function(decoration) {
+            var postfix = (decoration.outdated ? ".outdated" : "" );
             decoration.id = changeAccessor.addDecoration( decoration.range, 
               { isWholeLine: true,
-                //glyphMarginClassName: 'glyph-error'
-                linesDecorationsClassName: 'latex-error'
+                glyphMarginClassName: 'glyph-error' + postfix,
+                linesDecorationsClassName: 'latex-error' + postfix
               }
             );            
           });
@@ -1409,13 +1441,13 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.showErrors = function( errors ) {
+  UI.prototype.showErrors = function( errors, sticky ) {
     var self = this;
-    self.removeDecorations();
-
+    self.removeDecorations(true);
+    //self.decorations = new Map();    
     errors.forEach( function(error) {
       var decs = self.decorations.getOrCreate(error.range.fileName || self.editName, []);
-      decs.push( { id: null, message: error.message, range: error.range });
+      decs.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
     });
 
     self.showDecorations();
