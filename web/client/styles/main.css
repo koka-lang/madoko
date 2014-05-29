@@ -12,7 +12,7 @@ notes:
   that do not support calc expressions.
 */
 
-html,body,#fullapp,#app {
+html,body,#fullapp {
   height: 100%;
   padding: 0pt;
   margin: 0pt;
@@ -20,14 +20,14 @@ html,body,#fullapp,#app {
 
 
 /* Colors */
-#app, .spinner.spin {
+#fullapp, .spinner.spin {
   background-color: white;  
 }
 .output {
   background-color: white;
   border-style: solid;
 }
-.pane-header, .output {
+.header-bar, .output {
   border-color: silver;
   border-width: 1px;
 }
@@ -35,41 +35,18 @@ html,body,#fullapp,#app {
   background-color: white;
 }
 
-.theme-grey #app {
-  background-color: white;      
-}
-.theme-grey .pane-header, .theme-grey .spinner.spin, .theme-grey .output, .theme-grey #app-footer {
-  background-color: #444;
-  border-style: none;
-  color: white;
-}
-.theme-grey .pane-header {
-  border-bottom: 1px solid 000;
-}
-.theme-grey .pane-header .popup div {
-  color: black;
-}
-
-.theme-grey .menubar>div>img.button:hover,
-.theme-grey .popup:hover,
-.theme-grey .popup>.button:hover,
-.theme-grey #app-footer a:hover {
-  background-color: #888;
-}
-
-.theme-dark #app {
+.theme-dark .app-body {
   background-color: white;      
 }
 .theme-dark #fullapp,
-.theme-dark .pane-header, 
 .theme-dark .spinner.spin, 
 .theme-dark .output,
-.theme-dark #app-footer {
+.theme-dark .header-bar  {
   background-color: #135;
   border-style: none;
   color: white;
 }
-.theme-dark .pane-header .popup div {
+.theme-dark .header-bar .popup div {
   color: black;
 }
 .theme-dark .monaco-editor.vs .clnr {
@@ -78,7 +55,8 @@ html,body,#fullapp,#app {
 .theme-dark .menubar>div>img.button:hover,
 .theme-dark .popup:hover,
 .theme-dark .popup>.button:hover,
-.theme-dark #app-footer a:hover {
+.theme-dark .header-bar a:hover,
+.theme-dark .header-bar .button:hover {
   background-color: #357;
 }
 
@@ -91,20 +69,30 @@ html,body,#fullapp,#app {
   padding: 0em 0.25em;
 }
 
-#app {
-  height: 100%;
-  margin-bottom: -1.5rem;
+.app-body {
+  height: calc(100% - 3.3em);
 }
 
-#app-footer {
+.header-bar {
   height: 1.5rem;
+  margin: 0pt;
+  padding: 0pt;
+  font-family: "Segoe UI";
+}
+
+.app-header.header-bar {
+  padding-top: 0.2rem;
+  padding-bottom: 0.1rem;
 }
 
 .pane {
-  height: 96%;
-  height: calc(100% - 1.5rem);
+  height: 100%;
   width: 49%;
   transition: width 1s;
+}
+
+.pane-content {
+  height: 100%;
 }
 
 .view-normal .pane.left {
@@ -120,27 +108,6 @@ html,body,#fullapp,#app {
   width: 30%;
 }
 
-.pane-header {
-  height: 1.5em; 
-  padding: 0.2em 0px 0rem 0px;
-  border-bottom-style: solid;
-}
-
-.pane-header img {
-  height: 1em;
-  vertical-align: -0.1em;
-}
-
-#app-footer img {
-  height: 1.4em;
-  vertical-align: -0.2em;
-}
-
-.pane-content {
-  height: 95%;
-  height: calc(100% - 1.7em);     
-}
-
 .pane.right {
   float: right;
 }
@@ -149,20 +116,28 @@ html,body,#fullapp,#app {
   float: left;
 }
 
-.pane-header, #app-footer {
-  font-family: "Segoe UI";
+
+/* header & footer */
+
+.header-bar img {
+  height: 1em;
+  vertical-align: -0.1em;
 }
 
-
-.pane.right .pane-header {
-  text-align: right;
+.header-bar .right {
+  float: right;
 }
 
-.pane.right .pane-header div {
-  text-align: left;
+#fullapp .header-bar .right img {
+  margin: 0em 0.2em;
 }
 
-#app-footer {
+.app-footer img {
+  height: 1.4em;
+  vertical-align: -0.2em;
+}
+
+#fullapp .app-footer {
   font-size: small;
   text-align: right;
 }
@@ -171,12 +146,12 @@ html,body,#fullapp,#app {
   font-size: x-small;
 }
 
-#app-footer a {
+.app-footer a {
   color: white;
   text-decoration: none;
 }
 
-#app-footer #view-message {
+.app-footer #view-message {
   float: left;
   text-align: left;
   margin-left: 0.25em;
@@ -304,12 +279,11 @@ div.boxed {
 
 /* Editor Header */
 #document {
-  width: 2em;
-  margin-left: 0.25em;
   margin-right: 0.3em;
 }
+
 #edit-select {
-  width: calc(100% - 3em);
+  width: 40%;
 }
 
 #sync-spinner {
@@ -342,25 +316,6 @@ div.boxed {
 
 #help-content>a:hover {
   background-color: Gainsboro;
-}
-
-/* menu bar */
-
-.menubar {
-  display: inline-block;
-}
-
-/* this rule is necessary for IE */
-.menubar .popup {
-  width: 1.5em; 
-}
-
-
-
-/* View header */
-
-.right .pane-header>div>img {
-  margin: 0em 0.25em;
 }
 
 
@@ -403,6 +358,7 @@ div.boxed {
   width:0.7em; 
   vertical-align:-0.4em;
 }
+
 
 /* Monaco token classes */
 .xlatex-error-line {

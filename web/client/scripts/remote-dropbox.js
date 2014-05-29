@@ -106,6 +106,13 @@ function fileInfo(fname) {
   });
 }
 
+function folderInfo(fname) {
+  var url = metadataUrl + fname;
+  return Util.requestGET( url, { access_token: getAccessToken(), list: true }).then( function(info) {
+    return (typeof info === "string" ? JSON.parse(info) : info);
+  });  
+}
+
 function pushFile(fname,content) {
   var url = pushUrl + fname;
   return Util.requestPOST( url, { access_token: getAccessToken() }, content ).then( function(info) {
@@ -240,6 +247,16 @@ var Dropbox = (function() {
       return (info ? new Date(info.modified) : null);
     }, function(err) {
       return null;
+    });
+  }
+
+  Dropbox.prototype.listing = function( fpath ) {
+    var self = this;
+    return folderInfo( self.fullPath(fpath) ).then( function(info) {
+      return (info ? info.contents : []).map( function(item) {
+        item.type = item.is_dir ? "folder" : "file";
+        return item;
+      });
     });
   }
 

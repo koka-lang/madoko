@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
+<!-- madoko style -->
+<link rel="stylesheet" type="text/css" href="styles/madoko.css">
+
+<!-- main style -->
+<link rel="stylesheet" type="text/css" href="styles/main.css">
+
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+}
+
+.header-bar {
+  padding: 0.75rem 1em 0.25rem 1em !important;
+  height: 2rem;
+}
+
+.header-bar img {
+  height: 1.5em;
+}
+
+.app-body {
+  height: calc(100% - 6rem);
+}
+
+.app-footer {
+  text-align: right;
+  padding-top: 0.5em;
+}
+
+.app-content {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: 0.5em;
+}
+
+div.button {
+  display: inline-block;
+  border: 1px white solid;
+  border-radius: 5px;
+  padding-bottom: 0.2em;
+  margin: 0em 0.25em;
+}
+
+div.item {
+  display: inline-block;
+  width: 49%;
+}
+
+div.item:hover {
+  background-color: Gainsboro;
+  cursor: pointer;
+}
+
+.item-icon {
+  height: 1em;
+  margin: 0em 0.25em;
+}
+
+.item-select {
+  background-color: white;
+}
+</style>
+
+</head>
+
+<body class="theme-dark" >
+<div class="app-header header-bar">
+  <img id="remote-logo" src="images/dark/icon-dropbox.png"/>      
+</div>
+<div class="app-body">
+<div id="listing" class="app-content">
+
+</div>
+</div>
+<div class="app-footer header-bar">
+  <div class="button">choose</div>
+  <div class="button">cancel</div>
+</div>
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" src="lib/vs/loader.js"></script>
+
+<!-- start the picker -->
+<script type="text/javascript">
+require.config({
+  baseUrl: "lib"
+});
+
+require( ["../scripts/picker"], function(picker) {
+  picker.choose();
+});
+</script>
+
+</body>
+</html>
