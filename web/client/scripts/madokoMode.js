@@ -47,7 +47,7 @@ var madokoMode = {
           [/^(@metakey)/, { token: "namespace.metadata.key", next: "metadata" } ],
           
           // headers
-          [/^(\s{0,3})(#+)((?:[^\\#\{]|@escapes)+)((?:#+)?)/, ['white','keyword.$1','keyword.$1','keyword.$1']],
+          [/^(\s{0,3})(#+)((?:[^\\\{]|@escapes)+)/, ['white','keyword.$1','keyword.$1']],
           [/^\s{0,3}(=+|\-+)\s*$/, 'keyword.header'],      
           [/^\s{0,3}((\*[ ]?)+)\s*$/, 'keyword.header'],
           [/^\s{0,3}(~+)\s*(?:begin\s+(\w+)\s*|end\s+(\w+)\s*|(\w+)\s*)?(?=(?:\{[^}]+\}\s*)?$)/, {
