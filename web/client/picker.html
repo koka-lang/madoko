@@ -24,13 +24,13 @@ body {
 }
 
 .header-bar {
-  padding: 0.75rem 1em 0.25rem 1em !important;
+  padding: 0.7rem 1em 0.3rem 1em !important;
   height: 2rem;
 }
 
 .header-bar img {
   height: 1.5em;
-  vertical-align: -0.4em
+  vertical-align: bottom;
 }
 
 #app {
@@ -64,7 +64,7 @@ body {
 /* view */
 
 .app-content {
-  padding: 1em;
+  padding: 0.5em 1em;
 }
 
 .message {
@@ -73,6 +73,10 @@ body {
 
 #remotes {
   margin-right: 0.5em;
+}
+
+.command-alert #remotes {
+  display: none;
 }
 
 #listing {
@@ -89,6 +93,9 @@ body {
 
 #folder-name {
   display: none;
+  max-width: 80%;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .command-open #folder-name,
@@ -121,7 +128,8 @@ body {
 
 div.item {
   display: inline-block;
-  width: 49%;
+  width: calc(50% - 2em);
+  padding: 0.1em 0.5em 0.1em 1.5em;
 }
 
 div.item:hover {
@@ -131,7 +139,9 @@ div.item:hover {
 
 .item-icon {
   height: 1em;
-  margin: 0em 0.25em;
+  width : 1em;
+  margin: 0.2em 0em 0em -1.25em;
+  float: left;
 }
 
 .item-select {
@@ -171,8 +181,14 @@ div.item:hover {
 }
 
 
-.command-login #button-login, .command-login #message-login, 
+.command-login #message-login, 
 .command-connect #message-connect,
+.command-alert #message-alert {
+  display: block;
+}
+
+.command-login #button-login,
+.command-alert #button-discard,
 .command-open #button-choose,
 .command-save #button-save,
 .command-new #button-new,
@@ -181,12 +197,19 @@ div.item:hover {
   display: inline;
 }
 
-.command-login #login-info {
+.command-login #login-info,
+.command-alert #login-info {
   display: none;
 }
 
 #login-info {
   float: left;
+  font-size: small;
+}
+
+#message-login, #message-connect, #message-alert {
+  text-align: center;
+  width: 100%;
 }
 </style>
 
@@ -204,24 +227,28 @@ div.item:hover {
         ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
     </div>
   </div>
-  <div id="button-login" class="button">login</div> 
   <div id="folder-name"></div>
   <input id="file-name" type="text"></input>
 </div>
 <div class="app-body">
   <div class="app-content">
-    <div id="message-login" class="message">Please login.</div>
+    <div id="message-login" class="message">Not connected.</div>       
     <div id="message-connect" class="message">Connected.</div>
+    <div id="message-alert" class="message">The current document has not been saved yet.
+    <br/>Are you sure you want to discard these changes?</div>
     <div id="listing">
     </div>
   </div>
 </div>
 <div class="app-footer header-bar">
-  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div></div>
-  <div id="button-choose" class="button">choose</div>
-  <div id="button-new" class="button">create</div>
-  <div id="button-save" class="button">save</div>
-  <div id="button-cancel" class="button">cancel</div>
+  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div>
+  </div>
+  <div id="button-login" class="button">login</div>
+  <div id="button-discard" class="button">Discard</div>
+  <div id="button-choose" class="button">Open</div>
+  <div id="button-new" class="button">Create</div>
+  <div id="button-save" class="button">Save As</div>
+  <div id="button-cancel" class="button">Cancel</div>
 </div>
 </div>
 

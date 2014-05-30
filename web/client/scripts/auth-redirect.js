@@ -29,7 +29,7 @@ var remote = (script ? script.getAttribute("data-remote") : "");
 
 if (remote && window && window.location && window.location.hash) {
   var params = decodeParams(window.location.hash);
-  document.body.innerHTML = JSON.stringify(params);
+  //document.body.innerHTML = JSON.stringify(params);
 
   if (params.access_token) {
     var year = 60*60*24*365;
@@ -37,4 +37,4 @@ if (remote && window && window.location && window.location.hash) {
   }
 }
 
-// window.close();
+window.close();

@@ -96,6 +96,11 @@ function run() {
     end();
   }
 
+  document.getElementById("button-discard").onclick = function(ev) {
+    options.alert = ""; // stop alert
+    display(remote,folder);
+  }
+
   listing.onclick = function(ev) {
     var elem = ev.target;
     while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item")) {
@@ -122,6 +127,8 @@ function run() {
       itemEnterFolder(remote,path);
     }
   };
+
+  Util.enablePopupClickHovering();
 
   display( remote, folder );
 }
@@ -191,21 +198,31 @@ function setRemote( newRemote ) {
 
 
 function display( remote, folder ) {
-  // set correct logo
-  document.getElementById("remote-logo").src = "images/dark/" + remote.logo();
-  remote.getUserName().then( function(userName) {
-    document.getElementById("remote-username").innerHTML = Util.escape( userName );
-  });
-  
-  // check connection
   app.className = "";
   listing.innerHTML = "";
-  if (!remote.connected()) {
-    Util.addClassName(app,"command-login");
+
+  if (options.alert) {
+    // alert message
+    if (options.alert!=="true") {
+      document.getElementById("message-alert").innerHTML = Util.escape(options.alert);
+    }
+    Util.addClassName(app,"command-alert");
   }
   else {
-    Util.addClassName(app,"command-" + options.command );
-    displayFolder(remote, folder);
+    // set correct logo
+    document.getElementById("remote-logo").src = "images/dark/" + remote.logo();
+    remote.getUserName().then( function(userName) {
+      document.getElementById("remote-username").innerHTML = Util.escape( userName );
+    });
+
+    // check connection
+    if (!remote.connected()) {
+      Util.addClassName(app,"command-login");
+    }
+    else {
+      Util.addClassName(app,"command-" + options.command );
+      displayFolder(remote, folder);
+    }
   }
 }
 
@@ -217,13 +234,13 @@ function displayFolder( remote, folder ) {
     var html = items.map( function(item) {
       var disable = canSelect(item.path,item.type) ? "" : " disabled";
       return "<div class='item item-" + item.type + disable + "' data-type='" + item.type + "' data-path='" + Util.escape(item.path) + "'>" + 
-                "<input type='checkbox' class='item-select'></input>" +
+                //"<input type='checkbox' class='item-select'></input>" +
                 "<img class='item-icon' src='images/icon-" + item.type + ".png'/>" +
                 "<span class='item-name'>" + Util.escape(Util.basename(item.path)) + "</span>" +
              "</div>";
 
     });
-    listing.innerHTML = html.join("\n");
+    listing.innerHTML = html.join("");
   });
 }
 

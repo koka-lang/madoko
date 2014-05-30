@@ -1118,6 +1118,46 @@ doc.execCommand("SaveAs", null, filename)
     return popup;
   }
 
+  function enablePopupClickHovering() 
+  {
+    var hovering = null;
+
+    document.body.onclick = function(ev) {
+      if (hovering) {
+        removeClassName(hovering,"hover");
+        hovering = null;
+      }
+    }
+    
+    function isDivParent(parent,elem) {
+      while( elem && elem !== parent && elem.nodeName !== "DIV") {
+        elem = elem.parentNode;
+      }
+      return (elem === parent);
+    }
+
+    var hoverElems = document.getElementsByClassName("popup");
+    for(var i = 0; i < hoverElems.length; i++) {
+      var elem = hoverElems[i];
+      elem.onclick = function(ev) {
+        ev.cancelBubble = true;                 
+        if (hovering) {
+          removeClassName(hovering, "hover");
+        }
+        var thisElem = isDivParent(ev.currentTarget,ev.target);
+        if ((hovering && hovering !== ev.currentTarget) ||
+            (hovering && !thisElem) ||
+            (!hovering && thisElem)) {          
+          hovering = ev.currentTarget;
+          util.addClassName(hovering,"hover");
+        }
+        else {
+          hovering = null;
+        }
+      }
+    }
+  }
+
   return {
     properties: properties,
     extend: extend,
@@ -1174,6 +1214,8 @@ doc.execCommand("SaveAs", null, filename)
     downloadFile: downloadFile,
     downloadText: downloadText,
     openAuthPopup: openAuthPopup,
+    enablePopupClickHovering: enablePopupClickHovering,
+  
 
     Map: Map,
     unpersistMap: unpersistMap,

@@ -561,41 +561,7 @@ var UI = (function() {
     }
 
     // emulate hovering by clicks for touch devices
-    self.hovering = null;
-    document.body.onclick = function(ev) {
-      if (self.hovering) {
-        util.removeClassName(self.hovering,"hover");
-        self.hovering = null;
-      }
-    }
-    
-    function isDivParent(parent,elem) {
-      while( elem && elem !== parent && elem.nodeName !== "DIV") {
-        elem = elem.parentNode;
-      }
-      return (elem === parent);
-    }
-
-    var hoverElems = document.getElementsByClassName("popup");
-    for(var i = 0; i < hoverElems.length; i++) {
-      var elem = hoverElems[i];
-      elem.onclick = function(ev) {
-        ev.cancelBubble = true;                 
-        if (self.hovering) {
-          util.removeClassName(self.hovering, "hover");
-        }
-        var thisElem = isDivParent(ev.currentTarget,ev.target);
-        if ((self.hovering && self.hovering !== ev.currentTarget) ||
-            (self.hovering && !thisElem) ||
-            (!self.hovering && thisElem)) {          
-          self.hovering = ev.currentTarget;
-          util.addClassName(self.hovering,"hover");
-        }
-        else {
-          self.hovering = null;
-        }
-      }
-    }
+    util.enablePopupClickHovering();    
   }
 
   UI.prototype.setEditText = function( text, mode ) {
