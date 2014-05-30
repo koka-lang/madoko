@@ -57,7 +57,7 @@ function picker( storage, params ) {
 
     var uri = Util.getCookie("picker-path"); Util.setCookie("picker-path","",0);
     var cap = /^(\w+):\/\/\/?(.*)$/.exec(uri);
-    if (!cap) throw new Error("cancelled");
+    if (!cap) throw new Error("canceled");
     var path = cap[2];
     var folder = Util.dirname(path);
     var fileName = Util.basename(path);
@@ -66,16 +66,40 @@ function picker( storage, params ) {
       fileName = Util.basename(path) + ".mdk";
     }
     var remote = unpersistRemote( cap[1], { folder: folder } );
-    if (!remote) throw new Error("cancelled");
+    if (!remote) throw new Error("canceled");
     return { storage: new Storage(remote), docName: fileName }
   });
 }
 
 function openFile(storage) {
-  return picker( storage, {
+  var params = {
     command: "open",   
     extensions: ".mdk .md .madoko .mkdn", 
-  });
+  }
+  if (storage && storage.remote.type() !== "null") {
+    params.remote = storage.remote.type();
+    params.folder = storage.remote.getFolder();
+  }
+
+  return picker( storage, params);
+}
+
+function createFile(storage) {
+  var params = {
+    command: "new", 
+  }
+  if (storage && storage.remote.type() !== "null") {
+    params.remote = storage.remote.type();
+    params.folder = storage.remote.getFolder();
+  }
+  return picker(storage, params).then( function(res) {
+    if (res) {
+      // Add initial content
+      var content = document.getElementById("initial").textContent;
+      res.storage.writeFile(res.docName, content);
+    }
+    return res;
+  })
 }
 
 function httpOpenFile(url,doc) {  
@@ -142,10 +166,16 @@ function newDropboxAt( folder ) {
 
 function saveAs( storage, docName ) {
   var stem = Util.stemname(docName);
-  return picker( storage, {
+  var params = {
     command: "save",
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
-  }).then( function(res) {
+  }
+  if (storage && storage.remote.type() !== "null") {
+    params.remote = storage.remote.type();
+    params.folder = Util.dirname(docName);
+    params.file   = Util.stemname(docName);
+  }
+  return picker( storage, params).then( function(res) {
     if (!res) return null; // cancel
     return saveTo( storage, res.storage, stem, Util.stemname(res.docName) );
   });
@@ -676,6 +706,7 @@ var Storage = (function() {
 
 return {
   openFile: openFile,
+  createFile: createFile,
   saveAs: saveAs,
   httpOpenFile    : httpOpenFile,
   createNullStorage: createNullStorage,

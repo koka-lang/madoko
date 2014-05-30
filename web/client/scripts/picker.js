@@ -7,26 +7,34 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/promise","../scripts/util", 
+        "../scripts/remote-null",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive2",
-        ], function(Promise,Util,Dropbox,Onedrive) {
+        ], function(Promise,Util,NullRemote,Dropbox,Onedrive) {
 
 
 var options = {
   command: "open", // open, connect, save, new
-  root: "",
   extensions: "",
-  file: "document"  
+  file: "document",
+  alert: "",
+  // remote: initial remote
+  // folder: initial folder for the remote
 };
 
 var app     = document.getElementById("app");
 var listing = document.getElementById("listing");
 var remotes = {
-  dropbox: { remote: new Dropbox.Dropbox(options.root), folder: "" },
-  onedrive: { remote: new Onedrive.Onedrive(options.root), folder: "" },
+  dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
+  onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
+  local: { remote: new NullRemote.NullRemote(), folder: "" },
 };
-var remote  = remotes.dropbox.remote;
-var folder  = remotes.dropbox.folder;
+var current  = remotes.dropbox;
+
+function capitalize(s) {
+  if (!s) return "";
+  return s[0].toUpperCase() + s.substr(1);
+}
 
 function run() {
   var hash = window.location.hash || "";
@@ -38,8 +46,18 @@ function run() {
     if (key) options[key] = val;
   });
 
-  if (options.remote && remotes[options.remote]) {
-    setRemote( remotes[options.remote] );
+  document.title = capitalize(options.command) + " document";
+
+  var data = JSON.parse( Util.getCookie("picker-data") || "null");
+  if (data) {
+    if (!options.remote) options.remote = data.remote;
+    remotes.dropbox.folder  = data.dropbox || "";
+    remotes.onedrive.folder = data.onedrive || "";
+  }
+
+  if (options.remote && remotes[options.remote] && options.remote !== "local") {
+    if (options.folder) remotes[options.remote].folder = options.folder;
+    setCurrent( remotes[options.remote] );
   }
 
   if (options.file) {
@@ -47,58 +65,63 @@ function run() {
   }
 
   document.getElementById("remote-dropbox").onclick = function(ev) {
-    if (remote.type === Dropbox.type()) return;
-    setRemote( remotes.dropbox );
+    if (current.remote.type === remotes.dropbox.remote.type()) return;
+    setCurrent( remotes.dropbox );
   }
 
   document.getElementById("remote-onedrive").onclick = function(ev) {
-    if (remote.type === Onedrive.type()) return;
-    setRemote( remotes.onedrive );
+    if (current.remote.type === remotes.onedrive.remote.type()) return;
+    setCurrent( remotes.onedrive );
   }
 
+  document.getElementById("remote-local").onclick = function(ev) {
+    if (current.remote.type === remotes.local.remote.type()) return;
+    setCurrent( remotes.local );
+  }
+  
   document.getElementById("button-login").onclick = function(ev) {
-    if (!remote || remote.connected()) return;
-    remote.login().then( function(userName) {
-      display( remote, folder );
+    if (!current.remote.connected()) return;
+    current.remote.login().then( function(userName) {
+      display(current);
     });
   }
 
   document.getElementById("button-logout").onclick = function(ev) {
-    if (!remote || !remote.connected()) return;
-    remote.logout();
-    display( remote, folder );
+    if (!current.remote.connected()) return;
+    current.remote.logout();
+    display(current);
   }
 
   document.getElementById("button-choose").onclick = function(ev) {
     var path = itemGetSelected();
     if (path) {
-      end(remote,path);
+      end(current,path);
     }
   }
 
   document.getElementById("button-save").onclick = function(ev) {
     var fileName = getFileName();
     if (fileName) {
-      var path = Util.combine(folder,fileName);
-      end(remote,path);
+      var path = Util.combine(current.folder,fileName);
+      end(current,path);
     }
   }
 
   document.getElementById("button-new").onclick = function(ev) {
     var fileName = getFileName();
     if (fileName) {
-      var path = Util.combine(folder,fileName);
-      end(remote,path);
+      var path = Util.combine(current.folder,fileName);
+      end(current,path);
     }
   }
 
   document.getElementById("button-cancel").onclick = function(ev) {
-    end();
+    end(current);
   }
 
   document.getElementById("button-discard").onclick = function(ev) {
     options.alert = ""; // stop alert
-    display(remote,folder);
+    display(current);
   }
 
   listing.onclick = function(ev) {
@@ -113,7 +136,7 @@ function run() {
       itemSelect(elem);
     }
     else {
-      itemEnterFolder(remote,path);
+      itemEnterFolder(current,path);
     }
   };
 
@@ -124,13 +147,13 @@ function run() {
     }
     if (Util.hasClassName(elem,"dir")) {
       var path = elem.getAttribute("data-path");
-      itemEnterFolder(remote,path);
+      itemEnterFolder(current,path);
     }
   };
 
   Util.enablePopupClickHovering();
 
-  display( remote, folder );
+  display( current  );
 }
 
 function canSelect(path,type) {
@@ -178,9 +201,9 @@ function itemSelectX(elem,select) {
          else Util.removeClassName(elem,"selected");
 }
 
-function itemEnterFolder(remote,path) {
-  folder = path;
-  display( remote, folder );
+function itemEnterFolder(current,path) {
+  current.folder = path;
+  display( current );
 }
 
 function setFileName( fname ) {
@@ -190,14 +213,13 @@ function getFileName( ) {
   return document.getElementById("file-name").value;
 }
 
-function setRemote( newRemote ) {
-  remote = newRemote.remote;
-  folder = newRemote.folder;
-  display( remote, folder );
+function setCurrent( newCurrent ) {
+  current = newCurrent;
+  display( current );
 }
 
 
-function display( remote, folder ) {
+function display( current ) {
   app.className = "";
   listing.innerHTML = "";
 
@@ -210,26 +232,26 @@ function display( remote, folder ) {
   }
   else {
     // set correct logo
-    document.getElementById("remote-logo").src = "images/dark/" + remote.logo();
-    remote.getUserName().then( function(userName) {
+    document.getElementById("remote-logo").src = "images/dark/" + current.remote.logo();
+    current.remote.getUserName().then( function(userName) {
       document.getElementById("remote-username").innerHTML = Util.escape( userName );
     });
 
     // check connection
-    if (!remote.connected()) {
+    if (!current.remote.connected()) {
       Util.addClassName(app,"command-login");
     }
     else {
       Util.addClassName(app,"command-" + options.command );
-      displayFolder(remote, folder);
+      displayFolder(current);
     }
   }
 }
 
-function displayFolder( remote, folder ) {
-  displayFolderName(remote,folder);
-
-  remote.listing(folder).then( function(items) {
+function displayFolder( current ) {
+  displayFolderName(current);
+  listing.innerHTML = "Loading...";
+  current.remote.listing(current.folder).then( function(items) {
     //console.log(items);
     var html = items.map( function(item) {
       var disable = canSelect(item.path,item.type) ? "" : " disabled";
@@ -244,9 +266,9 @@ function displayFolder( remote, folder ) {
   });
 }
 
-function displayFolderName(remote, folder ) {
-  var parts = folder.split("/");
-  var html = "<span class='dir' data-path=''>" + remote.type() + "</span><span class='dirsep'>/</span>";
+function displayFolderName(current) {
+  var parts = current.folder.split("/");
+  var html = "<span class='dir' data-path=''>" + current.remote.type() + "</span><span class='dirsep'>/</span>";
   var partial = "";
   parts.forEach( function(part) {
     if (part) {
@@ -257,12 +279,24 @@ function displayFolderName(remote, folder ) {
   document.getElementById("folder-name").innerHTML = html;
 }
 
-function end( remote, path ) {
-  if (remote && path) {
-    var result = remote.type() + "://" + path;
+function end( current, path ) {
+  // return result
+  if (current && path) {
+    var result = current.remote.type() + "://" + path;
     console.log(result);
-    Util.setCookie("picker-path", result, 30 );
+    Util.setCookie("picker-path", result, 10 );
+
   }
+  // save state
+  if (current) {
+    var data = {
+      remote: current.remote.type(),
+      onedrive: remotes.onedrive.folder,
+      dropbox: remotes.dropbox.folder,
+    }
+  }
+  Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
+
   window.close();
 }
 

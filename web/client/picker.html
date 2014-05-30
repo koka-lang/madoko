@@ -26,6 +26,7 @@ body {
 .header-bar {
   padding: 0.7rem 1em 0.3rem 1em !important;
   height: 2rem;
+  white-space: nowrap;
 }
 
 .header-bar img {
@@ -212,6 +213,14 @@ div.item:hover {
   text-align: center;
   width: 100%;
 }
+
+#remote-local {
+  display: none;
+}
+
+.command-new #remote-local {
+  display: block;
+}
 </style>
 
 </head>
@@ -226,6 +235,8 @@ div.item:hover {
           ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>
       <div id="remote-onedrive" class="button" title="Onedrive cloud storage"
         ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
+      <div id="remote-local" class="button" title="Browser local storage"
+        ><span class="icon"><img src="images/icon-local.png"/></span> Local</div>    
     </div>
   </div>
   <div id="folder-name"></div>

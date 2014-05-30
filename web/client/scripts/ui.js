@@ -408,8 +408,17 @@ var UI = (function() {
     };
 
     document.getElementById("open").onclick = function(ev) {
-      self.event( "loaded from remote storage", "loading...", State.Loading, function() {
-        return storage.openFile().then( function(res) { 
+      self.event( "loaded", "loading...", State.Loading, function() {
+        return storage.openFile(self.storage).then( function(res) { 
+          if (!res) return Promise.resolved(); // canceled
+          return self.openFile(res.storage,res.docName); 
+        });
+      });
+    };
+
+    document.getElementById("new").onclick = function(ev) {
+      self.event( "created", "creating...", State.Loading, function() {
+        return storage.createFile(self.storage).then( function(res) { 
           if (!res) return Promise.resolved(); // canceled
           return self.openFile(res.storage,res.docName); 
         });
@@ -421,19 +430,11 @@ var UI = (function() {
     });
 
     document.getElementById("save").onclick = function(ev) {
-      self.event( "","", State.Syncing, function() {
+      self.event( "saved","saving...", State.Syncing, function() {
         return self.saveTo();
       });
     }
-
-    document.getElementById("new-document").onclick = function(ev) {
-      self.event( "created new local document", "creating...", State.Loading, function() {
-        return self.checkSynced( function() {
-          return self.openFile(null,null);
-        });
-      });
-    }
-
+    
     document.getElementById("export-html").onclick = function(ev) {
       self.event( "HTML exported", "exporting...", State.Exporting, function() { 
         return self.generateHtml(); 
@@ -911,7 +912,7 @@ var UI = (function() {
         
       if (self.storage) {
         self.storage.destroy(); // clears all event listeners
-        self.viewHTML( "<p>Loading...</p>", Date.now() );
+        self.viewHTML( "<p>Rendering...</p>", Date.now() );
         //self.storage.clearEventListener(self);
       }
       self.storage = stg;
@@ -1535,22 +1536,12 @@ var UI = (function() {
   }
 
   UI.prototype.saveTo = function() {
-    var self = this;
-    self.showSpinner(true,self.syncer);
-    
-    return self.withSyncSpinner( function() { 
-      return storage.saveAs(self.storage,self.docName);
-    }).then( function(res) {
+    var self = this;    
+    return storage.saveAs(self.storage,self.docName).then( function(res) {
       if (!res) throw new Error("cancel"); 
       return self.setStorage(res.storage,res.docName).then( function() {
         return res.docName;
       }); 
-    }).then( function(newDocName) {
-      self.showSpinner(false,self.syncer);    
-      util.message("saved: " + newDocName, util.Msg.Status);
-    }, function(err){ 
-      self.showSpinner(false,self.syncer);    
-      self.onError(err); 
     });
   }
 

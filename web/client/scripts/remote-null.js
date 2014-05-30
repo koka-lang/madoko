@@ -8,16 +8,18 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
-function unpersist() {
-  return new NullRemote();
+function unpersist(obj) {
+  return new NullRemote(obj ? obj.folder : "");
 }
 
 function type() {
-  return "null";
+  return "local";
 }
 
 var NullRemote = (function() {
-  function NullRemote() {    
+  function NullRemote(folder) {
+    var self = this;
+    self.folder = folder || "";    
   }
 
   NullRemote.prototype.type = function() {
@@ -29,11 +31,18 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.getFolder = function() {
-    return "Madoko/document";
+    var self = this;
+    return self.folder;
+  }
+
+  NullRemote.prototype.fullPath = function(fname) {
+    var self = this;
+    return Util.combine(self.folder,fname);
   }
 
   NullRemote.prototype.persist = function() {
-    return { };
+    var self = this;
+    return { folder: self.folder };
   }
 
   NullRemote.prototype.connect = function(dontForce) {
@@ -41,7 +50,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.createNewAt = function(folder) {
-    return Promise.resolved( new NullRemote() );
+    return Promise.resolved( new NullRemote(folder) );
   }
 
   NullRemote.prototype.pushFile = function( fpath, content ) {
@@ -59,6 +68,28 @@ var NullRemote = (function() {
 
   NullRemote.prototype.createSubFolder = function( path ) {
     return Promise.resolved({folder: path, created: true });
+  }
+
+  NullRemote.prototype.listing = function( fpath ) {
+    var self = this;
+    return Promise.resolved([]);
+  }
+
+  NullRemote.prototype.connected = function() {
+    return true;
+  }
+
+  NullRemote.prototype.login = function() {
+    return Promise.resolved();
+  }
+
+  NullRemote.prototype.logout = function() {
+    return;
+  }
+
+  NullRemote.prototype.getUserName = function() {
+    var self = this;
+    return Promise.resolved("");
   }
 
   return NullRemote;
