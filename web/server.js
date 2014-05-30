@@ -21,7 +21,7 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+)$/;
+var allowedIps = /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+|71\.37\.5\.\d+)$/;
 var blockedIps = null;
 
 // -------------------------------------------------------------
@@ -130,12 +130,12 @@ setInterval( function() {
   });
 }, hour); 
 
-function event( req, res, action, maxRequests ) {
+function event( req, res, action, maxRequests, allowAll ) {
   var domain = null;
   if (!maxRequests) maxRequests = limits.requestsPerDomain;
   try {
     if (mode !== Mode.Normal) throw { httpCode: 503, message: "server is in " + mode + " mode" };
-    if (allowedIps && !allowedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access" };
+    if (!allowAll && (allowedIps && !allowedIps.test(req.ip))) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access" };
     if (blockedIps && blockedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is blocked" };
     var start = Date.now();
     var entry =  {
@@ -712,7 +712,7 @@ app.post('/rest/run', function(req,res) {
 app.post('/rest/push-atomic', function(req,res) {
   event( req, res, function() {
     return pushAtomic( req.body.name, req.body.time );
-  });
+  }, null, true );
 });
 
 app.post("/report/csp", function(req,res) {
