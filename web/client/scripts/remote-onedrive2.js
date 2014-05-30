@@ -204,7 +204,7 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,"oauth",800,800).then( function() {
+  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,"oauth",800,600).then( function() {
     if (!getAccessToken()) throw new Error("onedrive login failed");
     return getUserName();
   });
