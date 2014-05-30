@@ -102,6 +102,31 @@ function createFile(storage) {
   })
 }
 
+function checkConnected(remote) {
+  if (!remote.connected()) return Promise.resolved(false);
+  return remote.getUserName().then( function(userName) {
+    return (userName != null);
+  }, function(err) {
+    remote.logout();
+    return false;
+  });
+}
+
+function connect(storage) {
+  if (!storage) return Promise.resolved();
+  var params = {
+    command: "connect"
+  }
+  if (storage.remote.type() !== "null") {
+    params.remote = storage.remote.type();
+  }
+  return picker(storage,params).then( function(res) {
+    return;
+  }, function(err) {
+    return;
+  });
+}
+
 function httpOpenFile(url,doc) {  
   return HttpRemote.openFile(url).then( function(remote) {
     return { storage: new Storage(remote), docName: doc };
@@ -707,6 +732,7 @@ var Storage = (function() {
 return {
   openFile: openFile,
   createFile: createFile,
+  connect: connect,
   saveAs: saveAs,
   httpOpenFile    : httpOpenFile,
   createNullStorage: createNullStorage,

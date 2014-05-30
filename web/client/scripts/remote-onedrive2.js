@@ -358,8 +358,6 @@ var Onedrive = (function() {
     return getUserName();
   }
 
-  
-
   return Onedrive;
 })();   
 

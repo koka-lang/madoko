@@ -80,7 +80,7 @@ function run() {
   }
   
   document.getElementById("button-login").onclick = function(ev) {
-    if (!current.remote.connected()) return;
+    if (current.remote.connected()) return;
     current.remote.login().then( function(userName) {
       display(current);
     });
@@ -218,6 +218,16 @@ function setCurrent( newCurrent ) {
   display( current );
 }
 
+function checkConnected(remote) {
+  if (!remote.connected()) return Promise.resolved(false);
+  return remote.getUserName().then( function(userName) {
+    return (userName != null);
+  }, function(err) {
+    remote.logout();
+    return false;
+  });
+}
+  
 
 function display( current ) {
   app.className = "";
@@ -229,29 +239,33 @@ function display( current ) {
       document.getElementById("message-alert").innerHTML = Util.escape(options.alert);
     }
     Util.addClassName(app,"command-alert");
+    return Promise.resolved();
   }
   else {
     // set correct logo
     document.getElementById("remote-logo").src = "images/dark/" + current.remote.logo();
-    current.remote.getUserName().then( function(userName) {
-      document.getElementById("remote-username").innerHTML = Util.escape( userName );
-    });
-
+    
     // check connection
-    if (!current.remote.connected()) {
-      Util.addClassName(app,"command-login");
-    }
-    else {
-      Util.addClassName(app,"command-" + options.command );
-      displayFolder(current);
-    }
+    return checkConnected(current.remote).then( function(isConnected) {
+      if (!isConnected) {
+        Util.addClassName(app,"command-login");
+        return Promise.resolved();
+      }
+      else {
+        Util.addClassName(app,"command-" + options.command );
+        current.remote.getUserName().then( function(userName) {
+          document.getElementById("remote-username").innerHTML = Util.escape( userName );
+          return displayFolder(current);
+        });
+      }
+    });
   }
 }
 
 function displayFolder( current ) {
   displayFolderName(current);
   listing.innerHTML = "Loading...";
-  current.remote.listing(current.folder).then( function(items) {
+  return current.remote.listing(current.folder).then( function(items) {
     //console.log(items);
     var html = items.map( function(item) {
       var disable = canSelect(item.path,item.type) ? "" : " disabled";
