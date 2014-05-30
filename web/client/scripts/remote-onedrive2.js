@@ -204,21 +204,10 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  var w = Util.openAuthPopup(onedriveLoginUrl,onedriveOptions,800,800);
-  if (!w) return Promise.rejected( new Error("onedrive: authorization popup was blocked") );
-  return new Promise( function(cont) {
-    var timer = setInterval(function() {   
-      if(w==null || w.closed) {  
-        clearInterval(timer);  
-        if (getAccessToken()) {
-          cont(null);
-        }
-        else {
-          cont(new Error("onedrive login failed"));
-        }
-      }  
-    }, 100); 
-  }).then( getUserName );
+  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,800,800).then( function() {
+    if (!getAccessToken()) throw new Error("onedrive login failed");
+    return getUserName();
+  });
 }
 
 function logout() {

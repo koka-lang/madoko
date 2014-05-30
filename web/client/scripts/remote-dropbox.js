@@ -37,21 +37,10 @@ function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
   var url = "https://www.dropbox.com/1/oauth2/authorize?response_type=token&client_id=" + appKey + "&redirect_uri=" + redirectUri;
-  var w = Util.openAuthPopup(url,null,600);
-  if (!w) return Promise.rejected( new Error("dropbox: authorization popup was blocked") );
-  return new Promise( function(cont) {
-    var timer = setInterval(function() {   
-      if(w==null || w.closed) {  
-        clearInterval(timer);  
-        if (getAccessToken()) {
-          cont(null);
-        }
-        else {
-          cont(new Error("dropbox login failed"));
-        }
-      }  
-    }, 100); 
-  }).then( getUserName );
+  return Util.openModalPopup(url,null,600,600).then( function() {
+    if (!getAccessToken()) throw new Error("dropbox login failed");
+    return getUserName();
+  });
 }
 
 function getUserName() {
@@ -267,6 +256,7 @@ var Dropbox = (function() {
     return folderInfo( self.fullPath(fpath) ).then( function(info) {
       return (info ? info.contents : []).map( function(item) {
         item.type = item.is_dir ? "folder" : "file";
+        item.isShared = item.is_dir && item.icon==="folder_user";
         return item;
       });
     });

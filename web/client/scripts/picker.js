@@ -235,7 +235,7 @@ function displayFolder( remote, folder ) {
       var disable = canSelect(item.path,item.type) ? "" : " disabled";
       return "<div class='item item-" + item.type + disable + "' data-type='" + item.type + "' data-path='" + Util.escape(item.path) + "'>" + 
                 //"<input type='checkbox' class='item-select'></input>" +
-                "<img class='item-icon' src='images/icon-" + item.type + ".png'/>" +
+                "<img class='item-icon' src='images/icon-" + item.type + (item.isShared ? "-shared" : "") + ".png'/>" +
                 "<span class='item-name'>" + Util.escape(Util.basename(item.path)) + "</span>" +
              "</div>";
 

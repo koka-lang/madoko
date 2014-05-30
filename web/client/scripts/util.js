@@ -1118,6 +1118,19 @@ doc.execCommand("SaveAs", null, filename)
     return popup;
   }
 
+  function openModalPopup( url, params, width, height ) {
+    var w = openAuthPopup( url, params, width, height );
+    if (!w) return Promise.rejected( new Error("popup was blocked") );
+    return new Promise( function(cont) {
+      var timer = setInterval(function() {   
+        if(w==null || w.closed) {  
+          clearInterval(timer);  
+          cont(null);
+        }  
+      }, 100); 
+    });
+  }
+
   function enablePopupClickHovering() 
   {
     var hovering = null;
@@ -1215,6 +1228,7 @@ doc.execCommand("SaveAs", null, filename)
     downloadText: downloadText,
     openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
+    openModalPopup: openModalPopup,
   
 
     Map: Map,
