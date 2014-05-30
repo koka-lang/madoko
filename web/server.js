@@ -575,16 +575,18 @@ function madokoRun( userpath, docname, files, pdf ) {
 // Live authentication redirection
 // -------------------------------------------------------------
 
-var liveCallbackPage = 
-['<html>',
-'<head>',
-'  <title>Madoko Live Callback</title>',
-'</head>',
-'<body>',
-'  <script src="//js.live.net/v5.0/wl.js" type="text/javascript"></script>',
-'</body>',
-'</html>'
-].join("\n");
+function redirectPage(remote) { 
+  return [
+    '<html>',
+    '<head>',
+    '  <title>Madoko Onedrive Callback</title>',
+    '</head>',
+    '<body>',
+    '  <script id="auth" data-remote="' + remote + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '</body>',
+    '</html>'
+  ].join("\n");
+}
 
 var dropboxCallbackPage = 
 ['<html>',
@@ -723,7 +725,14 @@ app.post("/report/csp", function(req,res) {
 app.get("/redirect/live", function(req,res) {
   //event( req, res, function() {
     console.log("live redirect authentication");
-    res.send(200,liveCallbackPage);
+    res.send(200,redirectPage("onedrive"));
+  //});
+});
+
+app.get("/redirect/onedrive", function(req,res) {
+  //event( req, res, function() {
+    console.log("onedrive redirect authentication");
+    res.send(200,redirectPage("onedrive"));
   //});
 });
 
@@ -732,7 +741,7 @@ app.get("/redirect/dropbox", function(req,res) {
     console.log("dropbox redirect authentication");
     console.log(req.query);
     console.log(req.url);
-    res.send(200,dropboxCallbackPage);
+    res.send(200,redirectPage("dropbox"));
   //});
 });
 

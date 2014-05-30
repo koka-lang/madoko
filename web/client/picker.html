@@ -17,6 +17,8 @@
 <link rel="stylesheet" type="text/css" href="styles/main.css">
 
 <style>
+
+/* Application layout */
 body {
   font-family: "Segoe UI", sans-serif;
 }
@@ -28,10 +30,17 @@ body {
 
 .header-bar img {
   height: 1.5em;
+  vertical-align: -0.4em
+}
+
+#app {
+  height: 100%;
 }
 
 .app-body {
   height: calc(100% - 6rem);
+  width: 100%;
+  overflow: auto;
 }
 
 .app-footer {
@@ -39,20 +48,76 @@ body {
   padding-top: 0.5em;
 }
 
-.app-content {
-  height: 100%;
-  width: 100%;
-  overflow: auto;
-  padding: 0.5em;
+/* menus */
+#remote-menu {
+  width: 10em;
 }
 
-div.button {
-  display: inline-block;
-  border: 1px white solid;
-  border-radius: 5px;
-  padding-bottom: 0.2em;
-  margin: 0em 0.25em;
+.menu .button {
+  display: block;
 }
+
+.menu .button:hover {
+  background-color: Gainsboro !important;
+}
+
+/* view */
+
+.app-content {
+  padding: 1em;
+}
+
+.message {
+  display: none;
+}
+
+#remotes {
+  margin-right: 0.5em;
+}
+
+#listing {
+  display: none;
+}
+
+.command-open #listing,
+.command-save #listing,
+.command-new #listing {
+  display: block;
+}
+
+/* folder name */
+
+#folder-name {
+  display: none;
+}
+
+.command-open #folder-name,
+.command-save #folder-name,
+.command-new #folder-name {
+  display: inline-block;
+}
+
+.dir:hover {
+  background-color: #357;
+  cursor: pointer;
+}
+
+.dirsep {
+  color: Gainsboro;
+}
+
+#file-name {
+  width: 14em;
+  display: none;
+  font-size: 1em;
+}
+
+.command-save #file-name, 
+.command-new #file-name {
+  display: inline;
+}
+
+/* items */
 
 div.item {
   display: inline-block;
@@ -72,22 +137,92 @@ div.item:hover {
 .item-select {
   background-color: white;
 }
+
+.item.selected,
+.item.selected:hover {
+  background-color: #8AC;
+}
+
+.item-file.disabled {
+  color: #AAA;
+}
+
+.item.disabled input {
+  visibility: hidden;
+}
+
+/* buttons */
+
+.button {
+  display: none;
+  border: 1px white solid;
+  border-radius: 5px;
+  padding-bottom: 0.2em;
+  margin: 0em 0.25em;
+}
+
+.app-content .button {
+  color: white;
+  border-color: black;
+  background-color: #135;
+}
+.app-content .button:hover {
+  background-color: #357;
+}
+
+
+.command-login #button-login, .command-login #message-login, 
+.command-connect #message-connect,
+.command-open #button-choose,
+.command-save #button-save,
+.command-new #button-new,
+#button-logout,
+#button-cancel {
+  display: inline;
+}
+
+.command-login #login-info {
+  display: none;
+}
+
+#login-info {
+  float: left;
+}
 </style>
 
 </head>
 
 <body class="theme-dark" >
+<div id="app" class="command-login">
 <div class="app-header header-bar">
-  <img id="remote-logo" src="images/dark/icon-dropbox.png"/>      
+  <div id="remotes" class="popup">
+    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>  
+    <div id="remote-menu" class="menu boxed">
+      <div id="remote-dropbox" class="button" title="Dropbox cloud storage"
+          ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>
+      <div id="remote-onedrive" class="button" title="Onedrive cloud storage"
+        ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
+    </div>
+  </div>
+  <div id="button-login" class="button">login</div> 
+  <div id="folder-name"></div>
+  <input id="file-name" type="text"></input>
 </div>
 <div class="app-body">
-<div id="listing" class="app-content">
-
-</div>
+  <div class="app-content">
+    <div id="message-login" class="message">Please login.</div>
+    <div id="message-connect" class="message">Connected.</div>
+    <div id="listing">
+    </div>
+  </div>
 </div>
 <div class="app-footer header-bar">
-  <div class="button">choose</div>
-  <div class="button">cancel</div>
+  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div></div>
+  <div id="button-choose" class="button">choose</div>
+  <div id="button-new" class="button">create</div>
+  <div id="button-save" class="button">save</div>
+  <div id="button-cancel" class="button">cancel</div>
+</div>
 </div>
 
 <!-- use the monaco loader to implement "require" -->
@@ -100,7 +235,7 @@ require.config({
 });
 
 require( ["../scripts/picker"], function(picker) {
-  picker.choose();
+  picker.run();
 });
 </script>
 

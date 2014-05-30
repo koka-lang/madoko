@@ -519,7 +519,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function getCookie(name) {
     var rx = RegExp("\\b" + name + "=([^;&]*)");
     var cap = rx.exec(document.cookie);
-    return (cap ? cap[1] : null);
+    return (cap ? decodeURIComponent(cap[1]) : null);
   }
 
   function setCookie( name, value, maxAge ) {
@@ -928,7 +928,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var method = reqparam.method || "POST";
 
     var query = (params ? urlEncode(params) : "");
-    if (query) reqparam.url = reqparam.url + "?" + urlEncode(params);
+    if (query) reqparam.url = reqparam.url + "?" + query;
 
     req.open( method, reqparam.url, true );
     
@@ -1090,7 +1090,10 @@ doc.close();
 doc.execCommand("SaveAs", null, filename)
 */
 
-  function openAuthPopup(url, width, height ) {
+  function openAuthPopup(url, params, width, height ) {
+    var query = (params ? urlEncode(params) : "");
+    if (query) url = url + "?" + query;
+
     if (!width) width = 525;
     if (!height) height = 525; 
     var left  = (window.screenX || window.screenLeft) + ((window.outerWidth - width) / 2);

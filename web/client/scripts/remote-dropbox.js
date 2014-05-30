@@ -10,15 +10,17 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-var redirectUri = "https://www.madoko.net/redirect/dropbox";
-//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
+//var redirectUri = "https://www.madoko.net/redirect/dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
 var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
+var accountUrl  = "https://api.dropbox.com/1/account/";
 var appRoot     = "";
 
 var _access_token = null;
+var _username = "";
 
 function getAccessToken() {
   if (!_access_token) {
@@ -35,7 +37,7 @@ function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
   var url = "https://www.dropbox.com/1/oauth2/authorize?response_type=token&client_id=" + appKey + "&redirect_uri=" + redirectUri;
-  var w = Util.openAuthPopup(url,600);
+  var w = Util.openAuthPopup(url,null,600);
   if (!w) return Promise.rejected( new Error("dropbox: authorization popup was blocked") );
   return new Promise( function(cont) {
     var timer = setInterval(function() {   
@@ -49,12 +51,22 @@ function login(dontForce) {
         }
       }  
     }, 100); 
+  }).then( getUserName );
+}
+
+function getUserName() {
+  if (_username) return Promise.resolved(_username);
+  return Util.requestGET( accountUrl + "info", { access_token: getAccessToken() } ).then( function(info) {
+    if (typeof info === "string") info = JSON.parse(info);
+    _username = info ? info.display_name : "";
+    return _username;
   });
 }
 
 function logout() {
   Util.setCookie("auth_dropbox","",0);
   _access_token = null;
+  _username = "";
 }
 
 function chooseOneFile() {
@@ -259,6 +271,25 @@ var Dropbox = (function() {
       });
     });
   }
+
+  Dropbox.prototype.connected = function() {
+    return (getAccessToken() != null);
+  }
+
+  Dropbox.prototype.login = function() {
+    return login();
+  }
+
+  Dropbox.prototype.logout = function() {
+    return logout();
+  }
+
+  Dropbox.prototype.getUserName = function() {
+    var self = this;
+    if (!self.connected()) return Promise.resolved(null);
+    return getUserName();
+  }
+
 
   return Dropbox;
 })();   
