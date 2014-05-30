@@ -36,8 +36,13 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
-  var url = "https://www.dropbox.com/1/oauth2/authorize?response_type=token&client_id=" + appKey + "&redirect_uri=" + redirectUri;
-  return Util.openModalPopup(url,null,600,600).then( function() {
+  var url = "https://www.dropbox.com/1/oauth2/authorize"
+  var params = { 
+    response_type: "token", 
+    client_id: appKey, 
+    redirect_uri:  redirectUri
+  };
+  return Util.openModalPopup(url,params,"oauth",600,600).then( function() {
     if (!getAccessToken()) throw new Error("dropbox login failed");
     return getUserName();
   });
@@ -178,7 +183,7 @@ var Dropbox = (function() {
 
   function Dropbox( folder ) {
     var self = this;
-    self.folder = folder;
+    self.folder = folder || "";
   }
 
   Dropbox.prototype.createNewAt = function(folder) {

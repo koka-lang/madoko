@@ -194,7 +194,6 @@ var UI = (function() {
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("remote-logo");
-    self.saveFolder = document.getElementById("save-folder");
     self.theme = "vs";
 
     // start editor
@@ -408,22 +407,11 @@ var UI = (function() {
       }
     };
 
-    document.getElementById("load-onedrive").onclick = function(ev) {
+    document.getElementById("open").onclick = function(ev) {
       self.event( "loaded from remote storage", "loading...", State.Loading, function() {
-        return self.checkSynced( function() {
-          return storage.onedriveOpenFile().then( function(res) { 
-            return self.openFile(res.storage,res.docName); 
-          });
-        });
-      });
-    };
-
-    document.getElementById("load-dropbox").onclick = function(ev) {
-      self.event( "loaded from remote storage", "loading...", State.Loading, function() {
-        return self.checkSynced( function() {
-          return storage.dropboxOpenFile().then( function(res) { 
-            return self.openFile(res.storage,res.docName); 
-          });
+        return storage.openFile().then( function(res) { 
+          if (!res) return Promise.resolved(); // canceled
+          return self.openFile(res.storage,res.docName); 
         });
       });
     };
@@ -432,15 +420,9 @@ var UI = (function() {
       self.loadFromHash();
     });
 
-    document.getElementById("save-onedrive").onclick = function(ev) {
+    document.getElementById("save").onclick = function(ev) {
       self.event( "","", State.Syncing, function() {
-        return self.saveTo( storage.newOnedriveAt );
-      });
-    }
-
-    document.getElementById("save-dropbox").onclick = function(ev) {
-      self.event( "","", State.Syncing, function() {
-        return self.saveTo( storage.newDropboxAt );
+        return self.saveTo();
       });
     }
 
@@ -935,8 +917,7 @@ var UI = (function() {
       self.storage = stg;
       self.docName = docName;
       self.docText = file.content;
-      self.saveFolder.value = self.storage.folder(); 
-    
+      
       self.storage.addEventListener("update",self);
       self.runner.setStorage(self.storage);
       var remoteLogo = self.storage.remote.logo();
@@ -1553,17 +1534,14 @@ var UI = (function() {
     self.editSelect();
   }
 
-  UI.prototype.saveTo = function( newStorageAt ) {
+  UI.prototype.saveTo = function() {
     var self = this;
     self.showSpinner(true,self.syncer);
-    var folder = self.saveFolder.value.replace("\\","/");
-
-    var newstem = (folder ? util.stemname(folder) : "document");
+    
     return self.withSyncSpinner( function() { 
-      return newStorageAt(folder).then( function(toStorage) {
-        return storage.saveTo(self.storage, toStorage, util.stemname(self.docName), newstem);
-      });
-    }).then( function(res){ 
+      return storage.saveAs(self.storage,self.docName);
+    }).then( function(res) {
+      if (!res) throw new Error("cancel"); 
       return self.setStorage(res.storage,res.docName).then( function() {
         return res.docName;
       }); 

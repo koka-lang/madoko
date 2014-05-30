@@ -49,10 +49,14 @@ html,body,#fullapp {
 .theme-dark .header-bar .popup div {
   color: black;
 }
+.theme-dark .header-bar .popup div .button:hover {
+  background-color: Gainsboro;
+}
+
 .theme-dark .monaco-editor.vs .clnr {
   color: #666;
 }
-.theme-dark .menubar>div>img.button:hover,
+
 .theme-dark .popup:hover,
 .theme-dark .popup>.button:hover,
 .theme-dark .header-bar a:hover,

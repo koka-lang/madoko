@@ -899,7 +899,20 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return AsyncRunner;
   })();
 
-  function urlEncode( obj ) {
+  function urlParamsDecode(hash) {
+    if (!hash) return {};
+    if (hash[0]==="#" || hash[0]==="?") hash = hash.substr(1);
+    var obj = {};
+    hash.split("&").forEach( function(part) {
+      var i = part.indexOf("=");
+      var key = decodeURIComponent(i < 0 ? part : part.substr(0,i));
+      var val = decodeURIComponent(i < 0 ? "" : part.substr(i+1));
+      obj[key] = val;
+    });
+    return obj;
+  }
+
+  function urlParamsEncode( obj ) {
     var vals = [];
     properties(obj).forEach( function(prop) {
       vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] ? obj[prop].toString() : "") );
@@ -927,7 +940,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var req = new XMLHttpRequest();
     var method = reqparam.method || "POST";
 
-    var query = (params ? urlEncode(params) : "");
+    var query = (params ? urlParamsEncode(params) : "");
     if (query) reqparam.url = reqparam.url + "?" + query;
 
     req.open( method, reqparam.url, true );
@@ -1090,12 +1103,16 @@ doc.close();
 doc.execCommand("SaveAs", null, filename)
 */
 
-  function openAuthPopup(url, params, width, height ) {
-    var query = (params ? urlEncode(params) : "");
+  function openAuthPopup(url, params, name, width, height ) {
+    var query = (params ? urlParamsEncode(params) : "");
     if (query) url = url + "?" + query;
 
-    if (!width) width = 525;
-    if (!height) height = 525; 
+    if (!width || width < 0) width = 600;
+    if (!height || height < 0) height = 500; 
+
+    if (width < 1) width = window.outerWidth * width;
+    if (height < 1) height = window.outerHeight * height;
+
     var left  = (window.screenX || window.screenLeft) + ((window.outerWidth - width) / 2);
     var top   = (window.screenY || window.screenTop) + (((window.outerHeight - height) / 2) - 30);
 
@@ -1110,7 +1127,7 @@ doc.execCommand("SaveAs", null, filename)
       "menubar=no",
       "scrollbars=yes"];
 
-    var popup = window.open(url, "oauth", features.join(","));
+    var popup = window.open(url, name || "oauth", features.join(","));
     if (popup) {
       popup.focus();
     }
@@ -1118,8 +1135,8 @@ doc.execCommand("SaveAs", null, filename)
     return popup;
   }
 
-  function openModalPopup( url, params, width, height ) {
-    var w = openAuthPopup( url, params, width, height );
+  function openModalPopup( url, params, name, width, height ) {
+    var w = openAuthPopup( url, params, name, width, height );
     if (!w) return Promise.rejected( new Error("popup was blocked") );
     return new Promise( function(cont) {
       var timer = setInterval(function() {   
@@ -1229,6 +1246,9 @@ doc.execCommand("SaveAs", null, filename)
     openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
     openModalPopup: openModalPopup,
+
+    urlParamsEncode: urlParamsEncode,
+    urlParamsDecode: urlParamsDecode,
   
 
     Map: Map,

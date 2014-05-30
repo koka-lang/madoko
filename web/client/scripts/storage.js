@@ -10,9 +10,9 @@ define(["../scripts/promise","../scripts/util",
         "../scripts/merge", 
         "../scripts/remote-null",
         "../scripts/remote-dropbox",
-        "../scripts/remote-onedrive",
+        "../scripts/remote-onedrive2",
         "../scripts/remote-http",
-        ], function(Promise,util,merge,NullRemote,Dropbox,Onedrive,HttpRemote) {
+        ], function(Promise,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote) {
 
 
 var Encoding = {
@@ -21,7 +21,7 @@ var Encoding = {
 
   decode: function( enc, text ) {
     if (enc===Encoding.Base64) {
-      return util.decodeBase64(text);
+      return Util.decodeBase64(text);
     }
     else {
       return text;
@@ -32,7 +32,7 @@ var Encoding = {
     if (!data) return "";
     if (enc===Encoding.Base64) {
       if (data instanceof ArrayBuffer) 
-        return util.encodeBase64(data);
+        return Util.encodeBase64(data);
       else
         return window.btoa(data);
     }
@@ -42,21 +42,39 @@ var Encoding = {
   },
 
   fromExt: function(fpath) {
-    var mime = util.mimeFromExt(fpath);
-    return (util.isTextMime(mime) ? Encoding.Utf8 : Encoding.Base64);
+    var mime = Util.mimeFromExt(fpath);
+    return (Util.isTextMime(mime) ? Encoding.Utf8 : Encoding.Base64);
   },
 };
 
 
-function onedriveOpenFile() {
-  return Onedrive.openFile().then( function(info) {
-    return {storage: new Storage(info.remote), docName: info.docName };
+
+function picker( storage, params ) {
+  if (storage && !storage.isSynced()) params.alert = "true";
+  return Util.openModalPopup("picker.html#" + Util.urlParamsEncode(params), null,"picker",0.5,0.5).then( function() {
+    var err = Util.getCookie("picker-error"); Util.setCookie("picker-error","",0);
+    if (err) throw err;
+
+    var uri = Util.getCookie("picker-path"); Util.setCookie("picker-path","",0);
+    var cap = /^(\w+):\/\/\/?(.*)$/.exec(uri);
+    if (!cap) throw new Error("cancelled");
+    var path = cap[2];
+    var folder = Util.dirname(path);
+    var fileName = Util.basename(path);
+    if (Util.extname(path) == "" && (params.command === "save" || params.command === "new")) {
+      folder = path;
+      fileName = Util.basename(path) + ".mdk";
+    }
+    var remote = unpersistRemote( cap[1], { folder: folder } );
+    if (!remote) throw new Error("cancelled");
+    return { storage: new Storage(remote), docName: fileName }
   });
 }
 
-function dropboxOpenFile() {
-  return Dropbox.openFile().then( function(info) {
-    return {storage: new Storage(info.remote), docName: info.docName };
+function openFile(storage) {
+  return picker( storage, {
+    command: "open",   
+    extensions: ".mdk .md .madoko .mkdn", 
   });
 }
 
@@ -71,9 +89,9 @@ function createNullStorage() {
 }
 
 function serverGetInitialContent(fpath) {
-  if (!util.extname(fpath)) fpath = fpath + ".mdk";
-  if (!util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
-  return util.requestGET( fpath );
+  if (!Util.extname(fpath)) fpath = fpath + ".mdk";
+  if (!Util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
+  return Util.requestGET( fpath );
 }
 
 function unpersistRemote(remoteType,obj) {
@@ -94,12 +112,12 @@ function unpersistRemote(remoteType,obj) {
 function unpersistStorage( obj ) {
   var remote = unpersistRemote( obj.remoteType, obj.remote );
   var storage = new Storage(remote);
-  storage.files = util.unpersistMap( obj.files );
+  storage.files = Util.unpersistMap( obj.files );
   // be downward compatible with old storage..
   storage.files.forEach( function(fpath,file) {
     if (file.kind) {
       file.encoding = Encoding.fromExt(fpath);
-      file.mime = util.mimeFromExt(fpath);
+      file.mime = Util.mimeFromExt(fpath);
       delete file.url;
     }
     if (typeof file.createdTime === "string") {
@@ -122,18 +140,28 @@ function newDropboxAt( folder ) {
   return Dropbox.createAt(folder);
 }
 
-function saveTo(  storage, toRemote, docStem, newStem ) 
+function saveAs( storage, docName ) {
+  var stem = Util.stemname(docName);
+  return picker( storage, {
+    command: "save",
+    file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
+  }).then( function(res) {
+    if (!res) return null; // cancel
+    return saveTo( storage, res.storage, stem, Util.stemname(res.docName) );
+  });
+}
+
+function saveTo(  storage, toStorage, docStem, newStem ) 
 {
   var newStem = (newStem === docStem ? "" : newStem);
   var newName = (newStem ? newStem : docStem) + ".mdk";
-  var toStorage = new Storage(toRemote);
   return toStorage.readFile( newName, false ).then( 
     function(file) {
-      throw new Error( "cannot save, document already exists: " + util.combine(toStorage.folder(), newName) );
+      throw new Error( "cannot save, document already exists: " + Util.combine(toStorage.folder(), newName) );
     },
     function(err) {
       storage.forEachFile( function(file0) {
-        var file = util.copy(file0);
+        var file = Util.copy(file0);
         file.modified = true;
         if (newStem) {
           file.path = file.path.replace( 
@@ -155,8 +183,8 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
             
     stem = ["snapshot", docstem, 
             now.getFullYear().toString(),
-            util.lpad( month.toString(), 2, "0" ),
-            util.lpad( day.toString(), 2, "0" ),
+            Util.lpad( month.toString(), 2, "0" ),
+            Util.lpad( day.toString(), 2, "0" ),
            ].join("-");
   }
   var folder = stem + (num ? "-v" + num.toString() : "");
@@ -170,24 +198,24 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 
 function createSnapshot( storage, docName ) {
   return storage.remote.connect().then( function() {
-    return createSnapshotFolder( storage.remote, util.stemname(docName) );
+    return createSnapshotFolder( storage.remote, Util.stemname(docName) );
   }).then( function(folder) {
     return storage.remote.createNewAt( folder );
   }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);
     storage.forEachFile( function(file0) {
-      var file = util.copy(file0);
+      var file = Util.copy(file0);
       file.modified = true;
       toStorage.files.set( file.path, file );
     });
     return toStorage.sync().then( function() {
-      util.message( "snapshot saved to: " + toStorage.folder(), util.Msg.Info );
+      Util.message( "snapshot saved to: " + toStorage.folder(), Util.Msg.Info );
     });
   });
 }
 
 function isEditable(file) {
-  return (util.isTextMime(file.mime) && !util.hasGeneratedExt(file.path));
+  return (Util.isTextMime(file.mime) && !Util.hasGeneratedExt(file.path));
 }
 
 function getEditPosition(file) {
@@ -195,7 +223,7 @@ function getEditPosition(file) {
 }
 
 function pushAtomic( fpath, time ) {
-  return util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString() } );
+  return Util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString() } );
 }
 
 
@@ -203,11 +231,11 @@ var Storage = (function() {
   function Storage( remote ) {
     var self = this;
     self.remote    = remote;
-    self.files     = new util.Map();
+    self.files     = new Util.Map();
     self.listeners = [];
     self.unique    = 1;
     // we only pull again from remote storage every minute or so..
-    self.pullFails = new util.Map();
+    self.pullFails = new Util.Map();
     self.pullIval  = setInterval( function() { 
       self.pullFails.clear(); 
     }, 60000 );
@@ -234,7 +262,7 @@ var Storage = (function() {
     if (minimal) {
       var map = self.files.copy();
       map.forEach( function(path,file) {
-        if (!util.isTextMime(file.mime) || util.hasGeneratedExt(path)) map.remove(path);
+        if (!Util.isTextMime(file.mime) || Util.hasGeneratedExt(path)) map.remove(path);
       });
       pfiles = map.persist();
     }
@@ -271,7 +299,7 @@ var Storage = (function() {
     var self = this;
     var synced = true;
     self.forEachFile( function(file) {
-      if (file.modified && (full || !util.hasGeneratedExt(file.path))) {
+      if (file.modified && (full || !Util.hasGeneratedExt(file.path))) {
         synced = false;
         return false; // break
       }
@@ -335,11 +363,11 @@ var Storage = (function() {
   // private
   Storage.prototype._updateFile = function( finfo ) {
     var self = this;
-    util.assert(typeof finfo==="object");
+    Util.assert(typeof finfo==="object");
     finfo.path    = finfo.path || "unknown.mdk";
     finfo.content = finfo.content || "";
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
-    finfo.mime        = finfo.mime || util.mimeFromExt(finfo.path);
+    finfo.mime        = finfo.mime || Util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
     
     // check same content
@@ -371,7 +399,7 @@ var Storage = (function() {
     var self = this;
     if (!opts) opts = {};
     if (!opts.encoding) opts.encoding = Encoding.fromExt(fpath);
-    if (!opts.mime) opts.mime = util.mimeFromExt(fpath);
+    if (!opts.mime) opts.mime = Util.mimeFromExt(fpath);
     if (opts.searchDirs==null) opts.searchDirs = [];
     return opts;
   }
@@ -408,7 +436,7 @@ var Storage = (function() {
     var self = this;
     if (!dirs || dirs.length===0) return Promise.resolved(null);
     var dir = dirs.shift();
-    return self._pullFile( util.combine(dir,fbase), opts ).then( function(file) {
+    return self._pullFile( Util.combine(dir,fbase), opts ).then( function(file) {
         return file;
       }, function(err) {
         if (dirs.length===0) return null;
@@ -421,12 +449,14 @@ var Storage = (function() {
     var file = self.files.get(fpath);
     if (file) return Promise.resolved(file);
 
+    //if (!fpath) throw new Error("no path:" + fpath)
+
     // prevent too many calls to remote storage... 
     if (self.pullFails.contains(fpath)) return Promise.rejected(new Error("cannot find file: " + fpath));
 
     opts = self._initFileOptions(fpath,opts);
-    var dirs = [util.dirname(fpath)].concat(opts.searchDirs);
-    return self._pullFileSearch( util.basename(fpath), opts, dirs ).then( function(file) {      
+    var dirs = [Util.dirname(fpath)].concat(opts.searchDirs);
+    return self._pullFileSearch( Util.basename(fpath), opts, dirs ).then( function(file) {      
       if (file) {
         self._updateFile( file );
         return file;
@@ -444,14 +474,14 @@ var Storage = (function() {
         }
 
         // only try standard style if necessary
-        if (!util.hasEmbedExt(fpath)) {
+        if (!Util.hasEmbedExt(fpath)) {
           return noContent();
         }
 
         // try to find the file as a madoko standard style on the server..
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
-        if (util.extname(fpath) === ".json" && !util.dirname(fpath)) spath = "styles/lang/" + fpath;
+        if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) spath = "styles/lang/" + fpath;
 
         return serverGetInitialContent(spath).then( function(_content,req) {
             var content = req.responseText;
@@ -467,11 +497,11 @@ var Storage = (function() {
   }
 
   function isRoot( fpath, roots ) {
-    if (util.contains(roots,fpath)) return true;
-    if (util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
-      if (util.contains(roots,fpath.substr(4))) return true;
+    if (Util.contains(roots,fpath)) return true;
+    if (Util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
+      if (Util.contains(roots,fpath.substr(4))) return true;
     }
-    if (util.extname(fpath) === ".pdf" || util.extname(fpath) === ".html") return true;
+    if (Util.extname(fpath) === ".pdf" || Util.extname(fpath) === ".html") return true;
     return false;
   }
 
@@ -495,15 +525,15 @@ var Storage = (function() {
 
   Storage.prototype.sync = function( diff, cursors ) {
     var self = this;
-    var remotes = new util.Map();
+    var remotes = new Util.Map();
 
     return self.connect(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,file); } );
       return Promise.when( syncs ).then( function(res) {
         res.forEach( function(msg) {
-          if (msg) util.message(msg, util.Msg.Trace);
+          if (msg) Util.message(msg, Util.Msg.Trace);
         });
-        util.message("synchronized with cloud storage", util.Msg.Info );
+        Util.message("synchronized with cloud storage", Util.Msg.Info );
       });
     });
   }
@@ -535,7 +565,7 @@ var Storage = (function() {
       // nothing to do
       return self._syncMsg(file,"up-to-date");
     }
-    else if (util.isTextMime(file.mime) && rxConflicts.test(file.content)) {
+    else if (Util.isTextMime(file.mime) && rxConflicts.test(file.content)) {
       // don't save files with merge conflicts
       throw new Error( self._syncMsg(file,"cannot save to server: resolve merge conflicts first!", "save to server") );
     }
@@ -543,7 +573,7 @@ var Storage = (function() {
       // write back the client changes
       return pushAtomic( file.path, remoteTime ).then( function() {
         // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
-        var file0 = util.copy(file);
+        var file0 = Util.copy(file);
         return self.pushFile( file0 ).then( function(createdTime) {
           //newFile.modified = false;
           var file1 = self.files.get(file.path);
@@ -566,7 +596,7 @@ var Storage = (function() {
 
   Storage.prototype._syncPull = function(diff,cursors,file,remoteFile) {
     var self = this;
-    var canMerge = util.isTextMime(file.mime);
+    var canMerge = Util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
     if (file.modified && canMerge) {
       if (rxConflicts.test(file.content)) {
@@ -577,7 +607,7 @@ var Storage = (function() {
     else {
       // overwrite with server content
       if (!canMerge && file.modified) {
-        util.message( "warning: binary file modified on server and client, overwrite local one: " + file.path, util.Msg.Warning );
+        Util.message( "warning: binary file modified on server and client, overwrite local one: " + file.path, Util.Msg.Warning );
       }
       self._updateFile( remoteFile );
       return self._syncMsg( remoteFile, "update from server");
@@ -609,7 +639,7 @@ var Storage = (function() {
         }
         else {
           // write back merged result
-          var file0 = util.copy(remoteFile);
+          var file0 = Util.copy(remoteFile);
           file0.content  = res.merged;
           file0.modified = true;
           self._updateFile(file0);
@@ -645,13 +675,11 @@ var Storage = (function() {
   
 
 return {
-  onedriveOpenFile: onedriveOpenFile,
-  dropboxOpenFile : dropboxOpenFile,
+  openFile: openFile,
+  saveAs: saveAs,
   httpOpenFile    : httpOpenFile,
   createNullStorage: createNullStorage,
-  newOnedriveAt   : newOnedriveAt,
-  newDropboxAt    : newDropboxAt,
-  saveTo          : saveTo,  
+  
   Storage         : Storage,
   unpersistStorage: unpersistStorage,  
   Encoding        : Encoding,

@@ -173,7 +173,7 @@ function _writeFileAt( folderId, name, content ) {
 }
 
 function _writeFile( folderId, path, content ) {
-  return ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
+  return _ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
     return _writeFileAt( info.id, Util.basename(path), content );
   }).then( function(resp) {
     return infoFromId( resp.id );
@@ -204,7 +204,7 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,800,800).then( function() {
+  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,"oauth",800,800).then( function() {
     if (!getAccessToken()) throw new Error("onedrive login failed");
     return getUserName();
   });
@@ -244,7 +244,7 @@ function createAt( folder ) {
 ---------------------------------------------- */
 
 function unpersist( obj ) {
-  return new Onedrive(obj.folderId, obj.folder || "");
+  return new Onedrive(obj.folder || "");
 }
 
 function type() {
@@ -255,7 +255,7 @@ var Onedrive = (function() {
 
   function Onedrive( folder ) {
     var self = this;
-    self.folder = folder;
+    self.folder = folder || "";
   }
 
   Onedrive.prototype.type = function() {
