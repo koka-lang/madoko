@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/map","../scripts/util"], function(Promi
 
 var onedriveOptions = {
   client_id     : "000000004C113E9D",
-  redirect_uri  : // "https://www.madoko.net/redirect/live", 
-    "https://madoko.cloudapp.net/redirect/live",
+  redirect_uri  : "https://www.madoko.net/redirect/live", 
+    //"https://madoko.cloudapp.net/redirect/live",
   scope         : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   response_type : "token",
   display: "touch",
