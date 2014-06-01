@@ -105,13 +105,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
         status.innerHTML = span(txt,35);
-        addClassName(iconOk,"hide");
-        removeClassName(iconWarn,"hide");
+        //addClassName(iconOk,"hide");
+        //removeClassName(iconWarn,"hide");
       }
       else if (kind===Msg.Status) {
         status.innerHTML = span(txt,35);
-        addClassName(iconWarn,"hide");
-        removeClassName(iconOk,"hide");
+        //addClassName(iconWarn,"hide");
+        //removeClassName(iconOk,"hide");
       }
     }
   }
@@ -1176,10 +1176,10 @@ doc.execCommand("SaveAs", null, filename)
         }
         var thisElem = isDivParent(ev.currentTarget,ev.target);
         if ((hovering && hovering !== ev.currentTarget) ||
-            (hovering && !thisElem) ||
+            (hovering && !thisElem && hasClassName(ev.currentTarget,"no-close-on-click")) ||
             (!hovering && thisElem)) {          
           hovering = ev.currentTarget;
-          util.addClassName(hovering,"hover");
+          addClassName(hovering,"hover");
         }
         else {
           hovering = null;
