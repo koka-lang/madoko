@@ -223,8 +223,13 @@ function checkConnected(remote) {
   return remote.getUserName().then( function(userName) {
     return (userName != null);
   }, function(err) {
-    remote.logout();
-    return false;
+    if (err.httpCode === 401) { // access token expired
+      remote.logout();
+      return false;
+    }
+    else {
+      return true;
+    }
   });
 }
   
