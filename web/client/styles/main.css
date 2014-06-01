@@ -228,6 +228,13 @@ html,body,#fullapp {
   margin: 0;
 } 
 
+#icon-disconnect {
+  display: none;
+  height: 0.5em;
+  margin-left: -0.3em;
+  vertical-align: 0.35em;
+ }
+
 /* File items */
 
 .disable, .file.generated, .file.image {
