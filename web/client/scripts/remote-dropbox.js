@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-var redirectUri = "https://www.madoko.net/redirect/dropbox";
-//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
+//var redirectUri = "https://www.madoko.net/redirect/dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -40,7 +40,8 @@ function login(dontForce) {
   var params = { 
     response_type: "token", 
     client_id: appKey, 
-    redirect_uri:  redirectUri
+    redirect_uri:  redirectUri,
+    state: Util.generateOAuthState(),
   };
   return Util.openModalPopup(url,params,"oauth",600,600).then( function() {
     if (!getAccessToken()) throw new Error("dropbox login failed");

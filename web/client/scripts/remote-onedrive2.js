@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/map","../scripts/util"], function(Promi
 
 var onedriveOptions = {
   client_id     : "000000004C113E9D",
-  redirect_uri  : "https://www.madoko.net/redirect/live", 
-    //"https://madoko.cloudapp.net/redirect/live",
+  redirect_uri  : //"https://www.madoko.net/redirect/live", 
+    "https://madoko.cloudapp.net/redirect/live",
   scope         : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   response_type : "token",
   display: "touch",
@@ -204,7 +204,9 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  return Util.openModalPopup(onedriveLoginUrl,onedriveOptions,"oauth",800,600).then( function() {
+  var params = Util.copy(onedriveOptions);
+  params.state = Util.generateOAuthState();
+  return Util.openModalPopup(onedriveLoginUrl,params,"oauth",800,650).then( function() {
     if (!getAccessToken()) throw new Error("onedrive login failed");
     return getUserName();
   });
@@ -333,6 +335,7 @@ var Onedrive = (function() {
       return (items ? items : []).map( function(item) {
         item.type = (item.type==="folder" || item.type==="album" ? "folder" : "file");
         item.path = Util.combine(fpath,item.name);
+        item.isShared = (item.shared_with && item.shared_with.access !== "Just me");
         return item;
       });
     });

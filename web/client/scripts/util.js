@@ -1188,6 +1188,12 @@ doc.execCommand("SaveAs", null, filename)
     }
   }
 
+  function generateOAuthState() {
+    var state = Date.now().toFixed(0) + "-" + (Math.random() * 999999).toFixed(0);
+    setCookie( "oauth-state", state, 60 ); 
+    return state;
+  }
+
   return {
     properties: properties,
     extend: extend,
@@ -1246,6 +1252,7 @@ doc.execCommand("SaveAs", null, filename)
     openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
     openModalPopup: openModalPopup,
+    generateOAuthState: generateOAuthState,
 
     urlParamsEncode: urlParamsEncode,
     urlParamsDecode: urlParamsDecode,

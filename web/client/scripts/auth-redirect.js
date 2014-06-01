@@ -11,6 +11,13 @@ function setCookie( name, value, maxAge ) {
   document.cookie = name + "=" + encodeURIComponent(value) + ";path=/;secure;expires=" + date.toGMTString();
 }
 
+function getCookie(name) {
+  var rx  = RegExp("\\b" + name + "=([^;&]*)");
+  var cap = rx.exec(document.cookie);
+  return (cap ? decodeURIComponent(cap[1]) : null);
+}
+
+
 function decodeParams(hash) {
   if (!hash) return {};
   if (hash[0]==="#") hash = hash.substr(1);
@@ -24,6 +31,7 @@ function decodeParams(hash) {
   return obj;
 }
 
+var success = false;
 var script = document.getElementById("auth");
 var remote = (script ? script.getAttribute("data-remote") : "");
 
@@ -31,10 +39,23 @@ if (remote && window && window.location && window.location.hash) {
   var params = decodeParams(window.location.hash);
   //document.body.innerHTML = JSON.stringify(params);
 
-  if (params.access_token) {
-    var year = 60*60*24*365;
-    setCookie( "auth_" + remote, params.access_token, year );
+  var state = getCookie("oauth-state");
+  if (state && state === params.state) {  // protect against CSRF attack
+    if (params.access_token) {
+      var year = 60*60*24*365;
+      setCookie( "auth_" + remote, params.access_token, year );
+      var success = true;
+    }
+    else {
+      document.body.innerHTML = "The access_token was not present in the reponse.";
+    }
+  }
+  else {
+    document.body.innerHTML = "The state parameter does not match; this might indicate a CSRF attack?";
   }
 }
 
-window.close();
+if (success) {
+  window.close();
+}
+
