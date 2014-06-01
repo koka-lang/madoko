@@ -229,16 +229,21 @@ html,body,#fullapp {
 } 
 
 #icon-disconnect {
-  display: none;
+  visibility: hidden;
   height: 0.5em;
   margin-left: -0.3em;
   vertical-align: 0.35em;
+  margin-right: -0.3em;
  }
 
 /* File items */
 
 .disable, .file.generated, .file.image {
   color: #AAA;
+}
+
+#edit-select-header {
+  padding-left: 0.25em;
 }
 
 #edit-select-header .folder {
@@ -290,7 +295,7 @@ div.boxed {
 
 /* Editor Header */
 #document {
-  margin-right: 0.3em;
+  padding-right: 0.2em;
 }
 
 #edit-select {

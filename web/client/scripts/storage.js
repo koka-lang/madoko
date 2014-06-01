@@ -112,7 +112,7 @@ function checkConnected(remote) {
       return false;
     }
     else {
-      return true;
+      return false;
     }
   });
 }
@@ -340,6 +340,11 @@ var Storage = (function() {
   Storage.prototype.createSnapshot = function(docName) {
     var self = this;
     return createSnapshot(self,docName);
+  }
+
+  Storage.prototype.checkConnected = function() {
+    var self = this;
+    return checkConnected(self.remote);
   }
 
   /* Generic */

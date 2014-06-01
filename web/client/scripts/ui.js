@@ -130,7 +130,6 @@ var UI = (function() {
       util.dispatchEvent( self.checkLineNumbers, "change" );
       util.dispatchEvent( self.checkWrapLines, "change" );      
       util.dispatchEvent( self.checkDelayedUpdate, "change" );
-      util.dispatchEvent( self.checkAutoSync, "change" );
     }).then( function() { }, function(err) {
       util.message(err, util.Msg.Error);          
     }).always( function() {
@@ -377,25 +376,23 @@ var UI = (function() {
       }
     };
 
-    self.autoSyncIval = 0;
+    self.iconDisconnect = document.getElementById("icon-disconnect");
     self.checkAutoSync = document.getElementById('checkAutoSync');
-    self.checkAutoSync.onchange = function(ev) {
-      if (self.autoSyncIval) {
-        clearInterval(self.autoSyncIval);
-        self.autoSyncIval = 0;
-      }
-      if (ev.target.checked) {
-        self.autoSyncIval = setInterval( function() {
-          if (self.state === State.Normal && self.storage.isConnected()) { 
-            if (Date.now() - self.lastEditChange > 5000) {
-              self.synchronize();
-            }
+    setInterval( function() {
+      self.updateConnectionStatus().then( function(isConnected) {
+        if (isConnected && self.checkAutoSync.checked && self.state === State.Normal) { 
+          if (Date.now() - self.lastEditChange > 5000) {
+            self.synchronize();
           }
-        }, 30000 );
-      }      
-    }
-    util.dispatchEvent( self.checkAutoSync, "change");
+        }        
+      });
+    }, 30000 );
 
+    document.getElementById("connection").onclick = function(ev) {
+      self.event( "connected", "connecting...", State.Loading, function() {
+        return storage.connect(self.storage);
+      });
+    };
 
     document.getElementById("menu-settings-content").onclick = function(ev) {
       if (ev.target && util.contains(ev.target.className,"button")) {
@@ -551,6 +548,16 @@ var UI = (function() {
 
     // emulate hovering by clicks for touch devices
     util.enablePopupClickHovering();    
+  }
+
+  UI.prototype.updateConnectionStatus = function (stg) {
+    var self = this;
+    if (!stg) stg = self.storage;
+    if (!stg) return Promise.resolved(false);
+    return stg.checkConnected().then( function(isConnected) {
+      self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
+      return isConnected;
+    });
   }
 
   UI.prototype.setEditText = function( text, mode ) {
@@ -912,6 +919,7 @@ var UI = (function() {
       var content = document.getElementById("initial").textContent;
       stg.writeFile(docName, content);
     }
+    self.updateConnectionStatus(stg);
     self.showSpinner(true);    
     return stg.readFile(docName, false).then( function(file) { 
       self.showSpinner(false );    
