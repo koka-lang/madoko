@@ -361,6 +361,7 @@ div.input-mathpre {
 .highlighted .token.predefined      { color: navy }
 .highlighted .token.invalid         { border-bottom: red dotted 1px }
 .highlighted .token.code            { color: maroon }
+.highlighted .token.code.keyword    { color: navy }
 
 .highlighted .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
 .highlighted .token.number      {  }    /* .[hex,octal,binary,float] */

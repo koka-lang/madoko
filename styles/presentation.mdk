@@ -54,14 +54,15 @@ Html Header   :
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<link rel="stylesheet" href="&reveal-url;/css/theme/&reveal-theme;.css" id="theme">
 	<script>
-		document.write( '<link rel="stylesheet" href="&reveal-url;/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+	  document.write( '<link rel="stylesheet" href="&reveal-url;/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
 	</script>
 	<!--[if lt IE 9]>
 	<script src="&reveal-url;/lib/js/html5shiv.js"></script>
 	<![endif]-->
 	<style>
 	body.madoko {
-		margin: 0pt
+	  margin: 0pt;
+      padding: 0pt;      
 	}	
 	.reveal p { 
 		text-align: center; 
