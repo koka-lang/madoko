@@ -380,7 +380,7 @@ var UI = (function() {
     self.checkAutoSync = document.getElementById('checkAutoSync');
     setInterval( function() {
       self.updateConnectionStatus().then( function(isConnected) {
-        if (isConnected && self.storage.remote.type() !== "null" && 
+        if (isConnected && self.storage.remote.type() !== "local" && 
               self.checkAutoSync.checked && self.state === State.Normal) { 
           if (Date.now() - self.lastEditChange > 5000) {
             self.synchronize();
