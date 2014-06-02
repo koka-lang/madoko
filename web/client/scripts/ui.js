@@ -422,12 +422,6 @@ var UI = (function() {
       });
     };
 
-    document.getElementById("connect").onclick = function(ev) {
-      self.event( "connected", "connecting...", State.Loading, function() {
-        return storage.connect(self.storage);
-      });
-    };
-
     window.addEventListener("hashchanged", function(ev) {
       self.loadFromHash();
     });
