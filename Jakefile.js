@@ -148,21 +148,22 @@ task("bench", [], function() {
 //-----------------------------------------------------
 desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
 task("doc", [], function() {
-  var docout = path.join("doc","out")
+  var docout = "out";
   args = Array.prototype.slice.call(arguments).join(" ");
   var pngs = new jake.FileList().include(path.join("doc","*.png"));
-  copyFiles("doc",pngs.toArray(),docout);  
-  mdCmd = "node lib/cli.js -v --odir=" + docout + " " + args + " doc/reference.mdk doc/mathdemo.mdk doc/slidedemo.mdk";
+  copyFiles("doc",pngs.toArray(),path.join("doc",docout));  
+  process.chdir("doc");
+  mdCmd = "node ../lib/cli.js -v --odir=" + docout + " " + args + " reference.mdk mathdemo.mdk slidedemo.mdk";
   jake.log("> " + mdCmd);
-  jake.exec(mdCmd, function() {
+  jake.exec(mdCmd, {interactive:true}, function() {
     var files = ["reference","mathdemo","slidedemo"];
     var styles= [path.join(docout,"madoko.css")];
     var htmls = files.map( function(fname) { return path.join(docout,fname + ".html") });
     var pdfs  = files.map( function(fname) { return path.join(docout,fname + ".pdf") });
     var outfiles = htmls.concat(args.indexOf("--pdf") < 0 ? [] : pdfs,styles)
-    copyFiles(docout,outfiles,"doc");
+    copyFiles(docout,outfiles,".");
     complete();
-  }, {interactive:true});
+  });
 });
 
 

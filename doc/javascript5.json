@@ -1,5 +1,5 @@
 {
-  "extend":        "text/javascript",  
-  "extraKeywords": [ "module", "export"
-  ] 
+    "name": "javascript5",
+    "extend": "javascript",
+    "extraKeywords": ["module","export","import"]
 }

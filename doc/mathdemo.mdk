@@ -166,7 +166,6 @@ Applying Schwarz\'s lemma, we obtain $\vert\phi(w)\vert\le \vert w \vert$ for $\
 Furthermore, if equality holds, then $f(z)=e^{i\gamma'} z$ for $\gamma'\in [0,2\pi]$. Therefore, 
 
 ~~~ Equation {#eq-eqn1}
-
 	\left\vert\frac{f(z)-f(a)}{1-\overline{f(a)}f(z)}\right\vert\le 
 	\left\vert\frac{z-a}{1-\overline{a}z}\right\vert
 ~~~
