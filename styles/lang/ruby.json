@@ -115,7 +115,7 @@
       [":'", { "token": "string.s.delim", "bracket": "@open", "next": "@sstring.s" } ],
             
       
-      ["/", { "token": "regexp.delim", "bracket": "@open", "next": "@regexp" } ],
+      ["/(?=[^/]*/)", { "token": "regexp.delim", "bracket": "@open", "next": "@regexp" } ],
       
       
       ["[{}()\\[\\]]", "@brackets"],
