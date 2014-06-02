@@ -60,10 +60,10 @@ public struct options(
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "book",    // latex document class (.cls)
   
-  author   : string = "",
-  affiliation: string = "",
-  email    : string = "",
-  authorNotes : string = "",
+  author   : list<string> = [],
+  affiliation: list<string> = [],
+  email    : list<string> = [],
+  authorNotes : list<string> = [],
   titleNote: string = "",
 
   citestyle     : citestyle = citeNumeric,     

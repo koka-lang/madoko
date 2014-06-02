@@ -102,8 +102,8 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
 
 function titleInfo( options : options, metadata : dict<string> ) : div titleinfo {
   function expand(s) { s.expandKeys(metadata) }  
-  authors = zipAuthors(options.author.expand.splitPaths, options.affiliation.expand.splitPaths, 
-                  options.email.expand.splitPaths, options.authorNotes.expand.splitPaths) 
+  authors = zipAuthors(options.author.map(expand), options.affiliation.map(expand), 
+                  options.email.map(expand), options.authorNotes.map(expand)) 
   Titleinfo(options.title.expand, options.subtitle.expand, authors, options.titleNote.expand)
 }
 

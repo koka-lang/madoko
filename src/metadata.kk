@@ -37,6 +37,13 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    else (options,rest)  
 }
 
+function appendValue( xs : list<string>, x : string ) : list<string> {
+  match(xs.reverse) {
+    Nil -> [x]
+    Cons(y,yy) -> if (y=="") then Cons(x,yy).reverse else Cons(x,xs).reverse
+  }
+}
+
 public function fromMeta( opts : options, mdata : metadata ) : options {
   //opts = opts0(metadata = opts0.metadata + mdata)
   mdata.foldl(opts) fun(options : options, kv : (string,string)) {
@@ -68,16 +75,16 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader + "\n" + value)
     elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx + "\n" + value)
     elif (key=="author") {
-      if (value=="") then options(author="") else {
-        options(author=options.author + ";" + value, 
-                affiliation=options.affiliation + ";", 
-                email=options.email + ";",
-                authorNotes=options.authorNotes + ";")
+      if (value=="") then options(author=[]) else {
+        options(author=options.author + [value], 
+                affiliation=options.affiliation + [""], 
+                email=options.email + [""],
+                authorNotes=options.authorNotes + [""])
       }
     }
-    elif (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then "" else options.affiliation + value)
-    elif (key=="email") options(email=if (value=="") then "" else options.email + value)    
-    elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then "" else options.authorNotes + value)    
+    elif (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then [] else appendValue(options.affiliation,value))
+    elif (key=="email") options(email=if (value=="") then [] else appendValue(options.email,value))
+    elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then [] else appendValue(options.authorNotes,value))
     elif (key=="title-note" || key=="title-date") options(titleNote=value)
     elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
     elif (key=="cite-all") options(citeAll=(value!="")) 
