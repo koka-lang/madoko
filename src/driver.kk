@@ -111,13 +111,13 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                               then {
                                 //trace("embed image: " + fname)
                                 img = readBase64FileDef(combine(inName.dirname,fname),"",False)
-                                ("data:" + mime + ";base64," + img)
+                                if (img != "") then "data:" + mime + ";base64," + img else img
                               }
                             else ""
 
                   // write the file to the out directory
                   if (data != "" && (opts.pdf || data.length > mopts.embedLimit)) { 
-                    newName = combine(outName.dirname,fname)
+                    newName = combine(outName.dirname,fname) 
                     //trace("copying: " + fname + " to " + newName)
                     mkdirp(newName.dirname)
                     if (mime.startsWith("text/")) {
