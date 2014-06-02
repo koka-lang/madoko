@@ -55,6 +55,10 @@ function run() {
     remotes.onedrive.folder = data.onedrive || "";
   }
 
+  if (options.command==="connect") {
+    document.getElementById("button-cancel").innerHTML = "Close";
+  }
+
   if (options.remote && remotes[options.remote] && options.remote !== "local") {
     if (options.folder) remotes[options.remote].folder = options.folder;
     setCurrent( remotes[options.remote] );
@@ -68,6 +72,7 @@ function run() {
     if (current.remote.type === remotes.dropbox.remote.type()) return;
     setCurrent( remotes.dropbox );
   }
+
 
   document.getElementById("remote-onedrive").onclick = function(ev) {
     if (current.remote.type === remotes.onedrive.remote.type()) return;
