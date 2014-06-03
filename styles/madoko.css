@@ -347,10 +347,10 @@ body.madoko.preview {
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
 .madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
-  font-size: 0.90em;
+  font-size: 0.85em;
 }
 .madoko pre code {
-  font-size: 0.90em;
+  font-size: 0.95em;
 }
 
 /* Code prettify */
