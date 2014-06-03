@@ -67,6 +67,16 @@ Html Header   :
 	.reveal p { 
 		text-align: center; 
 	}
+    .reveal table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .reveal li p {
+        text-align: left;
+    }
+    .reveal h2 {
+        margin-bottom: 0.7em;
+    }
 	.reveal section img.math-display {
 		padding: 1em;
 	}
@@ -77,17 +87,29 @@ Html Header   :
 		box-shadow: none;
 		border: none;
 	}
+    .reveal section img {
+        box-shadow: none;
+        border: none;
+    }
 	.reveal pre {
 		box-shadow: none;
-		border: 1px solid black
-	}	
+		border: 1px solid black;
+        word-wrap: normal;
+        background-color: white;
+        width: 100%;
+        padding: 1em;
+	}	    
+    .reveal pre code, .reveal code, .reveal .monospace, .reveal tt, .reveal kbd {
+        padding: 0pt;
+        font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
+    }
 	.reveal .tocitem {
 	  	text-align: left;
 	}
 	.reveal .toc>.tocblock .tocblock {
 	  	margin-left: 0.5em;
-	}
-	.reveal .toc>.tocblock .tocblock .tocblock {
+	}	
+    .reveal .toc>.tocblock .tocblock .tocblock {
 	  	margin-left: 1em;
 	}
 	</style>
