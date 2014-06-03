@@ -29,7 +29,10 @@ import std/log
 ---------------------------------------- */
 
 // Takes source markdown input and returns formatted html
-public function markdown( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
+public function markdown( src : string, 
+                          options : options = initialOptions0, 
+                          fmt : formatter = FmtHtml 
+                        ) : pure string
 {
   if (options.xmp) then markdownXmp(src,options,fmt) else markdownNormal(src,options,fmt)
 }

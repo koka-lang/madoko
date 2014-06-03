@@ -10,33 +10,6 @@ define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/uti
         "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
         function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
 
-/*
-
-editor.revealPosition({
-  lineNumber: 50,
-  column: 120
-}, shouldRevealLineInCenterOfViewport, shouldRevealColumn);
-*/
-
-var ie = (function(){
-  var ua = window.navigator.userAgent;
-  var msie = ua.indexOf('MSIE ');
-  var trident = ua.indexOf('Trident/');
-  return (msie > 0 || trident > 0);
-})();
-
-var supportTransitions = (function() {
-  return (!ie && document.body.style.transition=="");
-})();
-
-function diff( original, modified ) {
-  var originalModel = Monaco.Editor.createModel(original, "text/plain");
-  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
-  var diffSupport   = modifiedModel.getMode().diffSupport;
-  var diff = diffSupport.computeDiff( 
-                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
-  return new Promise(diff); // wrap promise
-}
 
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;

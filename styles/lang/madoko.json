@@ -44,7 +44,7 @@
         "cases": {
           "$2": { "token": "keyword.header.custom.$2", "bracket": "@open" },
           "$3": { "token": "keyword.header.custom.$3", "bracket": "@close" },
-          "$4~(equation|texraw)": { "token": "keyword.header.custom.$1", "bracket": "@open", "next": "@latexblock.$1" },
+          "$4~(equation|texraw|snippet)": { "token": "keyword.header.custom.$1", "bracket": "@open", "next": "@latexblock.$1" },
           "$4": { "token": "keyword.header.custom.$1", "bracket": "@open" },
           "@default": { "token": "keyword.header.custom.$1", "bracket": "@close" }
         }}],      
