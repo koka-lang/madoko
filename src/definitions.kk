@@ -94,14 +94,14 @@ function parseDefinitionsFull(
 
   // process attributes 
   function process( attrs : attrs, previousIsPar : bool, block : block ) : <div,st<_h>> block {
-    bname = block.blockName
+    val bname = block.blockName
     
     // merge and set default attributes
-    attrsd  = if (!(attrs.defaults)) then attrs
-              else {
-                attrsy = defaultAttrs.matchRules(bname,attrs)
-                if (attrsy.name != "" && attrsy.label=="") then attrsy( label = "@"+bname ) else attrsy
-              } 
+    val attrsd  = if (!(attrs.defaults)) then attrs
+                  else {
+                    val attrsy = defaultAttrs.matchRules(bname,attrs)
+                    if (attrsy.name != "" && attrsy.label=="") then attrsy( label = "@"+bname ) else attrsy
+                  } 
     //adjust counters
     if (bname!="" && attrs.defaults) counters.adjustCounter(bname,"",nested)
 
@@ -111,41 +111,41 @@ function parseDefinitionsFull(
     }
 
     // expand counters in label
-    cmdata = fcontext.inlineContext.metadata
-    attrsx = attrsd.expandCounters(counters,cmdata).expand(cmdata)
+    val cmdata = fcontext.inlineContext.metadata
+    val attrsx = attrsd.expandCounters(counters,cmdata).expand(cmdata)
 
     // set label
     if (attrsx.name != "") then {
-      labelCaption = attrsx.hasKey("caption").maybe("",id)
+      val labelCaption = attrsx.hasKey("caption").maybe("",id)
       labels[attrsx.name] := Label(bname,attrsx.label,labelCaption)   
       match (attrsx.hasKey("cite-label")) {
         Nothing -> ()
         Just(clabel) -> {
-          clabelx = clabel.expandKeys(attrsx.source,attrsx,dict(),fcontext.inlineContext.metadata)
+          val clabelx = clabel.expandKeys(attrsx.source,attrsx,dict(),fcontext.inlineContext.metadata)
           labels["@" + attrsx.name] := Label(bname,clabelx,labelCaption)
         }
       }
     }
 
     // paragraph indentation
-    attrsp = match(block) {
+    val attrsp = match(block) {
       Para | previousIsPar -> attrsx.addClass("indent")
       _ -> attrsx
     }
 
     // render
-    rblock = block.setAttrs(attrsp,fcontext) 
+    val rblock = block.setAttrs(attrsp,fcontext) 
 
     // toc
     match (attrsp.hasKey("toc")) {
       Nothing -> ()
       Just(value) -> {
-        entry = match(rblock) {
+        val entry = match(rblock) {
           Heading(d,txt,xs) -> {
             (d,xs.addKeyval("toc-line",txt))  // note: txt is processed already
           }
           _ -> {
-            depth = attrsp.lookupKey("toc-depth","1").parseInt.maybe(1,id)
+            val depth = attrsp.lookupKey("toc-depth","1").parseInt.maybe(1,id)
             (depth,attrsp)
           }
         }
@@ -159,14 +159,14 @@ function parseDefinitionsFull(
 
   // process a block
   function parseDefBlock( previousIsPar : bool,  block : block ) : <st<_h>,div> block {
-    attrs : attrs = match(block) {
+    val attrs : attrs = match(block) {
       DefLink(id,link) -> {
         links[id] := link
         attrsNone  
       }
       DefFootnote(id,content) -> {
         footnoteCount := footnoteCount+1
-        ncontent = content.mapBlocks(parseDefBlock)
+        val ncontent = content.mapBlocks(parseDefBlock)
         footnotes[id] := Footnote("&fn-" + id + ";", 
                                    fun(ictx){ formatBlocks(fcontext(inlineContext=ictx),ncontent) },
                                    extractCaption(ncontent))
@@ -196,17 +196,17 @@ function parseDefinitionsFull(
     attrs.process( previousIsPar, block )
   }
   
-  newblocks  = blocks.mapBlocks(parseDefBlock)
-  labelsDict = labels.freeze()
-  tocBlocks     = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
-                  (tocs.list.map fun(entry) {
-                     (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
-                   }).dict
-  footnoteBlock = if (isNil(footnoteItems)) then Empty 
-                   else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
-  fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
+  val newblocks  = blocks.mapBlocks(parseDefBlock)
+  val labelsDict = labels.freeze()
+  val tocBlocks  = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
+                    (tocs.list.map fun(entry) {
+                       (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
+                     }).dict
+  val footnoteBlock = if (isNil(footnoteItems)) then Empty 
+                       else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
+  val fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
 
-  secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
+  val secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
 
   (secblocks,                   
    fcontext( fcontext.inlineContext.copy( links=links.freeze, labels=labelsDict, 
@@ -228,7 +228,7 @@ function mapBlocks( blocks : list<block>,
                     action : (bool,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
   var previousIsPar := False
   blocks.map fun(block) {
-    nblock = action(previousIsPar,block)
+    val nblock = action(previousIsPar,block)
   
     match(nblock) {
       Para        -> previousIsPar := True
@@ -241,7 +241,7 @@ function mapBlocks( blocks : list<block>,
     }
     match(nblock) {
       Div(content,xs) -> {
-        ncontent = match(content.mapBlocks(action)) {
+        val ncontent = match(content.mapBlocks(action)) {
           Cons(Para(txt,attrs),rest) | xs.tight
             -> Cons(Line(txt,False,attrs),rest)
           other -> other
@@ -278,9 +278,9 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
   if (attrs.hasKey("display").maybe("",id) == "none") return Empty
   //if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
-  citestyle = fcontext.inlineContext.citestyle
+  val citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
-  txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
+  val txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
       Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4)
@@ -306,15 +306,15 @@ function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>
     if (key.startsWith("~") || key.startsWith("#") || key.startsWith(".")) then {
       // element attributes
       // name   = key.substr(1)  // no .#~
-      attrs  = value.parseAttrs
-      dattrs = if (!(attrs.defaults)) then attrs
-               else match(defaultAttrs[key]) {
-                 Nothing   -> attrs
-                 Just(def) -> {
-                   //trace("default merge " + name + ": " + attrs.classes.join(",") + "  def: " + def.classes.join(","))  
-                   attrs.mergeDefault(def.parseAttrs) 
-                 }
-               }
+      val attrs  = value.parseAttrs
+      val dattrs = if (!(attrs.defaults)) then attrs
+                   else match(defaultAttrs[key]) {
+                     Nothing   -> attrs
+                     Just(def) -> {
+                       //trace("default merge " + name + ": " + attrs.classes.join(",") + "  def: " + def.classes.join(","))  
+                       attrs.mergeDefault(def.parseAttrs) 
+                     }
+                   }
       defaultAttrs[key] := dattrs.text
       //trace("default " + name + ": " + dattrs.show)  
       
@@ -337,7 +337,7 @@ function extractCaption( blocks : list<block> ) : string
   match(blocks) {
     Nil -> ""
     Cons(block,rest) -> {
-      post = if (rest.isNil) then "" else "&nl;..."
+      val post = if (rest.isNil) then "" else "&nl;..."
       match(block) {
         Heading(_,txt) -> txt + post
         Line(txt)  -> txt+post
@@ -383,18 +383,18 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
 {
   function createSection(content) 
   {
-    lvl = h.headingLevel(secinfo.level)
-    nsecinfo = secinfo(level=lvl+1)
-    ncontent = content.sections(nsecinfo)
+    val lvl = h.headingLevel(secinfo.level)
+    val nsecinfo = secinfo(level=lvl+1)
+    val ncontent = content.sections(nsecinfo)
     match(h) {
       Heading(d,txt,attrs) -> {
         val (skvs,hkvs) = attrs.keyvals.partition(fun(kv) { kv.fst.startsWith("data-") })
         val (scls,hcls) = attrs.classes.partition(fun(c) { c.startsWith("section-") })
-        secattrs = "html-elem=section .section" + d.show +
-                     (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
-        hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
-        sattrs = secattrs.parseAttrs("section")
-        divattrs = (secinfo.secDefaults)(sattrs.addClasses(scls).addKeyvals(skvs))
+        val secattrs = "html-elem=section .section" + d.show +
+                        (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
+        val hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
+        val sattrs = secattrs.parseAttrs("section")
+        val divattrs = (secinfo.secDefaults)(sattrs.addClasses(scls).addKeyvals(skvs))
         [Div(Cons(Heading(d,txt,hattrs(classes=hcls,keyvals=hkvs)),ncontent),divattrs)]
       }
       _ -> [h].sectionMap(nsecinfo) + ncontent
@@ -409,9 +409,9 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
 
 function findHeading( blocks : list<block>, secinfo : secinfo ) : maybe<(list<block>,block,list<block>)>
 {
-  lvl = max(secinfo.level,secinfo.secBase)
+  val lvl = max(secinfo.level,secinfo.secBase)
   val (pre,post) = blocks.span(fun(b) { 
-    d = b.headingLevel(lvl+1, lvl)
+    val d = b.headingLevel(lvl+1, lvl)
     (d > lvl) //  || d < secinfo.secMin
   })  
   match(post) {
@@ -459,11 +459,11 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
       }
       else {
         val (subs,rest) = hdrs.span( fun(h) { h.fst > depth } )
-        txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
-        tocline = @"[\/" + txt + "](#" + attrs.name + ")"
+        val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
+        val tocline = @"[\/" + txt + "](#" + attrs.name + ")"
         //trace("tocline: " + attrs.source)
-        item = Div([Line(tocline)], Attrs(classes=["tocitem"], keyvals=[("toctarget",attrs.name), ("toclevel",depth.show)]))
-        subitems = tocItems(subs,depth,labels,metadata).tocList 
+        val item = Div([Line(tocline)], Attrs(classes=["tocitem"], keyvals=[("toctarget",attrs.name), ("toclevel",depth.show)]))
+        val subitems = tocItems(subs,depth,labels,metadata).tocList 
         Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata)))
       }
     }
@@ -506,7 +506,7 @@ function adjustCounter(counters : mdict<h,counter>,name : string, value : string
 
 // increment or set a count to a value
 function increment(counter :counter, xvalue : string) : counter {
-  v = xvalue.toLower
+  val v = xvalue.toLower
   if (v=="upper-case") then counter(counter.value,Uppercase)
   elif (v=="lower-case") then counter(counter.value,Lowercase)
   elif (v=="arabic") then counter(counter.value,Arabic)
@@ -551,9 +551,9 @@ function setCounter( counters : mdict<h,counter>, name : string, counter : count
 
 function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st<h> ()
 {
-  prefixes = name.split("-").list.init
+  val prefixes = name.split("-").list.init
   prefixes.foreachIndexed fun(i,_) {
-    pre = prefixes.take(i+1).join("-")
+    val pre = prefixes.take(i+1).join("-")
     nested[pre] := Cons(name, nested[pre].maybe([],id))
     //trace("nested: " + pre + ": " + nested[pre].maybe([],id).join(","))
   }
@@ -593,8 +593,8 @@ function showLetterBase( value : int, baseChar : char) : string {
 
 function showRLetterBase( value : int, baseChar : char ) : div list<char> {
   if (value <= 0) return []
-  next = value/26
-  mod  = value%26 - (if (next == 0) then 1 else 0)
+  val next = value/26
+  val mod  = value%26 - (if (next == 0) then 1 else 0)
   Cons(mod.char + baseChar, next.showRLetterBase(baseChar))
 }
 

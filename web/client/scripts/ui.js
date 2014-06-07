@@ -115,14 +115,14 @@ var UI = (function() {
     util.message( err, util.Msg.Error );
   }
 
-  UI.prototype.event = function( status, pre, state, action ) {
+  UI.prototype.event = function( status, pre, state, action, okStates ) {
     var self = this;
     if (state) {
-      if (self.state !== State.Normal) {
+      if (self.state !== State.Normal && !util.contains(okStates,self.state)) {
         util.message( "sorry, cannot perform action while " + self.state, util.Msg.Status );
         return;
       }
-      else {
+      else if (state) {
         self.state = state;      
       }
     }
@@ -150,9 +150,9 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.anonEvent = function( action ) {
+  UI.prototype.anonEvent = function( action, okStates ) {
     var self = this;
-    self.event( "","",null, action );
+    self.event( "","",null, action, okStates );
   }
 
   UI.prototype.initUIElements = function(content) {
@@ -203,7 +203,7 @@ var UI = (function() {
             clearInterval(self.syncInterval);
             self.syncInterval = 0;
           }      
-        });
+        }, [State.Syncing]);
       }
 
       // use interval since the editor is asynchronous, this way  the start line number can stabilize.
@@ -223,7 +223,7 @@ var UI = (function() {
     self.keybinding = self.editor.getHandlerService().bind({
       key: 'Alt-Q'
     }, function(ev) { 
-      self.anonEvent( function() { self.onFormatPara(ev); } );
+      self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
 
     self.keybinding = self.editor.getHandlerService().bind({
@@ -251,7 +251,7 @@ var UI = (function() {
           var msg = self.getDecorationMessage(self.docName,ev.target.position.lineNumber);
           ev.target.element.title = msg;
         }
-      });
+      }, [State.Syncing]);
     });
     
     self.editorPane = document.getElementById("editor");
@@ -281,7 +281,7 @@ var UI = (function() {
         }
         // rely on mousemove event instead...
         self.dropFiles = ev.dataTransfer.files;
-      });
+      }, [State.Syncing]);
     }, false);
 
     self.editorPane.addEventListener("dragover", function(ev) {
@@ -312,7 +312,7 @@ var UI = (function() {
         else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
           return self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
         }
-      });
+      }, [State.Syncing]);
     }, false);
 
     // Buttons and checkboxes
@@ -429,7 +429,7 @@ var UI = (function() {
     document.getElementById("edit-select").onmouseenter = function(ev) {
       self.anonEvent( function() {
         self.editSelect();
-      });
+      }, [State.Syncing]);
     };   
        
     document.getElementById("edit-select-files").onclick = function(ev) {
@@ -452,7 +452,7 @@ var UI = (function() {
             });
           }
         }
-      });
+      }, [State.Syncing]);
     };
 
     document.getElementById("console-out").ondblclick = function(ev) {
@@ -471,7 +471,7 @@ var UI = (function() {
             }
           }
         }
-      });
+      }, [State.Syncing]);
     }
    
     self.syncer.onclick = function(ev) {      

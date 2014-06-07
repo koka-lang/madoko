@@ -50,7 +50,7 @@ public external readInt4( b : buffer, ofs : int ) : int
 
 
 public function tryReadFileSync( fname : string ) : io maybe<buffer> {
-  onExn( Nothing, { b = readFileSync(fname); Just(b) } )
+  onExn( Nothing, { val b = readFileSync(fname); Just(b) } )
 }
 
 

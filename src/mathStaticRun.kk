@@ -50,12 +50,12 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
-  bibtexCmd = opts.bibtex.quote + " " + bibFile.basename.quote
+  val bibtexCmd = opts.bibtex.quote + " " + bibFile.basename.quote
   opts.print("> " + bibtexCmd,3)
-  system(bibtexCmd, function(err:int,stdout:string,stderr:string) {
+  system(bibtexCmd, fun(err:int,stdout:string,stderr:string) {
     if (err!=0) {
       opts.printErr("> " + bibtexCmd)
-      system(bibtexCmd + " -version") function(errx:int,stdoutx,stderrx) {
+      system(bibtexCmd + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("could not find bibtex: \"" + bibtexCmd + "\"")
           opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
@@ -75,9 +75,9 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
 
 public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
   opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
-  notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
+  val notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
   runLaTeX(srcName, texFile, opts.getPdflatex, opts, content, notfound, 0, True,
-    function(err) { continue() } )  
+    fun(err) { continue() } )  
 }
 
 
@@ -89,19 +89,19 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                     showWarnings : bool = True,
                     continue : (err : int) -> io () )
 {
-  latexCmd = texCmd.quote + " -output-directory=" + texFile.dirname.norm.quote + 
-                " -halt-on-error -interaction=batchmode" + 
-                " " + texFile.norm.quote
+  val latexCmd = texCmd.quote + " -output-directory=" + texFile.dirname.norm.quote + 
+                       " -halt-on-error -interaction=batchmode" + 
+                      " " + texFile.norm.quote
 
   opts.print("> " + latexCmd,3)
   
-  system(latexCmd, function(err:int,stdout:string,stderr:string) {
-    logout = readTextFileDef(texFile.changeExt(".log"),"")
+  system(latexCmd, fun(err:int,stdout:string,stderr:string) {
+    val logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
       opts.printErr("error while running: \n> " + latexCmd)
       trace("err: " + err.show + "\n" + stdout + stderr)
       //println(stdout + stderr)
-      system(texCmd + " -version") function(errx:int,stdoutx,stderrx) {
+      system(texCmd + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("could not find program: \"" + texCmd + "\"")
           if (notfound != "") opts.printErr(notfound)
@@ -109,7 +109,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
         else {
           match(logout.find(rxLatexErr)) {
             Just(cap) -> {          
-              texContent = readTextFileDef(texFile,"")
+              val texContent = readTextFileDef(texFile,"")
               match (content.findLatexLine(cap.matched,texContent)) {
                 Just(lineNo) -> opts.printErr("error: source line: " + lineNo)
                 Nothing -> ()
@@ -143,16 +143,16 @@ val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=Tr
 
 function mathHeader( xopts : options, mode : string ) : string 
 {
-  initial = ["% MathDpi: " + xopts.mathDpi.show,
+  val initial = ["% MathDpi: " + xopts.mathDpi.show,
              "MathImgDir: " + xopts.mathImgDir,
              "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
              "MathDocClass: " + xopts.mathDocClass
             ]
-  dviDeps = ["Dvipng: " + xopts.dvipng,
+  val dviDeps = ["Dvipng: " + xopts.dvipng,
              "Latex: " + xopts.latex, 
              "MathConvert: " + xopts.mathconvert 
             ]
-  pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
+  val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
              "PdfLatex: " + xopts.pdflatex, 
              "Convert: " + xopts.convert,
              "Dvips: " + xopts.dvips,
@@ -162,15 +162,15 @@ function mathHeader( xopts : options, mode : string ) : string
 }
 
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {
-  opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
-  xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
+  val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
+  val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
   opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
 }
 
 function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)
 {
-  texName = outName.appendStem("-math-" + mode).changeExt(".tex")
-  texFinalName = texName.changeExt(".final.tex")  
+  val texName = outName.appendStem("-math-" + mode).changeExt(".tex")
+  val texFinalName = texName.changeExt(".final.tex")  
   (texName,texFinalName,mathContent(xopts,mode,math))
 }
 
@@ -189,10 +189,10 @@ public function runMathStatic( content : string, inName: string, outName : strin
       mathDviPdfToPng( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
         mathConvertPng( texNameDvi, xopts, dviPages ) {
           mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
-            function(mbmath) {
+            fun(mbmath) {
               if (mbmath.isJust) {
-                texNameFinalDvi = texNameDvi.changeExt(".final.tex")
-                texNameFinalPdf = texNamePdf.changeExt(".final.tex")
+                val texNameFinalDvi = texNameDvi.changeExt(".final.tex")
+                val texNameFinalPdf = texNamePdf.changeExt(".final.tex")
                 tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
                 tryRename(texNamePdf,texNameFinalPdf);
               }
@@ -213,7 +213,7 @@ function mathSnippetsToDvi( srcName :string, texName : string, xopts : options,
   if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue(0)
 
   xopts.print("running " + xopts.latex.stemname + " on math...   (dvi)")
-  notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
+  val notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
   runLaTeX( srcName, texName, xopts.latex, xopts, content, notfound, 0, False,
               continue ) 
 }  
@@ -227,20 +227,20 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
   if (pages.isNil) return continue(0)
   if (xopts.mathpdflatex != "") {
     // re-run latex to get a pdf
-    notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
-    texCmd = xopts.getMathpdflatex
+    val notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
+    val texCmd = xopts.getMathpdflatex
     xopts.print("running " + texCmd.stemname + " on math... (pdf)")
     runLaTeX( srcName, texName, texCmd, xopts, content, notfound, 0, False, continue )
   }
   else {
     // use dvips and ps2pdf to get a pdf
-    dir = texName.dirname
-    stem = texName.stemname
-    dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + stem + ".dvi"
-    ps2pdfCmd = xopts.ps2pdf.quote + " " + stem + ".ps"
+    val dir = texName.dirname
+    val stem = texName.stemname
+    val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + stem + ".dvi"
+    val ps2pdfCmd = xopts.ps2pdf.quote + " " + stem + ".ps"
     xopts.print("generating pdf from dvi...")
     xopts.print(">" + dvipsCmd, 3)
-    system(dvipsCmd,function(err,stdout,stderr) {
+    system(dvipsCmd,fun(err,stdout,stderr) {
       if (err != 0) {
         xopts.printErr("> " + dvipsCmd)
         xopts.printErr("error: failure while typesetting math: \n" + stdout + stderr)      
@@ -248,7 +248,7 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
       }
       else {
         xopts.print(">" + ps2pdfCmd, 3)
-        system(ps2pdfCmd, function(err2,stdout2,stderr2) {
+        system(ps2pdfCmd, fun(err2,stdout2,stderr2) {
           if (err2 != 0) {
             xopts.printErr("> " + ps2pdfCmd)
             xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
@@ -268,7 +268,7 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
   match(texerr.find(rxLatexLineNum)) {
     Nothing -> Nothing
     Just(cap) -> {
-      lineNo = cap.groups[1].parseInt.maybe(0,id)
+      val lineNo = cap.groups[1].parseInt.maybe(0,id)
       findLatexLineData(0, texSrc.lines.list.take(lineNo-1).reverse )
       /*
       lineStart0 = cap.groups[2]
@@ -294,11 +294,11 @@ function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> 
     Cons(line,rest) -> {
       match(line.find(rxLineData)) {
         Nothing -> {
-          newDelta = if (line.contains(rxEndComment)) then delta else delta+1
+          val newDelta = if (line.contains(rxEndComment)) then delta else delta+1
           findLatexLineData( newDelta, rest )
         }
         Just(cap) -> {
-          last = cap.groups[1].split(";").list.reverse.take(1).join()
+          val last = cap.groups[1].split(";").list.reverse.take(1).join()
           match( last.find(rxLineNo) ) {
             Nothing -> Nothing
             Just(cap2) -> Just(cap2.groups[1]  + (cap2.groups[2].parseInt.maybe(0,id) + delta).show)
@@ -321,7 +321,7 @@ public function latexStrip( s : string ) : string
 val rxStrip = regex(@"(\\[\w/\-\r\n]*(\[[^\]\r\n]*\])?|\^\^.|'\w*|\}\{[lrct]\}|\]\{[^\]\r\n]*\}|[^a-zA-Z])+") // ;""!\*()/\+=/,~:
 
 public function latexFindLineByMatch( texLine : string, source : string ) : maybe<string> {
-  stripLine = texLine.latexStrip.substr(0,16) // some arbitrary length... seems to work well in practice
+  val stripLine = texLine.latexStrip.substr(0,16) // some arbitrary length... seems to work well in practice
   if (stripLine.length < 3) then Nothing else {
     match (source.findLines(stripLine)) {
       Cons(lineNo,rest) -> Just(lineNo.show + (if (rest.isNil) then "" else " (?)"))
@@ -338,9 +338,9 @@ public function latexFindLineByMatch( texLine : string, source : string ) : mayb
 }
 
 function findLines( source : string, pat : string ) : list<int> {
-  slines  = source.lines.list.map(fun(line) { line.latexStrip })
-  slens   = slines.map(fun(s){ s.length })
-  offsets = findOffsets( slines.join, pat )
+  val slines  = source.lines.list.map(fun(line) { line.latexStrip })
+  val slens   = slines.map(fun(s){ s.length })
+  val offsets = findOffsets( slines.join, pat )
   offsets.map fun(ofs) {
     var total := 0
     var current := 1
@@ -355,8 +355,8 @@ function findLines( source : string, pat : string ) : list<int> {
 }
 
 function findOffsets( source : string, pat : string ) : list<int> {
-  i0 = source.indexOf(pat)
-  i1 = source.lastIndexOf(pat)
+  val i0 = source.indexOf(pat)
+  val i1 = source.lastIndexOf(pat)
   if (i0 < 0) then []
   elif (i0 == i1) then [i0]
   else [i0,i1]
@@ -374,20 +374,20 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
     return ()
   }
 
-  warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { (cap.index,cap.matched) })
+  val warnings = logout.findAll(rxLatexWarning).list.map(fun(cap) { (cap.index,cap.matched) })
   if (warnings.isNil) then return () 
 
-  texlines = readTextFileDef(texFile,"").lines
+  val texlines = readTextFileDef(texFile,"").lines
   println("")
   warnings.foreach fun(iw) {
     val (index,warning0) = iw
-    warning = warning0.replace(rxLatexBrackets,"")
-    warn = match(warning.find(rxLatexLine)) {
+    val warning = warning0.replace(rxLatexBrackets,"")
+    val warn = match(warning.find(rxLatexLine)) {
       Nothing   -> {
         // no line no: try to display page
-        pre = match(warning.find(rxLatexOutputActive)) { 
+        val pre = match(warning.find(rxLatexOutputActive)) { 
                 Just -> {  // find a page
-                  page = match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
+                  val page = match(logout.substr(0,index).findAll(rxLatexPage).list.reverse) {
                     Cons(pcap,_) -> (pcap.groups[1].parseInt.maybe(0,id)+1).show 
                     Nil -> "1"
                   }  
@@ -398,12 +398,12 @@ function latexShowWarnings(texFile:string,logout:string, content:string,opts:opt
         pre + warning
       }
       Just(cap) -> {
-        line = if (cap.groups[2].latexStrip != "") then cap.groups[2] 
+        val line = if (cap.groups[2].latexStrip != "") then cap.groups[2] 
                 else {
-                  lineNo = cap.groups[1].parseInt.maybe(0,id)
+                  val lineNo = cap.groups[1].parseInt.maybe(0,id)
                   texlines.latexFindLine(lineNo)
                 }                
-        pre = match(latexFindLineByMatch(line,content)) {
+        val pre = match(latexFindLineByMatch(line,content)) {
           Nothing -> {
             if (opts.verbose >= 4) then opts.printErr("unable to find line: \n> " + line.latexStrip + "\n")
             ""
@@ -431,9 +431,9 @@ val rxLatexWarning = regex(@"^(Overfull|Underfull|[\w ]*[Ww]arning:)[\s\S]*?\n *
 
 function latexFindLine( src : vector<string>, lineNo : int, direction : int = 0 ) : div string
 {
-  line = latexGetLine(src,lineNo)
+  val line = latexGetLine(src,lineNo)
   if (line.contains(rxEnd) && direction <= 0) {
-    latexFindLine(src,lineNo-1,-1)
+    latexFindLine(src,lineNo-1,~1)
   }
   elif (line.contains(rxBegin) && direction >= 0) {
     latexFindLine(src,lineNo+1,1)
@@ -485,20 +485,20 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
                           dviPages : pages, pdfPages : pages,  
                           continue : () -> io () ) : io () 
 {  
-  dviBasePng = combine(xopts.mathImgDir,texNameDvi.stemname) 
-  dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
+  val dviBasePng = combine(xopts.mathImgDir,texNameDvi.stemname) 
+  val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
                                       " " + dvipngPages(dviPages) + 
                                       " -o " + dviBasePng + "-%d.png" +
                                       " " + texNameDvi.basename
-  pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
-  pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
+  val pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
+  val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
                   texNamePdf.basename + pdfPages.convertPages + " " +
                   pdfBasePng + pdfPages.convertSuffix + ".png"
               
 
   // make sure the output directory exists
-  outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
+  val outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
   if (!(fexistsSync(outDir))) {
     xopts.print("create image directory: " + outDir)
     mkdirp(outDir)
@@ -523,7 +523,7 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 
   xopts.print("generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
   xopts.print("> " + cmd,3)
-  system(cmd,function(err2,stdout2,stderr2) {
+  system(cmd,fun(err2,stdout2,stderr2) {
     if (err2 != 0) {
       xopts.printErr("> " + cmd)
       xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
@@ -536,12 +536,12 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
   if (xopts.mathconvert=="") then continue() else {
-    convertCmd = xopts.mathconvert + " " + texName.stemname + "-%d.png" + 
+    val convertCmd = xopts.mathconvert + " " + texName.stemname + "-%d.png" + 
                           dviPages.convertPages + " " +
                           texName.stemname + "-c" + dviPages.convertSuffix + ".png"
     xopts.print( "converting math images... (dvi)" )
     xopts.print( "> " + convertCmd, 3 )
-    system(convertCmd, function(err,stdout,stderr) {
+    system(convertCmd, fun(err,stdout,stderr) {
       if (err!=0) {
         xopts.printErr("> " + convertCmd)
         xopts.printErr("warning: conversion failed: \n" + stdout + stderr )
@@ -555,8 +555,8 @@ function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, p
                          texNameDvi : string, texNamePdf : string,
                          continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
-  dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
-  mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
+  val dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
+  val mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( Just(mdim2) )
 }
@@ -568,7 +568,7 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
     match(newDim[digest]) {
       Just -> ()
       Nothing -> {
-        imageFile = combine(outDir,mi.imageName)
+        val imageFile = combine(outDir,mi.imageName)
         tryUnlink(imageFile)
       }
     }
@@ -583,21 +583,21 @@ function extendDim( dviPages : pages, pdfPages : pages,
   var imageCount := 0
   var embedSize := 0
   var embedCount := 0  
-  dim = opts.mathdim
+  val dim = opts.mathdim
 
   function dimLine( isPdf : bool, pages : pages, line : string ) 
   {
     match(line.find(rxDimLine)) {
       Nothing   -> line
       Just(cap) -> { 
-        pageNo = cap.groups[2].parseInt.maybe(0,id)
-        digest = cap.groups[3]
-        imageStem = (if (isPdf) then texNamePdf.stemname else texNameDvi.stemname) +
+        val pageNo = cap.groups[2].parseInt.maybe(0,id)
+        val digest = cap.groups[3]
+        val imageStem = (if (isPdf) then texNamePdf.stemname else texNameDvi.stemname) +
                     (if (opts.mathconvert!="") then "-c" else "") + "-" +
                     (if (isPdf || opts.mathconvert!="") then (pageNo-1).show else pageNo.show)
 
-        imageName = combine(opts.mathImgDir, imageStem + ".png")
-        imageFile = combine(dimxFile.dirname,imageName)
+        val imageName = combine(opts.mathImgDir, imageStem + ".png")
+        val imageFile = combine(dimxFile.dirname,imageName)
         //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
         val (pxwidth,pxheight,size,embed) 
@@ -615,17 +615,17 @@ function extendDim( dviPages : pages, pdfPages : pages,
                   }
                   Just(buf) -> {
                     //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
-                    base64 = buf.string("base64")
-                    pxwidth = buf.readInt4(16)
-                    pxheight = buf.readInt4(20)
+                    val base64 = buf.string("base64")
+                    val pxwidth = buf.readInt4(16)
+                    val pxheight = buf.readInt4(20)
                     //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
-                    pngprefix = "data:image/png;base64,"
+                    val pngprefix = "data:image/png;base64,"
 
-                    embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
+                    val embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
                              then pngprefix + base64 else ""
-                    imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
+                    val imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
                     tryUnlink(imageDigestFile)                              
-                    size  = if (embed=="") then {
+                    val size  = if (embed=="") then {
                               // give robust name  
                               rename(imageFile,imageDigestFile)
                               buf.length 
@@ -656,16 +656,16 @@ function extendDim( dviPages : pages, pdfPages : pages,
     }
   }
 
-  dviDims = readTextFileDef(texNameDvi.changeExt(".dim"),"")
-  pdfDims = readTextFileDef(texNamePdf.changeExt(".dim"),"")
-  dimsx   = dviDims.lines.list.map( fun(line) { dimLine(False,dviPages,line) }) +
+  val dviDims = readTextFileDef(texNameDvi.changeExt(".dim"),"")
+  val pdfDims = readTextFileDef(texNamePdf.changeExt(".dim"),"")
+  val dimsx   = dviDims.lines.list.map( fun(line) { dimLine(False,dviPages,line) }) +
             pdfDims.lines.list.map( fun(line) { dimLine(True,pdfPages,line) })
   
-  txt = dimsx.join("\n")
+  val txt = dimsx.join("\n")
   tryWriteTextFile( dimxFile, txt )
   if (opts.verbose >= 2) {
-    totalCount = imageCount + embedCount
-    totalSize = imageSize + embedSize
+    val totalCount = imageCount + embedCount
+    val totalSize = imageSize + embedSize
     opts.print(" math images  : " + imageCount.show.align(4) + " in " + imageSize.showSize, 2 )
     opts.print(" math embedded: " + embedCount.show.align(4) + " in " + embedSize.showSize, 2 )
     opts.print(" math total   : " + totalCount.show.align(4) + " in " + totalSize.showSize, 2 )
@@ -674,7 +674,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
 }
 
 function showSize( size : int ) : string {
-  kb = 1024
+  val kb = 1024
   if (size < 10*kb) 
    then (size.double / kb.double).showFixed(1).align(4) + " kb"
    else ((size + kb - 1)/kb).show.align(4) + " kb"

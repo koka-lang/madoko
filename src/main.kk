@@ -25,18 +25,18 @@ public function main() : io () {
 
 public function test( s : string = "code_blocks", moreargs = "" ) {
   //main("test/code_blocks.text")
-  root = if (s.contains(path/sep)) then combine("test",s) else combine(["test","new",s])
-  input  = root + ".text"
-  outputDir = "test/out"
-  target = root + ".html"
+  val root = if (s.contains(path/sep)) then combine("test",s) else combine(["test","new",s])
+  val input  = root + ".text"
+  val outputDir = "test/out"
+  val target = root + ".html"
 
   markdownFiles("-v --tex --installdir=src --odir=" + outputDir + " " + moreargs + " " + input) 
     fun(outText,_input,output,_options) {
     //trace("-----\n" + outText + "\n-----")
-    targetText = target.readTextFileDef("")
-    outStrip = outText.replaceAll(regex(@"\s"),"")
+    val targetText = target.readTextFileDef("")
+    val outStrip = outText.replaceAll(regex(@"\s"),"")
                       //.replaceAll(regex(@"class=""indent"""),"")
-    targetStrip = targetText.replaceAll(regex(@"\s"),"")
+    val targetStrip = targetText.replaceAll(regex(@"\s"),"")
     if (outStrip != targetStrip) {
       trace("\n*** test failed ***")
       //trace(targetText + "\n***")
@@ -44,7 +44,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
       var i := 0;
       while { outStrip[i] == targetStrip[i] } { i := i+1 }
       trace("position: " + i.show)
-      preN = 20
+      val preN = 20
       i := max(0, i-preN)
       trace("inferred: " + outStrip.substr(i,preN) + " " + outStrip.substr(i+preN,40) + " ...")
       trace("expected: " + targetStrip.substr(i,preN) + " " + targetStrip.substr(i+preN,40) + "...")
@@ -69,8 +69,8 @@ public function markdownFiles(args : string, action : (string,string,string,opti
       }                                      
 
       opts.inputs.foreach fun(input0) {
-        input   = if (input0.extname=="") then input0 + ".mdk" else input0
-        outName = outputName(input,opts)    
+        val input   = if (input0.extname=="") then input0 + ".mdk" else input0
+        val outName = outputName(input,opts)    
         if (opts.options.verbose > 0) println("process: " + input + " -> " + outName )        
         match (input.tryReadTextFile()) {
           Left -> println("error: unable to read: " + input )

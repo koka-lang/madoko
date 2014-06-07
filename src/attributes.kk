@@ -17,7 +17,7 @@ import entity
 
 public function parseAttrs( attrStr : string, elemName : string = "", source : string = "" ) : attrs {
   if (attrStr == "" && elemName == "" && source=="") return attrsNone
-  attrs0 = Attrs() // source=source,classes=if (className=="") then [] else [className])
+  val attrs0 = Attrs() // source=source,classes=if (className=="") then [] else [className])
   attrs0.extendAttrs( (if (elemName!="") then "elem='" + elemName + "' " else "") + attrStr, source )
 }
 
@@ -29,8 +29,8 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
-  def = (attrs.classes.map( fun(cname) { defaults["." + cname] } ) +
-         [defaults["#" + attrs.name], defaults["~" + elementName]]).filter(isJust).map(string).join(" ")
+  val def = (attrs.classes.map( fun(cname) { defaults["." + cname] } ) +
+             [defaults["#" + attrs.name], defaults["~" + elementName]]).filter(isJust).map(string).join(" ")
   if (def=="") then attrs else {
     //trace("matched " + elementName + ": {" + attrs.text + "} : {" + def + "}" ) 
     attrs.mergeDefault(def.parseAttrs)
@@ -41,22 +41,22 @@ public function matchRules( defaults : dict<string>, elementName : string, attrs
 public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string ) : attrs 
 {
   if (attrsStr=="" && source=="") then return attrs0
-  attrsx = attrs0(empty=False, sticky=False, source=source, 
-                    text=attrs0.text + " " + attrsStr,
-                    classes=[])
+  val attrsx = attrs0(empty=False, sticky=False, source=source, 
+                      text=attrs0.text + " " + attrsStr,
+                      classes=[])
 
-  kvs = attrsStr.joinLines.parseAttributes  // join lines here.
+  val kvs = attrsStr.joinLines.parseAttributes  // join lines here.
   
-  attrs = kvs.foldl(attrsx) fun(acc:attrs,kv:(string,string,string)) {
+  val attrs = kvs.foldl(attrsx) fun(acc:attrs,kv:(string,string,string)) {
     val (name,kwvalue,value) = kv
-    start = name.substr(0,1)
+    val start = name.substr(0,1)
     if (kwvalue=="clear") {
       if (start==".") {
-        cname = name.substr(1)
+        val cname = name.substr(1)
         acc(classes = acc.classes.filter(fun(c) { c != cname }))
       }
       elif (start=="@") {
-        cname = name.substr(1)
+        val cname = name.substr(1)
         acc(counters = acc.counters.filter(fun(c) { c.fst != cname }))
       }
       elif (name=="class") {
@@ -126,23 +126,23 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(replacers = acc.replacers + [@"\/&source;" + value])
     }
     elif (name=="input") {
-      v = kwvalue
-      r = if (v=="pre") then Pre
-          elif (v=="raw") then Raw(Nothing)
-          elif (v=="texraw") then Raw(Just(FmtTex))
-          elif (v=="htmlraw") then Raw(Just(FmtHtml))
-          elif (v=="tex") then Tex
-          elif (v=="math") then Math
-          elif (v=="mathpre") then MathPre
-          elif (v=="mathdefs") then MathDefs
-          elif (v=="normal") then Markdown()
-          elif (v=="markdown") then Markdown()
-          elif (v=="htmlonly") then Markdown(Just(FmtHtml))
-          elif (v=="texonly") then Markdown(Just(FmtTex))
-          else {
-            warning( "unrecognized input value: " + value)
-            Markdown()
-          }         
+      val v = kwvalue
+      val r = if (v=="pre") then Pre
+              elif (v=="raw") then Raw(Nothing)
+              elif (v=="texraw") then Raw(Just(FmtTex))
+              elif (v=="htmlraw") then Raw(Just(FmtHtml))
+              elif (v=="tex") then Tex
+              elif (v=="math") then Math
+              elif (v=="mathpre") then MathPre
+              elif (v=="mathdefs") then MathDefs
+              elif (v=="normal") then Markdown()
+              elif (v=="markdown") then Markdown()
+              elif (v=="htmlonly") then Markdown(Just(FmtHtml))
+              elif (v=="texonly") then Markdown(Just(FmtTex))
+              else {
+                warning( "unrecognized input value: " + value)
+                Markdown()
+              }         
       acc(input=r)
     }
     elif (name=="tight") {
@@ -179,8 +179,8 @@ function parseAttributeX( s : string ) : list<(string,string,string)>
       []
     }
     Just(cap) -> {
-      value = cap.groups.firstMatched(2)
-      kwvalue = if (cap.groups.matchedOn(4)) then cap.groups[4] else ""
+      val value = cap.groups.firstMatched(2)
+      val kwvalue = if (cap.groups.matchedOn(4)) then cap.groups[4] else ""
       [(cap.groups[1].toLower, kwvalue, value)]
     }
   }
@@ -203,7 +203,7 @@ public function transformText( attrs : attrs, txt : string, labels : dict<label>
 {  
   if (attrs.empty) then return txt
   attrs.replacers.foldl(txt,fun(cur,repl) {
-    res = repl.applyReplacer(cur,attrs,labels,metadata) 
+    val res = repl.applyReplacer(cur,attrs,labels,metadata) 
     //trace("replacer '" + erepl.substr(0,10) + "': " + cur + " -> " + res)
     res
   })
@@ -263,13 +263,13 @@ function evalCondition( cond : string ) : bool {
       cond!=""
     }
     Just(cap) -> {
-      s = cap.groups[1].trim
-      t = cap.groups[3].trim
-      op = cap.groups[2]
+      val s = cap.groups[1].trim
+      val t = cap.groups[3].trim
+      val op = cap.groups[2]
       //trace("condition: " + s.show + " " + op + " " + t.show )
       
-      i = s.parseInt.maybe(-1,id)
-      j = t.parseInt.maybe(-1,id)
+      val i = s.parseInt.maybe(~1,id)
+      val j = t.parseInt.maybe(~1,id)
       if (i>0 && j>0) then {
         if (op=="==") then (i==j)
         elif (op=="!=") then (i!=j)
@@ -322,13 +322,13 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
         }
       })
 
-  rexp = regex( entries.map(fun(e){"(" + e.fst.ungroup + ")"}).join("|"), ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
-  convCase = flags.contains("c")
+  val rexp = regex( entries.map(fun(e){"(" + e.fst.ungroup + ")"}).join("|"), ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
+  val convCase = flags.contains("c")
 
   function replaceGroups( cap : matched ) {
-    i = cap.groups.firstMatchedOn(1,entries.length)
+    val i = cap.groups.firstMatchedOn(1,entries.length)
     if (i<=0) return ""
-    subst = match(entries.drop(i-1)) {
+    val subst = match(entries.drop(i-1)) {
       Nil -> cap.matched // should never happen
       Cons(entry) -> {
         val (rx,repl) = entry
@@ -339,7 +339,7 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
             // assert: cap.matched == rcap.matched
             repl.replaceAll(rxCaptureGroup, fun(gcap) {
               if (gcap.groups.matchedOn(1)) {
-                j = gcap.groups[1].parseInt.maybe(0,id)
+                val j = gcap.groups[1].parseInt.maybe(0,id)
                 if (convCase)
                  then rcap.groups[j].replaceAll(rxCaseEsc,@"\\$2$1") // escape replacement
                  else rcap.groups[j]  
@@ -357,9 +357,9 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
      else subst
   }
   
-  gtxt = if (flags.contains("g")) 
-          then txt.replaceAll(rexp,replaceGroups) 
-          else txt.replace(rexp,replaceGroups)
+  val gtxt = if (flags.contains("g")) 
+              then txt.replaceAll(rexp,replaceGroups) 
+              else txt.replace(rexp,replaceGroups)
   gtxt
 }
 
@@ -368,13 +368,13 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
 
 function regexReplacer( rxText : string, rtxt : string, flags : string, txt : string ) 
 {
-  rexp = regex(rxText, ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
-  convCase = flags.contains("c")
+  val rexp = regex(rxText, ignoreCase=flags.contains("i"), multiline=flags.contains("m"))
+  val convCase = flags.contains("c")
 
   function replaceGroups( cap : matched ) {
-    repl = rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
+    val repl = rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
       if (gcap.groups.matchedOn(1)) {
-        i = gcap.groups[1].parseInt.maybe(0,id)
+        val i = gcap.groups[1].parseInt.maybe(0,id)
         if (convCase) 
          then cap.groups[i].replaceAll( rxCaseEsc, @"\\$2$1" ) // escape replacement
          else cap.groups[i]   
@@ -387,9 +387,9 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
      then repl.caseConvert  // do case conversion (and unescape replacements)
      else repl
   }  
-  gtxt = if (flags.contains("g")) 
-          then txt.replaceAll(rexp,replaceGroups) 
-          else txt.replace(rexp,replaceGroups)
+  val gtxt = if (flags.contains("g")) 
+              then txt.replaceAll(rexp,replaceGroups) 
+              else txt.replace(rexp,replaceGroups)
   //trace("replace (" + rxText.substr(0,20) + "): '" + txt + "' to '" + gtxt + "'")    
   gtxt
 }
@@ -461,8 +461,8 @@ private function expandKeys( p0 : peano, txt : string, source : string,
     Zero -> txt
     Succ(p) -> {
       txt.replaceAll(rxkey) fun(cap) {
-        rawkey = cap.groups[1]
-        key = rawkey.normalizeId 
+        val rawkey = cap.groups[1]
+        val key = rawkey.normalizeId 
         if (rawkey=="") then cap.matched  // no key was matched
         elif (rawkey=="&") then "&"       // special in replacements
         elif (key=="label" && !(attrs.empty)) then attrs.label

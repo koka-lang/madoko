@@ -26,7 +26,7 @@ var webclient = path.join(web,"client");
 
 var kokaDir   = "../koka"
 var libraryDir= path.join(kokaDir,"lib")
-var kokaExe   = path.join(kokaDir,"out/release/koka-0.5.0-dev")
+var kokaExe   = path.join(kokaDir,"out/release/koka-0.6.0-dev")
 var testDir   = "test";
 
 var kokaFlags = "-i" + sourceDir + " -i" + libraryDir + " " + (process.env.kokaFlags || "");

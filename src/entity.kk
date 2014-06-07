@@ -23,10 +23,10 @@ struct entity(
 public function entityToTex( entity : string ) : string 
 {
   if (entity.startsWith("#")) {
-    num = if (entity.startsWith("#x") || entity.startsWith("#X")) 
+    val num = if (entity.startsWith("#x") || entity.startsWith("#X")) 
            then "0" + entity.substr(1)
            else entity.substr(1)
-    i = num.parseInt.maybe(-1,id)
+    val i = num.parseInt.maybe(~1,id)
     match (entities.find(fun(e) { e.ecode == i })) {
       Nothing -> {
         warning( "unknown unicode point: &#" + num + ";", "texwarning")
@@ -67,7 +67,7 @@ public function entityNameToNum( name : string ) : string
 }
 
 function entityCmd( entity : entity ) : string {
-  cmd = "{" + entity.ecmd + "}"
+  val cmd = "{" + entity.ecmd + "}"
   if (entity.emath) then @"\ensuremath" + cmd else cmd
 }
 

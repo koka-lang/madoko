@@ -53,8 +53,8 @@ public function markdown( inputName : string, input : string, outdir : string, o
     log("stdout",s)
   });
 
-  copts = coptions(options = options, outputDir = outdir)
-  outName = outputName(inputName,copts)
+  val copts = coptions(options = options, outputDir = outdir)
+  val outName = outputName(inputName,copts)
   
   var rerun := False;
 
@@ -82,17 +82,17 @@ public function markdown( inputName : string, input : string, outdir : string, o
     cont(Nothing)
   }
 
-  runners = Runners(runPdfLatex, runBibtex, runMathStatic )
+  val runners = Runners(runPdfLatex, runBibtex, runMathStatic )
 
   withLog("stdout") {
     withLog("files") {
       withLog("filesRefer") {
         withLog("filesWrite") {
           processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
-            stdout = getLog("stdout")
-            files  = getLog("files")
-            filesRefer  = getLog("filesRefer")
-            filesWrite  = getLog("filesWrite")
+            val stdout = getLog("stdout")
+            val files  = getLog("files")
+            val filesRefer  = getLog("filesRefer")
+            val filesWrite  = getLog("filesWrite")
             continue(output,stdout,rerun,options1,files,filesRefer,filesWrite)
           })
         }

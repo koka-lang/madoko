@@ -112,13 +112,13 @@ function texNormal( cap : matched, _context ) : string {
 }
 
 function texChar( cap : matched, _context ) : string {
-  ent = texCmdToEntity(cap.matched)
+  val ent = texCmdToEntity(cap.matched)
   if (ent=="") then cap.matched.substr(1) else ent
 }
 
 
 function texOther( cap : matched, _context ) : string {
-  char = cap.matched
+  val char = cap.matched
   if (char == "~") then @"&nbsp;"
   elif (char=="*") then @"\*"
   elif (char=="_") then @"\_"
@@ -142,8 +142,8 @@ public val texAccents = [
 
 
 function texAccent( cap : matched, _context ) : string {
-  accent = cap.groups[1]
-  letter = cap.groups[2] + cap.groups[3]
+  val accent = cap.groups[1]
+  val letter = cap.groups[2] + cap.groups[3]
   match (texAccents[cap.groups[1]]) {
     Just(name) -> "&" + letter + name + ";"
     Nothing -> letter 
@@ -172,27 +172,27 @@ function texIgnore( cap : matched, context : texContext ) : string {
 }
 
 function texEmph( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1]
+  val txt = cap.groups[1]
   if (txt=="") then "" else "_" + txt.parseTexX(context) + "_"
 }
 
 function texSlanted( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1]
+  val txt = cap.groups[1]
   if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-style=oblique}"
 }
 
 function texStrong( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1]
+  val txt = cap.groups[1]
   if (txt=="") then "" else "**" + txt.parseTexX(context) + "**"
 }
 
 function texCode( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1]
+  val txt = cap.groups[1]
   if (txt=="") then "" else "`" + txt.parseTexX(context) + "`"
 }
 
 function texUrl( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1].unbrace
+  val txt = cap.groups[1].unbrace
   if (txt=="") then "" else ("[" + txt + "](" + txt + ")")
 }
 
@@ -202,7 +202,7 @@ function texUrlPrefix( cap : matched, context : texContext ) : string {
 
 
 function texDoi( cap : matched, context : texContext ) : string {
-  txt = cap.groups[1].unbrace
+  val txt = cap.groups[1].unbrace
   if (txt=="") then "" else ("doi:[" + txt + "](http://dx.doi.org/" + txt + ")")
 }
 
@@ -221,7 +221,7 @@ function texQuot( quot : string, cap : matched, context : texContext ) : string 
 }
 
 function texBibliography( cap : matched, context : texContext ) : string {
-  numcite = if (context.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"
+  val numcite = if (context.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"
   "~ Begin Bibliography { " + numcite +
     " caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parseTexX(context) + 
     "\n~ End Bibliography\n"
@@ -235,11 +235,11 @@ function texCite( cap : matched, context : texContext ) : string {
   // handles various natbib and chicago style citations
   // groups: 1: short? 2: author? 3: year|yearpar?, 4: al?,  5: p or t?, or A?N?P? 
   //         6: *?, 7: optarg1, 8: optarg2, 9: citations
-  citations = cap.groups[9].unbrace.split(",")  
-  modifier  = if (cap.groups[6]=="*") then "+" 
-              elif (cap.groups[2]=="author" || cap.groups[5].contains("A")) then "!"
-              elif (cap.groups[3].startsWith("year") || cap.groups[1]=="short") then "-"               
-              else ""
+  val citations = cap.groups[9].unbrace.split(",")  
+  val modifier  = if (cap.groups[6]=="*") then "+" 
+                  elif (cap.groups[2]=="author" || cap.groups[5].contains("A")) then "!"
+                  elif (cap.groups[3].startsWith("year") || cap.groups[1]=="short") then "-"               
+                  else ""
   function bracket(s) { 
     if (cap.groups[3]=="year" || cap.groups[2]=="author" ||
          cap.groups[5] == "t" || cap.groups[5].contains("N")) 
@@ -256,12 +256,12 @@ function texCite( cap : matched, context : texContext ) : string {
 }
 
 function texHarvarditem( cap : matched, context : texContext ) : string {
-  key  = cap.groups[4]
-  year = "(" + cap.groups[3] + ")"
-  lab  = if (cap.groups[1]!="") 
-          then cap.groups[1] + year + cap.groups[2] 
-          else cap.groups[2] + year         
-  content = cap.groups[5]
+  val key  = cap.groups[4]
+  val year = "(" + cap.groups[3] + ")"
+  val lab  = if (cap.groups[1]!="") 
+              then cap.groups[1] + year + cap.groups[2] 
+              else cap.groups[2] + year         
+  val content = cap.groups[5]
   context.makeBibitem(key,lab,content)
 }
 
@@ -270,17 +270,17 @@ function texBibitem( cap : matched, context : texContext ) : string {
 }
 
 function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
-  key = keyx.unbrace
-  lab = labx.unbrace.parseTexX(context,True)  
-  md  = content.parseTexX(context)
+  val key = keyx.unbrace
+  val lab = labx.unbrace.parseTexX(context,True)  
+  val md  = content.parseTexX(context)
   val (authors,title) = match(md.find(rxAuthorTitle)) {
               Just(cap) -> (cap.groups[1],cap.groups[2])
               Nothing   -> ("",md)
             }
-  caption = (authors + "\n" + title).replaceAll(rxNewblock,"&nl;")
+  val caption = (authors + "\n" + title).replaceAll(rxNewblock,"&nl;")
                 .replaceAll("\n"," ").replaceAll("'","&apos;").replaceAll("\\","&bslash;")
                 .replaceAll(rxSpaces," ").trim
-  search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
+  val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
 
   //trace("bibitem: lab: " + labx + " -> " + lab)
   "~ Begin Bibitem { id='" + key.definitionId + "' " + 
@@ -315,12 +315,12 @@ function unbrace(s : string ) : string {
 // Parse TeX elements and return Markdown
 public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False  ) : string
 {
-  normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
-               .replaceAll(regex(@"\t"),"   ")
-               // strip off comments
-               // little conservative but % sometimes occurs inside url's
-               .replaceAll(regex(@"(^|[^\\])%[^\n}]*"),@"$1") 
-  md = parseTexX(normTxt,TexContext(texGrammar,citestyle))
+  val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
+                 .replaceAll(regex(@"\t"),"   ")
+                 // strip off comments
+                 // little conservative but % sometimes occurs inside url's
+                 .replaceAll(regex(@"(^|[^\\])%[^\n}]*"),@"$1") 
+  val md = parseTexX(normTxt,TexContext(texGrammar,citestyle))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
@@ -328,7 +328,7 @@ public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbos
 public function parseTexX( txt : string, context : texContext, newlineToSpace : bool = False) : string
 {
   if (txt=="") then "" else {
-    res = parseTexAcc(context,builder(), txt)
+    val res = parseTexAcc(context,builder(), txt)
     if (!newlineToSpace) then res else res.replaceAll(rxNl," ")
   }
 }

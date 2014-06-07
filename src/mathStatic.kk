@@ -39,34 +39,34 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 function mathHeader( xopts : options, mode : string ) : string 
 {
-  initial = ["% MathDpi: " + xopts.mathDpi.show,
-             "MathImgDir: " + xopts.mathImgDir,
-             "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
-             "MathDocClass: " + xopts.mathDocClass
-            ]
-  dviDeps = ["Dvipng: " + xopts.dvipng,
-             "Latex: " + xopts.latex, 
-             "MathConvert: " + xopts.mathconvert 
-            ]
-  pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
-             "PdfLatex: " + xopts.pdflatex, 
-             "Convert: " + xopts.convert,
-             "Dvips: " + xopts.dvips,
-             "Ps2pdf: " + xopts.ps2pdf 
-            ]
+  val initial = ["% MathDpi: " + xopts.mathDpi.show,
+                 "MathImgDir: " + xopts.mathImgDir,
+                 "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
+                 "MathDocClass: " + xopts.mathDocClass
+                ]
+  val dviDeps = ["Dvipng: " + xopts.dvipng,
+                 "Latex: " + xopts.latex, 
+                 "MathConvert: " + xopts.mathconvert 
+                ]
+  val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
+                 "PdfLatex: " + xopts.pdflatex, 
+                 "Convert: " + xopts.convert,
+                 "Dvips: " + xopts.dvips,
+                 "Ps2pdf: " + xopts.ps2pdf 
+                ]
   (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
 }
 
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {
-  opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
-  xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
+  val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
+  val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
   opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
 }
 
 function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)
 {
-  texName = outName.appendStem("-math-" + mode).changeExt(".tex")
-  texFinalName = texName.changeExt(".final.tex")  
+  val texName = outName.appendStem("-math-" + mode).changeExt(".tex")
+  val texFinalName = texName.changeExt(".final.tex")  
   (texName,texFinalName,mathContent(xopts,mode,math))
 }
 
@@ -86,8 +86,8 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   val (texNameDvi,texNameFinalDvi,outMathDvi) = xopts.mathFormat("dvi",mathDvi,outName)
   val (texNamePdf,texNameFinalPdf,outMathPdf) = xopts.mathFormat("pdf",mathPdf,outName)
 
-  oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"),True)
-  oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"),True)
+  val oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"),True)
+  val oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"),True)
 
   /*
   if (outMathDvi != oldMathDvi) {
@@ -110,10 +110,10 @@ public function mathStatic( mathDvi : string, mathPdf : string,
     return continue(Nothing)
   }
   
-  rebuildDvi = oldMathDvi.getHeader != outMathDvi.getHeader
-  rebuildPdf = oldMathPdf.getHeader != outMathPdf.getHeader
-  dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
-  pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
+  val rebuildDvi = oldMathDvi.getHeader != outMathDvi.getHeader
+  val rebuildPdf = oldMathPdf.getHeader != outMathPdf.getHeader
+  val dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
+  val pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
   if (xopts.verbose>=1) {
     if (dviPages.isNil && mathDvi.containsSnippet) xopts.print("math unchanged (dvi)")
@@ -144,7 +144,7 @@ public alias pages = list<(int,int)>
 
 function range(lo,n) { if (lo<=0) then [] else [(lo,lo+n)] }
   
-function compress( pages : list<int>, lo : int = -1, n : int = 0 ) : pages {
+function compress( pages : list<int>, lo : int = ~1, n : int = 0 ) : pages {
   match(pages) {
     Nil -> range(lo,n)
     Cons(p,ps) -> {
@@ -166,16 +166,16 @@ public function inside( page : int, pages : pages ) : bool {
 
 function mathAnalyseChanged( snippets : string, dim : dict<mathinfo>, rebuild : bool ) : pages
 {  
-  digests = snippets.findAll(rxDigest).list.mapIndexed( fun(idx,cap) { (idx+1,cap.groups[1]) })
-  maxPage = digests.length
+  val digests = snippets.findAll(rxDigest).list.mapIndexed( fun(idx,cap) { (idx+1,cap.groups[1]) })
+  val maxPage = digests.length
   
-  pages = digests.concat fun(idigest) {
-            val (current,digest) = idigest
-            match(dim[digest]) {
-              Just(_)  | !rebuild -> []
-              _ -> [current]
-            }
-          }
+  val pages = digests.concat fun(idigest) {
+                val (current,digest) = idigest
+                match(dim[digest]) {
+                  Just(_)  | !rebuild -> []
+                  _ -> [current]
+                }
+              }
   pages.compress
 }
 

@@ -85,14 +85,14 @@ public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : 
 public function fmtTexCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 
 {
-  lang = attrs.hasKey("language").maybe("",id)
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang],keyvals=[("language",lang)])
-  plain = txt.htmlEscape(False).texText.preSpace
-  content = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then plain 
-             else match(txt.hilite(lang)) {
-                    Just(hl) -> hl.texText.unspan(lang).preSpace
-                    Nothing  -> plain
-                  }
+  val lang = attrs.hasKey("language").maybe("",id)
+  val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang],keyvals=[("language",lang)])
+  val plain = txt.htmlEscape(False).texText.preSpace
+  val content = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then plain 
+                 else match(txt.hilite(lang)) {
+                        Just(hl) -> hl.texText.unspan(lang).preSpace
+                        Nothing  -> plain
+                      }
   if (env=="" || env=="code") 
    then texCmd("code",content,attrs)
    else texEnv(env,texCmd("code",content,lattrs),attrs)
@@ -100,10 +100,10 @@ public function fmtTexCode( context : inlineContext, env : string,
 
 public function unspan( txt : string, lang : string ) : string {
   txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan) fun(cap) {
-    classes=cap.groups[1].toLower.trim.split(rxSpaces).map(fun(cname) {
+    val classes=cap.groups[1].toLower.trim.split(rxSpaces).map(fun(cname) {
       if (cname.startsWith("hljs-")) then cname.substr(5) else cname
     }).list.filter( fun(cname) { cname != "token" && cname != lang } )
-    cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse
+    val cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse
     @"\mdToken{" + (classes + cclasses).join(",") + "}{"
   }  
 } 
@@ -171,12 +171,12 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
 
 
 public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {
-  pre = "md"
-  rows = head + body
-  td = if (attrs.hasClass("columns")) then "column" else "td"
-  table = if (attrs.hasClass("long")) then "LongTable" else "Table"
-  columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
-  colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
+  val pre = "md"
+  val rows = head + body
+  val td = if (attrs.hasClass("columns")) then "column" else "td"
+  val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
+  val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
+  val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
   "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + 
       "{" + columns.show + "}" + 
       "{" + colattrsx.map(fmtColumn).join + "}\n" +
@@ -205,19 +205,19 @@ function fmtColumn( colattr : attrs ) : string {
 
 function fmtRows( rows : list<row>, td : string, pre : string ) : string {
   var lastIsLine := False
-  xrows = rows.map fun(row) {
-    lineRow = row.cells.map(fun(cell) { 
-                if (cell.cellAttrs.hasClass("cell-line")) then Single
-                elif (cell.cellAttrs.hasClass("cell-double-line")) then Double 
-                else NoLine 
-              } )
+  val xrows = rows.map fun(row) {
+    val lineRow = row.cells.map(fun(cell) { 
+                    if (cell.cellAttrs.hasClass("cell-line")) then Single
+                    elif (cell.cellAttrs.hasClass("cell-double-line")) then Double 
+                    else NoLine 
+                  } )
     if (!(lineRow.all(isNoLine))) then { 
-      res = (if (lastIsLine) then fmtRowLineBreak else "") + fmtLine(lineRow,row)
+      val res = (if (lastIsLine) then fmtRowLineBreak else "") + fmtLine(lineRow,row)
       lastIsLine := True
       res
     }
     else {
-      res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row,pre)
+      val res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row,pre)
       lastIsLine := False
       res
     }
@@ -235,18 +235,18 @@ function fmtLine( lines : list<line>, row : row ) : string
     }
   }
 
-  line2 = if (!(lines.any(isDouble))) then "" else {
+  val line2 = if (!(lines.any(isDouble))) then "" else {
     fmtRowLineBreak + 
      zipWithIndexed(row.cells,lines,fun(i,cell,line) {
-      attrs = cell.cellAttrs
+      val attrs = cell.cellAttrs
       if (!(line.isDouble)) then "" 
        else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join            
   }
   
-  line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width(row.rowAttrs) else {
+  val line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width(row.rowAttrs) else {
     zipWithIndexed(row.cells,lines,fun(i,cell,line) {
-      attrs = cell.cellAttrs
+      val attrs = cell.cellAttrs
       if (line.isNoLine) then "" 
        else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
      }).join
@@ -269,25 +269,25 @@ function fmtRow( td : string, row : row, pre : string ) : string {
 
 
 function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : string {
-  colspan = attrs.lookupKey("column-span","1")
-  align   = match(attrs.hasKey("text-align")) {
-              Just(alignment) -> alignment.substr(0,1)
-              Nothing -> if (elem=="th") then "c" else "l" 
-            }
-  bcolor  = match (attrs.hasKey("background-color")) {
-              Nothing   -> ""
-              Just(clr) -> "{\\cellcolor" + fmtColorArg(clr) + "}"
-            }            
-  fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
-            (if (attrs.hasClass("cell-border-right")) then "|" else "")
+  val colspan = attrs.lookupKey("column-span","1")
+  val align   = match(attrs.hasKey("text-align")) {
+                  Just(alignment) -> alignment.substr(0,1)
+                  Nothing -> if (elem=="th") then "c" else "l" 
+                }
+  val bcolor  = match (attrs.hasKey("background-color")) {
+                  Nothing   -> ""
+                  Just(clr) -> "{\\cellcolor" + fmtColorArg(clr) + "}"
+                }            
+  val fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
+                (if (attrs.hasClass("cell-border-right")) then "|" else "")
 
-  attrsx  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
-                   keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
+  val attrsx  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
+                       keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
 
-  content = if (elem=="column") 
-             then texEnv(elem,body,attrsx)
-             else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
-             
+  val content = if (elem=="column") 
+                 then texEnv(elem,body,attrsx)
+                 else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
+                 
   if (colspan=="1" && fmt=="l") then content 
    else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
 }
@@ -297,21 +297,21 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
 
 function texAttrsX( attrs : attrs = attrsNone ) : string {
   if (attrs.empty) then "" else {
-    txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
-            if (attrs.name=="") then [] else ["id=" + attrs.name],
-            if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
-            if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
-            attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
-              kv.fst.normalizeId + "={" + kv.snd.normalizeVal + "}" 
-            }),          
-          ].concat.join(",") 
+    val txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
+                if (attrs.name=="") then [] else ["id=" + attrs.name],
+                if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
+                if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
+                attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
+                  kv.fst.normalizeId + "={" + kv.snd.normalizeVal + "}" 
+                }),          
+              ].concat.join(",") 
     if (txt=="") then "" else "[" + txt + "]"
   }
 }
 
 
 function nosuppressKey( kv : (string,string) ) : bool {
-  key = kv.fst
+  val key = kv.fst
   (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
 }
 
@@ -341,14 +341,14 @@ function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : stri
 }
 
 function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
-  envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
+  val envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
   "\\begin{" + envName + "}" + attrs.texAttrsX + "%\n" +
     body.trimRight + "%\n" +
     "\\end{" + envName + "}%\n"
 }
 
 function texClassName( attrs : attrs, def : string ) : (string,attrs) {
-  name = attrs.elementName(def)
+  val name = attrs.elementName(def)
   (name.normalizeCmd.capitalize,attrs(classes=attrs.classes.filter(fun(c){ c != name })))    
 }
 
@@ -397,7 +397,7 @@ function fmtTexFullX(body : string, options : options, metadata : dict<string>, 
 {
   function expand(s) { s.expandKeys(metadata) }
 
-  pkgs = (options.packages.expand + (if (snippets) then "" else options.packagesx.expand)).splitPaths 
+  val pkgs = (options.packages.expand + (if (snippets) then "" else options.packagesx.expand)).splitPaths 
   [fmtOptArg(@"\documentclass", options.docClass.expand, ext = ".cls" ),
    "% generated by Madoko, version " + version,
    if (snippets) then @"\newcommand\mathmode{true}" else "",

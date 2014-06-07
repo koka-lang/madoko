@@ -145,12 +145,12 @@ function cflag( f : (commandOptions,bool) -> commandOptions ) : optionArg<comman
 
 function oflag( f : (options,bool) -> options ) : optionArg<commandOptions>
 {
-  Flag(function(co:commandOptions,b:bool) { co(options = f(co.options,b)) })
+  Flag(fun(co:commandOptions,b:bool) { co(options = f(co.options,b)) })
 }
 
 function oreq( f : (options,string) -> options, help : string ) : optionArg<commandOptions>
 {
-  Req(function(co:commandOptions,v:string) { co(options = f(co.options,v)) },help) 
+  Req(fun(co:commandOptions,v:string) { co(options = f(co.options,v)) },help) 
 }
 
 function setbench( o : options, b : bool ) {
@@ -182,12 +182,12 @@ val optionsDesc : list<option<commandOptions>>
     ]
 
 function setMeta( opts0 : options, value : string ) : options {
-  keyvals = value.split(";").list
+  val keyvals = value.split(";").list
   keyvals.foldl(opts0) fun(opts : options,keyval) {
-    i = keyval.indexOf(":")
+    val i = keyval.indexOf(":")
     if (i > 0) {
-      key = keyval.substr(0,i).trim
-      s   = keyval.substr(i+1).trim
+      val key = keyval.substr(0,i).trim
+      val s   = keyval.substr(i+1).trim
       opts(metadata = opts.metadata + [(key,s)] )
     }
     else {
@@ -205,7 +205,7 @@ public function parseOptions( extra : string = "") : io maybe<commandOptions>
 
 public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOptions>
 {
-  header = "usage:\n madoko [options] files\n\noptions:"
+  val header = "usage:\n madoko [options] files\n\noptions:"
   // testOptions.usageInfo( header ).println
   val (options,args,errs) = parse( CommandOptions(), optionsDesc, cmdargs )
   

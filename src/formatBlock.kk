@@ -110,7 +110,7 @@ function formatBlocksAcc( context : formatContext, blocks : list<block>, acc : b
             _ -> {
               // This is to emulate fully pedantic list mode where we always
               // combine text lines as a paragraph in a loose list
-              newblock = if (loose) then Para(content,attrs) else Line(content,loose,attrs)
+              val newblock = if (loose) then Para(content,attrs) else Line(content,loose,attrs)
               formatBlocksAcc(context,rest2,acc.append(formatBlock(context,newblock)))
             }
           }
@@ -160,7 +160,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
 {
   match(block) {
     Para(txt,attrs) -> {
-      content = formatInline(context.inlineContext, txt, attrs)
+      val content = formatInline(context.inlineContext, txt, attrs)
       if (attrs.notag)
        then context.fmtEnv("div", content, attrs) // content
       elif (content.contains(rxblank)) then "" else 
@@ -219,8 +219,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         }
         MathDefs  -> {
           //context.logLineInfo(parentAttrs)
-          lineInfo = getLineInfo(parentAttrs)
-          mtxt = txt.escapeMath(context.fmt)
+          val lineInfo = getLineInfo(parentAttrs)
+          val mtxt = txt.escapeMath(context.fmt)
           match(context.fmt) {
             FmtTex  -> lineInfo + mtxt
             FmtHtml -> {
@@ -254,8 +254,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Table(header,colstyles,cells,attrs) -> {
-      thead = formatRows(header,colstyles,context,attrs,False)
-      tbody = formatRows(cells,colstyles,context,attrs,True)
+      val thead = formatRows(header,colstyles,context,attrs,False)
+      val tbody = formatRows(cells,colstyles,context,attrs,True)
       context.fmtTable(thead,tbody, colstyles, attrs.addClass("madoko"))  
     }
 
@@ -264,7 +264,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }    
 
     Div(content,attrs) | attrs.hasClass("columns") -> {
-      cols = content.map fun(b) {
+      val cols = content.map fun(b) {
         match(b) {
           Div(bs,xs) -> {
             if (!(xs.hasClass("column"))) {
@@ -282,8 +282,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }    
     
     Div(content,attrs) -> {    
-      txt = formatBlocksX(context,content)
-      rnd = attrs.input
+      val txt = formatBlocksX(context,content)
+      val rnd = attrs.input
       if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
             (context.fmt==FmtTex && rnd.isMathDefs))
         then txt 
@@ -292,7 +292,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
 
     Special(name,value) -> {
       if (name.toLower=="toc") then {
-        blk = context.tocBlocks[value.toLower].maybe(Empty,id)
+        val blk = context.tocBlocks[value.toLower].maybe(Empty,id)
         formatBlock(context,blk)
       }
       elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then formatBlock(context,context.footnoteBlock)
@@ -312,7 +312,7 @@ val rxDDashes = regex(@"^ *(\\/)?===+ *[|+]*$")
 function deriveMathAttrs( parentAttrs : attrs ) {
   common/Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ),
          keyvals  = parentAttrs.keyvals.filter( fun(kv) {
-                      key = kv.fst
+                      val key = kv.fst
                       key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-")
                     }))
 }
@@ -329,7 +329,7 @@ function formatRows( rows : list<row>,
         match(cols) {
           Cons(colstyle,cs) -> {
             // merge with row style
-            colstyle0 = colstyle.mergeDefault(rowstyle)
+            val colstyle0 = colstyle.mergeDefault(rowstyle)
 
             // span multiple columns?
             val (txt1,colspan) = match(cell.text.find(rxbars)) {
@@ -339,9 +339,9 @@ function formatRows( rows : list<row>,
             // combine borders in case of a multi-column
             val (colstyle1,cs1) = if (colspan<=1) then (colstyle0,cs) 
                                     else {
-                                      colstylex = colstyle0.addKeyval("column-span",colspan.show)
-                                      colstyley = if (isBody) then colstylex 
-                                                   else colstylex.addKeyval("text-align",rowstyle.hasKey("text-align").maybe("center",id))
+                                      val colstylex = colstyle0.addKeyval("column-span",colspan.show)
+                                      val colstyley = if (isBody) then colstylex 
+                                                       else colstylex.addKeyval("text-align",rowstyle.hasKey("text-align").maybe("center",id))
                                       match(cs.drop(colspan-2)) {
                                        Cons(colstylez,csx) 
                                            -> (colstyley.addClasses(colstylez.classes.filter(noalign))
@@ -357,7 +357,7 @@ function formatRows( rows : list<row>,
                                     then (colstyle1.addClass("cell-double-line"), "")
                                     else (colstyle1,txt1)
             
-            elem = Cell(context.inlineContext.formatInline(txt2,colstyle2), colstyle2)
+            val elem = Cell(context.inlineContext.formatInline(txt2,colstyle2), colstyle2)
             Cons(elem, formatRow(rs,cs1, rowstyle))        
           }
           _ -> Nil
@@ -385,10 +385,10 @@ function formatRows( rows : list<row>,
   }
 
   function defaultKeyvals( hasLine :  bool, rowNum : int ) : list<(string,string)> {
-    mod = if (rowNum.even && rowNum != 0) then "even-" else "odd-"
-    kvs = attrs.keyvals.filterKeyvals("cell-") +
-           attrs.keyvals.filterKeyvals(if (isBody) then "tr-" else "th-") +
-            attrs.keyvals.filterKeyvals((if (isBody) then "tr-" else "th-") + mod) 
+    val mod = if (rowNum.even && rowNum != 0) then "even-" else "odd-"
+    val kvs = attrs.keyvals.filterKeyvals("cell-") +
+               attrs.keyvals.filterKeyvals(if (isBody) then "tr-" else "th-") +
+                attrs.keyvals.filterKeyvals((if (isBody) then "tr-" else "th-") + mod) 
     if (hasLine)
      then kvs.filter(fun(kv){kv.fst.startsWith("background-color") || kv.fst.startsWith("rule") })
      else kvs
@@ -400,23 +400,23 @@ function formatRows( rows : list<row>,
          
   var rowNum := 0
   var rowCount := 0
-  firstHasLine = rows.take(1).all(containsDashes)
-  lastHasLine  = rows.reverse.take(1).all(containsDashes)
+  val firstHasLine = rows.take(1).all(containsDashes)
+  val lastHasLine  = rows.reverse.take(1).all(containsDashes)
   rows.map fun(row) {
     rowCount := rowCount+1
-    hasLine = row.containsDashes
+    val hasLine = row.containsDashes
     if (!hasLine) then rowNum := rowNum+1  
-    rowstyle = row.rowAttrs.addKeyvals( 
-                      addRowKey("rule-width", "rule-top-width", !isBody && rowNum==0 ) +
-                      addRowKey("rule-width", "rule-mid-width", isBody && rowNum==0 ) +
-                      addRowKey("rule-width", "rule-bottom-width", isBody && hasLine && rowCount == rows.length ) +
-                      addRowKey("rule-width", "rule-width", True ) +
-                      addRowKey("padding-top", "rule-top-sep", !isBody && firstHasLine && rowNum==1 && !hasLine ) +
-                      addRowKey("padding-top", "rule-mid-sep", isBody && rowNum==1 && !hasLine) +
-                      addRowKey("padding-bottom", "rule-mid-sep", !isBody && !hasLine && rowCount == rows.length ) +
-                      addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && lastHasLine && rowCount == rows.length-1 ) 
-                    )
-                    .addKeyvals( defaultKeyvals(hasLine,rowNum) )
+    val rowstyle = row.rowAttrs.addKeyvals( 
+        addRowKey("rule-width", "rule-top-width", !isBody && rowNum==0 ) +
+        addRowKey("rule-width", "rule-mid-width", isBody && rowNum==0 ) +
+        addRowKey("rule-width", "rule-bottom-width", isBody && hasLine && rowCount == rows.length ) +
+        addRowKey("rule-width", "rule-width", True ) +
+        addRowKey("padding-top", "rule-top-sep", !isBody && firstHasLine && rowNum==1 && !hasLine ) +
+        addRowKey("padding-top", "rule-mid-sep", isBody && rowNum==1 && !hasLine) +
+        addRowKey("padding-bottom", "rule-mid-sep", !isBody && !hasLine && rowCount == rows.length ) +
+        addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && lastHasLine && rowCount == rows.length-1 ) 
+      )
+      .addKeyvals( defaultKeyvals(hasLine,rowNum) )
     Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)
   }
 }

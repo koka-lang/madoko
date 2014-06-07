@@ -65,12 +65,12 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
   tagBlock(tbody,
     rows.map( fun(row) {
       tag("tr", row.cells.map(fun(cell) { 
-                    cattrs1 = match(cell.cellAttrs.hasKey("rule-width")) {
-                               Just(wd) -> cell.cellAttrs
-                                            .addKeyvalIfNotExist("border-top-width",wd)
-                                            .addKeyvalIfNotExist("border-bottom-width",wd)
-                               Nothing  -> cell.cellAttrs
-                             }
+                    val cattrs1 = match(cell.cellAttrs.hasKey("rule-width")) {
+                                     Just(wd) -> cell.cellAttrs
+                                                  .addKeyvalIfNotExist("border-top-width",wd)
+                                                  .addKeyvalIfNotExist("border-bottom-width",wd)
+                                     Nothing  -> cell.cellAttrs
+                                   }
                     tag(td,cell.text, cattrs1.htmlFormat(td,context.sanitize)) 
                 }).join, 
                 //row.rowAttrs.htmlFormat("tr",context.sanitize)
@@ -133,10 +133,10 @@ public function fmtHtmlCodeHilite( context : inlineContext, txt : string, lang :
 public function fmtHtmlCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 
 {
-  lang = attrs.hasKey("language").maybe("",id)
-  lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
+  val lang = attrs.hasKey("language").maybe("",id)
+  val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
   
-  plain = txt.escapePre
+  val plain = txt.escapePre
   val (pattrs,content)
     = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) then (attrs,plain) 
        else match( txt.hilite(lang) ) {
@@ -164,7 +164,7 @@ public function htmlFormat( attrs : attrs, tag : string, sanitize : bool = True 
 }
 
 function formatKeyvals( attrs : attrs, tag : string ) {
-  kvs = attrs.keyvals.map fun(kv) {
+  val kvs = attrs.keyvals.map fun(kv) {
     formatKeyval(kv.fst,kv.snd,tag)
   }
   val (hstyles,hattrs) = kvs.partition( fun(kv){ kv.contains(rxColon) } )
@@ -287,24 +287,24 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     match (metadata[name]) {
       Nothing -> []
       Just(value) -> {
-        evalue = value.expand.escape
+        val evalue = value.expand.escape
         ["name=\"" + name.escape + "\" content=\"" + 
           (if (sep=="") then evalue else evalue.replaceAll(";",sep)) + "\""]
       }
     }
   }
 
-  extensions = options.mjext.expand.splitPaths.map(fun(path) { 
+  val extensions = options.mjext.expand.splitPaths.map(fun(path) { 
       htmlQuote( (if (path.endsWith(".js")) then path else path + ".js") )
     }).join(",")
 
-  meta = options.htmlMeta.expand.splitPaths + 
-          makeMeta("copyright") +
-          makeMeta("license") +
-          makeMeta("keywords",",") + 
-          makeMeta("author",",") +
-          makeMeta("description") 
-          
+  val meta = options.htmlMeta.expand.splitPaths + 
+              makeMeta("copyright") +
+              makeMeta("license") +
+              makeMeta("keywords",",") + 
+              makeMeta("author",",") +
+              makeMeta("description") 
+              
   "<!DOCTYPE html>\n<html>\n<head>\n" +
    "  <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n" +
    "  <meta name=\"generator\" content=\"Madoko, version " + version + "\" />\n" +
@@ -312,7 +312,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
    (if (options.title=="") then "" else
       "  <title>" + escape(options.title.expand) + "</title>\n") +
    (if (options.css == "") then "" else {
-      links = options.css.expand.splitPaths
+      val links = options.css.expand.splitPaths
       links.map(fun(link) { 
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
@@ -328,7 +328,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       }).join 
     }) +
    (if (options.scripts == "") then "" else {
-      links = options.scripts.expand.splitPaths
+      val links = options.scripts.expand.splitPaths
       links.map(fun(link) { 
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 

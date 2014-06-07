@@ -22,13 +22,13 @@ import options
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
   val (mdata2,rest,lineCount) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
-  options1 = options0.fromMeta(mdata2)
-  options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
+  val options1 = options0.fromMeta(mdata2)
+  val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
     else { 
-      mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst      
-      mdataFull = mdataDef + options0.metadata + mdata2
-      options2  = options0.fromMeta(mdataFull)
+      val mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst      
+      val mdataFull = mdataDef + options0.metadata + mdata2
+      val options2  = options0.fromMeta(mdataFull)
       options2( metadata = mdataFull)
     }
 
@@ -48,9 +48,9 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
   //opts = opts0(metadata = opts0.metadata + mdata)
   mdata.foldl(opts) fun(options : options, kv : (string,string)) {
     val (key,xvalue) = kv
-    lvalue = xvalue.toLower
-    value = if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else xvalue
-    ivalue = value.parseInt.maybe(-1,id)
+    val lvalue = xvalue.toLower
+    val value = if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else xvalue
+    val ivalue = value.parseInt.maybe(~1,id)
 
     //trace("from meta: " + key + "=" + value)
     if   (key=="title")  options(title=value)
@@ -131,7 +131,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
 }
 
 function setMathMode( options : options, value : string ) : options {
-  nvalue = value.normalizeId
+  val nvalue = value.normalizeId
   if (nvalue=="static") then options(mathmode=Static)
   elif (nvalue=="dynamic" || nvalue=="mathjax") then options(mathmode=Dynamic)
   else {
@@ -149,15 +149,15 @@ public function parsePlainMeta( txt : string, fmt : formatter, metadata : metada
       (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
-      kvs = if (fmt.matchFmt(cap.groups[1])) then {
-              value = cap.groups[4].joinLines.trim
-              //if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
-              if (cap.groups.matchedOn(3))
-               then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
-               else [(cap.groups[2].normalizeId, value)]
-            }
-            else []
-      lines2 = txt.substr(0,cap.next).count("\n")
+      val kvs = if (fmt.matchFmt(cap.groups[1])) then {
+                  val value = cap.groups[4].joinLines.trim
+                  //if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
+                  if (cap.groups.matchedOn(3))
+                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
+                   else [(cap.groups[2].normalizeId, value)]
+                }
+                else []
+      val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose, lines+lines2 )
     }
   }
@@ -235,14 +235,14 @@ function defaultMeta( options : options ) : string {
 }
 
 function theorem( prose : string ) {
-  name = prose.toLower
+  val name = prose.toLower
   "~" + prose + ": .block label='[@" + name + "]{." + name + "-label}' " +
       "before='[**" + prose + "\\ &label;.** ]{." + name + "-before}'"
 }
 
 function heading( depth : int, headingDepth : int, tocDepth : int ) {
-  label = list(1,depth).map( fun(d){ headingCounter(d) } ).join(".")
-  num   = depth.show
+  val label = list(1,depth).map( fun(d){ headingCounter(d) } ).join(".")
+  val num   = depth.show
   "~h" + num + ": " + 
     (if (depth > 1) then headingCounter(depth) else "") + 
     " label='[" + label + "]{.heading-label}'" +

@@ -54,10 +54,10 @@ public function ruleRemove( grammar : grammar<a,c>, pred : bool, names : list<st
 // For inline expressions, this does not improve the performance much.
 public function combineRules( rules : list<rule<a,c>> ) : rule<a,c> {
   val (rxs,lactions) = rules.map( fun(rule) { (rule.regex.source, rule.action) }).unzip
-  actions = lactions.vector
-  rx = regexAlt(rxs)
+  val actions = lactions.vector
+  val rx = regexAlt(rxs)
   Rule("<combined>",rx,fun(cap : matched, context) {
-    i = max(0,cap.groups.alternative)
+    val i = max(0,cap.groups.alternative)
     unsafeTotal{ actions[i](cap,context) }
   })
 }
@@ -75,7 +75,7 @@ public function matchRules( rules : grammar<a,c>, context : c, src : string, def
   match(rules) {
     Nil -> {
       //trace("Unable to match any rule!")
-      matched = src.substr(0,1)
+      val matched = src.substr(0,1)
       (def(matched), 1, matched) //src.substr(1))
     }
     Cons(rule,rulesNext) -> {
@@ -184,23 +184,23 @@ val citeSuper   = Citestyle(Super,"","",",",",",",",True,True)
 public function parseCiteStyle( text : string ) : citestyle {
   match(text.find(rxCiteSpec)) {
     Just(cap) -> {
-      md = if (cap.groups[1]=="natural") then Natural
-           elif (cap.groups[1]=="textual") then Textual
-           elif (cap.groups[1]=="numeric") then Numeric
-           elif (cap.groups[1]=="super") then Super
-           else Auto
-      cite = match(md) {
+      val md = if (cap.groups[1]=="natural") then Natural
+               elif (cap.groups[1]=="textual") then Textual
+               elif (cap.groups[1]=="numeric") then Numeric
+               elif (cap.groups[1]=="super") then Super
+               else Auto
+      val cite = match(md) {
         Natural -> citeNatural
         Textual -> citeTextual
         Super   -> citeSuper
         Numeric -> citeNumeric
         _       -> citeAuto
       }
-      xsort = if (cap.groups[2]!="") then (cap.groups[2]=="sort") else cite.sort
-      xcompress = xsort      
+      val xsort = if (cap.groups[2]!="") then (cap.groups[2]=="sort") else cite.sort
+      val xcompress = xsort      
       if (cap.groups.matchedOn(3)) {           
-        aysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else cap.groups[5]
-        yysep = if (cap.groups.matchedOn(7)) then cap.groups[7] else aysep      
+        val aysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else cap.groups[5]
+        val yysep = if (cap.groups.matchedOn(7)) then cap.groups[7] else aysep      
         Citestyle(md,cap.groups[3],cap.groups[4],cap.groups[5],aysep,yysep,xsort,xcompress)
       }
       else {
@@ -279,7 +279,7 @@ public function (==)( x : formatter, y : formatter ) : bool {
 // See if a string matches the format. An empty string always matches.
 public function matchFmt( fmt : formatter, fmtstr : string ) : bool {
   if (fmtstr=="") return True
-  s = fmtstr.toLower
+  val s = fmtstr.toLower
   match(fmt) {
     FmtHtml | s == "html" -> True
     FmtTex  | s == "tex"  -> True
@@ -400,7 +400,7 @@ public function hasKey( attrs : attrs, key : string ) : maybe<string> {
 }
 
 public function hasBoolKey( attrs : attrs, key : string ) : bool {
-  value = attrs.hasKey(key).maybe("",id).toLower
+  val value = attrs.hasKey(key).maybe("",id).toLower
   (attrs.hasClass(key) || value=="true" || value=="1")
 }
 
@@ -411,9 +411,9 @@ public function hasClass( attrs : attrs, className : string ) : bool {
 
 // Generate a fresh id if it is not specified
 public function generateHeaderId( attrs : attrs, heading : string ) : attrs {
-  attrs1 = if (attrs.name!="") then attrs else {
-    newid = heading.normalizeId
-    newname = if (newid=="") then "section" else newid
+  val attrs1 = if (attrs.name!="") then attrs else {
+    val newid = heading.normalizeId
+    val newname = if (newid=="") then "section" else newid
     attrs(text=attrs.text + " id='" + newname + "'", name = newname, empty=False)
   }
   match (attrs1.hasKey("caption")) {

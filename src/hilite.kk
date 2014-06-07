@@ -51,11 +51,11 @@ public function hilitePartial( src : string, lang : string, mbMode : maybe<hilit
 {
   if (lang=="") return Nothing
   catch( { 
-    mode = match(mbMode) {
+    val mode = match(mbMode) {
       Nothing -> xinitialMode(lang.toLower)
       Just(m) -> m
     }
-    res = xhilite(src,lang.toLower,mode)
+    val res = xhilite(src,lang.toLower,mode)
     Just( (res.highlighted,res.finalMode) )
    }, 
    fun(exn) { 

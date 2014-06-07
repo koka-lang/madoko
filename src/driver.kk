@@ -37,27 +37,27 @@ public function processContent( inName : string, outName : string, content : str
                           continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
 {
   if (opts.options.sandbox) enforceSandbox()
-  styleDir = opts.installDir + "/../styles"
-  searchDirs = [inName.dirname,outName.dirname,styleDir];
+  val styleDir = opts.installDir + "/../styles"
+  val searchDirs = [inName.dirname,outName.dirname,styleDir];
   content.include(False, outName, searchDirs) fun(icontent,lmap) {
     // set up options
-    opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
-              then (opts.options)(xmp = True) else opts.options
+    val opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
+                  then (opts.options)(xmp = True) else opts.options
                
-    date   = now()                             
-    opts1  = opts0(lineMap=lmap, metadata=opts0.metadata 
-                    + [("docname",inName.stemname),("filename",inName)]
-                    + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))] )
+    val date   = now()                             
+    val opts1  = opts0(lineMap=lmap, metadata=opts0.metadata 
+                       + [("docname",inName.stemname),("filename",inName)]
+                       + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))] )
 
-    mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
-              else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
+    val mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
+                  else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
-    dims = outName.changeExt(".dimx").readTextFileDef("",True)
-    mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
+    val dims = outName.changeExt(".dimx").readTextFileDef("",True)
+    val mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale)
 
-    xopts  = opts1(mathdim=mdim)
-    mopts  = mmopts(mathdim=mdim)  
+    val xopts  = opts1(mathdim=mdim)
+    val mopts  = mmopts(mathdim=mdim)  
 
     if (mopts.verbose>=4) {
       println(mopts.metadata.map(fun(kv) { kv.fst + ": " + kv.snd }).join("\n"))
@@ -96,7 +96,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 {
   function genPdf(outTexName:string) {
     if (mopts.pdf) {
-      (runners.runPdfLatex)( inName, outTexName, mopts, content, function() { () } )                  
+      (runners.runPdfLatex)( inName, outTexName, mopts, content, fun() { () } )                  
     }        
   }
 
@@ -104,20 +104,20 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     if (files.length == 0) return (opts,html0);
 
     val infos = files.concat fun(fname) {
-                  mime = mimeFromExt(fname);
-                  data = if (mime.startsWith("text/")) 
-                              then searchReadTextFileDef(fname,"",searchDirs,"",False)
-                            elif (mime.startsWith("image/"))
-                              then {
-                                //trace("embed image: " + fname)
-                                img = readBase64FileDef(combine(inName.dirname,fname),"",False)
-                                if (img != "") then "data:" + mime + ";base64," + img else img
-                              }
-                            else ""
+                  val mime = mimeFromExt(fname);
+                  val data = if (mime.startsWith("text/")) 
+                                then searchReadTextFileDef(fname,"",searchDirs,"",False)
+                              elif (mime.startsWith("image/"))
+                                then {
+                                  //trace("embed image: " + fname)
+                                  val img = readBase64FileDef(combine(inName.dirname,fname),"",False)
+                                  if (img != "") then "data:" + mime + ";base64," + img else img
+                                }
+                              else ""
 
                   // write the file to the out directory
                   if (data != "" && (opts.pdf || data.length > mopts.embedLimit)) { 
-                    newName = combine(outName.dirname,fname) 
+                    val newName = combine(outName.dirname,fname) 
                     if (newName.normalize != fname.normalize) {
                       //trace("copying: " + fname + " to " + newName)
                       mkdirp(newName.dirname)
@@ -162,10 +162,10 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                  }}}}}
 
     // write an aux file
-    bibAux = outName.appendStem("-bib").changeExt(".aux")
-    bibChanged =
+    val bibAux = outName.appendStem("-bib").changeExt(".aux")
+    val bibChanged =
       if (logs == "") then False else {
-        bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
+        val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
         // write the log to an aux file (one for latex, and one to track changes)
         writeCitations( logs, bibData, outName.changeExt(".aux"), inName, mopts, False )
         writeCitations( logs, bibData, bibAux, inName, mopts, True )                
@@ -192,7 +192,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
 
       // generate tex
-      outTexName = outName.changeExt(".tex")
+      val outTexName = outName.changeExt(".tex")
       if (mopts.tex) {
         if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
@@ -214,7 +214,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
               // write html again
               mopts.print("re-aligning math in HTML.")
               
-              html2 = markdown(icontent,xopts(mathdim=mdim2))
+              val html2 = markdown(icontent,xopts(mathdim=mdim2))
               if (!(tryWriteTextFile(outName,html2))) {
                 mopts.printErr("error: unable to write: " + outName) 
               }
@@ -240,10 +240,10 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 // Register colorizers
 function registerColorizers( opts : options, searchDirs : list<string>, content : string ) : io ()
 {
-  searchDirsEx = searchDirs.concat( fun(dir) { [dir,combine(dir,"lang")] } )
-  registered = mdict()
-  langs1 = opts.hilitelang.split(";").list
-  langs2 = content.findAll(regex(@"^ *```+ *([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
+  val searchDirsEx = searchDirs.concat( fun(dir) { [dir,combine(dir,"lang")] } )
+  val registered = mdict()
+  val langs1 = opts.hilitelang.split(";").list
+  val langs2 = content.findAll(regex(@"^ *```+ *([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
   (langs1 + langs2).foreach fun(lang) {
     match (registered[lang]) {
       Just -> ()
@@ -256,7 +256,7 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
               opts.printErr("warning: unable to read language definition: " + lang)
             }
             Just((_,definition)) -> {
-              langName = lang.basename.noext.toLower
+              val langName = lang.basename.noext.toLower
               //trace("register language: " + langName + ":\n" + definition )
               registerLanguage(langName,definition)
             }
@@ -290,22 +290,22 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
 function writeCitations( auxData : string, bibData : string, auxName : string, docName : string, opts : options, required : bool ) : io bool {
-  bibStyleName = if (opts.bibStyle != "") then opts.bibStyle else "plainnat"
+  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle else "plainnat"
       
-  oldData = readTextFileDef(auxName,"",required)
-  initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")
-  newData = (if (initial!="") then initial + "\n" else "") + 
-            "% Generated by Madoko, version " + version + "\n" + auxData + 
-            "\n\\bibstyle{" + bibStyleName + "}\n" + bibData
-            
+  val oldData = readTextFileDef(auxName,"",required)
+  val initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")
+  val newData = (if (initial!="") then initial + "\n" else "") + 
+                  "% Generated by Madoko, version " + version + "\n" + auxData + 
+                  "\n\\bibstyle{" + bibStyleName + "}\n" + bibData
+                  
   if (newData != oldData) {
     if (!(tryWriteTextFile(auxName, newData))) then {
       opts.printErr("error: unable to write citations: " + auxName )
     }
   }
   
-  oldCites = oldData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
-  newCites = newData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
+  val oldCites = oldData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
+  val newCites = newData.findAll(rxCite).list.map(fun(cap) { cap.matched }).join("\n");
   //trace("oldCites: " + oldCites)
   //trace("newCites: " + newCites)
   return (oldCites != newCites)
@@ -320,14 +320,14 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
   function readInclude( fname : string ) : io (string,string) 
   {
     if (fname=="BIB") then {
-      fileName = outName.appendStem("-bib").changeExt(".bbl")
-      bbl = readTextFileDef( fileName, "", True)  
+      val fileName = outName.appendStem("-bib").changeExt(".bbl")
+      val bbl = readTextFileDef( fileName, "", True)  
       (fileName, "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~")
     }
     else {
       match (trySearchReadTextFile(fname,dirs,".mdk")) {
         Nothing -> {
-          fileName = if (extname(fname)=="") then fname + ".mdk" else fname
+          val fileName = if (extname(fname)=="") then fname + ".mdk" else fname
           log("files", fileName)
           println("  warning: unable to read include: " + fname )
           (fileName,"")
@@ -342,7 +342,7 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
     var lineNo := 0;
     var lineCount := 0;
     var lineMap := End;
-    ls = txt.lines.map fun(line) {
+    val ls = txt.lines.map fun(line) {
       lineNo := lineNo + 1;
       lineCount := lineCount + 1;
       match (line.find(rxInclude)) {
@@ -389,8 +389,8 @@ function trySearchReadTextFile( fname : string, dirs : list<string>, ext : strin
 }
 
 public function outputName( inputName : string, options : commandOptions ) : string {
-  noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 
-  outName = noextName + ".html"
+  val noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 
+  val outName = noextName + ".html"
   if (options.outputDir=="") 
    then outName 
    else options.outputDir + "/" + outName.basename                  
@@ -431,7 +431,7 @@ val mimes = dict([
 ]);
 
 function mimeFromExt( fname : string ) : string {
-  ext = extname(fname).substr(1);
+  val ext = extname(fname).substr(1);
   match(mimes[ext]) {
     Just(mime) -> mime
     Nothing    -> ""
