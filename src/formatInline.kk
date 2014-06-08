@@ -69,7 +69,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\.|\$[^\$])*)\$\$]"), inlineMathBlock ),
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
 
-  Rule("textcite",  regex(@"^([\n ]*)(([\-+!]?)@([\w:\-]+))"), inlineCite ),
+  Rule("textcite",  regex(@"^([\n ]*)(([\-+!]?)@" + rxCitename + ")"), inlineCite ),
   
   Rule("ibr",       regex(@"^  \n(?!\s*$)"), inlineBreak ),  
   Rule("iescape",   regex(@"^\\([^a-zA-Z0-9])"), inlineEscape ),
@@ -487,8 +487,8 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
 }
 val rxCiteSep         = regex(@"\s*[;]\s*")
 val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
-val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@([\w\-:]+))([\s\S]*)$")
-
+val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@" + rxCitename + @")([\s\S]*)$")
+val rxCitename        = @"(\w(?:[\w]|[\w:\-\.])*)"
 
 function inlineCite( cap : matched, context : inlineContext ) : string {
   log("aux",@"\citation{" + cap.groups[4] + "}")

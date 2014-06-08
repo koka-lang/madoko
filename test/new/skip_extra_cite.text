@@ -3,7 +3,7 @@ Subtitle    : A &Ccedil;ubtitle
 Heading Base: 2
 
 Doc Class	  : article
-Bib       	: ../test
+Bib       	: ../../test.bib
 Pdf Latex   : pdflatex
 
 Author      : Daan Leijen
@@ -26,6 +26,8 @@ Bib Search Url: www.google.com
 [TOC]
 
 ## Abstract 		{-}
+
+Test: [@Abel:termination.12345].
 
 We propose a [programming]{.mono} model where effects are treated in a disciplined way, 
 and where the potential side-effects of a function are apparent in its type
