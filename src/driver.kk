@@ -328,7 +328,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
   val rxSnippetEnd = regex(options.extractEnd)
 
   function warning( msg, lineNo = 0, fileName = "") {
-    println( "warning: " + 
+    options.printErr( "warning: " + 
              (if (fileName != "" || lineNo > 0)
                then fileName + (if (lineNo > 0) then " (" + lineNo.show + ")" else "") + ": "
                else "") +
@@ -390,7 +390,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
     }
   }
 
-  function readInclude( fname : string ) : io (string,string) 
+  function readInclude( fname : string, srcname, lineNo ) : io (string,string) 
   {
     if (fname=="") then {
       ("","\n")  // happens for snippet only includes
@@ -412,7 +412,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
         Nothing -> {
           val fileName = if (extname(fname)=="") then fname + ".mdk" else fname
           log("files", fileName)
-          println("  warning: unable to read include: " + fname )
+          warning("unable to read include: " + fname, lineNo, srcname )
           (fileName,"")
         }
         Just((fileName,content)) -> {
@@ -479,7 +479,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
         Nothing -> line
         Just(cap) -> {
           val incname = cap.groups.firstMatched(1,4)
-          val (fileName0,content) = readInclude(incname)
+          val (fileName0,content) = readInclude(incname,fname,lineNo)
           val (fileName,istart,fragment)  = fileName0.findRange(cap.matched, cap.groups[5], content, fname, lineNo);
           if (istart<=0) then "" else {
             val (lcount,lmap,icontent) = processIncludes( fragment, fileName, istart )
