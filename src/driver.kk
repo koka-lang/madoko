@@ -39,7 +39,7 @@ public function processContent( inName : string, outName : string, content : str
   if (opts.options.sandbox) enforceSandbox()
   val styleDir = opts.installDir + "/../styles"
   val searchDirs = [inName.dirname,outName.dirname,styleDir];
-  content.include(False, outName, searchDirs) fun(icontent,lmap) {
+  content.include(False, inName, outName, searchDirs, opts.options) fun(icontent,lmap) {
     // set up options
     val opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
                   then (opts.options)(xmp = True) else opts.options
@@ -313,16 +313,99 @@ function writeCitations( auxData : string, bibData : string, auxName : string, d
 val rxCite = regex(@"^(\\(citation|bibstyle|bibdata)\b.*)|(%md5:.*)$",multiline=True)
 val rxEmptyTail = regex(@"(\s|%.*)*$")
 
+struct snippet(
+  fileName : string,
+  startLine: int,
+  content  : string
+)
 
-function include( text : string, fast : bool, outName : string, dirs : list<string>, action : (string,lineMap) -> <io|e> a ) : <io|e> a {
+function include( text : string, fast : bool, inName : string, outName : string, dirs : list<string>, options : options, action : (string,lineMap) -> <io|e> a ) : <io|e> a {
   if (fast) then return action(text,End) 
+
+  val includes : mdict<global,string> = mdict()
+  val snippets : mdict<global,snippet> = mdict()
+  val rxSnippetStart = regex(options.extractStart)
+  val rxSnippetEnd = regex(options.extractEnd)
+
+  function warning( msg, lineNo = 0, fileName = "") {
+    println( "warning: " + 
+             (if (fileName != "" || lineNo > 0)
+               then fileName + (if (lineNo > 0) then " (" + lineNo.show + ")" else "") + ": "
+               else "") +
+             msg )
+  }
+
+  function extractSnippet( name, content, fname, lineNo, acc = [] ) : io (list<string>,int) {
+    match(content) {
+      Nil -> {
+        warning("unclosed snippet: " + name, lineNo, fname )
+        (Nil,lineNo)
+      }
+      Cons(line,lines) -> {
+        match(line.find(rxSnippetEnd)) {
+          Nothing -> match(line.find(rxSnippetStart)) {
+            Nothing -> {
+              extractSnippet( name, lines, fname, lineNo+1,  Cons(line,acc))
+            }
+            Just(cap) -> {
+              // embedded snippet: extract separately 
+              extractSnippet( cap.groups[1], lines, fname, lineNo+1 )
+              // and for this snippet, ignore this line
+              extractSnippet( name, lines, fname, lineNo+1, acc )
+            }
+          }
+          Just(cap) -> {
+            val cname = cap.groups[1]
+            if (name == cname) {
+              // end of snippet
+              if (snippets[name].isJust) {
+                warning( "snippet " + name + " is redefined", lineNo, fname )
+              }
+              snippets[name] := Snippet(fname, lineNo, acc.reverse.join("\n"))
+              (lines,lineNo+1)
+            }
+            else {
+              // end of another snippet, ignore it
+              extractSnippet( name, lines, fname, lineNo+1, acc )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function findSnippets( content : list<string>, fname : string, lineNo : int = 1) : io () {
+    match(content) {
+      Nil -> ()
+      Cons(line,lines) -> {
+        match(line.find(rxSnippetStart)) {
+          Nothing -> findSnippets( lines, fname, lineNo+1 )
+          Just(cap) -> {
+            val name = cap.groups[1]
+            val (rest, endLineNo) = extractSnippet( name, lines, fname, lineNo+1 )
+            findSnippets( rest, fname, endLineNo )
+          }
+        }
+      }
+    }
+  }
 
   function readInclude( fname : string ) : io (string,string) 
   {
-    if (fname=="BIB") then {
+    if (fname=="") then {
+      ("","")  // happens for snippet only includes
+    }
+    elif (fname=="BIB") then {
       val fileName = outName.appendStem("-bib").changeExt(".bbl")
-      val bbl = readTextFileDef( fileName, "", True)  
-      (fileName, "~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~")
+      match (includes[fileName]) {
+        Just(content) -> (fname,content)
+        Nothing -> {
+          val bbl = readTextFileDef( fileName, "", True)  
+          val content = ("~ TeX\n" + (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" else bbl) + "\n~")
+          includes[fileName] := content
+          (fileName,content)
+        }
+      }
     }
     else {
       match (trySearchReadTextFile(fname,dirs,".mdk")) {
@@ -332,32 +415,58 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
           println("  warning: unable to read include: " + fname )
           (fileName,"")
         }
-        Just(res) -> res 
+        Just((fileName,content)) -> {
+          match(includes[fileName]) {
+            Just -> ()
+            Nothing -> {
+              includes[fileName] := content
+              content.lines.list.findSnippets(fileName) // record snippets only once
+            }
+          }
+          (fileName,content)
+        } 
       }
     }
   }
 
   val rxRange = regex(@"^(\d+)(?:-(\d+))?$")
-  function findRange( incline: string, range : string, content : string ) : console (int,string)
+  val rxSnippetName = regex(@"^(\w+)$")
+  function findRange( incfile: string, incline: string, range : string, content : string, fname : string, lineNo : int ) : io (string,int,string)
   {
-    if (range=="") return (1,content)
+    if (range=="") return (incfile, 1,content)
     match(range.find(rxRange)) {
       Nothing -> {
-        println( "  warning: invalid include range: " + incline )
-        (1,content)
+        match(range.find(rxSnippetName)) {
+          Nothing -> {
+            warning( "invalid include range: " + incline, lineNo, fname )
+            (incfile,1,content)
+          }
+          Just(cap) -> {
+            // snippet name
+            match(snippets[cap.groups[1]]) {
+              Nothing -> {
+                warning( "unknown snippet name: " + cap.groups[1], lineNo, fname )
+                (incfile,1,content)                
+              }
+              Just(Snippet(fileName,start,fragment)) -> {
+                (fileName,start,fragment)
+              }
+            }
+          }
+        }
       }
       Just(cap) -> {
         val start = cap.groups[1].parseInt().maybe(1,id)
-        if (start<=0) return (0,"")
+        if (start<=0) return (incfile,0,"")
         val end   = max(start,cap.groups[2].parseInt().maybe(start,id))
         val fragment = content.lines.list.drop(start-1).take((end - start) + 1).join("\n")
         trace("include: " + start.show + "," + end.show + ":\n" + fragment)
-        (start,fragment)
+        (incfile,start,fragment)
       }
     }
   }
   
-  function processIncludes( txt : string, start : int = 1 ) : io (int,lineMap,string)
+  function processIncludes( txt : string, fname : string, start : int = 1 ) : io (int,lineMap,string)
   {
     if (start<=0) return (0,End,"")
     var lineNo := start-1
@@ -369,11 +478,11 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
       match (line.find(rxInclude)) {
         Nothing -> line
         Just(cap) -> {
-          val fname = cap.groups.firstMatched
-          val (fileName,content) = readInclude(fname)
-          val (istart,fragment)  = findRange(cap.matched, cap.groups[5],content);
+          val incname = cap.groups.firstMatched(1,4)
+          val (fileName0,content) = readInclude(incname)
+          val (fileName,istart,fragment)  = fileName0.findRange(cap.matched, cap.groups[5], content, fname, lineNo);
           if (istart<=0) then "" else {
-            val (lcount,lmap,icontent) = processIncludes( fragment, istart )
+            val (lcount,lmap,icontent) = processIncludes( fragment, fileName, istart )
             lineMap := Include(lineNo,istart,lcount,fileName,lmap,lineMap)
             lineCount := lineCount + lcount - 1
             //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
@@ -386,10 +495,10 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
     (lineCount, lineMap.reverse, ls.unlines)
   }
 
-  val (_lcount,lmap,content) = processIncludes(text)
+  val (_lcount,lmap,content) = processIncludes(text,inName)
   action(content,lmap)
 }
-val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
+val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?:= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s:=\]]+)) *)?(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext,required)) {
