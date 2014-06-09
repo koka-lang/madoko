@@ -264,8 +264,9 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
     Para( text )        -> Para(xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Table(h,cattrs,cells) -> Table(h,cattrs,cells,xs)
+    List(tag,items)     -> List(tag,items,xs)
     Div( content  )     -> transformDiv(content, xs, fcontext )
-    Quote( content )    -> Quote(content, xs) 
+    Quote( content )    -> Quote(content, xs)     
     Code( text, lang)   -> {
       if (lang=="" && !(xs.input.isPre))
         then transformDiv([Source(text)], xs(source=text,elem="pre"), fcontext )
