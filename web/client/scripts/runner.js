@@ -251,15 +251,18 @@ var Runner = (function() {
       var i = location.lastIndexOf(";");
       if (i >= 0) location = location.substr(i+1);
       var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
-      var line = parseInt(capl[2]);
-      var range = {
-        startLineNumber: line,
-        endLineNumber: line,
-        startColumn: 1,
-        endColumn: 1,
-        fileName: capl[1] || "",
-      };
-      errors.push( { type: "error", range: range, message: message } );  
+      if (capl) {
+        var line = parseInt(capl[2]);
+        var fileName = capl[1] || "";
+        var range = {
+          startLineNumber: line,
+          endLineNumber: line,
+          startColumn: 1,
+          endColumn: 1,
+          fileName: fileName,
+        };
+        errors.push( { type: "error", range: range, message: message } );  
+      }
     }
     show(errors);
   }
