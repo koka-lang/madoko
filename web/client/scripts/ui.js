@@ -10,6 +10,14 @@ define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/uti
         "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
         function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
 
+function diff( original, modified ) {
+  var originalModel = Monaco.Editor.createModel(original, "text/plain");
+  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+  var diffSupport   = modifiedModel.getMode().diffSupport;
+  var diff = diffSupport.computeDiff( 
+                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
+  return new Promise(diff); // wrap promise
+}
 
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
