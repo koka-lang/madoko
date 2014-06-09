@@ -52,7 +52,7 @@ ul.para-end, ol.para-end {
 }
 
 .madoko dl {
-  padding-left: 0em;
+  margin-left: 0em;
 }
 
 /* Local page links do not get an underline unless hovering */
