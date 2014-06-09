@@ -349,13 +349,13 @@ function include( text : string, fast : bool, inName : string, outName : string,
             }
             Just(cap) -> {
               // embedded snippet: extract separately 
-              extractSnippet( cap.groups[1], lines, fname, lineNo+1 )
+              extractSnippet( cap.groups[1].toLower(), lines, fname, lineNo+1 )
               // and for this snippet, ignore this line
               extractSnippet( name, lines, fname, lineNo+1, acc )
             }
           }
           Just(cap) -> {
-            val cname = cap.groups[1]
+            val cname = cap.groups[1].toLower()
             if (name == cname) {
               // end of snippet
               if (snippets[name].isJust) {
@@ -381,7 +381,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
         match(line.find(rxSnippetStart)) {
           Nothing -> findSnippets( lines, fname, lineNo+1 )
           Just(cap) -> {
-            val name = cap.groups[1]
+            val name = cap.groups[1].toLower()
             val (rest, endLineNo) = extractSnippet( name, lines, fname, lineNo+1 )
             findSnippets( rest, fname, endLineNo )
           }
@@ -393,7 +393,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
   function readInclude( fname : string ) : io (string,string) 
   {
     if (fname=="") then {
-      ("","")  // happens for snippet only includes
+      ("","\n")  // happens for snippet only includes
     }
     elif (fname=="BIB") then {
       val fileName = outName.appendStem("-bib").changeExt(".bbl")
@@ -443,10 +443,10 @@ function include( text : string, fast : bool, inName : string, outName : string,
           }
           Just(cap) -> {
             // snippet name
-            match(snippets[cap.groups[1]]) {
+            match(snippets[cap.groups[1].toLower()]) {
               Nothing -> {
                 warning( "unknown snippet name: " + cap.groups[1], lineNo, fname )
-                (incfile,1,content)                
+                (incfile,1,content)
               }
               Just(Snippet(fileName,start,fragment)) -> {
                 (fileName,start,fragment)
