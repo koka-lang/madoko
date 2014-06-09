@@ -13,6 +13,7 @@ import std/dict
 import std/string
 import std/regex
 import std/log
+import std/path
 import common
 import inline
 import options
@@ -85,17 +86,19 @@ val rxProtocol = regex(@"^\w+:");
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
-    val href = match (context.embedinfos[link.href]) {
+    val imgref = if (link.href.relative && link.href.extname == ".eps") then link.href.changeExt(".png") else link.href
+          
+    val href = match (context.embedinfos[imgref]) {
       Just(info) | info.embedData != "" -> {
         //trace("embedded: " + info.embedName)
         info.embedData 
       }
       _          -> {
-        if (link.href.relative) then {
-          log("filesRefer",link.href);
-          log("embed", link.href);
+        if (imgref.relative) then {
+          log("filesRefer",imgref);
+          log("embed", imgref);
         }
-        link.href.escape
+        imgref.escape
       }
     }    
     "<img src=\"" + href + "\"" +
