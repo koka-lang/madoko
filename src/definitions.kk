@@ -277,7 +277,8 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
   if (attrs.hasKey("display").maybe("",id) == "none") return Empty
-  //if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
+  //if (attrs.hasKey("transform").maybe("",id) == "false") return Div(blocks,attrs)
+  if (blocks.isCons) return Div(blocks,attrs) // for example, inserted sections
   val citestyle = fcontext.inlineContext.citestyle
   //if (attrs.source=="") then return Div(blocks,attrs) 
   val txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)

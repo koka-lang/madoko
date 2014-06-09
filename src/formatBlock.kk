@@ -190,7 +190,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Item(bs,attrs)  -> {
       context.fmtEnv("li", formatBlocksX(context,bs), attrs)    
     }
-    
+     
     Heading(d,txt,attrs) -> { 
       context.fmtCmd("h" + (d + context.headingBase -1).show, formatInline(context.inlineContext,txt,attrs), attrs)
     }

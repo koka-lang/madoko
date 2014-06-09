@@ -193,6 +193,8 @@ function defaultMeta( options : options ) : string {
       @"~Code     : input=pre",
       @"~Hr       : .madoko",
       @"~Table    : .madoko",
+      @"~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em",
+      @"~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold",
       
       @"~Tex      : input=tex",
       @"~TexRaw   : input=texraw",

@@ -10,6 +10,7 @@
 \RequirePackage{css}
 \RequirePackage{array}
 \RequirePackage{longtable}
+\RequirePackage{enumitem}
 \RequirePackage{booktabs}
 \RequirePackage{hyperref}
 \RequirePackage{amsmath}
@@ -365,6 +366,21 @@
 
 \newenvironment{mdLi}[1][]{\item\mdLabeltarget\begin{mdDivInline}[#1]}{\end{mdDivInline}}
 
+\newenvironment{mdDl}[1][]%
+  {\begin{mdDiv}[#1]%
+   \advance\c@mdListNesting by 1% use advance to be local
+   \begin{itemize}[leftmargin=0pt]%
+   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
+  }%
+  {\end{itemize}\end{mdDiv}}%
+
+\newenvironment{mdDt}[1][]%
+  {\item[]\hspace{-\leftmargin}\begin{mdDiv}[#1]}%
+  {\end{mdDiv}}%
+
+\newenvironment{mdDd}[1][]%
+  {\begin{mdDiv}[#1]}%
+  {\end{mdDiv}}%
 
 
 % ---------------------------------------------------

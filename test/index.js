@@ -110,7 +110,8 @@ main:
     else {
       options.madoko.bench = true;
     }
-    
+    //options.madoko.bench = false;
+
     try {
       text = engine(file.text, options.madoko ).replace(/\s+/g, '').replace(/<!--[\s\S]*?-->/g,"");
       html = file.html.replace(/\s+/g, '').replace(/<!--[\s\S]*?-->/g,"");
@@ -513,7 +514,7 @@ function fix(options) {
 
 function parseArg(argv) {
   var argv = process.argv.slice(2)
-    , options = { madoko: madoko.initialOptions  }
+    , options = { madoko: madoko.initialOptions()  }
     , orphans = []
     , arg;
 

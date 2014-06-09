@@ -73,6 +73,13 @@ val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + linkid + @"\]:|"
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
 val bspecial    = @" \[\*\-_\+\d><#`~\n|"  // Special block start characters 
 
+// deflist
+val defitem     = @"([^" + bspecial + @"].*)\n\n?" 
+val defstart    = @"(?:[:]| {1,2}[~:])"
+val defdef      = @"(?:.*(?:\n|$)(?:(?:    .*)?(?:\n|$))*)"
+val defdefs     = @"(?:" + defstart + defdef + ")+"
+val deflist     = @"^(?:" + defitem + defdefs + ")+"
+
 // Tables
 val rxtableHeader = @"((?:(?:\| *|\+)[-=][-=+| ]*\n *)?(?:\| *[^-=~: ].+\n *)*)"
 val rxtableSep    = @"((?:\| *|\+)[-=~:](?:[-=~+| :]|" + xattrs + ")*)\n"
@@ -81,6 +88,7 @@ val rxtableBody   = @"((?: *(?:\||\+[-=]).*(?:\n|$))+)"
 // The main block grammar
 val blockGrammar : grammar<block,blockContext> = [
   Rule("lheading",   regex(@"^(?!    )([^ \n].*?)" + iattrs + @"\n *(===+|---+) *(?:\n+|$)"), blockHeadingLine ), 
+  Rule("deflist",    regex(deflist), blockDefList ),
   Rule("parax",      regex(@"^([^" + bspecial + @"][^|\n]*?(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
@@ -210,38 +218,67 @@ function blockDefFootnote( cap : matched, context : blockContext ) :  block {
 }
 
 // --------------------------------
+// Definition Lists
+
+function blockDefList( cap : matched, context : blockContext ) : block {
+  function parseItem( icap : matched, line : int, icontext : blockContext ) :  list<block> {
+    //trace("item:\n" + icap.matched)
+    val item = icap.groups[3].replaceAll(rxindent4,"") 
+    val attrs = icap.groups[2].parseAttrs("dd",source=item)
+    val dterm = if (icap.groups[1]=="") then [] else {
+                  val attrsd = parseAttrs("","dt",source=icap.groups[1])
+                  [Div([Line(icap.groups[1])],attrsd)]
+                }
+    val ddesc = Div(parseBlocks(icontext,item,line), 
+                          if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))
+    [ddesc] + dterm
+  }
+
+  blockListX( cap.matched, context, "dl", rxDefItem, parseItem )
+}
+val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @")? *(" + defdef + ")" )
+
+// --------------------------------
 // Lists
 
 function blockList( cap : matched, context : blockContext ) : block {
-  val loose = cap.matched.contains(blankline)
+  function parseItem( icap : matched, line : int, icontext : blockContext ) :  list<block> {
+    val item = icap.groups[4].replaceAll(if (icontext.pedantic) 
+                                           then rxindent4
+                                           else rxindent(icap.groups[1].length) ,"") 
+    val attrs = icap.groups[3].parseAttrs
+    [Item(parseBlocks(icontext,item,line), 
+           if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))]
+  }
+
+  val tag = if (cap.groups[2].length > 1) then "ol" else "ul"
+  blockListX( cap.matched, context, tag, rxitem, parseItem )
+}
+val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
+
+function blockListX( text : string, context : blockContext, 
+                     tag : string, rxParseItem : regex, parseItem : (matched,int,blockContext) -> list<block> ) : block
+{  
+  val loose = text.contains(blankline)
   // we should merge any text blocks into a paragraph for a loose list
   // in sane mode, we only make text blocks paragraphs if they are followed by a blank line
   val icontext = context(grammar = // context.grammar.filter( fun(r) { !(r.name.startsWith("paragraph")) }), 
                          context.listGrammar,
                          loose = loose) // if (context.sane) then False else loose)
-
-
-  function parseItem( icap : matched, line : int ) :  block {
-    val item = icap.groups[4].replaceAll(if (icontext.pedantic) 
-                                           then rxindent4
-                                           else rxindent(icap.groups[1].length) ,"") 
-    val attrs = icap.groups[3].parseAttrs
-    Item(parseBlocks(icontext,item,line), if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))
-  }
-
+  
   function parseItems( src : string, line : int, acc : list<block> = Nil ) {
-    match (src.find(rxitem)) {
+    match (src.find(rxParseItem)) {
       Nothing    -> acc.reverse
       Just(icap) -> {
         val newline = if (line <= 0) then line else line + icap.matched.count("\n") 
-        parseItems( src.substr1(icap.next), newline, Cons(parseItem(icap,line),acc))
+        parseItems( src.substr1(icap.next), newline, parseItem(icap,line,icontext) + acc)
       }
     }
   }
 
-  val (txt,attrsTxt) = match(cap.matched.find(rxlattrs)) {
-    Just(acap) -> (cap.matched.substr(0,cap.matched.length - acap.matched.length), acap.groups[1])
-    Nothing    -> (cap.matched,"")
+  val (txt,attrsTxt) = match(text.find(rxlattrs)) {
+    Just(acap) -> (text.substr(0,text.length - acap.matched.length), acap.groups[1])
+    Nothing    -> (text,"")
   }
   val attrs0 = attrsTxt.parseAttrs.addClass(if (loose) then "loose" else "compact")
   val attrs = match (txt.find(rxFirstNum)) {
@@ -254,12 +291,11 @@ function blockList( cap : matched, context : blockContext ) : block {
               } 
   // if loose then add a blank at the end of the last item so it has a Blank
   val items = parseItems( txt + (if (loose) then "\n\n" else ""), context.lineNo ) 
-  List(if (cap.groups[2].length > 1) then "ol" else "ul",items,attrs)
+  List(tag,items,attrs)
 }
 
 val rxlattrs    = regex(lattrs)
 val blankline   = regex(@"\n\n(?!\s*$)")
-val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
 val rxindent4   = regex(@"^    ",multiline=True)
 val rxFirstNum  = regex(@"^ *(\d+)\.")
 
