@@ -337,11 +337,32 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
     }
   }
 
-  function processIncludes( txt : string) : io (int,lineMap,string)
+  val rxRange = regex(@"^(\d+)(?:-(\d+))?$")
+  function findRange( incline: string, range : string, content : string ) : console (int,string)
   {
-    var lineNo := 0;
-    var lineCount := 0;
-    var lineMap := End;
+    if (range=="") return (1,content)
+    match(range.find(rxRange)) {
+      Nothing -> {
+        println( "  warning: invalid include range: " + incline )
+        (1,content)
+      }
+      Just(cap) -> {
+        val start = cap.groups[1].parseInt().maybe(1,id)
+        if (start<=0) return (0,"")
+        val end   = max(start,cap.groups[2].parseInt().maybe(start,id))
+        val fragment = content.lines.list.drop(start-1).take((end - start) + 1).join("\n")
+        trace("include: " + start.show + "," + end.show + ":\n" + fragment)
+        (start,fragment)
+      }
+    }
+  }
+  
+  function processIncludes( txt : string, start : int = 1 ) : io (int,lineMap,string)
+  {
+    if (start<=0) return (0,End,"")
+    var lineNo := start-1
+    var lineCount := 0
+    var lineMap := End
     val ls = txt.lines.map fun(line) {
       lineNo := lineNo + 1;
       lineCount := lineCount + 1;
@@ -350,11 +371,14 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
         Just(cap) -> {
           val fname = cap.groups.firstMatched
           val (fileName,content) = readInclude(fname)
-          val (lcount,lmap,icontent) = processIncludes( content )
-          lineMap := Include(lineNo,lcount,fileName,lmap,lineMap)
-          lineCount := lineCount + lcount - 1
-          //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
-          icontent
+          val (istart,fragment)  = findRange(cap.matched, cap.groups[5],content);
+          if (istart<=0) then "" else {
+            val (lcount,lmap,icontent) = processIncludes( fragment, istart )
+            lineMap := Include(lineNo,istart,lcount,fileName,lmap,lineMap)
+            lineCount := lineCount + lcount - 1
+            //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
+            icontent
+          }
         }
       }
     }
@@ -365,7 +389,7 @@ function include( text : string, fast : bool, outName : string, dirs : list<stri
   val (_lcount,lmap,content) = processIncludes(text)
   action(content,lmap)
 }
-val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *)(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)\] *(?=\n|$)",multiline=True)
+val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?: |= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s\]]+)) *)(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext,required)) {

@@ -124,6 +124,7 @@ public type lineMap  {
   End
   Include( 
     line: int,        // line of the [INCLUDE] 
+    start: int,       // start line of included fragment
     count: int,       // number of lines in the included text
     fileName: string, // include file name
     lineMap: lineMap, // lineMap of the included file
@@ -138,8 +139,8 @@ public function reverse( lineMap : lineMap ) : lineMap {
 function reverseAcc( lineMap : lineMap, acc : lineMap ) : lineMap {
   match(lineMap) {
     End -> acc
-    Include(line,count,fileName,lmap,rest)
-      -> reverseAcc( rest, Include(line,count,fileName,lmap,acc) )
+    Include(line,start,count,fileName,lmap,rest)
+      -> reverseAcc( rest, Include(line,start,count,fileName,lmap,acc) )
   }
 }
 
