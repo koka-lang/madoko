@@ -478,6 +478,16 @@ var UI = (function() {
               self.editor.setPosition( { lineNumber: lineNo, column: 1 }, true, true );
             }
           }
+          else {
+            cap = /\b(?:warning|error):(?:\s|&nbsp;)*([\w\\\/\.\-]*)(?:\s|&nbsp;)*\((\d+)(?:-\d+)?\)/.exec(line)
+            if (cap) {
+              var lineNo = parseInt(cap[2]);
+              var fileName = cap[1]; // TODO use file
+              if (!isNaN(lineNo)) {
+                self.editor.setPosition( { lineNumber: lineNo, column: 1 }, true, true );
+              }
+            }
+          }
         }
       }, [State.Syncing]);
     }
