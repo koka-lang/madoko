@@ -488,7 +488,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
 val rxCiteSep         = regex(@"\s*[;]\s*")
 val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
 val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@" + rxCitename + @")([\s\S]*)$")
-val rxCitename        = @"(\w(?:[\w]|[\w:\-\.])*)"
+val rxCitename        = @"(\w(?:[\w]|[:\-\.]\w)*)"
 
 function inlineCite( cap : matched, context : inlineContext ) : string {
   log("aux",@"\citation{" + cap.groups[4] + "}")
