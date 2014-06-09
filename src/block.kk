@@ -78,7 +78,7 @@ val defitem     = @"([^" + bspecial + @"].*)\n\n?"
 val defstart    = @"(?:[:]| {1,2}[~:])"
 val defdef      = @"(?:.*(?:\n|$)(?:(?:    .*)?(?:\n|$))*)"
 val defdefs     = @"(?:" + defstart + defdef + ")+"
-val deflist     = @"^(?:" + defitem + defdefs + ")+"
+val deflist     = @"^(?:" + defitem + defdefs + ")+" + pattrs 
 
 // Tables
 val rxtableHeader = @"((?:(?:\| *|\+)[-=][-=+| ]*\n *)?(?:\| *[^-=~: ].+\n *)*)"
@@ -234,7 +234,7 @@ function blockDefList( cap : matched, context : blockContext ) : block {
     [ddesc] + dterm
   }
 
-  blockListX( cap.matched, context, "dl", rxDefItem, parseItem )
+  blockListX( cap.matched.trim, context, "dl", rxDefItem, parseItem )
 }
 val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @")? *(" + defdef + ")" )
 
