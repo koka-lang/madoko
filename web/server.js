@@ -191,8 +191,8 @@ var limits = {
   hashLength  : 16,  
   fileSize    : 8*mb,         
   cookieAge   : 24 * hour,  // 1 day for now
-  timeoutPDF  : minute,
-  timeoutMath : 45*second,
+  timeoutPDF  : 3*minute,
+  timeoutMath : minute,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
   logFlush    : 1*minute,
@@ -495,12 +495,18 @@ function saveFiles( userpath, files ) {
 
 
 // Read madoko generated files.
-function readFiles( userpath, docname, pdf ) {
+function readFiles( userpath, docname, pdf, out ) {
   var ext    = path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
   var fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
                 .concat( pdf ? [".pdf"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); });
+  var cap = /^  log written at: ([\w\-\/\\]+\.log) *$/m.exec(out);
+  if (cap && isValidFileName(cap[1])) {
+    console.log("add output: " + cap[1]);
+    fnames.push(cap[1]);
+    fnames.push(combine(outdir, stem + ".tex" ));
+  }
   //console.log("sending back:\n" + fnames.join("\n"));
   return Promise.when( fnames.map( function(fname) {
     // paranoia
@@ -551,8 +557,9 @@ function madokoRun( userpath, docname, files, pdf ) {
     if (!isValidFileName(docname)) return Promise.rejected( new Error("unauthorized document name: " + docname) );
     var flags = " -mmath-embed:512 -membed:512 -vv" + (pdf ? " --pdf" : "");
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
-      console.log("result: \n" + stdout + "\n" + stderr + "\n");
-      return readFiles( userpath, docname, pdf ).then( function(filesOut) {
+      var out = stdout + "\n" + stderr + "\n";
+      console.log("result: \n" + out);      
+      return readFiles( userpath, docname, pdf, out ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
           stdout: stdout,
