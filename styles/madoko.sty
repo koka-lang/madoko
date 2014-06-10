@@ -170,8 +170,8 @@
 \newcommand{\mdTitle}[1]{\gdef\@mdTitle{#1}\title{\@mdTitle}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
 \newcommand{\mdAuthor}[4]{%
-  \edef\@note{#2\ifx#4\relax\else\\#4\fi}%
-  \authorinfo{#1}{\@note}{#3}%
+  %\edef\@note{#2\ifx#4\relax\else\\#4\fi}%
+  \authorinfo{#1}{#2\\#4}{#3}%
 }
 \newcommand{\mdMaketitle}[1]{%  
   \ifnum\value{@mdAuthorcount}>0%
