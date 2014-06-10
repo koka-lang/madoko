@@ -191,7 +191,7 @@ var limits = {
   hashLength  : 16,  
   fileSize    : 8*mb,         
   cookieAge   : 24 * hour,  // 1 day for now
-  timeoutPDF  : 3*minute,
+  timeoutPDF  : 5*minute,
   timeoutMath : minute,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
