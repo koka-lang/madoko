@@ -103,6 +103,7 @@ task("web", [], function() {
   });
 },{async:true})
 
+var localTexDir = "c:/texlive/texmf-local/tex/latex/local";
 desc("setup web");
 task("webcopy", ["web"], function() {
   // copy all madoko sources
@@ -116,6 +117,10 @@ task("webcopy", ["web"], function() {
   jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   //jake.cpR(path.join(styleDir,"madoko.css"), webclient);
+
+  // copy sty files to local texmf tree
+  var sty = new Jake.FileList().include(path.join(styleDir,"*.sty"));
+  copyFiles(styleDir,js.toArray(),localTexDir);
 }); 
 
 
