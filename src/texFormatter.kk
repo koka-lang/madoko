@@ -37,7 +37,7 @@ public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, a
 }
 
 public function fmtTexLineInfo( context : inlineContext, lineInfo : string ) : string {
-  "% data-line={" + lineInfo + "}\n"
+  "% data-line={" + lineInfo + "}\n{}"
 }
 
 public function fmtTexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
@@ -54,7 +54,7 @@ public function fmtTexFootnote(context : inlineContext, id : string, fn : footno
 
 public function fmtTexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   if (isImage) {
-    texCmd("img",texText(link.href),link.linkattrs)
+    texCmd("img",link.href,link.linkattrs)
   }
   else {
     texCmd("a",texText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
