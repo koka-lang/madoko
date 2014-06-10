@@ -14,7 +14,7 @@
     "case", "class", "data", "default", "deriving", "do", "else", 
     "if", "import", "in", "infix", "infixl", "infixr", "instance", 
     "let", "module", "newtype", "of", "then", "type", "where",
-    "->", "|", "=>", "::"  
+    "->", "|", "=>", "::", "\\", "="
   ],
 
   "extraKeywords": [
@@ -80,7 +80,7 @@
 
       
       ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
-      ["\"",  { "token": "string.quote", "bracket": "@open", "next": "@string" } ], // "
+      ["\"",  { "token": "string.quote", "bracket": "@open", "next": "@string" } ], 
       
       
       ["'[^\\\\']'", "string"],
@@ -93,14 +93,14 @@
 
     "whitespace": [
       ["[ \\r\\n]+", "white"],
-      ["\{\-", "comment", "@comment" ],
+      ["{-", "comment", "@comment" ],
       ["--.*$",  "comment"]
     ],
 
     "comment": [
       ["[^\\{\\-]+", "comment" ],     
-      ["\{\-",  "comment", "@push" ],
-      ["\-\}",  "comment", "@pop"  ],
+      ["{-",  "comment", "@push" ],
+      ["-}",  "comment", "@pop"  ],
       ["[\\{\\-]", "comment"]
     ],  
     
@@ -119,6 +119,7 @@
 
     "type_data": [
       [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","whitespace","constructor"]],
+      ["^\\s*$", { "token": "whitespace", "next": "@pop" } ],
       { "include": "@type" }
     ],
     
