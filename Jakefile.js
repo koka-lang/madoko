@@ -119,8 +119,8 @@ task("webcopy", ["web"], function() {
   //jake.cpR(path.join(styleDir,"madoko.css"), webclient);
 
   // copy sty files to local texmf tree
-  var sty = new Jake.FileList().include(path.join(styleDir,"*.sty"));
-  copyFiles(styleDir,js.toArray(),localTexDir);
+  var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
+  copyFiles(styleDir,sty.toArray(),localTexDir);
 }); 
 
 
