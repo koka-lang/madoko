@@ -95,6 +95,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
       }
       _          -> {
         if (imgref.relative) then {
+          if (link.href.extname == ".eps") log("filesRefer",link.href) // refer to eps too
           log("filesRefer",imgref);
           log("embed", imgref);
         }
@@ -270,7 +271,7 @@ public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : 
                                         (if (author.address!="") then "<br>[" + author.address + "]{.affiliation .address}" else "") +
                                         (if (author.email!="") then "<br>[" + author.email + "]{.email}" else "") +
                                              (if (author.note=="") then "" else 
-                                             "[" + author.note + "]{.note}") )
+                                             "[&br;" + author.note + "]{.authornote}") )
            ," class='authorblock align-center'")
        }).join("\n"))),
      if (titleinfo.note=="") then "" else "<div class=note>" + context.formatInline(titleinfo.note) + "</div>"
