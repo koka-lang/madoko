@@ -328,6 +328,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     jpeg: "image/jpg",
     gif:  "image/gif",
     svg:  "image/svg+xml",
+    eps:  "image/eps",
   };
 
   function mimeFromExt( fname ) {
@@ -356,7 +357,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
 
-  var dropExts = [".js",".css","mdk","md","bib","cls","sty","tex","png","jpg","jpeg","gif","svg"].join(";");
+  var dropExts = [".js",".css","mdk","md","bib","cls","sty","tex","png","jpg","jpeg","gif","svg","eps"].join(";");
   function hasDropExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
