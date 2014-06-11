@@ -92,6 +92,7 @@
     ],
 
     "whitespace": [
+      ["^[ \\r\\n]+", "white.indent"],
       ["[ \\r\\n]+", "white"],
       ["{-", "comment", "@comment" ],
       ["--.*$",  "comment"]
@@ -118,8 +119,8 @@
     ],
 
     "type_data": [
-      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","whitespace","constructor"]],
-      ["^\\s*$", { "token": "whitespace", "next": "@pop" } ],
+      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","white","constructor"]],
+      ["^\\s*$", { "token": "white", "next": "@pop" } ],
       { "include": "@type" }
     ],
     

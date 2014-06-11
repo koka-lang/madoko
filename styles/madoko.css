@@ -349,12 +349,16 @@ body.madoko.preview {
 }
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace {
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token.indent {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
   font-size: 0.85em;
 }
-.madoko pre code {
+.madoko pre code, .madoko .token.indent {
   font-size: 0.95em;
+}
+
+.madoko pre code {
+  font-family: inherit !important;
 }
 
 /* Code prettify */
