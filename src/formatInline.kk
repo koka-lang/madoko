@@ -286,15 +286,18 @@ function inlineCode( cap : matched, context ) : string {
 public function fmtCode( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
   val lang   = attrs.hasKey("language").maybe("",id)
   val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
-  
+  val cattrs = match(attrs.hasKey("data-line-code")) {
+                 Nothing -> lattrs
+                 Just(v) -> lattrs.addKeyval("data-line",v)
+               }
   val (pattrs,content)
     = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) 
        then (attrs, context.fmtCodePlain(txt))
        else (attrs.addClass("highlighted"), context.fmtCodeEx(lang,txt,attrs))
 
   if (env=="" || env=="code") 
-   then context.fmtCmd("code", content, pattrs.mergeDefault(lattrs))
-   else context.fmtEnv(env, context.fmtCmd("code", content, lattrs), pattrs)
+   then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
+   else context.fmtEnv(env, context.fmtCmd( if (context.fmt==FmtTex) then "precode" else "code", content, cattrs), pattrs)
 }
 
 function fmtCodeEx( context : inlineContext, lang : string, txt : string, attrs : attrs ) : string 

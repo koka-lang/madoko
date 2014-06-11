@@ -103,8 +103,12 @@ public function unspan( txt : string, lang : string ) : string {
     val classes=cap.groups[1].toLower.trim.split(rxSpaces).map(fun(cname) {
       if (cname.startsWith("hljs-")) then cname.substr(5) else cname
     }).list.filter( fun(cname) { cname != "token" && cname != lang } )
-    val cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse
-    @"\mdToken{" + (classes + cclasses).join(",") + "}{"
+    if (classes.any(fun(cname) { cname=="white" })) 
+     then "{"  // so preindent can match
+     else {
+      val cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse    
+      @"\mdToken{" + (classes + cclasses).join(",") + "}{"
+     }
   }  
 } 
 
@@ -112,12 +116,12 @@ val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
 val rxSpan = regex(@"{\\textless}span\s+.*?\bclass=['""]?([^""']+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
 
 public function preSpace( txt : string ) : string {
-  txt.replaceAll(rxIndent,fun(cap){ @"\preindent{" + cap.matched.length.show + "}" })
+  txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + @"\preindent{" + cap.groups[2].length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
      .replaceAll("\n|{\\textless}br{\\textgreater}","\\prebr{}\n")
      .replaceAll("`","{`}")
 }
-val rxIndent = regex(@"^ +",multiLine=True)
+val rxIndent = regex(@"(\n|{\\textless}br{\\textgreater}){?( +)}?",multiLine=True)
 val rxSpaces = regex(@" +")
 
 public function texText( txt : string ) : string {

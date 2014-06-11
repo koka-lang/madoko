@@ -139,7 +139,7 @@ public function fmtHtmlCode( context : inlineContext, env : string,
 {
   val lang = attrs.hasKey("language").maybe("",id)
   val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
-  
+
   val plain = txt.escapePre
   val (pattrs,content)
     = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) then (attrs,plain) 

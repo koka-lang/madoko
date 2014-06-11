@@ -418,7 +418,9 @@ function parseBlocksAccLine( context : blockContext,  acc : list<block>, line : 
                  Nothing   -> 0
                  Just(cap) -> cap.regex/matched.count("\n")
                }
-  val block2 = block.adjustAttrs( fun(attrs:attrs) { attrs.setLineNo(context.lineMap,line+ofs) } )
+  val block2 = block.adjustAttrs( fun(attrs:attrs) { 
+    attrs.setLineNo(context.lineMap,line+ofs) 
+  })
   parseBlocksAccLine( context, Cons(block2,acc), line2, src.substr1(next) )
 }
 
@@ -430,7 +432,14 @@ function raw( s : string ) : block {
 
 function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
   val srcline = translateLine(lineMap,lineNo)
-  return attrs.setLineNo(lineNo,srcline)
+  val attrs1  = attrs.setLineNo(lineNo,srcline)
+  if (attrs1.hasClass("fenced")) {
+    val preline = translateLine(lineMap,lineNo+1)
+    attrs1.addKeyval("data-line-code",preline)
+  }
+  else {
+    attrs1
+  }
 }
 
 function translateLine( lineInfos: lineMap, lineNo : int ) : string {

@@ -531,9 +531,10 @@
 %-------------------------------------------------------------
 \cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
 \cssNewInlineElem{\mdCode}{code}{font-family=monospace}
+\cssNewInlineElem{\mdPrecode}{precode}{}
 
 \newlength{\@presp}
-\settowidth{\@presp}{\mdCode{ }}
+\settowidth{\@presp}{\texttt{ }}
 \newcommand{\prespace}[1]{\hspace*{#1\@presp}}
 \newcommand{\preindent}[1]{\hspace*{#1\@presp}}
 \newcommand{\prebr}{\strut\\}
