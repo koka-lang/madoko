@@ -22,6 +22,7 @@ import texParser      // for texAccents et al
 import htmlFormatter  // for htmlEscape
 import hilite
 import attributes
+import codeAlign
 
 public function fmtTexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
@@ -115,13 +116,13 @@ public function unspan( txt : string, lang : string ) : string {
 val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
 val rxSpan = regex(@"{\\textless}span\s+.*?\bclass=['""]?([^""']+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
 
-public function preSpace( txt : string ) : string {
-  txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + @"\preindent{" + cap.groups[2].length.show + "}" })
-     .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
-     .replaceAll("\n|{\\textless}br{\\textgreater}","\\prebr{}\n")
+public function preSpace( txt : string, pre : string = "" ) : string {
+  txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + @"\" + pre + @"preindent{" + cap.groups[2].length.show + "}" })
+     .replaceAll(rxSpaces,fun(cap){ @"\" + pre + @"prespace{" + cap.matched.length.show + "}"})
+     .replaceAll("\n|{\\textless}br{\\textgreater}",@"\" + pre + @"prebr{}\n")
      .replaceAll("`","{`}")
 }
-val rxIndent = regex(@"(\n|{\\textless}br{\\textgreater}){?( +)}?",multiLine=True)
+val rxIndent = regex(@"(^|\n|{\\textless}br{\\textgreater}){?( +)}?",multiLine=True)
 val rxSpaces = regex(@" +")
 
 public function texText( txt : string ) : string {
@@ -173,6 +174,17 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
   "\\" + pre + cmd.normalizeCmd.capitalize + attrs.texAttrsX + "{" + body + "}"
 }
 
+public function fmtTexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
+  val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
+  "\\begin{mdCode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + string(ct.columns,'l') + "}\n" +
+    ct.rows.map( fun(row) { row.map(fmtTexCodeCell).join(" & ") }).join("\\\\\n") +
+  "\n\\end{mdCodeTable}\n"
+}
+
+function fmtTexCodeCell( ccell : ccell ) : string {
+  val align = if (ccell.center) then "c" else "l"
+  "\\multicolumn{" + ccell.span.show + "}{" + align + "}{" + ccell.content.preSpace("p") + "}"
+}
 
 public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {
   val pre = "md"

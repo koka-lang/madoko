@@ -15,18 +15,42 @@ import std/dict
 import common
 import attributes
 
-struct codeTable(
+public struct codeTable(
   columns: int,
   rows: list<crow>
 )
 
-alias crow = list<ccell>;
+public alias crow = list<ccell>;
 
-struct ccell(
+public struct ccell(
   span: int,
   center: bool,
   content: string 
 )
+
+public function foldCodeTable( ct : codeTable, st : a, f : (string,a) -> (string,a) ) : codeTable {
+  function foldRow( row, st0 ) {
+    match(row) {
+      Nil -> (Nil,st0)
+      Cons(c,cs) -> {
+        val (txt,st1) = f(c.content,st0)
+        val (cs1,st2) = foldRow(cs,st1)
+        (Cons(c(content=txt),cs1), st2)
+      }
+    }
+  }
+  function foldRows( rows, st0 ) {
+    match(rows) {
+      Nil -> (Nil,st0)
+      Cons(r,rs) -> {
+        val (r1,st1) = foldRow(r,st0)
+        val (rs1,st2) = foldRows(rs,st1)
+        (Cons(r1,rs1), st2)
+      }
+    }
+  }
+  ct( rows = foldRows(ct.rows,st ).fst )
+}
 
 public function show( ct : codeTable ) : string {
   "\\begin{tabular}{" + string(ct.columns,'l') + "}\n" +
@@ -46,7 +70,7 @@ public function codeAlign( txt : string, sep : int = 2 ) : codeTable
   val ls    = txt.lines.list
   val colss = ls.map fun(line){ findAlignColumns(line,rxSep) }
   val acols = colss.merge 
-  val rows  = zipWith(ls,colss) fun(line,cols){ makeRow(acols,line,cols) }
+  val rows  = zipWith(ls,colss) fun(line,cols){ makeRow(acols,line,cols,sep) }
   CodeTable( acols.length + 1, rows )
 }
 
@@ -73,31 +97,77 @@ function merge( alignss : list<list<int>> ) : list<int>
   alignss.concat().foldl([],insert)
 }
 
-function makeRow( acols : list<int>, line : string, lineCols : list<int> ) : list<ccell>
+function makeRow( acols : list<int>, line : string, lineCols : list<int>, sep : int ) : list<ccell>
 {
-  val parts = splitColumns( line, 0, lineCols )
-  alignParts( acols, parts )
+  val parts1 = splitColumns( line, 0, lineCols )
+  /*
+  val parts2 = match(parts1) {
+    Cons((_,text),rest) | text.list.all(isWhite) -> {
+      // split indentation
+      val nextcol = getColumn(rest)
+      val icol = acols.getIndentColumn(nextcol)
+      if (icol==0) then parts1 else {
+        Cons((0,text.substr(0,icol)), Cons((icol, text.substr(icol)), rest))
+      }
+    } 
+    _ -> parts1
+  }
+  */
+  val rxEndSpaces = regex( string(sep,' ') + "$")
+  alignParts( acols, parts1, rxEndSpaces  )
 }
 
-function alignParts( acols : list<int>, parts : list<(int,string)> ) : list<ccell> {
+public function isWhite( s : string ) : bool {
+  s.list.all(isWhite)
+}
+
+function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces : regex ) : list<ccell> {
   match( parts ) {
     Nil -> Nil
-    Cons((_,text),rest) -> {
-      val nextcol = match(rest) {
-                      Nil -> 999
-                      Cons((c,_),_) -> c
-                    }
-      val (span,afterCols) = acols.getSpan(nextcol)
-      Cons( Ccell(span,False,text), alignParts(afterCols, rest))
+    Cons((col,text),rest) -> {
+      val nextcol = getColumn(col,text,rest)
+      val (spanCols,afterCols) = acols.getSpan(nextcol)
+      val span = spanCols.length+1
+      val ccells = if (text.isWhite) 
+       then {
+         val pre = string(col,' ')
+         val ws = splitColumns( pre + text, col, spanCols )
+         ws.map( fun(w) { Ccell(1,False,w.snd) })
+       }
+       else {
+         val stext = text.replace(rxEndSpaces," ")
+         [Ccell(span,False,stext)]  
+       }
+      ccells + alignParts(afterCols, rest, rxEndSpaces)
     }
   }
 }
 
-function getSpan( acols : list<int>, col : int, span : int = 1 ) : (int,list<int>) {
+
+
+function getColumn( col:int, text : string, parts : list<(int,string)> ) : int {
+  match(parts) {
+    Nil -> col + text.length
+    Cons((c,_),_) -> c
+  }
+}
+
+function getIndentColumn( acols : list<int>, col : int, prev : int = 0 ) : int {
   match(acols) {
-    Nil -> (span,Nil)
+    Nil -> 0
     Cons(acol,rest) -> {
-      if (acol >= col) then (span,rest) else getSpan( rest, col, span+1 )
+      if (acol == col) then 0  // no indentation necessary since it aligns
+      elif (acol > col) then prev
+      else getIndentColumn( rest, col, acol )
+    }
+  }
+}
+
+function getSpan( acols : list<int>, col : int, acc : list<int> = [] ) : (list<int>,list<int>) {
+  match(acols) {
+    Nil -> (acc.reverse,Nil)
+    Cons(acol,rest) -> {
+      if (acol >= col) then (acc.reverse,rest) else getSpan( rest, col, Cons(acol,acc) )
     }
   }
 }

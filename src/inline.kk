@@ -14,6 +14,7 @@ import std/string
 import std/regex
 import std/log
 import common
+import codeAlign  // codeTable
 import hilite  // hilitemode
 
 public function pick(fmt : formatter, htmlElem, texElem ) {
@@ -58,6 +59,7 @@ public rectype inlineContext {
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
                  xfmtCodeHilite : (context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) -> (string,maybe<hilitemode>),
                  xfmtLineInfo : (context : inlineContext, lineInfo : string ) -> string,
+                 xfmtCodeTable : (context : inlineContext, ct : codeTable, attrs : attrs ) -> string,
                  fmt : formatter
                )                 
 }
@@ -122,6 +124,9 @@ public function fmtLineInfo(context : inlineContext, lineInfo : string ) : strin
   (context.xfmtLineInfo)(context,lineInfo)
 }
 
+public function fmtCodeTable(context : inlineContext, ct : codeTable, attrs : attrs = attrsNone ) : string {
+  (context.xfmtCodeTable)(context,ct,attrs)
+}
 
 // Copy an ":inlineContext"
 public function copy( self : inlineContext,
@@ -150,12 +155,13 @@ public function copy( self : inlineContext,
                        xfmtCodePlain = self.xfmtCodePlain,
                        xfmtCodeHilite = self.xfmtCodeHilite,
                        xfmtLineInfo = self.xfmtLineInfo,
+                       xfmtCodeTable = self.xfmtCodeTable,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
-                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtLineInfo, fmt )
+                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtLineInfo, xfmtCodeTable, fmt )
 }
 
 public function sanitize( context : inlineContext ) : bool {

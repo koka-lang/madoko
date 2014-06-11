@@ -453,7 +453,7 @@
 \newlength{\mdDefaultColumnWidth}
 
 \newcommand{\mdTableInit}[1]{%
-  \renewcommand{\tabcolsep}{0.5ex}%
+  \setlength{\tabcolsep}{0.5ex}%
   \setlength{\mdLineWidth}{\dimexpr\linewidth-\tabcolsep*2*#1-\tabcolsep\relax}% the line length minus table spacing
   \setlength{\mdDefaultColumnWidth}{\dimexpr\mdLineWidth/#1\relax}%
   \setlength{\linewidth}{\mdLineWidth}
@@ -538,6 +538,31 @@
 \newcommand{\prespace}[1]{\hspace*{#1\@presp}}
 \newcommand{\preindent}[1]{\hspace*{#1\@presp}}
 \newcommand{\prebr}{\strut\\}
+
+
+
+% pretty layout
+\newenvironment{mdCodeTable}[3][]{% [attributes]{column-count}{column-specifiers}
+  \begin{mdDiv}[#1]%
+  \mdTableInit{#2}%
+  \setlength{\tabcolsep}{0pt}%
+  \begin{tabular}{#3}}{\end{tabular}\end{mdDiv}}
+
+\newenvironment{mdCodeLongTable}[3][]{% [attributes]{column-count}{column-specifiers}
+  \begin{mdDiv}[#1]%
+  \mdTableInit{#2}%
+  \setlength{\tabcolsep}{0pt}%
+  \begin{longtable}{#3}}{\end{longtable}\end{mdDiv}}
+
+\newlength{\ppresp}
+\setlength{\ppresp}{0.5ex}
+\newcommand{\ppreindent}[1]{\hspace*{#1\ppresp}}
+
+\newcommand{\pprespace}[1]{\hspace*{\ppresp}}
+\newcommand{\pprebr}[1]{ }
+
+
+% Tokens for highlighting
 
 \cssNewKey{css}{language}{\cssLanguage}{}
 

@@ -17,6 +17,7 @@ import std/path
 import common
 import inline
 import options
+import codeAlign
 import attributes // expandKeys
 import hilite
 
@@ -78,6 +79,19 @@ function fmtRows( context : inlineContext, tbody : string, td : string, rows : l
                 "") 
     }).join("\n"))
 } 
+
+public function fmtHtmlCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
+  tag("table", tagBlock("tbody", context.fmtCtRows( ct.rows ) ), attrs.addClass("block").htmlFormat("table",context.sanitize) )
+}
+
+function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
+  rows.map( fun(row) {
+    tag("tr", row.map( fun(cell) {
+                val attrs = (" colspan='" + cell.span.show + "'") + (if (cell.content.isWhite) then " class='empty'" else "")
+                tag("td", if (cell.content.isWhite) then "&nbsp;" else cell.content, attrs )
+              }).join, "")
+  }).join("\n")
+}
 
 function relative( path : string ) : bool {
   !(path.contains(rxProtocol));

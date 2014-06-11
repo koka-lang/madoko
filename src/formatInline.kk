@@ -22,6 +22,7 @@ import texFormatter
 import texParser   // rxAuthorYear
 import entity
 import hilite // inlineMode
+import codeAlign
 
 /* --------------------------------------
   Inline grammar 
@@ -123,6 +124,7 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlCodePlain,fmtTexCodePlain),
                  fmt.pick(fmtHtmlCodeHilite,fmtTexCodeHilite),
                  fmt.pick(fmtHtmlLineInfo, fmtTexLineInfo),
+                 fmt.pick(fmtHtmlCodeTable, fmtTexCodeTable),
                  fmt 
                )
 }
@@ -290,14 +292,25 @@ public function fmtCode( context : inlineContext, env : string, txt : string, at
                  Nothing -> lattrs
                  Just(v) -> lattrs.addKeyval("data-line",v)
                }
+  val plain = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))                
   val (pattrs,content)
-    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) 
+    = if (attrs.hasClass("pretty")) then {
+        (attrs, context.fmtCodePretty( codeAlign(txt) ))
+      }
+      elif (plain)
        then (attrs, context.fmtCodePlain(txt))
-       else (attrs.addClass("highlighted"), context.fmtCodeEx(lang,txt,attrs))
+       else (attrs.addClass("highlighted"), context.fmtCodeEx(lang,txt,attrs))    
 
   if (env=="" || env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
    else context.fmtEnv(env, context.fmtCmd( if (context.fmt==FmtTex) then "precode" else "code", content, cattrs), pattrs)
+}
+
+function fmtCodePretty( context : inlineContext, ct : codeTable ) : string {
+  val ctNew = ct.foldCodeTable( (), fun(text,st) {
+    (context.fmtCodePlain(text),st)
+  })
+  context.fmtCodeTable(ct)
 }
 
 function fmtCodeEx( context : inlineContext, lang : string, txt : string, attrs : attrs ) : string 
