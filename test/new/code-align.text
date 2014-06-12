@@ -7,9 +7,7 @@ author note : &time;
 pre.pretty { 
   font-family: constantia, serif;
 }
-.pretty table {
-  table-layout: fixed;
-}
+
 .pretty td {
   padding: 0pt;
 }
@@ -52,7 +50,7 @@ substitute1  (var, val) exp = subst exp where
   subst (Multiply a b)   = Multiply (subst a) (subst b)
   subst (Divide a b)     = Divide (subst a) (subst b)
   subst (Variable name)  = if var == name
-                        then Number val
+                            then Number val
                             else Variable name          
 ```          
 
@@ -67,14 +65,14 @@ data Exp   =  Number    Int
 ```
 
 ``` Haskell {.pretty}
-substitute1  :: (String, Int) -> Exp -> Exp
+substitute1 :: (String, Int) -> Exp -> Exp
 substitute1  (var, val) exp = subst exp where
-  subst (Number i)       = Number i
-  subst (Add a b)        = Add (subst a) (subst b)
-  subst (Subtract a b)   = Subtract (subst a) (subst b)
-  subst (Multiply a b)   = Multiply (subst a) (subst b)
-  subst (Divide a b)     = Divide (subst a) (subst b)
-  subst (Variable name)  = if var == name
-                        then Number val
-                           else Variable name          
+  subst (Number i)       =  Number i
+  subst (Add a b)        =  Add (subst a) (subst b)
+  subst (Subtract a b)   =  Subtract (subst a) (subst b)
+  subst (Multiply a b)   =  Multiply (subst a) (subst b)
+  subst (Divide a b)     =  Divide (subst a) (subst b)
+  subst (Variable name)  =  if var == name
+                             then Number val
+                             else Variable name          
 ```          

@@ -87,7 +87,7 @@ public function fmtHtmlCodeTable( context : inlineContext, ct : codeTable, attrs
 function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
   rows.map( fun(row) {
     tag("tr", row.map( fun(cell) {
-                val attrs = (" colspan='" + cell.span.show + "'") + (if (cell.content.isWhite) then " class='empty'" else "")
+                val attrs = (if (cell.span > 1) then " colspan='" + cell.span.show + "'" else "") + (if (cell.content.isWhite) then " class='empty'" else "")
                 tag("td", if (cell.content.isWhite) then "&nbsp;" else cell.content, attrs )
               }).join, "")
   }).join("\n")

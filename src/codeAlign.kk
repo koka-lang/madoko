@@ -67,9 +67,11 @@ function show( ccell : ccell ) : string {
 public function codeAlign( txt : string, sep : int = 2 ) : codeTable
 {
   val rxSep = regex( @" {" + sep.show + ",}" )
-  val ls    = txt.lines.list
+  val ls    = txt.replaceAll("<br>","\n").lines.list
+  trace(ls.join("\n"))
   val colss = ls.map fun(line){ findAlignColumns(line,rxSep) }
   val acols = colss.merge 
+  trace("\nalign cols: " + acols.map(show).join(","))
   val rows  = zipWith(ls,colss) fun(line,cols){ makeRow(acols,line,cols,sep) }
   CodeTable( acols.length + 1, rows )
 }
@@ -78,9 +80,17 @@ public function codeAlign( txt : string, sep : int = 2 ) : codeTable
 public function findAlignColumns( line : string, rxSep : regex) : list<int>
 {
   line.findAll(rxSep).list.map fun(cap) {
-    cap.index + cap.matched.length
+    rawColumn( line, cap.index + cap.matched.length )
   }
 }
+
+function rawColumn( line : string, col : int ) : int {
+  // get column number disregarding html elements from colorization
+  val raw = line.substr(0,col).replaceAll(rxTags,"")
+  raw.length
+}
+
+val rxTags = regex(@"(</?\w+\b[^>]*>)|(&#[xX]?[\da-fA-F]+(?=;))")
 
 function merge( alignss : list<list<int>> ) : list<int>
 {
@@ -100,6 +110,10 @@ function merge( alignss : list<list<int>> ) : list<int>
 function makeRow( acols : list<int>, line : string, lineCols : list<int>, sep : int ) : list<ccell>
 {
   val parts1 = splitColumns( line, 0, lineCols )
+  trace("makeRow: " + acols.map(show).join(",") + ": " + lineCols.map(show).join(",") + "\n" +
+         " line:\n" + line + "\n" +
+         " parts:\n  " + 
+           parts1.map(fun(p) { p.fst.show + ": " + p.snd }).join("\n  "))
   /*
   val parts2 = match(parts1) {
     Cons((_,text),rest) | text.list.all(isWhite) -> {
@@ -147,7 +161,7 @@ function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces 
 
 function getColumn( col:int, text : string, parts : list<(int,string)> ) : int {
   match(parts) {
-    Nil -> col + text.length
+    Nil -> col + text.replaceAll(rxTags,"").length
     Cons((c,_),_) -> c
   }
 }
@@ -174,9 +188,31 @@ function getSpan( acols : list<int>, col : int, acc : list<int> = [] ) : (list<i
 
 function splitColumns( line : string, col : int, lineCols : list<int> ) : list<(int,string)> {
   match(lineCols) {
-    Nil -> [(col,line.substr(col))]
+    Nil -> [(col,line.subPart(col))]
     Cons(next,rest) -> {
-      Cons( (col,line.substr(col, next - col)), splitColumns( line, next, rest ) )
+      Cons( (col,line.subPart(col, next - col)), splitColumns( line, next, rest ) )
+    }
+  }
+}
+
+function subPart( line : string, col : int, len : int = line.length ) : string {
+  val col0 = htmlColumn(line,col)
+  val col1 = htmlColumn(line,col + len)
+  line.substr( col0, (col1 - col0) )
+}
+
+function htmlColumn( s: string, col : int ) : int {
+  val caps = s.findAll(rxTags).list
+  htmlCol( caps, col, 0 )
+}
+
+function htmlCol( caps : list<matched>, col : int, extra : int ) {
+  match( caps ) {
+    Nil -> col + extra
+    Cons(cap,rest) -> {
+      if (cap.index < col + extra || (cap.index == col + extra && cap.matched.startsWith("</")))
+       then htmlCol( rest, col, extra + cap.matched.length )
+       else col + extra
     }
   }
 }

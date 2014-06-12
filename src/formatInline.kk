@@ -294,13 +294,14 @@ public function fmtCode( context : inlineContext, env : string, txt : string, at
                }
   val plain = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
   val pattrs = if (plain) then attrs else attrs.addClass("highlighted")                
-  val content
-    = if (attrs.hasClass("pretty")) then {
-        context.fmtCodePretty( codeAlign(txt), plain, lang, attrs )
-      }
-      elif (plain)
+  val content0
+    = if (plain)
        then context.fmtCodePlain(txt)
        else context.fmtCodeColorize(lang,txt,attrs).fst
+  val content 
+    = if (attrs.hasClass("pretty"))
+       then context.fmtCodeTable( codeAlign(content0) )
+       else content0
 
   if (env=="" || env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))

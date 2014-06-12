@@ -92,7 +92,7 @@
     ],
 
     "whitespace": [
-      ["[ \\r\\n]+", "white"],
+      ["[ \\r\\n]+", ""],
       ["{-", "comment", "@comment" ],
       ["--.*$",  "comment"]
     ],
@@ -118,13 +118,13 @@
     ],
 
     "type_data": [
-      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","whitespace","constructor"]],
-      ["^\\s*$", { "token": "whitespace", "next": "@pop" } ],
+      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","","constructor"]],
+      ["^\\s*$", { "token": "", "next": "@pop" } ],
       { "include": "@type" }
     ],
     
     "type_line": [
-      ["^\\s*(?!\\-\\-|\\{\\-)[^\\s]", { "token": "@rematch", "next": "@pop" } ],
+      ["^\\s*(?!\\-\\-|\\{\\-)[_a-z]", { "token": "@rematch", "next": "@pop" } ],
       ["[^=]*=", { "token": "@rematch", "next": "@pop" } ],
       { "include": "@type" }
     ],
@@ -159,7 +159,7 @@
       ],
       
       ["::|->|[\\.:|]", "type.operator"],
-      ["","","@pop"]  
+      ["[\\s\\S]","@rematch","@pop"]  
     ]
   }
 }
