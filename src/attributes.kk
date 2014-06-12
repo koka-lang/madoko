@@ -29,8 +29,8 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
-  val def = (attrs.classes.map( fun(cname) { defaults["." + cname.toLower] } ) +
-             [defaults["#" + attrs.name.toLower], defaults["~" + elementName.toLower]]).filter(isJust).map(string).join(" ")
+  val def = (attrs.classes.map( fun(cname) { defaults["." + cname.definitionId] } ) +
+             [defaults["#" + attrs.name.definitionId], defaults["~" + elementName.definitionId]]).filter(isJust).map(string).join(" ")
   if (def=="") then attrs else {
     //trace("matched " + elementName + ": {" + attrs.text + "} : {" + def + "}" ) 
     attrs.mergeDefault(def.parseAttrs)
@@ -83,7 +83,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(counters = Cons((name.substr(1), value), acc.counters))
     }
     elif (name=="elem") {
-      acc(elem = value, classes = [value] + acc.classes )
+      acc(elem = value.definitionId, classes = [value.definitionId] + acc.classes )
     }
     elif (name=="tex-elem") {
       acc(texelem = value )
@@ -93,10 +93,10 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     }
     elif (name=="id") {
       //trace("id: " + value)
-      acc(name = value )
+      acc(name = value.definitionId )
     }
     elif (name=="class") {
-      acc( classes = acc.classes + [value] )
+      acc( classes = acc.classes + [value.definitionId] )
     }
     elif (name=="label") {
       acc(label = value)
