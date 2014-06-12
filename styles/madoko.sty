@@ -545,14 +545,21 @@
 \newenvironment{mdCodeTable}[3][]{% [attributes]{column-count}{column-specifiers}
   \begin{mdDiv}[#1]%
   \mdTableInit{#2}%
-  \setlength{\tabcolsep}{0pt}%
+  \mdPrettyInit%
   \begin{tabular}{#3}}{\end{tabular}\end{mdDiv}}
 
 \newenvironment{mdCodeLongTable}[3][]{% [attributes]{column-count}{column-specifiers}
   \begin{mdDiv}[#1]%
   \mdTableInit{#2}%
-  \setlength{\tabcolsep}{0pt}%
+  \mdPrettyInit%
   \begin{longtable}{#3}}{\end{longtable}\end{mdDiv}}
+
+\newcommand\mdPrettyInit{%
+  \setlength{\tabcolsep}{0pt}%
+  \def\prespace{\pprespace}%
+  \def\preindent{\ppreindent}%
+  \def\prebr{\pprebr}%
+}
 
 \newlength{\ppresp}
 \setlength{\ppresp}{0.5ex}
