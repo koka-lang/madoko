@@ -72,10 +72,10 @@ public function codeAlign( txt : string, sep : int = 2 ) : codeTable
 {
   val rxSep = regex( @" {" + sep.show + ",}" )
   val ls    = txt.replaceAll("<br>","\n").lines.list
-  trace(ls.join("\n"))
+  //trace(ls.join("\n"))
   val colss = ls.map fun(line){ findAlignColumns(line,rxSep) }
   val acols = colss.merge 
-  trace("\nalign cols: " + acols.map(show).join(","))
+  //trace("\nalign cols: " + acols.map(show).join(","))
   val rows  = zipWith(ls,colss) fun(line,cols){ makeRow(acols,line,cols,sep) }
   CodeTable( acols.length + 1, rows )
 }
@@ -94,7 +94,7 @@ function rawColumn( line : string, col : int ) : int {
   raw.length
 }
 
-val rxTags = regex(@"(</?\w+\b[^>]*>)|(&#[xX]?[\da-fA-F]+(?=;))")
+val rxTags = regex(@"(<ESCAPED>[\s\S]*?</ESCAPE)(?=D>)|(</?\w+\b[^>]*>)|(&(?:\w+|#[xX]?[\da-fA-F]+))(?=;)")
 
 function merge( alignss : list<list<int>> ) : list<int>
 {
@@ -114,23 +114,12 @@ function merge( alignss : list<list<int>> ) : list<int>
 function makeRow( acols : list<int>, line : string, lineCols : list<int>, sep : int ) : list<ccell>
 {
   val parts1 = splitColumns( line, 0, lineCols )
+  /*
   trace("makeRow: " + acols.map(show).join(",") + ": " + lineCols.map(show).join(",") + "\n" +
          " line:\n" + line + "\n" +
          " parts:\n  " + 
            parts1.map(fun(p) { p.fst.show + ": " + p.snd }).join("\n  "))
-  /*
-  val parts2 = match(parts1) {
-    Cons((_,text),rest) | text.list.all(isWhite) -> {
-      // split indentation
-      val nextcol = getColumn(rest)
-      val icol = acols.getIndentColumn(nextcol)
-      if (icol==0) then parts1 else {
-        Cons((0,text.substr(0,icol)), Cons((icol, text.substr(icol)), rest))
-      }
-    } 
-    _ -> parts1
-  }
-  */
+  */          
   val rxEndSpaces = regex( string(sep,' ') + "$")
   alignParts( acols, parts1, rxEndSpaces  )
 }

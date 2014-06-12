@@ -29,8 +29,8 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
-  val def = (attrs.classes.map( fun(cname) { defaults["." + cname] } ) +
-             [defaults["#" + attrs.name], defaults["~" + elementName]]).filter(isJust).map(string).join(" ")
+  val def = (attrs.classes.map( fun(cname) { defaults["." + cname.toLower] } ) +
+             [defaults["#" + attrs.name.toLower], defaults["~" + elementName.toLower]]).filter(isJust).map(string).join(" ")
   if (def=="") then attrs else {
     //trace("matched " + elementName + ": {" + attrs.text + "} : {" + def + "}" ) 
     attrs.mergeDefault(def.parseAttrs)

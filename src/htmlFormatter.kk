@@ -140,49 +140,11 @@ public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : stri
   txt.escapePre  
 }
 
-public function fmtHtmlCodeHilite( context : inlineContext, txt : string, lang : string) : (string) 
+public function fmtHtmlCodeHilite( context : inlineContext, txt : string ) : (string) 
 {
-  txt.htmlUnescape
-  /*
-  match( txt.hilitePartial(lang,mode) ) {
-    Nothing -> (context.fmtHtmlCodePlain(txt),mode)
-    Just((hl,next)) -> (hl,Just(next))
-  }
-  */
+  txt.replaceAll(rxEndSpaces," ")
 }
-
-function htmlUnescape( txt : string) : string {
-  function unspan(caps : list<matched>, i : int ) {
-    match(caps) {
-      Nil -> txt.substr(i)
-      Cons(cap,rest) -> {
-        txt.substr(i,cap.index - i) + cap.groups[1] + unspan(rest, cap.next)
-      }
-    }
-  }
-  val caps = txt.findAll(rxEscaped).list
-  unspan(caps,0)
-}
-val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
-
-
-public function fmtHtmlCode( context : inlineContext, env : string, 
-                              txt : string, attrs : attrs ) : string 
-{
-  val lang = attrs.hasKey("language").maybe("",id)
-  val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
-
-  val plain = txt.escapePre
-  val (pattrs,content)
-    = if (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint")) then (attrs,plain) 
-       else match( txt.hilite(lang) ) {
-              Just(html) -> (attrs.addClass("highlighted"),html)
-              Nothing    -> (attrs,plain)  // as is..
-            }
-  if (env=="" || env=="code") 
-   then context.fmtHtmlCmd("code", content, pattrs.mergeDefault(lattrs))
-   else tagEnv(env, context.fmtHtmlCmd("code", content, lattrs), pattrs, context.sanitize)
-}
+val rxEndSpaces = regex(@"  +$")
 
 /* --------------------------------------
  Format attributes 

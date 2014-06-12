@@ -317,6 +317,22 @@ div.input-mathpre {
 .highlighted .token.italic          { font-style: italic; }
 
 
+/* Pretty formatting of code */
+pre.pretty, code.pretty { 
+  font-family: "Times New Roman", serif;
+  font-size: 95%;
+}
+
+.pretty td {
+  padding: 0em;
+}
+.pretty td.empty {
+  width: 0.25em;
+}
+.pretty .token.identifier         { font-style: italic }
+.pretty .token.constructor        { font-style: italic }
+
+
 /* ---------------------------------------------------
    Styling for full documents
 ----------------------------------------------------*/

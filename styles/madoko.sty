@@ -529,9 +529,12 @@
 %-------------------------------------------------------------
 % Code and syntax highlighting 
 %-------------------------------------------------------------
-\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt}
+\newcommand{\mdPrettyFont}{serif}
+
+\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt,font-family=monospace}
 \cssNewInlineElem{\mdCode}{code}{font-family=monospace}
 \cssNewInlineElem{\mdPrecode}{precode}{}
+\cssClassRule{pretty}{font-family=\mdPrettyFont}
 
 \newlength{\@presp}
 \settowidth{\@presp}{\texttt{ }}

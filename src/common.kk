@@ -321,7 +321,7 @@ public function showFormatter( f : formatter ) {
 public struct label( element : string, labelText : string, labelCaption : string )
 
 public function show( attrs : attrs ) : string {
-  "{" + attrs.text.substr(0,40) + "... }"
+  "{" + attrs.text + "}"
 }
 
 // Attributes

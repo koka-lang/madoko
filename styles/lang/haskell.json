@@ -69,7 +69,7 @@
       
       ["::(?!@symbols0)", "type.operator", "@type_line"],
       ["@symbols", { "cases": { "@keywords": "keyword.operator",
-                              "@extraKeywords": "keyword",
+                              "@extraKeywords": "keyword.operator",
                               "@default": "operator" }}
       ],
 
@@ -118,7 +118,7 @@
     ],
 
     "type_data": [
-      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword","","constructor"]],
+      [ "([=|])(\\s*)([A-Z]@idchars)", ["keyword.operator","","constructor"]],
       ["^\\s*$", { "token": "", "next": "@pop" } ],
       { "include": "@type" }
     ],

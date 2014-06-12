@@ -285,12 +285,16 @@ function inlineCode( cap : matched, context ) : string {
    else context.fmtSpan( txt, attrs.addClass("code") ) // can be overridden by the user
 }
 
-public function fmtCode( context : inlineContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
-  val lang   = attrs.hasKey("language").maybe("",id)
-  val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang, "lang-"+lang, lang])
+public function fmtCode( context : inlineContext, env0 : string, txt : string, attrs0 : attrs = attrsNone ) : string {
+  val env = if (env0=="") then "code" else env0
+  val lang   = attrs0.hasKey("language").maybe("",id)
+  val attrs1 = if (lang=="") then attrs0 else attrs0.addClasses(["language-" + lang, "lang-"+lang, lang])
+  val attrs  = context.defaults.matchRules(env,attrs1)
+  //trace("code: " + env + ": " + attrs.show)
+
   val cattrs = match(attrs.hasKey("data-line-code")) {
-                 Nothing -> lattrs
-                 Just(v) -> lattrs.addKeyval("data-line",v)
+                 Nothing -> attrsNone
+                 Just(v) -> attrsNone.addKeyval("data-line",v)
                }
   val plain0 = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
   val plain = if (plain0) then plain0 else {
@@ -300,58 +304,79 @@ public function fmtCode( context : inlineContext, env : string, txt : string, at
     }
   }
 
-  val pattrs = if (plain) then attrs else attrs.addClass("highlighted")                
-  val content 
-    = if (attrs.hasClass("pretty"))
-        then {
-          val cont = if (plain)
-                      then txt
-                      else context.fmtColorize(lang,txt,attrs).fst
-          val ct = codeAlign(cont).map( fun(ctext) { 
-            if (plain) then context.fmtCodePlain(ctext) else context.fmtCodeHilite(ctext,lang)
-          })
-          context.fmtCodeTable(ct,attrs)
-        }
-        elif (plain) then context.fmtCodePlain(txt)
-        else context.fmtCodeHilite(context.fmtColorize(lang,txt,attrs).fst, lang)
+  
+  function colorize( code : string, mode : maybe<hilitemode> ) : (string,maybe<hilitemode>) {
+    if (plain) 
+     then (code, mode)
+     else match(code.hilitePartial(lang,mode)) {
+            Nothing         -> (code,mode)
+            Just((hl,next)) -> (hl,Just(next))
+          } 
+  }
 
-  if (env=="" || env=="code") 
+  function codeEscape( code : string ) : string {
+    context.fmtCodeEscaped(txt,colorize,attrs).fst   // possibly tokenize with colors, and process escapes     
+  }
+
+  function codeUnescape( ecode : string ) : string {
+    fmtCodeUnescape( ecode, fun(s) { 
+      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s)
+    })
+  }
+
+
+  val pattrs = if (plain) then attrs else attrs.addClass("highlighted")  
+  val content 
+    = if (attrs.hasClass("pretty") && env != "code" ) then {
+        val ct = codeAlign(codeEscape(txt)).map( codeUnescape )
+        context.fmtCodeTable(ct,cattrs)
+      }
+      else codeUnescape(codeEscape(txt))
+
+  if (env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
    else context.fmtEnv(env, context.fmtCmd( if (context.fmt==FmtTex) then "precode" else "code", content, cattrs), pattrs)
 }
 
 
-function colorize(text : string, lang :string, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
-  match (text.hilitePartial(lang,mode)) {
-    Nothing         -> (text,mode)
-    Just((hl,next)) -> (hl,Just(next)) 
+
+function fmtCodeUnescape( txt : string, fmt : string -> string ) : string {
+  function unspan(caps : list<matched>, i : int ) {
+    match(caps) {
+      Nil -> txt.substr(i).fmt
+      Cons(cap,rest) -> {
+        txt.substr(i,cap.index - i).fmt + cap.groups[1] + unspan(rest, cap.next)
+      }
+    }
   }
+  val caps = txt.findAll(rxEscaped).list
+  unspan(caps,0)
 }
+val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
 
-function fmtColorize( context : inlineContext, lang : string, txt : string, attrs : attrs = attrsNone, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
-  if (attrs.hasClass("noescape")) return colorize(txt,lang)
+function fmtCodeEscaped( context : inlineContext, txt : string, format : (string,maybe<a>) -> (string,maybe<a>), 
+                         attrs : attrs = attrsNone, st : maybe<a> = Nothing ) : (string,maybe<a>) {
+  if (attrs.hasClass("noescape")) return format(txt,st)
 
-  function hiliteX( src : string, mode0 : maybe<hilitemode> ) : (string,maybe<hilitemode>) {
+  function codeEscape( src : string, st0 : maybe<_a> ) : (string,maybe<_a>) {
     match( src.find(rxCodeEscaped)) {
-      Nothing   -> colorize(src,lang,mode0)
+      Nothing   -> format(src,st0)
       Just(cap) -> {
-        val (fmt1,mode1) = colorize(src.substr(0,cap.index),lang,mode0)
+        val (fmt1,st1) = format(src.substr(0,cap.index),st0)
         val fmt2 = "<ESCAPED>" + 
                       context.fmtCmd("span", context.formatInline(cap.groups[1]), 
                                 context.formatDefaults(attrsNone.addClass("code-escaped"))) +
                    "</ESCAPED>"
-
-        trace("escaped: " + fmt2)
-        val (fmt3,mode3) = hiliteX(src.substr1(cap.next),mode1)
-        (fmt1 + fmt2 + fmt3, mode3)
+        val (fmt3,st2) = codeEscape(src.substr1(cap.next),st1)
+        (fmt1 + fmt2 + fmt3, st2)
       }
     }
   }
 
-  hiliteX(txt,mode)
+  codeEscape(txt,st)
 }
-
 val rxCodeEscaped = regex(@"\\\(((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
+
 
 function escapeTexPre( txt : string ) : string {
   txt.replaceAll(regex(@"\$"),@"$\text{\tt\textdollar}$")

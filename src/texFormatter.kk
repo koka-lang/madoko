@@ -75,65 +75,48 @@ public function fmtTexCodePlain( context : inlineContext, txt : string ) : strin
   txt.htmlEscape(False).texText.preSpace
 }
 
-public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : string ) : (string) 
+public function fmtTexCodeHilite( context : inlineContext, txt : string ) : (string) 
 {
-  txt.texTextEscaped.unspan(lang).preSpace
+  txt.unTokenize
 }
 
-function texTextEscaped( txt : string) : string {
-  function unspan(caps : list<matched>, i : int ) {
-    match(caps) {
-      Nil -> txt.substr(i).texText
-      Cons(cap,rest) -> {
-        txt.substr(i,cap.index - i).texText + cap.groups[1] + unspan(rest, cap.next)
-      }
-    }
-  }
-  val caps = txt.findAll(rxEscaped).list
-  unspan(caps,0)
-}
-val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
-
-public function fmtTexCode( context : inlineContext, env : string, 
-                              txt : string, attrs : attrs ) : string 
-{
-  val lang = attrs.hasKey("language").maybe("",id)
-  val lattrs = if (lang=="") then attrsNone else Attrs(classes=["language-" + lang],keyvals=[("language",lang)])
-  val plain = txt.htmlEscape(False).texText.preSpace
-  val content = if (lang=="" || !(context.highlight) || attrs.hasClass("plain")) then plain 
-                 else match(txt.hilite(lang)) {
-                        Just(hl) -> hl.texText.unspan(lang).preSpace
-                        Nothing  -> plain
+function unTokenize( txt : string ) : string {
+  var nl := True
+  txt.replaceAll(rxTagged, fun(cap) {
+        if (cap.groups.matchedOn(1)) {
+          val res = cap.matched.texText.preSpace(nl)
+          nl := False
+          res
+        }
+        elif (cap.matched=="<br>") then {
+          nl := True
+          "\\prebr{}\n" 
+        }
+        else cap.matched
+      })
+      .replaceAll(rxToken, fun(cap) {
+        val classes=cap.groups[1].toLower.trim.split(rxSpaces).list.filter( fun(cname) { cname != "token" } )
+        val start = if (classes.any(fun(cname) { cname=="white" })) 
+                      then "{"  // so preindent can match
+                      else {
+                        val cclasses = if (classes.length <= 1) then [] else list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse    
+                        @"\mdToken{" + (classes + cclasses).join(",") + "}{"
                       }
-  if (env=="" || env=="code") 
-   then texCmd("code",content,attrs)
-   else texEnv(env,texCmd("code",content,lattrs),attrs)
-}
-
-public function unspan( txt : string, lang : string ) : string {
-  txt.replaceAll(rxEndSpan,"}").replaceAll(rxSpan) fun(cap) {
-    val classes=cap.groups[1].toLower.trim.split(rxSpaces).map(fun(cname) {
-      if (cname.startsWith("hljs-")) then cname.substr(5) else cname
-    }).list.filter( fun(cname) { cname != "token" && cname != lang } )
-    if (classes.any(fun(cname) { cname=="white" })) 
-     then "{"  // so preindent can match
-     else {
-      val cclasses = list(2,2).map( fun(i) { classes.take(i).join(":") }).reverse    
-      @"\mdToken{" + (classes + cclasses).join(",") + "}{"
-     }
-  }  
+        val end = "}"
+        start + cap.groups[2] + end                  
+      })
 } 
+val rxToken = regex(@"<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
+val rxBr = regex(@"\n|<br>")
+val rxTagged = regex(@"([^<>]+)|<([^>]*)>")
 
-val rxEndSpan = regex(@"{\\textless}/span{\\textgreater}")
-val rxSpan = regex(@"{\\textless}span\s+.*?\bclass=['""]?([^""']+)['""]?[^{]*{\\textgreater}",ignoreCase=True)
-
-public function preSpace( txt : string, pre : string = "" ) : string {
-  txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + @"\" + pre + @"preindent{" + cap.groups[2].length.show + "}" })
-     .replaceAll(rxSpaces,fun(cap){ @"\" + pre + @"prespace{" + cap.matched.length.show + "}"})
-     .replaceAll("\n|{\\textless}br{\\textgreater}",@"\" + pre + @"prebr{}\n")
+public function preSpace( txt : string, start : bool = True ) : string {
+  txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + (if (start) then @"\preindent" else @"\prespace") + "{" + cap.groups[2].length.show + "}" })
+     .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
+     .replaceAll("\n|<br>","\\prebr{}\n")
      .replaceAll("`","{`}")
 }
-val rxIndent = regex(@"(^|\n|{\\textless}br{\\textgreater}){?( +)}?",multiLine=True)
+val rxIndent = regex(@"(^|\n)( +)")
 val rxSpaces = regex(@" +")
 
 public function texText( txt : string ) : string {
@@ -194,7 +177,7 @@ public function fmtTexCodeTable( context : inlineContext, ct : codeTable, attrs 
 
 function fmtTexCodeCell( ccell : ccell ) : string {
   val align = if (ccell.center) then "c" else "l"
-  "\\multicolumn{" + ccell.span.show + "}{" + align + "}{" + ccell.content.preSpace("p") + "}"
+  if (ccell.span <= 1) then ccell.content else "\\multicolumn{" + ccell.span.show + "}{" + align + "}{" + ccell.content + "}"
 }
 
 public function fmtTexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {

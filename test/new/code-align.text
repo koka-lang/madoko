@@ -2,22 +2,7 @@ title		: definition lists
 author		: Daan
 author note : &time;
 ~Pre : replace=/->/\(&rarr;\)/g
-
-<style>
-pre.pretty { 
-  font-family: Cambria, serif;
-  font-size: 95%;
-}
-
-.pretty td {
-  padding: 0pt;
-}
-.pretty td.empty {
-  width: 0.25em;
-}
-.pretty .token.identifier { font-style: italic }
-.pretty .token.constructor { font-style: italic }
-</style>
+~Pre,~Code: .pretty
 
 
 ~ TexRaw
@@ -25,17 +10,25 @@ pre.pretty {
 \mdDefineToken{type}{\mdTokenType}
 \mdDefineToken{constructor}{\mdTokenConId}
 \mdDefineToken{type:identifier}{\mdTokenTypeId}
+\mdDefineToken{keyword:operator}{\mdTokenKeywordOp}
+\mdDefineToken{keyword:operator}{\mdTokenKeywordOp}
+\mdDefineToken{operator}{\mdTokenOperator}
+\renewcommand{\mdTokenKeyword}[1]{\textbf{#1}}
+\newcommand{\mdTokenOperator}[1]{\,#1\,}
+\newcommand{\mdTokenKeywordOp}[1]{{#1}}
 \newcommand{\mdTokenIdentifier}[1]{\textit{#1}}
 \newcommand{\mdTokenTypeId}[1]{\textit{\mdTokenType{#1}}}
 \newcommand{\mdTokenConId}[1]{\textit{\mdTokenConstructor{#1}}}
 ~
+
+
 
 [TITLE]
 [TOC]
 
 Here is some `haskell code do`{language=haskell}, and here some more:
 
-``` Haskell  {.pretty}
+``` haskell  
 data Exp   =  Number    Int
            |  Add       Exp Exp
            |  Subtract  Exp Exp
@@ -56,7 +49,12 @@ substitute1  (var, val) exp = subst exp where
                             else Variable name          
 ```          
 
-``` Haskell  {.pretty}
+``` Html 
+<span>  test</span>
+<span>  aligned</span> &amp;
+```
+
+``` Haskell  
 data Exp   =  Number    Int
            |  Add       Exp Exp
            |  Subtract  Exp Exp
@@ -66,15 +64,12 @@ data Exp   =  Number    Int
            deriving (Eq)
 ```
 
-``` Haskell {.pretty}
-substitute1 :: (String, Int) -> Exp -> Exp
-substitute1  (var, val) exp = subst exp where
-  subst (Number i)       =  Number i
-  subst (Add a b)        =  Add (subst a) (subst b)
-  subst (Subtract a b)   =  Subtract (subst a) (subst b)
-  subst (Multiply a b)   =  Multiply (subst a) (subst b)
-  subst (Divide a b)     =  Divide (subst a) (subst b)
-  subst (Variable name)  =  if var == name
-                             then Number val
-                             else Variable name          
+``` Haskell 
+scanr1        :: (a -> a -> a) -> [a] -> [a]
+scanr1 f xxs  =  case xxs of 
+                   x:xs ->  case xs of 
+                              []  ->  [x] 
+                              _   ->  let  qs = scanr1 f xs 
+                                      in   case qs of 
+                                            q:_ -> f x q : qs
 ```          
