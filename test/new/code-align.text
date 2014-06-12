@@ -5,7 +5,8 @@ author note : &time;
 
 <style>
 pre.pretty { 
-  font-family: constantia, serif;
+  font-family: Cambria, serif;
+  font-size: 95%;
 }
 
 .pretty td {
@@ -15,13 +16,14 @@ pre.pretty {
   width: 0.25em;
 }
 .pretty .token.identifier { font-style: italic }
+.pretty .token.constructor { font-style: italic }
 </style>
 
 
 ~ TexRaw
 \mdDefineToken{identifier}{\mdTokenIdentifier}
 \mdDefineToken{type}{\mdTokenType}
-\mdDefineToken{identifier:constructor}{\mdTokenConId}
+\mdDefineToken{constructor}{\mdTokenConId}
 \mdDefineToken{type:identifier}{\mdTokenTypeId}
 \newcommand{\mdTokenIdentifier}[1]{\textit{#1}}
 \newcommand{\mdTokenTypeId}[1]{\textit{\mdTokenType{#1}}}

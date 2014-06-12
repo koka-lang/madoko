@@ -53,7 +53,7 @@
         }
       ],
 
-      ["[A-Z]@idchars", "identifier.constructor" ],
+      ["[A-Z]@idchars", "constructor" ],
 
       ["_@idchars", "identifier.wildcard"],
 

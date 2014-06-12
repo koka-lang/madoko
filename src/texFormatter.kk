@@ -75,13 +75,24 @@ public function fmtTexCodePlain( context : inlineContext, txt : string ) : strin
   txt.htmlEscape(False).texText.preSpace
 }
 
-public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) : (string,maybe<hilitemode>) 
+public function fmtTexCodeHilite( context : inlineContext, txt : string, lang : string ) : (string) 
 {
-  match (txt.hilitePartial(lang,mode)) {
-    Nothing -> (fmtTexCodePlain(context,txt),mode)
-    Just((hl,next)) -> (hl.texText.unspan(lang).preSpace, Just(next))
-  }  
+  txt.texTextEscaped.unspan(lang).preSpace
 }
+
+function texTextEscaped( txt : string) : string {
+  function unspan(caps : list<matched>, i : int ) {
+    match(caps) {
+      Nil -> txt.substr(i).texText
+      Cons(cap,rest) -> {
+        txt.substr(i,cap.index - i).texText + cap.groups[1] + unspan(rest, cap.next)
+      }
+    }
+  }
+  val caps = txt.findAll(rxEscaped).list
+  unspan(caps,0)
+}
+val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
 
 public function fmtTexCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 

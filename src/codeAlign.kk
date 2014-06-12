@@ -52,6 +52,10 @@ public function foldCodeTable( ct : codeTable, st : a, f : (string,a) -> (string
   ct( rows = foldRows(ct.rows,st ).fst )
 }
 
+public function map( ct : codeTable,  f : (string) -> string ) : codeTable {
+  ct( rows = ct.rows.map( fun(row) { row.map( fun(ccell) { ccell(content = f(ccell.content)) }) }) )
+}
+
 public function show( ct : codeTable ) : string {
   "\\begin{tabular}{" + string(ct.columns,'l') + "}\n" +
    ct.rows.map( fun(row) { row.map(show).join(" & ") }).join("\\\\\n") +

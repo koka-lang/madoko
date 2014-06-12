@@ -57,7 +57,7 @@ public rectype inlineContext {
                  xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, colattrs: list<attrs>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
-                 xfmtCodeHilite : (context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) -> (string,maybe<hilitemode>),
+                 xfmtCodeHilite : (context : inlineContext, txt : string, lang : string ) -> (string),
                  xfmtLineInfo : (context : inlineContext, lineInfo : string ) -> string,
                  xfmtCodeTable : (context : inlineContext, ct : codeTable, attrs : attrs ) -> string,
                  fmt : formatter
@@ -96,8 +96,8 @@ public function fmtCodePlain( context : inlineContext, txt : string ) : string {
   (context.xfmtCodePlain)(context,txt)
 }
 
-public function fmtCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
-  (context.xfmtCodeHilite)(context,txt,lang,mode)
+public function fmtCodeHilite( context : inlineContext, txt : string, lang : string ) : (string) {
+  (context.xfmtCodeHilite)(context,txt,lang)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {

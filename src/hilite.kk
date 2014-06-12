@@ -44,6 +44,7 @@ public function hilite( src : string, lang : string ) : maybe<string>
          })
 }
 
+
 // Syntax highlight code. 
 // If "lang" is the empty string, returns Nothing. 
 // Use `auto` for automatic language detection.
@@ -72,4 +73,12 @@ public function registerLanguage( name : string, definition: string ) : io () {
   catch( { //trace("register: " + name + ": " + fname); 
            xxregisterLanguage(name.toLower,definition) }, 
          fun(exn) { println("error: could not register language: " + name  + "\n" + exn.show /* + "\n" + fulldef */ ) } )
+}
+
+external xcanHilite( name : string ) : bool {
+  js inline "(monarch.getLanguage(#1) != null)"
+}
+
+public function canHilite( name : string ) : bool {
+  xcanHilite( name.toLower )
 }

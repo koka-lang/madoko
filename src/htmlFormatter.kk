@@ -140,13 +140,31 @@ public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : stri
   txt.escapePre  
 }
 
-public function fmtHtmlCodeHilite( context : inlineContext, txt : string, lang : string, mode : maybe<hilitemode> ) : (string,maybe<hilitemode>) 
+public function fmtHtmlCodeHilite( context : inlineContext, txt : string, lang : string) : (string) 
 {
+  txt.htmlUnescape
+  /*
   match( txt.hilitePartial(lang,mode) ) {
     Nothing -> (context.fmtHtmlCodePlain(txt),mode)
     Just((hl,next)) -> (hl,Just(next))
   }
+  */
 }
+
+function htmlUnescape( txt : string) : string {
+  function unspan(caps : list<matched>, i : int ) {
+    match(caps) {
+      Nil -> txt.substr(i)
+      Cons(cap,rest) -> {
+        txt.substr(i,cap.index - i) + cap.groups[1] + unspan(rest, cap.next)
+      }
+    }
+  }
+  val caps = txt.findAll(rxEscaped).list
+  unspan(caps,0)
+}
+val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
+
 
 public function fmtHtmlCode( context : inlineContext, env : string, 
                               txt : string, attrs : attrs ) : string 

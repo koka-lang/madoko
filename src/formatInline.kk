@@ -292,46 +292,56 @@ public function fmtCode( context : inlineContext, env : string, txt : string, at
                  Nothing -> lattrs
                  Just(v) -> lattrs.addKeyval("data-line",v)
                }
-  val plain = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
+  val plain0 = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
+  val plain = if (plain0) then plain0 else {
+    if (canHilite(lang)) then False else {
+      warning("unknown language: " + lang)
+      True
+    }
+  }
+
   val pattrs = if (plain) then attrs else attrs.addClass("highlighted")                
-  val content0
-    = if (plain)
-       then context.fmtCodePlain(txt)
-       else context.fmtCodeColorize(lang,txt,attrs).fst
   val content 
     = if (attrs.hasClass("pretty"))
-       then context.fmtCodeTable( codeAlign(content0) )
-       else content0
+        then {
+          val cont = if (plain)
+                      then txt
+                      else context.fmtColorize(lang,txt,attrs).fst
+          val ct = codeAlign(cont).map( fun(ctext) { 
+            if (plain) then context.fmtCodePlain(ctext) else context.fmtCodeHilite(ctext,lang)
+          })
+          context.fmtCodeTable(ct,attrs)
+        }
+        elif (plain) then context.fmtCodePlain(txt)
+        else context.fmtCodeHilite(context.fmtColorize(lang,txt,attrs).fst, lang)
 
   if (env=="" || env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
    else context.fmtEnv(env, context.fmtCmd( if (context.fmt==FmtTex) then "precode" else "code", content, cattrs), pattrs)
 }
 
-function fmtCodePretty( context : inlineContext, ct : codeTable, plain : bool, lang : string, attrs : attrs ) : string {
-  val ctNew = if (plain) then {
-      ct.foldCodeTable( (), fun(text,st) {
-        (context.fmtCodePlain(text),st)
-      })
-    }
-    else {
-      ct.foldCodeTable( Nothing, fun(text,mode) {
-        context.fmtCodeColorize(lang, text, attrs, mode)
-      }) 
-    }
-  context.fmtCodeTable(ctNew)
+
+function colorize(text : string, lang :string, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
+  match (text.hilitePartial(lang,mode)) {
+    Nothing         -> (text,mode)
+    Just((hl,next)) -> (hl,Just(next)) 
+  }
 }
 
-function fmtCodeColorize( context : inlineContext, lang : string, txt : string, attrs : attrs = attrsNone, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
-  if (attrs.hasClass("noescape")) return context.fmtCodeHilite(txt,lang)
+function fmtColorize( context : inlineContext, lang : string, txt : string, attrs : attrs = attrsNone, mode : maybe<hilitemode> = Nothing ) : (string,maybe<hilitemode>) {
+  if (attrs.hasClass("noescape")) return colorize(txt,lang)
 
   function hiliteX( src : string, mode0 : maybe<hilitemode> ) : (string,maybe<hilitemode>) {
     match( src.find(rxCodeEscaped)) {
-      Nothing   -> context.fmtCodeHilite(src,lang,mode0)
+      Nothing   -> colorize(src,lang,mode0)
       Just(cap) -> {
-        val (fmt1,mode1) = context.fmtCodeHilite(src.substr(0,cap.index),lang,mode0)
-        val fmt2 = context.fmtCmd("span", context.formatInline(cap.groups[1]), 
-                                context.formatDefaults(attrsNone.addClass("code-escaped")))  
+        val (fmt1,mode1) = colorize(src.substr(0,cap.index),lang,mode0)
+        val fmt2 = "<ESCAPED>" + 
+                      context.fmtCmd("span", context.formatInline(cap.groups[1]), 
+                                context.formatDefaults(attrsNone.addClass("code-escaped"))) +
+                   "</ESCAPED>"
+
+        trace("escaped: " + fmt2)
         val (fmt3,mode3) = hiliteX(src.substr1(cap.next),mode1)
         (fmt1 + fmt2 + fmt3, mode3)
       }
@@ -341,37 +351,7 @@ function fmtCodeColorize( context : inlineContext, lang : string, txt : string, 
   hiliteX(txt,mode)
 }
 
-function fmtCodeEx( context : inlineContext, lang : string, txt : string, attrs : attrs ) : string 
-{
-  if (attrs.hasClass("noescape")) return context.fmtCodeHilite(txt,lang).fst
-
-  function hiliteX( src : string, mode : maybe<hilitemode> ) : string {
-    match( src.find(rxCodeEscaped)) {
-      Nothing   -> context.fmtCodeHilite(src,lang,mode).fst
-      Just(cap) -> {
-        val (fmt1,mode1) = context.fmtCodeHilite(src.substr(0,cap.index),lang,mode)
-        val fmt2 = context.fmtCmd("span", context.formatInline(cap.groups[1]), 
-                                context.formatDefaults(attrsNone.addClass("code-escaped")))  
-        fmt1 + fmt2 + hiliteX(src.substr1(cap.next),mode1)
-      }
-    }
-  }
-
-  hiliteX(txt,Nothing)
-}
-
 val rxCodeEscaped = regex(@"\\\(((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
-
-/*
-function fmtCode( context : inlineContext, tag : string, txt : string, attrs : attrs = attrsNone) : string {
-  match(context.fmt) {
-    FmtHtml -> context.fmtCmd(tag, context.fmtEscapePre(txt), attrs)  
-    FmtTex  -> if (attrs.hasClass("plain"))
-                then context.fmtCmd("verb", context.fmtText(txt), attrs )
-                else context.fmtCmd(tag, txt.escapeTexPre, attrs )
-  }
-}
-*/
 
 function escapeTexPre( txt : string ) : string {
   txt.replaceAll(regex(@"\$"),@"$\text{\tt\textdollar}$")
