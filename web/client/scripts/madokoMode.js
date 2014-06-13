@@ -50,7 +50,7 @@ var madokoMode = {
           [/^(\s{0,3})(#+)((?:[^\\\{]|@escapes)+)/, ['white','keyword.$1','keyword.$1']],
           [/^\s{0,3}(=+|\-+)\s*$/, 'keyword.header'],      
           [/^\s{0,3}((\*[ ]?)+)\s*$/, 'keyword.header'],
-          [/^\s{0,3}(~+)\s*(?:begin\s+(\w+)\s*|end\s+(\w+)\s*|(\w+)\s*)?(?=(?:\{[^}]+\}\s*)?$)/, {
+          [/^\s{0,3}(~+)\s*(?:begin\s+([\w\-]+)\s*|end\s+([\w\-]+)\s*|([\w\-]+)\s*)?(?=(?:\{[^}]+\}\s*)?$)/, {
             cases: {
               "$2": { token: 'keyword.header.custom.$2', bracket: "@open" },
               "$3": { token: 'keyword.header.custom.$3', bracket: "@close" },
