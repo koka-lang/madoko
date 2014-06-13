@@ -90,11 +90,37 @@ public function findAlignColumns( line : string, rxSep : regex) : list<int>
 
 function rawColumn( line : string, col : int ) : int {
   // get column number disregarding html elements from colorization
-  val raw = line.substr(0,col).replaceAll(rxTags,"")
+  val raw = line.substr(0,col).replaceAll(rxTags,tagsSpaces)
   raw.length
 }
 
-val rxTags = regex(@"(<ESCAPED>[\s\S]*?</ESCAPE)(?=D>)|(</?\w+\b[^>]*>)|(&(?:\w+|#[xX]?[\da-fA-F]+))(?=;)")
+function htmlColumn( s: string, col : int ) : int {
+  val caps = s.findAll(rxTags).list
+  htmlCol( caps, col, 0 )
+}
+
+function htmlCol( caps : list<matched>, col : int, extra : int ) {
+  match( caps ) {
+    Nil -> col + extra
+    Cons(cap,rest) -> {
+      if (cap.index < col + extra || (cap.index == col + extra && cap.matched.startsWith("</")))
+       then htmlCol( rest, col, extra + cap.tagsLength )
+       else col + extra
+    }
+  }
+}
+
+function tagsSpaces( cap : matched ) : string {
+  if (cap.matched.startsWith("<ESCAPED")) then string( cap.groups[1].parseInt.maybe(1,id), '.' )
+  elif (cap.matched.startsWith("&")) then "."
+  else ""
+}
+
+function tagsLength( cap : matched ) : int {
+  cap.matched.length - cap.tagsSpaces.length
+}
+
+val rxTags = regex(@"<ESCAPED\s*(?:width=(\d*)\s*)?>[\s\S]*?</ESCAPED>|</?\w+\b[^>]*>|&(?:\w+|#[xX]?[\da-fA-F]+);")
 
 function merge( alignss : list<list<int>> ) : list<int>
 {
@@ -154,7 +180,7 @@ function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces 
 
 function getColumn( col:int, text : string, parts : list<(int,string)> ) : int {
   match(parts) {
-    Nil -> col + text.replaceAll(rxTags,"").length
+    Nil -> 999 // col + text.replaceAll(rxTags,"").length
     Cons((c,_),_) -> c
   }
 }
@@ -194,18 +220,3 @@ function subPart( line : string, col : int, len : int = line.length ) : string {
   line.substr( col0, (col1 - col0) )
 }
 
-function htmlColumn( s: string, col : int ) : int {
-  val caps = s.findAll(rxTags).list
-  htmlCol( caps, col, 0 )
-}
-
-function htmlCol( caps : list<matched>, col : int, extra : int ) {
-  match( caps ) {
-    Nil -> col + extra
-    Cons(cap,rest) -> {
-      if (cap.index < col + extra || (cap.index == col + extra && cap.matched.startsWith("</")))
-       then htmlCol( rest, col, extra + cap.matched.length )
-       else col + extra
-    }
-  }
-}

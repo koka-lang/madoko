@@ -1,9 +1,17 @@
 title		: definition lists
 author		: Daan
 author note : &time;
-~Pre : replace=/->/\(&rarr;\)/g
+~Pre : replace=/->/\(2:&rarr;\)/g
 ~Pre,~Code: .pretty
 
+<style>
+.xpretty td {
+  border: 1px solid black;
+}
+.xpretty .token {
+  color: black !important;
+}
+</style>
 
 ~ TexRaw
 \mdDefineToken{identifier}{\mdTokenIdentifier}
@@ -39,14 +47,14 @@ data Exp   =  Number    Int
 
 substitute1  :: (String, Int) -> Exp -> Exp
 substitute1  (var, val) exp = subst exp where
-  subst (Number i)       = Number i
-  subst (Add a b)        = Add (subst a) (subst b)
-  subst (Subtract a b)   = Subtract (subst a) (subst b)
-  subst (Multiply a b)   = Multiply (subst a) (subst b)
-  subst (Divide a b)     = Divide (subst a) (subst b)
-  subst (Variable name)  = if var == name
-                            then Number val
-                            else Variable name          
+  subst (Number i)       =  Number i
+  subst (Add a b)        =  Add (subst a) (subst b)
+  subst (Subtract a b)   =  Subtract (subst a) (subst b)
+  subst (Multiply a b)   =  Multiply (subst a) (subst b)
+  subst (Divide a b)     =  Divide (subst a) (subst b)
+  subst (Variable name)  =  if var == name
+                             then Number val
+                             else Variable name          
 ```          
 
 ``` Html 
