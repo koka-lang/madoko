@@ -185,7 +185,7 @@ var UI = (function() {
       roundedSelection: false,
       lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
       //mode: madokoMode.mode,
-      tabSize: 4,
+      tabSize: 2,
       insertSpaces: true,
       //wrappingColumn: -1,
       automaticLayout: true,

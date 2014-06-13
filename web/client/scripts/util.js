@@ -349,7 +349,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".bbl",".js",".css",".json"].join(";");
+  var embedExts = [".bbl",".js",".css",".json",".mdk"].join(";");
   function hasEmbedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
