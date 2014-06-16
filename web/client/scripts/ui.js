@@ -420,6 +420,12 @@ var UI = (function() {
       });
     }
 
+    document.getElementById("azure").onclick = function(ev) {
+      self.event( "Saved website", "exporting...", State.Exporting, function() { 
+        return self.generateSite(); 
+      });
+    }
+
     document.getElementById("export-pdf").onclick = function(ev) {
       self.event( "PDF exported", "exporting...",  State.Exporting, function() { 
         return self.generatePdf(); 
@@ -1151,6 +1157,18 @@ var UI = (function() {
         self.storage.writeFile( name, content );
         return self.openInWindow( name, "text/html" );
         //saveUserContent( name, "text/html", content );
+      })
+    );
+  }
+
+
+  UI.prototype.generateSite = function() {
+    var self = this;
+    return self.spinWhile( self.viewSpinner, 
+      self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
+        var name = "out/" + util.changeExt(self.docName,".html");
+        self.storage.writeFile( name, content );
+        return storage.publishSite( self.storage, self.docName );
       })
     );
   }

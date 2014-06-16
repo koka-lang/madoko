@@ -235,6 +235,28 @@ function saveTo(  storage, toStorage, docStem, newStem )
   );
 }  
 
+
+function publishSite(  storage, docName )
+{
+  return newDropboxAt( "Apps/Azure/" + Util.stemname(docName) ).then( function(remote) {
+    var toStorage = new Storage(remote);
+    storage.forEachFile( function(file0) {
+      var file = Util.copy(file0);
+      file.modified = true;
+      if (Util.startsWith(file.path, "out/") && (!Util.hasGeneratedExt(file.path) || Util.extname(file.path) === ".html")) {
+        file.path = file.path.substr(4);
+        if (Util.extname(file.path)===".html" && Util.stemname(file.path) === Util.stemname(docName)) {
+          file.path = "index.html";
+        }
+        toStorage.files.set( file.path, file );
+      }
+    });
+    return Promise.when( toStorage.files.elems().map( function(file) { 
+      return toStorage.pushFile(file); 
+    }) );
+  });
+}  
+
 function createSnapshotFolder(remote, docstem, stem, num ) {
   if (!stem) {
     var now = new Date();
@@ -752,6 +774,8 @@ return {
   Encoding        : Encoding,
   isEditable      : isEditable,
   getEditPosition : getEditPosition,
+
+  publishSite     : publishSite,
 }
 
 });
