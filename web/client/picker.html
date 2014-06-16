@@ -204,6 +204,10 @@ div.item:hover {
   display: none;
 }
 
+#remote-down {
+  height: 0.6em;
+  margin-left: -0.4em;
+}
 
 
 #login-info {
@@ -220,6 +224,7 @@ div.item:hover {
   display: none;
 }
 
+.command-login-new #remote-local, 
 .command-new #remote-local {
   display: block;
 }
@@ -231,7 +236,8 @@ div.item:hover {
 <div id="app" class="command-login">
 <div class="app-header header-bar">
   <div id="remotes" class="popup">
-    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>  
+    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>
+    <img id="remote-down" src="images/dark/icon-tri-down.png"/>  
     <div id="remote-menu" class="menu boxed">
       <div id="remote-dropbox" class="button" title="Dropbox cloud storage"
           ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>

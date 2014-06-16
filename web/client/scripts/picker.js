@@ -259,6 +259,7 @@ function display( current ) {
     return checkConnected(current.remote).then( function(isConnected) {
       if (!isConnected) {
         Util.addClassName(app,"command-login");
+        Util.addClassName(app,"command-login-" + options.command );
         return Promise.resolved();
       }
       else {
