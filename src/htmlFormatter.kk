@@ -366,7 +366,9 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
    "</head>\n" +
    "<body class=\"madoko\">\n" + 
    html +
-   "\n</body>\n</html>\n"
+   "\n</body>\n" +
+   options.htmlFooter.expand + "\n" + 
+   "</html>\n"
 }
 
 

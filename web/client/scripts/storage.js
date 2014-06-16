@@ -50,7 +50,7 @@ var Encoding = {
 
 
 function picker( storage, params ) {
-  if (storage && !storage.isSynced()) params.alert = "true";
+  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect")) params.alert = "true";
   return Util.openModalPopup("picker.html#" + Util.urlParamsEncode(params), null,"picker",0.5,0.5).then( function() {
     var err = Util.getCookie("picker-error"); Util.setCookie("picker-error","",0);
     if (err) throw err;

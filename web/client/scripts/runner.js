@@ -86,7 +86,7 @@ var Runner = (function() {
                           util.combine("out", util.changeExt(res.name, ".pdf")) 
                         ]);
     var referred = filesReferred.map( function(file) {
-      return self.loadFile(ctx.round, file, true);
+      return self.loadFile(ctx.round, file, !util.hasEmbedExt(file));
       /*      
       if (util.hasImageExt(file)) {
         return self.loadFile(ctx.round, file, true);

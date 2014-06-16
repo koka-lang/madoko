@@ -318,9 +318,9 @@ div.input-mathpre {
 
 
 /* Pretty formatting of code */
-pre.pretty, code.pretty { 
+.madoko pre.pretty, .madoko code.pretty { 
   font-family: "Times New Roman", serif;
-  font-size: 95%;
+  font-size: 100%;
 }
 
 .pretty td {

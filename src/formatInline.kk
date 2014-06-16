@@ -331,7 +331,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
         val ct = codeAlign(codeEscape(txt)).map( codeUnescape )
         context.fmtCodeTable(ct,cattrs)
       }
-      else codeUnescape(codeEscape(txt))
+      else codeUnescape(codeEscape(txt)) // todo: optimize the escape/unescape path?
 
   if (env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
@@ -350,9 +350,9 @@ function fmtCodeUnescape( txt : string, fmt : string -> string ) : string {
     }
   }
   val caps = txt.findAll(rxEscaped).list
-  unspan(caps,0)
+  unspan(caps,0)  
 }
-val rxEscaped = regex(@"<ESCAPED>([\s\S]*?)</ESCAPED>")
+val rxEscaped = regex(@"<ESCAPED\b[^>]*>([\s\S]*?)</ESCAPED>")
 
 function fmtCodeEscaped( context : inlineContext, txt : string, format : (string,maybe<a>) -> (string,maybe<a>), 
                          attrs : attrs = attrsNone, st : maybe<a> = Nothing ) : (string,maybe<a>) {
@@ -363,8 +363,9 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
       Nothing   -> format(src,st0)
       Just(cap) -> {
         val (fmt1,st1) = format(src.substr(0,cap.index),st0)
-        val fmt2 = "<ESCAPED>" + 
-                      context.fmtCmd("span", context.formatInline(cap.groups[1]), 
+        val width = if (cap.groups[1].length > 0) then cap.groups[1].parseInt.maybe(1,id) else 1
+        val fmt2 = "<ESCAPED width=" + width.show + ">" +
+                      context.fmtCmd("span", context.formatInline(cap.groups[2]), 
                                 context.formatDefaults(attrsNone.addClass("code-escaped"))) +
                    "</ESCAPED>"
         val (fmt3,st2) = codeEscape(src.substr1(cap.next),st1)
@@ -375,7 +376,7 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
 
   codeEscape(txt,st)
 }
-val rxCodeEscaped = regex(@"\\\(((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
+val rxCodeEscaped = regex(@"\\\((?:(\d+):)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
 
 
 function escapeTexPre( txt : string ) : string {
