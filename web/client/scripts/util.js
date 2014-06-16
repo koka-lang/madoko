@@ -950,29 +950,34 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     var promise = new Promise();
 
     function reject() {
-      if (timeout) clearTimeout(timeout);
-      var domain = reqparam.url.replace( /([^\/])\/(?:[^\/].*)?$/, "$1" );
-      var msg    = req.statusText || ("network request failed (" + domain + ")");
-      var type = req.getResponseHeader("Content-Type");
-      if (req.responseText && startsWith(type,"application/json")) {
-        var res = JSON.parse(req.responseText);
-        if (res.error && res.error.message) {
-          msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
+      try {
+        if (timeout) clearTimeout(timeout);
+        var domain = reqparam.url.replace( /([^\/])\/(?:[^\/].*)?$/, "$1" );
+        var msg    = req.statusText || ("network request failed (" + domain + ")");
+        var type = req.getResponseHeader("Content-Type");
+        if (startsWith(type,"application/json") && req.responseText) {
+          var res = JSON.parse(req.responseText);
+          if (res.error && res.error.message) {
+            msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
+          }
+          else if (res.error && typeof res.error === "string") {
+            msg = msg + ": " + res.error;
+          }      
+          else if (res.message) {
+            msg = msg + ": " + res.message;
+          }
         }
-        else if (res.error && typeof res.error === "string") {
-          msg = msg + ": " + res.error;
-        }      
-        else if (res.message) {
-          msg = msg + ": " + res.message;
+        else if (startsWith(type,"text/") && req.responseText) {
+          msg = msg + ": " + req.responseText;
         }
+        
+        //cont(msg, res, req.response);
+        console.log(msg + "\n request: " + method + ": " + reqparam.url );
+        promise.reject( { message: msg, httpCode: req.status } );
       }
-      else if (req.responseText) {
-        msg = msg + ": " + req.responseText;
+      catch(exn) {
+        promise.reject( { message: exn.toString(), httpCode: 400 } );
       }
-      
-      //cont(msg, res, req.response);
-      console.log(msg + "\n request: " + method + ": " + reqparam.url );
-      promise.reject( { message: msg, httpCode: req.status } );
     }
 
     req.onload = function(ev) {
