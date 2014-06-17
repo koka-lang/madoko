@@ -253,7 +253,9 @@ function publishSite(  storage, docName )
     });
     return Promise.when( toStorage.files.elems().map( function(file) { 
       return toStorage.pushFile(file); 
-    }) );
+    }) ).then( function() {
+      return toStorage.folder();
+    });
   });
 }  
 

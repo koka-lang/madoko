@@ -509,3 +509,75 @@ div.boxed {
   height: 20rem;
   padding: 0pt;
 }
+
+
+/* --------------------------------------------
+  Modal dialog
+----------------------------------------------*/
+
+#modal {
+  display: none; 
+  position: absolute; 
+  left: 25%; 
+  top: 25%; 
+  border: 2px solid #135;
+  background-color: white;
+  width: 50%;
+  height: 50%;
+  z-index: 100; 
+
+  font-family: "Segoe UI", sans-serif;
+}
+
+#model .app-content {
+  font-size: large;
+}
+
+#fade {
+  display: none;  
+  position: absolute; 
+  left: 0%; 
+  top: 0%; 
+  background-color: #135;
+  -moz-opacity: 30; 
+  opacity: .30;
+  filter: alpha(opacity=30);
+  width: 100%;
+  height: 100%;
+  z-index: 90; 
+}
+
+#modal .app-body {
+  height: calc(100% - 6rem);
+  width: 100%;
+  overflow: auto;
+}
+
+#modal .header-bar {
+  padding: 0.7rem 1em 0.3rem 1em !important;
+  height: 2rem;
+  white-space: nowrap;
+}
+
+#modal .header-bar img {
+  height: 1.5em;
+  vertical-align: bottom;
+}
+
+#modal .app-content {
+  padding: 0.5em 1em;
+}
+
+#modal .app-footer {
+  text-align: right;
+  padding-top: 0.5em;
+}
+
+
+#modal .button {
+  display: inline;
+  border: 1px white solid;
+  border-radius: 5px;
+  padding-bottom: 0.2em;
+  margin: 0em 0.25em;
+}

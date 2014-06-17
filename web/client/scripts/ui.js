@@ -7,8 +7,8 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
-        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
+        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand", "../scripts/modal"],
+        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand,modal) {
 
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
@@ -219,7 +219,7 @@ var UI = (function() {
         self.syncInterval = setInterval(scroll, 100);
         //scroll();
       }
-    });
+    });  
     
     self.changed = false;
     self.lastEditChange = 0;
@@ -1168,7 +1168,16 @@ var UI = (function() {
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        return storage.publishSite( self.storage, self.docName );
+        return storage.publishSite( self.storage, self.docName ).then( function(folder) {
+          modal.showMessage( "<img src='images/dark/icon-dropbox.png'/> " + util.escape(folder),
+            ["<p>Website saved.</p>",
+            ,"<p></p>"
+            ,"<p>Visit the <a target='azure' href='http://manage.windowsazure.com'>Azure web manager</a> to synchronize your website.</p>",
+            ,"<p></p>"
+            ,"<p>Or view this <a target='webcast' href='http://www.youtube.com/watch?v=hC1xAjz6jHI&hd=1'>webcast</a> to learn more about Azure website deployment from Dropbox.</p>"
+            ].join("\n")
+          );
+        });
       })
     );
   }
