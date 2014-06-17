@@ -1269,7 +1269,7 @@ var UI = (function() {
 
   function findMetaPos( text ) {
     var lineNo = 1;
-    var reMeta = /^(?:@(\w+)[ \t]+)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, \t]*?\*?)[ \t]*[:].*\r?\n(?![ \t])/;
+    var reMeta = /^(?:@(\w+)[ \t]+)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, \t]*?\*?)[ \t]*[:].*\r?\n(?![ \t])|\[INCLUDE\b[^\]]*\][ \t]*\r?\n/;
     var cap;
     while ((cap = reMeta.exec(text))) {
       text = text.substr(cap[0].length);
