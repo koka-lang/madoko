@@ -12,7 +12,8 @@ define(["../scripts/promise","../scripts/util",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive2",
         "../scripts/remote-http",
-        ], function(Promise,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote) {
+        "../scripts/picker",
+        ], function(Promise,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
 
 
 var Encoding = {
@@ -51,11 +52,7 @@ var Encoding = {
 
 function picker( storage, params ) {
   if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect")) params.alert = "true";
-  return Util.openModalPopup("picker.html#" + Util.urlParamsEncode(params), null,"picker",0.5,0.5).then( function() {
-    var err = Util.getCookie("picker-error"); Util.setCookie("picker-error","",0);
-    if (err) throw err;
-
-    var uri = Util.getCookie("picker-path"); Util.setCookie("picker-path","",0);
+  return Picker.show(params).then( function(uri) {
     var cap = /^(\w+):\/\/\/?(.*)$/.exec(uri);
     if (!cap) throw new Error("canceled");
     var path = cap[2];

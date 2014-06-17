@@ -7,8 +7,8 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand", "../scripts/modal"],
-        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand,modal) {
+        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand", "../scripts/modal", "../scripts/picker"],
+        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand,modal,picker) {
 
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
@@ -173,7 +173,7 @@ var UI = (function() {
     self.syncer.spinDelay = 1;  
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
-    self.remoteLogo = document.getElementById("remote-logo");
+    self.remoteLogo = document.getElementById("connect-logo");
     self.theme = "vs";
 
     // start editor
@@ -426,6 +426,13 @@ var UI = (function() {
       });
     }
 
+    document.getElementById("picker-test").onclick = function(ev) {
+      picker.show( { command: "open" } ).then( function(path) {
+        alert(path);
+      });
+    }
+
+
     document.getElementById("export-pdf").onclick = function(ev) {
       self.event( "PDF exported", "exporting...",  State.Exporting, function() { 
         return self.generatePdf(); 
@@ -506,7 +513,7 @@ var UI = (function() {
 
     
     // narrow and wide editor panes
-    var app = document.getElementById("app");
+    var app = document.getElementById("main-body");
     
     //viewpane.addEventListener('transitionend', function( event ) { 
     //  self.syncView(); 
@@ -1063,7 +1070,7 @@ var UI = (function() {
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
-                      "class='button item file" + disable + main + hide + "'>" + 
+                      "class='button file" + disable + main + hide + "'>" + 
                           self.displayFile(file,true) + "</div>";
         if (util.startsWith(file.mime,"image/")) images.push(line); 
         else if (!disable) files.push(line);

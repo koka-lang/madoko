@@ -39,7 +39,7 @@
 <p>(After a browser crash, you may have to wait up to a minute for this message to disappear)</p>
 </div>
 
-<div id="fullapp" style="display:none">
+<div id="main" style="display:none">
 <div class="app-header header-bar">
     <div id="document" class="popup">
       <img id="cloud" class="button" src="images/dark/button-folder.png"/>
@@ -55,6 +55,8 @@
           ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot</div>        
         <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure</div>        
+        <div id="picker-test" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
+          ><span class="icon"><img src="images/icon-azure.png"/></span>Test picker</div>        
         <hr/>
         <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
@@ -63,7 +65,7 @@
       </div
     ></div
     ><span id="connection" class="button">
-      <img id="remote-logo" src="images/icon-empty.png"/>
+      <img id="connect-logo" src="images/icon-empty.png"/>
       <img id="icon-disconnect" src="images/dark/icon-disconnect.png"/>
     </span
     ><div id="edit-select" class="popup" >
@@ -137,7 +139,7 @@
     </div>  
 </div>
 
-<div id="app" class="view-normal app-body">
+<div id="main-body" class="view-normal app-body">
   <div id="editorpane" class="pane left">
     <div class="pane-content" >
       <div id="editor"></div>
@@ -167,21 +169,64 @@
 </div>
 </div>
 
+<!-- modal dialogs -->
 <div id="fade"></div>
-<div id="modal">
-<div id="modal-header" class="app-header header-bar">
-  <span id="modal-header-message"></span>
+
+<div id="alert" class="modal">
+<div id="alert-header" class="app-header header-bar">
+  <span id="alert-header-message"></span>
 </div>
 <div class="app-body">
-  <div id="modal-content" class="app-content">
+  <div id="alert-content" class="app-content">
   Azure
   </div>
 </div>
-<div id="modal-footer" class="app-footer header-bar">
-  <div id="modal-ok" class="button">Ok</div>
+<div id="alert-footer" class="app-footer header-bar">
+  <div id="alert-ok" class="button">Ok</div>
 </div>
 </div>
 
+<!-- file picker -->
+<div id="picker" class="modal command-login">
+<div class="app-header header-bar">
+  <div id="remotes" class="popup">
+    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>
+    <img id="remote-down" src="images/dark/icon-tri-down.png"/>  
+    <div id="remote-menu" class="menu boxed">
+      <div id="remote-dropbox" class="button" title="Dropbox cloud storage"
+          ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>
+      <div id="remote-onedrive" class="button" title="Onedrive cloud storage"
+        ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
+      <div id="remote-local" class="button" title="Browser local storage"
+        ><span class="icon"><img src="images/icon-local.png"/></span> Local</div>    
+    </div>
+  </div>
+  <div id="folder-name"></div>
+  <input id="file-name" type="text"></input>
+</div>
+<div class="app-body">
+  <div class="app-content">
+    <div id="message-login" class="message">Not connected.</div>       
+    <div id="message-connect" class="message">Connected.</div>
+    <div id="message-alert" class="message">The current document has not been saved yet.
+    <br/>Are you sure you want to discard these changes?</div>
+    <div id="listing">
+    </div>
+  </div>
+</div>
+<div class="app-footer header-bar">
+  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div></div>
+  <div id="button-login" class="button">login</div>
+  <div id="button-discard" class="button">Discard</div>
+  <div id="button-choose" class="button">Open</div>
+  <div id="button-new" class="button">Create</div>
+  <div id="button-save" class="button">Save As</div>
+  <div id="button-cancel" class="button">Cancel</div>
+</div>
+</div>
+
+
+<!-- initial content for the editor -->
 <div style="display:none">
 <div id="initial" style="display:none; white-space:pre">Title         : Welcome to Madoko
 Heading Base  : 2
@@ -214,7 +259,7 @@ are automatically merged.
 # Editing
 
 Just edit the text in the editor pane on the left and the result will
-show in the view pane on the right â†’. If you double click anywhere in
+show in the view pane on the right &rarr;. If you double click anywhere in
 the view pane, the editor scrolls to that location. Useful shortcuts
 include:
 
@@ -358,7 +403,7 @@ else {
     document.cookie = updateCookie(0);
   });
   
-  document.getElementById("fullapp").style.display = "block"; 
+  document.getElementById("main").style.display = "block"; 
   goodToGo = true;
 }
 </script>

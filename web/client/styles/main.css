@@ -12,7 +12,7 @@ notes:
   that do not support calc expressions.
 */
 
-html,body,#fullapp {
+html,body,#main {
   height: 100%;
   padding: 0pt;
   margin: 0pt;
@@ -20,7 +20,7 @@ html,body,#fullapp {
 
 
 /* Colors */
-#fullapp, .spinner.spin {
+#main, .spinner.spin {
   background-color: white;  
 }
 .output {
@@ -38,7 +38,7 @@ html,body,#fullapp {
 .theme-dark .app-body {
   background-color: white;      
 }
-.theme-dark #fullapp,
+.theme-dark #main,
 .theme-dark .spinner.spin, 
 .theme-dark .output,
 .theme-dark .header-bar  {
@@ -69,7 +69,7 @@ html,body,#fullapp {
 }
 
 /* Application panes */
-#fullapp {
+#main {
   padding: 0em 0.25em;
 }
 
@@ -132,7 +132,7 @@ html,body,#fullapp {
   float: right;
 }
 
-#fullapp .header-bar .right img {
+#main .header-bar .right img {
   margin: 0em 0.2em;
 }
 
@@ -141,7 +141,7 @@ html,body,#fullapp {
   vertical-align: -0.2em;
 }
 
-#fullapp .app-footer {
+#main .app-footer {
   font-size: small;
   text-align: right;
 }
@@ -515,7 +515,7 @@ div.boxed {
   Modal dialog
 ----------------------------------------------*/
 
-#modal {
+div.modal {
   display: none; 
   position: absolute; 
   left: 25%; 
@@ -529,8 +529,8 @@ div.boxed {
   font-family: "Segoe UI", sans-serif;
 }
 
-#model .app-content {
-  font-size: large;
+.modal .app-content {
+  padding: 0.5em 1em;
 }
 
 #fade {
@@ -547,37 +547,211 @@ div.boxed {
   z-index: 90; 
 }
 
-#modal .app-body {
+.modal .app-body {
   height: calc(100% - 6rem);
   width: 100%;
   overflow: auto;
 }
 
-#modal .header-bar {
+.modal .header-bar {
   padding: 0.7rem 1em 0.3rem 1em !important;
   height: 2rem;
   white-space: nowrap;
 }
 
-#modal .header-bar img {
+.modal .header-bar img {
   height: 1.5em;
   vertical-align: bottom;
 }
 
-#modal .app-content {
+.modal .app-content {
   padding: 0.5em 1em;
 }
 
-#modal .app-footer {
+.modal .app-footer {
   text-align: right;
   padding-top: 0.5em;
 }
 
-
-#modal .button {
+.modal .button {
   display: inline;
   border: 1px white solid;
   border-radius: 5px;
   padding-bottom: 0.2em;
   margin: 0em 0.25em;
+}
+
+
+/* ----------------------------------------------------------
+   File Picker
+-----------------------------------------------------------*/
+
+/* menus */
+#picker #remote-menu {
+  width: 10em;
+}
+
+#picker .menu .button {
+  display: block;
+}
+
+#picker .menu .button:hover {
+  background-color: Gainsboro !important;
+}
+
+
+/* view */
+
+#picker .message {
+  display: none;
+}
+
+#picker #remotes {
+  margin-right: 0.5em;
+}
+
+#picker.command-alert #remotes {
+  display: none;
+}
+
+#picker #listing {
+  display: none;
+}
+
+#picker.command-open #listing,
+#picker.command-save #listing,
+#picker.command-new #listing {
+  display: block;
+}
+
+/* folder name */
+
+#picker #folder-name {
+  display: none;
+  max-width: 80%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+#picker.command-open #folder-name,
+#picker.command-save #folder-name,
+#picker.command-new #folder-name {
+  display: inline-block;
+}
+
+#picker .dir:hover {
+  background-color: #357;
+  cursor: pointer;
+}
+
+#picker .dirsep {
+  color: Gainsboro;
+}
+
+#picker #file-name {
+  width: 14em;
+  display: none;
+  font-size: 1em;
+  vertical-align: 0.2em;
+}
+
+#picker.command-save #file-name, 
+#picker.command-new #file-name {
+  display: inline;
+}
+
+/* items */
+
+div.item {
+  display: inline-block;
+  width: calc(50% - 3em);
+  padding: 0.2em 0.5em 0.2em 2.5em;
+}
+
+div.item:hover {
+  background-color: Gainsboro;
+  cursor: pointer;
+}
+
+.item-icon {
+  height: 1.5em;
+  width : 1.5em;
+  margin: 0em 0em 0em -2em;
+  float: left;
+}
+
+.item-select {
+  background-color: white;
+}
+
+.item.selected,
+.item.selected:hover {
+  background-color: #8AC;
+}
+
+.item-file.disabled {
+  color: #AAA;
+}
+
+.item.disabled input {
+  visibility: hidden;
+}
+
+/* buttons */
+#picker .button {
+  display: none;
+}
+
+#picker .app-content .button {
+  color: white;
+  border-color: black;
+  background-color: #135;
+}
+#picker .app-content .button:hover {
+  background-color: #357;
+}
+
+#picker.command-login #message-login, 
+#picker.command-connect #message-connect,
+#picker.command-alert #message-alert {
+  display: block;
+}
+
+#picker.command-login #button-login,
+#picker.command-alert #button-discard,
+#picker.command-open #button-choose,
+#picker.command-save #button-save,
+#picker.command-new #button-new,
+#picker #button-logout,
+#picker #button-cancel {
+  display: inline;
+}
+
+#picker.command-login #login-info,
+#picker.command-alert #login-info {
+  display: none;
+}
+
+#remote-down {
+  height: 0.6em;
+  margin-left: -0.4em;
+}
+
+#login-info {
+  float: left;
+  font-size: small;
+}
+
+#message-login, #message-connect, #message-alert {
+  text-align: center;
+  width: 100%;
+}
+
+#remote-local {
+  display: none;
+}
+
+#picker.command-login-new #remote-local, 
+#picker.command-new #remote-local {
+  display: block;
 }

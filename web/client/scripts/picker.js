@@ -13,16 +13,8 @@ define(["../scripts/promise","../scripts/util",
         ], function(Promise,Util,NullRemote,Dropbox,Onedrive) {
 
 
-var options = {
-  command: "open", // open, connect, save, new
-  extensions: "",
-  file: "document",
-  alert: "",
-  // remote: initial remote
-  // folder: initial folder for the remote
-};
-
-var app     = document.getElementById("app");
+var fade = document.getElementById("fade");
+var app     = document.getElementById("picker");
 var listing = document.getElementById("listing");
 var remotes = {
   dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
@@ -36,17 +28,12 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.substr(1);
 }
 
-function run() {
-  var hash = window.location.hash || "";
-  if (hash[0]==="#") hash = hash.substr(1);
-  hash.split("&").forEach( function(param) {
-    var keyval = param.split("=");
-    var key = keyval[0] ? decodeURIComponent(keyval[0]) : "";
-    var val = keyval[1] ? decodeURIComponent(keyval[1]) : "";
-    if (key) options[key] = val;
-  });
+function run( options, end ) {
+  //document.title = capitalize(options.command) + " document";
+  if (fade) fade.style.display = "block";
 
-  document.title = capitalize(options.command) + " document";
+  if (!options.extensions) options.extensions = "";
+  if (!options.file) options.file = "document";
 
   var data = JSON.parse( Util.getCookie("picker-data") || "null");
   if (data) {
@@ -61,7 +48,7 @@ function run() {
 
   if (options.remote && remotes[options.remote] && options.remote !== "local") {
     if (options.folder) remotes[options.remote].folder = options.folder;
-    setCurrent( remotes[options.remote] );
+    setCurrent( options, remotes[options.remote] );
   }
 
   if (options.file) {
@@ -70,31 +57,31 @@ function run() {
 
   document.getElementById("remote-dropbox").onclick = function(ev) {
     if (current.remote.type === remotes.dropbox.remote.type()) return;
-    setCurrent( remotes.dropbox );
+    setCurrent( options, remotes.dropbox );
   }
 
 
   document.getElementById("remote-onedrive").onclick = function(ev) {
     if (current.remote.type === remotes.onedrive.remote.type()) return;
-    setCurrent( remotes.onedrive );
+    setCurrent( options, remotes.onedrive );
   }
 
   document.getElementById("remote-local").onclick = function(ev) {
     if (current.remote.type === remotes.local.remote.type()) return;
-    setCurrent( remotes.local );
+    setCurrent( options, remotes.local );
   }
   
   document.getElementById("button-login").onclick = function(ev) {
     if (current.remote.connected()) return;
     current.remote.login().then( function(userName) {
-      display(current);
+      display(options,current);
     });
   }
 
   document.getElementById("button-logout").onclick = function(ev) {
     if (!current.remote.connected()) return;
     current.remote.logout();
-    display(current);
+    display(options,current);
   }
 
   document.getElementById("button-choose").onclick = function(ev) {
@@ -126,7 +113,7 @@ function run() {
 
   document.getElementById("button-discard").onclick = function(ev) {
     options.alert = ""; // stop alert
-    display(current);
+    display(options,current);
   }
 
   listing.onclick = function(ev) {
@@ -141,7 +128,7 @@ function run() {
       itemSelect(elem);
     }
     else {
-      itemEnterFolder(current,path);
+      itemEnterFolder(options, current,path);
     }
   };
 
@@ -152,17 +139,18 @@ function run() {
     }
     if (Util.hasClassName(elem,"dir")) {
       var path = elem.getAttribute("data-path");
-      itemEnterFolder(current,path);
+      itemEnterFolder(options, current,path);
     }
   };
 
-  Util.enablePopupClickHovering();
+  //Util.enablePopupClickHovering();
 
-  display( current  );
+  display( options,current  );
+  app.style.display= "block";
 }
 
-function canSelect(path,type) {
-  var allowed = options.extensions.split(/\s+/);
+function canSelect(path,type,extensions) {
+  var allowed = extensions.split(/\s+/);
   if (!allowed || allowed.length===0 || allowed[0]==="") return true;
   var ext = Util.extname(path);
   for( var i = 0; i < allowed.length; i++) {
@@ -206,9 +194,9 @@ function itemSelectX(elem,select) {
          else Util.removeClassName(elem,"selected");
 }
 
-function itemEnterFolder(current,path) {
+function itemEnterFolder(options, current,path) {
   current.folder = path;
-  display( current );
+  display( options, current );
 }
 
 function setFileName( fname ) {
@@ -218,9 +206,9 @@ function getFileName( ) {
   return document.getElementById("file-name").value;
 }
 
-function setCurrent( newCurrent ) {
+function setCurrent( options, newCurrent ) {
   current = newCurrent;
-  display( current );
+  display( options, current );
 }
 
 function checkConnected(remote) {
@@ -239,8 +227,8 @@ function checkConnected(remote) {
 }
   
 
-function display( current ) {
-  app.className = "";
+function display( options, current ) {
+  app.className = "modal";
   listing.innerHTML = "";
 
   if (options.alert) {
@@ -266,20 +254,20 @@ function display( current ) {
         Util.addClassName(app,"command-" + options.command );
         current.remote.getUserName().then( function(userName) {
           document.getElementById("remote-username").innerHTML = Util.escape( userName );
-          return displayFolder(current);
+          return displayFolder(options,current);
         });
       }
     });
   }
 }
 
-function displayFolder( current ) {
+function displayFolder( options, current ) {
   displayFolderName(current);
   listing.innerHTML = "Loading...";
   return current.remote.listing(current.folder).then( function(items) {
     //console.log(items);
     var html = items.map( function(item) {
-      var disable = canSelect(item.path,item.type) ? "" : " disabled";
+      var disable = canSelect(item.path,item.type,options.extensions) ? "" : " disabled";
       return "<div class='item item-" + item.type + disable + "' data-type='" + item.type + "' data-path='" + Util.escape(item.path) + "'>" + 
                 //"<input type='checkbox' class='item-select'></input>" +
                 "<img class='item-icon' src='images/icon-" + item.type + (item.isShared ? "-shared" : "") + ".png'/>" +
@@ -304,14 +292,10 @@ function displayFolderName(current) {
   document.getElementById("folder-name").innerHTML = html;
 }
 
-function end( current, path ) {
-  // return result
-  if (current && path) {
-    var result = current.remote.type() + "://" + path;
-    console.log(result);
-    Util.setCookie("picker-path", result, 10 );
+function onEnd( current, path ) {  
+  app.style.display = "none";
+  if (fade) fade.style.display = "none";
 
-  }
   // save state
   if (current) {
     var data = {
@@ -322,11 +306,41 @@ function end( current, path ) {
   }
   Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
 
-  window.close();
+  // return result
+  if (current && path) {
+    var result = current.remote.type() + "://" + path;
+    console.log(result);
+    return result;
+    //Util.setCookie("picker-path", result, 10 );
+  }
+  else {
+    return path;
+  }
+  //window.close();
+}
+
+function show( options ) {
+  return new Promise( function(cont) {
+    try {
+      run(options, function(current,path) {
+        var res = onEnd(current,path);
+        cont(null,res);
+      });    
+    }
+    catch(exn) {
+      cont(exn,null);
+    }
+  }).then( function(res) { 
+    return res; 
+  }, function(err) {
+    app.style.display = "none";
+    if (fade) fade.style.display = "none";
+    throw err;
+  });
 }
 
 return {
-  run: run,
+  show: show,
 }
 
 });

@@ -11,11 +11,11 @@ define(["../scripts/promise","../scripts/util"],
 
 var fade = document.getElementById("fade");
 
-var modal = document.getElementById("modal");
-var header = document.getElementById("modal-header");
-var footer = document.getElementById("modal-footer");
-var content = document.getElementById("modal-content");
-var headerContent = document.getElementById("modal-header-message");
+var modal = document.getElementById("alert");
+var header = document.getElementById("alert-header");
+var footer = document.getElementById("alert-footer");
+var content = document.getElementById("alert-content");
+var headerContent = document.getElementById("alert-header-message");
 
 function close() {
   if (fade) fade.style.display = "none";
@@ -24,7 +24,7 @@ function close() {
 
 //fade.onclick = function(ev) { close(); };
 
-document.getElementById("modal-ok").onclick = function(ev) {
+document.getElementById("alert-ok").onclick = function(ev) {
   close();
 };
 
