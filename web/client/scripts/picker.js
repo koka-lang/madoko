@@ -28,6 +28,14 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.substr(1);
 }
 
+// options:
+//  command: open | new | connect | save | push
+//  alert: false | true  // discard changes?
+//  extensions: ".mdk .md"
+//  remote: dropbox | onedrive | local
+//  folder: <initial folder> (relative to root)
+//  file: <initial file name>
+//  root: <cannot select upward here>
 function run( options, end ) {
   //document.title = capitalize(options.command) + " document";
   if (fade) fade.style.display = "block";
@@ -42,10 +50,8 @@ function run( options, end ) {
     remotes.onedrive.folder = data.onedrive || "";
   }
 
-  if (options.command==="connect") {
-    document.getElementById("button-cancel").innerHTML = "Close";
-  }
-
+  document.getElementById("button-cancel").innerHTML  = (options.command==="connect" || options.command==="message") ? "Close" : "Cancel";
+  
   if (options.remote && remotes[options.remote] && options.remote !== "local") {
     if (options.folder) remotes[options.remote].folder = options.folder;
     setCurrent( options, remotes[options.remote] );
@@ -92,6 +98,14 @@ function run( options, end ) {
   }
 
   document.getElementById("button-save").onclick = function(ev) {
+    var fileName = getFileName();
+    if (fileName) {
+      var path = Util.combine(current.folder,fileName);
+      end(current,path);
+    }
+  }
+
+  document.getElementById("button-push").onclick = function(ev) {
     var fileName = getFileName();
     if (fileName) {
       var path = Util.combine(current.folder,fileName);
@@ -239,6 +253,12 @@ function display( options, current ) {
     Util.addClassName(app,"command-alert");
     return Promise.resolved();
   }
+  else if (options.command==="message") {
+    document.getElementById("message-message").innerHTML = options.message;
+    document.getElementById("folder-name").innerHTML = options.header || "";
+    Util.addClassName(app,"command-message");
+    return Promise.resolved();
+  }
   else {
     // set correct logo
     document.getElementById("remote-logo").src = "images/dark/" + current.remote.logo();
@@ -262,7 +282,7 @@ function display( options, current ) {
 }
 
 function displayFolder( options, current ) {
-  displayFolderName(current);
+  displayFolderName(options,current);
   listing.innerHTML = "Loading...";
   return current.remote.listing(current.folder).then( function(items) {
     //console.log(items);
@@ -279,10 +299,20 @@ function displayFolder( options, current ) {
   });
 }
 
-function displayFolderName(current) {
-  var parts = current.folder.split("/");
-  var html = "<span class='dir' data-path=''>" + current.remote.type() + "</span><span class='dirsep'>/</span>";
-  var partial = "";
+function displayFolderName(options,current) {
+  var folder = current.folder;
+  var root = options.root || "";
+  if (root) {
+    if (Util.startsWith(folder,root)) {
+      folder = folder.substr(root.length);
+    }
+    else {
+      root = "";
+    }
+  }
+  var parts = folder.split("/");
+  var html = "<span class='dir' data-path='" + root + "'>" + Util.escape(root ? Util.combine(current.remote.type(),root) : current.remote.type()) + "</span><span class='dirsep'>/</span>";
+  var partial = root;
   parts.forEach( function(part) {
     if (part) {
       partial = Util.combine(partial,part);

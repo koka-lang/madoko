@@ -53,12 +53,14 @@ var Encoding = {
 function picker( storage, params ) {
   if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect")) params.alert = "true";
   return Picker.show(params).then( function(uri) {
+    if (params.command === "message") return null;
+
     var cap = /^(\w+):\/\/\/?(.*)$/.exec(uri);
     if (!cap) throw new Error("canceled");
     var path = cap[2];
     var folder = Util.dirname(path);
     var fileName = Util.basename(path);
-    if (Util.extname(path) == "" && (params.command === "save" || params.command === "new")) {
+    if (Util.extname(path) == "" && (params.command === "save" || params.command === "new" || params.command==="push")) {
       folder = path;
       fileName = Util.basename(path) + ".mdk";
     }
@@ -233,17 +235,27 @@ function saveTo(  storage, toStorage, docStem, newStem )
 }  
 
 
-function publishSite(  storage, docName )
+function publishSite(  storage, docName, indexName )
 {
-  return newDropboxAt( "Apps/Azure/" + Util.stemname(docName) ).then( function(remote) {
-    var toStorage = new Storage(remote);
+  var params = { 
+      command: "push", 
+      remote:"dropbox", 
+      root:"/apps/Azure", 
+      folder:"/apps/Azure/" + Util.stemname(docName), 
+      file: "index.html",
+      extensions: "folder .html .htm .aspx" 
+  };
+  return picker( storage, params ).then( function(res) {
+    var toStorage = res.storage;
     storage.forEachFile( function(file0) {
       var file = Util.copy(file0);
       file.modified = true;
       if (Util.startsWith(file.path, "out/") && (!Util.hasGeneratedExt(file.path) || Util.extname(file.path) === ".html")) {
-        file.path = file.path.substr(4);
-        if (Util.extname(file.path)===".html" && Util.stemname(file.path) === Util.stemname(docName)) {
-          file.path = "index.html";
+        if (file.path === indexName) {
+          file.path = res.docName;
+        }
+        else {
+          file.path = file.path.substr(4);        
         }
         toStorage.files.set( file.path, file );
       }
@@ -251,7 +263,20 @@ function publishSite(  storage, docName )
     return Promise.when( toStorage.files.elems().map( function(file) { 
       return toStorage.pushFile(file); 
     }) ).then( function() {
-      return toStorage.folder();
+      var params = {
+        command: "message",
+        header: "<img src='images/dark/" + toStorage.remote.logo() + "'/> " + Util.escape(toStorage.folder()),
+        message: 
+            ["<p>Website saved.</p>",
+            ,"<p></p>"
+            ,"<p>Visit the <a target='azure' href='http://manage.windowsazure.com'>Azure web manager</a> to synchronize your website.</p>",
+            ,"<p></p>"
+            ,"<p>Or view this <a target='webcast' href='http://www.youtube.com/watch?v=hC1xAjz6jHI&hd=1'>webcast</a> to learn more about Azure website deployment from Dropbox.</p>"
+            ].join("\n")
+      };
+      return picker( storage, params ).then( function() {
+        return toStorage.folder();
+      });
     });
   });
 }  

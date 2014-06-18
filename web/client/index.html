@@ -55,8 +55,6 @@
           ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot</div>        
         <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure</div>        
-        <div id="picker-test" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
-          ><span class="icon"><img src="images/icon-azure.png"/></span>Test picker</div>        
         <hr/>
         <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
@@ -169,24 +167,9 @@
 </div>
 </div>
 
-<!-- modal dialogs -->
-<div id="fade"></div>
-
-<div id="alert" class="modal">
-<div id="alert-header" class="app-header header-bar">
-  <span id="alert-header-message"></span>
-</div>
-<div class="app-body">
-  <div id="alert-content" class="app-content">
-  Azure
-  </div>
-</div>
-<div id="alert-footer" class="app-footer header-bar">
-  <div id="alert-ok" class="button">Ok</div>
-</div>
-</div>
 
 <!-- file picker -->
+<div id="fade"></div>
 <div id="picker" class="modal command-login">
 <div class="app-header header-bar">
   <div id="remotes" class="popup">
@@ -208,6 +191,7 @@
   <div class="app-content">
     <div id="message-login" class="message">Not connected.</div>       
     <div id="message-connect" class="message">Connected.</div>
+    <div id="message-message" class="message"></div>
     <div id="message-alert" class="message">The current document has not been saved yet.
     <br/>Are you sure you want to discard these changes?</div>
     <div id="listing">
@@ -221,6 +205,7 @@
   <div id="button-choose" class="button">Open</div>
   <div id="button-new" class="button">Create</div>
   <div id="button-save" class="button">Save As</div>
+  <div id="button-push" class="button">Publish</div>
   <div id="button-cancel" class="button">Cancel</div>
 </div>
 </div>

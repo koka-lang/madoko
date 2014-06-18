@@ -610,7 +610,9 @@ div.modal {
   margin-right: 0.5em;
 }
 
-#picker.command-alert #remotes {
+#picker.command-alert #remotes,
+#picker.command-push #remotes,
+#picker.command-message #remotes {
   display: none;
 }
 
@@ -620,6 +622,7 @@ div.modal {
 
 #picker.command-open #listing,
 #picker.command-save #listing,
+#picker.command-push #listing,
 #picker.command-new #listing {
   display: block;
 }
@@ -635,7 +638,9 @@ div.modal {
 
 #picker.command-open #folder-name,
 #picker.command-save #folder-name,
-#picker.command-new #folder-name {
+#picker.command-push #folder-name,
+#picker.command-new #folder-name,
+#picker.command-message #folder-name {
   display: inline-block;
 }
 
@@ -655,7 +660,8 @@ div.modal {
   vertical-align: 0.2em;
 }
 
-#picker.command-save #file-name, 
+#picker.command-save #file-name,
+#picker.command-push #file-name, 
 #picker.command-new #file-name {
   display: inline;
 }
@@ -713,7 +719,8 @@ div.item:hover {
 
 #picker.command-login #message-login, 
 #picker.command-connect #message-connect,
-#picker.command-alert #message-alert {
+#picker.command-alert #message-alert,
+#picker.command-message #message-message {
   display: block;
 }
 
@@ -722,13 +729,15 @@ div.item:hover {
 #picker.command-open #button-choose,
 #picker.command-save #button-save,
 #picker.command-new #button-new,
+#picker.command-push #button-push,
 #picker #button-logout,
 #picker #button-cancel {
   display: inline;
 }
 
 #picker.command-login #login-info,
-#picker.command-alert #login-info {
+#picker.command-alert #login-info,
+#picker.command-message #login-info {
   display: none;
 }
 
@@ -742,7 +751,7 @@ div.item:hover {
   font-size: small;
 }
 
-#message-login, #message-connect, #message-alert {
+#message-login, #message-connect, #message-alert, #message-message {
   text-align: center;
   width: 100%;
 }
