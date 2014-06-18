@@ -51,7 +51,7 @@ var Encoding = {
 
 
 function picker( storage, params ) {
-  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect")) params.alert = "true";
+  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "push")) params.alert = "true";
   return Picker.show(params).then( function(uri) {
     if (params.command === "message") return null;
 
