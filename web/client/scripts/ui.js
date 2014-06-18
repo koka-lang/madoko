@@ -1313,7 +1313,7 @@ var UI = (function() {
         text="Bib Style   : " + util.stemname(name);
       }
       else if (ext===".cls") {
-        text="Doc Class   : " + util.stemname(name);
+        text="Doc Class   : " + util.basename(name);
       }
       else if (ext===".sty" || ext===".tex") {
         text="Package     : " + util.stemname(name);
