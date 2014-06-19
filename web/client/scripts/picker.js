@@ -16,6 +16,7 @@ define(["../scripts/promise","../scripts/util",
 var fade = document.getElementById("fade");
 var app     = document.getElementById("picker");
 var listing = document.getElementById("listing");
+var headerLogo = document.getElementById("header-logo");
 var remotes = {
   dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
   onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
@@ -36,6 +37,7 @@ function capitalize(s) {
 //  folder: <initial folder> (relative to root)
 //  file: <initial file name>
 //  root: <cannot select upward here>
+//  header-logo: <img path>
 function run( options, end ) {
   //document.title = capitalize(options.command) + " document";
   if (fade) fade.style.display = "block";
@@ -244,6 +246,13 @@ function checkConnected(remote) {
 function display( options, current ) {
   app.className = "modal";
   listing.innerHTML = "";
+  if (options.headerLogo) {
+    headerLogo.src = options.headerLogo;
+    headerLogo.style.display = "inline";
+  }
+  else {
+    headerLogo.style.display = "none";
+  }
 
   if (options.alert) {
     // alert message

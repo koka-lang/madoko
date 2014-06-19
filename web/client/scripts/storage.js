@@ -237,13 +237,15 @@ function saveTo(  storage, toStorage, docStem, newStem )
 
 function publishSite(  storage, docName, indexName )
 {
+  var headerLogo = "images/dark/" + Dropbox.logo();
   var params = { 
       command: "push", 
       remote:"dropbox", 
       root:"/apps/Azure", 
       folder:"/apps/Azure/" + Util.stemname(docName), 
       file: "index.html",
-      extensions: "folder .html .htm .aspx" 
+      extensions: "folder .html .htm .aspx",
+      headerLogo: headerLogo,
   };
   return picker( storage, params ).then( function(res) {
     var toStorage = res.storage;
@@ -265,7 +267,8 @@ function publishSite(  storage, docName, indexName )
     }) ).then( function() {
       var params = {
         command: "message",
-        header: "<img src='images/dark/" + toStorage.remote.logo() + "'/> " + Util.escape(toStorage.folder()),
+        header: Util.escape(toStorage.folder()),
+        headerLogo: headerLogo,
         message: 
             ["<p>Website saved.</p>",
             ,"<p></p>"

@@ -62,7 +62,15 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return html.replace(/(^|<br>)(.*?)(?=<br>|$)/g, "$1<span class='" + cls + "'>$2</span>");
   }
 
-  var maxConsole = 12*1024;
+  var maxConsole = 8*1024;
+
+  var messageTimeout = 0;
+
+  function setStatusHTML( html ) {
+    if (messageTimeout) clearTimeout(messageTimeout);
+    messageTimeout = setTimeout( function() { status.innerHTML = ""; }, 10000 ); // fade after 10 secs
+    status.innerHTML = html;
+  }
 
   // Call for messages
   function message( txt, kind ) {
@@ -104,14 +112,10 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       consoleOut.innerHTML = prefix + dprefix + span(txt) + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        status.innerHTML = span(txt,35);
-        //addClassName(iconOk,"hide");
-        //removeClassName(iconWarn,"hide");
+        setStatusHTML(span(txt,40));
       }
       else if (kind===Msg.Status) {
-        status.innerHTML = span(txt,35);
-        //addClassName(iconWarn,"hide");
-        //removeClassName(iconOk,"hide");
+        setStatusHTML(span(txt,40))
       }
     }
   }

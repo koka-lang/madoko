@@ -342,6 +342,10 @@ div.boxed {
   color: maroon;
 }
 
+.msg-section .msg-status {
+  color: green;
+}
+
 .msg-section {
   border-bottom: 1px dotted Gainsboro;
   border-radius: 0pt !important;
@@ -765,10 +769,6 @@ div.item:hover {
   display: block;
 }
 
-#picker #dropbox-logo {
+#picker #header-logo {
   display: none;
-}
-
-#picker.command-push #dropbox-logo {
-  display: inline;
 }
