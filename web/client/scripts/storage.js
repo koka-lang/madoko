@@ -367,22 +367,15 @@ var Storage = (function() {
 
   Storage.prototype.persist = function(minimal) {
     var self = this;
-    var pfiles;
-    if (minimal) {
-      var map = self.files.copy();
-      map.forEach( function(path,file) {
-        if (!Util.isTextMime(file.mime) || Util.hasGeneratedExt(path)) map.remove(path);
-      });
-      pfiles = map.persist();
-    }
-    else {
-      pfiles = self.files.persist();
-    }
-
+    var pfiles = self.files.copy();
+    pfiles.forEach( function(path,file) {
+      if (file.nosync || (minimal && (!Util.isTextMime(file.mime) || Util.hasGeneratedExt(path)))) pfiles.remove(path);
+    });
+    
     return { 
       remote: self.remote.persist(), 
       remoteType: self.remote.type(),
-      files: pfiles 
+      files: pfiles.persist(), 
     };
   };
 
@@ -447,6 +440,7 @@ var Storage = (function() {
         createdTime: new Date(),
         modified  : false,
         position  : opts.position,
+        nosync    : opts.nosync,
       });
     }
   }
@@ -600,6 +594,7 @@ var Storage = (function() {
         return serverGetInitialContent(spath).then( function(_content,req) {
             var content = req.responseText;
             if (!content) return noContent();
+            opts.nosync = true;
             self.writeFile(opath,content,opts);
             return self.files.get(opath);
           },
@@ -654,6 +649,7 @@ var Storage = (function() {
 
   Storage.prototype._syncFile = function(diff,cursors,file) {  // : Promise<string>
     var self = this;
+    if (file.nosync) return Promise.resolved( self._syncMsg(file,"no sync") );
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
       if (!remoteTime) remoteTime = new Date(0);
       if (file.createdTime.getTime() < remoteTime.getTime()) {
