@@ -370,11 +370,7 @@ var UI = (function() {
       });
     }, 30000 );
 
-    document.getElementById("connection").onclick = function(ev) {
-      self.event( "connected", "connecting...", State.Loading, function() {
-        return storage.connect(self.storage);
-      });
-    };
+    
 
     document.getElementById("menu-settings-content").onclick = function(ev) {
       if (ev.target && util.contains(ev.target.className,"button")) {
@@ -386,15 +382,22 @@ var UI = (function() {
       }
     };
 
-    document.getElementById("open").onclick = function(ev) {
+    var openEvent = function(ev) {
       self.event( "loaded", "loading...", State.Loading, function() {
         return storage.openFile(self.storage).then( function(res) { 
-          if (!res) return Promise.resolved(); // canceled
-          return self.openFile(res.storage,res.docName); 
+          self.updateConnectionStatus().then( function() {
+            if (!res) return Promise.resolved(); // canceled
+            return self.openFile(res.storage,res.docName); 
+          });
+        }, function(err) {
+          self.updateConnectionStatus();
+          throw err;
         });
       });
     };
-
+    document.getElementById("open").onclick = openEvent;
+    document.getElementById("connection").onclick = openEvent;
+    
     document.getElementById("new").onclick = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
         return storage.createFile(self.storage).then( function(res) { 

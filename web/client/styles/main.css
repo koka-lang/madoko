@@ -756,11 +756,19 @@ div.item:hover {
   width: 100%;
 }
 
-#remote-local {
+#picker #remote-local {
   display: none;
 }
 
 #picker.command-login-new #remote-local, 
 #picker.command-new #remote-local {
   display: block;
+}
+
+#picker #dropbox-logo {
+  display: none;
+}
+
+#picker.command-push #dropbox-logo {
+  display: inline;
 }
