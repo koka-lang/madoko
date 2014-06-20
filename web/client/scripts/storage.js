@@ -619,9 +619,17 @@ var Storage = (function() {
     self.forEachFile( function(file) {
       if (!isRoot(file.path,roots) && 
           (!file.content || !isEditable(file) || !file.modified) ) {
-        self.files.remove(file.path);
+        self._removeFile(file.path);
       }
     });
+  }
+
+  Storage.prototype._removeFile = function( fpath ) {
+    var self = this;
+    var file = self.files.get(fpath);
+    if (file == null) return;
+    self.files.remove(fpath);
+    self._fireEvent("delete", { file: file }); 
   }
 
   Storage.prototype.existsLocal = function( fpath ) {

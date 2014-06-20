@@ -11,6 +11,8 @@ module definitions
 
 import std/dict
 import std/regex
+import std/log
+import std/path
 import common
 import options
 import attributes
@@ -162,6 +164,11 @@ function parseDefinitionsFull(
     val attrs : attrs = match(block) {
       DefLink(id,link) -> {
         links[id] := link
+        // defining a relative image link causes it to be retained in the online editor
+        if (link.href.relative && link.href.extname.mimeFromExt.startsWith("image/")) {
+          log("filesRefer",link.href);
+          if (link.href.extname == ".eps") log("filesRefer",link.href.changeExt(".png")) // refer to png too for eps images (so both latex and html will work)
+        }
         attrsNone  
       }
       DefFootnote(id,content) -> {

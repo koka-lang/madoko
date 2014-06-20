@@ -12,7 +12,7 @@ module common
 import std/log
 import std/regex
 import std/dict
-
+import std/path
 
 // Warning messages get logged
 public function warning( message : string, logname : string = "warning" ) : () {
@@ -450,3 +450,41 @@ public function joinLines( s : string ) : string {
 }
 val rxLineBreak = regex(@"\\\n\r?[ \t]*")
 
+
+
+val mimes = dict([
+  ("","text/plain"),
+  ("mdk","text/plain"),
+  ("txt","text/plain"),
+  ("css","text/css"),
+  ("html","text/html"),
+  ("htm","text/html"),
+  ("js","text/javascript"),
+  
+  ("tex","text/tex"),
+  ("sty","text/latex"),
+  ("cls","text/latex"),
+  ("bib","text/plain"),
+  ("bbl","text/plain"),
+  ("aux","text/plain"),
+
+  ("png","image/png"),
+  ("jpg","image/jpg"),
+  ("jpeg","image/jpg"),
+  ("gif","image/gif"),
+  ("svg","image/svg+xml"),
+  ("eps","image/eps"),
+]);
+
+public function mimeFromExt( fname : string ) : string {
+  val ext = extname(fname).substr(1);
+  match(mimes[ext]) {
+    Just(mime) -> mime
+    Nothing    -> ""
+  }
+}
+
+public function relative( path : string ) : bool {
+  !(path.contains(rxProtocol));
+}
+val rxProtocol = regex(@"^(\w+:|//)");

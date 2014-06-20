@@ -55,6 +55,12 @@ var Runner = (function() {
         mime: ev.file.mime,
       });
     }
+    else if (ev.type === "delete") {
+      self.madokoWorker.postMessage( { 
+        type: "delete", 
+        files: [{ path: ev.file.path }],
+      });
+    }
     else if (ev.type === "destroy") {
       self.madokoWorker.postMessage( { type: "clear" } );
       self.storage = null;

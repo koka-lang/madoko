@@ -204,3 +204,15 @@ external xwriteBase64FileSync( fileName : string, content : string ) : io ()
   cs inline "System.IO.File.WriteAllBytes(#1,Convert.FromBase64String(#2))"
   js inline "$writeFileSync(#1,'base64',#2)"
 }
+
+// Delete a file
+public function unlinkSync( fileName : string ) : io () {
+  checkSandbox(fileName)
+  xunlinkSync( fileName )
+}
+
+external xunlinkSync( fileName : string ) : io ()
+{
+  cs inline "System.IO.File.Delete(#1)"
+  js inline "$unlinkSync(#1)"
+}

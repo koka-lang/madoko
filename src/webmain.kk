@@ -33,7 +33,11 @@ public function writeTextFile( fileName : string, content : string ) : io () {
 }
 
 public function readTextFile( fname : string ) : io string {
-  return readTextFileSync( fname );
+  readTextFileSync( fname );
+}
+
+public function unlinkFile( fname : string ) : io () {
+  unlinkSync(fname)
 }
 
 public function clearStorage() : io () {

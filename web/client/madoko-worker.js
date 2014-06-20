@@ -72,6 +72,18 @@ require(["../scripts/util","webmain"], function(util,madoko)
           err: null,
         });
       }
+      else if (req.type === "delete") {
+        if (req.files) {
+          req.files.forEach( function(f) {
+            madoko.unlinkFile(f.path);
+            local.remove(f.path);
+          });
+        }
+        self.postMessage( {
+          messageId: req.messageId,
+          err: null,
+        });
+      }
       else {
         if (req.files) {
           req.files.forEach( function(f) {

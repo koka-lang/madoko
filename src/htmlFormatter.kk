@@ -93,11 +93,6 @@ function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
   }).join("\n")
 }
 
-function relative( path : string ) : bool {
-  !(path.contains(rxProtocol));
-}
-val rxProtocol = regex(@"^\w+:");
-
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
     val imgref = if (link.href.relative && link.href.extname == ".eps") then link.href.changeExt(".png") else link.href

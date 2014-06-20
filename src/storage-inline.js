@@ -21,6 +21,7 @@ var $relative;
 var $mkdirp;
 var $cwd;
 var $clear;
+var $unlinkSync;
 var vfs = {};
 
 if (onServer) {
@@ -36,6 +37,7 @@ if (onServer) {
   $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); };
   $renameSync = function(oldname,newname) { return fs.renameSync(oldname,newname); };
   $clear = function() { };
+  $unlinkSync = function(fname) { return fs.unlinkSync(fname); }; 
 }
 else {
   $readFileSync = function(fname,enc) {
@@ -70,5 +72,13 @@ else {
 
   $clear = function() {
     vfs = {};
+  }
+
+  $unlinkSync = function(fname) {
+    var data = vfs["/" + fname];
+    if (data != null) {
+      delete vfs["/" + fname];
+    }
+    return null;
   }
 }
