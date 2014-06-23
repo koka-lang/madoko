@@ -383,6 +383,11 @@ body.madoko.preview {
   list-style-type: decimal;
 }
 
+/* Merging */
+.madoko .remote {
+  background-color: #F0FFF0;
+}
+
 /* ---------------------------------------------------
    Print settings
 ----------------------------------------------------*/
