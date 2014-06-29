@@ -101,6 +101,10 @@ a.localref:hover {
   text-align: center !important;
 }
 
+.align-center pre {
+  text-align: left;
+}
+
 .align-center>* {
   margin-left: auto !important;
   margin-right: auto !important;
