@@ -403,6 +403,8 @@
   \begin{mdDiv}[#1]%
   \def\section*##1{}% suppress bibliography header
   \def\chapter*##1{}% suppress bibliography header
+  \ifdef\section{\renewcommand{\section}[2][]{}}{}% suppress bibliography header
+  \ifdef\chapter{\renewcommand{\chapter}[2][]{}}{}% suppress bibliography header
   \providecommand{\markboth}[2]{}%
   \cssIfHasClass{bib-authoryear}{\def\mdBibDisplay{hidden}}{}%
   \begin{thebibliography}{\cssCaption}}%
