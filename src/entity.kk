@@ -271,7 +271,7 @@ val entities : list<entity> = [
   Entity("medsp", 8197, @"\:", True ),
   Entity("thinsp", 8201, @"\,", True ),
   Entity("strut", 8203, @"\strut", False ),
-  Entity("pagebreak", 8203, @"\clearpage", False),
+  Entity("pagebreak", 12, @"\pagebreak", False), //use form feed character
   Entity("zwnj", 8204, "", False),
   Entity("zwj", 8205, "", False),
   Entity("lrm", 8206, "", False),
