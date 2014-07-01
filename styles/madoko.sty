@@ -399,15 +399,15 @@
 
 \newcommand{\mdBibDisplay}{inline}
 
+\newcommand{\@ignore}[2][]{} % ignore argument (and optional argument)
+
 \newenvironment{mdBibliography}[1][]{%
   \begin{mdDiv}[#1]%
-  \def\section*##1{}% suppress bibliography header
-  \def\chapter*##1{}% suppress bibliography header
-  \ifdef\section{\renewcommand{\section}[2][]{}}{}% suppress bibliography header
-  \ifdef\chapter{\renewcommand{\chapter}[2][]{}}{}% suppress bibliography header
+  \ifdef\section{\def\section{\@ifstar\@ignore\@ignore}}{}% suppress bibliography header
+  \ifdef\chapter{\def\chapter{\@ifstar\@ignore\@ignore}}{}% suppress bibliography header
   \providecommand{\markboth}[2]{}%
   \cssIfHasClass{bib-authoryear}{\def\mdBibDisplay{hidden}}{}%
-  \begin{thebibliography}{\cssCaption}}%
+  \begin{thebibliography}{\cssCaption}\setlength{\topsep}{0pt}\vspace{-4ex}}%
   {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
 
@@ -415,7 +415,7 @@
 
 \newenvironment{mdBibitem}[1][]{%
   \item[]\mdLabeltarget\begin{mdDivInline}[#1]\hspace*{-\leftmargin}}%  
-  {\end{mdDivInline}}
+  {\end{mdDivInline}\par}
 
 \cssClassRule{bibitem-before}{display=\mdBibDisplay,width=\leftmargin,text-align=right}
 \cssClassRuleDoBefore{newblock}{\newblock}
