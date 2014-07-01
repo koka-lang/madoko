@@ -495,8 +495,12 @@
   {\eifstrequal{\cssPageAlign}{bottom}%
     {\def\@pagealign{b}}%
   {\eifstrequal{\cssPageAlign}{here}%
-    {\def\@pagealign{h}}%
-    {\def\@pagealign{tbp}}}}% default tbp
+    {\def\@pagealign{ht}}%
+  {\eifstrequal{\cssPageAlign}{page}%
+    {\def\@pagealign{p}}%
+  {\eifstrequal{\cssPageAlign}{forcehere}%
+    {\def\@pagealign{!ht}}%
+    {\def\@pagealign{tbp}}}}}}% default tbp
   %\cssDoAfter{\cssRestoreFootnotes}%
   \cssIfHasClass{wide}%
     {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
@@ -533,7 +537,10 @@
 %-------------------------------------------------------------
 \newcommand{\mdPrettyFont}{serif}
 
-\cssNewBlockElem{mdPre}{pre}{margin-top=1ex,margin-bottom=1ex,text-indent=0pt,font-family=monospace}
+\newenvironment{mdPre}[1][]%
+  {\begin{cssBlockX}{elem=pre,margin-top=1ex,margin-bottom=1ex,text-indent=0pt,font-family=monospace}{text-align=left,#1}}% text-align must come after defaults due to parent rules..
+  {\end{cssBlockX}}%
+
 \cssNewInlineElem{\mdCode}{code}{font-family=monospace}
 \cssNewInlineElem{\mdPrecode}{precode}{}
 \cssClassRule{pretty}{font-family=\mdPrettyFont}
