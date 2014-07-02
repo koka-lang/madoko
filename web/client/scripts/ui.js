@@ -911,7 +911,7 @@ var UI = (function() {
       // initialize fresh
       docName = "document.mdk";
       stg = storage.createNullStorage();
-      var content = document.getElementById("initial").textContent;
+      var content = document.getElementById("template-default").textContent;
       stg.writeFile(docName, content);
     }
     self.updateConnectionStatus(stg);

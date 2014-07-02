@@ -616,7 +616,8 @@ div.modal {
 
 #picker.command-alert #remotes,
 #picker.command-push #remotes,
-#picker.command-message #remotes {
+#picker.command-message #remotes,
+#picker.command-template #remotes {
   display: none;
 }
 
@@ -645,7 +646,8 @@ div.modal {
 #picker.command-save #folder-name,
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
-#picker.command-message #folder-name {
+#picker.command-message #folder-name,
+#picker.command-template #folder-name {
   display: inline-block;
 }
 
@@ -737,7 +739,7 @@ div.item:hover {
 
 #picker.command-login #button-login,
 #picker.command-alert #button-discard,
-#picker.command-open #button-choose,
+#picker.command-open #button-open,
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
@@ -779,4 +781,8 @@ div.item:hover {
 
 #picker #header-logo {
   display: none;
+}
+
+#picker.command-template #header-logo {
+  display: inline;
 }

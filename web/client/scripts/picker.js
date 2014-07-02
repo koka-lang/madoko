@@ -31,7 +31,7 @@ function capitalize(s) {
 }
 
 // options:
-//  command: open | new | connect | save | push
+//  command: open | new | connect | save | push  (| template)
 //  alert: false | true  // discard changes?
 //  extensions: ".mdk .md"
 //  remote: dropbox | onedrive | local
@@ -93,7 +93,7 @@ function run( options, end ) {
     display(options,current);
   }
 
-  document.getElementById("button-choose").onclick = function(ev) {
+  document.getElementById("button-open").onclick = function(ev) {
     var path = itemGetSelected(listing);
     if (path) {
       end(current,path);
@@ -120,8 +120,12 @@ function run( options, end ) {
     if (options.command == "new") {
       var fileName = getFileName();
       if (fileName) {
+        if (Util.extname(fileName) == "") { // directory
+          fileName = Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
+        }
         options.path = Util.combine(current.folder,fileName);
         options.command = "template";
+        options.headerLogo = "images/dark/" + current.remote.logo();    
         display(options,current);
         //end(current,path);
       }
@@ -142,9 +146,11 @@ function run( options, end ) {
     display(options,current);
   }
   
-  listing.onclick = onItemSelect(listing);
-  templates.onclick = onItemSelect(templates);
-
+  listing.onclick      = onItemSelect(options,listing);
+  listing.ondblclick   = onItemSelectDbl(options,listing,options.command);
+  templates.onclick    = onItemSelect(options,templates);
+  templates.ondblclick = onItemSelectDbl(options,templates,"new");
+  
   document.getElementById("folder-name").onclick = function(ev) {
     var elem = ev.target;
     while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"dir")) {
@@ -188,7 +194,20 @@ function itemGetSelected(parent) {
   return null;
 }
 
-function onItemSelect(parent) {
+function onItemSelectDbl(options,parent,cmd) {
+  var itemSelect = onItemSelect(options,parent);
+  return function(ev) {
+    itemSelect(ev);
+    if (itemGetSelected(parent)) {
+      var button = document.getElementById("button-" + cmd);
+      if (button) {
+        Util.dispatchEvent(button,"click");
+      }
+    }
+  };
+}
+
+function onItemSelect(options,parent) {
   return function(ev) {
     var elem = ev.target;
     while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item") && elem != parent) {
@@ -284,6 +303,7 @@ function display( options, current ) {
     return Promise.resolved();
   }
   else if (options.command==="template") {
+    document.getElementById("folder-name").innerHTML = options.path || "";
     Util.addClassName(app,"command-template");
     return Promise.resolved();
   }

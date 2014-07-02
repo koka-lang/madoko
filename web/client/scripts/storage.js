@@ -90,15 +90,19 @@ function createFile(storage) {
     params.folder = storage.remote.getFolder();
   }
   return picker(storage, params).then( function(res) {
-    if (res) {
-      // Add initial content
+    if (!res) return null;
+    // Add initial content
+    return Util.requestGET( "templates/" + res.template + ".mdk" ).then( function(content) {
+      return content;
+    }, function(err) {
       var elem = document.getElementById("template-" + res.template);
       if (!elem) elem = document.getElementById("template-default");
-      var content = elem ? elem.textContent : "";
+      return (elem ? elem.textContent : "");
+    }).then( function(content) {
       res.storage.writeFile(res.docName, content);      
-    }
-    return res;
-  })
+      return res;
+    });
+  });
 }
 
 function checkConnected(remote) {
