@@ -620,14 +620,15 @@ div.modal {
   display: none;
 }
 
-#picker #listing {
+#picker #listing, #picker #templates {
   display: none;
 }
 
 #picker.command-open #listing,
 #picker.command-save #listing,
 #picker.command-push #listing,
-#picker.command-new #listing {
+#picker.command-new #listing,
+#picker.command-template #templates {
   display: block;
 }
 
@@ -675,7 +676,7 @@ div.modal {
 div.item {
   display: inline-block;
   width: calc(50% - 3em);
-  padding: 0.2em 0.5em 0.2em 2.5em;
+  padding: 0.2em 0.5em 0.2em 0.5em;
 }
 
 div.item:hover {
@@ -686,8 +687,13 @@ div.item:hover {
 .item-icon {
   height: 1.5em;
   width : 1.5em;
-  margin: 0em 0em 0em -2em;
-  float: left;
+  margin: 0em 0.5em 0em 0em;
+  vertical-align: middle;
+}
+
+.template .item-icon {
+  height: 4em;
+  width: 4em;
 }
 
 .item-select {
@@ -724,7 +730,8 @@ div.item:hover {
 #picker.command-login #message-login, 
 #picker.command-connect #message-connect,
 #picker.command-alert #message-alert,
-#picker.command-message #message-message {
+#picker.command-message #message-message,
+#picker.command-template #message-template {
   display: block;
 }
 
@@ -734,6 +741,7 @@ div.item:hover {
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
+#picker.command-template #button-new,
 #picker #button-logout,
 #picker #button-cancel {
   display: inline;
@@ -755,7 +763,7 @@ div.item:hover {
   font-size: small;
 }
 
-#message-login, #message-connect, #message-alert, #message-message {
+#message-login, #message-connect, #message-alert, #message-message, #message-template {
   text-align: center;
   width: 100%;
 }
