@@ -52,21 +52,19 @@ var Encoding = {
 
 function picker( storage, params ) {
   if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "push")) params.alert = "true";
-  return Picker.show(params).then( function(uri) {
+  return Picker.show(params).then( function(res) {
     if (params.command === "message") return null;
+    if (!res || !res.path) throw new Error("canceled");
 
-    var cap = /^(\w+):\/\/\/?(.*)$/.exec(uri);
-    if (!cap) throw new Error("canceled");
-    var path = cap[2];
-    var folder = Util.dirname(path);
-    var fileName = Util.basename(path);
-    if (Util.extname(path) == "" && (params.command === "save" || params.command === "new" || params.command==="push")) {
-      folder = path;
-      fileName = Util.basename(path) + ".mdk";
+    var folder = Util.dirname(res.path);
+    var fileName = Util.basename(res.path);
+    if (Util.extname(res.path) == "" && (params.command === "save" || params.command === "new" || params.command==="push")) {
+      folder = res.path;
+      fileName = Util.basename(res.path) + ".mdk";
     }
-    var remote = unpersistRemote( cap[1], { folder: folder } );
+    var remote = unpersistRemote( res.remote, { folder: folder } );
     if (!remote) throw new Error("canceled");
-    return { storage: new Storage(remote), docName: fileName }
+    return { storage: new Storage(remote), docName: fileName, template: res.template }
   });
 }
 
@@ -94,8 +92,10 @@ function createFile(storage) {
   return picker(storage, params).then( function(res) {
     if (res) {
       // Add initial content
-      var content = document.getElementById("initial").textContent;
-      res.storage.writeFile(res.docName, content);
+      var elem = document.getElementById("template-" + res.template);
+      if (!elem) elem = document.getElementById("template-default");
+      var content = elem ? elem.textContent : "";
+      res.storage.writeFile(res.docName, content);      
     }
     return res;
   })
@@ -144,7 +144,7 @@ function createNullStorage() {
 function serverGetInitialContent(fpath) {
   if (!Util.extname(fpath)) fpath = fpath + ".mdk";
   if (!Util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
-  return Util.requestGET( fpath );
+  return Util.requestGET( { url: fpath,  binary: Util.hasImageExt(fpath) } );
 }
 
 function unpersistRemote(remoteType,obj) {
@@ -582,7 +582,7 @@ var Storage = (function() {
         }
 
         // only try standard style if necessary
-        if (!Util.hasEmbedExt(fpath)) {
+        if (!Util.hasEmbedExt(fpath) && Util.extname(fpath) !== ".png") {
           return noContent();
         }
 
@@ -590,12 +590,12 @@ var Storage = (function() {
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
         if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) spath = "styles/lang/" + fpath;
+        if (Util.extname(fpath) === ".png") opath = fpath;
 
-        return serverGetInitialContent(spath).then( function(_content,req) {
-            var content = req.responseText;
+        return serverGetInitialContent(spath).then( function(content) {
             if (!content) return noContent();
             opts.nosync = true;
-            self.writeFile(opath,content,opts);
+            self.writeFile(opath,Encoding.encode(opts.encoding, content),opts);
             return self.files.get(opath);
           },
           function(_err) {
