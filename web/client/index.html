@@ -45,7 +45,7 @@
       <img id="cloud" class="button" src="images/dark/button-folder.png"/>
       <div id="document-content" class="menu boxed">
         <div id="new" class="button" title="Create a new document"
-          ><span class="icon"><img src="images/icon-plus.png"/></span>New ...</div>
+          ><span class="icon"><img src="images/icon-plus.png"/></span>Neww ...</div>
         <div id="open" class="button" title="Open document from cloud storage"
           ><span class="icon"><img src="images/icon-local.png"/></span>Open ...</div>
         <div id="save" class="button" title="Save document to cloud storage"
@@ -195,6 +195,21 @@
     <div id="message-message" class="message"></div>
     <div id="message-alert" class="message">The current document has not been saved yet.
     <br/>Are you sure you want to discard these changes?</div>
+    <div id="message-template" class="message">Select a template<hr></div>
+    <div id="templates">
+      <div class='item selected' data-path='default'>
+        <img class='item-icon' src='images/template-default.png'/><span class='item-name'>Default document</span>
+      </div>
+      <div class='item' data-path='article'>
+        <img class='item-icon' src='images/template-article.png'/><span class='item-name'>Academic article (ACM style)</span>
+      </div>
+      <div class='item' data-path='webpage'>
+        <img class='item-icon' src='images/template-webpage.png'/><span class='item-name'>Web page</span>
+      </div>
+      <div class='item' data-path='presentation'>
+        <img class='item-icon' src='images/template-presentation.png'/><span class='item-name'>Presentation</span>
+      </div>
+    </div>
     <div id="listing">
     </div>
   </div>
@@ -214,7 +229,7 @@
 
 <!-- initial content for the editor -->
 <div style="display:none">
-<div id="initial" style="display:none; white-space:pre">Title         : Welcome to Madoko
+<div id="template-default" style="display:none; white-space:pre">Title         : Welcome to Madoko
 Heading Base  : 2
 Author        : You
 

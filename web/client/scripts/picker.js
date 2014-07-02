@@ -16,6 +16,7 @@ define(["../scripts/promise","../scripts/util",
 var fade = document.getElementById("fade");
 var app     = document.getElementById("picker");
 var listing = document.getElementById("listing");
+var templates = document.getElementById("templates");  
 var headerLogo = document.getElementById("header-logo");
 var remotes = {
   dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
@@ -93,7 +94,7 @@ function run( options, end ) {
   }
 
   document.getElementById("button-choose").onclick = function(ev) {
-    var path = itemGetSelected();
+    var path = itemGetSelected(listing);
     if (path) {
       end(current,path);
     }
@@ -116,10 +117,19 @@ function run( options, end ) {
   }
 
   document.getElementById("button-new").onclick = function(ev) {
-    var fileName = getFileName();
-    if (fileName) {
-      var path = Util.combine(current.folder,fileName);
-      end(current,path);
+    if (options.command == "new") {
+      var fileName = getFileName();
+      if (fileName) {
+        options.path = Util.combine(current.folder,fileName);
+        options.command = "template";
+        display(options,current);
+        //end(current,path);
+      }
+    }
+    else {
+      var template = itemGetSelected(templates) || "default";
+      options.command = "new";
+      end(current,options.path,template);
     }
   }
 
@@ -131,22 +141,9 @@ function run( options, end ) {
     options.alert = ""; // stop alert
     display(options,current);
   }
-
-  listing.onclick = function(ev) {
-    var elem = ev.target;
-    while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item")) {
-      elem = elem.parentNode;
-    }
-
-    var type = elem.getAttribute("data-type");
-    var path = elem.getAttribute("data-path");
-    if (ev.target.nodeName === "INPUT" || type!=="folder") {
-      itemSelect(elem);
-    }
-    else {
-      itemEnterFolder(options, current,path);
-    }
-  };
+  
+  listing.onclick = onItemSelect(listing);
+  templates.onclick = onItemSelect(templates);
 
   document.getElementById("folder-name").onclick = function(ev) {
     var elem = ev.target;
@@ -181,8 +178,8 @@ function canSelect(path,type,extensions) {
   return false;
 }
 
-function itemGetSelected() {
-  var items = listing.children;
+function itemGetSelected(parent) {
+  var items = parent.children;
   for(var i = 0; i < items.length; i++) {
     if (Util.hasClassName(items[i],"selected")) {
       return items[i].getAttribute("data-path");
@@ -191,10 +188,28 @@ function itemGetSelected() {
   return null;
 }
 
-function itemSelect(elem) {
+function onItemSelect(parent) {
+  return function(ev) {
+    var elem = ev.target;
+    while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item") && elem != parent) {
+      elem = elem.parentNode;
+    }
+
+    var type = elem.getAttribute("data-type");
+    var path = elem.getAttribute("data-path");
+    if (ev.target.nodeName === "INPUT" || type!=="folder") {
+      itemSelect(parent,elem);
+    }
+    else {
+      itemEnterFolder(options, current,path);
+    }
+  };
+};
+
+function itemSelect(parent,elem) {
   if (Util.hasClassName(elem,"disabled")) return;
   var select = !Util.hasClassName(elem,"selected");
-  var items = listing.children;
+  var items = parent.children;
   for(var i = 0; i < items.length; i++) {
     itemSelectX(items[i],false);
   }
@@ -268,6 +283,10 @@ function display( options, current ) {
     Util.addClassName(app,"command-message");
     return Promise.resolved();
   }
+  else if (options.command==="template") {
+    Util.addClassName(app,"command-template");
+    return Promise.resolved();
+  }
   else {
     // set correct logo
     document.getElementById("remote-logo").src = "images/dark/" + current.remote.logo();
@@ -331,7 +350,8 @@ function displayFolderName(options,current) {
   document.getElementById("folder-name").innerHTML = html;
 }
 
-function onEnd( current, path ) {  
+function onEnd( current, path, template ) {  
+  template = template || "default";
   app.style.display = "none";
   if (fade) fade.style.display = "none";
 
@@ -345,24 +365,19 @@ function onEnd( current, path ) {
   }
   Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
 
-  // return result
-  if (current && path) {
-    var result = current.remote.type() + "://" + path;
-    console.log(result);
-    return result;
-    //Util.setCookie("picker-path", result, 10 );
+  return {
+    path: path,  // null is canceled.
+    remote: (current ? current.remote.type() : null),
+    template: template,
   }
-  else {
-    return path;
-  }
-  //window.close();
 }
 
-function show( options ) {
+function show( options0 ) {
+  var options = Util.copy(options0);
   return new Promise( function(cont) {
     try {
-      run(options, function(current,path) {
-        var res = onEnd(current,path);
+      run(options, function(current,path,template) {
+        var res = onEnd(current,path,template);
         cont(null,res);
       });    
     }
