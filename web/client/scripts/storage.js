@@ -37,6 +37,9 @@ var Encoding = {
       else
         return window.btoa(data);
     }
+    else if (typeof data === "object") {
+      return JSON.stringify(data);
+    }
     else {
       return data;
     }
@@ -596,8 +599,9 @@ var Storage = (function() {
         if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) spath = "styles/lang/" + fpath;
         if (Util.extname(fpath) === ".png") opath = fpath;
 
-        return serverGetInitialContent(spath).then( function(content) {
+        return serverGetInitialContent(spath).then( function(content,req) {
             if (!content) return noContent();
+            if (Util.extname(fpath)===".json") content = req.responseText;
             opts.nosync = true;
             self.writeFile(opath,Encoding.encode(opts.encoding, content),opts);
             return self.files.get(opath);
