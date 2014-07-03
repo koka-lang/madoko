@@ -693,7 +693,7 @@ div.item:hover {
   vertical-align: middle;
 }
 
-.template .item-icon {
+#templates .item-icon {
   height: 4em;
   width: 4em;
 }
