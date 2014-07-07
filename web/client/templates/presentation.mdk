@@ -1,10 +1,9 @@
-[INCLUDE=presentation.mdk]
+[INCLUDE=present.mdk]
 Title         : Demo presentation in Madoko
 Sub Title     : In both HTML and PDF
 Author        : Daan Leijen
 Affiliation   : Microsoft Research
 Email         : daan@microsoft.com
-Reveal Url    : reveal.js
 Reveal Theme  : solarized
 Beamer Theme  : singapore
 Css           : &reveal-url;/css/theme/&reveal-theme;.css

@@ -113,6 +113,7 @@ task("webcopy", ["web"], function() {
   // copy style files
   var js = new jake.FileList().include(path.join(styleDir,"*.css"))
                               .include(path.join(styleDir,"*.mdk"))
+                              .include(path.join(styleDir,"*.bib"))
                               .include(path.join(styleDir,"lang","*.json"));
   jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
