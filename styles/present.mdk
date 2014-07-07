@@ -23,12 +23,13 @@ Description:
 	[Reveal.js]: http://lab.hakim.se/reveal-js/#/
 	[Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
 
-Reveal Url    : reveal.js 		
+Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2		
 Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
 Document Class: [xcolor=table]beamer
 Css  		  : &reveal-url;/css/reveal.min.css
+Css           : &reveal-url;/css/theme/&reveal-theme;.css
 Script        : &reveal-url;/lib/js/head.min.js
 Script        : &reveal-url;/js/reveal.min.js
 Header Depth  : 0

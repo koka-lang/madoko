@@ -1,17 +1,17 @@
-[INCLUDE=present.mdk]
+[INCLUDE=presentation.mdk]
 Title         : Demo presentation in Madoko
 Sub Title     : In both HTML and PDF
 Author        : Daan Leijen
 Affiliation   : Microsoft Research
 Email         : daan@microsoft.com
-Reveal Url    : ../contrib/reveal.js
+Reveal Url    : reveal.js
 Reveal Theme  : solarized
 Beamer Theme  : singapore
+Css           : &reveal-url;/css/theme/&reveal-theme;.css
 Package       : pstricks
 Package       : pst-plot
 Math Embed    : 64
 @html .math-inline, .math-display: color=#586e75
-
 
 [TITLE]
 
@@ -43,11 +43,11 @@ its full glory.
 And any Madoko features just work. Here is some math.
 
 ~ Begin Framed { padding-right=1ex }
-A famous equation is $E = mmc^2$, but this one is 
+A famous equation is $e = mc^2 $, but this one is 
 famous too:
 
 ~ Equation  {#eq-gaussian}
-  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
 ~
 ~ End Framed
 
@@ -61,7 +61,7 @@ can see them if you open the speaker notes window (hit 's' on your keyboard).
 With the PSTricks package we create do cool images, like:
 
 ~~ Snippet
-\psset{unit=1.2cm}
+\psset{unit=1.2cm} 
 \begin{pspicture*}(-0.5,-1.5)(4,2.2)
   \psgrid[subgriddiv=5,gridcolor=black!20%
          ,gridlabels=0pt](1,0)(3,1.2)
@@ -114,11 +114,11 @@ Butterfly
 
 [![butterfly]][butterfly]
 
-[butterfly]: butterfly.png "Butterfly" { width=280px  }
+[butterfly]: images/butterfly.png "Butterfly" { width=280px  }
 [cornify]: http://cornify.com {.test}
 
 
-## Basement Level 3 { data-background=butterfly.png }
+## Basement Level 3 { data-background=images/butterfly.png }
 That's it, time to go back up.
 
 [![arrowup]][back2]
