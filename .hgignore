@@ -24,4 +24,5 @@ syntax:regexp
 ^web/ssl/
 ^web/log/
 ^web/run/
+^web/node_modules/
 ^test/new/out
