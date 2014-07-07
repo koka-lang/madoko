@@ -179,6 +179,10 @@ function type() {
   return "dropbox";
 }
 
+function logo() {
+  return "icon-dropbox.png";
+}
+
 
 var Dropbox = (function() {
 
@@ -196,7 +200,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.logo = function() {
-    return "icon-dropbox.png";
+    return logo();
   }
 
   Dropbox.prototype.getFolder = function() {
@@ -299,6 +303,7 @@ return {
   logout: logout,
   unpersist: unpersist,
   type: type,
+  logo: logo,
   Dropbox: Dropbox,
 }
 
