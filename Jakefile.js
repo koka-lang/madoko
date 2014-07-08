@@ -21,6 +21,7 @@ var maincli   = "main";
 var sourceDir = "src";
 var outputDir = "lib";
 var styleDir  = "styles";
+var contribDir = "contrib";
 var web       = "web";
 var webclient = path.join(web,"client");
 
@@ -110,15 +111,21 @@ task("webcopy", ["web"], function() {
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
   
-  // copy style files
+  // copy style, language, and image files
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"images")));
   var js = new jake.FileList().include(path.join(styleDir,"*.css"))
                               .include(path.join(styleDir,"*.mdk"))
-                              .include(path.join(styleDir,"*.bib"))
                               .include(path.join(styleDir,"lang","*.json"));
-  jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
-  //jake.cpR(path.join(styleDir,"madoko.css"), webclient);
-
+  js     = new jake.FileList().include(path.join(contribDir,"styles","*.css"))
+                              .include(path.join(contribDir,"styles","*.mdk"))
+                              .include(path.join(contribDir,"styles","*.bib"))
+                              .include(path.join(contribDir,"styles","*.cls"));
+  copyFiles(path.join(contribDir,"styles"),js.toArray(),path.join(webclient,styleDir));
+  js     = new jake.FileList().include(path.join(contribDir,"images","*.png"));
+  copyFiles(contribDir,js.toArray(),path.join(webclient,styleDir));
+  
   // copy sty files to local texmf tree
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
   copyFiles(styleDir,sty.toArray(),localTexDir);
@@ -340,6 +347,7 @@ function fileExist(fileName) {
 // i.e. copyFiles('A',['A/B/c.txt'],'D')  creates 'D/B/c.txt'
 function copyFiles(rootdir,files,destdir) {
   rootdir = rootdir || "";
+  rootdir = rootdir.replace(/\\/g, "/");
   jake.mkdirP(destdir);        
   files.forEach(function(filename) {
     // make relative
