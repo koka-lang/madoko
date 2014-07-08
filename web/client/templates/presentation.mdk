@@ -103,7 +103,7 @@ try pressing [down].
 
 
 [down]: # { .navigate-down }
-[arrowdown]: arrow.png "Down arrow" { width=178px height=238px }
+[arrowdown]: images/arrow.png "Down arrow" { width=178px height=238px }
 
 ## Basement Level 1
 Press down or up to navigate.
@@ -122,7 +122,7 @@ That's it, time to go back up.
 
 [![arrowup]][back2]
 
-[arrowup]:  arrow.png "Up arrow" { width="178px" height="238px" transform="rotate(180deg)" }
+[arrowup]:  images/arrow.png "Up arrow" { width="178px" height="238px" transform="rotate(180deg)" }
 [back2]: #vertical { .image }
 
 ~ End Vertical
