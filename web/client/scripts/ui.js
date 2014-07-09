@@ -905,39 +905,56 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.setStorage = function( stg, docName ) {
+  UI.prototype.setStorage = function( stg0, docName0 ) {
     var self = this;
-    if (stg == null) {
-      // initialize fresh
-      docName = "document.mdk";
-      stg = storage.createNullStorage();
-      var content = document.getElementById("template-default").textContent;
-      stg.writeFile(docName, content);
-    }
-    self.updateConnectionStatus(stg);
-    self.showSpinner(true);    
-    return stg.readFile(docName, false).then( function(file) { 
-      self.showSpinner(false );    
+    return self.initializeStorage(stg0,docName0, function(stg,docName) {
+      self.updateConnectionStatus(stg);
+      self.showSpinner(true);    
+      return stg.readFile(docName, false).then( function(file) { 
+        self.showSpinner(false );    
+          
+        if (self.storage) {
+          self.storage.destroy(); // clears all event listeners
+          self.viewHTML( "<p>Rendering...</p>", Date.now() );
+          //self.storage.clearEventListener(self);
+        }
+        self.storage = stg;
+        self.docName = docName;
+        self.docText = file.content;
         
-      if (self.storage) {
-        self.storage.destroy(); // clears all event listeners
-        self.viewHTML( "<p>Rendering...</p>", Date.now() );
-        //self.storage.clearEventListener(self);
-      }
-      self.storage = stg;
-      self.docName = docName;
-      self.docText = file.content;
-      
-      self.storage.addEventListener("update",self);
-      self.runner.setStorage(self.storage);
-      var remoteLogo = self.storage.remote.logo();
-      var remoteType = self.storage.remote.type();
-      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-      self.remoteLogo.src = "images/dark/" + remoteLogo;
-      self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
-      self.editName = "";
-      return self.editFile(self.docName).always( function() { self.setStale(); } );
+        self.storage.addEventListener("update",self);
+        self.runner.setStorage(self.storage);
+        var remoteLogo = self.storage.remote.logo();
+        var remoteType = self.storage.remote.type();
+        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+        self.remoteLogo.src = "images/dark/" + remoteLogo;
+        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+        self.editName = "";
+        return self.editFile(self.docName).always( function() { self.setStale(); } );
+      });
     });
+  }
+
+  UI.prototype.initializeStorage = function(stg,docName,cont) {
+    var self = this;
+    var cap = /[#&]template=([^=&#;]+)/.exec(window.location.hash);
+    if (cap) window.location.hash = "";
+    if (cap || !stg) {
+      return (stg && !stg.isSynced() ? storage.discard(stg) : Promise.resolved(true)).then( function(discard) {
+        if (!discard) return cont(stg,docName);
+
+        // initialize fresh from template
+        docName = "document.mdk";
+        stg = storage.createNullStorage();
+        var template = (cap ? cap[1] : "default");
+        return storage.createFromTemplate(stg,docName,template).then( function() {
+          return cont(stg,docName);
+        });
+      });
+    }
+    else {
+      return cont(stg,docName);
+    }
   }
 
   UI.prototype.spinWhile = function( elem, promise ) {
@@ -1001,7 +1018,7 @@ var UI = (function() {
       self.checkDelayedUpdate.checked = json.delayedUpdate;
       self.checkAutoSync.checked = json.autoSync;
       self.theme = json.theme || "vs";
-      var stg = storage.unpersistStorage(json.storage);      
+      var stg = storage.unpersistStorage(json.storage);
       return self.setStorage( stg, docName ).then( function() {
         return self.editFile( json.editName, json.pos );
       });

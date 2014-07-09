@@ -94,17 +94,24 @@ function createFile(storage) {
   }
   return picker(storage, params).then( function(res) {
     if (!res) return null;
-    // Add initial content
-    return Util.requestGET( "templates/" + res.template + ".mdk" ).then( function(content) {
-      return content;
-    }, function(err) {
-      var elem = document.getElementById("template-" + res.template);
-      if (!elem) elem = document.getElementById("template-default");
-      return (elem ? elem.textContent : "");
-    }).then( function(content) {
-      res.storage.writeFile(res.docName, content);      
+    return createFromTemplate( res.storage, res.docName, res.template ).then( function(content) {
       return res;
     });
+  });
+}
+
+function createFromTemplate( storage, docName, template )
+{
+  if (!template) template = "default";
+  return Util.requestGET( "templates/" + template + ".mdk" ).then( function(content) {
+    return content;
+  }, function(err) {
+    var elem = document.getElementById("template-" + template);
+    if (!elem) elem = document.getElementById("template-default");
+    return (elem ? elem.textContent : "");
+  }).then( function(content) {
+    storage.writeFile(docName, content);      
+    return content;
   });
 }
 
@@ -135,6 +142,21 @@ function connect(storage) {
     return;
   }, function(err) {
     return;
+  });
+}
+
+function discard(storage) {
+  var params = {
+    command: "alert",
+    alert: "true"
+  };
+  if (storage.remote.type() !== "null") {
+    params.remote = storage.remote.type();
+  }
+  return picker(storage,params).then( function(res) {
+    return true;
+  }, function(err) {
+    return false;
   });
 }
 
@@ -804,9 +826,11 @@ return {
   openFile: openFile,
   createFile: createFile,
   connect: connect,
+  discard: discard,
   saveAs: saveAs,
   httpOpenFile    : httpOpenFile,
   createNullStorage: createNullStorage,
+  createFromTemplate: createFromTemplate,
   
   Storage         : Storage,
   unpersistStorage: unpersistStorage,  

@@ -31,7 +31,7 @@ function capitalize(s) {
 }
 
 // options:
-//  command: open | new | connect | save | push  (| template)
+//  command: open | new | connect | save | push  (| template) | alert
 //  alert: false | true  // discard changes?
 //  extensions: ".mdk .md"
 //  remote: dropbox | onedrive | local
@@ -142,8 +142,13 @@ function run( options, end ) {
   }
 
   document.getElementById("button-discard").onclick = function(ev) {
-    options.alert = ""; // stop alert
-    display(options,current);
+    if (options.command==="alert") {
+      end(current,"discard");
+    }
+    else {
+      options.alert = ""; // stop alert
+      display(options,current);
+    }
   }
   
   listing.onclick      = onItemSelect(options,listing);
