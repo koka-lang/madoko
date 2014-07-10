@@ -1,34 +1,34 @@
 Description: 
-	Include this file to create slide shows using [Reveal.js] for HTML and
-	the [Beamer] package for LaTeX.
-	* Slides are started on a level 1 `#` or 2 `##` header.
-	  You can also a `~ Slide` custom block.
-	* Use the `.fragment` class to create overlays that appear one by one.
-	* Use the `.fragmented` class on a list to have each item appear in order.
-	* Use a `~ Notes` custom block for speaker notes (only for HTML for now).
-	* Use a `~ Vertical` custom block to create a set of vertical slides (only for HTML).
-	\
-	Notes for Reveal.js:
-	* It expects the reveal.js library to be in a subdirectory "reveal.js".
-	  You can use another url by setting the `Reveal Url` metadata key.
-	* Select another default theme by setting the `Reveal Theme`, like `sky` for example.
-	* The "revealConfig" variable contains the default configuration options
-		and can be extended inside `<script>` tags.
-	\
-	Notes for the beamer package:
-	* Set the `Beamer Theme` metadata key to select anther theme.
-	* Set the `Beamer Theme Options` for different options for the theme.
-	* Use the `.pause` class to insert pauses.
-	\
-	[Reveal.js]: http://lab.hakim.se/reveal-js/#/
-	[Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
+    Include this file to create slide shows using [Reveal.js] for HTML and
+    the [Beamer] package for LaTeX.
+    * Slides are started on a level 1 `#` or 2 `##` header.
+      You can also a `~ Slide` custom block.
+    * Use the `.fragment` class to create overlays that appear one by one.
+    * Use the `.fragmented` class on a list to have each item appear in order.
+    * Use a `~ Notes` custom block for speaker notes (only for HTML for now).
+    * Use a `~ Vertical` custom block to create a set of vertical slides (only for HTML).
+    \
+    Notes for Reveal.js:
+    * It expects the reveal.js library to be in a subdirectory "reveal.js".
+      You can use another url by setting the `Reveal Url` metadata key.
+    * Select another default theme by setting the `Reveal Theme`, like `sky` for example.
+    * The "revealConfig" variable contains the default configuration options
+        and can be extended inside `<script>` tags.
+    \
+    Notes for the beamer package:
+    * Set the `Beamer Theme` metadata key to select anther theme.
+    * Set the `Beamer Theme Options` for different options for the theme.
+    * Use the `.pause` class to insert pauses.
+    \
+    [Reveal.js]: http://lab.hakim.se/reveal-js/#/
+    [Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
 
-Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2		
+Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2        
 Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
 Document Class: [xcolor=table]beamer
-Css  		  : &reveal-url;/css/reveal.min.css
+Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
 Script        : &reveal-url;/lib/js/head.min.js
 Script        : &reveal-url;/js/reveal.min.js
@@ -36,38 +36,35 @@ Header Depth  : 0
 Toc Depth     : 2
 Section Base  : 2
 Section Depth : 2
-Math Dpi	  : 400
-~Notes		  : html-elem=aside .notes
-.Author		  : font-size=xx-large
+Math Dpi      : 400
+~Notes        : html-elem=aside .notes
+.Author       : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
 ~Body         : before="~ Begin Reveal&nl;~ Begin Slides&nl;"
                 after="~ End Slides&nl;~ End Reveal&nl;" 
 ~Slide        : .section html-elem=section tex-elem=mdSection
 ~Vertical     : .section html-elem=section
-@tex ~Notes	  : display=none
+@tex ~Notes   : display=none
 @tex ~Vertical: notag
 Tex Header*   :
-	\ifbeamer\usetheme[&beamer-theme-options;]{&beamer-theme;}\fi
-Html Header   : 		
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<link rel="stylesheet" href="&reveal-url;/css/theme/&reveal-theme;.css" id="theme">
-	<script>
-	  document.write( '<link rel="stylesheet" href="&reveal-url;/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
-	</script>
-	<!--[if lt IE 9]>
-	<script src="&reveal-url;/lib/js/html5shiv.js"></script>
-	<![endif]-->
-	<style>
-	body.madoko {
-	  margin: 0pt;
+    \ifbeamer\usetheme[&beamer-theme-options;]{&beamer-theme;}\fi
+Html Header   :         
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="&reveal-url;/css/theme/&reveal-theme;.css" id="theme">    
+    <!--[if lt IE 9]>
+    <script src="&reveal-url;/lib/js/html5shiv.js"></script>
+    <![endif]-->
+    <style>
+    body.madoko {
+      margin: 0pt;
       padding: 0pt;      
-	}	
-	.reveal p { 
-		text-align: center; 
-	}
+    }   
+    .reveal p { 
+        text-align: center; 
+    }
     .reveal table {
         margin-left: auto;
         margin-right: auto;
@@ -78,65 +75,85 @@ Html Header   :
     .reveal h2 {
         margin-bottom: 0.7em;
     }
-	.reveal section img.math-display {
-		padding: 1em;
-	}
-	.reveal section img.math-inline {
-		margin: 0pt;
-		padding: 0pt;
-		background-color: none;
-		box-shadow: none;
-		border: none;
-	}
+    .reveal section img.math-display {
+        padding: 1em;
+    }
+    .reveal section img.math-inline {
+        margin: 0pt;
+        padding: 0pt;
+        background-color: none;
+        box-shadow: none;
+        border: none;
+    }
     .reveal section img {
         box-shadow: none;
         border: none;
     }
-	.reveal pre {
-		box-shadow: none;
-		border: 1px solid black;
+    .reveal pre {
+        box-shadow: none;
+        border: 1px solid black;
         word-wrap: normal;
         background-color: white;
         width: 100%;
         padding: 1em;
-	}	    
+    }       
     .reveal pre code, .reveal code, .reveal .monospace, .reveal tt, .reveal kbd {
         padding: 0pt;
         font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
     }
-	.reveal .tocitem {
-	  	text-align: left;
-	}
-	.reveal .toc>.tocblock .tocblock {
-	  	margin-left: 0.5em;
-	}	
+    .reveal .tocitem {
+        text-align: left;
+    }
+    .reveal .toc>.tocblock .tocblock {
+        margin-left: 0.5em;
+    }   
     .reveal .toc>.tocblock .tocblock .tocblock {
-	  	margin-left: 1em;
-	}
-	</style>
-	<script>	
-	// Full list of configuration options available here:
-	// https://github.com/hakimel/reveal.js#configuration
-	var revealConfig = {
-		controls: true,
-		progress: true,
-		history: true,
-		center: true,
-		theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-		transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
-		// Optional libraries used to extend on reveal.js
-		dependencies: [
-			{ src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
-			{ src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
-			{ src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
-		]
-	};
-	document.addEventListener("DOMContentLoaded", function(event) {
-		[].forEach.call( document.getElementsByClassName("fragmented"), function(list) {
-			[].forEach.call( list.childNodes, function(li) {
-				li.className = li.className + " fragment";
-			});
-		});
-		Reveal.initialize(revealConfig);
-	});
-	</script>
+        margin-left: 1em;
+    }
+    /* Display in the preview window */    
+    body.preview .reveal {
+      margin: 0pt -1em;
+    }
+    body.preview .reveal .slides .fragment,
+    body.preview .reveal .slides .fragmented {
+      visibility: visible;
+      opacity: 100;
+    }
+    body.preview div.reveal, body.preview div.reveal .slides, body.preview div.reveal section {
+      display: block !important;
+      position: relative !important;
+      width: auto !important;      
+    }
+    body.preview div.reveal section {
+      border: solid 1px black;
+      padding: 1em !important;
+      margin-top: 1em;
+      min-height: 15em;
+    }
+    </style>
+    <script>    
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    var revealConfig = {
+        controls: true,
+        progress: true,
+        history: false,
+        center: true,
+        //theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        //transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+        // Optional libraries used to extend on reveal.js
+        //dependencies: [
+        //    { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+        //    { src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+        //    { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        //]
+    };
+    document.addEventListener("DOMContentLoaded", function(event) {
+        [].forEach.call( document.getElementsByClassName("fragmented"), function(list) {
+            [].forEach.call( list.childNodes, function(li) {
+                li.className = li.className + " fragment";
+            });
+        });
+        Reveal.initialize(revealConfig);
+    });
+    </script>

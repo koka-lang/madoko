@@ -336,10 +336,7 @@ function dispatchEvent( elem, eventName ) {
     // execute inline scripts
     var scripts = document.body.getElementsByTagName("script");   
     for(var i=0;i<scripts.length;i++) {  
-      try {
-        eval(scripts[i].text);  
-      }
-      catch(exn) {}
+      eval(scripts[i].text);  
     }  
     // append script to detect onload event
     var loaded = document.createElement("script");
