@@ -110,10 +110,7 @@ Html Header   :
     .reveal .toc>.tocblock .tocblock .tocblock {
         margin-left: 1em;
     }
-    /* Display in the preview window */    
-    body.preview .reveal {
-      margin: 0pt -1em;
-    }
+    /* Display in the preview window */        
     body.preview .reveal .slides .fragment,
     body.preview .reveal .slides .fragmented {
       visibility: visible;

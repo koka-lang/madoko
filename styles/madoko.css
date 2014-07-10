@@ -347,7 +347,7 @@ body.madoko, .madoko-body {
 }
 
 body.madoko.preview {
-  padding: 0em 5% 0em 5% !important;
+  padding: 0em 2em 0em 2em !important;
 }
 
 .madoko p,
