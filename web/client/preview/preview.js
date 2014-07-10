@@ -333,6 +333,14 @@ function dispatchEvent( elem, eventName ) {
     // note: add a final element to help the scrolling to the end.
     var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
     document.body.innerHTML = info.content + finalElem;
+    // execute inline scripts
+    var scripts = document.body.getElementsByTagName("script");   
+    for(var i=0;i<scripts.length;i++) {  
+      try {
+        eval(scripts[i].text);  
+      }
+      catch(exn) {}
+    }  
     // append script to detect onload event
     var loaded = document.createElement("script");
     loaded.type = "text/javascript";
