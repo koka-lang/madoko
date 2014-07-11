@@ -24,6 +24,9 @@
     "interface", "instance"
   ],
 
+  "extraKeywords": [
+  ],
+
   "builtins": [
     "for", "while", "repeat",
     "foreach", "foreach-indexed", 
@@ -35,7 +38,10 @@
     "forall", "exists", "some", "with"      
   ],
 
-  "typeStart": [
+ "extraTypeKeywords": [
+  ],
+
+ "typeStart": [
     "type","cotype","rectype","alias","struct","enum"
   ],
 
@@ -65,6 +71,7 @@
                              "module|as|import": { "token": "keyword", "next": "@module" },
                              "@default": "keyword" } 
                   },
+                  "@extraKeywords": "keyword",
                   "@builtins": "identifier.predefined",
                   "@default" : "identifier" }
         }
@@ -95,6 +102,7 @@
       
       ["@symbols", { "cases": { "\\-": "operator.minus",
                               "@keywords": "keyword.operator",
+                              "@extraKeywords": "keyword.operator",
                               "@default": "operator" }}
       ],
 
@@ -214,7 +222,9 @@
       
       ["((?:[a-z]@idchars\\/)*)([a-z]@idchars)", 
         { "cases": { "@typeKeywords": ["type.identifier.namespace","type.keyword"],
+                   "@extraTypeKeywords": ["type.identifier.namespace","type.keyword"], 
                    "@keywords": { "token": "@rematch", "next": "@pop" },
+                   "@extraKeywords": { "token": "@rematch", "next": "@pop" },
                    "@default": ["type.identifier.namespace","type.identifier"]
         }}
       ],
