@@ -6,10 +6,8 @@ Affiliation   : Microsoft Research
 Email         : daan@microsoft.com
 Reveal Theme  : solarized
 Beamer Theme  : singapore
-Css           : &reveal-url;/css/theme/&reveal-theme;.css
 Package       : pstricks
 Package       : pst-plot
-Math Embed    : 64
 @html .math-inline, .math-display: color=#586e75
 
 [TITLE]
