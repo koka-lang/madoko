@@ -89,7 +89,7 @@
 \mdDefineUnicode{128270}{\hspace{-0.75ex}\protect\raisebox{-0.25ex}{$\arrownot$}\hspace{1.05ex}\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
 
 % break and nbsp
-\newcommand{\mdBr}{\\}
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
 
@@ -136,7 +136,7 @@
     {%LLNCS, Beamer
       \gappto\@mdauthors{#1}%
       \gappto\@mdinsts{#2}%
-      \ifx\relax#3\else\gappto\@mdinsts{\\\email{#3}}\fi
+      \ifx\relax#3\else\gappto\@mdinsts{\mdBr\email{#3}}\fi
     }%
     {% EPTCS
       \gappto\@mdauthors{#1%
@@ -418,6 +418,7 @@
   {\end{mdDivInline}\par}
 
 \cssClassRule{bibitem-before}{display=\mdBibDisplay,width=\leftmargin,text-align=right}
+\providecommand{\newblock}{\hskip .11em plus .33em minus .07em}
 \cssClassRuleDoBefore{newblock}{\newblock}
 
 % ---------------------------------------------------
