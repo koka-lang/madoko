@@ -767,16 +767,15 @@ var UI = (function() {
         if (self.editName === self.docName) {
           self.docText = self.getEditText();
         }
-        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() })
-          .then(
-            function(res) {
+        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() }).then( function(res) {
               self.htmlText = res.content; 
               var quick = self.viewHTML(res.content, res.ctx.time0);
               if (res.runAgain) {
                 self.stale=true;              
               }
               if (res.runOnServer && self.allowServer && self.asyncServer 
-                    && self.lastMathDoc !== self.docText) { // prevents infinite math rerun on latex error
+                    && self.lastMathDoc !== res.mathDoc) { // prevents infinite math rerun on latex error
+                self.lastMathDoc = res.mathDoc;
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
@@ -824,7 +823,7 @@ var UI = (function() {
     self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
       function() { return false; },
       function(round) {
-        self.lastMathDoc = self.docText;
+        //self.lastMathDoc = self.getMathDoc();
         var ctx = {
           docname: self.docName, 
           round:round,
@@ -839,10 +838,18 @@ var UI = (function() {
           function(err) {
             self.onError(err);            
           }
-        );
+        );     
       }
     );
   }
+
+  UI.prototype.getMathDoc = function() {
+    var self = this;
+    var mathExt = ".tex";
+    var mathStem = "out/" + util.stemname(self.docName) + "-math-"
+    return self.storage.readLocalFile(mathStem + "dvi" + mathExt) + self.storage.readLocalFile( mathStem + "pdf" + mathExt, "" );
+  }
+
 
   // Save editor text to storage
   UI.prototype.flush = function(path) {

@@ -61,3 +61,12 @@ public function containsSnippet( txt : string ) : bool {
 }
 
 public val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet}[\[\{]([a-fA-F0-9]{32})[\}\]]")
+
+
+// return all tex content outside snippets and line comments
+public function unsnippet( txt : string ) : string {
+  txt.replaceAll( rxSnippet, "" ).replaceAll( rxComment, "" )
+}
+
+val rxSnippet = regex( @"\\begin{md(?:Inline|Display)Snippet}[\s\S]*?\\end{md(?:Inline|Display)Snippet}" )
+val rxComment = regex( @"^[ \t]*%.*$" )

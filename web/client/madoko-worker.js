@@ -59,6 +59,18 @@ require(["../scripts/util","webmain"], function(util,madoko)
     });
   }
 
+  function mathDoc(files) {
+    if (!files) return "";
+    var mdocs = nub(files.split("\n")).filter( function(fname) {
+      return (fname && (util.endsWith(fname,"-math-dvi.tex") || util.endsWith(fname,"-math-pdf.tex")));
+    });
+    if (!mdocs) return "";
+    var mcontents = mdocs.map( function(fname) {
+      return madoko.readTextFile(fname);
+    });
+    return mcontents.join();
+  }
+
   var local = new util.Map(); // filename -> bool
 
   self.addEventListener( "message", function(ev) {
@@ -107,6 +119,7 @@ require(["../scripts/util","webmain"], function(util,madoko)
             filesRead  : fileList(filesRead),         
             filesReferred: fileList(filesReferred),
             filesWritten: fileWriteList(filesWrite),
+            mathDoc    : mathDoc(filesWrite),
             err        : null,
           });
         });

@@ -513,6 +513,7 @@ var Storage = (function() {
 
     // update
     self.files.set(finfo.path,finfo);
+    self.pullFails.remove(finfo.path);
     self._fireEvent("update", { file: finfo });
   }
 
@@ -581,6 +582,12 @@ var Storage = (function() {
       });
   }
 
+  Storage.prototype.readLocalFile = function( fpath ) {
+    var self = this;
+    var file = self.files.get(fpath);
+    return (file ? file.content : "");
+  }
+
   Storage.prototype.readFile = function( fpath, createOnErr, opts ) {  // : Promise<file>
     var self = this;
     var file = self.files.get(fpath);
@@ -589,7 +596,7 @@ var Storage = (function() {
     //if (!fpath) throw new Error("no path:" + fpath)
 
     // prevent too many calls to remote storage... 
-    if (self.pullFails.contains(fpath)) return Promise.rejected(new Error("cannot find file: " + fpath));
+    if (!createOnErr && self.pullFails.contains(fpath)) return Promise.rejected(new Error("cannot find file: " + fpath));
 
     opts = self._initFileOptions(fpath,opts);
     var dirs = [Util.dirname(fpath)].concat(opts.searchDirs);
