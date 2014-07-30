@@ -67,7 +67,7 @@ else {
   }
 
   $renameSync = function(oldname,newname) {
-    $writeFileSync( newname, $readFileSync(oldname) );
+    $writeFileSync( newname, "binary", $readFileSync(oldname) );
   }
 
   $clear = function() {
