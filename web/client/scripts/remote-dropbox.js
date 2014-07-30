@@ -255,7 +255,7 @@ var Dropbox = (function() {
   Dropbox.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info ? new Date(info.modified) : null);
+      return (info && !info.is_deleted ? new Date(info.modified) : null);
     }, function(err) {
       return null;
     });
