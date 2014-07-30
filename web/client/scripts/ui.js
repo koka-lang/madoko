@@ -831,7 +831,7 @@ var UI = (function() {
         };
         return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
-            self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
+            // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
             return self.asyncMadoko.run(true);
           },
