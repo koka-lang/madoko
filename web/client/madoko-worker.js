@@ -68,7 +68,7 @@ require(["../scripts/util","webmain"], function(util,madoko)
     var mcontents = mdocs.map( function(fname) {
       return madoko.readTextFile(fname);
     });
-    return mcontents.join();
+    return mcontents.join().replace(/\n[ \t]*%.*/mg, "" );
   }
 
   var local = new util.Map(); // filename -> bool

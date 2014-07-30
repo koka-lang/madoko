@@ -110,8 +110,9 @@ public function mathStatic( mathDvi : string, mathPdf : string,
     return continue(Nothing)
   }
   
-  val rebuildDvi = oldMathDvi.unsnippet != outMathDvi.unsnippet
-  val rebuildPdf = oldMathPdf.unsnippet != outMathPdf.unsnippet
+  val rebuildDvi = oldMathDvi.unsnippet("old dvi") != outMathDvi.unsnippet("new dvi")
+  val rebuildPdf = oldMathPdf.unsnippet("old pdf") != outMathPdf.unsnippet("new pdf")
+  if (rebuildDvi || rebuildPdf) trace("math rebuild")
   val dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
   val pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 

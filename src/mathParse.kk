@@ -64,9 +64,13 @@ public val rxDigest = regex(@"\\begin{md(?:Inline|Display)Snippet}[\[\{]([a-fA-F
 
 
 // return all tex content outside snippets and line comments
-public function unsnippet( txt : string ) : string {
-  txt.replaceAll( rxSnippet, "" ).replaceAll( rxComment, "" )
+public function unsnippet( txt : string, which : string ) : string {
+  val res = txt.replaceAll( rxSnippet, "" ).replaceAll( rxComment, "" ).replaceAll(rxLines, "\n")
+  trace("**** unsnippet pre " + which + " ****\n" + txt + "\n\n")
+  trace("**** unsnippet " + which + " ****\n" + res + "\n\n")
+  res
 }
 
 val rxSnippet = regex( @"\\begin{md(?:Inline|Display)Snippet}[\s\S]*?\\end{md(?:Inline|Display)Snippet}" )
-val rxComment = regex( @"^[ \t]*%.*$" )
+val rxComment = regex( @"\r?\n[ \t]*%[^\r\n]*" )
+val rxLines   = regex( @"(?:\r?\n)+")
