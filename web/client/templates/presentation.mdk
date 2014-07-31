@@ -53,42 +53,17 @@ Oh hey, these are some notes. They'll be hidden in your presentation, but you
 can see them if you open the speaker notes window (hit 's' on your keyboard).
 ~~
 
-## Cool images
-
-With the PSTricks package we create do cool images, like:
-
-~~ Snippet
-\psset{unit=1.2cm} 
-\begin{pspicture*}(-0.5,-1.5)(4,2.2)
-  \psgrid[subgriddiv=5,gridcolor=black!20%
-         ,gridlabels=0pt](1,0)(3,1.2)
-  \psaxes{->}(0,0)(0,-1)(3.2,1.5)
-  \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
-  \pscircle*[linecolor=red](! Euler 1){3pt}
-  \psline[linecolor=red,linestyle=dashed]%
-         (! Euler 0)(! Euler 1)
-  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]%
-         {->}(! Euler 1)(0, 1)
-  \uput[-90](! Euler 0){\color{red}$e$}
-  \pscircle*[linecolor=blue](1,0){3pt}
-  \psplot[linewidth=1pt]{0.2}{3}{ x ln }
-  \rput(2,-1){\color{blue}\fbox{$f(x)=\ln(x)$}}
-\end{pspicture*}
-~~
-
-
 ## Code
 
-Here is code, highlighted by Madoko:
+Here is code, highlighted by Madoko 
 
-``` lisp 
-(def lazy-fib
-  (concat
-   [0 1]
-   ((fn rfib [a b]
-        (lazy-cons (+ a b) (rfib b (+ a b)))) 0 1)))
+``` javascript
+function sqr( x ) {
+  var \(&pi;\) = 3.141593;
+  return x*x;  /* the square */
+}
 ```
-
+We used `\(` and `\)` to escape into markdown to write &pi;.
 
 <!-- Example of nested vertical slides -->
 ~ Begin Vertical { data-background=Gainsboro }
