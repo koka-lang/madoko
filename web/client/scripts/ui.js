@@ -1452,10 +1452,40 @@ var UI = (function() {
   UI.prototype.showErrors = function( errors, sticky ) {
     var self = this;
     self.removeDecorations(true);
-    //self.decorations = new Map();    
+   
     errors.forEach( function(error) {
       if (!error.range.fileName) error.range.fileName = self.editName;
       self.decorations.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
+    });
+
+    // remove duplicates
+    self.editor.changeDecorations( function(changeAccessor) {
+      var newdecs = [];
+      for( var i = 0; i < self.decorations.length; i++) {
+        var dec = self.decorations[i];
+        for (var j = i+1; j < self.decorations.length; j++) {
+          var dec2 = self.decorations[j];
+          // overlapping range?
+          // todo: check column range, perhaps merge messages?
+          if (dec.range.fileName === dec2.range.fileName && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
+            if (!dec.outdated && dec2.outdated) {
+              // swap, so we remove the outdated one
+              self.decorations[j] = dec;
+              dec = dec2;
+              dec2 = self.decorations[j];
+            }
+            // remove dec
+            if (dec.id) {
+              changeAccessor.removeDecoration( dec.id );
+              dec.id = null;
+            }
+            dec = null;
+            break;
+          }
+        }
+        if (dec) newdecs.push(dec);
+      }
+      self.decorations = newdecs;
     });
 
     self.showDecorations();
