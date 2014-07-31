@@ -284,6 +284,7 @@ div.input-mathpre {
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
+.highlighted                        { color: black; }
 .highlighted .token.identifier      { }
 .highlighted .token.operators       { }
 .highlighted .token.keyword         { color: blue }
