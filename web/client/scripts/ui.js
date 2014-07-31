@@ -256,7 +256,7 @@ var UI = (function() {
         else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
                  && ev.target.position && ev.target.element) 
         {
-          var msg = self.getDecorationMessage(self.docName,ev.target.position.lineNumber);
+          var msg = self.getDecorationMessage(self.editName,ev.target.position.lineNumber);
           ev.target.element.title = msg;
         }
       }, [State.Syncing]);

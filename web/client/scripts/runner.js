@@ -255,7 +255,7 @@ var Runner = (function() {
   Runner.prototype.showLatexMessages = function( output, show ) {
     var self = this;
     var errors = [];
-    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-;:\\\/]*).*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
+    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-\.;:\\\/]*).*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[1];
