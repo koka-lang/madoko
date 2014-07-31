@@ -647,7 +647,8 @@ div.modal {
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
 #picker.command-message #folder-name,
-#picker.command-template #folder-name {
+#picker.command-template #folder-name,
+#picker.command-alert #folder-name {
   display: inline-block;
 }
 
@@ -783,6 +784,7 @@ div.item:hover {
   display: none;
 }
 
-#picker.command-template #header-logo {
+#picker.command-template #header-logo,
+#picker.command-alert #header-logo  {
   display: inline;
 }

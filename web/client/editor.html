@@ -193,7 +193,7 @@
     <div id="message-login" class="message">Not connected.</div>       
     <div id="message-connect" class="message">Connected.</div>
     <div id="message-message" class="message"></div>
-    <div id="message-alert" class="message">The current document has not been saved yet.
+    <div id="message-alert" class="message">The current local document has changes that have not been saved to the cloud yet!
     <br/>Are you sure you want to discard these changes?</div>
     <div id="message-template" class="message">Select a template<hr></div>
     <div id="templates">
@@ -390,7 +390,7 @@ if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
 // test for multiple instances
 else if (/\bmadoko=?([^&;]*)(?:[&;]|$)/.test(document.cookie)) {
   document.getElementById("multibrowser").style.display = "block";
-  document.cookie=updateCookie(cookieIval); // just in case there is some stale cookie somehow..
+  //document.cookie=updateCookie(cookieIval); // just in case there is some stale cookie somehow..
 }
 // we are good to go
 else {

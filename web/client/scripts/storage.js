@@ -145,13 +145,15 @@ function connect(storage) {
   });
 }
 
-function discard(storage) {
+function discard(storage,docName) {
   var params = {
     command: "alert",
-    alert: "true"
+    alert: "true",
+    header: Util.escape(Util.combine(storage.folder(),docName))
   };
   if (storage.remote.type() !== "null") {
     params.remote = storage.remote.type();
+    params.headerLogo = "images/dark/" + storage.remote.logo();
   }
   return picker(storage,params).then( function(res) {
     return true;

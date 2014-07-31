@@ -914,7 +914,7 @@ var UI = (function() {
 
   UI.prototype.setStorage = function( stg0, docName0 ) {
     var self = this;
-    return self.initializeStorage(stg0,docName0, function(stg,docName) {
+    return self.initializeStorage(stg0,docName0, function(stg,docName,fresh) {
       self.updateConnectionStatus(stg);
       self.showSpinner(true);    
       return stg.readFile(docName, false).then( function(file) { 
@@ -937,7 +937,7 @@ var UI = (function() {
         self.remoteLogo.src = "images/dark/" + remoteLogo;
         self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
         self.editName = "";
-        return self.editFile(self.docName).always( function() { self.setStale(); } );
+        return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
       });
     });
   }
@@ -947,7 +947,7 @@ var UI = (function() {
     var cap = /[#&]template=([^=&#;]+)/.exec(window.location.hash);
     if (cap) window.location.hash = "";
     if (cap || !stg) {
-      return (stg && !stg.isSynced() ? storage.discard(stg) : Promise.resolved(true)).then( function(discard) {
+      return (stg && !stg.isSynced() ? storage.discard(stg,docName) : Promise.resolved(true)).then( function(discard) {
         if (!discard) return cont(stg,docName);
 
         // initialize fresh from template
@@ -955,12 +955,12 @@ var UI = (function() {
         stg = storage.createNullStorage();
         var template = (cap ? cap[1] : "default");
         return storage.createFromTemplate(stg,docName,template).then( function() {
-          return cont(stg,docName);
+          return cont(stg,docName,true);
         });
       });
     }
     else {
-      return cont(stg,docName);
+      return cont(stg,docName,false);
     }
   }
 
@@ -1026,7 +1026,8 @@ var UI = (function() {
       self.checkAutoSync.checked = json.autoSync;
       self.theme = json.theme || "vs";
       var stg = storage.unpersistStorage(json.storage);
-      return self.setStorage( stg, docName ).then( function() {
+      return self.setStorage( stg, docName ).then( function(fresh) {
+        if (fresh) return; // loaded template instead of local document
         return self.editFile( json.editName, json.pos );
       });
     }

@@ -298,6 +298,7 @@ function display( options, current ) {
     if (options.alert!=="true") {
       document.getElementById("message-alert").innerHTML = Util.escape(options.alert);
     }
+    document.getElementById("folder-name").innerHTML = options.header || "";
     Util.addClassName(app,"command-alert");
     return Promise.resolved();
   }
