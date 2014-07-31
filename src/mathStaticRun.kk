@@ -54,7 +54,7 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
   opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, fun(err:int,stdout:string,stderr:string) {
     if (err!=0) {
-      opts.printErr("> " + bibtexCmd)
+      opts.printErr("error while running: > " + bibtexCmd)
       system(bibtexCmd + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("could not find bibtex: \"" + bibtexCmd + "\"")
@@ -99,7 +99,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
     val logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
       opts.printErr("error while running: \n> " + latexCmd)
-      trace("err: " + err.show + "\n" + stdout + stderr)
+      trace("error code: " + err.show + "\n" + stdout + stderr)
       //println(stdout + stderr)
       system(texCmd + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {

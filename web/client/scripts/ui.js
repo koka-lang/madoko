@@ -241,7 +241,7 @@ var UI = (function() {
       self.synchronize();
     });
 
-    self.decorations = new Map();
+    self.decorations = [];
     self.dropFiles = null;
     self.editor.addListener("mousemove", function(ev) {
       self.anonEvent( function() {
@@ -1169,7 +1169,8 @@ var UI = (function() {
       showErrors: function(errs) { self.showErrors(errs,true); } 
     };
     return self.spinWhile( self.viewSpinner, 
-      self.runner.runMadokoServer( self.docText, ctx ).then( function() {
+      self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
+        if (errorCode !== 0) throw "PDF generation failed";
         var name = "out/" + util.changeExt(self.docName,".pdf");
         return self.openInWindow( name, "application/pdf" );
       })
@@ -1380,44 +1381,48 @@ var UI = (function() {
     }
   }
 
+  /*---------------------------------------------------
+    Decorations 
+  -------------------------------------------------- */
+
   UI.prototype.removeDecorations = function(discardSticky) {
     var self = this;
     self.editor.changeDecorations(function(changeAccessor) {
-      self.decorations.forEach( function(fname,decorations) {
-        var newdecs = [];
-        decorations.forEach( function(decoration) {
+      var newdecs = [];
+      self.decorations.forEach( function(decoration) {
+        if (discardSticky || !decoration.sticky) {
           if (decoration.id) {
-            decoration.outdated = true;
-            if (discardSticky || !decoration.sticky) {
-              changeAccessor.removeDecoration(decoration.id);
-              decoration.id = null;
-            }
-            else {
-              newdecs.push(decoration);
-              decoration.id = changeAccessor.changeDecorationOptions(decoration.id,{
-                isWholeLine: true,
-                glyphMarginClassName: 'glyph-error.outdated',
-                linesDecorationsClassName: 'latex-error.outdated',
-              });
-            }
+            changeAccessor.removeDecoration(decoration.id);
+            decoration.id = null;          
           }
-        });
-        if (newdecs.length > 0) self.decorations.set(fname, newdecs);
-                           else self.decorations.remove(fname);
+        }
+        else {
+          newdecs.push(decoration);
+          decoration.outdated = true;
+          if (decoration.id && decoration.range.fileName === self.editName) {
+            changeAccessor.changeDecorationOptions(decoration.id,{
+              isWholeLine: true,
+              glyphMarginClassName: 'glyph-error.outdated',
+              linesDecorationsClassName: 'latex-error.outdated',
+            });
+          }
+          else if (decoration.id) {
+            changeAccessor.removeDecoration(decoration.id);
+            decoration.id = null;          
+          }
+        }
       });
+      self.decorations = newdecs;
     });    
   }
 
   UI.prototype.hideDecorations = function() {
     var self = this;
     self.editor.changeDecorations( function(changeAccessor) {
-      self.decorations.forEach( function(fname,decorations) {
-        if (fname === self.editName) {
-          decorations.forEach( function(decoration) {
-            if (decoration.id) {
-              changeAccessor.removeDecoration( decoration.id );
-            }
-          });
+      self.decorations.forEach( function(decoration) {
+        if (decoration.id) {
+          changeAccessor.removeDecoration( decoration.id );
+          decoration.id = null;
         }
       });
     });
@@ -1426,17 +1431,19 @@ var UI = (function() {
   UI.prototype.showDecorations = function() {
     var self = this;
     self.editor.changeDecorations( function(changeAccessor) {
-      self.decorations.forEach( function(fname,decorations) {
-        if (fname === self.editName) {
-          decorations.forEach( function(decoration) {
-            var postfix = (decoration.outdated ? ".outdated" : "" );
-            decoration.id = changeAccessor.addDecoration( decoration.range, 
-              { isWholeLine: true,
-                glyphMarginClassName: 'glyph-error' + postfix,
-                linesDecorationsClassName: 'latex-error' + postfix
-              }
-            );            
-          });
+      self.decorations.forEach( function(decoration) {
+        if (decoration.id) {
+          changeAccessor.removeDecoration( decoration.id );
+          decoration.id = null;
+        }
+        if (decoration.range.fileName === self.editName) {
+          var postfix = (decoration.outdated ? ".outdated" : "" );
+          decoration.id = changeAccessor.addDecoration( decoration.range, 
+            { isWholeLine: true,
+              glyphMarginClassName: 'glyph-error' + postfix,
+              linesDecorationsClassName: 'latex-error' + postfix
+            }
+          );            
         }
       });
     });
@@ -1447,8 +1454,8 @@ var UI = (function() {
     self.removeDecorations(true);
     //self.decorations = new Map();    
     errors.forEach( function(error) {
-      var decs = self.decorations.getOrCreate(error.range.fileName || self.editName, []);
-      decs.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
+      if (!error.range.fileName) error.range.fileName = self.editName;
+      self.decorations.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
     });
 
     self.showDecorations();
@@ -1456,18 +1463,20 @@ var UI = (function() {
 
   UI.prototype.getDecorationMessage = function( fileName, lineNo ) {
     var self = this;
-    if (!fileName) fileName = self.docName;
-    var decs = self.decorations.get(fileName);
-    if (decs) {
-      for (var i = 0; i < decs.length; i++) {
-        if (decs[i].range.startLineNumber <= lineNo && decs[i].range.endLineNumber >= lineNo) {
-          return decs[i].message;
-        }
+    if (!fileName) fileName = self.editName;
+    for (var i = 0; i < self.decorations.length; i++) {
+      var dec = self.decorations[i];
+      if (dec.range.fileName === fileName && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo) {
+        return dec.message;
       }
-    }
+    }    
     return "";
   }
 
+
+  /* --------------------------------------------------------------
+     View synchronization 
+  -------------------------------------------------------------- */
   
   UI.prototype.dispatchViewEvent = function( ev ) {
     var self = this;

@@ -242,7 +242,13 @@ var Runner = (function() {
       });
       if (ctx.showErrors) self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors);
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
-      return ctx;
+      if (/^[\t ]*error\b[\w \t]+:/m.test(data.stdout + data.stderr)) {
+        ctx.errorCode = 1;
+      }
+      else {
+        ctx.errorCode = 0;
+      }
+      return ctx.errorCode;
     });
   }  
 
