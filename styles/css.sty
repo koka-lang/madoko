@@ -265,7 +265,7 @@
 }
 
 \newcommand{\@cssBlockEndPar}{%
-	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfter{\relax\ifhmode\par\fi}}%
+	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfter{\relax\ifhmode\par\global\hangindent=0pt\fi}}%
 }
 
 \newif\if@hasdim
@@ -546,7 +546,7 @@
 \cssNewLengthKey{css}{text-indent}{\cssTextIndent}
 \cssNewKey{css}{text-align}{\cssTextAlign}{justify}
 \cssNewLengthKey{css}{line-height}{\cssLineHeight}
-
+\cssNewKey{css}{float}{\cssFloat}{}
 
 \DeclareRobustCommand{\@robustColor}[1]{%
 	\cssDefNormalizeColor{@fcolor}{#1}\color{\@fcolor}%
@@ -581,11 +581,11 @@
 
 \newcommand{\@cssInlineText}{%
 	\eifstrequal{\cssId}{}{}{\label{\cssId}}% set label
-	\eifstrequal{\cssTextAlign}{left}%
+	\eifstrequal{\cssFloat}{left}%
 		{\cssDoAfter{\hspace*{\fill}}}%
-	{\eifstrequal{\cssTextAlign}{right}%
+	{\eifstrequal{\cssFloat}{right}%
 		{\cssDoBefore{\hspace*{\fill}}}%
-	{\eifstrequal{\cssTextAlign}{center}%
+	{\eifstrequal{\cssFloat}{center}%
 		{\cssDoAfter{\hspace*{\fill}}\cssDoBefore{\hspace*{\fill}}}%
 	{}}}%
 	\ifdim\cssLineHeight=0pt\else\cssDoBefore{\rule{0pt}{\cssLineHeight}}\fi

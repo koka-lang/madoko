@@ -352,9 +352,13 @@ function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : stri
 
 function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
   val envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
-  "\\begin{" + envName + "}" + attrs.texAttrsX + "%\n" +
-    body.trimRight + "%\n" +
-    "\\end{" + envName + "}%\n"
+  val envCmd = "\\begin{" + envName + "}" + attrs.texAttrsX + "%\n" +
+                body.trimRight + "%\n" +
+               "\\end{" + envName + "}%\n"
+  match(attrs.hasKey("float")) {
+    Nothing   -> envCmd
+    Just(flt) -> "\\mdFloatBox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
+  }               
 }
 
 function texClassName( attrs : attrs, def : string ) : (string,attrs) {

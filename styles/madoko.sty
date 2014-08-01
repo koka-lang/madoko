@@ -20,6 +20,7 @@
 \RequirePackage{textcomp}
 \RequirePackage{pifont}
 \RequirePackage{pdfcomment}
+\RequirePackage{wrapfig}
 
 % conditionals
 \newif\ifmathmode
@@ -503,9 +504,14 @@
     {\def\@pagealign{!ht}}%
     {\def\@pagealign{tbp}}}}}}% default tbp
   %\cssDoAfter{\cssRestoreFootnotes}%
-  \cssIfHasClass{wide}%
+  \eifstrequal{\cssFloat}{left}%
+    {}%
+  {\eifstrequal{\cssFloat}{right}%
+    {}%
+  {\cssIfHasClass{wide}%
     {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
     {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}\cssDoAfter{\end{figure}}}%
+  }}%
   %\cssDoBefore{\cssSaveFootnotes}%
 }
 
@@ -532,6 +538,35 @@
   \endgroup}
 
 \cssClassRule{block}{margin-top=\topsep,margin-bottom=\topsep}
+
+
+%-------------------------------------------------------------
+% Float boxes  (should this be in css.sty?)
+%-------------------------------------------------------------
+\newlength{\@sideheight}
+\newsavebox{\@sidebox}
+\newcommand{\mdFloatBox}[3]{
+  \savebox{\@sidebox}{#3}%
+  \ifdim\ht\@sidebox>0pt\relax%
+    \savebox{\@sidebox}{\raisebox{-\ht\@sidebox}{\usebox{\@sidebox}}}% top-align the box
+  \fi%
+  \ifnum 0=0#2\relax%
+    \setlength{\@sideheight}{\dp\@sidebox}%
+    \addtolength{\@sideheight}{\ht\@sidebox}%
+    \def\@hangafter{\the\numexpr(0 - \@sideheight - \baselineskip/2)/\baselineskip\relax}%  
+  \else%
+    \def\@hangafter{-#2}%
+  \fi%
+  \eifstrequal{#1}{right}%
+      {\hangindent=-\wd\@sidebox%
+       \hangafter=\@hangafter%
+       \smash{\hspace*{\dimexpr\textwidth - \wd\@sidebox}\usebox{\@sidebox}}%
+    }%
+   {\hangindent=\wd\@sidebox%
+       \hangafter=\@hangafter%
+       \smash{\usebox{\@sidebox}}%
+    }%  
+}
 
 %-------------------------------------------------------------
 % Code and syntax highlighting 
