@@ -499,13 +499,13 @@ function readFiles( userpath, docname, pdf, out ) {
   var ext    = path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
   var fnames = [".dimx", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
-                .concat( pdf ? [".pdf"] : [] )
+                .concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); });
   var cap = /^  log written at: ([\w\-\/\\]+\.log) *$/m.exec(out);
   if (cap && isValidFileName(cap[1])) {
     console.log("add output: " + cap[1]);
     fnames.push(cap[1]);
-    fnames.push(combine(outdir, stem + ".tex" ));
+    //fnames.push(combine(outdir, stem + ".tex" ));
   }
   //console.log("sending back:\n" + fnames.join("\n"));
   return Promise.when( fnames.map( function(fname) {
