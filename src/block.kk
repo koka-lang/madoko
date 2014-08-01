@@ -234,7 +234,7 @@ function blockDefList( cap : matched, context : blockContext ) : block {
     [ddesc] + dterm
   }
 
-  blockListX( cap.matched.trim, context, "dl", rxDefItem, parseItem )
+  blockListX( cap.matched.trim, context, "dl", [], rxDefItem, parseItem )
 }
 val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @")? *(" + defdef + ")" )
 
@@ -251,13 +251,18 @@ function blockList( cap : matched, context : blockContext ) : block {
            if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))]
   }
 
-  val tag = if (cap.groups[2].length > 1) then "ol" else "ul"
-  blockListX( cap.matched, context, tag, rxitem, parseItem )
+  val tag  = if (cap.groups[2].length > 1) then "ol" else "ul"
+  val bull = cap.groups[2].substr(0,1)
+  val cls  = if (bull=="*") then ["list-star"]
+             elif (bull=="+") then ["list-plus"]
+             elif (bull=="-") then ["list-dash"]
+             else [] 
+  blockListX( cap.matched, context, tag, cls, rxitem, parseItem )
 }
 val rxitem      = regex(@"^(( *)(?:" + bull + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bull + @" ).*)*\n?)",multiline=True);
 
 function blockListX( text : string, context : blockContext, 
-                     tag : string, rxParseItem : regex, parseItem : (matched,int,blockContext) -> list<block> ) : block
+                     tag : string, classes : list<string>, rxParseItem : regex, parseItem : (matched,int,blockContext) -> list<block> ) : block
 {  
   val loose = text.contains(blankline)
   // we should merge any text blocks into a paragraph for a loose list
@@ -280,7 +285,7 @@ function blockListX( text : string, context : blockContext,
     Just(acap) -> (text.substr(0,text.length - acap.matched.length), acap.groups[1])
     Nothing    -> (text,"")
   }
-  val attrs0 = attrsTxt.parseAttrs.addClass(if (loose) then "loose" else "compact")
+  val attrs0 = attrsTxt.parseAttrs.addClasses( classes + [if (loose) then "loose" else "compact"] )
   val attrs = match (txt.find(rxFirstNum)) {
                 Nothing    -> attrs0
                 Just(icap) -> {

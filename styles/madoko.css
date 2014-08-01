@@ -232,7 +232,19 @@ hr.madoko, .madoko hr {
   font-family: monospace;
 }
 
+/* Lists */
 
+ul.list-star {
+  list-style-type: disc;
+}
+
+ul.list-dash {
+  list-style: square url('data:image/gif;base64,R0lGODlhBQAKAIABAAAAAP///yH5BAEAAAEALAAAAAAFAAoAAAIIjI+ZwKwPUQEAOw==');
+}
+
+ul.list-plus {
+  list-style-type: square;
+}
 
 /* Tables */
 table.madoko {
