@@ -649,7 +649,7 @@ var Storage = (function() {
     if (Util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
       if (Util.contains(roots,fpath.substr(4))) return true;
     }
-    if (Util.extname(fpath) === ".pdf" || Util.extname(fpath) === ".html") return true;
+    if (Util.extname(fpath) === ".pdf" || Util.extname(fpath) === ".html" || Util.extname(fpath) === ".tex") return true;
     return false;
   }
 
