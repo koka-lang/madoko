@@ -227,7 +227,10 @@ var UI = (function() {
       self.changed = true;
       self.lastEditChange = Date.now();
     });
-
+    self.editor.addListener("keydown", function (e) {    
+      if (self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
+    });
+    
     self.keybinding = self.editor.getHandlerService().bind({
       key: 'Alt-Q'
     }, function(ev) { 
@@ -1112,6 +1115,12 @@ var UI = (function() {
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
 
+
+  /*---------------------------------------------------
+    Generating HTML & PDF
+  -------------------------------------------------- */
+
+
   function saveUserContent( name, mime, content, tryOpenFirst ) {
     var blob = new Blob([content], { type: mime });
     var url = URL.createObjectURL(blob);
@@ -1201,6 +1210,12 @@ var UI = (function() {
       })
     );
   }
+
+
+  /*---------------------------------------------------
+    Editor operations
+  -------------------------------------------------- */
+
 
   function breakLines(text, maxCol, hang0, hang ) {
     var para    = hang0;
@@ -1297,6 +1312,12 @@ var UI = (function() {
     }
     return lineNo;
   }
+
+
+  /*---------------------------------------------------
+    File and text insertion
+  -------------------------------------------------- */
+
 
   // Insert some text in the document 
   UI.prototype.insertText = function( txt, pos ) {
