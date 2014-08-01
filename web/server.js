@@ -21,7 +21,7 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+|71\.37\.5\.\d+|98\.158\.13\.\d+)$/;
+var allowedIps = null; // /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+|71\.37\.5\.\d+|98\.158\.13\.\d+)$/;
 var blockedIps = null;
 
 // -------------------------------------------------------------
