@@ -250,11 +250,11 @@ function theorem( prose : string ) {
 function heading( depth : int, headingDepth : int, tocDepth : int ) {
   val label = list(1,depth).map( fun(d){ headingCounter(d) } ).join(".")
   val num   = depth.show
-  "~h" + num + ": " + 
-    (if (depth > 1) then headingCounter(depth) else "") + 
-    " label='[" + label + "]{.heading-label}'" +
-    (if (depth > headingDepth) then "" else " before='[&label;.&ensp;]{.heading-before}'") +
-    (if (depth > tocDepth) then "" else " toc")    
+  ["~h" + num + ": ", 
+   (if (depth > 1) then headingCounter(depth) else ""),
+   " label='[" + label + "]{.heading-label}'",
+   (if (depth > headingDepth) then "" else " before='[&label;.&ensp;]{.heading-before}'"),
+   (if (depth > tocDepth) then "" else " toc")].join
 }
 
 // Generate a heading counter "headingCounter(2)" becomes "@h1-h2".
