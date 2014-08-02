@@ -92,6 +92,10 @@ var NullRemote = (function() {
     return Promise.resolved("");
   }
 
+  NullRemote.prototype.getShareUrl = function(fname) {
+    return null;
+  }
+
   return NullRemote;
 })();
 

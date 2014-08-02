@@ -155,6 +155,12 @@ html,body,#main {
   text-decoration: none;
 }
 
+
+
+.app-footer a.external {
+  text-decoration: underline;
+}
+
 .app-footer #view-message {
   float: left;
   text-align: left;
@@ -186,6 +192,14 @@ html,body,#main {
   white-space: nowrap;  
 }
 
+#console-out a {
+  color: blue;
+}
+
+#console-out a:hover {
+  color: blue;
+  background-color: white;
+}
 
 /* buttons */
 .button {

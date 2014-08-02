@@ -361,6 +361,10 @@ var Onedrive = (function() {
     return getUserName();
   }
 
+  Onedrive.prototype.getShareUrl = function(fname) {
+    return null;
+  }
+
   return Onedrive;
 })();   
 

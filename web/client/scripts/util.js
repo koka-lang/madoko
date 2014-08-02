@@ -74,11 +74,18 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
 
   // Call for messages
   function message( txt, kind ) {
+    var linkTxt = "";
     if (typeof txt === "object") {
       if (txt.stack) {
         console.log(txt.stack);
       }
-      if (txt.message) 
+      
+      if (txt.url && typeof txt.url === "string") {
+        linkTxt = "<a class='external' target='_blank' href='" + htmlEscape(txt.url) + "'>" + 
+                    htmlEscape(txt.urlText || "link") + "</a>";
+        txt = txt.message || "";                    
+      }
+      else if (txt.message) 
         txt = txt.message;
       else
         txt = txt.toString();
@@ -91,7 +98,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
         if (n && s.length > n-2) {
           s = s.substr(0,n) + "...";
         }
-        return "<span class='msg-" + kind + "'>" + spanLines(htmlEscape(s),"msg-line") + "</span>";
+        return "<span class='msg-" + kind + "'>" + spanLines(htmlEscape(s),"msg-line") + linkTxt + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";

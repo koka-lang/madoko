@@ -556,6 +556,11 @@ var Storage = (function() {
     return self.remote.connect(dontForce);
   }
 
+  Storage.prototype.getShareUrl = function(fpath) {
+    var self = this;
+    return self.remote.getShareUrl(fpath);
+  }
+
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);

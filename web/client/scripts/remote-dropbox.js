@@ -17,6 +17,8 @@ var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
 var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var accountUrl  = "https://api.dropbox.com/1/account/";
+var sharesUrl   = "https://api.dropbox.com/1/shares/auto";
+
 var appRoot     = "";
 
 var _access_token = null;
@@ -142,6 +144,14 @@ function createFolder( dirname ) {
   }, function(err) {
     if (err.httpCode === 403) return false;
     throw err;
+  });
+}
+
+function getShareUrl( fname ) {
+  var url = sharesUrl + fname;
+  return Util.requestPOST( url, { access_token: getAccessToken(), short_url: false } ).then( function(info) {
+    if (typeof info === "string") info = JSON.parse(info);
+    return (info.url || null);
   });
 }
 
@@ -290,6 +300,10 @@ var Dropbox = (function() {
     return getUserName();
   }
 
+  Dropbox.prototype.getShareUrl = function(fname) {
+    var self = this;
+    return getShareUrl( self.fullPath(fname) );
+  };
 
   return Dropbox;
 })();   

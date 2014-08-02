@@ -433,7 +433,7 @@ var UI = (function() {
     }
 
     document.getElementById("export-pdf").onclick = function(ev) {
-      self.event( "PDF exported", "exporting...",  State.Exporting, function() { 
+      self.event( null, "exporting...",  State.Exporting, function() { 
         return self.generatePdf(); 
       });
     }
@@ -1180,8 +1180,19 @@ var UI = (function() {
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw "PDF generation failed";
-        var name = "out/" + util.changeExt(self.docName,".pdf");
-        return self.openInWindow( name, "application/pdf" );
+        return self._synchronize().then( function() {
+          var name = "out/" + util.changeExt(self.docName,".pdf");
+          return self.storage.getShareUrl( name ).then( function(url) {
+            if (url) {
+              util.message( { message: "", urlText: "PDF exported", url: url }, util.Msg.Status );
+            }
+            else {
+              return self.openInWindow( name, "application/pdf" ).then( function() {
+                util.message( "PDF exported", util.Msg.Status );
+              });
+            }
+          });
+        });
       })
     );
   }
@@ -1661,24 +1672,30 @@ var UI = (function() {
 
   UI.prototype.synchronize = function() {
     var self = this;
-    self.event( "", "", State.Syncing, function() {
-      if (self.storage) {
-        self.localSave();
-        var cursors = {};        
-        var line0 = self.editor.getPosition().lineNumber;
-        cursors["/" + self.docName] = line0;
-        return self.withSyncSpinner( function() {
-          return self.storage.sync( diff, cursors ).then( function() {
-            var line1 = cursors["/" + self.docName];
-            var pos = self.editor.getPosition();
-            if (pos.lineNumber >= line0) {
-              pos.lineNumber += (line1 - line0);
-              self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
-             }
-          });
+    return self.event( "", "", State.Syncing, self._synchronize);
+  }
+
+  UI.prototype._synchronize = function() {
+    var self = this;
+    if (self.storage) {
+      self.localSave();
+      var cursors = {};        
+      var line0 = self.editor.getPosition().lineNumber;
+      cursors["/" + self.docName] = line0;
+      return self.withSyncSpinner( function() {
+        return self.storage.sync( diff, cursors ).then( function() {
+          var line1 = cursors["/" + self.docName];
+          var pos = self.editor.getPosition();
+          if (pos.lineNumber >= line0) {
+            pos.lineNumber += (line1 - line0);
+            self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
+          }
         });
-      }
-    });    
+      });
+    }
+    else {
+      return Promise.resolved();
+    }
   }
 
   // object    
