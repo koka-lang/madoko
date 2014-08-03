@@ -715,7 +715,7 @@ var Storage = (function() {
         return self._syncPush(file,remoteTime);
       }
     }).then( function(res) {
-      if (!file.shareUrl && file.mime === "application/pdf") {
+      if (!file.shareUrl && (file.mime === "application/pdf" || file.mime === "text/html")) {
         return self.remote.getShareUrl( file.path ).then( function(url) {
           file.shareUrl = url;
           return res;
