@@ -456,7 +456,8 @@ var UI = (function() {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV") {
-          elem = elem.parentNode;
+          if (elem.nodeName === "A") return; //don't proceed if clicking on explicit link
+          elem = elem.parentNode;          
         }
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
           var path = elem.getAttribute("data-file");
@@ -1077,6 +1078,9 @@ var UI = (function() {
           extra = "<span class='file-size'>" + kb.toFixed(0) + " kb</span>";
         }
       }
+      if (file.shareUrl) {
+        extra = extra + "<a class='external file-share' target='_blank' href='" + file.shareUrl + "'><span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span></a>"
+      }
     }
     return span + extra;
   }
@@ -1182,16 +1186,15 @@ var UI = (function() {
         if (errorCode !== 0) throw "PDF generation failed";
         return self._synchronize().then( function() {
           var name = "out/" + util.changeExt(self.docName,".pdf");
-          return self.storage.getShareUrl( name ).then( function(url) {
-            if (url) {
-              util.message( { message: "", urlText: "PDF exported", url: url }, util.Msg.Status );
-            }
-            else {
-              return self.openInWindow( name, "application/pdf" ).then( function() {
-                util.message( "PDF exported", util.Msg.Status );
-              });
-            }
-          });
+          var url = self.storage.getShareUrl( name )
+          if (url) {
+            util.message( { message: "", urlText: "PDF exported", url: url }, util.Msg.Status );
+          }
+          else {
+            return self.openInWindow( name, "application/pdf" ).then( function() {
+              util.message( "PDF exported", util.Msg.Status );
+            });
+          }
         });
       })
     );
@@ -1488,6 +1491,8 @@ var UI = (function() {
     errors.forEach( function(error) {
       if (!error.range.fileName) error.range.fileName = self.editName;
       self.decorations.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
+      var msg = "error: " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
+      util.message( msg, util.Msg.Error );
     });
 
     // remove duplicates
@@ -1672,7 +1677,7 @@ var UI = (function() {
 
   UI.prototype.synchronize = function() {
     var self = this;
-    return self.event( "", "", State.Syncing, self._synchronize);
+    return self.event( "", "", State.Syncing, function() { return self._synchronize(); } );
   }
 
   UI.prototype._synchronize = function() {

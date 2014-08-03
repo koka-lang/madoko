@@ -168,6 +168,7 @@ a.localref:hover {
   font-size: x-small;
   text-decoration:none;
   color: black;
+  font-family: "Segoe UI Symbol", Symbola;
 }
 
 /* General */

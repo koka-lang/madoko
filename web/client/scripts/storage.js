@@ -558,7 +558,9 @@ var Storage = (function() {
 
   Storage.prototype.getShareUrl = function(fpath) {
     var self = this;
-    return self.remote.getShareUrl(fpath);
+    var file = self.files.get(fpath);
+    return (file && file.shareUrl ? file.shareUrl : "");
+    //return self.remote.getShareUrl(fpath);
   }
 
   Storage.prototype._pullFile = function( fpath, opts ) {
@@ -712,6 +714,14 @@ var Storage = (function() {
       else {
         return self._syncPush(file,remoteTime);
       }
+    }).then( function(res) {
+      if (!file.shareUrl && file.mime === "application/pdf") {
+        return self.remote.getShareUrl( file.path ).then( function(url) {
+          file.shareUrl = url;
+          return res;
+        })
+      }
+      else return res;
     });
   }
 

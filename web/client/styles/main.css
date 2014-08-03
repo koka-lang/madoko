@@ -198,7 +198,7 @@ html,body,#main {
 
 #console-out a:hover {
   color: blue;
-  background-color: white;
+  background-color: Gainsboro;
 }
 
 /* buttons */
@@ -291,6 +291,18 @@ html,body,#main {
   padding-top: 0.5em;
 }
 
+.file-share {
+  display: inline-block;
+  float: right;  
+  text-decoration: none;
+  padding-right: 0.5em;
+  color: inherit;
+}
+
+a.file-share:hover {
+  background-color: Gainsboro !important;
+  text-decoration: underline;
+}
 
 /* Generic */
 
