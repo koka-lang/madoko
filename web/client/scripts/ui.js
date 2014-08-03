@@ -482,7 +482,7 @@ var UI = (function() {
         while(elem && elem.nodeName !== "DIV" && elem.className !== "msg-line") {
           elem = elem.parentNode;
         }
-        if (elem && elem.className==="msg-line") {
+        if (elem && (elem.className==="msg-line" || elem.className==="msg-section")) {
           var line = elem.textContent;
           var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/.exec(line);
           if (cap) {
@@ -497,7 +497,7 @@ var UI = (function() {
               var lineNo = parseInt(cap[2]);
               var fileName = cap[1]; // TODO use file
               if (!isNaN(lineNo)) {
-                self.editor.setPosition( { lineNumber: lineNo, column: 1 }, true, true );
+                self.editFile( fileName, { lineNumber: lineNo, column: 1 } );
               }
             }
           }
