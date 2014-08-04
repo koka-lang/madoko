@@ -1079,7 +1079,7 @@ var UI = (function() {
         }
       }
       if (file.shareUrl) {
-        extra = extra + "<a class='external file-share' target='_blank' href='" + file.shareUrl + "'><span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span></a>"
+        extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'><span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span></a>"
       }
     }
     return span + extra;

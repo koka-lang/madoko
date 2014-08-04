@@ -927,7 +927,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function urlParamsEncode( obj ) {
     var vals = [];
     properties(obj).forEach( function(prop) {
-      vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] ? obj[prop].toString() : "") );
+      vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] != null ? obj[prop].toString() : "") );
     });
     return vals.join("&");
   }
