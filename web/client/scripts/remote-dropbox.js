@@ -17,7 +17,7 @@ var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
 var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var accountUrl  = "https://api.dropbox.com/1/account/";
-var sharesUrl   = "https://api.dropbox.com/1/shares/auto";
+var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
 
 var appRoot     = "";
 
@@ -148,7 +148,7 @@ function createFolder( dirname ) {
 }
 
 function getShareUrl( fname ) {
-  var url = sharesUrl + fname;
+  var url = Util.combine(sharesUrl,fname);
   return Util.requestPOST( url, { access_token: getAccessToken(), short_url: false } ).then( function(info) {
     if (typeof info === "string") info = JSON.parse(info);
     return (info.url || null);
