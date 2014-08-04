@@ -1184,8 +1184,8 @@ var UI = (function() {
     return self.spinWhile( self.viewSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw "PDF generation failed";
+        var name = "out/" + util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
-          var name = "out/" + util.changeExt(self.docName,".pdf");
           var url = self.storage.getShareUrl( name )
           if (url) {
             util.message( { message: "", urlText: "PDF exported", url: url }, util.Msg.Status );
@@ -1195,6 +1195,10 @@ var UI = (function() {
               util.message( "PDF exported", util.Msg.Status );
             });
           }
+        }, function(err) {
+            return self.openInWindow( name, "application/pdf" ).then( function() {
+              util.message( "PDF exported", util.Msg.Status );
+            });
         });
       })
     );
