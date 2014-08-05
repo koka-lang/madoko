@@ -621,42 +621,18 @@
 
 \cssNewKey{css}{language}{\cssLanguage}{}
 
-\newcommand{\mdTokenUnknown}[2]{#2}
-\newcommand{\mdToken}[2]{\mdTokenUnknown{#1}{#2}}
-
-\newcommand{\mdDefineToken}[2]{%
-  \protected@edef\mdToken##1##2{\protect\mdIfTokenIn{##1}{#1}{{\protect#2{##2}}}{\mdToken{##1}{##2}}}%
-}
-
-\newcommand{\mdIfTokenIn}[4]{%
-  \ifintersect{\cssLanguage:#1,#1}{#2}{#3}{#4}%
+\newcommand{\@tokencmd}[1]{#1}
+\newcommand{\mdToken}[2]{%
+  \renewcommand{\@tokencmd}[1]{##1}%
+  \@for\@tname:=#1\do{%
+    \ifcsdef{mdToken\@tname}{\apptox{\@tokencmd}{\csname mdToken\@tname\endcsname}}{}%
+  }%
+  \@tokencmd{#2}%
 }
 
 %-------------------------------------------------------------
 % Standard token classes for syntax highlighting 
 %-------------------------------------------------------------
-\mdDefineToken{keyword}{\mdTokenKeyword}
-\mdDefineToken{string}{\mdTokenString}
-\mdDefineToken{comment}{\mdTokenComment}
-\mdDefineToken{special}{\mdTokenSpecial}
-\mdDefineToken{type,typename}{\mdTokenType}
-\mdDefineToken{type:delimiter}{\mdTokenType}
-\mdDefineToken{literal,number}{\mdTokenConstant}
-\mdDefineToken{delimiter}{\mdTokenDelimiter}
-\mdDefineToken{emphasis,italic}{\mdTokenEmphasis}
-\mdDefineToken{strong,bold}{\mdTokenStrong}
-\mdDefineToken{title}{\mdTokenTitle}
-\mdDefineToken{formula}{\mdTokenMeta}
-\mdDefineToken{lisp:title}{\mdTokenKeyword}
-
-\mdDefineToken{meta}{\mdTokenMeta}
-\mdDefineToken{tag}{\mdTokenTag}
-\mdDefineToken{regexp}{\mdTokenString}
-\mdDefineToken{namespace,header}{\mdTokenNamespace}
-\mdDefineToken{error-token,invalid,error}{\mdTokenConstructor}
-\mdDefineToken{constructor}{\mdTokenConstructor}
-\mdDefineToken{attribute}{\mdTokenAttribute}
-\mdDefineToken{attribute:value}{\mdTokenString}
 
 \newcommand{\mdTokenKeyword}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenPredefined}[1]{\textcolor{Navy}{#1}}
@@ -678,6 +654,14 @@
 \newcommand{\mdTokenMeta}[1]{\textcolor{Gray}{#1}}
 \newcommand{\mdTokenEntity}[1]{{#1}}
 \newcommand{\mdTokenDelimiter}[1]{{#1}}
+
+\newcommand{\mdTokenNumber}[1]{\mdTokenConstant{#1}}
+\newcommand{\mdTokenLiteral}[1]{\mdTokenConstant{#1}}
+\newcommand{\mdTokenItalic}[1]{\mdTokenEmphasis{#1}}
+\newcommand{\mdTokenBold}[1]{\mdTokenStrong{#1}}
+\newcommand{\mdTokenRegexp}[1]{\mdTokenString{#1}}
+\newcommand{\mdTokenInvalid}[1]{\mdTokenError{#1}}
+\newcommand{\mdTokenValue}[1]{\mdTokenString{#1}}
 
 % ---------------------------------------------------
 % Support the Beamer class
