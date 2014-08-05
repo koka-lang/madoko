@@ -228,7 +228,7 @@ var UI = (function() {
       self.lastEditChange = Date.now();
     });
     self.editor.addListener("keydown", function (e) {    
-      if (self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
+      if (self.stale || self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
     });
     
     self.keybinding = self.editor.getHandlerService().bind({
@@ -759,10 +759,14 @@ var UI = (function() {
         self.changed = false;
         self.stale = self.stale || changed;
         self.storage.setEditPosition( self.editName, self.editor.getPosition() );
+        if (!self.stale) return false;
+
         if (!self.refreshContinuous && self.lastEditChange) {
-          if (Date.now() - self.lastEditChange < 1000) return false;
+          if (Date.now() - self.lastEditChange < 1000) {
+            return false;
+          }
         }
-        return self.stale;
+        return true;
       },
       function(round) {
         self.localSave(true); // minimal save
