@@ -95,7 +95,7 @@ task("clean", function() {
 //-----------------------------------------------------
 desc("build web madoko")
 task("web", [], function() {
-  fixVersion("web/client/index.html");
+  fixVersion("web/client/editor.html");
   var args = Array.prototype.slice.call(arguments).join(" ")
   var cmd = kokaCmd + " -v -l " + args + " " + "web" + maincli
   jake.logger.log("> " + cmd);
