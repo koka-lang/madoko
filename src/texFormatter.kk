@@ -100,8 +100,8 @@ function unTokenize( txt : string ) : string {
                       then "{"  // so preindent can match
                       else {
                         val cclasses = classes.map(fun(cname) { 
-                                          cname.replaceAll(regex(@"(?:^|[^a-z]+)(?:([a-z])([a-z]*))?",ignoreCase=True),fun(cap) {
-                                            cap.groups[1].toUpper() + cap.groups[2]
+                                          cname.replaceAll(regex(@"(?:^|[^a-z]+)(?:([a-z])([a-z]*))?",ignoreCase=True),fun(ccap) {
+                                            ccap.groups[1].toUpper() + ccap.groups[2]
                                           }).replaceAll(regex(@"[^a-zA-Z]+"),"")
                                         }).filter( fun(cname) { cname != "" })
                         @"\mdToken{" + cclasses.join(",") + "}{"
