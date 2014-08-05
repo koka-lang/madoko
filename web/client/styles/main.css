@@ -814,3 +814,27 @@ div.item:hover {
 #picker.command-alert #header-logo  {
   display: inline;
 }
+
+
+/* hover box */
+.hoverbox {
+  position: relative;
+}
+
+.hoverbox-content {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  left: calc(100% - 5em);
+}
+
+.hoverbox:hover .hoverbox-content {
+  display: block;
+}
+
+.hoverbox-content img {
+  height: auto;
+  width: auto;
+  max-width: 5em;
+  max-height: 5em;
+}

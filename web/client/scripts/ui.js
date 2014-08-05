@@ -1085,6 +1085,9 @@ var UI = (function() {
       if (file.shareUrl) {
         extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'><span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span></a>"
       }
+      if (util.startsWith(file.mime,"image/")) {
+        extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
+      }
     }
     return span + extra;
   }
@@ -1102,7 +1105,7 @@ var UI = (function() {
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
         var line = "<div data-file='" + util.escape(file.path) + "' " +
-                      "class='button file" + disable + main + hide + "'>" + 
+                      "class='button file hoverbox" + disable + main + hide + "'>" + 
                           self.displayFile(file,true) + "</div>";
         if (util.startsWith(file.mime,"image/")) images.push(line); 
         else if (!disable) files.push(line);
