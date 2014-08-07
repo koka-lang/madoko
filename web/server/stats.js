@@ -13,6 +13,8 @@ var Promise = require("../client/scripts/promise.js");
 var Map     = require("../client/scripts/map.js");
 var date    = require("../client/scripts/date.js");
 
+var filenameStats = "stats.html";
+
 function readDir(dir) {
   return new Promise( function(cont) { 
   	Fs.readdir(dir,cont); 
@@ -22,6 +24,13 @@ function readDir(dir) {
 function readFile( path, options ) {
   return new Promise( function(cont) {
     Fs.readFile( path, options, cont );
+  });
+}
+
+
+function writeFile( path, content, options ) {
+  return new Promise( function(cont) {
+    Fs.writeFile( path, content, options, cont );
   });
 }
 
@@ -108,9 +117,14 @@ function digestUsers(entries) {
 	return users.elems();
 }
 
+function writeStats( obj ) {
+  return readFile("stats-template.html",{encoding:"utf-8"}).then( function(content) {
+    content = content.replace("<STATS>", JSON.stringify(obj));
+    return writeFile(filenameStats,content);
+  });
+}
+
 function digestDaily(entries) {
-	entries = entries.filter( function(entry) { return (entry.user != null && entry.time != null); } );
-	console.log("total user entries: " + entries.length);
 	var daily = new Map();
 	entries.forEach( function(entry) {
 		var date = entry.date.replace(/T.*/,"");
@@ -125,7 +139,6 @@ function digestDaily(entries) {
 		}
 		dateEntries.push(entry);
 	});
-	console.log(daily.length)
 	daily = daily.map( function(dentries) {		
 		var users = digestUsers(dentries);
 		var runEntries = dentries.filter( function(entry) { return entry.url === "/rest/run"; })
@@ -140,21 +153,23 @@ function digestDaily(entries) {
 			maxServerSize: max( runEntries.map( function(entry) { return entry.size; }) ),
 			//entries: dentries.map( function(entry) { return entry.user.id; } ),
 		};
-	});
+	});	
 	return daily;
 }
 
 parseLogs().then( function(entries) {
-	try {
-		console.log("total entries: " + entries.length );
-		var daily = digestDaily(entries);
-		console.log(daily);
-	}
-	catch(exn) {
-		console.log(exn.stack);
-	}
-	return;
-	//console.log(entries.map(function(entry){ return entry.date; }));
+	console.log("total entries: " + entries.length );
+	var uentries = entries.filter( function(entry) { return (entry.user != null && entry.time != null); } );
+	
+	var stats = {
+		daily: digestDaily(uentries).keyElems(),
+		userCount: digestUsers(uentries).length,
+		reqCount: uentries.length,
+	};
+	return writeStats( stats ).then( function() {
+	  console.log("done");
+	});
 }, function(err) {
-	console.trace(err);
+	console.log(err.stack);
 });
+
