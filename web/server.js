@@ -77,7 +77,7 @@ function onError(req,res,err) {
       
       logerr.entry( {
         error: result,
-        user: res.user,
+        user: res.user || { id: req.signedCookies.auth },
         ip: req.ip,
         domains: doms,    
         url: req.url,
@@ -143,11 +143,14 @@ function event( req, res, action, maxRequests, allowAll ) {
       url: req.url,
       params: req.params, 
       date: new Date(start).toISOString(),        
-    };
-    if (logev) logev.entry( entry );    
+    };    
+    //if (logev) logev.entry( entry );    
     domain = domainsGet(req);
     if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
     domain.requests++;
+    if (/^\/rest\/.*/.test(req.url)) {
+      entry.user = { id: getUserId(req,res) };
+    }
     var x = action();
     if (x && x.then) {
       x.then( function(result) {
@@ -403,10 +406,8 @@ function logRequest(req,msg) {
 // General server helpers
 // -------------------------------------------------------------
 
-
-
-// Get a unique user path for this session.
-function getUser( req,res ) {
+// Get a unique user id for this session.
+function getUserId(req,res) {
   var userid = req.signedCookies.auth;
   if (!userid) {
     var domain = domainsGet(req);
@@ -415,6 +416,13 @@ function getUser( req,res ) {
     res.cookie("auth", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
     domain.newUsers++;
   }
+  return userid;
+}
+
+
+// Get a unique user path for this session.
+function getUser( req,res ) {
+  var userid = getUserId(req,res);
   var user = usersGet(userid);
   if (user.requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
 
@@ -440,12 +448,15 @@ function withUser( req,res, action ) {
     return action(user);    
   }).always( function() {    
     entry.time = Date.now() - start; 
+    entry.size = 0;
     entry.files = req.body.files.map( function(file) {
+      var size = file.content.length;
+      entry.size += size;
       return { 
         path: file.path,
         //encoding: file.encoding,
         //mime: file.mime,
-        size: file.content.length,
+        size: size,
       };
     });
     log.entry( entry );
