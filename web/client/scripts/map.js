@@ -64,6 +64,16 @@ define([],function() {
       };
     }
 
+    // return a new map where action is applied to every element
+    Map.prototype.map = function( action ) {
+      var self = this;
+      var res = new Map();
+      self.forEach( function(name,elem) {
+        res.set(name,action(elem));
+      });
+      return res;
+    }
+
     Map.prototype.elems = function() {
       var self = this;
       var res = [];
