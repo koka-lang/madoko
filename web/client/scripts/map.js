@@ -83,6 +83,15 @@ define([],function() {
       return res;
     }
 
+    Map.prototype.keyElems = function() {
+      var self = this;
+      var res = [];
+      self.forEach( function(name,elem) {
+        res.push( {key:name,value:elem} );
+      });
+      return res;
+    }
+
     return Map;
   })();
 
