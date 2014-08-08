@@ -1,0 +1,64 @@
+<html>
+<head>
+
+<!--
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
+<style>
+.chart {
+  width:70%;
+  margin-bottom: 1em;
+}
+</style>
+
+</head>
+
+<body>
+<p>Total unique users: <span id="userCount"></span><p>
+<div id="daily">
+Daily charts.
+</div>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawCharts);
+
+  function drawDaily( name, attr, title ) {
+    var data = [['date', name]].concat(stats.daily.map(function(elem) {
+      return [elem.key.substr(5),elem.value[attr]];
+    }));
+    var options = {
+      title: title,
+      legend: "none",
+    };
+
+    var div = document.createElement("DIV");
+    div.className = "chart";
+    div.id = "daily-" + attr;
+    document.getElementById("daily").appendChild(div);
+
+    var chart = new google.visualization.LineChart(div);
+    chart.draw(google.visualization.arrayToDataTable(data), options);
+  }
+
+  function drawCharts() {
+    document.getElementById("userCount").innerHTML = stats.userCount;
+    
+    drawDaily("users","userCount","Unique users per day");
+    drawDaily("avg. work time","avgWorkTime","Average work time in minutes per day");
+    drawDaily("latex runs","reqCount","LaTeX requests per day");
+    drawDaily("max latex run","maxServerTime","Maximum LaTeX job per day (in milliseconds)");
+  }
+ 
+  var stats = JSON.parse('<STATS>');
+</script>
+
+
+</body>
+</html>
