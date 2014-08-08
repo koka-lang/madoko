@@ -201,7 +201,7 @@ var limits = {
   timeoutMath : minute,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
-  logFlush    : 5*second, //1*minute,
+  logFlush    : 1*minute,
   rmdirDelay  : 3*second,
 }
 
