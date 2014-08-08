@@ -11,6 +11,17 @@ define([],function() {
   var Map = (function() {
     function Map() { };
 
+    Map.prototype.count = function() {
+      var self = this;
+      var total = 0;
+      for (var key in self) {
+        if (key[0] === "/") {  
+          total++;
+        }
+      }
+      return total;
+    }
+
     Map.prototype.clear = function() {
       var self = this;
       self.forEach( function(name,value) {
@@ -69,7 +80,7 @@ define([],function() {
       var self = this;
       var res = new Map();
       self.forEach( function(name,elem) {
-        res.set(name,action(elem));
+        res.set(name,action(name,elem));
       });
       return res;
     }
