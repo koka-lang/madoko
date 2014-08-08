@@ -58,7 +58,7 @@ function parseLogs(dir) {
 				}
 				if (!entry.type) {
 					if (entry.error) entry.type = "error";
-					else if (entry.files || entry.url==="/rest/run") entry.type = "user"; 
+					else if (entry.url==="/rest/run" && entry.user && entry.time) entry.type = "user"; 
 					else entry.type = "request";
 				}
 				//else if (entry.date && typeof entry.date === "string") {
@@ -110,7 +110,7 @@ function digestUsers(entries) {
 		var userEntries = users.getOrCreate(entry.user.id, []);
 		userEntries.push(entry);
 	});
-	users = users.map( function(uentries) {
+	users = users.map( function(id,uentries) {
 		var delta = 10*60*1000; // 10 minutes
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
@@ -127,6 +127,7 @@ function digestUsers(entries) {
 		return {
 			workTime: total,
 			reqCount: uentries.length,
+			id: id,
 		}
 	});
 	return users.elems();
@@ -154,11 +155,18 @@ function digestDaily(entries) {
 		}
 		dateEntries.push(entry);
 	});
-	daily = daily.map( function(dentries) {		
+	daily = daily.map( function(date,dentries) {		
 		var users = digestUsers(dentries);
 		var runEntries = dentries.filter( function(entry) { return entry.url === "/rest/run"; })
+		var pagesEntries = dentries.filter( function(entry) { return entry.type === "pages"; })
 		return { 
 			userCount: users.length,
+			users: users.map( function(entry) { return entry.id; }),
+			pagesCount: sum( pagesEntries.map( function(entry) { return entry.pagesCount; })),
+			pageIndexCount: sum( pagesEntries.map( function(entry) { 
+				var ipages = entry.pages.filter(function(page) { return (page.key==="/" || page.key=="/index.html" || page.key=="/editor.html"); });
+				return sum(ipages.map( function(page) { return page.value; })); 
+			})),
 			reqCount: dentries.length,
 			avgWorkTime  : Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
 			maxWorkTime  : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
@@ -169,21 +177,33 @@ function digestDaily(entries) {
 			//entries: dentries.map( function(entry) { return entry.user.id; } ),
 		};
 	});	
+	
+	var knownUsers = new Map();
+	var knownCount = 0;
+	daily.forEach( function(date,entry) {
+		entry.users.forEach( function(id) {
+			if (!knownUsers.get(id)) {
+				knownUsers.set(id,true);
+				knownCount++;
+			}
+		});
+		delete entry.users;
+		entry.cumUserCount = knownCount;
+	});
+
 	return daily;
 }
 
 parseLogs().then( function(entries) {
 	console.log("total entries: " + entries.length );
-	var uentries = entries.filter( function(entry) { return (entry.user != null && entry.time != null); } );
-	
+	var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
 	var stats = {
-		daily: digestDaily(uentries).keyElems(),
-		userCount: digestUsers(uentries).length,
-		reqCount: uentries.length,
+		daily: digestDaily(xentries).keyElems(),
+		userCount: digestUsers(xentries).length
 	};
-	return writeStats( stats ).then( function() {
-	  console.log("done");
-	});
+	return writeStats( stats );
+}).then( function() {
+	console.log("done");
 }, function(err) {
 	console.log(err.stack);
 });

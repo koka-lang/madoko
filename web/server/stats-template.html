@@ -49,6 +49,9 @@ Daily charts.
 
   function drawCharts() {
     document.getElementById("userCount").innerHTML = stats.userCount;
+    drawDaily("cumulative users","cumUserCount","Unique cumulative users");
+    drawDaily("page hits","pagesCount","Page hits per day");
+    drawDaily("index hits","pageIndexCount","Index page hits per day");
     
     drawDaily("users","userCount","Unique users per day");
     drawDaily("avg. work time","avgWorkTime","Average work time in minutes per day");
