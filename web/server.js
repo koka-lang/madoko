@@ -76,6 +76,7 @@ function onError(req,res,err) {
       }
       
       logerr.entry( {
+        type: "error",
         error: result,
         user: res.user || { id: req.signedCookies.auth },
         ip: req.ip,
@@ -139,12 +140,14 @@ function event( req, res, action, maxRequests, allowAll ) {
     if (blockedIps && blockedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is blocked" };
     var start = Date.now();
     var entry =  {
+      type: "none",
       ip: req.ip,
       url: req.url,
       params: req.params, 
       date: new Date(start).toISOString(),        
     };    
-    //if (logev) logev.entry( entry );    
+    if (logev) logev.entry( entry );    
+    entry.type = "request";
     domain = domainsGet(req);
     if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
     domain.requests++;
@@ -198,7 +201,7 @@ var limits = {
   timeoutMath : minute,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
-  logFlush    : 1*minute,
+  logFlush    : 5*second, //1*minute,
   rmdirDelay  : 3*second,
 }
 
@@ -215,7 +218,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize, strict: false }));
-app.use(cookieParser(fs.readFileSync("ssl/madoko-cookie.txt",{encoding:"utf-8"})));
+app.use(cookieParser(fs.readFileSync("ssl/madoko-cookie.txt",{encoding:"utf8"})));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -314,7 +317,7 @@ function mimeFromExt( fname ) {
 
 function encodingFromExt(fname) {
   var mime = mimeFromExt(fname);
-  return (mime.indexOf("text/") === 0 ? "utf-8" : "base64" );
+  return (mime.indexOf("text/") === 0 ? "utf8" : "base64" );
 }
 
 function uniqueHash() {
@@ -331,57 +334,45 @@ var Log = (function(){
 
   function Log(base) {
     var self = this;
-    self.base = base || "log-";
-    
-    var fnames = fs.readdirSync("log");
-    var max = 0;
-    var rx = new RegExp( "^" + self.base + "(\\d+)\\.txt$");    
-    fnames.forEach( function(fname) {
-      var cap = rx.exec(fname);
-      if (cap) {
-        var i = parseInt(cap[1]);
-        if (!isNaN(i) && i > max) max = i;
-      }
-    });
-    self.start( max+1 );
+    self.base = base || "log-";    
+    self.start();
   }
 
-  function leftfill( s, n, fill ) {
-    if (!fill) fill = " ";
-    if (s.length >= n) return s;
-    return (new Array(n - s.length + 1).join(fill) + s); 
-  }
-
-  Log.prototype.start = function( n ) {
+  Log.prototype.start = function() {
     var self = this;
     if (self.ival) {
       clearInterval(self.ival);
       flush();
     }
-    self.logNum = n;
-    var logNumStr = self.logNum.toFixed(0);
-    self.logFile = combine("log", self.base + leftfill(self.logNum.toString(),4,"0") + ".txt");
+    
     self.log = [];
     self.ival = setInterval( function() {
-      var size = self.flush();
-      if (size > limits.fileSize) {
-        self.start(n+1);
-      }
+      self.flush();      
     }, limits.logFlush );
   }
 
   Log.prototype.flush = function() {
     var self=this;
-    var content = JSON.stringify(self.log);
-    fs.writeFile( self.logFile, content );
-    return content.length;
+    if (!self.log || self.log.length <= 0) return;
+
+    var content = self.log.join("\n") + "\n";
+    var date = new Date().toISOString().replace(/T.*/,"");
+    var logFile = "log/" + self.base + date + ".txt";
+    fs.appendFile( logFile, content, {encoding:"utf8"}, function(err) {
+      if (err) {
+        console.log("unable to write log data to " + logFile + ": " + err);
+      }
+    });
+    self.log = []; // clear log
   }
 
   Log.prototype.entry = function( obj ) {
     var self = this;
-    console.log( JSON.stringify(obj) + "\n" );
-    if (self.log[self.log.length-1] !== obj) {
-      self.log.push( obj );
+    if (!obj) return;
+    var data = JSON.stringify(obj);
+    console.log( data + "\n" );
+    if (obj.type != "none" && self.log[self.log.length-1] !== obj) {
+      self.log.push( data );
     }
   }
 
@@ -390,7 +381,7 @@ var Log = (function(){
 
 
 var log    = new Log();
-var logerr = new Log("log-err");
+var logerr = log;
 var logev  = log; // new Log("log-event");
 
 
@@ -401,6 +392,24 @@ function logRequest(req,msg) {
     log.entry( { type: msg, ip: req.ip, url: req.url, domains: doms, date: date });
   });
 }
+
+/* count page hits */
+
+var pagesCount = 0;
+var pages = new Map();
+
+setInterval( function() {
+  if (pagesCount===0) return;
+  var pagesStat = {
+    type: "pages",
+    pagesCount: pagesCount,
+    pages: pages.keyElems(),
+    date: new Date().toISOString(),    
+  };
+  if (log) log.entry( pagesStat );
+  pagesCount = 0;
+  pages = new Map();
+}, limits.logFlush );
 
 // -------------------------------------------------------------
 // General server helpers
@@ -436,7 +445,7 @@ function getUser( req,res ) {
 function withUser( req,res, action ) {
   var user = getUser(req,res);
   var start = Date.now();
-  var entry = { user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
+  var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
   if (req.body.docname) entry.docname = req.body.docname;
   if (req.body.pdf) entry.pdf = req.body.pdf;
   log.entry( entry );
@@ -446,7 +455,8 @@ function withUser( req,res, action ) {
     return ensureDir(user.path);
   }).then( function() {
     return action(user);    
-  }).always( function() {    
+  }).always( function() {  
+    entry.type = "user";  
     entry.time = Date.now() - start; 
     entry.size = 0;
     entry.files = req.body.files.map( function(file) {
@@ -465,7 +475,7 @@ function withUser( req,res, action ) {
       setTimeout( function() {
         rmdir( user.path, function(err) {
           if (err) {
-            var eentry = { error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
+            var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
             extend(eentry,entry);          
             logerr.entry( eentry );
           }
@@ -736,7 +746,7 @@ app.post('/rest/push-atomic', function(req,res) {
 app.post("/report/csp", function(req,res) {
   event(req,res, function() {
     console.log(req.body);
-    logerr.entry( { 'csp-report': req.body['csp-report'], date: new Date().toISOString() } );
+    logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   });
 });
 
@@ -796,6 +806,8 @@ app.use('/', function(req,res,next) {
   if (!staticDirs.test(dir)) {
     logRequest(req,"static-scan");
   }
+  pagesCount++;
+  pages.set(req.path, 1 + pages.getOrCreate(req.path,0));
   return (mode===Mode.Maintenance ? staticMaintenance : staticClient)(req,res,next);
 });
 
@@ -821,6 +833,8 @@ function listen() {
       mode = Mode.Maintenance;
       secs = (answer==="q!" ? 10 : 60);
       console.log("quitting in " + secs.toString() + " seconds...");
+      if (logev) logev.flush();
+      if (logerr) logerr.flush();
       rl.close();
       setTimeout( function() { process.exit(0); }, secs*second );
       return;

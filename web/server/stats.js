@@ -35,16 +35,31 @@ function writeFile( path, content, options ) {
 }
 
 function parseLogs(dir) {
-	dir = dir || "../../../log";
+	dir = dir || "../log";
 	return readDir( dir ).then( function(fnames) {
-		fnames = fnames.filter( function(fname) { return /log-\d+\.txt/.test(Path.basename(fname)); } );
-		return Promise.when( fnames.map( function(fname) { return readFile(Path.join(dir,fname),{encoding:"utf-8"}) } ) ).then( function(fcontents) {
-			var datas = fcontents.map( function(content) { return JSON.parse(content); } );
+		fnames = fnames.filter( function(fname) { return /log-[\w\-]+\.txt/.test(Path.basename(fname)); } );
+		return Promise.when( fnames.map( function(fname) { 
+			console.log("read: " + fname);
+			return readFile(Path.join(dir,fname),{encoding:"utf8"}); 
+		})).then( function(fcontents) {
+			var datas = fcontents.map( function(content) { 
+				if (!content || content.length<=0) return [];
+				if (content[0] === "[") return JSON.parse(content); // older log
+			  var lines = content.split("\n");
+			  return lines.map(function(line){ 
+			  	return (line ? JSON.parse(line) : {type:"none"});   // new logs are line separated JSON objects
+			  });
+			});
 			var entries = [].concat.apply([],datas);
 			entries.forEach( function(entry) {
 				// normalize
 				if (!entry.date && entry.start) {
 					entry.date = new Date(entry.start).toISOString();
+				}
+				if (!entry.type) {
+					if (entry.error) entry.type = "error";
+					else if (entry.files || entry.url==="/rest/run") entry.type = "user"; 
+					else entry.type = "request";
 				}
 				//else if (entry.date && typeof entry.date === "string") {
 				//	entry.date = date.dateFromISO(entry.date);
