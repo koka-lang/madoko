@@ -711,7 +711,7 @@ function pushAtomic( name, time ) {
     }
     else {
       // ouch. someone pushed a more recent version concurrently.
-      throw { httpCode: 409, message: "failed" };
+      throw { httpCode: 409, message: "failed to push atomically due to concurrent update" };
     }
   }
 }

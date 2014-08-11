@@ -160,20 +160,20 @@ function digestDaily(entries) {
 		var runEntries = dentries.filter( function(entry) { return entry.url === "/rest/run"; })
 		var pagesEntries = dentries.filter( function(entry) { return entry.type === "pages"; })
 		return { 
-			userCount: users.length,
+			userCnt: users.length,
 			users: users.map( function(entry) { return entry.id; }),
-			pagesCount: sum( pagesEntries.map( function(entry) { return entry.pagesCount; })),
-			pageIndexCount: sum( pagesEntries.map( function(entry) { 
+			pagesCnt: sum( pagesEntries.map( function(entry) { return entry.pagesCount; })),
+			pageIdxCnt: sum( pagesEntries.map( function(entry) { 
 				var ipages = entry.pages.filter(function(page) { return (page.key==="/" || page.key=="/index.html" || page.key=="/editor.html"); });
 				return sum(ipages.map( function(page) { return page.value; })); 
 			})),
 			reqCount: dentries.length,
-			avgWorkTime  : Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
-			maxWorkTime  : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
-			avgServerTime: avg( runEntries.map( function(entry) { return entry.time; }) ),
-			maxServerTime: max( runEntries.map( function(entry) { return entry.time; }) ),
-			avgServerSize: avg( runEntries.map( function(entry) { return entry.size; }) ),
-			maxServerSize: max( runEntries.map( function(entry) { return entry.size; }) ),
+			avgWTm: Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
+			maxWTm : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
+			avgSTm: avg( runEntries.map( function(entry) { return entry.time; }) ),
+			maxSTm: max( runEntries.map( function(entry) { return entry.time; }) ),
+			avgSTm: avg( runEntries.map( function(entry) { return entry.size; }) ),
+			maxSSz: max( runEntries.map( function(entry) { return entry.size; }) ),
 			//entries: dentries.map( function(entry) { return entry.user.id; } ),
 		};
 	});	
@@ -188,18 +188,56 @@ function digestDaily(entries) {
 			}
 		});
 		delete entry.users;
-		entry.cumUserCount = knownCount;
+		entry.cumUserCnt = knownCount;
 	});
 
 	return daily;
 }
 
+function anonIP(ip) {
+	return (ip ? ip.replace(/\.\d+\s*$/, ".***") : "");
+}
+
+function anon(s) {
+	if (!s) return "";
+	return s.replace(/[a-zA-Z]:[\\\/][\w\-\_\.\\\/]*\bmadoko[\/\\]/,"").replace(/'/g,"`");
+}
+
+function digestErrors( entries ) {
+	var errors = [];
+	var rejects = 0;
+	var pushfails = 0;
+	entries.forEach( function(entry) {
+		if (entry.type !== "error" || !entry.error) return;
+		if (/is not allowed access/.test(entry.error.message)) {
+			rejects++;
+		}
+		else if (entry.url==="/rest/push-atomic" && /^failed\b/.test(entry.error.message)) {
+			pushfails++;
+		}
+		else {
+			errors.push( {
+				msg: anon(entry.error.message || "<unknown>"),
+				ip: anonIP(entry.ip),
+				domain: entry.domains && entry.domains instanceof Array ? entry.domains.join(",") : "",
+				url: entry.url,
+				date: entry.date,
+			});
+		}
+	});
+	return { errors: errors, rejects: rejects, pushfails: pushfails };
+}
+
 parseLogs().then( function(entries) {
 	console.log("total entries: " + entries.length );
 	var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
+	var errors = digestErrors(entries);
+	console.log("total errors: " + errors.errors.length );
 	var stats = {
 		daily: digestDaily(xentries).keyElems(),
-		userCount: digestUsers(xentries).length
+		errors: errors,
+		userCount: digestUsers(xentries).length,
+		date: new Date(),
 	};
 	return writeStats( stats );
 }).then( function() {

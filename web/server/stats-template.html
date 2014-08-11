@@ -10,53 +10,125 @@
 -->
 
 <style>
+body {
+  background-color: Gainsboro;
+  font-family: "Segoe UI", sans-serif;
+}
+
+#page {
+  margin: 2em 10% 2em 10%;
+  padding: 1em;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: white;
+}
+
 .chart {
-  width:70%;
+  width:95%;
   margin-bottom: 1em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chart * {
+  font-family: "Segoe UI", sans-serif !important;
+}
+
+#dailyx {
+  border-top: 1px solid black;
+  margin-top: 2em;
+}
+.local-time {
+  font-size: small;
+  color: gray;
+  padding-left: 1em;
 }
 </style>
 
 </head>
 
 <body>
+<div id="page">
+
+<h2>Madoko.net Statistics</h2>
+<p><span id="date"></span></p>
 <p>Total unique users: <span id="userCount"></span><p>
+<h2>Daily charts</h2>
 <div id="daily">
-Daily charts.
 </div>
+<div id="dailyx">
+</div>
+
+<h2>Errors</h2>
+<div id="errors">
+</div>
+
+</page>
 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
   google.load("visualization", "1", {packages:["corechart"]});
   google.setOnLoadCallback(drawCharts);
 
-  function drawDaily( name, attr, title ) {
+  function draw( divName, name, attr, title ) {
     var data = [['date', name]].concat(stats.daily.map(function(elem) {
       return [elem.key.substr(5),elem.value[attr]];
     }));
+    
     var options = {
-      title: title,
+      title: title,      
       legend: "none",
+      pointSize: 3,
+      chartArea: { backgroundColor: "Floralwhite" },
     };
 
     var div = document.createElement("DIV");
     div.className = "chart";
     div.id = "daily-" + attr;
-    document.getElementById("daily").appendChild(div);
+    document.getElementById(divName || "daily").appendChild(div);
 
     var chart = new google.visualization.LineChart(div);
     chart.draw(google.visualization.arrayToDataTable(data), options);
   }
 
+
+  // Get the properties of an object.
+  function properties(obj) {
+    var attrs = [];
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        attrs.push(key);
+      }
+    } 
+    return attrs;
+  }
+
+  function rows( divName, hdr, rows ) {
+    var content = "";
+    var props = properties(hdr);
+    content += "<table>\n<th>" + props.map( function(prop) { return "<td>" + prop + "</td>"; } ).join() + "</th>\n";
+    rows.forEach( function(row) {
+      content += "<tr>" + props.map( function(prop) { return "<td>" + row[prop] + "</td>"; } ).join() + "</tr>\n";
+    });
+    content += "</table>";
+    var elem = document.getElementById(divName);
+    elem.innerHTML = elem.innerHTML + content;
+  }
+
   function drawCharts() {
+    var date = new Date(stats.date);
+    document.getElementById("date").innerHTML = date.toUTCString() + "<span class='local-time'>(local time: " + date.toLocaleString() + ")</span>";
     document.getElementById("userCount").innerHTML = stats.userCount;
-    drawDaily("cumulative users","cumUserCount","Unique cumulative users");
-    drawDaily("page hits","pagesCount","Page hits per day");
-    drawDaily("index hits","pageIndexCount","Index page hits per day");
+    draw("daily", "cumulative users","cumUserCnt","Unique cumulative users");
+    draw("daily", "page hits","pagesCnt","Page hits per day");
+    draw("daily", "index hits","pageIdxCnt","Index page hits per day");
     
-    drawDaily("users","userCount","Unique users per day");
-    drawDaily("avg. work time","avgWorkTime","Average work time in minutes per day");
-    drawDaily("latex runs","reqCount","LaTeX requests per day");
-    drawDaily("max latex run","maxServerTime","Maximum LaTeX job per day (in milliseconds)");
+    draw("dailyx", "users","userCnt","Unique users per day");
+    draw("dailyx", "avg. work time","avgWTm","Average work time in minutes per day");
+    draw("dailyx", "latex runs","reqCount","LaTeX requests per day");
+    draw("dailyx", "max latex run","maxSTm","Maximum LaTeX job per day (in milliseconds)");
+
+    rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
   }
  
   var stats = JSON.parse('<STATS>');
