@@ -292,6 +292,7 @@ function resolveDomains(entries) {
 
 function writeStatsPage( fname ) {
 	if (!fname) fname = "client/private/stats.html";
+	var start = Date.now();
 	return parseLogs().then( function(entries) {
 		console.log("stats: total entries: " + entries.length );
 		var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
@@ -307,6 +308,7 @@ function writeStatsPage( fname ) {
 				userCount: digestUsers(xentries).length,
 				date: new Date(),
 			};
+			console.log("stats: total time: " + (Date.now() - start).toString() + " ms");
 			return writeStats( fname, stats );
 		});
 	}).then( function() {
