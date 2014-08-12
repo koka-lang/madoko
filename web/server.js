@@ -21,8 +21,9 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieParser  = require("cookie-parser");
 
-var allowedIps = null; // /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+|71\.37\.5\.\d+|98\.158\.13\.\d+)$/;
+var allowedIps = null; 
 var blockedIps = null;
+var privateIps = /^((131\.107\.).*|127\.0\.0\.1|64\.187\.160\.\d+|173\.160\.195\.\d+|71\.37\.5\.\d+|98\.158\.13\.\d+)$/;
 
 // -------------------------------------------------------------
 // Wrap promises
@@ -31,6 +32,7 @@ var blockedIps = null;
 var Promise = require("./client/scripts/promise.js");
 var Map     = require("./client/scripts/map.js");
 var date    = require("./client/scripts/date.js");
+var Stats   = require("./stats.js");
 
 function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
@@ -55,6 +57,22 @@ function fstat( fpath ) {
            function(err)  { return null; } );
 }
 
+function dnsReverse( ip, callback ) {
+  try {
+    dns.reverse( ip, function(err,doms) {
+      if (err) {
+        doms = null;
+        console.log("unable to resolve ip: " + err.toString() );
+      }
+      callback(doms);      
+    });
+  }
+  catch(exn) {
+    console.log("unable to resolve ip: " + exn.toString() );
+    callback(null);
+  }  
+}
+
 function onError(req,res,err) {
   if (!err) err = "unknown error";
   //console.log("*******");
@@ -69,12 +87,7 @@ function onError(req,res,err) {
 
   //console.log("*****\nerror (" + result.httpCode.toString() + "): " + result.message);
   if (logerr) {
-    dns.reverse(req.ip, function(err,doms) {
-      if (err) {
-        doms = null;
-        console.log("unable to resolve ip: " + err.toString() );
-      }
-      
+    dnsReverse(req.ip, function(doms) {
       logerr.entry( {
         type: "error",
         error: result,
@@ -202,6 +215,7 @@ var limits = {
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
   logFlush    : 1*minute,
+  logDigest   : 30*minute,
   rmdirDelay  : 3*second,
 }
 
@@ -335,6 +349,7 @@ var Log = (function(){
   function Log(base) {
     var self = this;
     self.base = base || "log-";    
+    self.lastDigest = 0;
     self.start();
   }
 
@@ -364,6 +379,11 @@ var Log = (function(){
       }
     });
     self.log = []; // clear log
+    var now = Date.now();
+    if (now - self.lastDigest > limits.logDigest) {
+      self.lastDigest = now;
+      Stats.writeStatsPage();
+    }
   }
 
   Log.prototype.entry = function( obj ) {
@@ -799,9 +819,9 @@ app.get("/remote/http", function(req,res) {
 
 var staticClient      = express.static( combine(__dirname, "client"));
 var staticMaintenance = express.static( combine(__dirname, "maintenance"));
-var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out))?|lib(\/vs(\/.*)?)?|preview(\/out)?)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out|math))?|lib(\/vs(\/.*)?)?|preview(\/(out|math))?|template|private)?$/;
 
-app.use('/', function(req,res,next) {
+function staticPage(req,res,next) {
   var dir = path.dirname(req.path);
   if (!staticDirs.test(dir)) {
     logRequest(req,"static-scan");
@@ -809,6 +829,20 @@ app.use('/', function(req,res,next) {
   pagesCount++;
   pages.set(req.path, 1 + pages.getOrCreate(req.path,0));
   return (mode===Mode.Maintenance ? staticMaintenance : staticClient)(req,res,next);
+}
+
+app.use('/private', function(req,res,next) {
+  console.log("private request: " + req.url)
+  if (!privateIps.test(req.ip)) {
+    onError( req, res, { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access to private data" } );
+  }
+  else {
+    return staticPage(req,res,next);
+  }
+});
+
+app.use('/', function(req,res,next) {
+  return staticPage(req,res,next);
 });
 
 

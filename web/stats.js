@@ -5,15 +5,15 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
+var dns     = require("dns");
 
 var Fs      = require("fs");
 var Path    = require("path");
 
-var Promise = require("../client/scripts/promise.js");
-var Map     = require("../client/scripts/map.js");
-var date    = require("../client/scripts/date.js");
+var Promise = require("./client/scripts/promise.js");
+var Map     = require("./client/scripts/map.js");
+var date    = require("./client/scripts/date.js");
 
-var filenameStats = "stats.html";
 
 function readDir(dir) {
   return new Promise( function(cont) { 
@@ -35,11 +35,11 @@ function writeFile( path, content, options ) {
 }
 
 function parseLogs(dir) {
-	dir = dir || "../log";
+	dir = dir || "log";
 	return readDir( dir ).then( function(fnames) {
 		fnames = fnames.filter( function(fname) { return /log-[\w\-]+\.txt/.test(Path.basename(fname)); } );
 		return Promise.when( fnames.map( function(fname) { 
-			console.log("read: " + fname);
+			//console.log("read: " + fname);
 			return readFile(Path.join(dir,fname),{encoding:"utf8"}); 
 		})).then( function(fcontents) {
 			var datas = fcontents.map( function(content) { 
@@ -133,10 +133,12 @@ function digestUsers(entries) {
 	return users.elems();
 }
 
-function writeStats( obj ) {
+function writeStats( fname, obj ) {
   return readFile("stats-template.html",{encoding:"utf-8"}).then( function(content) {
-    content = content.replace("<STATS>", JSON.stringify(obj));
-    return writeFile(filenameStats,content);
+  	var json = JSON.stringify(obj);
+  	JSON.parse(json);
+    content = content.replace("<STATS>",json);
+    return writeFile(fname,content);
   });
 }
 
@@ -200,49 +202,125 @@ function anonIP(ip) {
 
 function anon(s) {
 	if (!s) return "";
-	return s.replace(/[a-zA-Z]:[\\\/][\w\-\_\.\\\/]*\bmadoko[\/\\]/,"").replace(/'/g,"`");
+	return s.replace(/[a-zA-Z]:[\\\/][\w\-\_\.\\\/]*\bmadoko[\/\\]/,"");
+}
+
+function anonURL(s) {
+	if (!s) return "";
+	return s.replace(/[?#].*$/,"");
+}
+
+function reverse(xs) {
+	if (!xs) return;
+	var res = [];
+	xs.forEach( function(x) { res.unshift(x); });
+	return res;
+}
+
+function anonDomain(d) {
+	if (!d) return "";
+	if (d instanceof Array) return d.join(",");
+	return d.toString();
 }
 
 function digestErrors( entries ) {
 	var errors = [];
+	var scans = new Map();
 	var rejects = 0;
 	var pushfails = 0;
 	entries.forEach( function(entry) {
-		if (entry.type !== "error" || !entry.error) return;
-		if (/is not allowed access/.test(entry.error.message)) {
+		if (!((entry.type === "error" && entry.error) || entry.type==="static-scan")) return;
+		if (entry.type === "static-scan") {
+			if (!(/^\/(styles|preview)\/math\/math-|\/templates\/(article|default|presentation|webpage).mdk$/.test(entry.url))) {
+				var e = scans.getOrCreate(entry.url,{ url: entry.url, domain:"", count: 0, ip:anonIP(entry.ip), });
+				e.domain += anonDomain(entry.domains || entry.domain);
+				e.date = entry.date;
+				e.count++;
+			}
+		}
+		else if (/is not allowed access|is not on the white list/.test(entry.error.message)) {
 			rejects++;
 		}
 		else if (entry.url==="/rest/push-atomic" && /^failed\b/.test(entry.error.message)) {
 			pushfails++;
 		}
 		else {
-			errors.push( {
+			errors.unshift( {
 				msg: anon(entry.error.message || "<unknown>"),
 				ip: anonIP(entry.ip),
-				domain: entry.domains && entry.domains instanceof Array ? entry.domains.join(",") : "",
-				url: entry.url,
+				domain: anonDomain(entry.domains || entry.domain),
+				url: anonURL(entry.url),
 				date: entry.date,
 			});
 		}
 	});
-	return { errors: errors, rejects: rejects, pushfails: pushfails };
+	return { errors: errors.slice(0,100), rejects: rejects, pushfails: pushfails, scans: reverse(scans.elems()) };
 }
 
-parseLogs().then( function(entries) {
-	console.log("total entries: " + entries.length );
-	var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
-	var errors = digestErrors(entries);
-	console.log("total errors: " + errors.errors.length );
-	var stats = {
-		daily: digestDaily(xentries).keyElems(),
-		errors: errors,
-		userCount: digestUsers(xentries).length,
-		date: new Date(),
-	};
-	return writeStats( stats );
-}).then( function() {
-	console.log("done");
-}, function(err) {
-	console.log(err.stack);
-});
+function digestDomains(entries) {
+	var domains = new Map();
+	entries.forEach( function(entry) {
+		if (entry.ip) {
+			var key = entry.ip.replace(/\.\d+$/, "");
+			var e = domains.getOrCreate( key,  {
+				count: 0,
+				ip: anonIP(entry.ip),
+				domain: anonDomain(entry.domains || entry.domain),
+			});
+			e.count++;
+		}
+	});
+	return reverse(domains.elems()).sort( function(x,y) { return y.count - x.count; }).slice(0,25);
+}
+
+function resolveDomains(entries) {
+	return Promise.when( entries.map( function(entry) {
+		if (entry.domain || !entry.ip) return Promise.resolved();
+		try {
+			return dns.reverse(entry.ip, function(err,doms) {
+				if (err || !doms) return;
+				console.log(doms)
+				entry.domain = doms.join(",");
+			});
+		}
+		catch(exn) {
+			//entry.domain = exn.toString();
+			return Promise.resolved();
+		}
+	}));
+}
+
+function writeStatsPage( fname ) {
+	if (!fname) fname = "client/private/stats.html";
+	return parseLogs().then( function(entries) {
+		console.log("stats: total entries: " + entries.length );
+		var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
+		var errors = digestErrors(entries);
+		console.log("stats: total errors: " + errors.errors.length );
+		console.log("stats: total scans: " + errors.scans.length );
+		var domains  = digestDomains(entries);
+		return resolveDomains(domains).then( function() {
+			var stats = {
+				daily: digestDaily(xentries).keyElems(),
+				errors: errors,
+				domains: domains,
+				userCount: digestUsers(xentries).length,
+				date: new Date(),
+			};
+			return writeStats( fname, stats );
+		});
+	}).then( function() {
+		console.log("updated stats.");
+	}, function(err) {
+		console.log("unable to write stats:")
+		console.log(err.stack);
+	});
+};
+
+module.exports.writeStatsPage = writeStatsPage;
+
+if (!module.parent) {
+	writeStatsPage();
+}
+
 

@@ -43,6 +43,19 @@ body {
   color: gray;
   padding-left: 1em;
 }
+table, th,tr {
+  width: 100%;
+  border: 1px solid black;
+}
+table td {
+  max-width: 12em;
+  vertical-align: top;
+  padding: 0pt 1ex;
+}
+table tr:nth-child(even), table thead tr {
+  background-color: gainsboro;
+}
+
 </style>
 
 </head>
@@ -59,9 +72,15 @@ body {
 <div id="dailyx">
 </div>
 
-<h2>Errors</h2>
-<div id="errors">
-</div>
+<h2>Top domains</h2>
+<div id="domains"></div>
+
+<h2>Recent errors</h2>
+<div id="errors"></div>
+
+<h2>Recent scans</h2>
+<div id="scans"></div>
+
 
 </page>
 
@@ -106,11 +125,11 @@ body {
   function rows( divName, hdr, rows ) {
     var content = "";
     var props = properties(hdr);
-    content += "<table>\n<th>" + props.map( function(prop) { return "<td>" + prop + "</td>"; } ).join() + "</th>\n";
+    content += "<table>\n<thead><tr>" + props.map( function(prop) { return "<th>" + prop + "</th>"; } ).join("") + "</tr></thead><tbody>\n";
     rows.forEach( function(row) {
-      content += "<tr>" + props.map( function(prop) { return "<td>" + row[prop] + "</td>"; } ).join() + "</tr>\n";
+      content += "<tr>" + props.map( function(prop) { return "<td>" + row[hdr[prop]] + "</td>"; } ).join("") + "</tr>\n";
     });
-    content += "</table>";
+    content += "</tbody></table>";
     var elem = document.getElementById(divName);
     elem.innerHTML = elem.innerHTML + content;
   }
@@ -119,6 +138,7 @@ body {
     var date = new Date(stats.date);
     document.getElementById("date").innerHTML = date.toUTCString() + "<span class='local-time'>(local time: " + date.toLocaleString() + ")</span>";
     document.getElementById("userCount").innerHTML = stats.userCount;
+
     draw("daily", "cumulative users","cumUserCnt","Unique cumulative users");
     draw("daily", "page hits","pagesCnt","Page hits per day");
     draw("daily", "index hits","pageIdxCnt","Index page hits per day");
@@ -129,9 +149,11 @@ body {
     draw("dailyx", "max latex run","maxSTm","Maximum LaTeX job per day (in milliseconds)");
 
     rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
+    rows("scans", {url: "url", count: "count", domain:"domain", date: "date" }, stats.errors.scans );
+    rows("domains", { count: "count", ip: "ip", domain: "domain" }, stats.domains );
   }
  
-  var stats = JSON.parse('<STATS>');
+  var stats = <STATS>;
 </script>
 
 
