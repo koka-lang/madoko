@@ -76,7 +76,11 @@ var UI = (function() {
     var self = this;
     self.state  = State.Init;
     self.editor = null;
-    self.sessionid = crypto.md5(new Date().toISOString() + ":" + Math.random().toString()).substr(0,16);
+    self.sessionid = localStorage.getItem("sessionid");
+    if (!self.sessionid) {
+      self.sessionid = crypto.md5(new Date().toISOString() + ":" + Math.random().toString()).substr(0,16);
+      localStorage.setItem("sessionid",self.sessionid);
+    }
     
     self.refreshContinuous = true;
     self.refreshRate = 500;
@@ -362,18 +366,23 @@ var UI = (function() {
       }
     };
 
+    self.lastSync = 0;
+    self.lastConUsersCheck = 0;
     self.iconDisconnect = document.getElementById("icon-disconnect");
     self.checkAutoSync = document.getElementById('checkAutoSync');
     setInterval( function() {
       self.updateConnectionStatus().then( function(isConnected) {
-        if (isConnected && self.storage.remote.type() !== "local" && 
-              self.checkAutoSync.checked && self.state === State.Normal) { 
-          if (Date.now() - self.lastEditChange > 5000) {
-            self.synchronize();
+        if (isConnected && self.storage.remote.type() !== "local") {
+          var now = Date.now();
+          self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
+          if (self.checkAutoSync.checked && self.state === State.Normal) { 
+            if (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000) {
+              self.synchronize();
+            }
           }
         }        
       });
-    }, 30000 );
+    }, 10000 );
 
     
 
@@ -792,6 +801,7 @@ var UI = (function() {
                 util.message("ready", util.Msg.Status);
                 self.removeDecorations(false);
               }
+              self.showConcurrentUsers( true );
               
               /*
               // adjust refresh rate dynamically
@@ -989,6 +999,7 @@ var UI = (function() {
     if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
             self.hideDecorations();
+            self.showConcurrentUsers(false,"none");
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
@@ -1017,7 +1028,7 @@ var UI = (function() {
         //self.editor.revealPosition( pos, true, true );
       }
       self.showDecorations();
-      self.showConcurrentUsers();
+      self.showConcurrentUsers(false);
     }).always( function() { 
       self.state = State.Normal; 
     });    
@@ -1133,17 +1144,24 @@ var UI = (function() {
   /*---------------------------------------------------
     Concurrent users
   -------------------------------------------------- */
-  UI.prototype.showConcurrentUsers = function(edit) {
+  UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.isConnected()) {
+    if (!self.storage.isConnected() || !self.allowServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
+    }
+    else if (quick && self.usersStatus.className === "") {  // don't do a get request for a quick check
+      return;
+    }
+    else if (edit==="none") {
+      self.usersStatus.className = "";
+    }
+    else if (!edit) {
+      edit = (self.storage && self.storage.isModified(self.editName)) ? "write" : "read";
     }
 
     var files = {};    
     var root = "/" + self.storage.folder() + "/";
-    if (!edit) edit = "read";
-
     var docFile = root + self.docName + "*";
     files[docFile] = edit;
     files[root + self.editName] = edit;
@@ -1151,17 +1169,20 @@ var UI = (function() {
       sessionid: self.sessionid,
       files: files,
     };
-    
+
+    self.lastConUsersCheck = Date.now();
     util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
       var res = data[docFile];
-      if (res && res.writers > 0) {
-        self.usersStatus.className = "users-write";
-      }
-      else if (res && res.readers > 0) {
-        self.usersStatus.className = "users-read";        
-      }
-      else {
-        self.usersStatus.className = "";
+      if (res && edit !== "none") {
+        if (res && res.writers > 0) {
+          self.usersStatus.className = "users-write";
+        }
+        else if (res && res.readers > 0) {
+          self.usersStatus.className = "users-read";        
+        }
+        else {
+          self.usersStatus.className = "";
+        }
       }
     });
   }
@@ -1733,11 +1754,13 @@ var UI = (function() {
 
   UI.prototype._synchronize = function() {
     var self = this;
+    self.lastSync = Date.now();
     if (self.storage) {
       self.localSave();
       var cursors = {};        
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;
+      self.showConcurrentUsers(false);
       return self.withSyncSpinner( function() {
         return self.storage.sync( diff, cursors ).then( function() {
           var line1 = cursors["/" + self.docName];

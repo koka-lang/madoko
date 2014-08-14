@@ -591,6 +591,12 @@ var Storage = (function() {
       });
   }
 
+  Storage.prototype.isModified = function( fpath ) {
+    var self = this;
+    var file = self.files.get(fpath);
+    return (file ? file.modified : false);
+  }
+
   Storage.prototype.readLocalFile = function( fpath ) {
     var self = this;
     var file = self.files.get(fpath);
