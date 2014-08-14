@@ -112,10 +112,19 @@ define([],function() {
       return Promise.resolved().then( function() { return action(); } );
     }
 
+    Promise.maybe = function(p,action) {
+      if (p && p.then) {
+        return p.then(action);
+      }
+      else {
+        return action(p);
+      }
+    }
+
     Promise.prototype.always = function( action ) {
       var self = this;
       self.then( function(){ action(); }, function(){ action(); });
-      return self;
+      return self; // ignores result of 'then'
     }
 
     Promise.prototype.then = function( onSuccess, onError, onProgress ) {

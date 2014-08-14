@@ -103,18 +103,36 @@ function max(xs) {
 	return m;
 }
 
+function userVal(user) {
+	return user.reqCount + (user.uid ? 10000 : 0);
+}
+
 function digestUsers(entries) {
 	var users = new Map();
 	entries.forEach( function(entry) {
-		if (entry.user == null || entry.user.id == null) return;
-		var userEntries = users.getOrCreate(entry.user.id, []);
-		userEntries.push(entry);
+		if (entry.type === "uid") {
+			var user = users.getOrCreate(entry.uid,{ name: entry.name, email: entry.email, entries: [] });
+			if (entry.id !== entry.uid) {
+				var old = users.get(entry.id);				
+				if (old && old.entries) {
+					user.entries = old.entries + user.entries;
+					users.set(entry.id,{ redirect: entry.uid } );
+				}
+			}
+			user.name = entry.name;
+			user.email = entry.email;
+		}
+		else if (entry.user && entry.user.id) {
+			var user = users.getOrCreate(entry.user.id, { name: entry.user.id, email: "", entries: [] });
+			while (user.redirect) user = users.get(user.redirect);
+			user.entries.push(entry);
+		}
 	});
-	users = users.map( function(id,uentries) {
+	users = users.map( function(id,user) {
 		var delta = 10*60*1000; // 10 minutes
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
-		uentries.forEach( function(entry) {
+		user.entries.forEach( function(entry) {
 			var nextTime = date.dateFromISO(entry.date).getTime();
 			if (prevTime===0) {
 				prevTime = nextTime;
@@ -125,12 +143,15 @@ function digestUsers(entries) {
 			}
 		});
 		return {
-			workTime: total,
-			reqCount: uentries.length,
+			reqCount: user.entries.length,
+			name: user.name,
+			//email: user.email,
+			workTime: Math.ceil(total/(60*1000)),
 			id: id,
+			uid: (user.email != "")
 		}
 	});
-	return users.elems();
+	return users.elems().sort( function(x,y) { return userVal(y) - userVal(x); });
 }
 
 function writeStats( fname, obj ) {
@@ -300,12 +321,14 @@ function writeStatsPage( fname ) {
 		console.log("stats: total errors: " + errors.errors.length );
 		console.log("stats: total scans: " + errors.scans.length );
 		var domains  = digestDomains(entries);
+		var users   = digestUsers(xentries);
 		return resolveDomains(domains).then( function() {
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),
 				errors: errors,
+				users: users.slice(0,25),
 				domains: domains,
-				userCount: digestUsers(xentries).length,
+				userCount: users.length,
 				date: new Date(),
 			};
 			console.log("stats: total time: " + (Date.now() - start).toString() + " ms");

@@ -162,12 +162,13 @@ function event( req, res, action, maxRequests, allowAll ) {
     if (logev) logev.entry( entry );    
     entry.type = "request";
     domain = domainsGet(req);
-    if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
     domain.requests++;
-    if (/^\/rest\/.*/.test(req.url)) {
-      entry.user = { id: getUserId(req,res) };
-    }
-    var x = action();
+    if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
+    var x = Promise.maybe( getUserId(req,res), function(userid) {
+              //if (/^\/rest\/.*/.test(req.url)) {
+              entry.user = { id: userid };
+              return action(userid);
+            });
     if (x && x.then) {
       x.then( function(result) {
         domain.requests--;
@@ -201,6 +202,7 @@ var mb        = 1024*1024;
 var second    = 1000;
 var minute    = 60*second;
 var hour      = 60*minute;
+var day       = 24*hour;
 
 var limits = {
   requestsPerDomain: 10,
@@ -209,7 +211,8 @@ var limits = {
   maxProcesses: 10, 
   hashLength  : 16,  
   fileSize    : 8*mb,         
-  cookieAge   : 24 * hour,  // 1 day for now
+  cookieAge   : 1 * day,  // 1 day for now
+  cookieAgeUid: 30 * day,  
   timeoutPDF  : 5*minute,
   timeoutMath : minute,
   timeoutGET  : 5*second,
@@ -334,10 +337,16 @@ function encodingFromExt(fname) {
   return (mime.indexOf("text/") === 0 ? "utf8" : "base64" );
 }
 
+
+function createHash(data) {
+  return crypto.createHash('md5').update(data).digest('hex').substr(0,limits.hashLength);
+}
+
 function uniqueHash() {
   var unique = (new Date()).toString() + ":" + Math.random().toString();
-  return crypto.createHash('md5').update(unique).digest('hex').substr(0,limits.hashLength);
+  return createHash(unique);
 }
+
 
 
 // -------------------------------------------------------------
@@ -435,74 +444,97 @@ setInterval( function() {
 // General server helpers
 // -------------------------------------------------------------
 
+function freshUserId(req,res) {
+  var domain = domainsGet(req);
+  if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
+  var userid = uniqueHash();
+  res.cookie("auth", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
+  domain.newUsers++;
+  return userid;
+}
+
 // Get a unique user id for this session.
 function getUserId(req,res) {
-  var userid = req.signedCookies.auth;
-  if (!userid) {
-    var domain = domainsGet(req);
-    if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
-    userid = uniqueHash();
-    res.cookie("auth", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
-    domain.newUsers++;
+  var userCookie = req.signedCookies.auth;  
+  var user = (!userCookie || typeof userCookie === "string") ? { id: userCookie } : userCookie;
+  console.log(user);
+
+  if (user.uid) return user.uid;
+
+  var dropboxAccess = req.cookies.auth_dropbox;
+  if (dropboxAccess) {    
+    return requestGET("https://api.dropbox.com/1/account/info?access_token=" + dropboxAccess).then( function(data) {
+      var dbinfo = JSON.parse(data);
+      if (!dbinfo.uid) return (user.id || freshUserId(req,res));
+
+      dbinfo.uid = dbinfo.uid.toString();
+      var uid = createHash(dbinfo.uid);
+      console.log("new uid: " + user.id + " -> " + uid);
+      if (log) log.entry( { type: "uid", id: user.id || uid, uid: uid, name: dbinfo.display_name, email: dbinfo.email, date: new Date().toISOString(), ip: req.ip, url: req.url } );
+      res.cookie("auth", { uid: uid }, { signed: true, maxAge: limits.cookieAgeUid, httpOnly: true, secure: true } );
+      return uid;
+    });
   }
-  return userid;
+  else return (user.id || freshUserId(req,res));
 }
 
 
 // Get a unique user path for this session.
-function getUser( req,res ) {
-  var userid = getUserId(req,res);
-  var user = usersGet(userid);
-  if (user.requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
+function getUser( req,res, _userid ) {
+  return Promise.maybe( (_userid || getUserId(req,res)), function(userid) {
+    var user = usersGet(userid);
+    if (user.requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
 
-  return {
-    id: userid,
-    user: user,
-    path: combine(runDir, userid + "-" + uniqueHash()),
-  };
+    return {
+      id: userid,
+      user: user,
+      path: combine(runDir, userid + "-" + uniqueHash()),
+    };
+  });
 }
 
-function withUser( req,res, action ) {
-  var user = getUser(req,res);
-  var start = Date.now();
-  var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
-  if (req.body.docname) entry.docname = req.body.docname;
-  if (req.body.pdf) entry.pdf = req.body.pdf;
-  log.entry( entry );
-  user.user.requests++;
-  return fstat(user.path).then( function(stats) {
-    if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
-    return ensureDir(user.path);
-  }).then( function() {
-    return action(user);    
-  }).always( function() {  
-    entry.type = "user";  
-    entry.time = Date.now() - start; 
-    entry.size = 0;
-    entry.files = req.body.files.map( function(file) {
-      var size = file.content.length;
-      entry.size += size;
-      return { 
-        path: file.path,
-        //encoding: file.encoding,
-        //mime: file.mime,
-        size: size,
-      };
-    });
+function withUser( req,res, userid, action ) {
+  return Promise.maybe( getUser(req,res,userid), function(user) {
+    var start = Date.now();
+    var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
+    if (req.body.docname) entry.docname = req.body.docname;
+    if (req.body.pdf) entry.pdf = req.body.pdf;
     log.entry( entry );
-    if (user.path) {
-      //console.log("remove: " + user.path);      
-      setTimeout( function() {
-        rmdir( user.path, function(err) {
-          if (err) {
-            var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
-            extend(eentry,entry);          
-            logerr.entry( eentry );
-          }
-        });
-      }, limits.rmdirDelay );    
-    }
-    user.user.requests--;
+    user.user.requests++;
+    return fstat(user.path).then( function(stats) {
+      if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
+      return ensureDir(user.path);
+    }).then( function() {
+      return action(user);    
+    }).always( function() {  
+      entry.type = "user";  
+      entry.time = Date.now() - start; 
+      entry.size = 0;
+      entry.files = req.body.files.map( function(file) {
+        var size = file.content.length;
+        entry.size += size;
+        return { 
+          path: file.path,
+          //encoding: file.encoding,
+          //mime: file.mime,
+          size: size,
+        };
+      });
+      log.entry( entry );
+      if (user.path) {
+        //console.log("remove: " + user.path);      
+        setTimeout( function() {
+          rmdir( user.path, function(err) {
+            if (err) {
+              var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
+              extend(eentry,entry);          
+              logerr.entry( eentry );
+            }
+          });
+        }, limits.rmdirDelay );    
+      }
+      user.user.requests--;
+    });
   });
 }
 
@@ -744,8 +776,8 @@ function pushAtomic( name, time ) {
 
 var runs = 0;
 app.post('/rest/run', function(req,res) {
-  event( req, res, function() {
-    return withUser(req, res, function(user) {
+  event( req, res, function(userid) {
+    return withUser(req, res, userid, function(user) {
       console.log("run request: " + (req.body.round ? req.body.round.toString() + ": " : "") + user.path);
       if (runs >= limits.maxProcesses) throw { httpCode: 503, message: "too many processes" };
       runs++;
