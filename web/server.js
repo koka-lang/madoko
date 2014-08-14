@@ -211,12 +211,13 @@ var limits = {
   maxProcesses: 10, 
   hashLength  : 16,  
   fileSize    : 8*mb,         
-  cookieAge   : 1 * day,  // 1 day for now
-  cookieAgeUid: 30 * day,  
+  cookieAge   : 1*day,  // 1 day for now
+  cookieAgeUid: 30*day,  
   timeoutPDF  : 5*minute,
   timeoutMath : minute,
   timeoutGET  : 5*second,
   atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
+  editDelay   : 30*second,  
   logFlush    : 1*minute,
   logDigest   : 30*minute,
   rmdirDelay  : 3*second,
@@ -768,7 +769,74 @@ function pushAtomic( name, time ) {
   }
 }
 
+/* -------------------------------------------------------------
+   Keep track of who edits what
+------------------------------------------------------------- */
 
+var edits = new Map();
+
+setInterval( function() {
+  var now = Date.now();
+  edits.forEach( function(name,info) {
+    info.users.forEach( function(id,user) {
+      if (user.lastUpdate + limits.editDelay < now) {
+        info.users.remove(id);
+      }
+    });
+    if (info.users.count() === 0) {
+      edits.remove(name);
+    }
+  });
+}, limits.editDelay/2 );
+
+
+function getEditInfo( id, name ) {
+  var res = { readers: 0, writers: 0 };
+  var info = edits.get(name);
+  if (info && info.users) {
+    info.users.forEach( function(uid,user) {
+      if (uid !== id) {
+        res.readers++;
+        if (user.editing) res.writers++;
+      }
+    });
+  }
+  return res;
+}
+
+var EditOp = { None: "none", View: "read", Edit:"write" }
+
+function updateEditInfo( id, name, editop ) {
+  if (!name) return;
+  var info = edits.get(name);
+  if (!info) {
+    if (editop === EditOp.None);
+    info = { users : new Map() };
+    edits.set(name,info);
+  }
+
+  if (editop === EditOp.None) {
+    info.users.remove( id );
+    if (info.users.count === 0) edits.remove(name);
+  }
+  else {
+    var user = info.users.getOrCreate( id, { lastUpdate: 0, editing: false });
+    user.lastUpdate = Date.now();
+    user.editing = (editop === EditOp.Edit);    
+  }
+}
+
+function editUpdate( _userid, sessionid, names ) {
+  if (!names) return {};
+  var res = {};
+  properties(names).forEach( function(name) {
+    if (!name || name[0] !== "/") return;
+    if (typeof names[name] !== "string") return;
+    updateEditInfo( sessionid, name, names[name]);
+    res[name] = getEditInfo(sessionid,name);
+  });
+  return res;
+}
 
 // -------------------------------------------------------------
 // The server entry points
@@ -794,6 +862,15 @@ app.post('/rest/push-atomic', function(req,res) {
     return pushAtomic( req.body.name, req.body.time );
   }, null, true );
 });
+
+app.post("/rest/edit", function(req,res) {
+  event( req, res, function(userid) {
+    var sessionid = req.body.sessionid || uniqueHash();
+    var files = req.body.files || {};
+    return editUpdate(userid,sessionid,files);
+  });
+});
+
 
 app.post("/report/csp", function(req,res) {
   event(req,res, function() {

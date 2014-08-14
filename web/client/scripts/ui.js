@@ -6,9 +6,9 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","../scripts/storage","../scripts/madokoMode",
+define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","std_crypto","../scripts/storage","../scripts/madokoMode",
         "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
-        function(Map,merge,Promise,util,storage,madokoMode,range,selection,replaceCommand) {
+        function(Map,merge,Promise,util,crypto,storage,madokoMode,range,selection,replaceCommand) {
 
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
@@ -76,6 +76,7 @@ var UI = (function() {
     var self = this;
     self.state  = State.Init;
     self.editor = null;
+    self.sessionid = crypto.md5(new Date().toISOString() + ":" + Math.random().toString()).substr(0,16);
     
     self.refreshContinuous = true;
     self.refreshRate = 500;
@@ -167,6 +168,7 @@ var UI = (function() {
     var self = this;
 
     // common elements
+    self.usersStatus = document.getElementById("users-status");
     self.spinner = document.getElementById("view-spinner");    
     self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
@@ -1015,6 +1017,7 @@ var UI = (function() {
         //self.editor.revealPosition( pos, true, true );
       }
       self.showDecorations();
+      self.showConcurrentUsers();
     }).always( function() { 
       self.state = State.Normal; 
     });    
@@ -1124,6 +1127,43 @@ var UI = (function() {
       files.sort().join("\n") + 
       (images.length > 0 || generated.length > 0 ? 
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
+  }
+
+
+  /*---------------------------------------------------
+    Concurrent users
+  -------------------------------------------------- */
+  UI.prototype.showConcurrentUsers = function(edit) {
+    var self = this;
+    if (!self.storage.isConnected()) {
+      self.usersStatus.className = "";
+      return; 
+    }
+
+    var files = {};    
+    var root = "/" + self.storage.folder() + "/";
+    if (!edit) edit = "read";
+
+    var docFile = root + self.docName + "*";
+    files[docFile] = edit;
+    files[root + self.editName] = edit;
+    var body = {
+      sessionid: self.sessionid,
+      files: files,
+    };
+    
+    util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
+      var res = data[docFile];
+      if (res && res.writers > 0) {
+        self.usersStatus.className = "users-write";
+      }
+      else if (res && res.readers > 0) {
+        self.usersStatus.className = "users-read";        
+      }
+      else {
+        self.usersStatus.className = "";
+      }
+    });
   }
 
 

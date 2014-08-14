@@ -454,6 +454,17 @@ div.boxed {
   background-color: Gainsboro;
 }
 
+/* status icons */
+
+#users-status img {
+  vertical-align: -0.5ex;
+  visibility: hidden;
+}
+
+#users-status.users-read img#icon-users,
+#users-status.users-write img#icon-users-edit {
+  visibility: visible;
+}
 
 
 /* Generic Spinner */
