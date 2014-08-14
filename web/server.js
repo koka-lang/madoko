@@ -834,7 +834,7 @@ function editUpdate( _userid, sessionid, names ) {
     if (typeof names[name] !== "string") return;
     updateEditInfo( sessionid, name, names[name]);
     res[name] = getEditInfo(sessionid,name);
-    console.log("session: " + sessionid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    // console.log("session: " + sessionid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   return res;
 }
