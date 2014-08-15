@@ -1,10 +1,11 @@
 title		: definition lists
-author		: Daan
+author	   	: Daan
 author note : &time;
 Doc Class   : article
 
-~Pre : replace=/->/\(2:&rarr;\)/g
-~Pre,~Code: .pretty
+~Pre        : replace=//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g 
+~Pre,~Code  : .pretty
+.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" replace="/([a-zA-Z])(\d+)\b/\(\1~\2~\)/g"
 
 <style>
 .xpretty td {
@@ -14,12 +15,6 @@ Doc Class   : article
   color: black !important;
 }
 </style>
-
-~ TexRaw
-\renewcommand{\mdTokenKeyword}[1]{\textsf{#1}}
-\newcommand{\mdTokenOperator}[1]{\,#1\,}
-\newcommand{\mdTokenIdentifier}[1]{\textit{#1}}
-~
 
 
 
@@ -64,6 +59,8 @@ data Exp   =  Number    Int
            deriving (Eq)
 ```
 
+Scan:
+
 ``` Haskell 
 scanr1        :: (a -> a -> a) -> [a] -> [a]
 scanr1 f xxs  =  case xxs of 
@@ -73,3 +70,14 @@ scanr1 f xxs  =  case xxs of
                                       in   case qs of 
                                             q:_ -> f x q : qs
 ```          
+
+Rep-min problem:
+
+``` Haskell
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in   Bin lt rt "hi"
+                   )
+replace_min’ t  =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
+```

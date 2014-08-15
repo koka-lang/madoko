@@ -88,6 +88,8 @@
 \mdDefineUnicode{9746}{\rlap{$\square$}{\hspace{0.1em}\ding{55}}}
 % magnifying glass
 \mdDefineUnicode{128270}{\hspace{-0.75ex}\protect\raisebox{-0.25ex}{$\arrownot$}\hspace{1.05ex}\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
+% short underscore
+\mdDefineUnicode{818}{\leavevmode \kern.06em\vbox{\hrule width.3em}}
 
 % break and nbsp
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\}
@@ -580,6 +582,7 @@
 \cssNewInlineElem{\mdCode}{code}{font-family=monospace}
 \cssNewInlineElem{\mdPrecode}{precode}{}
 \cssClassRule{pretty}{font-family=\mdPrettyFont}
+\cssClassRuleDo{pretty}{\def\@tokenPostfix{Pretty}}
 
 \newlength{\@presp}
 \settowidth{\@presp}{\texttt{ }}
@@ -612,7 +615,6 @@
 \newlength{\ppresp}
 \setlength{\ppresp}{0.5ex}
 \newcommand{\ppreindent}[1]{\hspace*{#1\ppresp}}
-
 \newcommand{\pprespace}[1]{\hspace*{\ppresp}}
 \newcommand{\pprebr}[1]{ }
 
@@ -621,11 +623,12 @@
 
 \cssNewKey{css}{language}{\cssLanguage}{}
 
+\newcommand{\@tokenPostfix}{}
 \newcommand{\@tokencmd}[1]{#1}
 \newcommand{\mdToken}[2]{%
   \renewcommand{\@tokencmd}[1]{##1}%
   \@for\@tname:=#1\do{%
-    \ifcsdef{mdToken\@tname}{\apptox{\@tokencmd}{\csname mdToken\@tname\endcsname}}{}%
+    \ifcsdef{mdToken\@tokenPostfix\@tname}{\apptox{\@tokencmd}{\csname mdToken\@tokenPostfix\@tname\endcsname}}{}%
   }%
   \@tokencmd{#2}%
 }
@@ -634,6 +637,7 @@
 % Standard token classes for syntax highlighting 
 %-------------------------------------------------------------
 
+\newcommand{\mdTokenIdentifier}[1]{#1}
 \newcommand{\mdTokenKeyword}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenPredefined}[1]{\textcolor{Navy}{#1}}
 \newcommand{\mdTokenString}[1]{\textcolor{Maroon}{#1}}
@@ -662,6 +666,13 @@
 \newcommand{\mdTokenRegexp}[1]{\mdTokenString{#1}}
 \newcommand{\mdTokenInvalid}[1]{\mdTokenError{#1}}
 \newcommand{\mdTokenValue}[1]{\mdTokenString{#1}}
+
+% Pretty tokens
+
+\newcommand{\mdTokenPrettyIdentifier}[1]{\textit{#1}}
+\newcommand{\mdTokenPrettyConstructor}[1]{\textit{#1}}
+\newcommand{\mdTokenPrettyKeyword}[1]{\textsf{#1}}
+\newcommand{\mdTokenPrettyOperator}[1]{\,#1\,}
 
 % ---------------------------------------------------
 % Support the Beamer class
