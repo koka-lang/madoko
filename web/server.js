@@ -826,15 +826,15 @@ function updateEditInfo( id, name, editop ) {
   }
 }
 
-function editUpdate( _userid, sessionid, names ) {
+function editUpdate( userid, names ) {
   if (!names) return {};
   var res = {};
   properties(names).forEach( function(name) {
     if (!name || name[0] !== "/") return;
     if (typeof names[name] !== "string") return;
-    updateEditInfo( sessionid, name, names[name]);
-    res[name] = getEditInfo(sessionid,name);
-    // console.log("session: " + sessionid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    updateEditInfo( userid, name, names[name]);
+    res[name] = getEditInfo(userid,name);
+    // console.log("user: " + userid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   return res;
 }
@@ -866,9 +866,9 @@ app.post('/rest/push-atomic', function(req,res) {
 
 app.post("/rest/edit", function(req,res) {
   event( req, res, function(userid) {
-    var sessionid = req.body.sessionid || uniqueHash();
+    //var sessionid = req.body.sessionid || uniqueHash();
     var files = req.body.files || {};
-    return editUpdate(userid,sessionid,files);
+    return editUpdate(userid,files);
   });
 });
 

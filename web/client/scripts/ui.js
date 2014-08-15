@@ -76,12 +76,7 @@ var UI = (function() {
     var self = this;
     self.state  = State.Init;
     self.editor = null;
-    self.sessionid = localStorage.getItem("sessionid");
-    if (!self.sessionid) {
-      self.sessionid = crypto.md5(new Date().toISOString() + ":" + Math.random().toString()).substr(0,16);
-      localStorage.setItem("sessionid",self.sessionid);
-    }
-    
+        
     self.refreshContinuous = true;
     self.refreshRate = 500;
     self.serverRefreshRate = 2500;
@@ -1166,7 +1161,6 @@ var UI = (function() {
     files[docFile] = edit;
     files[root + self.editName] = edit;
     var body = {
-      sessionid: self.sessionid,
       files: files,
     };
 
