@@ -23,7 +23,7 @@ var cookieParser  = require("cookie-parser");
 
 var allowedIps = null; 
 var blockedIps = null;
-var privateIps = /^(131\.107\.(147|174|159|160)\.\d+|127\.0\.0\.1|173\.160\.195\.\d+)$/;
+var privateIps = /^(131\.107\.(147|174|159|160|192)\.\d+|127\.0\.0\.1|173\.160\.195\.\d+)$/;
 
 // -------------------------------------------------------------
 // Wrap promises
@@ -458,7 +458,7 @@ function freshUserId(req,res) {
 function getUserId(req,res) {
   var userCookie = req.signedCookies.auth;  
   var user = (!userCookie || typeof userCookie === "string") ? { id: userCookie } : userCookie;
-  console.log(user);
+  //console.log(user);
 
   if (user.uid) return user.uid;
 
