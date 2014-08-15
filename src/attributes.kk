@@ -29,12 +29,28 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
-  val def = (attrs.classes.map( fun(cname) { defaults["." + cname.definitionId] } ) +
-             [defaults["#" + attrs.name.definitionId], defaults["~" + elementName.definitionId]]).filter(isJust).map(string).join(" ")
-  if (def=="") then attrs else {
-    //trace("matched " + elementName + ": {" + attrs.text + "} : {" + def + "}" ) 
-    attrs.mergeDefault(def.parseAttrs)
+  val extra = ["#" + attrs.name.definitionId, "~" + elementName.definitionId]
+  applyRules(peano10, defaults, attrs, defaults.getMatches(attrs,dict(),extra) );
+}
+
+function applyRules(p : peano, defaults : dict<string>, attrs : attrs, dv : (string,dict<bool>) ) : attrs {
+  match(p) {
+    Zero -> attrs
+    Succ(s) -> {
+      val (def,visited) = dv
+      if (def=="") return attrs
+      val attrs2 = attrs.mergeDefault(def.parseAttrs)      
+      applyRules( s, defaults, attrs2, defaults.getMatches(attrs2,visited) )
+    }
   }
+}
+
+function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool> = dict(), extra : list<string> = [] ) : (string, dict<bool>) {
+  val keys0 = attrs.classes.map( fun(cname) { "." + cname.definitionId } ) + extra
+  val keys1 = keys0.filter( fun(key) { visited[key].isNothing } )
+  val visited1 = visited + keys1.map( fun(key) { (key,True) } ).dict
+  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(string).join(" ")
+  return (def,visited1)
 }
 
 
@@ -426,6 +442,7 @@ function peano(n : int ) : peano {
   p
 }
 
+val peano10= peano(10)
 val peanoN = peano(100)
 
 public function expand( attrs : attrs, metadata : dict<string>, labels : dict<label> = dict() ) : attrs {
