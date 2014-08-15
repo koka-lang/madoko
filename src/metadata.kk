@@ -122,6 +122,8 @@ function defaultMeta( options : options ) : string {
       @"~Bibitem: replace='?if &bib-search-url; && &searchterm;\
                           ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'",
       @"@html Bib Search Url: www.bing.com",
+      @"lowline: &#x5F;",
+      @"@tex lowline: &#0818;",
 
       theorem("Theorem"),
       theorem("Lemma"),
