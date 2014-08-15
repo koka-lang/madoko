@@ -134,13 +134,15 @@ function digestUsers(entries) {
 		var prevTime = 0;
 		user.entries.forEach( function(entry) {
 			var nextTime = date.dateFromISO(entry.date).getTime();
-			if (prevTime===0) {
+			if (prevTime > nextTime) {
+				var tmp = nextTime;
+				nextTime = prevTime;
 				prevTime = nextTime;
 			}
-			else if (prevTime + delta > nextTime) {
+			if (prevTime + delta > nextTime) {
 				total += (nextTime - prevTime);
-				prevTime = nextTime;
 			}
+			prevTime = nextTime;
 		});
 		return {
 			reqCount: user.entries.length,
