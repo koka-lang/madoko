@@ -171,7 +171,9 @@ var UI = (function() {
     self.spinner = document.getElementById("view-spinner");    
     self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
-    self.syncer.spinDelay = 1;  
+    self.syncer.spinDelay = 200;  
+    self.exportSpinner = document.getElementById("export-spinner");    
+    self.exportSpinner.spinDelay = 1000;
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
     self.remoteLogo = document.getElementById("connect-logo");
@@ -1249,14 +1251,14 @@ var UI = (function() {
       includeImages: true,
       showErrors: function(errs) { self.showErrors(errs,true); } 
     };
-    return self.spinWhile( self.viewSpinner, 
+    return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw "PDF generation failed";
         var name = "out/" + util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
           var url = self.storage.getShareUrl( name )
           if (url) {
-            util.message( { message: "", urlText: "PDF exported", url: url }, util.Msg.Status );
+            util.message( { message: "PDF exported", url: url }, util.Msg.Status );
           }
           else {
             return self.openInWindow( name, "application/pdf" ).then( function() {
@@ -1275,7 +1277,7 @@ var UI = (function() {
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    return self.spinWhile( self.viewSpinner, 
+    return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
@@ -1288,7 +1290,7 @@ var UI = (function() {
 
   UI.prototype.generateSite = function() {
     var self = this;
-    return self.spinWhile( self.viewSpinner, 
+    return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );

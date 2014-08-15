@@ -328,10 +328,16 @@ div.boxed {
   width: 40%;
 }
 
-#sync-spinner {
+#sync-spinner, #export-spinner {
   float: right;
   margin-top: 0.2em;  
 }
+
+
+#export-spinner {
+  height: 1em;
+}
+
 
 #save-folder {
   width: 11em;

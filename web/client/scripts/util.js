@@ -73,32 +73,40 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
   // Call for messages
-  function message( txt, kind ) {
-    var linkTxt = "";
-    if (typeof txt === "object") {
-      if (txt.stack) {
-        console.log(txt.stack);
+  function message( msg, kind ) {
+    var linkPre = "";
+    var linkPost = "";
+    var txt = "";
+
+    if (typeof msg === "object") {
+      if (msg.stack) {
+        console.log(msg.stack);
+      }
+      if (msg.url && typeof msg.url === "string") {
+        linkPre = "<a class='external' target='_blank' href='" + htmlEscape(msg.url) + "'>";        
+        linkPost= "</a>";
       }
       
-      if (txt.url && typeof txt.url === "string") {
-        linkTxt = "<a class='external' target='_blank' href='" + htmlEscape(txt.url) + "'>" + 
-                    htmlEscape(txt.urlText || "link") + "</a>";
-        txt = txt.message || "";                    
-      }
-      else if (txt.message) 
-        txt = txt.message;
+      if (msg.message) 
+        txt = msg.message;
       else
-        txt = txt.toString();
+        txt = msg.toString();
     }
+    else if (msg) {
+      txt = msg.toString();
+    }
+
     if (!kind) kind = Msg.Normal;
     // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
+
     if (kind !== Msg.Trace && consoleOut) {
-      function span(s,n) {
-        if (n && s.length > n-2) {
-          s = s.substr(0,n) + "...";
+    
+      function span(n) {
+        if (n && txt.length > n-2) {
+          txt = txt.substr(0,n) + "...";
         }
-        return "<span class='msg-" + kind + "'>" + spanLines(htmlEscape(s),"msg-line") + linkTxt + "</span>";
+        return "<span class='msg-" + kind + "'>" + linkPre + spanLines(htmlEscape(txt),"msg-line") + linkPost + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";
@@ -116,13 +124,13 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
       var date = new Date();
       var dprefix = "<span class='msg-time'>(" + lpad(date.getHours().toString(),2,"0") + ":" + lpad(date.getMinutes().toString(),2,"0") + ":" + lpad(date.getSeconds().toString(),2,"0") + ") </span>"
       
-      consoleOut.innerHTML = prefix + dprefix + span(txt) + "</span></div>" + current;
+      consoleOut.innerHTML = prefix + dprefix + span() + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        setStatusHTML(span(txt,40));
+        setStatusHTML(span(40));
       }
       else if (kind===Msg.Status) {
-        setStatusHTML(span(txt,40))
+        setStatusHTML(span(40))
       }
     }
   }
