@@ -283,11 +283,11 @@
 	\if@hasdim%
 		% set full height and width
 		\setlength{\cssWidthFull}{\dimexpr\cssWidth+\cssPaddingLeft+\cssPaddingRight\relax}%
-		\eifstrequal{\cssBorderStyleLeft}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
-		\eifstrequal{\cssBorderStyleRight}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
+		\eifstrequal{\cssBorderLeftStyle}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
+		\eifstrequal{\cssBorderRightStyle}{none}{}{\addtolength{\cssWidthFull}{\cssBorderWidth}}%
 		\setlength{\cssHeightFull}{\dimexpr\cssHeight+\cssPaddingTop+\cssPaddingBottom\relax}%
-		\eifstrequal{\cssBorderStyleTop}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%
-		\eifstrequal{\cssBorderStyleBottom}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%		
+		\eifstrequal{\cssBorderTopStyle}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%
+		\eifstrequal{\cssBorderBottomStyle}{none}{}{\addtolength{\cssHeightFull}{\cssBorderWidth}}%		
 		% set default width?
 		\ifdim\cssWidth=1sp% in this case, cssWidthFull is just padding and borders
 			\setlength{\cssWidth}{\dimexpr\linewidth-\cssWidthFull-\cssMarginLeft-\cssMarginRight}%
@@ -362,16 +362,16 @@
 \newlength{\cssBorderWidthTotal}
 \cssNewLengthKey[\cssPixel]{css}{border-width}{\cssBorderWidth}
 \cssNewKey{css}{border-color}{\cssBorderColor}{black}
-\cssNewKey{css}{border-style-top}{\cssBorderStyleTop}{none}
-\cssNewKey{css}{border-style-bottom}{\cssBorderStyleBottom}{none}
-\cssNewKey{css}{border-style-left}{\cssBorderStyleLeft}{none}
-\cssNewKey{css}{border-style-right}{\cssBorderStyleRight}{none}
+\cssNewKey{css}{border-top-style}{\cssBorderTopStyle}{none}
+\cssNewKey{css}{border-bottom-style}{\cssBorderBottomStyle}{none}
+\cssNewKey{css}{border-left-style}{\cssBorderLeftStyle}{none}
+\cssNewKey{css}{border-right-style}{\cssBorderRightStyle}{none}
 \cssNewKey{css}{background-color}{\cssBackgroundColor}{white}
 
 \cssNewPseudoKey{css}{padding}{padding-top=#1,padding-bottom=#1,padding-right=#1,padding-left=#1}
 
 \cssNewPseudoKey{css}{border-style}%
-	{border-style-top=#1,border-style-bottom=#1,border-style-left=#1,border-style-right=#1}
+	{border-top-style=#1,border-bottom-style=#1,border-left-style=#1,border-right-style=#1}
 
 \newcommand{\@cssProcessPadding}{%
 	\eifstrequal{\cssDisplay}{block}%
@@ -393,10 +393,10 @@
 \newcommand{\@cssBorderStyleAll}{}
 \newcommand{\@cssBlockPadding}{%
 	\@needframefalse%
-	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderTopStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderBottomStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderLeftStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderRightStyle}{none}{}{\@needframetrue}%
 	\eifstrequal{\cssBackgroundColor}{white}{}{\@needframetrue}%
 	\ifdim\cssPaddingTop=0pt\else\@needframetrue\fi
 	\ifdim\cssPaddingBottom=0pt\else\@needframetrue\fi
@@ -419,11 +419,11 @@
 			backgroundcolor=\@@bcolor%
 		}%
 		\setlength{\cssBorderWidthTotal}{0pt}%
-		\eifstrequal{\cssBorderStyleTop}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
-		\eifstrequal{\cssBorderStyleBottom}{none}{\appto{\@cssFramedArgs}{,bottomline=false}}{}%	
-		\eifstrequal{\cssBorderStyleLeft}{none}{\appto{\@cssFramedArgs}{,leftline=false}}%
+		\eifstrequal{\cssBorderTopStyle}{none}{\appto{\@cssFramedArgs}{,topline=false}}{}%	
+		\eifstrequal{\cssBorderBottomStyle}{none}{\appto{\@cssFramedArgs}{,bottomline=false}}{}%	
+		\eifstrequal{\cssBorderLeftStyle}{none}{\appto{\@cssFramedArgs}{,leftline=false}}%
 			{\addtolength{\cssBorderWidthTotal}{\cssBorderWidth}}%	
-		\eifstrequal{\cssBorderStyleRight}{none}{\appto{\@cssFramedArgs}{,rightline=false}}%		
+		\eifstrequal{\cssBorderRightStyle}{none}{\appto{\@cssFramedArgs}{,rightline=false}}%		
 			{\addtolength{\cssBorderWidthTotal}{\cssBorderWidth}}%	
 		\cssIfHasClass{math-display}%
 			{\@expandafter{\cssDoEnvOpt{mdmathframed}}{\@cssFramedArgs}}%
@@ -497,10 +497,10 @@
 		}%
 	  }%
 	\@needframefalse%
-	\eifstrequal{\cssBorderStyleTop}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleBottom}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleLeft}{none}{}{\@needframetrue}%
-	\eifstrequal{\cssBorderStyleRight}{none}{}{\@needframetrue}%		
+	\eifstrequal{\cssBorderTopStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderBottomStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderLeftStyle}{none}{}{\@needframetrue}%
+	\eifstrequal{\cssBorderRightStyle}{none}{}{\@needframetrue}%		
 	\if@needframe%
 		\setlength{\fboxrule}{\cssBorderWidth}%
 		\ifdim\cssWidth=1sp%

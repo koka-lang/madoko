@@ -370,15 +370,16 @@
 \newenvironment{mdLi}[1][]{\item\mdLabeltarget\begin{mdDivInline}[#1]}{\end{mdDivInline}}
 
 \newenvironment{mdDl}[1][]%
-  {\begin{mdDiv}[#1]%
+  {\begin{mdDiv}[margin-top=\topsep,margin-bottom=\topsep,#1]%
    \advance\c@mdListNesting by 1% use advance to be local
-   \begin{itemize}[leftmargin=0pt]%
+   \begin{itemize}[leftmargin=0pt,topsep=0pt]%
+   \vspace{-\itemsep}%
    \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
   {\end{itemize}\end{mdDiv}}%
 
 \newenvironment{mdDt}[1][]%
-  {\item[]\hspace{-\leftmargin}\begin{mdDiv}[#1]}%
+  {\item[]\begin{mdDiv}[#1]}%
   {\end{mdDiv}}%
 
 \newenvironment{mdDd}[1][]%
