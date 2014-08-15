@@ -365,19 +365,25 @@ var UI = (function() {
     self.lastConUsersCheck = 0;
     self.iconDisconnect = document.getElementById("icon-disconnect");
     self.checkAutoSync = document.getElementById('checkAutoSync');
-    setInterval( function() {
+
+    var autoSync = function() {
       self.updateConnectionStatus().then( function(isConnected) {
         if (isConnected && self.storage.remote.type() !== "local") {
           var now = Date.now();
-          self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
+          if (now - self.lastConUserCheck >= 10000) {
+            self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
+          }
           if (self.checkAutoSync.checked && self.state === State.Normal) { 
-            if (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000) {
+            if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
               self.synchronize();
             }
           }
-        }        
+        }
       });
-    }, 10000 );
+    }
+
+    setTimeout( autoSync, 1000 ); // run early on on startup
+    setInterval( autoSync, 5000 );
 
     
 
