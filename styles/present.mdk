@@ -89,17 +89,17 @@ Html Header   :
         box-shadow: none;
         border: none;
     }
-    .reveal pre {
+    .madoko .reveal pre {
         box-shadow: none;
         border: 1px solid black;
         word-wrap: normal;
         background-color: white;
-        width: 100%;
-        padding: 1em;
-    }       
-    .reveal pre code, .reveal code, .reveal .monospace, .reveal tt, .reveal kbd {
+        font-size: 0.7em;
+        line-height: 100%;
+        padding: 0.7em;
+    }      
+    .reveal pre code, .reveal code {
         padding: 0pt;
-        font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
     }
     .reveal .tocitem {
         text-align: left;

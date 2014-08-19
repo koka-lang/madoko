@@ -650,7 +650,8 @@ var Storage = (function() {
             self.writeFile(opath,Encoding.encode(opts.encoding, content),opts);
             return self.files.get(opath);
           },
-          function(_err) {
+          function(err) {
+            Util.message( err, Util.Msg.Exn );
             return noContent();
           });
       }      
