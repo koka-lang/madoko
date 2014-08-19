@@ -348,24 +348,24 @@
 \newcounter{mdListNesting}
 
 \newenvironment{mdUl}[1][]%
-  {\begin{mdDiv}[#1]%
+  {\begin{mdDiv}[margin-top=\topsep,#1]%
    \advance\c@mdListNesting by 1% use advance to be local
-   \begin{itemize}%
+   \begin{itemize}[topsep=0pt]%
    \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
-  {\end{itemize}\end{mdDiv}}
+  {\strut\end{itemize}\end{mdDiv}}
 
 \cssNewKey{css}{start}{\cssStart}{}
 \newenvironment{mdOl}[1][]%
-  {\begin{mdDiv}[#1]%
+  {\begin{mdDiv}[margin-top=\topsep,#1]%
   \advance\c@mdListNesting by 1% use advance to be local
-  \begin{enumerate}%
+  \begin{enumerate}[topsep=0pt]%
   \eifstrequal{\cssStart}{}{}%
     {\addtocounter{enum\roman{mdListNesting}}{\cssStart}%
      \addtocounter{enum\roman{mdListNesting}}{-1}}%
   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
-  {\end{enumerate}\end{mdDiv}}
+  {\strut\end{enumerate}\end{mdDiv}}
 
 \newenvironment{mdLi}[1][]{\item\mdLabeltarget\begin{mdDivInline}[#1]}{\end{mdDivInline}}
 
