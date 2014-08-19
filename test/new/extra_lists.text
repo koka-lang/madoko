@@ -18,5 +18,10 @@ Test
 3. list
 { border-style=solid border-width=1px margin-left=1em }
 
+A link to [daan] and some [email] and [crazy].
+
+[daan]: http://research.microsoft.com/~daan
+[email]: a_name@foo.bar
+[crazy]: http://x_x^x|x@x#x~x&x$x<xx.bar
 
 Test

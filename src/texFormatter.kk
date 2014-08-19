@@ -58,7 +58,7 @@ public function fmtTexLink( context : inlineContext, isImage : bool, link : link
     texCmd("img",link.href,link.linkattrs)
   }
   else {
-    texCmd("a",texText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
+    texCmd("a", texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
       "{" + (if (link.linkattrs.hasClass("tex-tooltip")) then extractText(link.title) else "") + "}" +
       "{" + content + "}"    
   }
@@ -122,6 +122,10 @@ public function preSpace( txt : string, start : bool = True ) : string {
 }
 val rxIndent = regex(@"(^|\n)( +)")
 val rxSpaces = regex(@" +")
+
+function texLinkText( txt : string ) : string {
+  txt.replaceAll("~","\\textasciitilde ").replaceAll("%","\\%").replaceAll("#","\\#")
+}
 
 public function texText( txt : string ) : string {
   txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)     
