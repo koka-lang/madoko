@@ -240,7 +240,13 @@ ul.list-star {
 }
 
 ul.list-dash {
-  list-style: square url('data:image/gif;base64,R0lGODlhBQAKAIABAAAAAP///yH5BAEAAAEALAAAAAAFAAoAAAIIjI+ZwKwPUQEAOw==');
+    list-style-type: none !important;
+}
+
+ul.list-dash > li:before {
+    content: "\2013"; 
+    position: absolute;
+    margin-left: -1em; 
 }
 
 ul.list-plus {

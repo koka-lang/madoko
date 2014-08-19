@@ -1,13 +1,14 @@
 Title	: Test list margins and borders
 Heading Base: 2
 
+
 # Testing
 
 Here is a paragraph
 
-* and
-* a 
-* list
+- and
+- a 
+- list
 { border-style=solid border-width=1px margin-left=1em }
 
 Test
