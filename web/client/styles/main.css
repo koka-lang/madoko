@@ -136,18 +136,24 @@ html,body,#main {
   margin: 0em 0.2em;
 }
 
-.app-footer img {
+img#console-ok {
   height: 1.4em;
   vertical-align: -0.2em;
 }
 
 #main .app-footer {
   font-size: small;
-  text-align: right;
+  padding-top: 0.1em;
 }
 
 .ms-notice {
-  font-size: x-small;
+  float     : right;
+  font-size : x-small;
+  margin-top: 0.1em;
+}
+
+.app-footer a.external {
+  text-decoration: underline;
 }
 
 .app-footer a {
@@ -155,17 +161,8 @@ html,body,#main {
   text-decoration: none;
 }
 
-
-
-.app-footer a.external {
-  text-decoration: underline;
-}
-
 .app-footer #view-message {
-  float: left;
-  text-align: left;
   margin-left: 0.25em;
-  margin-top: 0.15em;
   width: 50%;
 }
 
@@ -328,12 +325,6 @@ div.boxed {
   width: 40%;
 }
 
-#sync-spinner, #export-spinner {
-  float: right;
-  margin-top: 0.2em;  
-}
-
-
 #export-spinner {
   height: 1em;
 }
@@ -461,7 +452,6 @@ div.boxed {
 }
 
 /* status icons */
-
 #users-status img {
   vertical-align: -0.5ex;
   visibility: hidden;
