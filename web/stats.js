@@ -193,6 +193,7 @@ function digestDaily(entries) {
 				return sum(ipages.map( function(page) { return page.value; })); 
 			})),
 			reqCount: dentries.length,
+			runCount: runEntries.length,
 			avgWTm: Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
 			maxWTm : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
 			avgSTm: avg( runEntries.map( function(entry) { return entry.time; }) ),

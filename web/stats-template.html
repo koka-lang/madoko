@@ -147,7 +147,8 @@ table tr:nth-child(even), table thead tr {
     
     draw("dailyx", "users","userCnt","Unique users per day");
     draw("dailyx", "avg. work time","avgWTm","Average work time in minutes per day");
-    draw("dailyx", "latex runs","reqCount","LaTeX requests per day");
+    draw("dailyx", "requests","reqCount","Requests per day");
+    draw("dailyx", "latex runs","runCount","LaTeX requests per day");
     draw("dailyx", "max latex run","maxSTm","Maximum LaTeX job per day (in milliseconds)");
 
     rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
