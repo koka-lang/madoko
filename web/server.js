@@ -160,6 +160,7 @@ function event( req, res, action, maxRequests, allowAll ) {
       date: new Date(start).toISOString(),        
     };    
     if (logev) logev.entry( entry );    
+    var logit = (req.url != "/rest/edit");
     entry.type = "request";
     domain = domainsGet(req);
     domain.requests++;
@@ -173,7 +174,7 @@ function event( req, res, action, maxRequests, allowAll ) {
       x.then( function(result) {
         domain.requests--;
         entry.time = Date.now() - start;
-        if (logev) logev.entry(entry);
+        if (logev && logit) logev.entry(entry);
         res.send(200,result);
       }, function(err) {
         domain.requests--;
@@ -183,7 +184,7 @@ function event( req, res, action, maxRequests, allowAll ) {
     else {
       domain.requests--;
       entry.time = Date.now() - start;
-      if (logev) logev.entry(entry);
+      if (logev && logit) logev.entry(entry);
       res.send(200,x);
     }
   }
@@ -826,16 +827,27 @@ function updateEditInfo( id, name, editop ) {
   }
 }
 
-function editUpdate( userid, names ) {
+function editUpdate( req, userid, names ) {
   if (!names) return {};
   var res = {};
+  var logit = false;
   properties(names).forEach( function(name) {
     if (!name || name[0] !== "/") return;
     if (typeof names[name] !== "string") return;
+    if (names[name] === EditOp.Edit) logit = true;
     updateEditInfo( userid, name, names[name]);
     res[name] = getEditInfo(userid,name);
     // console.log("user: " + userid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
+  if (log && logit) {
+    log.entry({ 
+      type: "edit", 
+      user: { id: userid },
+      ip: req.ip,
+      url: req.url,      
+      date: new Date().toISOString()
+    });
+  }
   return res;
 }
 
@@ -868,7 +880,7 @@ app.post("/rest/edit", function(req,res) {
   event( req, res, function(userid) {
     //var sessionid = req.body.sessionid || uniqueHash();
     var files = req.body.files || {};
-    return editUpdate(userid,files);
+    return editUpdate(req,userid,files);
   });
 });
 
