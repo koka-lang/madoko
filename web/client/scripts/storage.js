@@ -744,6 +744,10 @@ var Storage = (function() {
       // nothing to do
       return self._syncMsg(file,"up-to-date");
     }
+    else if (remoteTime.getTime() === 0 && file.content === "") {  
+      // deleted on server and no content: don't sync
+      return self._syncMsg(file,"up-to-date (empty and removed on server)");
+    }
     else if (Util.isTextMime(file.mime) && rxConflicts.test(file.content)) {
       // don't save files with merge conflicts
       throw new Error( self._syncMsg(file,"cannot save to server: resolve merge conflicts first!", "save to server") );
