@@ -430,6 +430,9 @@ div.boxed {
 .monaco-editor .token.string.escape {
   color: gray;
 }
+.monaco-editor .token.invalid {
+  border-bottom: Gray dotted 2px;
+}
 
 .monaco-editor.vs-dark .token.code {
   color: #897;

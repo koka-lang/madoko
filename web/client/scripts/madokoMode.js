@@ -176,7 +176,8 @@ var madokoMode = {
         
         // whitespace and (html style) comments
         whitespace: [
-          [/[ ]{2}$/, 'invalid'],
+          [/[ \t]{2}$/, 'invalid'],
+          [/^[ \t]+$/, 'invalid'],
           [/[ \t\r\n]+/, 'white'],
           [/<!--/, 'comment', '@comment']
         ],
