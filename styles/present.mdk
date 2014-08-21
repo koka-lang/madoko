@@ -41,7 +41,7 @@ Math Dpi      : 400
 .Author       : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
-~Body         : before="~ Begin Reveal&nl;~ Begin Slides&nl;"
+~Body         : before="~ Begin Reveal {line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
                 after="~ End Slides&nl;~ End Reveal&nl;" 
 ~Slide        : .section html-elem=section tex-elem=mdSection
 ~Vertical     : .section html-elem=section

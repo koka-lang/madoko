@@ -31,7 +31,7 @@ public function parseBody( fcontext : formatContext,
                            secBase : int,
                            secDepth : int ) :  div (list<block>,formatContext)
 {
-  parseDefinitions(fcontext, [Div([],("notag line=" + lineNo.show).parseAttrs("body",src))], 
+  parseDefinitions(fcontext, [Div([],("notag line-adjust=0 line=" + lineNo.show).parseAttrs("body",src))], 
                    metadata,tocDepth,secBase,secDepth)
 }
 
@@ -297,16 +297,26 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   match(attrs.input) {
     Tex -> {      
       Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4)
-        .parseBlocks(attrs.lineNo,fcontext.lineMap,citestyle),attrs)
+        .parseBlocks(attrs.lineNo+1,fcontext.lineMap,citestyle),attrs)
     }
     Markdown(monly) -> {
       match(monly) {
         Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
-        _ -> Div(txt.parseBlocks(attrs.lineNo,fcontext.lineMap,citestyle),attrs)
+        _ -> {
+          val adjLineNo = match (attrs.hasKey("line-adjust")) {
+            Nothing -> attrs.lineNo + 1
+            Just(d) -> attrs.lineNo + (d.parseInt().maybe(0,id))
+          }
+          Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle),attrs)
+        }
       }
     }
     input -> {
-      Div([Source(txt,input,attrs)],attrs)
+      val adjLineNo = match (attrs.hasKey("line-adjust")) {
+        Nothing -> attrs.lineNo + 1
+        Just(d) -> attrs.lineNo + (d.parseInt().maybe(0,id))
+      }
+      Div([Source(txt,input,attrs.setLineNo(fcontext.lineMap,adjLineNo))],attrs)
     }
   }  
 }

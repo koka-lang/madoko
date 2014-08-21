@@ -66,7 +66,7 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" }&nl;&source;&nl;~ End Math&nl;' tight .para-block",
+  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End Math&nl;' tight .para-block line-adjust=0",
       @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
       @"~Figure   : after='&nl;********* {.figureline}&nl;[[**Figure\ &label;.** ]\
                            {.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
@@ -108,7 +108,7 @@ function defaultMeta( options : options ) : string {
       @"~Snippet  : input=math .block snippet-needpdf=true",
       @"~Footnote : label='[@footnote]{.footnote-label}'",
       @"            before='[\/^&label;.^ ]{.footnote-before}'",
-      @"            after='&nl;[&#8617;](#back-&id;){.footnote-backref}'",
+      @"            after='&nl;[&#8617;](#back-&id;){.footnote-backref}' line-adjust=0",
 
       @"Madoko Version: " + version,
       @"Defaults  : True",

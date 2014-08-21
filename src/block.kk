@@ -320,25 +320,26 @@ val rxindent5x  = regex(@"^ {1,5}",multiline=True)
 // --------------------------------
 // Tables
 
-function blockNpTable( cap : matched, _context ) : block {
-  val header = cap.groups[1].npcolumns
-  val cols   = cap.groups[2].npcolumns.cells.map(fun(c) { c.text.columnStyle } )
-  val cells  = cap.groups[3].rows.map(npcolumns)
+function blockNpTable( cap : matched, context ) : block {
+  val header = cap.groups[1].npcolumns(context,0)
+  val cols   = cap.groups[2].npcolumns(context,1).cells.map(fun(c) { c.text.columnStyle } )
+  val cells  = cap.groups[3].rows.mapIndexed( fun(i,row) { npcolumns(row,context,i+2) } )
   Table([header],cols,cells,cap.groups[4].parseAttrs)    
 }  
 
-function blockTable( cap : matched, _context ) : block {
-  val headers = if (cap.groups[1]=="") then [] else cap.groups[1].rows.map(columns)
+function blockTable( cap : matched, context ) : block {
+  val headers = if (cap.groups[1]=="") then [] else cap.groups[1].rows.mapIndexed( fun(i,row) { columns(row,context,i) } )
   val cols    = cap.groups[2].columnStyles
-  val cells   = cap.groups[4].rows.map(columns)
+  val ofs     = headers.length + 1;
+  val cells   = cap.groups[4].rows.mapIndexed( fun(i,row) { columns(row,context,i+ofs) })
   // create a horizontal line after the headers?
   val txts    = cols.map(source)
   val hline   = if (txts.all(fun(txt){txt==""})) then [] else [Row(txts.map(fun(t){ Cell(t) }))]
   Table(headers,cols,hline+cells,cap.groups[5].parseAttrs)    
 }  
 
-function npcolumns( row : string ) : row {
-  ("|" + row + "|").columns
+function npcolumns( row : string, context : blockContext, ofs : int ) : row {
+  ("|" + row + "|").columns(context,ofs) 
 }
 
 function rows( body : string ) : list<string> {
@@ -346,12 +347,12 @@ function rows( body : string ) : list<string> {
 }
 
 // Split a row into cells, keeping final separators ("|" or "+") at the end of each cell.
-function columns( row : string ) : row {
+function columns( row : string, context : blockContext, ofs: int  ) : row {
   // Note: we allow "+" to separate for dashed lines. So we carefully split on "+" too
   // as long as such "+" is followed by dashes or double-dash.
   val cells = row.findAll(rxCell).list.map( fun(cap) { Cell(cap.groups[1]) })
   val attrs = row.find(rxRowAttr).maybe(attrsNone, fun(cap) { cap.groups[1].parseAttrs("row")  })
-  Row(cells,attrs)
+  Row(cells,attrs.setLineNo(context.lineMap, context.lineNo + ofs))
 }
 
 val rxCell = regex(@"(?:^ *(?:\||\+(?=[-=])))?((?:[^\\|+]|\\.|\+ *(?![-=]))+(?:[|]+|[+]+(?= *[-=])|$))")
@@ -435,16 +436,9 @@ function raw( s : string ) : block {
   Line(s)
 }
 
-function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
+public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
   val srcline = translateLine(lineMap,lineNo)
-  val attrs1  = attrs.setLineNo(lineNo,srcline)
-  if (attrs1.hasClass("fenced")) {
-    val preline = translateLine(lineMap,lineNo+1)
-    attrs1.addKeyval("data-line-code",preline)
-  }
-  else {
-    attrs1
-  }
+  attrs.setLineNo(lineNo,srcline)  
 }
 
 function translateLine( lineInfos: lineMap, lineNo : int ) : string {
