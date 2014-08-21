@@ -77,6 +77,8 @@ Html Header   :
     }
     .reveal section img.math-display {
         padding: 1em;
+        box-shadow: none;
+        border: none;
     }
     .reveal section img.math-inline {
         margin: 0pt;
@@ -90,13 +92,13 @@ Html Header   :
         border: none;
     }
     .madoko .reveal pre {
-        box-shadow: none;
         border: 1px solid black;
         word-wrap: normal;
         background-color: white;
         font-size: 0.7em;
-        line-height: 100%;
         padding: 0.7em;
+        line-height: 100%;
+        width: 100%;
     }      
     .reveal pre code, .reveal code {
         padding: 0pt;
