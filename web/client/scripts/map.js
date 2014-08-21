@@ -85,6 +85,16 @@ define([],function() {
       return res;
     }
 
+    // return a new map where every element satisfies the predicate
+    Map.prototype.filter = function( pred ) {
+      var self = this;
+      var res = new Map();
+      self.forEach( function(name,elem) {
+        if (pred(name,elem)) res.set(name,elem);
+      });
+      return res;
+    }
+
     Map.prototype.elems = function() {
       var self = this;
       var res = [];

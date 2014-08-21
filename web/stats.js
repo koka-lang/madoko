@@ -113,9 +113,10 @@ function digestUsers(entries) {
 		if (entry.type === "uid") {
 			var user = users.getOrCreate(entry.uid,{ name: entry.name, email: entry.email, entries: [] });
 			if (entry.id !== entry.uid) {
-				var old = users.get(entry.id);				
-				if (old && old.entries) {
-					user.entries = old.entries + user.entries;
+				var old = users.get(entry.id);	
+				while (old.redirect) old = users.get(old.redirect);
+				if (old && old !== user && old.entries) {	
+					user.entries = old.entries.concat(user.entries);
 					users.set(entry.id,{ redirect: entry.uid } );
 				}
 			}
@@ -125,10 +126,10 @@ function digestUsers(entries) {
 		else if (entry.user && entry.user.id) {
 			var user = users.getOrCreate(entry.user.id, { name: entry.user.id, email: "", entries: [] });
 			while (user.redirect) user = users.get(user.redirect);
-			user.entries.push(entry);
+  		user.entries.push(entry);
 		}
 	});
-	users = users.map( function(id,user) {
+	users = users.filter( function(id,user) { return user.entries != null; } ).map( function(id,user) {
 		var delta = 10*60*1000; // 10 minutes
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
