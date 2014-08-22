@@ -438,7 +438,12 @@ function raw( s : string ) : block {
 
 public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
   val srcline = translateLine(lineMap,lineNo)
-  attrs.setLineNo(lineNo,srcline)  
+  val attrs1 = attrs.setLineNo(lineNo,srcline)  
+  if (attrs1.hasClass("fenced")) {
+    val preline = translateLine(lineMap,lineNo+1)
+    attrs1.addKeyval("data-line-code",preline)
+  }
+  else attrs1
 }
 
 function translateLine( lineInfos: lineMap, lineNo : int ) : string {

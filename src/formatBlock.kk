@@ -145,10 +145,19 @@ function lineText( b :  block ) {
   }
 }
 
-function getLineInfo( attrs : attrs ) {
+function getLineInfo( attrs : attrs ) : string {
   match(attrs.hasKey("data-line")) {
     Just(info) -> "% data-line={" + info + "}\n" 
     Nothing    -> ""    
+  }
+}
+
+function deriveCodeLineInfo( attrs : attrs ) : attrs {
+  match(attrs.hasKey("data-line")) {
+    Just(info) -> {
+      attrsNone.addKeyval("data-line-code",info)
+    }
+    Nothing    -> attrsNone
   }
 }
 
@@ -205,7 +214,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Source(txt,input,parentAttrs) -> {
       match(input) {
         Pre       -> {
-          context.inlineContext.fmtCode("pre",txt,attrsNone)
+          context.inlineContext.fmtCode("pre",txt,parentAttrs.deriveCodeLineInfo)
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
