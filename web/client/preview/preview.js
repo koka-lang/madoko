@@ -280,7 +280,7 @@ function dispatchEvent( elem, eventName ) {
       var res = findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
       scrollTop = offsetOuterTop(res.elem); 
-      console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
+      //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
@@ -302,7 +302,6 @@ function dispatchEvent( elem, eventName ) {
           //}
           if (delta < 0) delta = 0;
           if (delta > 1) delta = 1;
-          console.log("delta: " + delta + ", scrollTop: " + scrollTop + ", scrollTopNext: " + scrollTopNext);
           scrollTop += ((scrollTopNext - scrollTop) * delta);
         }
       }
@@ -311,8 +310,6 @@ function dispatchEvent( elem, eventName ) {
       // now adjust to actually scroll it to the middle of the view or the relative cursor position.
       var relative = (info.viewLine - info.viewStartLine) / (info.viewEndLine - info.viewStartLine + 1);
       scrollTop = Math.max(0, scrollTop - (info.height != null ? info.height : document.body.clientHeight) * relative ) | 0; // round it
-
-      console.log("relative: " + relative.toString() + ", scrollTop: " + scrollTop);
     }
 
     // exit if we are still at the same scroll position
