@@ -110,14 +110,14 @@ function pullFile(fname,binary) {
 
 function fileInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( url, { access_token: getAccessToken() }).then( function(info) {
+  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
     return (typeof info === "string" ? JSON.parse(info) : info);
   });
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( url, { access_token: getAccessToken(), list: true }).then( function(info) {
+  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken(), list: true }).then( function(info) {
     return (typeof info === "string" ? JSON.parse(info) : info);
   });  
 }
