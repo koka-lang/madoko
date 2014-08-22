@@ -334,7 +334,7 @@ function dispatchEvent( elem, eventName ) {
       var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
       scrollTop = offsetOuterTop(res.elem); 
-      console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
+      //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
