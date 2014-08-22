@@ -249,7 +249,7 @@ var UI = (function() {
 
     self.editor.addListener("mouseup", function(ev) {
       self.anonEvent( function() {
-        if (ev.event.detail===2 && ev.target.type === 6) { // double click on text
+        if ((ev.event.detail===2 || ev.event.detail===102) && ev.target.type === 6) { // double click on text
           var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
           var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
           if (cap) {
