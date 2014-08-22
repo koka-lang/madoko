@@ -247,6 +247,19 @@ var UI = (function() {
       self.synchronize();
     });
 
+    self.editor.addListener("mouseup", function(ev) {
+      self.anonEvent( function() {
+        if (ev.event.detail===2 && ev.target.type === 6) { // double click on text
+          var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
+          var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
+          if (cap) {
+            var fileName = cap[1]; // TODO use file
+            self.editFile( fileName );
+          }
+        }
+      });
+    });
+
     self.decorations = [];
     self.dropFiles = null;
     self.editor.addListener("mousemove", function(ev) {
@@ -304,6 +317,8 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
+
+
     // synchronize on cursor position changes
     // disabled for now, scroll events seem to be enough
     /*
