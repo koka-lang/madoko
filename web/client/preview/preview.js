@@ -97,26 +97,27 @@ function dispatchEvent( elem, eventName ) {
     return i;
   }
 
-  function elemOffsetTop(elem) {
+  function elemOffsetTop(elem,forward) {
     // we search upward to the first node that has a valid offsetTop (ie. non-empty element)
     while (elem.nodeType !== 1 || elem.clientHeight === 0) {
-      var prev = (elem.previousSibling ? elem.previousSibling : elem.parentNode);
-      if (!prev) break;
-      elem = prev;
+      var next = (forward ? elem.nextSibling : elem.previousSibling);
+      if (!next) next = elem.parentNode;
+      if (!next) break;
+      elem = next;
     }
     return elem.offsetTop;
   }
 
-  function bodyOffsetTop(elem) {
+  function bodyOffsetTop(elem,forward) {
     var offset = 0;
     while( elem && elem.nodeName != "BODY") {
-      offset += elemOffsetTop(elem);
+      offset += elemOffsetTop(elem,forward);
       elem = elem.offsetParent;
     }
     return offset;
   }
 
-  function offsetOuterTop(elem) {
+  function offsetOuterTop(elem,forward) {
     var delta = 0;
     if (window.getComputedStyle) {
       var style = window.getComputedStyle(elem);
@@ -124,7 +125,7 @@ function dispatchEvent( elem, eventName ) {
         delta = px(style.marginTop) + px(style.paddingTop) + px(style.borderTopWidth);
       }   
     }
-    return (bodyOffsetTop(elem) - delta);
+    return (bodyOffsetTop(elem,forward) - delta);
   }
 
   function getScrollTop( elem ) {
@@ -271,21 +272,74 @@ function dispatchEvent( elem, eventName ) {
     return res;
   }
 
+  function findNext(root,elem) {
+    if (elem == null || elem === root) return elem;
+    if (elem.nextSibling) return elem.nextSibling;
+    return findNext(root,elem.parentNode);
+  }
+
+  function bodyFindElemAtLine( lineCount, line, fname ) {
+    if (!fname || !document.querySelectorAll) return findElemAtLine( document.body, line, fname);
+
+    var selector = '[data-line*=";' + fname + ':"]';
+    var elems = document.querySelectorAll( selector );
+    if (!elems) elems = [];
+
+    var currentLine = line;
+    var current = elems[0];
+    var nextLine = line;
+    var next = null;
+    for(var i = 0; i < elems.length; i++) {
+      var elem = elems[i];
+      var dataline = elem.getAttribute("data-line");
+      if (dataline) { // && child.style.display.indexOf("inline") < 0) {
+        if (fname) {
+          var idx = dataline.indexOf(fname + ":");
+          if (idx >= 0) {
+            dataline = dataline.substr(idx + fname.length + 1)
+          }
+          else {
+            dataline = ""  // gives NaN to cline
+          }
+        } 
+        var cline = parseInt(dataline);
+        if (!isNaN(cline)) {
+          if (cline <= line) {
+            currentLine = cline;
+            current = elems[i];
+          }
+          if (cline > line) {
+            nextLine = cline;
+            next = elems[i];
+            break;
+          }
+        }
+      }
+    }
+
+    if (!current) return null;
+    if (!next) {
+      next = findNext(document.body,current);
+      nextLine = lineCount;
+    }
+    return { elem: current, elemLine : currentLine, next: next, nextLine: nextLine };
+  }
+
   var lastScrollTop = -1;
 
   function scrollToLine( info )
   {
     var scrollTop = 0;
     if (info.sourceName || info.textLine > 1) {
-      var res = findElemAtLine( document.body, info.textLine, info.sourceName );
+      var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
       scrollTop = offsetOuterTop(res.elem); 
-      //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
+      console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
       if (res.elemLine < info.textLine && res.elemLine < res.nextLine) {
-        var scrollTopNext = offsetOuterTop(res.next); 
+        var scrollTopNext = offsetOuterTop(res.next,true); 
         if (scrollTopNext > scrollTop) {
           var delta = 0;
           /*
