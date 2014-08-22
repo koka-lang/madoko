@@ -37,7 +37,7 @@ function dispatchEvent( elem, eventName ) {
   
   function findLocation( root, elem ) {
     while (elem && elem !== root) {
-      var dataline = elem.getAttribute("data-line");
+      var dataline = (elem.getAttribute ? elem.getAttribute("data-line") : null);
       if (dataline) {
         cap = /(?:^|;)(?:([^:;]+):)?(\d+)$/.exec(dataline);
         if (cap) {
@@ -47,7 +47,7 @@ function dispatchEvent( elem, eventName ) {
           } 
         }
       }
-      elem = elem.parentNode;
+      elem = (elem.previousSibling ? elem.previousSibling : elem.parentNode);
     }
     return null;
   }
@@ -96,10 +96,19 @@ function dispatchEvent( elem, eventName ) {
     return i;
   }
 
+  function elemOffsetTop(elem) {
+    while (elem.nodeType === 3 || elem.innerHTML === "") {
+      var prev = (elem.previousSibling ? elem.previousSibling : elem.parentNode);
+      if (!prev) break;
+      elem = prev;
+    }
+    return elem.offsetTop;
+  }
+
   function bodyOffsetTop(elem) {
     var offset = 0;
     while( elem && elem.nodeName != "BODY") {
-      offset += elem.offsetTop;
+      offset += elemOffsetTop(elem);
       elem = elem.offsetParent;
     }
     return offset;
@@ -199,8 +208,8 @@ function dispatchEvent( elem, eventName ) {
     
     for(var i = 0; i < children.length; i++) {
       var child = children[i];
-      var dataline = child.getAttribute("data-line");
-      if (dataline && child.style.display.indexOf("inline") < 0) {
+      var dataline = (child.getAttribute ? child.getAttribute("data-line") : null);
+      if (dataline) { // && child.style.display.indexOf("inline") < 0) {
         if (fname) {
           var idx = dataline.indexOf(fname + ":");
           if (idx >= 0) {
@@ -260,8 +269,9 @@ function dispatchEvent( elem, eventName ) {
     if (info.textLine > 1) {
       var res = findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
-
       scrollTop = offsetOuterTop(res.elem); 
+      console.log("find elem at line: " + info.textLine + ":" ); console.log(res);
+      console.log("scrolltop: " + scrollTop.toString());
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
