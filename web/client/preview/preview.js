@@ -119,7 +119,7 @@ function dispatchEvent( elem, eventName ) {
 
   function offsetOuterTop(elem,forward) {
     var delta = 0;
-    if (window.getComputedStyle) {
+    if (elem.nodeType === 1 && window.getComputedStyle) {
       var style = window.getComputedStyle(elem);
       if (style) {
         delta = px(style.marginTop) + px(style.paddingTop) + px(style.borderTopWidth);
