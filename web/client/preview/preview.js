@@ -47,6 +47,7 @@ function dispatchEvent( elem, eventName ) {
           } 
         }
       }
+      // search through previous siblings too since we include line span info inside inline element sequences.
       elem = (elem.previousSibling ? elem.previousSibling : elem.parentNode);
     }
     return null;
@@ -97,7 +98,8 @@ function dispatchEvent( elem, eventName ) {
   }
 
   function elemOffsetTop(elem) {
-    while (elem.nodeType === 3 || elem.innerHTML === "") {
+    // we search upward to the first node that has a valid offsetTop (ie. non-empty element)
+    while (elem.nodeType !== 1 || elem.clientHeight === 0) {
       var prev = (elem.previousSibling ? elem.previousSibling : elem.parentNode);
       if (!prev) break;
       elem = prev;
@@ -216,9 +218,14 @@ function dispatchEvent( elem, eventName ) {
             dataline = dataline.substr(idx + fname.length + 1)
           }
           else {
+            if (found) {
+              // we left this include file, set next.
+              next = i;
+              break;
+            }
             dataline = ""  // gives NaN to cline
           }
-        }
+        } 
         var cline = parseInt(dataline);
         if (!isNaN(cline)) {
           if (cline <= line) {
@@ -235,6 +242,9 @@ function dispatchEvent( elem, eventName ) {
         }
       }
     }
+
+    // The current may be moved up if the first element is in an include
+    if (fname && currentLine===0 && next >= 1) current = next-1;
 
     // go through all children of our found range
     var res = { elem: children[current], elemLine: currentLine, next: children[next], nextLine: nextLine };
@@ -266,12 +276,11 @@ function dispatchEvent( elem, eventName ) {
   function scrollToLine( info )
   {
     var scrollTop = 0;
-    if (info.textLine > 1) {
+    if (info.sourceName || info.textLine > 1) {
       var res = findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
       scrollTop = offsetOuterTop(res.elem); 
-      console.log("find elem at line: " + info.textLine + ":" ); console.log(res);
-      console.log("scrolltop: " + scrollTop.toString());
+      console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
@@ -293,6 +302,7 @@ function dispatchEvent( elem, eventName ) {
           //}
           if (delta < 0) delta = 0;
           if (delta > 1) delta = 1;
+          console.log("delta: " + delta + ", scrollTop: " + scrollTop + ", scrollTopNext: " + scrollTopNext);
           scrollTop += ((scrollTopNext - scrollTop) * delta);
         }
       }
@@ -301,6 +311,8 @@ function dispatchEvent( elem, eventName ) {
       // now adjust to actually scroll it to the middle of the view or the relative cursor position.
       var relative = (info.viewLine - info.viewStartLine) / (info.viewEndLine - info.viewStartLine + 1);
       scrollTop = Math.max(0, scrollTop - (info.height != null ? info.height : document.body.clientHeight) * relative ) | 0; // round it
+
+      console.log("relative: " + relative.toString() + ", scrollTop: " + scrollTop);
     }
 
     // exit if we are still at the same scroll position
