@@ -247,17 +247,23 @@ var UI = (function() {
       self.synchronize();
     });
 
+    self.lastMouseUp = 0;
     self.editor.addListener("mouseup", function(ev) {
-      self.anonEvent( function() {
-        if ((ev.event.detail===2 || ev.event.detail===102) && ev.target.type === 6) { // double click on text
-          var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
-          var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
-          if (cap) {
-            var fileName = cap[1]; // TODO use file
-            self.editFile( fileName );
+      var now = Date.now();
+      var delta = now - self.lastMouseUp;
+      self.lastMouseUp = now;
+      if (delta <= 200) { // check for double click
+        self.anonEvent( function() {        
+          if (ev.target.type === 6) { // on text
+            var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
+            var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
+            if (cap) {
+              var fileName = cap[1]; // TODO use file
+              self.editFile( fileName );
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     self.decorations = [];
