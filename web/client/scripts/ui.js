@@ -255,7 +255,8 @@ var UI = (function() {
       if (delta <= 200) { // check for double click
         self.anonEvent( function() {        
           if (ev.target.type === 6) { // on text
-            var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
+            var lineNo = ev.target.position.lineNumber; 
+            var line   = self.editor.getModel().getLineContent(lineNo);
             var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
             if (cap) {
               var fileName = cap[1]; // TODO use file
@@ -273,9 +274,10 @@ var UI = (function() {
         if (self.dropFiles) {
           var files = self.dropFiles;
           self.dropFiles = null;
-          var pos = ev.target.position;
-          pos.column = 1;
-          pos.lineNumber++;
+          var pos = {
+            column: 1,
+            lineNumber: ev.target.position.lineNumber+1,
+          };
           self.insertFiles(files,pos);
         }
         else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
@@ -308,7 +310,6 @@ var UI = (function() {
           }
           if (posLine >= 0) {
             posLine = self.viewToTextLine(posLine);
-
             return self.insertFiles( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
           }
         }
