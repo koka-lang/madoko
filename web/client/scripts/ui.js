@@ -242,12 +242,7 @@ var UI = (function() {
       ev.browserEvent.preventDefault();
       self.synchronize();
     });
-
-    self.editor.getHandlerService().bind({ key: 'Ctrl-O' }, function(ev) { 
-      ev.browserEvent.preventDefault();
-      openEvent(ev);
-    });
-        
+    
     document.getElementById("sync-now").onclick = function(ev) {
       self.synchronize();
     };
