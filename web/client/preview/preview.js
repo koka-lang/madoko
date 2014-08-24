@@ -98,7 +98,7 @@ function dispatchEvent( elem, eventName ) {
   }
 
   function elemOffsetTop(elem,forward) {
-    // we search upward to the first node that has a valid offsetTop (ie. non-empty element)
+    // we search backward or forward to the first node that has a valid offsetTop (ie. non-empty element)
     while (elem.nodeType !== 1 || elem.clientHeight === 0) {
       var next = (forward ? elem.nextSibling : elem.previousSibling);
       if (!next) next = elem.parentNode;
@@ -196,92 +196,14 @@ function dispatchEvent( elem, eventName ) {
   }
 
 
-  function findElemAtLine( elem, line, fname ) 
-  {
-    if (!elem || !line || line < 0) return null;
-
-    var children = elem.children; 
-    if (!children || children.length <= 0) return null;
-
-    var current  = 0;
-    var currentLine = 0;
-    var next     = children.length-1;
-    var nextLine = line;
-    var found    = false;
-    
-    for(var i = 0; i < children.length; i++) {
-      var child = children[i];
-      var dataline = (child.getAttribute ? child.getAttribute("data-line") : null);
-      if (dataline) { // && child.style.display.indexOf("inline") < 0) {
-        if (fname) {
-          var idx = dataline.indexOf(fname + ":");
-          if (idx >= 0) {
-            dataline = dataline.substr(idx + fname.length + 1)
-          }
-          else {
-            if (found) {
-              // we left this include file, set next.
-              next = i;
-              break;
-            }
-            dataline = ""  // gives NaN to cline
-          }
-        } 
-        var cline = parseInt(dataline);
-        if (!isNaN(cline)) {
-          if (cline <= line) {
-            found = true;
-            currentLine = cline;
-            current = i;
-          }
-          if (cline > line) {
-            found = true;
-            nextLine = cline;
-            next = i;
-            break;
-          }
-        }
-      }
-    }
-
-    // The current may be moved up if the first element is in an include
-    if (fname && currentLine===0 && next >= 1) current = next-1;
-
-    // go through all children of our found range
-    var res = { elem: children[current], elemLine: currentLine, next: children[next], nextLine: nextLine };
-    for(var i = current; i <= next; i++) {
-      var child = children[i];
-      if (child.children && child.children.length > 0) {
-        var cres = findElemAtLine(child,line,fname);
-        if (cres) {
-          found = true;
-          if (cres.elemLine >= res.elemLine) {
-            res.elem = cres.elem;
-            res.elemLine = cres.elemLine; // cres.elemLine can be 0 as part of a child search
-          }
-          if (cres.nextLine > line) { // && cres.nextLine <= res.nextLine) {
-            res.next = cres.next;
-            res.nextLine = cres.nextLine;
-          }
-          break; 
-        }
-      }
-    }
-
-    if (!found) return null; // no data-line at all.
-    return res;
-  }
-
-  function findNext(root,elem) {
+  function findNextElement(root,elem) {
     if (elem == null || elem === root) return elem;
     if (elem.nextSibling) return elem.nextSibling;
-    return findNext(root,elem.parentNode);
+    return findNextElement(root,elem.parentNode);
   }
 
-  function bodyFindElemAtLine( lineCount, line, fname ) {
-    if (!fname || !document.querySelectorAll) return findElemAtLine( document.body, line, fname);
-
-    var selector = '[data-line*=";' + fname + ':"]';
+  function bodyFindElemAtLine( lineCount, line, fname ) {    
+    var selector = "[data-line" + (fname ? '*=";' + fname + ':"' : "") + "]";
     var elems = document.querySelectorAll( selector );
     if (!elems) elems = [];
 
@@ -295,12 +217,7 @@ function dispatchEvent( elem, eventName ) {
       if (dataline) { // && child.style.display.indexOf("inline") < 0) {
         if (fname) {
           var idx = dataline.indexOf(fname + ":");
-          if (idx >= 0) {
-            dataline = dataline.substr(idx + fname.length + 1)
-          }
-          else {
-            dataline = ""  // gives NaN to cline
-          }
+          dataline = (idx >= 0 ? dataline.substr(idx + fname.length + 1) : "" /* give NaN to parseInt */ );         
         } 
         var cline = parseInt(dataline);
         if (!isNaN(cline)) {
@@ -319,7 +236,7 @@ function dispatchEvent( elem, eventName ) {
 
     if (!current) return null;
     if (!next) {
-      next = findNext(document.body,current);
+      next = findNextElement(document.body,current);
       nextLine = lineCount;
     }
     return { elem: current, elemLine : currentLine, next: next, nextLine: nextLine };
