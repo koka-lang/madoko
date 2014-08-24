@@ -234,18 +234,23 @@ var UI = (function() {
       if (self.stale || self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
     });
     
-    self.keybinding = self.editor.getHandlerService().bind({
-      key: 'Alt-Q'
-    }, function(ev) { 
+    self.editor.getHandlerService().bind({ key: 'Alt-Q' }, function(ev) { 
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
 
-    self.keybinding = self.editor.getHandlerService().bind({
-      key: 'Ctrl-S'
-    }, function(ev) { 
+    self.editor.getHandlerService().bind({ key: 'Ctrl-S' }, function(ev) { 
       ev.browserEvent.preventDefault();
       self.synchronize();
     });
+
+    self.editor.getHandlerService().bind({ key: 'Ctrl-O' }, function(ev) { 
+      ev.browserEvent.preventDefault();
+      openEvent(ev);
+    });
+        
+    document.getElementById("sync-now").onclick = function(ev) {
+      self.synchronize();
+    };
 
     self.lastMouseUp = 0;
     self.editor.addListener("mouseup", function(ev) {
@@ -437,7 +442,7 @@ var UI = (function() {
     document.getElementById("open").onclick = openEvent;
     document.getElementById("connection").onclick = openEvent;
     
-    document.getElementById("new").onclick = function(ev) {
+    var newEvent = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
         return storage.createFile(self.storage).then( function(res) { 
           if (!res) return Promise.resolved(); // canceled
@@ -445,6 +450,7 @@ var UI = (function() {
         });
       });
     };
+    document.getElementById("new").onclick = newEvent;
 
     window.addEventListener("hashchanged", function(ev) {
       self.loadFromHash();

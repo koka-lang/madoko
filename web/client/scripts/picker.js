@@ -141,6 +141,14 @@ function run( options, end ) {
     end(current);
   }
 
+  document.onkeydown = function(ev) {   
+    if (!ev) ev = event;    
+    if (ev.keyCode == 27) { // escape key
+      end(current);
+    }
+    // todo: invoke default button on enter
+  }
+
   document.getElementById("button-discard").onclick = function(ev) {
     if (options.command==="alert") {
       end(current,"discard");
