@@ -13,265 +13,10 @@ define(["../scripts/promise","../scripts/util",
         ], function(Promise,Util,NullRemote,Dropbox,Onedrive) {
 
 
-var fade = document.getElementById("fade");
-var app     = document.getElementById("picker");
-var listing = document.getElementById("listing");
-var templates = document.getElementById("templates");  
-var headerLogo = document.getElementById("header-logo");
-var remotes = {
-  dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
-  onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
-  local: { remote: new NullRemote.NullRemote(), folder: "" },
-};
-var current  = remotes.dropbox;
 
 function capitalize(s) {
   if (!s) return "";
   return s[0].toUpperCase() + s.substr(1);
-}
-
-// options:
-//  command: open | new | connect | save | push  (| template) | alert
-//  alert: false | true  // discard changes?
-//  extensions: ".mdk .md"
-//  remote: dropbox | onedrive | local
-//  folder: <initial folder> (relative to root)
-//  file: <initial file name>
-//  root: <cannot select upward here>
-//  header-logo: <img path>
-function run( options, end ) {
-  //document.title = capitalize(options.command) + " document";
-  if (fade) fade.style.display = "block";
-
-  if (!options.extensions) options.extensions = "";
-  if (!options.file) options.file = "document";
-
-  var data = JSON.parse( Util.getCookie("picker-data") || "null");
-  if (data) {
-    if (!options.remote) options.remote = data.remote;
-    remotes.dropbox.folder  = data.dropbox || "";
-    remotes.onedrive.folder = data.onedrive || "";
-  }
-
-  document.getElementById("button-cancel").innerHTML  = (options.command==="connect" || options.command==="message") ? "Close" : "Cancel";
-  
-  if (options.remote && remotes[options.remote] && options.remote !== "local") {
-    if (options.folder) remotes[options.remote].folder = options.folder;
-    setCurrent( options, remotes[options.remote] );
-  }
-
-  if (options.file) {
-    setFileName( options.file );
-  }
-
-  document.getElementById("remote-dropbox").onclick = function(ev) {
-    if (current.remote.type === remotes.dropbox.remote.type()) return;
-    setCurrent( options, remotes.dropbox );
-  }
-
-
-  document.getElementById("remote-onedrive").onclick = function(ev) {
-    if (current.remote.type === remotes.onedrive.remote.type()) return;
-    setCurrent( options, remotes.onedrive );
-  }
-
-  document.getElementById("remote-local").onclick = function(ev) {
-    if (current.remote.type === remotes.local.remote.type()) return;
-    setCurrent( options, remotes.local );
-  }
-  
-  document.getElementById("button-login").onclick = function(ev) {
-    if (current.remote.connected()) return;
-    current.remote.login().then( function(userName) {
-      display(options,current);
-    });
-  }
-
-  document.getElementById("button-logout").onclick = function(ev) {
-    if (!current.remote.connected()) return;
-    current.remote.logout();
-    display(options,current);
-  }
-
-  document.getElementById("button-open").onclick = function(ev) {
-    var path = itemGetSelected(listing);
-    if (path) {
-      end(current,path);
-    }
-  }
-
-  document.getElementById("button-save").onclick = function(ev) {
-    var fileName = getFileName();
-    if (fileName) {
-      var path = Util.combine(current.folder,fileName);
-      end(current,path);
-    }
-  }
-
-  document.getElementById("button-push").onclick = function(ev) {
-    var fileName = getFileName();
-    if (fileName) {
-      var path = Util.combine(current.folder,fileName);
-      end(current,path);
-    }
-  }
-
-  document.getElementById("button-new").onclick = function(ev) {
-    if (options.command == "new") {
-      var fileName = getFileName();
-      if (fileName) {
-        if (Util.extname(fileName) == "") { // directory
-          fileName = Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
-        }
-        options.path = Util.combine(current.folder,fileName);
-        options.command = "template";
-        options.headerLogo = "images/dark/" + current.remote.logo();    
-        display(options,current);
-        //end(current,path);
-      }
-    }
-    else {
-      var template = itemGetSelected(templates) || "default";
-      options.command = "new";
-      end(current,options.path,template);
-    }
-  }
-
-  document.getElementById("button-cancel").onclick = function(ev) {
-    end(current);
-  }
-
-  document.onkeydown = function(ev) {   
-    if (!ev) ev = event;    
-    if (ev.keyCode == 27) { // escape key
-      end(current);
-    }
-    // todo: invoke default button on enter
-  }
-
-  document.getElementById("button-discard").onclick = function(ev) {
-    if (options.command==="alert") {
-      end(current,"discard");
-    }
-    else {
-      options.alert = ""; // stop alert
-      display(options,current);
-    }
-  }
-  
-  listing.onclick      = onItemSelect(options,listing);
-  listing.ondblclick   = onItemSelectDbl(options,listing,options.command);
-  templates.onclick    = onItemSelect(options,templates);
-  templates.ondblclick = onItemSelectDbl(options,templates,"new");
-  
-  document.getElementById("folder-name").onclick = function(ev) {
-    var elem = ev.target;
-    while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"dir")) {
-      elem = elem.parentNode;
-    }
-    if (Util.hasClassName(elem,"dir")) {
-      var path = elem.getAttribute("data-path");
-      itemEnterFolder(options, current,path);
-    }
-  };
-
-  //Util.enablePopupClickHovering();
-
-  display( options,current  );
-  app.style.display= "block";
-}
-
-function canSelect(path,type,extensions) {
-  var allowed = extensions.split(/\s+/);
-  if (!allowed || allowed.length===0 || allowed[0]==="") return true;
-  var ext = Util.extname(path);
-  for( var i = 0; i < allowed.length; i++) {
-    var filter = allowed[i];
-    if (filter[0] === "." && filter === ext) {
-      return true;
-    }
-    else if (filter === type) {
-      return true;
-    }
-  };
-  return false;
-}
-
-function itemGetSelected(parent) {
-  var items = parent.children;
-  for(var i = 0; i < items.length; i++) {
-    if (Util.hasClassName(items[i],"selected")) {
-      return items[i].getAttribute("data-path");
-    }
-  }
-  return null;
-}
-
-function onItemSelectDbl(options,parent,cmd) {
-  var itemSelect = onItemSelect(options,parent);
-  return function(ev) {
-    itemSelect(ev);
-    if (itemGetSelected(parent)) {
-      var button = document.getElementById("button-" + cmd);
-      if (button) {
-        Util.dispatchEvent(button,"click");
-      }
-    }
-  };
-}
-
-function onItemSelect(options,parent) {
-  return function(ev) {
-    var elem = ev.target;
-    while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item") && elem != parent) {
-      elem = elem.parentNode;
-    }
-
-    var type = elem.getAttribute("data-type");
-    var path = elem.getAttribute("data-path");
-    if (ev.target.nodeName === "INPUT" || type!=="folder") {
-      itemSelect(parent,elem);
-    }
-    else {
-      itemEnterFolder(options, current,path);
-    }
-  };
-};
-
-function itemSelect(parent,elem) {
-  if (Util.hasClassName(elem,"disabled")) return;
-  var select = !Util.hasClassName(elem,"selected");
-  var items = parent.children;
-  for(var i = 0; i < items.length; i++) {
-    itemSelectX(items[i],false);
-  }
-  itemSelectX(elem,select);
-}
-
-function itemSelectX(elem,select) {
-  var child = elem.children[0];
-  if (child && child.nodeName === "INPUT") {
-    child.checked = select;    
-  }
-  if (select) Util.addClassName(elem,"selected");
-         else Util.removeClassName(elem,"selected");
-}
-
-function itemEnterFolder(options, current,path) {
-  current.folder = path;
-  display( options, current );
-}
-
-function setFileName( fname ) {
-  document.getElementById("file-name").value = fname;
-}
-function getFileName( ) {
-  return document.getElementById("file-name").value;
-}
-
-function setCurrent( options, newCurrent ) {
-  current = newCurrent;
-  display( options, current );
 }
 
 function checkConnected(remote) {
@@ -287,142 +32,457 @@ function checkConnected(remote) {
       return true;
     }
   });
-}
+}  
+
+
+
+var Picker = (function() {
+  var fade      = document.getElementById("fade");
+  var app       = document.getElementById("picker");
+  var listing   = document.getElementById("listing");
+  var templates = document.getElementById("templates");  
+  var headerLogo = document.getElementById("header-logo");
+
+  var remotes = {
+    dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
+    onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
+    local: { remote: new NullRemote.NullRemote(), folder: "" },
+  };
+
+  var picker    = null;
   
 
-function display( options, current ) {
-  app.className = "modal";
-  listing.innerHTML = "";
-  if (options.headerLogo) {
-    headerLogo.src = options.headerLogo;
-    headerLogo.style.display = "inline";
-  }
-  else {
-    headerLogo.style.display = "none";
-  }
+  // options:
+  //  command: open | new | connect | save | push  (| template) | alert
+  //  alert: false | true  // discard changes?
+  //  extensions: ".mdk .md"
+  //  remote: dropbox | onedrive | local
+  //  folder: <initial folder> (relative to root)
+  //  file: <initial file name>
+  //  root: <cannot select upward here>
+  //  header-logo: <img path>
+  function Picker( opts, end ) {
+    var self = this;
+    self.current = remotes.dropbox;
+    self.options = Util.copy(opts);
+    self.endCont = end;
 
-  if (options.alert) {
-    // alert message
-    if (options.alert!=="true") {
-      document.getElementById("message-alert").innerHTML = Util.escape(options.alert);
+    if (fade) fade.style.display = "block";
+
+    if (!self.options.extensions) self.options.extensions = "";
+    if (!self.options.file) self.options.file = "document";
+
+    // update persistent remotes
+    var data = JSON.parse( Util.getCookie("picker-data") || "null");
+    if (data) {
+      if (!self.options.remote) self.options.remote = data.remote;
+      remotes.dropbox.folder  = data.dropbox || "";
+      remotes.onedrive.folder = data.onedrive || "";
     }
-    document.getElementById("folder-name").innerHTML = options.header || "";
-    Util.addClassName(app,"command-alert");
-    return Promise.resolved();
-  }
-  else if (options.command==="message") {
-    document.getElementById("message-message").innerHTML = options.message;
-    document.getElementById("folder-name").innerHTML = options.header || "";
-    Util.addClassName(app,"command-message");
-    return Promise.resolved();
-  }
-  else if (options.command==="template") {
-    document.getElementById("folder-name").innerHTML = options.path || "";
-    Util.addClassName(app,"command-template");
-    return Promise.resolved();
-  }
-  else {
-    // set correct logo
-    document.getElementById("remote-logo").src = "images/dark/" + current.remote.logo();
+
+    document.getElementById("button-cancel").innerHTML  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
     
-    // check connection
-    return checkConnected(current.remote).then( function(isConnected) {
-      if (!isConnected) {
-        Util.addClassName(app,"command-login");
-        Util.addClassName(app,"command-login-" + options.command );
-        return Promise.resolved();
-      }
-      else {
-        Util.addClassName(app,"command-" + options.command );
-        current.remote.getUserName().then( function(userName) {
-          document.getElementById("remote-username").innerHTML = Util.escape( userName );
-          return displayFolder(options,current);
-        });
-      }
+    if (self.options.remote && remotes[self.options.remote] && self.options.remote !== "local") {
+      if (self.options.folder) remotes[self.options.remote].folder = self.options.folder;
+      self.setCurrent( remotes[self.options.remote] );
+    }
+
+    if (self.options.file) {
+      self.setFileName( self.options.file );
+    }
+
+    //Util.enablePopupClickHovering();
+
+    picker = self; // enable all event handlers
+    self.display();
+    app.style.display= "block";
+  }
+
+
+  Picker.prototype.onEnd = function( path, template ) {
+    var self = this;
+    picker = null;
+    app.style.display = "none";
+    if (fade) fade.style.display = "none";
+
+    // save persistent state
+    if (self.current) {
+      var data = {
+        remote: self.current.remote.type(),
+        onedrive: remotes.onedrive.folder,
+        dropbox: remotes.dropbox.folder,
+      };
+      Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
+    }
+    
+    // call end continuation
+    if (self.endCont) self.endCont(self.current,path,template);
+  }
+
+
+  // ------------------------------------------------------------------------------------
+  // Event handlers: installed once on initialization and refer the current picker object
+  // through the picker variable.
+  // ------------------------------------------------------------------------------------
+
+  document.getElementById("button-cancel").onclick = function(ev) { if (picker) picker.onEnd(); }
+
+
+  // Set remotes
+  document.getElementById("remote-dropbox").onclick = function(ev) { if (picker) picker.onRemote( remotes.dropbox ); }
+  document.getElementById("remote-onedrive").onclick = function(ev) { if (picker) picker.onRemote( remotes.onedrive ); }
+  document.getElementById("remote-local").onclick = function(ev) { if (picker) picker.onRemote( remotes.local ); }
+
+  Picker.prototype.onRemote = function(remote) {
+    var self = this;
+    if (self.current.remote.type === remote.remote.type()) return;
+    self.setCurrent( remote );
+  }  
+
+  // login/logout
+  document.getElementById("button-login").onclick = function(ev) { if (picker) picker.onLogin(); }
+  document.getElementById("button-logout").onclick = function(ev) { if (picker) picker.onLogout(); }
+    
+  Picker.prototype.onLogin = function() {
+    var self = this;
+    if (self.current.remote.connected()) return;
+    self.current.remote.login().then( function(userName) {
+      self.display();
     });
   }
-}
 
-function displayFolder( options, current ) {
-  displayFolderName(options,current);
-  listing.innerHTML = "Loading...";
-  return current.remote.listing(current.folder).then( function(items) {
-    //console.log(items);
-    var html = items.map( function(item) {
-      var disable = canSelect(item.path,item.type,options.extensions) ? "" : " disabled";
-      return "<div class='item item-" + item.type + disable + "' data-type='" + item.type + "' data-path='" + Util.escape(item.path) + "'>" + 
-                //"<input type='checkbox' class='item-select'></input>" +
-                "<img class='item-icon' src='images/icon-" + item.type + (item.isShared ? "-shared" : "") + ".png'/>" +
-                "<span class='item-name'>" + Util.escape(Util.basename(item.path)) + "</span>" +
-             "</div>";
+  Picker.prototype.onLogout = function() {
+    var self = this;
+    if (!self.current.remote.connected()) return;
+    self.current.remote.logout();
+    self.display();
+  }
 
-    });
-    listing.innerHTML = html.join("");
-  });
-}
+  document.getElementById("button-open").onclick = function(ev) { if (picker) picker.onOpen(); }
 
-function displayFolderName(options,current) {
-  var folder = current.folder;
-  var root = options.root || "";
-  if (root) {
-    if (Util.startsWith(folder,root)) {
-      folder = folder.substr(root.length);
+  Picker.prototype.onOpen = function() {
+    var self = this;
+    var path = itemGetSelected(listing);
+    if (path) self.onEnd(path); 
+  }
+
+  document.getElementById("button-save").onclick = function(ev) { if (picker) picker.onSave(); }
+  document.getElementById("button-push").onclick = function(ev) { if (picker) picker.onSave(); }
+
+  Picker.prototype.onSave = function() {
+    var self = this;
+    var fileName = self.getFileName();
+    if (fileName) {
+      var path = Util.combine(self.current.folder,fileName);
+      self.onEnd(path);
+    }
+  }
+
+  document.getElementById("button-new").onclick = function(ev) { if (picker) picker.onNew(); }
+
+  Picker.prototype.onNew = function() {
+    var self = this;
+    if (self.options.command == "new") {
+      var fileName = self.getFileName();
+      if (fileName) {
+        if (Util.extname(fileName) == "") { // directory
+          fileName = Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
+        }
+        self.options.path = Util.combine(self.current.folder,fileName);
+        self.options.command = "template";
+        self.options.headerLogo = "images/dark/" + self.current.remote.logo();    
+        self.display();
+        //end(self.current,path);
+      }
     }
     else {
-      root = "";
+      var template = itemGetSelected(templates) || "default";
+      self.options.command = "new";
+      self.onEnd(self.options.path,template);
     }
   }
-  var parts = folder.split("/");
-  var html = "<span class='dir' data-path='" + root + "'>" + Util.escape(root ? Util.combine(current.remote.type(),root) : current.remote.type()) + "</span><span class='dirsep'>/</span>";
-  var partial = root;
-  parts.forEach( function(part) {
-    if (part) {
-      partial = Util.combine(partial,part);
-      html = html + "<span class='dir' data-path='" + Util.escape(partial) + "'>" + Util.escape(part) + "</span><span class='dirsep'>/</span>";
+
+
+  document.onkeydown = function(ev) {   
+    if (!picker) return;
+    if (!ev) ev = event;    
+    if (app.style.display === "block" && ev.keyCode == 27) { // escape key on picker
+      picker.onEnd();
     }
-  });
-  document.getElementById("folder-name").innerHTML = html;
-}
+    // todo: invoke default button on enter
+  }
 
-function onEnd( current, path, template ) {  
-  template = template || "default";
-  app.style.display = "none";
-  if (fade) fade.style.display = "none";
+  document.getElementById("button-discard").onclick = function(ev) { if (picker) picker.onDiscard(); };
 
-  // save state
-  if (current) {
-    var data = {
-      remote: current.remote.type(),
-      onedrive: remotes.onedrive.folder,
-      dropbox: remotes.dropbox.folder,
+  Picker.prototype.onDiscard = function() {
+    var self = this;
+    if (self.options.command==="alert") {
+      self.onEnd("discard");
+    }
+    else {
+      self.options.alert = ""; // stop alert
+      self.display();
     }
   }
-  Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
+      
+  document.getElementById("folder-name").onclick = function(ev) { if (picker) picker.onFolderName(ev); };
 
-  return {
-    path: path,  // null is canceled.
-    remote: (current ? current.remote.type() : null),
-    template: template,
+  Picker.prototype.onFolderName = function(ev) {
+    var self = this;
+    var elem = ev.target;
+    while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"dir")) {
+      elem = elem.parentNode;
+    }
+    if (Util.hasClassName(elem,"dir")) {
+      var path = elem.getAttribute("data-path");
+      self.itemEnterFolder(path);
+    }
+  };    
+
+  // ------------------------------------------------------------------------------------
+  // Item selection
+  // ------------------------------------------------------------------------------------
+
+  listing.onclick      = onItemSelect(listing);
+  listing.ondblclick   = onItemSelectDbl(listing);
+  templates.onclick    = onItemSelect(templates);
+  templates.ondblclick = onItemSelectDbl(templates,"new");
+    
+  function canSelect(path,type,extensions) {
+    var allowed = extensions.split(/\s+/);
+    if (!allowed || allowed.length===0 || allowed[0]==="") return true;
+    var ext = Util.extname(path);
+    for( var i = 0; i < allowed.length; i++) {
+      var filter = allowed[i];
+      if (filter[0] === "." && filter === ext) {
+        return true;
+      }
+      else if (filter === type) {
+        return true;
+      }
+    };
+    return false;
   }
-}
+
+  function itemGetSelected(parent) {
+    var items = parent.children;
+    for(var i = 0; i < items.length; i++) {
+      if (Util.hasClassName(items[i],"selected")) {
+        return items[i].getAttribute("data-path");
+      }
+    }
+    return null;
+  }
+  function itemSelect(parent,elem) {
+    if (Util.hasClassName(elem,"disabled")) return;
+    var select = !Util.hasClassName(elem,"selected");
+    var items = parent.children;
+    for(var i = 0; i < items.length; i++) {
+      itemSelectX(items[i],false);
+    }
+    itemSelectX(elem,select);
+  }
+
+  function itemSelectX(elem,select) {
+    var child = elem.children[0];
+    if (child && child.nodeName === "INPUT") {
+      child.checked = select;    
+    }
+    if (select) Util.addClassName(elem,"selected");
+           else Util.removeClassName(elem,"selected");
+  }
+
+  function onItemSelectDbl(parent,cmd) {
+    var selectHandler = onItemSelect(parent);
+    return function(ev) {
+      if (!picker) return;
+      selectHandler(ev);
+      if (itemGetSelected(parent)) {
+        var button = document.getElementById("button-" + (cmd || picker.options.command));
+        if (button) {
+          Util.dispatchEvent(button,"click");
+        }
+      }
+    };
+  }
+
+  function onItemSelect(parent) {
+    return function(ev) {
+      if (!picker) return;
+      var elem = ev.target;
+      while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item") && elem != parent) {
+        elem = elem.parentNode;
+      }
+
+      var type = elem.getAttribute("data-type");
+      var path = elem.getAttribute("data-path");
+      if (ev.target.nodeName === "INPUT" || type!=="folder") {
+        itemSelect(parent,elem);
+      }
+      else {
+        picker.itemEnterFolder(path);
+      }
+    };
+  };
+
+  Picker.prototype.itemEnterFolder = function(path) {
+    var self = this;
+    self.current.folder = path;
+    self.display();
+  }
+
+  
+  // ------------------------------------------------------------------------------------
+  // State update
+  // ------------------------------------------------------------------------------------
+
+
+  Picker.prototype.setFileName = function( fname ) {
+    document.getElementById("file-name").value = fname;
+  }
+
+  Picker.prototype.getFileName = function() {
+    return document.getElementById("file-name").value;
+  }
+
+  Picker.prototype.setCurrent = function( newCurrent ) {
+    var self = this;
+    self.current = newCurrent;
+    self.display();
+  }
+  
+  // ------------------------------------------------------------------------------------
+  // Display
+  // ------------------------------------------------------------------------------------
+
+  Picker.prototype.display = function() {
+    var self = this;
+
+    app.className = "modal";
+    listing.innerHTML = "";
+    if (self.options.headerLogo) {
+      headerLogo.src = self.options.headerLogo;
+      headerLogo.style.display = "inline";
+    }
+    else {
+      headerLogo.style.display = "none";
+    }
+
+    if (self.options.alert) {
+      // alert message
+      if (self.options.alert!=="true") {
+        document.getElementById("message-alert").innerHTML = Util.escape(self.options.alert);
+      }
+      document.getElementById("folder-name").innerHTML = self.options.header || "";
+      Util.addClassName(app,"command-alert");
+      return Promise.resolved();
+    }
+    else if (self.options.command==="message") {
+      document.getElementById("message-message").innerHTML = self.options.message;
+      document.getElementById("folder-name").innerHTML = self.options.header || "";
+      Util.addClassName(app,"command-message");
+      return Promise.resolved();
+    }
+    else if (self.options.command==="template") {
+      document.getElementById("folder-name").innerHTML = self.options.path || "";
+      Util.addClassName(app,"command-template");
+      return Promise.resolved();
+    }
+    else {
+      // set correct logo
+      document.getElementById("remote-logo").src = "images/dark/" + self.current.remote.logo();
+      
+      // check connection
+      return checkConnected(self.current.remote).then( function(isConnected) {
+        if (!isConnected) {
+          Util.addClassName(app,"command-login");
+          Util.addClassName(app,"command-login-" + self.options.command );
+          return Promise.resolved();
+        }
+        else {
+          Util.addClassName(app,"command-" + self.options.command );
+          self.current.remote.getUserName().then( function(userName) {
+            document.getElementById("remote-username").innerHTML = Util.escape( userName );
+            return self.displayFolder();
+          });
+        }
+      });
+    }
+  }
+
+  Picker.prototype.displayFolder = function() {
+    var self = this;
+    self.displayFolderName();
+    listing.innerHTML = "Loading...";
+    return self.current.remote.listing(self.current.folder).then( function(items) {
+      //console.log(items);
+      var html = items.map( function(item) {
+        var disable = canSelect(item.path,item.type,self.options.extensions) ? "" : " disabled";
+        return "<div class='item item-" + item.type + disable + "' data-type='" + item.type + "' data-path='" + Util.escape(item.path) + "'>" + 
+                  //"<input type='checkbox' class='item-select'></input>" +
+                  "<img class='item-icon' src='images/icon-" + item.type + (item.isShared ? "-shared" : "") + ".png'/>" +
+                  "<span class='item-name'>" + Util.escape(Util.basename(item.path)) + "</span>" +
+               "</div>";
+
+      });
+      listing.innerHTML = html.join("");
+    });
+  }
+
+  Picker.prototype.displayFolderName = function() {
+    var self = this;
+    var folder = self.current.folder;
+    var root = self.options.root || "";
+    if (root) {
+      if (Util.startsWith(folder,root)) {
+        folder = folder.substr(root.length);
+      }
+      else {
+        root = "";
+      }
+    }
+    var parts = folder.split("/");
+    var html = "<span class='dir' data-path='" + root + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";
+    var partial = root;
+    parts.forEach( function(part) {
+      if (part) {
+        partial = Util.combine(partial,part);
+        html = html + "<span class='dir' data-path='" + Util.escape(partial) + "'>" + Util.escape(part) + "</span><span class='dirsep'>/</span>";
+      }
+    });
+    document.getElementById("folder-name").innerHTML = html;
+  }
+
+  return Picker;
+})();
+  
+
+// ------------------------------------------------------------------------------------
+// Entry
+// ------------------------------------------------------------------------------------
 
 function show( options0 ) {
   var options = Util.copy(options0);
+  var picker = null;
   return new Promise( function(cont) {
     try {
-      run(options, function(current,path,template) {
-        var res = onEnd(current,path,template);
+      picker = new Picker(options, function(current,path,template) {
+        var res = {
+          path: path,  // null is canceled.
+          remote: (current ? current.remote.type() : null),
+          template: template || "default",
+        }
         cont(null,res);
       });    
     }
     catch(exn) {
+      picker.onEnd();
       cont(exn,null);
     }
   }).then( function(res) { 
     return res; 
   }, function(err) {
-    app.style.display = "none";
-    if (fade) fade.style.display = "none";
+    if (picker) picker.onEnd();
     throw err;
   });
 }
