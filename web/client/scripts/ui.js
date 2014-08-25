@@ -234,30 +234,37 @@ var UI = (function() {
       if (self.stale || self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
     });
     
-    self.keybinding = self.editor.getHandlerService().bind({
-      key: 'Alt-Q'
-    }, function(ev) { 
+    self.editor.getHandlerService().bind({ key: 'Alt-Q' }, function(ev) { 
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
 
-    self.keybinding = self.editor.getHandlerService().bind({
-      key: 'Ctrl-S'
-    }, function(ev) { 
+    self.editor.getHandlerService().bind({ key: 'Ctrl-S' }, function(ev) { 
       ev.browserEvent.preventDefault();
       self.synchronize();
     });
+    
+    document.getElementById("sync-now").onclick = function(ev) {
+      self.synchronize();
+    };
 
+    self.lastMouseUp = 0;
     self.editor.addListener("mouseup", function(ev) {
-      self.anonEvent( function() {
-        if ((ev.event.detail===2 || ev.event.detail===102) && ev.target.type === 6) { // double click on text
-          var line = self.editor.viewModel.getLineContent(ev.target.position.lineNumber);
-          var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
-          if (cap) {
-            var fileName = cap[1]; // TODO use file
-            self.editFile( fileName );
+      var now = Date.now();
+      var delta = now - self.lastMouseUp;
+      self.lastMouseUp = now;
+      if (delta <= 200) { // check for double click
+        self.anonEvent( function() {        
+          if (ev.target.type === 6) { // on text
+            var lineNo = ev.target.position.lineNumber; 
+            var line   = self.editor.getModel().getLineContent(lineNo);
+            var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
+            if (cap) {
+              var fileName = cap[1]; // TODO use file
+              self.editFile( fileName );
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     self.decorations = [];
@@ -267,9 +274,10 @@ var UI = (function() {
         if (self.dropFiles) {
           var files = self.dropFiles;
           self.dropFiles = null;
-          var pos = ev.target.position;
-          pos.column = 1;
-          pos.lineNumber++;
+          var pos = {
+            column: 1,
+            lineNumber: ev.target.position.lineNumber+1,
+          };
           self.insertFiles(files,pos);
         }
         else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
@@ -302,7 +310,6 @@ var UI = (function() {
           }
           if (posLine >= 0) {
             posLine = self.viewToTextLine(posLine);
-
             return self.insertFiles( ev.dataTransfer.files, { lineNumber: posLine+1, column: 1 });
           }
         }
@@ -430,7 +437,7 @@ var UI = (function() {
     document.getElementById("open").onclick = openEvent;
     document.getElementById("connection").onclick = openEvent;
     
-    document.getElementById("new").onclick = function(ev) {
+    var newEvent = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
         return storage.createFile(self.storage).then( function(res) { 
           if (!res) return Promise.resolved(); // canceled
@@ -438,6 +445,7 @@ var UI = (function() {
         });
       });
     };
+    document.getElementById("new").onclick = newEvent;
 
     window.addEventListener("hashchanged", function(ev) {
       self.loadFromHash();

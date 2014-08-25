@@ -281,7 +281,7 @@ img#console-ok {
   display: none;
 }
 
-.file-size {
+.shortcut, .file-size {
   display: inline-block;
   float: right;
   font-size: x-small;
@@ -688,6 +688,10 @@ div.modal {
   display: inline-block;
 }
 
+#picker .dir {
+  text-decoration: underline;
+}
+
 #picker .dir:hover {
   background-color: #357;
   cursor: pointer;
@@ -745,6 +749,7 @@ div.item:hover {
 }
 
 .item-file.disabled {
+  display: none;
   color: #AAA;
 }
 
