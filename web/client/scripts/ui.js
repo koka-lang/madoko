@@ -238,10 +238,47 @@ var UI = (function() {
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
 
-    self.editor.getHandlerService().bind({ key: 'Ctrl-S' }, function(ev) { 
-      ev.browserEvent.preventDefault();
-      self.synchronize();
+    
+    // Key bindings
+
+    var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
+    var keyHandlers = [];
+
+    document.addEventListener( "keydown", function(ev) {
+      var code = ev.keyCode;
+      if (ev.ctrlKey)  code |= KeyMask.ctrlKey;
+      if (ev.altKey)   code |= KeyMask.altKey;
+      if (ev.metaKey)  code |= KeyMask.metaKey;
+      if (ev.shiftKey) code |= KeyMask.shiftKey;       
+      keyHandlers.forEach( function(handler) {
+        if (handler.code === code) {
+          if (handler.stop) {
+            ev.stopPropagation();
+            ev.preventDefault();
+          }
+          handler.action(ev);
+        }
+      });
     });
+
+    function bindKey( key, action ) {
+      if (typeof key === "string") key = { key: key, stop: true };
+      var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
+      var code = 0;
+      if (cap) {
+        code = cap[5].charCodeAt(0);
+        if (cap[1]) code |= KeyMask.altKey;
+        if (cap[2]) code |= KeyMask.ctrlKey;
+        if (cap[3]) code |= KeyMask.metaKey;
+        if (cap[4]) code |= KeyMask.shiftKey;
+      }
+      keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
+    }
+
+    bindKey( "Alt-S",  function()   { self.synchronize(); } );
+    bindKey( "Ctrl-S", function()   { self.synchronize(); } );
+    bindKey( "Alt-O",  function(ev) { openEvent(ev); });
+    bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     
     document.getElementById("sync-now").onclick = function(ev) {
       self.synchronize();

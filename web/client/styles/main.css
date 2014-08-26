@@ -288,6 +288,10 @@ img#console-ok {
   padding-top: 0.5em;
 }
 
+span.shortcut {
+  padding-right: 0.25em;
+}
+
 .file-share {
   display: inline-block;
   float: right;  
