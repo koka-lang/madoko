@@ -594,7 +594,7 @@ div.modal {
 }
 
 .modal .header-bar {
-  padding: 0.7rem 1em 0.3rem 1em !important;
+  padding: 0.7rem 0.5em 0.3rem 1em !important;
   height: 2rem;
   white-space: nowrap;
 }
@@ -787,7 +787,8 @@ div.item:hover {
 #picker.command-push #button-push,
 #picker.command-template #button-new,
 #picker #button-logout,
-#picker #button-cancel {
+#picker #button-cancel,
+#picker #icon-close {
   display: inline;
 }
 
@@ -828,6 +829,14 @@ div.item:hover {
 #picker.command-template #header-logo,
 #picker.command-alert #header-logo  {
   display: inline;
+}
+
+#picker #icon-close.button {
+  border: none;
+  float: right;
+  margin-top: -0.2em;
+  padding-top: 0.2em;
+  vertical-align: middle;
 }
 
 
