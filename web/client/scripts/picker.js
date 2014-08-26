@@ -203,14 +203,14 @@ var Picker = (function() {
   }
 
 
-  document.onkeydown = function(ev) {   
+  document.addEventListener( "keydown", function(ev) {   
     if (!picker) return;
     if (!ev) ev = event;    
     if (app.style.display === "block" && ev.keyCode == 27) { // escape key on picker
       picker.onEnd();
     }
     // todo: invoke default button on enter
-  }
+  });
 
   document.getElementById("button-discard").onclick = function(ev) { if (picker) picker.onDiscard(); };
 
