@@ -625,6 +625,10 @@ div.modal {
   margin: 0em 0.25em;
 }
 
+.modal .button.active {
+  border-width: 2px;
+}
+
 
 /* ----------------------------------------------------------
    File Picker
@@ -722,8 +726,10 @@ div.modal {
 
 div.item {
   display: inline-block;
-  width: calc(50% - 3em);
+  width: calc(50% - 1em);
   padding: 0.2em 0.5em 0.2em 0.5em;
+  max-height: 1.6em;
+  overflow-y: hidden;
 }
 
 div.item:hover {

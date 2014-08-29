@@ -42,7 +42,19 @@ var Picker = (function() {
   var listing   = document.getElementById("listing");
   var templates = document.getElementById("templates");  
   var headerLogo = document.getElementById("header-logo");
+  var buttonCancel  = document.getElementById("button-cancel");
+  var buttonDiscard = document.getElementById("button-discard");
 
+  var buttons = [];
+  var child = document.getElementById("picker-footer").firstChild;
+  while (child) {
+    if (Util.hasClassName(child,"button")) {
+      buttons.push(child);
+    }
+    child = child.nextSibling;
+  }
+
+  
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
@@ -50,7 +62,8 @@ var Picker = (function() {
   };
 
   var picker    = null;
-  
+
+    
 
   // options:
   //  command: open | new | connect | save | push  (| template) | alert
@@ -66,9 +79,10 @@ var Picker = (function() {
     self.current = remotes.dropbox;
     self.options = Util.copy(opts);
     self.endCont = end;
+    self.buttonActive = null;
 
+    // fade and normalize
     if (fade) fade.style.display = "block";
-
     if (!self.options.extensions) self.options.extensions = "";
     if (!self.options.file) self.options.file = "document";
 
@@ -80,7 +94,8 @@ var Picker = (function() {
       remotes.onedrive.folder = data.onedrive || "";
     }
 
-    document.getElementById("button-cancel").innerHTML  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
+    // init UI
+    buttonCancel.innerHTML  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
     
     if (self.options.remote && remotes[self.options.remote] && self.options.remote !== "local") {
       if (self.options.folder) remotes[self.options.remote].folder = self.options.folder;
@@ -92,16 +107,20 @@ var Picker = (function() {
     }
 
     //Util.enablePopupClickHovering();
-
     picker = self; // enable all event handlers
+    self.buttonActive = null;          
     self.display();
     app.style.display= "block";
+    app.focus();
   }
 
 
   Picker.prototype.onEnd = function( path, template ) {
     var self = this;
     picker = null;
+
+    if (self.buttonActive) Util.removeClassName(self.buttonActive,"active");
+    self.buttonActive = null;
     app.style.display = "none";
     if (fade) fade.style.display = "none";
 
@@ -114,6 +133,9 @@ var Picker = (function() {
       };
       Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
     }
+
+    // focus back to editor
+    document.getElementById("editor").focus();
     
     // call end continuation
     if (self.endCont) self.endCont(self.current,path,template);
@@ -125,7 +147,7 @@ var Picker = (function() {
   // through the picker variable.
   // ------------------------------------------------------------------------------------
 
-  document.getElementById("button-cancel").onclick = function(ev) { if (picker) picker.onEnd(); }
+  buttonCancel.onclick = function(ev) { if (picker) picker.onEnd(); }
 
 
   // Set remotes
@@ -205,14 +227,26 @@ var Picker = (function() {
 
   document.addEventListener( "keydown", function(ev) {   
     if (!picker) return;
+    if (app.style.display !== "block") return;
     if (!ev) ev = event;    
-    if (app.style.display === "block" && ev.keyCode == 27) { // escape key on picker
-      picker.onEnd();
+    if (ev.keyCode == 27) { // escape key on picker
+      picker.onEnd();      
     }
-    // todo: invoke default button on enter
+    else if (ev.keyCode == 9) { // tab
+      picker.nextActive();
+    }
+    else if (ev.keyCode == 13) { // enter
+      picker.clickActive();
+    }
+    else {
+      return;
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+    ev.keyCode = 0; // for IE    
   });
 
-  document.getElementById("button-discard").onclick = function(ev) { if (picker) picker.onDiscard(); };
+  buttonDiscard.onclick = function(ev) { if (picker) picker.onDiscard(); };
 
   Picker.prototype.onDiscard = function() {
     var self = this;
@@ -375,17 +409,20 @@ var Picker = (function() {
       }
       document.getElementById("folder-name").innerHTML = self.options.header || "";
       Util.addClassName(app,"command-alert");
+      self.setActive();
       return Promise.resolved();
     }
     else if (self.options.command==="message") {
       document.getElementById("message-message").innerHTML = self.options.message;
       document.getElementById("folder-name").innerHTML = self.options.header || "";
       Util.addClassName(app,"command-message");
+      self.setActive();
       return Promise.resolved();
     }
     else if (self.options.command==="template") {
       document.getElementById("folder-name").innerHTML = self.options.path || "";
       Util.addClassName(app,"command-template");
+      self.setActive();
       return Promise.resolved();
     }
     else {
@@ -397,10 +434,11 @@ var Picker = (function() {
         if (!isConnected) {
           Util.addClassName(app,"command-login");
           Util.addClassName(app,"command-login-" + self.options.command );
-          return Promise.resolved();
+          self.setActive();
         }
         else {
           Util.addClassName(app,"command-" + self.options.command );
+          self.setActive();            
           self.current.remote.getUserName().then( function(userName) {
             document.getElementById("remote-username").innerHTML = Util.escape( userName );
             return self.displayFolder();
@@ -408,6 +446,45 @@ var Picker = (function() {
         }
       });
     }
+  }
+
+  Picker.prototype.setActive = function() {
+    var self = this;
+    if (self.buttonActive === null || self.buttonActive.offsetParent === null) {
+      self.buttonActive = null;
+      // Set active button (after making the app appear)
+      setTimeout( function() { 
+        buttons.every( function(button) {
+          if (button !== buttonDiscard && button.offsetParent !== null) {
+            self.buttonActive = button;
+            Util.addClassName(button,"active");
+            return false; // break
+          }
+          return true;
+        });
+      }, 0 );
+    }
+  }
+
+  Picker.prototype.nextActive = function() {
+    var self = this;
+    if (!self.buttonActive || self.buttonActive.offsetParent === null) return;
+    var next = self.buttonActive;
+    do {
+      next = (next.nextSibling ? next.nextSibling : next.parentNode.firstChild);
+      if (Util.hasClassName(next,"button") && next.offsetParent !== null) {
+        Util.removeClassName(self.buttonActive,"active");
+        self.buttonActive = next;
+        Util.addClassName(self.buttonActive,"active");        
+      }
+    }
+    while( next && next !== self.buttonActive)
+  }
+
+  Picker.prototype.clickActive = function() {
+    var self = this;
+    if (!self.buttonActive || self.buttonActive.offsetParent === null) return;
+    Util.dispatchEvent( self.buttonActive, "click" );
   }
 
   Picker.prototype.displayFolder = function() {
@@ -476,7 +553,7 @@ function show( options0 ) {
       });    
     }
     catch(exn) {
-      picker.onEnd();
+      if (picker) picker.onEnd();
       cont(exn,null);
     }
   }).then( function(res) { 

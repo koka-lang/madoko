@@ -264,6 +264,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
   function hasClassName( elem, cname ) {    
+    if (!elem || !elem.className) return false;
     var names = elem.className.split(/\s+/);
     return contains(names,cname);
   }
@@ -278,6 +279,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
   function removeClassName( elem, cname ) {
+    if (!elem || !elem.className) return;
     var cnames = elem.className;
     var names = cnames.split(/\s+/);
     var newnames = names.filter( function(n) { return (n !== cname); });
@@ -287,6 +289,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   }
 
   function addClassName( elem, cname ) {
+    if (!elem || !elem.className) return;
     var cnames = elem.className;
     var names = cnames.split(/\s+/);
     if (!contains(names,cname)) {
