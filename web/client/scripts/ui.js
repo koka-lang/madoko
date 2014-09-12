@@ -903,7 +903,7 @@ var UI = (function() {
       }
     );
 
-    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, showSpinner, 
+    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) }, 
       function() { return false; },
       function(round) {
         //self.lastMathDoc = self.getMathDoc();
@@ -1337,7 +1337,7 @@ var UI = (function() {
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    return self.spinWhile( self.exportSpinner, 
+    return self.spinWhile( self.spinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );

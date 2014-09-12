@@ -194,7 +194,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
                       texcmd + "\n\\end{md" + kind + "Snippet}")
         //trace("math: " + digest)
         match(context.mathinfos[digest]) {
-          Nothing  -> mcmd
+          Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering"))
           Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
         }
       }

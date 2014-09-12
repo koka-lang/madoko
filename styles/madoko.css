@@ -298,6 +298,10 @@ div.input-mathpre {
   margin-bottom: 1ex;
 }
 
+.math-rendering {
+  color: gray;
+}
+
 
 /*---------------------------------------------------------------------------
   Default style for syntax highlighting
