@@ -217,8 +217,9 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
                     .addKeyvalIfNotExist("height",(scale * mi.height / fontsize).showFixed(3) + "em")
                     .addClass("math")
                 // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
+                // .addKeyval("data-math", mtxt)
   val src = if (mi.imageData!="") then mi.imageData else mi.imageName
-  context.fmtLink(True,Link(src,txt,xattrs),mtxt)
+  context.fmtLink(True,Link(src,"",xattrs),mtxt)
 }
 
 function escapeMath( txt : string, fmt : formatter ) : string {
