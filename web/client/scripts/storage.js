@@ -712,7 +712,9 @@ var Storage = (function() {
     var self = this;
     if (file.nosync) return Promise.resolved( self._syncMsg(file,"no sync") );
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
-      if (!remoteTime) remoteTime = new Date(0);
+      if (!remoteTime) {
+        remoteTime = new Date(0);
+      }
       if (file.createdTime.getTime() < remoteTime.getTime()) {
         return self._pullFile(file.path, file).then( function(remoteFile) {
           return self._syncPull(diff,cursors,file,remoteFile);
@@ -779,7 +781,7 @@ var Storage = (function() {
 
   Storage.prototype._syncPull = function(diff,cursors,file,remoteFile) {
     var self = this;
-    var canMerge = Util.isTextMime(file.mime);
+    var canMerge = isEditable(file); // Util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
     if (file.modified && canMerge) {
       if (rxConflicts.test(file.content)) {
@@ -790,7 +792,7 @@ var Storage = (function() {
     else {
       // overwrite with server content
       if (!canMerge && file.modified) {
-        Util.message( "warning: binary file modified on server and client, overwrite local one: " + file.path, Util.Msg.Warning );
+        Util.message( "warning: binary- or generated file modified on server and client, overwrite local one: " + file.path, Util.Msg.Warning );
       }
       self._updateFile( remoteFile );
       return self._syncMsg( remoteFile, "update from server");

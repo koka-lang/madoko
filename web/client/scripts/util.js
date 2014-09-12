@@ -389,7 +389,6 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
   function isTextMime( mime ) {
     return (startsWith(mime,"text/") || mime==="application/json");
   }
-
   
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html"].join(";");
   function hasGeneratedExt(fname) {
