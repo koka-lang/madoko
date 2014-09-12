@@ -223,8 +223,10 @@ img#console-ok {
 /* menus */
 
 .menu hr {
-  margin-top: 0.2em;
-  margin-bottom: 0.25em;
+  margin-top: 0.3em;
+  margin-bottom: 0.2em;
+  border: none;
+  border-top: solid #AAA 1px;
 }
 
 .menu div {
@@ -261,9 +263,15 @@ img#console-ok {
   padding-right: 0.15em;
 }
 
-#edit-select-header .disable {
+#edit-select-header .disable,
+#edit-select-header .file-share {
   color: #888;
 }
+
+.exported .disable {
+  color: black;
+}
+
 
 .theme-dark #edit-select-header .disable {
   color: #BBB;
@@ -281,11 +289,12 @@ img#console-ok {
   display: none;
 }
 
-.shortcut, .file-size {
+.shortcut, .file-size, .file-share {
   display: inline-block;
   float: right;
   font-size: x-small;
   padding-top: 0.5em;
+  color: inherit;
 }
 
 span.shortcut {
@@ -293,16 +302,11 @@ span.shortcut {
 }
 
 .file-share {
-  display: inline-block;
-  float: right;  
-  text-decoration: none;
   padding-right: 0.5em;
-  color: inherit;
 }
 
 a.file-share:hover {
   background-color: Gainsboro !important;
-  text-decoration: underline;
 }
 
 /* Generic */

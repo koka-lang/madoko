@@ -1160,7 +1160,8 @@ var UI = (function() {
         }
       }
       if (file.shareUrl) {
-        extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'><span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span></a>"
+        var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
+        extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
       if (util.startsWith(file.mime,"image/")) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
@@ -1174,10 +1175,12 @@ var UI = (function() {
     var files = [];
     var images = [];
     var generated = [];
+    var finals = [];
     var div = document.getElementById("edit-select-files");
       
     self.storage.forEachFile( function(file) {
       if (file) {
+        var ext = util.extname(file.path)
         var disable = (storage.isEditable(file) ? "": " disable");
         var main    = (file.path === self.docName ? " main" : "");
         var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
@@ -1186,6 +1189,7 @@ var UI = (function() {
                           self.displayFile(file,true) + "</div>";
         if (util.startsWith(file.mime,"image/")) images.push(line); 
         else if (!disable) files.push(line);
+        else if (util.stemname(self.docName) === util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
         else generated.push(line)
       }
     });
@@ -1199,6 +1203,7 @@ var UI = (function() {
     */
     div.innerHTML = 
       files.sort().join("\n") + 
+      (finals.length > 0 ? "<hr/><div class='exported'>" + finals.sort().join("\n") + "</div>" : "") +
       (images.length > 0 || generated.length > 0 ? 
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
