@@ -730,7 +730,7 @@ div.modal {
 
 div.item {
   display: inline-block;
-  width: calc(50% - 1em);
+  width: calc(50% - 2em);
   padding: 0.2em 0.5em 0.2em 0.5em;
   max-height: 1.6em;
   overflow-y: hidden;
@@ -751,6 +751,10 @@ div.item:hover {
 #templates .item-icon {
   height: 4em;
   width: 4em;
+}
+
+#templates div.item {
+  max-height: 4.1em;
 }
 
 .item-select {
