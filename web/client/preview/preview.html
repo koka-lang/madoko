@@ -6,9 +6,21 @@ html,body {
   height: auto !important;
   width: auto !important;
 }
+#preview-refresh {
+	display: none;
+}
 </style>
 <body class="madoko preview">
 <p>Rendering...</p>
+<p id="preview-refresh">Try to refresh your browser if this takes too long...</p>
 </body>
 <script type="text/javascript" src="preview.js"></script>
+<script>
+setTimeout(function() {
+	var p = document.getElementById("preview-refresh");
+	if (p) {
+		p.style.display = "block";
+	}
+}, 5000);
+</script>
 </html>
