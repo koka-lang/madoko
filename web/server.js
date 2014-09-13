@@ -745,19 +745,24 @@ setInterval( function() {
   });
 }, limits.atomicDelay / 4 );
 
-function pushAtomic( name, time ) {
+function pushAtomic( name, time, release ) {
   if (!name || typeof name !== "string") throw { httpCode: 400, message: "invalid request (no 'name')" };
   if (!time) time = new Date(0);
   else if (typeof time === "string") time = date.dateFromISO(time);
   else if (!(time instanceof Date)) time = new Date(time.toString());
 
-  if (time.getTime() <= 0) {
-    atomics.remove(name);
-    return { message: "released" };
+  var info = atomics.get(name);
+  var atime = (info ? info.time : new Date(0));
+  if (release) {
+    if (atime.getTime() == time.getTime()) {
+      atomics.remove(name);
+      return { message: "released" };
+    }
+    else {
+      throw { httpCode: 409, message: "failed to release lock since it updated in the meantime." };
+    }
   }
   else {
-    var info = atomics.get(name);
-    var atime = (info ? info.time : new Date(0));
     if (atime < time) {
       // someone is pushing a more recent version: ok
       atomics.set(name, { time: time, created: Date.now() });
@@ -837,7 +842,7 @@ function editUpdate( req, userid, names ) {
     if (names[name] === EditOp.Edit) logit = true;
     updateEditInfo( userid, name, names[name]);
     res[name] = getEditInfo(userid,name);
-    // console.log("user: " + userid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    console.log("user: " + userid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   if (log && logit) {
     log.entry({ 
@@ -872,7 +877,7 @@ app.post('/rest/run', function(req,res) {
 
 app.post('/rest/push-atomic', function(req,res) {
   event( req, res, function() {
-    return pushAtomic( req.body.name, req.body.time );
+    return pushAtomic( req.body.name, req.body.time, req.body.release );
   }, null, true );
 });
 
@@ -880,6 +885,7 @@ app.post("/rest/edit", function(req,res) {
   event( req, res, function(userid) {
     //var sessionid = req.body.sessionid || uniqueHash();
     var files = req.body.files || {};
+    console.log(files);
     return editUpdate(req,userid,files);
   });
 });

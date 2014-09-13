@@ -294,7 +294,7 @@ var Onedrive = (function() {
   Onedrive.prototype.pushFile = function( fpath, content ) {
     var self = this;
     return pushFile( self.fullPath(fpath), content ).then( function(info) {
-      return Util.dateFromISO(info.updated_time);
+      return { createdTime: Util.dateFromISO(info.updated_time) };
     });
   }
 

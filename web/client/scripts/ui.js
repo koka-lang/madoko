@@ -1229,10 +1229,9 @@ var UI = (function() {
     }
 
     var files = {};    
-    var root = "/" + self.storage.folder() + "/";
-    var docFile = root + self.docName + "*";
+    var docFile = self.storage.getUniqueFileId(self.docName) + "*";
     files[docFile] = edit;
-    files[root + self.editName] = edit;
+    files[self.storage.getUniqueFileId(self.editName)] = edit;
     var body = {
       files: files,
     };

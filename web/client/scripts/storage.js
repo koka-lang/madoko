@@ -362,8 +362,8 @@ function getEditPosition(file) {
   return (file.position || { lineNumber: 1, column: 1 });
 }
 
-function pushAtomic( fpath, time ) {
-  return Util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString() } );
+function pushAtomic( fpath, time, release ) {
+  return Util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString(), release: (release ? true : false)  } );
 }
 
 
@@ -574,6 +574,10 @@ var Storage = (function() {
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       file.position  = file.position || opts.position;
+
+      var root = "//" + self.remote.type() + "/" + file.path;
+      file.uniqueId  = root + "@" + (file.rev || file.createdTime.toISOString());
+      //file.uniqueId  = file.uniqueId || null;
       return file;
     });
   }
@@ -596,6 +600,15 @@ var Storage = (function() {
     var file = self.files.get(fpath);
     return (file ? file.modified : false);
   }
+
+  Storage.prototype.getUniqueFileId = function( fpath ) {
+    var self = this;
+    var file = self.files.get(fpath);
+    if (file && file.uniqueId) return file.uniqueId;
+    var root = "//" + self.remote.type();    
+    return "//" + self.remote.type() + "/" + self.folder() + "/" + fpath + (file ? "@" + file.createdTime.toISOString() : "");
+  }
+
 
   Storage.prototype.readLocalFile = function( fpath ) {
     var self = this;
@@ -756,19 +769,25 @@ var Storage = (function() {
     }
     else {
       // write back the client changes
-      return pushAtomic( file.path, remoteTime ).then( function() {
+      return pushAtomic( file.uniqueId, remoteTime ).then( function() {
         // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
         var file0 = Util.copy(file);
-        return self.pushFile( file0 ).then( function(createdTime) {
+        return self.pushFile( file0 ).then( function(info) {
           //newFile.modified = false;
           var file1 = self.files.get(file.path);
           if (file1) { // could be deleted in the mean-time?
             file1.original = file0.content;
             file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
-            file1.createdTime = createdTime;
+            file1.createdTime = info.createdTime;
+            file1.rev         = info.rev;
             self._updateFile(file1);
           }
-          return self._syncMsg(file, "save to server"); 
+          if (remoteTime.getTime() == info.createdTime.getTime()) {  // this happens if the file equal and not updated on the server; release our lock in that case
+            return pushAtomic( file0.uniqueId, remoteTime, true ).then( function () {
+              return self._syncMsg(file, "saved to server (unmodified)");     
+            });
+          }
+          else return self._syncMsg(file, "saved to server"); 
         });
       }, function(err) {
         if (err.httpCode == 409) 
@@ -828,15 +847,22 @@ var Storage = (function() {
           file0.content  = res.merged;
           file0.modified = true;
           self._updateFile(file0);
-          return pushAtomic(file0.path, remoteFile.createdTime).then( function() {
-            return self.pushFile(file0).then( function(createdTime) {
+          return pushAtomic(file0.uniqueId, remoteFile.createdTime).then( function() {
+            return self.pushFile(file0).then( function(info) {
               var file1 = self.files.get(file.path);
               if (file1) { // could be deleted?
                 file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
-                file1.createdTime = createdTime;
+                file1.createdTime = info.createdTime;
+                file1.rev         = info.rev
                 file1.original    = file0.content;
                 self._updateFile(file1);
               }
+              if (remoteFile.createdTime.getTime() == info.createdTime.getTime()) {  // this happens if the file equal and not updated on the server; release our lock in that case
+                return pushAtomic( file.uniqueId, remoteFile.createdTime, true ).then( function () {
+                  return self._syncMsg(file, "merge from server (unmodified)");     
+                });
+              }
+              else return self._syncMsg(file, "saved to server"); 
               return self._syncMsg( file, "merge from server" );
             });
           }, function(err) {

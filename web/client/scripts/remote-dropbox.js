@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-var redirectUri = "https://www.madoko.net/redirect/dropbox";
-//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
+//var redirectUri = "https://www.madoko.net/redirect/dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -111,7 +111,9 @@ function pullFile(fname,binary) {
 function fileInfo(fname) {
   var url = metadataUrl + fname;
   return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
-    return (typeof info === "string" ? JSON.parse(info) : info);
+    var res = (typeof info === "string" ? JSON.parse(info) : info);
+    //console.log(fname + ": " + res.rev);
+    return res;
   });
 }
 
@@ -243,7 +245,7 @@ var Dropbox = (function() {
   Dropbox.prototype.pushFile = function( fpath, content ) {
     var self = this;
     return pushFile( self.fullPath(fpath), content ).then( function(info) {
-      return new Date(info.modified);
+      return { createdTime: new Date(info.modified), rev : info.rev };
     });
   }
 
@@ -252,10 +254,13 @@ var Dropbox = (function() {
     return self.getRemoteTime(fpath).then( function(date) {
       if (!date) return Promise.rejected("file not found: " + fpath);
       return pullFile( self.fullPath(fpath), binary ).then( function(content,req) {
+        var infoHdr = req.getResponseHeader("x-dropbox-metadata");
+        var info = (infoHdr ? JSON.parse(infoHdr) : { rev: null });
         var file = {
           path: fpath,
           content: content,
           createdTime: date,
+          uniqueId: info.rev,
         };
         return file;
       });
