@@ -755,12 +755,10 @@ function pushAtomic( name, time, release ) {
   var atime = (info ? info.time : new Date(0));
   if (release) {
     if (atime.getTime() == time.getTime()) {
+      // only remove if not concurrently reaquired by someone else
       atomics.remove(name);
-      return { message: "released" };
     }
-    else {
-      throw { httpCode: 409, message: "failed to release lock since it updated in the meantime." };
-    }
+    return { message: "released" };    
   }
   else {
     if (atime < time) {
