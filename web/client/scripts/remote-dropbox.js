@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-//var redirectUri = "https://www.madoko.net/redirect/dropbox";
-var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
+var redirectUri = "https://www.madoko.net/redirect/dropbox";
+//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -260,7 +260,7 @@ var Dropbox = (function() {
           path: fpath,
           content: content,
           createdTime: date,
-          uniqueId: info.rev,
+          rev: info.rev,
         };
         return file;
       });

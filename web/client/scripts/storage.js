@@ -508,7 +508,8 @@ var Storage = (function() {
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || Util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
-    
+    self._setUniqueId(finfo);
+
     // check same content
     // var file = self.files.get(fpath);
     // if (file && file.content === finfo.content) return;
@@ -574,12 +575,17 @@ var Storage = (function() {
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       file.position  = file.position || opts.position;
-
-      var root = "//" + self.remote.type() + "/" + file.path;
-      file.uniqueId  = root + "@" + (file.rev || file.createdTime.toISOString());
+      self._setUniqueId(file)
+      
       //file.uniqueId  = file.uniqueId || null;
       return file;
     });
+  }
+
+  Storage.prototype._setUniqueId = function(file) {
+    var self = this;
+    var root = "//" + self.remote.type() + "/" + file.path;
+    file.uniqueId = root + "@" + (file.rev || file.createdTime.toISOString());
   }
   
   /* Interface */
