@@ -757,11 +757,6 @@ var Storage = (function() {
     });
   }
 
-  Storage.prototype.pushFile = function( file ) {
-    var self = this;
-    return self.remote.pushFile(file.path, Encoding.decode( file.encoding, file.content ));
-  }
-
   Storage.prototype._syncPush = function(file,remoteTime) {
     var self = this;
     // file.createdTime >= remoteTime
@@ -779,42 +774,7 @@ var Storage = (function() {
     }
     else {
       // write back the client changes
-      return pushAtomic( file.uniqueId, remoteTime ).then( function() {
-        // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
-        var file0 = Util.copy(file);
-        return self.pushFile( file0 ).then( function(info) {
-          //newFile.modified = false;
-          var file1 = self.files.get(file.path);
-          if (file1) { // could be deleted in the mean-time?
-            file1.original = file0.content;
-            file1.modified = (file1.content !== file0.content); // could be modified in the mean-time
-            file1.createdTime = info.createdTime;
-            file1.rev         = info.rev;
-            self._updateFile(file1);
-          }
-          return Promise.guarded(file1.uniqueId !== file0.uniqueId, 
-            function() {
-             return createAlias(file1.uniqueId,file0.uniqueId);
-            },
-            function() {
-              var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
-              return Promise.guarded( unmodified,
-                function() {  // this happens if the file equal and not updated on the server; release our lock in that case
-                  return pushAtomic( file0.uniqueId, remoteTime, true );
-                },
-                function() {
-                  return self._syncMsg(file, "saved to server" + (unmodified ? " (unmodified)" : ""));     
-                }
-              );
-            }
-          );
-        });
-      }, function(err) {
-        if (err.httpCode == 409) 
-          throw new Error( self._syncMsg(file,"cannot save to server: file was saved concurrently by another user!", "save to server") );
-        else 
-          throw err;
-      });
+      self._syncWriteBack(file,remoteTime,"save to server")
     }
   }
 
@@ -864,46 +824,59 @@ var Storage = (function() {
         else {
           // write back merged result
           var remoteTime = remoteFile.createdTime;
-          var file0 = Util.copy(remoteFile);
-          file0.content  = res.merged;
-          file0.modified = true;
-          self._updateFile(file0);
-          return pushAtomic(file0.uniqueId, remoteTime).then( function() {
-            return self.pushFile(file0).then( function(info) {
-              var file1 = self.files.get(file.path);
-              if (file1) { // could be deleted?
-                file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
-                file1.createdTime = info.createdTime;
-                file1.rev         = info.rev
-                file1.original    = file0.content;
-                self._updateFile(file1);
-              }
-              return Promise.guarded(file1.uniqueId !== file.uniqueId, 
-                function() {
-                  return createAlias(file1.uniqueId,file.uniqueId);
-                },
-                function() {
-                  var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
-                  return Promise.guarded( unmodified,
-                    function() {  // this happens if the file equal and not updated on the server; release our lock in that case
-                      return pushAtomic( file0.uniqueId, remoteTime, true );
-                    },
-                    function() {
-                      return self._syncMsg(file, "merge from server"  + (unmodified ? " (unmodified)" : ""));     
-                    }
-                  );
-                }
-              );
-            });
-          }, function(err) {
-            if (err.httpCode == 409) 
-              throw new Error( self_syncMsg( file, "merged from server but cannot save: file was saved concurrently by another user", "merge from server" ) );
-            else 
-              throw err;
-          });
+          var filex = Util.copy(remoteFile);
+          filex.content  = res.merged;
+          filex.modified = true;
+          self._updateFile(filex);
+          return self._syncWriteBack( filex, remoteTime, "merge to server" );          
         }
       }
     );
+  }
+
+  Storage.prototype._syncWriteBack = function( file, remoteTime, message ) {
+    var self = this;
+    return pushAtomic( file.uniqueId, remoteTime ).then( function() {
+      // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
+      var file0 = Util.copy(file);
+      return self.pushFile( file0 ).then( function(info) {
+        //newFile.modified = false;
+        var file1 = self.files.get(file.path);
+        if (file1) { // could be deleted in the mean-time?
+          file1.original    = file0.content;
+          file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
+          file1.createdTime = info.createdTime;
+          file1.rev         = info.rev;
+          self._updateFile(file1);
+        }
+        return Promise.guarded(file1.uniqueId !== file0.uniqueId, 
+          function() {
+           return createAlias(file1.uniqueId,file0.uniqueId);
+          },
+          function() {
+            var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
+            return Promise.guarded( unmodified,
+              function() {  // this happens if the file equal and not updated on the server; release our lock in that case
+                return pushAtomic( file0.uniqueId, remoteTime, true );
+              },
+              function() {
+                return self._syncMsg(file, message + (unmodified ? " (unmodified)" : ""));     
+              }
+            );
+          }
+        );
+      });
+    }, function(err) {
+      if (err.httpCode == 409) 
+        throw new Error( self._syncMsg(file,"cannot " + message + ": file was saved concurrently by another user!", "save to server") );
+      else 
+        throw err;
+    });
+  }
+
+  Storage.prototype.pushFile = function( file ) {
+    var self = this;
+    return self.remote.pushFile(file.path, Encoding.decode( file.encoding, file.content ));
   }
 
   Storage.prototype._syncMsg = function( file, msg, action ) {

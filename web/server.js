@@ -782,12 +782,28 @@ function pushAtomic( name, time, release ) {
 }
 
 /* -------------------------------------------------------------
-   Keep track of who edits what
+   Keep track of who edits what.
+   The edits map, maps a 'global unique file name' to:
+
+   info {
+      users: map<uid,user>
+   }
+
+   user {
+      lastUpdate: time   -- the last time this was updated
+      editing: bool      -- true if writing, false if just reading
+   }
+
+   Since it proves hard to create truly global unique names,
+   we also have an aliases map which maps file names to other names.
+   This way we can use revisions on dropbox for example to create
+   unique names. 
 ------------------------------------------------------------- */
 
 var edits = new Map();
 var aliases = new Map();
 
+// We remove edit info after limits.editDelay if there was no update
 setInterval( function() {
   var now = Date.now();
   edits.forEach( function(name,info) {
@@ -811,6 +827,7 @@ setInterval( function() {
   });
 }, limits.editDelay/2 );
 
+// Resolve a name to its shared true name
 function resolveAlias(name) {
   var aliasInfo = null;
   var xname = name;
@@ -823,6 +840,8 @@ function resolveAlias(name) {
   return xname;
 } 
 
+// return a record { readers, writers } that show how many
+// other readers and writers there are.
 function getEditInfo( id, name ) {
   var res = { readers: 0, writers: 0 };
   var info = edits.get(name);
@@ -859,6 +878,8 @@ function updateEditInfo( id, name, editop ) {
   }2
 }
 
+// given a list of file names with their edit operation,
+// return a list those file names with the number of readers and writers for each.
 function editUpdate( req, userid, names ) {
   if (!names) return {};
   var res = {};
@@ -884,9 +905,12 @@ function editUpdate( req, userid, names ) {
   return res;
 }
 
+// Create a new alias
 function editCreateAlias( req, userid, alias, name ) {
   console.log("edit alias: " + alias + " -> " + name);
   if (!alias || !name || alias == name) return;
+  var realname = resolveAlias(name);
+  if (realname == alias) return; // no cycles please
   var now = Date.now();
   aliases.set(alias, { createdTime: Date.now(), name: name });  
 }
