@@ -112,7 +112,7 @@ function fileInfo(fname) {
   var url = metadataUrl + fname;
   return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
     var res = (typeof info === "string" ? JSON.parse(info) : info);
-    //console.log(fname + ": " + res.rev);
+    //console.log(fname + ": " + res.rev + ": " + res.parent_shared_folder_id );
     return res;
   });
 }
