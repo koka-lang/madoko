@@ -95,6 +95,16 @@ define([],function() {
       return promiseWhen(promises);
     }
 
+    Promise.guarded = function(pred,action,after) { 
+      if (pred) {
+        return action().then( function() { return after(); } );
+      }
+      else {
+        return after();
+      }
+    }
+
+
     Promise.rejected = function(err) {
       var promise = new Promise();
       delayed( function() { promise.reject(err); });
