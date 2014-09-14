@@ -267,6 +267,12 @@ function startsWith(s,pre) {
   return (s.substr(0,pre.length) === pre);
 }
 
+function endsWith(s,post) {
+  if (!post) return true;
+  if (!s) return false;
+  return (s.substr(-post.length) === post);
+}
+
 function normalize(fpath) {
   return path.normalize(fpath).replace(/\\/g,"/");
 }
@@ -751,6 +757,8 @@ function pushAtomic( name, time, release ) {
   else if (typeof time === "string") time = date.dateFromISO(time);
   else if (!(time instanceof Date)) time = new Date(time.toString());
 
+  console.log("push-atomic: " + (release ? "release" : "acquire") + ": " + name)
+
   var info = atomics.get(name);
   var atime = (info ? info.time : new Date(0));
   if (release) {
@@ -778,6 +786,7 @@ function pushAtomic( name, time, release ) {
 ------------------------------------------------------------- */
 
 var edits = new Map();
+var aliases = new Map();
 
 setInterval( function() {
   var now = Date.now();
@@ -791,8 +800,28 @@ setInterval( function() {
       edits.remove(name);
     }
   });
+  aliases.forEach( function(name,info) {
+    var realname = resolveAlias(name);
+    if (edits.get(realname)) {
+      info.name = realname; // shorten chain
+    }
+    else {
+      aliases.remove(name);
+    }
+  });
 }, limits.editDelay/2 );
 
+function resolveAlias(name) {
+  var aliasInfo = null;
+  var xname = name;
+  while ((aliasInfo = aliases.get(xname)) != null && xname !== aliasInfo.name) {
+    xname = aliasInfo.name;
+  } 
+  if (xname !== name) {
+    //console.log("resolve alias final: " + name + " -> " + xname);    
+  }
+  return xname;
+} 
 
 function getEditInfo( id, name ) {
   var res = { readers: 0, writers: 0 };
@@ -827,7 +856,7 @@ function updateEditInfo( id, name, editop ) {
     var user = info.users.getOrCreate( id, { lastUpdate: 0, editing: false });
     user.lastUpdate = Date.now();
     user.editing = (editop === EditOp.Edit);    
-  }
+  }2
 }
 
 function editUpdate( req, userid, names ) {
@@ -838,9 +867,10 @@ function editUpdate( req, userid, names ) {
     if (!name || name[0] !== "/") return;
     if (typeof names[name] !== "string") return;
     if (names[name] === EditOp.Edit) logit = true;
-    updateEditInfo( userid, name, names[name]);
-    res[name] = getEditInfo(userid,name);
-    console.log("user: " + userid + ": " + name + ": " + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    var realname = resolveAlias(name);
+    updateEditInfo( userid, realname, names[name]);
+    res[name] = getEditInfo(userid, realname);
+    // console.log("user: " + userid + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   if (log && logit) {
     log.entry({ 
@@ -852,6 +882,13 @@ function editUpdate( req, userid, names ) {
     });
   }
   return res;
+}
+
+function editCreateAlias( req, userid, alias, name ) {
+  console.log("edit alias: " + alias + " -> " + name);
+  if (!alias || !name || alias == name) return;
+  var now = Date.now();
+  aliases.set(alias, { createdTime: Date.now(), name: name });  
 }
 
 // -------------------------------------------------------------
@@ -883,8 +920,17 @@ app.post("/rest/edit", function(req,res) {
   event( req, res, function(userid) {
     //var sessionid = req.body.sessionid || uniqueHash();
     var files = req.body.files || {};
-    console.log(files);
     return editUpdate(req,userid,files);
+  });
+});
+
+app.post("/rest/edit-alias", function(req,res) {
+  event( req, res, function(userid) {
+    //var sessionid = req.body.sessionid || uniqueHash();
+    var name = req.body.name || {};
+    var alias = req.body.alias || {};
+    editCreateAlias(req,userid,alias,name);
+    editCreateAlias(req,userid,alias + "*",name + "*");
   });
 });
 

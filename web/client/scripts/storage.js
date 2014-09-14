@@ -366,6 +366,10 @@ function pushAtomic( fpath, time, release ) {
   return Util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString(), release: (release ? true : false)  } );
 }
 
+function createAlias( alias, name ) {
+  return Util.requestPOST( "rest/edit-alias", {}, { name: name, alias: alias } );
+}
+
 
 var Storage = (function() {
   function Storage( remote ) {
@@ -788,12 +792,22 @@ var Storage = (function() {
             file1.rev         = info.rev;
             self._updateFile(file1);
           }
-          if (remoteTime.getTime() == info.createdTime.getTime()) {  // this happens if the file equal and not updated on the server; release our lock in that case
-            return pushAtomic( file0.uniqueId, remoteTime, true ).then( function () {
-              return self._syncMsg(file, "saved to server (unmodified)");     
-            });
-          }
-          else return self._syncMsg(file, "saved to server"); 
+          return Promise.guarded(file1.uniqueId !== file0.uniqueId, 
+            function() {
+             return createAlias(file1.uniqueId,file0.uniqueId);
+            },
+            function() {
+              var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
+              return Promise.guarded( unmodified,
+                function() {  // this happens if the file equal and not updated on the server; release our lock in that case
+                  return pushAtomic( file0.uniqueId, remoteTime, true );
+                },
+                function() {
+                  return self._syncMsg(file, "saved to server" + (unmodified ? " (unmodified)" : ""));     
+                }
+              );
+            }
+          );
         });
       }, function(err) {
         if (err.httpCode == 409) 
@@ -849,11 +863,12 @@ var Storage = (function() {
         }
         else {
           // write back merged result
+          var remoteTime = remoteFile.createdTime;
           var file0 = Util.copy(remoteFile);
           file0.content  = res.merged;
           file0.modified = true;
           self._updateFile(file0);
-          return pushAtomic(file0.uniqueId, remoteFile.createdTime).then( function() {
+          return pushAtomic(file0.uniqueId, remoteTime).then( function() {
             return self.pushFile(file0).then( function(info) {
               var file1 = self.files.get(file.path);
               if (file1) { // could be deleted?
@@ -863,13 +878,22 @@ var Storage = (function() {
                 file1.original    = file0.content;
                 self._updateFile(file1);
               }
-              if (remoteFile.createdTime.getTime() == info.createdTime.getTime()) {  // this happens if the file equal and not updated on the server; release our lock in that case
-                return pushAtomic( file.uniqueId, remoteFile.createdTime, true ).then( function () {
-                  return self._syncMsg(file, "merge from server (unmodified)");     
-                });
-              }
-              else return self._syncMsg(file, "saved to server"); 
-              return self._syncMsg( file, "merge from server" );
+              return Promise.guarded(file1.uniqueId !== file.uniqueId, 
+                function() {
+                  return createAlias(file1.uniqueId,file.uniqueId);
+                },
+                function() {
+                  var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
+                  return Promise.guarded( unmodified,
+                    function() {  // this happens if the file equal and not updated on the server; release our lock in that case
+                      return pushAtomic( file0.uniqueId, remoteTime, true );
+                    },
+                    function() {
+                      return self._syncMsg(file, "merge from server"  + (unmodified ? " (unmodified)" : ""));     
+                    }
+                  );
+                }
+              );
             });
           }, function(err) {
             if (err.httpCode == 409) 
