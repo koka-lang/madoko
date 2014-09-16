@@ -42,8 +42,11 @@ if (remote && window && window.location && window.location.hash) {
   var state = getCookie("oauth-state");
   if (state && state === params.state) {  // protect against CSRF attack
     if (params.access_token) {
+      var info = { access_token: params.access_token };
+      if (params.uid) info.uid = params.uid;
+      if (params.refresh_token) info.refresh_token = params.refresh_token;
       var year = 60*60*24*365;
-      setCookie( "auth_" + remote, params.access_token, year );
+      setCookie( "auth_" + remote, JSON.stringify(info), year );
       var success = true;
     }
     else {

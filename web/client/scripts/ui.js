@@ -1228,10 +1228,13 @@ var UI = (function() {
       edit = (self.storage && self.storage.isModified(self.editName)) ? "write" : "read";
     }
 
-    var files = {};    
-    var docFile = self.storage.getUniqueFileId(self.docName) + "*";
+    var files = {};
+    var docFile = self.storage.getSharedPath(self.docName);
+    var editFile = self.storage.getSharedPath(self.editName);
+    if (!editFile || !docFile) return;
+    docFile = docFile + "*"; // special name for overall document
     files[docFile] = edit;
-    files[self.storage.getUniqueFileId(self.editName)] = edit;
+    files[editFile] = edit;
     var body = {
       files: files,
     };

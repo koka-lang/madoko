@@ -891,7 +891,7 @@ function editUpdate( req, userid, names ) {
     var realname = resolveAlias(name);
     updateEditInfo( userid, realname, names[name]);
     res[name] = getEditInfo(userid, realname);
-    // console.log("user: " + userid + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    console.log("user: " + userid + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   if (log && logit) {
     log.entry({ 

@@ -192,6 +192,10 @@ function unpersistRemote(remoteType,obj) {
   }
   return NullRemote.unpersist();
 }
+
+function makeDefaultGlobalPath(remoteType,path) {
+  return "//" + remoteType + "/unshared/0/" + path;  // default guess
+}
   
 function unpersistStorage( obj ) {
   var remote = unpersistRemote( obj.remoteType, obj.remote );
@@ -209,6 +213,9 @@ function unpersistStorage( obj ) {
     }
     else if (!file.createdTime) {
       file.createdTime = new Date(0);
+    }
+    if (!file.globalPath) {
+      file.globalPath = makeDefaultGlobalPath(remote.type(),file.path);
     }
     delete file.generated;
   });
@@ -512,8 +519,8 @@ var Storage = (function() {
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || Util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
-    self._setUniqueId(finfo);
-
+    finfo.globalPath  = finfo.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
+    
     // check same content
     // var file = self.files.get(fpath);
     // if (file && file.content === finfo.content) return;
@@ -565,7 +572,6 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     return (file && file.shareUrl ? file.shareUrl : "");
-    //return self.remote.getShareUrl(fpath);
   }
 
   Storage.prototype._pullFile = function( fpath, opts ) {
@@ -579,19 +585,11 @@ var Storage = (function() {
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       file.position  = file.position || opts.position;
-      self._setUniqueId(file)
-      
-      //file.uniqueId  = file.uniqueId || null;
+      file.globalPath= file.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
       return file;
     });
   }
 
-  Storage.prototype._setUniqueId = function(file) {
-    var self = this;
-    var root = "//" + self.remote.type() + "/" + file.path;
-    file.uniqueId = root + "@" + (file.rev || file.createdTime.toISOString());
-  }
-  
   /* Interface */
   Storage.prototype._pullFileSearch = function( fbase, opts, dirs ) {
     var self = this;
@@ -611,12 +609,10 @@ var Storage = (function() {
     return (file ? file.modified : false);
   }
 
-  Storage.prototype.getUniqueFileId = function( fpath ) {
+  Storage.prototype.getSharedPath = function( fpath ) {
     var self = this;
     var file = self.files.get(fpath);
-    if (file && file.uniqueId) return file.uniqueId;
-    var root = "//" + self.remote.type();    
-    return "//" + self.remote.type() + "/" + self.folder() + "/" + fpath + (file ? "@" + file.createdTime.toISOString() : "");
+    return (file ? file.sharedPath : null);
   }
 
 
@@ -836,7 +832,7 @@ var Storage = (function() {
 
   Storage.prototype._syncWriteBack = function( file, remoteTime, message ) {
     var self = this;
-    return pushAtomic( file.uniqueId, remoteTime ).then( function() {
+    return pushAtomic( file.globalPath, remoteTime ).then( function() {
       // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
       var file0 = Util.copy(file);
       return self.pushFile( file0 ).then( function(info) {
@@ -846,18 +842,17 @@ var Storage = (function() {
           file1.original    = file0.content;
           file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
           file1.createdTime = info.createdTime;
-          file1.rev         = info.rev;
           self._updateFile(file1);
         }
-        return Promise.guarded(file1.uniqueId !== file0.uniqueId, 
+        return Promise.guarded(file1.sharedPath !== file0.sharedPath, // support aliases for systems that do not have unique shared paths
           function() {
-           return createAlias(file1.uniqueId,file0.uniqueId);
+           return createAlias(file1.sharedPath,file0.sharedPath);
           },
           function() {
             var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
             return Promise.guarded( unmodified,
               function() {  // this happens if the file equal and not updated on the server; release our lock in that case
-                return pushAtomic( file0.uniqueId, remoteTime, true );
+                return pushAtomic( file0.globalPath, remoteTime, true );
               },
               function() {
                 return self._syncMsg(file, message + (unmodified ? " (unmodified)" : ""));     

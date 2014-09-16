@@ -192,10 +192,16 @@ function pushFile( path, content ) {
 
 var _access_token = null;
 var _username = "";
+var _userid = "";
 
 function getAccessToken() {
   if (!_access_token) {
-    _access_token = Util.getCookie("auth_onedrive");
+    var cookie = Util.getCookie("auth_onedrive");
+    if (cookie && typeof(cookie) === "string") {
+      var info = (cookie[0]==="{" ? JSON.parse(cookie) : { access_token: cookie } );
+      _access_token = info.access_token;
+      if (info.uid) _userid = info.uid;
+    }
   }
   return _access_token;
 }
@@ -216,12 +222,16 @@ function logout() {
   Util.setCookie("auth_onedrive","",0);
   _access_token = null;
   _username = "";
+  _userid = "";
 }
 
 function getUserName() {
   if (_username) return Promise.resolved(_username);
   return onedriveGet("/me").then( function(info) {
-    _username = info ? info.name : "";
+    if (info) {
+      _username = info.name;
+      _userid = info.id;
+    }
     return _username;
   });
 };

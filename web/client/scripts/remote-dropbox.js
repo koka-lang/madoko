@@ -24,10 +24,16 @@ var appRoot     = "";
 
 var _access_token = null;
 var _username = "";
+var _userid = "";
 
 function getAccessToken() {
   if (!_access_token) {
-    _access_token = Util.getCookie("auth_dropbox");
+    var cookie = Util.getCookie("auth_dropbox");
+    if (cookie && typeof(cookie) === "string") {
+      var info = (cookie[0]==="{" ? JSON.parse(cookie) : { access_token: cookie } );
+      _access_token = info.access_token;
+      if (info.uid) _userid = info.uid;
+    }
   }
   return _access_token;
 }
@@ -52,12 +58,28 @@ function login(dontForce) {
   });
 }
 
+function withUserId(action) {
+  if (_userid) return action(_userid);
+  return getUserInfo().then( function() {
+    return action(_userid);
+  });
+}
+
 function getUserName() {
   if (_username) return Promise.resolved(_username);
-  return Util.requestGET( accountUrl + "info", { access_token: getAccessToken() } ).then( function(info) {
-    if (typeof info === "string") info = JSON.parse(info);
-    _username = info ? info.display_name : "";
+  return getUserInfo().then( function() {
     return _username;
+  });
+}
+
+function getUserInfo() {
+  if (_username && _userinfo) return Promise.resolved();
+  return Util.requestGET( accountUrl + "info", { access_token: getAccessToken() } ).then( function(info) {
+    if (info) {
+      _username = info.display_name;
+      _userid = info.uid;
+    }
+    return;
   });
 }
 
@@ -65,6 +87,7 @@ function logout() {
   Util.setCookie("auth_dropbox","",0);
   _access_token = null;
   _username = "";
+  _userid = "";
 }
 
 function chooseOneFile() {
@@ -106,45 +129,48 @@ function loginAndChooseOneFile() {
 
 function pullFile(fname,binary) {
   var opts = { url: contentUrl + fname, binary: binary };
-  return Util.requestGET( opts, { access_token: getAccessToken() });
-}
-
-function fileInfo(fname) {
-  var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
-    var res = (typeof info === "string" ? JSON.parse(info) : info);
-    if (!res.parent_shared_folder_id) return res;
-    console.log(fname + ": get shared info: " + res.parent_shared_folder_id);
-    return sharedFolderInfo(res.parent_shared_folder_id).then( function(sinfo) {
-      console.log(fname + ": " + res.rev + ": " + res.parent_shared_folder_id );
-      console.log(sinfo);
-      return res;
+  return Util.requestGET( opts, { access_token: getAccessToken() }).then( function(content,req) {
+    var infoHdr = req.getResponseHeader("x-dropbox-metadata");
+    var info = (infoHdr ? JSON.parse(infoHdr) : { });
+    info.content = content;
+    return withUserId( function(uid) {
+      info.globalPath = "//dropbox/unshared/" + uid + info.path;
+      if (!info.parent_shared_folder_id) return info;
+      // shared
+      return sharedFolderInfo(info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
+        if (sinfo || Util.startsWith(info.path,sinfo.path + "/")) {
+          info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + sinfo.shared_folder_name + "/" + info.path.substr(sinfo.path.length + 1);
+          info.globalPath = info.sharedPath; // use the shared path
+        }      
+        return info;
+      }, function(err) {
+        Util.message( new Error("dropbox: could not get shared info: " + (err.message || err)), Util.Msg.Error );
+        return info;
+      });
     });
   });
 }
 
+function fileInfo(fname) {
+  var url = metadataUrl + fname;
+  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() });
+}
+
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
-  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
-    return (typeof info === "string" ? JSON.parse(info) : info);
-  });
+  return Util.requestGET( { url: url, timeout: 2500, cache: -10000 }, { access_token: getAccessToken() });  // cached, retry after 10 seconds
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken(), list: true }).then( function(info) {
-    var res = (typeof info === "string" ? JSON.parse(info) : info);
-    console.log( "folder info: " + res.path + ", " + res.rev);
-    console.log(res.shared_folder);
-    return res;
-  });  
+  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken(), list: true });
 }
 
 function pushFile(fname,content) {
   var url = pushUrl + fname;
   return Util.requestPOST( url, { access_token: getAccessToken() }, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
-    return (typeof info === "string" ? JSON.parse(info) : info);
+    return info;
   });
   //, function(err) {
   //  throw new Error("dropbox: could not push file: " + fname + ": " + err.toString());
@@ -168,7 +194,6 @@ function createFolder( dirname ) {
 function getShareUrl( fname ) {
   var url = Util.combine(sharesUrl,fname);
   return Util.requestPOST( url, { access_token: getAccessToken(), short_url: false } ).then( function(info) {
-    if (typeof info === "string") info = JSON.parse(info);
     return (info.url || null);
   });
 }
@@ -269,14 +294,13 @@ var Dropbox = (function() {
     var self = this;
     return self.getRemoteTime(fpath).then( function(date) {
       if (!date) return Promise.rejected("file not found: " + fpath);
-      return pullFile( self.fullPath(fpath), binary ).then( function(content,req) {
-        var infoHdr = req.getResponseHeader("x-dropbox-metadata");
-        var info = (infoHdr ? JSON.parse(infoHdr) : { rev: null });
+      return pullFile( self.fullPath(fpath), binary ).then( function(info) {
         var file = {
           path: fpath,
-          content: content,
+          content: info.content,
           createdTime: date,
-          rev: info.rev,
+          globalPath: info.globalPath,
+          sharedPath: info.sharedPath
         };
         return file;
       });

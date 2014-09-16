@@ -922,7 +922,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     var timeout = 0;  // timeout handler id.
     var promise = new Promise();
 
-    function reject() {
+    function reject(message) {
       try {
         if (timeout) clearTimeout(timeout);
         
@@ -932,9 +932,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
         }
 
         // otherwise, construct an error reply
-        var domain = reqparam.url.replace( /([^\/])\/(?:[^\/].*)?$/, "$1" );
-        var msg    = req.statusText || ("network request failed (" + domain + ")");
-        var type = req.getResponseHeader("Content-Type");
+        var domain = reqparam.url.replace( /^([^\?\#]+).*$/, "$1" );
+        var msg    = (req.statusText || ("network request failed (" + domain + ")")) + (message ? ": " + message : "");
+        var type = req.getResponseHeader("Content-Type") || req.responseType;
         if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && req.responseText) {
           var res = JSON.parse(req.responseText);
           if (res.error && res.error.message) {
@@ -964,7 +964,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
       if (req.readyState === 4 && req.status >= 200 && req.status <= 299) {
         if (timeout) clearTimeout(timeout);
         // parse result
-        var type = req.getResponseHeader("Content-Type");
+        var type = req.getResponseHeader("Content-Type") || req.responseType;
         var res;
         if (startsWith(type,"application/json") || startsWith(type,"text/javascript")) {
           res = JSON.parse(req.responseText);
@@ -994,7 +994,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
       reject();
     }
     req.ontimeout = function(ev) {
-      reject();
+      reject("request timed out");
     }
     if (reqparam.timeout != null) req.timeout = reqparam.timeout;
     
