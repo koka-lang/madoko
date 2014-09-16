@@ -18,6 +18,7 @@ var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
 var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var accountUrl  = "https://api.dropbox.com/1/account/";
 var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
+var sharedFoldersUrl   = "https://api.dropbox.com/1/shared_folders/";
 
 var appRoot     = "";
 
@@ -112,15 +113,30 @@ function fileInfo(fname) {
   var url = metadataUrl + fname;
   return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
     var res = (typeof info === "string" ? JSON.parse(info) : info);
-    //console.log(fname + ": " + res.rev + ": " + res.parent_shared_folder_id );
-    return res;
+    if (!res.parent_shared_folder_id) return res;
+    console.log(fname + ": get shared info: " + res.parent_shared_folder_id);
+    return sharedFolderInfo(res.parent_shared_folder_id).then( function(sinfo) {
+      console.log(fname + ": " + res.rev + ": " + res.parent_shared_folder_id );
+      console.log(sinfo);
+      return res;
+    });
+  });
+}
+
+function sharedFolderInfo(id) {
+  var url = sharedFoldersUrl + id;
+  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() }).then( function(info) {
+    return (typeof info === "string" ? JSON.parse(info) : info);
   });
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
   return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken(), list: true }).then( function(info) {
-    return (typeof info === "string" ? JSON.parse(info) : info);
+    var res = (typeof info === "string" ? JSON.parse(info) : info);
+    console.log( "folder info: " + res.path + ", " + res.rev);
+    console.log(res.shared_folder);
+    return res;
   });  
 }
 
