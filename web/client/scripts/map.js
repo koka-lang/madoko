@@ -11,6 +11,17 @@ define([],function() {
   var Map = (function() {
     function Map() { };
 
+    Map.unpersist = function(obj) {
+      var map = new Map();
+      for(var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          map[prop] = obj[prop];
+        }
+      };
+      return map;
+    }
+
+
     Map.prototype.count = function() {
       var self = this;
       var total = 0;

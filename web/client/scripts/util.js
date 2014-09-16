@@ -6,7 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Promise) {
+define(["std_core","std_path","../scripts/promise","../scripts/map"],function(stdcore,stdpath,Promise,Map) {
 
   var Msg = { 
     Normal: "normal", 
@@ -648,77 +648,7 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     elem.animate = setInterval( action, ival);
     action(); // perform one step right away
   }
-
-  function unpersistMap(obj) {
-    var map = new Map();
-    properties(obj).forEach( function(prop) {
-      map[prop] = obj[prop];
-    });
-    return map;
-  }
-
-  var Map = (function() {
-    function Map() { };
-
-    Map.prototype.clear = function() {
-      var self = this;
-      self.forEach( function(name,value) {
-        self.remove(name);
-      });      
-    }
-
-    Map.prototype.persist = function() {
-      return this;
-    };
-
-    Map.prototype.copy = function() {
-      var self = this;
-      var map = new Map();
-      self.forEach( function(name,value) {
-        map.set(name,value);
-      });
-      return map;
-    }
-
-    Map.prototype.set = function( name, value ) {
-      this["/" + name] = value;
-    }
-
-    Map.prototype.get = function( name ) {
-      return this["/" + name];
-    }
-
-    Map.prototype.contains = function( name ) {
-      return (this.get(name) !== undefined);
-    }
-
-    Map.prototype.remove = function( name ) {
-      delete this["/" + name];
-    }
-
-    // apply action to each element. breaks early if action returns "false".
-    Map.prototype.forEach = function( action ) {
-      var self = this;
-      properties(self).every( function(name) {
-        if (name.substr(0,1) === "/") {
-          var res = action(name.substr(1), self[name]);
-          return (res===false ? false : true);
-        }
-      });
-    }
-
-    Map.prototype.elems = function() {
-      var self = this;
-      var res = [];
-      self.forEach( function(name,elem) {
-        res.push(elem);
-      });
-      return res;
-    }
-
-    return Map;
-  })();
-
+  
   var ContWorker = (function() {
     function ContWorker( scriptName ) {
       var self = this;
@@ -957,14 +887,36 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     return requestPOST( reqparam, params, body );
   }
 
+  // clean up request cache every 1 minute
+  var requestCache = new Map();
+  setInterval( function() {
+    var now = Date.now();
+    requestCache.forEach( function(url,cached) {
+      if (cached.lastUpdate + cached.removeIval < now) {
+        requestCache.remove(url);
+      }
+    });
+  }, 60000 );
+
   function requestPOST( opts, params, body ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
     var method = reqparam.method || "POST";
+    if (method !== "GET") reqparam.cache = null;
 
     var query = (params ? urlParamsEncode(params) : "");
     if (query) reqparam.url = reqparam.url + "?" + query;
 
+    // Check cache
+    var cached = null;
+    if (reqparam.cache) {
+      cached = requestCache.get(reqparam.url);
+      if (cached && cached.lastUpdate + cached.retryIval > Date.now()) {
+        return promise.resolved(cached.value);  // cached, no need to issue a request
+      }
+    }
+
+    // Open request
     req.open( method, reqparam.url, true );
     
     var timeout = 0;  // timeout handler id.
@@ -973,10 +925,17 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     function reject() {
       try {
         if (timeout) clearTimeout(timeout);
+        
+        if (cached) {  // we retried, but failed: return the previous cached value
+          cached.lastUpdate = Date.now();
+          return promise.resolved(cached.value);
+        }
+
+        // otherwise, construct an error reply
         var domain = reqparam.url.replace( /([^\/])\/(?:[^\/].*)?$/, "$1" );
         var msg    = req.statusText || ("network request failed (" + domain + ")");
         var type = req.getResponseHeader("Content-Type");
-        if (startsWith(type,"application/json") && req.responseText) {
+        if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && req.responseText) {
           var res = JSON.parse(req.responseText);
           if (res.error && res.error.message) {
             msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
@@ -1004,13 +963,23 @@ define(["std_core","std_path","../scripts/promise"],function(stdcore,stdpath,Pro
     req.onload = function(ev) {
       if (req.readyState === 4 && req.status >= 200 && req.status <= 299) {
         if (timeout) clearTimeout(timeout);
+        // parse result
         var type = req.getResponseHeader("Content-Type");
         var res;
-        if (startsWith(type,"application/json")) {
+        if (startsWith(type,"application/json") || startsWith(type,"text/javascript")) {
           res = JSON.parse(req.responseText);
         }
         else {
           res = req.response;
+        }
+        // update cache?
+        if (reqparam.cache) {
+          if (reqparam.cache === true) reqparam.cache = 30 * 60 * 1000; // 30 minutes
+          cached = requestCache.getOrCreate(reqparam.url, { });
+          cached.removeIval = (reqparam.cache < 0 ? 60*60*1000 : reqparam.cache);
+          cached.retryIval  = (reqparam.cache < 0 ? - reqparam.cache : cached.removeIval);
+          cached.lastUpdate = Date.now();
+          cached.value = res;
         }
         promise.resolve(res,req);
       }
@@ -1286,8 +1255,6 @@ doc.execCommand("SaveAs", null, filename)
     urlParamsDecode: urlParamsDecode,
   
 
-    Map: Map,
-    unpersistMap: unpersistMap,
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,
     Promise: Promise,

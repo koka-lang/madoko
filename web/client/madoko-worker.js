@@ -19,7 +19,7 @@ setInterval( function() {
   self.postMessage( { messageId: -1, heartbeat: heartbeat } );
 }, 15000);
 
-require(["../scripts/util","webmain"], function(util,madoko) 
+require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko) 
 {
   // remove duplicates
   function nub( xs ) {
@@ -73,13 +73,13 @@ require(["../scripts/util","webmain"], function(util,madoko)
     return mcontents.join().replace(/\n[ \t]*%[ \t]*data-line=.*/mg, "" );
   }
 
-  var local = new util.Map(); // filename -> bool
+  var local = new Map(); // filename -> bool
 
   self.addEventListener( "message", function(ev) {
     try {    
       var req = ev.data;
       if (req.type === "clear") {
-        local = new util.Map();
+        local = new Map();
         madoko.clearStorage();
         self.postMessage( {
           messageId: req.messageId,

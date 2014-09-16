@@ -6,15 +6,15 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/util","../scripts/promise","../scripts/storage","webmain"],
-        function(util,Promise,storage,madoko) {
+define(["../scripts/map","../scripts/util","../scripts/promise","../scripts/storage","webmain"],
+        function(Map,util,Promise,storage,madoko) {
 
 var Runner = (function() {
 
   function Runner() {
     var self = this;
     
-    self.sendFiles = new util.Map();
+    self.sendFiles = new Map();
     self.storage = null;
 
     self.options = madoko.initialOptions();

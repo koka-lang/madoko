@@ -6,14 +6,14 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util", 
+define(["../scripts/promise","../scripts/map","../scripts/util", 
         "../scripts/merge", 
         "../scripts/remote-null",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive2",
         "../scripts/remote-http",
         "../scripts/picker",
-        ], function(Promise,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
+        ], function(Promise,Map,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
 
 
 var Encoding = {
@@ -196,7 +196,7 @@ function unpersistRemote(remoteType,obj) {
 function unpersistStorage( obj ) {
   var remote = unpersistRemote( obj.remoteType, obj.remote );
   var storage = new Storage(remote);
-  storage.files = Util.unpersistMap( obj.files );
+  storage.files = Map.unpersist( obj.files );
   // be downward compatible with old storage..
   storage.files.forEach( function(fpath,file) {
     if (file.kind) {
@@ -375,11 +375,11 @@ var Storage = (function() {
   function Storage( remote ) {
     var self = this;
     self.remote    = remote;
-    self.files     = new Util.Map();
+    self.files     = new Map();
     self.listeners = [];
     self.unique    = 1;
     // we only pull again from remote storage every minute or so..
-    self.pullFails = new Util.Map();
+    self.pullFails = new Map();
     self.pullIval  = setInterval( function() { 
       self.pullFails.clear(); 
     }, 60000 );
@@ -718,7 +718,7 @@ var Storage = (function() {
 
   Storage.prototype.sync = function( diff, cursors ) {
     var self = this;
-    var remotes = new Util.Map();
+    var remotes = new Map();
 
     return self.connect(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,file); } );
