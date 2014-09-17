@@ -22,14 +22,16 @@ Package     : amscd
 MathJax Ext : mhchem
 Package     : [version=3]mhchem
 
+Math Embed  : 512 
+
 Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}               
 
 
 .SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
                 border-style=solid border-width=1px 
 ~Sample     : margin-bottom=2ex 
-              replace="~ Begin SampleBlock&nl;\
-                       ````` {.SampleSource replace=clear .noescape}&nl;\
+              replace="~ Begin SampleBlock {line-adjust=0} &nl;\
+                       ````` {.SampleSource replace=clear .noescape line-adjust=0}&nl;\
                        &source;&nl;`````&nl;-------- { width=50% text-align=left }&nl;\
                        &source;&nl;~ End SampleBlock&nl;"
 ~Slanted    : font-style=oblique
@@ -802,7 +804,33 @@ nicely. Here is how the above example is rendered in LaTeX:
 
 ![aligned]
 
+Finally, for really pretty code, it generally helps to add more 
+replacements. For example, here is a sample from the [lhs2tex] manual:
+
+~ Sample
+``` Haskell { .pretty \
+              replace="//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g" \
+              replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" \
+              replace="/([a-zA-Z])(\d+)\b/\(\1~\2~\)/g" }
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in   Bin lt rt "hi"
+                   )
+replace_min t   =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
+```
+~
+
+In LaTeX this sample is rendered as:
+
+![aligned2]
+
+Note that to improve the renderening, we added replacements for underscores inside
+identifiers with `&lowline;` and subscripted digits that end an identifier. Also,
+we replaced right arrows and lambda bindings. 
+
 [aligned]: aligned-code.png "LaTeX rendering of aligned code sample" { width=25em}
+[aligned2]: aligned-code2.png "LaTeX rendering of aligned code sample" { width=25em}
 [lhs2tex]: http://www.andres-loeh.de/lhs2tex/
 
 ### Advanced: Customizing highlight colors
@@ -833,6 +861,16 @@ In LaTeX, just define a `\mdToken`_token_ command. For example:
 ~ TexRaw
 \renewcommand{\mdTokenIdentifier}[1]{\textit{#1}}
 \renewcommand{\mdTokenEscape}[1]{\textbf{#1}}
+~
+```
+
+For identifiers in _pretty_ code, the token rendering is determined 
+by `mdTokenPretty`_token_ commands. By default, these tokens are not
+colorized in LaTex but this is easy to customize:
+
+```madoko
+~ TexRaw
+\renewcommand{\mdTokenPrettyKeyword}[1]{\textcolor{blue}{\textsf{#1}}}
 ~
 ```
 
@@ -2276,8 +2314,8 @@ commands that are recognized are:
 * `height=`_length_
 * `vertical-align=`(`top`|`middle`|`bottom`|`baseline`|_length_)
 * `border-style=`(`none`|`solid`|`dotted`)
-* `border-style-left`, `border-style-right`.
-* `border-style-top`, `border-style-bottom`.
+* `border-left-style`, `border-right-style`.
+* `border-top-style`, `border-bottom-style`.
 * `border-width=`_length_
 * `border-color=`_color_
 * `text-align=`(`center`|`right`|`left`|`justify`)
@@ -2391,7 +2429,7 @@ This is rendered in LaTeX as shown by the following screenshot:
 
 [aargh]: aargh.png "PDF screen capture of the Aargh example." { width=19em }
 
-### Float
+### Float  { #sec-float }
 
 There is limited support for the `float` attribute but it is generally quite hard
 to emulate this well in LaTeX. However, one can use the `float` attribute to put
@@ -2413,9 +2451,14 @@ terrible had happened to [him.]{float=right}
 ~ End Sample
 
 Note that it is important to give a specific width when specifying `float`.
+Also, in LaTeX, the height of the text flowing around the float is not always
+correct (especially if the text contains mathematics). To fine-tune the appearance
+in LaTeX, one can use the `lines` key to give the height of the float figure in 
+text lines.
+
 Still the LaTeX command is fragile and generally works best when immediately
 followed by a paragraph. Also, when using `float` on inline elements, it is
-implemented in LaTeX simply using `\hfil` which is hopefully enough or most 
+implemented in LaTeX simply using `\hfill` which is hopefully enough for most 
 common situations.
 
 ## Metadata rules           { #sec-rules }
@@ -2741,6 +2784,7 @@ where the options can consist of:
 |                   | `--tex`                | Output a LaTeX file too.                       |
 |                   | `--pdf`                | Generate a PDF file (implies `--tex`).         |
 | `-f`              | `--full`               | Generate a full html/latex document.           |
+|                   | `--sandbox`            | Run in a sandbox for secure server execution.  |
 |                   | `--sanitize`           | Always escape or suppress user defined html.   |
 |                   | `--pedantic`           | Pedantic mode.                                 |
 |                   | `--bench`              | For benchmarking: turn off numbering,  etc.    |
@@ -2782,6 +2826,15 @@ documents this is the case.
 The `-m` flag can be used to set metadata values. For example, when specifying
 what command to use to invoke LaTeX, we can say `-mpdflatex:/foo/bar/xelatex`
 for example.
+
+The `--sandbox` flags runs Madoko in a sandbox: it can only read files
+underneath the current directory, the output directory, and include
+paths, and it can only write files underneath the output directory.
+Moreover, documents cannot change the following metadata keys: `latex`,
+`pdflatex`, `dvipng`, `math-pdflatex`, `bibtex`, `math-convert`,
+`convert`, `ps2pdf`, and `dvips`. Note that this flag only influences
+the Madoko program, any run of LaTeX or other external programs need
+to be secured separately.
 
 ## Slide shows and presentations { #sec-presentations }
 
@@ -3058,8 +3111,8 @@ The following commands are quite useful for this:
 Inside rules, you can also access most CSS attributes that defined through
 `\cssNewKey` or `\cssNewLengthKey`. The attributes are named using camel casing 
 with a `css` prefix, i.e. `\cssCamelCasing`,
-where `text-indent` is stored in `\cssTextIndent`, or `border-style-left` as
-`\cssBorderStyleLeft`.
+where `text-indent` is stored in `\cssTextIndent`, or `border-left-style` as
+`\cssBorderLeftStyle`.
 
 As an advanced example, here is how `madoko.sty` defines the rules for the 
 `Figure` custom block:
@@ -3145,6 +3198,7 @@ Some attributes have a special meaning to Madoko. In particular:
 * `cite-label=`_label_: Sets the citation label of an `BibItem` block. This is used when 
     referencing a bibliography item as explained in Section [#sec-bib]
 * `cite-style=`_style_: Sets the citation style for a citation (Section [#sec-cite]).
+* `lines=`_lines_: Set the height of a float figure to _lines_ height (Section [#sec-float]).
 * `sticky`: The attributes for this element will stick to apply to all of the same
     elements that follow in the document.
 * `html-`_name_: use _name_ as an HTML attribute only in the HTML backend. For example,
@@ -3409,6 +3463,7 @@ full list of predefined entities is:
 |    402 | fnof        | &#402;   |                       |
 |    710 | circ        | &#710;   |                       |
 |    732 | tilde       | &#732;   |                       |
+|    818 | lowline     | &lowline;   | (in LaTeX becomes a short underscore)  |
 |    913 | Alpha       | &#913;   |                       |
 |    914 | Beta        | &#914;   |                       |
 |    915 | Gamma       | &#915;   |                       |
