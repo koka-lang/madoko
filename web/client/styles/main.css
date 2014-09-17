@@ -74,11 +74,11 @@ html,body,#main {
 }
 
 .app-body {
-  height: calc(100% - 3.3em);
+  height: calc(100% - 3.2rem);
 }
 
 .header-bar {
-  height: 1.5rem;
+  height: 1.4rem;
   margin: 0pt;
   padding: 0pt;
   font-family: "Segoe UI";
@@ -87,6 +87,10 @@ html,body,#main {
 .app-header.header-bar {
   padding-top: 0.2rem;
   padding-bottom: 0.1rem;
+}
+
+.app-footer.header-bar {
+  padding-top: 0.1rem;
 }
 
 .pane {
@@ -143,7 +147,6 @@ img#console-ok {
 
 #main .app-footer {
   font-size: small;
-  padding-top: 0.1em;
 }
 
 .ms-notice {
