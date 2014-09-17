@@ -403,11 +403,11 @@ var Log = (function(){
     }
   }
 
-  Log.prototype.entry = function( obj ) {
+  Log.prototype.entry = function( obj, hide ) {
     var self = this;
     if (!obj) return;
     var data = JSON.stringify(obj);
-    console.log( data + "\n" );
+    if (!hide) console.log( data + "\n" );
     if (obj.type != "none" && self.log[self.log.length-1] !== obj) {
       self.log.push( data );
     }
@@ -443,7 +443,7 @@ setInterval( function() {
     pages: pages.keyElems(),
     date: new Date().toISOString(),    
   };
-  if (log) log.entry( pagesStat );
+  if (log) log.entry( pagesStat, true );
   pagesCount = 0;
   pages = new Map();
 }, limits.logFlush );
@@ -757,10 +757,12 @@ function pushAtomic( name, time, release ) {
   else if (typeof time === "string") time = date.dateFromISO(time);
   else if (!(time instanceof Date)) time = new Date(time.toString());
 
-  console.log("push-atomic: " + (release ? "release" : "acquire") + ": " + name)
 
   var info = atomics.get(name);
   var atime = (info ? info.time : new Date(0));
+  console.log("push-atomic: " + (release ? "release" : "acquire") + ": " + name)
+  console.log("  aquire time: " + time );
+  console.log("  found time: " + atime );
   if (release) {
     if (atime.getTime() == time.getTime()) {
       // only remove if not concurrently reaquired by someone else

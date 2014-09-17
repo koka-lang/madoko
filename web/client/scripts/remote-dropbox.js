@@ -131,7 +131,7 @@ function pullFile(fname,binary) {
   var opts = { url: contentUrl + fname, binary: binary };
   return Util.requestGET( opts, { access_token: getAccessToken() }).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
-    var info = (infoHdr ? JSON.parse(infoHdr) : { });
+    var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
     info.content = content;
     return withUserId( function(uid) {
       info.globalPath = "//dropbox/unshared/" + uid + info.path;
@@ -158,7 +158,7 @@ function fileInfo(fname) {
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
-  return Util.requestGET( { url: url, timeout: 2500, cache: -10000 }, { access_token: getAccessToken() });  // cached, retry after 10 seconds
+  return Util.requestGET( { url: url, timeout: 2500, cache: -60000 }, { access_token: getAccessToken() });  // cached, retry after 60 seconds
 }
 
 function folderInfo(fname) {
