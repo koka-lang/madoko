@@ -93,6 +93,11 @@ var HttpRemote = (function() {
     return Promise.resolved({folder: path, created: true });
   }
 
+
+  HttpRemote.prototype.getShareUrl = function(fname) {
+    return Promise.resolved(null);
+  }
+
   return HttpRemote;
 })();
 

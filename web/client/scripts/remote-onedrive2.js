@@ -372,7 +372,7 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.getShareUrl = function(fname) {
-    return null;
+    return Promise.resolved(null);
   }
 
   return Onedrive;

@@ -93,7 +93,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.getShareUrl = function(fname) {
-    return null;
+    return Promise.resolved(null);
   }
 
   return NullRemote;
