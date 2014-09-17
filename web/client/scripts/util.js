@@ -912,7 +912,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     if (reqparam.cache) {
       cached = requestCache.get(reqparam.url);
       if (cached && cached.lastUpdate + cached.retryIval > Date.now()) {
-        return promise.resolved(cached.value);  // cached, no need to issue a request
+        return Promise.resolved(cached.value);  // cached, no need to issue a request
       }
     }
 
@@ -928,7 +928,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
         
         if (cached) {  // we retried, but failed: return the previous cached value
           cached.lastUpdate = Date.now();
-          return promise.resolved(cached.value);
+          return promise.resolve(cached.value);
         }
 
         // otherwise, construct an error reply
