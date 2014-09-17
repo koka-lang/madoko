@@ -103,10 +103,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     if (kind !== Msg.Trace && consoleOut) {
     
       function span(n) {
-        if (n && txt.length > n-2) {
-          txt = txt.substr(0,n) + "...";
+        var xtxt = txt;
+        if (n) {
+          xtxt = xtxt.replace(/^\s*(.*)[\s\S]*/,"$1"); // just the first line
+          if (xtxt.length > n-2) {
+            xtxt = xtxt.substr(0,n) + "...";
+          }
         }
-        return "<span class='msg-" + kind + "'>" + linkPre + spanLines(htmlEscape(txt),"msg-line") + linkPost + "</span>";
+        return "<span class='msg-" + kind + "'>" + linkPre + spanLines(htmlEscape(xtxt),"msg-line") + linkPost + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";
