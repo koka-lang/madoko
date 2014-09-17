@@ -550,13 +550,13 @@ var UI = (function() {
       }, [State.Syncing]);
     };
 
-    document.getElementById("console-out").ondblclick = function(ev) {
+    function messageDblClick(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV" && elem.className !== "msg-line") {
           elem = elem.parentNode;
         }
-        if (elem && (elem.className==="msg-line" || elem.className==="msg-section")) {
+        if (elem && (elem.id === "status" || elem.className==="msg-line" || elem.className==="msg-section")) {
           var line = elem.textContent;
           var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/.exec(line);
           if (cap) {
@@ -578,6 +578,9 @@ var UI = (function() {
         }
       }, [State.Syncing]);
     }
+
+    document.getElementById("console-out").ondblclick = messageDblClick;
+    document.getElementById("status").ondblclick = messageDblClick;
    
     self.syncer.onclick = function(ev) {      
       self.synchronize();
@@ -1320,7 +1323,7 @@ var UI = (function() {
     };
     return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
-        if (errorCode !== 0) throw "PDF generation failed";
+        if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
         var name = "out/" + util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
           var url = self.storage.getShareUrl( name )
@@ -1329,7 +1332,7 @@ var UI = (function() {
           }
           else {
             return self.openInWindow( name, "application/pdf" ).then( function() {
-              util.message( "PDF exported", util.Msg.Status );
+              util.message( "PDF exported (available in the files menu)", util.Msg.Status );
             });
           }
         }, function(err) {

@@ -240,7 +240,9 @@ var Runner = (function() {
           });
         }        
       });
-      if (ctx.showErrors) self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors);
+      if (ctx.showErrors) {
+        ctx.message = self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors, ctx.docname);
+      }
       util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
       if (/^[\t ]*error\b[\w \t]+:/m.test(data.stdout + data.stderr)) {
         ctx.errorCode = 1;
@@ -252,10 +254,11 @@ var Runner = (function() {
     });
   }  
 
-  Runner.prototype.showLatexMessages = function( output, show ) {
+  Runner.prototype.showLatexMessages = function( output, show, docname) {
     var self = this;
     var errors = [];
-    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-\.;:\\\/]*).*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
+    // location latex errors
+    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-\.;:\\\/]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[1];
@@ -276,7 +279,23 @@ var Runner = (function() {
         errors.push( { type: "error", range: range, message: message } );  
       }
     }
+    // other errors
+    rx = /^[ \t]*![ \t]*LaTeX Error:(.+)/mgi;    
+    while ((cap = rx.exec(output)) != null) {
+      var range = { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1, fileName: docname};
+      errors.push( { type: "error", range: range, message: cap[1] } ); 
+    }
+    
     show(errors);
+    if (errors.length > 0) {
+      var err = errors[0]; 
+      var msg = err.message.replace(/^\s*(.*)[\s\S]*/,"$1"); // just the first line    
+      return (err.type + ": " + err.range.fileName + ":" + err.range.startLineNumber + ": " + msg);
+    }
+    else {
+      var log = util.basename(docname) + ".log";
+      return "unknown error: see the " + log + " file for more info";
+    }
   }
 
   return Runner;

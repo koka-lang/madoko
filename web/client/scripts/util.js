@@ -127,10 +127,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
       consoleOut.innerHTML = prefix + dprefix + span() + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        setStatusHTML(span(40));
+        setStatusHTML(span(60));
       }
       else if (kind===Msg.Status) {
-        setStatusHTML(span(40))
+        setStatusHTML(span(60))
       }
     }
   }
@@ -344,6 +344,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     bbl: "text/tex",
     aux: "text/tex",
     dimx: "text/plain",
+    log: "text/plain",
 
     png:  "image/png",
     jpg:  "image/jpg",
@@ -390,7 +391,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     return (startsWith(mime,"text/") || mime==="application/json");
   }
   
-  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html"].join(";");
+  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html",".log"].join(";");
   function hasGeneratedExt(fname) {
     var ext = stdpath.extname(fname);
     if (!ext) return false;
