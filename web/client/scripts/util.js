@@ -1189,10 +1189,42 @@ doc.execCommand("SaveAs", null, filename)
     }
   }
 
-  function generateOAuthState() {
+  function withOAuthState(remote, action) {
     var state = Date.now().toFixed(0) + "-" + (Math.random() * 999999).toFixed(0);
-    setCookie( "oauth-state", state, 60 ); 
-    return state;
+    var key   = "oauth/state-" + remote;
+    sessionStorage.setItem( key, state ); 
+    return action(state).always( function() {
+      sessionStorage.removeItem( key );
+    });
+  }
+
+  function openOAuthLogin( remote, url, params, width, height ) {
+    return withOAuthState( remote, function(state) {
+      params.state = state;
+      return openModalPopup(url,params,"oauth",width,height); 
+    }).then( function() {
+      return getSessionObject("oauth/auth-" + remote);
+    });
+  }
+
+  function getSessionObject(name) {
+    if (!sessionStorage || !name) return null;
+    var value = sessionStorage.getItem(name);
+    return (value != null ? JSON.parse(value) : null);
+  }
+
+  function setSessionObject(name,value) {
+    if (!sessionStorage || !name) return;
+    if (value == null) {
+      sessionStorage.removeItem(name);
+    }
+    else {
+      sessionStorage.setItem(name,JSON.stringify(value));
+    }
+  }
+
+  function removeSessionObject(name) {
+    setSessionObject(name,null);
   }
 
   return {
@@ -1206,6 +1238,10 @@ doc.execCommand("SaveAs", null, filename)
     escape: htmlEscape,
     stringEscape: stringEscape,
     Msg: Msg,
+
+    getSessionObject: getSessionObject,
+    setSessionObject: setSessionObject,
+    removeSessionObject: removeSessionObject,
     
     changeExt: stdpath.changeExt,
     extname: stdpath.extname,
@@ -1251,10 +1287,12 @@ doc.execCommand("SaveAs", null, filename)
     requestGET: requestGET,
     downloadFile: downloadFile,
     downloadText: downloadText,
-    openAuthPopup: openAuthPopup,
+    //openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
     openModalPopup: openModalPopup,
-    generateOAuthState: generateOAuthState,
+    
+    //withOAuthState: generateOAuthState,
+    openOAuthLogin: openOAuthLogin,
 
     urlParamsEncode: urlParamsEncode,
     urlParamsDecode: urlParamsDecode,

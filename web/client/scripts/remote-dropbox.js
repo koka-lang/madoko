@@ -10,8 +10,8 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 var appKey      = "3vj9witefc2z44w";
 var root        = "dropbox";
-var redirectUri = "https://www.madoko.net/redirect/dropbox";
-//var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
+//var redirectUri = "https://www.madoko.net/redirect/dropbox";
+var redirectUri = "https://madoko.cloudapp.net/redirect/dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
@@ -28,11 +28,10 @@ var _userid = "";
 
 function getAccessToken() {
   if (!_access_token) {
-    var cookie = Util.getCookie("auth_dropbox");
-    if (cookie && typeof(cookie) === "string") {
-      var info = (cookie[0]==="{" ? JSON.parse(cookie) : { access_token: cookie } );
+    var info = Util.getSessionObject("oauth/auth-dropbox");
+    if (info) {
       _access_token = info.access_token;
-      if (info.uid) _userid = info.uid;
+      if (info.uid) _userid = info.uid;    
     }
   }
   return _access_token;
@@ -42,6 +41,13 @@ function getAccessToken() {
    Login 
 ---------------------------------------------- */
 
+function logout() {
+  Util.removeSessionObject( "oauth/auth-dropbox" );
+  _access_token = null;
+  _username = "";
+  _userid = "";
+}
+
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
@@ -50,9 +56,8 @@ function login(dontForce) {
     response_type: "token", 
     client_id: appKey, 
     redirect_uri:  redirectUri,
-    state: Util.generateOAuthState(),
   };
-  return Util.openModalPopup(url,params,"oauth",600,600).then( function() {
+  return Util.openOAuthLogin("dropbox",url,params,600,600).then( function(info) {
     if (!getAccessToken()) throw new Error("dropbox login failed");
     return getUserName();
   });
@@ -83,12 +88,6 @@ function getUserInfo() {
   });
 }
 
-function logout() {
-  Util.setCookie("auth_dropbox","",0);
-  _access_token = null;
-  _username = "";
-  _userid = "";
-}
 
 function chooseOneFile() {
   return new Promise( function(cont) {

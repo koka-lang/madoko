@@ -6,15 +6,16 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-function setCookie( name, value, maxAge ) {
-  var date = new Date( Date.now() + maxAge * 1000 );
-  document.cookie = name + "=" + encodeURIComponent(value) + ";path=/;secure;expires=" + date.toGMTString();
+function setSessionValue( owner, name, value ) {
+  if (owner.sessionStorage && name) owner.sessionStorage.setItem(name,value);
 }
 
-function getCookie(name) {
-  var rx  = RegExp("\\b" + name + "=([^;&]*)");
-  var cap = rx.exec(document.cookie);
-  return (cap ? decodeURIComponent(cap[1]) : null);
+function getSessionValue(owner, name) {
+  return (owner.sessionStorage && name ? owner.sessionStorage.getItem(name) : null);
+}
+
+function removeSessionValue(owner, name) {
+  if (owner.sessionStorage && name) owner.sessionStorage.removeItem(name);
 }
 
 
@@ -36,25 +37,30 @@ var script = document.getElementById("auth");
 var remote = (script ? script.getAttribute("data-remote") : "");
 
 if (remote && window && window.location && window.location.hash) {
-  var params = decodeParams(window.location.hash);
-  //document.body.innerHTML = JSON.stringify(params);
+  if (window.location.origin === window.opener.location.origin) {
+    var params = decodeParams(window.location.hash);
+    //document.body.innerHTML = JSON.stringify(params);
 
-  var state = getCookie("oauth-state");
-  if (state && state === params.state) {  // protect against CSRF attack
-    if (params.access_token) {
-      var info = { access_token: params.access_token };
-      if (params.uid) info.uid = params.uid;
-      if (params.refresh_token) info.refresh_token = params.refresh_token;
-      var year = 60*60*24*365;
-      setCookie( "auth_" + remote, JSON.stringify(info), year );
-      var success = true;
+    var state = getSessionValue(window, "oauth/state-" + remote); // read our own session storage: this can only read values from the same-origin session
+    removeSessionValue( window.opener, "oauth/state-" + remote);  // clear state token
+    if (state && params.state && state === params.state) {  // protect against CSRF attack
+      if (params.access_token) {
+        var info = { access_token: params.access_token, created: new Date().toISOString() };
+        if (params.uid) info.uid = params.uid;
+        if (params.refresh_token) info.refresh_token = params.refresh_token;
+        setSessionValue( window.opener, "oauth/auth-" + remote, JSON.stringify(info) );  // write back to our opener; we already verified that it has the same origin
+        var success = true;
+      }
+      else {
+        document.body.innerHTML = "The access_token was not present in the reponse.";
+      }
     }
     else {
-      document.body.innerHTML = "The access_token was not present in the reponse.";
+      document.body.innerHTML = "The state parameter does not match; this might indicate a CSRF attack?";
     }
   }
   else {
-    document.body.innerHTML = "The state parameter does not match; this might indicate a CSRF attack?";
+    document.body.innerHTML = "The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?";
   }
 }
 

@@ -417,12 +417,6 @@ else {
 }
 </script>
 
-<!-- dropbox -->
-<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>
-
-<!-- onedrive -->
-<script src="//js.live.net/v5.0/wl.debug.js"></script>
-
 <!-- use the monaco loader to implement "require" -->
 <script type="text/javascript" src="lib/vs/loader.js"></script>
 
@@ -438,6 +432,8 @@ if (goodToGo) {
             "vs/editor/editor.main"],
             function(Util,Runner) 
   { 
+    Util.setCookie("auth_dropbox","",0);   // remove legacy cookies
+    Util.setCookie("auth_onedrive","",0); 
     require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
       var runner = new Runner();
       var ui     = new UI(runner);

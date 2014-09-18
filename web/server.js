@@ -673,7 +673,7 @@ function redirectPage(remote) {
   return [
     '<html>',
     '<head>',
-    '  <title>Madoko Onedrive Callback</title>',
+    '  <title>Madoko ' + remote + ' login</title>',
     '</head>',
     '<body>',
     '  <script id="auth" data-remote="' + remote + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
