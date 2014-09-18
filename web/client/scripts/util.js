@@ -911,12 +911,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
 
     // init headers
     var headers = {};
-    if (params && params.access_token) {
+    if (reqparam.access_token) {
       if (!startsWith(reqparam.url,"https://")) {
         throw new Error("Attempt to pass access_token to non-secure site: " + reqparam.url);
       }
-      headers.Authorization = "Bearer " + params.access_token;
-      delete params.access_token;
+      headers.Authorization = "Bearer " + reqparam.access_token;
     }
 
     // init query
