@@ -11,7 +11,7 @@ define(["../scripts/promise","../scripts/map","../scripts/util"], function(Promi
 var onedriveOptions = {
   client_id     : "000000004C113E9D",
   redirect_uri  : "https://www.madoko.net/redirect/live", 
-   // "https://madoko.cloudapp.net/redirect/live",
+  //redirect_uri  : "https://madoko.cloudapp.net/redirect/live",
   scope         : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   response_type : "token",
   display: "touch",
@@ -196,11 +196,9 @@ var _userid = "";
 
 function getAccessToken() {
   if (!_access_token) {
-    var cookie = Util.getCookie("auth_onedrive");
-    if (cookie && typeof(cookie) === "string") {
-      var info = (cookie[0]==="{" ? JSON.parse(cookie) : { access_token: cookie } );
-      _access_token = info.access_token;
-      if (info.uid) _userid = info.uid;
+    var info = Util.getSessionObject("oauth/auth-onedrive");
+    if (info) {
+      _access_token = info.access_token;   
     }
   }
   return _access_token;
@@ -210,16 +208,15 @@ function getAccessToken() {
 function login(dontForce) {
   if (getAccessToken()) return Promise.resolved();
   if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  var params = Util.copy(onedriveOptions);
-  params.state = Util.generateOAuthState();
-  return Util.openModalPopup(onedriveLoginUrl,params,"oauth",800,650).then( function() {
+  var params = Util.copy(onedriveOptions);  
+  return Util.openOAuthLogin("onedrive",onedriveLoginUrl,params,800,650).then( function(info) {
     if (!getAccessToken()) throw new Error("onedrive login failed");
     return getUserName();
   });
 }
 
 function logout() {
-  Util.setCookie("auth_onedrive","",0);
+  Util.removeSessionObject( "oauth/auth-onedrive" );
   _access_token = null;
   _username = "";
   _userid = "";
@@ -319,6 +316,7 @@ var Onedrive = (function() {
           path: fpath,
           content: req.responseText,
           createdTime: Util.dateFromISO(info.updated_time),
+          shareUrl: info.source,
         };
         return file;
       });
@@ -372,7 +370,10 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.getShareUrl = function(fname) {
-    return Promise.resolved(null);
+    var self = this;
+    return infoFromPath( self.fullPath(fname) ).then( function(info) {
+      return info.source;
+    });
   }
 
   return Onedrive;
