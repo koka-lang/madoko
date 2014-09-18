@@ -212,7 +212,7 @@ function unpersistStorage( obj ) {
       file.createdTime = new Date(file.createdTime);
     }
     else if (!file.createdTime) {
-      file.createdTime = new Date(0);
+      file.createdTime = new Date(1);
     }
     if (!file.globalPath) {
       file.globalPath = makeDefaultGlobalPath(remote.type(),file.path);
