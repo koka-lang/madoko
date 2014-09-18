@@ -909,6 +909,17 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     var method = reqparam.method || "POST";
     if (method !== "GET") reqparam.cache = null;
 
+    // init headers
+    var headers = {};
+    if (params && params.access_token) {
+      if (!startsWith(reqparam.url,"https://")) {
+        throw new Error("Attempt to pass access_token to non-secure site: " + reqparam.url);
+      }
+      headers.Authorization = "Bearer " + params.access_token;
+      delete params.access_token;
+    }
+
+    // init query
     var query = (params ? urlParamsEncode(params) : "");
     if (query) reqparam.url = reqparam.url + "?" + query;
 
@@ -1048,6 +1059,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     if (reqparam.mimeType != null) {
       req.overrideMimeType(reqparam.mimeType);
     }
+
+    // set headers
+    properties(headers).forEach( function(hdr) {
+      req.setRequestHeader(hdr, headers[hdr]);
+    });
 
     if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
     req.send(content);
