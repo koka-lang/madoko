@@ -1669,8 +1669,8 @@ var UI = (function() {
         type: "merge.merge-" + merge.type,
         sticky: true, 
         outdated: false, 
-        expire: now + (5*60000), // expire merges after 5 minutes
-        message: "merged: remote " + merge.type, 
+        expire: now + (60000), // expire merges after 1 minute?
+        message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
         range: {
           fileName: merge.path,
           startLineNumber: merge.startLine,

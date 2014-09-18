@@ -99,8 +99,13 @@ function diffChunks( olen, alen, blen, adiff, bdiff )
 
     if (i+1 === j) {
       // no overlap
-      if (d.mend >= d.mstart) { // and there is something added or changed
-        chunksPush( { side: d.side, start: d.mstart, end: d.mend } );
+      if (d.mend >= d.mstart) {
+        // there is something added or changed
+        chunksPush( { side: d.side, start: d.mstart, end: d.mend } );      
+      }
+      else {
+        // there is something deleted
+        chunksPush( { side: d.side, start: d.mstart, end: d.mend, ostart: d.ostart, oend: d.oend } );      
       }
     }
     else {
@@ -162,11 +167,20 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
   var newCursorLine = cursorLine; // the cursor line in the merged content.
   var mergeInfos = [];     // info records for display in the ui.
 
-  function mergePush( s, type ) {
-    merge.push(s);
-    var n = 1 + lineCount(s);
+  function mergePush( s, type, content ) {
+    var n = 0;
+    if (s != null) {
+      merge.push(s);
+      n = 1 + lineCount(s);
+    }
     if (type) {
-      mergeInfos.push( { type: type, startLine: mergeLines+1, endLine: mergeLines + n } );
+      var info  = { 
+        type: type, 
+        startLine: mergeLines+1, 
+        endLine: mergeLines + (n > 0 ? n : 1),
+        content: content
+      };
+      mergeInfos.push(info);
     }
     mergeLines += n;
   }
@@ -183,8 +197,14 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
   lines[Side.O] = olines;
 
   chunks.forEach( function(c) {
-    if (c.side !== Side.None) {
-      mergePush( subtxt(lines[c.side], c.start, c.end ), (c.side===Side.A ? "inserted" : null) );
+    if (c.end < c.start) {
+      // something was deleted
+      if (c.side === Side.A) {
+        mergePush(null, "deleted", subtxt(olines,c.ostart,c.oend));
+      }
+    }
+    else if (c.side !== Side.None) {
+      mergePush( subtxt(lines[c.side], c.start, c.end ), (c.side===Side.A ? "insertion" : null) );
       if (c.side === Side.B) adjustCursor( c.start, c.end );
     }
     else {
@@ -195,14 +215,14 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
         /* both deleted */
       }
       else if (c.aend < c.astart && c.bend >= c.bstart) {
-        mergePush( btxt, "deleted" ); // deletion in A, change in B
+        mergePush( btxt, "deletion" ); // deletion in A, change in B
         adjustCursor( c.bstart, c.bend );      
       }
       else if (c.bend < c.bstart && c.aend >= c.astart) {
-        mergePush( atxt, "changed" ); // deletion in B, change in A
+        mergePush( atxt, "change" ); // deletion in B, change in A
       }
       else if (otxt === btxt) {
-        mergePush( atxt, "changed" ); // just a change in A        
+        mergePush( atxt, "change" ); // just a change in A        
       }
       else if (otxt === atxt) {
         mergePush( btxt ); // just a change in B
@@ -216,7 +236,7 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
         // real conflict
         conflicts = true;
         if (markers.start) mergePush( markers.start );
-        mergePush( atxt, "conflicted" );
+        mergePush( atxt, "conflict" );
         if (markers.mid) mergePush( markers.mid );
         mergePush( btxt, "original" );
         adjustCursor( c.bstart, c.bend );      

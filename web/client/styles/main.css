@@ -425,24 +425,24 @@ div.boxed {
 }
 
 .monaco-editor .line-merge {
-  background-color: #007e00;
+  background-color: #7e0000;
   width: 6px !important;
   left: 2px;
 }
 
-.monaco-editor .line-merge.merge-changed,
-.monaco-editor .line-merge.merge-deleted,
-.monaco-editor .line-merge.merge-conflicted,
+.monaco-editor .line-merge.merge-change,
+.monaco-editor .line-merge.merge-deletion,
+.monaco-editor .line-merge.merge-conflict {
   background-color: #7e0000;
 }
 .monaco-editor .line-merge.outdated {
   background-color: #4b0000;
 }
 
-.monaco-editor .line-merge.merge-inserted {
+.monaco-editor .line-merge.merge-insertion {
   background-color: #007e00;
 }
-.monaco-editor .line-merge.merge-inserted.outdated {
+.monaco-editor .line-merge.merge-insertion.outdated {
   background-color: #004b00;
 }
 
