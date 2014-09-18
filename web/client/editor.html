@@ -36,7 +36,7 @@
 <p>Snap! You already have Madoko open in another window.</p>
 <p>Unfortunately, Madoko only works within a single browser window.</p>
 <p></p>
-<p>(After a browser crash, you may have to wait up to a minute for this message to disappear)</p>
+<p>This page will try to reload automatically after <span id="reload-delay">?</span> seconds...</p>
 </div>
 
 <div id="main" style="display:none">
@@ -385,10 +385,23 @@ function hello() {
 <script>
 var goodToGo = false;
 
-var cookieIval = 30; // in seconds
-function updateCookie(inc) {
-  var date = new Date(Date.now() + (1000*inc));
-  return "madoko=1;expires=" + date.toGMTString();
+var tickIval = 10000; // in milliseconds
+
+function recentTick() {
+  var s = localStorage.madoko;
+  if (s == null) return 0;
+  var time = Number(s);
+  if (isNaN(time)) time = 0;
+  var diff = time + tickIval - Date.now();
+  return (diff < 0 ? 0 : diff);
+}
+
+function updateTick() {
+  localStorage.madoko = Date.now().toString();
+}
+
+function removeTick() {
+  localStorage.removeItem("madoko");
 }
   
 // test browser features 
@@ -396,20 +409,27 @@ if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
 }
 // test for multiple instances
-else if (/\bmadoko=?([^&;]*)(?:[&;]|$)/.test(document.cookie)) {
-  document.getElementById("multibrowser").style.display = "block";
-  //document.cookie=updateCookie(cookieIval); // just in case there is some stale cookie somehow..
+else if (recentTick()) {
+  var delay = Math.ceil(Math.max(1000, recentTick())/1000)*1000;
+  setTimeout( function() { location.reload(); }, delay );
+  // display nice reload counter
+  var secondsElem = document.getElementById("reload-delay");
+  var seconds = Math.ceil(delay/1000);
+  secondsElem.innerHTML = seconds.toString();
+  setInterval( function() {
+    seconds--;
+    secondsElem.innerHTML = seconds.toString();
+  }, 1000 );
+  // show the multi instance message..
+  document.getElementById("multibrowser").style.display = "block";  
 }
 // we are good to go
 else {
-  // we detect multiple instances by keeping a cookie alive
-  // we use an expiring cookie so if the browser crashes we are ok (after cookieIval)
-  document.cookie = updateCookie(cookieIval);
-  setInterval( function() {
-    document.cookie = updateCookie(cookieIval);
-  }, cookieIval * (1000/2) );  // half the ival in ms 
+  // we detect multiple instances by keeping a heart beat.
+  updateTick();
+  setInterval( updateTick, tickIval/2 );  
   window.addEventListener( "unload", function() {
-    document.cookie = updateCookie(0);
+    removeTick();
   });
   
   document.getElementById("main").style.display = "block"; 
