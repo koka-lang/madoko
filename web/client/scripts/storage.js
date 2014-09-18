@@ -585,7 +585,7 @@ var Storage = (function() {
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       file.position  = file.position || opts.position;
-      file.globalPath= file.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
+      file.globalPath= file.globalPath || makeDefaultGlobalPath(self.remote.type(),file.path);
       return file;
     });
   }
