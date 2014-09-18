@@ -275,13 +275,13 @@ var UI = (function() {
       keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
     }
 
-    bindKey( "Alt-S",  function()   { self.synchronize(); } );
-    bindKey( "Ctrl-S", function()   { self.synchronize(); } );
+    bindKey( "Alt-S",  function()   { self.synchronize(true); } );
+    bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     
     document.getElementById("sync-now").onclick = function(ev) {
-      self.synchronize();
+      self.synchronize(true);
     };
 
     self.lastMouseUp = 0;
@@ -479,9 +479,7 @@ var UI = (function() {
       }
       else {
         return self.anonEvent( function() {
-          return self.storage.connect().always( function() {
-            return self.updateConnectionStatus();
-          });        
+          return self.connect();
         });
       }
     };
@@ -636,6 +634,14 @@ var UI = (function() {
 
     // emulate hovering by clicks for touch devices
     util.enablePopupClickHovering();    
+  }
+
+  UI.prototype.connect = function() {
+    var self = this;
+    if (!self.storage) return Promise.resolved(false);
+    return self.storage.connect().always( function() {
+      return self.updateConnectionStatus();
+    });
   }
 
   UI.prototype.updateConnectionStatus = function (stg) {
@@ -1892,9 +1898,18 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.synchronize = function() {
+  UI.prototype.synchronize = function(login) {
     var self = this;
-    return self.event( "", "", State.Syncing, function() { return self._synchronize(); } );
+    return self.event( "", "", State.Syncing, function() {
+      if (!self.isConnected && login) {
+        return self.connect().then( function() {  
+          return self._synchronize(); 
+        });
+      }
+      else {
+        return self._synchronize();
+      }
+    });
   }
 
   UI.prototype._synchronize = function() {
