@@ -455,10 +455,10 @@ if (goodToGo) {
     // remove legacy cookies
     Util.setCookie("auth_dropbox","",0);   
     Util.setCookie("auth_onedrive","",0); 
-    var pickerData = Util.getCookie("picker-data");
-    if (pickerData) {
+    var picker = Util.getCookie("picker-data");
+    if (picker) {
       Util.setCookie("picker-data","",0);
-      localStorage.pickerData = pickerData;
+      localStorage.picker = picker;
     }
     // start
     require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
