@@ -472,7 +472,19 @@ var UI = (function() {
       });
     };
     document.getElementById("open").onclick = openEvent;
-    document.getElementById("connection").onclick = openEvent;
+    
+    document.getElementById("connection").onclick = function(ev) {
+      if (self.isConnected || !self.storage) {
+        return openEvent(ev);
+      }
+      else {
+        return self.anonEvent( function() {
+          return self.storage.connect().always( function() {
+            return self.updateConnectionStatus();
+          });        
+        });
+      }
+    };
     
     var newEvent = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
@@ -631,7 +643,15 @@ var UI = (function() {
     if (!stg) stg = self.storage;
     if (!stg) return Promise.resolved(false);
     return stg.checkConnected().then( function(isConnected) {
+      self.isConnected = isConnected; 
       self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
+      if (self.storage) {
+        var remoteLogo = self.storage.remote.logo();
+        var remoteType = self.storage.remote.type();        
+        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+        self.remoteLogo.src = "images/dark/" + remoteLogo;
+        self.remoteLogo.title = remoteMsg + " storage: " + (isConnected ? "connected" : "not connected, click to login");
+      }
       return isConnected;
     });
   }
@@ -1018,11 +1038,13 @@ var UI = (function() {
         
         self.storage.addEventListener("update",self);
         self.runner.setStorage(self.storage);
+        /*
         var remoteLogo = self.storage.remote.logo();
         var remoteType = self.storage.remote.type();
         var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
         self.remoteLogo.src = "images/dark/" + remoteLogo;
         self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+        */
         self.editName = "";
         return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
       });
