@@ -767,7 +767,7 @@ function pushAtomic( name, time, release ) {
   var info = atomics.get(name);
   var atime = (info ? info.time : new Date(0));
   console.log("push-atomic: " + (release ? "release" : "acquire") + ": " + name)
-  console.log("  aquire time: " + time );
+  console.log("  acquire time: " + time );
   console.log("  found time: " + atime );
   if (release) {
     if (atime.getTime() == time.getTime()) {
@@ -777,7 +777,7 @@ function pushAtomic( name, time, release ) {
     return { message: "released" };    
   }
   else {
-    if (atime < time) {
+    if (atime <= 0 || atime < time) {
       // someone is pushing a more recent version: ok
       atomics.set(name, { time: time, created: Date.now() });
       return { message: "acquired" };
