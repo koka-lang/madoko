@@ -79,7 +79,7 @@ function getUserName() {
 
 function getUserInfo() {
   if (_username && _userinfo) return Promise.resolved();
-  return Util.requestGET( accountUrl + "info", { access_token: getAccessToken() } ).then( function(info) {
+  return Util.requestGET( { url: accountUrl + "info", access_token: getAccessToken() } ).then( function(info) {
     if (info) {
       _username = info.display_name;
       _userid = info.uid;
@@ -127,8 +127,8 @@ function loginAndChooseOneFile() {
 ---------------------------------------------- */
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + fname, binary: binary };
-  return Util.requestGET( opts, { access_token: getAccessToken() }).then( function(content,req) {
+  var opts = { url: contentUrl + fname, binary: binary, access_token: getAccessToken() };
+  return Util.requestGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
     info.content = content;
@@ -152,22 +152,23 @@ function pullFile(fname,binary) {
 
 function fileInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken() });
+  return Util.requestGET( { url: url, timeout: 2500, access_token: getAccessToken() } );
 }
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
-  return Util.requestGET( { url: url, timeout: 2500, cache: -60000 }, { access_token: getAccessToken() });  // cached, retry after 60 seconds
+  // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
+  return Util.requestGET( { url: url, timeout: 2500, cache: -60000 }, { access_token: getAccessToken() } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500 }, { access_token: getAccessToken(), list: true });
+  return Util.requestGET( { url: url, timeout: 2500, access_token: getAccessToken() }, { list: true });
 }
 
 function pushFile(fname,content) {
   var url = pushUrl + fname;
-  return Util.requestPOST( url, { access_token: getAccessToken() }, content ).then( function(info) {
+  return Util.requestPOST( { url: url, access_token: getAccessToken() }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return info;
   });
@@ -178,8 +179,10 @@ function pushFile(fname,content) {
 
 function createFolder( dirname ) {
   var url = fileopsUrl + "create_folder";
-  return Util.requestPOST( url, { 
+  return Util.requestPOST( {
+    url: url,
     access_token: getAccessToken(),
+  }, {
     root: root, 
     path: dirname,
   }).then( function(info) {
@@ -192,7 +195,7 @@ function createFolder( dirname ) {
 
 function getShareUrl( fname ) {
   var url = Util.combine(sharesUrl,fname);
-  return Util.requestPOST( url, { access_token: getAccessToken(), short_url: false } ).then( function(info) {
+  return Util.requestPOST( { url: url, access_token: getAccessToken() }, { short_url: false } ).then( function(info) {
     return (info.url || null);
   });
 }
