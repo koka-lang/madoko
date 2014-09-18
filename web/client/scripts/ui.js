@@ -865,8 +865,9 @@ var UI = (function() {
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
                 util.message("ready", util.Msg.Status);
-                self.removeDecorations(false);
+                self.removeDecorations(false,"error");
               }
+              self.removeDecorations(false,"merge");
               self.showConcurrentUsers( true );
               
               /*
@@ -1564,12 +1565,18 @@ var UI = (function() {
     Decorations 
   -------------------------------------------------- */
 
-  UI.prototype.removeDecorations = function(discardSticky) {
+  UI.prototype.removeDecorations = function(discardSticky,type) {
     var self = this;
+    var now = Date.now();
     self.editor.changeDecorations(function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
-        if (discardSticky || !decoration.sticky) {
+        if (type && !util.startsWith(decoration.type,type)) {
+          // do nothing
+          newdecs.push(decoration);          
+        }
+        else if (discardSticky || !decoration.sticky ||
+                  (decoration.expire && decoration.expire < now)) {
           if (decoration.id) {
             changeAccessor.removeDecoration(decoration.id);
             decoration.id = null;          
@@ -1581,8 +1588,8 @@ var UI = (function() {
           if (decoration.id && decoration.range.fileName === self.editName) {
             changeAccessor.changeDecorationOptions(decoration.id,{
               isWholeLine: true,
-              glyphMarginClassName: 'glyph-error.outdated',
-              linesDecorationsClassName: 'latex-error.outdated',
+              glyphMarginClassName: 'glyph-' + decoration.type + '.outdated',
+              linesDecorationsClassName: 'line-' + decoration.type + '.outdated',
             });
           }
           else if (decoration.id) {
@@ -1616,11 +1623,11 @@ var UI = (function() {
           decoration.id = null;
         }
         if (decoration.range.fileName === self.editName) {
-          var postfix = (decoration.outdated ? ".outdated" : "" );
+          var postfix = decoration.type + (decoration.outdated ? ".outdated" : "" );
           decoration.id = changeAccessor.addDecoration( decoration.range, 
             { isWholeLine: true,
-              glyphMarginClassName: 'glyph-error' + postfix,
-              linesDecorationsClassName: 'latex-error' + postfix
+              glyphMarginClassName: 'glyph-' + postfix,
+              linesDecorationsClassName: 'line-' + postfix
             }
           );            
         }
@@ -1630,14 +1637,58 @@ var UI = (function() {
 
   UI.prototype.showErrors = function( errors, sticky ) {
     var self = this;
-    self.removeDecorations(true);
-   
+    
+    var decs = [];
     errors.forEach( function(error) {
       if (!error.range.fileName) error.range.fileName = self.editName;
-      self.decorations.push( { id: null, sticky: sticky, outdated: false, message: error.message, range: error.range });
+      decs.push( { 
+        id: null, 
+        type: "error",
+        sticky: sticky, 
+        outdated: false, 
+        message: error.message, 
+        range: error.range,
+        expire: 0, // does not expire
+      });
       var msg = "error: " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
       util.message( msg, util.Msg.Error );
     });
+
+    self.removeDecorations(true,"error");
+    self.addDecorations(decs);
+  }
+
+  UI.prototype.showMerges = function( merges ) {
+    var self = this;
+    var decs = [];
+    var now = Date.now();
+    merges.forEach( function(merge) {
+      if (!merge.path) merge.path = self.editName;
+      decs.push( { 
+        id: null, 
+        type: "merge.merge-" + merge.type,
+        sticky: true, 
+        outdated: false, 
+        expire: now + (5*60000), // expire merges after 5 minutes
+        message: "merged: remote " + merge.type, 
+        range: {
+          fileName: merge.path,
+          startLineNumber: merge.startLine,
+          endLineNumber: merge.endLine,
+          startColumn: 1,
+          endColumn: 1,
+        } 
+      });
+      self.removeDecorations(false,"merge");
+      self.addDecorations(decs);      
+    });
+  }
+
+  UI.prototype.addDecorations = function( decs ) {
+    var self = this;
+
+    // add decorations
+    self.decorations = self.decorations.concat(decs);
 
     // remove duplicates
     self.editor.changeDecorations( function(changeAccessor) {
@@ -1834,7 +1885,7 @@ var UI = (function() {
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
       return self.withSyncSpinner( function() {
-        return self.storage.sync( diff, cursors ).then( function() {
+        return self.storage.sync( diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
           var line1 = cursors["/" + self.docName];
           var pos = self.editor.getPosition();
           if (pos.lineNumber >= line0) {

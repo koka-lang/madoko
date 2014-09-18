@@ -712,22 +712,25 @@ var Storage = (function() {
 
   var rxConflicts = /^ *<!-- *begin +merge +.*?--> *$/im;
 
-  Storage.prototype.sync = function( diff, cursors ) {
+  Storage.prototype.sync = function( diff, cursors, showMerges ) {
     var self = this;
     var remotes = new Map();
+    var merges = [];
 
     return self.connect(self.isSynced()).then( function() {      
-      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,file); } );
+      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );
       return Promise.when( syncs ).then( function(res) {
         res.forEach( function(msg) {
           if (msg) Util.message(msg, Util.Msg.Trace);
         });
         Util.message("synchronized with cloud storage", Util.Msg.Info );
+      }).always( function() {
+        if (showMerges) showMerges(merges);
       });
     });
   }
 
-  Storage.prototype._syncFile = function(diff,cursors,file) {  // : Promise<string>
+  Storage.prototype._syncFile = function(diff,cursors,merges,file) {  // : Promise<string>
     var self = this;
     if (file.nosync) return Promise.resolved( self._syncMsg(file,"no sync") );
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
@@ -736,7 +739,7 @@ var Storage = (function() {
       }
       if (file.createdTime.getTime() < remoteTime.getTime()) {
         return self._pullFile(file.path, file).then( function(remoteFile) {
-          return self._syncPull(diff,cursors,file,remoteFile);
+          return self._syncPull(diff,cursors,merges,file,remoteFile);
         });
       }
       else {
@@ -774,7 +777,7 @@ var Storage = (function() {
     }
   }
 
-  Storage.prototype._syncPull = function(diff,cursors,file,remoteFile) {
+  Storage.prototype._syncPull = function(diff,cursors,merges,file,remoteFile) {
     var self = this;
     var canMerge = isEditable(file); // Util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
@@ -782,19 +785,40 @@ var Storage = (function() {
       if (rxConflicts.test(file.content)) {
         throw new Error( self._syncMsg(file, "cannot update from server: resolve merge conflicts first!", "update from server" ));
       }
-      return self._syncMerge(diff,cursors,file,remoteFile);
+      return self._syncMerge(diff,cursors,merges,file,remoteFile);
     }
     else {
       // overwrite with server content
       if (!canMerge && file.modified) {
         Util.message( "warning: binary- or generated file modified on server and client, overwrite local one: " + file.path, Util.Msg.Warning );
       }
+      var original = (file.original != null ? file.original : file.content);
+      var content = file.content;
       self._updateFile( remoteFile );
-      return self._syncMsg( remoteFile, "update from server");
+      if (!canMerge) {
+        return self._syncMsg( remoteFile, "update from server");
+      }
+      else {
+        // still do a merge for display of changes in the UI
+        return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+                            original, remoteFile.content, content).then( 
+          function(res) {
+            // push merge fragments for display in UI
+            res.merges.forEach( function(m) {
+              m.path = file.path;
+              merges.push(m);
+            });
+            if (res.merged !== remoteFile.content) {
+              console.log("error in merge!");
+            }
+            return self._syncMsg( remoteFile, "update from server");
+          }
+        );
+      }
     }
   }
 
-  Storage.prototype._syncMerge = function(diff,cursors,file,remoteFile) {
+  Storage.prototype._syncMerge = function(diff,cursors,merges,file,remoteFile) {
     var self = this;
     var original = (file.original != null ? file.original : file.content);
     var content  = file.content;
@@ -802,6 +826,12 @@ var Storage = (function() {
                         original, remoteFile.content, file.content).then( 
       function(res) {
         self._fireEvent("flush", { path: file.path }); // save editor state
+        // push merge fragments for display in UI
+        res.merges.forEach( function(m) {
+          m.path = file.path;
+          merges.push(m);
+        });
+
         if (content !== file.content) {
           // modified in the mean-time!
           throw new Error( self._syncMsg(file,"merged from server, but modified in the mean-time","merge from server"));

@@ -414,18 +414,43 @@ div.boxed {
 
 
 /* Monaco token classes */
-.xlatex-error-line {
-  background-color: lightblue;
-}
-
 .monaco-editor .glyph-error.outdated {
   background-color: orange !important;
 }
 
-.xlatex-error {
+.monaco-editor .xline-error {
   background-color: red;
-  width: 5px !important;
+  xwidth: 5px !important;
+  xleft: 2px;
+}
+
+.monaco-editor .line-merge {
+  background-color: #007e00;
+  width: 6px !important;
   left: 2px;
+}
+
+.monaco-editor .line-merge.merge-changed,
+.monaco-editor .line-merge.merge-deleted,
+.monaco-editor .line-merge.merge-conflicted,
+  background-color: #7e0000;
+}
+.monaco-editor .line-merge.outdated {
+  background-color: #4b0000;
+}
+
+.monaco-editor .line-merge.merge-inserted {
+  background-color: #007e00;
+}
+.monaco-editor .line-merge.merge-inserted.outdated {
+  background-color: #004b00;
+}
+
+.monaco-editor .line-merge.merge-original {
+  background-color: #00007e;
+}
+.monaco-editor .line-merge.merge-original.outdated {
+  background-color: #00004b;
 }
 
 .monaco-editor .token.code {

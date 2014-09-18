@@ -160,10 +160,15 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
   var merge      = [];     // array of text fragments that will be the merged text
   var mergeLines = 0;      // current line count of the merged content
   var newCursorLine = cursorLine; // the cursor line in the merged content.
+  var mergeInfos = [];     // info records for display in the ui.
 
-  function mergePush( s ) {
+  function mergePush( s, type ) {
     merge.push(s);
-    mergeLines += (1 + lineCount(s));
+    var n = 1 + lineCount(s);
+    if (type) {
+      mergeInfos.push( { type: type, startLine: mergeLines+1, endLine: mergeLines + n } );
+    }
+    mergeLines += n;
   }
 
   function adjustCursor( start, end ) {
@@ -179,8 +184,8 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
 
   chunks.forEach( function(c) {
     if (c.side !== Side.None) {
-      mergePush( subtxt(lines[c.side], c.start, c.end ) );
-      if (c.side === Side.B) adjustCursor( c.start, c.end );      
+      mergePush( subtxt(lines[c.side], c.start, c.end ), (c.side===Side.A ? "inserted" : null) );
+      if (c.side === Side.B) adjustCursor( c.start, c.end );
     }
     else {
       var otxt = subtxt( lines[Side.O], c.start, c.end );
@@ -190,14 +195,14 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
         /* both deleted */
       }
       else if (c.aend < c.astart && c.bend >= c.bstart) {
-        mergePush( btxt ); // deletion in A, change in B
+        mergePush( btxt, "deleted" ); // deletion in A, change in B
         adjustCursor( c.bstart, c.bend );      
       }
       else if (c.bend < c.bstart && c.aend >= c.astart) {
-        mergePush( atxt ); // deletion in B, change in A
+        mergePush( atxt, "changed" ); // deletion in B, change in A
       }
       else if (otxt === btxt) {
-        mergePush( atxt ); // just a change in A        
+        mergePush( atxt, "changed" ); // just a change in A        
       }
       else if (otxt === atxt) {
         mergePush( btxt ); // just a change in B
@@ -211,16 +216,16 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
         // real conflict
         conflicts = true;
         if (markers.start) mergePush( markers.start );
-        mergePush( atxt );
+        mergePush( atxt, "conflicted" );
         if (markers.mid) mergePush( markers.mid );
-        mergePush( btxt );
+        mergePush( btxt, "original" );
         adjustCursor( c.bstart, c.bend );      
         if (markers.end) mergePush( markers.end );      
       }
     }
   });
 
-  return { merged: merge.join("\n"), cursorLine: newCursorLine, conflicts: conflicts };
+  return { merged: merge.join("\n"), cursorLine: newCursorLine, conflicts: conflicts, merges: mergeInfos };
 }
 
 // Perform a three-way merge.
@@ -256,7 +261,7 @@ function merge3( diff, markers, cursorLine, original, m1, m2 ) {
       var blines = m2.split("\n");
       var blen   = blines.length;
       var res = mergeChunks( markers, cursorLine, olines, alines, blines, diffChunks(olen,alen,blen,adiff,bdiff) );
-      return { merged: res.merged, conflicts: res.conflicts, cursorLine: res.cursorLine };      
+      return { merged: res.merged, conflicts: res.conflicts, cursorLine: res.cursorLine, merges: res.merges };      
     });
   });
 }
