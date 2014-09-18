@@ -388,7 +388,7 @@ var goodToGo = false;
 var tickIval = 10000; // in milliseconds
 
 function recentTick() {
-  var s = localStorage.madoko;
+  var s = localStorage.ticks;
   if (s == null) return 0;
   var time = Number(s);
   if (isNaN(time)) time = 0;
@@ -397,11 +397,11 @@ function recentTick() {
 }
 
 function updateTick() {
-  localStorage.madoko = Date.now().toString();
+  localStorage.ticks = Date.now().toString();
 }
 
 function removeTick() {
-  localStorage.removeItem("madoko");
+  localStorage.removeItem("ticks");
 }
   
 // test browser features 
@@ -452,8 +452,15 @@ if (goodToGo) {
             "vs/editor/editor.main"],
             function(Util,Runner) 
   { 
-    Util.setCookie("auth_dropbox","",0);   // remove legacy cookies
+    // remove legacy cookies
+    Util.setCookie("auth_dropbox","",0);   
     Util.setCookie("auth_onedrive","",0); 
+    var pickerData = Util.getCookie("picker-data");
+    if (pickerData) {
+      Util.setCookie("picker-data","",0);
+      localStorage.pickerData = pickerData;
+    }
+    // start
     require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
       var runner = new Runner();
       var ui     = new UI(runner);

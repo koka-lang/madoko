@@ -87,7 +87,7 @@ var Picker = (function() {
     if (!self.options.file) self.options.file = "document";
 
     // update persistent remotes
-    var data = JSON.parse( Util.getCookie("picker-data") || "null");
+    var data = JSON.parse( localStorage.picker || "null");
     if (data) {
       if (!self.options.remote) self.options.remote = data.remote;
       remotes.dropbox.folder  = data.dropbox || "";
@@ -130,8 +130,9 @@ var Picker = (function() {
         remote: self.current.remote.type(),
         onedrive: remotes.onedrive.folder,
         dropbox: remotes.dropbox.folder,
+        created: new Date().toISOString(),
       };
-      Util.setCookie("picker-data", JSON.stringify(data), 60*60*24*30 );
+      localStorage.picker = JSON.stringify(data);
     }
 
     // focus back to editor
