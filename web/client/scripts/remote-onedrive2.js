@@ -316,7 +316,7 @@ var Onedrive = (function() {
           path: fpath,
           content: req.responseText,
           createdTime: Util.dateFromISO(info.updated_time),
-          shareUrl: info.source,
+          // shareUrl: info.source,
         };
         return file;
       });
