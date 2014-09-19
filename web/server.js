@@ -5,6 +5,10 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
+var passphrase = process.argv[2];
+if (!passphrase) {
+  throw new Error("Need to supply passphrase as an argument.")
+}
 
 var readline= require("readline");
 var cp      = require("child_process");
@@ -19,7 +23,7 @@ var http    = require("http");
 
 var express       = require('express');
 var bodyParser    = require("body-parser");
-var cookieParser  = require("cookie-parser");
+var cookieSession = require("cookie-session");
 
 var allowedIps = null; 
 var blockedIps = null;
@@ -75,8 +79,10 @@ function dnsReverse( ip, callback ) {
 
 function onError(req,res,err) {
   if (!err) err = "unknown error";
-  //console.log("*******");
-  //console.log(err);
+  console.log("*******");
+  console.log(err.stack || err);
+  console.log("*******");
+
   var result = {
     message: err.killed ? "process time-out" : (err.message || err.toString()),
     code: err.code || 0,
@@ -91,7 +97,7 @@ function onError(req,res,err) {
       logerr.entry( {
         type: "error",
         error: result,
-        user: res.user || { id: req.signedCookies.auth },
+        user: res.user || { id: (req.session ? req.session.userid : null) },
         ip: req.ip,
         domains: doms,    
         url: req.url,
@@ -100,7 +106,7 @@ function onError(req,res,err) {
     });
   };
 
-  res.send( result.httpCode, result );
+  res.status( result.httpCode ).send( result );
 }
 
 // -------------------------------------------------------------
@@ -125,14 +131,14 @@ function domainsGet(req) {
   return domains.getOrCreate(req.ip, { requests: 0, newUsers: 0 });
 }
 
-function usersGet(req) {
-  return users.getOrCreate(req.ip, { requests: 0 });
+function usersGetRequests(req) {
+  return users.getOrCreate(req.ip, { requests: 0 }).requests;
 }
 
 // every hour, reset stats
 setInterval( function() {
-  users.forEach( function(id,user) {
-    if (user.requests <= 0) users.remove(id);
+  users.forEach( function(id,info) {
+    if (info.requests <= 0) users.remove(id);
   });
   domains.forEach( function(ip,domain) {
     if (domain.requests <= 0) {
@@ -144,7 +150,23 @@ setInterval( function() {
   });
 }, hour); 
 
-function event( req, res, action, maxRequests, allowAll ) {
+
+function initSession(req) {
+  var domain = domainsGet(req);
+  if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
+  if (!req.session) req.session = {};
+  if (!req.session.userid) {
+    req.session.userid = uniqueHash();
+    domain.newUsers++;
+  }
+  console.log("initSession: userid: " + req.session.userid);
+  if (req.sessionCookies.get("auth")) {
+    console.log("auth: " + req.sessionCookies.get("auth"));
+  }
+  return req.session.userid;
+}
+
+function event( req, res, useSession, action, maxRequests, allowAll ) {
   var domain = null;
   if (!maxRequests) maxRequests = limits.requestsPerDomain;
   try {
@@ -152,12 +174,21 @@ function event( req, res, action, maxRequests, allowAll ) {
     if (!allowAll && (allowedIps && !allowedIps.test(req.ip))) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access" };
     if (blockedIps && blockedIps.test(req.ip)) throw { httpCode: 401, message: "sorry, ip " + req.ip + " is blocked" };
     var start = Date.now();
+
+    if (useSession) {
+      initSession(req);    
+    }
+    else {
+      req.session = { userid: null };
+    }
+
     var entry =  {
       type: "none",
       ip: req.ip,
       url: req.url,
       params: req.params, 
-      date: new Date(start).toISOString(),        
+      date: new Date(start).toISOString(),  
+      id: req.session.userid,      
     };    
     if (logev) logev.entry( entry );    
     var logit = (req.url != "/rest/edit");
@@ -165,11 +196,7 @@ function event( req, res, action, maxRequests, allowAll ) {
     domain = domainsGet(req);
     domain.requests++;
     if (domain.requests > maxRequests) throw { httpCode: 429, message: "too many requests from this domain"};
-    var x = Promise.maybe( getUserId(req,res), function(userid) {
-              //if (/^\/rest\/.*/.test(req.url)) {
-              entry.user = { id: userid };
-              return action(userid);
-            });
+    var x = action();
     if (x && x.then) {
       x.then( function(result) {
         domain.requests--;
@@ -237,7 +264,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize, strict: false }));
-app.use(cookieParser(fs.readFileSync("ssl/madoko-cookie.txt",{encoding:"utf8"})));
+app.use(cookieSession({ name: "session", secret: passphrase, encrypted: true, maxAge: limits.cookieAge, httpOnly: true, secure: true, signed: false }));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -452,24 +479,13 @@ setInterval( function() {
 // General server helpers
 // -------------------------------------------------------------
 
-function freshUserId(req,res) {
-  var domain = domainsGet(req);
-  if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
-  var userid = uniqueHash();
-  res.cookie("auth", userid, { signed: true, maxAge: limits.cookieAge, httpOnly: true, secure: true } );
-  domain.newUsers++;
-  return userid;
-}
 
-// Get a unique user id for this session.
+
+/*
 function getUserId(req,res) {
-  var userCookie = req.signedCookies.auth;  
-  var user = (!userCookie || typeof userCookie === "string") ? { id: userCookie } : userCookie;
-  //console.log(user);
+  if (req.session.uid) return user.uid;
 
-  if (user.uid) return user.uid;
-
-  var dropboxAccess = req.cookies.auth_dropbox;
+  var dropboxAccess = req.cookies.auth_dropbox; // TODO: update to uid on login
   if (dropboxAccess) {    
     return requestGET("https://api.dropbox.com/1/account/info?access_token=" + dropboxAccess).then( function(data) {
       var dbinfo = JSON.parse(data);
@@ -483,66 +499,75 @@ function getUserId(req,res) {
       return uid;
     });
   }
-  else return (user.id || freshUserId(req,res));
+  
+  if (!req.session.userid) {
+    freshUserId(req,res);
+  }
+  return req.session.userid;
 }
-
+*/
 
 // Get a unique user path for this session.
-function getUser( req,res, _userid ) {
-  return Promise.maybe( (_userid || getUserId(req,res)), function(userid) {
-    var user = usersGet(userid);
-    if (user.requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
+function getUser( req ) {  // : { id: string, requests: int, path: string }
+  var requests = usersGetRequests(req.session.userid);
+  if (requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
+  
+  return {
+    id: req.session.userid,
+    requests: requests,
+    path: combine(runDir, createHash(req.session.userid) + "-" + uniqueHash()),
+  };
+}
 
-    return {
-      id: userid,
-      user: user,
-      path: combine(runDir, userid + "-" + uniqueHash()),
-    };
+function userEvent( req, res, action ) {
+  return event(req,res,true, function() {
+    return withUser(req, action );
   });
 }
 
-function withUser( req,res, userid, action ) {
-  return Promise.maybe( getUser(req,res,userid), function(user) {
-    var start = Date.now();
-    var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
-    if (req.body.docname) entry.docname = req.body.docname;
-    if (req.body.pdf) entry.pdf = req.body.pdf;
-    log.entry( entry );
-    user.user.requests++;
-    return fstat(user.path).then( function(stats) {
-      if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
-      return ensureDir(user.path);
-    }).then( function() {
-      return action(user);    
-    }).always( function() {  
-      entry.type = "user";  
-      entry.time = Date.now() - start; 
-      entry.size = 0;
-      entry.files = req.body.files.map( function(file) {
-        var size = file.content.length;
-        entry.size += size;
-        return { 
-          path: file.path,
-          //encoding: file.encoding,
-          //mime: file.mime,
-          size: size,
-        };
-      });
-      log.entry( entry );
-      if (user.path) {
-        //console.log("remove: " + user.path);      
-        setTimeout( function() {
-          rmdir( user.path, function(err) {
-            if (err) {
-              var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
-              extend(eentry,entry);          
-              logerr.entry( eentry );
-            }
-          });
-        }, limits.rmdirDelay );    
-      }
-      user.user.requests--;
+
+function withUser( req, action ) {
+  var user = getUser(req);
+  var start = Date.now();
+  var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
+  if (req.body.docname) entry.docname = req.body.docname;
+  if (req.body.pdf) entry.pdf = req.body.pdf;
+  log.entry( entry );
+  user.requests++;
+
+  return fstat(user.path).then( function(stats) {
+    if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
+    return ensureDir(user.path);
+  }).then( function() {
+    return action(user);    
+  }).always( function() {  
+    entry.type = "user";  
+    entry.time = Date.now() - start; 
+    entry.size = 0;
+    entry.files = req.body.files.map( function(file) {
+      var size = file.content.length;
+      entry.size += size;
+      return { 
+        path: file.path,
+        //encoding: file.encoding,
+        //mime: file.mime,
+        size: size,
+      };
     });
+    log.entry( entry );
+    if (user.path) {
+      //console.log("remove: " + user.path);      
+      setTimeout( function() {
+        rmdir( user.path, function(err) {
+          if (err) {
+            var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
+            extend(eentry,entry);          
+            logerr.entry( eentry );
+          }
+        });
+      }, limits.rmdirDelay );    
+    }
+    user.requests--;
   });
 }
 
@@ -929,67 +954,63 @@ function editCreateAlias( req, userid, alias, name ) {
 
 var runs = 0;
 app.post('/rest/run', function(req,res) {
-  event( req, res, function(userid) {
-    return withUser(req, res, userid, function(user) {
-      console.log("run request: " + (req.body.round ? req.body.round.toString() + ": " : "") + user.path);
-      if (runs >= limits.maxProcesses) throw { httpCode: 503, message: "too many processes" };
-      runs++;
-      var docname  = req.body.docname || "document.mdk";
-      var files    = req.body.files || [];
-      var pdf      = req.body.pdf || false;
-      return madokoRun( user.path, docname, files, pdf ).always( function() { runs--; } );  
-    });
-  });  
+  userEvent( req, res, function(user) {
+    console.log("run request: " + (req.body.round ? req.body.round.toString() + ": " : "") + user.path);
+    if (runs >= limits.maxProcesses) throw { httpCode: 503, message: "too many processes" };
+    runs++;
+    var docname  = req.body.docname || "document.mdk";
+    var files    = req.body.files || [];
+    var pdf      = req.body.pdf || false;
+    return madokoRun( user.path, docname, files, pdf ).always( function() { runs--; } );  
+  }); 
 });
 
 app.post('/rest/push-atomic', function(req,res) {
-  event( req, res, function() {
+  event( req, res, false, function() {
     return pushAtomic( req.body.name, req.body.time, req.body.release );
   }, null, true );
 });
 
 app.post("/rest/edit", function(req,res) {
-  event( req, res, function(userid) {
-    //var sessionid = req.body.sessionid || uniqueHash();
+  event( req, res, true, function() {
     var files = req.body.files || {};
-    return editUpdate(req,userid,files);
+    return editUpdate(req,req.session.userid,files);
   });
 });
 
 app.post("/rest/edit-alias", function(req,res) {
-  event( req, res, function(userid) {
-    //var sessionid = req.body.sessionid || uniqueHash();
+  event( req, res, true, function() {
     var name = req.body.name || {};
     var alias = req.body.alias || {};
-    editCreateAlias(req,userid,alias,name);
-    editCreateAlias(req,userid,alias + "*",name + "*");
+    editCreateAlias(req,req.session.userid,alias,name);
+    editCreateAlias(req,req.session.userid,alias + "*",name + "*");
   });
 });
 
 
 app.post("/report/csp", function(req,res) {
-  event(req,res, function() {
+  event(req,res, false, function() {
     console.log(req.body);
     logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   });
 });
 
 app.get("/redirect/live", function(req,res) {
-  //event( req, res, function() {
+  //event( req, res, false, function() {
     console.log("live redirect authentication");
     res.send(200,redirectPage("onedrive"));
   //});
 });
 
 app.get("/redirect/onedrive", function(req,res) {
-  //event( req, res, function() {
+  //event( req, res, false, function() {
     console.log("onedrive redirect authentication");
     res.send(200,redirectPage("onedrive"));
   //});
 });
 
 app.get("/redirect/dropbox", function(req,res) {
-  //event( req, res, function() {
+  //event( req, res, false, function() {
     console.log("dropbox redirect authentication");
     console.log(req.query);
     console.log(req.url);
@@ -998,7 +1019,7 @@ app.get("/redirect/dropbox", function(req,res) {
 });
 
 app.get("/remote/onedrive", function(req,res) {
-  event( req, res, function() {
+  event( req, res, true, function() {
     if (!/https:\/\/[\w\-\.]+?\.livefilestore\.com\//.test(req.query.url)) {
       throw { httpCode: 403, message: "illegal onedrive url: " + req.query.url };
     }
@@ -1007,7 +1028,7 @@ app.get("/remote/onedrive", function(req,res) {
 });
 
 app.get("/remote/http", function(req,res) {
-  event( req, res, function() {
+  event( req, res, false, function() {
     console.log("remote http get: " + req.query.url );
     return requestGET( req.query.url, "binary" ).then( function(content) {
       res.set('Content-Disposition',';');
@@ -1051,6 +1072,37 @@ app.use('/', function(req,res,next) {
 
 
 // -------------------------------------------------------------
+// Start listening on https
+// -------------------------------------------------------------
+
+var sslOptions = {
+  pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
+  passphrase: passphrase, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
+  //key: fs.readFileSync('./ssl/madoko-server.key'),
+  //cert: fs.readFileSync('./ssl/madoko-server.crt'),
+  //ca: fs.readFileSync('./ssl/daan-ca.crt'),
+  //requestCert: true,
+  //rejectUnauthorized: false
+};
+https.createServer(sslOptions, app).listen(443);
+console.log("listening...");
+
+
+// -------------------------------------------------------------
+// Set up http redirection
+// -------------------------------------------------------------
+
+var httpApp = express();
+
+httpApp.use(function(req, res, next) {
+  logRequest(req,"http-redirection");
+  res.redirect("https://" + req.host + req.path);
+});
+
+http.createServer(httpApp).listen(80);
+
+
+// -------------------------------------------------------------
 // Listen on the console for commands
 // -------------------------------------------------------------
 
@@ -1087,40 +1139,7 @@ function listen() {
 
 mode = Mode.Normal;
 
+// and listen to console commands
+listen();
 
-rl.question( "ssl passphrase: ", function(passphrase) {
-
-  // -------------------------------------------------------------
-  // Start listening on https
-  // -------------------------------------------------------------
-
-  var sslOptions = {
-    pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
-    passphrase: passphrase, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
-    //key: fs.readFileSync('./ssl/madoko-server.key'),
-    //cert: fs.readFileSync('./ssl/madoko-server.crt'),
-    //ca: fs.readFileSync('./ssl/daan-ca.crt'),
-    //requestCert: true,
-    //rejectUnauthorized: false
-  };
-  https.createServer(sslOptions, app).listen(443);
-  console.log("listening...");
-
-
-  // -------------------------------------------------------------
-  // Set up http redirection
-  // -------------------------------------------------------------
-
-  var httpApp = express();
-
-  httpApp.use(function(req, res, next) {
-    logRequest(req,"http-redirection");
-    res.redirect("https://" + req.host + req.path);
-  });
-
-  http.createServer(httpApp).listen(80);
-
-  // and listen to console commands
-  listen();
-});
 
