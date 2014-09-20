@@ -131,6 +131,10 @@ define([],function() {
       }
     }
 
+    Promise.wrap = function(p) {
+      return (p && p.then ? p : Promise.resolved(p));
+    }
+
     Promise.prototype.always = function( action ) {
       var self = this;
       self.then( function(){ action(); }, function(){ action(); });

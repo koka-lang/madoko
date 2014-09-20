@@ -5,7 +5,8 @@
     "token_url"     : "https://api.dropbox.com/1/oauth2/token",
     "redirect_uris" : ["https://madoko.cloudapp.net/redirect/dropbox", "https://www.madoko.net/redirect/dropbox"],
     "flow"          : "code",
-    "account_url"   : "https://api.dropbox.com/1/account/info"
+    "account_url"   : "https://api.dropbox.com/1/account/info",
+    "disable_url"   : "https://api.dropbox.com/1/disable_access_token"
   },
   "onedrive": {
     "redirect_uris" : ["https://madoko.cloudapp.net/redirect/onedrive", "https://www.madoko.net/redirect/onedrive"],

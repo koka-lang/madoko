@@ -5,9 +5,14 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
-var passphrase = process.argv[2];
-if (!passphrase) {
-  throw new Error("Need to supply passphrase as an argument.")
+var passphraseSSL = process.argv[2];
+if (!passphraseSSL) {
+  throw new Error("Need to supply passphrase as an argument.");
+}
+
+var passphraseSession = process.argv[3];
+if (!passphraseSession) {
+  passphraseSession = "session:" + passphraseSSL + ":" + new Date().toDateString().replace(/\s+/,"-");
 }
 
 var readline= require("readline");
@@ -155,6 +160,13 @@ setInterval( function() {
 function initSession(req) {
   var domain = domainsGet(req);
   if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
+  
+  // check if we encrypt cookies: need to patch cookie-session or 'encrypted' is ignored
+  if (!req.sessionEncryptionKeys) {
+    throw new Error("Session cookies are not encrypted!");
+  }
+
+  // initialize session
   if (!req.session) req.session = {};
   if (!req.session.userid) {
     req.session.userid = uniqueHash();
@@ -265,7 +277,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize, strict: false }));
-app.use(cookieSession({ name: "session", secret: passphrase, encrypted: true, _maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
+app.use(cookieSession({ name: "session", secret: passphraseSession, encrypted: true, _maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -709,8 +721,8 @@ function decrypt(secret,value) {
 var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
 properties(remotes).forEach( function(name) {
   var remote = remotes[name];
-  if (remote.xclient_id) remote.client_id = decrypt(passphrase, remote.xclient_id);
-  if (remote.xclient_secret) remote.client_secret = decrypt(passphrase, remote.xclient_secret);
+  //if (remote.xclient_id) remote.client_id = decrypt(passphraseSSL, remote.xclient_id);
+  if (remote.xclient_secret) remote.client_secret = decrypt(passphraseSSL, remote.xclient_secret);
   if (!remote.name) remote.name = name;
 });
 
@@ -721,7 +733,7 @@ function redirectPage(remote, message ) {
   return [
     '<html>',
     '<head>',
-    '  <title>Madoko ' + remote + ' login</title>',
+    '  <title>Madoko ' + remote.name + ' login</title>',
     '</head>',
     '<body>',
     '  <p>' + message + '</p>',
@@ -756,7 +768,7 @@ function oauthLogin(req,res,remote) {
   if (state != state0) {
     return redirectError(remote, "The state parameter did not match; this might indicate a CSRF attack?" );
   }
-  var uri = req.protocol + "://" + req.hostname + req.path;
+  var uri = req.protocol + "://" + (req.host || req.hostname) + req.path;
   if (!remote.redirect_uris || remote.redirect_uris.indexOf(uri) < 0) {
     return redirectError(remote, "Invalid redirection url: " + uri ); 
   }
@@ -793,6 +805,14 @@ function oauthLogin(req,res,remote) {
   }, function(err) {
     console.log("authorization failed: " + err.toString());
     return redirectError(remote, "Failed to contact the token server.");
+  });
+}
+
+function oauthLogout(req,res,remote,access_token) {
+  if (!remote.disable_url) return;
+  console.log("disabling token...");
+  return makeRequest({url: remote.disable_url, headers: { Authorization: "Bearer " + access_token }, secure: true, json: true } ).then( function(info) {
+    if (info) console.log("Successfully disabled the access token");
   });
 }
 
@@ -1143,6 +1163,21 @@ app.get("/oauth/token", function(req,res) {
   });
 })
 
+app.post("/oauth/logout", function(req,res) {
+  event( req, res, true, function() {
+    var remoteName = req.param("remote");
+    console.log("logout from: " + remoteName);
+    var remoteInfo = req.session[remoteName];
+    if (remoteInfo) {
+      delete req.session[remoteName];
+      var remote = remotes[remoteName];
+      if (remote && remoteInfo.access_token) {
+        return oauthLogout(req,res,remote,remoteInfo.access_token);
+      }
+    }
+  });
+})
+
 app.get("/remote/onedrive", function(req,res) {
   event( req, res, true, function() {
     if (!/https:\/\/[\w\-\.]+?\.livefilestore\.com\//.test(req.query.url)) {
@@ -1202,7 +1237,7 @@ app.use('/', function(req,res,next) {
 
 var sslOptions = {
   pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
-  passphrase: passphrase, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
+  passphrase: passphraseSSL, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
   //key: fs.readFileSync('./ssl/madoko-server.key'),
   //cert: fs.readFileSync('./ssl/madoko-server.crt'),
   //ca: fs.readFileSync('./ssl/daan-ca.crt'),

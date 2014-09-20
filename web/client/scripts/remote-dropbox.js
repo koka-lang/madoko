@@ -20,117 +20,104 @@ var accountUrl  = "https://api.dropbox.com/1/account/";
 var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
 var sharedFoldersUrl   = "https://api.dropbox.com/1/shared_folders/";
 
-var appRoot     = "";
-
-var _access_token = null;
-var _username = "";
+var _access_token = null; // null: never tried ask server, false: tried but not logged in
 var _userid = "";
 
-function getAccessToken() {
-  if (!_access_token) {
-    var info = Util.getSessionObject("oauth/auth-dropbox");
-    if (info) {
-      _access_token = info.access_token;
-      if (info.uid) _userid = info.uid;    
-    }
-  }
-  return _access_token;
+function withAccessToken(action) {
+  if (_access_token) return Promise.wrap(action(_access_token));
+  if (_access_token === false) return Promise.rejected("Not logged in");
+  return Util.requestGET("/oauth/token",{ remote: "dropbox" } ).then( function(access_token) {
+    _access_token = access_token;
+    return action(_access_token);
+  }, function(err) {
+    _access_token = false;
+    throw err;
+  });
 }
+
+function dropboxGET( options, params ) {
+  return withAccessToken( function(access_token) {
+    options.access_token = access_token;
+    return Util.requestGET( options, params );
+  });
+}
+
+function dropboxPOST( options, params, content ) {
+  return withAccessToken( function(access_token) {
+    options.access_token = access_token;
+    return Util.requestPOST( options, params, content );
+  });
+}
+
 
 /* ----------------------------------------------
    Login 
 ---------------------------------------------- */
 
 function logout() {
-  Util.removeSessionObject( "oauth/auth-dropbox" );
-  _access_token = null;
-  _username = "";
+  if (_access_token) {
+    // invalidate the access_token
+    Util.requestPOST( {url: "/oauth/logout"}, { remote: "dropbox" } );
+  }
+  _access_token = false;
   _userid = "";
 }
 
+function tryLogin(action) {
+  if (_access_token) return Promise.wrap(action(true));
+  if (_access_token===false) return Promise.wrap(action(false));
+  return withAccessToken( function() { return true; }).then( function() {
+    return action(true);
+  }, function(err) {
+    return action(false);
+  });
+}
+
 function login(dontForce) {
-  if (getAccessToken()) return Promise.resolved();
-  if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
-  var url = "https://www.dropbox.com/1/oauth2/authorize"
-  var params = { 
-    response_type: "code", 
-    client_id: appKey, 
-    redirect_uri:  redirectUri,
-  };
-  return Util.openOAuthLogin("dropbox",url,params,600,600).then( function() {
-    return Util.requestGET("/oauth/token",{ remote: "dropbox" } ).then( function(access_token) {
-      _access_token = access_token;
-      if (!getAccessToken()) throw new Error("dropbox login failed");
+  return tryLogin( function(ok) {
+    if (ok) return;
+    if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
+    var url = "https://www.dropbox.com/1/oauth2/authorize"
+    var params = { 
+      response_type: "code", 
+      client_id: appKey, 
+      redirect_uri:  redirectUri,
+    };
+    return Util.openOAuthLogin("dropbox",url,params,600,600).then( function() {
+      _access_token = null; // reset from 'false'
+      return withAccessToken( function() { return; } ); // and get the token
     });
   });
 }
 
 function withUserId(action) {
-  if (_userid) return action(_userid);
-  return getUserInfo().then( function() {
+  if (_userid) return Promise.wrap(action(_userid));
+  return getUserInfo().then( function(info) {
+    _userid = info.uid;
     return action(_userid);
   });
 }
 
 function getUserName() {
-  if (_username) return Promise.resolved(_username);
-  return getUserInfo().then( function() {
-    return _username;
+  // don't cache, we use it to determine connected-ness 
+  // if (_username) return Promise.resolved(_username);
+  return getUserInfo().then( function(info) {
+    return info.display_name;
   });
 }
 
 function getUserInfo() {
-  if (_username && _userinfo) return Promise.resolved();
-  return Util.requestGET( { url: accountUrl + "info", access_token: getAccessToken() } ).then( function(info) {
-    if (info) {
-      _username = info.display_name;
-      _userid = info.uid;
-    }
-    return;
-  });
+  return dropboxGET( { url: accountUrl + "info" } );
 }
 
-
-function chooseOneFile() {
-  return new Promise( function(cont) {
-    window.Dropbox.choose( {
-      success: function(files) {
-        if (!files || !files.length || files.length !== 1) cont(new Error("Can only select a single file to open"));    
-        cont(null, files[0].link );
-      },
-      cancel: function() {
-        cont( new Error("dropbox dialog was canceled") );
-      },
-      linkType: "direct",
-      multiselect: false,
-      extensions: [".mdk",".md",".mkdn",".markdown"],
-    });
-  });
-}
-
-function loginAndChooseOneFile() {
-  Util.setCookie("dropbox-next","choose",60);
-  return login().then( function() {
-    Util.setCookie("dropbox-next","",0);  
-    var err  = Util.getCookie("dropbox-error");
-    if (err) {
-      throw new Error( decodeURIComponent(err) );
-    }
-    var link = Util.getCookie("dropbox-choose");
-    if (!link) {
-      throw new Error( "dropbox: could not read file selection -- try again" );
-    }
-    return decodeURIComponent(link);
-  });
-}
 
 /* ----------------------------------------------
   Basic file API
 ---------------------------------------------- */
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + fname, binary: binary, access_token: getAccessToken() };
-  return Util.requestGET( opts ).then( function(content,req) {
+  var opts = { url: contentUrl + fname, binary: binary };
+  return dropboxGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
     info.content = content;
@@ -154,36 +141,34 @@ function pullFile(fname,binary) {
 
 function fileInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500, access_token: getAccessToken() } );
+  return dropboxGET( { url: url, timeout: 2500 } );
 }
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
   // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
-  return Util.requestGET( { url: url, timeout: 2500, cache: -60000 }, { access_token: getAccessToken() } );  // cached, retry after 60 seconds;
+  return withAccessToken( function(token) {
+    return Util.requestGET( { url: url, timeout: 2500, cache: -60000 }, { access_token: token } );  // cached, retry after 60 seconds;
+  });
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return Util.requestGET( { url: url, timeout: 2500, access_token: getAccessToken() }, { list: true });
+  return dropboxGET( { url: url, timeout: 2500 }, { list: true });
 }
 
 function pushFile(fname,content) {
   var url = pushUrl + fname;
-  return Util.requestPOST( { url: url, access_token: getAccessToken() }, {}, content ).then( function(info) {
+  return dropboxPOST( { url: url }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return info;
   });
-  //, function(err) {
-  //  throw new Error("dropbox: could not push file: " + fname + ": " + err.toString());
-  //});
 }
 
 function createFolder( dirname ) {
   var url = fileopsUrl + "create_folder";
-  return Util.requestPOST( {
+  return dropboxPOST( {
     url: url,
-    access_token: getAccessToken(),
   }, {
     root: root, 
     path: dirname,
@@ -197,7 +182,7 @@ function createFolder( dirname ) {
 
 function getShareUrl( fname ) {
   var url = Util.combine(sharesUrl,fname);
-  return Util.requestPOST( { url: url, access_token: getAccessToken() }, { short_url: false } ).then( function(info) {
+  return dropboxPOST( { url: url }, { short_url: false } ).then( function(info) {
     return (info.url || null);
   });
 }
@@ -205,18 +190,6 @@ function getShareUrl( fname ) {
 /* ----------------------------------------------
    Main entry points
 ---------------------------------------------- */
-
-function openFile() {
-  // carefully login so we avoid popup blockers but can still use dropbox's file picker
-  var choose = (getAccessToken() ? chooseOneFile : loginAndChooseOneFile);
-  return choose().then( function(fileLink) {
-    var cap = new RegExp("^https://" + ".*?/view/[^\\/]+/" + appRoot + "(.*)$").exec(fileLink);
-    if (!cap) throw (new Error("Can only select files in the " + appRoot + " folder"));
-    return cap[1];
-  }).then( function(fname) {
-    return { remote: new Dropbox(Util.dirname(fname)), docName: Util.basename(fname) };
-  });
-}
 
 function createAt( folder ) {
   return login().then( function() {
@@ -332,7 +305,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.connected = function() {
-    return (getAccessToken() != null);
+    return (_access_token != null);
   }
 
   Dropbox.prototype.login = function() {
@@ -360,7 +333,6 @@ var Dropbox = (function() {
 
 
 return {
-  openFile: openFile,
   createAt: createAt,
   login: login,
   logout: logout,
