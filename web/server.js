@@ -277,7 +277,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize, strict: false }));
-app.use(cookieSession({ name: "session", secret: passphraseSession, encrypted: true, _maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
+app.use(cookieSession({ name: "session", secret: passphraseSession, encrypted: true, maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -726,7 +726,8 @@ properties(remotes).forEach( function(name) {
   if (!remote.name) remote.name = name;
 });
 
-function redirectPage(remote, message ) { 
+function redirectPage(remote, message, status ) { 
+  if (!status) status = "ok";
   if (!message) {
     message = "Logged in to " + remote.name;
   }
@@ -734,17 +735,21 @@ function redirectPage(remote, message ) {
     '<html>',
     '<head>',
     '  <title>Madoko ' + remote.name + ' login</title>',
+    '  <style>',
+    '    p { text-align: center; font-size: large; margin-top: 1em }',
+    '  </style>',
     '</head>',
     '<body>',
     '  <p>' + message + '</p>',
-    '  <script id="auth" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '  <p><button id="button-close">Close Window</button></p>', 
+    '  <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
     '</body>',    
     '</html>'
   ].join("\n");
 }
 
 function redirectError(remote,message) {
-  return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""));
+  return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""), "error");
 }
 
 
@@ -753,10 +758,10 @@ function redirectError(remote,message) {
 function oauthLogin(req,res,remote) {
   res.status(200);
   if (!remote) {
-    return redirectPage(remote, "Could not login; unknown remote service." );
+    return redirectError(remote, "Could not login; unknown remote service." );
   }
   if (remote.flow === "token") {
-    return redirectPage(remote);
+    return redirectPage(remote,"","token");
   }
 
   // code flow

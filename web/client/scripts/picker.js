@@ -176,7 +176,7 @@ var Picker = (function() {
 
   Picker.prototype.onLogout = function() {
     var self = this;
-    if (!self.current.remote.connected()) return;
+    //if (!self.current.remote.connected()) return;
     self.current.remote.logout();
     self.display();
   }

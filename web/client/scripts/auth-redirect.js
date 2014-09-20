@@ -6,6 +6,21 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
+var success = false;
+var script = document.getElementById("auth");
+var remote = (script ? script.getAttribute("data-remote") : "");
+var status = (script ? script.getAttribute("data-status") : "unknown");
+
+if (status === "ok") {
+  //setTimeout( function() { window.close(); }, 1000 );
+  window.close();
+}
+
+document.getElementById("button-close").onclick = function() {
+  window.close();
+};
+
+
 function setSessionValue( owner, name, value ) {
   if (owner.sessionStorage && name) owner.sessionStorage.setItem(name,value);
 }
@@ -32,9 +47,6 @@ function decodeParams(hash) {
   return obj;
 }
 
-var success = false;
-var script = document.getElementById("auth");
-var remote = (script ? script.getAttribute("data-remote") : "");
 
 try {
   if (remote && window && window.location && window.location.hash) {
