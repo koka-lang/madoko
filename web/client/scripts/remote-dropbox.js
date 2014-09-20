@@ -305,7 +305,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.connected = function() {
-    return (_access_token != null);
+    return (_access_token ? true : false);
   }
 
   Dropbox.prototype.login = function() {
