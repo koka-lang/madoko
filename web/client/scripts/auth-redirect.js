@@ -6,20 +6,26 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-var success = false;
 var script  = document.getElementById("auth");
 var remote  = (script ? script.getAttribute("data-remote") : "");
 var status  = (script ? script.getAttribute("data-status") : "unknown");
-
-if (status === "ok") {
-  //setTimeout( function() { window.close(); }, 1000 );
-  window.close();
-}
 
 document.getElementById("button-close").onclick = function() {
   window.close();
 };
 
+if (status === "ok") {
+  window.close();
+}
+else if (status === "flow") {
+  oauthTokenFlow();
+}
+
+
+
+/* -----------------------------------------------------------------------
+   Oauth Token flow
+----------------------------------------------------------------------- */
 
 function message(msg) {
   var elem = document.getElementById("message");
@@ -55,40 +61,43 @@ function decodeParams(hash) {
 }
 
 
-try {
-  if (remote && window && window.location && window.location.hash) {
-    if (window.location.origin === window.opener.location.origin) {
-      var params = decodeParams(window.location.hash);
-      //document.body.innerHTML = JSON.stringify(params);
+function oauthTokenFlow() 
+{
+  var success = false;
+  try {
+    if (remote && window && window.location && window.location.hash) {
+      if (window.location.origin === window.opener.location.origin) {
+        var params = decodeParams(window.location.hash);
+        //document.body.innerHTML = JSON.stringify(params);
 
-      var state = getSessionValue(window, "oauth/state-" + remote); // read our own session storage: this can only read values from the same-origin session
-      removeSessionValue( window.opener, "oauth/state-" + remote);  // clear state token
-      if (state && params.state && state === params.state) {  // protect against CSRF attack
-        if (params.access_token) {
-          var info = { access_token: params.access_token, created: new Date().toISOString() };
-          if (params.uid) info.uid = params.uid;
-          if (params.refresh_token) info.refresh_token = params.refresh_token;
-          setSessionValue( window.opener, "oauth/auth-" + remote, JSON.stringify(info) );  // write back to our opener; we already verified that it has the same origin
-          var success = true;
+        var state = getSessionValue(window, "oauth/state-" + remote); // read our own session storage: this can only read values from the same-origin session
+        removeSessionValue( window.opener, "oauth/state-" + remote);  // clear state token
+        if (state && params.state && state === params.state) {  // protect against CSRF attack
+          if (params.access_token) {
+            var info = { access_token: params.access_token, created: new Date().toISOString() };
+            if (params.uid) info.uid = params.uid;
+            if (params.refresh_token) info.refresh_token = params.refresh_token;
+            setSessionValue( window.opener, "oauth/auth-" + remote, JSON.stringify(info) );  // write back to our opener; we already verified that it has the same origin
+            var success = true;
+          }
+          else {
+            message("The access_token was not present in the reponse.");
+          }
         }
         else {
-          message("The access_token was not present in the reponse.");
+          message("The state parameter does not match; this might indicate a CSRF attack?");
         }
       }
       else {
-        message("The state parameter does not match; this might indicate a CSRF attack?");
+        message("The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?");
       }
     }
-    else {
-      message("The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?");
-    }
+  }
+  catch(exn) {
+    message("Error, could not log in:<br>" + encodeURI(exn.toString()));
+  }
+
+  if (success) {
+    window.close();
   }
 }
-catch(exn) {
-  message("Error, could not log in:<br>" + encodeURI(exn.toString()));
-}
-
-if (success) {
-  window.close();
-}
-
