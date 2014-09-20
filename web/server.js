@@ -161,7 +161,7 @@ function initSession(req) {
   var domain = domainsGet(req);
   if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
   
-  // check if we encrypt cookies: need to patch cookie-session or 'encrypted' is ignored
+  // check if we encrypt cookies: need to patch cookie-session or 'encrypted' flag is ignored
   if (!req.sessionEncryptionKeys) {
     throw new Error("Session cookies are not encrypted!");
   }
@@ -170,12 +170,13 @@ function initSession(req) {
   if (!req.session) req.session = {};
   if (!req.session.userid) {
     req.session.userid = uniqueHash();
+    req.session.created = (new Date()).toISOString();
     domain.newUsers++;
   }
+  if (!req.session.logins) req.session.logins = {};
+  if (req.sessionCookies.get("auth")) req.clearCookie("auth"); // legacy
+  
   //console.log("initSession: userid: " + req.session.userid);
-  if (req.sessionCookies.get("auth")) {
-    req.clearCookie("auth");
-  }
   return req.session.userid;
 }
 
@@ -391,7 +392,7 @@ function createHash(data) {
 }
 
 function uniqueHash() {
-  var unique = (new Date()).toString() + ":" + Math.random().toString();
+  var unique = Date.now().toString() + ":" + Math.random().toString();
   return createHash(unique);
 }
 
@@ -752,9 +753,6 @@ function redirectError(remote,message) {
   return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""), "error");
 }
 
-
-
-
 function oauthLogin(req,res,remote) {
   res.status(200);
   if (!remote) {
@@ -798,10 +796,11 @@ function oauthLogin(req,res,remote) {
         uid: info.uid || info.id || info.user_id || info.userid || null,
         access_token: tokenInfo.access_token,
         created:  new Date().toISOString(),
+        nonce: uniqueHash(),
       };
       // store info in our encrypted cookie
-      req.session[remote.name] = userInfo;
-      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, name: userName, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
+      req.session.logins[remote.name] = userInfo;
+      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, name: userName, date: userInfo.created, ip: req.ip, url: req.url } );
       return redirectPage(remote);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
@@ -865,8 +864,7 @@ function makeRequest(options,data) {
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
     console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
-    console.log(options);
-    // (options.secure===false ? http : https)
+    // console.log(options);
     req = (options.secure===false ? http : https).request(options, function(res) {
       if (options.encoding) res.setEncoding(options.encoding);
       var body = "";
@@ -1150,10 +1148,6 @@ app.get("/redirect/onedrive", function(req,res) {
 
 app.get("/redirect/dropbox", function(req,res) {
   event( req, res, true, function() {
-    console.log("dropbox redirect authentication");
-    console.log(req.query);
-    console.log(req.url);
-    console.log(req.sessionCookies.get("oauth/state-dropbox"));
     return oauthLogin(req,res,remotes.dropbox);
   });
 });
@@ -1161,23 +1155,23 @@ app.get("/redirect/dropbox", function(req,res) {
 app.get("/oauth/token", function(req,res) {
   event( req, res, true, function() {
     var remoteName = req.param("remote");
-    console.log("retrieve access token for: " + remoteName);
-    var remote = req.session[remoteName];
-    if (!remote || !remote.access_token) throw { httpCode: 404, message: "Not logged in to " + remoteName };
-    return remote.access_token;
+    if (!remoteName) throw { httpCode: 404, message: "No 'remote' parameter" }
+    var login = req.session.logins[remoteName];
+    if (!login || !login.access_token) throw { httpCode: 404, message: "Not logged in to " + remoteName };
+    return login.access_token;
   });
 })
 
 app.post("/oauth/logout", function(req,res) {
   event( req, res, true, function() {
     var remoteName = req.param("remote");
-    console.log("logout from: " + remoteName);
-    var remoteInfo = req.session[remoteName];
-    if (remoteInfo) {
-      delete req.session[remoteName];
+    if (!remoteName) throw { httpCode: 404, message: "No 'remote' parameter" }
+    var login = req.session.logins[remoteName];
+    if (login) {
+      delete req.session.logins[remoteName];
       var remote = remotes[remoteName];
-      if (remote && remoteInfo.access_token) {
-        return oauthLogout(req,res,remote,remoteInfo.access_token);
+      if (remote && login.access_token) {
+        return oauthLogout(req,res,remote,login.access_token);
       }
     }
   });
