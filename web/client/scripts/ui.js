@@ -1524,9 +1524,16 @@ var UI = (function() {
     if (util.startsWith(mime,"image/")) name = "images/" + name;    
     if (encoding===storage.Encoding.Base64) {
       var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
-      if (!cap) return;
+      if (!cap) {
+        util.message("invalid base64 encoding", util.Msg.Error );
+        return;
+      }
       content = cap[3];  
     }
+    if (content.length >= 100*1024) {
+      throw new Error("file size is too large (maximum is about 384kb)");
+    }
+
     self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
     
     var text = "";
@@ -1578,7 +1585,12 @@ var UI = (function() {
       var reader = new FileReader();
       reader.onload = (function(_file,_encoding,_mime) { 
         return function(loadEvt) {
-          self.insertFile( _file, loadEvt.target.result, _encoding, _mime, pos );
+          try {
+            self.insertFile( _file, loadEvt.target.result, _encoding, _mime, pos );
+          }
+          catch(exn) {
+            util.message(exn,util.Msg.Exn);
+          }
         };
       })(f,encoding,mime);
 
