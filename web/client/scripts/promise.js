@@ -137,8 +137,7 @@ define([],function() {
 
     Promise.prototype.always = function( action ) {
       var self = this;
-      self.then( function(){ action(); }, function(){ action(); });
-      return self; // ignores result of 'then'
+      return self.then( function(x){ action(); return x; }, function(err){ action(); throw err; });
     }
 
     Promise.prototype.then = function( onSuccess, onError, onProgress ) {

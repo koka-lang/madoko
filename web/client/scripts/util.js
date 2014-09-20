@@ -890,16 +890,20 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
   function requestGET( opts, params ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "GET";
-
     reqparam.contentType = null; //"application/x-www-form-urlencoded";     
-    return requestPOST( reqparam, params, null );
+    return requestXHR( reqparam, params, null );
   }
   
   function requestPUT( opts, params, body ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);
     if (!reqparam.method) reqparam.method = "PUT";
+    return requestXHR( reqparam, params, body );
+  }
 
-    return requestPOST( reqparam, params, body );
+  function requestPOST( opts, params, body ) {
+    var reqparam = (typeof opts === "string" ? { url: opts } : opts);
+    if (!reqparam.method) reqparam.method = "POST";
+    return requestXHR( reqparam, params, body ); 
   }
 
   // clean up request cache every 1 minute
@@ -913,14 +917,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     });
   }, 60000 );
 
-  function requestPOST( opts, params, body ) {
+  function requestXHR( opts, params, body ) {
     var reqparam = (typeof opts === "string" ? { url: opts } : opts);    
     var req = new XMLHttpRequest();
-    var method = reqparam.method || "POST";
+    var method = reqparam.method || "GET";
     if (method !== "GET") reqparam.cache = null;
 
     // init headers
-    var headers = {};
+    var headers = reqparam.headers || {};
     if (reqparam.access_token) {
       if (!startsWith(reqparam.url,"https://")) {
         throw new Error("Attempt to pass access_token to non-secure site: " + reqparam.url);
@@ -1308,6 +1312,7 @@ doc.execCommand("SaveAs", null, filename)
     requestPOST: requestPOST,
     requestPUT: requestPUT,
     requestGET: requestGET,
+    requestXHR: requestXHR,
     downloadFile: downloadFile,
     downloadText: downloadText,
     //openAuthPopup: openAuthPopup,

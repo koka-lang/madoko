@@ -176,7 +176,8 @@ function initSession(req) {
   if (!req.session.logins) req.session.logins = {};
   if (req.sessionCookies.get("auth")) req.clearCookie("auth"); // legacy
   
-  //console.log("initSession: userid: " + req.session.userid);
+  console.log("initSession: userid: " + req.session.userid);
+  console.log(req.session.toJSON());
   return req.session.userid;
 }
 
@@ -193,7 +194,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
       initSession(req);    
     }
     else {
-      req.session = { userid: null };
+      req.session = { userid: null, logins: {} };
     }
 
     var entry =  {

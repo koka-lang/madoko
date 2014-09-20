@@ -892,7 +892,7 @@ var Storage = (function() {
         );
       });
     }, function(err) {
-      if (err.httpCode == 409) 
+      if (err && err.httpCode == 409) 
         throw new Error( self._syncMsg(file,"cannot " + message + ": file was saved concurrently by another user!", "save to server") );
       else 
         throw err;
