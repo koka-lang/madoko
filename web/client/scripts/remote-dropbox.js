@@ -53,13 +53,15 @@ function login(dontForce) {
   if (dontForce) return Promise.rejected( new Error("dropbox: not logged in") );
   var url = "https://www.dropbox.com/1/oauth2/authorize"
   var params = { 
-    response_type: "token", 
+    response_type: "code", 
     client_id: appKey, 
     redirect_uri:  redirectUri,
   };
-  return Util.openOAuthLogin("dropbox",url,params,600,600).then( function(info) {
-    if (!getAccessToken()) throw new Error("dropbox login failed");
-    return getUserName();
+  return Util.openOAuthLogin("dropbox",url,params,600,600).then( function() {
+    return Util.requestGET("/oauth/token",{ remote: "dropbox" } ).then( function(access_token) {
+      _access_token = access_token;
+      if (!getAccessToken()) throw new Error("dropbox login failed");
+    });
   });
 }
 

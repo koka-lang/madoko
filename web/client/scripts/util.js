@@ -549,10 +549,20 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     return (cap ? decodeURIComponent(cap[1]) : null);
   }
 
-  function setCookie( name, value, maxAge ) {
-    var date = new Date( Date.now() + maxAge * 1000 );
-    document.cookie = name + "=" + encodeURIComponent(value) + ";path=/;secure;expires=" + date.toGMTString();
+  function setCookie( name, value, opts ) {
+    if (!opts) opts = {};
+    if (typeof opts === "number") opts = { maxAge: opts };
+    if (!opts.expires) opts.expires = (opts.maxAge ? new Date( Date.now() + opts.maxAge * 1000 ) : new Date(0));
+    else if (typeof opts.expires !== "object") opts.expires = new Date(opts.expires);
+
+    var cookie = name + "=" + encodeURIComponent(value);
+    cookie += ";path=" + (opts.path || "/");
+    if (opts.secure!==false) cookie += ";secure";
+    //if (opts.httpOnly) cookie += ";httpOnly";
+    cookie += ";expires=" + opts.expires.toGMTString();    
+    document.cookie = cookie;
   }
+
 
 
   function getScrollTop( elem ) {
@@ -1207,9 +1217,9 @@ doc.execCommand("SaveAs", null, filename)
   function withOAuthState(remote, action) {
     var state = Date.now().toFixed(0) + "-" + (Math.random() * 999999).toFixed(0);
     var key   = "oauth/state-" + remote;
-    sessionStorage.setItem( key, state ); 
+    setCookie(key,state,{maxAge: 30, httpOnly: true, secure: true});
     return action(state).always( function() {
-      sessionStorage.removeItem( key );
+      setCookie(key,"",{maxAge: 0});
     });
   }
 
@@ -1217,8 +1227,6 @@ doc.execCommand("SaveAs", null, filename)
     return withOAuthState( remote, function(state) {
       params.state = state;
       return openModalPopup(url,params,"oauth",width,height); 
-    }).then( function() {
-      return getSessionObject("oauth/auth-" + remote);
     });
   }
 

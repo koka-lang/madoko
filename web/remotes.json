@@ -1,0 +1,15 @@
+{
+  "dropbox": {
+    "client_id"     : "3vj9witefc2z44w",
+    "xclient_secret": "uCDVZB5bZkqdUlA2M5vnyA==",
+    "token_url"     : "https://api.dropbox.com/1/oauth2/token",
+    "redirect_uris" : ["https://madoko.cloudapp.net/redirect/dropbox", "https://www.madoko.net/redirect/dropbox"],
+    "flow"          : "code",
+    "account_url"   : "https://api.dropbox.com/1/account/info"
+  },
+  "onedrive": {
+    "redirect_uris" : ["https://madoko.cloudapp.net/redirect/onedrive", "https://www.madoko.net/redirect/onedrive"],
+    "flow"          : "token",
+    "account_url"   : "https://apis.live.net/v5.0/me"
+  } 
+}

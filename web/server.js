@@ -20,6 +20,7 @@ var crypto  = require("crypto");
 var dns     = require("dns");
 var https   = require("https");
 var http    = require("http");
+var Url     = require("url");
 
 var express       = require('express');
 var bodyParser    = require("body-parser");
@@ -159,9 +160,9 @@ function initSession(req) {
     req.session.userid = uniqueHash();
     domain.newUsers++;
   }
-  console.log("initSession: userid: " + req.session.userid);
+  //console.log("initSession: userid: " + req.session.userid);
   if (req.sessionCookies.get("auth")) {
-    console.log("auth: " + req.sessionCookies.get("auth"));
+    req.clearCookie("auth");
   }
   return req.session.userid;
 }
@@ -202,7 +203,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
         domain.requests--;
         entry.time = Date.now() - start;
         if (logev && logit) logev.entry(entry);
-        res.send(200,result);
+        res.status(200).send(result);
       }, function(err) {
         domain.requests--;
         onError(req,res,err);
@@ -212,7 +213,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
       domain.requests--;
       entry.time = Date.now() - start;
       if (logev && logit) logev.entry(entry);
-      res.send(200,x);
+      res.status(200).send(x);
     }
   }
   catch(err) {
@@ -264,7 +265,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(bodyParser({limit: limits.fileSize, strict: false }));
-app.use(cookieSession({ name: "session", secret: passphrase, encrypted: true, maxAge: limits.cookieAge, httpOnly: true, secure: true, signed: false }));
+app.use(cookieSession({ name: "session", secret: passphrase, encrypted: true, _maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
 
 app.use(function(err, req, res, next){
   if (!err) return next();
@@ -691,42 +692,109 @@ function madokoRun( userpath, docname, files, pdf ) {
 
 
 // -------------------------------------------------------------
-// Live authentication redirection
+// Authentication redirection
 // -------------------------------------------------------------
+function encrypt(secret,value) {
+  var cipher = crypto.createCipher('aes256', secret);
+  var encrypted = cipher.update(value, 'utf8', 'base64') + cipher.final('base64');
+  return encrypted;
+}
 
-function redirectPage(remote) { 
+function decrypt(secret,value) {
+  var decipher = crypto.createDecipher('aes256', secret);
+  var decrypted = decipher.update(value, 'base64', 'utf8') + decipher.final('utf8');
+  return decrypted;
+}
+
+var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
+properties(remotes).forEach( function(name) {
+  var remote = remotes[name];
+  if (remote.xclient_id) remote.client_id = decrypt(passphrase, remote.xclient_id);
+  if (remote.xclient_secret) remote.client_secret = decrypt(passphrase, remote.xclient_secret);
+  if (!remote.name) remote.name = name;
+});
+
+function redirectPage(remote, message ) { 
+  if (!message) {
+    message = "Logged in to " + remote.name;
+  }
   return [
     '<html>',
     '<head>',
     '  <title>Madoko ' + remote + ' login</title>',
     '</head>',
     '<body>',
-    '  <script id="auth" data-remote="' + remote + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
-    '</body>',
+    '  <p>' + message + '</p>',
+    '  <script id="auth" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '</body>',    
     '</html>'
   ].join("\n");
 }
 
-var dropboxCallbackPage = 
-['<html>',
-'<head>',
-'  <title>Madoko Dropbox Callback</title>',
-'  <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="3vj9witefc2z44w"></script>',
-'  <style>',
-'    body {',
-'      text-align: center;',
-'      font-family: "Segoe UI", sans-serif;',
-'      font-size: large',
-'    }',
-'  </style>',
-'</head>',
-'<body>',
-' <p>You successfully logged into Dropbox!</p>',
-' <div id="choose-container"></div>',
-'</body>',
-'<script src="../scripts/auth-dropbox.js" type="text/javascript"></script>',
-'</html>'
-].join("\n");
+function redirectError(remote,message) {
+  return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""));
+}
+
+
+
+
+function oauthLogin(req,res,remote) {
+  res.status(200);
+  if (!remote) {
+    return redirectPage(remote, "Could not login; unknown remote service." );
+  }
+  if (remote.flow === "token") {
+    return redirectPage(remote);
+  }
+
+  // code flow
+  // check state and redirection uri
+  var state = req.query.state;
+  var stateCookie = "oauth/state-" + remote.name;
+  var state0 = req.sessionCookies.get(stateCookie); res.clearCookie(stateCookie);
+  console.log("states: " + state + ", " + state0);
+  if (state != state0) {
+    return redirectError(remote, "The state parameter did not match; this might indicate a CSRF attack?" );
+  }
+  var uri = req.protocol + "://" + req.hostname + req.path;
+  if (!remote.redirect_uris || remote.redirect_uris.indexOf(uri) < 0) {
+    return redirectError(remote, "Invalid redirection url: " + uri ); 
+  }
+
+  // get access token
+  var query = { 
+    code: req.query.code, 
+    grant_type: "authorization_code", 
+    redirect_uri: uri,    
+    client_id: remote.client_id,
+    client_secret: remote.client_secret,
+  };
+  return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
+    if (!tokenInfo || !tokenInfo.access_token) {
+      return redirectError("Failed to get access token from the token server.");
+    }
+    //req.session[remote.name] = { access_token: info.access_token };
+    return makeRequest( { url: remote.account_url, headers: { Authorization: "Bearer " + tokenInfo.access_token }, secure: true, json: true } ).then( function(info) {
+      console.log(info);
+      var userName = info.display_name || info.name || "<unknown>";
+      var userInfo = {
+        uid: info.uid || info.id || info.user_id || info.userid || null,
+        access_token: tokenInfo.access_token,
+        created:  new Date().toISOString(),
+      };
+      // store info in our encrypted cookie
+      req.session[remote.name] = userInfo;
+      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, name: userName, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
+      return redirectPage(remote);      
+    }, function(err) {
+      console.log("access_token failed: " + err.toString());
+      return redirectError(remote, "Failed to retrieve account information.");
+    });
+  }, function(err) {
+    console.log("authorization failed: " + err.toString());
+    return redirectError(remote, "Failed to contact the token server.");
+  });
+}
 
 // -------------------------------------------------------------
 // Onedrive request redirection:
@@ -734,14 +802,48 @@ var dropboxCallbackPage =
 // content request over our server
 // -------------------------------------------------------------
 
-function requestGET(query,encoding) {
+function urlParamsEncode( obj ) {
+  var vals = [];
+  properties(obj).forEach( function(prop) {
+    vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] != null ? obj[prop].toString() : "") );
+  });
+  return vals.join("&");
+}
+
+function requestGET(query, encoding) {
+  return makeRequest( { url: query, encoding: encoding } );
+}
+
+function makeRequest(options,data) {
+  if (typeof options==="string") options = { url: options };
+  if (!options.method) options.method = "GET";
+  if (options.url) {
+    var parts = Url.parse(options.url);
+    options.hostname = parts.hostname;
+    options.port = parts.port;
+    options.path = parts.path;
+    if (!options.secure) options.secure = (parts.protocol != "http:");
+  }
+  if (options.query) {
+    options.path += "?" + urlParamsEncode(options.query);
+  }
+  if (data) {
+    var data = urlParamsEncode(data);
+    if (!options.headers) options.headers = {};
+    options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    options.headers['Content-Length'] = data.length;
+  }
+  
   return new Promise( function(cont) {
     var req;
     var timeout = setTimeout( function() { 
       if (req) req.abort();
-    }, limits.timeoutGET );
-    req = (startsWith(query,"http://") ? http : https).get(query, function(res) {
-      if (encoding) res.setEncoding(encoding);
+    }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
+    console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
+    console.log(options);
+    // (options.secure===false ? http : https)
+    req = (options.secure===false ? http : https).request(options, function(res) {
+      if (options.encoding) res.setEncoding(options.encoding);
       var body = "";
       res.on('data', function(d) {
         body += d;
@@ -751,6 +853,14 @@ function requestGET(query,encoding) {
       });
       res.on('end', function() {
         clearTimeout(timeout);
+        if (options.json) {
+          try {
+            body = JSON.parse(body);
+          }
+          catch(exn) {
+            body = null;
+          }
+        }
         cont( null, body ); //(encoding ? new Buffer(body,encoding) : body) );
       });
       res.on('error', function(err) {
@@ -758,6 +868,10 @@ function requestGET(query,encoding) {
         cont(err, "");
       })
     });
+    if (data) {
+      req.write(data);
+    }
+    req.end();        
   });  
 }
 
@@ -996,27 +1110,38 @@ app.post("/report/csp", function(req,res) {
 });
 
 app.get("/redirect/live", function(req,res) {
-  //event( req, res, false, function() {
+  event( req, res, true, function() {
     console.log("live redirect authentication");
-    res.send(200,redirectPage("onedrive"));
-  //});
+    return oauthLogin(req,res,remotes.onedrive);
+  });
 });
 
 app.get("/redirect/onedrive", function(req,res) {
-  //event( req, res, false, function() {
+  event( req, res, true, function() {
     console.log("onedrive redirect authentication");
-    res.send(200,redirectPage("onedrive"));
-  //});
+    return oauthLogin(req,res,remotes.onedrive);
+  });
 });
 
 app.get("/redirect/dropbox", function(req,res) {
-  //event( req, res, false, function() {
+  event( req, res, true, function() {
     console.log("dropbox redirect authentication");
     console.log(req.query);
     console.log(req.url);
-    res.send(200,redirectPage("dropbox"));
-  //});
+    console.log(req.sessionCookies.get("oauth/state-dropbox"));
+    return oauthLogin(req,res,remotes.dropbox);
+  });
 });
+
+app.get("/oauth/token", function(req,res) {
+  event( req, res, true, function() {
+    var remoteName = req.param("remote");
+    console.log("retrieve access token for: " + remoteName);
+    var remote = req.session[remoteName];
+    if (!remote || !remote.access_token) throw { httpCode: 404, message: "Not logged in to " + remoteName };
+    return remote.access_token;
+  });
+})
 
 app.get("/remote/onedrive", function(req,res) {
   event( req, res, true, function() {
