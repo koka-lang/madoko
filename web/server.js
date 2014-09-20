@@ -741,7 +741,7 @@ function redirectPage(remote, message, status ) {
     '  </style>',
     '</head>',
     '<body>',
-    '  <p>' + message + '</p>',
+    '  <p id="message">' + message + '</p>',
     '  <p><button id="button-close">Close Window</button></p>', 
     '  <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
     '</body>',    

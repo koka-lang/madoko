@@ -7,9 +7,9 @@
 ---------------------------------------------------------------------------*/
 
 var success = false;
-var script = document.getElementById("auth");
-var remote = (script ? script.getAttribute("data-remote") : "");
-var status = (script ? script.getAttribute("data-status") : "unknown");
+var script  = document.getElementById("auth");
+var remote  = (script ? script.getAttribute("data-remote") : "");
+var status  = (script ? script.getAttribute("data-status") : "unknown");
 
 if (status === "ok") {
   //setTimeout( function() { window.close(); }, 1000 );
@@ -20,6 +20,13 @@ document.getElementById("button-close").onclick = function() {
   window.close();
 };
 
+
+function message(msg) {
+  var elem = document.getElementById("message");
+  if (elem && elem.textContent) {
+    elem.textContent = msg;
+  }  
+}
 
 function setSessionValue( owner, name, value ) {
   if (owner.sessionStorage && name) owner.sessionStorage.setItem(name,value);
@@ -65,20 +72,20 @@ try {
           var success = true;
         }
         else {
-          document.body.innerHTML = "The access_token was not present in the reponse.";
+          message("The access_token was not present in the reponse.");
         }
       }
       else {
-        document.body.innerHTML = "The state parameter does not match; this might indicate a CSRF attack?";
+        message("The state parameter does not match; this might indicate a CSRF attack?");
       }
     }
     else {
-      document.body.innerHTML = "The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?";
+      message("The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?");
     }
   }
 }
 catch(exn) {
-  document.body.innerHTML = "Error, could not log in:<br>" + encodeURI(exn.toString());
+  message("Error, could not log in:<br>" + encodeURI(exn.toString()));
 }
 
 if (success) {
