@@ -91,7 +91,7 @@ var OAuthRemote = (function() {
     var self = this;
     if (typeof options === "string") options = { url: options };
     options.method = "GET";
-    if (!options.contentType) options.contentType = ";";
+    if (options.contentType === undefined) options.contentType = ";";
     return self._requestXHR(options,params);
   }
 

@@ -1078,7 +1078,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
       req.setRequestHeader(hdr, headers[hdr]);
     });
 
-    if (contentType != null) req.setRequestHeader("Content-Type", contentType);    
+    if (contentType) req.setRequestHeader("Content-Type", contentType);    
     req.send(content);
     return promise;
   }
