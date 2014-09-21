@@ -16,6 +16,7 @@ syntax:regexp
 ^doc/contrib/
 ^node_modules/
 ^web/client/lib/
+^web/client/private/
 ^web/client/styles/
 ^web/client/jquery-ui/
 ^web/client/highlight.js$
