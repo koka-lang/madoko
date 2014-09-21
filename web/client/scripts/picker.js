@@ -415,7 +415,7 @@ var Picker = (function() {
       document.getElementById("remote-logo").src = "images/dark/" + self.current.remote.logo();
       
       // check connection
-      return self.current.remote.connect().then( function(isConnected) {
+      return self.current.remote.connect(true /* verify */).then( function(isConnected) {
         if (!isConnected) {
           Util.addClassName(app,"command-login");
           Util.addClassName(app,"command-login-" + self.options.command );
@@ -475,7 +475,8 @@ var Picker = (function() {
   Picker.prototype.displayFolder = function() {
     var self = this;
     self.displayFolderName();
-    listing.innerHTML = "Loading...";
+    var spinner = "<img class='spinner spin' style='height:1em' src='images/icon-spinner.gif'></img>";
+    listing.innerHTML = spinner + " Loading...";
     return self.current.remote.listing(self.current.folder).then( function(items) {
       //console.log(items);
       var html = items.map( function(item) {
@@ -488,6 +489,9 @@ var Picker = (function() {
 
       });
       listing.innerHTML = html.join("");
+    }, function(err) {
+      listing.innerHTML = "<p>Error: Could not retrieve directory listing.</p>";
+      throw err;
     });
   }
 

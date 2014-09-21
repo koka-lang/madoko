@@ -65,7 +65,7 @@ var OAuthRemote = (function() {
       }
       return Util.requestXHR( options, params, body ).then( null, function(err) {
         // err.message.indexOf("request_token_expired") >= 0
-        if (err && (err.httpCode === 401 || (err.message && err.message.indexOf("request_token_expired") >= 0 ))) { // access token expired 
+        if (err && err.httpCode === 401) { // access token expired 
           self.logout();
         }
         throw err;
@@ -104,7 +104,7 @@ var OAuthRemote = (function() {
 
     if (token) {
       // invalidate the access_token
-      return Util.requestPOST( {url: "/oauth/logout"}, { remote: "dropbox" } );
+      return Util.requestPOST( {url: "/oauth/logout"}, { remote: self.name } );
     }
     else {
       return Promise.resolved();
@@ -125,9 +125,16 @@ var OAuthRemote = (function() {
   }
 
   // try to set access token without full login; return whether logged in or not.
-  OAuthRemote.prototype.connect = function() {
+  OAuthRemote.prototype.connect = function(verify) {
     var self = this;
-    return self._withConnect( function(connected) { return connected; } );
+    return self._withConnect( function(connected) { 
+      if (!connected || !verify) return connected;
+      return self.getUserInfo().then( function() {
+        return true;
+      }, function(err) {
+        return false;
+      });
+    });
   }
 
   OAuthRemote.prototype.withUserId = function(action) {
