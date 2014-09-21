@@ -18,7 +18,7 @@ var OAuthRemote = (function() {
     self.authorizeUrl   = opts.authorizeUrl;
     self.authorizeParams= opts.authorizeParams;
     self.accountUrl     = opts.accountUrl;
-    self.useAuthHeader  = opts.useAuthHeader || true;
+    self.useAuthHeader  = (opts.useAuthHeader !== false);
     self.access_token   = null;
     self.userName = null;
     self.userId = null;
@@ -91,6 +91,7 @@ var OAuthRemote = (function() {
     var self = this;
     if (typeof options === "string") options = { url: options };
     options.method = "GET";
+    if (!options.contentType) options.contentType = ";";
     return self._requestXHR(options,params);
   }
 
