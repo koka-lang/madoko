@@ -151,9 +151,10 @@ var Picker = (function() {
     
   Picker.prototype.onLogin = function() {
     var self = this;
-    if (self.current.remote.connected()) return;
-    self.current.remote.getUserName().then( function(userName) {
-      self.display();
+    return self.current.remote.login().then( function() {
+      return self.current.remote.getUserName().then( function(userName) {
+        self.display();
+      });
     });
   }
 

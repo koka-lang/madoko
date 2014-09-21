@@ -127,7 +127,7 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
     return onedrive.requestPOST( folderId.toString(), { }, { 
       name: dir, 
       description: "" 
-    })).then( function(newInfo) {
+    }).then( function(newInfo) {
       if (dirs.length===0) return { id: newInfo.id, created: true }; // remember we created it
       return _ensureSubDirs( newInfo.id, dirs );
     }, function(err) {
@@ -206,6 +206,10 @@ var Onedrive = (function() {
     self.folder = folder || "";
   }
 
+  Onedrive.prototype.createNewAt = function(folder) {
+    return createAt(folder);
+  }
+
   Onedrive.prototype.type = function() {
     return type();
   }
@@ -214,9 +218,8 @@ var Onedrive = (function() {
     return logo();
   }  
 
-  Onedrive.prototype.persist = function() {
-    var self = this;
-    return { folder: self.folder };
+  Onedrive.prototype.isRemote = function() {
+    return true;
   }
 
   Onedrive.prototype.getFolder = function() {
@@ -224,18 +227,32 @@ var Onedrive = (function() {
     return self.folder;
   }
 
+  Onedrive.prototype.persist = function() {
+    var self = this;
+    return { folder: self.folder };
+  }
+  
   Onedrive.prototype.fullPath = function(fname) {
     var self = this;
     return Util.combine(self.folder,fname);
   }
 
-  Onedrive.prototype.connect = function(dontForce) {
-    return login(dontForce);
+  Onedrive.prototype.connect = function() {
+    return onedrive.connect();
   }
 
-  Onedrive.prototype.createNewAt = function(folder) {
-    return createAt(folder);
+  Onedrive.prototype.login = function(dontForce) {
+    return onedrive.login(dontForce);
   }
+
+  Onedrive.prototype.logout = function() {
+    return onedrive.logout();
+  }
+
+  Onedrive.prototype.getUserName = function() {
+    return onedrive.getUserName();
+  }
+
 
   Onedrive.prototype.pushFile = function( fpath, content ) {
     var self = this;
@@ -288,26 +305,6 @@ var Onedrive = (function() {
     });
   }
 
-
-  Onedrive.prototype.connected = function() {
-    return (getAccessToken() != null);
-  }
-
-  Onedrive.prototype.login = function() {
-    return login();
-  }
-
-
-  Onedrive.prototype.logout = function() {
-    logout();
-  }
-
-  Onedrive.prototype.getUserName = function() {
-    var self = this;
-    if (!self.connected()) return Promise.resolved(null);
-    return getUserName();
-  }
-
   Onedrive.prototype.getShareUrl = function(fname) {
     var self = this;
     return infoFromPath( self.fullPath(fname) ).then( function(info) {
@@ -322,10 +319,9 @@ var Onedrive = (function() {
 
 return {
   createAt  : createAt,
-  login     : login,
-  logout    : logout,
   unpersist : unpersist,
   type      : type,
+  logo      : logo,
   Onedrive  : Onedrive,
 }
 
