@@ -115,7 +115,7 @@ function createFromTemplate( storage, docName, template )
   });
 }
 
-function connect(storage) {
+function login(storage) {
   if (!storage) return Promise.resolved();
   var params = {
     command: "connect"
@@ -329,7 +329,7 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 }
 
 function createSnapshot( storage, docName ) {
-  return storage.connect().then( function() {
+  return storage.login().then( function() {
     return createSnapshotFolder( storage.remote, Util.stemname(docName) );
   }).then( function(folder) {
     return storage.remote.createNewAt( folder );
@@ -411,10 +411,17 @@ var Storage = (function() {
     return createSnapshot(self,docName);
   }
 
-  Storage.prototype.checkConnected = function() {
+  Storage.prototype.connect = function() {
     var self = this;
-    return self.remote.checkConnected();
+    return self.remote.connect();
   }
+
+  
+  Storage.prototype.login = function(dontForce) {
+    var self = this;
+    return self.remote.login(dontForce);
+  }
+
 
   /* Generic */
   Storage.prototype.forEachFile = function( action ) {
@@ -424,7 +431,7 @@ var Storage = (function() {
     });
   }
 
-  Storage.prototype.isConnected = function() {
+  Storage.prototype.isRemote = function() {
     var self = this;
     return (self.remote && self.remote.type() !== NullRemote.type() && self.remote.type() !== HttpRemote.type() );
   }
@@ -546,11 +553,6 @@ var Storage = (function() {
     var file = self.files.get(fpath);
     if (!file || !pos) return;
     file.position = pos;    
-  }
-
-  Storage.prototype.connect = function(dontForce) {
-    var self = this;
-    return self.remote.login(dontForce);
   }
 
   Storage.prototype.getShareUrl = function(fpath) {
@@ -702,7 +704,7 @@ var Storage = (function() {
     var remotes = new Map();
     var merges = [];
 
-    return self.connect(self.isSynced()).then( function() {      
+    return self.login(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );
       return Promise.when( syncs ).then( function(res) {
         res.forEach( function(msg) {
@@ -901,10 +903,10 @@ var Storage = (function() {
 return {
   openFile  : openFile,
   createFile: createFile,
-  connect   : connect,
+  login     : login,
   discard   : discard,
   saveAs    : saveAs,
-  
+
   httpOpenFile      : httpOpenFile,
   createNullStorage : createNullStorage,
   createFromTemplate: createFromTemplate,

@@ -158,10 +158,6 @@ var Dropbox = (function() {
     return Util.combine(self.folder,fname);
   }
 
-  Dropbox.prototype.checkConnected = function() {
-    return dropbox.checkConnected();
-  }
-
   Dropbox.prototype.connect = function() {
     return dropbox.connect();
   }
@@ -191,7 +187,7 @@ var Dropbox = (function() {
 
   Dropbox.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return self.getRemoteTime(fpath).then( function(date) {
+    return self.getRemoteTime(fpath).then( function(date) { // TODO: can we make this one request?
       if (!date) return Promise.rejected("file not found: " + fpath);
       return pullFile( self.fullPath(fpath), binary ).then( function(info) {
         var file = {
@@ -220,7 +216,7 @@ var Dropbox = (function() {
     return folderInfo( self.fullPath(fpath) ).then( function(info) {
       return (info ? info.contents : []).map( function(item) {
         item.type = item.is_dir ? "folder" : "file";
-        item.isShared = item.is_dir && item.icon==="folder_user";
+        item.isShared = (item.shared_folder || item.parent_shared_folder_id ? true : false);
         return item;
       });
     });

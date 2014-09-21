@@ -479,7 +479,7 @@ var UI = (function() {
       }
       else {
         return self.anonEvent( function() {
-          return self.connect();
+          return self.login();
         });
       }
     };
@@ -636,10 +636,10 @@ var UI = (function() {
     util.enablePopupClickHovering();    
   }
 
-  UI.prototype.connect = function() {
+  UI.prototype.login = function() {
     var self = this;
     if (!self.storage) return Promise.resolved(false);
-    return self.storage.connect().always( function() {
+    return self.storage.login().always( function() {
       return self.updateConnectionStatus();
     });
   }
@@ -648,7 +648,7 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (!stg) return Promise.resolved(false);
-    return stg.checkConnected().then( function(isConnected) {
+    return stg.connect().then( function(isConnected) {
       self.isConnected = isConnected; 
       self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
       if (self.storage) {
@@ -1179,15 +1179,15 @@ var UI = (function() {
       if (storage.isEditable(file)) {
         var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
         var words   = matches ? matches.length : 0;
-        if (words > 0) {
+        if (words >= 0) {
           extra = "<span class='file-size'>" + words.toFixed(0) + " words</span>";
         }
       }
       else {
         var len = file.content.length;
         if (file.encoding === storage.Encoding.Base64) len = (len/4)*3;
-        var kb = (len + 1023)/1024;
-        if (kb > 100) {
+        var kb = (len + 1023)/1024; // round up..
+        if (kb >= 0) {
           extra = "<span class='file-size'>" + kb.toFixed(0) + " kb</span>";
         }
       }
@@ -1246,7 +1246,7 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.isConnected() || !self.allowServer) {  // unconnected storage (null or http)
+    if (!self.storage.isRemote() || !self.allowServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
@@ -1914,7 +1914,7 @@ var UI = (function() {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
       if (!self.isConnected && login) {
-        return self.connect().then( function() {  
+        return self.login().then( function() {  
           return self._synchronize(); 
         });
       }

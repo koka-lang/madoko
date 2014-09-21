@@ -40,6 +40,7 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype._requestXHR = function( options, params, body ) {
     var self = this;
+    if (typeof options === "string") options = { url: options };
     return self._withAccessToken( function(token) {
       if (options.useAuthHeader !== false && self.useAuthHeader) {
         if (!options.headers) options.headers = {};
@@ -106,6 +107,7 @@ var OAuthRemote = (function() {
     });
   }
 
+  // Do a full login. Pass 'true' to give up if not yet logged in (instead of presenting a login form to the user).
   OAuthRemote.prototype.login = function(dontForce) {
     var self = this;
     return self._tryLogin( function(ok) {
@@ -123,6 +125,7 @@ var OAuthRemote = (function() {
     });
   }
 
+  // try to set access token without full login; return whether logged in or not.
   OAuthRemote.prototype.connect = function() {
     var self = this;
     return self.login(true).then( function() { return true; }, function(err) { return false; });
@@ -153,12 +156,13 @@ var OAuthRemote = (function() {
     });
   }
 
-  OAuthRemote.prototype.haveToken = function() {
+  OAuthRemote.prototype.isLoggedIn = function() {
     var self = this;
     return (self.access_token ? true : false);
   }
 
-  OAuthRemote.prototype.checkConnected = function() {
+  // check if logged-in, online, and if the access_token is still valid
+  OAuthRemote.prototype.verifyLoginStatus = function() {
     var self = this;
     return self.getUserInfo().then( function(info) { return true; }, function(err) { return false; });    
   } 
