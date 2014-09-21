@@ -11,12 +11,15 @@ define(["../scripts/promise","../scripts/util","../scripts/oauthRemote"],
 
 var dropbox = new OAuthRemote( {
   name         : "dropbox",
-  client_id    : "3vj9witefc2z44w",
-  //redirect_uri : "https://www.madoko.net/redirect/dropbox",
-  redirect_uri : "https://madoko.cloudapp.net/redirect/dropbox",
-  response_type: "code",
-  accountUrl   : "https://api.dropbox.com/1/account/info",
+  defaultDomain: "https://api.dropbox.com/1/",
+  accountUrl   : "account/info",
   authorizeUrl : "https://www.dropbox.com/1/oauth2/authorize",
+  authorizeParams: {
+    client_id    : "3vj9witefc2z44w",
+    //redirect_uri : "https://www.madoko.net/redirect/dropbox",
+    redirect_uri : "https://madoko.cloudapp.net/redirect/dropbox",
+    response_type: "code",
+  },
   useAuthHeader: true,
 } );
 
@@ -143,6 +146,10 @@ var Dropbox = (function() {
     return logo();
   }
 
+  Dropbox.prototype.isRemote = function() {
+    return true;
+  }
+
   Dropbox.prototype.getFolder = function() {
     var self = this;
     return self.folder;
@@ -170,12 +177,8 @@ var Dropbox = (function() {
     return dropbox.logout();
   }
 
-  Dropbox.prototype.createSubFolder = function(dirname) {
-    var self = this;
-    var folder = self.fullPath(dirname);
-    return createFolder(folder).then( function(created) {
-      return { folder: folder, created: created };
-    });
+  Dropbox.prototype.getUserName = function() {
+    return dropbox.getUserName();
   }
 
   Dropbox.prototype.pushFile = function( fpath, content ) {
@@ -211,6 +214,14 @@ var Dropbox = (function() {
     });
   }
 
+  Dropbox.prototype.createSubFolder = function(dirname) {
+    var self = this;
+    var folder = self.fullPath(dirname);
+    return createFolder(folder).then( function(created) {
+      return { folder: folder, created: created };
+    });
+  }
+
   Dropbox.prototype.listing = function( fpath ) {
     var self = this;
     return folderInfo( self.fullPath(fpath) ).then( function(info) {
@@ -220,10 +231,6 @@ var Dropbox = (function() {
         return item;
       });
     });
-  }
-
-  Dropbox.prototype.getUserName = function() {
-    return dropbox.getUserName();
   }
 
   Dropbox.prototype.getShareUrl = function(fname) {
@@ -237,11 +244,11 @@ var Dropbox = (function() {
 
 
 return {
-  createAt: createAt,
+  createAt : createAt,
   unpersist: unpersist,
-  type: type,
-  logo: logo,
-  Dropbox: Dropbox,
+  type     : type,
+  logo     : logo,
+  Dropbox  : Dropbox,
 }
 
 });

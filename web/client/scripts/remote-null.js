@@ -8,6 +8,10 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
+function createAt(folder) {
+  return Promise.resolved( new NullRemote(folder) );
+}
+
 function unpersist(obj) {
   return new NullRemote(obj ? obj.folder : "");
 }
@@ -16,10 +20,20 @@ function type() {
   return "local";
 }
 
+
+function logo() {
+  return "icon-local.png";
+}
+
+
 var NullRemote = (function() {
   function NullRemote(folder) {
     var self = this;
     self.folder = folder || "";    
+  }
+
+  NullRemote.prototype.createNewAt = function(folder) {
+    return createAt(folder);
   }
 
   NullRemote.prototype.type = function() {
@@ -27,7 +41,11 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.logo = function() {
-    return "icon-local.png";
+    return logo();
+  }
+
+  NullRemote.prototype.isRemote = function() {
+    return false;
   }
 
   NullRemote.prototype.getFolder = function() {
@@ -35,31 +53,39 @@ var NullRemote = (function() {
     return self.folder;
   }
 
-  NullRemote.prototype.fullPath = function(fname) {
-    var self = this;
-    return Util.combine(self.folder,fname);
-  }
-
   NullRemote.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };
   }
 
-  NullRemote.prototype.connect = function(dontForce) {
+  NullRemote.prototype.fullPath = function(fname) {
+    var self = this;
+    return Util.combine(self.folder,fname);
+  }
+
+  NullRemote.prototype.connect = function() {
+    return Promise.resolved(true);
+  }
+
+  NullRemote.prototype.login = function(dontForce) {
     return Promise.resolved();
   }
 
-  NullRemote.prototype.createNewAt = function(folder) {
-    return Promise.resolved( new NullRemote(folder) );
+  NullRemote.prototype.logout = function() {
+    return Promise.resolved();
+  }
+
+  NullRemote.prototype.getUserName = function() {
+    return Promise.resolved("");
   }
 
   NullRemote.prototype.pushFile = function( fpath, content ) {
-    return Promise.rejected( new Error("not connected to cloud storage: cannot store files") );
+    return Promise.rejected( new Error("Not connected to cloud storage: cannot store files") );
   }
 
   NullRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return Promise.rejected( new Error("not connected to cloud storage: unable to read: " + fpath) );
+    return Promise.rejected( new Error("Not connected to cloud storage: unable to read: " + fpath) );
   }
 
   NullRemote.prototype.getRemoteTime = function( fpath ) {
@@ -71,25 +97,7 @@ var NullRemote = (function() {
   }
 
   NullRemote.prototype.listing = function( fpath ) {
-    var self = this;
     return Promise.resolved([]);
-  }
-
-  NullRemote.prototype.connected = function() {
-    return true;
-  }
-
-  NullRemote.prototype.login = function() {
-    return Promise.resolved();
-  }
-
-  NullRemote.prototype.logout = function() {
-    return;
-  }
-
-  NullRemote.prototype.getUserName = function() {
-    var self = this;
-    return Promise.resolved("");
   }
 
   NullRemote.prototype.getShareUrl = function(fname) {
@@ -101,8 +109,10 @@ var NullRemote = (function() {
 
 
 return {
+  createAt  : createAt,
   unpersist : unpersist,
   type      : type,
+  logo      : logo,
   NullRemote: NullRemote,
 }
 

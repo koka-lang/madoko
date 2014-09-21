@@ -14,27 +14,37 @@ var OAuthRemote = (function() {
     var self = this;
     
     self.name           = opts.name;
-    self.client_id      = opts.client_id;
-    self.redirect_uri   = opts.redirect_uri;
-    self.response_type  = opts.response_type || "code";
+    self.defaultDomain  = opts.defaultDomain;
     self.authorizeUrl   = opts.authorizeUrl;
+    self.authorizeParams= opts.authorizeParams;
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = opts.useAuthHeader || true;
     self.access_token   = null;
     self.userName = null;
     self.userId = null;
+    self.authorizeWidth = opts.authorizeWidth || 600;
+    self.authorizeHeight = opts.authorizeHeight || 600;
+  }
+
+  // try to set access token without full login; call action with logged in or not.
+  OAuthRemote.prototype._withConnect = function(action) {
+    var self = this;
+    if (self.access_token) return Promise.wrap(action(true));
+    if (self.access_token === false) return Promise.wrap(action(false));
+    return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(access_token) {
+      self.access_token = access_token;
+      return action(true);
+    }, function(err) {
+      self.access_token = false; // remember we tried
+      return action(false,err);
+    });
   }
 
   OAuthRemote.prototype._withAccessToken = function(action) {
     var self = this;
-    if (self.access_token) return Promise.wrap(action(self.access_token));
-    if (self.access_token === false) return Promise.rejected("Not logged in");
-    return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(access_token) {
-      self.access_token = access_token;
+    return self._withConnect( function(connected,err) {
+      if (!connected || !self.access_token) throw err;
       return action(self.access_token);
-    }, function(err) {
-      self.access_token = false; // remember we tried
-      throw err;
     });
   }
 
@@ -50,8 +60,12 @@ var OAuthRemote = (function() {
         if (!params) params = {};
         params.access_token = token;
       }
+      if (self.defaultDomain && options.url && !Util.startsWith(options.url,"http")) {
+        options.url = self.defaultDomain + options.url;
+      }
       return Util.requestXHR( options, params, body ).then( null, function(err) {
-        if (err && err.httpCode === 401) { // access token expired 
+        // err.message.indexOf("request_token_expired") >= 0
+        if (err && (err.httpCode === 401 || (err.message && err.message.indexOf("request_token_expired") >= 0 ))) { // access token expired 
           self.logout();
         }
         throw err;
@@ -96,29 +110,13 @@ var OAuthRemote = (function() {
     }
   }
 
-  OAuthRemote.prototype._tryLogin = function(action) {
-    var self = this;
-    if (self.access_token) return Promise.wrap(action(true));
-    if (self.access_token===false) return Promise.wrap(action(false));
-    return self._withAccessToken( function() { return true; }).then( function() {
-      return action(true);
-    }, function(err) {
-      return action(false);
-    });
-  }
-
   // Do a full login. Pass 'true' to give up if not yet logged in (instead of presenting a login form to the user).
   OAuthRemote.prototype.login = function(dontForce) {
     var self = this;
-    return self._tryLogin( function(ok) {
+    return self._withConnect( function(ok) {
       if (ok) return;
       if (dontForce) return Promise.rejected( new Error("Not logged in to " + self.name) );
-      var params = { 
-        response_type: self.response_type, 
-        client_id    : self.client_id, 
-        redirect_uri : self.redirect_uri,
-      };
-      return Util.openOAuthLogin(self.name,self.authorizeUrl,params,600,600).then( function() {
+      return Util.openOAuthLogin(self.name,self.authorizeUrl,self.authorizeParams,self.authorizeWidth, self.authorizeHeight).then( function() {
         self.access_token = null; // reset from 'false'
         return self._withAccessToken( function() { return; } ); // and get the token
       });
@@ -128,7 +126,7 @@ var OAuthRemote = (function() {
   // try to set access token without full login; return whether logged in or not.
   OAuthRemote.prototype.connect = function() {
     var self = this;
-    return self.login(true).then( function() { return true; }, function(err) { return false; });
+    return self._withConnect( function(connected) { return connected; } );
   }
 
   OAuthRemote.prototype.withUserId = function(action) {

@@ -416,7 +416,7 @@ var Storage = (function() {
     return self.remote.connect();
   }
 
-  
+
   Storage.prototype.login = function(dontForce) {
     var self = this;
     return self.remote.login(dontForce);
@@ -433,7 +433,7 @@ var Storage = (function() {
 
   Storage.prototype.isRemote = function() {
     var self = this;
-    return (self.remote && self.remote.type() !== NullRemote.type() && self.remote.type() !== HttpRemote.type() );
+    return (self.remote && self.remote.isRemote());
   }
 
   Storage.prototype.isSynced = function(full) {

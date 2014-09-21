@@ -6,23 +6,30 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/map","../scripts/util"], function(Promise,Map,Util) {
+define(["../scripts/promise","../scripts/map","../scripts/util","../scripts/oauthRemote"], 
+        function(Promise,Map,Util,OAuthRemote) {
 
-var onedriveOptions = {
-  client_id     : "000000004C113E9D",
-  redirect_uri  : "https://www.madoko.net/redirect/live", 
-  //redirect_uri  : "https://madoko.cloudapp.net/redirect/live",
-  scope         : ["wl.signin","wl.skydrive","wl.skydrive_update"],
-  response_type : "token",
-  display: "touch",
-};
 
-var onedriveDomain = "https://apis.live.net/v5.0/";
-var onedriveLoginUrl = "https://login.live.com/oauth20_authorize.srf";
+var onedrive = new OAuthRemote( {
+  name           : "onedrive",
+  defaultDomain  : "https://apis.live.net/v5.0/",
+  accountUrl     : "me",
+  authorizeUrl   : "https://login.live.com/oauth20_authorize.srf",
+  authorizeParams: {
+    client_id    : "000000004C113E9D",
+    redirect_uri : "https://madoko.cloudapp.net/redirect/live",
+    response_type: "code",
+    scope        : ["wl.signin","wl.skydrive","wl.skydrive_update"],
+  },
+  authorizeHeight: 650,
+  authorizeWidth : 800,
+  useAuthHeader: false,  
+} );
 
 
 /* ----------------------------------------------
    Id's, paths, and sub-directories are quite a hassle :-(
+   We set up a special cache for file paths
 ---------------------------------------------- */
 
 var pathCache = new Map();
@@ -45,25 +52,8 @@ setInterval( function() {
 }, 60000);
 
 
-function onedriveGet( path ) {
-  return onedriveRequest( Util.requestGET( onedriveDomain + path, { access_token: getAccessToken() } ) );
-}
-
-function onedriveRequest( req ) {
-  return req.then( function(res) {
-    return res;
-  }, function(err) {
-    if (err.message && err.message.indexOf("request_token_expired") >= 0) {
-      logout();
-    }
-    throw err;
-  }
-  );
-}
-
-
 function infoFromId( fileId ) {
-  return onedriveGet( fileId.toString() );
+  return onedrive.requestGET( fileId.toString() );
 }
 
 function pathFromId( id, path ) {
@@ -76,11 +66,11 @@ function pathFromId( id, path ) {
 }
 
 function rootInfo() {
-  return cache( "me/skydrive", function() { return onedriveGet("me/skydrive"); } );
+  return cache( "me/skydrive", function() { return onedrive.requestGET("me/skydrive"); } );
 }
 
 function _getListing( folderId ) {
-  return onedriveGet( folderId + "/files").then( function(res) {
+  return onedrive.requestGET( folderId + "/files").then( function(res) {
     return res.data || [];
   });
 }
@@ -134,8 +124,7 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
   var dir = dirs.shift();
   return _infoFromName( folderId, dir ).then( function(dirInfo) {
     if (dirInfo) return _ensureSubDirs( dirInfo.id, dirs );
-    var url = onedriveDomain + folderId.toString();
-    return onedriveRequest( Util.requestPOST( url, { access_token: getAccessToken() }, { 
+    return onedrive.requestPOST( folderId.toString(), { }, { 
       name: dir, 
       description: "" 
     })).then( function(newInfo) {
@@ -168,8 +157,8 @@ function ensurePath( path ) {
 /* Write a file */
 
 function _writeFileAt( folderId, name, content ) {
-  var url = onedriveDomain + folderId.toString() + "/files/" + name;                  
-  return Util.requestPUT( {url:url, contentType:";" }, { access_token: getAccessToken() }, content );
+  var url = folderId.toString() + "/files/" + name;                  
+  return onedrive.requestPUT( { url: url, contentType:";" }, {}, content );
 }
 
 function _writeFile( folderId, path, content ) {
@@ -187,54 +176,6 @@ function pushFile( path, content ) {
 }
 
 /* ----------------------------------------------
-  login
----------------------------------------------- */
-
-var _access_token = null;
-var _username = "";
-var _userid = "";
-
-function getAccessToken() {
-  if (!_access_token) {
-    var info = Util.getSessionObject("oauth/auth-onedrive");
-    if (info) {
-      _access_token = info.access_token;   
-    }
-  }
-  return _access_token;
-}
-
-
-function login(dontForce) {
-  if (getAccessToken()) return Promise.resolved();
-  if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  var params = Util.copy(onedriveOptions);  
-  return Util.openOAuthLogin("onedrive",onedriveLoginUrl,params,800,650).then( function(info) {
-    if (!getAccessToken()) throw new Error("onedrive login failed");
-    return getUserName();
-  });
-}
-
-function logout() {
-  Util.removeSessionObject( "oauth/auth-onedrive" );
-  _access_token = null;
-  _username = "";
-  _userid = "";
-}
-
-function getUserName() {
-  if (_username) return Promise.resolved(_username);
-  return onedriveGet("/me").then( function(info) {
-    if (info) {
-      _username = info.name;
-      _userid = info.id;
-    }
-    return _username;
-  });
-};
-
-
-/* ----------------------------------------------
   Main entry points
 ---------------------------------------------- */
 
@@ -246,18 +187,16 @@ function createAt( folder ) {
   });
 }
 
-
-
-/* ----------------------------------------------
-  Remote interface
----------------------------------------------- */
-
 function unpersist( obj ) {
   return new Onedrive(obj.folder || "");
 }
 
 function type() {
   return "onedrive";
+}
+
+function logo() {
+  return "icon-onedrive.png";
 }
 
 var Onedrive = (function() {
@@ -272,7 +211,7 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.logo = function() {
-    return "icon-onedrive.png";
+    return logo();
   }  
 
   Onedrive.prototype.persist = function() {
