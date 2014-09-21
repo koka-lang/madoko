@@ -115,21 +115,6 @@ function createFromTemplate( storage, docName, template )
   });
 }
 
-function checkConnected(remote) {
-  if (!remote.connected()) return Promise.resolved(false);
-  return remote.getUserName().then( function(userName) {
-    return (userName != null);
-  }, function(err) {
-    if (err.httpCode === 401) { // access token expired
-      remote.logout();
-      return false;
-    }
-    else {
-      return false;
-    }
-  });
-}
-
 function connect(storage) {
   if (!storage) return Promise.resolved();
   var params = {
@@ -344,7 +329,7 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 }
 
 function createSnapshot( storage, docName ) {
-  return storage.remote.connect().then( function() {
+  return storage.connect().then( function() {
     return createSnapshotFolder( storage.remote, Util.stemname(docName) );
   }).then( function(folder) {
     return storage.remote.createNewAt( folder );
@@ -428,7 +413,7 @@ var Storage = (function() {
 
   Storage.prototype.checkConnected = function() {
     var self = this;
-    return checkConnected(self.remote);
+    return self.remote.checkConnected();
   }
 
   /* Generic */
@@ -565,7 +550,7 @@ var Storage = (function() {
 
   Storage.prototype.connect = function(dontForce) {
     var self = this;
-    return self.remote.connect(dontForce);
+    return self.remote.login(dontForce);
   }
 
   Storage.prototype.getShareUrl = function(fpath) {
@@ -914,13 +899,14 @@ var Storage = (function() {
   
 
 return {
-  openFile: openFile,
+  openFile  : openFile,
   createFile: createFile,
-  connect: connect,
-  discard: discard,
-  saveAs: saveAs,
-  httpOpenFile    : httpOpenFile,
-  createNullStorage: createNullStorage,
+  connect   : connect,
+  discard   : discard,
+  saveAs    : saveAs,
+  
+  httpOpenFile      : httpOpenFile,
+  createNullStorage : createNullStorage,
   createFromTemplate: createFromTemplate,
   
   Storage         : Storage,

@@ -19,23 +19,6 @@ function capitalize(s) {
   return s[0].toUpperCase() + s.substr(1);
 }
 
-function checkConnected(remote) {
-  if (!remote.connected()) return Promise.resolved(false);
-  return remote.getUserName().then( function(userName) {
-    return (userName != null);
-  }, function(err) {
-    if (err.httpCode === 401) { // access token expired
-      remote.logout();
-      return false;
-    }
-    else {
-      return true;
-    }
-  });
-}  
-
-
-
 var Picker = (function() {
   var fade      = document.getElementById("fade");
   var app       = document.getElementById("picker");
@@ -169,7 +152,7 @@ var Picker = (function() {
   Picker.prototype.onLogin = function() {
     var self = this;
     if (self.current.remote.connected()) return;
-    self.current.remote.login().then( function(userName) {
+    self.current.remote.getUserName().then( function(userName) {
       self.display();
     });
   }
@@ -431,7 +414,7 @@ var Picker = (function() {
       document.getElementById("remote-logo").src = "images/dark/" + self.current.remote.logo();
       
       // check connection
-      return checkConnected(self.current.remote).then( function(isConnected) {
+      return self.current.remote.connect().then( function(isConnected) {
         if (!isConnected) {
           Util.addClassName(app,"command-login");
           Util.addClassName(app,"command-login-" + self.options.command );
