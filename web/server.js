@@ -7,13 +7,12 @@
 ---------------------------------------------------------------------------*/
 var passphraseSSL = process.argv[2];
 if (!passphraseSSL) {
-  throw new Error("Need to supply passphrase as an argument.");
+  throw new Error("Need to supply passphrase(s) as an argument.");
 }
 
-var passphraseSession = process.argv[3];
-if (!passphraseSession) {
-  passphraseSession = "session:" + passphraseSSL + ":" + new Date().toDateString().replace(/\s+/,"-");
-}
+var passphraseLocal   = passphraseSSL + (process.argv[3] || "local");
+var passphraseSession = passphraseSSL + (process.argv[4] || "session") + ":" + new Date().toDateString().replace(/\s+/,"-");
+
 
 var readline= require("readline");
 var cp      = require("child_process");
@@ -724,7 +723,7 @@ var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
 properties(remotes).forEach( function(name) {
   var remote = remotes[name];
   //if (remote.xclient_id) remote.client_id = decrypt(passphraseSSL, remote.xclient_id);
-  if (remote.xclient_secret) remote.client_secret = decrypt(passphraseSSL, remote.xclient_secret);
+  if (remote.xclient_secret) remote.client_secret = decrypt(passphraseLocal, remote.xclient_secret);
   if (!remote.name) remote.name = name;
 });
 
@@ -779,7 +778,7 @@ function oauthLogin(req,res,remote) {
 
   // get access token
   var query = { 
-    code: req.query.code, 
+    code: req.query.code,                
     grant_type: "authorization_code", 
     redirect_uri: uri,    
     client_id: remote.client_id,
@@ -789,8 +788,20 @@ function oauthLogin(req,res,remote) {
     if (!tokenInfo || !tokenInfo.access_token) {
       return redirectError("Failed to get access token from the token server.");
     }
+    console.log(tokenInfo);
     //req.session[remote.name] = { access_token: info.access_token };
-    return makeRequest( { url: remote.account_url, headers: { Authorization: "Bearer " + tokenInfo.access_token }, secure: true, json: true } ).then( function(info) {
+    var options = { 
+      url: remote.account_url, 
+      secure: true, 
+      json: true 
+    };
+    if (remote.useAuthHeader) {
+      options.headers = { Authorization: "Bearer " + tokenInfo.access_token };
+    }
+    else {
+      options.query = { access_token: tokenInfo.access_token };
+    }
+    return makeRequest( options ).then( function(info) {
       console.log(info);
       var userName = info.display_name || info.name || "<unknown>";
       var userInfo = {
@@ -815,8 +826,19 @@ function oauthLogin(req,res,remote) {
 
 function oauthLogout(req,res,remote,access_token) {
   if (!remote.disable_url) return;
-  console.log("disabling token...");
-  return makeRequest({url: remote.disable_url, headers: { Authorization: "Bearer " + access_token }, secure: true, json: true } ).then( function(info) {
+  console.log("disabling token...");  
+  var options = { 
+    url: remote.disable_url, 
+    secure: true, 
+    json: true 
+  };
+  if (remote.useAuthHeader) {
+    options.headers = { Authorization: "Bearer " + access_token };
+  }
+  else {
+    options.query = { access_token: access_token };
+  }
+  return makeRequest(options).then( function(info) {
     if (info) console.log("Successfully disabled the access token");
   });
 }
@@ -839,7 +861,7 @@ function requestGET(query, encoding) {
   return makeRequest( { url: query, encoding: encoding } );
 }
 
-function makeRequest(options,data) {
+function makeRequest(options,obj) {
   if (typeof options==="string") options = { url: options };
   if (!options.method) options.method = "GET";
   if (options.url) {
@@ -852,10 +874,18 @@ function makeRequest(options,data) {
   if (options.query) {
     options.path += "?" + urlParamsEncode(options.query);
   }
-  if (data) {
-    var data = urlParamsEncode(data);
-    if (!options.headers) options.headers = {};
-    options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+  var data = "";
+  if (obj) {
+    if (typeof obj === "string") {
+      data = obj;
+      options.headers['Content-Type'] = options.contentType || ';';
+    }
+    else {
+      data = urlParamsEncode(obj);
+      if (!options.headers) options.headers = {};
+      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    }
     options.headers['Content-Length'] = data.length;
   }
   
@@ -865,7 +895,7 @@ function makeRequest(options,data) {
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
     console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
-    // console.log(options);
+    //console.log(options);
     req = (options.secure===false ? http : https).request(options, function(res) {
       if (options.encoding) res.setEncoding(options.encoding);
       var body = "";
@@ -892,10 +922,14 @@ function makeRequest(options,data) {
         cont(err, "");
       })
     });
+    req.on('error', function(err) {
+      clearTimeout(timeout);
+      cont(err, "")
+    });
     if (data) {
       req.write(data);
     }
-    req.end();        
+    req.end();
   });  
 }
 
