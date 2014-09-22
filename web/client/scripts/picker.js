@@ -7,10 +7,10 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/promise","../scripts/util", 
-        "../scripts/remote-null",
+        "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
-        ], function(Promise,Util,NullRemote,Dropbox,Onedrive) {
+        ], function(Promise,Util,LocalRemote,Dropbox,Onedrive) {
 
 
 
@@ -41,7 +41,7 @@ var Picker = (function() {
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
-    local: { remote: new NullRemote.NullRemote(), folder: "" },
+    local: { remote: new LocalRemote.LocalRemote(), folder: "" },
   };
 
   var picker    = null;

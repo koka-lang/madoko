@@ -8,12 +8,12 @@
 
 define(["../scripts/promise","../scripts/map","../scripts/util", 
         "../scripts/merge", 
-        "../scripts/remote-null",
+        "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
         "../scripts/remote-http",
         "../scripts/picker",
-        ], function(Promise,Map,Util,Merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
+        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Picker) {
 
 
 var Encoding = {
@@ -76,7 +76,7 @@ function openFile(storage) {
     command: "open",   
     extensions: ".mdk .md .madoko .mkdn", 
   }
-  if (storage && storage.remote.type() !== "null") {
+  if (storage && storage.isRemote()) {
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
@@ -88,7 +88,7 @@ function createFile(storage) {
   var params = {
     command: "new", 
   }
-  if (storage && storage.remote.type() !== "null") {
+  if (storage && storage.isRemote()) {
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
@@ -120,7 +120,7 @@ function login(storage) {
   var params = {
     command: "connect"
   }
-  if (storage.remote.type() !== "null") {
+  if (storage.isRemote()) {
     params.remote = storage.remote.type();
   }
   return picker(storage,params).then( function(res) {
@@ -136,7 +136,7 @@ function discard(storage,docName) {
     alert: "true",
     header: Util.escape(Util.combine(storage.folder(),docName))
   };
-  if (storage.remote.type() !== "null") {
+  if (storage.isRemote()) {
     params.remote = storage.remote.type();
     params.headerLogo = "images/dark/" + storage.remote.logo();
   }
@@ -154,7 +154,7 @@ function httpOpenFile(url,doc) {
 }
 
 function createNullStorage() {
-  return new Storage( new NullRemote.NullRemote() );
+  return new Storage( LocalRemote.createAt("") );
 }
 
 function serverGetInitialContent(fpath) {
@@ -175,7 +175,7 @@ function unpersistRemote(remoteType,obj) {
       return HttpRemote.unpersist(obj);
     }
   }
-  return NullRemote.unpersist();
+  return LocalRemote.unpersist();
 }
 
 function makeDefaultGlobalPath(remoteType,path) {
@@ -222,7 +222,7 @@ function saveAs( storage, docName ) {
     command: "save",
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
   }
-  if (storage && storage.remote.type() !== "null") {
+  if (storage && storage.isRemote()) {
     params.remote = storage.remote.type();
     params.folder = Util.dirname(docName);
     params.file   = Util.stemname(docName);
