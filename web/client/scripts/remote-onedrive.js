@@ -52,7 +52,7 @@ setInterval( function() {
 
 
 function infoFromId( fileId ) {
-  return onedrive.requestGET( fileId.toString() );
+  return onedrive.requestGET( { url: fileId.toString(), timeout: 5000 } );
 }
 
 function pathFromId( id, path ) {
@@ -69,7 +69,7 @@ function rootInfo() {
 }
 
 function _getListing( folderId ) {
-  return onedrive.requestGET( folderId + "/files").then( function(res) {
+  return onedrive.requestGET( { url: folderId + "/files", timeout: 5000 } ).then( function(res) {
     return res.data || [];
   });
 }
@@ -267,13 +267,13 @@ var Onedrive = (function() {
       // onedrive does not do CORS on content so we need to use our server to get it.. :-(
       // no need for binary as our server does the right thing
       return Util.requestGET( "remote/onedrive", { url: info.source } ).then( function(_content,req) {
-        var file = {
+          var file = {
           path: fpath,
           content: req.responseText,
           createdTime: Util.dateFromISO(info.updated_time),
           // shareUrl: info.source,
         };
-        return file;
+        return file;        
       });
     });
   }

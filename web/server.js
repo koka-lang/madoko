@@ -1197,8 +1197,10 @@ app.post("/oauth/logout", function(req,res) {
 
 app.get("/remote/onedrive", function(req,res) {
   event( req, res, true, function() {
+    var login = req.session.logins.onedrive;
+    if (!login || !login.access_token) throw { httpCode: 401, message: "Must be logged in to request Onedrive content" };
     if (!/https:\/\/[\w\-\.]+?\.livefilestore\.com\//.test(req.query.url)) {
-      throw { httpCode: 403, message: "illegal onedrive url: " + req.query.url };
+      throw { httpCode: 403, message: "Illegal onedrive url: " + req.query.url };
     }
     return requestGET( req.query.url, "binary" );
   }, 100 );
