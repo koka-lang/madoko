@@ -14,14 +14,15 @@ var onedrive = new OAuthRemote( {
   name           : "onedrive",
   defaultDomain  : "https://apis.live.net/v5.0/",
   accountUrl     : "me",
-  authorizeUrl   : "https://login.live.com/oauth20_authorize.srf",
-  authorizeParams: {
+  loginUrl       : "https://login.live.com/oauth20_authorize.srf",
+  loginParams: {
     client_id    : "000000004C113E9D",
     scope        : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   },
-  authorizeHeight: 650,
-  authorizeWidth : 800,
-  useAuthHeader: false,  
+  dialogHeight   : 650,
+  dialogWidth    : 800,
+  logoutUrl      : "https://login.live.com/oauth20_logout.srf",
+  useAuthHeader  : false,  
 } );
 
 
@@ -190,11 +191,11 @@ function unpersist( obj ) {
 }
 
 function type() {
-  return "onedrive";
+  return onedrive.name;
 }
 
 function logo() {
-  return "icon-onedrive.png";
+  return onedrive.logo;
 }
 
 var Onedrive = (function() {

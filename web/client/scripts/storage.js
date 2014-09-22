@@ -710,7 +710,7 @@ var Storage = (function() {
         res.forEach( function(msg) {
           if (msg) Util.message(msg, Util.Msg.Trace);
         });
-        Util.message("synchronized with cloud storage", Util.Msg.Info );
+        Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
       }).always( function() {
         if (showMerges) showMerges(merges);
       });

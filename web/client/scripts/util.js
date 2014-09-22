@@ -62,6 +62,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     return html.replace(/(^|<br>)(.*?)(?=<br>|$)/g, "$1<span class='" + cls + "'>$2</span>");
   }
 
+  function capitalize(s) {
+    if (!s || typeof(s) !== "string") return s;
+    return (s.substr(0,1).toUpperCase() + s.substr(1));
+  }
+
   var maxConsole = 8*1024;
 
   var messageTimeout = 0;
@@ -95,6 +100,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     else if (msg) {
       txt = msg.toString();
     }
+
+    txt = capitalize(txt);
 
     if (!kind) kind = Msg.Normal;
     // stdcore.println(txt);

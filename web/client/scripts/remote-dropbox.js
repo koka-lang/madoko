@@ -13,12 +13,11 @@ var dropbox = new OAuthRemote( {
   name         : "dropbox",
   defaultDomain: "https://api.dropbox.com/1/",
   accountUrl   : "account/info",
-  authorizeUrl : "https://www.dropbox.com/1/oauth2/authorize",
-  authorizeParams: {
-    client_id    : "3vj9witefc2z44w",
+  loginUrl     : "https://www.dropbox.com/1/oauth2/authorize",
+  loginParams  : {
+    client_id: "3vj9witefc2z44w",
   },
-  useAuthHeader: true,
-} );
+});
 
 
 /* ----------------------------------------------
@@ -113,11 +112,11 @@ function unpersist(obj) {
 }
 
 function type() {
-  return "dropbox";
+  return dropbox.name;
 }
 
 function logo() {
-  return "icon-dropbox.png";
+  return dropbox.logo;
 }
 
 /* ----------------------------------------------

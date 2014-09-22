@@ -14,19 +14,21 @@ var OAuthRemote = (function() {
     var self = this;
     
     self.name           = opts.name;
+    self.logo           = opts.logo || ("icon-" + self.name + ".png");
     self.defaultDomain  = opts.defaultDomain;
-    self.authorizeUrl   = opts.authorizeUrl;
-    self.authorizeParams= opts.authorizeParams;
+    self.loginUrl       = opts.loginUrl;
+    self.loginParams    = opts.loginParams;
+    self.logoutUrl      = opts.logoutUrl;
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = (opts.useAuthHeader !== false);
     self.access_token   = null;
     self.userName       = null;
     self.userId         = null;
-    self.authorizeWidth = opts.authorizeWidth || 600;
-    self.authorizeHeight= opts.authorizeHeight || 600;
+    self.dialogWidth    = opts.dialogWidth || 600;
+    self.dialogHeight   = opts.dialogHeight || 600;
 
-    if (!self.authorizeParams.redirect_uri)  self.authorizeParams.redirect_uri = location.origin + "/redirect/" + self.name;
-    if (!self.authorizeParams.response_type) self.authorizeParams.response_type = "code";
+    if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/redirect/" + self.name;
+    if (!self.loginParams.response_type) self.loginParams.response_type = "code";
   }
 
   // try to set access token without full login; call action with logged in or not.
@@ -36,6 +38,7 @@ var OAuthRemote = (function() {
     if (self.access_token === false) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
     return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(access_token) {
       self.access_token = access_token;
+      Util.message("Connected to " + self.name, Util.Msg.Status );
       return action(true);
     }, function(err) {
       self.access_token = false; // remember we tried
@@ -99,11 +102,12 @@ var OAuthRemote = (function() {
   }
 
   OAuthRemote.prototype.logout = function() {
-    var self = this;
+    var self  = this;
     var token = self.access_token;
     self.access_token = false;
-    self.userId = null;
+    self.userId   = null;
     self.userName = null;
+    Util.message("Logged out from " + self.name, Util.Msg.Status);
 
     if (token) {
       // invalidate the access_token
@@ -120,9 +124,12 @@ var OAuthRemote = (function() {
     return self._withConnect( function(ok) {
       if (ok) return;
       if (dontForce) return Promise.rejected( new Error("Not logged in to " + self.name) );
-      return Util.openOAuthLogin(self.name,self.authorizeUrl,self.authorizeParams,self.authorizeWidth, self.authorizeHeight).then( function() {
+      return Util.openOAuthLogin(self.name,self.loginUrl,self.loginParams,self.dialogWidth, self.dialogHeight).then( function() {
         self.access_token = null; // reset from 'false'
-        return self._withAccessToken( function() { return; } ); // and get the token
+        return self._withAccessToken( function() { // and get the token
+          Util.message( "Logged in to " + self.name, Util.Msg.Status );
+          return; 
+        } ); 
       });
     });
   }
@@ -164,17 +171,6 @@ var OAuthRemote = (function() {
       return info;
     });
   }
-
-  OAuthRemote.prototype.isLoggedIn = function() {
-    var self = this;
-    return (self.access_token ? true : false);
-  }
-
-  // check if logged-in, online, and if the access_token is still valid
-  OAuthRemote.prototype.verifyLoginStatus = function() {
-    var self = this;
-    return self.getUserInfo().then( function(info) { return true; }, function(err) { return false; });    
-  } 
 
   return OAuthRemote;
 })();
