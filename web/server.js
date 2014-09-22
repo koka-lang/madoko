@@ -194,7 +194,7 @@ setInterval( function() {
 }, hour); 
 
 
-function initSession(req) {
+function initSession(req,res) {
   var domain = domainsGet(req);
   if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
   
@@ -214,7 +214,7 @@ function initSession(req) {
   if (!req.session.logins) req.session.logins = {};
   var today = new Date().toDateString();
   if (req.session.lastDate != today) req.session.lastDate = today; // update cookie at least once every day
-  if (req.sessionCookies.get("auth")) req.clearCookie("auth"); // legacy
+  if (req.sessionCookies.get("auth")) res.clearCookie("auth",{path:"/"}); // legacy
   
   console.log("initSession: userid: " + req.session.userid);
   console.log(req.session.toJSON());
@@ -231,7 +231,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
     var start = Date.now();
 
     if (useSession) {
-      initSession(req);    
+      initSession(req,res);    
     }
     
     var entry =  {
