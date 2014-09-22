@@ -17,8 +17,6 @@ var onedrive = new OAuthRemote( {
   authorizeUrl   : "https://login.live.com/oauth20_authorize.srf",
   authorizeParams: {
     client_id    : "000000004C113E9D",
-    redirect_uri : "https://madoko.cloudapp.net/redirect/live",
-    response_type: "code",
     scope        : ["wl.signin","wl.skydrive","wl.skydrive_update"],
   },
   authorizeHeight: 650,

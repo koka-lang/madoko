@@ -8,6 +8,9 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
+//var madokoDomain = "https://www.madoko.net";
+var madokoDomain = "https://madoko.cloudapp.net";
+
 var OAuthRemote = (function() {
 
   function OAuthRemote(opts) {
@@ -20,10 +23,13 @@ var OAuthRemote = (function() {
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = (opts.useAuthHeader !== false);
     self.access_token   = null;
-    self.userName = null;
-    self.userId = null;
+    self.userName       = null;
+    self.userId         = null;
     self.authorizeWidth = opts.authorizeWidth || 600;
-    self.authorizeHeight = opts.authorizeHeight || 600;
+    self.authorizeHeight= opts.authorizeHeight || 600;
+
+    if (!self.authorizeParams.redirect_uri)  self.authorizeParams.redirect_uri = madokoDomain + "/redirect/" + self.name;
+    if (!self.authorizeParams.response_type) self.authorizeParams.response_type = "code";
   }
 
   // try to set access token without full login; call action with logged in or not.

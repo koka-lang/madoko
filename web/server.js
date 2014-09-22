@@ -5,6 +5,11 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
+
+// -------------------------------------------------------------
+// Passprases
+// -------------------------------------------------------------
+
 var passphraseSSL = process.argv[2];
 if (!passphraseSSL) {
   throw new Error("Need to supply passphrase(s) as an argument.");
@@ -13,6 +18,42 @@ if (!passphraseSSL) {
 var passphraseLocal   = passphraseSSL + (process.argv[3] || "local");
 var passphraseSession = passphraseSSL + (process.argv[4] || "session") + ":" + new Date().toDateString().replace(/\s+/,"-");
 
+// -------------------------------------------------------------
+// Constants
+// -------------------------------------------------------------
+
+var runDir = "run"
+var mb        = 1024*1024;
+var second    = 1000;
+var minute    = 60*second;
+var hour      = 60*minute;
+var day       = 24*hour;
+
+var limits = {
+  requestsPerDomain: 10,
+  requestsPerUser  : 2,
+  requestNewUser   : 5,
+  maxProcesses: 10, 
+  hashLength  : 16,  
+  fileSize    : 8*mb,         
+  cookieAge   : 30*day,  
+  timeoutPDF  : 5*minute,
+  timeoutMath : minute,
+  timeoutGET  : 5*second,
+  atomicDelay : 1*minute,  // a push to cloud storage is assumed visible everywhere after this time
+  editDelay   : 30*second,  
+  logFlush    : 1*minute,
+  logDigest   : 30*minute,
+  rmdirDelay  : 3*second,
+};
+
+var allowedIps = null; 
+var blockedIps = null;
+var privateIps = /^(131\.107\.(147|174|159|160|192)\.\d+|127\.0\.0\.1|173\.160\.195\.\d+)$/;
+
+// -------------------------------------------------------------
+// Imports
+// -------------------------------------------------------------
 
 var readline= require("readline");
 var cp      = require("child_process");
@@ -30,9 +71,6 @@ var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieSession = require("cookie-session");
 
-var allowedIps = null; 
-var blockedIps = null;
-var privateIps = /^(131\.107\.(147|174|159|160|192)\.\d+|127\.0\.0\.1|173\.160\.195\.\d+)$/;
 
 // -------------------------------------------------------------
 // Wrap promises
@@ -173,6 +211,8 @@ function initSession(req) {
     domain.newUsers++;
   }
   if (!req.session.logins) req.session.logins = {};
+  var today = new Date().toDateString();
+  if (req.session.lastDate != today) req.session.lastDate = today; // update cookie at least once every day
   if (req.sessionCookies.get("auth")) req.clearCookie("auth"); // legacy
   
   console.log("initSession: userid: " + req.session.userid);
@@ -235,35 +275,6 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
   }
 }
 
-// -------------------------------------------------------------
-// Constants
-// -------------------------------------------------------------
-
-var runDir = "run"
-var mb        = 1024*1024;
-var second    = 1000;
-var minute    = 60*second;
-var hour      = 60*minute;
-var day       = 24*hour;
-
-var limits = {
-  requestsPerDomain: 10,
-  requestsPerUser  : 2,
-  requestNewUser   : 5,
-  maxProcesses: 10, 
-  hashLength  : 16,  
-  fileSize    : 8*mb,         
-  cookieAge   : 1*day,  // 1 day for now
-  cookieAgeUid: 30*day,  
-  timeoutPDF  : 5*minute,
-  timeoutMath : minute,
-  timeoutGET  : 5*second,
-  atomicDelay : 10*minute,  // a push to cloud storage is assumed visible everywhere after this time
-  editDelay   : 30*second,  
-  logFlush    : 1*minute,
-  logDigest   : 30*minute,
-  rmdirDelay  : 3*second,
-}
 
 // -------------------------------------------------------------
 // Set up server app 
@@ -285,7 +296,7 @@ app.use(function(err, req, res, next){
   onError(req, res,err);
 });
 
-var scriptSrc = "'self' https://apis.live.net https://js.live.net 'unsafe-inline'";
+var scriptSrc = "'self' 'unsafe-inline'";
 
 app.use(function(req, res, next){
   var csp = ["script-src " + scriptSrc,
@@ -493,34 +504,6 @@ setInterval( function() {
 // General server helpers
 // -------------------------------------------------------------
 
-
-
-/*
-function getUserId(req,res) {
-  if (req.session.uid) return user.uid;
-
-  var dropboxAccess = req.cookies.auth_dropbox; // TODO: update to uid on login
-  if (dropboxAccess) {    
-    return requestGET("https://api.dropbox.com/1/account/info?access_token=" + dropboxAccess).then( function(data) {
-      var dbinfo = JSON.parse(data);
-      if (!dbinfo.uid) return (user.id || freshUserId(req,res));
-
-      dbinfo.uid = dbinfo.uid.toString();
-      var uid = createHash(dbinfo.uid);
-      console.log("new uid: " + user.id + " -> " + uid);
-      if (log) log.entry( { type: "uid", id: user.id || uid, uid: uid, name: dbinfo.display_name, email: dbinfo.email, date: new Date().toISOString(), ip: req.ip, url: req.url } );
-      res.cookie("auth", { uid: uid }, { signed: true, maxAge: limits.cookieAgeUid, httpOnly: true, secure: true } );
-      return uid;
-    });
-  }
-  
-  if (!req.session.userid) {
-    freshUserId(req,res);
-  }
-  return req.session.userid;
-}
-*/
-
 // Get a unique user path for this session.
 function getUser( req ) {  // : { id: string, requests: int, path: string }
   var requests = usersGetRequests(req.session.userid);
@@ -725,6 +708,12 @@ properties(remotes).forEach( function(name) {
   //if (remote.xclient_id) remote.client_id = decrypt(passphraseSSL, remote.xclient_id);
   if (remote.xclient_secret) remote.client_secret = decrypt(passphraseLocal, remote.xclient_secret);
   if (!remote.name) remote.name = name;
+  if (!remote.redirect_uris) {
+    remote.redirect_uris = [
+      "https://www.madoko.net/redirect/" + remote.name,
+      "https://madoko.cloudapp.net/redirect/" + remote.name
+    ];
+  }
 });
 
 function redirectPage(remote, message, status ) { 
@@ -773,6 +762,7 @@ function oauthLogin(req,res,remote) {
   }
   var uri = req.protocol + "://" + (req.host || req.hostname) + req.path;
   if (!remote.redirect_uris || remote.redirect_uris.indexOf(uri) < 0) {
+    console.log(remote.redirect_uris);
     return redirectError(remote, "Invalid redirection url: " + uri ); 
   }
 
@@ -1164,13 +1154,6 @@ app.post("/report/csp", function(req,res) {
   event(req,res, false, function() {
     console.log(req.body);
     logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
-  });
-});
-
-app.get("/redirect/live", function(req,res) {
-  event( req, res, true, function() {
-    console.log("live redirect authentication");
-    return oauthLogin(req,res,remotes.onedrive);
   });
 });
 

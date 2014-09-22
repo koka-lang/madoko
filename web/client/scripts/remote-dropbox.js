@@ -16,9 +16,6 @@ var dropbox = new OAuthRemote( {
   authorizeUrl : "https://www.dropbox.com/1/oauth2/authorize",
   authorizeParams: {
     client_id    : "3vj9witefc2z44w",
-    //redirect_uri : "https://www.madoko.net/redirect/dropbox",
-    redirect_uri : "https://madoko.cloudapp.net/redirect/dropbox",
-    response_type: "code",
   },
   useAuthHeader: true,
 } );

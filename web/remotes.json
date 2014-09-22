@@ -3,8 +3,6 @@
     "client_id"     : "3vj9witefc2z44w",
     "xclient_secret": "nxBmMsSFbnjRgFSdjFPFGQ==",
     "token_url"     : "https://api.dropbox.com/1/oauth2/token",
-    "redirect_uris" : ["https://madoko.cloudapp.net/redirect/dropbox", "https://www.madoko.net/redirect/dropbox"],
-    "flow"          : "code",
     "account_url"   : "https://api.dropbox.com/1/account/info",
     "disable_url"   : "https://api.dropbox.com/1/disable_access_token"
   },
@@ -12,8 +10,6 @@
     "client_id"     : "000000004C113E9D",
     "xclient_secret": "YlyRNQrVwKwgm9JbY9d/yot1dyU7DCwBEb9Hl17l9sEeh7hOQnnumcetzGUwiy/W",
     "token_url"     : "https://login.live.com/oauth20_token.srf",
-    "redirect_uris" : ["https://www.madoko.net/redirect/live", "https://madoko.cloudapp.net/redirect/live"],
-    "flow"          : "code",
     "account_url"   : "https://apis.live.net/v5.0/me"
   } 
 }
