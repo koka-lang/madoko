@@ -154,7 +154,7 @@ function httpOpenFile(url,doc) {
 }
 
 function createNullStorage() {
-  return new Storage( LocalRemote.createAt("") );
+  return new Storage( new LocalRemote.LocalRemote("") );
 }
 
 function serverGetInitialContent(fpath) {
