@@ -8,18 +8,6 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
-function unpersist(obj) {
-  return new HttpRemote( obj.url );
-}
-
-function type() {
-  return "http";
-}
-
-function openFile(url) {
-  return Promise.resolved( new HttpRemote(url) );
-}
-
 function pullFile(url,binary) {
   // no need for binary as our server sends binary by default
   return Util.requestGET( "remote/http", { url: url } ).then( function(_content,req) {
@@ -34,11 +22,34 @@ function pullFile(url,binary) {
   });
 }
 
+function createAt(folder) {
+  return Promise.resolved( new HttpRemote(folder) );
+}
+
+function unpersist(obj) {
+  return new HttpRemote( obj.url );
+}
+
+function type() {
+  return "http";
+}
+
+function logo() {
+  return "icon-http.png";
+}
+
+
+
 var HttpRemote = (function() {
+
   function HttpRemote( url ) {    
     var self = this;
     self.url = url;
     self.date = new Date(0);
+  }
+
+  HttpRemote.prototype.createNewAt = function(folder) {
+    return createAt(folder);
   }
 
   HttpRemote.prototype.type = function() {
@@ -46,7 +57,11 @@ var HttpRemote = (function() {
   }
 
   HttpRemote.prototype.logo = function() {
-    return "icon-http.png";
+    return logo();
+  }
+
+  HttpRemote.prototype.isRemote = function() {
+    return true;
   }
 
   HttpRemote.prototype.getFolder = function() {
@@ -59,25 +74,42 @@ var HttpRemote = (function() {
     return { url: self.url };
   }
 
-  HttpRemote.prototype.connect = function(dontForce) {
+  HttpRemote.prototype.fullPath = function(fname) {
+    var self = this;
+    return Util.combine(self.url,fname);
+  }
+
+  HttpRemote.prototype.connect = function() {
+    return Promise.resolved(true);
+  }
+
+  HttpRemote.prototype.login = function(dontForce) {
     return Promise.resolved();
   }
 
-  HttpRemote.prototype.createNewAt = function(url) {
-    return Promise.resolved( new HttpRemote(url) );
+  HttpRemote.prototype.logout = function() {
+    return Promise.resolved();
   }
 
+  HttpRemote.prototype.getUserName = function() {
+    return Promise.resolved("");
+  }
+
+
   HttpRemote.prototype.pushFile = function( fpath, content ) {
-    return Promise.rejected( new Error("not connected: cannot store files on HTTP remote") );
+    return Promise.rejected( new Error("Not connected to writeable cloud storage: cannot store files on HTTP remote") );
   }
 
   HttpRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
     return pullFile( self.url + "/" + fpath, binary ).then( function(content) {
+      var sharedPath = "//" + self.type() + "/shared/0/" + self.fullPath(fpath);
       var file = {
         path: fpath,
         content: content,
         createdTime: self.date,
+        globalPath : sharedPath,
+        sharedPath : sharedPath,
       };
       return file;
     });
@@ -93,9 +125,9 @@ var HttpRemote = (function() {
     return Promise.resolved({folder: path, created: true });
   }
 
-
   HttpRemote.prototype.getShareUrl = function(fname) {
-    return Promise.resolved(null);
+    var self = this;
+    return Promise.resolved(self.fullPath(fname));
   }
 
   return HttpRemote;
@@ -103,9 +135,10 @@ var HttpRemote = (function() {
 
 
 return {
+  createAt  : createAt,
   unpersist : unpersist,
   type      : type,
-  openFile  : openFile,
+  logo      : logo,
   HttpRemote: HttpRemote,
 }
 
