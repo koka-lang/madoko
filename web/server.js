@@ -708,8 +708,8 @@ properties(remotes).forEach( function(name) {
   if (!remote.name) remote.name = name;
   if (!remote.redirect_uris) {
     remote.redirect_uris = [
-      "https://www.madoko.net/redirect/" + remote.name,
-      "https://madoko.cloudapp.net/redirect/" + remote.name
+      "https://www.madoko.net/oauth/redirect",
+      "https://madoko.cloudapp.net/oauth/redirect",
     ];
   }
 });
@@ -740,8 +740,17 @@ function redirectError(remote,message) {
   return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""), "error");
 }
 
-function oauthLogin(req,res,remote) {
+function oauthLogin(req,res) {
   res.status(200);
+  
+  // get oauth state
+  var cookieName = "oauth/state";
+  var cookie = req.sessionCookies.get(cookieName); res.clearCookie(cookieName);
+  var state  = {};
+  try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
+  console.log("oauth state: " + decodeURIComponent(cookie)); console.log(state);
+
+  var remote = remotes[state.remote];
   if (!remote) {
     return redirectError(remote, "Could not login; unknown remote service." );
   }
@@ -751,11 +760,8 @@ function oauthLogin(req,res,remote) {
 
   // code flow
   // check state and redirection uri
-  var state = req.query.state;
-  var stateCookie = "oauth/state-" + remote.name;
-  var state0 = req.sessionCookies.get(stateCookie); res.clearCookie(stateCookie);
-  console.log("states: " + state + ", " + state0);
-  if (state != state0) {
+  console.log("states: " + req.query.state + ", " + state.state );
+  if (!req.query.state || req.query.state != state.state) {
     return redirectError(remote, "The state parameter did not match; this might indicate a CSRF attack?" );
   }
   var uri = req.protocol + "://" + (req.hostname || req.host) + req.path;
@@ -1155,33 +1161,26 @@ app.post("/report/csp", function(req,res) {
   });
 });
 
-app.get("/redirect/onedrive", function(req,res) {
+app.get("/oauth/redirect", function(req,res) {
   event( req, res, true, function() {
-    console.log("onedrive redirect authentication");
-    return oauthLogin(req,res,remotes.onedrive);
-  });
-});
-
-app.get("/redirect/dropbox", function(req,res) {
-  event( req, res, true, function() {
-    return oauthLogin(req,res,remotes.dropbox);
+    return oauthLogin(req,res);
   });
 });
 
 app.get("/oauth/token", function(req,res) {
   event( req, res, true, function() {
     var remoteName = req.param("remote");
-    if (!remoteName) throw { httpCode: 404, message: "No 'remote' parameter" }
+    if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
-    if (!login || !login.access_token) throw { httpCode: 404, message: "Not logged in to " + remoteName };
-    return login.access_token;
+    if (!login || typeof(login.access_token) !== "string") return { message: "Not logged in to " + remoteName };
+    return { access_token: login.access_token };
   });
 })
 
 app.post("/oauth/logout", function(req,res) {
   event( req, res, true, function() {
     var remoteName = req.param("remote");
-    if (!remoteName) throw { httpCode: 404, message: "No 'remote' parameter" }
+    if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     if (login) {
       delete req.session.logins[remoteName];

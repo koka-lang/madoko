@@ -27,7 +27,7 @@ var OAuthRemote = (function() {
     self.dialogWidth    = opts.dialogWidth || 600;
     self.dialogHeight   = opts.dialogHeight || 600;
 
-    if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/redirect/" + self.name;
+    if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
     if (!self.loginParams.response_type) self.loginParams.response_type = "code";
   }
 
@@ -36,8 +36,12 @@ var OAuthRemote = (function() {
     var self = this;
     if (self.access_token) return Promise.wrap(action, true);
     if (self.access_token === false) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
-    return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(access_token) {
-      self.access_token = access_token;
+    return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(res) {
+      if (!res || typeof(res.access_token) !== "string") {
+        self.access_token = false; // remember we tried
+        return action(false,new Error("Cannot login to " + self.name));
+      }
+      self.access_token = res.access_token;
       Util.message("Connected to " + self.name, Util.Msg.Status );
       return action(true);
     }, function(err) {

@@ -1226,9 +1226,9 @@ doc.execCommand("SaveAs", null, filename)
   }
 
   function withOAuthState(remote, action) {
-    var state = Date.now().toFixed(0) + "-" + (Math.random() * 999999).toFixed(0);
-    var key   = "oauth/state-" + remote;
-    setCookie(key,state,{maxAge: 30, httpOnly: true, secure: true});
+    var state = Date.now().toFixed(0) + "-" + (Math.random() * 99999999).toFixed(0);
+    var key   = "oauth/state";
+    setCookie(key,JSON.stringify({ remote: remote, state: state}),{maxAge: 30, httpOnly: true, secure: true});
     return action(state).always( function() {
       setCookie(key,"",{maxAge: 0});
     });
