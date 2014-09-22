@@ -206,7 +206,7 @@ function initSession(req,res) {
   // initialize session
   if (!req.session) req.session = {};
   if (!req.session.userid) {
-    console.log("create new userid")
+    console.log("create guest userid")
     req.session.userid = uniqueHash();
     req.session.created = (new Date()).toISOString();
     domain.newUsers++;
@@ -216,8 +216,7 @@ function initSession(req,res) {
   if (req.session.lastDate != today) req.session.lastDate = today; // update cookie at least once every day
   if (req.sessionCookies.get("auth")) res.clearCookie("auth",{path:"/"}); // legacy
   
-  console.log("initSession: userid: " + req.session.userid);
-  console.log(req.session.toJSON());
+  //console.log(req.session.toJSON());
   return req.session.userid;
 }
 
@@ -749,8 +748,7 @@ function oauthLogin(req,res) {
   var cookie = req.sessionCookies.get(cookieName); res.clearCookie(cookieName);
   var state  = {};
   try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
-  console.log("oauth state: " + decodeURIComponent(cookie)); console.log(state);
-
+  
   var remote = remotes[state.remote];
   if (!remote) {
     return redirectError(remote, "Could not login; unknown remote service." );
@@ -761,7 +759,7 @@ function oauthLogin(req,res) {
 
   // code flow
   // check state and redirection uri
-  console.log("states: " + req.query.state + ", " + state.state );
+  // console.log("states: " + req.query.state + ", " + state.state );
   if (!req.query.state || req.query.state != state.state) {
     return redirectError(remote, "The state parameter did not match; this might indicate a CSRF attack?" );
   }
@@ -797,7 +795,7 @@ function oauthLogin(req,res) {
       options.query = { access_token: tokenInfo.access_token };
     }
     return makeRequest( options ).then( function(info) {
-      console.log(info);
+      // console.log(info);
       var userName = info.display_name || info.name || "<unknown>";
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
@@ -807,7 +805,7 @@ function oauthLogin(req,res) {
       };
       // store info in our encrypted cookie
       req.session.logins[remote.name] = userInfo;
-      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: userName, date: userInfo.created, ip: req.ip, url: req.url } );
+      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: userName, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
       return redirectPage(remote);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
@@ -976,7 +974,7 @@ function pushAtomic( name, time, release ) {
     }
     else {
       // ouch. someone pushed a more recent version concurrently.
-      throw { httpCode: 409, message: "failed to push atomically due to concurrent update (time: " + time.toString() + ", atime: " + atime.toString() + ")" };
+      throw { httpCode: 409, message: "failed to push atomically due to concurrent update." };
     }
   }
 }
