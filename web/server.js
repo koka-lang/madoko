@@ -758,7 +758,7 @@ function oauthLogin(req,res,remote) {
   if (state != state0) {
     return redirectError(remote, "The state parameter did not match; this might indicate a CSRF attack?" );
   }
-  var uri = req.protocol + "://" + (req.host || req.hostname) + req.path;
+  var uri = req.protocol + "://" + (req.hostname || req.host) + req.path;
   if (!remote.redirect_uris || remote.redirect_uris.indexOf(uri) < 0) {
     console.log(remote.redirect_uris);
     return redirectError(remote, "Invalid redirection url: " + uri ); 
@@ -1274,7 +1274,7 @@ var httpApp = express();
 
 httpApp.use(function(req, res, next) {
   logRequest(req,"http-redirection");
-  res.redirect("https://" + req.host + req.path);
+  res.redirect("https://" + (req.hostname || req.host) + req.path);
 });
 
 http.createServer(httpApp).listen(80);
