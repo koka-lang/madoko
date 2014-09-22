@@ -109,37 +109,76 @@ function userVal(user) {
 
 function digestUsers(entries) {
 	var users = new Map();
+
+	function userGet(id) {
+		var user = users.get(id);
+		while (user && user.redirect) {
+			user = users.get(user.redirect);
+		}
+		return user;
+	}
+
+	function userSet(id,user) {
+		user.id = id;
+		users.set(id,user);
+		return user;
+	}
+
+	function userGetOrCreate(id,defaultVal) {
+		var user = userGet(id);
+		if (user) return user;
+		return userSet(id,defaultVal);
+	}
+
+	function userLink(id,uid) {
+		var user1 = userGet(id);
+		var user2 = userGet(uid);
+
+		if (id === uid || (user1 && user2 && user1.id === user2.id)) {
+			return user1;
+		}
+		else if (!user1) {
+			users.set(id, { redirect: uid });
+			return user2;
+		}
+		else if (!user2) {
+			users.set(id, { redirect: uid });
+			userSet(uid, user1 );
+			return user1;
+		}
+		else {
+			// merge
+			users.set(id, { redirect: uid });
+			if (user1.entries) user2.entries = user1.entries.concat(user2.entries);
+			if (!user2.name)   user2.name    = user1.name;
+			if (!user2.email)  user2.email   = user1.email;
+			return user2;
+		}
+	}
+
 	entries.forEach( function(entry) {
-		if (entry.type === "uid") {
-			var user = users.getOrCreate(entry.uid,{ name: entry.name, email: entry.email, entries: [] });
-			if (entry.id !== entry.uid) {
-				var old = users.get(entry.id);	
-				while (old.redirect) old = users.get(old.redirect);
-				if (old && old !== user && old.entries) {	
-					user.entries = old.entries.concat(user.entries);
-					users.set(entry.id,{ redirect: entry.uid } );
-				}
-			}
-			user.name = entry.name;
-			user.email = entry.email;
+		var user;
+		if (entry.type === "uid" || entry.type==="login") {
+			userGetOrCreate(entry.uid,{ name: entry.name, remote: entry.remote, email: entry.email, entries: [] });
+			user = userLink(entry.id,entry.uid);			
 		}
 		else if (entry.user && entry.user.id) {
-			var user = users.getOrCreate(entry.user.id, { name: entry.user.id, email: "", entries: [] });
-			while (user.redirect) user = users.get(user.redirect);
-  		user.entries.push(entry);
+			user = userGetOrCreate(entry.user.id, { name: "", email: "", entries: [] });
+		}
+		else {
+			user = null;
+		}
+		if (user) {
+			entry.dateTime = date.dateFromISO(entry.date).getTime();
+			user.entries.push(entry);
 		}
 	});
 	users = users.filter( function(id,user) { return user.entries != null; } ).map( function(id,user) {
 		var delta = 10*60*1000; // 10 minutes
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
-		user.entries.forEach( function(entry) {
-			var nextTime = date.dateFromISO(entry.date).getTime();
-			if (prevTime > nextTime) {
-				var tmp = nextTime;
-				nextTime = prevTime;
-				prevTime = nextTime;
-			}
+		user.entries.sort( function(x,y) { return x.dateTime - y.dateTime; } ).forEach( function(entry) {
+			var nextTime = entry.dateTime;
 			if (prevTime + delta > nextTime) {
 				total += (nextTime - prevTime);
 			}
@@ -147,11 +186,12 @@ function digestUsers(entries) {
 		});
 		return {
 			reqCount: user.entries.length,
-			name: user.name,
+			name: user.name || user.id,
+			remote: user.remote,
 			//email: user.email,
 			workTime: Math.ceil(total/(60*1000)),
 			id: id,
-			uid: (user.email != "")
+			uid: (user.name != ""),
 		}
 	});
 	return users.elems().sort( function(x,y) { return userVal(y) - userVal(x); });

@@ -802,7 +802,7 @@ function oauthLogin(req,res,remote) {
       };
       // store info in our encrypted cookie
       req.session.logins[remote.name] = userInfo;
-      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, name: userName, date: userInfo.created, ip: req.ip, url: req.url } );
+      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: userName, date: userInfo.created, ip: req.ip, url: req.url } );
       return redirectPage(remote);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
@@ -1189,6 +1189,7 @@ app.post("/oauth/logout", function(req,res) {
       delete req.session.logins[remoteName];
       var remote = remotes[remoteName];
       if (remote && login.access_token) {
+        if (log) log.entry( { type: "logout", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
         return oauthLogout(req,res,remote,login.access_token);
       }
     }
