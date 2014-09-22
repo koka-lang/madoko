@@ -206,6 +206,7 @@ function initSession(req) {
   // initialize session
   if (!req.session) req.session = {};
   if (!req.session.userid) {
+    console.log("create new userid")
     req.session.userid = uniqueHash();
     req.session.created = (new Date()).toISOString();
     domain.newUsers++;
@@ -232,10 +233,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
     if (useSession) {
       initSession(req);    
     }
-    else {
-      req.session = { userid: null, logins: {} };
-    }
-
+    
     var entry =  {
       type: "none",
       ip: req.ip,
@@ -1224,7 +1222,7 @@ app.get("/remote/http", function(req,res) {
 
 var staticClient      = express.static( combine(__dirname, "client"));
 var staticMaintenance = express.static( combine(__dirname, "maintenance"));
-var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out|math))?|lib(\/vs(\/.*)?)?|preview(\/(out|math))?|template|private)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out|math))?|lib(\/vs(\/.*)?)?|preview(\/(lang|out|math|styles))?|template|private)?$/;
 
 function staticPage(req,res,next) {
   var dir = path.dirname(req.path);
