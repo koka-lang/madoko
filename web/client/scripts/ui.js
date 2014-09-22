@@ -6,10 +6,10 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","std_crypto",
+define(["../scripts/map","../scripts/promise","../scripts/util",
         "../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
-        function(Map,merge,Promise,util,crypto,storage,madokoMode,range,selection,replaceCommand) {
+        "vs/editor/core/range", "vs/editor/core/command/replaceCommand"],
+        function(Map,Promise,Util,Storage,MadokoMode,Range,ReplaceCommand) {
 
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
@@ -23,7 +23,7 @@ function diff( original, modified ) {
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
   if (!localStorage) {
-    util.message("cannot make local backup: upgrade your browser.", util.Msg.Error );
+    Util.message("cannot make local backup: upgrade your browser.", Util.Msg.Error );
     return false;
   }
   try {    
@@ -34,19 +34,19 @@ function localStorageSave( fname, obj, createMinimalObj ) {
     if (createMinimalObj) {
       try {
         localStorage.setItem( key, JSON.stringify(createMinimalObj()) );
-        util.message("full local backup is too large; using minimal backup instead", util.Msg.Trace);
+        Util.message("full local backup is too large; using minimal backup instead", Util.Msg.Trace);
         return true;
       }
       catch(e2) {};
     }
-    util.message("failed to make local backup: " + e.toString(), util.Msg.Error );
+    Util.message("failed to make local backup: " + e.toString(), Util.Msg.Error );
     return false;
   }
 }
 
 function localStorageLoad( fname ) {
  if (!localStorage) {
-    util.message("cannot load locally: " + fname + "\n  upgrade your browser." );
+    Util.message("cannot load locally: " + fname + "\n  upgrade your browser." );
     return null;
   }
   try {
@@ -59,7 +59,7 @@ function localStorageLoad( fname ) {
 }
 
 function getModeFromExt(ext) {
-  return util.mimeFromExt("doc" + ext);
+  return Util.mimeFromExt("doc" + ext);
 }
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
@@ -92,7 +92,7 @@ var UI = (function() {
     self.docText = "";
     self.htmlText = "";
 
-    Monaco.Editor.createCustomMode(madokoMode.mode);
+    Monaco.Editor.createCustomMode(MadokoMode.mode);
     window.onbeforeunload = function(ev) { 
       //if (self.storage.isSynced()) return;
       if (self.localSave()) return; 
@@ -107,13 +107,13 @@ var UI = (function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();
       // dispatch check box events so everything gets initialized
-      util.dispatchEvent( self.checkDisableAutoUpdate, "change" );
-      util.dispatchEvent( self.checkDisableServer, "change" );
-      util.dispatchEvent( self.checkLineNumbers, "change" );
-      util.dispatchEvent( self.checkWrapLines, "change" );      
-      util.dispatchEvent( self.checkDelayedUpdate, "change" );
+      Util.dispatchEvent( self.checkDisableAutoUpdate, "change" );
+      Util.dispatchEvent( self.checkDisableServer, "change" );
+      Util.dispatchEvent( self.checkLineNumbers, "change" );
+      Util.dispatchEvent( self.checkWrapLines, "change" );      
+      Util.dispatchEvent( self.checkDelayedUpdate, "change" );
     }).then( function() { }, function(err) {
-      util.message(err, util.Msg.Error);          
+      Util.message(err, Util.Msg.Error);          
     }).always( function() {
       self.state = State.Normal;
     });
@@ -121,14 +121,14 @@ var UI = (function() {
 
   UI.prototype.onError  = function(err) {
     var self = this;
-    util.message( err, util.Msg.Error );
+    Util.message( err, Util.Msg.Error );
   }
 
   UI.prototype.event = function( status, pre, state, action, okStates ) {
     var self = this;
     if (state) {
-      if (self.state !== State.Normal && !util.contains(okStates,self.state)) {
-        util.message( "sorry, cannot perform action while " + self.state, util.Msg.Status );
+      if (self.state !== State.Normal && !Util.contains(okStates,self.state)) {
+        Util.message( "sorry, cannot perform action while " + self.state, Util.Msg.Status );
         return;
       }
       else if (state) {
@@ -136,12 +136,12 @@ var UI = (function() {
       }
     }
     try {
-      if (pre) util.message( pre, util.Msg.Status);
+      if (pre) Util.message( pre, Util.Msg.Status);
       var res = action();
       if (res && res.then) {
         return res.then( function() {
           if (state) self.state = State.Normal;
-          if (status) util.message( status, util.Msg.Status);
+          if (status) Util.message( status, Util.Msg.Status);
         }, function(err) {
           if (state) self.state = State.Normal;
           self.onError(err);
@@ -149,7 +149,7 @@ var UI = (function() {
       }
       else {
         if (state) self.state = State.Normal;
-        if (status) util.message( status, util.Msg.Status);
+        if (status) Util.message( status, Util.Msg.Status);
         return res;
       }        
     }
@@ -188,7 +188,7 @@ var UI = (function() {
       theme: self.theme,
       roundedSelection: false,
       lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
-      //mode: madokoMode.mode,
+      //mode: MadokoMode.mode,
       tabSize: 2,
       insertSpaces: true,
       //wrappingColumn: -1,
@@ -450,18 +450,18 @@ var UI = (function() {
     
 
     document.getElementById("menu-settings-content").onclick = function(ev) {
-      if (ev.target && util.contains(ev.target.className,"button")) {
+      if (ev.target && Util.contains(ev.target.className,"button")) {
         var child = ev.target.children[0];
         if (child && child.nodeName === "INPUT") {
           child.checked = !child.checked;
-          util.dispatchEvent( child, "change" );
+          Util.dispatchEvent( child, "change" );
         }
       }
     };
 
     var openEvent = function(ev) {
       self.event( "loaded", "loading...", State.Loading, function() {
-        return storage.openFile(self.storage).then( function(res) { 
+        return Storage.openFile(self.storage).then( function(res) { 
           self.updateConnectionStatus().then( function() {
             if (!res) return Promise.resolved(); // canceled
             return self.openFile(res.storage,res.docName); 
@@ -487,7 +487,7 @@ var UI = (function() {
     
     var newEvent = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
-        return storage.createFile(self.storage).then( function(res) { 
+        return Storage.createFile(self.storage).then( function(res) { 
           if (!res) return Promise.resolved(); // canceled
           return self.openFile(res.storage,res.docName); 
         });
@@ -547,9 +547,9 @@ var UI = (function() {
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
           var path = elem.getAttribute("data-file");
           if (path) {
-            var mime = util.mimeFromExt(path);
+            var mime = Util.mimeFromExt(path);
             return self.event( "loaded: " + path, "loading...", State.Loading, function() {
-              if (mime==="application/pdf" || mime==="text/html" || util.startsWith(mime,"image/")) {
+              if (mime==="application/pdf" || mime==="text/html" || Util.startsWith(mime,"image/")) {
                 return self.openInWindow( path, mime );
               }
               else {
@@ -608,19 +608,19 @@ var UI = (function() {
     //}, false);
     
     document.getElementById("view-narrow").onclick = function(ev) {
-      util.removeClassName(app,"view-wide");
-      util.removeClassName(app,"view-normal");
-      util.addClassName(app,"view-narrow");
+      Util.removeClassName(app,"view-wide");
+      Util.removeClassName(app,"view-normal");
+      Util.addClassName(app,"view-narrow");
     }
     document.getElementById("view-normal").onclick = function(ev) {
-      util.removeClassName(app,"view-wide");
-      util.removeClassName(app,"view-narrow");
-      util.addClassName(app,"view-normal");
+      Util.removeClassName(app,"view-wide");
+      Util.removeClassName(app,"view-narrow");
+      Util.addClassName(app,"view-normal");
     }
     document.getElementById("view-wide").onclick = function(ev) {
-      util.removeClassName(app,"view-narrow");
-      util.removeClassName(app,"view-normal");
-      util.addClassName(app,"view-wide");
+      Util.removeClassName(app,"view-narrow");
+      Util.removeClassName(app,"view-normal");
+      Util.addClassName(app,"view-wide");
       //if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
 
@@ -634,7 +634,7 @@ var UI = (function() {
     }
 
     // emulate hovering by clicks for touch devices
-    util.enablePopupClickHovering();    
+    Util.enablePopupClickHovering();    
   }
 
   UI.prototype.login = function() {
@@ -837,11 +837,11 @@ var UI = (function() {
 
     if (enable && elem.spinners === 0) {      
       setTimeout( function() {
-        if (elem.spinners >= 1) util.addClassName(elem,"spin");
+        if (elem.spinners >= 1) Util.addClassName(elem,"spin");
       }, elem.spinDelay );
     }
     else if (!enable && elem.spinners === 1) {
-      util.removeClassName(elem,"spin");
+      Util.removeClassName(elem,"spin");
       // for IE
       var vis = elem.style.visibility;
       elem.style.visibility="hidden";
@@ -857,7 +857,7 @@ var UI = (function() {
       self.showSpinner(enable);
     }
 
-    self.asyncMadoko = new util.AsyncRunner( self.refreshRate, showSpinner, 
+    self.asyncMadoko = new Util.AsyncRunner( self.refreshRate, showSpinner, 
       function() {
         var changed = self.changed;
         self.changed = false;
@@ -891,7 +891,7 @@ var UI = (function() {
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
-                util.message("ready", util.Msg.Status);
+                Util.message("ready", Util.Msg.Status);
                 self.removeDecorations(false,"error");
               }
               self.removeDecorations(false,"merge");
@@ -934,7 +934,7 @@ var UI = (function() {
       }
     );
 
-    self.asyncServer = new util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) }, 
+    self.asyncServer = new Util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) }, 
       function() { return false; },
       function(round) {
         //self.lastMathDoc = self.getMathDoc();
@@ -960,7 +960,7 @@ var UI = (function() {
   UI.prototype.getMathDoc = function() {
     var self = this;
     var mathExt = ".tex";
-    var mathStem = "out/" + util.stemname(self.docName) + "-math-"
+    var mathStem = "out/" + Util.stemname(self.docName) + "-math-"
     return self.storage.readLocalFile(mathStem + "dvi" + mathExt) + self.storage.readLocalFile( mathStem + "pdf" + mathExt, "" );
   }
 
@@ -1007,17 +1007,17 @@ var UI = (function() {
     var self = this;
     var cap = /[#&]url=(https?:\/\/[^=&#;]+)/.exec(window.location.hash);
     if (cap) {
-      var url = util.dirname(cap[1]);
-      var doc = util.basename(cap[1]);
+      var url = Util.dirname(cap[1]);
+      var doc = Util.basename(cap[1]);
       return self.checkSynced( function() {
-        return storage.httpOpenFile(url,doc);        
+        return Storage.httpOpenFile(url,doc);        
       }).then( function(res) { 
         return self.openFile(res.storage,res.docName); 
       }).then( function() {
         return true;
       }, function(err) {
-        util.message(err, util.Msg.Error);
-        util.message("failed to load hash url: " + cap[1], util.Msg.Error);
+        Util.message(err, Util.Msg.Error);
+        Util.message("failed to load hash url: " + cap[1], Util.Msg.Error);
         return self.localLoad();
       });
     }
@@ -1063,14 +1063,14 @@ var UI = (function() {
     var cap = /[#&]template=([^=&#;]+)/.exec(window.location.hash);
     if (cap) window.location.hash = "";
     if (cap || !stg) {
-      return (stg && !stg.isSynced() ? storage.discard(stg,docName) : Promise.resolved(true)).then( function(discard) {
+      return (stg && !stg.isSynced() ? Storage.discard(stg,docName) : Promise.resolved(true)).then( function(discard) {
         if (!discard) return cont(stg,docName);
 
         // initialize fresh from template
         docName = "document.mdk";
-        stg = storage.createNullStorage();
+        stg = Storage.createNullStorage();
         var template = (cap ? cap[1] : "default");
-        return storage.createFromTemplate(stg,docName,template).then( function() {
+        return Storage.createFromTemplate(stg,docName,template).then( function() {
           return cont(stg,docName,true);
         });
       });
@@ -1104,7 +1104,7 @@ var UI = (function() {
               return Monaco.Editor.getOrCreateMode("text/plain");
             });
             var options = {
-              readOnly: !storage.isEditable(file),
+              readOnly: !Storage.isEditable(file),
               theme: self.theme,
               //mode: file.mime,
               //mode: mode, // don't set the mode here or Monaco runs out-of-stack
@@ -1115,7 +1115,7 @@ var UI = (function() {
             self.setEditText(file.content, mode);
             self.onFileUpdate(file); // update display etc.
             self.editor.updateOptions(options);            
-            return storage.getEditPosition(file);
+            return Storage.getEditPosition(file);
       });
     return loadEditor.then( function(posx) {      
       if (!pos) pos = posx;
@@ -1143,7 +1143,7 @@ var UI = (function() {
       self.checkDelayedUpdate.checked = json.delayedUpdate;
       self.checkAutoSync.checked = json.autoSync;
       self.theme = json.theme || "vs";
-      var stg = storage.unpersistStorage(json.storage);
+      var stg = Storage.unpersistStorage(json.storage);
       return self.setStorage( stg, docName ).then( function(fresh) {
         if (fresh) return; // loaded template instead of local document
         return self.editFile( json.editName, json.pos );
@@ -1165,19 +1165,19 @@ var UI = (function() {
 
   UI.prototype.openFile = function(storage,fname) {
     var self = this;
-    var mime = util.mimeFromExt(fname);
-    if (fname && !(mime === "text/madoko" || mime==="text/markdown") ) return util.message("only markdown (.mdk) files can be selected",util.Msg.Error);      
+    var mime = Util.mimeFromExt(fname);
+    if (fname && !(mime === "text/madoko" || mime==="text/markdown") ) return Util.message("only markdown (.mdk) files can be selected",Util.Msg.Error);      
     return self.setStorage( storage, fname );
   }
 
 
   UI.prototype.displayFile = function(file,extensive) {
-    var disable = (storage.isEditable(file) ? "" : " disable");
+    var disable = (Storage.isEditable(file) ? "" : " disable");
     var icon = "<span class='file-status'>" + (file.modified? "&bull;" : "") + "</span>";
-    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + util.escape(file.path) + icon + "</span>";
+    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + Util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
-      if (storage.isEditable(file)) {
+      if (Storage.isEditable(file)) {
         var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
         var words   = matches ? matches.length : 0;
         if (words >= 0) {
@@ -1186,7 +1186,7 @@ var UI = (function() {
       }
       else {
         var len = file.content.length;
-        if (file.encoding === storage.Encoding.Base64) len = (len/4)*3;
+        if (file.encoding === Storage.Encoding.Base64) len = (len/4)*3;
         var kb = (len + 1023)/1024; // round up..
         if (kb >= 0) {
           extra = "<span class='file-size'>" + kb.toFixed(0) + " kb</span>";
@@ -1196,7 +1196,7 @@ var UI = (function() {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
         extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
-      if (util.startsWith(file.mime,"image/")) {
+      if (Util.startsWith(file.mime,"image/")) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
       }
     }
@@ -1213,16 +1213,16 @@ var UI = (function() {
       
     self.storage.forEachFile( function(file) {
       if (file) {
-        var ext = util.extname(file.path)
-        var disable = (storage.isEditable(file) ? "": " disable");
+        var ext = Util.extname(file.path)
+        var disable = (Storage.isEditable(file) ? "": " disable");
         var main    = (file.path === self.docName ? " main" : "");
-        var hide    = ""; // (util.extname(file.path) === ".dimx" ? " hide" : "");
-        var line = "<div data-file='" + util.escape(file.path) + "' " +
+        var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
+        var line = "<div data-file='" + Util.escape(file.path) + "' " +
                       "class='button file hoverbox" + disable + main + hide + "'>" + 
                           self.displayFile(file,true) + "</div>";
-        if (util.startsWith(file.mime,"image/")) images.push(line); 
+        if (Util.startsWith(file.mime,"image/")) images.push(line); 
         else if (!disable) files.push(line);
-        else if (util.stemname(self.docName) === util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
+        else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
         else generated.push(line)
       }
     });
@@ -1231,7 +1231,7 @@ var UI = (function() {
     var dir = document.getElementById("edit-select-directory");
     if (dir) {
       dir.innerHTML = "<img src='images/" + self.storage.remote.logo() + "'/> " + 
-                        util.escape( self.storage.folder() ) + "<hr/>";
+                        Util.escape( self.storage.folder() ) + "<hr/>";
     }
     */
     div.innerHTML = 
@@ -1273,7 +1273,7 @@ var UI = (function() {
     };
 
     self.lastConUsersCheck = Date.now();
-    util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
+    Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
       var res = data[docFile];
       if (res && edit !== "none") {
         if (res && res.writers > 0) {
@@ -1317,7 +1317,7 @@ var UI = (function() {
     if ("download" in link) {
       link.setAttribute("href",url);
       link.setAttribute("download",name);
-      //util.dispatchEvent(link,"click");
+      //Util.dispatchEvent(link,"click");
       var event = document.createEvent('MouseEvents');
       event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
@@ -1335,10 +1335,10 @@ var UI = (function() {
 
   UI.prototype.openInWindow = function( path, mime ) {
     var self = this;
-    if (!mime) mime = util.mimeFromExt(path);            
+    if (!mime) mime = Util.mimeFromExt(path);            
     return self.storage.readFile( path ).then( function(file) {
-      var content = storage.Encoding.decode(file.encoding, file.content);
-      saveUserContent( util.basename(path), mime, content );
+      var content = Storage.Encoding.decode(file.encoding, file.content);
+      saveUserContent( Util.basename(path), mime, content );
     });
   }
 
@@ -1354,20 +1354,20 @@ var UI = (function() {
     return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
-        var name = "out/" + util.changeExt(self.docName,".pdf");
+        var name = "out/" + Util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
           var url = self.storage.getShareUrl( name )
           if (url) {
-            util.message( { message: "PDF exported", url: url }, util.Msg.Status );
+            Util.message( { message: "PDF exported", url: url }, Util.Msg.Status );
           }
           else {
             return self.openInWindow( name, "application/pdf" ).then( function() {
-              util.message( "PDF exported (available in the files menu)", util.Msg.Status );
+              Util.message( "PDF exported (available in the files menu)", Util.Msg.Status );
             });
           }
         }, function(err) {
             return self.openInWindow( name, "application/pdf" ).then( function() {
-              util.message( "PDF exported", util.Msg.Status );
+              Util.message( "PDF exported", Util.Msg.Status );
             });
         });
       })
@@ -1379,7 +1379,7 @@ var UI = (function() {
     var self = this;
     return self.spinWhile( self.spinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        var name = "out/" + util.changeExt(self.docName,".html");
+        var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
         return self.openInWindow( name, "text/html" );
         //saveUserContent( name, "text/html", content );
@@ -1392,9 +1392,9 @@ var UI = (function() {
     var self = this;
     return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        var name = "out/" + util.changeExt(self.docName,".html");
+        var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        return storage.publishSite( self.storage, self.docName, name );
+        return Storage.publishSite( self.storage, self.docName, name );
       })
     );
   }
@@ -1484,8 +1484,8 @@ var UI = (function() {
     var text = self.getEditText();
     var res = reformatPara( pos.lineNumber, text );
     if (res) {
-      var rng = new range.Range( res.startLine, 0, res.endLine, res.endColumn );
-      var command = new replaceCommand.ReplaceCommandWithoutChangingPosition( rng, res.text );
+      var rng = new Range.Range( res.startLine, 0, res.endLine, res.endColumn );
+      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, res.text );
       self.editor.executeCommand("madoko",command);
     }
   }
@@ -1511,22 +1511,22 @@ var UI = (function() {
   UI.prototype.insertText = function( txt, pos ) {
     var self = this;
     if (!pos) pos = self.editor.getPosition(); 
-    var rng = new range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
-    var command = new replaceCommand.ReplaceCommandWithoutChangingPosition( rng, txt );
+    var rng = new Range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
+    var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, txt );
     self.editor.executeCommand("madoko",command);
   }
 
   UI.prototype.insertFile = function(file, content, encoding, mime, pos ) {
     var self = this;
     if (pos) pos.column = 0;
-    var ext  = util.extname(file.name);
-    var stem = util.stemname(file.name);
-    var name = util.basename(file.name);      
-    if (util.startsWith(mime,"image/")) name = "images/" + name;    
-    if (encoding===storage.Encoding.Base64) {
+    var ext  = Util.extname(file.name);
+    var stem = Util.stemname(file.name);
+    var name = Util.basename(file.name);      
+    if (Util.startsWith(mime,"image/")) name = "images/" + name;    
+    if (encoding===Storage.Encoding.Base64) {
       var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
       if (!cap) {
-        util.message("invalid base64 encoding", util.Msg.Error );
+        Util.message("invalid base64 encoding", Util.Msg.Error );
         return;
       }
       content = cap[3];  
@@ -1538,7 +1538,7 @@ var UI = (function() {
     self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
     
     var text = "";
-    if (util.startsWith(mime,"image/")) {
+    if (Util.startsWith(mime,"image/")) {
       text = "![" + stem + "]\n\n[" + stem + "]: " + name + ' "' + stem + '"';
     }
     else if (ext===".mdk" || ext===".md") {
@@ -1555,16 +1555,16 @@ var UI = (function() {
         text="Bibliography: " + name;
       }
       else if (ext===".bst") {
-        text="Bib Style   : " + util.stemname(name);
+        text="Bib Style   : " + Util.stemname(name);
       }
       else if (ext===".cls") {
-        text="Doc Class   : " + util.basename(name);
+        text="Doc Class   : " + Util.basename(name);
       }
       else if (ext===".sty" || ext===".tex") {
-        text="Package     : " + util.stemname(name);
+        text="Package     : " + Util.stemname(name);
       }
       else {
-        util.message( "unsupported drop file extension: " + ext, util.Msg.Info );
+        Util.message( "unsupported drop file extension: " + ext, Util.Msg.Info );
         return;
       }
       var lineNo = findMetaPos(self.getEditText());      
@@ -1577,9 +1577,9 @@ var UI = (function() {
     var self = this;
     if (!files) return;
     for (var i = 0, f; f = files[i]; i++) {      
-      var encoding = storage.Encoding.fromExt(f.name);      
-      var mime = f.type || util.mimeFromExt(f.name);
-      if (!(util.startsWith(mime,"image/") || util.isTextMime(mime))) { // only images or text..
+      var encoding = Storage.Encoding.fromExt(f.name);      
+      var mime = f.type || Util.mimeFromExt(f.name);
+      if (!(Util.startsWith(mime,"image/") || Util.isTextMime(mime))) { // only images or text..
         continue;
       }
       
@@ -1590,12 +1590,12 @@ var UI = (function() {
             self.insertFile( _file, loadEvt.target.result, _encoding, _mime, pos );
           }
           catch(exn) {
-            util.message(exn,util.Msg.Exn);
+            Util.message(exn,Util.Msg.Exn);
           }
         };
       })(f,encoding,mime);
 
-      if (encoding===storage.Encoding.Base64)
+      if (encoding===Storage.Encoding.Base64)
         reader.readAsDataURL(f);
       else 
         reader.readAsText(f);
@@ -1612,7 +1612,7 @@ var UI = (function() {
     self.editor.changeDecorations(function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
-        if (type && !util.startsWith(decoration.type,type)) {
+        if (type && !Util.startsWith(decoration.type,type)) {
           // do nothing
           newdecs.push(decoration);          
         }
@@ -1692,7 +1692,7 @@ var UI = (function() {
         expire: 0, // does not expire
       });
       var msg = "error: " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
-      util.message( msg, util.Msg.Error );
+      Util.message( msg, Util.Msg.Error );
     });
 
     self.removeDecorations(true,"error");
@@ -1895,7 +1895,7 @@ var UI = (function() {
 
   UI.prototype.saveTo = function() {
     var self = this;    
-    return storage.saveAs(self.storage,self.docName).then( function(res) {
+    return Storage.saveAs(self.storage,self.docName).then( function(res) {
       if (!res) throw new Error("cancel"); 
       return self.setStorage(res.storage,res.docName).then( function() {
         return res.docName;
