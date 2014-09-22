@@ -131,8 +131,17 @@ define([],function() {
       }
     }
 
-    Promise.wrap = function(p) {
-      return (p && p.then ? p : Promise.resolved(p));
+    Promise.wrap = function() {
+      try {
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length < 2) console.log ("madoko: Promise.wrap does not have enough arguments!");
+        var p = args[0].apply(args[0],args.slice(1));
+        if (p && p.then) return p;
+                   else  return Promise.resolved(p);
+      }
+      catch(exn) {
+        return Promise.rejected(exn);
+      }
     }
 
     Promise.prototype.always = function( action ) {

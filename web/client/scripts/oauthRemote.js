@@ -8,9 +8,6 @@
 
 define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
-//var madokoDomain = "https://www.madoko.net";
-var madokoDomain = "https://madoko.cloudapp.net";
-
 var OAuthRemote = (function() {
 
   function OAuthRemote(opts) {
@@ -28,15 +25,15 @@ var OAuthRemote = (function() {
     self.authorizeWidth = opts.authorizeWidth || 600;
     self.authorizeHeight= opts.authorizeHeight || 600;
 
-    if (!self.authorizeParams.redirect_uri)  self.authorizeParams.redirect_uri = madokoDomain + "/redirect/" + self.name;
+    if (!self.authorizeParams.redirect_uri)  self.authorizeParams.redirect_uri = location.origin + "/redirect/" + self.name;
     if (!self.authorizeParams.response_type) self.authorizeParams.response_type = "code";
   }
 
   // try to set access token without full login; call action with logged in or not.
   OAuthRemote.prototype._withConnect = function(action) {
     var self = this;
-    if (self.access_token) return Promise.wrap(action(true));
-    if (self.access_token === false) return Promise.wrap(action(false));
+    if (self.access_token) return Promise.wrap(action, true);
+    if (self.access_token === false) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
     return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(access_token) {
       self.access_token = access_token;
       return action(true);
@@ -145,7 +142,7 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype.withUserId = function(action) {
     var self = this;
-    if (self.userId) return Promise.wrap(action(self.userId));
+    if (self.userId) return Promise.wrap(action, self.userId);
     return self.getUserInfo().then( function(info) {
       return action(self.userId);
     });
