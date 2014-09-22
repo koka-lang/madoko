@@ -645,20 +645,27 @@ var UI = (function() {
     });
   }
 
+  UI.prototype.updateRemoteLogo = function(stg,isConnected) {
+    var self = this;
+    if (!stg) stg = self.storage;
+    if (isConnected==null) isConnected = self.isConnected;
+    self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
+    if (stg && stg.remote) {
+      var remoteLogo = stg.remote.logo();
+      var remoteType = stg.remote.type();        
+      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+      self.remoteLogo.src = "images/dark/" + remoteLogo;
+      self.remoteLogo.title = remoteMsg + " storage: " + (isConnected ? "connected" : "not connected, click to login");
+    }
+  }
+
   UI.prototype.updateConnectionStatus = function (stg) {
     var self = this;
     if (!stg) stg = self.storage;
     if (!stg) return Promise.resolved(false);
     return stg.connect().then( function(isConnected) {
       self.isConnected = isConnected; 
-      self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
-      if (self.storage) {
-        var remoteLogo = self.storage.remote.logo();
-        var remoteType = self.storage.remote.type();        
-        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-        self.remoteLogo.src = "images/dark/" + remoteLogo;
-        self.remoteLogo.title = remoteMsg + " storage: " + (isConnected ? "connected" : "not connected, click to login");
-      }
+      self.updateRemoteLogo(stg,isConnected);
       return isConnected;
     });
   }
