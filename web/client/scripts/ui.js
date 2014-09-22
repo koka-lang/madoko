@@ -6,7 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","std_crypto","../scripts/storage","../scripts/madokoMode",
+define(["../scripts/map","../scripts/merge","../scripts/promise","../scripts/util","std_crypto",
+        "../scripts/storage","../scripts/madokoMode",
         "vs/editor/core/range", "vs/editor/core/selection", "vs/editor/core/command/replaceCommand"],
         function(Map,merge,Promise,util,crypto,storage,madokoMode,range,selection,replaceCommand) {
 

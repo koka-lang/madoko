@@ -6,60 +6,53 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
+define(["../scripts/promise","../scripts/map","../scripts/util","../scripts/oauthRemote"], 
+        function(Promise,Map,Util,OAuthRemote) {
 
-var onedriveOptions = {
-  client_id     : "000000004C113E9D",
-  redirect_uri  : "https://www.madoko.net/redirect/live", 
-  scope         : ["wl.signin","wl.skydrive","wl.skydrive_update"],
-  response_type : "token",
-  secure_cookie : true,
-};
 
-var onedriveDomain = "https://apis.live.net/v5.0/";
-
-/* Helpers */
-
-function makeError( obj, premsg ) {
-  var msg = "onedrive: " + (premsg ? premsg + ": " : "")
-  if (obj && obj.error) {
-    var err = obj.error.message || obj.error.toString();
-    err = err.replace(/^WL\..*:\s*/,"").replace(/^.*?Detail:\s*/,"");
-    if (Util.startsWith(err,"Cannot read property 'focus'")) err = "Cannot open dialog box. Enable pop-ups?";
-    msg = msg + err; // + (obj.error.code ? " (" + obj.error.code + ")" : "");
-  }
-  else if (obj && typeof obj === "string") {
-    msg = msg + obj;
-  }
-  else {
-    msg = msg + "unknown error";
-  }
-  return msg;
-}
-
-function makePromise( call, premsg ) {
-  return new Promise(call).then( 
-    function(res) {
-      return res;
-    },
-    function(err) {
-      throw makeError(err,premsg);
-    }
-  );
-}
+var onedrive = new OAuthRemote( {
+  name           : "onedrive",
+  defaultDomain  : "https://apis.live.net/v5.0/",
+  accountUrl     : "me",
+  loginUrl       : "https://login.live.com/oauth20_authorize.srf",
+  loginParams: {
+    client_id    : "000000004C113E9D",
+    scope        : ["wl.signin","wl.skydrive","wl.skydrive_update"],
+  },
+  dialogHeight   : 650,
+  dialogWidth    : 800,
+  logoutUrl      : "https://login.live.com/oauth20_logout.srf",
+  useAuthHeader  : false,  
+} );
 
 
 /* ----------------------------------------------
    Id's, paths, and sub-directories are quite a hassle :-(
+   We set up a special cache for file paths
 ---------------------------------------------- */
 
+var pathCache = new Map();
 
-function onedriveGet( path ) {
-  return Util.requestGET( onedriveDomain + path, { access_token: getAccessToken() } );
+function cache( path, action ) {
+  var val = pathCache.get(path);
+  if (val) return Promise.resolved(val.info);
+  return action(path).then( function(info) {
+    pathCache.set(path, { time: Date.now(), info: info });
+    return info;
+  });
 }
 
+
+setInterval( function() {
+  var now = Date.now();
+  pathCache.forEach( function(path,val) {
+    if (now - val.time > 60000) pathCache.remove(path);
+  });
+}, 60000);
+
+
 function infoFromId( fileId ) {
-  return onedriveGet( fileId.toString() );
+  return onedrive.requestGET( fileId.toString() );
 }
 
 function pathFromId( id, path ) {
@@ -72,19 +65,29 @@ function pathFromId( id, path ) {
 }
 
 function rootInfo() {
-  return onedriveGet( "me/skydrive" );
+  return cache( "me/skydrive", function() { return onedrive.requestGET("me/skydrive"); } );
+}
+
+function _getListing( folderId ) {
+  return onedrive.requestGET( folderId + "/files").then( function(res) {
+    return res.data || [];
+  });
+}
+
+function getListing( path ) {
+  return infoFromPath( path ).then( function(info) {
+    return _getListing( info.id );
+  });
 }
 
 function _infoFromName( folderId, name ) {
-  return onedriveGet( folderId + "/files").then( function(res) {
+  return _getListing(folderId).then( function(items) {
     var file = null;
-    if (res.data) {
-      for (var i = 0; i < res.data.length; i++) {
-        var f = res.data[i];
-        if (f.name == name) {
-          file = f;
-          break;
-        }
+    for (var i = 0; i < items.length; i++) {
+      var f = items[i];
+      if (f.name == name) {
+        file = f;
+        break;
       }
     }
     return file;
@@ -100,7 +103,7 @@ function _infoFromSubDirs( info, parts ) {
   });
 }
 
-function infoFromSubPath( folderId, path ) {
+function _infoFromSubPath( folderId, path ) {
   return infoFromId( folderId ).then(function(info) {
     if (!path) return info;
     return _infoFromSubDirs( info, path.split("/") );    
@@ -108,8 +111,10 @@ function infoFromSubPath( folderId, path ) {
 }
 
 function infoFromPath( path ) {
-  return rootInfo().then( function( info ) {
-    return infoFromSubPath( info.id, path );
+  return cache( path, function() {
+    return rootInfo().then( function( info ) {
+      return _infoFromSubPath( info.id, path );
+    });
   });
 }
 
@@ -118,8 +123,7 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
   var dir = dirs.shift();
   return _infoFromName( folderId, dir ).then( function(dirInfo) {
     if (dirInfo) return _ensureSubDirs( dirInfo.id, dirs );
-    var url = onedriveDomain + folderId.toString();
-    return Util.requestPOST( url, { access_token: getAccessToken() }, { 
+    return onedrive.requestPOST( folderId.toString(), { }, { 
       name: dir, 
       description: "" 
     }).then( function(newInfo) {
@@ -138,111 +142,41 @@ function _ensureSubDirs( folderId, dirs, recurse ) {
   });
 }
 
-function ensureSubPath( folderId, path ) {
+function _ensureSubPath( folderId, path ) {
   if (!path) return Promise.resolved( { id: folderId, created: false } );
   return _ensureSubDirs( folderId, path.split("/"));
 }
 
 function ensurePath( path ) {
   return rootInfo().then( function(info) {
-    return ensureSubPath( info.id, path );
+    return _ensureSubPath( info.id, path );
   });
 }
 
 /* Write a file */
 
 function _writeFileAt( folderId, name, content ) {
-  var url = onedriveDomain + folderId.toString() + "/files/" + name;                  
-  return Util.requestPUT( {url:url, contentType:";" }, { access_token: getAccessToken() }, content );
+  var url = folderId.toString() + "/files/" + name;                  
+  return onedrive.requestPUT( { url: url, contentType:";" }, {}, content );
 }
 
-function writeFile( folderId, path, content ) {
-  return ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
+function _writeFile( folderId, path, content ) {
+  return _ensureSubPath( folderId, Util.dirname(path) ).then( function(info) {
     return _writeFileAt( info.id, Util.basename(path), content );
   }).then( function(resp) {
     return infoFromId( resp.id );
   });
 }
 
-
-/* ----------------------------------------------
-  login
----------------------------------------------- */
-
-var _access_token = null;
-function getAccessToken() {
-  if (!_access_token && WL) {
-    var session = WL.getSession();
-    if (session) _access_token = session.access_token;
-  }
-  return _access_token;
-}
-
-function init() {
-  if (_access_token) return true;
-  try {
-    WL.init(onedriveOptions); // ignore the promise.. or we trigger popup blockers
-    if (console && console.log) {
-      // fix these or the live.js script will call the wrong entries
-      if (!console.error) console.error = console.log;
-      if (!console.warn) console.warn = console.log;
-    }
-    WL.Event.subscribe("auth.sessionChange", function(ev) {
-      var xsession = WL.getSession();
-      if (xsession) _access_token = xsession.access_token;
-    });
-    WL.Event.subscribe("auth.logout", function(ev) {
-      _access_token = null;
-    });
-    return true;
-  }
-  catch(exn) {
-    return false;
-  }
-}
-
-function login(dontForce) {
-  if (getAccessToken()) return Promise.resolved();
-  if (dontForce) return Promise.rejected( new Error("onedrive: not logged in") );
-  init();
-  return makePromise(WL.login()).then( function() {
-    var session = WL.getSession();
-    if (session) _access_token = session.access_token;
-    return;
+function pushFile( path, content ) {
+  return rootInfo().then( function(info) {
+    return _writeFile( info.id, path, content );
   });
 }
-
-function logout() {
-  WL.logout();
-}
-
-
-function chooseFile() {
-  return makePromise( WL.fileDialog( {
-    mode: "open",
-    select: "single",
-  })).then( function(res) {
-    if (!(res.data && res.data.files && res.data.files.length==1)) {
-      throw new Error("onedrive: no file selected");
-    }
-    return res.data.files[0];
-  }).then( function(file) {
-    return infoFromId( file.id );
-  });
-}     
 
 /* ----------------------------------------------
   Main entry points
 ---------------------------------------------- */
-
-function openFile() {
-  init();  // chooseFile will also login if necessary
-  return chooseFile().then( function(info) {
-    return pathFromId( info.parent_id ).then( function(path) {
-      return { remote: new Onedrive(info.parent_id, path), docName: Util.basename(info.name) };
-    });
-  });
-}
 
 function createAt( folder ) {
   return login().then( function() {
@@ -252,42 +186,27 @@ function createAt( folder ) {
   });
 }
 
-
-function openFolder() {
-  return makePromise( WL.fileDialog( {
-    mode: "save",
-    select: "single",
-  })).then( function(res) {
-    if (!(res.data && res.data.folders && res.data.folders.length==1)) {
-      return Promise.rejected(onedriveError("no save folder selected"));
-    }
-    return res.data.folders[0].id;
-  }).then( function(folderId) {
-    return pathFromId( folderId ).then( function(folder) {
-      return new Onedrive(folderId, folder);
-    });
-  });
-}     
-
-
-/* ----------------------------------------------
-  Remote interface
----------------------------------------------- */
-
 function unpersist( obj ) {
-  return new Onedrive(obj.folderId, obj.folder || "");
+  return new Onedrive(obj.folder || "");
 }
 
 function type() {
-  return "Onedrive";
+  return onedrive.name;
+}
+
+function logo() {
+  return onedrive.logo;
 }
 
 var Onedrive = (function() {
 
-  function Onedrive( folderId, folder ) {
+  function Onedrive( folder ) {
     var self = this;
-    self.folderId = folderId;
-    self.folder = folder;
+    self.folder = folder || "";
+  }
+
+  Onedrive.prototype.createNewAt = function(folder) {
+    return createAt(folder);
   }
 
   Onedrive.prototype.type = function() {
@@ -295,12 +214,11 @@ var Onedrive = (function() {
   }
 
   Onedrive.prototype.logo = function() {
-    return "icon-onedrive.png";
+    return logo();
   }  
 
-  Onedrive.prototype.persist = function() {
-    var self = this;
-    return { folderId: self.folderId, folder: self.folder };
+  Onedrive.prototype.isRemote = function() {
+    return true;
   }
 
   Onedrive.prototype.getFolder = function() {
@@ -308,26 +226,43 @@ var Onedrive = (function() {
     return self.folder;
   }
 
-  Onedrive.prototype.connect = function(dontForce) {
-    return login(dontForce);
+  Onedrive.prototype.persist = function() {
+    var self = this;
+    return { folder: self.folder };
+  }
+  
+  Onedrive.prototype.fullPath = function(fname) {
+    var self = this;
+    return Util.combine(self.folder,fname);
   }
 
-  Onedrive.prototype.createNewAt = function(folder) {
-    return createAt(folder);
+  Onedrive.prototype.connect = function() {
+    return onedrive.connect();
   }
+
+  Onedrive.prototype.login = function(dontForce) {
+    return onedrive.login(dontForce);
+  }
+
+  Onedrive.prototype.logout = function() {
+    return onedrive.logout();
+  }
+
+  Onedrive.prototype.getUserName = function() {
+    return onedrive.getUserName();
+  }
+
 
   Onedrive.prototype.pushFile = function( fpath, content ) {
     var self = this;
-    return writeFile( self.folderId, fpath, content ).then( function(info) {
-      return Util.dateFromISO(info.updated_time);
+    return pushFile( self.fullPath(fpath), content ).then( function(info) {
+      return { createdTime: Util.dateFromISO(info.updated_time) };
     });
   }
 
   Onedrive.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return login(true).then(function() {
-      return infoFromSubPath( self.folderId, fpath );
-    }).then( function(info) {
+    return infoFromPath( self.fullPath(fpath) ).then( function(info) {
       if (!info || !info.source) return Promise.rejected("file not found: " + fpath);
       // onedrive does not do CORS on content so we need to use our server to get it.. :-(
       // no need for binary as our server does the right thing
@@ -336,6 +271,7 @@ var Onedrive = (function() {
           path: fpath,
           content: req.responseText,
           createdTime: Util.dateFromISO(info.updated_time),
+          // shareUrl: info.source,
         };
         return file;
       });
@@ -344,18 +280,36 @@ var Onedrive = (function() {
 
   Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
-    return infoFromSubPath( self.folderId, fpath ).then( function(info) {
+    return infoFromPath( self.fullPath(fpath) ).then( function(info) {
       return (info ? Util.dateFromISO(info.updated_time) : null);
     });
   }
 
   Onedrive.prototype.createSubFolder = function(dirname) {
     var self = this;
-    return ensureSubPath(self.folderId,dirname).then( function(info) {
+    return ensurePath( self.fullPath(dirname) ).then( function(info) {
       return { folder: Util.combine(self.folder,dirname), created: info.created };
     });
   }
 
+  Onedrive.prototype.listing = function( fpath ) {
+    var self = this;
+    return getListing( self.fullPath(fpath) ).then( function(items) {
+      return (items ? items : []).map( function(item) {
+        item.type = (item.type==="folder" || item.type==="album" ? "folder" : "file");
+        item.path = Util.combine(fpath,item.name);
+        item.isShared = (item.shared_with && item.shared_with.access !== "Just me");
+        return item;
+      });
+    });
+  }
+
+  Onedrive.prototype.getShareUrl = function(fname) {
+    var self = this;
+    return infoFromPath( self.fullPath(fname) ).then( function(info) {
+      return info.source;
+    });
+  }
 
   return Onedrive;
 })();   
@@ -363,13 +317,10 @@ var Onedrive = (function() {
 
 
 return {
-  openFile  : openFile,
-  openFolder: openFolder,
   createAt  : createAt,
-  login     : login,
-  logout    : logout,
   unpersist : unpersist,
   type      : type,
+  logo      : logo,
   Onedrive  : Onedrive,
 }
 

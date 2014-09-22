@@ -10,7 +10,7 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/merge", 
         "../scripts/remote-null",
         "../scripts/remote-dropbox",
-        "../scripts/remote-onedrive2",
+        "../scripts/remote-onedrive",
         "../scripts/remote-http",
         "../scripts/picker",
         ], function(Promise,Map,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {

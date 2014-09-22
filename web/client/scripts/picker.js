@@ -9,7 +9,7 @@
 define(["../scripts/promise","../scripts/util", 
         "../scripts/remote-null",
         "../scripts/remote-dropbox",
-        "../scripts/remote-onedrive2",
+        "../scripts/remote-onedrive",
         ], function(Promise,Util,NullRemote,Dropbox,Onedrive) {
 
 
