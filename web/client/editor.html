@@ -56,7 +56,7 @@
         <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure ...</div>
         <div id="sync-now" class="button" title="Force synchronization with cloud storage (done automatically every 30 seconds)"
-          ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize now <span class="shortcut">(Alt-S)</span></div>                
+          ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize now <span class="shortcut">(Ctrl-S / Alt-S)</span></div>                
         <hr/>
         <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
@@ -202,7 +202,10 @@
     <div id="message-connect" class="message">Connected.</div>
     <div id="message-message" class="message"></div>
     <div id="message-alert" class="message">The current local document has changes that have not been saved to the cloud yet!
-    <br/>Are you sure you want to discard these changes?</div>
+    <br/>Are you sure you want to discard these changes?
+    <br/>
+    <br/>
+    <br/><small>(Select <code>Synchronize now</code> from the menu to save your changes)</small></div>
     <div id="message-template" class="message">Select a template<hr></div>
     <div id="templates">
       <div class='item selected' data-path='default'>
