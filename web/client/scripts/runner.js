@@ -7,7 +7,7 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/util","../scripts/promise","../scripts/storage","webmain"],
-        function(Map,util,Promise,storage,madoko) {
+        function(Map,Util,Promise,Storage,Madoko) {
 
 var Runner = (function() {
 
@@ -17,8 +17,8 @@ var Runner = (function() {
     self.sendFiles = new Map();
     self.storage = null;
 
-    self.options = madoko.initialOptions();
-    self.madokoWorker = new util.ContWorker("madoko-worker.js"); 
+    self.options = Madoko.initialOptions();
+    self.madokoWorker = new Util.ContWorker("madoko-worker.js"); 
 
     self.times = [];
     self.timesSamples = 10;
@@ -72,14 +72,14 @@ var Runner = (function() {
     var self = this;
     //console.log( "  update done.");
     if (res.message) {
-      util.message(res.message, util.Msg.Tool );
+      Util.message(res.message, Util.Msg.Tool );
     }
     if (res.err) return Promise.rejected( res.err );
     
     //if (res.runOnServer) {
     //  self.serverRun(ctx);
     //}
-    util.message("update: " + ctx.round + " done", util.Msg.Trace );
+    Util.message("update: " + ctx.round + " done", Util.Msg.Trace );
       
     if (res.time) {
       self.times.push(parseInt(res.time));
@@ -88,16 +88,16 @@ var Runner = (function() {
 
     // todo: should we wait for image url resolving?
     var filesReferred = res.filesReferred.concat( [
-                          util.combine("out", util.changeExt(res.name, ".html")),
-                          util.combine("out", util.changeExt(res.name, ".pdf")) 
+                          Util.combine("out", Util.changeExt(res.name, ".html")),
+                          Util.combine("out", Util.changeExt(res.name, ".pdf")) 
                         ]);
     var referred = filesReferred.map( function(file) {
-      return self.loadFile(ctx.round, file, !util.hasEmbedExt(file));
+      return self.loadFile(ctx.round, file, !Util.hasEmbedExt(file));
       /*      
-      if (util.hasImageExt(file)) {
+      if (Util.hasImageExt(file)) {
         return self.loadFile(ctx.round, file, true);
       }
-      else if (util.hasEmbedExt(file)) {
+      else if (Util.hasEmbedExt(file)) {
         return self.loadFile(ctx.round, file, true);
       }
       else return Promise.resolved(0);
@@ -121,8 +121,8 @@ var Runner = (function() {
 
       if (!runAgain) {
         res.filesWritten.forEach( function(file) {
-          if (util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
-            util.message(ctx.round.toString() + ": worker generated: " + file.path, util.Msg.Trace );
+          if (Util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
+            Util.message(ctx.round.toString() + ": worker generated: " + file.path, Util.Msg.Trace );
             if (self.storage) self.storage.writeFile(file.path, file.content );
             runAgain = true;
             runOnServer = false;
@@ -138,7 +138,7 @@ var Runner = (function() {
   Runner.prototype.runMadoko = function(text,ctx,options) 
   {
     var self = this;
-    util.message( "update " + ctx.round + " start", util.Msg.Trace );
+    Util.message( "update " + ctx.round + " start", Util.Msg.Trace );
     var msg = {
       type   : "run",
       content: text,
@@ -159,7 +159,7 @@ var Runner = (function() {
   {
     var self = this;
     var ctx = { round: -1, includeImages: true, docname: docName };
-    var options = util.copy(self.options);
+    var options = Util.copy(self.options);
     options.lineNo = 0;
     return self.runMadoko( text, ctx, options ).then( function(res) {
       if (res.runAgain) {
@@ -181,10 +181,10 @@ var Runner = (function() {
     }
     return self.storage.readFile( fname, !referred, { searchDirs: ["out"] } )
       .then( function(file) {
-        util.message(round.toString() + ":storage sent: " + file.path, util.Msg.Trace);      
+        Util.message(round.toString() + ":storage sent: " + file.path, Util.Msg.Trace);      
         return 1;
       }, function(err) {
-          util.message("unable to read from storage: " + fname, util.Msg.Info);
+          Util.message("unable to read from storage: " + fname, Util.Msg.Info);
           return 0;
       });
   }
@@ -209,15 +209,15 @@ var Runner = (function() {
     params.files = [];
     params.files.push( { 
       path: params.docname,
-      mime: util.mimeFromExt(ctx.docname), 
-      encoding: storage.Encoding.fromExt(ctx.docname),
+      mime: Util.mimeFromExt(ctx.docname), 
+      encoding: Storage.Encoding.fromExt(ctx.docname),
       content: text, 
     });
     
     if (self.storage) {
       self.storage.forEachFile(function(file) {
         if (file.path === params.docname) return; // use the latest version
-        if (util.isTextMime(file.mime) || (util.startsWith(file.mime, "image/") && ctx.includeImages)) {
+        if (Util.isTextMime(file.mime) || (Util.startsWith(file.mime, "image/") && ctx.includeImages)) {
           params.files.push( { 
             path: file.path,
             mime: file.mime, 
@@ -228,11 +228,11 @@ var Runner = (function() {
       });
     }
     var t0 = Date.now();
-    return util.requestPOST( "/rest/run", {}, params).then( function(data) {
+    return Util.requestPOST( "/rest/run", {}, params).then( function(data) {
       var time = (Date.now() - t0).toString() + "ms";
-      util.message(data.stdout + data.stderr, util.Msg.Tool);      
+      Util.message(data.stdout + data.stderr, Util.Msg.Tool);      
       data.files.forEach( function(file) {
-        util.message("server sent: " + file.path, util.Msg.Trace );
+        Util.message("server sent: " + file.path, Util.Msg.Trace );
         if (self.storage) {
           self.storage.writeFile( file.path, file.content, {
             encoding: file.encoding,
@@ -243,7 +243,7 @@ var Runner = (function() {
       if (ctx.showErrors) {
         ctx.message = self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors, ctx.docname);
       }
-      util.message( "server update: " + ctx.round + "\n  time: " + time, util.Msg.Info );
+      Util.message( "server update: " + ctx.round + "\n  time: " + time, Util.Msg.Info );
       if (/^[\t ]*error\b[\w \t]+:/m.test(data.stdout + data.stderr)) {
         ctx.errorCode = 1;
       }
@@ -293,7 +293,7 @@ var Runner = (function() {
       return (err.type + ": " + err.range.fileName + ":" + err.range.startLineNumber + ": " + msg);
     }
     else {
-      var log = util.basename(docname) + ".log";
+      var log = Util.basename(docname) + ".log";
       return "unknown error: see the " + log + " file for more info";
     }
   }

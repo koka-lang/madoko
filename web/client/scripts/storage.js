@@ -13,7 +13,7 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-onedrive",
         "../scripts/remote-http",
         "../scripts/picker",
-        ], function(Promise,Map,Util,merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
+        ], function(Promise,Map,Util,Merge,NullRemote,Dropbox,Onedrive,HttpRemote,Picker) {
 
 
 var Encoding = {
@@ -787,7 +787,7 @@ var Storage = (function() {
       }
       else {
         // still do a merge for display of changes in the UI
-        return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+        return Merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                             original, remoteFile.content, content).then( 
           function(res) {
             // push merge fragments for display in UI
@@ -809,7 +809,7 @@ var Storage = (function() {
     var self = this;
     var original = (file.original != null ? file.original : file.content);
     var content  = file.content;
-    return merge.merge3(diff, null, cursors["/" + file.path] || 1, 
+    return Merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                         original, remoteFile.content, file.content).then( 
       function(res) {
         self._fireEvent("flush", { path: file.path }); // save editor state

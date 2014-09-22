@@ -6,7 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["std_core","std_path","../scripts/promise","../scripts/map"],function(stdcore,stdpath,Promise,Map) {
+define(["std_core","std_path","../scripts/promise","../scripts/map"],
+        function(Stdcore,Stdpath,Promise,Map) {
 
   var Msg = { 
     Normal: "normal", 
@@ -104,7 +105,6 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
     txt = capitalize(txt);
 
     if (!kind) kind = Msg.Normal;
-    // stdcore.println(txt);
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
 
     if (kind !== Msg.Trace && consoleOut) {
@@ -327,7 +327,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
   }
 
   function firstdirname(path) {
-    var dir = stdpath.dirname(path);
+    var dir = Stdpath.dirname(path);
     if (!dir) return "";
     return dir.replace(/[\/\\].*$/, "");
   }
@@ -366,7 +366,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
   };
 
   function mimeFromExt( fname ) {
-    var ext = stdpath.extname(fname);
+    var ext = Stdpath.extname(fname);
     if (ext) {
       var mime = mimeTypes[ext.substr(1)];
       if (mime) return mime;
@@ -385,7 +385,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
 
   var embedExts = [".bbl",".js",".css",".json",".mdk",".cls",".bib"].join(";");
   function hasEmbedExt(fname) {
-    var ext = stdpath.extname(fname);
+    var ext = Stdpath.extname(fname);
     if (!ext) return false;
     return (contains(embedExts,ext));
   }
@@ -393,7 +393,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
 
   var dropExts = [".js",".css","mdk","md","bib","cls","sty","tex","png","jpg","jpeg","gif","svg","eps"].join(";");
   function hasDropExt(fname) {
-    var ext = stdpath.extname(fname);
+    var ext = Stdpath.extname(fname);
     if (!ext) return false;
     return (contains(dropExts,ext));
   }
@@ -404,9 +404,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
   
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html",".log"].join(";");
   function hasGeneratedExt(fname) {
-    var ext = stdpath.extname(fname);
+    var ext = Stdpath.extname(fname);
     if (!ext) return false;
-    return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || stdpath.dirname(fname)==="out");
+    return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || Stdpath.dirname(fname)==="out");
   }
 
   function toggleButton( elemName, text0, text1, action ) {
@@ -1117,7 +1117,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],function(st
 
       if (link.download !== undefined){
         //Set HTML5 download attribute. This will prevent file from opening if supported.
-        link.download = stdpath.basename(url);
+        link.download = Stdpath.basename(url);
       }
 
       var ev = document.createEvent('MouseEvents');
@@ -1277,13 +1277,13 @@ doc.execCommand("SaveAs", null, filename)
     setSessionObject: setSessionObject,
     removeSessionObject: removeSessionObject,
     
-    changeExt: stdpath.changeExt,
-    extname: stdpath.extname,
-    basename: stdpath.basename,
-    dirname: stdpath.dirname,
-    stemname: stdpath.stemname,
+    changeExt: Stdpath.changeExt,
+    extname: Stdpath.extname,
+    basename: Stdpath.basename,
+    dirname: Stdpath.dirname,
+    stemname: Stdpath.stemname,
     isRelative: isRelative,
-    combine: stdpath.combine,
+    combine: Stdpath.combine,
     firstdirname: firstdirname,
 
     hasEmbedExt: hasEmbedExt,
