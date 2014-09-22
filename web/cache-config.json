@@ -1,0 +1,6 @@
+{
+  "version"  : "0",
+  "rootPath" : "client",
+  "dirs"     : [".","images","lib","preview","scripts","styles","templates"],
+  "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls"]
+}
