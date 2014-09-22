@@ -286,7 +286,8 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser({limit: limits.fileSize, strict: false }));
+app.use(bodyParser.urlencoded({limit: limits.fileSize, extended: true}));
+app.use(bodyParser.json({limit: limits.fileSize, strict: false }));
 app.use(cookieSession({ name: "session", secret: passphraseSession, encrypted: true, maxage: limits.cookieAge, httpOnly: true, secure: true, signed: false, overwrite: true }));
 
 app.use(function(err, req, res, next){

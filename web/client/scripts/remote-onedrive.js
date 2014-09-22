@@ -69,7 +69,7 @@ function rootInfo() {
 }
 
 function _getListing( folderId ) {
-  return onedrive.requestGET( { url: folderId + "/files", timeout: 5000 } ).then( function(res) {
+  return onedrive.requestGET( { url: folderId + "/files", timeout: 5000, cache: 30000 } ).then( function(res) {
     return res.data || [];
   });
 }
@@ -307,7 +307,7 @@ var Onedrive = (function() {
   Onedrive.prototype.getShareUrl = function(fname) {
     var self = this;
     return infoFromPath( self.fullPath(fname) ).then( function(info) {
-      return info.source;
+      return (info ? info.source : null);
     });
   }
 
