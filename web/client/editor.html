@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="madoko.appcache">
 <head>
 
 <!-- 
@@ -408,7 +408,7 @@ function removeTick() {
 }
   
 // test browser features 
-if (typeof Worker === "undefined" || typeof localStorage === "undefined") {
+if (typeof Worker === "undefined" || typeof localStorage === "undefined" || typeof(window.applicationCache) === "undefined") {
   document.getElementById("oldbrowser").style.display = "block";
 }
 // test for multiple instances
@@ -455,7 +455,8 @@ if (goodToGo) {
             "vs/editor/editor.main"],
             function(Util,Runner) 
   { 
-    // remove legacy cookies
+    // remove legacy cookies & storage
+    if (localStorage.sessionid) localStorage.removeItem("sessionid");
     Util.setCookie("auth_dropbox","",0);   
     Util.setCookie("auth_onedrive","",0); 
     var picker = Util.getCookie("picker-data");

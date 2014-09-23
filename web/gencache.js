@@ -53,14 +53,13 @@ function readFile(fname) {
 }
 
 function createDigest(fnames) {
-	var digest = Crypto.createHash('md5');
-	var digests = fnames.map( function(fname) {
+	var makedigests = fnames.map( function(fname) {
 		return readFile(Path.join(options.rootPath,fname)).then( function(content) {
-			digest.update(content);			
+			return Crypto.createHash('md5').update(content);			
 		});
 	});
-	return Promise.when(digests).then( function() {
-		return digest.digest("hex");
+	return Promise.when(makedigests).then( function(digests) {
+		return Crypto.createHash('md5').update(digests.join()).digest("hex");
 	});
 }
 
@@ -82,8 +81,10 @@ function createCache(fnames,digest) {
 readResources().then( function(fnames) {
 	console.log("creating digest...");
 	return createDigest(fnames).then( function(digest) {
+		console.log("version: " + version);
+		console.log("digest : " + digest);
 		var cache = createCache(fnames,digest);
-		Fs.writeFileSync("madoko.appcache",cache);
+		Fs.writeFileSync(Path.join(options.rootPath,"madoko.appcache"),cache);
 		console.log("done");
 	});	
 }, function(err) {

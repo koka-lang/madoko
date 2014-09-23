@@ -180,6 +180,21 @@ var UI = (function() {
     self.remoteLogo = document.getElementById("connect-logo");
     self.theme = "vs";
 
+    // listen to application cache
+    self.appUpdateReady = false;
+    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+      // reload immediately if an update is ready
+      window.location.reload();
+    }
+    else {
+      // otherwise install a listener
+      window.applicationCache.addEventListener("updateready", function(ev) {
+        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+          self.appUpdateReady = true;
+        };
+      });
+    }
+
     // start editor
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
@@ -429,8 +444,8 @@ var UI = (function() {
     self.checkAutoSync = document.getElementById('checkAutoSync');
 
     var autoSync = function() {
-      self.updateConnectionStatus().then( function(isConnected) {
-        if (isConnected && self.storage.remote.type() !== "local") {
+      self.updateConnectionStatus().then( function(isConnected) {        
+        if (isConnected && self.storage.isRemote()) {
           var now = Date.now();
           if (now - self.lastConUserCheck >= 10000) {
             self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
@@ -442,6 +457,13 @@ var UI = (function() {
           }
         }
       });
+      if (self.storage && self.storage.isSynced() && self.appUpdateReady) {
+        self.appUpdateReady = false;
+        console.log("The Madoko app has been updated. Auto-reload.");
+        //if (window.confirm("The Madoko web-app has been updated. Press 'Ok' to reload.")) {
+        window.location.reload();
+        //}
+      }
     }
 
     setTimeout( autoSync, 1000 ); // run early on on startup
