@@ -1,5 +1,5 @@
 var Crypto  = require("crypto");
-var Fs  		= require("fs");
+var Fs  	  = require("fs");
 var Path    = require("path");
 var Promise = require("./client/scripts/promise.js");
 
@@ -30,7 +30,7 @@ function readDirRec(dir) {
 function readResources() {
 	return readDirRec(options.rootPath).then( function(files) {
 		return files.map(function(fname) {
-			return fname.substr(options.rootPath.length+1);
+			return fname.substr(options.rootPath.length+1).replace(/\\/g,"/");
 		}).filter( function(fname) {
 			var dir = Path.dirname(fname);
 			if (dir && !options.dirs.some(function(d) { return startsWith(dir,d); } )) {
@@ -60,20 +60,20 @@ function createDigest(fnames) {
 		});
 	});
 	return Promise.when(makedigests).then( function(digests) {
-		//console.log(digests.join("\n"));
-		return Crypto.createHash('md5').update(digests.join()).digest("hex");
+		return Crypto.createHash('md5').update(digests.sort().join()).digest("hex");
 	});
 }
 
 function createCache(fnames,digest) {
-	var header = JSON.stringify( {
+	var header = "#" + JSON.stringify( {
 		version: appVersion,
 		madokoVersion: madokoVersion,
 		digest: digest,
 	});
+	Fs.writeFileSync(Path.join(options.rootPath,"version.txt"),header + "\n");
 	return [
 		"CACHE MANIFEST",
-		"#" + header,
+		header,
 		"",
 		template,
 		fnames.join("\n"),		

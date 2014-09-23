@@ -11,6 +11,9 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         "vs/editor/core/range", "vs/editor/core/command/replaceCommand"],
         function(Map,Promise,Util,Storage,MadokoMode,Range,ReplaceCommand) {
 
+
+var isFirefox = typeof InstallTrigger !== 'undefined'; // test for firefox
+
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
   var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
@@ -180,19 +183,20 @@ var UI = (function() {
     self.remoteLogo = document.getElementById("connect-logo");
     self.theme = "vs";
 
-    // listen to application cache
+    // listen to application cache    
     self.appUpdateReady = false;
     if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-      // reload immediately if an update is ready
+      // reload immediately if an update is ready without asking the user.
       window.location.reload();
     }
     else {
-      // otherwise install a listener
+      // otherwise install a listener 
       window.applicationCache.addEventListener("updateready", function(ev) {
+        console.log("updateready event" );
         if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
           self.appUpdateReady = true;
         };
-      });
+      },false);
     }
 
     // start editor
@@ -443,7 +447,14 @@ var UI = (function() {
     self.iconDisconnect = document.getElementById("icon-disconnect");
     self.checkAutoSync = document.getElementById('checkAutoSync');
     self.lastVersionCheck = 0;
+
+    // request cached version; so it corresponds to the cache-manifest version
     self.version = null;
+    Util.getAppVersionInfo(false).then( function(version) {
+      if (version) {
+        self.version = version;
+      }
+    })
     
     var autoSync = function() {
       var now = Date.now();
@@ -459,25 +470,34 @@ var UI = (function() {
           }
         }
       });
-      // check if an app update happened  
-      if (self.storage && self.storage.isSynced() && self.appUpdateReady) {
+      // check if an app update happened 
+      if (self.state === State.Normal && self.appUpdateReady) {
         self.appUpdateReady = false;
         console.log("The Madoko app has been updated. Auto-reload.");
         if (window.confirm("The Madoko web-app has been updated. Press 'Ok' to reload.")) {
           window.location.reload();
         }
+        else {
+          // set appUpdateReady to true again...??
+        }
       }
-      // check the version number on the server every hour 
+      // check the version number on the server every 1 minutes
       if (now - self.lastVersionCheck >= 60000) {
-        Util.getAppVersionInfo().then( function(version) {
+        // request lastest appversion from the server
+        Util.getAppVersionInfo(true).then( function(version) {
           if (!version) return;
           if (!self.appUpdateReady && self.version && self.version.digest !== version.digest) {
             console.log("Madoko application has been updated");
-            self.appUpdateReady = true;            
+            window.applicationCache.update(); // update the cache -- will trigger a reload later on.            
+            //if (isFirefox) {
+              // on firefox, update doesn't cause an event... just force a reload
+            //  self.appUpdateReady = true; 
+            //}
           }
           self.version = version;
           document.getElementById("version").textContent = self.version.version || "?";       
           document.getElementById("madokoVersion").textContent = self.version.madokoVersion || "?";
+          document.getElementById("digest").textContent = "x" + self.version.digest || "?";
         });
       }
     }

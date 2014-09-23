@@ -297,10 +297,21 @@ app.use(function(err, req, res, next){
 var scriptSrc = "'self' 'unsafe-inline'";
 
 app.use(function(req, res, next){
-  //res.setHeader("Cache-Control","public, max-age=5000");
+  if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
+    // for security do not store any rest or oauth request 
+    console.log("cache: no-store: " + req.path);
+    res.setHeader("Cache-Control","no-store");
+  }
+  else {
+    // set very short cache because we use a cache-manifest;
+    // can't use no-cache or firefox won't work.
+    console.log("cache: no-cache: " + req.path);
+    res.setHeader("Cache-Control","public; max-age=10");
+  }
+  res.setHeader("Last-Modified",new Date().toUTCString());
   
   var csp = ["script-src " + scriptSrc,
-             "report-uri /report/csp"
+             "report-uri /rest/report/csp"
             ].join(";");
 
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
@@ -1155,7 +1166,7 @@ app.post("/rest/edit-alias", function(req,res) {
 });
 
 
-app.post("/report/csp", function(req,res) {
+app.post("/rest/report/csp", function(req,res) {
   event(req,res, false, function() {
     console.log(req.body);
     logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
@@ -1194,7 +1205,7 @@ app.post("/oauth/logout", function(req,res) {
   });
 })
 
-app.get("/remote/onedrive", function(req,res) {
+app.get("/rest/remote/onedrive", function(req,res) {
   event( req, res, true, function() {
     var login = req.session.logins.onedrive;
     if (!login || !login.access_token) throw { httpCode: 401, message: "Must be logged in to request Onedrive content" };
@@ -1205,7 +1216,7 @@ app.get("/remote/onedrive", function(req,res) {
   }, 100 );
 });
 
-app.get("/remote/http", function(req,res) {
+app.get("/rest/remote/http", function(req,res) {
   event( req, res, false, function() {
     console.log("remote http get: " + req.query.url );
     return requestGET( req.query.url, "binary" ).then( function(content) {

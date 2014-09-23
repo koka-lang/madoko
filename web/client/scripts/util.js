@@ -1265,8 +1265,9 @@ doc.execCommand("SaveAs", null, filename)
     return (Math.random()*99999999).toFixed(0);
   }
 
-  function getAppVersionInfo() {
-    return requestGET("madoko.appcache?nocache=" + randomHash()).then( function(content) {
+  function getAppVersionInfo(latest) {
+    var url = (latest ? "madoko.appcache?nocache=" + randomHash() : "version.txt");
+    return requestGET(url).then( function(content) {
       var cap = /^#(\{.*)/m.exec(content);
       if (cap) {
         return JSON.parse(cap[1]);
