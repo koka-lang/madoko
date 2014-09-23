@@ -298,17 +298,10 @@ var scriptSrc = "'self' 'unsafe-inline'";
 
 app.use(function(req, res, next){
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
-    // for security do not store any rest or oauth request 
+    // for security do not store any rest or oauth request
     console.log("cache: no-store: " + req.path);
     res.setHeader("Cache-Control","no-store");
   }
-  else {
-    // set very short cache because we use a cache-manifest;
-    // can't use no-cache or firefox won't work.
-    console.log("cache: regular: " + req.path );
-    //res.setHeader("Cache-Control","public; max-age=10");
-  }
-  //res.setHeader("Last-Modified",new Date().toUTCString());
   
   var csp = ["script-src " + scriptSrc,
              "report-uri /rest/report/csp"
