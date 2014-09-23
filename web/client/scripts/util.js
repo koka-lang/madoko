@@ -1261,6 +1261,21 @@ doc.execCommand("SaveAs", null, filename)
     setSessionObject(name,null);
   }
 
+  function randomHash() {
+    return (Math.random()*99999999).toFixed(0);
+  }
+
+  function getAppVersionInfo() {
+    return requestGET("madoko.appcache?nocache=" + randomHash()).then( function(content) {
+      var cap = /^#(\{.*)/m.exec(content);
+      if (cap) {
+        return JSON.parse(cap[1]);
+      }
+    }, function(err) {
+      return null;
+    });
+  }
+
   return {
     properties: properties,
     extend: extend,
@@ -1332,6 +1347,7 @@ doc.execCommand("SaveAs", null, filename)
     urlParamsEncode: urlParamsEncode,
     urlParamsDecode: urlParamsDecode,
   
+    getAppVersionInfo: getAppVersionInfo,
 
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,

@@ -3,9 +3,10 @@ var Fs  		= require("fs");
 var Path    = require("path");
 var Promise = require("./client/scripts/promise.js");
 
-var version = JSON.parse(Fs.readFileSync("../package.json")).version;
-var options = JSON.parse(Fs.readFileSync("cache-config.json"));
-var template= Fs.readFileSync("cache-template.txt");
+var madokoVersion = JSON.parse(Fs.readFileSync("../package.json")).version;
+var appVersion 		= JSON.parse(Fs.readFileSync("package.json")).version;
+var options 			= JSON.parse(Fs.readFileSync("cache-config.json"));
+var template 			= Fs.readFileSync("cache-template.txt");
 
 function startsWith(s,pre) {
   if (!pre) return true;
@@ -55,17 +56,19 @@ function readFile(fname) {
 function createDigest(fnames) {
 	var makedigests = fnames.map( function(fname) {
 		return readFile(Path.join(options.rootPath,fname)).then( function(content) {
-			return Crypto.createHash('md5').update(content);			
+			return Crypto.createHash('md5').update(content).digest("hex");			
 		});
 	});
 	return Promise.when(makedigests).then( function(digests) {
+		//console.log(digests.join("\n"));
 		return Crypto.createHash('md5').update(digests.join()).digest("hex");
 	});
 }
 
 function createCache(fnames,digest) {
 	var header = JSON.stringify( {
-		version: version,
+		version: appVersion,
+		madokoVersion: madokoVersion,
 		digest: digest,
 	});
 	return [
@@ -81,8 +84,9 @@ function createCache(fnames,digest) {
 readResources().then( function(fnames) {
 	console.log("creating digest...");
 	return createDigest(fnames).then( function(digest) {
-		console.log("version: " + version);
-		console.log("digest : " + digest);
+		console.log("version: " + appVersion);
+		console.log("madokoVersion: " + madokoVersion);
+		console.log("digest : " + digest);		
 		var cache = createCache(fnames,digest);
 		Fs.writeFileSync(Path.join(options.rootPath,"madoko.appcache"),cache);
 		console.log("done");

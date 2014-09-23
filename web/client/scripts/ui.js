@@ -442,11 +442,13 @@ var UI = (function() {
     self.lastConUsersCheck = 0;
     self.iconDisconnect = document.getElementById("icon-disconnect");
     self.checkAutoSync = document.getElementById('checkAutoSync');
-
+    self.lastVersionCheck = 0;
+    self.version = null;
+    
     var autoSync = function() {
+      var now = Date.now();
       self.updateConnectionStatus().then( function(isConnected) {        
         if (isConnected && self.storage.isRemote()) {
-          var now = Date.now();
           if (now - self.lastConUserCheck >= 10000) {
             self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
           }
@@ -457,12 +459,26 @@ var UI = (function() {
           }
         }
       });
+      // check if an app update happened  
       if (self.storage && self.storage.isSynced() && self.appUpdateReady) {
         self.appUpdateReady = false;
         console.log("The Madoko app has been updated. Auto-reload.");
-        //if (window.confirm("The Madoko web-app has been updated. Press 'Ok' to reload.")) {
-        window.location.reload();
-        //}
+        if (window.confirm("The Madoko web-app has been updated. Press 'Ok' to reload.")) {
+          window.location.reload();
+        }
+      }
+      // check the version number on the server every hour 
+      if (now - self.lastVersionCheck >= 60000) {
+        Util.getAppVersionInfo().then( function(version) {
+          if (!version) return;
+          if (!self.appUpdateReady && self.version && self.version.digest !== version.digest) {
+            console.log("Madoko application has been updated");
+            self.appUpdateReady = true;            
+          }
+          self.version = version;
+          document.getElementById("version").textContent = self.version.version || "?";       
+          document.getElementById("madokoVersion").textContent = self.version.madokoVersion || "?";
+        });
       }
     }
 
