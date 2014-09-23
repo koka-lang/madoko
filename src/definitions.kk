@@ -411,7 +411,11 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
     val ncontent = content.sections(nsecinfo)
     match(h) {
       Heading(d,txt,attrs) -> {
-        val (skvs,hkvs) = attrs.keyvals.partition(fun(kv) { kv.fst.startsWith("data-") })
+        val (skvs,hkvs0) = attrs.keyvals.partition(fun(kv) { kv.fst.startsWith("data-") })
+        val hkvs = match (attrs.hasKey("data-line")) {
+                        Nothing -> hkvs0
+                        Just(v) -> Cons(("data-line",v),hkvs0)
+                      }
         val (scls,hcls) = attrs.classes.partition(fun(c) { c.startsWith("section-") })
         val secattrs = "html-elem=section .section" + d.show +
                         (if (attrs.name=="") then "" else " id='" + attrs.name + "'")

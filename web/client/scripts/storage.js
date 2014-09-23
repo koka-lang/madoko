@@ -313,18 +313,18 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
     var month = now.getMonth()+1;
     var day   = now.getDate();
             
-    stem = ["snapshot", docstem, 
+    stem = [docstem, 
             now.getFullYear().toString(),
             Util.lpad( month.toString(), 2, "0" ),
             Util.lpad( day.toString(), 2, "0" ),
            ].join("-");
   }
-  var folder = stem + (num ? "-v" + num.toString() : "");
+  var folder = "snapshots/" + stem + (num ? "-v" + num.toString() : "");
 
   return remote.createSubFolder(folder).then( function(info) {
-    if (info.created) return info.folder;
+    if (info && info.created) return info.folder;
     if (num && num >= 100) throw new Error("too many snapshot verions");  // don't loop forever...
-    return createSnapshotFolder(remote,stem, (num ? num+1 : 2));
+    return createSnapshotFolder(remote, docstem, stem, (num ? num+1 : 2));
   });
 }
 

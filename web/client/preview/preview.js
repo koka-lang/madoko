@@ -202,6 +202,13 @@ function dispatchEvent( elem, eventName ) {
     return findNextElement(root,elem.parentNode);
   }
 
+  function nextAdjust(elem) {
+    if (elem && elem.nodeName === "SECTION" && elem.firstChild) {
+      return elem.firstChild;
+    }
+    return elem;
+  }
+
   function bodyFindElemAtLine( lineCount, line, fname ) {    
     var selector = "[data-line" + (fname ? '*=";' + fname + ':"' : "") + "]";
     var elems = document.querySelectorAll( selector );

@@ -471,10 +471,10 @@ var UI = (function() {
       // check if an app update happened 
       if (self.state === State.Normal && self.appUpdateReady) {
         self.appUpdateReady = false;        
-        Util.message("The Madoko web-app has been updated. Please reload.", Util.Msg.Status);     
+        Util.message("Madoko has been updated. Please reload.", Util.Msg.Status);     
         window.location.reload();        // force reload. TODO: ask the user? show a sticky status message?   
       }
-      // check the version number on the server every 1 minutes
+      // check the version number on the server every minute
       if (now - self.lastVersionCheck >= 60000) {
         // request lastest appversion from the server
         Util.getAppVersionInfo(true).then( function(version) {
@@ -489,7 +489,7 @@ var UI = (function() {
             }
           }
           else {
-            Util.message("Madoko has been updated. Downloading updates...", Util.Msg.Status);
+            Util.message("Downloading updates...", Util.Msg.Status);
             self.version.updateDigest = version.digest; // remember we update to this version
             window.applicationCache.update(); // update the cache -- will trigger a reload later on.                                
           }
@@ -1854,10 +1854,10 @@ var UI = (function() {
     // translate view line to text line (for when lines are wrapped)
     if (self.editor.configuration.getWrappingColumn() >= 0) {
       var slines = self.editor.getView().context.model.lines;
-      return slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber;
+      return slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber|0;
     }
     else {
-      return lineNo;
+      return lineNo|0;
     }
   }
 
