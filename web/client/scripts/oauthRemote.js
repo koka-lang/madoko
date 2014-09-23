@@ -29,23 +29,28 @@ var OAuthRemote = (function() {
 
     if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
     if (!self.loginParams.response_type) self.loginParams.response_type = "code";
+
+    self.nextTry  = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
+    self.tryDelay = 60000; // once a minute
   }
 
   // try to set access token without full login; call action with logged in or not.
   OAuthRemote.prototype._withConnect = function(action) {
     var self = this;
     if (self.access_token) return Promise.wrap(action, true);
-    if (self.access_token === false) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
+    if (self.nextTry < 0 || Date.now() < self.nextTry) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
     return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
-        self.access_token = false; // remember we tried
+        self.nextTry = Date.now() + self.tryDelay; // remember we tried
         return action(false,new Error("Cannot login to " + self.name));
       }
-      self.access_token = res.access_token;
-      Util.message("Connected to " + self.name, Util.Msg.Status );
-      return action(true);
+      else {
+        self.access_token = res.access_token;
+        Util.message("Connected to " + self.name, Util.Msg.Status );
+        return action(true);
+      }
     }, function(err) {
-      self.access_token = false; // remember we tried
+      self.nextTry = Date.now() + self.tryDelay; // remember we tried
       return action(false,err);
     });
   }
@@ -108,7 +113,8 @@ var OAuthRemote = (function() {
   OAuthRemote.prototype.logout = function() {
     var self  = this;
     var token = self.access_token;
-    self.access_token = false;
+    self.access_token = null;
+    self.nextTry  = -1; // no need to ever try to get the token
     self.userId   = null;
     self.userName = null;
     Util.message("Logged out from " + self.name, Util.Msg.Status);
@@ -129,7 +135,7 @@ var OAuthRemote = (function() {
       if (ok) return;
       if (dontForce) return Promise.rejected( new Error("Not logged in to " + self.name) );
       return Util.openOAuthLogin(self.name,self.loginUrl,self.loginParams,self.dialogWidth, self.dialogHeight).then( function() {
-        self.access_token = null; // reset from 'false'
+        self.nextTry = 0; // ensure we access the server this time
         return self._withAccessToken( function() { // and get the token
           Util.message( "Logged in to " + self.name, Util.Msg.Status );
           return; 

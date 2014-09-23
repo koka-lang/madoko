@@ -274,7 +274,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
 
 
 // -------------------------------------------------------------
-// Set up server app 
+// Set up server app  
 // -------------------------------------------------------------
 var app = express();
 
@@ -305,10 +305,10 @@ app.use(function(req, res, next){
   else {
     // set very short cache because we use a cache-manifest;
     // can't use no-cache or firefox won't work.
-    console.log("cache: no-cache: " + req.path);
-    res.setHeader("Cache-Control","public; max-age=10");
+    console.log("cache: regular: " + req.path );
+    //res.setHeader("Cache-Control","public; max-age=10");
   }
-  res.setHeader("Last-Modified",new Date().toUTCString());
+  //res.setHeader("Last-Modified",new Date().toUTCString());
   
   var csp = ["script-src " + scriptSrc,
              "report-uri /rest/report/csp"
@@ -1230,9 +1230,11 @@ app.get("/rest/remote/http", function(req,res) {
   }, 100 );
 });
 
-
-var staticClient      = express.static( combine(__dirname, "client"));
-var staticMaintenance = express.static( combine(__dirname, "maintenance"));
+var staticOptions = {
+  maxAge: 10000  
+}
+var staticClient      = express.static( combine(__dirname, "client"), staticOptions);
+var staticMaintenance = express.static( combine(__dirname, "maintenance"), staticOptions);
 var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out|math))?|lib(\/vs(\/.*)?)?|preview(\/(lang|out|math|styles))?|template|private)?$/;
 
 function staticPage(req,res,next) {

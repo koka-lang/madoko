@@ -155,6 +155,11 @@ img#console-ok {
   margin-top: 0.1em;
 }
 
+#madokoDigest {
+  padding-left: 1em;
+  color: Dimgray;
+}
+
 .app-footer a.external {
   text-decoration: underline;
 }

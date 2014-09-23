@@ -32,6 +32,10 @@ function readResources() {
 		return files.map(function(fname) {
 			return fname.substr(options.rootPath.length+1).replace(/\\/g,"/");
 		}).filter( function(fname) {
+			if (options.excludes.some(function(e) { return (fname === e); })) {
+				console.log("ignore: excluded: " + fname);
+				return false;
+			}
 			var dir = Path.dirname(fname);
 			if (dir && !options.dirs.some(function(d) { return startsWith(dir,d); } )) {
 				console.log("ignore: dir not included: " + dir + ": " + fname );
@@ -49,7 +53,10 @@ function readResources() {
 
 function readFile(fname) {
 	return new Promise( function(cont) {
-		return Fs.readFile(fname,cont);
+		return Fs.readFile(fname,function(err,content) {
+			if (err) console.trace(err);
+			cont(err,content);
+		});
 	})
 }
 
@@ -65,16 +72,16 @@ function createDigest(fnames) {
 }
 
 function createCache(fnames,digest) {
-	var header = "#" + JSON.stringify( {
+	var header = JSON.stringify( {
 		version: appVersion,
 		madokoVersion: madokoVersion,
 		digest: digest,
 	});
-	Fs.writeFileSync(Path.join(options.rootPath,"version.txt"),header + "\n");
+	Fs.writeFileSync(Path.join(options.rootPath,"version.json"),header + "\n");
 	return [
 		"CACHE MANIFEST",
-		header,
-		"",
+		"#" + header,
+		"", 
 		template,
 		fnames.join("\n"),		
 		"",
@@ -83,7 +90,7 @@ function createCache(fnames,digest) {
 
 readResources().then( function(fnames) {
 	console.log("creating digest...");
-	return createDigest(fnames).then( function(digest) {
+	return createDigest(fnames.concat(options.digestOnly)).then( function(digest) {
 		console.log("version: " + appVersion);
 		console.log("madokoVersion: " + madokoVersion);
 		console.log("digest : " + digest);		

@@ -4,4 +4,4 @@ NETWORK:
 FALLBACK:
 
 CACHE:
-version.txt
+version.json

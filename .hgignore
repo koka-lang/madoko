@@ -3,6 +3,8 @@ syntax:glob
 *.text.html
 *.md.html
 *.log
+web/client/version.json
+web/client/madoko.appcache
 
 syntax:regexp
 ^contrib/

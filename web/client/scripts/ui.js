@@ -12,11 +12,9 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         function(Map,Promise,Util,Storage,MadokoMode,Range,ReplaceCommand) {
 
 
-var isFirefox = typeof InstallTrigger !== 'undefined'; // test for firefox
-
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
-  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain");
+  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain"); 
   var diffSupport   = modifiedModel.getMode().diffSupport;
   var diff = diffSupport.computeDiff( 
                 originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
@@ -26,7 +24,7 @@ function diff( original, modified ) {
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
   if (!localStorage) {
-    Util.message("cannot make local backup: upgrade your browser.", Util.Msg.Error );
+    Util.message("cannot make local backup: upgrade your browser.", Util.Msg.Error ); 
     return false;
   }
   try {    
@@ -185,18 +183,9 @@ var UI = (function() {
 
     // listen to application cache    
     self.appUpdateReady = false;
-    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-      // reload immediately if an update is ready without asking the user.
+    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
+      // reload immediately if an update is ready 
       window.location.reload();
-    }
-    else {
-      // otherwise install a listener 
-      window.applicationCache.addEventListener("updateready", function(ev) {
-        console.log("updateready event" );
-        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-          self.appUpdateReady = true;
-        };
-      },false);
     }
 
     // start editor
@@ -448,13 +437,22 @@ var UI = (function() {
     self.checkAutoSync = document.getElementById('checkAutoSync');
     self.lastVersionCheck = 0;
 
-    // request cached version; so it corresponds to the cache-manifest version
+    // request cached version; so it corresponds to the cache-manifest version  
     self.version = null;
     Util.getAppVersionInfo(false).then( function(version) {
       if (version) {
         self.version = version;
+        var elem = document.getElementById("madokoWebVersion");
+        if (elem) elem.textContent = self.version.version || "?";       
+        elem = document.getElementById("madokoVersion");
+        if (elem) elem.textContent = self.version.madokoVersion || "?";
+        elem = document.getElementById("madokoDigest");
+        if (elem) {
+          elem.textContent = "(" + self.version.digest.substr(0,6) + ")" || "";
+          elem.setAttribute("title","digest: " + self.version.digest);
+        }
       }
-    })
+    });
     
     var autoSync = function() {
       var now = Date.now();
@@ -472,35 +470,32 @@ var UI = (function() {
       });
       // check if an app update happened 
       if (self.state === State.Normal && self.appUpdateReady) {
-        self.appUpdateReady = false;
-        console.log("The Madoko app has been updated. Auto-reload.");
-        if (window.confirm("The Madoko web-app has been updated. Press 'Ok' to reload.")) {
-          window.location.reload();
-        }
-        else {
-          // set appUpdateReady to true again...??
-        }
+        self.appUpdateReady = false;        
+        Util.message("The Madoko web-app has been updated. Please reload.", Util.Msg.Status);     
+        window.location.reload();        // force reload. TODO: ask the user? show a sticky status message?   
       }
       // check the version number on the server every 1 minutes
       if (now - self.lastVersionCheck >= 60000) {
         // request lastest appversion from the server
         Util.getAppVersionInfo(true).then( function(version) {
           if (!version) return;
-          if (!self.appUpdateReady && self.version && self.version.digest !== version.digest) {
-            console.log("Madoko application has been updated");
-            window.applicationCache.update(); // update the cache -- will trigger a reload later on.            
-            //if (isFirefox) {
-              // on firefox, update doesn't cause an event... just force a reload
-            //  self.appUpdateReady = true; 
-            //}
+          if (self.appUpdateReady || !self.version) return;
+          if (self.version.digest === version.digest) return;
+          if (self.version.updateDigest === version.digest) { // are we updating right now to this version?
+            // firefox doesn't reliably send a update ready event, check here.
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+              window.applicationCache.swapCache();
+              self.appUpdateReady = true;
+            }
           }
-          self.version = version;
-          document.getElementById("version").textContent = self.version.version || "?";       
-          document.getElementById("madokoVersion").textContent = self.version.madokoVersion || "?";
-          document.getElementById("digest").textContent = "x" + self.version.digest || "?";
+          else {
+            Util.message("Madoko has been updated. Downloading updates...", Util.Msg.Status);
+            self.version.updateDigest = version.digest; // remember we update to this version
+            window.applicationCache.update(); // update the cache -- will trigger a reload later on.                                
+          }
         });
       }
-    }
+    };
 
     setTimeout( autoSync, 1000 ); // run early on on startup
     setInterval( autoSync, 5000 );

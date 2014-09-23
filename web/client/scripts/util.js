@@ -1266,12 +1266,9 @@ doc.execCommand("SaveAs", null, filename)
   }
 
   function getAppVersionInfo(latest) {
-    var url = (latest ? "madoko.appcache?nocache=" + randomHash() : "version.txt");
-    return requestGET(url).then( function(content) {
-      var cap = /^#(\{.*)/m.exec(content);
-      if (cap) {
-        return JSON.parse(cap[1]);
-      }
+    var url = "version.json" + (latest ? "?nocache=" + randomHash() : "");
+    return requestGET(url).then( function(info) {
+      return info;
     }, function(err) {
       return null;
     });
