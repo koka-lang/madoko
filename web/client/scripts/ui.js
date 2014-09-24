@@ -187,6 +187,14 @@ var UI = (function() {
       // reload immediately if an update is ready 
       window.location.reload();
     }
+    else {
+      window.applicationCache.addEventListener( "updateready", function(ev) {
+        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
+          window.applicationCache.swapCache();
+          self.appUpdateReady = true;
+        }           
+      })
+    }
 
     // start editor
     self.checkLineNumbers = document.getElementById('checkLineNumbers');
