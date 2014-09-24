@@ -109,6 +109,10 @@ function dispatchEvent( elem, eventName ) {
   }
 
   function bodyOffsetTop(elem,forward) {
+    // somehow the offset top calculation is wrong for code elements directly in a pre element, so we adjust here.
+    if (elem.nodeName==="CODE" && elem.parentNode && elem.parentNode.nodeName==="PRE") {
+      elem = elem.parentNode;
+    }
     var offset = 0;
     while( elem && elem.nodeName != "BODY") {
       offset += elemOffsetTop(elem,forward);
