@@ -1097,31 +1097,31 @@ var UI = (function() {
   UI.prototype.setStorage = function( stg0, docName0 ) {
     var self = this;
     return self.initializeStorage(stg0,docName0, function(stg,docName,fresh) {
-      self.updateConnectionStatus(stg);
-      self.showSpinner(true);    
-      return stg.readFile(docName, false).then( function(file) { 
-        self.showSpinner(false );    
+      return self.updateConnectionStatus(stg).then( function() {
+        return self.withSyncSpinner( function() {
+          return stg.readFile(docName, false);
+        }).then( function(file) {           
+          if (self.storage) {
+            self.storage.destroy(); // clears all event listeners
+            self.viewHTML( "<p>Rendering...</p>", Date.now() );
+            //self.storage.clearEventListener(self);
+          }
+          self.storage = stg;
+          self.docName = docName;
+          self.docText = file.content;
           
-        if (self.storage) {
-          self.storage.destroy(); // clears all event listeners
-          self.viewHTML( "<p>Rendering...</p>", Date.now() );
-          //self.storage.clearEventListener(self);
-        }
-        self.storage = stg;
-        self.docName = docName;
-        self.docText = file.content;
-        
-        self.storage.addEventListener("update",self);
-        self.runner.setStorage(self.storage);
-        /*
-        var remoteLogo = self.storage.remote.logo();
-        var remoteType = self.storage.remote.type();
-        var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-        self.remoteLogo.src = "images/dark/" + remoteLogo;
-        self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
-        */
-        self.editName = "";
-        return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
+          self.storage.addEventListener("update",self);
+          self.runner.setStorage(self.storage);
+          /*
+          var remoteLogo = self.storage.remote.logo();
+          var remoteType = self.storage.remote.type();
+          var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
+          self.remoteLogo.src = "images/dark/" + remoteLogo;
+          self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+          */
+          self.editName = "";
+          return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
+        });
       });
     });
   }
@@ -1278,23 +1278,24 @@ var UI = (function() {
     var generated = [];
     var finals = [];
     var div = document.getElementById("edit-select-files");
-      
-    self.storage.forEachFile( function(file) {
-      if (file) {
-        var ext = Util.extname(file.path)
-        var disable = (Storage.isEditable(file) ? "": " disable");
-        var main    = (file.path === self.docName ? " main" : "");
-        var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
-        var line = "<div data-file='" + Util.escape(file.path) + "' " +
-                      "class='button file hoverbox" + disable + main + hide + "'>" + 
-                          self.displayFile(file,true) + "</div>";
-        if (Util.startsWith(file.mime,"image/")) images.push(line); 
-        else if (!disable) files.push(line);
-        else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
-        else generated.push(line)
-      }
-    });
-
+    if (self.storage) {
+      self.storage.forEachFile( function(file) {
+        if (file) {
+          var ext = Util.extname(file.path)
+          var disable = (Storage.isEditable(file) ? "": " disable");
+          var main    = (file.path === self.docName ? " main" : "");
+          var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
+          var line = "<div data-file='" + Util.escape(file.path) + "' " +
+                        "class='button file hoverbox" + disable + main + hide + "'>" + 
+                            self.displayFile(file,true) + "</div>";
+          if (Util.startsWith(file.mime,"image/")) images.push(line); 
+          else if (!disable) files.push(line);
+          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
+          else generated.push(line)
+        }
+      });
+    };
+    
     /*
     var dir = document.getElementById("edit-select-directory");
     if (dir) {

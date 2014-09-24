@@ -707,10 +707,12 @@ var Storage = (function() {
     return self.login(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );
       return Promise.when( syncs ).then( function(res) {
-        res.forEach( function(msg) {
-          if (msg) Util.message(msg, Util.Msg.Trace);
-        });
         Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
+        return true;
+      }, function(err) {
+        //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
+        if (err.message) err.message = "Synchronization failed: " + err.message; 
+        throw err;
       }).always( function() {
         if (showMerges) showMerges(merges);
       });
@@ -893,7 +895,9 @@ var Storage = (function() {
 
   Storage.prototype._syncMsg = function( file, msg, action ) {
     var self = this;
-    return file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
+    var message = file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
+    Util.message(message,Util.Msg.Trace);
+    return message;
   }
 
   return Storage;

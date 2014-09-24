@@ -58,18 +58,18 @@ function pullFile(fname,binary) {
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: metadataUrl + fname, timeout: 2500 } );
+  return dropbox.requestGET( { url: metadataUrl + fname, timeout: 5000 } );
 }
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
   // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
-  return dropbox.requestGET( { url: url, timeout: 2500, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
+  return dropbox.requestGET( { url: url, timeout: 5000, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return dropbox.requestGET( { url: url, timeout: 2500 }, { list: true });
+  return dropbox.requestGET( { url: url, timeout: 5000 }, { list: true });
 }
 
 function pushFile(fname,content) {
@@ -85,7 +85,7 @@ function createFolder( dirname ) {
   return dropbox.requestPOST( url, { root: root, path: dirname }).then( function(info) {
     return true; // freshly created
   }, function(err) {
-    if (err.httpCode === 403) return false;
+    if (err && err.httpCode === 403) return false;
     throw err;
   });
 }
@@ -206,7 +206,8 @@ var Dropbox = (function() {
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
       return (info && !info.is_deleted ? new Date(info.modified) : null);
     }, function(err) {
-      return null;
+      if (err && err.httpCode===404) return null;
+      throw err;
     });
   }
 

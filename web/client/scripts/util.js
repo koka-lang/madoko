@@ -958,7 +958,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     var timeout = 0;  // timeout handler id.
     var promise = new Promise();
 
-    function reject(message) {
+    function reject(message,httpCode) {
       try {
         if (timeout) clearTimeout(timeout);
         
@@ -989,10 +989,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         
         //cont(msg, res, req.response);
         console.log(msg + "\n request: " + method + ": " + reqparam.url );
-        promise.reject( { message: msg, httpCode: req.status } );
+        promise.reject( { message: msg, httpCode: httpCode || req.status || 400 } );
       }
       catch(exn) {
-        promise.reject( { message: exn.toString(), httpCode: 400 } );
+        promise.reject( { message: exn.toString(), httpCode: httpCode || 400 } );
       }
     }
 
@@ -1030,7 +1030,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       reject();
     }
     req.ontimeout = function(ev) {
-      reject("request timed out");
+      reject("request timed out", 408);
     }
     if (reqparam.timeout != null) req.timeout = reqparam.timeout;
     
