@@ -130,6 +130,15 @@ Html Header   :
       min-height: 15em;
       top: 0pt;
     }
+    body.madoko.preview section {
+      font-size: 75%;
+    }
+    body.madoko.preview {
+      padding: 0em 1em 0em 1em !important;
+    }
+    body.madoko.preview .reveal pre {
+      width: 95%;
+    }
     </style>
     <script>    
     // Full list of configuration options available here:
