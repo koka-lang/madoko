@@ -2,6 +2,7 @@ var Crypto  = require("crypto");
 var Fs  	  = require("fs");
 var Path    = require("path");
 var Promise = require("./client/scripts/promise.js");
+var match   = require("minimatch");
 
 var madokoVersion = JSON.parse(Fs.readFileSync("../package.json")).version;
 var appVersion 		= JSON.parse(Fs.readFileSync("package.json")).version;
@@ -32,7 +33,8 @@ function readResources() {
 		return files.map(function(fname) {
 			return fname.substr(options.rootPath.length+1).replace(/\\/g,"/");
 		}).filter( function(fname) {
-			if (options.excludes.some(function(e) { return (fname === e); })) {
+			// excludes
+			if (options.excludes.some(function(pat) { return match(fname,pat); })) {
 				console.log("ignore: excluded: " + fname);
 				return false;
 			}
@@ -96,7 +98,7 @@ readResources().then( function(fnames) {
 		console.log("digest : " + digest);		
 		var cache = createCache(fnames,digest);
 		Fs.writeFileSync(Path.join(options.rootPath,"madoko.appcache"),cache);
-		console.log("done");
+		console.log("done (" + fnames.length + " files)" );
 	});	
 }, function(err) {
 	console.trace(err);

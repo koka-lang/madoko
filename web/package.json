@@ -32,7 +32,8 @@
     "body-parser" : ">=1.0.2",
     "cookie-session" : ">=1.0.2",
     "rimraf"      : ">=2.2.8",
-    "recursive-readdir": ">=1.2.0"
+    "recursive-readdir": ">=1.2.0",
+    "minimatch"   : ">=1.0.0"   
   },
   "repository": {
     "type": "hg", 

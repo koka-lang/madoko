@@ -3,6 +3,9 @@
   "rootPath" : "client",
   "dirs"     : [".","images","lib","preview","scripts","styles","templates"],
   "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls","sty"],
-  "excludes" : ["version.json","madoko.appcache"],
+  "excludes" : ["version.json","madoko.appcache",
+  				"lib/vs/languages/!(json|plaintext)/**",
+  				"lib/vs/workbench/**",
+  				"lib/vs/editor/contrib/!(find)/**"],
   "digestOnly": ["../server.js","../stats.js","../cache-template.txt","../cache-config.json","../package.json","../../package.json","../remotes.json"]
 }
