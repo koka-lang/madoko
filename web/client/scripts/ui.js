@@ -1861,7 +1861,7 @@ var UI = (function() {
   UI.prototype.viewToTextLine = function( lineNo ) {
     var self = this;
     // translate view line to text line (for when lines are wrapped)
-    if (self.editor.configuration.getWrappingColumn() >= 0) {
+    if (self.editor.getConfiguration().wrappingColumn >= 0) {
       var slines = self.editor.getView().context.model.lines;
       return slines.convertOutputPositionToInputPosition(lineNo,0).lineNumber|0;
     }
