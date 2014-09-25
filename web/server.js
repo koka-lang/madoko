@@ -305,14 +305,31 @@ app.use(function(req, res, next){
             ];
   if (startsWith(req.path,"/preview/")) {
     csp = csp.concat([
-            "sandbox allow-scripts allow-popups"
+            "sandbox allow-scripts allow-popups", // already set in document, but just to be sure :-)
+            "connect-src 'none'"
           ]);
   }            
-  else {
+  else if (req.path==="/" || req.path==="/index.html") {
     csp = csp.concat([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'",
-            "img-src 'self' data:",            
+            "img-src 'self' data: https://maxcdn.bootstrapcdn.com",
+            "style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com",
+            "script-src 'self' https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com",
+            "connect-src 'none'",
+          ]);
+  }
+  else if (req.path==="/editor.html") {
+    csp = csp.concat([
+            "default-src 'self'",
+            "style-src 'self' 'unsafe-inline'",  // editor needs unsafe-inline
+            "img-src 'self' data:",
+            "connect-src 'self' https://*.dropbox.com https://login.live.com https://apis.live.net",
+          ]);
+  }
+  else if (req.path==="/editor.html") {
+    csp = csp.concat([
+            "default-src: 'self'",
+            "connect-src: 'none'",
           ]);
   }
   csp = csp.join(";");
