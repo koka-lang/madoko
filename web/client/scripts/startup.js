@@ -53,9 +53,9 @@ else if (recentTick()) {
   // show the multi instance message..
   document.getElementById("multibrowser").style.display = "block";  
 }
-// we are good to go
+// we are good to go 
 else {
-  // we detect multiple instances by keeping a heart beat.
+  // we detect multiple instances by keeping a heart beat. 
   updateTick();
   setInterval( updateTick, tickIval/2 );  
   window.addEventListener( "unload", function() {
