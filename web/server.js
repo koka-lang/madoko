@@ -295,7 +295,7 @@ app.use(function(err, req, res, next){
 });
 
 // -------------------------------------------------------------
-// Security  
+// Security   
 // -------------------------------------------------------------
 app.use(function(req, res, next){
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
@@ -305,6 +305,7 @@ app.use(function(req, res, next){
   }
   else {
     console.log("cache: regular: " + req.path);
+    res.setHeader("Cache-Control","public, max-age=10");  // the static middle ware sets this incorrectly for Firefox...
   }
   
   // tell browsers to immediately redirect to https

@@ -193,7 +193,7 @@ var UI = (function() {
           window.applicationCache.swapCache();
           self.appUpdateReady = true;
         }           
-      })
+      });
     }
 
     // start editor
@@ -499,7 +499,7 @@ var UI = (function() {
           else {
             Util.message("Downloading updates...", Util.Msg.Status);
             self.version.updateDigest = version.digest; // remember we update to this version
-            window.applicationCache.update(); // update the cache -- will trigger a reload later on.                                
+            window.applicationCache.update(); // update the cache -- will trigger a reload later on.
           }
         });
       }
