@@ -1,9 +1,9 @@
-Version       : 3.1.1
+Version       : 3.2.0
 Theme         : 
 Bootstrap Url : https://maxcdn.bootstrapcdn.com/bootstrap/&version;/
 Bootswatch Url: https://maxcdn.bootstrapcdn.com/bootswatch/&version;/&theme;/bootstrap.min.css
-Css               : &bootstrap-url;css/bootstrap.min.css
-Css               : &bootstrap-url;css/bootstrap-theme.min.css
+Css           : &bootstrap-url;css/bootstrap.min.css
+Css           : &bootstrap-url;css/bootstrap-theme.min.css
 Css           : &bootswatch-url;
 Html Meta     : http-equiv="X-UA-Compatible" content="IE=edge"
 Html Meta     : name="viewport" content="width=device-width, initial-scale=1"
