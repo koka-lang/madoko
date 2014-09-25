@@ -3,6 +3,6 @@
   "rootPath" : "client",
   "dirs"     : [".","images","lib","preview","scripts","styles","templates"],
   "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls","sty"],
-  "excludes" : ["version.json","madoko.appcache"],
+  "excludes" : ["version.json","madoko.appcache","lib/vs/languages/xtypescript/lib/typescriptServices.js"],
   "digestOnly": ["../server.js","../stats.js","../cache-template.txt","../cache-config.json","../package.json","../../package.json","../remotes.json"]
 }

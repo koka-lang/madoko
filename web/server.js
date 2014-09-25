@@ -16,7 +16,7 @@ if (!passphraseSSL) {
 }
 
 var passphraseLocal   = passphraseSSL + (process.argv[3] || "local");
-var passphraseSession = passphraseSSL + (process.argv[4] || "session") + ":" + new Date().toDateString().replace(/\s+/,"-");
+var passphraseSession = passphraseSSL + (process.argv[4] || "session"); // + ":" + new Date().toDateString().replace(/\s+/,"-");
 
 // -------------------------------------------------------------
 // Constants
@@ -30,21 +30,22 @@ var hour      = 60*minute;
 var day       = 24*hour;
 
 var limits = {
-  requestsPerDomain: 10,
-  requestsPerUser  : 2,
-  requestNewUser   : 5,
+  requestsPerDomain: 100,     // at most 100 concurrent requests per domain
+  requestsPerUser  : 5,       // at most 5 concurrent requests per user
+  requestNewUser   : 10,      // at most 10 users per hour per domain
   maxProcesses: 10, 
   hashLength  : 16,  
   fileSize    : 8*mb,         
-  cookieAge   : 30*day,  
+  cookieAge   : 30*day,       // our session cookie expires after one month
   timeoutPDF  : 5*minute,
   timeoutMath : minute,
   timeoutGET  : 5*second,
-  atomicDelay : 1*minute,  // a push to cloud storage is assumed visible everywhere after this time
+  atomicDelay : 1*minute,     // a push to cloud storage is assumed visible everywhere after this time
   editDelay   : 30*second,  
   logFlush    : 1*minute,
   logDigest   : 30*minute,
   rmdirDelay  : 3*second,
+  tokenExpires: 7*day,        // we disable access_tokens older than this time
 };
 
 var allowedIps = null; 
@@ -195,9 +196,6 @@ setInterval( function() {
 
 
 function initSession(req,res) {
-  var domain = domainsGet(req);
-  if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
-  
   // check if we encrypt cookies: need to patch cookie-session or 'encrypted' flag is ignored
   if (!req.sessionEncryptionKeys) {
     throw new Error("Session cookies are not encrypted!");
@@ -209,6 +207,8 @@ function initSession(req,res) {
     console.log("create guest userid")
     req.session.userid = uniqueHash();
     req.session.created = (new Date()).toISOString();
+    var domain = domainsGet(req);
+    if (domain.newUsers > limits.requestNewUser) throw { httpCode: 429, message: "too many requests for new users from this domain" };
     domain.newUsers++;
   }
   if (!req.session.logins) req.session.logins = {};
@@ -294,8 +294,6 @@ app.use(function(err, req, res, next){
   onError(req, res,err);
 });
 
-var scriptSrc = "'self' 'unsafe-inline'";
-
 app.use(function(req, res, next){
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
     // for security do not store any rest or oauth request
@@ -303,13 +301,25 @@ app.use(function(req, res, next){
     res.setHeader("Cache-Control","no-store");
   }
   
-  var csp = ["script-src " + scriptSrc,
-             "report-uri /rest/report/csp"
-            ].join(";");
+  var csp = ["report-uri /rest/report/csp"
+            ];
+  if (startsWith(req.path,"/preview/")) {
+    csp = csp.concat([
+            "sandbox allow-scripts allow-popups"
+          ]);
+  }            
+  else {
+    csp = csp.concat([
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "img-src 'self' data:",            
+          ]);
+  }
+  csp = csp.join(";");
 
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
-  //res.setHeader("Content-Security-Policy-Report-Only",csp);
-  //res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
+  res.setHeader("Content-Security-Policy-Report-Only",csp);
+  res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
   next();
 });
 
@@ -823,8 +833,13 @@ function oauthLogin(req,res) {
   });
 }
 
-function oauthLogout(req,res,remote,access_token) {
-  if (!remote.disable_url) return;
+function oauthLogout(req,res,remoteName,login) {
+  delete req.session.logins[remoteName];
+  var remote = remotes[remoteName];
+  if (!remote || !login.access_token) return Promise.resolved();
+  if (log) log.entry( { type: "logout", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
+  
+  if (!remote.disable_url) return Promise.resolved();
   console.log("disabling token...");  
   var options = { 
     url: remote.disable_url, 
@@ -832,10 +847,10 @@ function oauthLogout(req,res,remote,access_token) {
     json: true 
   };
   if (remote.useAuthHeader) {
-    options.headers = { Authorization: "Bearer " + access_token };
+    options.headers = { Authorization: "Bearer " + login.access_token };
   }
   else {
-    options.query = { access_token: access_token };
+    options.query = { access_token: login.access_token };
   }
   return makeRequest(options).then( function(info) {
     if (info) console.log("Successfully disabled the access token");
@@ -1162,7 +1177,7 @@ app.post("/rest/edit-alias", function(req,res) {
 app.post("/rest/report/csp", function(req,res) {
   event(req,res, false, function() {
     console.log(req.body);
-    logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
+    //logerr.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   });
 });
 
@@ -1177,7 +1192,16 @@ app.get("/oauth/token", function(req,res) {
     var remoteName = req.param("remote");
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
-    if (!login || typeof(login.access_token) !== "string") return { message: "Not logged in to " + remoteName };
+    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") return { message: "Not logged in to " + remoteName };
+
+    // check expiration date: we expire tokens ourselves for extra security
+    var created = date.dateFromISO(login.created);
+    if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + limits.tokenExpires) {
+      console.log("Expired token: " + login.created);
+      return oauthLogout(req,res,remoteName,login).then( function() {
+        return { message: "Not logged in to " + remoteName };
+      });
+    }
     return { access_token: login.access_token };
   });
 })
@@ -1188,12 +1212,7 @@ app.post("/oauth/logout", function(req,res) {
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     if (login) {
-      delete req.session.logins[remoteName];
-      var remote = remotes[remoteName];
-      if (remote && login.access_token) {
-        if (log) log.entry( { type: "logout", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
-        return oauthLogout(req,res,remote,login.access_token);
-      }
+      return oauthLogout(req,res,remoteName,login);
     }
   });
 })
