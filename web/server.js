@@ -294,49 +294,56 @@ app.use(function(err, req, res, next){
   onError(req, res,err);
 });
 
+// -------------------------------------------------------------
+// Security  
+// -------------------------------------------------------------
 app.use(function(req, res, next){
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
     // for security do not store any rest or oauth request
     console.log("cache: no-store: " + req.path);
     res.setHeader("Cache-Control","no-store");
   }
+  else {
+    console.log("cache: regular: " + req.path);
+  }
   
-  var csp = ["report-uri /rest/report/csp"
-            ];
-  if (startsWith(req.path,"/preview/")) {
-    csp = csp.concat([
-            "sandbox allow-scripts allow-popups", // already set in document, but just to be sure :-)
-            "connect-src 'none'"
-          ]);
-  }            
-  else if (req.path==="/" || req.path==="/index.html") {
-    csp = csp.concat([
-            "default-src 'self'",
-            "img-src 'self' data: https://maxcdn.bootstrapcdn.com",
-            "style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com",
-            "script-src 'self' https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com",
-            "connect-src 'none'",
-          ]);
-  }
-  else if (req.path==="/editor.html") {
-    csp = csp.concat([
-            "default-src 'self'",
-            "style-src 'self' 'unsafe-inline'",  // editor needs unsafe-inline
-            "img-src 'self' data:",
-            "connect-src 'self' https://*.dropbox.com https://login.live.com https://apis.live.net",
-          ]);
-  }
-  else if (req.path==="/editor.html") {
-    csp = csp.concat([
-            "default-src: 'self'",
-            "connect-src: 'none'",
-          ]);
-  }
-  csp = csp.join(";");
-
+  // tell browsers to immediately redirect to https
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
-  res.setHeader("Content-Security-Policy-Report-Only",csp);
-  res.setHeader("X-Content-Security-Policy-Report-Only",csp);      
+  
+  // default is very secure: just our server and no XHR/inline/eval
+  var csp = { "default-src": "'self'",
+              "connect-src": "'none'",
+              "report-uri": "/rest/report/csp",
+            };
+
+  // preview is sandboxed
+  if (startsWith(req.path,"/preview/")) {
+    delete csp["default-src"];
+    csp["sandbox"]      = "allow-scripts allow-popups"; // already set in document, but just to be sure :-)    
+  }
+  else {
+    res.setHeader("X-Frame-Options","DENY");              
+    // index uses bootstrap theme
+    if (req.path==="/" || req.path==="/index.html") {
+      csp["img-src"]      = "'self' data: https://maxcdn.bootstrapcdn.com";
+      csp["font-src"]     = "'self' https://maxcdn.bootstrapcdn.com";
+      csp["style-src"]    = "'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com";
+      csp["script-src"]   = "'self' https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com";
+    }
+    // the editor can use only server resources and connect to dropbox, onedrive.
+    // also prevent loading the editor in a frame
+    else if (req.path==="/editor.html") {
+      csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles
+      csp["img-src"]      = "'self' data:";
+      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net";
+    }  
+    else if (endsWith(req.path,".svg")) { 
+      csp["style-src"]   = "'self' 'unsafe-inline'";
+    }
+  }
+  var cspHeader = properties(csp).map(function(key) { return key + " " + csp[key]; }).join(";");
+  //res.setHeader("Content-Security-Policy-Report-Only",cspHeader);
+  //res.setHeader("X-Content-Security-Policy-Report-Only",cspHeader);      
   next();
 });
 
