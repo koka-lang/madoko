@@ -887,6 +887,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function urlParamsEncode( obj ) {
+    if (!obj || typeof(obj)==="string") return obj;
     var vals = [];
     properties(obj).forEach( function(prop) {
       vals.push( encodeURIComponent(prop) + "=" + encodeURIComponent( obj[prop] != null ? obj[prop].toString() : "") );
@@ -929,7 +930,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     var req = new XMLHttpRequest();
     var method = reqparam.method || "GET";
     if (method !== "GET") reqparam.cache = null;
-
+   
     // init headers
     var headers = reqparam.headers || {};
     if (reqparam.access_token) {
@@ -940,7 +941,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     }
 
     // init query
-    var query = (params ? urlParamsEncode(params) : "");
+    if (!params) params = {};
+    if (reqparam.nocache) params.nocache = randomHash8();
+    var query = urlParamsEncode(params);
     if (query) reqparam.url = reqparam.url + "?" + query;
 
     // Check cache
@@ -1261,13 +1264,12 @@ doc.execCommand("SaveAs", null, filename)
     setSessionObject(name,null);
   }
 
-  function randomHash() {
+  function randomHash8() {
     return (Math.random()*99999999).toFixed(0);
   }
 
   function getAppVersionInfo(latest) {
-    var url = "version.json" + (latest ? "?nocache=" + randomHash() : "");
-    return requestGET(url).then( function(info) {
+    return requestGET({url:"version.json", timeout:2500, nocache:latest}).then( function(info) {
       return info;
     }, function(err) {
       return null;
@@ -1351,4 +1353,4 @@ doc.execCommand("SaveAs", null, filename)
     AsyncRunner: AsyncRunner,
     Promise: Promise,
   };
-});
+}); 
