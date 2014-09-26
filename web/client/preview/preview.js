@@ -379,31 +379,36 @@ function dispatchEvent( elem, eventName ) {
   });
 
   /*
-  var req = new XMLHttpRequest();
-  var url = "https://madoko.cloudapp.net:8080/styles/madoko.css";
-  req.open("GET", url, true );
-  req.onload = function(res) {
-    console.log("WARNING: can access root domain!!");
-  };
-  req.onerror = function(res) {
-    console.log("OK: cannot access root domain");    
-  }
-  req.send(null);
-
   try {
-    localStorage.getItem( "local/" + fname );
-    console.log("WARNING: can access local storage for root domain!!")
+    var req = new XMLHttpRequest();
+    var url = "https://madoko.cloudapp.net/index.html";
+    req.open("GET", url, true );
+    req.onload = function(res) {
+      console.log("PREVIEW WARNING: can access root domain!!");
+    };
+    req.onerror = function(res) {
+      console.log("PREVIEW OK: cannot access root domain");    
+    }
+    req.send(null);
   }
   catch(exn) {
-    console.log("OK: cannot access local storage for root domain.")
+    console.log("PREVIEW OK: cannot do XHR: " + exn.toString());
+  }
+
+  try {
+    var ticks = localStorage.getItem( "ticks" );
+    console.log("PREVIEW WARNING: can access local storage for root domain!!")
+  }
+  catch(exn) {
+    console.log("PREVIEW OK: cannot access local storage for root domain.")
   }
   
   try {
     var cookie = document.cookie;
-    console.log( "WARNING: could accesss cookie for root domain!!");
+    console.log( "PREVIEW WARNING: could accesss cookie for root domain!!");
   }
   catch(exn) {
-    console.log("OK: cannot access cookies of root domain.")
+    console.log("PREVIEW OK: cannot access cookies of root domain.")
   }
   */
 

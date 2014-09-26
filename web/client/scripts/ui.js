@@ -1384,7 +1384,7 @@ var UI = (function() {
     // The rest of the code handles all cases to allow saving the content locally
     var saveBlob = navigator.saveOrOpenBlob || navigator.msSaveOrOpenBlob || navigator.saveBlob || navigator.msSaveBlob;
     var link = document.createElement("a");
-    if ("download" in link) {
+    if (false && "download" in link) {  // safari, firefox, chrome
       link.setAttribute("href",url);
       link.setAttribute("download",name);
       //Util.dispatchEvent(link,"click");
@@ -1392,13 +1392,10 @@ var UI = (function() {
       event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
     }
-    else if (window.saveAs) {
-      window.saveAs(blob, name);
-    }
-    else if (saveBlob) {
+    else if (saveBlob) {  // IE
       saveBlob.call(navigator, blob, name);
     }
-    else {
+    else {  // fallback
       window.open(url,name);
     }
   }
@@ -1449,19 +1446,10 @@ var UI = (function() {
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        var url = self.storage.getBlobUrl( name );
-        if (url) {
-          return Util.message( { message: "HTML exported", url: url, target: self.docName }, Util.Msg.Status);
-        }
-        var blob = self.storage.getBlob(name);
-        if (blob && window.navigator.msSaveOrOpenBlob) {
-          window.navigator.msSaveOrOpenBlob(blob, name );
-          return;
-        }
         
-        return self.openInWindow( name, "text/html" ).then( function() {
-          Util.message( "HTML exported");
-        });
+        //return self.openInWindow( name, "text/html" ).then( function() {
+        //  Util.message( "HTML exported");
+        //});
         
         //saveUserContent( name, "text/html", content );
       })

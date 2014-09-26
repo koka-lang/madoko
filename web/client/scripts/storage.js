@@ -513,16 +513,11 @@ var Storage = (function() {
     finfo.createdTime = finfo.createdTime || new Date();
     finfo.globalPath  = finfo.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
 
-    if ((finfo.mime === "application/pdf" || finfo.mime === "text/html") && window.URL) {
-      if (finfo._blobUrl) {
-        window.URL.revokeObjectURL(finfo._blobUrl);
-        finfo._blobUrl = null;
-      }
-      
-      var raw  = Encoding.decode(finfo.encoding, finfo.content);
-      var blob = new Blob([raw], { type: finfo.mime });
-      if (window.navigator.msSaveOrOpenBlob) finfo._blob    = blob;
-                                        else finfo._blobUrl = window.URL.createObjectURL(blob);      
+    if (!finfo.shareUrl && (finfo.mime === "application/pdf" || finfo.mime === "text/html")) {
+      // async set shareUrl
+      self.remote.getShareUrl( finfo.path ).then( function(url) {
+        finfo.shareUrl = url;  
+      }, function(err) { } ); 
     }
     
     // check same content
@@ -567,22 +562,10 @@ var Storage = (function() {
     file.position = pos;    
   }
 
-  Storage.prototype.getShareUrl = function(fpath) {
+  Storage.prototype.getShareUrl = function(fpath,wait) {
     var self = this;
     var file = self.files.get(fpath);
     return (file && file.shareUrl ? file.shareUrl : "");
-  }
-
-  Storage.prototype.getBlobUrl = function(fpath) {
-    var self = this;
-    var file = self.files.get(fpath);
-    return (file && file._blobUrl ? file._blobUrl : "");
-  }
-
-  Storage.prototype.getBlob = function(fpath) {
-    var self = this;
-    var file = self.files.get(fpath);
-    return (file && file._blob ? file._blob : "");
   }
 
   Storage.prototype._pullFile = function( fpath, opts ) {
@@ -763,10 +746,10 @@ var Storage = (function() {
         return self.remote.getShareUrl( file.path ).then( function(url) {
           file.shareUrl = url;
           return res;
-        })
+        });
       }
       else return res;
-    });
+    });;
   }
 
   Storage.prototype._syncPush = function(file,remoteTime) {
