@@ -484,6 +484,7 @@ var UI = (function() {
       }
       // check the version number on the server every minute
       if (now - self.lastVersionCheck >= 60000) {
+        self.lastVersionCheck = now;
         // request lastest appversion from the server 
         Util.getAppVersionInfo(true).then( function(version) {
           if (!version) return;
