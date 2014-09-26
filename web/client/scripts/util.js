@@ -88,10 +88,12 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       if (msg.stack) {
         console.log(msg.stack);
       }
+
       if (msg.url && typeof msg.url === "string") {
-        linkPre = "<a class='external' target='_blank' href='" + htmlEscape(msg.url) + "'>";        
+        linkPre = "<a class='external' target='" + (msg.target || "_blank") + "' href='" + htmlEscape(msg.url) + "'>";        
         linkPost= "</a>";
       }
+
       
       if (msg.message) 
         txt = msg.message;

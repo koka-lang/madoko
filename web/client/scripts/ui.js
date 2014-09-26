@@ -568,7 +568,7 @@ var UI = (function() {
     }
     
     document.getElementById("export-html").onclick = function(ev) {
-      self.event( "HTML exported", "exporting...", State.Exporting, function() { 
+      self.event( null, "exporting...", State.Exporting, function() { 
         return self.generateHtml(); 
       });
     }
@@ -1436,9 +1436,7 @@ var UI = (function() {
             });
           }
         }, function(err) {
-            return self.openInWindow( name, "application/pdf" ).then( function() {
-              Util.message( "PDF exported", Util.Msg.Status );
-            });
+            Util.message( "PDF exported", Util.Msg.Status );            
         });
       })
     );
@@ -1451,7 +1449,20 @@ var UI = (function() {
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        return self.openInWindow( name, "text/html" );
+        var url = self.storage.getBlobUrl( name );
+        if (url) {
+          return Util.message( { message: "HTML exported", url: url, target: self.docName }, Util.Msg.Status);
+        }
+        var blob = self.storage.getBlob(name);
+        if (blob && window.navigator.msSaveOrOpenBlob) {
+          window.navigator.msSaveOrOpenBlob(blob, name );
+          return;
+        }
+        
+        return self.openInWindow( name, "text/html" ).then( function() {
+          Util.message( "HTML exported");
+        });
+        
         //saveUserContent( name, "text/html", content );
       })
     );

@@ -512,6 +512,18 @@ var Storage = (function() {
     finfo.mime        = finfo.mime || Util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
     finfo.globalPath  = finfo.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
+
+    if ((finfo.mime === "application/pdf" || finfo.mime === "text/html") && window.URL) {
+      if (finfo._blobUrl) {
+        window.URL.revokeObjectURL(finfo._blobUrl);
+        finfo._blobUrl = null;
+      }
+      
+      var raw  = Encoding.decode(finfo.encoding, finfo.content);
+      var blob = new Blob([raw], { type: finfo.mime });
+      if (window.navigator.msSaveOrOpenBlob) finfo._blob    = blob;
+                                        else finfo._blobUrl = window.URL.createObjectURL(blob);      
+    }
     
     // check same content
     // var file = self.files.get(fpath);
@@ -559,6 +571,18 @@ var Storage = (function() {
     var self = this;
     var file = self.files.get(fpath);
     return (file && file.shareUrl ? file.shareUrl : "");
+  }
+
+  Storage.prototype.getBlobUrl = function(fpath) {
+    var self = this;
+    var file = self.files.get(fpath);
+    return (file && file._blobUrl ? file._blobUrl : "");
+  }
+
+  Storage.prototype.getBlob = function(fpath) {
+    var self = this;
+    var file = self.files.get(fpath);
+    return (file && file._blob ? file._blob : "");
   }
 
   Storage.prototype._pullFile = function( fpath, opts ) {
