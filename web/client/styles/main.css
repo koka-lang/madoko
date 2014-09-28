@@ -897,3 +897,13 @@ div.item:hover {
   max-width: 5em;
   max-height: 5em;
 }
+
+
+body.viewer,
+iframe.viewer {
+  padding: 0pt;
+  margin: 0pt;
+  height: 99%;
+  width: 100%;
+  border: none;
+}

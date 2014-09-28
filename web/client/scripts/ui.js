@@ -612,7 +612,7 @@ var UI = (function() {
             var mime = Util.mimeFromExt(path);
             return self.event( "loaded: " + path, "loading...", State.Loading, function() {
               if (mime==="application/pdf" || mime==="text/html" || Util.startsWith(mime,"image/")) {
-                return self.openInWindow( path, mime );
+                return self.saveUserContent( path, mime );
               }
               else {
                 return self.editFile(path);            
@@ -1365,9 +1365,14 @@ var UI = (function() {
   -------------------------------------------------- */
 
 
-  function saveUserContent( name, mime, content, tryOpenFirst ) {
+  function _saveUserContent( name, mime, content, tryOpenFirst ) {
+    // blob is created in our origin; 
+    // so we should make sure a user can only save, not open a window in our domain
+    // since a html page could read our local storage or do rest calls with our cookie.
+    // (this could be problem if a user opens a document with 'evil' content)
+
     var blob = new Blob([content], { type: mime });
-    var url = URL.createObjectURL(blob);
+    var url  = URL.createObjectURL(blob);
     setTimeout( function() { URL.revokeObjectURL(url); }, 250 );
 
     if (tryOpenFirst) {
@@ -1382,7 +1387,8 @@ var UI = (function() {
     }
 
     // The rest of the code handles all cases to allow saving the content locally
-    var saveBlob = navigator.saveOrOpenBlob || navigator.msSaveOrOpenBlob || navigator.saveBlob || navigator.msSaveBlob;
+    // IE 'saveOrOpen' is secure as it opens the blob in a null domain.
+    var saveBlob = navigator.msSaveOrOpenBlob || navigator.msSaveBlob;
     var link = document.createElement("a");
     if (false && "download" in link) {  // safari, firefox, chrome
       link.setAttribute("href",url);
@@ -1400,12 +1406,25 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.openInWindow = function( path, mime ) {
+  UI.prototype.getViewLink = function(path, mime) {
     var self = this;
-    if (!mime) mime = Util.mimeFromExt(path);            
+    if (!mime) mime = Util.mimeFromExt(path);
+    var url = self.storage.getShareUrl();
+    if (url) return url;
+    if (mime==="application/pdf") {
+      // blob is created in our origin, so unsafe for html content.
+      var blob = new Blob([content], { type: mime });
+      return URL.createObjectURL(blob);
+    }
+    return null;
+  }
+
+  UI.prototype.saveUserContent = function( path, mime ) {
+    var self = this;
+    if (!mime) mime = Util.mimeFromExt(path);
     return self.storage.readFile( path ).then( function(file) {
       var content = Storage.Encoding.decode(file.encoding, file.content);
-      saveUserContent( Util.basename(path), mime, content );
+      _saveUserContent( Util.basename(path), mime, content );
     });
   }
 
@@ -1423,17 +1442,15 @@ var UI = (function() {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
         var name = "out/" + Util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
-          var url = self.storage.getShareUrl( name )
+          var url = self.getViewLink();
           if (url) {
             Util.message( { message: "PDF exported", url: url }, Util.Msg.Status );
           }
-          else {
-            return self.openInWindow( name, "application/pdf" ).then( function() {
-              Util.message( "PDF exported (available in the files menu)", Util.Msg.Status );
+          else { 
+            return self.saveUserContent( name, "application/pdf" ).then( function() {
+              Util.message( "PDF exported", Util.Msg.Status );
             });
           }
-        }, function(err) {
-            Util.message( "PDF exported", Util.Msg.Status );            
         });
       })
     );
@@ -1442,16 +1459,21 @@ var UI = (function() {
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    return self.spinWhile( self.spinner, 
+    return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        
-        //return self.openInWindow( name, "text/html" ).then( function() {
-        //  Util.message( "HTML exported");
-        //});
-        
-        //saveUserContent( name, "text/html", content );
+        return self._synchronize().then( function() {
+          var url = self.getViewLink();
+          if (url) {
+            Util.message( { message: "HTML exported", url: url }, Util.Msg.Status );
+          }
+          else {            
+            return self.saveUserContent( name, "text/html" ).then( function() {
+              Util.message( "HTML exported", Util.Msg.Status );
+            });
+          }
+        });
       })
     );
   }
