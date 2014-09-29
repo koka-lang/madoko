@@ -19,6 +19,7 @@ var OAuthRemote = (function() {
     self.loginUrl       = opts.loginUrl;
     self.loginParams    = opts.loginParams;
     self.logoutUrl      = opts.logoutUrl;
+    self.logoutTimeout  = opts.logoutTimeout || false;
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = (opts.useAuthHeader !== false);
     self.access_token   = null;
@@ -30,9 +31,14 @@ var OAuthRemote = (function() {
     if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
     if (!self.loginParams.response_type) self.loginParams.response_type = "code";
 
+    self.logoutParams = opts.logoutParams || {};
+    if (!self.logoutParams.client_id) self.logoutParams.client_id = self.loginParams.client_id;
+    if (!self.logoutParams.redirect_uri) self.logoutParams.redirect_uri = self.loginParams.redirect_uri;
+
     self.nextTry     = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
     self.lastTryErr  = null;
     self.tryDelay    = 10000; 
+    self.logoutErr   = { httpCode: 401, message: "Not logged in to " + self.name };
   }
 
   // try to set access token without full login; call action with connected or not.
@@ -41,14 +47,14 @@ var OAuthRemote = (function() {
     var self = this;
     if (self.access_token) return Promise.wrap(action, true);
     if (self.nextTry < 0 || Date.now() < self.nextTry) {
-      if (!self.lastTryErr) self.lastTryErr = { httpCode: 401, message: "Not logged in to " + self.name };
+      if (!self.lastTryErr) self.lastTryErr = self.logoutErr;
       return Promise.wrap(action, false, self.lastTryErr);
     }
     self.lastTryErr = null;
     return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
         self.nextTry = Date.now() + self.tryDelay; // remember we tried
-        self.lastTryErr = { httpCode: 401, message: "Not logged in to " + self.name };
+        self.lastTryErr = self.logoutErr;
         return action(false, self.lastTryErr);
       }
       else {
@@ -57,8 +63,13 @@ var OAuthRemote = (function() {
         return action(true);
       }
     }, function(err) {
-      self.nextTry = Date.now() + self.tryDelay; // remember we tried
-      self.lastTryErr = err || { httpCode: 400, message: "Network request failed" };
+      if (err && err.httpCode === 401) {
+        self.logout();
+      }
+      else {
+        self.nextTry    = Date.now() + self.tryDelay; // remember we tried
+        self.lastTryErr = err || { httpCode: 400, message: "Network request failed" };
+      }
       return action(false,self.lastTryErr);
     });
   }
@@ -118,37 +129,38 @@ var OAuthRemote = (function() {
     return self._requestXHR(options,params);
   }
 
-  OAuthRemote.prototype.logout = function() {
+  OAuthRemote.prototype.logout = function(force) {
     var self  = this;
-    var token = self.access_token;
-    self.access_token = null;
-    self.nextTry  = -1; // no need to ever try to get the token
-    self.userId   = null;
-    self.userName = null;
-    Util.message("Logged out from " + self.name, Util.Msg.Status);
+    return (force && self.logoutUrl ? Util.openOAuthLogout(self.name, { url: self.logoutUrl, width: self.dialogWidth, height: self.dialogHeight, timeout: self.logoutTimeout }, self.logoutParams ) : Promise.resolved()).always( function() {
+      var token = self.access_token;
+      self.access_token = null;
+      self.nextTry    = -1; // no need to ever try to get the token
+      self.lastTryErr = self.logoutErr;
+      self.userId   = null;
+      self.userName = null;
+      Util.message("Logged out from " + self.name, Util.Msg.Status);
 
-    if (token) {
-      // invalidate the access_token
-      return Util.requestPOST( {url: "/oauth/logout"}, { remote: self.name } );
-    }
-    else {
-      return Promise.resolved();
-    }
+
+      if (token) {
+        // invalidate the access_token
+        return Util.requestPOST( {url: "/oauth/logout"}, { remote: self.name } );
+      }
+      else {
+        return Promise.resolved();
+      }
+    });
   }
 
-  // Do a full login. Pass 'true' to give up if not yet logged in (instead of presenting a login form to the user).
-  OAuthRemote.prototype.login = function(dontForce) {
+  // Do a full login. 
+  OAuthRemote.prototype.login = function() {
     var self = this;
-    return self._withConnect( function(ok) {
-      if (ok) return;
-      if (dontForce) return Promise.rejected( new Error("Not logged in to " + self.name) );
-      return Util.openOAuthLogin(self.name,self.loginUrl,self.loginParams,self.dialogWidth, self.dialogHeight).then( function() {
-        self.nextTry = 0; // ensure we access the server this time
-        return self._withAccessToken( function() { // and get the token
-          Util.message( "Logged in to " + self.name, Util.Msg.Status );
-          return; 
-        } ); 
-      });
+    if (self.access_token) return Promise.resolved();
+    return Util.openOAuthLogin(self.name, { url: self.loginUrl, width: self.dialogWidth, height: self.dialogHeight }, self.loginParams).then( function() {
+      self.nextTry = 0; // ensure we access the server this time
+      return self._withAccessToken( function() { // and get the token
+        Util.message( "Logged in to " + self.name, Util.Msg.Status );
+        return; 
+      } ); 
     });
   }
 

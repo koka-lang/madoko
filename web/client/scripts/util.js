@@ -1152,41 +1152,47 @@ doc.close();
 doc.execCommand("SaveAs", null, filename)
 */
 
-  function openAuthPopup(url, params, name, width, height ) {
+  function _openWindow(opts, params ) {
     var query = (params ? urlParamsEncode(params) : "");
-    if (query) url = url + "?" + query;
+    if (query) opts.url = opts.url + "?" + query;
 
-    if (!width || width < 0) width = 600;
-    if (!height || height < 0) height = 500; 
+    if (opts.width==null || opts.width < 0) opts.width = 600;
+    if (opts.height==null || opts.height < 0) opts.height = 500; 
 
-    if (width < 1) width = window.outerWidth * width;
-    if (height < 1) height = window.outerHeight * height;
+    if (opts.width < 1) opts.width = window.outerWidth * opts.width;
+    if (opts.height < 1) opts.height = window.outerHeight * opts.height;
 
-    var left  = (window.screenX || window.screenLeft) + ((window.outerWidth - width) / 2);
-    var top   = (window.screenY || window.screenTop) + (((window.outerHeight - height) / 2) - 30);
+    if (opts.left==null) opts.left = (window.screenX || window.screenLeft) + ((window.outerWidth - opts.width) / 2);
+    if (opts.top==null)  opts.top  = (window.screenY || window.screenTop) + (((window.outerHeight - opts.height) / 2) - 30);
 
     var features = [
-      "width=" + width.toFixed(0),
-      "height=" + height.toFixed(0),
-      "top=" + top.toFixed(0),
-      "left=" + left.toFixed(0),
+      "width=" + opts.width.toFixed(0),
+      "height=" + opts.height.toFixed(0),
+      "top=" + opts.top.toFixed(0),
+      "left=" + opts.left.toFixed(0),
       "status=no",
       "resizable=yes",
       "toolbar=no",
       "menubar=no",
       "scrollbars=yes"];
 
-    var popup = window.open(url, name || "oauth", features.join(","));
-    if (popup) {
+    var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
+    if (popup && (opts.focus !== false)) {
       popup.focus();
     }
 
     return popup;
   }
 
-  function openModalPopup( url, params, name, width, height ) {
-    var w = openAuthPopup( url, params, name, width, height );
+  function openModalPopup( opts, params ) {
+    if (typeof opts==="string") opts = { url: opts };
+    var w = _openWindow( opts, params );
     if (!w) return Promise.rejected( new Error("popup was blocked") );
+    if (opts.timeout && opts.timeout > 0) {
+      setTimeout( function() { 
+        w.close(); 
+      }, opts.timeout );
+    }
     return new Promise( function(cont) {
       var timer = setInterval(function() {   
         if(w==null || w.closed) {  
@@ -1246,11 +1252,19 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
-  function openOAuthLogin( remote, url, params, width, height ) {
+  function openOAuthLogin( remote, opts, params ) {
     return withOAuthState( remote, function(state) {
       params.state = state;
-      return openModalPopup(url,params,"oauth",width,height); 
+      return openModalPopup(opts,params); 
     });
+  }
+
+  function openOAuthLogout( remote, opts, params ) {
+    if (opts.timeout==null) {
+      opts.timeout = 500;
+    }
+    opts.focus = false;
+    return openModalPopup(opts,params); 
   }
 
   function getSessionObject(name) {
@@ -1352,6 +1366,7 @@ doc.execCommand("SaveAs", null, filename)
     
     //withOAuthState: generateOAuthState,
     openOAuthLogin: openOAuthLogin,
+    openOAuthLogout: openOAuthLogout,
 
     urlParamsEncode: urlParamsEncode,
     urlParamsDecode: urlParamsDecode,

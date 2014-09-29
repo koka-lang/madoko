@@ -70,7 +70,7 @@ else {
   Start the UI
 -------------------------------------------------------------------------*/
 
-function start() {
+function start() {       
   require([ "../scripts/util",
             "../scripts/runner",
             "vs/editor/editor.main"],

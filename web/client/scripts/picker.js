@@ -166,7 +166,7 @@ var Picker = (function() {
   Picker.prototype.onLogout = function() {
     var self = this;
     //if (!self.current.remote.connected()) return;
-    return self.current.remote.logout().then( function() {
+    return self.current.remote.logout(true).then( function() {   // true does full logout
       self.display();
     });
   }

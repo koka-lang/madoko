@@ -17,6 +17,8 @@ var dropbox = new OAuthRemote( {
   loginParams  : {
     client_id: "3vj9witefc2z44w",
   },
+  logoutUrl    : "https://www.dropbox.com/logout",
+  logoutTimeout: 500,
 });
 
 
@@ -165,12 +167,12 @@ var Dropbox = (function() {
     return dropbox.connect();
   }
 
-  Dropbox.prototype.login = function(dontForce) {
-    return dropbox.login(dontForce);
+  Dropbox.prototype.login = function() {
+    return dropbox.login();
   }
 
-  Dropbox.prototype.logout = function() {
-    return dropbox.logout();
+  Dropbox.prototype.logout = function(force) {
+    return dropbox.logout(force);
   }
 
   Dropbox.prototype.getUserName = function() {

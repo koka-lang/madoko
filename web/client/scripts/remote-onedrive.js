@@ -22,7 +22,7 @@ var onedrive = new OAuthRemote( {
   dialogHeight   : 650,
   dialogWidth    : 800,
   logoutUrl      : "https://login.live.com/oauth20_logout.srf",
-  useAuthHeader  : false,  
+  useAuthHeader  : false,    
 } );
 
 
@@ -240,12 +240,12 @@ var Onedrive = (function() {
     return onedrive.connect();
   }
 
-  Onedrive.prototype.login = function(dontForce) {
-    return onedrive.login(dontForce);
+  Onedrive.prototype.login = function() {
+    return onedrive.login();
   }
 
-  Onedrive.prototype.logout = function() {
-    return onedrive.logout();
+  Onedrive.prototype.logout = function(force) {
+    return onedrive.logout(force);
   }
 
   Onedrive.prototype.getUserName = function() {

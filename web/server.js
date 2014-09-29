@@ -298,13 +298,14 @@ app.use(function(err, req, res, next){
 // Security   
 // -------------------------------------------------------------
 app.use(function(req, res, next){
+  console.log("referer: " + req.get("Referrer") + ", path: " + req.path + ", host: " + req.hostname);
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
     // for security do not store any rest or oauth request
     console.log("cache: no-store: " + req.path);
     res.setHeader("Cache-Control","no-store");
   }
   else {
-    //console.log("cache: regular: " + req.path);
+    //console.log("cache: regular: " + req.path); 
   }
   
   // tell browsers to immediately redirect to https    
@@ -336,7 +337,7 @@ app.use(function(req, res, next){
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
       csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net";
-    }  
+    } 
     else if (endsWith(req.path,".svg")) { 
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.
     }
@@ -754,6 +755,7 @@ properties(remotes).forEach( function(name) {
 });
 
 function redirectPage(remote, message, status ) { 
+  if (!remote) remote = { name: ""};
   if (!status) status = "ok";
   if (!message) {
     message = "Logged in to " + remote.name;
@@ -762,11 +764,9 @@ function redirectPage(remote, message, status ) {
     '<html>',
     '<head>',
     '  <title>Madoko ' + remote.name + ' login</title>',
-    '  <style>',
-    '    p { text-align: center; font-size: large; margin-top: 1em }',
-    '  </style>',
+    '  <link rel="stylesheet" type="text/css" href="styles/main.css">',
     '</head>',
-    '<body>',
+    '<body id="auth-redirect">',
     '  <p id="message">' + message + '</p>',
     '  <p><button id="button-close">Close Window</button></p>', 
     '  <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
@@ -776,19 +776,25 @@ function redirectPage(remote, message, status ) {
 }
 
 function redirectError(remote,message) {
-  return redirectPage(remote || { name: ""}, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""), "error");
+  return redirectPage(remote, "Could not login" + (remote ? " to " + remote.name : "") + "." + (message ? "<br>" + message : ""), "error");
 }
 
 function oauthLogin(req,res) {
   res.status(200);
-  
+  var remote = null;
+
+  // check if this is a logout request..
+  if (req.query.code == null) {
+    return redirectPage(remote,"Logged out");
+  }
+
   // get oauth state
   var cookieName = "oauth/state";
   var cookie = req.sessionCookies.get(cookieName); res.clearCookie(cookieName);
   var state  = {};
   try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
   
-  var remote = remotes[state.remote];
+  remote = remotes[state.remote];
   if (!remote) {
     return redirectError(remote, "Could not login; unknown remote service." );
   }
@@ -1215,14 +1221,14 @@ app.get("/oauth/token", function(req,res) {
     var remoteName = req.param("remote");
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
-    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") return { message: "Not logged in to " + remoteName };
+    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") return { httpCode: 401, message: "Not logged in to " + remoteName };
 
     // check expiration date: we expire tokens ourselves for extra security
     var created = date.dateFromISO(login.created);
     if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + limits.tokenExpires) {
       console.log("Expired token: " + login.created);
       return oauthLogout(req,res,remoteName,login).then( function() {
-        return { message: "Not logged in to " + remoteName };
+        return { httpCode: 401, message: "Not logged in to " + remoteName };
       });
     }
     return { access_token: login.access_token };

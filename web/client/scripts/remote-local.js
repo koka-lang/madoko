@@ -64,14 +64,14 @@ var LocalRemote = (function() {
   }
 
   LocalRemote.prototype.connect = function() {
-    return Promise.resolved(true);
+    return Promise.resolved(0);
   }
 
-  LocalRemote.prototype.login = function(dontForce) {
+  LocalRemote.prototype.login = function() {
     return Promise.resolved();
   }
 
-  LocalRemote.prototype.logout = function() {
+  LocalRemote.prototype.logout = function(force) {
     return Promise.resolved();
   }
 

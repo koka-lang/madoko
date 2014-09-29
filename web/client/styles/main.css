@@ -622,7 +622,7 @@ div.modal {
 }
 
 .modal .app-body {
-  height: calc(100% - 6rem);
+  height: calc(100% - 6rem + 1px);
   width: 100%;
   overflow: auto;
 }
@@ -656,7 +656,7 @@ div.modal {
 }
 
 .modal .button.active {
-  border-width: 3px;
+  border-width: 2px;
 }
 
 
@@ -917,4 +917,10 @@ iframe.viewer {
   height: 99%;
   width: 100%;
   border: none;
+}
+
+#auth-redirect p {
+  text-align: center; 
+  font-size: large; 
+  margin-top: 1em;
 }

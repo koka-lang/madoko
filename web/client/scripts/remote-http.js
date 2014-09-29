@@ -80,14 +80,14 @@ var HttpRemote = (function() {
   }
 
   HttpRemote.prototype.connect = function() {
-    return Promise.resolved(true);
+    return Promise.resolved(0);
   }
 
-  HttpRemote.prototype.login = function(dontForce) {
+  HttpRemote.prototype.login = function() {
     return Promise.resolved();
   }
 
-  HttpRemote.prototype.logout = function() {
+  HttpRemote.prototype.logout = function(force) {
     return Promise.resolved();
   }
 

@@ -514,7 +514,7 @@ var UI = (function() {
         window.location.reload(true);        // force reload. TODO: ask the user? show a sticky status message?   
       }
       // check the version number on the server every minute
-      if (now - self.lastVersionCheck >= 60000) {
+      if (now - self.lastVersionCheck >= 60000) {  
         self.lastVersionCheck = now;
         // request lastest appversion from the server 
         Util.getAppVersionInfo(true).then( function(version) {
@@ -522,17 +522,19 @@ var UI = (function() {
           if (self.appUpdateReady || !self.version) return;
           if (self.version.digest === version.digest) return;
           if (self.version.updateDigest === version.digest) { // are we updating right now to this version?
-            // firefox doesn't reliably send a update ready event, check here. 
-            if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-              window.applicationCache.swapCache();
+            // firefox doesn't reliably send a update ready event, check here also. 
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY || 
+                window.applicationCache.status === window.applicationCache.IDLE)  // this is for Firefox which doesn't update the status correctly
+            {
               self.appUpdateReady = true;
+              window.applicationCache.swapCache();
             }
+            return;
           }
-          else {
-            Util.message("Downloading updates...", Util.Msg.Status);
-            self.version.updateDigest = version.digest; // remember we update to this version
-            window.applicationCache.update(); // update the cache -- will trigger a reload later on.             
-          }
+          
+          Util.message("Downloading updates...", Util.Msg.Status);
+          self.version.updateDigest = version.digest; // remember we update to this version
+          window.applicationCache.update(); // update the cache -- will trigger a reload later on.                     
         });
       }
     };
@@ -568,9 +570,11 @@ var UI = (function() {
     document.getElementById("open").onclick = openEvent;
     
     document.getElementById("connection").onclick = function(ev) {
-      return self.anonEvent( function() {
-        return Storage.login(self.storage);
-      });      
+      if (self.storage && self.storage.isRemote()) {        
+        return self.anonEvent( function() {
+          return Storage.login(self.storage);
+        });      
+      }
     };
     
     var newEvent = function(ev) {
