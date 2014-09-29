@@ -30,19 +30,26 @@ var OAuthRemote = (function() {
     if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
     if (!self.loginParams.response_type) self.loginParams.response_type = "code";
 
-    self.nextTry  = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
-    self.tryDelay = 60000; // once a minute
+    self.nextTry     = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
+    self.lastTryErr  = null;
+    self.tryDelay    = 10000; 
   }
 
-  // try to set access token without full login; call action with logged in or not.
+  // try to set access token without full login; call action with connected or not.
+  // if not connected, also apply the error.
   OAuthRemote.prototype._withConnect = function(action) {
     var self = this;
     if (self.access_token) return Promise.wrap(action, true);
-    if (self.nextTry < 0 || Date.now() < self.nextTry) return Promise.wrap(action, false, new Error("Cannot login to " + self.name));
+    if (self.nextTry < 0 || Date.now() < self.nextTry) {
+      if (!self.lastTryErr) self.lastTryErr = { httpCode: 401, message: "Not logged in to " + self.name };
+      return Promise.wrap(action, false, self.lastTryErr);
+    }
+    self.lastTryErr = null;
     return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
         self.nextTry = Date.now() + self.tryDelay; // remember we tried
-        return action(false,new Error("Cannot login to " + self.name));
+        self.lastTryErr = { httpCode: 401, message: "Not logged in to " + self.name };
+        return action(false, self.lastTryErr);
       }
       else {
         self.access_token = res.access_token;
@@ -51,7 +58,8 @@ var OAuthRemote = (function() {
       }
     }, function(err) {
       self.nextTry = Date.now() + self.tryDelay; // remember we tried
-      return action(false,err);
+      self.lastTryErr = err || { httpCode: 400, message: "Network request failed" };
+      return action(false,self.lastTryErr);
     });
   }
 
@@ -144,15 +152,16 @@ var OAuthRemote = (function() {
     });
   }
 
-  // try to set access token without full login; return whether logged in or not.
+  // try to set access token without full login; return status code: 0 = ok, 401 = logged out, 400 = network failure.
   OAuthRemote.prototype.connect = function(verify) {
     var self = this;
-    return self._withConnect( function(connected) { 
-      if (!connected || !verify) return connected;
+    return self._withConnect( function(connected,err) { 
+      if (!connected) return (err.httpCode || 401);
+      if (!verify) return 0;
       return self.getUserInfo().then( function() {
-        return true;
+        return 0;
       }, function(err) {
-        return false;
+        return (err.httpCode || 401);
       });
     });
   }

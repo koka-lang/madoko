@@ -419,7 +419,16 @@ var Storage = (function() {
 
   Storage.prototype.login = function(dontForce) {
     var self = this;
-    return self.remote.login(dontForce);
+    return self.remote.connect().then( function(status) {
+      if (status===0) return;
+      if (status!==401 || dontForce) throw new Error("Could not connect to " + self.remote.type() );
+      return login(self).then( function() {
+        return self.remote.connect().then( function(status2) {
+          if (status2 === 0) return;
+          throw new Error("Synchronization failed: could not connect to " + self.remote.type() );
+        })
+      });
+    });
   }
 
 
@@ -780,7 +789,7 @@ var Storage = (function() {
     }
     else {
       // write back the client changes
-      self._syncWriteBack(file,remoteTime,"save to server")
+      return self._syncWriteBack(file,remoteTime,"save to server")
     }
   }
 

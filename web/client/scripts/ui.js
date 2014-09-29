@@ -487,14 +487,22 @@ var UI = (function() {
     
     var autoSync = function() {
       var now = Date.now();
-      self.updateConnectionStatus().then( function(isConnected) {        
-        if (isConnected && self.storage.isRemote()) {
-          if (now - self.lastConUserCheck >= 10000) {
-            self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
+      self.updateConnectionStatus().then( function(status) {        
+        if (self.storage.isRemote()) {
+          if (status===0) {
+            if (now - self.lastConUserCheck >= 10000) {
+              self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
+            }
           }
-          if (self.checkAutoSync.checked && self.state === State.Normal) { 
-            if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
-              self.synchronize();
+          
+          if (status===400) {
+            Util.message("Could not synchronize because the Madoko server could not be reached (offline?)", Util.Msg.Info);
+          }
+          else { // force login if not connected
+            if (self.checkAutoSync.checked && self.state === State.Normal) { 
+              if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
+                self.synchronize();
+              }
             }
           }
         }
@@ -748,10 +756,10 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (!stg) return Promise.resolved(false);
-    return stg.connect().then( function(isConnected) {
-      self.isConnected = isConnected; 
-      self.updateRemoteLogo(stg,isConnected);
-      return isConnected;
+    return stg.connect().then( function(status) {
+      self.isConnected = (status === 0); 
+      self.updateRemoteLogo(stg,self.isConnected);
+      return status;
     });
   }
 
