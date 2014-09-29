@@ -393,6 +393,12 @@ var Picker = (function() {
       headerLogo.style.display = "none";
     }
 
+    if (self.options.message) {
+      document.getElementById("message-message").innerHTML = self.options.message;
+      document.getElementById("folder-name").innerHTML = self.options.header || "";
+      Util.addClassName(app,"command-message");
+    }
+
     if (self.options.alert) {
       // alert message
       if (self.options.alert!=="true") {
@@ -404,9 +410,6 @@ var Picker = (function() {
       return Promise.resolved();
     }
     else if (self.options.command==="message") {
-      document.getElementById("message-message").innerHTML = self.options.message;
-      document.getElementById("folder-name").innerHTML = self.options.header || "";
-      Util.addClassName(app,"command-message");
       self.setActive();
       return Promise.resolved();
     }
@@ -416,6 +419,7 @@ var Picker = (function() {
       self.setActive();
       return Promise.resolved();
     }
+
     else {
       // set correct logo
       document.getElementById("remote-logo").src = "images/dark/" + self.current.remote.logo();

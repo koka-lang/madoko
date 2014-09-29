@@ -568,14 +568,9 @@ var UI = (function() {
     document.getElementById("open").onclick = openEvent;
     
     document.getElementById("connection").onclick = function(ev) {
-      if (self.isConnected || !self.storage) {
-        return openEvent(ev);
-      }
-      else {
-        return self.anonEvent( function() {
-          return self.login();
-        });
-      }
+      return self.anonEvent( function() {
+        return Storage.login(self.storage);
+      });      
     };
     
     var newEvent = function(ev) {

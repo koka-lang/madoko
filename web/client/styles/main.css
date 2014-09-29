@@ -691,7 +691,9 @@ div.modal {
 #picker.command-alert #remotes,
 #picker.command-push #remotes,
 #picker.command-message #remotes,
-#picker.command-template #remotes {
+#picker.command-template #remotes,
+#picker.command-connect #remotes,
+#picker.command-login-connect #remotes {
   display: none;
 }
 

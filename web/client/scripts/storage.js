@@ -115,14 +115,18 @@ function createFromTemplate( storage, docName, template )
   });
 }
 
-function login(storage) {
+function login(storage, message, header) {
   if (!storage) return Promise.resolved();
   var params = {
     command: "connect"
   }
   if (storage.isRemote()) {
     params.remote = storage.remote.type();
+    params.headerLogo = "images/dark/" + storage.remote.logo();
   }
+  if (message) params.message = message;
+  if (header) params.header = header;
+
   return picker(storage,params).then( function(res) {
     return;
   }, function(err) {
@@ -422,7 +426,7 @@ var Storage = (function() {
     return self.remote.connect().then( function(status) {
       if (status===0) return;
       if (status!==401 || dontForce) throw new Error("Could not connect to " + self.remote.type() );
-      return login(self).then( function() {
+      return login(self, "You are not logged in to " + self.remote.type() + ". Please login to synchronize.").then( function() {
         return self.remote.connect().then( function(status2) {
           if (status2 === 0) return;
           throw new Error("Synchronization failed: could not connect to " + self.remote.type() );
