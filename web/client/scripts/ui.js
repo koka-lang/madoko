@@ -296,6 +296,29 @@ var UI = (function() {
     bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
+
+    // --- save links
+    var saveLink = function(ev) {
+      var elem = ev.target;
+      while( elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem, "save-link")) {
+        elem = elem.parentNode;
+      }
+
+      if (Util.hasClassName(elem,"save-link")) {
+        ev.cancelBubble = true;
+        var path = elem.getAttribute("data-path"); 
+        var mime = elem.getAttribute("data-mime");
+        if (path) {
+          self.saveUserContent(path,mime);
+        }
+      }
+    };
+    //document.body.addEventListener("click", saveLink);
+    document.body.addEventListener("click",saveLink);
+
+
+
+    // ----
     
     document.getElementById("sync-now").onclick = function(ev) {
       self.synchronize(true);
@@ -696,7 +719,7 @@ var UI = (function() {
     }
 
     // emulate hovering by clicks for touch devices
-    Util.enablePopupClickHovering();    
+    //Util.enablePopupClickHovering();    
   }
 
   UI.prototype.login = function() {
@@ -1030,7 +1053,7 @@ var UI = (function() {
     var self = this;
     var mathExt = ".tex";
     var mathStem = "out/" + Util.stemname(self.docName) + "-math-"
-    return self.storage.readLocalFile(mathStem + "dvi" + mathExt) + self.storage.readLocalFile( mathStem + "pdf" + mathExt, "" );
+    return self.storage.readLocalContent(mathStem + "dvi" + mathExt) + self.storage.readLocalContent( mathStem + "pdf" + mathExt, "" );
   }
 
 
@@ -1390,7 +1413,7 @@ var UI = (function() {
     // IE 'saveOrOpen' is secure as it opens the blob in a null domain.
     var saveBlob = navigator.msSaveOrOpenBlob || navigator.msSaveBlob;
     var link = document.createElement("a");
-    if (false && "download" in link) {  // safari, firefox, chrome
+    if ("download" in link) {  // safari, firefox, chrome
       link.setAttribute("href",url);
       link.setAttribute("download",name);
       //Util.dispatchEvent(link,"click");
@@ -1409,23 +1432,32 @@ var UI = (function() {
   UI.prototype.getViewLink = function(path, mime) {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
-    var url = self.storage.getShareUrl();
-    if (url) return url;
     if (mime==="application/pdf") {
-      // blob is created in our origin, so unsafe for html content.
-      var blob = new Blob([content], { type: mime });
-      return URL.createObjectURL(blob);
+      var url = self.storage.getShareUrl(path); // for PDF share is best; dropbox preview is great
+      if (!url && URL.createObjectURL && !navigator.msSaveOrOpenBlob) {  // don't use for IE
+        // blob is created in our origin, so unsafe for html content but ok for PDF.
+        var content = self.storage.readLocalRawContent(path);
+        if (content) {
+          var blob = new Blob([content], { type: mime });
+          url = URL.createObjectURL(blob);
+        }
+      }
+      if (url) {
+        return (function(msg) { return "<a class='external' target='_blank' href='" + Util.escape(url) + "'>" + msg + "</a>"; });
+      }
     }
-    return null;
+    // probably html, cannot use blob url directly (since a user can right-click and open in our origin)
+    // we create fake url's that call "saveUserContent" on click
+    return (function(msg) {
+      return "<span class='save-link' data-path='" + Util.escape(path) + "' data-mime='" + Util.escape(mime) + "'>" + msg + "</span>"; 
+    });
   }
 
   UI.prototype.saveUserContent = function( path, mime ) {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
-    return self.storage.readFile( path ).then( function(file) {
-      var content = Storage.Encoding.decode(file.encoding, file.content);
-      _saveUserContent( Util.basename(path), mime, content );
-    });
+    var content = self.storage.readLocalRawContent( path );
+    return Promise.resolved( _saveUserContent( Util.basename(path), mime, content ) );
   }
 
   UI.prototype.generatePdf = function() {
@@ -1442,9 +1474,9 @@ var UI = (function() {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
         var name = "out/" + Util.changeExt(self.docName,".pdf");
         return self._synchronize().then( function() {
-          var url = self.getViewLink();
-          if (url) {
-            Util.message( { message: "PDF exported", url: url }, Util.Msg.Status );
+          var link = self.getViewLink(name,"application/pdf");
+          if (link) {
+            Util.message( { message: "PDF exported", link: link }, Util.Msg.Status );
           }
           else { 
             return self.saveUserContent( name, "application/pdf" ).then( function() {
@@ -1464,9 +1496,9 @@ var UI = (function() {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
         return self._synchronize().then( function() {
-          var url = self.getViewLink();
-          if (url) {
-            Util.message( { message: "HTML exported", url: url }, Util.Msg.Status );
+          var link = self.getViewLink(name,"text/html");
+          if (link) {
+            Util.message( { message: "HTML exported", link: link }, Util.Msg.Status );
           }
           else {            
             return self.saveUserContent( name, "text/html" ).then( function() {

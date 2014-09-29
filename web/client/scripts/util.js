@@ -80,8 +80,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   // Call for messages
   function message( msg, kind ) {
-    var linkPre = "";
-    var linkPost = "";
+    var linkFun = null;
     var txt = "";
 
     if (typeof msg === "object") {
@@ -90,9 +89,16 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       }
 
       if (msg.url && typeof msg.url === "string") {
-        linkPre = "<a class='external' target='" + (msg.target || "_blank") + "' href='" + htmlEscape(msg.url) + "'>";        
-        linkPost= "</a>";
+        linkFun = function(txt) {
+          return "<a class='external' target='" + (msg.target || "_blank") + 
+                 "' href='" + htmlEscape(msg.url) + "'>" +
+                    txt + "</a>";
+        };
       }
+      else if (msg.link) {
+        linkFun = msg.link;
+      }
+
 
       
       if (msg.message) 
@@ -119,7 +125,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
             xtxt = xtxt.substr(0,n) + "...";
           }
         }
-        return "<span class='msg-" + kind + "'>" + linkPre + spanLines(htmlEscape(xtxt),"msg-line") + linkPost + "</span>";
+        var content = spanLines(htmlEscape(xtxt),"msg-line");
+        return "<span class='msg-" + kind + "'>" + (linkFun ? linkFun(content) : content)  + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";
@@ -1194,12 +1201,12 @@ doc.execCommand("SaveAs", null, filename)
   {
     var hovering = null;
 
-    document.body.onclick = function(ev) {
+    document.body.addEventListener("click", function(ev) {
       if (hovering) {
         removeClassName(hovering,"hover");
         hovering = null;
       }
-    }
+    });
     
     function isDivParent(parent,elem) {
       while( elem && elem !== parent && elem.nodeName !== "DIV") {
@@ -1211,8 +1218,8 @@ doc.execCommand("SaveAs", null, filename)
     var hoverElems = document.getElementsByClassName("popup");
     for(var i = 0; i < hoverElems.length; i++) {
       var elem = hoverElems[i];
-      elem.onclick = function(ev) {
-        ev.cancelBubble = true;                 
+      elem.addEventListener( "click", function(ev) {
+        //ev.cancelBubble = true;                 
         if (hovering) {
           removeClassName(hovering, "hover");
         }
@@ -1226,7 +1233,7 @@ doc.execCommand("SaveAs", null, filename)
         else {
           hovering = null;
         }
-      }
+      });
     }
   }
 

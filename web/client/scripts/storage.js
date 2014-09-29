@@ -612,8 +612,19 @@ var Storage = (function() {
 
   Storage.prototype.readLocalFile = function( fpath ) {
     var self = this;
-    var file = self.files.get(fpath);
+    return self.files.get(fpath);
+  }
+
+  Storage.prototype.readLocalContent = function( fpath ) {
+    var self = this;
+    var file = self.readLocalFile(fpath);
     return (file ? file.content : "");
+  }
+
+  Storage.prototype.readLocalRawContent = function( fpath ) {
+    var self = this;
+    var file = self.readLocalFile(fpath);
+    return (file ? Encoding.decode( file.encoding, file.content ) : "");
   }
 
   Storage.prototype.readFile = function( fpath, createOnErr, opts ) {  // : Promise<file>

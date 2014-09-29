@@ -196,13 +196,21 @@ img#console-ok {
   white-space: nowrap;  
 }
 
-#console-out a {
+#console-out a, #console-out .save-link {
   color: blue;
 }
 
-#console-out a:hover {
+#console-out a:hover, #console-out .save-link {
   color: blue;
   background-color: Gainsboro;
+}
+
+span.save-link {
+  text-decoration: underline;
+}
+
+span.save-link:hover {
+  cursor: pointer;
 }
 
 /* buttons */
@@ -315,6 +323,7 @@ span.shortcut {
 a.file-share:hover {
   background-color: Gainsboro !important;
 }
+
 
 /* Generic */
 
