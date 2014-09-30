@@ -1225,7 +1225,6 @@ doc.execCommand("SaveAs", null, filename)
     for(var i = 0; i < hoverElems.length; i++) {
       var elem = hoverElems[i];
       elem.addEventListener( "click", function(ev) {
-        //ev.cancelBubble = true;                 
         if (hovering) {
           removeClassName(hovering, "hover");
         }
@@ -1235,6 +1234,7 @@ doc.execCommand("SaveAs", null, filename)
             (!hovering && thisElem)) {          
           hovering = ev.currentTarget;
           addClassName(hovering,"hover");
+          ev.cancelBubble = true;                         
         }
         else {
           hovering = null;

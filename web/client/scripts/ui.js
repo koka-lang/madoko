@@ -741,7 +741,7 @@ var UI = (function() {
     }
 
     // emulate hovering by clicks for touch devices
-    //Util.enablePopupClickHovering();    
+    Util.enablePopupClickHovering();    
   }
 
   UI.prototype.login = function() {
