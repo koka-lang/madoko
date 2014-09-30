@@ -171,6 +171,9 @@ img#console-ok {
 
 .app-footer #view-message {
   margin-left: 0.25em;
+}
+
+.app-footer #status {
   width: 50%;
 }
 
@@ -602,7 +605,7 @@ div.boxed {
 }
 
 #console {
-  width: 100%;
+  width: 40rem;
   top: -20rem;
   height: 20rem;
   padding: 0pt;
@@ -785,14 +788,17 @@ div.modal {
 div.item {
   display: inline-block;
   width: calc(50% - 2em);
-  padding: 0.2em 0.5em 0.2em 0.5em;
-  max-height: 1.6em;
-  overflow-y: hidden;
+  min-width: calc(50% - 2em);
+  padding: 0.2em 0.5em 0.2em 0.5em; 
+  overflow: hidden;
+  white-space: nowrap;  
 }
 
 div.item:hover {
   background-color: Gainsboro;
   cursor: pointer;
+  overflow-x: visible;
+  width: auto;  
 }
 
 div.item.disabled {
