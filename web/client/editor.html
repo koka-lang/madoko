@@ -66,10 +66,17 @@
         <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document</div>
       </div
     ></div
-    ><span id="connection" class="button">
-      <img id="connect-logo" src="images/icon-empty.png"/>
+    ><div id="connection" class="popup">
+      <img id="connection-logo" src="images/icon-empty.png"/>
       <img id="icon-disconnect" class="item-disconnect" src="images/dark/icon-disconnect.png"/>
-    </span
+      <div id="connection-content" class="menu boxed">
+        <div id="connection-message">Not signed in</div>
+        <div id="signin" class="button" title="Sign in"
+          ><span class="icon"><img src="images/icon-signin.png"/></span>Sign in ...</div>
+        <div id="signout" class="button" title="Sign out"
+          ><span class="icon"><img src="images/icon-signout.png"/></span>Sign out ...</div>
+      </div>
+    </div
     ><div id="edit-select" class="popup" >     
       <span id="edit-select-header">&nbsp;</span>
       <div id="edit-select-content" class="menu boxed">
@@ -179,17 +186,26 @@
 
 <!-- file picker -->
 <div id="fade"></div>
-<div id="picker" class="modal command-login">
-<div class="app-header header-bar">
+<div id="picker" class="modal">
+<div id="picker-header" class="app-header header-bar">
   <span id="command-name"></span>
   <img id="header-logo" src="images/dark/icon-dropbox.png"/>
   <div id="folder-name"></div>
   <input id="file-name" type="text"/>
+  <div id="picker-buttons">
+    <div id="button-signin" class="button">Sign in</div>
+    <div id="button-discard" class="button">Discard</div>
+    <div id="button-open" class="button">Open</div>
+    <div id="button-new" class="button">Create</div>
+    <div id="button-save" class="button">Save To</div>
+    <div id="button-push" class="button">Publish</div>
+    <div id="button-cancel" class="button">Cancel</div>
+  </div>
   <!-- <img id="icon-close" class="button" src="images/dark/icon-close.png" title="Close the dialog"/> -->
 </div>
 <div class="app-body">
   <div class="app-content"> 
-    <div id="message-login" class="message">Not connected.</div>        
+    <div id="message-signin" class="message">Not signed in.</div>        
     <div id="message-connect" class="message">Connected.</div>
     <div id="message-message" class="message"></div>
     <div id="message-alert" class="message">The current local document has changes that have not been saved to the cloud yet!
@@ -217,14 +233,7 @@
   </div>
 </div>
 <div id="picker-footer" class="app-footer header-bar">
-  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div></div>
-  <div id="button-login" class="button">login</div>
-  <div id="button-discard" class="button">Discard</div>
-  <div id="button-open" class="button">Open</div>
-  <div id="button-new" class="button">Create</div>
-  <div id="button-save" class="button">Save To</div>
-  <div id="button-push" class="button">Publish</div>
-  <div id="button-cancel" class="button">Cancel</div>
+  <div id="login-info"><span id="remote-username"></span> <div id="button-signout" class="button">sign out</div></div>  
 </div>
 </div>
 

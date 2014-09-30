@@ -30,7 +30,7 @@ var Picker = (function() {
   var commandName   = document.getElementById("command-name");
 
   var buttons = [];
-  var child = document.getElementById("picker-footer").firstChild;
+  var child = document.getElementById("picker-buttons").firstChild;
   while (child) {
     if (Util.hasClassName(child,"button")) {
       buttons.push(child);
@@ -43,11 +43,11 @@ var Picker = (function() {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
+    me: { remote: new LocalRemote.LocalRemote(), folder: "//" },
   };
-  var roots  = { remote: new LocalRemote.LocalRemote(), folder: "//" };
-  roots.remote.logo = function() { return "icon-me.png"; };
-  roots.remote.type = function() { return "roots"; };
-  roots.remote.readonly = true;
+  remotes.me.remote.logo = function() { return "icon-me.png"; };
+  remotes.me.remote.type = function() { return "me"; };
+  remotes.me.remote.readonly = true;
   var picker = null;
 
     
@@ -154,13 +154,13 @@ var Picker = (function() {
   }  
 
   // login/logout
-  document.getElementById("button-login").onclick = function(ev) { if (picker) picker.onLogin(); }
-  document.getElementById("button-logout").onclick = function(ev) { if (picker) picker.onLogout(); }
+  document.getElementById("button-signin").onclick = function(ev) { if (picker) picker.onSignin(); }
+  document.getElementById("button-signout").onclick = function(ev) { if (picker) picker.onSignout(); }
     
-  Picker.prototype.onLogin = function() {
+  Picker.prototype.onSignin = function() {
     var self = this;
     return self.current.remote.login().then( function() {
-      if (self.options.command === "connect") {
+      if (self.options.command === "signin") {
         return self.onEnd();
       }
       else {
@@ -171,7 +171,7 @@ var Picker = (function() {
     });
   }
 
-  Picker.prototype.onLogout = function() {
+  Picker.prototype.onSignout = function() {
     var self = this;
     //if (!self.current.remote.connected()) return;
     return self.current.remote.logout(true).then( function() {   // true does full logout
@@ -259,7 +259,7 @@ var Picker = (function() {
       self.onEnd("discard");
     }
     else {
-      self.options.alert = ""; // stop alert
+      self.options.page = ""; // stop alert
       self.display();
     }
   }
@@ -379,9 +379,10 @@ var Picker = (function() {
 
   Picker.prototype.itemEnterFolder = function(path) {
     var self = this;
+    self.options.page = ""; // navigate away from templates
     if (path === "//") {
-      roots.folder = path;
-      self.setCurrent(roots);
+      remotes.me.folder = path;
+      self.setCurrent(remotes.me);
     }
     else {
       self.current.folder = path;
@@ -429,9 +430,9 @@ var Picker = (function() {
   Picker.prototype.display = function() {
     var self = this;
 
-    app.className = "modal";    
+    app.className = "modal command-" + self.options.command;    
     listing.innerHTML = "";
-
+      
     if (self.options.page==="template") {
       document.getElementById("file-name").setAttribute("readonly","readonly");
     }
@@ -439,9 +440,9 @@ var Picker = (function() {
       document.getElementById("file-name").removeAttribute("readonly"); 
     }
 
-    if (self.options.page) {
-      Util.addClassName(app,"page-" + self.options.page);
-      self.options.page = "";
+    var page = self.options.page;
+    if (page) {
+      Util.addClassName(app,"page-" + page);
     }
 
     /*
@@ -460,13 +461,9 @@ var Picker = (function() {
       Util.addClassName(app,"command-message");
     }
 
-    if (self.options.alert) {
+    if (page === "alert") {
       // alert message
-      if (self.options.alert!=="true") {
-        document.getElementById("message-alert").innerHTML = Util.escape(self.options.alert);
-      }
       document.getElementById("folder-name").innerHTML = self.options.header || "";
-      Util.addClassName(app,"command-alert");
       self.setActive();
       return Promise.resolved();
     }
@@ -484,23 +481,24 @@ var Picker = (function() {
     else {
       // set correct logo
       headerLogo.src = "images/dark/" + self.current.remote.logo();
-      
-      // check connection
-      return self.current.remote.connect(true /* verify */).then( function(status) {
-        if (status===401) {
-          //Util.addClassName(app,"command-login");
-          //Util.addClassName(app,"command-login-" + self.options.command );
-          //self.setActive();
-          self.setCurrent(roots);
-        }
-      
-        Util.addClassName(app,"command-" + self.options.command );
-        self.setActive();            
-        self.current.remote.getUserName().then( function(userName) {
-          document.getElementById("remote-username").innerHTML = Util.escape( userName );
-          return self.displayFolder();
+      // on forced signin, don't try connection
+      if (self.options.command==="signin") {
+        self.setActive();
+        return Promise.resolved();
+      }
+      else {
+        // check connection
+        return self.current.remote.connect(true /* verify */).then( function(status) {
+          if (status===401) {
+            self.setCurrent(remotes.me);
+          }    
+          self.setActive();            
+          self.current.remote.getUserName().then( function(userName) {
+            document.getElementById("remote-username").innerHTML = Util.escape( userName );
+            return self.displayFolder();
+          });
         });
-      });
+      };
     }
   }
 
@@ -561,7 +559,7 @@ var Picker = (function() {
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
                   "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
-                  (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnected.png' />" : "") +
+                  (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnect.png' />" : "") +
                   "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
                "</div>";
 
@@ -575,7 +573,7 @@ var Picker = (function() {
 
   Picker.prototype.getRoots = function() {
     var self = this;
-    Util.addClassName(app,"page-roots");
+    Util.addClassName(app,"page-me");
     var items = Util.properties(remotes).map( function(remoteName) {
       var remote = remotes[remoteName].remote;
       return remote.connect().then( function(status) {
@@ -585,7 +583,7 @@ var Picker = (function() {
           iconName: remote.logo(), 
           type: "remote", 
           isShared: false,
-          disabled: (self.options.command!=="new" && remote.type()==="local"),
+          disabled: (remote.type()==="me" || (self.options.command!=="new" && remote.type()==="local")),
           connected: (status===0),
         };
       });      
@@ -606,7 +604,7 @@ var Picker = (function() {
         root = "";
       }
     }
-    var parts = folder.split("/");
+    var parts = (self.options.command==="connect" ? [] : folder.split("/"));
     var html = "<span class='dir' data-path='//'>me</span><span class='dirsep'>/</span>";
     if (folder!=="//") {
       html = html + "<span class='dir' data-path='" + root + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";

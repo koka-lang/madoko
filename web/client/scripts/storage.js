@@ -54,7 +54,7 @@ var Encoding = {
 
 
 function picker( storage, params ) {
-  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "push" && params.command !== "message")) params.alert = "true";
+  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "signin" && params.command !== "push" && params.command !== "message")) params.page = "alert";
   return Picker.show(params).then( function(res) {
     if (params.command === "message") return null;
     if (!res || !res.path) throw new Error("canceled");
@@ -119,11 +119,10 @@ function createFromTemplate( storage, docName, template )
 function login(storage, message, header) {
   if (!storage) return Promise.resolved();
   var params = {
-    command: "connect"
+    command: "signin",
   }
   if (storage.isRemote()) {
-    params.remote = storage.remote.type();
-    params.headerLogo = "images/dark/" + storage.remote.logo();
+    params.remote     = storage.remote.type();
   }
   if (message) params.message = message;
   if (header) params.header = header;
@@ -266,6 +265,8 @@ function saveTo(  storage, toStorage, docStem, newStem )
 
 function publishSite(  storage, docName, indexName )
 {
+  if (storage.remote.type() !== "dropbox") return Promise.reject("Sorry, can only publish to Azure for documents on Dropbox");
+
   var headerLogo = "images/dark/" + Dropbox.logo();
   var params = { 
       command: "push", 
@@ -276,38 +277,40 @@ function publishSite(  storage, docName, indexName )
       extensions: "remote folder .html .htm .aspx",
       headerLogo: headerLogo,
   };
-  return picker( storage, params ).then( function(res) {
-    var toStorage = res.storage;
-    storage.forEachFile( function(file0) {
-      var file = Util.copy(file0);
-      file.modified = true;
-      if (Util.startsWith(file.path, "out/") && (!Util.hasGeneratedExt(file.path) || Util.extname(file.path) === ".html")) {
-        if (file.path === indexName) {
-          file.path = res.docName;
+  return storage.login().then( function() {
+    return picker( storage, params ).then( function(res) {
+      var toStorage = res.storage;
+      storage.forEachFile( function(file0) {
+        var file = Util.copy(file0);
+        file.modified = true;
+        if (Util.startsWith(file.path, "out/") && (!Util.hasGeneratedExt(file.path) || Util.extname(file.path) === ".html")) {
+          if (file.path === indexName) {
+            file.path = res.docName;
+          }
+          else {
+            file.path = file.path.substr(4);        
+          }
+          toStorage.files.set( file.path, file );
         }
-        else {
-          file.path = file.path.substr(4);        
-        }
-        toStorage.files.set( file.path, file );
-      }
-    });
-    return Promise.when( toStorage.files.elems().map( function(file) { 
-      return toStorage.pushFile(file); 
-    }) ).then( function() {
-      var params = {
-        command: "message",
-        header: Util.escape(toStorage.folder()),
-        headerLogo: headerLogo,
-        message: 
-            ["<p>Website saved.</p>",
-            ,"<p></p>"
-            ,"<p>Visit the <a target='azure' href='http://manage.windowsazure.com'>Azure web manager</a> to synchronize your website.</p>",
-            ,"<p></p>"
-            ,"<p>Or view this <a target='webcast' href='http://www.youtube.com/watch?v=hC1xAjz6jHI&hd=1'>webcast</a> to learn more about Azure website deployment from Dropbox.</p>"
-            ].join("\n")
-      };
-      return picker( storage, params ).then( function() {
-        return toStorage.folder();
+      });
+      return Promise.when( toStorage.files.elems().map( function(file) { 
+        return toStorage.pushFile(file); 
+      }) ).then( function() {
+        var params = {
+          command: "message",
+          header: Util.escape(toStorage.folder()),
+          headerLogo: headerLogo,
+          message: 
+              ["<p>Website saved.</p>",
+              ,"<p></p>"
+              ,"<p>Visit the <a target='azure' href='http://manage.windowsazure.com'>Azure web manager</a> to synchronize your website.</p>",
+              ,"<p></p>"
+              ,"<p>Or view this <a target='webcast' href='http://www.youtube.com/watch?v=hC1xAjz6jHI&hd=1'>webcast</a> to learn more about Azure website deployment from Dropbox.</p>"
+              ].join("\n")
+        };
+        return picker( storage, params ).then( function() {
+          return toStorage.folder();
+        });
       });
     });
   });
@@ -422,16 +425,15 @@ var Storage = (function() {
     return self.remote.connect();
   }
 
-
   Storage.prototype.login = function(dontForce) {
     var self = this;
     return self.remote.connect().then( function(status) {
       if (status===0) return;
-      if (status!==401 || dontForce) throw new Error("Could not connect to " + self.remote.type() );
-      return login(self, "You are not logged in to " + self.remote.type() + ". Please login to synchronize.").then( function() {
+      if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.type() );
+      return login(self, "Cannot synchronize changes with " + Util.capitalize(self.remote.type()) + ". Please sign in to synchronize.").then( function() {
         return self.remote.connect().then( function(status2) {
           if (status2 === 0) return;
-          throw new Error("Synchronization failed: could not connect to " + self.remote.type() );
+          throw new Error("Synchronization failed: cannot connect to " + self.remote.type() );
         })
       });
     });

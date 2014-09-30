@@ -178,7 +178,10 @@ var UI = (function() {
     self.exportSpinner.spinDelay = 1000;
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
-    self.remoteLogo = document.getElementById("connect-logo");
+
+    self.app  = document.getElementById("main");
+    self.connectionLogo = document.getElementById("connection-logo");
+    self.connectionMessage = document.getElementById("connection-message");
     self.theme = "vs";
 
     // listen to application cache    
@@ -569,10 +572,22 @@ var UI = (function() {
     };
     document.getElementById("open").onclick = openEvent;
     
-    document.getElementById("connection").onclick = function(ev) {
+    document.getElementById("signin").onclick = function(ev) {
       if (self.storage && self.storage.isRemote()) {        
         return self.anonEvent( function() {
-          return Storage.login(self.storage);
+          return self.storage.remote.login().then( function() {
+            return self.updateConnectionStatus();
+          });
+        });      
+      }
+    };
+    
+    document.getElementById("signout").onclick = function(ev) {
+      if (self.storage && self.storage.isRemote()) {        
+        return self.anonEvent( function() {
+          return self.storage.remote.logout(true).then( function() {
+            return self.updateConnectionStatus();
+          });
         });      
       }
     };
@@ -741,13 +756,33 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (isConnected==null) isConnected = self.isConnected;
-    self.iconDisconnect.style.visibility = (isConnected ? "hidden" : "visible");
+    if (!stg.isRemote()) {
+      Util.removeClassName(self.app,"connected");
+      Util.removeClassName(self.app,"disconnected");
+    }
+    else if (isConnected) {
+      Util.removeClassName(self.app,"disconnected");
+      Util.addClassName(self.app,"connected");      
+    }
+    else {
+      Util.removeClassName(self.app,"connected");      
+      Util.addClassName(self.app,"disconnected");
+    }
+    
     if (stg && stg.remote) {
-      var remoteLogo = stg.remote.logo();
+      var remoteLogo = "images/dark/" + stg.remote.logo();
       var remoteType = stg.remote.type();        
-      var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
-      self.remoteLogo.src = "images/dark/" + remoteLogo;
-      self.remoteLogo.title = remoteMsg + " storage: " + (isConnected ? "connected" : "not connected, click to login");
+      var remoteDisplay = (remoteType==="local" ? "browser local" : remoteType);
+      var remoteMsg = (isConnected ? "Signed in" : "Signed out");
+      if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
+      if (self.connectionMessage.textContent !== remoteMsg) self.connectionMessage.textContent = remoteMsg;
+      self.connectionMessage.removeAttribute("title");
+      if (stg.isRemote() && isConnected) {
+        stg.remote.getUserName().then( function(userName) {
+          // TODO: check for race?
+          self.connectionMessage.setAttribute("title", "As " + userName);
+        });
+      }
     }
   }
 

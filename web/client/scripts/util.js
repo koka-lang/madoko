@@ -284,7 +284,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function hasClassName( elem, cname ) {    
-    if (!elem || !elem.className) return false;
+    if (!elem || elem.className==null) return false;
     var names = elem.className.split(/\s+/);
     return contains(names,cname);
   }
@@ -299,7 +299,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function removeClassName( elem, cname ) {
-    if (!elem || !elem.className) return;
+    if (!elem || elem.className==null) return;
     var cnames = elem.className;
     var names = cnames.split(/\s+/);
     var newnames = names.filter( function(n) { return (n !== cname); });
@@ -309,7 +309,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function addClassName( elem, cname ) {
-    if (!elem || !elem.className) return;
+    if (!elem || elem.className==null) return;
     var cnames = elem.className;
     var names = cnames.split(/\s+/);
     if (!contains(names,cname)) {

@@ -264,6 +264,26 @@ span.save-link:hover {
   margin-right: -0.3em;
 }
 
+.disconnected #icon-disconnect {
+  visibility: visible;
+}
+
+#signin, #signout {
+  display: none;
+}
+
+.disconnected #signin {
+  display: block;
+}
+
+.connected #signout {
+  display: block;
+}
+
+#connection {
+  padding: 0em 0.4em;
+}
+
 /* File items */
 
 .disable, .file.generated, .file.image {
@@ -568,6 +588,10 @@ div.boxed {
   width: 20em;
 }
 
+#connection-content {
+  min-width: 8em;
+}
+
 #help-content,
 #menu-settings-content {
   left: -18.5em;
@@ -665,10 +689,6 @@ div.modal {
 -----------------------------------------------------------*/
 
 /* menus */
-#picker #remote-menu {
-  width: 10em;
-}
-
 #picker .menu .button {
   display: block;
 }
@@ -684,18 +704,6 @@ div.modal {
   display: none;
 }
 
-#picker #remotes {
-  margin-right: 0.5em;
-}
-
-#picker.command-alert #remotes,
-#picker.command-push #remotes,
-#picker.command-message #remotes,
-#picker.command-connect #remotes,
-#picker.command-login-connect #remotes {
-  display: none;
-}
-
 #picker #listing, #picker #templates {
   display: none;
 }
@@ -704,6 +712,7 @@ div.modal {
 #picker.command-save #listing,
 #picker.command-push #listing,
 #picker.command-new #listing,
+#picker.page-me #listing,
 #picker.page-template #templates {
   display: block;
 }
@@ -726,7 +735,7 @@ div.modal {
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
 #picker.command-message #folder-name,
-#picker.command-alert #folder-name {
+#picker.command-connect #folder-name {
   display: inline-block;
 }
 
@@ -744,7 +753,7 @@ div.modal {
 }
 
 #picker #file-name {
-  width: 14em;
+  width: 11em;
   display: none;
   font-size: 1em;
   vertical-align: 0.2em;
@@ -760,7 +769,8 @@ div.modal {
   display: inline;
 }
 
-#picker.page-roots #file-name {
+#picker.page-me #file-name,
+#picker.page-alert #file-name {
   display: none;
 }
 
@@ -796,6 +806,7 @@ div.item.disabled {
   vertical-align: -0.3em;
 }
 
+
 .item-disconnect {
   height: 0.5em;
   width: 0.5em;
@@ -807,16 +818,17 @@ div.item.disabled {
 #templates .item-icon {
   height: 4em;
   width: 4em;
+  vertical-align: middle;
 }
 #templates div.item {
   max-height: 4.1em;
 }
 
-#roots .item-icon {
+#page-me .item-icon {
   height: 2em;
   width: 2em;
 }
-#roots div.item {
+#page-me div.item {
   max-height: 2.1em;
 }
 
@@ -841,6 +853,10 @@ div.item.disabled {
 }
 
 /* buttons */
+#picker-buttons {
+  float: right;
+}
+
 #picker .button {
   display: none;
 }
@@ -854,40 +870,43 @@ div.item.disabled {
   background-color: #357;
 }
 
-#picker.command-login #message-login, 
-#picker.command-connect #message-connect,
-#picker.command-alert #message-alert,
+#picker.command-signin #message-signin, 
 #picker.command-message #message-message,
-#picker.page-template #message-template {
+#picker.page-alert #message-alert,
+x#picker.page-template #message-template {
   display: block;
 }
 
-#picker.command-login #button-login,
-#picker.command-alert #button-discard,
+#picker.command-signin #button-signin,
 #picker.command-open #button-open,
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
-#picker #button-logout,
+#picker.page-alert #button-discard,
+#picker #button-signout,
 #picker #button-cancel,
 #picker #icon-close {
   display: inline;
 }
 
-#picker.page-roots #button-login,
-#picker.page-roots #button-logout {
+#picker.page-me #button-signin,
+#picker.page-me #button-signout,
+#picker.page-alert #button-new,
+#picker.page-alert #button-save,
+#picker.page-alert #button-open,
+#picker.page-alert #button-signout {
   display: none;
 }
 
-#picker.page-roots #button-new,
-#picker.page-roots #button-open,
-#picker.page-roots #button-save,
-#picker.page-roots #button-push {
+#picker.page-me #button-new,
+#picker.page-me #button-open,
+#picker.page-me #button-save,
+#picker.page-me #button-push {
   border-color: #AAA;
   color: #AAA;
 }
 
-#picker.command-login #login-info,
+#picker.command-signin #login-info,
 #picker.command-alert #login-info,
 #picker.command-message #login-info {
   display: none;
@@ -903,7 +922,7 @@ div.item.disabled {
   font-size: small;
 }
 
-#message-login, #message-connect, #message-alert, #message-message, #message-template {
+#message-signin, #message-connect, #message-alert, #message-message, #message-template {
   text-align: center;
   width: 100%;
 }
@@ -912,13 +931,13 @@ div.item.disabled {
   display: none;
 }
 
-#picker.command-login-new #remote-local, 
 #picker.command-new #remote-local {
   display: block;
 }
 
 #picker #header-logo {
   display: inline;
+  padding-right: 0.25em;
 }
 
 #picker #command-name {
