@@ -27,6 +27,7 @@ var Picker = (function() {
   var headerLogo = document.getElementById("header-logo");
   var buttonCancel  = document.getElementById("button-cancel");
   var buttonDiscard = document.getElementById("button-discard");
+  var commandName   = document.getElementById("command-name");
 
   var buttons = [];
   var child = document.getElementById("picker-footer").firstChild;
@@ -44,6 +45,9 @@ var Picker = (function() {
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
   };
   var roots  = { remote: new LocalRemote.LocalRemote(), folder: "//" };
+  roots.remote.logo = function() { return "icon-me.png"; };
+  roots.remote.type = function() { return "roots"; };
+  roots.remote.readonly = true;
   var picker = null;
 
     
@@ -78,7 +82,8 @@ var Picker = (function() {
     }
 
     // init UI
-    buttonCancel.innerHTML  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
+    buttonCancel.textContent  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
+    commandName.textContent   = (self.options.commandDisplay || Util.capitalize(self.options.command)) + ":";
     
     if (self.options.remote && remotes[self.options.remote] && self.options.remote !== "local") {
       if (self.options.folder) remotes[self.options.remote].folder = self.options.folder;
@@ -135,19 +140,17 @@ var Picker = (function() {
 
 
   // Set remotes
-  document.getElementById("remote-dropbox").onclick = function(ev) { if (picker) picker.onRemote( remotes.dropbox ); }
-  document.getElementById("remote-onedrive").onclick = function(ev) { if (picker) picker.onRemote( remotes.onedrive ); }
-  document.getElementById("remote-local").onclick = function(ev) { if (picker) picker.onRemote( remotes.local ); }
-
   Picker.prototype.onRemote = function(remote) {
     var self = this;
     if (self.current.remote.type === remote.remote.type()) return;
     if (remote.remote.type()==="local" && self.options.command==="new") {
-      remote.folder        = "document";
-      self.options.path    = Util.combine(remote.folder,"document.mdk");
-      self.options.page    = "template";
+      self.setFileName("document");
+      self.current = remote;
+      self.onNew();
     }
-    self.setCurrent( remote );    
+    else {
+      self.setCurrent( remote );    
+    }
   }  
 
   // login/logout
@@ -189,6 +192,8 @@ var Picker = (function() {
 
   Picker.prototype.onSave = function() {
     var self = this;
+    if (self.current.remote.readonly) return;
+
     var fileName = self.getFileName();
     if (fileName) {
       var path = Util.combine(self.current.folder,fileName);
@@ -201,15 +206,18 @@ var Picker = (function() {
   Picker.prototype.onNew = function() {
     var self = this;
     if (!self.options.page) {
+      if (self.current.remote.readonly) return;
+
       var fileName = self.getFileName();
       if (fileName) {
         if (Util.extname(fileName) == "") { // directory
           fileName = Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
+          self.setFileName(fileName);
         }
         self.options.path = Util.combine(self.current.folder,fileName);
         self.options.page = "template";
         self.options.headerLogo = "images/dark/" + self.current.remote.logo();            
-        self.current.folder = Util.dirname(self.options.path);
+        //self.current.folder = Util.dirname(self.options.path);
         self.display();
         //end(self.current,path);
       }
@@ -424,10 +432,19 @@ var Picker = (function() {
     app.className = "modal";    
     listing.innerHTML = "";
 
-    if (self.options.page) {
-      Util.addClassName(app,"page-" + self.options.page);
+    if (self.options.page==="template") {
+      document.getElementById("file-name").setAttribute("readonly","readonly");
+    }
+    else {
+      document.getElementById("file-name").removeAttribute("readonly"); 
     }
 
+    if (self.options.page) {
+      Util.addClassName(app,"page-" + self.options.page);
+      self.options.page = "";
+    }
+
+    /*
     if (self.options.headerLogo) {
       headerLogo.src = self.options.headerLogo;
       headerLogo.style.display = "inline";
@@ -435,6 +452,7 @@ var Picker = (function() {
     else {
       headerLogo.style.display = "none";
     }
+    */
 
     if (self.options.message) {
       document.getElementById("message-message").innerHTML = self.options.message;
@@ -465,7 +483,7 @@ var Picker = (function() {
 
     else {
       // set correct logo
-      document.getElementById("remote-logo").src = "images/dark/" + self.current.remote.logo();
+      headerLogo.src = "images/dark/" + self.current.remote.logo();
       
       // check connection
       return self.current.remote.connect(true /* verify */).then( function(status) {
@@ -542,7 +560,8 @@ var Picker = (function() {
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
-                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +                                    
+                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
+                  (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnected.png' />" : "") +
                   "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
                "</div>";
 

@@ -225,6 +225,7 @@ function saveAs( storage, docName ) {
   var stem = Util.stemname(docName);
   var params = {
     command: "save",
+    commandDisplay: "Save To",
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
   }
   if (storage && storage.isRemote()) {

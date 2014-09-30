@@ -262,7 +262,7 @@ span.save-link:hover {
   margin-left: -0.3em;
   vertical-align: 0.35em;
   margin-right: -0.3em;
- }
+}
 
 /* File items */
 
@@ -725,7 +725,6 @@ div.modal {
 #picker.command-save #folder-name,
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
-#picker.page-template #folder-name,
 #picker.command-message #folder-name,
 #picker.command-alert #folder-name {
   display: inline-block;
@@ -751,6 +750,10 @@ div.modal {
   vertical-align: 0.2em;
 }
 
+#picker #file-name[readonly] {
+  background-color: Gainsboro;
+}
+
 #picker.command-save #file-name,
 #picker.command-push #file-name, 
 #picker.command-new #file-name {
@@ -760,6 +763,11 @@ div.modal {
 #picker.page-roots #file-name {
   display: none;
 }
+
+#picker.page-template #file-name {
+  display: inline;
+}
+
 
 
 /* items */
@@ -785,7 +793,15 @@ div.item.disabled {
   height: 1.5em;
   width : 1.5em;
   margin: 0em 0.5em 0em 0em;
-  vertical-align: middle;
+  vertical-align: -0.3em;
+}
+
+.item-disconnect {
+  height: 0.5em;
+  width: 0.5em;
+  margin-left: -0.5em;
+  vertical-align: 0.5em;
+  margin-right: 0.25em;
 }
 
 #templates .item-icon {
@@ -848,7 +864,7 @@ div.item.disabled {
 
 #picker.command-login #button-login,
 #picker.command-alert #button-discard,
-x#picker.command-open #button-open,
+#picker.command-open #button-open,
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
@@ -859,11 +875,16 @@ x#picker.command-open #button-open,
 }
 
 #picker.page-roots #button-login,
-#picker.page-roots #button-logout,
+#picker.page-roots #button-logout {
+  display: none;
+}
+
 #picker.page-roots #button-new,
+#picker.page-roots #button-open,
 #picker.page-roots #button-save,
 #picker.page-roots #button-push {
-  display: none;
+  border-color: #AAA;
+  color: #AAA;
 }
 
 #picker.command-login #login-info,
@@ -897,13 +918,15 @@ x#picker.command-open #button-open,
 }
 
 #picker #header-logo {
+  display: inline;
+}
+
+#picker #command-name {
+  font-size: larger;
+  padding-right: 0.75em;
   display: none;
 }
 
-#picker.page-template #header-logo,
-#picker.command-alert #header-logo  {
-  display: inline;
-}
 
 #picker #icon-close.button {
   border: none;

@@ -51,7 +51,7 @@
         <div id="open" class="button" title="Open document from cloud storage"
           ><span class="icon"><img src="images/icon-local.png"/></span>Open ... <span class="shortcut">(Alt-O)</span></div>
         <div id="save" class="button" title="Save document to cloud storage"
-          ><span class="icon"><img src="images/icon-disk.png"/></span>Save as ...</div>        
+          ><span class="icon"><img src="images/icon-disk.png"/></span>Save To ...</div>        
         <hr/>      
         <div id="snapshot" class="button" title="Save a full copy of the current document in a 'snapshot-<date>' sub-folder on the cloud storage"
           ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot</div>        
@@ -68,7 +68,7 @@
     ></div
     ><span id="connection" class="button">
       <img id="connect-logo" src="images/icon-empty.png"/>
-      <img id="icon-disconnect" src="images/dark/icon-disconnect.png"/>
+      <img id="icon-disconnect" class="item-disconnect" src="images/dark/icon-disconnect.png"/>
     </span
     ><div id="edit-select" class="popup" >     
       <span id="edit-select-header">&nbsp;</span>
@@ -181,18 +181,7 @@
 <div id="fade"></div>
 <div id="picker" class="modal command-login">
 <div class="app-header header-bar">
-  <div id="remotes" class="popup">
-    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>
-    <img id="remote-down" src="images/dark/icon-tri-down.png"/>  
-    <div id="remote-menu" class="menu boxed">
-      <div id="remote-dropbox" class="button" title="Dropbox cloud storage"
-          ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>
-      <div id="remote-onedrive" class="button" title="Onedrive cloud storage"
-        ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
-      <div id="remote-local" class="button" title="Browser local storage"
-        ><span class="icon"><img src="images/icon-local.png"/></span> Local</div>    
-    </div>
-  </div>
+  <span id="command-name"></span>
   <img id="header-logo" src="images/dark/icon-dropbox.png"/>
   <div id="folder-name"></div>
   <input id="file-name" type="text"/>
@@ -207,7 +196,7 @@
     <br/>Are you sure you want to discard these changes?
     <br/>
     <br/>
-    <br/><small>(Select <code>Synchronize now</code> or <code>Save as</code> from the menu to save your changes)</small></div>
+    <br/><small>(Select <code>Synchronize now</code> or <code>Save To</code> from the menu to save your changes)</small></div>
     <div id="message-template" class="message">Select a template<hr></div>
     <div id="templates">
       <div class='item selected' data-path='default'>
@@ -233,7 +222,7 @@
   <div id="button-discard" class="button">Discard</div>
   <div id="button-open" class="button">Open</div>
   <div id="button-new" class="button">Create</div>
-  <div id="button-save" class="button">Save As</div>
+  <div id="button-save" class="button">Save To</div>
   <div id="button-push" class="button">Publish</div>
   <div id="button-cancel" class="button">Cancel</div>
 </div>
