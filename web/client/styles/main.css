@@ -691,7 +691,6 @@ div.modal {
 #picker.command-alert #remotes,
 #picker.command-push #remotes,
 #picker.command-message #remotes,
-#picker.command-template #remotes,
 #picker.command-connect #remotes,
 #picker.command-login-connect #remotes {
   display: none;
@@ -705,8 +704,12 @@ div.modal {
 #picker.command-save #listing,
 #picker.command-push #listing,
 #picker.command-new #listing,
-#picker.command-template #templates {
+#picker.page-template #templates {
   display: block;
+}
+
+#picker.page-template #listing {
+  display: none;
 }
 
 /* folder name */
@@ -722,8 +725,8 @@ div.modal {
 #picker.command-save #folder-name,
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
+#picker.page-template #folder-name,
 #picker.command-message #folder-name,
-#picker.command-template #folder-name,
 #picker.command-alert #folder-name {
   display: inline-block;
 }
@@ -754,6 +757,11 @@ div.modal {
   display: inline;
 }
 
+#picker.page-roots #file-name {
+  display: none;
+}
+
+
 /* items */
 
 div.item {
@@ -769,6 +777,10 @@ div.item:hover {
   cursor: pointer;
 }
 
+div.item.disabled {
+  display: none;
+}
+
 .item-icon {
   height: 1.5em;
   width : 1.5em;
@@ -780,10 +792,19 @@ div.item:hover {
   height: 4em;
   width: 4em;
 }
-
 #templates div.item {
   max-height: 4.1em;
 }
+
+#roots .item-icon {
+  height: 2em;
+  width: 2em;
+}
+#roots div.item {
+  max-height: 2.1em;
+}
+
+
 
 .item-select {
   background-color: white;
@@ -821,21 +842,28 @@ div.item:hover {
 #picker.command-connect #message-connect,
 #picker.command-alert #message-alert,
 #picker.command-message #message-message,
-#picker.command-template #message-template {
+#picker.page-template #message-template {
   display: block;
 }
 
 #picker.command-login #button-login,
 #picker.command-alert #button-discard,
-#picker.command-open #button-open,
+x#picker.command-open #button-open,
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
-#picker.command-template #button-new,
 #picker #button-logout,
 #picker #button-cancel,
 #picker #icon-close {
   display: inline;
+}
+
+#picker.page-roots #button-login,
+#picker.page-roots #button-logout,
+#picker.page-roots #button-new,
+#picker.page-roots #button-save,
+#picker.page-roots #button-push {
+  display: none;
 }
 
 #picker.command-login #login-info,
@@ -872,7 +900,7 @@ div.item:hover {
   display: none;
 }
 
-#picker.command-template #header-logo,
+#picker.page-template #header-logo,
 #picker.command-alert #header-logo  {
   display: inline;
 }

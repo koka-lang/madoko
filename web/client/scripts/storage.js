@@ -74,7 +74,7 @@ function picker( storage, params ) {
 function openFile(storage) {
   var params = {
     command: "open",   
-    extensions: ".mdk .md .madoko .mkdn", 
+    extensions: "remote folder .mdk .md .madoko .mkdn", 
   }
   if (storage && storage.isRemote()) {
     params.remote = storage.remote.type();
@@ -87,6 +87,7 @@ function openFile(storage) {
 function createFile(storage) {
   var params = {
     command: "new", 
+    extensions: "remote folder",
   }
   if (storage && storage.isRemote()) {
     params.remote = storage.remote.type();
@@ -271,7 +272,7 @@ function publishSite(  storage, docName, indexName )
       root:"/apps/Azure", 
       folder:"/apps/Azure/" + Util.stemname(docName), 
       file: "index.html",
-      extensions: "folder .html .htm .aspx",
+      extensions: "remote folder .html .htm .aspx",
       headerLogo: headerLogo,
   };
   return picker( storage, params ).then( function(res) {

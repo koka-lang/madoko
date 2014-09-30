@@ -1309,6 +1309,7 @@ doc.execCommand("SaveAs", null, filename)
     assert: assert,
     escape: htmlEscape,
     stringEscape: stringEscape,
+    capitalize: capitalize,
     Msg: Msg,
 
     getSessionObject: getSessionObject,
