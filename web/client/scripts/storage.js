@@ -738,6 +738,7 @@ var Storage = (function() {
     var self = this;
     var remotes = new Map();
     var merges = [];
+    if (!self.isRemote()) return Promise.resolved(true); // can happen during generateHTML/PDF
 
     return self.login(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );
