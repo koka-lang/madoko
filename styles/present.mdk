@@ -22,7 +22,6 @@ Description:
     \
     [Reveal.js]: http://lab.hakim.se/reveal-js/#/
     [Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
-
 Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2        
 Reveal Theme  : default
 Beamer Theme  : default
@@ -31,12 +30,11 @@ Document Class: [xcolor=table]beamer
 Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
 Script        : &reveal-url;/lib/js/head.min.js
-Script        : &reveal-url;/js/reveal.min.js
-Header Depth  : 0
+Script        : &reveal-url;/js/reveal.js
+Heading Depth : 0
 Toc Depth     : 2
 Section Base  : 2
 Section Depth : 2
-Math Dpi      : 400
 ~Notes        : html-elem=aside .notes
 .Author       : font-size=xx-large
 .Affiliation  : font-size=x-large
@@ -64,7 +62,7 @@ Html Header   :
     }   
     .reveal p { 
         text-align: center; 
-    }
+    }    
     .reveal table {
         margin-left: auto;
         margin-right: auto;
@@ -112,33 +110,44 @@ Html Header   :
     .reveal .toc>.tocblock .tocblock .tocblock {
         margin-left: 1em;
     }
-    /* Display in the preview window */        
-    body.preview .reveal .slides .fragment,
-    body.preview .reveal .slides .fragmented {
+    /* Display in the preview window */
+    html, body.madoko.preview, .preview body {
+      height: 100% !important;
+      width: auto!important;
+      padding: 0pt !important;
+      overflow: hidden !important;
+    }            
+    body.preview .reveal .slides .fragment {
       visibility: visible;
-      opacity: 100;
+      opacity: 0.5;
     }
-    body.preview div.reveal, body.preview div.reveal .slides, body.preview div.reveal section {
+    body.preview .reveal .slides .fragment.visible {
+      opacity: 1.0;
+    }
+    /* 'static' display in the preview window, unused for now */
+    body.preview.static div.reveal, 
+    body.preview.static div.ticreveal .slides, 
+    body.preview.static div.reveal section {
       display: block !important;
       position: relative !important;
       width: auto !important;      
     }
-    body.preview div.reveal section {
+    body.preview.static div.reveal section {
       border: solid 1px black;
       padding: 1em !important;
       margin-top: 1em;
       min-height: 15em;
       top: 0pt;
     }
-    body.madoko.preview section {
+    body.madoko.preview.static section {
       font-size: 75%;
     }
-    body.madoko.preview {
+    body.madoko.preview.static {
       padding: 0em 1em 0em 1em !important;
     }
-    body.madoko.preview .reveal pre {
+    body.madoko.preview.static .reveal pre {
       width: 95%;
-    }
+    }    
     </style>
     <script>    
     // Full list of configuration options available here:
@@ -148,21 +157,13 @@ Html Header   :
         progress: true,
         history: false,
         center: true,
-        //theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-        //transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
-        // Optional libraries used to extend on reveal.js
-        //dependencies: [
-        //    { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
-        //    { src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
-        //    { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
-        //]
     };
     document.addEventListener("DOMContentLoaded", function(event) {
-        [].forEach.call( document.getElementsByClassName("fragmented"), function(list) {
-            [].forEach.call( list.childNodes, function(li) {
-                li.className = li.className + " fragment";
-            });
-        });
-        Reveal.initialize(revealConfig);
+        if (!Reveal.isReady()) {
+          [].forEach.call(document.querySelectorAll( ".fragmented>li" ), function(li) {
+            if (li && !/\bfragment\b/.test(li.className)) li.className = li.className + " fragment";
+          });
+          Reveal.initialize(revealConfig);
+       }
     });
     </script>

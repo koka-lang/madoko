@@ -5,9 +5,10 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
+
+
 function dispatchEvent( elem, eventName ) {
-  var event;
-  // we should use "new Event(eventName)" for HTML5 but how to detect that?
+  var event;  
   if (document.createEvent) {
       event = document.createEvent('Event');
       event.initEvent(eventName,true,true);
@@ -31,10 +32,24 @@ function dispatchEvent( elem, eventName ) {
   }
 }
 
+
 (function() {
 
+  // initialize
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
+
+  // Refresh message after 5 secs
+  setTimeout(function() {
+    var p = document.getElementById("preview-refresh");
+    if (p) {
+      p.className = p.className.replace(/\bpreview-hidden\b/g,"");
+    }
+  }, 5000);
+
   
+  /*-------------------------------------------------------
+     On double click, navigate to correct line
+  -------------------------------------------------------*/  
   function findLocation( root, elem ) {
     while (elem && elem !== root) {
       var dataline = (elem.getAttribute ? elem.getAttribute("data-line") : null);
@@ -54,6 +69,7 @@ function dispatchEvent( elem, eventName ) {
   }
 
   document.body.ondblclick = function(ev) {
+    if (typeof(Reveal) !== "undefined" && /\bnavigate-/.test(ev.target.className) && /\bcontrols\b/.test(ev.target.parentNode.className)) return; // don't count double clicks on controls in presentations
     var res = findLocation(document.body,ev.target);
     if (res) {
       res.eventType = 'previewSyncEditor';
@@ -63,6 +79,9 @@ function dispatchEvent( elem, eventName ) {
   };
 
 
+  /*-------------------------------------------------------
+     Scroll to right location based on a line number
+  -------------------------------------------------------*/  
   function px(s) {
     if (typeof s === "number") return s;
     var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
@@ -261,7 +280,7 @@ function dispatchEvent( elem, eventName ) {
     if (info.sourceName || info.textLine > 1) {
       var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
-      if (Reveal!=null) return scrollToSlide(res);
+      if (typeof(Reveal)!=="undefined") return scrollToSlide(res);
 
       scrollTop = offsetOuterTop(res.elem); 
       //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
@@ -305,31 +324,60 @@ function dispatchEvent( elem, eventName ) {
     return true;
   }
 
-  function jsonParse(s,def) {
-    try {
-      return JSON.parse(s);
+  /*-------------------------------------------------------
+     Slide navigation
+  -------------------------------------------------------*/
+  function getSlidesElem() {
+    var elems = document.getElementsByClassName("slides");
+    return elems[0];
+  }
+
+  function getSlideIndices(slide) {
+    var slides = getSlidesElem();
+    if (!slides) return null;
+    var h = 0;
+    var section = slides.firstElementChild;
+    while(section) {
+      if (section.nodeName==="SECTION") {
+        if (section===slide) return { h: h, v: 0 };
+        if (/\bvertical\b/.test(section.className)) {
+          var v = 0;        
+          var vsection = section.firstElementChild;
+          while(vsection) {
+            if (vsection===slide) return {h:h,v:v};
+            if (vsection.nodeName==="SECTION") {
+              v++;
+            }
+            vsection = vsection.nextElementSibling;
+          }
+        }
+        h++;
+      }
+      section = section.nextElementSibling;
     }
-    catch(exn) {
-      return def;
-    }
+    return null;
   }
 
   function scrollToSlide(info) {
     var elem = info.elem;
+    // check for the last line, and redirect to the last slide
+    if (elem && elem.previousElementSibling && /\breveal\b/.test(elem.previousElementSibling.className)) {
+      elem = elem.previousElementSibling.firstElementChild.lastElementChild;
+    }
     while(elem && elem.nodeName !== "SECTION") {
       elem = elem.parentNode;
     }
     if (!elem) return false;
-    var hs = elem.getAttribute("data-index-h");
-    var vs = elem.getAttribute("data-index-v");
-    if (hs==null || hs=="") return false;
-    var h = jsonParse(hs,0);
-    var v = jsonParse(vs,0);
-    Reveal.slide(h,v);
+    var pos = getSlideIndices(elem);
+    if (!pos) return false;
+    Reveal.slide(pos.h,pos.v);
     return true;
   }
 
 
+  /*-------------------------------------------------------
+     Load content
+  -------------------------------------------------------*/
   function findTextNode( elem, text ) {
     if (!elem || !text) return null;
     if (elem.nodeType===3) {
@@ -344,6 +392,65 @@ function dispatchEvent( elem, eventName ) {
     return null;  
   }
 
+  function revealRefresh( query ) {
+    if (typeof(Reveal)==="undefined") return;
+    if (!Reveal.config) {
+      if (typeof(revealConfig) !== "undefined") 
+        Reveal.config = revealConfig;
+      else {
+        Reveal.config = {  
+          controls: true,
+          progress: true,
+          center: true,
+          history: false,
+        };
+      }
+    }
+
+    // parse the query
+    if (query) {
+      var rx = /(\w+)=([\w\.%\-]*)/g;
+      var cap;
+      while( cap = rx.exec(query) ) {
+        var s = decodeURIComponent(cap[2]);
+        Reveal.config[cap[1]] = (s==="null" ? null : (s==="true" ? true : (s === "false" ? false : s))); 
+      }
+    }
+
+    // remember our position, and initialize special elements
+    var pos = (Reveal.isReady() ? Reveal.getIndices() : { h: 0, v: 0, f:undefined });
+    if (!query) {
+      var items = document.querySelectorAll( ".fragmented>li" );
+      for(var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (item && !/\bfragment\b/.test(item.className)) item.className = item.className + " fragment";
+      }
+      items = document.querySelectorAll('a[href^="?"]'); // get all query references
+      for(var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var query = item.getAttribute("href");
+        var listen = function(q) { // we pass query to a function to capture it fresh in q for every element
+          item.addEventListener("click", function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            revealRefresh( q );
+          });
+        };
+        listen(query); 
+      }
+    }
+    
+    // remove class names on reveal element that otherwise prevent transitions from updating
+    var elem = document.querySelectorAll("div.reveal")[0];
+    if (elem) elem.className="reveal";
+
+    // re-initialize and restore position
+    Reveal.initialize(Reveal.config);
+    Reveal.slide(pos.h,pos.v,pos.f);      
+  }
+
+  // we only load script tags once in the preview (and never remote them)
+  var loadedScripts = {};
 
   function loadContent(info) {
     if (info.oldText) {
@@ -363,7 +470,20 @@ function dispatchEvent( elem, eventName ) {
     // execute inline scripts
     var scripts = document.body.getElementsByTagName("script");   
     for(var i=0;i<scripts.length;i++) {  
-      eval(scripts[i].text);  
+      var script = scripts[i];
+      var src = script.getAttribute("src");
+      if (!src) {
+        eval(scripts[i].text);  
+      }
+      else if (!loadedScripts["/" + src]) {
+        loadedScripts["/" + src] = true;
+        var xscript = document.createElement("script");      
+        var attrs = script.attributes;
+        for(var j = 0; j < attrs.length; j++) {
+          xscript.setAttribute( attrs[j].name, attrs[j].value );
+        }      
+        document.documentElement.appendChild(xscript);
+      }
     }  
     // append script to detect onload event
     var loaded = document.createElement("script");
@@ -373,16 +493,8 @@ function dispatchEvent( elem, eventName ) {
     document.body.appendChild(loaded);    
 
     // reveal support
-    if (Reveal != null) {
-      var config = ({
-          controls: true,
-          progress: true,
-          history: false,
-          center: true,
-        });
-      var pos = (Reveal.isReady() ? Reveal.getIndices() : { h: 0, v: 0, f:undefined });
-      Reveal.initialize(config);
-      Reveal.slide(pos.h,pos.v,pos.f);      
+    if (typeof(Reveal) !== "undefined") {
+      revealRefresh();
     }
   }
 
@@ -397,6 +509,9 @@ function dispatchEvent( elem, eventName ) {
     }
   });
 
+  /*-------------------------------------------------------
+     React to messages
+  -------------------------------------------------------*/
   window.addEventListener("message", function(ev) {
     // check origin and source element so no-one else can send us messages
     if (ev.origin !== origin) return;
@@ -416,6 +531,8 @@ function dispatchEvent( elem, eventName ) {
       //ev.source.postMessage('contentLoaded',ev.origin);
     }
   });
+
+
 
   /*
   try {

@@ -1,29 +1,21 @@
 <!DOCTYPE html>
 <html>
-<style>
-html,body {
-  overflow: auto !important;
-  height: auto !important;
-  width: auto !important;
-}
-#preview-refresh {
-	display: none;
-}
-</style>
-<body class="madoko preview">
-<p>Rendering...</p>
-<p id="preview-refresh">Try to refresh your browser if this takes too long...</p>
-</body>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/reveal.js/2.6.2/lib/js/head.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/reveal.js/2.6.2/js/reveal.js"></script>
-<script type="text/javascript" src="preview.js"></script>
-
-<script>
-setTimeout(function() {
-	var p = document.getElementById("preview-refresh");
-	if (p) {
-		p.style.display = "block";
+<head>
+	<style>
+	html,body {
+	  overflow: auto !important;
+	  height: auto !important;
+	  width: auto !important;
 	}
-}, 5000);
-</script>
+	.preview-hidden {
+		display: none;
+	}
+	</style>
+</head>
+
+<body class="madoko preview">
+	<p>Rendering...</p>
+	<p id="preview-refresh" class="preview-hidden">Try to refresh your browser if this takes too long...</p>
+</body>	
+<script type="text/javascript" src="preview.js"></script>
 </html>
