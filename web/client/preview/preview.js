@@ -261,6 +261,8 @@ function dispatchEvent( elem, eventName ) {
     if (info.sourceName || info.textLine > 1) {
       var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
+      if (Reveal!=null) return scrollToSlide(res);
+
       scrollTop = offsetOuterTop(res.elem); 
       //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
@@ -300,6 +302,30 @@ function dispatchEvent( elem, eventName ) {
 
     // otherwise, start scrolling
     animateScrollTop(window, scrollTop, info.duration != null ? info.duration : 500);
+    return true;
+  }
+
+  function jsonParse(s,def) {
+    try {
+      return JSON.parse(s);
+    }
+    catch(exn) {
+      return def;
+    }
+  }
+
+  function scrollToSlide(info) {
+    var elem = info.elem;
+    while(elem && elem.nodeName !== "SECTION") {
+      elem = elem.parentNode;
+    }
+    if (!elem) return false;
+    var hs = elem.getAttribute("data-index-h");
+    var vs = elem.getAttribute("data-index-v");
+    if (hs==null || hs=="") return false;
+    var h = jsonParse(hs,0);
+    var v = jsonParse(vs,0);
+    Reveal.slide(h,v);
     return true;
   }
 
@@ -345,6 +371,19 @@ function dispatchEvent( elem, eventName ) {
     var code = "dispatchEvent(document,'load');";
     loaded.appendChild( document.createTextNode(code));
     document.body.appendChild(loaded);    
+
+    // reveal support
+    if (Reveal != null) {
+      var config = ({
+          controls: true,
+          progress: true,
+          history: false,
+          center: true,
+        });
+      var pos = (Reveal.isReady() ? Reveal.getIndices() : { h: 0, v: 0, f:undefined });
+      Reveal.initialize(config);
+      Reveal.slide(pos.h,pos.v,pos.f);      
+    }
   }
 
   document.addEventListener("load", function(ev) {
