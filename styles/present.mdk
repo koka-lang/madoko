@@ -164,6 +164,7 @@ Html Header   :
             if (li && !/\bfragment\b/.test(li.className)) li.className = li.className + " fragment";
           });
           Reveal.initialize(revealConfig);
+          console.log("Reveal intialized.");
        }
     });
     </script>

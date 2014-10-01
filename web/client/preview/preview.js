@@ -6,34 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-
-function dispatchEvent( elem, eventName ) {
-  var event;  
-  if (document.createEvent) {
-      event = document.createEvent('Event');
-      event.initEvent(eventName,true,true);
-  }
-  else if (document.createEventObject) { // IE < 9
-      event = document.createEventObject();
-      event.eventType = eventName;
-  }
-  event.eventName = eventName;
-  if (elem.dispatchEvent) {
-      elem.dispatchEvent(event);
-  }
-  else if (elem.fireEvent) { 
-      elem.fireEvent('on' + eventName, event);
-  }
-  else if (elem[eventName]) {
-      elem[eventName]();
-  } 
-  else if (elem['on' + eventName]) {
-      elem['on' + eventName]();
-  }
-}
-
-
-(function() {
+var Preview = (function() {
 
   // initialize
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
@@ -45,6 +18,7 @@ function dispatchEvent( elem, eventName ) {
       p.className = p.className.replace(/\bpreview-hidden\b/g,"");
     }
   }, 5000);
+
 
   
   /*-------------------------------------------------------
@@ -359,6 +333,8 @@ function dispatchEvent( elem, eventName ) {
   }
 
   function scrollToSlide(info) {
+    if (typeof(Reveal)==="undefined" || !Reveal.isReady()) return false;
+    var pos0 = Reveal.getIndices();
     var elem = info.elem;
     // check for the last line, and redirect to the last slide
     if (elem && elem.previousElementSibling && /\breveal\b/.test(elem.previousElementSibling.className)) {
@@ -370,7 +346,9 @@ function dispatchEvent( elem, eventName ) {
     if (!elem) return false;
     var pos = getSlideIndices(elem);
     if (!pos) return false;
-    Reveal.slide(pos.h,pos.v);
+    if (pos.h !== pos0.h || pos.v !== pos0.v) {  // only call if the position changed.
+      Reveal.slide(pos.h,pos.v);
+    }
     return true;
   }
 
@@ -391,6 +369,108 @@ function dispatchEvent( elem, eventName ) {
     }
     return null;  
   }
+
+  
+  function dispatchEvent( elem, eventName ) {
+    var event;  
+    if (document.createEvent) {
+        event = document.createEvent('Event');
+        event.initEvent(eventName,true,true);
+    }
+    else if (document.createEventObject) { // IE < 9
+        event = document.createEventObject();
+        event.eventType = eventName;
+    }
+    event.eventName = eventName;
+    if (elem.dispatchEvent) {
+        elem.dispatchEvent(event);
+    }
+    else if (elem.fireEvent) { 
+        elem.fireEvent('on' + eventName, event);
+    }
+    else if (elem[eventName]) {
+        elem[eventName]();
+    } 
+    else if (elem['on' + eventName]) {
+        elem['on' + eventName]();
+    }
+  }
+
+  // we only load script tags once in the preview (and never remote them)
+  var loadedScripts = {};
+
+  function onLoaded(src) {
+    if (src) {
+      loadedScripts["/" + src] = true;
+    }
+    for(var script in loadedScripts) {
+      if (loadedScripts[script] !== true) return;
+    }
+    dispatchEvent(document,"load");
+  }
+
+  function loadContent(info) {
+    if (info.oldText) {
+      //console.log("  try quick update:\n old: " + info.oldText + "\n new: " + info.newText);
+      var elem = findTextNode( document.body, info.oldText );
+      if (elem) {
+        // yes!
+        console.log("preview: quick view update" );
+        elem.textContent = info.newText;        
+        return;
+      }
+    }
+    // do a full update otherwise 
+    // note: add a final element to help the scrolling to the end.
+    var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
+    document.body.innerHTML = info.content + finalElem;
+    // execute inline scripts
+    var scripts = document.body.getElementsByTagName("script");   
+    for(var i=0;i<scripts.length;i++) {  
+      var script = scripts[i];
+      var src = script.getAttribute("src");
+      if (!src) {
+        eval(scripts[i].text);  
+      }
+      else if (loadedScripts["/" + src]==null) {
+        loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
+        var xscript = document.createElement("script");     
+        // listen for load events
+        xscript.onreadystatechange = function(ev) {
+          if (this.readyState==="complete" || this.readyState==="loaded") {
+            onLoaded( this.src );
+          }
+        }
+        xscript.onload = function(ev) { onLoaded(this.src); }
+        var attrs = script.attributes;
+        for(var j = 0; j < attrs.length; j++) {
+          xscript.setAttribute( attrs[j].name, attrs[j].value );
+        }              
+        document.documentElement.appendChild(xscript);
+      }
+    }  
+    // append script to detect onload event
+    var loaded = document.createElement("script");
+    loaded.type = "text/javascript";
+    var code = "Preview.onLoaded();";
+    loaded.appendChild( document.createTextNode(code));
+    document.body.appendChild(loaded);    
+  }
+
+  document.addEventListener("load", function(ev) {
+    window.parent.postMessage(JSON.stringify({eventType:'previewContentLoaded'}),origin);
+    var refs = document.getElementsByTagName("a");
+    for(var i = 0; i < refs.length; i++) {
+      var ref = refs[i];
+      if (!/\blocalref\b/.test(ref.className) && origin !== ref.protocol + "//" + ref.host && !ref.target) {
+        ref.target = "_blank"; // make all non-relative links open in a new window
+      }
+    }
+    // reveal support
+    if (typeof(Reveal) !== "undefined") {
+      revealRefresh();
+    }
+  });
 
   function revealRefresh( query ) {
     if (typeof(Reveal)==="undefined") return;
@@ -449,65 +529,6 @@ function dispatchEvent( elem, eventName ) {
     Reveal.slide(pos.h,pos.v,pos.f);      
   }
 
-  // we only load script tags once in the preview (and never remote them)
-  var loadedScripts = {};
-
-  function loadContent(info) {
-    if (info.oldText) {
-      //console.log("  try quick update:\n old: " + info.oldText + "\n new: " + info.newText);
-      var elem = findTextNode( document.body, info.oldText );
-      if (elem) {
-        // yes!
-        console.log("preview: quick view update" );
-        elem.textContent = info.newText;        
-        return;
-      }
-    }
-    // do a full update otherwise 
-    // note: add a final element to help the scrolling to the end.
-    var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
-    document.body.innerHTML = info.content + finalElem;
-    // execute inline scripts
-    var scripts = document.body.getElementsByTagName("script");   
-    for(var i=0;i<scripts.length;i++) {  
-      var script = scripts[i];
-      var src = script.getAttribute("src");
-      if (!src) {
-        eval(scripts[i].text);  
-      }
-      else if (!loadedScripts["/" + src]) {
-        loadedScripts["/" + src] = true;
-        var xscript = document.createElement("script");      
-        var attrs = script.attributes;
-        for(var j = 0; j < attrs.length; j++) {
-          xscript.setAttribute( attrs[j].name, attrs[j].value );
-        }      
-        document.documentElement.appendChild(xscript);
-      }
-    }  
-    // append script to detect onload event
-    var loaded = document.createElement("script");
-    loaded.type = "text/javascript";
-    var code = "dispatchEvent(document,'load');";
-    loaded.appendChild( document.createTextNode(code));
-    document.body.appendChild(loaded);    
-
-    // reveal support
-    if (typeof(Reveal) !== "undefined") {
-      revealRefresh();
-    }
-  }
-
-  document.addEventListener("load", function(ev) {
-    window.parent.postMessage(JSON.stringify({eventType:'previewContentLoaded'}),origin);
-    var refs = document.getElementsByTagName("a");
-    for(var i = 0; i < refs.length; i++) {
-      var ref = refs[i];
-      if (!/\blocalref\b/.test(ref.className) && origin !== ref.protocol + "//" + ref.host && !ref.target) {
-        ref.target = "_blank"; // make all non-relative links open in a new window
-      }
-    }
-  });
 
   /*-------------------------------------------------------
      React to messages
@@ -569,4 +590,8 @@ function dispatchEvent( elem, eventName ) {
   */
 
   //console.log("previewjs loaded: " + origin);
+
+  return {
+    onLoaded: onLoaded,
+  };
 })();
