@@ -306,7 +306,11 @@ span.save-link:hover {
 }
 
 #toolbox>div>div.options>div {
-  width: 8em;
+  width: 9em;
+}
+
+#toolbox #tool-include-content {
+  width: 12em;
 }
 
 #toolbox .help {
@@ -952,6 +956,32 @@ x#picker.page-template #message-template {
 #picker.command-message #login-info {
   display: none;
 }
+
+#picker #upload {
+  display: none;
+}
+
+#picker.command-upload #upload {
+  display: block;
+}
+
+#picker #upload {
+  margin: 1em 0em;
+  text-align: center;
+}
+
+#picker #dropzone {
+  margin: 1em auto 2em auto;
+  width: 50%;
+  height: 4em;
+  border: dotted 1px black;
+  border-radius: 10px;
+  text-align: center;
+  padding-top: 2em;
+  background-color: Gainsboro;
+}
+
+
 
 #remote-down {
   height: 0.6em;

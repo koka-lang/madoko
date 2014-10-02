@@ -103,7 +103,7 @@ var Picker = (function() {
   }
 
 
-  Picker.prototype.onEnd = function( path, template ) {
+  Picker.prototype.onEnd = function( res ) {
     var self = this;
     picker = null;
 
@@ -125,9 +125,16 @@ var Picker = (function() {
 
     // focus back to editor
     document.getElementById("editor").focus();
-    
+
+    if (!res) {
+      res = {
+        canceled: true,
+      }
+    }
+    if (self.current) res.remote = self.current.remote.type();
+
     // call end continuation
-    if (self.endCont) self.endCont(self.current,path,template);
+    if (self.endCont) self.endCont(res);
   }
 
 
@@ -161,7 +168,7 @@ var Picker = (function() {
     var self = this;
     return self.current.remote.login().then( function() {
       if (self.options.command === "signin") {
-        return self.onEnd();
+        return self.onEnd({});
       }
       else {
         return self.current.remote.getUserName().then( function(userName) {
@@ -184,7 +191,7 @@ var Picker = (function() {
   Picker.prototype.onOpen = function() {
     var self = this;
     var path = itemGetSelected(listing);
-    if (path) self.onEnd(path); 
+    if (path) self.onEnd({path:path}); 
   }
 
   document.getElementById("button-save").onclick = function(ev) { if (picker) picker.onSave(); }
@@ -197,7 +204,7 @@ var Picker = (function() {
     var fileName = self.getFileName();
     if (fileName) {
       var path = Util.combine(self.current.folder,fileName);
-      self.onEnd(path);
+      self.onEnd({path:path});
     }
   }
 
@@ -225,7 +232,7 @@ var Picker = (function() {
     else {
       var template = itemGetSelected(templates) || "default";
       //self.options.command = "new";
-      self.onEnd(self.options.path,template);
+      self.onEnd({path:self.options.path,template:template});
     }
   }
 
@@ -256,7 +263,7 @@ var Picker = (function() {
   Picker.prototype.onDiscard = function() {
     var self = this;
     if (self.options.command==="alert") {
-      self.onEnd("discard");
+      self.onEnd({});
     }
     else {
       self.options.page = ""; // stop alert
@@ -277,6 +284,31 @@ var Picker = (function() {
       self.itemEnterFolder(path);
     }
   };    
+
+  // ------------------------------------------------------------------------------------
+  // Upload
+  // ------------------------------------------------------------------------------------
+
+  var dropzone = document.getElementById("dropzone");
+  dropzone.addEventListener("dragover", function(ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'copy'; 
+  });
+
+  dropzone.addEventListener("drop", function(ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    picker.onEnd({files:ev.dataTransfer.files});
+  });
+
+  document.getElementById("pickfiles").addEventListener("change", function(ev) {
+    ev.stopPropagation;
+    ev.preventDefault();
+    var files = ev.target.files;
+    ev.target.files = null;
+    picker.onEnd({files:files});
+  });
 
   // ------------------------------------------------------------------------------------
   // Item selection
@@ -454,20 +486,31 @@ var Picker = (function() {
       headerLogo.style.display = "none";
     }
     */
+    if (self.options.headerLogo) {
+      headerLogo.src = self.options.headerLogo;
+    }
+    if (self.options.header) {
+      document.getElementById("folder-name").textContent = self.options.header || "";      
+    }
 
     if (self.options.message) {
       document.getElementById("message-message").innerHTML = self.options.message;
-      document.getElementById("folder-name").innerHTML = self.options.header || "";
+      //document.getElementById("folder-name").innerHTML = self.options.header || "";
       Util.addClassName(app,"command-message");
     }
 
     if (page === "alert") {
       // alert message
-      document.getElementById("folder-name").innerHTML = self.options.header || "";
+      // document.getElementById("folder-name").innerHTML = self.options.header || "";
+      headerLogo.src = "images/dark/icon-warning.png";
       self.setActive();
       return Promise.resolved();
     }
     else if (self.options.command==="message") {
+      self.setActive();
+      return Promise.resolved();
+    }
+    else if (self.options.command==="upload") {
       self.setActive();
       return Promise.resolved();
     }
@@ -632,12 +675,7 @@ function show( options0 ) {
   var picker = null;
   return new Promise( function(cont) {
     try {
-      picker = new Picker(options, function(current,path,template) {
-        var res = {
-          path: path,  // null is canceled.
-          remote: (current ? current.remote.type() : null),
-          template: template || "default",
-        }
+      picker = new Picker(options, function(res) {
         cont(null,res);
       });    
     }

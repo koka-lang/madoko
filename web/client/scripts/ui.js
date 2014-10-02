@@ -1770,9 +1770,8 @@ var UI = (function() {
       icon    : true,
       title   : "Insert an image",
       content : "",
-      replacer: function(txt) { 
-                  return txt + "\n**Just drag&drop an image into the editor**\n"; 
-                },
+      upload  : "Please select an image.",
+      exts    : [".jpg",".png",".svg",".gif"],
     },   
     { name    : "figure",
       icon    : true,
@@ -1786,12 +1785,12 @@ var UI = (function() {
     },
     { name    : "custom",
       display: "Custom",
-      title  : "Select a custom block",
+      title  : "Insert a custom block",
       options: [
         { name    : "title",
           display : "Title page",
           title   : "Insert a title page.",
-          content : "",
+          helpLink: "#sec-special",
           replacer: function(txt,rng) {
             return txt + "\n[TITLE]\n";
           }
@@ -1799,7 +1798,7 @@ var UI = (function() {
         { name    : "toc",
           display : "Table of contents",
           title   : "Insert a table of contents",
-          content : "",
+          helpLink: "#sec-special",
           replacer: function(txt,rng) {
             return txt + "\n[TOC]\n";
           }
@@ -1807,7 +1806,6 @@ var UI = (function() {
         { name    : "bib",
           display : "Bibliography",
           title   : "Insert the bibiliography",
-          content : "",
           helpLink: "#sec-bib",
           replacer: function(txt,rng) {
             return txt + "\n## References   {-}\n[BIB]\n";
@@ -1817,32 +1815,85 @@ var UI = (function() {
         customBlock("remark"),
         customBlock("example"),
         customBlock("abstract","", "The abstract."),
-        customBlock("framed","","A framed paragraph."),
-        customBlock("center","","Centered items."),
+        customBlock("framed","","A block with a solid border."),
+        customBlock("center","","A block with centered items."),
         customBlock("columns","","~~ Column { width=\"30%\" }\nThe first column\n~~\n~~ Column\nThe second column.\n~~"),
       ]
     },
     { name: "math",
-      title: "Select a math block",
+      title: "Insert a math block",
       options: [
-        customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n"),
+        customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n","","#sec-math"),
         customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$." ), 
         customBlock("proof", "", "Trivially by induction. [&box;]{float=right}" ),
         customBlock("lemma"),
         customBlock("proposition"), 
         customBlock("corollary"),
         customBlock("definition"),
-        customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}"),
-        customBlock("MathDefs","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$."),
+        customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre"),
+        customBlock("MathDefs","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$.","#sec-mathdefs"),
         customBlock("Math","","e = mc^2","","A plain display math block")
       ]
-    }
+    },
+    { name: "include",
+      title: "Include a local file",
+      options: [
+        { name    : "Image", 
+          title   : "Insert an image",
+          helpLink: "#sec-image",
+          upload  : "Please select an image.",
+          exts    : [".jpg",".png",".svg",".gif"],
+        },
+        { name    : "Markdown", 
+          title   : "Include another markdown file",
+          upload  : "Please select a markdown file.",
+          exts    : [".mdk",".md",".mkdn"],
+        },
+        { name    : "Bibliography", 
+          helpLink: "#sec-bib",
+          title   : "Include a BibTeX bibliography file",
+          upload  : "Please select a BibTeX bibliography file",
+          exts    : [".bib"],
+        },
+        { name    : "Bibliography style (.bst)", 
+          helpLink: "#sec-bib",
+          title   : "Use a specific bibliography style",
+          upload  : "Please select a BibTeX bibliography style file",
+          exts    : [".bst"],
+        },
+        { name    : "Language colorizer", 
+          helpLink: "#syntax-highlighting",
+          title   : "Include a language syntax highlighting specification",
+          upload  : "Please select a syntax highlighting specification file",
+          exts    : [".json"],
+        },
+        { name    : "CSS style", 
+          helpLink: "#html-keys",
+          title   : "Include a CSS style file (.css)",
+          upload  : "Please select a CSS style file (.css).",
+          exts    : [".css"],
+        },
+        { name    : "LaTeX package", 
+          helpLink: "#latex-keys",
+          title   : "Include a LaTeX package, style, or TeX file",
+          upload  : "Please select a LaTeX package file",
+          exts    : [".sty",".tex"],
+        },
+        { name    : "LaTeX document class", 
+          helpLink: "#latex-keys",
+          title   : "Include a LaTeX document class",
+          upload  : "Please select a LaTeX document class file",
+          exts    : [".cls"],
+        },
+      ]
+    }   
   ];
 
-  function customBlock(name,post,content,postContent) {
+  function customBlock(name,post,content,postContent,helpLink) {
     return { 
       name: name,
       content: content || "Here is a " + name + ".",
+      helpLink: helpLink,
       replacer: function(txt,rng) { 
         return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
@@ -1910,6 +1961,10 @@ var UI = (function() {
       item.className = "button";
       if (tool.icon===true) tool.icon = "images/icon-tool-" + tool.name + ".png";
       if (!tool.display) tool.display = Util.capitalize(tool.name);
+      if (!tool.title) tool.title = tool.display;
+      if (tool.exts) {
+        tool.title = tool.title + " (" + tool.exts.join(",") + ")";
+      }
       item.title = tool.title || tool.display;
       if (tool.html) {
         item.innerHTML = tool.html;
@@ -1969,8 +2024,20 @@ var UI = (function() {
     var self = this;
     if (!tool) return;
     self.anonEvent( function() {
-      self.insertOrReplaceText( tool.replacer, tool.content );
-      self.editor.revealPosition( self.editor.getPosition(), true );
+      if (tool.replacer) {
+        self.insertOrReplaceText( tool.replacer, tool.content );
+        self.editor.revealPosition( self.editor.getPosition(), true );
+      }
+      else if (tool.message) {
+        return Storage.message(self.storage,tool.message,tool.header,tool.headerLogo);
+      }
+      else if (tool.upload) {
+        var msg = tool.upload;
+        if (tool.exts) msg = msg + " (" + tool.exts.join(",") + ")";
+        return Storage.upload(self.storage, msg, tool.header || "Upload", "images/dark/icon-upload.png").then( function(files) {
+          return self.insertFiles(files);
+        });
+      }
     }, [State.Syncing]);      
   }
 
@@ -2026,7 +2093,7 @@ var UI = (function() {
       }
       content = cap[3];  
     }
-    if (content.length >= 100*1024) {
+    if (content.length >= 500*1024) {
       throw new Error("file size is too large (maximum is about 384kb)");
     }
 
@@ -2071,6 +2138,7 @@ var UI = (function() {
   UI.prototype.insertFiles = function(files,pos) {
     var self = this;
     if (!files) return;
+    if (!pos) pos = self.editor.getPosition();
     for (var i = 0, f; f = files[i]; i++) {      
       var encoding = Storage.Encoding.fromExt(f.name);      
       var mime = f.type || Util.mimeFromExt(f.name);

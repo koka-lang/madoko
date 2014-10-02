@@ -54,10 +54,10 @@ var Encoding = {
 
 
 function picker( storage, params ) {
-  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "signin" && params.command !== "push" && params.command !== "message")) params.page = "alert";
+  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "signin" && params.command !== "push" && params.command !== "message" && params.command !== "upload")) params.page = "alert";
   return Picker.show(params).then( function(res) {
-    if (params.command === "message") return null;
-    if (!res || !res.path) throw new Error("canceled");
+    if (!res || res.canceled) throw new Error("canceled");
+    if (!res.path) return res;
 
     var folder = Util.dirname(res.path);
     var fileName = Util.basename(res.path);
@@ -95,7 +95,7 @@ function createFile(storage) {
   }
   return picker(storage, params).then( function(res) {
     if (!res) return null;
-    return createFromTemplate( res.storage, res.docName, res.template ).then( function(content) {
+    return createFromTemplate( res.storage, res.docName, res.template || "default" ).then( function(content) {
       return res;
     });
   });
@@ -131,6 +131,28 @@ function login(storage, message, header) {
     return;
   }, function(err) {
     return;
+  });
+}
+
+function message(storage,message,header,headerLogo) {
+  var params = {
+    command: "message",    
+    message: message,
+    header: header,
+    headerLogo: headerLogo,
+  };
+  return picker(storage,params);
+}
+
+function uploadLocal(storage,message,header,headerLogo) {
+  var params = {
+    command: "upload",    
+    message: message,
+    header: header,
+    headerLogo: headerLogo,
+  };
+  return picker(storage,params).then( function(res) {
+    return res.files;
   });
 }
 
@@ -945,6 +967,8 @@ return {
   createFile: createFile,
   login     : login,
   discard   : discard,
+  message   : message,
+  upload    : uploadLocal,
   saveAs    : saveAs,
 
   httpOpenFile      : httpOpenFile,
