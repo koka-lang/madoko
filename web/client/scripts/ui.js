@@ -761,7 +761,7 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (isConnected==null) isConnected = self.isConnected;
-    self.app.className = self.app.className.replace(/\bremote-\w+\b/g,"") + " remote-" + stg.remote.type();
+    self.app.className = self.app.className.replace(/(^|\s+)remote-\w+\b/g,"") + " remote-" + stg.remote.type();
     if (!stg.isRemote()) {
       Util.removeClassName(self.app,"connected");
       Util.removeClassName(self.app,"disconnected");
@@ -1670,43 +1670,45 @@ var UI = (function() {
   /*---------------------------------------------------
     Edit toolbox
   -------------------------------------------------- */
-  var tools = {
-    bold: { 
-      defText: "bold text",
-      keys:    ["Ctrl-B","Alt-B"],
+  var tools = [
+    { name    : "bold", 
+      icon    : true,
+      content : "bold text",
+      keys    : ["Ctrl-B","Alt-B"],
       replacer: function(txt) { 
                   return "**" + txt + "**"; 
                 },
     },
-    italic: { 
-      defText: "italic text",
-      keys   : ["Ctrl-I","Alt-I"],
+    { name    : "italic", 
+      icon    : true,
+      content : "italic text",
+      keys    : ["Ctrl-I","Alt-I"],
       replacer: function(txt) { 
                   return "_" + txt + "_"; 
                 },
     },
-    code: { 
-      defText: "code",
-      keys   : ["Alt-C"],
+    { name    : "code", 
+      icon    : true,
+      title   : "Inline code",
+      content : "code",
+      keys    : ["Alt-C"],
       replacer: function(txt) { 
                   return "`" + txt + "`"; // TODO: make smart about quotes 
                 },
     },
-    pre: { 
-      defText: "function hello() {\n  return \"world\";\n}",
-      replacer: function(txt,rng) { 
-                  return blockRange(rng,"``` javascript" + block(txt) + "```"); 
+    { name    : "font", 
+      icon    : true,
+      title   : "Change the font family or size",
+      content : "text",
+      replacer: function(txt) { 
+                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"large\" } "; 
                 },
     },
-    ol: {
-      defText: "Banana\n* Bread\n  - white\n  - whole grain\n* Basil",
-      replacer: function(txt,rng) {
-        return blockRange(rng,paraPrefix("* ",txt));
-      }
-    },
-    link: { 
-      defText: "link",
-      keys   : ["Ctrl-K"],
+    { name    : "link", 
+      icon    : true,
+      title   : "Insert a link",
+      content : "link",
+      keys    : ["Ctrl-K"],
       replacer: function(txt,rng) { 
                   var self = this;
                   var name = txt.replace(/[^\w\- ]+/g,"").substr(0,16);
@@ -1715,51 +1717,134 @@ var UI = (function() {
                   self.insertAfterPara(self.editor.getPosition().lineNumber, def);
                   return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
                 },
-    },
-    img: { 
-      defText: "",
-      replacer: function(txt) { 
-                  return txt + "\n**Just drag&drop an image into the editor**\n"; 
-                },
-    },
-    font: { 
-      defText: "text",
-      replacer: function(txt) { 
-                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"large\" } "; 
-                },
-    },
-    heading: { 
-      defText: "Section    { #heading }\n\n## Sub-section\n\n And refer to Section [#heading].",
+    },    
+    { name    : "heading", 
+      icon    : true,
+      title   : "Insert a heading",
+      content : "Section    { #heading }\n\n## Sub-section\n\n And refer to Section [#heading].",
       replacer: function(txt,rng) { 
                   return blockRange(rng,"# " + txt); 
                 },
     },
-    custom: {
-      options: {
-        equation: {
-          defText: "e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n",
+    { name    : "pre", 
+      icon    : true,
+      title   : "Code block",
+      content : "function hello() {\n  return \"world\";\n}",
+      replacer: function(txt,rng) { 
+                  return blockRange(rng,"``` javascript" + block(txt) + "```"); 
+                },
+    },
+    { name    : "ul",
+      icon    : true,
+      title   : "Bulleted list",
+      content : "Banana.\n* Bread.\n  A nested list:\n  - white\n  - whole grain\n* Basil.",
+      replacer: function(txt,rng) {
+        return blockRange(rng,paraPrefix("* ",txt));
+      }
+    },
+    { name    : "ol",
+      icon    : true,
+      title   : "Numbered list",
+      content : "Banana.\n2. Bread.\n   Indent to continue.\n3. Basil.",
+      replacer: function(txt,rng) {
+        return blockRange(rng,paraPrefix("1. ",txt));
+      }
+    },
+    { name    : "dl",
+      icon    : true,
+      title   : "Definition list",
+      content : "The conceptual structure is called\n    the abstract syntax of the language.\nConcrete syntax\n  ~ The particular details and rules for writing expressions as strings \n    of characters is called the concrete syntax.\n  ~ Perhaps some other meaning too?",
+      replacer: function(txt,rng) {
+        return blockRange(rng,paraPrefix("Definition\n  ~ ",txt,"    "));
+      }
+    },
+    { name    : "bquote",
+      icon    : true,
+      title   : "Block quote",
+      content : "Of life's two chief prizes, beauty and truth,\nI found the first in a loving heart and the\nsecond in a laborer's hand.\\\n&emsp;&emsp; --- Khalil Gibran",
+      replacer: function(txt,rng) {
+        return blockRange(rng,linePrefix("> ",txt));
+      }
+    },
+    { name    : "img", 
+      icon    : true,
+      title   : "Insert an image",
+      content : "",
+      replacer: function(txt) { 
+                  return txt + "\n**Just drag&drop an image into the editor**\n"; 
+                },
+    },   
+    { name    : "figure",
+      icon    : true,
+      title   : "Insert a figure",
+      content : "  The butterfly ![monarch] image.\n\n  [monarch]: images/butterfly.png {width=100px vertical-align=middle}",
+      replacer: function(txt,rng) {
+        return wrapBlock(rng,"~ Figure { #fig-figure caption=\"My figure\"}", txt, "~")
+      }
+    },
+    { element: "BR",
+    },
+    { name    : "custom",
+      display: "Custom",
+      title  : "Select a custom block",
+      options: [
+        { name    : "title",
+          display : "Title page",
+          title   : "Insert a title page.",
+          content : "",
           replacer: function(txt,rng) {
-            return wrapBlock(rng,"Equation [#eq-euler]:\n~ Equation  { #eq-euler }", txt, "~");
+            return txt + "\n[TITLE]\n";
           }
         },
-        theorem: {
-          defText: "$e = mc^2$",
-          replacer: function(txt,rng) {
-            return wrapBlock(rng,"~ Theorem  { #th-euler }\n(_Euler's theorem_) ", txt, "~");
-          }
-        },
-        note: {
-          defText: "Here is a note.",
-          replacer: function(txt,rng) {
-            return wrapBlock(rng,"~ Note", txt, "~");
-          }
-        },
-        toc: {
-          defText: "",
+        { name    : "toc",
+          display : "Table of contents",
+          title   : "Insert a table of contents",
+          content : "",
           replacer: function(txt,rng) {
             return txt + "\n[TOC]\n";
           }
-        }
+        },
+        { name    : "bib",
+          display : "Bibliography",
+          title   : "Insert the bibiliography",
+          content : "",
+          helpLink: "#sec-bib",
+          replacer: function(txt,rng) {
+            return txt + "\n## References   {-}\n[BIB]\n";
+          }
+        },
+        customBlock("note"),
+        customBlock("remark"),
+        customBlock("example"),
+        customBlock("abstract","", "The abstract."),
+        customBlock("framed","","A framed paragraph."),
+        customBlock("center","","Centered items."),
+        customBlock("columns","","~~ Column { width=\"30%\" }\nThe first column\n~~\n~~ Column\nThe second column.\n~~"),
+      ]
+    },
+    { name: "math",
+      title: "Select a math block",
+      options: [
+        customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n"),
+        customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$." ), 
+        customBlock("proof", "", "Trivially by induction. [&box;]{float=right}" ),
+        customBlock("lemma"),
+        customBlock("proposition"), 
+        customBlock("corollary"),
+        customBlock("definition"),
+        customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}"),
+        customBlock("MathDefs","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$."),
+        customBlock("Math","","e = mc^2","","A plain display math block")
+      ]
+    }
+  ];
+
+  function customBlock(name,post,content,postContent) {
+    return { 
+      name: name,
+      content: content || "Here is a " + name + ".",
+      replacer: function(txt,rng) { 
+        return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
     }
   }
@@ -1768,9 +1853,19 @@ var UI = (function() {
     return blockRange(rng, pre + block(txt) + post);
   }
 
-  function paraPrefix(pre,txt) {
+  function paraPrefix(pre,txt,hang) {
     var paras = txt.split(/\n\n+/g);
-    return paras.map(function(p) { return pre + hangIndent("  ",p); } ).join("\n\n");
+    if (paras && paras.length > 1) {
+      return paras.map(function(p) { return pre + hangIndent(hang || "  ",p); } ).join("\n");
+    }
+    else {
+      return "\n" + pre + txt;
+    }
+  }
+
+  function linePrefix(pre,txt) {
+    var lines = txt.split("\n");
+    return lines.map(function(l) { return pre + l; }).join("\n");
   }
 
   function hangIndent(pre,txt) {
@@ -1798,30 +1893,75 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.initTools = function() {
+  UI.prototype.initTool = function( tool, parent  ) {
     var self = this;
-    Util.properties(tools).forEach( function(toolName) {
-      var tool = tools[toolName];
-      var elem = document.getElementById("tool-" + toolName);
+    if (tool.element) {
+      var elem = document.createElement(tool.element);
+      if (tool.name) elem.id = "tool-" + tool.name;
+      if (tool.html) elem.innerHTML = tool.html;
+      parent.appendChild(elem);
+      return;
+    }
 
-      if (elem.nodeName==="SELECT") {
-        elem.addEventListener("change", function() {
-          var subtoolName = elem.options[elem.selectedIndex].value;
-          var subtool = tool.options[subtoolName];
-          if (subtool) self.toolCommand(subtool);
-          elem.selectedIndex = 0; 
-        });
-        [].forEach.call(elem.options, function(option) {
-          var subtoolName = option.value;
-          var subtool = tool.options[subtoolName];
-          if (!subtool) return;
-          self.initToolKeys(subtool,option);          
-        });
+    var item = document.getElementById("tool-" + tool.name);
+    if (!item) {
+      item = document.createElement("DIV");
+      item.id = "tool-" + tool.name;
+      item.className = "button";
+      if (tool.icon===true) tool.icon = "images/icon-tool-" + tool.name + ".png";
+      if (!tool.display) tool.display = Util.capitalize(tool.name);
+      item.title = tool.title || tool.display;
+      if (tool.html) {
+        item.innerHTML = tool.html;
+      }
+      else if (tool.icon) {
+        item.innerHTML = "<img src='" + tool.icon + "'/>";
       }
       else {
-        elem.addEventListener("click", function() { self.toolCommand(tool); } );        
-        self.initToolKeys(tool,elem);
+        item.textContent = tool.display;
       }
+      if (tool.helpLink) {
+        if (Util.startsWith(tool.helpLink,"#")) tool.helpLink = "http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html" + tool.helpLink;
+        var help = document.createElement("A");
+        help.href = tool.helpLink;
+        help.textContent = "?";
+        help.className = "help";
+        help.target = "_blank";
+        help.title  = "Go to documentation"
+        item.appendChild(help);
+      }
+      parent.appendChild(item);
+    }
+    if (tool.options) {
+      Util.addClassName(item,"popup");        
+      Util.addClassName(item,"options");        
+      var menu = document.getElementById("tool-" + tool.name + "-content");
+      if (!menu) {
+        menu = document.createElement("DIV");
+        menu.id = item.id + "-content";
+        item.appendChild(menu);
+      }
+      Util.addClassName(menu,"menu");
+      Util.addClassName(menu,"boxed");
+      tool.options.forEach(function(subtool) {
+        self.initTool(subtool,menu);
+      });
+    }
+    else {
+      item.addEventListener("click", function(ev) { 
+        if (ev.target.nodeName !== "A") {
+          self.toolCommand(tool); 
+        }
+      });
+    }
+    self.initToolKeys(tool,item);          
+  }
+
+  UI.prototype.initTools = function() {
+    var self = this;
+    var toolbox = document.getElementById("toolbox-content")
+    tools.forEach(function(tool) {
+      self.initTool(tool,toolbox);
     });
   }
 
@@ -1829,7 +1969,7 @@ var UI = (function() {
     var self = this;
     if (!tool) return;
     self.anonEvent( function() {
-      self.insertOrReplaceText( tool.replacer, tool.defText );
+      self.insertOrReplaceText( tool.replacer, tool.content );
       self.editor.revealPosition( self.editor.getPosition(), true );
     }, [State.Syncing]);      
   }

@@ -172,6 +172,12 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return attrs;
   }
 
+  function forEachProperty( obj, action ) {
+    properties(obj).forEach( function(key) {
+      return action(key,obj[key]);
+    });
+  }
+
   // extend target with all fields of obj.
   function extend(target, obj) {
     properties(obj).forEach( function(prop) {
@@ -1301,6 +1307,7 @@ doc.execCommand("SaveAs", null, filename)
 
   return {
     properties: properties,
+    forEachProperty: forEachProperty,
     extend: extend,
     copy: copy,
     replicate: replicate,

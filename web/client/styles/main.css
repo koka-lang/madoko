@@ -300,6 +300,23 @@ span.save-link:hover {
   padding: 0em 0.5em;
 }
 
+#toolbox>div>div.button {
+  display: inline-block;
+  padding: 0em 0.25em;
+}
+
+#toolbox>div>div.options>div {
+  width: 8em;
+}
+
+#toolbox .help {
+  float: right;  
+  padding: 0em 0.25em;
+}
+
+#toolbox .help:hover {
+  background-color: #AAA !important;  
+}
 
 
 /* File items */
@@ -583,9 +600,9 @@ div.boxed {
   top: 1.25rem;
   left: 0;
   background-color: white;
-  max-height: 20rem;
-  overflow-y: auto;
+  max-height: 20rem;  
   padding: 0.5ex;
+  overflow-y: auto;
 }
 
 .popup:hover > div, 
@@ -593,6 +610,9 @@ div.boxed {
   display: block;
 }
 
+#toolbox.popup > div {
+  overflow-y: visible;
+}
 
 /* Widths of popup content */
 #edit-select-content {
