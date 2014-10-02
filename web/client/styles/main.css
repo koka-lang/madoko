@@ -271,8 +271,13 @@ span.save-link:hover {
   visibility: visible;
 }
 
-#signin, #signout {
+#signin, #signout, #local-message {
   display: none;
+}
+
+.remote-local #local-message {
+  display: block;
+  font-size: smaller;
 }
 
 .disconnected #signin {

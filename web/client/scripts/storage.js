@@ -152,7 +152,7 @@ function discard(storage,docName) {
 }
 
 function httpOpenFile(url,doc) {  
-  return HttpRemote.openFile(url).then( function(remote) {
+  return HttpRemote.createAt(url).then( function(remote) {
     return { storage: new Storage(remote), docName: doc };
   });
 }

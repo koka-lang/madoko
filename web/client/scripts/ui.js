@@ -756,6 +756,7 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (isConnected==null) isConnected = self.isConnected;
+    self.app.className = self.app.className.replace(/\bremote-\w+\b/g,"") + " remote-" + stg.remote.type();
     if (!stg.isRemote()) {
       Util.removeClassName(self.app,"connected");
       Util.removeClassName(self.app,"disconnected");
@@ -771,16 +772,11 @@ var UI = (function() {
     
     if (stg && stg.remote) {
       var remoteLogo = "images/dark/" + stg.remote.logo();
-      var remoteType = stg.remote.type();        
-      var remoteDisplay = (remoteType==="local" ? "browser local" : remoteType);
-      var remoteMsg = (isConnected ? "Signed in" : "Signed out");
       if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
-      if (self.connectionMessage.textContent !== remoteMsg) self.connectionMessage.textContent = remoteMsg;
-      self.connectionMessage.removeAttribute("title");
       if (stg.isRemote() && isConnected) {
         stg.remote.getUserName().then( function(userName) {
           // TODO: check for race?
-          self.connectionMessage.setAttribute("title", "As " + userName);
+          document.getElementByName("connection-content").setAttribute("title", "As " + userName);
         });
       }
     }
@@ -1139,12 +1135,12 @@ var UI = (function() {
 
   UI.prototype.loadFromHash = function() {
     var self = this;
-    var cap = /[#&]url=(https?:\/\/[^=&#;]+)/.exec(window.location.hash);
+    var cap = /[#&\?]url=(https?:\/\/[^=&#;]+)/.exec(window.location.hash);
     if (cap) {
       var url = Util.dirname(cap[1]);
       var doc = Util.basename(cap[1]);
       return self.checkSynced( function() {
-        return Storage.httpOpenFile(url,doc);        
+        return Storage.httpOpenFile(url,doc);
       }).then( function(res) { 
         return self.openFile(res.storage,res.docName); 
       }).then( function() {

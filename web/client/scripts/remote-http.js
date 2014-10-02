@@ -60,6 +60,8 @@ var HttpRemote = (function() {
     return logo();
   }
 
+  HttpRemote.prototype.readonly = true;
+
   HttpRemote.prototype.isRemote = function() {
     return true;
   }
