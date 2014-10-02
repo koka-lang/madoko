@@ -1673,20 +1673,21 @@ var UI = (function() {
   var tools = {
     bold: { 
       defText: "bold text",
-      keys:    ["Ctrl-B"],
+      keys:    ["Ctrl-B","Alt-B"],
       replacer: function(txt) { 
                   return "**" + txt + "**"; 
                 },
     },
     italic: { 
       defText: "italic text",
-      keys   : ["Ctrl-I"],
+      keys   : ["Ctrl-I","Alt-I"],
       replacer: function(txt) { 
                   return "_" + txt + "_"; 
                 },
     },
     code: { 
       defText: "code",
+      keys   : ["Alt-C"],
       replacer: function(txt) { 
                   return "`" + txt + "`"; // TODO: make smart about quotes 
                 },
@@ -1708,8 +1709,9 @@ var UI = (function() {
       keys   : ["Ctrl-K"],
       replacer: function(txt,rng) { 
                   var self = this;
-                  var name = txt.replace(/[^\w\-]+/g,"_").substr(1,12);
-                  var def  = "\n[" + name + "]: http://foo.com \"title\"\n";
+                  var name = txt.replace(/[^\w\- ]+/g,"").substr(0,16);
+                  var url  = "http://" + name.replace(/\s+/g,"_") + ".com";
+                  var def  = "\n[" + name + "]: " + url + " \"" + name + " title\"\n";
                   self.insertAfterPara(self.editor.getPosition().lineNumber, def);
                   return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
                 },
@@ -1732,7 +1734,38 @@ var UI = (function() {
                   return blockRange(rng,"# " + txt); 
                 },
     },
+    custom: {
+      options: {
+        equation: {
+          defText: "e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n",
+          replacer: function(txt,rng) {
+            return wrapBlock(rng,"Equation [#eq-euler]:\n~ Equation  { #eq-euler }", txt, "~");
+          }
+        },
+        theorem: {
+          defText: "$e = mc^2$",
+          replacer: function(txt,rng) {
+            return wrapBlock(rng,"~ Theorem  { #th-euler }\n(_Euler's theorem_) ", txt, "~");
+          }
+        },
+        note: {
+          defText: "Here is a note.",
+          replacer: function(txt,rng) {
+            return wrapBlock(rng,"~ Note", txt, "~");
+          }
+        },
+        toc: {
+          defText: "",
+          replacer: function(txt,rng) {
+            return txt + "\n[TOC]\n";
+          }
+        }
+      }
+    }
+  }
 
+  function wrapBlock(rng,pre,txt,post) {
+    return blockRange(rng, pre + block(txt) + post);
   }
 
   function paraPrefix(pre,txt) {
@@ -1754,22 +1787,40 @@ var UI = (function() {
     return "\n" + txt.replace(/^\n?([\s\S]*?)\n?$/,"$1") + "\n";
   }
 
+  UI.prototype.initToolKeys = function(tool,elem) {
+    var self = this;
+    var handler = function() { self.toolCommand(tool); }        
+    if (tool.keys) {
+      tool.keys.forEach( function(key) {
+        bindKey(key,handler);
+      });
+      elem.title = elem.title + " (" + tool.keys.join(",") + ")";
+    }
+  }
+
   UI.prototype.initTools = function() {
     var self = this;
     Util.properties(tools).forEach( function(toolName) {
       var tool = tools[toolName];
-      var handler = function() {
-        self.anonEvent( function() {
-          self.toolCommand(tool);
-        }, [State.Syncing]);
-      };
       var elem = document.getElementById("tool-" + toolName);
-      elem.addEventListener("click", handler );
-      if (tool.keys) {
-        tool.keys.forEach( function(key) {
-          bindKey(key,handler);
+
+      if (elem.nodeName==="SELECT") {
+        elem.addEventListener("change", function() {
+          var subtoolName = elem.options[elem.selectedIndex].value;
+          var subtool = tool.options[subtoolName];
+          if (subtool) self.toolCommand(subtool);
+          elem.selectedIndex = 0; 
         });
-        elem.title = elem.title + " (" + tool.keys.join(",") + ")";
+        [].forEach.call(elem.options, function(option) {
+          var subtoolName = option.value;
+          var subtool = tool.options[subtoolName];
+          if (!subtool) return;
+          self.initToolKeys(subtool,option);          
+        });
+      }
+      else {
+        elem.addEventListener("click", function() { self.toolCommand(tool); } );        
+        self.initToolKeys(tool,elem);
       }
     });
   }
@@ -1777,7 +1828,10 @@ var UI = (function() {
   UI.prototype.toolCommand = function( tool ) {
     var self = this;
     if (!tool) return;
-    self.insertOrReplaceText( tool.replacer, tool.defText );
+    self.anonEvent( function() {
+      self.insertOrReplaceText( tool.replacer, tool.defText );
+      self.editor.revealPosition( self.editor.getPosition(), true );
+    }, [State.Syncing]);      
   }
 
 
