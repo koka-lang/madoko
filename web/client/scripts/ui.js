@@ -21,6 +21,42 @@ function diff( original, modified ) {
   return new Promise(diff); // wrap promise
 }
 
+// Key binding
+var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
+var keyHandlers = [];
+
+document.addEventListener( "keydown", function(ev) {
+  var code = ev.keyCode;
+  if (ev.ctrlKey)  code |= KeyMask.ctrlKey;
+  if (ev.altKey)   code |= KeyMask.altKey;
+  if (ev.metaKey)  code |= KeyMask.metaKey;
+  if (ev.shiftKey) code |= KeyMask.shiftKey;       
+  keyHandlers.forEach( function(handler) {
+    if (handler.code === code) {
+      if (handler.stop) {
+        ev.stopPropagation();
+        ev.preventDefault();
+      }
+      handler.action(ev);
+    }
+  });
+});
+
+function bindKey( key, action ) {
+  if (typeof key === "string") key = { key: key, stop: true };
+  var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
+  var code = 0;
+  if (cap) {
+    code = cap[5].charCodeAt(0);
+    if (cap[1]) code |= KeyMask.altKey;
+    if (cap[2]) code |= KeyMask.ctrlKey;
+    if (cap[3]) code |= KeyMask.metaKey;
+    if (cap[4]) code |= KeyMask.shiftKey;
+  }
+  keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
+}
+
+
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
   if (!localStorage) {
@@ -260,40 +296,6 @@ var UI = (function() {
 
     
     // Key bindings
-
-    var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
-    var keyHandlers = [];
-
-    document.addEventListener( "keydown", function(ev) {
-      var code = ev.keyCode;
-      if (ev.ctrlKey)  code |= KeyMask.ctrlKey;
-      if (ev.altKey)   code |= KeyMask.altKey;
-      if (ev.metaKey)  code |= KeyMask.metaKey;
-      if (ev.shiftKey) code |= KeyMask.shiftKey;       
-      keyHandlers.forEach( function(handler) {
-        if (handler.code === code) {
-          if (handler.stop) {
-            ev.stopPropagation();
-            ev.preventDefault();
-          }
-          handler.action(ev);
-        }
-      });
-    });
-
-    function bindKey( key, action ) {
-      if (typeof key === "string") key = { key: key, stop: true };
-      var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
-      var code = 0;
-      if (cap) {
-        code = cap[5].charCodeAt(0);
-        if (cap[1]) code |= KeyMask.altKey;
-        if (cap[2]) code |= KeyMask.ctrlKey;
-        if (cap[3]) code |= KeyMask.metaKey;
-        if (cap[4]) code |= KeyMask.shiftKey;
-      }
-      keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
-    }
 
     bindKey( "Alt-S",  function()   { self.synchronize(true); } );
     bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
@@ -739,6 +741,9 @@ var UI = (function() {
       self.theme = "vs-dark";
       self.editor.updateOptions( { theme: self.theme } );
     }
+
+    // toolbox
+    self.initTools();
 
     // emulate hovering by clicks for touch devices
     Util.enablePopupClickHovering();    
@@ -1662,10 +1667,145 @@ var UI = (function() {
     return lineNo;
   }
 
+  /*---------------------------------------------------
+    Edit toolbox
+  -------------------------------------------------- */
+  var tools = {
+    bold: { 
+      defText: "bold text",
+      keys:    ["Ctrl-B"],
+      replacer: function(txt) { 
+                  return "**" + txt + "**"; 
+                },
+    },
+    italic: { 
+      defText: "italic text",
+      keys   : ["Ctrl-I"],
+      replacer: function(txt) { 
+                  return "_" + txt + "_"; 
+                },
+    },
+    code: { 
+      defText: "code",
+      replacer: function(txt) { 
+                  return "`" + txt + "`"; // TODO: make smart about quotes 
+                },
+    },
+    pre: { 
+      defText: "function hello() {\n  return \"world\";\n}",
+      replacer: function(txt,rng) { 
+                  return blockRange(rng,"``` javascript" + block(txt) + "```"); 
+                },
+    },
+    ol: {
+      defText: "Banana\n* Bread\n  - white\n  - whole grain\n* Basil",
+      replacer: function(txt,rng) {
+        return blockRange(rng,paraPrefix("* ",txt));
+      }
+    },
+    link: { 
+      defText: "link",
+      keys   : ["Ctrl-K"],
+      replacer: function(txt,rng) { 
+                  var self = this;
+                  var name = txt.replace(/[^\w\-]+/g,"_").substr(1,12);
+                  var def  = "\n[" + name + "]: http://foo.com \"title\"\n";
+                  self.insertAfterPara(self.editor.getPosition().lineNumber, def);
+                  return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
+                },
+    },
+    img: { 
+      defText: "",
+      replacer: function(txt) { 
+                  return txt + "\n**Just drag&drop an image into the editor**\n"; 
+                },
+    },
+    font: { 
+      defText: "text",
+      replacer: function(txt) { 
+                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"small\" }"; 
+                },
+    },
+    heading: { 
+      defText: "Section    { #heading }\n\n## Sub-section\n\n And refer to Section [#heading].",
+      replacer: function(txt,rng) { 
+                  return blockRange(rng,"# " + txt); 
+                },
+    },
+
+  }
+
+  function paraPrefix(pre,txt) {
+    var paras = txt.split(/\n\n+/g);
+    return paras.map(function(p) { return pre + hangIndent("  ",p); } ).join("\n\n");
+  }
+
+  function hangIndent(pre,txt) {
+    var lines = txt.split("\n");
+    var hang = lines.slice(1);
+    return (lines.slice(0,1).concat( hang.map(function(l) { return pre + l; }))).join("\n");
+  }
+
+  function blockRange(rng,txt) {
+    return (rng.startColumn===1 ? "" : "\n") + txt + "\n";
+  }
+
+  function block(txt) {
+    return "\n" + txt.replace(/^\n?([\s\S]*?)\n?$/,"$1") + "\n";
+  }
+
+  UI.prototype.initTools = function() {
+    var self = this;
+    Util.properties(tools).forEach( function(toolName) {
+      var tool = tools[toolName];
+      var handler = function() {
+        self.anonEvent( function() {
+          self.toolCommand(tool);
+        }, [State.Syncing]);
+      };
+      var elem = document.getElementById("tool-" + toolName);
+      elem.addEventListener("click", handler );
+      if (tool.keys) {
+        tool.keys.forEach( function(key) {
+          bindKey(key,handler);
+        });
+        elem.title = elem.title + " (" + tool.keys.join(",") + ")";
+      }
+    });
+  }
+
+  UI.prototype.toolCommand = function( tool ) {
+    var self = this;
+    if (!tool) return;
+    self.insertOrReplaceText( tool.replacer, tool.defText );
+  }
+
 
   /*---------------------------------------------------
     File and text insertion
   -------------------------------------------------- */
+
+  UI.prototype.insertAfterPara = function(lineNum,txt) {
+    var self = this;
+    var model = self.editor.getModel();
+    var n = model.getLineCount();
+    while( lineNum < n && (model.getLineContent(lineNum) !== "")) lineNum++;
+    var pos = self.editor.getPosition();
+    pos.lineNumber = lineNum;
+    pos.column = 1;
+    self.insertText(txt,pos);
+    return;
+  }
+
+  // Insert or replace some text in the document 
+  UI.prototype.insertOrReplaceText = function( replacer, defText ) {
+    var self = this;
+    var select = self.editor.getSelection();
+    var model = self.editor.getModel();
+    var txt = (select.isEmpty() ? defText : model.getValueInRange(select) );
+    var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, replacer.call(self,txt,select) );
+    self.editor.executeCommand("madoko",command);
+  }
 
 
   // Insert some text in the document 
