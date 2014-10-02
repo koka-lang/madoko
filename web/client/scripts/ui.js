@@ -1725,7 +1725,7 @@ var UI = (function() {
     font: { 
       defText: "text",
       replacer: function(txt) { 
-                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"small\" }"; 
+                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"large\" } "; 
                 },
     },
     heading: { 
