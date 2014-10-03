@@ -1209,6 +1209,27 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
+  function enablePinned() {
+    [].forEach.call( document.getElementsByClassName("pinnable"), function(menu) {
+      var pinbox = document.createElement("DIV");
+      pinbox.className = "pinbox";
+      var imgPin = document.createElement("IMG");
+      imgPin.src = "images/icon-pin.png";
+      imgPin.title = "Pin this menu";
+      imgPin.className = "button pin";
+      pinbox.appendChild(imgPin);
+      var imgUnpin = document.createElement("IMG");
+      imgUnpin.src = "images/icon-unpin.png";
+      imgUnpin.title = "Unpin this menu";
+      imgUnpin.className = "button unpin";
+      pinbox.appendChild(imgUnpin);
+      menu.insertBefore(pinbox,menu.firstChild);
+      pinbox.addEventListener( "click", function(ev) {
+        toggleClassName(menu, "pinned");
+      });
+    });
+  }
+
   function enablePopupClickHovering() 
   {
     var hovering = null;
@@ -1240,7 +1261,7 @@ doc.execCommand("SaveAs", null, filename)
             (!hovering && thisElem)) {          
           hovering = ev.currentTarget;
           addClassName(hovering,"hover");
-          ev.cancelBubble = true;                         
+          ev.stopPropagation(); // or the body listener cancels again..                         
         }
         else {
           hovering = null;
@@ -1370,6 +1391,7 @@ doc.execCommand("SaveAs", null, filename)
     downloadText: downloadText,
     //openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
+    enablePinned: enablePinned,
     openModalPopup: openModalPopup,
     
     //withOAuthState: generateOAuthState,

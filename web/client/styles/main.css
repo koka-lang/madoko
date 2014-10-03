@@ -275,11 +275,12 @@ span.save-link:hover {
   visibility: visible;
 }
 
-#signin, #signout, #local-message {
+#signin, #signout, #local-message, #http-message {
   display: none;
 }
 
-.remote-local #local-message {
+.remote-local #local-message,
+.remote-http #http-message {
   display: block;
   font-size: smaller;
 }
@@ -626,8 +627,27 @@ div.boxed {
 }
 
 .popup:hover > div, 
-.popup.hover > div {
+.popup.hover > div,
+.popup > div.pinned {
   display: block;
+}
+
+.popup > div.pinned {
+  left: 10em;
+}
+
+.pinned .pin, .unpin {
+  display: none;
+}
+
+.pin, .pinned .unpin {
+  display: inline;
+}
+
+.pinbox {
+  float: right;
+  margin-top: -0.5ex;
+  margin-right: -0.5ex;
 }
 
 #toolbox.popup > div {
@@ -792,9 +812,12 @@ div.modal {
 #picker.command-save #folder-name,
 #picker.command-push #folder-name,
 #picker.command-new #folder-name,
-#picker.command-message #folder-name,
 #picker.command-connect #folder-name {
   display: inline-block;
+}
+
+#picker.page-alert #folder-name {
+  display: none;
 }
 
 #picker .dir {

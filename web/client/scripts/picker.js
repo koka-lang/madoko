@@ -489,9 +489,7 @@ var Picker = (function() {
     if (self.options.headerLogo) {
       headerLogo.src = self.options.headerLogo;
     }
-    if (self.options.header) {
-      document.getElementById("folder-name").textContent = self.options.header || "";      
-    }
+    document.getElementById("header-text").textContent = self.options.header || "";    
 
     if (self.options.message) {
       document.getElementById("message-message").innerHTML = self.options.message;

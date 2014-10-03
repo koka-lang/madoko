@@ -76,7 +76,7 @@ function openFile(storage) {
     command: "open",   
     extensions: "remote folder .mdk .md .madoko .mkdn", 
   }
-  if (storage && storage.isRemote()) {
+  if (storage && !storage.remote.readonly) { // TODO: readonly is not correct, perhaps 'canbrowse'?
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
@@ -89,7 +89,7 @@ function createFile(storage) {
     command: "new", 
     extensions: "remote folder",
   }
-  if (storage && storage.isRemote()) {
+  if (storage && !storage.remote.readonly) {
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
@@ -121,8 +121,8 @@ function login(storage, message, header) {
   var params = {
     command: "signin",
   }
-  if (storage.isRemote()) {
-    params.remote     = storage.remote.type();
+  if (storage.remote.needSignin) {
+    params.remote  = storage.remote.type();
   }
   if (message) params.message = message;
   if (header) params.header = header;
@@ -162,10 +162,9 @@ function discard(storage,docName) {
     alert: "true",
     header: Util.escape(Util.combine(storage.folder(),docName))
   };
-  if (storage.isRemote()) {
-    params.remote = storage.remote.type();
-    params.headerLogo = "images/dark/" + storage.remote.logo();
-  }
+  params.remote = storage.remote.type();
+  params.headerLogo = "images/dark/" + storage.remote.logo();
+  
   return picker(storage,params).then( function(res) {
     return true;
   }, function(err) {
@@ -249,7 +248,7 @@ function saveAs( storage, docName ) {
     commandDisplay: "Save To",
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
   }
-  if (storage && storage.isRemote()) {
+  if (storage && !storage.remote.readonly) {
     params.remote = storage.remote.type();
     params.folder = Util.dirname(docName);
     params.file   = Util.stemname(docName);
@@ -468,11 +467,6 @@ var Storage = (function() {
     self.files.forEach( function(fname,file) {
       return action(file);
     });
-  }
-
-  Storage.prototype.isRemote = function() {
-    var self = this;
-    return (self.remote && self.remote.isRemote());
   }
 
   Storage.prototype.isSynced = function(full) {
@@ -760,7 +754,7 @@ var Storage = (function() {
     var self = this;
     var remotes = new Map();
     var merges = [];
-    if (!self.isRemote()) return Promise.resolved(true); // can happen during generateHTML/PDF
+    if (self.remote.readonly) return Promise.resolved(true); // can happen during generateHTML/PDF
 
     return self.login(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );

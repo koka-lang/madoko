@@ -68,7 +68,7 @@
     ></div
     ><div id="toolbox" class="popup">
       <img src="images/dark/icon-toolbox.png"/>
-      <div id="toolbox-content" class="menu boxed">                 
+      <div id="toolbox-content" class="menu boxed pinnable">
       </div>
     </div
     ><div id="connection" class="popup">
@@ -76,6 +76,7 @@
       <img id="icon-disconnect" class="item-disconnect" src="images/dark/icon-disconnect.png"/>
       <div id="connection-content" class="menu boxed">
         <div id="local-message">Browser local storage</div>
+        <div id="http-message">Read-only storage</div>
         <div id="signin" class="button" title="Sign in"
           ><span class="icon"><img src="images/icon-signin.png"/></span>Sign in ...</div>
         <div id="signout" class="button" title="Sign out"
@@ -195,6 +196,7 @@
 <div id="picker-header" class="app-header header-bar">
   <span id="command-name"></span>
   <img id="header-logo" src="images/dark/icon-dropbox.png"/>
+  <span id="header-text"></span>
   <div id="folder-name"></div>
   <input id="file-name" type="text"/>  
   <!-- <img id="icon-close" class="button" src="images/dark/icon-close.png" title="Close the dialog"/> -->

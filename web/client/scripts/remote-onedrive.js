@@ -217,10 +217,9 @@ var Onedrive = (function() {
     return logo();
   }  
 
-  Onedrive.prototype.isRemote = function() {
-    return true;
-  }
-
+  Onedrive.prototype.readonly = false;
+  Onedrive.prototype.needSignin = true;
+  
   Onedrive.prototype.getFolder = function() {
     var self = this;
     return self.folder;

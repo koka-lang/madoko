@@ -493,7 +493,7 @@ var UI = (function() {
     var autoSync = function() {
       var now = Date.now();
       self.updateConnectionStatus().then( function(status) {        
-        if (self.storage.isRemote()) {
+        if (self.storage.canSync()) {
           if (status===0) {
             if (now - self.lastConUserCheck >= 10000) {
               self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
@@ -575,7 +575,7 @@ var UI = (function() {
     document.getElementById("open").onclick = openEvent;
     
     document.getElementById("signin").onclick = function(ev) {
-      if (self.storage && self.storage.isRemote()) {        
+      if (self.storage && self.storage.remote.needSignin) {        
         return self.anonEvent( function() {
           return self.storage.remote.login().then( function() {
             return self.updateConnectionStatus();
@@ -585,7 +585,7 @@ var UI = (function() {
     };
     
     document.getElementById("signout").onclick = function(ev) {
-      if (self.storage && self.storage.isRemote()) {        
+      if (self.storage && self.storage.remote.needSignin) {        
         return self.anonEvent( function() {
           return self.storage.remote.logout(true).then( function() {
             return self.updateConnectionStatus();
@@ -678,7 +678,7 @@ var UI = (function() {
         }
         if (elem && (elem.id === "status" || elem.className==="msg-line" || elem.className==="msg-section")) {
           var line = elem.textContent;
-          var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/.exec(line);
+          var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/i.exec(line);
           if (cap) {
             var lineNo = parseInt(cap[1]);
             if (!isNaN(lineNo)) {
@@ -686,7 +686,7 @@ var UI = (function() {
             }
           }
           else {
-            cap = /\b(?:warning|error|line):(?:\s|&nbsp;)*([\w\\\/\.\-]*)(?:\s|&nbsp;)*:?\(?(\d+)(?:-\d+)?\)?/.exec(line)
+            cap = /\b(?:warning|error|line):(?:\s|&nbsp;)*([\w\\\/\.\-]*)(?:\s|&nbsp;)*:?\(?(\d+)(?:-\d+)?\)?/i.exec(line)
             if (cap) {
               var lineNo = parseInt(cap[2]);
               var fileName = cap[1]; // TODO use file
@@ -747,6 +747,8 @@ var UI = (function() {
 
     // emulate hovering by clicks for touch devices
     Util.enablePopupClickHovering();    
+    // pinned menus
+    Util.enablePinned();
   }
 
   UI.prototype.login = function() {
@@ -762,7 +764,7 @@ var UI = (function() {
     if (!stg) stg = self.storage;
     if (isConnected==null) isConnected = self.isConnected;
     self.app.className = self.app.className.replace(/(^|\s+)remote-\w+\b/g,"") + " remote-" + stg.remote.type();
-    if (!stg.isRemote()) {
+    if (!stg.remote.needSignin) {
       Util.removeClassName(self.app,"connected");
       Util.removeClassName(self.app,"disconnected");
     }
@@ -778,7 +780,7 @@ var UI = (function() {
     if (stg && stg.remote) {
       var remoteLogo = "images/dark/" + stg.remote.logo();
       if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
-      if (stg.isRemote() && isConnected) {
+      if (stg.remote.needSignin && isConnected) {
         stg.remote.getUserName().then( function(userName) {
           // TODO: check for race?
           document.getElementByName("connection-content").setAttribute("title", "As " + userName);
@@ -1383,7 +1385,7 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.isRemote() || !self.allowServer) {  // unconnected storage (null or http)
+    if (!self.storage.remote.readonly || !self.allowServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
@@ -1516,7 +1518,7 @@ var UI = (function() {
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
         var name = "out/" + Util.changeExt(self.docName,".pdf");
-        return self._synchronize().then( function() {
+        return self._synchronize().always( function() {
           var link = self.getViewLink(name,"application/pdf");
           if (link) {
             Util.message( { message: "PDF exported", link: link }, Util.Msg.Status );
@@ -1538,7 +1540,7 @@ var UI = (function() {
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        return self._synchronize().then( function() {
+        return self._synchronize().always( function() {
           var link = self.getViewLink(name,"text/html");
           if (link) {
             Util.message( { message: "HTML exported", link: link }, Util.Msg.Status );

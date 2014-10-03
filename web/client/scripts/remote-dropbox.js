@@ -144,9 +144,8 @@ var Dropbox = (function() {
     return logo();
   }
 
-  Dropbox.prototype.isRemote = function() {
-    return true;
-  }
+  Dropbox.prototype.readonly = false;
+  Dropbox.prototype.needSignin = true;
 
   Dropbox.prototype.getFolder = function() {
     var self = this;

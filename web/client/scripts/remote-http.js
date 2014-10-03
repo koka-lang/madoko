@@ -61,10 +61,7 @@ var HttpRemote = (function() {
   }
 
   HttpRemote.prototype.readonly = true;
-
-  HttpRemote.prototype.isRemote = function() {
-    return true;
-  }
+  HttpRemote.prototype.needSignin = false;
 
   HttpRemote.prototype.getFolder = function() {
     var self = this;
