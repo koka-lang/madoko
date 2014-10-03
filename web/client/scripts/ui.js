@@ -1672,6 +1672,315 @@ var UI = (function() {
   /*---------------------------------------------------
     Edit toolbox
   -------------------------------------------------- */
+    var symbolsBasic = [
+    { entity: "quot", code: 34 },
+    { entity: "hash", code: 35 },
+    { entity: "dollar", code: 36 },
+    { entity: "perc", code: 37 },
+    { entity: "amp", code: 38 },
+    { entity: "apos", code: 39 },
+    { entity: "lpar", code: 40 },
+    { entity: "rpar", code: 41 },
+    { entity: "ast", code: 42 },
+    { entity: "plus", code: 43 },
+    { entity: "fslash", code: 47 },
+    { entity: "lt", code: 60 },
+    { entity: "gt", code: 62 },
+    { entity: "bslash", code: 92 },
+    { entity: "backslash", code: 92 },
+    { entity: "caret", code: 94 },
+    { entity: "underscore", code: 95 },
+    { entity: "grave", code: 96 },
+    { entity: "lcurly", code: 123 },
+    { entity: "bar", code: 124 },
+    { entity: "rcurly", code: 125 },
+    { entity: "tilde", code: 126 },
+
+    { entity: "nbsp", code: 160, invisible:true, title: "non-breakable space", display:"nbsp" },
+    { entity: "iexcl", code: 161 },
+    { entity: "cent", code: 162 },
+    { entity: "pound", code: 163 },
+    { entity: "curren", code: 164 },
+    { entity: "yen", code: 165 },
+    { entity: "brvbar", code: 166 },
+    { entity: "sect", code: 167 },
+    { entity: "uml", code: 168 },
+    { entity: "copy", code: 169 },
+    { entity: "ordf", code: 170 },
+    { entity: "laquo", code: 171 },
+    { entity: "not", code: 172 },
+    { entity: "shy", code: 173, invisible:true, title:"soft hyphen", display:"shy" },
+    { entity: "reg", code: 174 },
+    { entity: "macr", code: 175 },
+    { entity: "deg", code: 176 },
+    { entity: "plusmn", code: 177 },
+    { entity: "sup2", code: 178 },
+    { entity: "sup3", code: 179 },
+    { entity: "acute", code: 180 },
+    { entity: "micro", code: 181 },
+    { entity: "para", code: 182 },
+    { entity: "middot", code: 183 },
+    { entity: "cedil", code: 184 },
+    { entity: "sup1", code: 185 },
+    { entity: "ordm", code: 186 },
+    { entity: "raquo", code: 187 },
+    { entity: "frac14", code: 188 },
+    { entity: "frac12", code: 189 },
+    { entity: "frac34", code: 190 },
+    { entity: "iquest", code: 191 },
+    { entity: "fnof", code: 402 },
+    { entity: "circ", code: 710 },
+    { code: 732 },
+    { entity: "ndash", code: 8211, title:"en-dash" },
+    { entity: "mdash", code: 8212, title:"em-dash" },
+  ];
+
+var symbolsAccents = [
+  { entity: "Agrave", code: 192 },
+  { entity: "Aacute", code: 193 },
+  { entity: "Acirc", code: 194 },
+  { entity: "Atilde", code: 195 },
+  { entity: "Auml", code: 196 },
+  { entity: "Aring", code: 197 },
+  { entity: "AElig", code: 198 },
+  { entity: "Ccedil", code: 199 },
+  { entity: "Egrave", code: 200 },
+  { entity: "Eacute", code: 201 },
+  { entity: "Ecirc", code: 202 },
+  { entity: "Euml", code: 203 },
+  { entity: "Igrave", code: 204 },
+  { entity: "Iacute", code: 205 },
+  { entity: "Icirc", code: 206 },
+  { entity: "Iuml", code: 207 },
+  { entity: "ETH", code: 208 },
+  { entity: "Ntilde", code: 209 },
+  { entity: "Ograve", code: 210 },
+  { entity: "Oacute", code: 211 },
+  { entity: "Ocirc", code: 212 },
+  { entity: "Otilde", code: 213 },
+  { entity: "Ouml", code: 214 },
+  { entity: "times", code: 215 },
+  { entity: "Oslash", code: 216 },
+  { entity: "Ugrave", code: 217 },
+  { entity: "Uacute", code: 218 },
+  { entity: "Ucirc", code: 219 },
+  { entity: "Uuml", code: 220 },
+  { entity: "Yacute", code: 221 },
+  { entity: "THORN", code: 222 },
+  { entity: "szlig", code: 223 },
+  { entity: "agrave", code: 224 },
+  { entity: "aacute", code: 225 },
+  { entity: "acirc", code: 226 },
+  { entity: "atilde", code: 227 },
+  { entity: "auml", code: 228 },
+  { entity: "aring", code: 229 },
+  { entity: "aelig", code: 230 },
+  { entity: "ccedil", code: 231 },
+  { entity: "egrave", code: 232 },
+  { entity: "eacute", code: 233 },
+  { entity: "ecirc", code: 234 },
+  { entity: "euml", code: 235 },
+  { entity: "igrave", code: 236 },
+  { entity: "iacute", code: 237 },
+  { entity: "icirc", code: 238 },
+  { entity: "iuml", code: 239 },
+  { entity: "eth", code: 240 },
+  { entity: "ntilde", code: 241 },
+  { entity: "ograve", code: 242 },
+  { entity: "oacute", code: 243 },
+  { entity: "ocirc", code: 244 },
+  { entity: "otilde", code: 245 },
+  { entity: "ouml", code: 246 },
+  { entity: "divide", code: 247 },
+  { entity: "oslash", code: 248 },
+  { entity: "ugrave", code: 249 },
+  { entity: "uacute", code: 250 },
+  { entity: "ucirc", code: 251 },
+  { entity: "uuml", code: 252 },
+  { entity: "yacute", code: 253 },
+  { entity: "thorn", code: 254 },
+  { entity: "yuml", code: 255 },
+  { entity: "Lstroke", code: 321 },
+  { entity: "lstroke", code: 322 },
+  { entity: "OElig", code: 338 },
+  { entity: "oelig", code: 339 },
+  { entity: "Scaron", code: 352 },
+  { entity: "scaron", code: 353 },
+  { entity: "Yuml", code: 376 },
+];
+
+var symbolsGreek = [
+  { entity: "Alpha", code: 913 },
+  { entity: "Beta", code: 914 },
+  { entity: "Gamma", code: 915 },
+  { entity: "Delta", code: 916 },
+  { entity: "Epsilon", code: 917 },
+  { entity: "Zeta", code: 918 },
+  { entity: "Eta", code: 919 },
+  { entity: "Theta", code: 920 },
+  { entity: "Iota", code: 921 },
+  { entity: "Kappa", code: 922 },
+  { entity: "Lambda", code: 923 },
+  { entity: "Mu", code: 924 },
+  { entity: "Nu", code: 925 },
+  { entity: "Xi", code: 926 },
+  { entity: "Omicron", code: 927 },
+  { entity: "Pi", code: 928 },
+  { entity: "Rho", code: 929 },
+  { entity: "Sigma", code: 931 },
+  { entity: "Tau", code: 932 },
+  { entity: "Upsilon", code: 933 },
+  { entity: "Phi", code: 934 },
+  { entity: "Chi", code: 935 },
+  { entity: "Psi", code: 936 },
+  { entity: "Omega", code: 937 },
+  { entity: "alpha", code: 945 },
+  { entity: "beta", code: 946 },
+  { entity: "gamma", code: 947 },
+  { entity: "delta", code: 948 },
+  { entity: "epsilon", code: 949 },
+  { entity: "zeta", code: 950 },
+  { entity: "eta", code: 951 },
+  { entity: "theta", code: 952 },
+  { entity: "iota", code: 953 },
+  { entity: "kappa", code: 954 },
+  { entity: "lambda", code: 955 },
+  { entity: "mu", code: 956 },
+  { entity: "nu", code: 957 },
+  { entity: "xi", code: 958 },
+  { entity: "omicron", code: 959 },
+  { entity: "pi", code: 960 },
+  { entity: "rho", code: 961 },
+  { entity: "sigmaf", code: 962 },
+  { entity: "sigma", code: 963 },
+  { entity: "tau", code: 964 },
+  { entity: "upsilon", code: 965 },
+  { entity: "phi", code: 966 },
+  { entity: "chi", code: 967 },
+  { entity: "psi", code: 968 },
+  { entity: "omega", code: 969 },
+  { entity: "thetasym", code: 977 },
+  { entity: "upsih", code: 978 },
+  { entity: "piv", code: 982 },
+];
+
+var symbolsSpacing = [
+  { entity: "ensp", code: 8194, invisible:true, title:"en-space", display:"en" },
+  { entity: "emsp", code: 8195, invisible:true, title:"em-space", display:"em" },
+  { entity: "quad", code: 8195, invisible:true, title:"quad space", display:"quad" },
+  { entity: "thicksp", code: 8196, invisible:true, title:"thick space", display:"thick" },
+  { entity: "medsp", code: 8197, invisible:true, title:"medium space", display:"medium" },
+  { entity: "thinsp", code: 8201, invisible:true, title:"thin space", display:"thin" },
+  { entity: "strut", code: 8203, invisible:true, title:"strut", display:"strut" },
+  { entity: "pagebreak", code: 12, invisible:true, title:"page break (in LaTeX)", display:"page-break" },
+  { entity: "zwnj", code: 8204, invisible:true, title:"zero-width non-joiner", display:"zwnj" },
+  { entity: "zwj", code: 8205, invisible:true, title:"zero-width joiner", display:"zwj" },
+  { entity: "lrm", code: 8206, invisible:true, title:"left-to-right mode", display:"lrm" },
+  { entity: "rlm", code: 8207, invisible:true, title:"right-to-left mode", display:"rlm" },
+];
+
+var symbolsOther = [
+  { entity: "lsquo", code: 8216 },
+  { entity: "rsquo", code: 8217 },
+  { entity: "sbquo", code: 8218 },
+  { entity: "ldquo", code: 8220 },
+  { entity: "rdquo", code: 8221 },
+  { entity: "bdquo", code: 8222 },
+  { entity: "dagger", code: 8224 },
+  { entity: "Dagger", code: 8225 },
+  { entity: "bull", code: 8226 },
+  { entity: "hellip", code: 8230 },
+  { entity: "permil", code: 8240 },
+  { entity: "prime", code: 8242 },
+  { entity: "Prime", code: 8243 },
+  { entity: "lsaquo", code: 8249 },
+  { entity: "rsaquo", code: 8250 },
+  { entity: "oline", code: 8254 },
+  { entity: "frasl", code: 8260 },
+  { entity: "euro", code: 8364 },
+  { entity: "image", code: 8465 },
+  { entity: "weierp", code: 8472 },
+  { entity: "real", code: 8476 },
+  { entity: "trade", code: 8482 },
+  { entity: "alefsym", code: 8501 },
+  { entity: "larr", code: 8592 },
+  { entity: "uarr", code: 8593 },
+  { entity: "rarr", code: 8594 },
+  { entity: "darr", code: 8595 },
+  { entity: "harr", code: 8596 },
+  { entity: "crarr", code: 8629 },
+  { entity: "lArr", code: 8656 },
+  { entity: "uArr", code: 8657 },
+  { entity: "rArr", code: 8658 },
+  { entity: "dArr", code: 8659 },
+  { entity: "hArr", code: 8660 },
+  // unnamed entities
+  { entity: "hooklarr", code: 8617 },
+  { entity: "bbox", code: 8718 },
+  { entity: "box", code: 9633 },
+  { entity: "ballotbox", code: 9744 },
+  { entity: "ballotc", code: 9745 },
+  { entity: "ballotx", code: 9746 },
+  { entity: "checkmark", code: 10003 },
+  { entity: "bcheckmark", code: 10004 },
+  { entity: "xmark", code: 10007 },
+  { entity: "bxmark", code: 10008 },
+  { entity: "mglass", code: 128270 },
+];
+
+var symbolsMath = [
+  { entity: "forall", code: 8704 },
+  { entity: "part", code: 8706 },
+  { entity: "exist", code: 8707 },
+  { entity: "empty", code: 8709 },
+  { entity: "nabla", code: 8711 },
+  { entity: "isin", code: 8712 },
+  { entity: "notin", code: 8713 },
+  { entity: "ni", code: 8715 },
+  { entity: "prod", code: 8719 },
+  { entity: "sum", code: 8721 },
+  { entity: "minus", code: 8722 },
+  { entity: "lowast", code: 8727 },
+  { entity: "radic", code: 8730 },
+  { entity: "prop", code: 8733 },
+  { entity: "infin", code: 8734 },
+  { entity: "ang", code: 8736 },
+  { entity: "and", code: 8743 },
+  { entity: "or", code: 8744 },
+  { entity: "cap", code: 8745 },
+  { entity: "cup", code: 8746 },
+  { entity: "int", code: 8747 },
+  { entity: "there4", code: 8756 },
+  { entity: "sim", code: 8764 },
+  { entity: "cong", code: 8773 },
+  { entity: "asymp", code: 8776 },
+  { entity: "ne", code: 8800 },
+  { entity: "equiv", code: 8801 },
+  { entity: "le", code: 8804 },
+  { entity: "ge", code: 8805 },
+  { entity: "sub", code: 8834 },
+  { entity: "sup", code: 8835 },
+  { entity: "nsub", code: 8836 },
+  { entity: "sube", code: 8838 },
+  { entity: "supe", code: 8839 },
+  { entity: "oplus", code: 8853 },
+  { entity: "otimes", code: 8855 },
+  { entity: "perp", code: 8869 },
+  { entity: "sdot", code: 8901 },
+  { entity: "vellip", code: 8942 },
+  { entity: "lceil", code: 8968 },
+  { entity: "rceil", code: 8969 },
+  { entity: "lfloor", code: 8970 },
+  { entity: "rfloor", code: 8971 },
+  { entity: "lang", code: 9001 },
+  { entity: "rang", code: 9002 },
+  { entity: "loz", code: 9674 },
+  { entity: "spades", code: 9824 },
+  { entity: "clubs", code: 9827 },
+  { entity: "hearts", code: 9829 },
+  { entity: "diams", code: 9830 },
+];
+
   var tools = [
     { name    : "bold", 
       icon    : true,
@@ -1746,7 +2055,12 @@ var UI = (function() {
         toolFontFamily("monospace"),
         toolFontFamily("normal"),
         toolCss("font-variant","small-caps"),
-        toolInline("strike-out","~~","~~"),
+        { name: "strike-out",
+          display: "strike-out",
+          helpLink: "#sec-css",
+          content: "text",
+          replacer: function(txt,rng) { return "~~" + txt + "~~"; }
+        },
         toolCss("text-decoration","underline","underline"),
       ]
     },
@@ -1776,6 +2090,28 @@ var UI = (function() {
         heading("Heading 5","#####"),        
       ]
     },      
+    {
+      name: "symbol",
+      icon: true,
+      title: "", //"Insert a symbol",
+      options: [
+        { name: "basic", title:"",
+          symbols: symbolsBasic.concat(symbolsOther),
+        },
+        { name: "accents", title:"",
+          symbols: symbolsAccents,
+        },
+        { name: "greek", title:"",
+          symbols: symbolsGreek,
+        },
+        { name: "math", title:"",
+          symbols: symbolsMath,
+        },
+        { name: "spacing", title:"",
+          symbols: symbolsSpacing,
+        },
+      ]
+    },
     { element: "BR",
     },
     { name    : "pre", 
@@ -1817,7 +2153,15 @@ var UI = (function() {
       replacer: function(txt,rng) {
         return blockRange(rng,linePrefix("> ",txt));
       }
-    },
+    },    
+    { name    : "img", 
+      icon    : true,
+      title   : "Insert an image",
+      content : "",
+      upload  : "Please select an image.",
+      exts    : [".jpg",".png",".svg",".gif"],
+    },   
+    toolFigure(true),   
     { name    : "table",
       icon    : true,
       title   : "Table",
@@ -1830,15 +2174,7 @@ var UI = (function() {
         toolTable(7),
         toolTable(8),
       ]
-    },
-    { name    : "img", 
-      icon    : true,
-      title   : "Insert an image",
-      content : "",
-      upload  : "Please select an image.",
-      exts    : [".jpg",".png",".svg",".gif"],
-    },   
-    toolFigure(true),
+    }, 
     { element: "BR",
     },
     { name    : "custom",
@@ -2000,6 +2336,32 @@ var UI = (function() {
     }  
 
   ];
+
+
+
+  UI.prototype.initSymbols = function(menu,symbols) {
+    var self = this;
+    var html = symbols.map(function(symbol) {
+      var entity = (symbol.entity ? symbol.entity : "#" + symbol.code.toString());
+      var classes = "symbol button" + (symbol.invisible ? " invisible" : "");
+      var title = symbol.title || entity;
+      return "<span class='" + classes + "' data-entity='" + entity + "' title='" + title + "'>"  +
+              (symbol.display ? symbol.display : "&#" + symbol.code.toString() + ";") + "</span>";
+    }).join("");
+    menu.innerHTML = html;
+    menu.addEventListener("click", function(ev) {
+      var elem = ev.target;
+      if (!elem) return;
+      var entity = elem.getAttribute("data-entity");
+      if (!entity) return;
+      self.toolCommand( { 
+        name: "symbol", 
+        replacer: function(txt,rng) {
+          return "&" + entity + ";";
+        }
+      });      
+    });
+  }
 
   function toolFontFamily(fam) {
     return toolCss("font-family",fam);
@@ -2178,11 +2540,11 @@ var UI = (function() {
       item.className = "button";
       if (tool.icon===true) tool.icon = "images/icon-tool-" + tool.name + ".png";
       if (!tool.display) tool.display = Util.capitalize(tool.name);
-      if (!tool.title) tool.title = tool.display;
+      if (tool.title==null) tool.title = tool.display;
       if (tool.exts) {
         tool.title = tool.title + " (" + tool.exts.join(",") + ")";
       }
-      item.title = tool.title || tool.display;
+      if (tool.title != null) item.title = tool.title;
       if (tool.html) {
         item.innerHTML = tool.html;
       }
@@ -2204,9 +2566,9 @@ var UI = (function() {
       }
       parent.appendChild(item);
     }
-    if (tool.options) {
+    if (tool.options || tool.symbols) {
       Util.addClassName(item,"popup");        
-      Util.addClassName(item,"options");        
+      Util.addClassName(item,tool.options ? "options":"symbols");        
       if (!tool.icon) Util.addClassName(item,"named");
       var menu = document.getElementById(item.id + "-content");
       if (!menu) {
@@ -2216,9 +2578,14 @@ var UI = (function() {
       }
       Util.addClassName(menu,"menu");
       Util.addClassName(menu,"boxed");
-      tool.options.forEach(function(subtool) {
-        self.initTool(subtool,menu,parentName + "-" + tool.name);
-      });
+      if (tool.options) {
+        tool.options.forEach(function(subtool) {
+          self.initTool(subtool,menu,parentName + "-" + tool.name);
+        });
+      }
+      else {
+        self.initSymbols(menu,tool.symbols);
+      }
     }
     else {
       item.addEventListener("click", function(ev) { 

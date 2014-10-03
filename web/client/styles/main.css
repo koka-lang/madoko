@@ -303,8 +303,11 @@ span.save-link:hover {
 
 #toolbox>div>div.button {
   display: inline-block;
-  padding: 0em 0.25em;
   color: #135;
+}
+
+#toolbox .button {
+  padding: 0em 0.25em;
 }
 
 #toolbox>div>div.options>div {
@@ -316,6 +319,15 @@ span.save-link:hover {
 #toolbox #tool-math-content,
 #toolbox #tool-metadata-content {
   width: 12em;
+}
+
+#toolbox #tool-symbol .menu {
+  width: 17em;
+}
+
+#toolbox .symbol {
+  display: inline-block;
+  width: 1em;
 }
 
 #toolbox .help {
@@ -332,8 +344,8 @@ span.save-link:hover {
   background-color: #AAA !important;  
 }
 
-#toolbox #tool-custom, #toolbox #tool-math, #toolbox #tool-include {
-  border-right: 1px solid #135;
+#toolbox .named ~ .named {
+  border-left: 1px solid #135;
 }
 
 #toolbox div.menu div.menu, #toolbox .named {
@@ -408,7 +420,8 @@ a.file-share:hover {
 }
 
 .boxed {
-  border: 1px solid black !important;
+  border: 1px solid !important;
+  border-color: black;
 }
 
 div.boxed {
@@ -652,12 +665,19 @@ div.boxed {
   cursor: -webkit-grabbing;
 }
 
-div.moving {
-  border-width: 3px !important;
+div.pinned.boxed.menu {
+  border-color: #135;
+  box-shadow: 1px 1px 0px;
 }
 
-#toolbox.popup > div {
+#toolbox.popup > div,
+#toolbox #tool-symbol.popup > div {
   overflow-y: visible;
+}
+
+#toolbox .symbol.invisible {
+  border: 1px solid Gainsboro;
+  width: auto;
 }
 
 /* Widths of popup content */
@@ -665,10 +685,7 @@ div.moving {
   width: 70%;
 }
 
-#toolbox-content,
-#help-content,
-#menu-settings-content,
-#document-content {
+#toolbox .menu {
   width: 20em;
 }
 
