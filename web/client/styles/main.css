@@ -46,10 +46,10 @@ html,body,#main {
   border-style: none;
   color: white;
 }
-.theme-dark .header-bar .popup div {
+.theme-dark .header-bar .menu {
   color: black;
 }
-.theme-dark .header-bar .popup div .button:hover {
+.theme-dark .header-bar .menu .button:hover {
   background-color: Gainsboro;
 }
 
@@ -299,6 +299,12 @@ span.save-link:hover {
 
 #toolbox {
   padding: 0em 0.5em;
+}
+
+.theme-dark #toolbox .menu {
+  color: #135;
+  border-color: #135;
+  box-shadow-color: #135;
 }
 
 #toolbox>div>div.button {
