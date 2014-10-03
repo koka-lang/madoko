@@ -661,8 +661,15 @@ div.boxed {
 
 .pinbox {
   float: right;
-  margin-top: -0.5ex;
-  margin-right: -0.5ex;
+  margin-top: calc(-1ex + 1px);
+  margin-right: calc(-0.5ex + 1px);
+  padding: 0pt;
+}
+
+.pinbox img {
+  padding: 0pt !important;
+  vertical-align: 0pt;
+  margin: 0pt;
 }
 
 .moving .pinbox,
