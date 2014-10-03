@@ -310,8 +310,10 @@ span.save-link:hover {
   width: 9em;
 }
 
+#toolbox #tool-custom-content,
 #toolbox #tool-include-content,
-#toolbox #tool-math-content {
+#toolbox #tool-math-content,
+#toolbox #tool-metadata-content {
   width: 12em;
 }
 
@@ -329,6 +331,13 @@ span.save-link:hover {
   background-color: #AAA !important;  
 }
 
+#toolbox #tool-custom, #toolbox #tool-math, #toolbox #tool-include {
+  border-right: 1px solid #135;
+}
+
+#toolbox div.menu div.menu, #toolbox .named {
+  font-size: small;
+}
 
 /* File items */
 
@@ -608,7 +617,7 @@ div.boxed {
   width: 100%;
   position: absolute;
   z-index: 1;
-  top: 1.25rem;
+  top: 1.25em;
   left: 0;
   background-color: white;
   max-height: 20rem;  

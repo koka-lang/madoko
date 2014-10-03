@@ -1876,6 +1876,14 @@ var UI = (function() {
             return "[^fn-footnote]";
           }
         },
+        { name: "hr",
+          display: "Horizontal rule",
+          title: "Insert a horizontal rule",
+          replacer: function(txt,rng) {
+            var content = "\n----------------------------- { width=50% }";
+            return txt + blockRange(rng, content);
+          }
+        },
         customBlock("note"),
         customBlock("remark"),
         customBlock("example"),
@@ -1889,15 +1897,18 @@ var UI = (function() {
       title: "Insert a math block",
       options: [
         customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n","","#sec-math"),
-        customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$." ), 
+        customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$.", "#sec-math" ), 
         customBlock("proof", "", "Trivially by induction. [&box;]{float=right}" ),
         customBlock("lemma"),
         customBlock("proposition"), 
         customBlock("corollary"),
         customBlock("definition"),
-        customBlock("Math preformatted","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre","Math mode that respects whitespace and identifier names"),
-        customBlock("Math definitions","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$.","#sec-mathdefs","Define math commands"),
-        customBlock("Math display","","e = mc^2","","A plain display math block (Equations are preferred)")
+        customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre","Math mode that respects whitespace and identifier names"),
+        customBlock("MathDef","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$.","#sec-mathdefs","Define math commands"),
+        customBlock("Math","","e = mc^2","","#sec-math","A plain display math block (Equations are preferred)"),
+        customBlock("Snippet","",
+                        "%note: use metadata: 'Package: pgfplots' to compile this snippet.\n\\begin{tikzpicture}\n\\begin{axis}[\n  height=8cm,\n  width=8cm,\n  grid=major,\n]\n% math plot\n\\addplot {-x^5 - 242}; \n\\addlegendentry{model}\n% data plot\n\\addplot coordinates {\n(-4.77778,2027.60977)\n(-3.55556,347.84069)\n(-2.33333,22.58953)\n(-1.11111,-493.50066)\n(0.11111,46.66082)\n(1.33333,-205.56286)\n(2.55556,-341.40638)\n(3.77778,-1169.24780)\n(5.00000,-3269.56775)\n};\n\\addlegendentry{estimate}\n\\end{axis}\n\\end{tikzpicture}",
+                        "","#sec-snippets","Insert an arbitrary LaTex snippet"),
       ]
     },
     { name: "include",
@@ -1951,7 +1962,39 @@ var UI = (function() {
           exts    : [".cls"],
         },
       ]
-    }   
+    },
+    { name: "metadata",
+      title: "Add document metadata",
+      options: [
+        toolMetadata("Title","My document title"),
+        toolMetadata("Sub Title","The sub-title"),
+        toolMetadata("Title Note", "&date; (version 1.0)"),
+        toolMetadata("Author","Name\nAffiliation : Company name\nEmail       : name@foo.com\n"),
+        toolMetadata("Toc Depth","3","Depth of the table of contents", "#sec-toc"),
+        toolMetadata("Heading Depth","3","Maximum depth up to which headings are numbered. Set to 0 to disable numbering","#sec-numbering"),
+        toolMetadata("Heading Base", "2", "Setting the heading base to 2 use H2 or \\section commands for level 1 headers"),
+        toolMetadata("Bibliography", "example.bib", "Specify a bilbliography file. Use the 'Include' menu to include a local file.","#sec-bib"),
+        toolMetadata("Bib Style", "plainnat", "Specify a bibliography style to use.","#sec-bibstyle"),
+        toolMetadata("Cite Style", "natural", "Specify a citation style to use.","#sec-cite"),
+        toolMetadata("Cite All", "true", "Include all entries in the bibliography"),
+        toolMetadata("Bib Search Url", "www.google.com", "Add a search icon to bibliography references", "#bibliography-tooltips-and-searches"),
+        { element: "HR" },
+        toolMetadata("Css", "example.css", "Specify a style file or reference to include in the HTML output"),
+        toolMetadata("Script", "example.js", "Specify a script file or reference to include in the HTML output"),
+        toolMetadata("HTML Meta", "http-equiv=\"refresh\" content=\"30\"", "Specify a meta tag for HTML output"),
+        toolMetadata("HTML Header", "", "This value is included literally in the <head> section of HTML output"),
+        { element: "HR" },
+        toolMetadata("Doc Class", "[9pt]article", "Specify the LaTeX document class. Use the 'Include' menu to include a specific local document class file."),
+        toolMetadata("Package", "pgfplots", "Specify a standard LaTeX package to use. Use the 'Include' menu to include a specific local package file","#sec-math"),
+        toolMetadata("Tex Header", "", "The value is included literally before \\begin{document}. in the LaTeX output"),
+        { element: "HR" },
+        toolMetadata("Math Dpi", "300", "Specify the resolution at which math is rendered."),
+        toolMetadata("Math Scale", "108", "Specify the scale math is rendered."),
+        toolMetadata("Math Embed", "512", "Specify up to which size (in Kb) math is rendered in-place (instead of a separate image)"),
+      ]
+
+    }  
+
   ];
 
   function toolFontFamily(fam) {
@@ -1983,6 +2026,23 @@ var UI = (function() {
       content : "  Figure contents.",
       replacer: function(txt,rng) {
         return wrapBlock(rng,"~ Figure { #fig-figure caption=\"My figure\"}", txt, "~")
+      }
+    }
+  }
+
+  function toolMetadata(name,value,title) {
+    return {
+      name: name,
+      helpLink: "#sec-metadata",
+      title: title,
+      replacer: function(txt,rng) {
+        var self = this;
+        var lineNo = findMetaPos(self.getEditText());      
+        if (lineNo > 0) {
+          var pos = { lineNumber: lineNo, column: 1 };      
+          self.insertText( pad(name,12," ") + ": " + value + "\n", pos );
+        }
+        return null;
       }
     }
   }
@@ -2029,11 +2089,12 @@ var UI = (function() {
     }
   }
 
-  function customBlock(name,post,content,postContent,helpLink) {
+  function customBlock(name,post,content,postContent,helpLink,title) {
     return { 
       name: name,
       content: content || "Here is a " + name + ".",
       helpLink: helpLink,
+      title: title,
       replacer: function(txt,rng) { 
         return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
@@ -2130,6 +2191,7 @@ var UI = (function() {
     if (tool.options) {
       Util.addClassName(item,"popup");        
       Util.addClassName(item,"options");        
+      if (!tool.icon) Util.addClassName(item,"named");
       var menu = document.getElementById(item.id + "-content");
       if (!menu) {
         menu = document.createElement("DIV");
@@ -2165,8 +2227,9 @@ var UI = (function() {
     if (!tool) return;
     self.anonEvent( function() {
       if (tool.replacer) {
+        //var pos = self.editor.getPosition();
         self.insertOrReplaceText( tool.replacer, tool.content || "" );
-        self.editor.revealPosition( self.editor.getPosition(), true );
+        self.editor.revealPosition( self.editor.getPosition(), true, true );
       }
       else if (tool.message) {
         return Storage.message(self.storage,tool.message,tool.header,tool.headerLogo);
@@ -2204,8 +2267,11 @@ var UI = (function() {
     var select = self.editor.getSelection();
     var model = self.editor.getModel();
     var txt = (select.isEmpty() ? defText : model.getValueInRange(select) );
-    var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, replacer.call(self,txt,select) );
-    self.editor.executeCommand("madoko",command);
+    var newText = replacer.call(self,txt,select);
+    if (newText != null) {
+      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
+      self.editor.executeCommand("madoko",command);
+    }
   }
 
 
