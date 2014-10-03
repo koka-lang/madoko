@@ -1865,14 +1865,17 @@ var symbolsGreek = [
 ];
 
 var symbolsSpacing = [
+  { content: "\\\n", invisible:true, title:"hard line-break", display:"line-break" },
+  { entity: "nbsp", code: 160, invisible:true, title: "non-breakable space", display:"nbsp" },
   { entity: "ensp", code: 8194, invisible:true, title:"en-space", display:"en" },
   { entity: "emsp", code: 8195, invisible:true, title:"em-space", display:"em" },
   { entity: "quad", code: 8195, invisible:true, title:"quad space", display:"quad" },
   { entity: "thicksp", code: 8196, invisible:true, title:"thick space", display:"thick" },
   { entity: "medsp", code: 8197, invisible:true, title:"medium space", display:"medium" },
   { entity: "thinsp", code: 8201, invisible:true, title:"thin space", display:"thin" },
-  { entity: "strut", code: 8203, invisible:true, title:"strut", display:"strut" },
+  { entity: "strut", code: 8203, invisible:true, title:"strut (zero-width entity of line-height)", display: "strut" },
   { entity: "pagebreak", code: 12, invisible:true, title:"page break (in LaTeX)", display:"page-break" },
+  { entity: "shy", code: 173, invisible:true, title:"soft hyphen", display:"shy" },
   { entity: "zwnj", code: 8204, invisible:true, title:"zero-width non-joiner", display:"zwnj" },
   { entity: "zwj", code: 8205, invisible:true, title:"zero-width joiner", display:"zwj" },
   { entity: "lrm", code: 8206, invisible:true, title:"left-to-right mode", display:"lrm" },
@@ -2342,7 +2345,7 @@ var symbolsMath = [
   UI.prototype.initSymbols = function(menu,symbols) {
     var self = this;
     var html = symbols.map(function(symbol) {
-      var entity = (symbol.entity ? symbol.entity : "#" + symbol.code.toString());
+      var entity = (symbol.content ? symbol.content : "&amp;" + (symbol.entity ? symbol.entity : "#" + symbol.code.toString()) + ";");
       var classes = "symbol button" + (symbol.invisible ? " invisible" : "");
       var title = symbol.title || entity;
       return "<span class='" + classes + "' data-entity='" + entity + "' title='" + title + "'>"  +
@@ -2357,7 +2360,7 @@ var symbolsMath = [
       self.toolCommand( { 
         name: "symbol", 
         replacer: function(txt,rng) {
-          return "&" + entity + ";";
+          return entity;
         }
       });      
     });
