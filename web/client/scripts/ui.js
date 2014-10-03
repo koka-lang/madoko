@@ -2071,15 +2071,41 @@ var symbolsMath = [
       icon    : true,
       title   : "Change the font size",
       options : [
+        toolFontSize("larger"),
+        toolFontSize("smaller"),
         toolFontSize("xx-small"),
         toolFontSize("x-small"),
         toolFontSize("small"),
         toolFontSize("medium"),
         toolFontSize("large"),
         toolFontSize("x-large"),
-        toolFontSize("xx-large"),
-        toolFontSize("50%"),
+        toolFontSize("xx-large"),        
+        toolFontSize("initial"),
         toolFontSize("2ex"),
+      ]
+    },    
+    { name    : "color", 
+      icon    : true,
+      title   : "Change the font color",
+      options : [
+        toolColor("red"),
+        toolColor("lime"),
+        toolColor("blue"),
+        toolColor("yellow"),
+        toolColor("cyan"),
+        toolColor("magenta"),
+        toolColor("maroon"),
+        toolColor("green"),
+        toolColor("navy"),        
+        toolColor("olive"),
+        toolColor("teal"),
+        toolColor("purple"),
+        toolColor("orange"),
+        toolColor("black"),
+        toolColor("gray"),
+        toolColor("lightgray"),
+        toolColor("white"),
+        toolColor("#335577"),  
       ]
     },    
     { name    : "heading", 
@@ -2374,6 +2400,16 @@ var symbolsMath = [
     return toolCss("font-size",size);
   }
 
+  function toolColor(color) {
+    var tool = toolCss("color",color);
+    if (!Util.startsWith(color,"#")) {
+      tool.html = "<span class='colorbox " + color + "'></span>";
+      tool.className = "button icon";
+      tool.helpLink = null;
+    }
+    return tool;
+  }
+
   function toolCss(attr,value,display) {
     return {
       name: value,
@@ -2540,7 +2576,7 @@ var symbolsMath = [
     if (!item) {
       item = document.createElement("DIV");
       item.id = parentName + "-" + tool.name;
-      item.className = "button";
+      item.className = (tool.className != null ? tool.className :"button");
       if (tool.icon===true) tool.icon = "images/icon-tool-" + tool.name + ".png";
       if (!tool.display) tool.display = Util.capitalize(tool.name);
       if (tool.title==null) tool.title = tool.display;

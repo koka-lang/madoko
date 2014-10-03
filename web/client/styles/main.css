@@ -320,6 +320,10 @@ span.save-link:hover {
   width: 9em;
 }
 
+#toolbox #tool-color-content {
+  width: 7.75em;
+}
+
 #toolbox #tool-custom-content,
 #toolbox #tool-include-content,
 #toolbox #tool-math-content,
@@ -356,6 +360,35 @@ span.save-link:hover {
 
 #toolbox div.menu div.menu, #toolbox .named {
   font-size: small;
+}
+
+#toolbox .colorbox {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 1px solid black;  
+}
+
+#toolbox .red { background-color: red; }
+#toolbox .lime { background-color: lime; }
+#toolbox .blue { background-color: blue; }
+#toolbox .yellow { background-color: yellow; }
+#toolbox .cyan { background-color: cyan; }
+#toolbox .magenta { background-color: magenta; }
+#toolbox .maroon { background-color: maroon; }
+#toolbox .green { background-color: green; }
+#toolbox .navy { background-color: navy; }        
+#toolbox .olive { background-color: olive; }
+#toolbox .teal { background-color: teal; }
+#toolbox .purple { background-color: purple; }
+#toolbox .orange { background-color: orange; }
+#toolbox .black { background-color: black; }
+#toolbox .gray { background-color: gray; }
+#toolbox .lightgray { background-color: lightgray; }
+#toolbox .white { background-color: white; }
+
+#toolbox .button.icon {
+  display: inline;
 }
 
 /* File items */
