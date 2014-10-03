@@ -619,7 +619,7 @@ div.boxed {
   position: absolute;
   z-index: 1;
   top: 1.25em;
-  left: 0;
+  left: 0pt;
   background-color: white;
   max-height: 20rem;  
   padding: 0.5ex;
@@ -632,15 +632,11 @@ div.boxed {
   display: block;
 }
 
-.popup > div.pinned {
-  left: 10em;
-}
-
-.pinned .pin, .unpin {
+.pinned .pin, .pinned.moving .unpin, .unpin {
   display: none;
 }
 
-.pin, .pinned .unpin {
+.pinned.moving .pin, .pinned .unpin {
   display: inline;
 }
 
@@ -648,6 +644,16 @@ div.boxed {
   float: right;
   margin-top: -0.5ex;
   margin-right: -0.5ex;
+}
+
+.moving .pinbox,
+.moving .pinbox .button:hover {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+
+div.moving {
+  border-width: 3px !important;
 }
 
 #toolbox.popup > div {

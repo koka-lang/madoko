@@ -2323,7 +2323,8 @@ var UI = (function() {
     
     var text = "";
     if (Util.startsWith(mime,"image/")) {
-      text = "![" + stem + "]\n\n[" + stem + "]: " + name + ' "' + stem + '"';
+      self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto }\n');
+      text = "![" + stem + "]";
     }
     else if (ext===".mdk" || ext===".md") {
       text = "[INCLUDE=\"" + name + "\"]";

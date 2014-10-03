@@ -1209,26 +1209,106 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
-  function enablePinned() {
+
+  function getScreenOffset(elem) {
+    var box = elem.getBoundingClientRect()
+    
+    var body = document.body
+    var docElem = document.documentElement
+    
+    var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
+    var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
+    
+    var clientTop = docElem.clientTop || body.clientTop || 0
+    var clientLeft = docElem.clientLeft || body.clientLeft || 0
+    
+    var top  = box.top +  scrollTop - clientTop
+    var left = box.left + scrollLeft - clientLeft
+    
+    return { top: Math.round(top), left: Math.round(left) }
+  } 
+
+  function getDocumentOffset(elem) {
+    var top = 0;
+    var left = 0;
+    while( elem ) {
+      top = top + elem.offsetTop;
+      left = left + elem.offsetLeft;
+      elem = elem.offsetParent;
+    }
+    return { top: top, left: left };
+  }
+
+  function enablePinned() 
+  {
+    var pinned = null;
+    var offsetX = 0;
+    var offsetY = 0;
+
+    function moveStart(_pinned,ev) {
+      moveEnd();
+      pinned  = _pinned;
+      var src = pinned.getBoundingClientRect();
+      var doc = getDocumentOffset(pinned.parentNode);
+      offsetX = ev.clientX - src.left + doc.left;
+      offsetY = ev.clientY - src.top + doc.top;      
+      addClassName(pinned,"moving");
+      addClassName(pinned,"pinned");
+      window.addEventListener( "mousemove", mouseMove, true );
+    }
+
+    function moveEnd(ev) {
+      if (pinned) {        
+        window.removeEventListener( "mousemove", mouseMove, true );
+        removeClassName(pinned,"moving");
+        pinned = null;
+        offsetX = 0;
+        offsetY = 0;
+      }
+    };
+
+    function mouseMove(ev) {
+      if (pinned) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        pinned.style.top = (ev.clientY - offsetY).toFixed(0) + "px";
+        pinned.style.left = (ev.clientX - offsetX).toFixed(0) + "px";
+      }
+    }
+
+    window.addEventListener("mouseup", moveEnd );    
+
     [].forEach.call( document.getElementsByClassName("pinnable"), function(menu) {
       var pinbox = document.createElement("DIV");
       pinbox.className = "pinbox";
       var imgPin = document.createElement("IMG");
       imgPin.src = "images/icon-pin.png";
       imgPin.title = "Pin this menu";
-      imgPin.className = "button pin";
+      imgPin.className = "pin button";
       pinbox.appendChild(imgPin);
       var imgUnpin = document.createElement("IMG");
       imgUnpin.src = "images/icon-unpin.png";
       imgUnpin.title = "Unpin this menu";
-      imgUnpin.className = "button unpin";
+      imgUnpin.className = "unpin button";
       pinbox.appendChild(imgUnpin);
       menu.insertBefore(pinbox,menu.firstChild);
-      pinbox.addEventListener( "click", function(ev) {
-        toggleClassName(menu, "pinned");
+      var left = menu.style.left;
+      var top  = menu.style.top;
+      imgUnpin.addEventListener( "click", function(ev) {
+        menu.style.left = left;
+        menu.style.top = top;
+        removeClassName(menu, "pinned");
+      });
+      imgPin.addEventListener("click", function(ev) {
+        if (!hasClassName(menu,"pinned")) {
+          moveStart(menu,ev);
+        }
       });
     });
+
   }
+
+
 
   function enablePopupClickHovering() 
   {
