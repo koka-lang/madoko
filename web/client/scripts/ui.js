@@ -1744,6 +1744,8 @@ var UI = (function() {
         toolFontFamily("monospace"),
         toolFontFamily("normal"),
         toolCss("font-variant","small-caps"),
+        toolInline("strike-out","~~","~~"),
+        toolCss("text-decoration","underline","underline"),
       ]
     },
     { name    : "fontsize", 
@@ -2005,14 +2007,26 @@ var UI = (function() {
     return toolCss("font-size",size);
   }
 
-  function toolCss(attr,value) {
+  function toolCss(attr,value,display) {
     return {
       name: value,
-      display: value,
+      display: display||value,
       helpLink: "#sec-css",
       content: "text",
       replacer: function(txt,rng) {
         return "[" + txt + "]{" + attr + "=\"" + value + "\"}";
+      }
+    }
+  }
+
+
+  function toolInline(name,pre,post) {
+    return {
+      name: name,
+      helpLink: "#syntax-inline-elements",
+      content: "text",
+      replacer: function(txt,rng) {
+        return pre + txt + post;
       }
     }
   }
