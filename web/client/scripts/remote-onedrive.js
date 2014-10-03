@@ -218,6 +218,7 @@ var Onedrive = (function() {
   }  
 
   Onedrive.prototype.readonly = false;
+  Onedrive.prototype.canSync  = true;
   Onedrive.prototype.needSignin = true;
   
   Onedrive.prototype.getFolder = function() {

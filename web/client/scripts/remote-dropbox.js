@@ -145,6 +145,7 @@ var Dropbox = (function() {
   }
 
   Dropbox.prototype.readonly = false;
+  Dropbox.prototype.canSync  = true;
   Dropbox.prototype.needSignin = true;
 
   Dropbox.prototype.getFolder = function() {

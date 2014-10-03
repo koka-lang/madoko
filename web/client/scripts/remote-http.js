@@ -60,9 +60,10 @@ var HttpRemote = (function() {
     return logo();
   }
 
-  HttpRemote.prototype.readonly = true;
+  HttpRemote.prototype.readonly   = true;
+  HttpRemote.prototype.canSync    = false;
   HttpRemote.prototype.needSignin = false;
-
+  
   HttpRemote.prototype.getFolder = function() {
     var self = this;
     return self.url;

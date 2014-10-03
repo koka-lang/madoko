@@ -76,7 +76,7 @@ function openFile(storage) {
     command: "open",   
     extensions: "remote folder .mdk .md .madoko .mkdn", 
   }
-  if (storage && !storage.remote.readonly) { // TODO: readonly is not correct, perhaps 'canbrowse'?
+  if (storage && storage.remote.canSync) { 
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
@@ -754,7 +754,7 @@ var Storage = (function() {
     var self = this;
     var remotes = new Map();
     var merges = [];
-    if (self.remote.readonly) return Promise.resolved(true); // can happen during generateHTML/PDF
+    if (!self.remote.canSync) return Promise.resolved(true); // can happen during generateHTML/PDF
 
     return self.login(self.isSynced()).then( function() {      
       var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );

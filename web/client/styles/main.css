@@ -685,6 +685,12 @@ div.pinned.boxed.menu {
   width: 70%;
 }
 
+#document-content {
+  width: 16em;
+}
+
+#help-content,
+#menu-settings-content,
 #toolbox .menu {
   width: 20em;
 }

@@ -1293,14 +1293,16 @@ doc.execCommand("SaveAs", null, filename)
       if (boundElem) {
         var bound = boundElem.getBoundingClientRect();
         var box = elem.getBoundingClientRect();
-        x = Math.min( bound.right - box.width, x );
-        y = Math.min( bound.bottom - box.height, y );
-        x = Math.max( bound.left, x );
-        y = Math.max( bound.top, y );
+        x = Math.min( bound.right - box.width - 5, x );
+        y = Math.min( bound.bottom - box.height - 5, y );
+        x = Math.max( bound.left + 5, x );
+        y = Math.max( bound.top + 5, y );
       }      
     }
-    elem.style.top = (y - doc.top).toFixed(0) + "px";
-    elem.style.left = (x - doc.left).toFixed(0) + "px";   
+    x = x - doc.left;
+    y = y - doc.top;
+    elem.style.top = y.toFixed(0) + "px";
+    elem.style.left = x.toFixed(0) + "px";   
   }
 
   function enablePinned() 
@@ -1310,7 +1312,9 @@ doc.execCommand("SaveAs", null, filename)
     window.addEventListener("unload", function() {
       localStorage.setItem("pinned", JSON.stringify(pinned.persist()));
     });
-    window.addEventListener("resize", positionPinned );
+    window.addEventListener("resize", function() { 
+      setTimeout( positionPinned, 100 );
+    });
 
     function positionPinned() {
       pinned.forEach( function(id,pos) {

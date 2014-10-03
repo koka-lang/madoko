@@ -44,9 +44,10 @@ var LocalRemote = (function() {
     return logo();
   }
 
+  LocalRemote.prototype.readonly = false;
+  LocalRemote.prototype.canSync  = false;
   LocalRemote.prototype.needSignin = false;
-  LocalRemote.prototype.readonly = true;
-
+  
   LocalRemote.prototype.getFolder = function() {
     var self = this;
     return self.folder;
