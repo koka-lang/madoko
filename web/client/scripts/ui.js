@@ -1696,14 +1696,6 @@ var UI = (function() {
                   return "`" + txt + "`"; // TODO: make smart about quotes 
                 },
     },
-    { name    : "font", 
-      icon    : true,
-      title   : "Change the font family or size",
-      content : "text",
-      replacer: function(txt) { 
-                  return "[" + txt + "]{ font-family=\"Segoe UI\" font-size=\"large\" } "; 
-                },
-    },
     { name    : "link", 
       icon    : true,
       title   : "Insert a link",
@@ -1717,14 +1709,70 @@ var UI = (function() {
                   self.insertAfterPara(self.editor.getPosition().lineNumber, def);
                   return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
                 },
+    }, 
+    { name    : "formula", 
+      icon    : true,
+      title   : "Inline formula",
+      content : "e = mc^2",
+      keys    : ["Alt-F"],
+      replacer: function(txt) { 
+                  return "$" + txt + "$"; 
+                },
+    },
+    { name    : "sub", 
+      icon    : true,
+      title   : "Sub-script",
+      content : "subscript",
+      replacer: function(txt) { 
+                  return "~" + txt.replace(/~/g,"\\~").replace(/ /g,"\\ ") + "~"; 
+                },
+    },
+    { name    : "super", 
+      icon    : true,
+      title   : "Super-script",
+      content : "super script",
+      replacer: function(txt) { 
+                  return "^" + txt.replace(/\^/g,"\\^").replace(/ /g,"\\ ") + "^"; 
+                },
+    },
+    { name    : "font", 
+      icon    : true,
+      title   : "Change the font family",
+      options : [
+        toolFontFamily("serif"),
+        toolFontFamily("sans-serif"),
+        toolFontFamily("monospace"),
+        toolFontFamily("normal"),
+        toolCss("font-variant","small-caps"),
+      ]
+    },
+    { name    : "fontsize", 
+      icon    : true,
+      title   : "Change the font size",
+      options : [
+        toolFontSize("xx-small"),
+        toolFontSize("x-small"),
+        toolFontSize("small"),
+        toolFontSize("medium"),
+        toolFontSize("large"),
+        toolFontSize("x-large"),
+        toolFontSize("xx-large"),
+        toolFontSize("50%"),
+        toolFontSize("2ex"),
+      ]
     },    
     { name    : "heading", 
       icon    : true,
       title   : "Insert a heading",
-      content : "Section    { #heading }\n\n## Sub-section\n\n And refer to Section [#heading].",
-      replacer: function(txt,rng) { 
-                  return blockRange(rng,"# " + txt); 
-                },
+      options: [
+        heading("Heading 1","#"),
+        heading("Heading 2","##"),
+        heading("Heading 3","###"),
+        heading("Heading 4","####"),
+        heading("Heading 5","#####"),        
+      ]
+    },      
+    { element: "BR",
     },
     { name    : "pre", 
       icon    : true,
@@ -1766,6 +1814,19 @@ var UI = (function() {
         return blockRange(rng,linePrefix("> ",txt));
       }
     },
+    { name    : "table",
+      icon    : true,
+      title   : "Table",
+      options: [
+        toolTable(2),
+        toolTable(3),
+        toolTable(4),
+        toolTable(5),
+        toolTable(6),
+        toolTable(7),
+        toolTable(8),
+      ]
+    },
     { name    : "img", 
       icon    : true,
       title   : "Insert an image",
@@ -1773,14 +1834,7 @@ var UI = (function() {
       upload  : "Please select an image.",
       exts    : [".jpg",".png",".svg",".gif"],
     },   
-    { name    : "figure",
-      icon    : true,
-      title   : "Insert a figure",
-      content : "  The butterfly ![monarch] image.\n\n  [monarch]: images/butterfly.png {width=100px vertical-align=middle}",
-      replacer: function(txt,rng) {
-        return wrapBlock(rng,"~ Figure { #fig-figure caption=\"My figure\"}", txt, "~")
-      }
-    },
+    toolFigure(true),
     { element: "BR",
     },
     { name    : "custom",
@@ -1804,11 +1858,22 @@ var UI = (function() {
           }
         },
         { name    : "bib",
-          display : "Bibliography",
-          title   : "Insert the bibiliography",
+          display : "References",
+          title   : "Insert the bibiliography section",
           helpLink: "#sec-bib",
           replacer: function(txt,rng) {
             return txt + "\n## References   {-}\n[BIB]\n";
+          }
+        },
+        toolFigure(false),
+        { name: "footnote",
+          title: "Insert a footnote",
+          content: "The footnote text.\nIndent to continue on the next line.",
+          helpLink: "#sec-footnotes",
+          replacer: function(txt,rng) {
+            var self = this;
+            self.insertAfterPara(self.editor.getPosition().lineNumber, paraPrefix("[^fn-footnote]: ", txt + "\n", "  "));
+            return "[^fn-footnote]";
           }
         },
         customBlock("note"),
@@ -1830,9 +1895,9 @@ var UI = (function() {
         customBlock("proposition"), 
         customBlock("corollary"),
         customBlock("definition"),
-        customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre"),
-        customBlock("MathDefs","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$.","#sec-mathdefs"),
-        customBlock("Math","","e = mc^2","","A plain display math block")
+        customBlock("Math preformatted","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre","Math mode that respects whitespace and identifier names"),
+        customBlock("Math definitions","","\\newcommand{\\infer}[3]{#1 \\vdash #2\,:#3}", "We infer $\\infer{\\Gamma}{e}{\\tau}$.","#sec-mathdefs","Define math commands"),
+        customBlock("Math display","","e = mc^2","","A plain display math block (Equations are preferred)")
       ]
     },
     { name: "include",
@@ -1889,6 +1954,81 @@ var UI = (function() {
     }   
   ];
 
+  function toolFontFamily(fam) {
+    return toolCss("font-family",fam);
+  }
+
+  function toolFontSize(size) {
+    return toolCss("font-size",size);
+  }
+
+  function toolCss(attr,value) {
+    return {
+      name: value,
+      display: value,
+      helpLink: "#sec-css",
+      content: "text",
+      replacer: function(txt,rng) {
+        return "[" + txt + "]{" + attr + "=\"" + value + "\"}";
+      }
+    }
+  }
+
+  function toolFigure(icon) {
+    return { 
+      name    : "figure",
+      icon    : icon,
+      helpLink: "#sec-figure",
+      title   : "Insert a figure",
+      content : "  Figure contents.",
+      replacer: function(txt,rng) {
+        return wrapBlock(rng,"~ Figure { #fig-figure caption=\"My figure\"}", txt, "~")
+      }
+    }
+  }
+
+
+  function pad(s,n,c) {
+    if (!c) c = " ";
+    var p = Math.max(0,n - s.length);
+    var padding = new Array(p+1).join(c);
+    return (s + padding);
+  }
+
+  function toolTable(columns) {
+    var cols = [];
+    for( var i = 0; i < columns; i++) {
+      cols.push(i+1);
+    }
+    var w = 14;
+    var lline = pad("",w,"-"); 
+    var cline = ":" + pad("",w-2,"-") + ":"
+    var headline = "+" + lline + "|" + cline + "+" + (columns <= 2 ? "" : cols.slice(2).map( function(c) { return (c===2 ? cline : lline); } ).join("|") + "+");
+    var head   = "|" + cols.map( function(c) { return pad( (c===2 ? " Centered " : " Heading ") + c.toString(), w, " "); } ).join("|") + "|";
+    var rowline = "|" + cols.map( function(c) { return lline; } ).join("|") + "|";
+    var row   = "|" + cols.map( function(c) { return pad(" Cell " + c.toString(), w, " "); } ).join("|") + "|";
+    var content = [rowline,head,headline,row,row,rowline,"{  }"].join("\n");
+    return {
+      name: columns.toString() + " columns",
+      helpLink: "#sec-table",
+      content: content,
+      replacer: function(txt,rng) {
+        return (rng.isEmpty() ? "" : txt) + blockRange(rng,content);
+      }
+    }
+  }
+
+  function heading(name,pre) {
+    return {
+      name: name,
+      helpLink: "#sec-heading",
+      content: name + " { #heading }\n\nAnd refer to Section [#heading].",
+      replacer: function(txt,rng) {
+        return blockRange(rng,pre + " " + txt);
+      }
+    }
+  }
+
   function customBlock(name,post,content,postContent,helpLink) {
     return { 
       name: name,
@@ -1944,7 +2084,7 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.initTool = function( tool, parent  ) {
+  UI.prototype.initTool = function( tool, parent, parentName  ) {
     var self = this;
     if (tool.element) {
       var elem = document.createElement(tool.element);
@@ -1954,10 +2094,10 @@ var UI = (function() {
       return;
     }
 
-    var item = document.getElementById("tool-" + tool.name);
+    var item = document.getElementById(parentName + "-" + tool.name);
     if (!item) {
       item = document.createElement("DIV");
-      item.id = "tool-" + tool.name;
+      item.id = parentName + "-" + tool.name;
       item.className = "button";
       if (tool.icon===true) tool.icon = "images/icon-tool-" + tool.name + ".png";
       if (!tool.display) tool.display = Util.capitalize(tool.name);
@@ -1975,7 +2115,7 @@ var UI = (function() {
       else {
         item.textContent = tool.display;
       }
-      if (tool.helpLink) {
+      if (tool.helpLink && !tool.icon) {
         if (Util.startsWith(tool.helpLink,"#")) tool.helpLink = "http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html" + tool.helpLink;
         var help = document.createElement("A");
         help.href = tool.helpLink;
@@ -1990,7 +2130,7 @@ var UI = (function() {
     if (tool.options) {
       Util.addClassName(item,"popup");        
       Util.addClassName(item,"options");        
-      var menu = document.getElementById("tool-" + tool.name + "-content");
+      var menu = document.getElementById(item.id + "-content");
       if (!menu) {
         menu = document.createElement("DIV");
         menu.id = item.id + "-content";
@@ -1999,7 +2139,7 @@ var UI = (function() {
       Util.addClassName(menu,"menu");
       Util.addClassName(menu,"boxed");
       tool.options.forEach(function(subtool) {
-        self.initTool(subtool,menu);
+        self.initTool(subtool,menu,parentName + "-" + tool.name);
       });
     }
     else {
@@ -2016,7 +2156,7 @@ var UI = (function() {
     var self = this;
     var toolbox = document.getElementById("toolbox-content")
     tools.forEach(function(tool) {
-      self.initTool(tool,toolbox);
+      self.initTool(tool,toolbox,"tool");
     });
   }
 
@@ -2025,7 +2165,7 @@ var UI = (function() {
     if (!tool) return;
     self.anonEvent( function() {
       if (tool.replacer) {
-        self.insertOrReplaceText( tool.replacer, tool.content );
+        self.insertOrReplaceText( tool.replacer, tool.content || "" );
         self.editor.revealPosition( self.editor.getPosition(), true );
       }
       else if (tool.message) {

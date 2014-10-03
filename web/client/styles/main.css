@@ -303,19 +303,26 @@ span.save-link:hover {
 #toolbox>div>div.button {
   display: inline-block;
   padding: 0em 0.25em;
+  color: #135;
 }
 
 #toolbox>div>div.options>div {
   width: 9em;
 }
 
-#toolbox #tool-include-content {
+#toolbox #tool-include-content,
+#toolbox #tool-math-content {
   width: 12em;
 }
 
 #toolbox .help {
   float: right;  
   padding: 0em 0.25em;
+  color: Gainsboro;
+}
+
+#toolbox .button:hover>.help {
+  color: black;
 }
 
 #toolbox .help:hover {
