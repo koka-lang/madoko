@@ -1209,6 +1209,9 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
+/*--------------------------------------------------------------------------------------------------
+  Pinned menus
+--------------------------------------------------------------------------------------------------*/
 
   function getScreenOffset(elem) {
     var box = elem.getBoundingClientRect()
@@ -1239,45 +1242,128 @@ doc.execCommand("SaveAs", null, filename)
     return { top: top, left: left };
   }
 
+  function jsonParse(s,def) {
+    try{
+      return JSON.parse(s);
+    }
+    catch(exn) {
+      return def;
+    }
+  }
+
+  function parseCssLen(s) {
+    if (typeof s === "number") return s;
+    var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
+    if (!cap) return 0;
+    var i = parseInt(cap[1]);
+    if (isNaN(i)) return 0;
+    if (cap[2] && cap[2] !== "px") {
+      var dpi = 96;
+      var empx = 12;
+      if (cap[2]==="em") {
+        i = (i * empx);
+      }
+      else if (cap[2]==="ex") {
+        i = (i * empx * 0.5);
+      }
+      else if (cap[2]==="pt") {
+        i = (i/72) * dpi;
+      }
+      else if (cap[2]==="pc") {
+        i = (i/6) * dpi;
+      }
+      else if (cap[2]==="in") {
+        i = i * dpi;
+      }
+      else if (cap[2]==="mm") {
+        i = (i/25.6) * dpi;
+      }
+      else if (cap[2]==="cm") {
+        i = (i/2.56) * dpi;
+      }
+    }
+    return i;
+  }
+
+
+  function moveTo( elem, x, y, boundid ) {
+    var doc = getDocumentOffset(elem.parentNode);          
+    if (boundid) {
+      var boundElem = document.getElementById(boundid);
+      if (boundElem) {
+        var bound = boundElem.getBoundingClientRect();
+        var box = elem.getBoundingClientRect();
+        x = Math.min( bound.right - box.width, x );
+        y = Math.min( bound.bottom - box.height, y );
+        x = Math.max( bound.left, x );
+        y = Math.max( bound.top, y );
+      }      
+    }
+    elem.style.top = (y - doc.top).toFixed(0) + "px";
+    elem.style.left = (x - doc.left).toFixed(0) + "px";   
+  }
+
   function enablePinned() 
   {
-    var pinned = null;
+    // Persistance
+    var pinned = Map.unpersist(jsonParse(localStorage.getItem("pinned"),{}));
+    window.addEventListener("unload", function() {
+      localStorage.setItem("pinned", JSON.stringify(pinned.persist()));
+    });
+    window.addEventListener("resize", positionPinned );
+
+    function positionPinned() {
+      pinned.forEach( function(id,pos) {
+        var elem = document.getElementById(id);
+        if (elem) {
+          moveTo(elem, pos.left, pos.top, pos.boundid );
+          addClassName(elem,"pinned");
+        }
+        else pinned.remove(id);
+      });
+    };
+
+    // Moving elements
+    var moving = null;
     var offsetX = 0;
     var offsetY = 0;
+    var boundid  = null;
 
-    function moveStart(_pinned,ev) {
+    function moveStart(_moving,ev) {
       moveEnd();
-      pinned  = _pinned;
-      var src = pinned.getBoundingClientRect();
-      var doc = getDocumentOffset(pinned.parentNode);
-      offsetX = ev.clientX - src.left + doc.left;
-      offsetY = ev.clientY - src.top + doc.top;      
-      addClassName(pinned,"moving");
-      addClassName(pinned,"pinned");
+      moving  = _moving;
+      var src = moving.getBoundingClientRect();
+      offsetX = ev.clientX - src.left;
+      offsetY = ev.clientY - src.top;    
+      boundid = moving.getAttribute("data-bounded");
+      addClassName(moving,"moving");
+      addClassName(moving,"pinned");
       window.addEventListener( "mousemove", mouseMove, true );
     }
 
     function moveEnd(ev) {
-      if (pinned) {        
+      if (moving) {        
+        pinned.set(moving.id, { left: parseCssLen(moving.style.left), top: parseCssLen(moving.style.top), boundid: boundid });
         window.removeEventListener( "mousemove", mouseMove, true );
-        removeClassName(pinned,"moving");
-        pinned = null;
+        removeClassName(moving,"moving");
+        moving = null;
         offsetX = 0;
         offsetY = 0;
+        boundid = null;
       }
     };
 
     function mouseMove(ev) {
-      if (pinned) {
+      if (moving) {
         ev.stopPropagation();
         ev.preventDefault();
-        pinned.style.top = (ev.clientY - offsetY).toFixed(0) + "px";
-        pinned.style.left = (ev.clientX - offsetX).toFixed(0) + "px";
+        moveTo( moving, ev.clientX - offsetX, ev.clientY - offsetY, boundid );
       }
     }
 
     window.addEventListener("mouseup", moveEnd );    
 
+    // Initialize pin boxes.
     [].forEach.call( document.getElementsByClassName("pinnable"), function(menu) {
       var pinbox = document.createElement("DIV");
       pinbox.className = "pinbox";
@@ -1292,12 +1378,13 @@ doc.execCommand("SaveAs", null, filename)
       imgUnpin.className = "unpin button";
       pinbox.appendChild(imgUnpin);
       menu.insertBefore(pinbox,menu.firstChild);
-      var left = menu.style.left;
-      var top  = menu.style.top;
+      var left0 = menu.style.left;
+      var top0  = menu.style.top;
       imgUnpin.addEventListener( "click", function(ev) {
-        menu.style.left = left;
-        menu.style.top = top;
         removeClassName(menu, "pinned");
+        pinned.remove(menu.id);
+        menu.style.left = left0;
+        menu.style.top = top0;
       });
       imgPin.addEventListener("click", function(ev) {
         if (!hasClassName(menu,"pinned")) {
@@ -1306,6 +1393,9 @@ doc.execCommand("SaveAs", null, filename)
       });
     });
 
+    // now restore persisted menus (not earlier, or the initial position is off)
+    positionPinned();
+  
   }
 
 

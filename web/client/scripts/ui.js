@@ -2241,7 +2241,7 @@ var UI = (function() {
   UI.prototype.toolCommand = function( tool ) {
     var self = this;
     if (!tool) return;
-    self.anonEvent( function() {
+    self.event( "","", State.Loading, function() {
       if (tool.replacer) {
         //var pos = self.editor.getPosition();
         self.insertOrReplaceText( tool.replacer, tool.content || "" );
