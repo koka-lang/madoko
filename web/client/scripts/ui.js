@@ -560,8 +560,6 @@ var UI = (function() {
     setTimeout( autoSync, 1000 ); // run early on on startup
     setInterval( autoSync, 5000 );
 
-    
-
     document.getElementById("menu-settings-content").onclick = function(ev) {
       if (ev.target && Util.contains(ev.target.className,"button")) {
         var child = ev.target.children[0];
@@ -2221,6 +2219,16 @@ var symbolsMath = [
         toolTable(8),
       ]
     }, 
+    { name   : "undo",
+      icon   : true,
+      command: "undo", 
+      title  : "(Ctrl-Z) Undo"
+    },
+    { name   : "redo",
+      icon   : true,
+      command: "redo",
+      title  : "(Ctrl-Y) Redo" 
+    },
     { element: "BR",
     },
     { name    : "custom",
@@ -2824,6 +2832,10 @@ var symbolsMath = [
           return self.insertFiles(files);
         });
       }
+      else if (tool.command) {
+        var cmd = self["command" + Util.capitalize(tool.command)];
+        if (cmd) return cmd.call(self);
+      }
     }, [State.Syncing]);      
   }
 
@@ -2831,6 +2843,15 @@ var symbolsMath = [
   /*---------------------------------------------------
     File and text insertion
   -------------------------------------------------- */
+  UI.prototype.commandUndo = function() {
+    var self = this;
+    return self.editor.getModel().undo();
+  }
+
+  UI.prototype.commandRedo = function() {
+    var self = this;
+    return self.editor.getModel().redo();
+  }
 
   UI.prototype.insertAfterPara = function(lineNum,txt) {
     var self = this;
