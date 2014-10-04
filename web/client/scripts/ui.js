@@ -1600,7 +1600,26 @@ var UI = (function() {
     return para;
   }
 
-  function reformatPara( lineNo, text, column ) {
+  function reformatPara(text, column) {
+    var para = (typeof text === "string" ? text.split("\n") : text);
+    para = para.map( function(line) {
+      return line.replace(/\t/g, "    ");
+    });
+    var indents = para.map( function(line) {
+      var cap = /^(\s*)/.exec(line);
+      return (cap ? cap[1].length : 0);
+    });
+      
+    var hang0  = new Array(indents[0]+1).join(" ");
+    var indent = Math.max( indents[0], (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
+    var hang   = new Array(indent+1).join(" ");
+    
+    // reformat
+    var paraText = para.join(" ");
+    return breakLines(paraText, column || 70, hang0, hang);
+  }
+
+  function reformatText( lineNo, text, column ) {
     function isBlank(line) {
       return /^\s*$/.test(line);
     }
@@ -1628,29 +1647,15 @@ var UI = (function() {
     var para      = lines.slice(start-1,end);
     if (para.length <= 0) return null;
 
-    para = para.map( function(line) {
-      return line.replace(/\t/g, "    ");
-    });
-    var indents = para.map( function(line) {
-      var cap = /^(\s*)/.exec(line);
-      return (cap ? cap[1].length : 0);
-    });
-      
-    var hang0  = new Array(indents[0]+1).join(" ");
-    var indent = Math.max( indents[0], (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
-    var hang   = new Array(indent+1).join(" ");
-    
-    // reformat
-    var paraText = para.join(" ");
-    var paraBroken = breakLines(paraText, column || 70, hang0, hang);
+    var paraBroken = reformatPara(para,column);
     return { text: paraBroken, startLine: start, endLine: end, endColumn: endColumn };
   }
 
-  UI.prototype.onFormatPara = function(ev) {
+  UI.prototype.onFormatPara = function() {
     var self = this;
     var pos = self.editor.getPosition();
     var text = self.getEditText();
-    var res = reformatPara( pos.lineNumber, text );
+    var res = reformatText( pos.lineNumber, text );
     if (res) {
       var rng = new Range.Range( res.startLine, 0, res.endLine, res.endColumn );
       var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, res.text );
@@ -2080,8 +2085,8 @@ var symbolsMath = [
         toolFontSize("large"),
         toolFontSize("x-large"),
         toolFontSize("xx-large"),        
-        toolFontSize("initial"),
-        toolFontSize("2ex"),
+        toolFontSize("initial", "The initial font size"),
+        toolFontSize("2ex","A specific font size (%|ex|em|pt|px)"),
       ]
     },    
     { name    : "color", 
@@ -2183,6 +2188,20 @@ var symbolsMath = [
         return blockRange(rng,linePrefix("> ",txt));
       }
     },    
+    { name    : "format",
+      icon    : true,
+      title   : "(Alt-Q) Format paragraph to fit in 70 columns",
+      replacer: function(txt,rng) {
+        if (txt) {
+          return reformatPara( txt );
+        }
+        else {
+          var self = this;
+          self.onFormatPara();
+          return null;
+        }
+      }
+    },  
     { name    : "img", 
       icon    : true,
       title   : "Insert an image",
@@ -2250,16 +2269,23 @@ var symbolsMath = [
           title: "Insert a horizontal rule",
           replacer: function(txt,rng) {
             var content = "\n----------------------------- { width=50% }";
-            return txt + blockRange(rng, content);
+            return blockRange(rng, content);
           }
         },
         customBlock("note"),
         customBlock("remark"),
-        customBlock("example"),
+        customBlock("example"),        
         customBlock("abstract","", "The abstract."),
         customBlock("framed","","A block with a solid border."),
         customBlock("center","","A block with centered items."),
         customBlock("columns","","~~ Column { width=\"30%\" }\nThe first column\n~~\n~~ Column\nThe second column.\n~~"),
+        { name: "comment",
+          title: "(Shift-Alt-A) Comment out a section of your document",
+          content: "  This is commented out.",
+          replacer: function(txt,rng) {
+            return blockRange(rng,"<!--\n" + txt + "\n-->");
+          }
+        },
       ]
     },
     { name: "math",
@@ -2320,6 +2346,7 @@ var symbolsMath = [
         toolMetadata("Cite Style", "natural", "Specify a citation style to use.","#sec-cite"),
         toolMetadata("Cite All", "true", "Include all entries in the bibliography"),
         toolMetadata("Bib Search Url", "www.google.com", "Add a search icon to bibliography references", "#bibliography-tooltips-and-searches"),
+        toolMetadata("Comment","A comment.", "A meta-data comment"),
         { element: "HR" },
         toolMetadata("Css", "example.css", "Specify a style file or reference to include in the HTML output"),
         toolMetadata("Script", "example.js", "Specify a script file or reference to include in the HTML output"),
@@ -2329,10 +2356,12 @@ var symbolsMath = [
         toolMetadata("Doc Class", "[9pt]article", "Specify the LaTeX document class. Use the 'Include' menu to include a specific local document class file."),
         toolMetadata("Package", "pgfplots", "Specify a standard LaTeX package to use. Use the 'Include' menu to include a specific local package file","#sec-math"),
         toolMetadata("Tex Header", "", "The value is included literally before \\begin{document}. in the LaTeX output"),
+        /*
         { element: "HR" },
         toolMetadata("Math Dpi", "300", "Specify the resolution at which math is rendered."),
         toolMetadata("Math Scale", "108", "Specify the scale math is rendered."),
         toolMetadata("Math Embed", "512", "Specify up to which size (in Kb) math is rendered in-place (instead of a separate image)"),
+        */
       ]
 
     },    
@@ -2420,8 +2449,10 @@ var symbolsMath = [
     return toolCss("font-family",fam);
   }
 
-  function toolFontSize(size) {
-    return toolCss("font-size",size);
+  function toolFontSize(size,title) {
+    var tool = toolCss("font-size",size);
+    if (title != null) tool.title = title;
+    return tool;
   }
 
   function toolColor(color) {
@@ -2431,6 +2462,17 @@ var symbolsMath = [
       tool.className = "button icon";
       tool.helpLink = null;
     }
+    else {
+      tool.title="Hex color";
+    }
+    return tool;
+  }
+
+
+  function toolCss(attr,value,display) {
+    var tool = toolStyle(attr,"="+value);
+    tool.name = value;
+    tool.display = display||value;
     return tool;
   }
 
@@ -2446,23 +2488,71 @@ var symbolsMath = [
       content: "text",
       title: title,
       replacer: function(txt,rng) {
-        return "[" + txt + "]{" + value + "}";
+        var self = this;
+        return self.styleReplacer(txt,rng,value);
       }
     }
   }
 
-  function toolCss(attr,value,display) {
-    return {
-      name: value,
-      display: display||value,
-      helpLink: "#sec-css",
-      content: "text",
-      replacer: function(txt,rng) {
-        return "[" + txt + "]{" + attr + "=\"" + value + "\"}";
+
+  UI.prototype.styleReplacer = function(txt,rng,value) {    
+    var self = this;
+    var cap;
+
+    // anything ending with attributes: just extend
+    cap = /^(.*)[ \t]*\}(\s*)$/.exec(txt);
+    if (cap) {  
+      return cap[1] + " " + value + " }" + cap[2];
+    }
+
+    // a position just after attributes
+    if (rng.isEmpty() && rng.startColumn > 1) {  
+      rng = rng.clone();
+      rng.startColumn = rng.startColumn-1;
+      rng.selectionStartColumn = rng.startColumn;
+      var prev = self.editor.getModel().getValueInRange(rng);
+      if (prev==="}") {
+        return { range: rng, content: " " + value + "}" };
+      }
+      else if (prev==="{") {
+        return " " + value + " ";
       }
     }
-  }
 
+    var maxEndColumn = self.editor.getModel().getLineMaxColumn(rng.endLineNumber);
+
+    // a position just before attributes
+    if (rng.isEmpty() && rng.endColumn < maxEndColumn) {  
+      rng = rng.clone();
+      rng.endColumn = rng.endColumn+1;      
+      var next = self.editor.getModel().getValueInRange(rng);
+      if (next==="}") {
+        return " " + value + " ";
+      }
+      else if (next==="{") {
+        return { range: rng, content: "{ " + value + " " };
+      }
+    }
+    
+    // custom block?
+    var cap = /^([ \t]*~.*?)\}[ \t]*$([\s\S]*)/m.exec(txt);
+    if (cap) {  
+      return cap[1] + " " + value + "}" + cap[2];
+    }
+
+    // paragraph or list block?
+    if (rng.startColumn===1 && rng.startLineNumber < rng.endLineNumber) { 
+      if (rng.endColumn===1) { 
+        return txt + "{ " + value + " }\n";
+      } 
+      else if (maxEndColumn === rng.endColumn) {
+        return txt + "\n{ " + value + " }\n";
+      }
+    }
+    
+    // default
+    return "[" + txt + "]{ " + value + " }";    
+  }
 
   function toolInline(name,pre,post) {
     return {
@@ -2730,9 +2820,14 @@ var symbolsMath = [
     var select = self.editor.getSelection();
     var model = self.editor.getModel();
     var txt = (select.isEmpty() ? defText : model.getValueInRange(select) );
-    var newText = replacer.call(self,txt,select);
-    if (newText != null) {
-      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
+    var res = replacer.call(self,txt,select);
+    if (res != null) {
+      var newText = res;
+      if (res.range) {
+        select = res.range;
+        newText = res.content;
+      }
+      var command = new ReplaceCommand.ReplaceCommand( select, newText );
       self.editor.executeCommand("madoko",command);
     }
   }

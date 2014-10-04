@@ -1313,14 +1313,15 @@ doc.execCommand("SaveAs", null, filename)
       localStorage.setItem("pinned", JSON.stringify(pinned.persist()));
     });
     window.addEventListener("resize", function() { 
-      setTimeout( positionPinned, 100 );
+      positionPinned();
     });
 
     function positionPinned() {
       pinned.forEach( function(id,pos) {
         var elem = document.getElementById(id);
         if (elem) {
-          moveTo(elem, pos.left, pos.top, pos.boundid );
+          var doc = getDocumentOffset(elem.parentNode);                      
+          moveTo(elem, pos.left + doc.left, pos.top + doc.top, pos.boundid );
           addClassName(elem,"pinned");
         }
         else pinned.remove(id);
@@ -1399,7 +1400,6 @@ doc.execCommand("SaveAs", null, filename)
 
     // now restore persisted menus (not earlier, or the initial position is off)
     positionPinned();
-  
   }
 
 
