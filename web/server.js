@@ -354,13 +354,13 @@ app.use(function(req, res, next){
 function startsWith(s,pre) {
   if (!pre) return true;
   if (!s) return false;
-  return (s.substr(0,pre.length) === pre);
+  return (s.substr(0,pre.length).indexOf(pre) === 0);
 }
 
 function endsWith(s,post) {
   if (!post) return true;
   if (!s) return false;
-  return (s.substr(-post.length) === post);
+  return (s.indexOf(post, s.length - post.length) >= 0);
 }
 
 function normalize(fpath) {
