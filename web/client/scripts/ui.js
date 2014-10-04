@@ -2207,7 +2207,7 @@ var symbolsMath = [
     { element: "BR",
     },
     { name    : "custom",
-      display: "Custom",
+      display: "Block",
       title  : "Insert a custom block",
       options: [
         { name    : "title",
@@ -2280,6 +2280,62 @@ var symbolsMath = [
                         "","#sec-snippets","Insert an arbitrary LaTex snippet"),
       ]
     },
+    { name: "styling",
+      title: "Add CSS styling",
+      options: [
+        toolStyle("margin","=1ex","auto|<length>"),
+        toolStyle("padding","=1ex","auto|<length>"),
+        toolStyle("border","border-style=solid border-width=1px border-color=black","none|solid|dotted"),
+        toolStyle("text-align","=center","center|right|left|justify"),
+        toolStyle("text-indent","=1em","<length>"),
+        toolStyle("color","=red","<color name>|#rrggbb"),
+        toolStyle("background-color","=Gainsboro","<color name>|#rrggbb"),
+        toolStyle("page-align","=here","top|bottom|here|forcehere","Used in LaTeX to place figures"),
+        toolStyle("float","float=right width=50% margin-left=1em","left|right","Limited support in LaTeX, but works for figures"),
+        toolStyle("line-height","=1.5em","<length>"),
+        toolStyle("vertical-align","=middle","top|middle|bottom|baseline|<length>"),
+        toolStyle("display","=inline","block|inline|inline-block|hidden"),        
+        toolStyle("margin-left","=1ex"),
+        toolStyle("margin-right","=1ex"),
+        toolStyle("margin-top","=1ex"),
+        toolStyle("margin-bottom","=1ex"),
+        toolStyle("padding-left","=1ex"),
+        toolStyle("padding-right","=1ex"),
+        toolStyle("padding-top","=1ex"),
+        toolStyle("padding-bottom","=1ex"),        
+      ]
+    },
+    { name: "metadata",
+      title: "Add document metadata",
+      options: [
+        toolMetadata("Title","My document title"),
+        toolMetadata("Sub Title","The sub-title"),
+        toolMetadata("Title Note", "&date; (version 1.0)"),
+        toolMetadata("Author","Name\nAffiliation : Company name\nEmail       : name@foo.com\n"),
+        toolMetadata("Toc Depth","3","Depth of the table of contents", "#sec-toc"),
+        toolMetadata("Heading Depth","3","Maximum depth up to which headings are numbered. Set to 0 to disable numbering","#sec-numbering"),
+        toolMetadata("Heading Base", "2", "Setting the heading base to 2 use H2 or \\section commands for level 1 headers"),
+        toolMetadata("Bibliography", "example.bib", "Specify a bilbliography file. Use the 'Include' menu to include a local file.","#sec-bib"),
+        toolMetadata("Bib Style", "plainnat", "Specify a bibliography style to use.","#sec-bibstyle"),
+        toolMetadata("Cite Style", "natural", "Specify a citation style to use.","#sec-cite"),
+        toolMetadata("Cite All", "true", "Include all entries in the bibliography"),
+        toolMetadata("Bib Search Url", "www.google.com", "Add a search icon to bibliography references", "#bibliography-tooltips-and-searches"),
+        { element: "HR" },
+        toolMetadata("Css", "example.css", "Specify a style file or reference to include in the HTML output"),
+        toolMetadata("Script", "example.js", "Specify a script file or reference to include in the HTML output"),
+        toolMetadata("HTML Meta", "http-equiv=\"refresh\" content=\"30\"", "Specify a meta tag for HTML output"),
+        toolMetadata("HTML Header", "", "This value is included literally in the <head> section of HTML output"),
+        { element: "HR" },
+        toolMetadata("Doc Class", "[9pt]article", "Specify the LaTeX document class. Use the 'Include' menu to include a specific local document class file."),
+        toolMetadata("Package", "pgfplots", "Specify a standard LaTeX package to use. Use the 'Include' menu to include a specific local package file","#sec-math"),
+        toolMetadata("Tex Header", "", "The value is included literally before \\begin{document}. in the LaTeX output"),
+        { element: "HR" },
+        toolMetadata("Math Dpi", "300", "Specify the resolution at which math is rendered."),
+        toolMetadata("Math Scale", "108", "Specify the scale math is rendered."),
+        toolMetadata("Math Embed", "512", "Specify up to which size (in Kb) math is rendered in-place (instead of a separate image)"),
+      ]
+
+    },    
     { name: "include",
       title: "Include a local file",
       options: [
@@ -2332,38 +2388,6 @@ var symbolsMath = [
         },
       ]
     },
-    { name: "metadata",
-      title: "Add document metadata",
-      options: [
-        toolMetadata("Title","My document title"),
-        toolMetadata("Sub Title","The sub-title"),
-        toolMetadata("Title Note", "&date; (version 1.0)"),
-        toolMetadata("Author","Name\nAffiliation : Company name\nEmail       : name@foo.com\n"),
-        toolMetadata("Toc Depth","3","Depth of the table of contents", "#sec-toc"),
-        toolMetadata("Heading Depth","3","Maximum depth up to which headings are numbered. Set to 0 to disable numbering","#sec-numbering"),
-        toolMetadata("Heading Base", "2", "Setting the heading base to 2 use H2 or \\section commands for level 1 headers"),
-        toolMetadata("Bibliography", "example.bib", "Specify a bilbliography file. Use the 'Include' menu to include a local file.","#sec-bib"),
-        toolMetadata("Bib Style", "plainnat", "Specify a bibliography style to use.","#sec-bibstyle"),
-        toolMetadata("Cite Style", "natural", "Specify a citation style to use.","#sec-cite"),
-        toolMetadata("Cite All", "true", "Include all entries in the bibliography"),
-        toolMetadata("Bib Search Url", "www.google.com", "Add a search icon to bibliography references", "#bibliography-tooltips-and-searches"),
-        { element: "HR" },
-        toolMetadata("Css", "example.css", "Specify a style file or reference to include in the HTML output"),
-        toolMetadata("Script", "example.js", "Specify a script file or reference to include in the HTML output"),
-        toolMetadata("HTML Meta", "http-equiv=\"refresh\" content=\"30\"", "Specify a meta tag for HTML output"),
-        toolMetadata("HTML Header", "", "This value is included literally in the <head> section of HTML output"),
-        { element: "HR" },
-        toolMetadata("Doc Class", "[9pt]article", "Specify the LaTeX document class. Use the 'Include' menu to include a specific local document class file."),
-        toolMetadata("Package", "pgfplots", "Specify a standard LaTeX package to use. Use the 'Include' menu to include a specific local package file","#sec-math"),
-        toolMetadata("Tex Header", "", "The value is included literally before \\begin{document}. in the LaTeX output"),
-        { element: "HR" },
-        toolMetadata("Math Dpi", "300", "Specify the resolution at which math is rendered."),
-        toolMetadata("Math Scale", "108", "Specify the scale math is rendered."),
-        toolMetadata("Math Embed", "512", "Specify up to which size (in Kb) math is rendered in-place (instead of a separate image)"),
-      ]
-
-    }  
-
   ];
 
 
@@ -2408,6 +2432,23 @@ var symbolsMath = [
       tool.helpLink = null;
     }
     return tool;
+  }
+
+  function toolStyle(attr,value,options,title) {
+    if (options) {
+      title = options + " " + (title || "");
+    }
+    if (Util.startsWith(value,"=")) value = attr + value;
+    return {
+      name: attr,
+      display: attr,
+      helpLink: "#sec-css",
+      content: "text",
+      title: title,
+      replacer: function(txt,rng) {
+        return "[" + txt + "]{" + value + "}";
+      }
+    }
   }
 
   function toolCss(attr,value,display) {

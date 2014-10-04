@@ -327,8 +327,10 @@ span.save-link:hover {
 #toolbox #tool-custom-content,
 #toolbox #tool-include-content,
 #toolbox #tool-math-content,
+#toolbox #tool-styling-content,
 #toolbox #tool-metadata-content {
   width: 12em;
+  max-height: 32em;
 }
 
 #toolbox #tool-symbol .menu {
