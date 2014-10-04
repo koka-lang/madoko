@@ -164,9 +164,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   // Get the properties of an object.
   function properties(obj) {
     var attrs = [];
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        attrs.push(key);
+    if (obj!=null) {
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          attrs.push(key);
+        }
       }
     } 
     return attrs;
@@ -180,9 +182,12 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   // extend target with all fields of obj.
   function extend(target, obj) {
-    properties(obj).forEach( function(prop) {
-      target[prop] = obj[prop];
-    });
+    if (obj != null) {
+      properties(obj).forEach( function(prop) {
+        target[prop] = obj[prop];
+      });
+    }
+    return target;
   }
 
   function copy(src ) {
@@ -332,8 +337,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   function endsWith(s,post) {
     if (!post) return true;
     if (!s) return false;
-    var i = s.indexOf(post);
-    return (i >= 0 && (s.length - post.length) == i);
+    return (s.indexOf(post, s.length - post.length) >= 0);
   }
 
   // no ".", "..", ":", or starting with "/"
@@ -1505,6 +1509,8 @@ doc.execCommand("SaveAs", null, filename)
     forEachProperty: forEachProperty,
     extend: extend,
     copy: copy,
+    __extends: __extends,
+
     replicate: replicate,
     lpad: lpad,
     message: message,

@@ -8,9 +8,22 @@
 
 define(["../scripts/map","../scripts/promise","../scripts/util",
         "../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/command/replaceCommand"],
-        function(Map,Promise,Util,Storage,MadokoMode,Range,ReplaceCommand) {
+        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand"],
+        function(Map,Promise,Util,Storage,MadokoMode,Range,Selection,ReplaceCommand) {
 
+var ReplaceCommandWithSelection = (function (_super) {
+        __extends(ReplaceCommandWithSelection, _super);
+        function ReplaceCommandWithSelection(range, text) {
+            _super.call(this, range, text);
+        }
+        ReplaceCommandWithSelection.prototype.computeCursorState = function (model, helper) {
+            var inverseEditOperations = helper.getInverseEditOperations();
+            var srcRange = inverseEditOperations[0].range;
+            var rng = srcRange; //this._range;
+            return new Selection.Selection(rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn);
+        };
+        return ReplaceCommandWithSelection;
+    })(ReplaceCommand.ReplaceCommand);
 
 function diff( original, modified ) {
   var originalModel = Monaco.Editor.createModel(original, "text/plain");
@@ -1658,7 +1671,7 @@ var UI = (function() {
     var res = reformatText( pos.lineNumber, text );
     if (res) {
       var rng = new Range.Range( res.startLine, 0, res.endLine, res.endColumn );
-      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, res.text );
+      var command = new ReplaceCommand.ReplaceCommand( rng, res.text );
       self.editor.executeCommand("madoko",command);
     }
   }
@@ -1990,31 +2003,21 @@ var symbolsMath = [
 ];
 
   var tools = [
-    { name    : "bold", 
+    toolInline("bold","**","**",{
       icon    : true,
-      content : "bold text",
-      keys    : ["Ctrl-B","Alt-B"],
-      replacer: function(txt) { 
-                  return "**" + txt + "**"; 
-                },
-    },
-    { name    : "italic", 
+      title   : "Strong emphasis (bold)",
+      keys    : ["Ctrl-B","Alt-B"]
+    }),
+    toolInline("italic","_","_",{
       icon    : true,
-      content : "italic text",
-      keys    : ["Ctrl-I","Alt-I"],
-      replacer: function(txt) { 
-                  return "_" + txt + "_"; 
-                },
-    },
-    { name    : "code", 
+      title   : "Emphasis (italic)",
+      keys    : ["Ctrl-I","Alt-I"]
+    }),
+    toolInline("code","`","`",{  // TODO: make smart about quotes
       icon    : true,
       title   : "Inline code",
-      content : "code",
-      keys    : ["Alt-C"],
-      replacer: function(txt) { 
-                  return "`" + txt + "`"; // TODO: make smart about quotes 
-                },
-    },
+      keys    : ["Alt-C"]
+    }),
     { name    : "link", 
       icon    : true,
       title   : "Insert a link",
@@ -2028,32 +2031,27 @@ var symbolsMath = [
                   self.insertAfterPara(self.editor.getPosition().lineNumber, def);
                   return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
                 },
-    }, 
-    { name    : "formula", 
+    },
+    toolInline("formula","$","$",{
       icon    : true,
       title   : "Inline formula",
       content : "e = mc^2",
-      keys    : ["Alt-F"],
-      replacer: function(txt) { 
-                  return "$" + txt + "$"; 
+      keys    : ["Alt-F"],      
+    }), 
+    toolInline("sub","~","~", {  
+      icon     : true,
+      title    : "Sub-script",
+      transform: function(txt) { 
+                  return txt.replace(/~/g,"\\~").replace(/ /g,"\\ "); 
                 },
-    },
-    { name    : "sub", 
-      icon    : true,
-      title   : "Sub-script",
-      content : "subscript",
-      replacer: function(txt) { 
-                  return "~" + txt.replace(/~/g,"\\~").replace(/ /g,"\\ ") + "~"; 
-                },
-    },
-    { name    : "super", 
+    }),
+    toolInline("super","^","^", { 
       icon    : true,
       title   : "Super-script",
-      content : "super script",
-      replacer: function(txt) { 
-                  return "^" + txt.replace(/\^/g,"\\^").replace(/ /g,"\\ ") + "^"; 
+      transform: function(txt) { 
+                  return txt.replace(/\^/g,"\\^").replace(/ /g,"\\ "); 
                 },
-    },
+    }),
     { name    : "font", 
       icon    : true,
       title   : "Change the font family",
@@ -2286,6 +2284,17 @@ var symbolsMath = [
             return blockRange(rng,"<!--\n" + txt + "\n-->");
           }
         },
+        { element: "HR" },
+        { name: "html",
+          title: "Insert literal HTML (ignored for PDF output)",
+          content: "  Some <i>HTLM</i> here.",
+          replacer: function(txt,rng) {
+            return blockRange(rng,"<div>\n" + txt + "\n</div>");
+          }
+        },
+        customBlock("HtmlOnly","","This is only displayed in HTML","",null,"Insert markdown that is only used in HTML output"),
+        customBlock("TexRaw","","% Raw LaTeX content","",null,"Insert raw LaTeX code (for PDF output only)"),
+        customBlock("TexOnly","","This is only displayed in PDF","",null,"Insert markdown that is only used in PDF output"),        
       ]
     },
     { name: "math",
@@ -2494,58 +2503,61 @@ var symbolsMath = [
     }
   }
 
+  UI.prototype._styleReplaceInLine = function( rng, value ) {
+    var self = this;
+    var line = self.editor.getModel().getLineContent(rng.startLineNumber);
+    var cap = /^([^\{]*)(\{[ \t]*)([^\}]*)(\}).*$/m.exec(line);
+    if (cap) {
+      var openCol  = 1 + cap[1].length;
+      var closeCol = openCol + cap[2].length + cap[3].length + (cap[4].length - 1);
+      if (rng.startColumn >= openCol && rng.startColumn <= closeCol+1) {
+        var select = rng.clone();
+        select.startColumn = openCol;
+        select.endColumn = closeCol;
+        select.selectionStartColumn = select.startColumn;
+        select.selectionEndColumn = select.endColumn;
+        select.endLineNumber = select.startLineNumber;
+        return { range: select, content: cap[2] + cap[3] + " " + value + cap[4] };
+      }
+    }
+    return null;
+  }
 
   UI.prototype.styleReplacer = function(txt,rng,value) {    
     var self = this;
     var cap;
 
     // anything ending with attributes: just extend
-    cap = /^(.*)[ \t]*\}(\s*)$/.exec(txt);
+    cap = /^(.*)([ \t]*\}\s*)$/.exec(txt);
     if (cap) {  
-      return cap[1] + " " + value + " }" + cap[2];
+      return cap[1] + " " + value + cap[2];
     }
 
-    // a position just after attributes
-    if (rng.isEmpty() && rng.startColumn > 1) {  
-      rng = rng.clone();
-      rng.startColumn = rng.startColumn-1;
-      rng.selectionStartColumn = rng.startColumn;
-      var prev = self.editor.getModel().getValueInRange(rng);
-      if (prev==="}") {
-        return { range: rng, content: " " + value + "}" };
-      }
-      else if (prev==="{") {
-        return " " + value + " ";
-      }
-    }
-
-    var maxEndColumn = self.editor.getModel().getLineMaxColumn(rng.endLineNumber);
-
-    // a position just before attributes
-    if (rng.isEmpty() && rng.endColumn < maxEndColumn) {  
-      rng = rng.clone();
-      rng.endColumn = rng.endColumn+1;      
-      var next = self.editor.getModel().getValueInRange(rng);
-      if (next==="}") {
-        return " " + value + " ";
-      }
-      else if (next==="{") {
-        return { range: rng, content: "{ " + value + " " };
-      }
+    // position in attributes
+    if (rng.isEmpty()) {
+      var res = self._styleReplaceInLine(rng);
+      if (res) return res;
     }
     
-    // custom block?
-    var cap = /^([ \t]*~.*?)\}[ \t]*$([\s\S]*)/m.exec(txt);
+    // custom block with attributes?
+    cap = /^([ \t]*~.*?)([ \t]*\}[ \t]*$[\s\S]*)/m.exec(txt);
     if (cap) {  
-      return cap[1] + " " + value + "}" + cap[2];
+      return cap[1] + " " + value + cap[2];
+    }
+
+    // custom block 
+    cap = /^([ ]{0,3}~.*)([\s\S]*?\r?\n[ \t]*~+\s*(?:[ \t]*End\b.*\s*)?)/i.exec(txt);
+    if (cap) {  
+      return cap[1] + "  { " + value + " }" + cap[2];
     }
 
     // paragraph or list block?
     if (rng.startColumn===1 && rng.startLineNumber < rng.endLineNumber) { 
       if (rng.endColumn===1) { 
         return txt + "{ " + value + " }\n";
-      } 
-      else if (maxEndColumn === rng.endColumn) {
+      }
+      var maxEndColumn = self.editor.getModel().getLineMaxColumn(rng.endLineNumber);     
+      if (maxEndColumn === rng.endColumn) {
         return txt + "\n{ " + value + " }\n";
       }
     }
@@ -2554,15 +2566,20 @@ var symbolsMath = [
     return "[" + txt + "]{ " + value + " }";    
   }
 
-  function toolInline(name,pre,post) {
-    return {
+  function toolInline(name,pre,post,extra) {
+    return Util.extend({
       name: name,
       helpLink: "#syntax-inline-elements",
       content: "text",
       replacer: function(txt,rng) {
-        return pre + txt + post;
+        if (Util.startsWith(txt,pre) && Util.endsWith(txt,post)) {
+          return txt.substr(0,txt.length-post.length).substr(pre.length);
+        }
+        else {
+          return pre + (extra.transform ? extra.transform(txt) : txt) + post;
+        }
       }
-    }
+    },extra);
   }
 
   function toolFigure(icon) {
@@ -2647,6 +2664,19 @@ var symbolsMath = [
         return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
     }
+  }
+
+  function toolCustom(name,display,content,helpLink,title) {
+    return { 
+      name: name,
+      display: display || Util.capitalize(name),
+      content: content || "Here is a " + name + ".",
+      helpLink: helpLink,
+      title: title,
+      replacer: function(txt,rng) { 
+        return wrapBlock(rng,"~ " + Util.capitalize(name), txt, "~");
+      }
+    }    
   }
 
   function wrapBlock(rng,pre,txt,post) {
@@ -2827,8 +2857,8 @@ var symbolsMath = [
         select = res.range;
         newText = res.content;
       }
-      var command = new ReplaceCommand.ReplaceCommand( select, newText );
-      self.editor.executeCommand("madoko",command);
+      var command = new ReplaceCommandWithSelection( select, newText );
+      self.editor.executeCommand("madoko",command);      
     }
   }
 
