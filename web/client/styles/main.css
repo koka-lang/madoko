@@ -548,6 +548,13 @@ div.boxed {
   width: 3.5em;
 }
 
+#main[data-fontscale=small] #font-small, 
+#main[data-fontscale=medium] #font-medium, 
+#main[data-fontscale=large] #font-large, 
+#main[data-fontscale=x-large] #font-x-large { 
+  text-decoration: underline 
+} 
+
 .color-box {
   display:inline-block;
   border:1px solid black; 

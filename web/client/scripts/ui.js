@@ -127,6 +127,7 @@ var UI = (function() {
     var self = this;
     self.state  = State.Init;
     self.editor = null;
+    self.app  = document.getElementById("main");
         
     self.refreshContinuous = true;
     self.refreshRate = 500;
@@ -228,7 +229,6 @@ var UI = (function() {
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
 
-    self.app  = document.getElementById("main");
     self.connectionLogo = document.getElementById("connection-logo");
     self.connectionMessage = document.getElementById("connection-message");
     self.theme = "vs";
@@ -744,6 +744,22 @@ var UI = (function() {
       //if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
     }
 
+    // font size
+    document.getElementById("font-small").onclick = function(ev) {
+      self.setFontScale("small");
+    }
+    document.getElementById("font-medium").onclick = function(ev) {
+      self.setFontScale("medium");
+    }
+    document.getElementById("font-large").onclick = function(ev) {
+      self.setFontScale("large");
+    }
+    document.getElementById("font-x-large").onclick = function(ev) {
+      self.setFontScale("x-large");
+    }
+
+
+    // Theme
     document.getElementById("theme-ivory").onclick = function(ev) {
       self.theme = "vs";
       self.editor.updateOptions( { theme: self.theme } );
@@ -1135,6 +1151,7 @@ var UI = (function() {
       editName: self.editName, 
       pos: pos, 
       theme: theme,
+      fontScale: self.fontScale,
       storage: self.storage.persist(minimal),
       showLineNumbers: self.checkLineNumbers.checked,
       wrapLines: self.checkWrapLines.checked,
@@ -1291,6 +1308,7 @@ var UI = (function() {
       self.checkDelayedUpdate.checked = json.delayedUpdate;
       self.checkAutoSync.checked = json.autoSync;
       self.theme = json.theme || "vs";
+      self.setFontScale(json.fontScale || "medium");      
       var stg = Storage.unpersistStorage(json.storage);
       return self.setStorage( stg, docName ).then( function(fresh) {
         if (fresh) return; // loaded template instead of local document
@@ -1300,6 +1318,21 @@ var UI = (function() {
     else {
       return self.setStorage( null, null );
     }
+  }
+
+  UI.prototype.setFontScale = function(size) {
+    var self = this;
+    var scale = 1.0;
+    if (size==="small") scale=0.8;
+    else if (size==="large") scale=1.2;
+    else if (size==="x-large") scale=1.44;
+    else {
+      size = "medium";
+      scale = 1.0;
+    }
+    self.fontScale = size;
+    document.getElementById("editor").style.zoom = scale;
+    self.app.setAttribute("data-fontscale",size);
   }
 
   UI.prototype.checkSynced = function( makePromise ) {
