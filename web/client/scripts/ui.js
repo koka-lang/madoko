@@ -721,27 +721,36 @@ var UI = (function() {
 
     
     // narrow and wide editor panes
-    var app = document.getElementById("main-body");
-    
     //viewpane.addEventListener('transitionend', function( event ) { 
     //  self.syncView(); 
     //}, false);
     
+    function toggleFullView() {
+      var view = self.app.getAttribute("data-view");
+      self.app.setAttribute("data-view",(view==="full" ? "normal" : "full"));      
+    }
+
+    function closeFullView() {
+      if (self.app.getAttribute("data-view") === "full") toggleFullView();
+    }
+
+    bindKey("Alt-V", toggleFullView );
+    bindKey("Esc", closeFullView );
+    document.getElementById("close-fullview").onclick = function(ev) {
+      closeFullView();
+    }
+    
+    document.getElementById("view-full").onclick = function(ev) {
+      toggleFullView();
+    }
     document.getElementById("view-narrow").onclick = function(ev) {
-      Util.removeClassName(app,"view-wide");
-      Util.removeClassName(app,"view-normal");
-      Util.addClassName(app,"view-narrow");
+      self.app.setAttribute("data-view","narrow");
     }
     document.getElementById("view-normal").onclick = function(ev) {
-      Util.removeClassName(app,"view-wide");
-      Util.removeClassName(app,"view-narrow");
-      Util.addClassName(app,"view-normal");
+      self.app.setAttribute("data-view","normal");
     }
     document.getElementById("view-wide").onclick = function(ev) {
-      Util.removeClassName(app,"view-narrow");
-      Util.removeClassName(app,"view-normal");
-      Util.addClassName(app,"view-wide");
-      //if (!supportTransitions) setTimeout( function() { self.syncView(); }, 100 );
+      self.app.setAttribute("data-view","wide");
     }
 
     // font size

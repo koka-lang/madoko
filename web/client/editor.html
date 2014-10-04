@@ -98,6 +98,7 @@
       
     <div class="right">
       <img id="view-spinner" class="gspinner" src="images/dark/spinner-view.gif" title="Rendering..."/>
+      <img id="view-full" class="button" src="images/dark/icon-view-full.png" title="Switch to full screen preview (Alt-V)"/>
       <div id="menu-settings" class="popup no-close-on-click">
         <img class="button" src="images/dark/button-settings.png" />
         <div id="menu-settings-content" class="menu boxed">
@@ -165,7 +166,7 @@
     </div>  
 </div>
 
-<div id="main-body" class="view-normal app-body">
+<div id="main-body" class="app-body">
   <div id="editorpane" class="pane left">
     <div class="pane-content" >
       <div id="editor"></div>
@@ -173,7 +174,11 @@
   </div>
   <div id="viewpane" class="pane right normal">
     <div class="pane-content" id="view-container">
-      <iframe id="view" class="view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
+      <div id="fullview-header" class="header-bar"
+      ><span class="content">Madoko preview
+        <span class="right"><span id="close-fullview" class="button" title="Close the preview window (Alt-V)"><img src="images/dark/icon-close.png"/></span></span>
+      </div
+      ><iframe id="view" class="view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
     </div>
   </div>
 </div>
