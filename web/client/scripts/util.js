@@ -1289,12 +1289,18 @@ doc.execCommand("SaveAs", null, filename)
     return i;
   }
 
+  function isVisible(elem) {
+    if (!elem) return false;
+    var box = elem.getBoundingClientRect();
+    return (box.width>0 && box.height>0);
+  }
 
   function moveTo( elem, x, y, boundid ) {
+    if (!isVisible(elem)) return;
     var doc = getDocumentOffset(elem.parentNode);          
     if (boundid) {
-      var boundElem = document.getElementById(boundid);
-      if (boundElem) {
+      var boundElem = document.getElementById(boundid);      
+      if (boundElem && isVisible(boundElem)) {
         var bound = boundElem.getBoundingClientRect();
         var box = elem.getBoundingClientRect();
         x = Math.min( bound.right - box.width - 5, x );
