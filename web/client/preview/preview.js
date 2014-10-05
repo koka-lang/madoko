@@ -551,6 +551,9 @@ var Preview = (function() {
       loadContent(info);
       //ev.source.postMessage('contentLoaded',ev.origin);
     }
+    else if (info.eventType==="view") {
+      document.body.setAttribute("data-view",info.view);
+    }
   });
 
 

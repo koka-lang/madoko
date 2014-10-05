@@ -57,14 +57,16 @@ document.addEventListener( "keydown", function(ev) {
 
 function bindKey( key, action ) {
   if (typeof key === "string") key = { key: key, stop: true };
-  var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
-  var code = 0;
-  if (cap) {
-    code = cap[5].charCodeAt(0);
-    if (cap[1]) code |= KeyMask.altKey;
-    if (cap[2]) code |= KeyMask.ctrlKey;
-    if (cap[3]) code |= KeyMask.metaKey;
-    if (cap[4]) code |= KeyMask.shiftKey;
+  var code = key.code || 0;
+  if (code===0) {
+    var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
+    if (cap) {
+      code = cap[5].charCodeAt(0);
+      if (cap[1]) code |= KeyMask.altKey;
+      if (cap[2]) code |= KeyMask.ctrlKey;
+      if (cap[3]) code |= KeyMask.metaKey;
+      if (cap[4]) code |= KeyMask.shiftKey;
+    }
   }
   keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
 }
@@ -146,6 +148,8 @@ var UI = (function() {
     Monaco.Editor.createCustomMode(MadokoMode.mode);
     window.onbeforeunload = function(ev) { 
       //if (self.storage.isSynced()) return;
+      localStorage.removeItem("viewer-html");
+      localStorage.removeItem("viewer-scroll");
       if (self.localSave()) return; 
       var message = "Changes to current document have not been saved yet!\n\nIf you leave this page, any unsaved work will be lost.";
       (ev || window.event).returnValue = message;
@@ -314,6 +318,8 @@ var UI = (function() {
     bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
+    bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
+    bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
 
     // --- save links
     var saveLink = function(ev) {
@@ -727,15 +733,18 @@ var UI = (function() {
     
     function toggleFullView() {
       var view = self.app.getAttribute("data-view");
-      self.app.setAttribute("data-view",(view==="full" ? "normal" : "full"));      
+      var newView = (view==="full" ? "normal" : "full");
+      self.app.setAttribute("data-view",newView);      
+      self.dispatchViewEvent( { eventType: "view", view: newView } );
     }
 
     function closeFullView() {
       if (self.app.getAttribute("data-view") === "full") toggleFullView();
     }
 
-    bindKey("Alt-V", toggleFullView );
-    bindKey("Esc", closeFullView );
+    bindKey("Alt-P", toggleFullView );
+    bindKey({code:27,stop:true}, closeFullView );
+
     document.getElementById("close-fullview").onclick = function(ev) {
       closeFullView();
     }
@@ -969,6 +978,8 @@ var UI = (function() {
     
     function updateFull() {
       update();
+      // for separate viewer
+      // localStorage.setItem("viewer-html",html);
     }
 
     function update(oldText,newText) {
@@ -2247,7 +2258,44 @@ var symbolsMath = [
       upload  : "Please select an image.",
       exts    : [".jpg",".png",".svg",".gif"],
     },   
-    toolFigure(true),   
+    { name    : "figure",
+      icon    : true,
+      title   : "Insert a figure",
+      options : [
+        toolBlock("normal", { 
+          block   : "Figure",
+          html    : "<img src='images/icon-tool-figurewide.png'/> Normal",
+          title   : "Insert a regular figure", 
+          helpLink: "#sec-figure",
+          content : "Here is a normal figure.",
+          attrs   : "#fig-myfigure caption=\"My caption.\"",
+        }),
+        toolBlock("left", { 
+          block   : "Figure", 
+          html    : "<img src='images/icon-tool-figure.png'/> Left",
+          helpLink: "#sec-float",
+          attrs   : "#fig-myfigure caption=\"My caption.\" float=left width=50% margin-right=1em",
+          content : "Here is a left figure.",
+          title   : "Insert a left-side figure with text wrap around", 
+        }),
+        toolBlock("right", { 
+          block   : "Figure", 
+          html    : "<img src='images/icon-tool-figureright.png'/> Right",
+          helpLink: "#sec-float",
+          content : "Here is a right figure.",
+          attrs   : "#fig-myfigure caption=\"My caption.\" float=right width=50% margin-left=1em",
+          title   : "Insert a right-side figure with text wrap around", 
+        }),
+        toolBlock("wide", { 
+          block   : "Figure", 
+          helpLink: "#sec-figure",
+          html    : "<img src='images/icon-tool-figurewide2.png'/> Wide",          
+          attrs   : "#fig-myfigure caption=\"My caption.\" .wide",
+          content : "Here is a wide figure.",
+          title   : "Insert a wide figure. In LaTeX such figure spans two columns (using the \\figure* command)", 
+        }),
+      ],
+    },   
     { name    : "table",
       icon    : true,
       title   : "Table",
@@ -2714,6 +2762,18 @@ var symbolsMath = [
         return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
     }
+  }
+
+  function toolBlock(name,extra) {
+    var block = extra.block || Util.capitalize(name);
+    return Util.extend({
+      name: name,
+      display: Util.capitalize(name),
+      content: "Here is a " + name + ".",
+      replacer: function(txt,rng) {
+        return wrapBlock(rng,"~ " + block + (extra.attrs ? " { " + extra.attrs + "}" : ""), txt, "~");
+      }
+    }, extra);
   }
 
   function toolCustom(name,display,content,helpLink,title) {
@@ -3274,6 +3334,9 @@ var symbolsMath = [
       event.sourceName  = self.editName === self.docName ? null : self.editName;
       event.height      = self.view.clientHeight;
       
+      // for separate viewer
+      // localStorage.setItem("viewer-scroll",JSON.stringify(event)); 
+
       // post scroll message to view iframe
       self.dispatchViewEvent(event);
       return true;

@@ -1331,8 +1331,8 @@ doc.execCommand("SaveAs", null, filename)
         var elem = document.getElementById(id);
         if (elem) {
           var doc = getDocumentOffset(elem.parentNode);                      
-          moveTo(elem, pos.left + doc.left, pos.top + doc.top, pos.boundid );
           addClassName(elem,"pinned");
+          moveTo(elem, pos.left + doc.left, pos.top + doc.top, pos.boundid );
         }
         else pinned.remove(id);
       });
