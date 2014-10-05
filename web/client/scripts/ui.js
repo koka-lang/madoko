@@ -1645,6 +1645,9 @@ var UI = (function() {
         cells.push( cap[2] );
         cells.push( cap[3] );
        }
+       if (!cells || cells.length===0) {
+         return [line,"","|"]; 
+       }
        return cells;
     });
     var mwidths = [];
@@ -1764,7 +1767,7 @@ var UI = (function() {
     var content = "";
 
     // test reformat table or paragraph..
-    var rxTable = /^[ \t]{0,3}[\|\+].*[\|\+][ \t]*$/m;
+    var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
     if (rxTable.test(lines[start-1])) {
       // find table extent
       while ( start > 1 && rxTable.test(lines[start-2]) ) {
