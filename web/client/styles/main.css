@@ -579,28 +579,19 @@ div.boxed {
 #main[data-view=full] #fullview-header {
   display: block !important;
   padding: 0em 0.5em;  
+  transition: height 0.5s;
 }
 
 #fullview-header {
   display: none;
 }
 
-.header-bar.collapse {
-  height: 0.5ex;
-  transition: height 0.5s;
+.header-bar.collapsed {
+  height: 0.3ex;  
 }
 
-.header-bar.collapse .content {
+.header-bar.collapsed .content {
   display: none;
-}
-
-.header-bar.collapse:hover,
-.header-bar.collapse.hover {
-  height: 1.4rem;
-}
-.header-bar.collapse:hover .content, 
-.header-bar.collapse.hover .content {
-  display: block;
 }
 
 .color-box {

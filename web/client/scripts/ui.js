@@ -736,6 +736,7 @@ var UI = (function() {
       var newView = (view==="full" ? "normal" : "full");
       self.app.setAttribute("data-view",newView);      
       self.dispatchViewEvent( { eventType: "view", view: newView } );
+      if (newView==="full") fullHeaderCollapse();
     }
 
     function closeFullView() {
@@ -761,6 +762,24 @@ var UI = (function() {
     document.getElementById("view-wide").onclick = function(ev) {
       self.app.setAttribute("data-view","wide");
     }
+
+    var fullh = document.getElementById("fullview-header");
+    var fullTimeout = null;
+    function fullHeaderCollapse() {
+      fullTimeout = window.setTimeout( function() {
+        Util.addClassName(fullh,"collapsed");        
+      }, 3000 );
+    };
+    fullh.addEventListener("mouseout", function() {
+      fullHeaderCollapse();
+    });
+    fullh.addEventListener("mouseover", function() {
+      if (fullTimeout) {
+        window.clearTimeout(fullTimeout);
+        fullTimeout = null;
+      }
+      Util.removeClassName(fullh,"collapsed");
+    });
 
     // font size
     document.getElementById("font-small").onclick = function(ev) {

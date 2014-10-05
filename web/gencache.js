@@ -31,7 +31,7 @@ function readDirRec(dir) {
 function readResources() {
 	return readDirRec(options.rootPath).then( function(files) {
 		return files.map(function(fname) {
-			return fname.substr(options.rootPath.length+1).replace(/\\/g,"/");
+			return (fname ? fname.substr(options.rootPath.length+1).replace(/\\/g,"/") : "");
 		}).filter( function(fname) {
 			// excludes
 			if (options.excludes.some(function(pat) { return match(fname,pat); })) {
