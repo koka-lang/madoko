@@ -280,6 +280,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (replicate(c,n - s.length) + s);
   }
 
+  function rpad(s,n,c) {
+    if (!c) c = "0";
+    if (!s) s = "";
+    if (!n) return s;
+    if (s.length >= n) return s;
+    return s + replicate(c,n - s.length);
+  }
+
   function contains( xs, s ) {
     if (!xs) return false;
     if (!s) return true;
@@ -1519,6 +1527,7 @@ doc.execCommand("SaveAs", null, filename)
 
     replicate: replicate,
     lpad: lpad,
+    rpad: rpad,
     message: message,
     assert: assert,
     escape: htmlEscape,

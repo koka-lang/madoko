@@ -1635,7 +1635,67 @@ var UI = (function() {
   /*---------------------------------------------------
     Editor operations
   -------------------------------------------------- */
-
+  function reformatTable( lines, column ) {
+    var rxCell = /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?![:~=-]|$))+)([|]+|[+]+(?= *[:~=-]|$)|$)/g;
+    var rows = lines.map( function(line) {
+       var cells = [];
+       var cap;
+       while( cap = rxCell.exec(line) ) {
+        if (cap[1]) cells.push(cap[1]);
+        cells.push( cap[2] );
+        cells.push( cap[3] );
+       }
+       return cells;
+    });
+    var mwidths = [];
+    rows.forEach( function(row) {
+      var r = 0;
+      row.forEach( function(cell,i) {
+        if (i%2 === 0) return; // skip columns
+        var len = cell.length;
+        var span = (i < row.length-1 ? row[i+1].length : 1);
+        if (span === 1) {
+          if (mwidths.length <= r) {
+            mwidths.push( Math.max(len,1) );
+          }
+          else if (mwidths[r] < len) {
+            mwidths[r] = len;
+          }
+        }
+        r = r + span;
+      });
+    });
+    var newlines = rows.map( function(row) {
+      var r = 0;
+      var line = row.map( function(cell,i) {
+        if (i%2===0) return cell; // skip separator
+        var len = cell.length;
+        var newlen = Math.max(1,mwidths[r]);
+        r++;
+        var span = (i < row.length-1 ? row[i+1].length : 1);
+        newlen = newlen - (span-1);
+        while (span > 1) {
+          newlen = newlen + 1 + Math.max(1,mwidths[r]);
+          r++;
+          span--;
+        }
+        // extend cell (or line)
+        var cap = /(.*)(--|~~|==)\s*(:)?$/.exec(cell);
+        if (cap) {
+          return Util.rpad( cap[1] + cap[2], newlen - (cap[3] ? cap[3].length : 0), cap[2][0] ) + (cap[3] || "");
+        }
+        else {
+          return Util.rpad(cell,newlen," ");
+        }
+      }).join("");
+      while( r < mwidths.length) {
+        line += Util.replicate(" ",mwidths[r]) + "|";
+        r++;
+      }
+      return line;
+    });
+    return newlines.join("\n");
+  }
 
   function breakLines(text, maxCol, hang0, hang ) {
     var para    = hang0;
@@ -1698,21 +1758,42 @@ var UI = (function() {
     var lines = text.split("\n");
     if (lineNo <= 0 || lineNo > lines.length || isBlank(lines[lineNo-1])) return null;
 
-    // find paragraph extent
+    // set up range
     var start = lineNo;
-    while( start > 1 && !endPara(lines[start-2]) && !stopPara(lines[start-1])) {
-      start--;
-    }
     var end = lineNo;
-    while( end < lines.length && !stopPara(lines[end]) ) {
-      end++;
-    }
-    var endColumn = lines[end-1].length+1;
-    var para      = lines.slice(start-1,end);
-    if (para.length <= 0) return null;
+    var content = "";
 
-    var paraBroken = reformatPara(para,column);
-    return { text: paraBroken, startLine: start, endLine: end, endColumn: endColumn };
+    // test reformat table or paragraph..
+    var rxTable = /^[ \t]{0,3}[\|\+].*[\|\+][ \t]*$/m;
+    if (rxTable.test(lines[start-1])) {
+      // find table extent
+      while ( start > 1 && rxTable.test(lines[start-2]) ) {
+        start--;
+      } 
+      while (end < lines.length && rxTable.test(lines[end])) {
+        end++;
+      }
+      var table = lines.slice(start-1,end);
+      if (table.length <= 0) return null;
+      content = reformatTable(table,column); 
+    }
+    else {
+      // find paragraph extent
+      while( start > 1 && !endPara(lines[start-2]) && !stopPara(lines[start-1])) {
+        start--;
+      }
+      while( end < lines.length && !stopPara(lines[end]) ) {
+        end++;
+      }
+      var para      = lines.slice(start-1,end);
+      if (para.length <= 0) return null;
+
+      content = reformatPara(para,column);
+    }
+    if (content === null) return null;
+
+    var endColumn = lines[end-1].length+1;
+    return { text: content, startLine: start, endLine: end, endColumn: endColumn };
   }
 
   UI.prototype.onFormatPara = function() {
@@ -1724,6 +1805,7 @@ var UI = (function() {
       var rng = new Range.Range( res.startLine, 0, res.endLine, res.endColumn );
       var command = new ReplaceCommand.ReplaceCommand( rng, res.text );
       self.editor.executeCommand("madoko",command);
+      self.editor.setPosition(pos);
     }
   }
 
@@ -2239,7 +2321,7 @@ var symbolsMath = [
     },    
     { name    : "format",
       icon    : true,
-      title   : "(Alt-Q) Format paragraph to fit in 70 columns",
+      title   : "(Alt-Q) Format paragraph to fit in 70 columns.\nOr reformat table to align all columns, and add missing columns.",
       replacer: function(txt,rng) {
         if (txt) {
           return reformatPara( txt );
