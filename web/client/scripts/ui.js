@@ -37,6 +37,7 @@ function diff( original, modified ) {
 // Constants
 var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
 
+var isFirefox = /\bfirefox/i.test(navigator.userAgent);
 
 // Key binding
 var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
@@ -1673,8 +1674,7 @@ var UI = (function() {
        var cap;
        while( cap = rxCell.exec(line) ) {
         if (cap[1]) cells.push(cap[1]); // start separator
-        var stripped = Util.strip(cap[2]);
-        cells.push( cap[2].replace(/^\s+|\s+$/g," ").replace(/(---)-+|(~~~)~+|(===)=+/g, "$1$2$3" ) );
+        cells.push( cap[2].replace(/^\s+|\s+$/g," ").replace(/(---)-+|(~~~)~+|(===)=+/g, "$1$2$3" ).replace(/^\s+$/,"") );
         cells.push( cap[3] ); // separator
        }
        if (!cells || cells.length===0) {
@@ -1691,7 +1691,7 @@ var UI = (function() {
         var span = (i < row.length-1 ? row[i+1].length : 1);
         if (span === 1) {
           if (mwidths.length <= r) {
-            mwidths.push( Math.max(len,1) );
+            mwidths.push( len );
           }
           else if (mwidths[r] < len) {
             mwidths[r] = len;
@@ -1703,17 +1703,23 @@ var UI = (function() {
     var newlines = rows.map( function(row) {
       var r = 0;
       var line = row.map( function(cell,i) {
-        if (i%2===0) return cell; // skip separator
+        if (i%2===0) return cell; // return separator
         var len = cell.length;
-        var newlen = Math.max(1,mwidths[r]);
+        var newlen = mwidths[r];
         r++;
         var span = (i < row.length-1 ? row[i+1].length : 1);
         newlen = newlen - (span-1);
         while (span > 1) {
-          newlen = newlen + 1 + Math.max(1,mwidths[r]);
+          newlen = newlen + 1 + mwidths[r];
           r++;
           span--;
         }
+        // remove empty column
+        if (newlen===0 && cell.length===0) {
+          row[i+1] = ""; // clear separator
+          return "";     // return empty
+        }
+
         // extend cell (or line)
         var cap = /(.*)(--|~~|==)\s*(:)?$/.exec(cell);
         if (cap) {
@@ -3106,12 +3112,11 @@ var symbolsMath = [
         newText = res.content;
       }
       var command;
-      if ((txt + newText).indexOf("\n") < 0) {
-        // no new lines, keep selection
-        command = new ReplaceCommandWithSelection(select,newText);
-      } else {
-        // new lines, need to use this one because there is trouble on firefox otherwise
+      if (isFirefox) {
+        // firefox has trouble with "WithSelection
         command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
+      } else {
+        command = new ReplaceCommandWithSelection(select,newText);
       } 
       self.editor.executeCommand("madoko",command);      
     }
