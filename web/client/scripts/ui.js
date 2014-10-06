@@ -34,6 +34,10 @@ function diff( original, modified ) {
   return new Promise(diff); // wrap promise
 }
 
+// Constants
+var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
+
+
 // Key binding
 var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
 var keyHandlers = [];
@@ -309,6 +313,14 @@ var UI = (function() {
     
     self.editor.getHandlerService().bind({ key: 'Alt-Q' }, function(ev) { 
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
+    });
+    self.editor.getHandlerService().bind({ key: 'Enter' }, function(ev) { 
+      var line = self.editor.getModel().getLineContent(self.editor.getPosition().lineNumber);
+      if (rxTable.test(line)) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        self.addTableRow();        
+      }
     });
 
     
@@ -1786,7 +1798,6 @@ var UI = (function() {
     var content = "";
 
     // test reformat table or paragraph..
-    var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
     if (rxTable.test(lines[start-1])) {
       // find table extent
       while ( start > 1 && rxTable.test(lines[start-2]) ) {
@@ -1829,6 +1840,15 @@ var UI = (function() {
       self.editor.executeCommand("madoko",command);
       self.editor.setPosition(pos);
     }
+  }
+
+  UI.prototype.addTableRow = function() {
+    var self = this;
+    var pos = self.editor.getPosition();
+    pos.lineNumber++;
+    pos.column=1;
+    self.insertText( "| |\n", pos );
+    self.onFormatPara();
   }
 
   function findMetaPos( text ) {
