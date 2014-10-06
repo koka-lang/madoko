@@ -1672,9 +1672,10 @@ var UI = (function() {
        var cells = [];
        var cap;
        while( cap = rxCell.exec(line) ) {
-        if (cap[1]) cells.push(cap[1]);
-        cells.push( cap[2] );
-        cells.push( cap[3] );
+        if (cap[1]) cells.push(cap[1]); // start separator
+        var stripped = Util.strip(cap[2]);
+        cells.push( cap[2].replace(/^\s+|\s+$/g," ").replace(/(---)-+|(~~~)~+|(===)=+/g, "$1$2$3" ) );
+        cells.push( cap[3] ); // separator
        }
        if (!cells || cells.length===0) {
          return [line,"","|"]; 

@@ -288,6 +288,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return s + replicate(c,n - s.length);
   }
 
+  function strip(s) {
+    if (!s) return "";
+    return s.replace(/^\s+|\s+$/g, "");
+  }
+
   function contains( xs, s ) {
     if (!xs) return false;
     if (!s) return true;
@@ -1528,6 +1533,7 @@ doc.execCommand("SaveAs", null, filename)
     replicate: replicate,
     lpad: lpad,
     rpad: rpad,
+    strip: strip,
     message: message,
     assert: assert,
     escape: htmlEscape,
