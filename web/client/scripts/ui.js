@@ -3105,7 +3105,14 @@ var symbolsMath = [
         select = res.range;
         newText = res.content;
       }
-      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
+      var command;
+      if ((txt + newText).indexOf("\n") < 0) {
+        // no new lines, keep selection
+        command = new ReplaceCommandWithSelection(select,newText);
+      } else {
+        // new lines, need to use this one because there is trouble on firefox otherwise
+        command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
+      } 
       self.editor.executeCommand("madoko",command);      
     }
   }
