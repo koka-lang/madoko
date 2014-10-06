@@ -2776,7 +2776,7 @@ var symbolsMath = [
       if (rng.startColumn >= openCol && rng.startColumn <= closeCol+1) {
         var select = rng.clone();
         select.startColumn = openCol;
-        select.endColumn = closeCol;
+        select.endColumn = closeCol+1;
         select.selectionStartColumn = select.startColumn;
         select.selectionEndColumn = select.endColumn;
         select.endLineNumber = select.startLineNumber;
@@ -2798,7 +2798,7 @@ var symbolsMath = [
 
     // position in attributes
     if (rng.isEmpty()) {
-      var res = self._styleReplaceInLine(rng);
+      var res = self._styleReplaceInLine(rng,value);
       if (res) return res;
     }
     
