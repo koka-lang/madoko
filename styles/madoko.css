@@ -365,13 +365,16 @@ div.input-mathpre {
    Styling for full documents
 ----------------------------------------------------*/
 body.madoko, .madoko-body {
-  padding: 1em 16% 1em 12%;
   font-family: Cambria,"Times New Roman","Liberation Serif","Times",serif;
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
 }
 
+body.madoko, .madoko-body, body.madoko.preview[data-view=full] {
+  padding: 1em 16% 1em 12%;
+}
+
 body.madoko.preview {
-  padding: 0em 2em 0em 2em !important;
+  padding: 0em 2em 0em 2em;
 }
 
 .madoko p,
