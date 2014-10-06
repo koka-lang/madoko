@@ -2368,6 +2368,27 @@ var symbolsMath = [
         return blockRange(rng,linePrefix("> ",txt));
       }
     },
+    { name    : "format",
+      icon    : true,
+      title   : "(Alt-Q) Format paragraph to fit in 70 columns.\nOr reformat table to align all columns, and add missing columns.",
+      replacer: function(txt,rng) {
+        if (txt) {
+          return reformatPara( txt );
+        }
+        else {
+          var self = this;
+          self.onFormatPara();
+          return null;
+        }
+      }
+    },  
+    { name    : "img", 
+      icon    : true,
+      title   : "Insert an image",
+      content : "",
+      upload  : "Please select an image.",
+      exts    : [".jpg",".png",".svg",".gif"],
+    },   
     { name    : "aligncenter",
       icon    : true,
       title   : "Text and block alignment",
@@ -2402,27 +2423,6 @@ var symbolsMath = [
         }),
       ]
     },
-    { name    : "format",
-      icon    : true,
-      title   : "(Alt-Q) Format paragraph to fit in 70 columns.\nOr reformat table to align all columns, and add missing columns.",
-      replacer: function(txt,rng) {
-        if (txt) {
-          return reformatPara( txt );
-        }
-        else {
-          var self = this;
-          self.onFormatPara();
-          return null;
-        }
-      }
-    },  
-    { name    : "img", 
-      icon    : true,
-      title   : "Insert an image",
-      content : "",
-      upload  : "Please select an image.",
-      exts    : [".jpg",".png",".svg",".gif"],
-    },   
     { name    : "figure",
       icon    : true,
       title   : "Insert a figure",
@@ -3573,6 +3573,9 @@ var symbolsMath = [
         return self.login().then( function() {  
           return self._synchronize(); 
         });
+      }
+      else if (self.storage && !self.storage.remote.canSync) {
+        self.saveTo();
       }
       else {
         return self._synchronize();
