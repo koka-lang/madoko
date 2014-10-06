@@ -3105,7 +3105,7 @@ var symbolsMath = [
         select = res.range;
         newText = res.content;
       }
-      var command = new ReplaceCommandWithSelection( select, newText );
+      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
       self.editor.executeCommand("madoko",command);      
     }
   }
