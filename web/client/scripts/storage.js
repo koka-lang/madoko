@@ -286,7 +286,7 @@ function saveTo(  storage, toStorage, docStem, newStem )
 
 function publishSite(  storage, docName, indexName )
 {
-  if (storage.remote.type() !== "dropbox") return Promise.reject("Sorry, can only publish to Azure for documents on Dropbox");
+  if (storage.remote.type() !== "dropbox") return Promise.rejected("Sorry, can only publish to Azure for documents on Dropbox.\nUse 'Save To' to save to Dropbox first.");
 
   var headerLogo = "images/dark/" + Dropbox.logo();
   var params = { 
@@ -359,6 +359,9 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 }
 
 function createSnapshot( storage, docName ) {
+  if (!storage.remote.canSync) {
+    return Promise.rejected( "Cannot create snapshot on local- or readonly storage. (Use 'Save To' to save to cloud storage first)");
+  }
   return storage.login().then( function() {
     return createSnapshotFolder( storage.remote, Util.stemname(docName) );
   }).then( function(folder) {
