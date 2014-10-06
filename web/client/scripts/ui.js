@@ -2367,7 +2367,41 @@ var symbolsMath = [
       replacer: function(txt,rng) {
         return blockRange(rng,linePrefix("> ",txt));
       }
-    },    
+    },
+    { name    : "aligncenter",
+      icon    : true,
+      title   : "Text and block alignment",
+      options : [
+        toolBlock("alignleft", { 
+          block   : "Align-Left",
+          html    : "<img src='images/icon-tool-alignleft.png'/> Left",
+          title   : "Left align text and blocks", 
+          helpLink: "#special-attribute-classes",
+          content : "Left aligned text.",
+        }),
+        toolBlock("aligncenter", { 
+          block   : "Center",
+          html    : "<img src='images/icon-tool-aligncenter.png'/> Center",
+          title   : "Center text and blocks", 
+          helpLink: "#special-attribute-classes",
+          content : "Centered text.",
+        }),
+        toolBlock("alignright", { 
+          block   : "Align-Right",
+          html    : "<img src='images/icon-tool-alignright.png'/> Right",
+          title   : "Right align text and blocks", 
+          helpLink: "#special-attribute-classes",
+          content : "Right aligned text.",
+        }),
+        toolBlock("justify", { 
+          block   : "Justify",
+          html    : "<img src='images/icon-tool-justify.png'/> Justify",
+          title   : "Justify text", 
+          helpLink: "#sec-css",
+          content : "Justified text.",
+        }),
+      ]
+    },
     { name    : "format",
       icon    : true,
       title   : "(Alt-Q) Format paragraph to fit in 70 columns.\nOr reformat table to align all columns, and add missing columns.",
