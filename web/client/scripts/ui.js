@@ -1045,12 +1045,19 @@ var UI = (function() {
     }  
   }
 
-  UI.prototype.updateCitations = function( bib ) {
+  UI.prototype.updateCitations = function( path, bib ) {
     var self = this;
-
     var menu = document.getElementById("tool-cite-content");
     if (!menu) return;
 
+    if (!self.citations) self.citations = new Map();
+    if (path==null || bib==null) {
+      // clear
+      self.citations = null;
+      menu.innerHTML = "<hr/>";      
+    }
+
+    // parse citations from this bib file
     var cites = [];
     var rxEntry = /^[ \t]*@(\w+)\s*\{\s*([\w:;\-\.]+)\s*,([\s\S]*?)\n(?=[ \t]*(?:[@\}]|\r?\n))/gm;
     var cap;
@@ -1062,14 +1069,23 @@ var UI = (function() {
       var title = capTitle ? capTitle[1] || capTitle[2] : name;
       cites.push( { name: name, title: title });
     }
+    self.citations.set(path,cites);
+
+
+    // collect all citations
+    cites = [];
+    self.citations.forEach( function(path,cs) {
+      cites = cites.concat(cs);
+    });
     cites = cites.sort(function(c1,c2) {
       var s1 = c1.name.toLowerCase();
       var s2 = c2.name.toLowerCase();
       return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
 
+    // and display
     var html = cites.map( function(cite) {
-      return "<span class='button cite' data-cite='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
+      return "<span class='button cite' data-value='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
     }).join("<br/>");
 
     menu.innerHTML = html;
@@ -1077,6 +1093,14 @@ var UI = (function() {
   
   UI.prototype.updateLabels = function( labelsTxt, linksTxt ) {
     var self = this;
+    var menuLabels = document.getElementById("tool-reference-content");
+    if (!menuLabels) return;
+
+    if (menuLabels==null) {
+      // clear
+      menuLabels.innerHTML = "<hr/>";
+      return;
+    }
 
     // parse labels
     var labelsJson  = "["+ labelsTxt.split("\n").filter(function(txt){ return (txt.length>0); }).join(",\n") + "]";
@@ -1104,15 +1128,13 @@ var UI = (function() {
       return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
 
-    var menuLabels = document.getElementById("tool-reference-content");
-    if (menuLabels) {
-      var labelHtml = labelsx.map( function(label) {
-        var name = label.key;
-        var text = label.value;
-        return "<span class='button label' data-label='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
-      }).join("<br/>");
-      menuLabels.innerHTML = (labelHtml ? labelHtml : "none");
-    }
+    // render
+    var labelHtml = labelsx.map( function(label) {
+      var name = label.key;
+      var text = label.value;
+      return "<span class='button label' data-value='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
+    }).join("<br/>");
+    menuLabels.innerHTML = (labelHtml ? labelHtml : "none");
   }
 
   UI.prototype.showSpinner = function(enable, elem) {
@@ -1322,13 +1344,20 @@ var UI = (function() {
           return stg.readFile(docName, false);
         }).then( function(file) {           
           if (self.storage) {
-            self.storage.destroy(); // clears all event listeners
+            self.storage.destroy();     // clears all event listeners
+            self.updateCitations(null); // clears citations
+            self.updateLabels(null,null); // clears references
             self.viewHTML( "<p>Rendering...</p>", Date.now() );
             //self.storage.clearEventListener(self);
           }
           self.storage = stg;
           self.docName = docName;
           self.docText = file.content;
+
+          // initialize citations
+          self.storage.forEachFile( function( file ) {
+            if (Util.extname(file.path) === ".bib") self.updateCitations( file.path, file.content );
+          });
           
           self.storage.addEventListener("update",self);
           self.runner.setStorage(self.storage);
@@ -2400,16 +2429,28 @@ var symbolsMath = [
     { name: "reference",
       icon: true,
       title: "Insert an in-document reference",
-      options: [
-        { element: "HR" }
-      ],
+      dynamic: function(ref) {
+        var self = this;
+        self.toolCommand( {
+          content: "",
+          replacer: function(txt,rng) {
+            return toolInsertReference(txt,rng,ref);
+          }
+        });
+      },
     },
     { name: "cite",
       icon: true,
       title: "Insert a citation",
-      options: [
-        { element: "HR" }
-      ],
+      dynamic: function(cite) {
+        var self = this;
+        self.toolCommand( {
+          content: "",
+          replacer: function(txt,rng) {
+            return self.toolInsertCitation(txt,rng,cite);
+          }
+        });
+      },
     },
     { element: "BR",
     },
@@ -2777,29 +2818,56 @@ var symbolsMath = [
   ];
 
 
-
-  UI.prototype.initSymbols = function(menu,symbols) {
+  UI.prototype.toolInsertCitation = function(txt,rng,cite) {
     var self = this;
-    var html = symbols.map(function(symbol) {
-      var entity = (symbol.content ? symbol.content : "&amp;" + (symbol.entity ? symbol.entity : "#" + symbol.code.toString()) + ";");
-      var classes = "symbol button" + (symbol.invisible ? " invisible" : "");
-      var title = symbol.title || entity;
-      return "<span class='" + classes + "' data-entity='" + entity + "' title='" + title + "'>"  +
-              (symbol.display ? symbol.display : "&#" + symbol.code.toString() + ";") + "</span>";
-    }).join("");
-    menu.innerHTML = html;
-    menu.addEventListener("click", function(ev) {
-      var elem = ev.target;
-      if (!elem) return;
-      var entity = elem.getAttribute("data-entity");
-      if (!entity) return;
-      self.toolCommand( { 
-        name: "symbol", 
-        replacer: function(txt,rng) {
-          return entity;
-        }
-      });      
-    });
+    if (!rng.isEmpty()) {
+      return txt + "[@" + cite + "]";   // TODO: make it insert citations into existing ones
+    }
+    else {
+      rng = rng.clone();
+      rng.startColumn--;
+      rng.endColumn++;
+      var postxt = self.editor.getModel().getValueInRange(rng);
+      if (postxt[0] === "[" || postxt[0] === ";") {
+        return "@" + cite + ";";
+      }
+      else if (postxt[1] === "]" || postxt[1] === ";") {
+        return ";@" + cite;
+      }
+      else if (postxt[0] === "]") {
+        rng.endColumn--;
+        return {
+          range: rng,
+          content: ";@" + cite + "]",
+        };
+      }
+      return "@" + cite + ";";
+    }
+  }
+
+  function toolInsertReference(txt,rng,ref) {
+    var reftxt = "[#" + ref + "]";
+    if (txt.length > 0) {
+      return "[" + txt + "]" + reftxt;
+    }
+    else if (Util.startsWith(ref,"sec-")) {
+      return "Section " + reftxt;
+    }
+    else if (Util.startsWith(ref,"fig-")) {
+      return "Figure " + reftxt;
+    }
+    else if (Util.startsWith(ref,"eq-")) {
+      return "Equation " + reftxt;
+    }
+    else if (Util.startsWith(ref,"th-")) {
+      return "Theorem " + reftxt;
+    }
+    else if (Util.startsWith(ref,"lem-")) {
+      return "Lemma " + reftxt;
+    }
+    else {
+      return reftxt;
+    }
   }
 
   function toolFontFamily(fam) {
@@ -3083,6 +3151,43 @@ var symbolsMath = [
     }
   }
 
+  UI.prototype.initDynamic = function( menu, dynamic ) {
+    var self = this;
+    menu.innerHTML = "<hr/>";
+    menu.addEventListener("click", function(ev) {
+      var elem = ev.target;
+      while( elem && elem !== menu && !Util.hasClassName(elem,"button")) elem = elem.parentNode;
+      if (!elem || elem === menu) return;
+      var value = elem.getAttribute("data-value");
+      if (!value) return;
+      return dynamic.call(self,value);
+    });
+  }
+
+  UI.prototype.initSymbols = function(menu,symbols) {
+    var self = this;
+    var html = symbols.map(function(symbol) {
+      var entity = (symbol.content ? symbol.content : "&amp;" + (symbol.entity ? symbol.entity : "#" + symbol.code.toString()) + ";");
+      var classes = "symbol button" + (symbol.invisible ? " invisible" : "");
+      var title = symbol.title || entity;
+      return "<span class='" + classes + "' data-entity='" + entity + "' title='" + title + "'>"  +
+              (symbol.display ? symbol.display : "&#" + symbol.code.toString() + ";") + "</span>";
+    }).join("");
+    menu.innerHTML = html;
+    menu.addEventListener("click", function(ev) {
+      var elem = ev.target;
+      if (!elem) return;
+      var entity = elem.getAttribute("data-entity");
+      if (!entity) return;
+      self.toolCommand( { 
+        name: "symbol", 
+        replacer: function(txt,rng) {
+          return entity;
+        }
+      });      
+    });
+  }
+
   UI.prototype.initTool = function( tool, parent, parentName  ) {
     var self = this;
     if (tool.element) {
@@ -3126,7 +3231,7 @@ var symbolsMath = [
       }
       parent.appendChild(item);
     }
-    if (tool.options || tool.symbols) {
+    if (tool.options || tool.symbols || tool.dynamic) {
       Util.addClassName(item,"popup");        
       Util.addClassName(item,tool.options ? "options":"symbols");        
       if (!tool.icon) Util.addClassName(item,"named");
@@ -3143,8 +3248,11 @@ var symbolsMath = [
           self.initTool(subtool,menu,parentName + "-" + tool.name);
         });
       }
-      else {
+      else if (tool.symbols) {
         self.initSymbols(menu,tool.symbols);
+      }
+      else if (tool.dynamic) {
+        self.initDynamic(menu,tool.dynamic);
       }
     }
     else {
@@ -3221,6 +3329,7 @@ var symbolsMath = [
   UI.prototype.insertOrReplaceText = function( replacer, defText ) {
     var self = this;
     var select = self.editor.getSelection();
+    var preserve = !select.isEmpty();
     var model = self.editor.getModel();
     var txt = (select.isEmpty() ? defText : model.getValueInRange(select) );
     var res = replacer.call(self,txt,select);
@@ -3231,7 +3340,7 @@ var symbolsMath = [
         newText = res.content;
       }
       var command;
-      if (isFirefox) {
+      if (!preserve || isFirefox) {
         // firefox has trouble with "WithSelection
         command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
       } else {
@@ -3632,7 +3741,7 @@ var symbolsMath = [
     }
     self.editSelect();
     if (Util.extname(file.path) === ".bib") {
-      self.updateCitations(file.content);
+      self.updateCitations(file.path,file.content);
     }
   }
 

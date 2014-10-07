@@ -337,7 +337,7 @@ span.save-link:hover {
 #toolbox #tool-reference-content,
 #toolbox #tool-cite-content {
   width: 12em;
-  overflow-x: hidden;
+  white-space: nowrap;
 }
 
 #toolbox #tool-symbol .menu {
@@ -792,6 +792,10 @@ div.pinned.boxed.menu {
 #help-content,
 #menu-settings-content {
   width: 20em;
+}
+
+#toolbox #toolbox-content {
+  width: 23em;
 }
 
 #toolbox .menu {
