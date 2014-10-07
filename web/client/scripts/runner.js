@@ -131,7 +131,16 @@ var Runner = (function() {
       }
 
       var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
-      return { content: res.content, ctx: ctx, avgTime: avg, runAgain: runAgain, runOnServer: runOnServer, mathDoc: res.mathDoc };      
+      return { 
+        content: res.content, 
+        ctx: ctx, 
+        avgTime: avg, 
+        runAgain: runAgain, 
+        runOnServer: runOnServer, 
+        mathDoc: res.mathDoc,
+        links: res.links,
+        labels: res.labels
+      };      
     });
   }
 

@@ -1045,6 +1045,72 @@ var UI = (function() {
     }  
   }
 
+  UI.prototype.updateCitations = function( bib ) {
+    var self = this;
+
+    var menu = document.getElementById("tool-cite-content");
+    if (!menu) return;
+
+    var cites = [];
+    var rxEntry = /^[ \t]*@(\w+)\s*\{\s*([\w:;\-\.]+)\s*,([\s\S]*?)\n(?=[ \t]*(?:[@\}]|\r?\n))/gm;
+    var cap;
+    while (cap = rxEntry.exec(bib)) {
+      var name = cap[2];
+      var entry = cap[3];
+      var rxTitle = /(?:^|,)\s*title\s*=\s*(?:\{((?:[^\\\}]|\}(?!\s*,)|\\.)*)\}|"((?:[^\\"]|\\.)*)")\s*,/;
+      var capTitle = rxTitle.exec(entry + ",");
+      var title = capTitle ? capTitle[1] || capTitle[2] : name;
+      cites.push( { name: name, title: title });
+    }
+    cites = cites.sort(function(c1,c2) {
+      return (c1.name < c2.name ? -1 : (c1.name > c2.name ? 1 : 0)); 
+    });
+
+    var html = cites.map( function(cite) {
+      return "<span class='button cite' data-cite='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
+    }).join("<br/>");
+
+    menu.innerHTML = html;
+  }
+  
+  UI.prototype.updateLabels = function( labelsTxt, linksTxt ) {
+    var self = this;
+
+    // parse labels
+    var labelsJson  = "["+ labelsTxt.split("\n").filter(function(txt){ return (txt.length>0); }).join(",\n") + "]";
+    var labelsArray = Util.jsonParse( labelsJson, []);
+    var labels = new Map();
+    var cites = new Map();
+    labelsArray.forEach( function(label) {
+      if (Util.startsWith(label.name, "fn-")) {
+        return;
+      }
+      else if (Util.startsWith(label.name,"@")) {
+        cites.set(label.name,label.caption||label.text);
+      }
+      else {
+        labels.set(label.name, label.caption|| label.text);
+      }
+    });
+    labels = labels.filter( function(name,text) {
+      return  !cites.contains("@" + name);
+    });
+    
+    var labelsx = labels.keyElems().sort(function(l1,l2) {
+      return (l1.key < l2.key ? -1 : (l1.key > l2.key ? 1 : 0)); 
+    });
+
+    var menuLabels = document.getElementById("tool-reference-content");
+    if (menuLabels) {
+      var labelHtml = labelsx.map( function(label) {
+        var name = label.key;
+        var text = label.value;
+        return "<span class='button label' data-label='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
+      }).join("<br/>");
+      menuLabels.innerHTML = (labelHtml ? labelHtml : "none");
+    }
+  }
+
   UI.prototype.showSpinner = function(enable, elem) {
     var self = this;
     if (!elem) elem = self.spinner; // default spinner
@@ -1098,6 +1164,7 @@ var UI = (function() {
         return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() }).then( function(res) {
               self.htmlText = res.content; 
               var quick = self.viewHTML(res.content, res.ctx.time0);
+              self.updateLabels(res.labels,res.links);
               if (res.runAgain) {
                 self.stale=true;              
               }
@@ -2326,6 +2393,14 @@ var symbolsMath = [
         },
       ]
     },
+    { name: "reference",
+      icon: true,
+      options: [],
+    },
+    { name: "cite",
+      icon: true,
+      options: [],
+    },
     { element: "BR",
     },
     { name    : "pre", 
@@ -3546,6 +3621,9 @@ var symbolsMath = [
       }
     }
     self.editSelect();
+    if (Util.extname(file.path) === ".bib") {
+      self.updateCitations(file.content);
+    }
   }
 
   UI.prototype.saveTo = function() {

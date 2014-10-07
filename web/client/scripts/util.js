@@ -1529,6 +1529,7 @@ doc.execCommand("SaveAs", null, filename)
     extend: extend,
     copy: copy,
     __extends: __extends,
+    jsonParse: jsonParse,
 
     replicate: replicate,
     lpad: lpad,
