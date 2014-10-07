@@ -334,6 +334,12 @@ span.save-link:hover {
   max-height: 32em;
 }
 
+#toolbox #tool-reference-content,
+#toolbox #tool-cite-content {
+  width: 12em;
+  overflow-x: hidden;
+}
+
 #toolbox #tool-symbol .menu {
   width: 17em;
 }
@@ -784,9 +790,12 @@ div.pinned.boxed.menu {
 }
 
 #help-content,
-#menu-settings-content,
-#toolbox .menu {
+#menu-settings-content {
   width: 20em;
+}
+
+#toolbox .menu {
+  width: 22em;
 }
 
 #connection-content {

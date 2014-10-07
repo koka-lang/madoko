@@ -1063,7 +1063,9 @@ var UI = (function() {
       cites.push( { name: name, title: title });
     }
     cites = cites.sort(function(c1,c2) {
-      return (c1.name < c2.name ? -1 : (c1.name > c2.name ? 1 : 0)); 
+      var s1 = c1.name.toLowerCase();
+      var s2 = c2.name.toLowerCase();
+      return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
 
     var html = cites.map( function(cite) {
@@ -1097,7 +1099,9 @@ var UI = (function() {
     });
     
     var labelsx = labels.keyElems().sort(function(l1,l2) {
-      return (l1.key < l2.key ? -1 : (l1.key > l2.key ? 1 : 0)); 
+      var s1 = l1.key.toLowerCase();
+      var s2 = l2.key.toLowerCase();
+      return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
 
     var menuLabels = document.getElementById("tool-reference-content");
@@ -2395,11 +2399,17 @@ var symbolsMath = [
     },
     { name: "reference",
       icon: true,
-      options: [],
+      title: "Insert an in-document reference",
+      options: [
+        { element: "HR" }
+      ],
     },
     { name: "cite",
       icon: true,
-      options: [],
+      title: "Insert a citation",
+      options: [
+        { element: "HR" }
+      ],
     },
     { element: "BR",
     },
