@@ -3674,8 +3674,8 @@ var symbolsMath = [
       else if (endLine === lineCount) {
         lineNo = endLine;
       }
-      else if (cursorLine < startLine || cursorLine > endLine) {
-        // not a visible cursor -- use the middle of the viewed ranged
+      else { // if (cursorLine < startLine || cursorLine > endLine) {   // not a visible cursor?
+        // use the middle of the viewed ranged
         lineNo = startLine + ((endLine - startLine + 1)/2);
       }
       // exit quickly if same line
