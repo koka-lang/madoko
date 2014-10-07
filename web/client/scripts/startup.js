@@ -9,7 +9,11 @@
 define([],function() {
 
 require.config({
-  baseUrl: "lib"
+  baseUrl: "lib",
+  catchError: true,
+  onError: function(err) {
+    console.log("Load exception");
+  }
 });
 
 /*-------------------------------------------------------------------------
@@ -70,28 +74,30 @@ else {
   Start the UI
 -------------------------------------------------------------------------*/
 
-function start() {       
-  require([ "../scripts/util",
-            "../scripts/runner",
-            "vs/editor/editor.main"],
-            function(Util,Runner) 
+function start() { 
+
+  require([ "vs/editor/editor.main",
+            "../scripts/util",
+            "../scripts/runner"],
+            function(_Editor,Util,Runner) 
   { 
-    // remove legacy cookies & storage
-    if (localStorage.sessionid) localStorage.removeItem("sessionid");
-    Util.setCookie("auth_dropbox","",0);   
-    Util.setCookie("auth_onedrive","",0); 
-    var picker = Util.getCookie("picker-data");
-    if (picker) {
-      Util.setCookie("picker-data","",0);
-      localStorage.picker = picker;
-    }
-    // start
-    require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
-      var runner = new Runner();
-      var ui     = new UI(runner);
-      Util.message("ready", Util.Msg.Status );
-    });
-  }); 
+    console.log("starting");
+      // remove legacy cookies & storage
+      if (localStorage.sessionid) localStorage.removeItem("sessionid");
+      Util.setCookie("auth_dropbox","",0);   
+      Util.setCookie("auth_onedrive","",0); 
+      var picker = Util.getCookie("picker-data");
+      if (picker) {
+        Util.setCookie("picker-data","",0);
+        localStorage.picker = picker;
+      }
+      // start
+      require( ["../scripts/ui"], function(UI) {   // UI imports editor internal modules.
+        var runner = new Runner();
+        var ui     = new UI(runner);
+        Util.message("ready", Util.Msg.Status );
+      });        
+  });
 }
 
 
