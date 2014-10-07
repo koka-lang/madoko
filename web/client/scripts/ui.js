@@ -136,10 +136,8 @@ var UI = (function() {
     self.editor = null;
     self.app  = document.getElementById("main");
         
-    self.refreshContinuous = true;
     self.refreshRate = 500;
     self.serverRefreshRate = 2500;
-    self.allowServer = true;
     self.runner = runner;
     //self.runner.setStorage(self.storage);
 
@@ -155,23 +153,19 @@ var UI = (function() {
       //if (self.storage.isSynced()) return;
       localStorage.removeItem("viewer-html");
       localStorage.removeItem("viewer-scroll");
+      self.saveSettings();
       if (self.localSave()) return; 
       var message = "Changes to current document have not been saved yet!\n\nIf you leave this page, any unsaved work will be lost.";
       (ev || window.event).returnValue = message;
       return message;
     };
 
+    self.loadSettings();
     self.initUIElements("");
     
     self.loadFromHash().then( function() {
       // Initialize madoko and madoko-server runner    
-      self.initRunners();
-      // dispatch check box events so everything gets initialized
-      Util.dispatchEvent( self.checkDisableAutoUpdate, "change" );
-      Util.dispatchEvent( self.checkDisableServer, "change" );
-      Util.dispatchEvent( self.checkLineNumbers, "change" );
-      Util.dispatchEvent( self.checkWrapLines, "change" );      
-      Util.dispatchEvent( self.checkDelayedUpdate, "change" );
+      self.initRunners();      
     }).then( function() { }, function(err) {
       Util.message(err, Util.Msg.Error);          
     }).always( function() {
@@ -219,6 +213,117 @@ var UI = (function() {
     }
   }
 
+  UI.prototype.loadSettings = function() {
+    var self = this;
+
+    var defaultCheckBoxes = {
+      disableAutoUpdate: false,
+      disableServer    : false,
+      lineNumbers      : false,
+      wrapLines        : false,
+      delayedUpdate    : false,
+      autoSync         : true,
+    };
+    var defaultSettings = Util.extend( Util.copy(defaultCheckBoxes), {
+      theme            : "vs",
+      fontScale        : "medium",      
+      viewMode         : "normal",
+      viewFull         : false,
+    });
+
+    if (!self.checkBoxes) {
+      self.checkBoxes = new Map();
+      function initCheckbox( name, checked ) {
+        var elem = document.getElementById("check" + Util.capitalize(name));
+        self.checkBoxes.set(name,elem);
+        elem.checked = checked;
+        elem.addEventListener( "change", function(ev) {
+          var upd = {};
+          upd[name] = elem.checked;
+          self.updateSettings( upd );
+        });
+      }
+      Util.forEachProperty(defaultCheckBoxes, function(name,checked) {
+        initCheckbox(name,checked);        
+      });
+    }
+
+    self.settings = Util.copy(defaultSettings);
+    
+    var json = localStorage.getItem("settings");
+    if (!json) { //legacy
+      json = localStorage.getItem("local/local");
+    }
+    self.updateSettings( Util.jsonParse(json,{}) );
+  }
+
+  UI.prototype.updateSettings = function(obj) {
+    var self = this;
+    if (!obj) return;
+
+    Util.forEachProperty(obj, function(name,value) {
+      if (name==="showLineNumbers") name = "lineNumbers"; // legacy
+      self.updateSetting(name,value);
+    });
+  }
+
+  UI.prototype.updateSetting = function(name,value) {
+    var self = this;
+
+    // update check boxes (may recurse!)
+    var checkBox = self.checkBoxes.get(name);
+    if (checkBox && checkBox.checked !== value) {
+      checkBox.checked = value;
+    }
+    // return if no change
+    if (!self.hasOwnProperty(name) && self[name] === value) return;
+
+    // set value
+    self.settings[name] = value;
+    self.saveSettings();
+        
+    // special actions
+    if (name==="theme") {
+      if (self.editor) self.editor.updateOptions( { theme: value } );
+    }
+    else if (name==="wrapLines") {
+      if (self.editor) self.editor.updateOptions( { wrappingColumn: (value ? 0 : -1 ) } ); 
+    }
+    else if (name==="lineNumbers") {
+      if (self.editor) self.editor.updateOptions( { lineNumbers: value } );  
+    }
+    else if (name==="disableAutoUpdate" && self.asyncMadoko) {
+      if (value) {
+        self.asyncMadoko.pause();
+      } 
+      else {
+        self.asyncMadoko.resume();
+      }
+    }
+    else if (name==="fontScale") {
+      self.setFontScale(name);
+    }
+    else if (name==="viewMode") {
+      self.app.setAttribute("data-view",value);
+      self.dispatchViewEvent( { eventType: "view", view: value } );
+    }
+    else if (name==="viewFull") {
+      var view = value ? "full" : self.settings.viewMode;
+      self.app.setAttribute("data-view",view);
+      self.dispatchViewEvent( { eventType: "view", view: view } );
+    }
+  }
+
+  UI.prototype.saveSettings = function() {
+    var self = this;
+    if (self.settings) {
+      var toSave = Util.copy(self.settings);
+      delete toSave.viewFull;
+      localStorage.setItem("settings", JSON.stringify(toSave));
+    }
+  }
+
+
   UI.prototype.anonEvent = function( action, okStates ) {
     var self = this;
     self.event( "","",null, action, okStates );
@@ -240,7 +345,6 @@ var UI = (function() {
 
     self.connectionLogo = document.getElementById("connection-logo");
     self.connectionMessage = document.getElementById("connection-message");
-    self.theme = "vs";
 
     // listen to application cache    
     self.appUpdateReady = false;
@@ -258,17 +362,16 @@ var UI = (function() {
     }
 
     // start editor
-    self.checkLineNumbers = document.getElementById('checkLineNumbers');
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
       mode: "text/madoko",
-      theme: self.theme,
+      theme: self.settings.theme,
       roundedSelection: false,
-      lineNumbers: (self.checkLineNumbers ? self.checkLineNumbers.checked : false),
+      lineNumbers: self.settings.lineNumbers,
       //mode: MadokoMode.mode,
       tabSize: 2,
       insertSpaces: true,
-      //wrappingColumn: -1,
+      wrappingColumn: (self.settings.wrapLines ? 0 : -1),
       automaticLayout: true,
       glyphMargin: true,
       scrollbar: {
@@ -466,43 +569,10 @@ var UI = (function() {
     }, false);
 
     // Buttons and checkboxes
-    self.checkLineNumbers.onchange = function(ev) { 
-      if (self.editor) {
-        self.editor.updateOptions( { lineNumbers: ev.target.checked } ); 
-      }
-    };
-    
-    self.checkWrapLines = document.getElementById("checkWrapLines");
-    self.checkWrapLines.onchange = function(ev) { 
-      if (self.editor) {
-        self.editor.updateOptions( { wrappingColumn: (ev.target.checked ? 0 : -1 ) } ); 
-      }
-    };
-
-    self.checkDelayedUpdate = document.getElementById("checkDelayedUpdate");
-    self.checkDelayedUpdate.onchange = function(ev) { 
-      self.refreshContinuous = !ev.target.checked; 
-    };
-
-    self.checkDisableServer = document.getElementById('checkDisableServer');
-    self.checkDisableServer.onchange = function(ev) { 
-      self.allowServer = !ev.target.checked; 
-    };
-
-    self.checkDisableAutoUpdate = document.getElementById('checkDisableAutoUpdate');
-    self.checkDisableAutoUpdate.onchange = function(ev) { 
-      if (ev.target.checked) {
-        self.asyncMadoko.pause();
-      } 
-      else {
-        self.asyncMadoko.resume();
-      }
-    };
 
     self.lastSync = 0;
     self.lastConUsersCheck = 0;
     self.iconDisconnect = document.getElementById("icon-disconnect");
-    self.checkAutoSync = document.getElementById('checkAutoSync');
     self.lastVersionCheck = 0;
 
     // request cached version; so it corresponds to the cache-manifest version  
@@ -525,7 +595,7 @@ var UI = (function() {
     var autoSync = function() {
       var now = Date.now();
       self.updateConnectionStatus().then( function(status) {        
-        if (self.storage.canSync()) {
+        if (self.storage.remote.canSync) {
           if (status===0) {
             if (now - self.lastConUserCheck >= 10000) {
               self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
@@ -536,7 +606,7 @@ var UI = (function() {
             Util.message("Could not synchronize because the Madoko server could not be reached (offline?)", Util.Msg.Info);
           }
           else { // force login if not connected
-            if (self.checkAutoSync.checked && self.state === State.Normal) { 
+            if (self.settings.autoSync && self.state === State.Normal) { 
               if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
                 self.synchronize();
               }
@@ -743,18 +813,19 @@ var UI = (function() {
     //viewpane.addEventListener('transitionend', function( event ) { 
     //  self.syncView(); 
     //}, false);
-    
+
     function toggleFullView() {
-      var view = self.app.getAttribute("data-view");
-      var newView = (view==="full" ? "normal" : "full");
-      self.app.setAttribute("data-view",newView);      
-      self.dispatchViewEvent( { eventType: "view", view: newView } );
-      if (newView==="full") fullHeaderCollapse();
+      if (!self.settings.viewFull) {
+        fullHeaderStart();
+      }
+      self.updateSettings({viewFull: !self.settings.viewFull });
     }
 
     function closeFullView() {
-      if (self.app.getAttribute("data-view") === "full") toggleFullView();
+      if (self.settings.viewFull) toggleFullView();
     }
+//      self.app.setAttribute("data-view",view);
+//      self.dispatchViewEvent( { eventType: "view", view: view } );
 
     bindKey("Alt-P", toggleFullView );
     bindKey({code:27,stop:true}, closeFullView );
@@ -767,13 +838,13 @@ var UI = (function() {
       toggleFullView();
     }
     document.getElementById("view-narrow").onclick = function(ev) {
-      self.app.setAttribute("data-view","narrow");
+      self.updateSettings({viewMode:"narrow"});
     }
     document.getElementById("view-normal").onclick = function(ev) {
-      self.app.setAttribute("data-view","normal");
+      self.updateSettings({viewMode:"normal"});
     }
     document.getElementById("view-wide").onclick = function(ev) {
-      self.app.setAttribute("data-view","wide");
+      self.updateSettings({viewMode:"wide"});
     }
 
     var fullh = document.getElementById("fullview-header");
@@ -783,6 +854,10 @@ var UI = (function() {
         Util.addClassName(fullh,"collapsed");        
       }, 3000 );
     };
+    function fullHeaderStart() {
+      Util.removeClassName(fullh,"collapsed");
+      fullHeaderCollapse();
+    }
     fullh.addEventListener("mouseout", function() {
       fullHeaderCollapse();
     });
@@ -796,27 +871,21 @@ var UI = (function() {
 
     // font size
     document.getElementById("font-small").onclick = function(ev) {
-      self.setFontScale("small");
+      self.updateSettings({fontScale:"small"});
     }
     document.getElementById("font-medium").onclick = function(ev) {
-      self.setFontScale("medium");
+      self.updateSettings({fontScale:"medium"});
     }
     document.getElementById("font-large").onclick = function(ev) {
-      self.setFontScale("large");
+      self.updateSettings({fontScale:"large"});
     }
-    document.getElementById("font-x-large").onclick = function(ev) {
-      self.setFontScale("x-large");
-    }
-
-
+    
     // Theme
     document.getElementById("theme-ivory").onclick = function(ev) {
-      self.theme = "vs";
-      self.editor.updateOptions( { theme: self.theme } );
+      self.updateSettings({theme:"vs"})
     }
     document.getElementById("theme-midnight").onclick = function(ev) {
-      self.theme = "vs-dark";
-      self.editor.updateOptions( { theme: self.theme } );
+      self.updateSettings({theme:"vs-dark"})
     }
 
     // toolbox
@@ -1050,11 +1119,14 @@ var UI = (function() {
     var menu = document.getElementById("tool-cite-content");
     if (!menu) return;
 
+    var noCitations = "No entries (need to include a .bib file)";
+
     if (!self.citations) self.citations = new Map();
     if (path==null || bib==null) {
       // clear
       self.citations = null;
-      menu.innerHTML = "<hr/>";      
+      menu.innerHTML = noCitations;    
+      return;  
     }
 
     // parse citations from this bib file
@@ -1083,10 +1155,12 @@ var UI = (function() {
       return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
 
-    // and display
-    var html = cites.map( function(cite) {
-      return "<span class='button cite' data-value='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
-    }).join("<br/>");
+    var html = noCitations;
+    if (cites.length > 0) {
+      html = cites.map( function(cite) {
+        return "<span class='button cite' data-value='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
+      }).join("<br/>");
+    }
 
     menu.innerHTML = html;
   }
@@ -1096,9 +1170,11 @@ var UI = (function() {
     var menuLabels = document.getElementById("tool-reference-content");
     if (!menuLabels) return;
 
-    if (menuLabels==null) {
+    var noLabels = "None";
+
+    if (labelsTxt==null) {
       // clear
-      menuLabels.innerHTML = "<hr/>";
+      menuLabels.innerHTML = noLabels;
       return;
     }
 
@@ -1129,12 +1205,15 @@ var UI = (function() {
     });
 
     // render
-    var labelHtml = labelsx.map( function(label) {
-      var name = label.key;
-      var text = label.value;
-      return "<span class='button label' data-value='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
-    }).join("<br/>");
-    menuLabels.innerHTML = (labelHtml ? labelHtml : "none");
+    var labelHtml = noLabels;
+    if (labelsx.length > 0) {
+      labelHtml = labelsx.map( function(label) {
+        var name = label.key;
+        var text = label.value;
+        return "<span class='button label' data-value='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
+      }).join("<br/>");
+    }
+    menuLabels.innerHTML = labelHtml;
   }
 
   UI.prototype.showSpinner = function(enable, elem) {
@@ -1173,7 +1252,7 @@ var UI = (function() {
         self.storage.setEditPosition( self.editName, self.editor.getPosition() );
         if (!self.stale) return false;
 
-        if (!self.refreshContinuous && self.lastEditChange) {
+        if (self.settings.delayedUpdate && self.lastEditChange) {
           if (Date.now() - self.lastEditChange < 1000) {
             return false;
           }
@@ -1194,7 +1273,7 @@ var UI = (function() {
               if (res.runAgain) {
                 self.stale=true;              
               }
-              if (res.runOnServer && self.allowServer && self.asyncServer 
+              if (res.runOnServer && !self.settings.disableServer && self.asyncServer 
                     && self.lastMathDoc !== res.mathDoc) { // prevents infinite math rerun on latex error
                 self.lastMathDoc = res.mathDoc;
                 self.asyncServer.setStale();
@@ -1232,7 +1311,7 @@ var UI = (function() {
               
               return ("update: " + res.ctx.round + 
                         (quick ? "  (quick view update)" : "") + 
-                        (self.refreshContinuous ? " (continuous)" : "") +
+                        (!self.settings.delayedUpdate ? " (continuous)" : "") +
                         //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
                         "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
             },
@@ -1289,21 +1368,13 @@ var UI = (function() {
   UI.prototype.localSave = function(minimal) {
     var self = this;
     self.flush();
+    self.saveSettings();
     var pos  = self.editor.getPosition();    
-    var theme = self.editor.getConfiguration().theme;
     var json = { 
       docName: self.docName, 
       editName: self.editName, 
       pos: pos, 
-      theme: theme,
-      fontScale: self.fontScale,
-      storage: self.storage.persist(minimal),
-      showLineNumbers: self.checkLineNumbers.checked,
-      wrapLines: self.checkWrapLines.checked,
-      disableServer: self.checkDisableServer.checked,
-      disableAutoUpdate: self.checkDisableAutoUpdate.checked,
-      delayedUpdate : self.checkDelayedUpdate.checked,
-      autoSync: self.checkAutoSync.checked,
+      storage: self.storage.persist(minimal),      
     };
     return localStorageSave("local", json, 
       (//minimal ? undefined : 
@@ -1422,11 +1493,11 @@ var UI = (function() {
             });
             var options = {
               readOnly: !Storage.isEditable(file),
-              theme: self.theme,
+              theme: self.settings.theme,
               //mode: file.mime,
               //mode: mode, // don't set the mode here or Monaco runs out-of-stack
-              lineNumbers: self.checkLineNumbers.checked,
-              wrappingColumn: self.checkWrapLines.checked ? 0 : -1,
+              lineNumbers: self.settings.lineNumbers,
+              wrappingColumn: self.settings.wrapLines ? 0 : -1,
             };
             self.editName = file.path;
             self.setEditText(file.content, mode);
@@ -1453,14 +1524,6 @@ var UI = (function() {
     if (json!=null) {
       // we ran before
       var docName = json.docName;
-      self.checkDisableAutoUpdate.checked = json.disableAutoUpdate;
-      self.checkDisableServer.checked = json.disableServer;
-      self.checkLineNumbers.checked = json.showLineNumbers;
-      self.checkWrapLines.checked = json.wrapLines;
-      self.checkDelayedUpdate.checked = json.delayedUpdate;
-      self.checkAutoSync.checked = json.autoSync;
-      self.theme = json.theme || "vs";
-      self.setFontScale(json.fontScale || "medium");      
       var stg = Storage.unpersistStorage(json.storage);
       return self.setStorage( stg, docName ).then( function(fresh) {
         if (fresh) return; // loaded template instead of local document
@@ -1474,17 +1537,37 @@ var UI = (function() {
 
   UI.prototype.setFontScale = function(size) {
     var self = this;
+    if (size === self.fontScale) return;
+    
     var scale = 1.0;
-    if (size==="small") scale=0.8;
-    else if (size==="large") scale=1.2;
-    else if (size==="x-large") scale=1.44;
-    else {
-      size = "medium";
-      scale = 1.0;
-    }
+    if (size==="small") scale = 0.85;
+    else if (size==="large" || size==="x-large") scale = 1.22;
+    else size = "medium"; // normalize
+
     self.fontScale = size;
-    document.getElementById("editor").style.zoom = scale;
-    self.app.setAttribute("data-fontscale",size);
+
+    if (!self.editor) {
+      self.app.setAttribute("data-fontscale",size);
+      if (size==="medium") return;
+
+      // calculate pixel sizes
+      var px = 14;
+      if (/^mac/i.test(navigator.platform)) px = 12;
+
+      fontpx = Math.round(px * scale);
+      linepx = Math.round(px * scale * 1.36);
+    
+      // create style rules for the editor
+      self.monacoStyle = document.createElement("style");
+      self.monacoStyle.appendChild(document.createTextNode(""));
+      document.head.appendChild(self.monacoStyle);
+      self.monacoStyle.sheet.addRule(".monaco-editor", "font-size: " + fontpx.toFixed(0) + "px"  );
+      self.monacoStyle.sheet.addRule(".monaco-editor", "line-height: " + linepx.toFixed(0) + "px" );
+    }
+    else {
+      // later change: we reload (or we need to re-create the editor for changes to take effect)
+      location.reload();
+    }
   }
 
   UI.prototype.checkSynced = function( makePromise ) {
@@ -1581,7 +1664,7 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.remote.readonly || !self.allowServer) {  // unconnected storage (null or http)
+    if (!self.storage.remote.readonly || self.disableServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
@@ -1710,6 +1793,10 @@ var UI = (function() {
       includeImages: true,
       showErrors: function(errs) { self.showErrors(errs,true); } 
     };
+    if (self.settings.disableServer) {
+      Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
+      return;
+    }
     return self.spinWhile( self.exportSpinner, 
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
@@ -2442,6 +2529,7 @@ var symbolsMath = [
     { name: "cite",
       icon: true,
       title: "Insert a citation",
+      initial: "None (include a .bib file)",
       dynamic: function(cite) {
         var self = this;
         self.toolCommand( {
@@ -3151,9 +3239,9 @@ var symbolsMath = [
     }
   }
 
-  UI.prototype.initDynamic = function( menu, dynamic ) {
+  UI.prototype.initDynamic = function( menu, dynamic, initial ) {
     var self = this;
-    menu.innerHTML = "<hr/>";
+    menu.innerHTML = initial || "None";
     menu.addEventListener("click", function(ev) {
       var elem = ev.target;
       while( elem && elem !== menu && !Util.hasClassName(elem,"button")) elem = elem.parentNode;
@@ -3252,7 +3340,7 @@ var symbolsMath = [
         self.initSymbols(menu,tool.symbols);
       }
       else if (tool.dynamic) {
-        self.initDynamic(menu,tool.dynamic);
+        self.initDynamic(menu,tool.dynamic,tool.initial);
       }
     }
     else {

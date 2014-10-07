@@ -10,10 +10,6 @@ define([],function() {
 
 require.config({
   baseUrl: "lib",
-  catchError: true,
-  onError: function(err) {
-    console.log("Load exception");
-  }
 });
 
 /*-------------------------------------------------------------------------

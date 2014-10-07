@@ -557,8 +557,7 @@ div.boxed {
 
 #main[data-fontscale=small] #font-small, 
 #main[data-fontscale=medium] #font-medium, 
-#main[data-fontscale=large] #font-large, 
-#main[data-fontscale=x-large] #font-x-large { 
+#main[data-fontscale=large] #font-large { 
   text-decoration: underline 
 } 
 
@@ -610,6 +609,11 @@ div.boxed {
 
 
 /* Monaco token classes */
+.monaco-editor {
+  font-size: inherit;
+  line-height: inherit;
+}
+
 .monaco-editor .glyph-error.outdated {
   background-color: orange !important;
 }
