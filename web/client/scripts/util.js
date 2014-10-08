@@ -1345,6 +1345,7 @@ doc.execCommand("SaveAs", null, filename)
         if (elem) {
           var doc = getDocumentOffset(elem.parentNode);                      
           addClassName(elem,"pinned");
+          addClassName(elem.parentNode,"content-pinned");
           moveTo(elem, pos.left + doc.left, pos.top + doc.top, pos.boundid );
         }
         else pinned.remove(id);
@@ -1422,6 +1423,7 @@ doc.execCommand("SaveAs", null, filename)
       var top0  = menu.style.top;
       imgUnpin.addEventListener( "click", function(ev) {
         removeClassName(menu, "pinned");
+
         removeClassName(menu.parentNode, "content-pinned");
         pinned.remove(menu.id);
         menu.style.left = left0;
