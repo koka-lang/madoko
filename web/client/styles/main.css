@@ -609,11 +609,6 @@ div.boxed {
 
 
 /* Monaco token classes */
-.monaco-editor {
-  font-size: inherit;
-  line-height: inherit;
-}
-
 .monaco-editor .glyph-error.outdated {
   background-color: orange !important;
 }
@@ -750,6 +745,14 @@ div.boxed {
   display: inline;
 }
 
+.content-pinned {
+  visibility: hidden !important;
+}
+
+.content-pinned>div {
+  visibility: visible !important;
+}
+
 .pinbox {
   float: right;
   margin-top: calc(-1ex + 1px);
@@ -759,7 +762,7 @@ div.boxed {
 
 .pinbox img {
   padding: 0pt !important;
-  vertical-align: 0pt;
+  vertical-align:f 0pt;
   margin: 0pt;
 }
 
