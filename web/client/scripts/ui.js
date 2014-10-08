@@ -160,9 +160,10 @@ var UI = (function() {
       return message;
     };
 
+    var firstTime = localStorage.settings === undefined;  
     self.loadSettings();
-    self.initUIElements("");
-    
+    self.initUIElements("",firstTime);
+  
     self.loadFromHash().then( function() {
       // Initialize madoko and madoko-server runner    
       self.initRunners();      
@@ -329,7 +330,7 @@ var UI = (function() {
     self.event( "","",null, action, okStates );
   }
 
-  UI.prototype.initUIElements = function(content) {
+  UI.prototype.initUIElements = function(content, firstTime) {
     var self = this;
 
     // common elements
@@ -871,7 +872,7 @@ var UI = (function() {
 
     // font size
     document.getElementById("font-small").onclick = function(ev) {
-      self.updateSettings({fontScale:"small"});
+      self.updateSettings ({fontScale:"small"});
     }
     document.getElementById("font-medium").onclick = function(ev) {
       self.updateSettings({fontScale:"medium"});
@@ -893,8 +894,15 @@ var UI = (function() {
 
     // emulate hovering by clicks for touch devices
     Util.enablePopupClickHovering();    
+    
     // pinned menus
-    Util.enablePinned();
+    var pin = Util.enablePinned();
+
+    // if first time, pin the tool menu
+    if (firstTime) {
+      pin("toolbox-content",1000,0,"editor");
+    }
+
   }
 
   UI.prototype.login = function() {

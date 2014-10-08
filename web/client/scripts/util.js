@@ -1389,6 +1389,17 @@ doc.execCommand("SaveAs", null, filename)
       }
     }
 
+    function pin(id,x,y,_boundid) {
+      var elem = (typeof id === "string" ? document.getElementById(id) : id);
+      if (!elem || !hasClassName(elem,"pinnable")) return;
+      if (moving != null) return;
+      var ev = {clientX: 0, clientY: 0};
+      moveStart(elem,ev);
+      if (!boundid) boundid = _boundid;
+      moveTo( elem, x - offsetX, y - offsetY, boundid );
+      moveEnd(ev);
+    }
+
     window.addEventListener("mouseup", moveEnd );    
 
     // Initialize pin boxes.
@@ -1423,6 +1434,9 @@ doc.execCommand("SaveAs", null, filename)
 
     // now restore persisted menus (not earlier, or the initial position is off)
     positionPinned();
+
+    // return pin function
+    return pin;
   }
 
 
