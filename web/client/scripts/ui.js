@@ -3750,7 +3750,7 @@ var symbolsMath = [
     try {
       if (self.lastLineNo===undefined) self.lastLineNo = -1;
       if (!options) options = {};
-      if (!self.view || self.state !== State.Normal) return; // during loading of new content
+      if (!self.view || self.state === State.Init || self.state === State.Loading) return false; // during loading of new content
 
       if (cursorLine==null) {
         cursorLine = self.editor.getPosition().lineNumber;
