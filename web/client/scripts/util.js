@@ -415,7 +415,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".bbl",".js",".css",".json",".mdk",".cls",".bib"].join(";");
+  var embedExts = [".js",".css",".json",".mdk",".cls",".bib"].join(";");  // .bbl
   function hasEmbedExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;
