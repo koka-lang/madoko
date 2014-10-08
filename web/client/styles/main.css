@@ -680,9 +680,10 @@ div.boxed {
   background-color: #FFFAF4;
 }
 
-.monaco-editor .line-numbers {
+.monaco-editor.vs .line-numbers {
   background-color: Gainsboro;
 }
+
 
 /* status icons */
 #users-status img {
@@ -735,6 +736,10 @@ div.boxed {
 .popup.hover > div,
 .popup > div.pinned {
   display: block;
+}
+
+#main[data-theme=vs-dark] .popup > div.pinned {
+  background-color: #BBB;
 }
 
 .pinned .pin, .pinned.moving .unpin, .unpin {

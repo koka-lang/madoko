@@ -286,6 +286,7 @@ var UI = (function() {
     // special actions
     if (name==="theme") {
       if (self.editor) self.editor.updateOptions( { theme: value } );
+      self.app.setAttribute("data-theme",value);
     }
     else if (name==="wrapLines") {
       if (self.editor) self.editor.updateOptions( { wrappingColumn: (value ? 0 : -1 ) } ); 
