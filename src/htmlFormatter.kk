@@ -162,7 +162,7 @@ function formatKeyvals( attrs : attrs, tag : string ) {
   }
   val (hstyles,hattrs) = kvs.partition( fun(kv){ kv.contains(rxColon) } )
   (if (hattrs.isNil) then "" else " " + hattrs.join(" ")) + 
-   (if (hstyles.isNil) then "" else " style='" + hstyles.join(";") + "'")
+   (if (hstyles.isNil) then "" else " style=" + hstyles.join(";").htmlQuote )
 }
 val rxColon = regex(@"^[\w\-]+\s*:")
 
@@ -208,8 +208,14 @@ function htmlQuote(s) {
   "\"" + s.escape + "\""
 }
 
-function cssQuote(s) {
-  if (s.trim.contains(" ")) then "\"" + s.escape + "\"" else s.escape
+function cssQuote(s :string) {
+  s.list.map(cssEscape).join
+}
+
+function cssEscape(c) {
+  if (c >= ' ' && c <= '~' && c != '\\') // && c != '"' && c != '\'' && c != '<' && c != '>') 
+   then c.string
+   else  "\\" + c.int.showHex() + " "
 }
 
 // private function htmlAttributes( attrs : attrs ) :  string {
