@@ -302,7 +302,7 @@ var UI = (function() {
       }
     }
     else if (name==="fontScale") {
-      self.setFontScale(name);
+      self.setFontScale(value);
     }
     else if (name==="viewMode") {
       self.app.setAttribute("data-view",value);
@@ -1545,14 +1545,11 @@ var UI = (function() {
 
   UI.prototype.setFontScale = function(size) {
     var self = this;
-    if (size === self.fontScale) return;
-    
+
     var scale = 1.0;
     if (size==="small") scale = 0.85;
     else if (size==="large" || size==="x-large") scale = 1.22;
     else size = "medium"; // normalize
-
-    self.fontScale = size;
 
     if (!self.editor) {
       self.app.setAttribute("data-fontscale",size);
@@ -2090,8 +2087,6 @@ var UI = (function() {
     { entity: "bar", code: 124 },
     { entity: "rcurly", code: 125 },
     { entity: "tilde", code: 126 },
-
-    { entity: "nbsp", code: 160, invisible:true, title: "non-breakable space", display:"nbsp" },
     { entity: "iexcl", code: 161 },
     { entity: "cent", code: 162 },
     { entity: "pound", code: 163 },
@@ -2104,7 +2099,6 @@ var UI = (function() {
     { entity: "ordf", code: 170 },
     { entity: "laquo", code: 171 },
     { entity: "not", code: 172 },
-    { entity: "shy", code: 173, invisible:true, title:"soft hyphen", display:"shy" },
     { entity: "reg", code: 174 },
     { entity: "macr", code: 175 },
     { entity: "deg", code: 176 },
@@ -2260,19 +2254,20 @@ var symbolsGreek = [
 ];
 
 var symbolsSpacing = [
-  { content: "\\\n", invisible:true, title:"hard line-break", display:"line-break" },
-  { entity: "nbsp", code: 160, invisible:true, title: "non-breakable space", display:"nbsp" },
   { entity: "ensp", code: 8194, invisible:true, title:"en-space", display:"en" },
   { entity: "emsp", code: 8195, invisible:true, title:"em-space", display:"em" },
   { entity: "quad", code: 8195, invisible:true, title:"quad space", display:"quad" },
   { entity: "thicksp", code: 8196, invisible:true, title:"thick space", display:"thick" },
   { entity: "medsp", code: 8197, invisible:true, title:"medium space", display:"medium" },
   { entity: "thinsp", code: 8201, invisible:true, title:"thin space", display:"thin" },
+  { entity: "nbsp", code: 160, invisible:true, title: "non-breakable space", display:"nbsp" },
   { entity: "strut", code: 8203, invisible:true, title:"strut (zero-width entity of line-height)", display: "strut" },
-  { entity: "pagebreak", code: 12, invisible:true, title:"page break (in LaTeX)", display:"page-break" },
+  { entity: "br", invisible:true, title:"entity hard line-break", display:"br" },
   { entity: "shy", code: 173, invisible:true, title:"soft hyphen", display:"shy" },
   { entity: "zwnj", code: 8204, invisible:true, title:"zero-width non-joiner", display:"zwnj" },
   { entity: "zwj", code: 8205, invisible:true, title:"zero-width joiner", display:"zwj" },
+  { content: "\\\n", invisible:true, title:"hard line-break", display:"line-break" },
+  { entity: "pagebreak", code: 12, invisible:true, title:"page break (in LaTeX)", display:"page-break" },
   { entity: "lrm", code: 8206, invisible:true, title:"left-to-right mode", display:"lrm" },
   { entity: "rlm", code: 8207, invisible:true, title:"right-to-left mode", display:"rlm" },
 ];
@@ -2323,7 +2318,11 @@ var symbolsOther = [
   { entity: "bcheckmark", code: 10004 },
   { entity: "xmark", code: 10007 },
   { entity: "bxmark", code: 10008 },
-  { entity: "mglass", code: 128270 },
+  //{ entity: "mglass", code: 128270 },
+  { entity: "date", invisible:true, title:"current date", display:"date" },
+  { entity: "time", invisible:true, title:"current time", display:"time" },
+  { entity: "madoko-version", invisible:true, title:"madoko version", display:"version" },
+  { entity: "docname", invisible:true, title:"document name", display:"document" },
 ];
 
 var symbolsMath = [
