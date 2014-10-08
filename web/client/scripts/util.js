@@ -1366,6 +1366,7 @@ doc.execCommand("SaveAs", null, filename)
       boundid = moving.getAttribute("data-bounded");
       addClassName(moving,"moving");
       addClassName(moving,"pinned");
+      addClassName(moving.parentNode,"content-pinned");
       window.addEventListener( "mousemove", mouseMove, true );
     }
 
@@ -1421,6 +1422,7 @@ doc.execCommand("SaveAs", null, filename)
       var top0  = menu.style.top;
       imgUnpin.addEventListener( "click", function(ev) {
         removeClassName(menu, "pinned");
+        removeClassName(menu.parentNode, "content-pinned");
         pinned.remove(menu.id);
         menu.style.left = left0;
         menu.style.top = top0;
