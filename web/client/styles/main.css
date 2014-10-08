@@ -335,7 +335,8 @@ span.save-link:hover {
 }
 
 #toolbox #tool-reference-content,
-#toolbox #tool-cite-content {
+#toolbox #tool-cite-content,
+#toolbox #tool-font-content {
   width: 12em;
   white-space: nowrap;
 }

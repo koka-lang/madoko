@@ -2445,6 +2445,7 @@ var symbolsMath = [
           replacer: function(txt,rng) { return "~~" + txt + "~~"; }
         },
         toolCss("text-decoration","underline","underline"),
+        toolCss("font-family","'\"Segoe UI\" sans-serif'",""),
       ]
     },
     { name    : "fontsize", 
@@ -2990,11 +2991,11 @@ var symbolsMath = [
   }
 
 
-  function toolCss(attr,value,display) {
+  function toolCss(attr,value,display,extra) {
     var tool = toolStyle(attr,"="+value);
     tool.name = value;
     tool.display = display||value;
-    return tool;
+    return Util.extend(tool,extra);
   }
 
   function toolStyle(attr,value,options,title) {
