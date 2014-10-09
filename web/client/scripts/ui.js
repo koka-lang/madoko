@@ -899,11 +899,14 @@ var UI = (function() {
     // pinned menus
     var pin = Util.enablePinned();
 
+    /*
     // if first time, pin the tool menu
     if (firstTime) {
       pin("toolbox-content",1000,0,"editor");
     }
+    */
 
+    return;
   }
 
   UI.prototype.login = function() {
@@ -1618,7 +1621,7 @@ var UI = (function() {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
         extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
-      if (Util.startsWith(file.mime,"image/")) {
+      if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps") {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
       }
     }

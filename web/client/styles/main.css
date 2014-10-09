@@ -751,6 +751,7 @@ div.boxed {
   display: inline;
 }
 
+/*
 .content-pinned {
   visibility: hidden !important;
 }
@@ -758,6 +759,7 @@ div.boxed {
 .content-pinned>div {
   visibility: visible !important;
 }
+*/
 
 .pinbox {
   float: right;
