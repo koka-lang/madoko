@@ -226,9 +226,9 @@ var UI = (function() {
       autoSync         : true,
     };
     var defaultSettings = Util.extend( Util.copy(defaultCheckBoxes), {
-      theme            : "vs",
-      fontScale        : "medium",      
-      viewMode         : "normal",
+      //theme            : "vs",
+      //fontScale        : "medium",      
+      //viewMode         : "normal",
       viewFull         : false,
     });
 
@@ -250,6 +250,11 @@ var UI = (function() {
     }
 
     self.settings = Util.copy(defaultSettings);
+    self.updateSettings( {
+      theme            : "vs",
+      fontScale        : "medium",      
+      viewMode         : "normal",
+    });
     
     var json = localStorage.getItem("settings");
     if (!json) { //legacy
@@ -268,6 +273,11 @@ var UI = (function() {
     });
   }
 
+  UI.prototype.getCurrentTheme = function() {
+    var self = this;
+    return self.settings.theme + " font-" + self.settings.fontScale;
+  }
+
   UI.prototype.updateSetting = function(name,value) {
     var self = this;
 
@@ -277,7 +287,8 @@ var UI = (function() {
       checkBox.checked = value;
     }
     // return if no change
-    if (!self.hasOwnProperty(name) && self[name] === value) return;
+    var oldValue = self.settings[name];
+    if (oldValue === value) return;
 
     // set value
     self.settings[name] = value;
@@ -285,7 +296,7 @@ var UI = (function() {
         
     // special actions
     if (name==="theme") {
-      if (self.editor) self.editor.updateOptions( { theme: value } );
+      if (self.editor) self.editor.updateOptions( { theme: self.getCurrentTheme() });
       self.app.setAttribute("data-theme",value);
     }
     else if (name==="wrapLines") {
@@ -303,7 +314,15 @@ var UI = (function() {
       }
     }
     else if (name==="fontScale") {
-      self.setFontScale(value);
+      if (self.editor) {
+        var editView  = self.editor.getView();      
+        var lines     = editView.viewLines;
+        var rng       = lines._currentVisibleRange;
+        var midLine   = Math.round(rng.startLineNumber + ((rng.endLineNumber - rng.startLineNumber + 1)/2));
+        self.editor.updateOptions( { theme: self.getCurrentTheme() });
+        self.editor.revealPosition( { lineNumber: midLine, column: 1 }, true, false );
+      }
+      self.app.setAttribute("data-fontscale",value);
     }
     else if (name==="viewMode") {
       self.app.setAttribute("data-view",value);
@@ -367,10 +386,10 @@ var UI = (function() {
     self.editor = Monaco.Editor.create(document.getElementById("editor"), {
       value: content,
       mode: "text/madoko",
-      theme: self.settings.theme,
       roundedSelection: false,
       lineNumbers: self.settings.lineNumbers,
       //mode: MadokoMode.mode,
+      theme: self.getCurrentTheme(),
       tabSize: 2,
       insertSpaces: true,
       wrappingColumn: (self.settings.wrapLines ? 0 : -1),
@@ -386,7 +405,7 @@ var UI = (function() {
         //arrowSize: 10,
       }
     });    
-
+    
     // synchronize on scrolling
     self.syncInterval = 0;
     self.editor.addListener("scroll", function (e) {    
@@ -880,6 +899,9 @@ var UI = (function() {
     }
     document.getElementById("font-large").onclick = function(ev) {
       self.updateSettings({fontScale:"large"});
+    }
+    document.getElementById("font-x-large").onclick = function(ev) {
+      self.updateSettings({fontScale:"x-large"});
     }
     
     // Theme
@@ -1505,7 +1527,7 @@ var UI = (function() {
             });
             var options = {
               readOnly: !Storage.isEditable(file),
-              theme: self.settings.theme,
+              theme: self.getCurrentTheme(),
               //mode: file.mime,
               //mode: mode, // don't set the mode here or Monaco runs out-of-stack
               lineNumbers: self.settings.lineNumbers,
@@ -1544,38 +1566,6 @@ var UI = (function() {
     }
     else {
       return self.setStorage( null, null );
-    }
-  }
-
-  UI.prototype.setFontScale = function(size) {
-    var self = this;
-
-    var scale = 1.0;
-    if (size==="small") scale = 0.85;
-    else if (size==="large" || size==="x-large") scale = 1.22;
-    else size = "medium"; // normalize
-
-    if (!self.editor) {
-      self.app.setAttribute("data-fontscale",size);
-      if (size==="medium") return;
-
-      // calculate pixel sizes
-      var px = 14;
-      if (/^mac/i.test(navigator.platform)) px = 12;
-
-      fontpx = Math.round(px * scale);
-      linepx = Math.round(px * scale * 1.36);
-    
-      // create style rules for the editor
-      self.monacoStyle = document.createElement("style");
-      self.monacoStyle.appendChild(document.createTextNode(""));
-      document.head.appendChild(self.monacoStyle);
-      self.monacoStyle.sheet.addRule(".monaco-editor", "font-size: " + fontpx.toFixed(0) + "px"  );
-      self.monacoStyle.sheet.addRule(".monaco-editor", "line-height: " + linepx.toFixed(0) + "px" );
-    }
-    else {
-      // later change: we reload (or we need to re-create the editor for changes to take effect)
-      location.reload();
     }
   }
 
