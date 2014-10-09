@@ -21,7 +21,7 @@
     "module", "import", "as",
     "=", ".", ":", ":=", "->",
     "include", "inline","rec","try", "yield",
-    "interface", "instance"
+    "interface", "instance", "effect"
   ],
 
   "extraKeywords": [
@@ -31,7 +31,7 @@
     "for", "while", "repeat",
     "foreach", "foreach-indexed", 
     "error", "catch", "finally",
-    "cs", "js", "file", "ref", "assigned"
+    "cs", "js", "file", "ref", "assigned", "bind", "unit"
   ],
 
   "typeKeywords": [
@@ -42,7 +42,7 @@
   ],
 
  "typeStart": [
-    "type","cotype","rectype","alias","struct","enum"
+    "type","cotype","rectype","alias","struct","enum","effect"
   ],
 
   "moduleKeywords": [
@@ -65,7 +65,7 @@
       
       ["[a-z]@idchars(?!\\/)", 
         { "cases":{ "@keywords": { 
-                    "cases": { "alias"  : { "token": "keyword", "next": "@alias_type" },
+                    "cases": { "alias|effect"  : { "token": "keyword", "next": "@alias_type" },
                              "struct" : { "token": "keyword", "next": "@struct_type" },
                              "type|cotype|rectype": { "token": "keyword", "next": "@type" }, 
                              "module|as|import": { "token": "keyword", "next": "@module" },
