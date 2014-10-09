@@ -104,6 +104,8 @@ function defaultMeta( options : options ) : string {
       @"~MathDefs : input=mathdefs .hidden",
       @"~HtmlOnly : input=htmlonly",
       @"~TexOnly  : input=texonly",
+      @"~math-inline: input=math",
+      @"~math-display: input=math",
 
       @"~Snippet  : input=math .block snippet-needpdf=true",
       @"~Footnote : label='[@footnote]{.footnote-label}'",
