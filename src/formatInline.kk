@@ -158,9 +158,10 @@ function inlineNormal( cap : matched, context : inlineContext ) : string {
 } 
 
 function inlineMath( cap : matched, context : inlineContext ) : string {
-  val attrs = cap.groups[2].parseAttrs
-  val attrsd = context.defaults.matchRules("math-inline",attrs)
-  context.fmtMath(False,cap.groups[1],attrsd)
+  val attrs = cap.groups[2].parseAttrs("math-inline");
+  //val attrsd = context.defaults.matchRules("math-inline",attrs)
+  //context.fmtMath(False,cap.groups[1],attrsd)
+  context.fmtSpan( cap.groups[1], attrs ); // can be taken over by the user
 }
 
 function inlineMathBlock( cap : matched, context : inlineContext ) : string {
