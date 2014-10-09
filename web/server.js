@@ -298,7 +298,7 @@ app.use(function(err, req, res, next){
 // Security   
 // -------------------------------------------------------------
 app.use(function(req, res, next){
-  console.log("referer: " + req.get("Referrer") + ", path: " + req.path + ", host: " + req.hostname);
+  // console.log("referer: " + req.get("Referrer") + ", path: " + req.path + ", host: " + req.hostname);
   if (startsWith(req.path,"/rest/") || startsWith(req.path,"/oauth/")) {
     // for security do not store any rest or oauth request
     console.log("cache: no-store: " + req.path);
