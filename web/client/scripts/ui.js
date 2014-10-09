@@ -2740,7 +2740,7 @@ var symbolsMath = [
         toolFigure(false),
         { name: "footnote",
           title: "Insert a footnote",
-          content: "The footnote text.\nIndent to continue on the next line.",
+          content: "The footnote text.\n    Indent to continue on the next line.",
           helpLink: "#sec-footnotes",
           replacer: function(txt,rng) {
             var self = this;
