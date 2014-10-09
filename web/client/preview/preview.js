@@ -11,13 +11,13 @@ var Preview = (function() {
   // initialize
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
 
-  // Refresh message after 5 secs
+  // Refresh message after some seconds
   setTimeout(function() {
     var p = document.getElementById("preview-refresh");
     if (p) {
       p.className = p.className.replace(/\bpreview-hidden\b/g,"");
     }
-  }, 5000);
+  }, 7500);
 
 
   
@@ -46,6 +46,7 @@ var Preview = (function() {
     if (typeof(Reveal) !== "undefined" && /\bnavigate-/.test(ev.target.className) && /\bcontrols\b/.test(ev.target.parentNode.className)) return; // don't count double clicks on controls in presentations
     var res = findLocation(document.body,ev.target);
     if (res) {
+      ev.preventDefault();
       res.eventType = 'previewSyncEditor';
       window.parent.postMessage( JSON.stringify(res), origin);
       console.log('posted: ' + JSON.stringify(res));
@@ -54,76 +55,26 @@ var Preview = (function() {
 
 
   /*-------------------------------------------------------
-     Scroll to right location based on a line number
+     Scrolling and offset calculations
   -------------------------------------------------------*/  
-  function px(s) {
-    if (typeof s === "number") return s;
-    var cap = /^(\d+(?:\.\d+)?)(em|ex|pt|px|pc|in|mm|cm)?$/.exec(s);
-    if (!cap) return 0;
-    var i = parseInt(cap[1]);
-    if (isNaN(i)) return 0;
-    if (cap[2] && cap[2] !== "px") {
-      var dpi = 96;
-      var empx = 12;
-      if (cap[2]==="em") {
-        i = (i * empx);
-      }
-      else if (cap[2]==="ex") {
-        i = (i * empx * 0.5);
-      }
-      else if (cap[2]==="pt") {
-        i = (i/72) * dpi;
-      }
-      else if (cap[2]==="pc") {
-        i = (i/6) * dpi;
-      }
-      else if (cap[2]==="in") {
-        i = i * dpi;
-      }
-      else if (cap[2]==="mm") {
-        i = (i/25.6) * dpi;
-      }
-      else if (cap[2]==="cm") {
-        i = (i/2.56) * dpi;
-      }
-    }
-    return i;
-  }
+  function getDocumentOffset(elem) {
+    var box = elem.getBoundingClientRect()
+    
+    var body = document.body
+    var docElem = document.documentElement
+    
+    var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
+    var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
+    
+    var clientTop = docElem.clientTop || body.clientTop || 0
+    var clientLeft = docElem.clientLeft || body.clientLeft || 0
+    
+    var top  = box.top +  scrollTop - clientTop
+    var left = box.left + scrollLeft - clientLeft
+    
+    return { top: Math.round(top), left: Math.round(left) }
+  } 
 
-  function elemOffsetTop(elem,forward) {
-    // we search backward or forward to the first node that has a valid offsetTop (ie. non-empty element)
-    while (elem.nodeType !== 1 || elem.clientHeight === 0) {
-      var next = (forward ? elem.nextSibling : elem.previousSibling);
-      if (!next) next = elem.parentNode;
-      if (!next) break;
-      elem = next;
-    }
-    return elem.offsetTop;
-  }
-
-  function bodyOffsetTop(elem,forward) {
-    // somehow the offset top calculation is wrong for code elements directly in a pre element, so we adjust here.
-    if (elem.nodeName==="CODE" && elem.parentNode && elem.parentNode.nodeName==="PRE") {
-      elem = elem.parentNode;
-    }
-    var offset = 0;
-    while( elem && elem.nodeName != "BODY") {
-      offset += elemOffsetTop(elem,forward);
-      elem = elem.offsetParent;
-    }
-    return offset;
-  }
-
-  function offsetOuterTop(elem,forward) {
-    var delta = 0;
-    if (elem.nodeType === 1 && window.getComputedStyle) {
-      var style = window.getComputedStyle(elem);
-      if (style) {
-        delta = px(style.marginTop) + px(style.paddingTop) + px(style.borderTopWidth);
-      }   
-    }
-    return (bodyOffsetTop(elem,forward) - delta);
-  }
 
   function getScrollTop( elem ) {
     if (!elem) return 0;
@@ -193,17 +144,14 @@ var Preview = (function() {
   }
 
 
+  /*-------------------------------------------------------
+     Scroll to right location based on a line number
+  -------------------------------------------------------*/  
+
   function findNextElement(root,elem) {
     if (elem == null || elem === root) return elem;
     if (elem.nextSibling) return elem.nextSibling;
     return findNextElement(root,elem.parentNode);
-  }
-
-  function nextAdjust(elem) {
-    if (elem && elem.nodeName === "SECTION" && elem.firstChild) {
-      return elem.firstChild;
-    }
-    return elem;
   }
 
   function bodyFindElemAtLine( lineCount, line, fname ) {    
@@ -256,27 +204,15 @@ var Preview = (function() {
       if (!res) return false;
       if (typeof(Reveal)!=="undefined") return scrollToSlide(res);
 
-      scrollTop = offsetOuterTop(res.elem); 
+      scrollTop = getDocumentOffset(res.elem).top; 
       //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
       
       // adjust for line delta: we only find the starting line of an
       // element, here we adjust for it assuming even distribution up to the next element
       if (res.elemLine < info.textLine && res.elemLine < res.nextLine) {
-        var scrollTopNext = offsetOuterTop(res.next,true); 
+        var scrollTopNext = getDocumentOffset(res.next).top; 
         if (scrollTopNext > scrollTop) {
-          var delta = 0;
-          /*
-          if (slines) {
-            // wrapping enabled, translate to view lines and calculate the offset
-            var elemViewLine = slines.convertInputPositionToOutputPosition(res.elemLine,0).lineNumber;
-            var nextViewLine = slines.convertInputPositionToOutputPosition(res.nextLine,0).lineNumber;
-            delta = (info.viewLine - elemViewLine) / (nextViewLine - elemViewLine + 1);
-          } 
-          else {
-          */
-            // no wrapping, directly calculate 
-            delta = (info.textLine - res.elemLine) / (res.nextLine - res.elemLine + 1);
-          //}
+          var delta = (info.textLine - res.elemLine) / (res.nextLine - res.elemLine + 1);
           if (delta < 0) delta = 0;
           if (delta > 1) delta = 1;
           scrollTop += ((scrollTopNext - scrollTop) * delta);
@@ -294,9 +230,10 @@ var Preview = (function() {
     lastScrollTop = scrollTop;
 
     // otherwise, start scrolling
-    animateScrollTop(window, scrollTop, info.duration != null ? info.duration : 500);
+    animateScrollTop(window, scrollTop, info.duration != null ? info.duration : 250);
     return true;
   }
+
 
   /*-------------------------------------------------------
      Slide navigation

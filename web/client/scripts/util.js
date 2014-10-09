@@ -1230,7 +1230,7 @@ doc.execCommand("SaveAs", null, filename)
   Pinned menus
 --------------------------------------------------------------------------------------------------*/
 
-  function getScreenOffset(elem) {
+  function getDocumentOffset(elem) {
     var box = elem.getBoundingClientRect()
     
     var body = document.body
@@ -1248,7 +1248,7 @@ doc.execCommand("SaveAs", null, filename)
     return { top: Math.round(top), left: Math.round(left) }
   } 
 
-  function getDocumentOffset(elem) {
+  function getCombinedOffset(elem) {
     var top = 0;
     var left = 0;
     while( elem ) {
@@ -1310,7 +1310,7 @@ doc.execCommand("SaveAs", null, filename)
 
   function moveTo( elem, x, y, boundid ) {
     if (!isVisible(elem)) return;
-    var doc = getDocumentOffset(elem.parentNode);          
+    var doc = getCombinedOffset(elem.parentNode);          
     if (boundid) {
       var boundElem = document.getElementById(boundid);      
       if (boundElem && isVisible(boundElem)) {
