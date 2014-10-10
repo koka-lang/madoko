@@ -2931,7 +2931,7 @@ var symbolsMath = [
           content: ";@" + cite + "]",
         };
       }
-      return "@" + cite + ";";
+      return "[@" + cite + "]";
     }
   }
 
