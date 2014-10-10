@@ -268,15 +268,18 @@ function saveTo(  storage, toStorage, docStem, newStem )
       throw new Error( "cannot save, document already exists: " + Util.combine(toStorage.folder(), newName) );
     },
     function(err) {
-      storage.forEachFile( function(file0) {
-        var file = Util.copy(file0);
-        file.modified = true;
+      storage.forEachFile( function(file) {
+        var opts = Util.copy(file);  
+        opts.shareUrl   = null;
+        opts.sharedPath = null;
+        opts.globalPath = null;
+        var path = file.path;
         if (newStem) {
-          file.path = file.path.replace( 
-                          new RegExp( "(^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
-                            "$1" + newStem + "$3" );
-        }
-        toStorage.files.set( file.path, file );
+          path = path.replace( 
+                    new RegExp( "(^|[\\/\\\\])(" + docStem + ")((?:[\\.\\-][\\w\\-\\.]*)?$)" ), 
+                      "$1" + newStem + "$3" );
+        }        
+        toStorage.writeFile( path, file.content, opts );
       });
       return toStorage.sync().then( function(){ return {storage: toStorage, docName: newName }; } );
     }
@@ -301,17 +304,20 @@ function publishSite(  storage, docName, indexName )
   return storage.login().then( function() {
     return picker( storage, params ).then( function(res) {
       var toStorage = res.storage;
-      storage.forEachFile( function(file0) {
-        var file = Util.copy(file0);
-        file.modified = true;
-        if (Util.startsWith(file.path, "out/") && (!Util.hasGeneratedExt(file.path) || Util.extname(file.path) === ".html")) {
-          if (file.path === indexName) {
-            file.path = res.docName;
+      storage.forEachFile( function(file) {
+        var opts = Util.copy(file);  
+        opts.shareUrl   = null;
+        opts.sharedPath = null;
+        opts.globalPath = null;
+        var path = file.path;
+        if (Util.startsWith(path, "out/") && (!Util.hasGeneratedExt(path) || Util.extname(path) === ".html")) {
+          if (path === indexName) {
+            path = res.docName;
           }
           else {
-            file.path = file.path.substr(4);        
+            path = path.substr(4);        
           }
-          toStorage.files.set( file.path, file );
+          toStorage.writeFile( path, file.content, opts );
         }
       });
       return Promise.when( toStorage.files.elems().map( function(file) { 

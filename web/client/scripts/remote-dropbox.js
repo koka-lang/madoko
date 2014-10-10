@@ -85,6 +85,7 @@ function pushFile(fname,content,recurse) {
     return addPathInfo(info);
   }, function(err) {
     if (err && err.httpCode === 500) {
+      console.log("Dropbox PUT failed: try once more...");
       // try one more time
       return Promise.delayed(500).then( function() { 
         return pushFile(fname,content,true);
