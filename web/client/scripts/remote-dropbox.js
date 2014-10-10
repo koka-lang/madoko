@@ -26,6 +26,7 @@ var dropbox = new OAuthRemote( {
   Basic file API
 ---------------------------------------------- */
 
+var defaultTimeout = 10000;
 var root        = "dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
@@ -64,18 +65,18 @@ function pullFile(fname,binary) {
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: metadataUrl + fname, timeout: 5000 } );
+  return dropbox.requestGET( { url: metadataUrl + fname, timeout: defaultTimeout } );
 }
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
   // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
-  return dropbox.requestGET( { url: url, timeout: 5000, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
+  return dropbox.requestGET( { url: url, timeout: defaultTimeout, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return dropbox.requestGET( { url: url, timeout: 5000 }, { list: true });
+  return dropbox.requestGET( { url: url, timeout: defaultTimeout }, { list: true });
 }
 
 function pushFile(fname,content,recurse) {
