@@ -35,27 +35,31 @@ var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
 var sharedFoldersUrl = "https://api.dropbox.com/1/shared_folders/";
 
 
+function addPathInfo(info) {
+  return dropbox.withUserId( function(uid) {
+    info.globalPath = "//dropbox/unshared/" + uid + info.path;
+    if (!info.parent_shared_folder_id) return info;
+    // shared
+    return sharedFolderInfo(info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
+      if (sinfo || Util.startsWith(info.path,sinfo.path + "/")) {
+        info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + sinfo.shared_folder_name + "/" + info.path.substr(sinfo.path.length + 1);
+        info.globalPath = info.sharedPath; // use the shared path
+      }      
+      return info;
+    }, function(err) {
+      Util.message( new Error("dropbox: could not get shared info: " + (err.message || err)), Util.Msg.Error );
+      return info;
+    });
+  });
+}
+
 function pullFile(fname,binary) {
   var opts = { url: contentUrl + fname, binary: binary };
   return dropbox.requestGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
     info.content = content;
-    return dropbox.withUserId( function(uid) {
-      info.globalPath = "//dropbox/unshared/" + uid + info.path;
-      if (!info.parent_shared_folder_id) return info;
-      // shared
-      return sharedFolderInfo(info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
-        if (sinfo || Util.startsWith(info.path,sinfo.path + "/")) {
-          info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + sinfo.shared_folder_name + "/" + info.path.substr(sinfo.path.length + 1);
-          info.globalPath = info.sharedPath; // use the shared path
-        }      
-        return info;
-      }, function(err) {
-        Util.message( new Error("dropbox: could not get shared info: " + (err.message || err)), Util.Msg.Error );
-        return info;
-      });
-    });
+    return addPathInfo(info);
   });
 }
 
@@ -74,12 +78,20 @@ function folderInfo(fname) {
   return dropbox.requestGET( { url: url, timeout: 5000 }, { list: true });
 }
 
-function pushFile(fname,content) {
-  var url = pushUrl + fname;
-  return dropbox.requestPOST( { url: url }, {}, content ).then( function(info) {
+function pushFile(fname,content,recurse) {
+  var url = pushUrl + fname; 
+  return dropbox.requestPUT( { url: url }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
-    return info;
-  });
+    return addPathInfo(info);
+  }, function(err) {
+    if (err && err.httpCode === 500) {
+      // try one more time
+      return Promise.delayed(500).then( function() { 
+        return pushFile(fname,content,true);
+      });
+    }
+    throw err;
+  });  
 }
 
 function createFolder( dirname ) {
@@ -96,6 +108,9 @@ function getShareUrl( fname ) {
   var url = Util.combine(sharesUrl,fname);
   return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
     return (info.url || null);
+  }, function(err) {
+    Util.message( err, Util.Msg.Trace );
+    return null;
   });
 }
 
@@ -182,7 +197,13 @@ var Dropbox = (function() {
   Dropbox.prototype.pushFile = function( fpath, content ) {
     var self = this;
     return pushFile( self.fullPath(fpath), content ).then( function(info) {
-      return { createdTime: new Date(info.modified), rev : info.rev };
+      return { 
+        path: info.path,
+        createdTime: new Date(info.modified),
+        globalPath: info.globalPath,
+        sharedPath: info.sharedPath,
+        rev: info.rev,
+      };
     });
   }
 

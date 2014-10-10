@@ -62,6 +62,31 @@ define([],function() {
     return continuation;
   }
 
+  var Queue = (function() {
+    function Queue() {
+      var self = this;
+      self.finalp = null;
+    }
+
+    // push an action that returns a promise on a queue; every action in the queue will
+    // be executed in sequence. Returns a promise.
+    Queue.prototype.push = function(action) {
+      var self = this;
+      if (self.finalp==null) return action();
+      var p = self.finalp.then( function() {
+        return action();
+      }, function() {
+        return action();
+      }).always( function() {
+        if (self.finalp === p) self.finalp = null;
+      });
+      self.finalp = p;
+      return p;
+    };
+
+    return Queue;
+  })();
+
   var Promise = (function() {
     var Event = { Success: "resolve", Progress: "progress", Error: "reject" };
 
@@ -95,6 +120,10 @@ define([],function() {
       return promiseWhen(promises);
     }
 
+    Promise.createQueue = function() {
+      return new Queue();
+    }
+
     Promise.guarded = function(pred,action,after) { 
       if (pred) {
         return action().then( function() { return after(); } );
@@ -102,6 +131,14 @@ define([],function() {
       else {
         return after();
       }
+    }
+
+    Promise.delayed = function(delay) {
+      return new Promise( function(cont) {
+        setTimeout( function() {
+          cont(null);
+        }, delay );
+      });
     }
 
 

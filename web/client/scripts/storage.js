@@ -368,10 +368,12 @@ function createSnapshot( storage, docName ) {
     return storage.remote.createNewAt( folder );
   }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);
-    storage.forEachFile( function(file0) {
-      var file = Util.copy(file0);
-      file.modified = true;
-      toStorage.files.set( file.path, file );
+    storage.forEachFile( function(file) {
+      var opts = Util.copy(file);
+      opts.shareUrl   = null;
+      opts.sharedPath = null;
+      opts.globalPath = null;
+      toStorage.writeFile( file.path, file.content, opts );
     });
     return toStorage.sync().then( function() {
       Util.message( "snapshot saved to: " + toStorage.folder(), Util.Msg.Info );
@@ -916,6 +918,9 @@ var Storage = (function() {
           file1.original    = file0.content;
           file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
           file1.createdTime = info.createdTime;
+          // these can be updated for newly created files
+          if (info.globalPath) file1.globalPath = info.globalPath;
+          if (info.sharedPath) file1.sharedPath = info.sharedPath;
           self._updateFile(file1);
         }
         return Promise.guarded(file1.sharedPath !== file0.sharedPath, // support aliases for systems that do not have unique shared paths
