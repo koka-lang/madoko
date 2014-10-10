@@ -1663,7 +1663,7 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.remote.readonly || self.disableServer) {  // unconnected storage (null or http)
+    if (!self.storage.remote.canSync || self.disableServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
