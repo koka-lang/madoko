@@ -369,7 +369,7 @@ var Preview = (function() {
       if (!src) {
         eval(scripts[i].text);  
       }
-      else if (loadedScripts["/" + src]==null) {
+      else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
         loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
         var xscript = document.createElement("script");     
         // listen for load events

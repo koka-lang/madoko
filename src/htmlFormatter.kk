@@ -327,17 +327,21 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       }).join 
     }) +
    (if (options.scripts == "") then "" else {
-      val links = options.scripts.expand.splitPaths
-      links.map(fun(link) { 
+      val xlinks = options.scripts.expand.splitPaths
+      xlinks.map(fun(xlink) { 
+        val (link,attrs) = match(xlink.find(rxScript)) {
+          Nothing   -> (xlink,attrsNone)
+          Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "script"))
+        }
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
-            "  <script>\n" + info.embedData + "\n  </script>\n"
+            "  <script " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </script>\n"
           _ -> {
             if (link.relative) then {
               log("filesRefer",link);
               log("embed",link);
             }
-            "  <script src=\"" + escape(link) + "\"></script>\n" 
+            "  <script src=\"" + escape(link) + "\" " + attrs.htmlFormat("script",False) + "></script>\n" 
           }
         }
       }).join 
@@ -372,7 +376,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
    "</html>\n"
 }
 
-
+val rxScript = regex(@"([^\{\s]+)\s*(?:\{((?:[^\\\}]|\\.)*)\})?")
 
 
 

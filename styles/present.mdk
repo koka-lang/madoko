@@ -29,8 +29,8 @@ Beamer Theme Options:
 Document Class: [xcolor=table]beamer
 Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
-Script        : &reveal-url;/lib/js/head.min.js
-Script        : &reveal-url;/js/reveal.js
+Script        : &reveal-url;/lib/js/head.min.js { .preview }
+Script        : &reveal-url;/js/reveal.js { .preview }
 Heading Depth : 0
 Toc Depth     : 2
 Section Base  : 2
