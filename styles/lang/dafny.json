@@ -8,24 +8,39 @@
   "blockCommentEnd":   "*/",
 
   "keywords": [
-    "class","datatype","codatatype","type","function",
-    "ghost","var","method","constructor",
-    "module","import","default","as","opened","static","refines",
-    "returns","break","then","else","if","label","return","while","print","where",
-    "new","parallel", "in","this","fresh","choose",
-    "match","case","assert","assume", "predicate","copredicate",
-    "forall","exists", "false","true","null","old",
-    "calc","iterator","yields","yield"
+    "class","trait","datatype","codatatype","newtype","type","iterator",
+    "function","predicate","copredicate",
+    "var","method","constructor","lemma","colemma",
+    "ghost","static","abstract","async",
+    "module","import","default","as","opened",
+    "include",
+    "extends","refines","returns","yields",
+    "assert","assume","break","then","else","if","label","return","yield","await",
+    "while","print","where",
+    "old","forall","exists","new","calc","modify","in","this","fresh",
+    "match","case","false","true","null"
   ],
-  
+
+  "extraKeywords": [
+  ],
+
   "verifyKeywords": [
-    "requires","ensures","modifies","reads","free", "invariant","decreases"
+    "requires","ensures","modifies","reads","free","invariant","decreases"
   ],
-  
+
+  "extraVerifyKeywords": [
+  ],
+
   "types": [
-    "bool","multiset","map","nat","int","object","set","seq", "array"
+    "bool","int","nat","real",
+    "set","multiset","seq","map",
+    "object","array","array2","array3"
   ],
-  
+
+  "extraTypes": [
+  ],
+
+
   "brackets": [
     ["{","}","delimiter.curly"],  
     ["[","]","delimiter.square"],  
@@ -39,10 +54,14 @@
     "root": [
       
       ["array([2-9]\\d*|1\\d+)", "type.keyword" ],
-      ["[a-zA-Z'_\\?\\\\][\\w'\\?\\\\]*", { "cases": {"@keywords": "keyword",
-                                             "@verifyKeywords": "constructor.identifier",
-                                             "@types"   : "type.keyword",
-                                             "@default" : "identifier" }}],            
+      ["[a-zA-Z'_\\?\\\\][\\w'\\?\\\\]*", { "cases": {
+          "@keywords": "keyword",
+          "@extraKeywords": "keyword",
+          "@verifyKeywords": "constructor.identifier",
+          "@extraVerifyKeywords": "constructor.identifier",
+          "@types"   : "type.keyword",
+          "@extraTypes": "type.keyword",
+          "@default" : "identifier" }}],            
       [":=","keyword"],
       
       
