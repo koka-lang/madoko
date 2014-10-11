@@ -164,6 +164,7 @@ function inlineMath( cap : matched, context : inlineContext ) : string {
   context.fmtSpan( cap.groups[1], attrs ); // can be taken over by the user
 }
 
+
 function inlineMathBlock( cap : matched, context : inlineContext ) : string {
   val attrsd = context.defaults.matchRules("math-display",attrsNone)
   context.fmtMath(True,cap.groups[1],attrsd)
@@ -182,7 +183,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val texcmd = if (kind=="Inline")
-                then context.fmtTexCmd("span", (left+lineInfo+txt+right).replaceAll(rxNl,""), attrsd)
+                then context.fmtTexCmd("span", left+lineInfo+txt+right, attrsd)
                 else context.fmtTexEnv("div",  left+lineInfo+txt+right, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
@@ -203,8 +204,6 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
     }
   }
 } 
-
-val rxNl = regex(@"\r?\n[ \t]*")
 
 public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string, mtxt : string, attrs : attrs ) {
   val scale = match(attrs.hasKey("math-scale")) {
@@ -640,8 +639,8 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
   val txt = attrsd.transformText(txt0,context.labels,context.metadata)
   match(attrsd.input) {
     Pre      -> context.fmtCode("", txt, attrsd) // todo: use sname as env name?
-    Math     -> context.fmtMath(False,txt,attrsd)
-    MathPre  -> context.fmtMath(False,txt.mathPre,attrsd)
+    Math     -> context.fmtMath(False,txt.mathUnline,attrsd)
+    MathPre  -> context.fmtMath(False,txt.mathUnline.mathPre,attrsd)
     Raw(monly) -> {
       if (context.sanitize) then "" 
        else match(monly) {
@@ -655,6 +654,11 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
     _  -> context.fmtCmd("span", context.formatInline(txt), attrsd )
   }
 }
+
+function mathUnline( txt : string ) {
+  txt.replaceAll(rxNl,"")  // allow line breaks in inline-math
+}
+val rxNl = regex(@"\\?\n[ \t]*")  
 
 // Format a citation link
 function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs ) : string 
