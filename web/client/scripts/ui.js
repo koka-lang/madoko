@@ -1302,7 +1302,12 @@ var UI = (function() {
         if (self.editName === self.docName) {
           self.docText = self.getEditText();
         }
-        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() }).then( function(res) {
+        return self.runner.runMadoko(self.docText, {
+                  docname: self.docName, 
+                  round: round, 
+                  time0: Date.now(),
+                  showErrors: function(errs) { self.showErrors(errs,false); }
+                }).then( function(res) {
               self.htmlText = res.content; 
               var quick = self.viewHTML(res.content, res.ctx.time0);
               self.updateLabels(res.labels,res.links);

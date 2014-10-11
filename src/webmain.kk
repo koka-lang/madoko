@@ -94,15 +94,15 @@ public function markdown( inputName : string, input : string, outdir : string, o
         withLog("filesWrite") {
           withLog("labels") {
             withLog("links") {
-              processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
-                val stdout = getLog("stdout")
-                val files  = getLog("files")
-                val filesRefer  = getLog("filesRefer")
-                val filesWrite  = getLog("filesWrite")
-                val labels = getLog("labels")
-                val links = getLog("links")
-                continue(output,stdout,rerun,options1,files,filesRefer,filesWrite,labels,links)
-              })
+                processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
+                  val stdout = getLog("stdout")
+                  val files  = getLog("files")
+                  val filesRefer  = getLog("filesRefer")
+                  val filesWrite  = getLog("filesWrite")
+                  val labels = getLog("labels")
+                  val links = getLog("links")
+                  continue(output,stdout,rerun,options1,files,filesRefer,filesWrite,labels,links)
+                })
             }
           }
         }

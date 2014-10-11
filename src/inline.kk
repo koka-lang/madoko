@@ -190,15 +190,16 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
                           lineNo : int, linePrefix : string ) : st<h> string
 {
   if (txt=="") return acc.string
-  val (s,next,_) = matchRules(context.grammar,context,txt,id)
-  val newLineNo = if (lineNo <= 0) then 0 else lineNo + txt.substr(0,next).count("\n")
   val location  = linePrefix + lineNo.show
   val lineInfo  = if (lineNo <= 0) then "" else context.fmtLineInfo( location )
   if (lineNo > 0) {
     val texLineInfo = "% data-line={" + location + "}"
     log("math-dvi", texLineInfo)
     log("math-pdf", texLineInfo)
+    logLocation(location)  // for warnings
   }
+  val (s,next,_) = matchRules(context.grammar,context,txt,id)
+  val newLineNo = if (lineNo <= 0) then 0 else lineNo + txt.substr(0,next).count("\n")
   formatInlineAcc(context, acc.append(lineInfo).append(s), txt.substr1(next), newLineNo, linePrefix )  
 }
 

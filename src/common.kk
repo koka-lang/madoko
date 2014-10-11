@@ -19,6 +19,10 @@ public function warning( message : string, logname : string = "warning" ) : () {
   log(logname,"  warning: " + message)
 }
 
+public function logLocation( lineInfo: string, logname : string = "warning" ) : () {
+  log(logname,"  location: " + lineInfo)
+}
+
 /* --------------------------------------
   Grammar rules 
 ---------------------------------------- */

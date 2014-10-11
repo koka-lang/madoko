@@ -677,8 +677,7 @@ div.boxed {
 /*
 .monaco-editor .token.keyword.heading 
 */
-.monaco-editor .token.link.special,
-.monaco-editor .token.keyword.list {
+.monaco-editor .token.link.special {
   font-weight: bold;
   color: inherit;
 }
