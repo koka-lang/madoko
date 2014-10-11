@@ -78,20 +78,11 @@ function folderInfo(fname) {
   return dropbox.requestGET( { url: url }, { list: true });
 }
 
-function pushFile(fname,content,recurse) {
+function pushFile(fname,content) {
   var url = pushUrl + fname; 
   return dropbox.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return addPathInfo(info);
-  }, function(err) {
-    if (err && err.httpCode === 500) {
-      console.log("Dropbox PUT failed: try once more...");
-      // try one more time
-      return Promise.delayed(500).then( function() { 
-        return pushFile(fname,content,true);
-      });
-    }
-    throw err;
   });  
 }
 
