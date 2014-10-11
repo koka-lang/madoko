@@ -47,14 +47,14 @@ var madokoMode = {
           [/^(@metakey)/, { token: "namespace.metadata.key", next: "metadata" } ],
           
           // headers
-          [/^(\s{0,3})(#+)((?:[^\\\{]|@escapes)+)/, ['white','keyword.$1','keyword.$1']],
+          [/^(\s{0,3})(#+)((?:[^\\\{]|@escapes)+)/, ['white','keyword.heading.$1','keyword.heading.$1']],
           [/^\s{0,3}(=+|\-+)\s*$/, 'keyword.header'],      
           [/^\s{0,3}((\*[ ]?)+)\s*$/, 'keyword.header'],
           [/^\s{0,3}(~+)\s*(?:begin\s+([\w\-]+)\s*|end\s+([\w\-]+)\s*|([\w\-]+)\s*)?(?=(?:\{[^}]+\}\s*)?$)/, {
             cases: {
               "$2": { token: 'keyword.header.custom.$2', bracket: "@open" },
               "$3": { token: 'keyword.header.custom.$3', bracket: "@close" },
-              "$4~(equation|texraw)": { token: 'keyword.header.custom.$1', bracket: "@open", next: "@latexblock.$1" },
+              "$4~(equation|texraw|math|mathpre)": { token: 'keyword.header.custom.$1', bracket: "@open", next: "@latexblock.$1" },
               "$4": { token: 'keyword.header.custom.$1', bracket: "@open" },
               "@default": { token: 'keyword.header.custom.$1', bracket: "@close" }
             }}],      
@@ -110,9 +110,25 @@ var madokoMode = {
             "$1==$S2": { token: 'keyword.header.custom.$1', bracket: '@close', next: '@pop' },
             "@default": "code.latex" 
           }}],
-          [/\\[a-zA-Z]+|\\.?/, "code.keyword.latex" ],
-          [/[^\\]+/, 'code.latex' ],      
+          { include: "@latexcontent" },
+          [/[^\\&\{\}#@]+/, 'code.latex' ],      
         ],
+
+        latexinline: [
+          { include: "@latexcontent" },
+          [/[^\\&\{\}#@\n\r\$]+/, { cases: {
+            '@eos': { token: 'code.latex', next: '@pop' },
+            '@default': 'code.latex' 
+          }}],
+          [/\$|$/, { token: "latex.close", next: "@pop", bracket: "@close" } ],
+        ],
+
+        latexcontent: [
+          [/\\[a-zA-Z]+|\\.?/, "code.keyword.latex" ],
+          [/[&]|#\d*|@\w*/, "code.special.latex" ],
+          [/[\{\}]/, "@brackets.code.delimiter.latex"],
+        ],
+
         
         codeblock: [      
           [/^(\t|[ ]{4}).*$/, 'namespace.code' ], // code line
@@ -146,17 +162,20 @@ var madokoMode = {
           
           // various markup
           [/\b__([^\\_]|@escapes|_(?!_))+__\b/, 'strong'],
-          [/\*\*([^\\*]|@escapes|\*(?!\*))+\*\*/, 'strong'],
+          [/(\*\*)((?:[^\\*]|@escapes|\*(?!\*))+)(\*\*)/, ['strong.open','strong','strong.close']],
           [/\b_[^_]+_\b/, 'emphasis'],
           [/\*([^\\*]|@escapes)+\*/, 'emphasis'],
           [/(`)((?:[^`])+)(`)/, ['','namespace.code',''] ],
-          [/(\$)((?:[^\\$]|\\.)+)(\$)/, ['','namespace.code.latex',''] ],
+          //[/(\$)((?:[^\\$]|\\.)+)(\$)/, ['','namespace.code.latex',''] ],
+          [/\$/, { token: "latex.open", next: "@latexinline", bracket: "@open" }],
           [/<<|>>/, ''],
           
           // links
-          [/\{[^}]+\}/, 'string.escape'],
-          [/(!?\[)((?:[^\]\\]|@escapes)+)(\]\([^\)]+\))/, ['string.link', '', 'string.link' ]],
-          [/(!?\[)((?:[^\]\\]|@escapes)+)(\])/, 'string.link'],          
+          [/(\{)([^}]+)(\})/, ['@brackets.string.escape','string.escape','@brackets.string.escape']],
+          [/(\[)((?:[^\]\\]|@escapes)+)(\])(\([^\)]+\))/, ['@brackets.link', '', '@brackets.link','string.link' ]],
+          [/(\[)((?:[^\]\\]|@escapes)+)(\])(\{)([^\}]+)(\})/, ['@brackets.link', '', '@brackets.link', '@brackets.string.escape','string.escape','@brackets.string.escape' ]],
+          [/(\[)((?:INCLUDE\b|TITLE\b|BIB\b)(?:[^\]\\]|@escapes)*)(\])/, ['@brackets.open','link.special','@brackets.link']],          
+          [/(\[)((?:[^\]\\]|@escapes)+)(\])/, ['@brackets.link','string.link','@brackets.link']],          
           
           // or html
           { include: 'html' },
@@ -176,7 +195,7 @@ var madokoMode = {
         
         // whitespace and (html style) comments
         whitespace: [
-          [/[ \t]{2}$/, 'invalid'],
+          [/[ \t]{2,}$/, 'invalid'],
           [/^[ \t]+$/, 'invalid'],
           [/[ \t\r\n]+/, 'white'],
           [/<!--/, 'comment', '@comment']
