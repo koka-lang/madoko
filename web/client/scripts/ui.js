@@ -249,6 +249,12 @@ var UI = (function() {
       });
     }
 
+    // read first, before calling updateSettings (as that saves right away)
+    var json = localStorage.getItem("settings");
+    if (!json) { //legacy
+      json = localStorage.getItem("local/local");
+    }
+    
     self.settings = Util.copy(defaultSettings);
     self.updateSettings( {
       theme            : "vs",
@@ -256,10 +262,6 @@ var UI = (function() {
       viewMode         : "normal",
     });
     
-    var json = localStorage.getItem("settings");
-    if (!json) { //legacy
-      json = localStorage.getItem("local/local");
-    }
     self.updateSettings( Util.jsonParse(json,{}) );
   }
 
@@ -1929,8 +1931,29 @@ var UI = (function() {
     var col     = hang0.length;
     var hangCol = col;
     text = text.substr(col);
-        
-    var parts = text.split(/\s(?!\s*\[)/);
+    
+    // split in non-breakable parts    
+    var parts = []; // text.split(/\s(?!\s*\[)/);
+    var rxpart = /(?:[^\s\\\$\{`]|\\[\s\S]|\$(?:[^\\\$]|\\.)*\$|\{(?:[^\\\}]|\\.)*\}|(`+)(?:[^`]|(?!\1)`)*\1|\s+\[|[\\\$\{`])+/;
+    var rxspace = /\s+/;
+    text = text.replace(/^\s+/,"");
+    while (cap = rxpart.exec(text) ) {
+      parts.push( cap[0] );
+      text = text.substr(cap[0].length);
+      if (text.length>0) {
+        cap = rxspace.exec(text);
+        if (!cap || !cap[0]) {
+          // somehow our search was non-exhaustive...
+          parts[parts.length-1] = parts[parts.length-1] + text[0];
+          text = text.substr(1);
+        }
+        else {
+          text = text.substr(cap[0].length); // skip whitespace
+        }
+      }
+    }  
+
+    // and put the parts together inside the column boundaries
     parts.forEach( function(part) {
       if (part && part !== "") {
         var n = part.length;
@@ -1967,7 +1990,7 @@ var UI = (function() {
     
     // reformat
     var paraText = para.join(" ");
-    return breakLines(paraText, column || 70, hang0, hang);
+    return breakLines(paraText, column || 72, hang0, hang);
   }
 
   function reformatText( lineNo, text, column ) {
