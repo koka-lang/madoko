@@ -611,8 +611,13 @@ div.boxed {
 
 
 /* Monaco token classes */
-.monaco-editor .glyph-error.outdated {
+.monaco-editor .glyph-error.outdated,
+.monaco-editor .glyph-warning.outdated {
   background-color: orange !important;
+}
+
+.monaco-editor .glyph-warning {
+  background: url(../lib/vs/editor/css/error-glyph.png) no-repeat center
 }
 
 .monaco-editor .xline-error {

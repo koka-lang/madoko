@@ -313,7 +313,7 @@ var Runner = (function() {
           endColumn: 1,
           fileName: fileName,
         };
-        errors.push( { type: 'error', range: range, message: message } );  
+        errors.push( { type: cap[1].toLowerCase(), range: range, message: message } );  
       }
     }
 

@@ -1306,7 +1306,7 @@ var UI = (function() {
                   docname: self.docName, 
                   round: round, 
                   time0: Date.now(),
-                  showErrors: function(errs) { self.showErrors(errs,false); }
+                  showErrors: function(errs) { self.showErrors(errs,false,"warning"); }
                 }).then( function(res) {
               self.htmlText = res.content; 
               var quick = self.viewHTML(res.content, res.ctx.time0);
@@ -3640,26 +3640,27 @@ var symbolsMath = [
     });
   }
 
-  UI.prototype.showErrors = function( errors, sticky ) {
+  UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
-    
+    if (!type) type = "error";
+
     var decs = [];
     errors.forEach( function(error) {
       if (!error.range.fileName) error.range.fileName = self.editName;
       decs.push( { 
         id: null, 
-        type: "error",
+        type: error.type || type,
         sticky: sticky, 
         outdated: false, 
         message: error.message, 
         range: error.range,
         expire: 0, // does not expire
       });
-      var msg = "error: " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
+      var msg = (error.type || type) + ": " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
       Util.message( msg, Util.Msg.Error );
     });
 
-    self.removeDecorations(true,"error");
+    self.removeDecorations(true,type);
     self.addDecorations(decs);
   }
 
