@@ -616,10 +616,6 @@ div.boxed {
   background-color: orange !important;
 }
 
-.monaco-editor .glyph-warning {
-  background: url(../lib/vs/editor/css/error-glyph.png) no-repeat center
-}
-
 .monaco-editor .xline-error {
   background-color: red;
   xwidth: 5px !important;

@@ -3593,7 +3593,7 @@ var symbolsMath = [
           if (decoration.id && decoration.range.fileName === self.editName) {
             changeAccessor.changeDecorationOptions(decoration.id,{
               isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + decoration.type + '.outdated',
+              glyphMarginClassName: 'glyph-' + decoration.glyphType + '.outdated',
               linesDecorationsClassName: 'line-' + decoration.type + '.outdated',
             });
           }
@@ -3628,11 +3628,11 @@ var symbolsMath = [
           decoration.id = null;
         }
         if (decoration.range.fileName === self.editName) {
-          var postfix = decoration.type + (decoration.outdated ? ".outdated" : "" );
+          var postfix = (decoration.outdated ? ".outdated" : "" );
           decoration.id = changeAccessor.addDecoration( decoration.range, 
             { isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + postfix,
-              linesDecorationsClassName: 'line-' + postfix
+              glyphMarginClassName: 'glyph-' + decoration.glyphType + postfix,
+              linesDecorationsClassName: 'line-' + decoration.type + postfix
             }
           );            
         }
@@ -3650,6 +3650,7 @@ var symbolsMath = [
       decs.push( { 
         id: null, 
         type: error.type || type,
+        glyphType: error.glyphType || error.type || type,
         sticky: sticky, 
         outdated: false, 
         message: error.message, 
