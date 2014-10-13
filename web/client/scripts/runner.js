@@ -76,6 +76,11 @@ var Runner = (function() {
     }
     if (res.err) return Promise.rejected( res.err );
     
+    if (ctx.showErrors) {
+      ctx.message = self.showLatexMessages(res.stdout, ctx.showErrors, ctx.docname);
+    }
+
+    
     //if (res.runOnServer) {
     //  self.serverRun(ctx);
     //}
@@ -268,11 +273,11 @@ var Runner = (function() {
     var self = this;
     var errors = [];
     // location latex errors
-    var rx = /(?:^|\n) *error *: *(?:source +line *: *)?([\w\-\.;:\\\/]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/g;
+    var rx = /(?:^|\n) *(error|warning) *: *(?:source +line *: *)?([\w\-\.;:\\\/]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
     var cap;
     while ((cap = rx.exec(output)) != null) {
-      var location = cap[1];
-      var message  = cap[2];
+      var location = cap[2];
+      var message  = cap[3];
       var i = location.lastIndexOf(";");
       if (i >= 0) location = location.substr(i+1);
       var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
@@ -286,9 +291,33 @@ var Runner = (function() {
           endColumn: 1,
           fileName: fileName,
         };
-        errors.push( { type: "error", range: range, message: message } );  
+        errors.push( { type: cap[1].toLowerCase(), range: range, message: message } );  
       }
     }
+
+    // madoko  errors
+    var rx = /^ *(error|warning) *: *((?:[^:]|:\d+)+):(.*)$/gim;
+    var cap;
+    while ((cap = rx.exec(output)) != null) {
+      var location = cap[2];
+      var message  = cap[3];
+      var i = location.lastIndexOf(";");
+      if (i >= 0) location = location.substr(i+1);
+      var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
+      if (capl) {
+        var line = parseInt(capl[2]);
+        var fileName = capl[1] || "";
+        var range = {
+          startLineNumber: line,
+          endLineNumber: line,
+          startColumn: 1,
+          endColumn: 1,
+          fileName: fileName,
+        };
+        errors.push( { type: cap[1].toLowerCase(), glyphType: "error", range: range, message: message } );  
+      }
+    }
+
     // other errors
     rx = /^[ \t]*![ \t]*LaTeX Error:(.+)/mgi;    
     while ((cap = rx.exec(output)) != null) {

@@ -611,7 +611,8 @@ div.boxed {
 
 
 /* Monaco token classes */
-.monaco-editor .glyph-error.outdated {
+.monaco-editor .glyph-error.outdated,
+.monaco-editor .glyph-warning.outdated {
   background-color: orange !important;
 }
 
@@ -653,6 +654,35 @@ div.boxed {
 .monaco-editor .token.code {
   color: purple;
 }
+
+.monaco-editor .token.comment {
+  color: gray;
+}
+
+.monaco-editor .token.code.latex {
+  xbackground-color: #F4F4F4;
+  xcolor: inherit;
+  color: purple;
+}
+
+.monaco-editor .token.code.latex.keyword,
+.monaco-editor .token.code.latex.special,
+.monaco-editor .token.code.latex.delimiter {
+  color: #801500;
+}
+
+.monaco-editor .token.open, .monaco-editor .token.close {
+  color: inherit;
+}
+
+/*
+.monaco-editor .token.keyword.heading 
+*/
+.monaco-editor .token.link.special {
+  font-weight: bold;
+  color: inherit;
+}
+
 .monaco-editor .token.code.keyword {
   color: navy;
 }

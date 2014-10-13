@@ -152,7 +152,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   function phaseHtml() 
   {
     // markdown to html          
-    val (fileEmbed,(mathDvi,(mathPdf,(warns,(logs, html0))))) = 
+    val (fileEmbed,(mathDvi,(mathPdf,(warns0,(logs, html0))))) = 
                               withLog("embed") {
                                withLog("math-dvi") {
                                 withLog("math-pdf") {
@@ -187,8 +187,12 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
 
       // show warnings
-      if (warns != "" && mopts.verbose >= 1) {
-        print(warns)
+      val warns = fixWarnings(warns0)
+      if (warns != "") {
+        log("stdout",warns)
+        if (mopts.verbose >= 1) {
+          print(warns)
+        }
       }
 
       // generate tex
@@ -236,6 +240,28 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
   phaseHtml()
 }
+
+// Fixup locations in warnings:
+function fixWarnings(txt : string) : string {
+  var location := "";
+  val ls = txt.lines.list.map fun(line) {
+    match(line.find(rxLocation)) {
+      Nothing -> {
+        match(line.find(rxWarning)) {
+          Nothing   -> Just(line + "\n")
+          Just(cap) -> Just(cap.groups[1] + location + cap.groups[2] + "\n")
+        }
+      }
+      Just(cap) -> {
+        location := cap.groups[1] + ":"
+        Nothing
+      }
+    }
+  }
+  ls.concatMaybe.join
+}
+val rxLocation = regex(@"^\s*location:(.*)",ignoreCase=True)
+val rxWarning  = regex(@"^(\s*(?:error|warning):)(.*)",ignoreCase=True)
 
 // Register colorizers
 function registerColorizers( opts : options, searchDirs : list<string>, content : string ) : io ()

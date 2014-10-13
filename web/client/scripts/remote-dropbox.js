@@ -25,7 +25,7 @@ var dropbox = new OAuthRemote( {
 /* ----------------------------------------------
   Basic file API
 ---------------------------------------------- */
-
+var longTimeout = 60000; // 1 minute for pull or push content
 var root        = "dropbox";
 var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
 var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
@@ -54,7 +54,7 @@ function addPathInfo(info) {
 }
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + fname, binary: binary };
+  var opts = { url: contentUrl + fname, timeout: longTimeout, binary: binary };
   return dropbox.requestGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
@@ -64,34 +64,25 @@ function pullFile(fname,binary) {
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: metadataUrl + fname, timeout: 5000 } );
+  return dropbox.requestGET( { url: metadataUrl + fname } );
 }
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + id;
   // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
-  return dropbox.requestGET( { url: url, timeout: 5000, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
+  return dropbox.requestGET( { url: url, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
   var url = metadataUrl + fname;
-  return dropbox.requestGET( { url: url, timeout: 5000 }, { list: true });
+  return dropbox.requestGET( { url: url }, { list: true });
 }
 
-function pushFile(fname,content,recurse) {
+function pushFile(fname,content) {
   var url = pushUrl + fname; 
-  return dropbox.requestPUT( { url: url }, {}, content ).then( function(info) {
+  return dropbox.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return addPathInfo(info);
-  }, function(err) {
-    if (err && err.httpCode === 500) {
-      console.log("Dropbox PUT failed: try once more...");
-      // try one more time
-      return Promise.delayed(500).then( function() { 
-        return pushFile(fname,content,true);
-      });
-    }
-    throw err;
   });  
 }
 

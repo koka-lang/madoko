@@ -27,6 +27,7 @@ var OAuthRemote = (function() {
     self.userId         = null;
     self.dialogWidth    = opts.dialogWidth || 600;
     self.dialogHeight   = opts.dialogHeight || 600;
+    self.timeout        = opts.timeout || 10000;  // should be short, real timeout can be 3 times as large, see primRequestXHR
 
     if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
     if (!self.loginParams.response_type) self.loginParams.response_type = "code";
@@ -82,6 +83,29 @@ var OAuthRemote = (function() {
     });
   }
 
+  OAuthRemote.prototype._primRequestXHR = function(options,params,body,recurse) {
+    var self = this;
+    return Util.requestXHR( options, params, body ).then( null, function(err) {
+        // err.message.indexOf("request_token_expired") >= 0
+        if (err) {
+          if (err.httpCode === 401) { // access token expired 
+            self.logout();
+          }
+          else if (!recurse && err.httpCode===500) { // internal server error, try once more
+            return Promise.delayed(250).then( function() {
+              return self._primRequestXHR(options,params,body,true);
+            });
+          }
+          else if (!recurse && err.httpCode===408 && options.timeout != null && options.timeout <= self.timeout) { // request timed out on short timeout
+            options.timeout = options.timeout*2; // try once more with longer timeout
+            console.log("request timed out; try again. " + options.url);
+            return self._primRequestXHR(options,params,body,true);
+          }
+        }
+        throw err;
+      });
+  }
+
   OAuthRemote.prototype._requestXHR = function( options, params, body ) {
     var self = this;
     if (typeof options === "string") options = { url: options };
@@ -94,16 +118,13 @@ var OAuthRemote = (function() {
         if (!params) params = {};
         params.access_token = token;
       }
+      if (options.timeout==null) {
+        options.timeout = self.timeout;
+      }
       if (self.defaultDomain && options.url && !Util.startsWith(options.url,"http")) {
         options.url = self.defaultDomain + options.url;
       }
-      return Util.requestXHR( options, params, body ).then( null, function(err) {
-        // err.message.indexOf("request_token_expired") >= 0
-        if (err && err.httpCode === 401) { // access token expired 
-          self.logout();
-        }
-        throw err;
-      });
+      return self._primRequestXHR(options,params,body,false);
     });
   }
 

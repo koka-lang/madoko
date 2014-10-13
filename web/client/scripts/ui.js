@@ -249,6 +249,12 @@ var UI = (function() {
       });
     }
 
+    // read first, before calling updateSettings (as that saves right away)
+    var json = localStorage.getItem("settings");
+    if (!json) { //legacy
+      json = localStorage.getItem("local/local");
+    }
+    
     self.settings = Util.copy(defaultSettings);
     self.updateSettings( {
       theme            : "vs",
@@ -256,10 +262,6 @@ var UI = (function() {
       viewMode         : "normal",
     });
     
-    var json = localStorage.getItem("settings");
-    if (!json) { //legacy
-      json = localStorage.getItem("local/local");
-    }
     self.updateSettings( Util.jsonParse(json,{}) );
   }
 
@@ -1300,7 +1302,12 @@ var UI = (function() {
         if (self.editName === self.docName) {
           self.docText = self.getEditText();
         }
-        return self.runner.runMadoko(self.docText, {docname: self.docName, round: round, time0: Date.now() }).then( function(res) {
+        return self.runner.runMadoko(self.docText, {
+                  docname: self.docName, 
+                  round: round, 
+                  time0: Date.now(),
+                  showErrors: function(errs) { self.showErrors(errs,false,"warning"); }
+                }).then( function(res) {
               self.htmlText = res.content; 
               var quick = self.viewHTML(res.content, res.ctx.time0);
               self.updateLabels(res.labels,res.links);
@@ -1929,8 +1936,29 @@ var UI = (function() {
     var col     = hang0.length;
     var hangCol = col;
     text = text.substr(col);
-        
-    var parts = text.split(/\s(?!\s*\[)/);
+    
+    // split in non-breakable parts    
+    var parts = []; // text.split(/\s(?!\s*\[)/);
+    var rxpart = /(?:[^\s\\\$\{`]|\\[\s\S]|\$(?:[^\\\$]|\\.)*\$|\{(?:[^\\\}]|\\.)*\}|(`+)(?:[^`]|(?!\1)`)*\1|\s+\[|[\\\$\{`])+/;
+    var rxspace = /\s+/;
+    text = text.replace(/^\s+/,"");
+    while (cap = rxpart.exec(text) ) {
+      parts.push( cap[0] );
+      text = text.substr(cap[0].length);
+      if (text.length>0) {
+        cap = rxspace.exec(text);
+        if (!cap || !cap[0]) {
+          // somehow our search was non-exhaustive...
+          parts[parts.length-1] = parts[parts.length-1] + text[0];
+          text = text.substr(1);
+        }
+        else {
+          text = text.substr(cap[0].length); // skip whitespace
+        }
+      }
+    }  
+
+    // and put the parts together inside the column boundaries
     parts.forEach( function(part) {
       if (part && part !== "") {
         var n = part.length;
@@ -1967,7 +1995,7 @@ var UI = (function() {
     
     // reformat
     var paraText = para.join(" ");
-    return breakLines(paraText, column || 70, hang0, hang);
+    return breakLines(paraText, column || 72, hang0, hang);
   }
 
   function reformatText( lineNo, text, column ) {
@@ -3565,7 +3593,7 @@ var symbolsMath = [
           if (decoration.id && decoration.range.fileName === self.editName) {
             changeAccessor.changeDecorationOptions(decoration.id,{
               isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + decoration.type + '.outdated',
+              glyphMarginClassName: 'glyph-' + decoration.glyphType + '.outdated',
               linesDecorationsClassName: 'line-' + decoration.type + '.outdated',
             });
           }
@@ -3600,11 +3628,11 @@ var symbolsMath = [
           decoration.id = null;
         }
         if (decoration.range.fileName === self.editName) {
-          var postfix = decoration.type + (decoration.outdated ? ".outdated" : "" );
+          var postfix = (decoration.outdated ? ".outdated" : "" );
           decoration.id = changeAccessor.addDecoration( decoration.range, 
             { isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + postfix,
-              linesDecorationsClassName: 'line-' + postfix
+              glyphMarginClassName: 'glyph-' + decoration.glyphType + postfix,
+              linesDecorationsClassName: 'line-' + decoration.type + postfix
             }
           );            
         }
@@ -3612,26 +3640,28 @@ var symbolsMath = [
     });
   }
 
-  UI.prototype.showErrors = function( errors, sticky ) {
+  UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
-    
+    if (!type) type = "error";
+
     var decs = [];
     errors.forEach( function(error) {
       if (!error.range.fileName) error.range.fileName = self.editName;
       decs.push( { 
         id: null, 
-        type: "error",
+        type: error.type || type,
+        glyphType: error.glyphType || error.type || type,
         sticky: sticky, 
         outdated: false, 
         message: error.message, 
         range: error.range,
         expire: 0, // does not expire
       });
-      var msg = "error: " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
+      var msg = (error.type || type) + ": " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
       Util.message( msg, Util.Msg.Error );
     });
 
-    self.removeDecorations(true,"error");
+    self.removeDecorations(true,type);
     self.addDecorations(decs);
   }
 

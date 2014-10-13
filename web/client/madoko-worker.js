@@ -125,6 +125,7 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
             links      : links,
             mathDoc    : mathDoc(filesWrite),
             err        : null,
+            stdout     : stdout,
           });
         });
       }
