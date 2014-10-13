@@ -182,7 +182,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val texcmd = if (kind=="Inline")
-                then context.fmtTexCmd("span", (left+lineInfo+txt+right).replaceAll(rxNl," "), attrsd)
+                then context.fmtTexCmd("span", left+lineInfo+txt+right, attrsd)
                 else context.fmtTexEnv("div",  left+lineInfo+txt+right, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
@@ -203,8 +203,6 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
     }
   }
 } 
-
-val rxNl = regex(@"\r?\n[ \t]*")
 
 public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string, mtxt : string, attrs : attrs ) {
   val scale = match(attrs.hasKey("math-scale")) {
