@@ -737,9 +737,11 @@ var Storage = (function() {
 
   Storage.prototype.collect = function( roots ) {
     var self = this;
+    var now = Date.now();
     self.forEachFile( function(file) {
       if (!isRoot(file.path,roots) && 
-          (!file.content || !isEditable(file) || !file.modified) ) {
+          (file.createdTime.getTime() + 60000 < now) && // at least one minute old
+            (!file.content || !isEditable(file) || !file.modified) ) {  
         self._removeFile(file.path);
       }
     });

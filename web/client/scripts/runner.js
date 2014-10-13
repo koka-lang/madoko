@@ -246,6 +246,7 @@ var Runner = (function() {
           self.storage.writeFile( file.path, file.content, {
             encoding: file.encoding,
             mime: file.mime,
+            nosync: (Util.extname(file.path) === ".log" ? true : false),
           });
         }        
       });

@@ -643,7 +643,7 @@ function readFiles( userpath, docname, pdf, out ) {
                 .concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); });
   // find last log file
-  var rxLog = new RegExp("^  log written at: ([\\w\\-\\/\\\\]+\\.log) *$", "mig");
+  var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
   var capx = cap;
   while((capx = rxLog.exec(out)) != null) {
