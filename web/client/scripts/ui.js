@@ -500,6 +500,7 @@ var UI = (function() {
             var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
             if (cap) {
               var fileName = cap[1]; // TODO use file
+              if (Util.extname(fileName)==="") fileName = fileName + ".mdk";
               self.editFile( fileName );
             }
           }
