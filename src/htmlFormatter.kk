@@ -87,11 +87,17 @@ public function fmtHtmlCodeTable( context : inlineContext, ct : codeTable, attrs
 function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
   rows.map( fun(row) {
     tag("tr", row.map( fun(cell) {
-                val attrs = (if (cell.span > 1) then " colspan='" + cell.span.show + "'" else "") + (if (cell.content.isWhite) then " class='empty'" else "")
+                val classes = "colspan" + cell.span.show + (if (cell.content.isHtmlWhite) then " empty" else "")
+                val attrs = " class='" + classes + "'" + (if (cell.span > 1) then " colspan='" + cell.span.show + "'" else "") 
                 tag("td", if (cell.content.isWhite) then "&nbsp;" else cell.content, attrs )
               }).join, "")
   }).join("\n")
 }
+
+function isHtmlWhite( s : string ) : bool {
+  s.find(rxAllWhite).bool
+}
+val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b.*?>(\s|&nbsp;)*</span>)*$")
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
