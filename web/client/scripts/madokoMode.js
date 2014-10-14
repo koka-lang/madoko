@@ -31,6 +31,18 @@ var madokoMode = {
       jsescapes:  /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
       
       metakey: /^(?:@(\w+) +)?((?:\w|([\.#~])(?=[\w\-]))[\w\-\.#~,]*( +?[\w\-]+){0,2}\\*?\*?) *[:]/,  
+
+      metadata: [
+        'Title','Subtitle','Author','Affiliation','Email','Toc Depth','Heading Depth',
+        'Heading Base','Section Depth','Section Base','Bib','Bibliography',
+        'Bib Style','Biblio Style','Cite Style','Cite All',
+        'Bibtex','Pdf Latex',
+        'Copyright','License','Keywords','Comment','Revision','Address','Phone',
+        'Css','Script','Html Header','Html Footer','Html Meta',
+        'Math Mode','Math Embed','Math Dir','Math Dpi','Math Scale',
+        'Latex','Convert','Dvipng','Math Pdf Latex','MathJax','MathJax Ext',
+        'Doc Class','Document Class','Package','Tex Header','Tex Header*','Package*',
+      ],
       
       // non matched elements
       empty: [
@@ -44,7 +56,11 @@ var madokoMode = {
           [/(?!^)[\w\s\(\)\-,\.?;]+/,""],
           
           // metadata
-          [/^(@metakey)/, { token: "namespace.metadata.key", next: "metadata" } ],
+          [/^@metakey/, { cases: {
+            "$2@metadata": { token: "namespace.metadata.key", next: "metadata" },
+            "$3": { token: "namespace.metadata.key", next: "metadata" },
+            "@default": { token: '' } 
+          }}],
           
           // headers
           [/^(\s{0,3})(#+)((?:[^\\\{]|@escapes)+)/, ['white','keyword.heading.$1','keyword.heading.$1']],
@@ -60,7 +76,7 @@ var madokoMode = {
             }}],      
           // code & quote     
           [/^\s{0,3}>+/, 'string.quote' ],  
-          [/^(\t|[ ]{4})\S.*$/, { token: 'namespace.code', next: '@codeblock' } ], // code line
+          [/^(\t|[ ]{4}(?:\S|\s+\S)*)(\s*$)/, ['namespace.code','invalid'], '@codeblock' ], // code line
           //[/^\s*~+\s*$/, { token: 'namespace.code', bracket: '@open', next: '@codeblock' }],
           
           // github style code blocks
@@ -131,7 +147,7 @@ var madokoMode = {
 
         
         codeblock: [      
-          [/^(\t|[ ]{4}).*$/, 'namespace.code' ], // code line
+          [/^((?:\t|[ ]{4})(?:\S|\s+\S)*)(\s*)$/, ['namespace.code','invalid'] ], // code line
           [/./, { token: "@rematch", next: "@pop"} ]
         ],
     
@@ -144,6 +160,8 @@ var madokoMode = {
             }},
             "@default": "namespace.code" 
           }} ],
+          [/\s+$/, 'invalid'],
+          [/(?:\S|\s+\S)+/, 'namespace.code' ],
           [/[^`]*$/, 'namespace.code' ],
         ],
         
