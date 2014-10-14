@@ -347,18 +347,29 @@ div.input-mathpre {
 
 /* Pretty formatting of code */
 .madoko pre.pretty, .madoko code.pretty { 
-  font-family: "Times New Roman", serif;
+  font-family: Cambria,Times,Georgia,serif;
   font-size: 100%;
 }
 
-.pretty td {
+.madoko .pretty table {
+  border-collapse: collapse;
+}
+.madoko .pretty td {
   padding: 0em;
 }
-.pretty td.empty {
-  width: 0.25em;
+.madoko .pretty td.empty {
+  min-width: 1.5ex;
+  max-width: 1.5ex;
+  width: 0ex;
 }
-.pretty .token.identifier         { font-style: italic }
-.pretty .token.constructor        { font-style: italic }
+.madoko .pretty td:last-child {
+  width: 100em;
+}
+.madoko .pretty td.empty:last-child {
+  width: 1ex;
+}
+.madoko .pretty .token.identifier         { font-style: italic }
+.madoko .pretty .token.constructor        { font-style: italic }
 
 
 /* ---------------------------------------------------
