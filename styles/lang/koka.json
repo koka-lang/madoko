@@ -201,6 +201,7 @@
 
     "type": [
       [ "[(\\[<]", { "token": "@brackets.type" }, "@type_nested"],
+      [",", "delimiter.type"],
       { "include": "@type_content" }
     ],
 
