@@ -1038,7 +1038,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         var type = req.getResponseHeader("Content-Type") || req.responseType;
         var res;
         if (startsWith(type,"application/json") || startsWith(type,"text/javascript")) {
-          res = JSON.parse(req.responseText);
+          res = jsonParse(req.responseText, null);
         }
         else {
           res = req.response;
