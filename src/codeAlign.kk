@@ -83,9 +83,12 @@ public function codeAlign( txt : string, sep : int = 2 ) : codeTable
 
 public function findAlignColumns( line : string, rxSep : regex) : list<int>
 {
-  line.findAll(rxSep).list.map fun(cap) {
-    rawColumn( line, cap.index + cap.matched.length )
-  }
+  val n = line.length
+  line.findAll(rxSep).list.map(fun(cap) {
+    if (cap.index + cap.matched.length >= n)
+     then Nothing
+     else Just(rawColumn( line, cap.index + cap.matched.length ))
+  }).concatMaybe
 }
 
 function rawColumn( line : string, col : int ) : int {

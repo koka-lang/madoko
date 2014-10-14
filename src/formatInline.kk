@@ -110,7 +110,7 @@ public function inlineContext( fmt : formatter,
                                mathStatic : bool = False,
                                highlight : bool = True,
                                starBold : bool = False,
-                               prettyAlign : int = 3 ) : inlineContext
+                               prettyAlign : int = 2 ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
                  metadata, mathinfos, embedinfos,
