@@ -109,11 +109,12 @@ public function inlineContext( fmt : formatter,
                                verbose : int = 0,
                                mathStatic : bool = False,
                                highlight : bool = True,
-                               starBold : bool = False ) : inlineContext
+                               starBold : bool = False,
+                               prettyAlign : int = 3 ) : inlineContext
 {
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
                  metadata, mathinfos, embedinfos,
-                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold,
+                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, prettyAlign,
                  fmt.pick(fmtHtmlCmd,fmtTexCmd), 
                  fmt.pick(fmtHtmlEscape,fmtTexEscape), 
                  fmt.pick(fmtHtmlLink,fmtTexLink), 
@@ -331,7 +332,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   val pattrs = if (plain) then attrs else attrs.addClass("highlighted")  
   val content 
     = if (attrs.hasClass("pretty") && env != "code" ) then {
-        val ct = codeAlign(codeEscape(txt)).map( codeUnescape )
+        val ct = codeAlign(codeEscape(txt),context.prettyAlign).map( codeUnescape )
         context.fmtCodeTable(ct,cattrs)
       }
       else codeUnescape(codeEscape(txt)) // todo: optimize the escape/unescape path?

@@ -81,6 +81,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       elif (key=="line-no-web") options(lineNoWeb = (lvalue=="true"))
       elif (key=="extract-start") options(extractStart=xvalue)
       elif (key=="extract-end") options(extractEnd=xvalue)
+      elif (key=="pretty-align") options(prettyAlign=ivalue)
 
       // can only set program options if not running in a sandbox
       elif (!(options.sandbox)) {

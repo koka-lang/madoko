@@ -75,6 +75,7 @@ public struct options(
   sectionMax    : int  = 0, // maximal depth for adding sections (0 = disable)
   sectionBase   : int  = 1, // starting section level.
   starBold      : bool = False, // use * for bold?
+  prettyAlign   : int  = 2, // default alignment spaces for .pretty mode
   
   mathmode      : mathmode = Static,  // mode used to render math
   mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
