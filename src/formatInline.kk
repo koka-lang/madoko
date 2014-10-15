@@ -367,21 +367,31 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
       Nothing   -> format(src,st0)
       Just(cap) -> {
         val (fmt1,st1) = format(src.substr(0,cap.index),st0)
-        val width = if (cap.groups[1].length > 0) then cap.groups[1].parseInt.maybe(1,id) else 1
-        val fmt2 = "<ESCAPED width=" + width.show + ">" +
-                      context.fmtCmd("span", context.formatInline(cap.groups[2]), 
-                                context.formatDefaults(attrsNone.addClass("code-escaped"))) +
-                   "</ESCAPED>"
-        val (fmt3,st2) = codeEscape(src.substr1(cap.next),st1)
-        (fmt1 + fmt2 + fmt3, st2)
+        val subcode    = cap.groups[2].replaceAll(regex(@"\\([^\w])"), "$1")
+        val width      = if (cap.groups.matchedOn(1)) then cap.groups[1].parseInt.maybe(1,id)  
+                         elif (cap.groups.matchedOn(2)) then cap.groups[2].length
+                         else 1
+        val (fmt2,st2) = format(subcode,st1) // for colorization, use the provided substitution
+        trace("subcode: " + fmt2)
+        val class2     = match(fmt2.find(rxClass)) {
+                           Just(ccap) -> (ccap.groups[1] + ccap.groups[2] + ccap.groups[3]).split(" ").list
+                           Nothing    -> []
+                         }
+        val fmt3       = "<ESCAPED width=" + width.show + ">" +
+                            context.fmtCmd("span", context.formatInline(cap.groups[3]), 
+                              context.formatDefaults(attrsNone.addClasses( Cons("code-escaped",class2)))) +
+                         "</ESCAPED>"
+        val (fmt4,st3) = codeEscape(src.substr1(cap.next),st2)
+        (fmt1 + fmt3 + fmt4, st3)
       }
     }
   }
 
   codeEscape(txt,st)
 }
-val rxCodeEscaped = regex(@"\\\((?:(\d+):)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
-
+//val rxCodeEscaped = regex(@"\\\((?:(\d+):)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
+val rxCodeEscaped = regex(@"\\\((?:(\d+):)?(?:((?:[^\\\|]|\\[^\)])*)\|)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
+val rxClass       = regex(@"<span\s+class=(?:""([^""]*)""|'([^']*)'|([^\s\&<>]+))\s*>",ignoreCase=True)
 
 function escapeTexPre( txt : string ) : string {
   txt.replaceAll(regex(@"\$"),@"$\text{\tt\textdollar}$")
