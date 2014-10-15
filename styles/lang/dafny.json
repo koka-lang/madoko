@@ -69,10 +69,10 @@
       
       ["[{}()\\[\\]]", "@brackets"],
       ["[;]", "delimiter"],
-
       
-      ["[0-9]+", "number"],
-
+      ["0{2,}", "invalid.number" ],
+      ["0[xX][A-Fa-f0-9]+",  "number.hex"],
+      ["[0-9]+", "number.dec"],
       
       ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
       ["\"",  "string", "@string" ]
