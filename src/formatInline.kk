@@ -372,7 +372,7 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
                          elif (cap.groups.matchedOn(2)) then cap.groups[2].length
                          else 1
         val (fmt2,st2) = format(subcode,st1) // for colorization, use the provided substitution
-        trace("subcode: " + fmt2)
+        // trace("subcode: " + fmt2)
         val class2     = match(fmt2.find(rxClass)) {
                            Just(ccap) -> (ccap.groups[1] + ccap.groups[2] + ccap.groups[3]).split(" ").list
                            Nothing    -> []
