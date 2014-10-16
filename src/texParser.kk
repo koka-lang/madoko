@@ -75,7 +75,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textt2",      regex(@"^\\texttt\b\s*" + texarg), texCode ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
 
-  Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
+  Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),
   
@@ -143,7 +143,7 @@ public val texAccents = [
 
 function texAccent( cap : matched, _context ) : string {
   val accent = cap.groups[1]
-  val letter = cap.groups[2] + cap.groups[3]
+  val letter = cap.groups[2].unbrace
   match (texAccents[cap.groups[1]]) {
     Just(name) -> "&" + letter + name + ";"
     Nothing -> letter 
