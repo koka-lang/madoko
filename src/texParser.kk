@@ -75,7 +75,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textt2",      regex(@"^\\texttt\b\s*" + texarg), texCode ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
 
-  Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
+  Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)(?:\{\\?(.+?)\}|\\?(.))"), texAccent ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),
   
