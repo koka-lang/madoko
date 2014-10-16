@@ -43,7 +43,7 @@ val linkreg  = linktxt + @"((?:\(" + linkhref + @"\)|\s*\[" + linkid + @"\])?(?:
 function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = [
   Rule("itext",     regex(@"^" + normal + "+"), inlineNormal ),
 
-  Rule("iquotes",   regex(@"^(?:'((?:[^\\']|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
+  Rule("iquotes",   regex(@"^(?:'(?![s\s])((?:[^\\']|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
   Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
   Rule("ilink",     regex(@"^([\n ]*)" + linkreg), inlineLink ),
   Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
