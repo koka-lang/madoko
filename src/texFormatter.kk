@@ -453,7 +453,7 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
   pre + (match(pkg.find(rxPkgOpt)) {
     Just(cap) -> {
       val pname = cap.groups[2]
-      if (ext != ".cls" || pname.extname!="" || pname.dirname!="") {
+      if (pname.extname!="" || pname.dirname!="") {
         log("filesRefer", changeExt(pname,ext) );
       }
       (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") + 
@@ -461,7 +461,7 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
     }
     Nothing  -> {
       val pname = pkg.trim
-      if (ext != ".cls" || pname.extname!="" || pname.dirname!="") {
+      if (pname.extname!="" || pname.dirname!="") {
         log("filesRefer", changeExt(pname,ext) )
       }
       "{" + (if (ext==".cls") then pname.noext else pname) + "}"
