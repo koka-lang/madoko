@@ -212,7 +212,7 @@ function urlEncode(txt) : string {
   })
 }
 
-val rxUrlReserved = regex(@"[\s>)\'\""(<;:\$,\[\]]")
+val rxUrlReserved = regex(@"[\s>)\'\""(<\[\]]")
 
 function texBibinfo( cap : matched, context : texContext ) : string {
   "[" + cap.groups[2].parseTexX(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
