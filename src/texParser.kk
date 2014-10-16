@@ -193,7 +193,7 @@ function texCode( cap : matched, context : texContext ) : string {
 
 function texUrl( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
-  if (txt=="") then "" else ("[" + txt + "](<" + txt + ">)")
+  if (txt=="") then "" else ("[" + txt + "](" + txt.urlEncode + ")")
 }
 
 function texUrlPrefix( cap : matched, context : texContext ) : string {
@@ -203,8 +203,16 @@ function texUrlPrefix( cap : matched, context : texContext ) : string {
 
 function texDoi( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
-  if (txt=="") then "" else ("doi:[" + txt + "](<http://dx.doi.org/" + txt + ">)")
+  if (txt=="") then "" else ("doi:[" + txt + "](http://dx.doi.org/" + urlEncode(txt) + ")")
 }
+
+function urlEncode(txt) : string {
+  txt.replaceAll(rxUrlReserved, fun(cap) {
+    cap.matched.list.map( fun(c) { "%" + c.int.showHex(2) } ).join
+  })
+}
+
+val rxUrlReserved = regex(@"[\s>)\'\""(<;:\$,\[\]]")
 
 function texBibinfo( cap : matched, context : texContext ) : string {
   "[" + cap.groups[2].parseTexX(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
