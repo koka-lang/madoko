@@ -164,7 +164,7 @@ function texCommandClass( cap : matched, context : texContext ) : string {
 }
 
 function texAttribute( cap : matched, context : texContext ) : string {
-  "[]{" + cap.groups[1] + "='" + cap.groups[2] + "'}"
+  "[]{" + cap.groups[1] + "=\"" + cap.groups[2] + "\"}"
 }
 
 function texIgnore( cap : matched, context : texContext ) : string {
@@ -193,7 +193,7 @@ function texCode( cap : matched, context : texContext ) : string {
 
 function texUrl( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
-  if (txt=="") then "" else ("[" + txt + "](" + txt + ")")
+  if (txt=="") then "" else ("[" + txt + "](<" + txt + ">)")
 }
 
 function texUrlPrefix( cap : matched, context : texContext ) : string {
@@ -203,11 +203,11 @@ function texUrlPrefix( cap : matched, context : texContext ) : string {
 
 function texDoi( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
-  if (txt=="") then "" else ("doi:[" + txt + "](http://dx.doi.org/" + txt + ")")
+  if (txt=="") then "" else ("doi:[" + txt + "](<http://dx.doi.org/" + txt + ">)")
 }
 
 function texBibinfo( cap : matched, context : texContext ) : string {
-  "[" + cap.groups[2].parseTexX(context) + "]{ .bibinfo field='" + cap.groups[1].unbrace + "'}"
+  "[" + cap.groups[2].parseTexX(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
 }
 
 function texDquot( cap : matched, context : texContext ) : string {
@@ -283,10 +283,10 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
 
   //trace("bibitem: lab: " + labx + " -> " + lab)
-  "~ Begin Bibitem { id='" + key.definitionId + "' " + 
-                  (if (lab=="") then "" else "cite-label='" + lab + "' " ) +
-                  (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label='" + lab + "' " else "") +
-                   "caption='" + caption + "' searchterm='" + search + "' " +
+  "~ Begin Bibitem { id=\"" + key.definitionId + "\" " + 
+                  (if (lab=="") then "" else "cite-label=\"" + lab + "\" " ) +
+                  (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label=\"" + lab + "\" " else "") +
+                   "caption=\"" + caption + "\" searchterm=\"" + search + "\" " +
                   "}\n" +
    md + 
    "\n~ End Bibitem\n"
