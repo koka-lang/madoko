@@ -3519,13 +3519,13 @@ var symbolsMath = [
         text="Bibliography: " + name;
       }
       else if (ext===".bst") {
-        text="Bib Style   : " + Util.stemname(name);
+        text="Bib Style   : " + name;
       }
       else if (ext===".cls") {
-        text="Doc Class   : " + Util.basename(name);
+        text="Doc Class   : " + name;
       }
       else if (ext===".sty" || ext===".tex") {
-        text="Package     : " + Util.stemname(name);
+        text="Package     : " + name;
       }
       else {
         Util.message( "unsupported drop file extension: " + ext, Util.Msg.Info );
