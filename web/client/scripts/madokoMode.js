@@ -35,7 +35,7 @@ var madokoMode = {
       metadata: [
         'Title','Subtitle','Author','Affiliation','Email','Toc Depth','Heading Depth',
         'Heading Base','Section Depth','Section Base','Bib','Bibliography',
-        'Bib Style','Biblio Style','Cite Style','Cite All',
+        'Bib Style','Biblio Style','Bibliography Style','Cite Style','Cite All','Bib Search Url',
         'Bibtex','Pdf Latex',
         'Copyright','License','Keywords','Comment','Revision','Address','Phone',
         'Css','Script','Html Header','Html Footer','Html Meta',
