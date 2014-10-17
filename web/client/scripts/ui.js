@@ -2057,7 +2057,7 @@ var UI = (function() {
     var text = self.getEditText();
     var res = reformatText( pos.lineNumber, text );
     if (res) {
-      var rng = new Range.Range( res.startLine, 0, res.endLine, res.endColumn );
+      var rng = new Range.Range( res.startLine, 1, res.endLine, res.endColumn );
       var command = new ReplaceCommand.ReplaceCommand( rng, res.text );
       self.editor.executeCommand("madoko",command);
       self.editor.setPosition(pos);
