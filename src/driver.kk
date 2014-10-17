@@ -165,6 +165,11 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     val bibAux = outName.appendStem("-bib").changeExt(".aux")
     val bibChanged =
       if (logs == "") then False else {
+        if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
+          // copy bst file
+          tryCopyTextFileFromTo( mopts.bibStyle.basename, mopts.bibStyle.dirname, outName.dirname )
+          ()          
+        }
         val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
         // write the log to an aux file (one for latex, and one to track changes)
         writeCitations( logs, bibData, outName.changeExt(".aux"), inName, mopts, False )
@@ -316,7 +321,7 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
 function writeCitations( auxData : string, bibData : string, auxName : string, docName : string, opts : options, required : bool ) : io bool {
-  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle else "plainnat"
+  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle.noext else "plainnat"
       
   val oldData = readTextFileDef(auxName,"",required)
   val initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")

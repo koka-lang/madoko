@@ -39,7 +39,12 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       if (value!="") log("files", value.changeExt(".bib"))
       options(bib=if (value=="") then "" else options.bib + ";" + value);
     }
-    elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") options(bibStyle=value)
+    elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") {
+      if (value.extname!="" || value.dirname!="") {
+        log("filesRefer", if (value.extname=="") then value.changeExt(".bst") else value)
+      }
+      options(bibStyle=value)
+    }
     elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
     elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader + "\n" + value)
     elif (key=="html-footer") options(htmlFooter=if(value=="") then "" else options.htmlFooter + "\n" + value)
