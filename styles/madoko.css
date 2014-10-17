@@ -84,7 +84,7 @@ a.localref:hover {
 }
 
 /* Abstract */
-.abstract>p:before {
+.abstract>p:first-child:before {
   content: "Abstract. ";
   font-weight: bold;
 }
