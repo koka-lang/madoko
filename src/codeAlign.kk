@@ -148,7 +148,7 @@ function makeRow( acols : list<int>, line : string, lineCols : list<int>, sep : 
          " line:\n" + line + "\n" +
          " parts:\n  " + 
            parts1.map(fun(p) { p.fst.show + ": " + p.snd }).join("\n  "))
-  */          
+  */           
   val rxEndSpaces = regex( string(sep,' ') + "$")
   alignParts( acols, parts1, rxEndSpaces  )
 }
@@ -167,13 +167,14 @@ function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces 
       val ccells = if (text.isWhite) 
        then {
          val pre = string(col,' ')
-         val ws = splitColumns( pre + text, col, spanCols )
-         ws.map( fun(w) { Ccell(1,False,w.snd) })
+         val ws = splitColumns( pre + text, col, spanCols )         
+         ws.mapIndexed( fun(i,w) { Ccell(1,False, if (i+1 < span) then " " else w.snd ) }) // this is for better spacing in latex
        }
        else {
          val stext = text.replace(rxEndSpaces," ")
          [Ccell(span,False,stext)]  
        }
+      
       ccells + alignParts(afterCols, rest, rxEndSpaces)
     }
   }

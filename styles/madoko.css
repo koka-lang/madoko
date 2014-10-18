@@ -359,14 +359,9 @@ div.input-mathpre {
 }
 .madoko .pretty td.empty {
   min-width: 1.5ex;
-  max-width: 1.5ex;
-  width: 0ex;
 }
-.madoko .pretty td:last-child {
+.madoko .pretty td.expander {
   width: 100em;
-}
-.madoko .pretty td.empty:last-child {
-  width: 1ex;
 }
 .madoko .pretty .token.identifier         { font-style: italic }
 .madoko .pretty .token.constructor        { font-style: italic }

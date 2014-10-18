@@ -81,7 +81,7 @@ public function fmtTexCodeHilite( context : inlineContext, txt : string, startLi
 }
 
 function unTokenize( txt : string, startLine : bool ) : string {
-  var nl := startLine
+  var nl := True // startLine
   txt.replaceAll(rxTagged, fun(cap) {
         if (cap.groups.matchedOn(1)) {
           val res = cap.matched.texText.preSpace(nl)
@@ -178,7 +178,7 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
 
 public function fmtTexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
   val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
-  "\\begin{mdCode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + list(1,ct.columns).map(fun(_) {"l"}).join() + "}\n" +
+  "\\begin{mdCode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
     ct.rows.map( fun(row) { row.map(fmtTexCodeCell).join("&") }).join("\\\\\n") +
   "\n\\end{mdCodeTable}\n"
 }

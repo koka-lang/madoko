@@ -5,11 +5,11 @@ Doc Class   : article
 
 ~Pre        : replace=//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g 
 ~Pre,~Code  : .pretty
-.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" replace="/([a-zA-Z])(\d+)\b/\(\1~\2~\)/g"
+.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
 
 <style>
-.xpretty td {
-  border: 1px solid black;
+.pretty td {
+  border: 1px dotted black;
 }
 .xpretty .token {
   color: black !important;
@@ -47,8 +47,8 @@ data Exp   =  Number     Int
            |  Variable   String        -- added
            deriving (Eq)
 
-substitute1  :: (String, Int) -> Exp -> Exp
-substitute1  (var, val) exp = subst exp where
+substitute1 :: (String, Int) -> Exp -> Exp
+substitute1 (var, val) exp = subst exp where
   subst (Number i)       =  Number i
   subst (Add a b)        =  Add (subst a) (subst b)
   subst (Subtract a b)   =  Subtract (subst a) (subst b)
@@ -60,8 +60,8 @@ substitute1  (var, val) exp = subst exp where
 ```          
 
 ``` Html 
-<span>  test</span>
-<span>  aligned</span> &amp;
+<span>test     </span>
+<span>aligned  </span> &amp;
 ```
 
 ``` Haskell  
@@ -97,5 +97,68 @@ rep_alg         =  (  \_          -> \m ->  Leaf m
 replace_min’ t  =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
 ```
 
+``` koka
+// source effectful code
+function map(xs, f) {
+  match(xs) {
+    Nil -> Nil
+    Cons(y, ys) ->
+      val z   = f(y)
+      val zs  = map(ys, f)
+      Cons(z, zs)
+  }
+}
 
+function xor() {
+  val [p,q] =
+    map( [1,2], fun(_) { flip() } )
 
+  (p||q) && not(p&&q)
+}
+
+```
+
+``` koka
+// translated monadic code
+function map(d:dict<e>, xs, f) {
+  match(xs) {
+    Nil -> d.unit(Nil)
+    Cons(y, ys) ->
+      d.bind( f(y), fun(z) {
+        d.bind( map(ys, f), fun(zs) {
+          d.unit(Cons(z, zs)
+  })})}
+}
+
+function xor() {
+  dict_amb.bind( 
+    map( dict_amb, [1,2], fun(_) { flip() } ),
+    fun([p,q]) {
+      dict_amb.unit( (p||q) && not(p&&q) )
+    })
+}
+```
+
+``` koka
+function parse( p : () -> 〈parser|e〉 a, input : string ) : e list〈(a,string)〉 {
+    from_parser(p)(input)
+}
+
+function succeed( x : a ) : parser a { to_parser fun(input) { [(x,input)] }
+
+function satisfy( pred : (string) -> maybe〈(a,string〉) ) : 〈parser〉 a {
+    to_parser fun(input) {
+        match(pred(input)) {
+            Just((x,rest))  -> [(x,rest)]
+            Nothing         -> []
+    }}
+}
+
+function choice( p1 : () → 〈parser|e〉 a, p2 : () -> 〈parser|e〉 a ) : 〈parser|e〉 a {
+    to_parser fun(input) {
+        match (parse(p1,input)) {
+            Nil -> parse(p2,input)
+            res -> res
+    }}
+}
+```
