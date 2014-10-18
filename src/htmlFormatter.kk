@@ -148,7 +148,7 @@ public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : stri
   txt.escapePre  
 }
 
-public function fmtHtmlCodeHilite( context : inlineContext, txt : string ) : (string) 
+public function fmtHtmlCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
   txt.replaceAll(rxEndSpaces," ")
 }

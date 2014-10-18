@@ -14,6 +14,12 @@ Doc Class   : article
 .xpretty .token {
   color: black !important;
 }
+
+.pretty.lang-koka .token.keyword {
+  color: black;
+  font-weight: bold;
+  font-family: corbel,sans-serif;
+}
 </style>
 
 
@@ -21,15 +27,24 @@ Doc Class   : article
 [TITLE]
 [TOC]
 
+Pretty koka:
+
+``` koka {.pretty}
+function test( xs : list<int> ) {
+  xs.map fun(x) { x*x }
+  if (xs.length==0) then 1 else xs.sum()
+}
+```
+
 Here is some `haskell code do`{language=haskell}, and here some more:
 
 ``` haskell  
-data Exp   =  Number    Int
-           |  Add       Exp Exp
-           |  Subtract  Exp Exp
-           |  Multiply  Exp Exp
-           |  Divide    Exp Exp
-           |  Variable  String        -- added
+data Exp   =  Number     Int
+           |  Add        Exp Exp
+           |  Subtract   Exp Exp
+           |  Multiply   Exp Exp
+           |  Divide     Exp Exp
+           |  Variable   String        -- added
            deriving (Eq)
 
 substitute1  :: (String, Int) -> Exp -> Exp
@@ -81,3 +96,6 @@ rep_alg         =  (  \_          -> \m ->  Leaf m
                    )
 replace_min’ t  =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
 ```
+
+
+

@@ -101,6 +101,7 @@
       
       
       ["@symbols", { "cases": { "\\-": "operator.minus",
+                              "\\.": "keyword",
                               "@keywords": "keyword.operator",
                               "@extraKeywords": "keyword.operator",
                               "@default": "operator" }}

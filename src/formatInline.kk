@@ -322,9 +322,9 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
     context.fmtCodeEscaped(txt,colorize,attrs).fst   // possibly tokenize with colors, and process escapes     
   }
 
-  function codeUnescape( ecode : string ) : string {
+  function codeUnescape( ecode : string, col : int ) : string {
     fmtCodeUnescape( ecode, fun(s) { 
-      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s)
+      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s, col==0)
     })
   }
 
@@ -335,7 +335,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
         val ct = codeAlign(codeEscape(txt),context.prettyAlign).map( codeUnescape )
         context.fmtCodeTable(ct,cattrs)
       }
-      else codeUnescape(codeEscape(txt)) // todo: optimize the escape/unescape path?
+      else codeUnescape(codeEscape(txt), 0) // todo: optimize the escape/unescape path?
 
   if (env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))

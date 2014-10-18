@@ -52,8 +52,8 @@ public function foldCodeTable( ct : codeTable, st : a, f : (string,a) -> (string
   ct( rows = foldRows(ct.rows,st ).fst )
 }
 
-public function map( ct : codeTable,  f : (string) -> string ) : codeTable {
-  ct( rows = ct.rows.map( fun(row) { row.map( fun(ccell) { ccell(content = f(ccell.content)) }) }) )
+public function map( ct : codeTable,  f : (string,int) -> string ) : codeTable {
+  ct( rows = ct.rows.map( fun(row) { row.mapIndexed( fun(idx,ccell) { ccell(content = f(ccell.content,idx)) }) }) )
 }
 
 public function show( ct : codeTable ) : string {

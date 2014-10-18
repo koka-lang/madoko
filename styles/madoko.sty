@@ -593,10 +593,10 @@
 \cssClassRule{pretty}{font-family=\mdPrettyFont}
 \cssClassRuleDo{pretty}{\def\@tokenPostfix{Pretty}}
 
-\newlength{\@presp}
-\settowidth{\@presp}{\texttt{ }}
-\newcommand{\prespace}[1]{\hspace*{#1\@presp}}
-\newcommand{\preindent}[1]{\hspace*{#1\@presp}}
+\newlength{\presp}
+\settowidth{\presp}{\texttt{ }}
+\newcommand{\prespace}[1]{\hspace*{#1\presp}}
+\newcommand{\preindent}[1]{\hspace*{#1\presp}}
 \newcommand{\prebr}{\strut\\}
 
 
@@ -622,9 +622,9 @@
 }
 
 \newlength{\ppresp}
-\setlength{\ppresp}{0.5ex}
+\setlength{\ppresp}{0.8ex}
 \newcommand{\ppreindent}[1]{\hspace*{#1\ppresp}}
-\newcommand{\pprespace}[1]{\hspace*{\ppresp}}
+\newcommand{\pprespace}[1]{\hspace*{0.5ex}}
 \newcommand{\pprebr}[1]{ }
 
 
