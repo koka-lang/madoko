@@ -4,8 +4,12 @@ author note : &time;
 Doc Class   : article
 
 ~Pre        : replace=//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g 
-~Pre,~Code  : .pretty
+~Pre,~Code  		: .pretty
+.pre-indented: .pretty language=koka
+.code2      : language=haskell
 .pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
+.language-koka: replace="/\/\/(.*)/\(\/\/|&emsp;&fslash;&fslash;\1\)/g"
+.language-haskell: replace="/(?=--)/\(|&emsp;\)/g"
 
 <style>
 .pretty td {
@@ -29,14 +33,12 @@ Doc Class   : article
 
 Pretty koka:
 
-``` koka {.pretty}
-function test( xs : list<int> ) {
-  xs.map fun(x) { x*x }
-  if (xs.length==0) then 1 else xs.sum()
-}
-```
+	function test( xs : list<int> ) {
+	  xs.map fun(x) { x*x }
+	  if (xs.length==0) then 1 else xs.sum() // test
+	}
 
-Here is some `haskell code do`{language=haskell}, and here some more:
+Here is some ``haskell data List``, and `module Hi`{language=haskell} and here some more:
 
 ``` haskell  
 data Exp   =  Number     Int
