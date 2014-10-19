@@ -46,7 +46,7 @@ function applyRules(p : peano, defaults : dict<string>, attrs : attrs, dv : (str
 }
 
 function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool> = dict(), extra : list<string> = [] ) : (string, dict<bool>) {
-  val keys0 = attrs.classes.map( fun(cname) { "." + cname.definitionId } ) + extra
+  val keys0 = extra + attrs.classes.map( fun(cname) { "." + cname.definitionId } ) 
   val keys1 = keys0.filter( fun(key) { visited[key].isNothing } )
   val visited1 = visited + keys1.map( fun(key) { (key,True) } ).dict
   val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(string).join(" ")
