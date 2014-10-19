@@ -284,9 +284,10 @@ function inlineCode( cap : matched, context ) : string {
   val txt  = if (txt0.endsWith("` ")) then txt1.substr(0,txt1.length-1) else txt1
   val attrs = if (cap.groups.matchedOn(3)) 
                then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone 
-  if (context.bench || cap.groups[1].length > 1)
+  if (context.bench)
    then context.fmtCode( "",txt,attrs)
-   else context.fmtSpan( txt, attrs.addClass("code") ) // can be overridden by the user
+   else context.fmtSpan( txt,  // can be overridden by the user
+          attrs.addClasses(["code","code" + cap.groups[1].length.show])) 
 }
 
 public function fmtCode( context : inlineContext, env0 : string, txt : string, attrs0 : attrs = attrsNone ) : string {
