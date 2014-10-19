@@ -182,7 +182,9 @@ function blockHeadingLine( cap : matched, context : blockContext ) : block {
 }
 
 function blockCode( cap : matched, context ) : block  {
-  Code(cap.groups[1].replaceAll(rxindent4,""))
+  val source = cap.groups[1].replaceAll(rxindent4,"")
+  Code(source, "", 
+          if (!(context.pedantic || context.bench)) then attrsNone.addClass("pre-indented") else attrsNone)
   //if (context.bench)
   // then Code(cap.groups[1].replaceAll(rxindent4,"")) 
   // else Div([], parseAttrs("","pre",cap.groups[1].replaceAll(rxindent4,"")))
@@ -191,7 +193,7 @@ function blockCode( cap : matched, context ) : block  {
 function blockFencedCode( cap : matched, context : blockContext ) {
   val attrs = cap.groups[3].parseAttrs
   Code(cap.groups[4], cap.groups[2], 
-        if (!(context.pedantic || context.bench)) then attrs.addClass("fenced") else attrs)
+        if (!(context.pedantic || context.bench)) then attrs.addClass("pre-fenced") else attrs)
 }
 
 function blockQuote( cap : matched, context : blockContext ) : block {
