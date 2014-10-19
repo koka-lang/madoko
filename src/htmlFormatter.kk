@@ -89,7 +89,7 @@ function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
     tag("tr", row.mapIndexed( fun(i,cell) {
                 val expander = if (row.length==i+1) then " expander" else ""
                 if (cell.content.isHtmlWhite) {
-                  list(1,cell.span).map(fun(i) {
+                  list(1,cell.span).map(fun(_i) {
                     tag("td","&nbsp;"," class='empty'")
                   }).join()
                 }
