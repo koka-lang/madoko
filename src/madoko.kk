@@ -104,7 +104,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
          ((options.title+options.scripts+options.htmlHeader+options.texHeader)!=""
           || options.css.splitPaths.length > 1 
           || options.packages.splitPaths.length > 1))
-     then True else options.full.maybe(False,id) 
+     then True else options.full.maybe(True,id) 
 
   val res = if (xfull) 
              then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options,fcontext.inlineContext.metadata)
