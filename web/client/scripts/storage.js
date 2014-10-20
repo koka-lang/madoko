@@ -411,6 +411,7 @@ var Storage = (function() {
     self.files     = new Map();
     self.listeners = [];
     self.unique    = 1;
+    self.storageId = Util.randomHash8();
     // we only pull again from remote storage every minute or so..
     self.pullFails = new Map();
     self.pullIval  = setInterval( function() { 

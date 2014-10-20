@@ -1622,6 +1622,7 @@ doc.execCommand("SaveAs", null, filename)
     urlParamsDecode: urlParamsDecode,
   
     getAppVersionInfo: getAppVersionInfo,
+    randomHash8      : randomHash8,
 
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,

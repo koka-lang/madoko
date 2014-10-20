@@ -75,6 +75,7 @@ var Runner = (function() {
       Util.message(res.message, Util.Msg.Tool );
     }
     if (res.err) return Promise.rejected( res.err );
+    if (!self.storage || ctx.storageId !== self.storage.storageId) return Promise.rejected(new Error("stale request"));
     
     if (ctx.showErrors) {
       ctx.message = self.showLatexMessages(res.stdout, ctx.showErrors, ctx.docname);
@@ -160,6 +161,7 @@ var Runner = (function() {
       options: options || self.options,
       files  : self.sendFiles.elems(),      
     };
+    ctx.storageId = self.storage.storageId;
     self.sendFiles.clear();
     return self.madokoWorker.postMessage( msg, 30000 ).then( function(res) {
       if (res.timedOut) {
@@ -172,10 +174,11 @@ var Runner = (function() {
   Runner.prototype.runMadokoLocal = function(docName,text) 
   {
     var self = this;
-    var ctx = { round: -1, includeImages: true, docname: docName };
+    var ctx = { round: -1, includeImages: true, docname: docName, storageId: self.storage.storageId };
     var options = Util.copy(self.options);
     options.lineNo = 0;
     return self.runMadoko( text, ctx, options ).then( function(res) {
+      if (!self.storage || ctx.storageId !== self.storage.storageId) throw new Error("stale request");
       if (res.runAgain) {
         ctx.round = -2;
         return self.runMadoko( text, ctx, options ). then( function(res2) {
@@ -242,28 +245,33 @@ var Runner = (function() {
       });
     }
     var t0 = Date.now();
+    var sid = self.storage.storageId;
     return Util.requestPOST( "/rest/run", {}, params).then( function(data) {
-      var time = (Date.now() - t0).toString() + "ms";
-      Util.message(data.stdout + data.stderr, Util.Msg.Tool);      
-      data.files.forEach( function(file) {
-        Util.message("server sent: " + file.path, Util.Msg.Trace );
-        if (self.storage) {
+      if (!self.storage || self.storage.storageId !== sid) {
+        ctx.errorCode = 1;
+        ctx.message = "stale request";
+      }
+      else {
+        var time = (Date.now() - t0).toString() + "ms";
+        Util.message(data.stdout + data.stderr, Util.Msg.Tool);      
+        data.files.forEach( function(file) {
+          Util.message("server sent: " + file.path, Util.Msg.Trace );
           self.storage.writeFile( file.path, file.content, {
             encoding: file.encoding,
             mime: file.mime,
             nosync: (Util.extname(file.path) === ".log" ? true : false),
           });
-        }        
-      });
-      if (ctx.showErrors) {
-        ctx.message = self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors, ctx.docname);
-      }
-      Util.message( "server update: " + ctx.round + "\n  time: " + time, Util.Msg.Info );
-      if (/^[\t ]*error\b[\w \t]+:/m.test(data.stdout + data.stderr)) {
-        ctx.errorCode = 1;
-      }
-      else {
-        ctx.errorCode = 0;
+        });
+        if (ctx.showErrors) {
+          ctx.message = self.showLatexMessages(data.stdout + data.stderr, ctx.showErrors, ctx.docname);
+        }
+        Util.message( "server update: " + ctx.round + "\n  time: " + time, Util.Msg.Info );
+        if (/^[\t ]*error\b[\w \t]+:/m.test(data.stdout + data.stderr)) {
+          ctx.errorCode = 1;
+        }
+        else {
+          ctx.errorCode = 0;
+        }
       }
       return ctx.errorCode;
     });
