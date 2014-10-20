@@ -1231,7 +1231,19 @@ doc.execCommand("SaveAs", null, filename)
 --------------------------------------------------------------------------------------------------*/
 
   function getDocumentOffset(elem) {
-    var box = elem.getBoundingClientRect()
+    var box;
+    if (elem.getBoundingClientRect) {
+      box = elem.getBoundingClientRect();
+    }
+    else if (elem.offsetParent && elem.offsetParent.getBoundingClientRect) {
+      // text node
+      box = elem.offsetParent.getBoundingClientRect();
+      box.top = box.top + elem.offsetTop;
+      box.left = box.left + elem.offsetLeft;
+    }
+    else {
+      box = { top: 0, left : 0 };
+    }
     
     var body = document.body
     var docElem = document.documentElement

@@ -3798,10 +3798,10 @@ var symbolsMath = [
       }
       else { // if (cursorLine < startLine || cursorLine > endLine) {   // not a visible cursor?
         // use the middle of the viewed ranged
-        lineNo = startLine + ((endLine - startLine + 1)/2);
+        lineNo = Math.round(startLine + ((endLine - startLine + 1)/2));
       }
       // exit quickly if same line
-      if (lineNo === self.lastLineNo && !options.force) return false;
+      if (lineNo === self.lastLineNo && lineNo !== endLine && !options.force) return false;
       self.lastLineNo = lineNo;
 
       // use physical textline; 

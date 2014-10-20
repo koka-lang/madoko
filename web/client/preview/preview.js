@@ -42,9 +42,32 @@ var Preview = (function() {
     return null;
   }
 
+  function findElemAfterOffset( root, offset ) {
+    var current = null;
+    var currentDiff = Math.abs(root.offsetTop - offset);
+    var elem = root.firstElementChild;
+    while (elem) {
+      if (elem.offsetTop != null) {
+        var diff = elem.offsetTop - offset;
+        if (diff >= 0  && diff < currentDiff) {
+          current = elem;
+          currentDiff = diff;
+        }
+      }
+      elem = elem.nextElementSibling;
+    }
+    return (current ? findElemAfterOffset( current, offset ) : root);
+  }
+
   document.body.ondblclick = function(ev) {
     if (typeof(Reveal) !== "undefined" && /\bnavigate-/.test(ev.target.className) && /\bcontrols\b/.test(ev.target.parentNode.className)) return; // don't count double clicks on controls in presentations
-    var res = findLocation(document.body,ev.target);
+    // var elem = findElemFromOffset( document.body, ev.pageY );    
+    var res = findLocation(document.body,ev.srcElement);
+    if (!res) {
+      // try to find the element before it..
+      var elem = findElemAfterOffset(document.body, ev.pageY);
+      res = findLocation(document.body,elem);
+    }
     if (res) {
       ev.preventDefault();
       res.eventType = 'previewSyncEditor';
@@ -57,8 +80,25 @@ var Preview = (function() {
   /*-------------------------------------------------------
      Scrolling and offset calculations
   -------------------------------------------------------*/  
+  function getWindowOffset(elem) {
+    var box;
+    if (elem.getBoundingClientRect) {
+      box = elem.getBoundingClientRect();
+    }
+    else if (elem.offsetParent && elem.offsetParent.getBoundingClientRect) {
+      // text node
+      box = elem.offsetParent.getBoundingClientRect();
+      box.top = box.top + elem.offsetTop;
+      box.left = box.left + elem.offsetLeft;
+    }
+    else {
+      box = { top: 0, left : 0 };
+    }
+    return box;
+  }
+
   function getDocumentOffset(elem) {
-    var box = elem.getBoundingClientRect()
+    var ofs = getWindowOffset(elem);
     
     var body = document.body
     var docElem = document.documentElement
@@ -69,8 +109,8 @@ var Preview = (function() {
     var clientTop = docElem.clientTop || body.clientTop || 0
     var clientLeft = docElem.clientLeft || body.clientLeft || 0
     
-    var top  = box.top +  scrollTop - clientTop
-    var left = box.left + scrollLeft - clientLeft
+    var top  = ofs.top +  scrollTop - clientTop
+    var left = ofs.left + scrollLeft - clientLeft
     
     return { top: Math.round(top), left: Math.round(left) }
   } 
@@ -150,7 +190,11 @@ var Preview = (function() {
 
   function findNextElement(root,elem) {
     if (elem == null || elem === root) return elem;
-    if (elem.nextSibling) return elem.nextSibling;
+    if (elem.nextSibling) {
+      elem = elem.nextSibling;
+      while( elem.firstChild ) { elem = elem.firstChild; }
+      return elem;
+    }
     return findNextElement(root,elem.parentNode);
   }
 
@@ -159,9 +203,9 @@ var Preview = (function() {
     var elems = document.querySelectorAll( selector );
     if (!elems) elems = [];
 
-    var currentLine = line;
+    var currentLine = 0;
     var current = elems[0];
-    var nextLine = line;
+    var nextLine = lineCount+1;
     var next = null;
     for(var i = 0; i < elems.length; i++) {
       var elem = elems[i];
@@ -173,11 +217,11 @@ var Preview = (function() {
         } 
         var cline = parseInt(dataline);
         if (!isNaN(cline)) {
-          if (cline <= line) {
+          if (cline <= line && cline >= currentLine) {
             currentLine = cline;
             current = elems[i];
           }
-          if (cline > line) {
+          if (cline > line && cline < nextLine) {
             nextLine = cline;
             next = elems[i];
             break;
