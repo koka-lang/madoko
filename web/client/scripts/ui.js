@@ -504,7 +504,7 @@ var UI = (function() {
               self.editFile( fileName );
             }
           }
-        });
+        }, [State.Syncing,State.Exporting]);
       }
     });
 
@@ -589,7 +589,7 @@ var UI = (function() {
         else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
           return self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
         }
-      }, [State.Syncing]);
+      }, [State.Syncing,State.Exporting]);
     }, false);
 
     // Buttons and checkboxes
@@ -788,10 +788,10 @@ var UI = (function() {
               else {
                 return self.editFile(path);            
               }
-            });
+            }, [State.Syncing,State.Exporting]);
           }
         }
-      }, [State.Syncing]);
+      });
     };
 
     function messageDblClick(ev) {
@@ -820,7 +820,7 @@ var UI = (function() {
             }
           }
         }
-      }, [State.Syncing]);
+      }, [State.Syncing,State.Exporting]);
     }
 
     document.getElementById("console-out").ondblclick = messageDblClick;
@@ -1521,7 +1521,7 @@ var UI = (function() {
   UI.prototype.editFile = function(fpath,pos) {
     var self = this;
     var loadEditor;
-    self.state = State.Loading;            
+    //self.state = State.Loading;            
     if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
             self.hideDecorations();
@@ -1555,9 +1555,10 @@ var UI = (function() {
       }
       self.showDecorations();
       self.showConcurrentUsers(false);
-    }).always( function() { 
-      self.state = State.Normal; 
-    });    
+    }); 
+    // .always( function() { 
+    //   self.state = State.Normal; 
+    // });    
   }
 
   UI.prototype.localLoad = function() {
