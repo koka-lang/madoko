@@ -830,7 +830,11 @@ var UI = (function() {
       self.synchronize();
     }
 
-
+    document.getElementById("view-sync").onclick = function(ev) {
+      self.anonEvent( function() {
+        self.dispatchViewEvent( { eventType: "viewSync" });
+      });
+    }
 
     
     // narrow and wide editor panes

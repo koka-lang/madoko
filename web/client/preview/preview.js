@@ -76,6 +76,17 @@ var Preview = (function() {
     }
   };
 
+  function viewSynchronize() {
+    var offset = window.pageYOffset + (window.innerHeight/2);
+    var elem = findElemAfterOffset(document.body, offset);
+    var res = findLocation(document.body,elem);
+    if (res) {
+      res.eventType = "previewSyncEditor";
+      window.parent.postMessage( JSON.stringify(res), origin);
+      console.log('posted: ' + JSON.stringify(res));
+    }
+  }
+
 
   /*-------------------------------------------------------
      Scrolling and offset calculations
@@ -534,6 +545,9 @@ var Preview = (function() {
     }
     else if (info.eventType==="view") {
       document.body.setAttribute("data-view",info.view);
+    }
+    else if (info.eventType==="viewSync") {
+      viewSynchronize();
     }
   });
 
