@@ -44,12 +44,12 @@ var Preview = (function() {
 
   function findElemAfterOffset( root, offset ) {
     var current = null;
-    var currentDiff = Math.abs(root.offsetTop - offset);
+    var currentDiff = Math.abs(getDocumentOffset(root).top - offset);
     var elem = root.firstElementChild;
     while (elem) {
-      if (elem.offsetTop != null) {
-        var diff = elem.offsetTop - offset;
-        if (diff >= 0  && diff < currentDiff) {
+      if (elem.offsetTop != null && elem.clientHeight > 0) {
+        var diff = Math.abs(getDocumentOffset(elem).top - offset);
+        if (diff < currentDiff) {
           current = elem;
           currentDiff = diff;
         }
@@ -77,9 +77,16 @@ var Preview = (function() {
   };
 
   function viewSynchronize() {
-    var offset = window.pageYOffset + (window.innerHeight/2);
-    var elem = findElemAfterOffset(document.body, offset);
-    var res = findLocation(document.body,elem);
+    var res;
+    if (typeof(Reveal) !== "undefined") {
+      var slide = Reveal.getCurrentSlide();
+      res = findLocation( getSlidesElem(), slide );
+    }
+    else {
+      var offset = window.pageYOffset + (window.innerHeight/2);
+      var elem = findElemAfterOffset(document.body, offset);
+      res = findLocation(document.body,elem);
+    }
     if (res) {
       res.eventType = "previewSyncEditor";
       window.parent.postMessage( JSON.stringify(res), origin);
