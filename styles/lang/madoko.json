@@ -21,6 +21,18 @@
   "jsescapes":  "\\\\(?:[btnfr\\\\\"']|[0-7][0-7]?|[0-3][0-7]{2})",
   
   "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))[\\w\\-\\.#~]*( +?[\\w\\-]+){0,2}\\\\*?\\*?) *[:]",  
+
+  "metadata": [
+    "Title","Subtitle","Author","Affiliation","Email","Toc Depth","Heading Depth",
+    "Heading Base","Section Depth","Section Base","Bib","Bibliography",
+    "Bib Style","Biblio Style","Bibliography Style","Cite Style","Cite All","Bib Search Url",
+    "Bibtex","Pdf Latex",
+    "Copyright","License","Keywords","Comment","Revision","Address","Phone",
+    "Css","Script","Html Header","Html Footer","Html Meta",
+    "Math Mode","Math Embed","Math Dir","Math Dpi","Math Scale",
+    "Latex","Convert","Dvipng","Math Pdf Latex","MathJax","MathJax Ext",
+    "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*"
+  ],
   
   
   "empty": [
@@ -34,23 +46,27 @@
       ["(?!^)[\\w\\s\\(\\)\\-,\\.?;]+",""],
       
       
-      ["^(@metakey)", { "token": "namespace.metadata.key", "next": "metadata" } ],
+      ["^@metakey", { "cases": {
+        "$2@metadata": { "token": "namespace.metadata.key", "next": "metadata" },
+        "$3": { "token": "namespace.metadata.key", "next": "metadata" },
+        "@default": { "token": "" } 
+      }}],
       
       
-      ["^(\\s{0,3})(#+)((?:[^\\\\\\{]|@escapes)+)", ["white","keyword.$1","keyword.$1"]],
+      ["^(\\s{0,3})(#+)((?:[^\\\\\\{]|@escapes)+)", ["white","keyword.heading.$1","keyword.heading.$1"]],
       ["^\\s{0,3}(=+|\\-+)\\s*$", "keyword.header"],      
       ["^\\s{0,3}((\\*[ ]?)+)\\s*$", "keyword.header"],
-      ["^\\s{0,3}(~+)\\s*(?:begin\\s+(\\w+)\\s*|end\\s+(\\w+)\\s*|(\\w+)\\s*)?(?=(?:\\{[^}]+\\}\\s*)?$)", {
+      ["^\\s{0,3}(~+)\\s*(?:begin\\s+([\\w\\-]+)\\s*|end\\s+([\\w\\-]+)\\s*|([\\w\\-]+)\\s*)?(?=(?:\\{[^}]+\\}\\s*)?$)", {
         "cases": {
           "$2": { "token": "keyword.header.custom.$2", "bracket": "@open" },
           "$3": { "token": "keyword.header.custom.$3", "bracket": "@close" },
-          "$4~(equation|texraw|snippet)": { "token": "keyword.header.custom.$1", "bracket": "@open", "next": "@latexblock.$1" },
+          "$4~(equation|texraw|math|mathpre|mathdefs)": { "token": "keyword.header.custom.$1", "bracket": "@open", "nextEmbedded": "text/latex", "next": "@xlatexdisplay.$1" },
           "$4": { "token": "keyword.header.custom.$1", "bracket": "@open" },
           "@default": { "token": "keyword.header.custom.$1", "bracket": "@close" }
         }}],      
       
       ["^\\s{0,3}>+", "string.quote" ],  
-      ["^(\\t|[ ]{4})\\S.*$", { "token": "namespace.code", "next": "@codeblock" } ], 
+      ["^(\\t|[ ]{4}(?:\\S|\\s+\\S)*)(\\s*$)", ["namespace.code","invalid"], "@codeblock" ], 
       
       
       
@@ -89,23 +105,8 @@
       [".+", "string.escape" ]
     ],
     
-    
-    "latexblock": [
-      ["\\s*\\{[^\\}]*\\}", "string.escape" ],
-      [".", { "token": "@rematch", "switchTo": "@latexblockcontent.$S2" } ]      
-    ],
-    
-    "latexblockcontent": [
-      ["^\\s*(~+)\\s*$", { "cases": {
-        "$1==$S2": { "token": "keyword.header.custom.$1", "bracket": "@close", "next": "@pop" },
-        "@default": "code.latex" 
-      }}],
-      ["\\\\[a-zA-Z]+|\\\\.?", "code.keyword.latex" ],
-      ["[^\\\\]+", "code.latex" ]      
-    ],
-    
     "codeblock": [      
-      ["^(\\t|[ ]{4}).*$", "namespace.code" ], 
+      ["^((?:\\t|[ ]{4})(?:\\S|\\s+\\S)*)(\\s*)$", ["namespace.code","invalid"] ], 
       [".", { "token": "@rematch", "next": "@pop"} ]
     ],
 
@@ -118,12 +119,34 @@
         }},
         "@default": "namespace.code" 
       }} ],
+      ["\\s+$", "invalid"],
+      ["(?:\\S|\\s+\\S)+", "namespace.code" ],
       ["[^`]*$", "namespace.code" ]
     ],
     
     "codeblockghend": [
       ["\\s*```+", { "token": "keyword.header.codeblock", "bracket": "@close", "next": "@pop" } ],
       [".", "@rematch", "@pop"] 
+    ],
+    
+    "xlatexdisplay": [
+      ["^\\s*(~+)\\s*$", { "cases": {
+        "$1==$S2": { "token": "@rematch", "switchTo": "@xlatexdisplay_end", "nextEmbedded": "@pop" },
+        "@default": "" 
+      }}]      
+    ],
+    
+    "xlatexdisplay_end": [
+      ["^\\s*(~+)\\s*$", { "token": "keyword.header.custom.$1", "next": "@pop", "bracket": "@close" } ],
+      [".|$", { "token": "@rematch", "next": "@pop" } ]
+    ],
+    
+    "xlatexinline": [
+      ["\\$|$", { "token": "@rematch", "switchTo": "xlatexinline_end", "nextEmbedded": "@pop" } ]      
+    ],
+    
+    "xlatexinline_end": [
+      [".", { "token": "latex.inline", "bracket": "@close", "next": "@pop" } ]
     ],
     
     "linecontent": [      
@@ -136,17 +159,19 @@
       
       
       ["\\b__([^\\\\_]|@escapes|_(?!_))+__\\b", "strong"],
-      ["\\*\\*([^\\\\*]|@escapes|\\*(?!\\*))+\\*\\*", "strong"],
+      ["(\\*\\*)((?:[^\\\\*]|@escapes|\\*(?!\\*))+)(\\*\\*)", ["strong.open","strong","strong.close"]],
       ["\\b_[^_]+_\\b", "emphasis"],
       ["\\*([^\\\\*]|@escapes)+\\*", "emphasis"],
       ["(`)((?:[^`])+)(`)", ["","namespace.code",""] ],
-      ["(\\$)((?:[^\\\\$]|\\\\.)+)(\\$)", ["","namespace.code.latex",""] ],
+      ["\\$", { "token": "latex.inline", "next": "@xlatexinline", "nextEmbedded": "latex", "bracket": "@open", "log": "inline" } ],
       ["<<|>>", ""],
       
       
-      ["\\{[^}]+\\}", "string.escape"],
-      ["(!?\\[)((?:[^\\]\\\\]|@escapes)+)(\\]\\([^\\)]+\\))", ["string.link", "", "string.link" ]],
-      ["(!?\\[)((?:[^\\]\\\\]|@escapes)+)(\\])", "string.link"],          
+      ["(\\{)([^}]+)(\\})", ["@brackets.string.escape","string.escape","@brackets.string.escape"]],
+      ["(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])(\\([^\\)]+\\))", ["@brackets.link", "", "@brackets.link","string.link" ]],
+      ["(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])(\\{)([^\\}]+)(\\})", ["@brackets.link", "", "@brackets.link", "@brackets.string.escape","string.escape","@brackets.string.escape" ]],
+      ["(\\[)((?:INCLUDE\\b|TITLE\\b|BIB\\b)(?:[^\\]\\\\]|@escapes)*)(\\])", ["@brackets.open","link.special","@brackets.link"]],          
+      ["(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])", ["@brackets.link","string.link","@brackets.link"]],          
       
       
       { "include": "html" }
@@ -166,7 +191,8 @@
     
     
     "whitespace": [
-      ["[ ]{2}$", "invalid"],
+      ["[ \\t]{2}$", "invalid"],
+      ["^[ \\t]+$", "invalid"],
       ["[ \\t\\r\\n]+", "white"],
       ["<!--", "comment", "@comment"]
     ],

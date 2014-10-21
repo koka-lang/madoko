@@ -41,10 +41,11 @@ function createCustomMode(mode) {
 }
 
 var languages = [
-  "boogie","codehunt","csharp","dafny","haskell","html","java","koka","python","ruby","smt","javascript",
+  "bibtex","boogie","codehunt","csharp","dafny","haskell","html","java","koka","latex","python","ruby","smt","javascript",
 ];
 
 Util.requestGET("styles/lang/madoko.json").then(function(madokoMode,req) {
+  madokoMode.name = "text/madoko";
   createCustomMode(madokoMode); 
   Promise.when( languages.map( function(lang) { return Util.requestGET("styles/lang/" + lang + ".json") }) ).then( function(modes) {
     modes.forEach( createCustomMode );
@@ -246,6 +247,7 @@ var Editor = (function(_super) {
   Editor.prototype.clearEditState = function() {
     var self = this;
     self.editState = new Map();
+    self.editName  = "";
   }
 
   Editor.prototype.saveEditState = function() {
