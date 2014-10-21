@@ -692,10 +692,6 @@ div.boxed {
 .monaco-editor .token.bold            { font-weight: bold; }
 .monaco-editor .token.italic          { font-style: italic; }
 
-.monaco-editor .token.code {
-  color: purple;
-}
-
 .monaco-editor .token.comment {
   color: gray;
 }
