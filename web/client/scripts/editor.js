@@ -12,7 +12,43 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         "vs/editor/standalone/standaloneCodeEditor"],
         function(Map,Promise,Util,MadokoMode,Range,Selection,ReplaceCommand,Url,StandaloneCodeEditor) {
 
-Monaco.Editor.createCustomMode(MadokoMode.mode); 
+Util.requestGET("styles/lang/madoko.json").then(function(mode,req) {
+  var madokoMode = Monaco.Editor.createCustomMode(mode); 
+  //var madokoMode = Monaco.Editor.createCustomMode(MadokoMode.mode);
+  var modesRegistry = madokoMode.modesRegistry;
+
+  modesRegistry.configureMode('text/typescript', {
+                validationSettings: {
+                       "semanticValidation": false,
+                       "syntaxValidation": false,
+                }
+         });
+
+  modesRegistry.configureMode('text/javascript', {
+                validationSettings: {
+                       "semanticValidation": false,
+                       "syntaxValidation": false,
+                }
+         });
+});
+/*
+var madokoMode = Monaco.Editor.createCustomMode(MadokoMode.mode); 
+var modesRegistry = madokoMode.modesRegistry;
+
+modesRegistry.configureMode('text/typescript', {
+              validationSettings: {
+                     "semanticValidation": false,
+                     "syntaxValidation": false,
+              }
+       });
+
+modesRegistry.configureMode('text/javascript', {
+              validationSettings: {
+                     "semanticValidation": false,
+                     "syntaxValidation": false,
+              }
+       });
+*/
 
 var ReplaceCommandWithSelection = (function (_super) {
         Util.__extends(ReplaceCommandWithSelection, _super);
