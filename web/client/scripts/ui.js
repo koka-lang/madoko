@@ -7,32 +7,10 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/util",
-        "../scripts/storage","../scripts/madokoMode",
-        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand"],
-        function(Map,Promise,Util,Storage,MadokoMode,Range,Selection,ReplaceCommand) {
+        "../scripts/storage",
+        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor"],
+        function(Map,Promise,Util,Storage,Range,Selection,ReplaceCommand,Editor) {
 
-var ReplaceCommandWithSelection = (function (_super) {
-        __extends(ReplaceCommandWithSelection, _super);
-        function ReplaceCommandWithSelection(range, text) {
-            _super.call(this, range, text);
-        }
-        ReplaceCommandWithSelection.prototype.computeCursorState = function (model, helper) {
-            var inverseEditOperations = helper.getInverseEditOperations();
-            var srcRange = inverseEditOperations[0].range;
-            var rng = srcRange; //this._range;
-            return new Selection.Selection(rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn);
-        };
-        return ReplaceCommandWithSelection;
-    })(ReplaceCommand.ReplaceCommand);
-
-function diff( original, modified ) {
-  var originalModel = Monaco.Editor.createModel(original, "text/plain");
-  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain"); 
-  var diffSupport   = modifiedModel.getMode().diffSupport;
-  var diff = diffSupport.computeDiff( 
-                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
-  return new Promise(diff); // wrap promise
-}
 
 // Constants
 var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
@@ -148,7 +126,7 @@ var UI = (function() {
     self.docText = "";
     self.htmlText = "";
 
-    Monaco.Editor.createCustomMode(MadokoMode.mode);
+    //Monaco.Editor.createCustomMode(MadokoMode.mode);
     window.onbeforeunload = function(ev) { 
       //if (self.storage.isSynced()) return;
       localStorage.removeItem("viewer-html");
@@ -385,7 +363,7 @@ var UI = (function() {
     }
 
     // start editor
-    self.editor = Monaco.Editor.create(document.getElementById("editor"), {
+    self.editor = Editor.create(document.getElementById("editor"), {
       value: content,
       mode: "text/madoko",
       roundedSelection: false,
@@ -987,19 +965,9 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.setEditText = function( text, mode ) {
+  UI.prototype.setEditText = function( text, options, mode ) {
     var self = this;
-    var text0 = self.editor.getValue();
-    if (text0 !== text) {
-      var pos = self.editor.getPosition();
-      self.editor.model.setValue(text,mode);    
-      self.editContent = text;
-      if (pos.lineNumber !== 1 && !mode) {
-        // set by a merge
-        self.editor.setPosition(pos,true,true);
-      }
-    }
-    // self.setStale();
+    self.editor.editFile(self.editName,text,options,mode)    
   }
 
   UI.prototype.getEditText = function() { 
@@ -1485,6 +1453,7 @@ var UI = (function() {
           self.remoteLogo.src = "images/dark/" + remoteLogo;
           self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
           */
+          self.editor.clearEditState();
           self.editName = "";
           return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
         });
@@ -1533,10 +1502,7 @@ var UI = (function() {
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
-            var mode = Monaco.Editor.getOrCreateMode(file.mime).then( function(md) {
-              if (md) return md;
-              return Monaco.Editor.getOrCreateMode("text/plain");
-            });
+            
             var options = {
               readOnly: !Storage.isEditable(file),
               theme: self.getCurrentTheme(),
@@ -1546,9 +1512,8 @@ var UI = (function() {
               wrappingColumn: self.settings.wrapLines ? 0 : -1,
             };
             self.editName = file.path;
-            self.setEditText(file.content, mode);
+            self.setEditText(file.content, options, file.mime);
             self.onFileUpdate(file); // update display etc.
-            self.editor.updateOptions(options);            
             return Storage.getEditPosition(file);
       });
     return loadEditor.then( function(posx) {      
@@ -3916,7 +3881,7 @@ var symbolsMath = [
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
       return self.withSyncSpinner( function() {
-        return self.storage.sync( diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
+        return self.storage.sync( Editor.diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
           var line1 = cursors["/" + self.docName];
           var pos = self.editor.getPosition();
           if (pos.lineNumber >= line0) {
