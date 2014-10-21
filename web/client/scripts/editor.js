@@ -45,10 +45,12 @@ var languages = [
 ];
 
 Util.requestGET("styles/lang/madoko.json").then(function(madokoMode,req) {
-  madokoMode.name = "text/madoko";
+  //madokoMode.name = "text/madoko";
   createCustomMode(madokoMode); 
-  Promise.when( languages.map( function(lang) { return Util.requestGET("styles/lang/" + lang + ".json") }) ).then( function(modes) {
-    modes.forEach( createCustomMode );
+  languages.forEach( function(lang) { 
+    Util.requestGET("styles/lang/" + lang + ".json").then( function(mode) {
+      createCustomMode(mode);
+    });
   });
 });
 
