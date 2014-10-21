@@ -651,14 +651,6 @@ div.boxed {
   background-color: #00004b;
 }
 
-.monaco-editor .token.code {
-  color: purple;
-}
-
-.monaco-editor .token.comment {
-  color: gray;
-}
-
 .monaco-editor .token.open, .monaco-editor .token.close {
   color: inherit;
 }
@@ -699,6 +691,16 @@ div.boxed {
 
 .monaco-editor .token.bold            { font-weight: bold; }
 .monaco-editor .token.italic          { font-style: italic; }
+
+.monaco-editor .token.code {
+  color: purple;
+}
+
+.monaco-editor .token.comment {
+  color: gray;
+}
+
+
 
 /*
 .monaco-editor .token.keyword.heading 
