@@ -675,6 +675,43 @@ div.boxed {
   color: inherit;
 }
 
+.monaco-editor                        { color: black; }
+.monaco-editor .token.identifier      { }
+.monaco-editor .token.operators       { }
+.monaco-editor .token.keyword         { color: blue }
+.monaco-editor .token.string          { color: maroon } 
+.monaco-editor .token.string.escape   { color: gray }
+.monaco-editor .token.comment         { color: darkgreen }
+.monaco-editor .token.comment.doc     { font-style: normal }
+.monaco-editor .token.constant        { color: purple; }
+.monaco-editor .token.entity          {  }
+.monaco-editor .token.tag             { color: blue }
+.monaco-editor .token.info-token      { color: black }
+.monaco-editor .token.warn-token      { color: black }
+.monaco-editor .token.error-token     { color: darkred }
+.monaco-editor .token.debug-token     { color: gray }
+.monaco-editor .token.regexp          { color: maroon }
+.monaco-editor .token.attribute.name  { color: navy }
+.monaco-editor .token.attribute.value { color: maroon }
+.monaco-editor .token.constructor     { color: purple }
+.monaco-editor .token.namespace       { color: navy }
+.monaco-editor .token.header          { color: navy }
+.monaco-editor .token.type            { color: teal } 
+.monaco-editor .token.type.delimiter  { color: teal; } 
+.monaco-editor .token.predefined      { color: navy }
+.monaco-editor .token.invalid         { border-bottom: red dotted 1px }
+.monaco-editor .token.code            { color: maroon }
+.monaco-editor .token.code.keyword    { color: navy }
+.monaco-editor .token.typevar         { font-style: italic; }
+
+.monaco-editor .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+.monaco-editor .token.number      {  }    /* .[hex,octal,binary,float] */
+.monaco-editor .token.variable    {  }  /* .[name,value]  */
+.monaco-editor .token.meta        { color: navy }      /* .[content] */
+
+.monaco-editor .token.bold            { font-weight: bold; }
+.monaco-editor .token.italic          { font-style: italic; }
+
 /*
 .monaco-editor .token.keyword.heading 
 */

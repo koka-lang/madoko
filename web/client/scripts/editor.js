@@ -7,48 +7,55 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/util",
-        "../scripts/madokoMode",
+        "../scripts/madokoMode","vs/editor/modes/monarch/monarch",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","vs/base/network",
-        "vs/editor/standalone/standaloneCodeEditor"],
-        function(Map,Promise,Util,MadokoMode,Range,Selection,ReplaceCommand,Url,StandaloneCodeEditor) {
+         "vs/platform/services","vs/editor/modes/modesExtensions", "vs/platform/platform","vs/editor/standalone/standaloneCodeEditor"],
+        function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Services,ModesExtensions,Platform,StandaloneCodeEditor) {
 
-Util.requestGET("styles/lang/madoko.json").then(function(mode,req) {
-  var madokoMode = Monaco.Editor.createCustomMode(mode); 
-  //var madokoMode = Monaco.Editor.createCustomMode(MadokoMode.mode);
-  var modesRegistry = madokoMode.modesRegistry;
 
-  modesRegistry.configureMode('text/typescript', {
-                validationSettings: {
-                       "semanticValidation": false,
-                       "syntaxValidation": false,
-                }
-         });
-
-  modesRegistry.configureMode('text/javascript', {
-                validationSettings: {
-                       "semanticValidation": false,
-                       "syntaxValidation": false,
-                }
-         });
-});
-/*
-var madokoMode = Monaco.Editor.createCustomMode(MadokoMode.mode); 
-var modesRegistry = madokoMode.modesRegistry;
-
+//---------------------------------------------------------------------------
+// Disable symantic validation for javascript
+//---------------------------------------------------------------------------
+var modesRegistry = Platform.Registry.as(ModesExtensions.Extensions.EditorModes);
 modesRegistry.configureMode('text/typescript', {
               validationSettings: {
                      "semanticValidation": false,
-                     "syntaxValidation": false,
+                     "syntaxValidation": true,
               }
        });
 
 modesRegistry.configureMode('text/javascript', {
               validationSettings: {
                      "semanticValidation": false,
-                     "syntaxValidation": false,
+                     "syntaxValidation": true,
               }
        });
-*/
+
+//---------------------------------------------------------------------------
+// Register Madoko languages
+//---------------------------------------------------------------------------
+
+function createCustomMode(mode) {
+  ModesExtensions.registerModeAsyncDescriptor(mode.name, [mode.name].concat(mode.mimeTypes), new Services.AsyncDescriptor('vs/editor/modes/monarch/monarch', 'DynamicMonarchMode', mode));
+  return modesRegistry.getMode(mode.name);
+}
+
+var languages = [
+  "boogie","codehunt","csharp","dafny","haskell","html","java","koka","python","ruby","smt","javascript",
+];
+
+Util.requestGET("styles/lang/madoko.json").then(function(madokoMode,req) {
+  createCustomMode(madokoMode); 
+  Promise.when( languages.map( function(lang) { return Util.requestGET("styles/lang/" + lang + ".json") }) ).then( function(modes) {
+    modes.forEach( createCustomMode );
+  });
+});
+
+
+
+//---------------------------------------------------------------------------
+// Editor commands
+//---------------------------------------------------------------------------
 
 var ReplaceCommandWithSelection = (function (_super) {
         Util.__extends(ReplaceCommandWithSelection, _super);
@@ -73,6 +80,11 @@ function diff( original, modified ) {
   return new Promise(diff); // wrap promise
 }
 
+
+
+//---------------------------------------------------------------------------
+// Enable saving of entire editor model
+//---------------------------------------------------------------------------
 
 var Model = (function() {
   function dehydrateAssociatedResource(model) {
@@ -214,6 +226,12 @@ var Model = (function() {
     }
   }
 })();
+
+
+
+//---------------------------------------------------------------------------
+// Our editor remembers undo/redo and view state 
+//---------------------------------------------------------------------------
 
 var Editor = (function(_super) {
   Util.__extends(Editor, _super);
