@@ -41,7 +41,7 @@ function createCustomMode(mode) {
 }
 
 var languages = [
-  "bibtex","boogie","codehunt","csharp","dafny","haskell","html","java","koka","latex","python","ruby","smt","javascript",
+  "bibtex","boogie","codehunt","cpp","csharp","dafny","haskell","html","java","koka","latex","python","ruby","smt","javascript",
 ];
 
 Util.requestGET("styles/lang/madoko.json").then(function(madokoMode,req) {
