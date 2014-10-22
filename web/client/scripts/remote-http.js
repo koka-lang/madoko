@@ -127,7 +127,7 @@ var HttpRemote = (function() {
 
   HttpRemote.prototype.getShareUrl = function(fname) {
     var self = this;
-    return Promise.resolved(self.fullPath(fname));
+    return Promise.resolved(null); // self.fullPath(fname));  
   }
 
   return HttpRemote;

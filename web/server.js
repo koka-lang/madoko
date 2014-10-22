@@ -842,7 +842,7 @@ function oauthLogin(req,res) {
       // console.log(info);
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
-        name: info.display_name || info.name || "?";
+        name: info.display_name || info.name || "",
         access_token: tokenInfo.access_token,
         created:  new Date().toISOString(),
         nonce: uniqueHash(),
@@ -1090,13 +1090,13 @@ function resolveAlias(name) {
 // return a record { readers, writers } that show how many
 // other readers and writers there are.
 function getEditInfo( id, name ) {
-  var res = { readers: 0, writers: 0 };
+  var res = { readers: [], writers: [] };
   var info = edits.get(name);
   if (info && info.users) {
     info.users.forEach( function(uid,user) {
       if (uid !== id) {
-        res.readers++;
-        if (user.editing) res.writers++;
+        res.readers.push( { name: user.name } );
+        if (user.editing) res.writers.push( {name: user.name} )
       }
     });
   }
@@ -1105,7 +1105,7 @@ function getEditInfo( id, name ) {
 
 var EditOp = { None: "none", View: "read", Edit:"write" }
 
-function updateEditInfo( id, name, editop ) {
+function updateEditInfo( id, name, editop, userName ) {
   if (!name) return;
   var info = edits.get(name);
   if (!info) {
@@ -1119,7 +1119,7 @@ function updateEditInfo( id, name, editop ) {
     if (info.users.count === 0) edits.remove(name);
   }
   else {
-    var user = info.users.getOrCreate( id, { lastUpdate: 0, editing: false });
+    var user = info.users.getOrCreate( id, { lastUpdate: 0, editing: false, name: (userName || "?") });
     user.lastUpdate = Date.now();
     user.editing = (editop === EditOp.Edit);    
   }2
@@ -1127,7 +1127,7 @@ function updateEditInfo( id, name, editop ) {
 
 // given a list of file names with their edit operation,
 // return a list those file names with the number of readers and writers for each.
-function editUpdate( req, userid, names ) {
+function editUpdate( req, userid, names, userName ) {
   if (!names) return {};
   var res = {};
   var logit = false;
@@ -1136,9 +1136,9 @@ function editUpdate( req, userid, names ) {
     if (typeof names[name] !== "string") return;
     if (names[name] === EditOp.Edit) logit = true;
     var realname = resolveAlias(name);
-    updateEditInfo( userid, realname, names[name]);
+    updateEditInfo( userid, realname, names[name], userName);
     res[name] = getEditInfo(userid, realname);
-    console.log("user: " + userid + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+    console.log("user: " + (userName || userid) + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
   });
   if (log && logit) {
     log.entry({ 
@@ -1188,7 +1188,8 @@ app.post('/rest/push-atomic', function(req,res) {
 app.post("/rest/edit", function(req,res) {
   event( req, res, true, function() {
     var files = req.body.files || {};
-    return editUpdate(req,req.session.userid,files);
+    var name  = req.body.name;
+    return editUpdate(req,req.session.userid,files,name);
   });
 });
 

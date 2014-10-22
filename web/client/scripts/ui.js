@@ -1662,24 +1662,28 @@ var UI = (function() {
     docFile = docFile + "*"; // special name for overall document
     files[docFile] = edit;
     files[editFile] = edit;
-    var body = {
-      files: files,
-    };
-
+    
     self.lastConUsersCheck = Date.now();
-    Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
-      var res = data[docFile];
-      if (res && edit !== "none") {
-        if (res && res.writers > 0) {
-          self.usersStatus.className = "users-write";
+    self.storage.remote.getUserName().then( function(name) {
+      var body = {
+        files: files,
+        name: name,
+        remote: self.storage.remote.type(),
+      };
+      Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
+        var res = data[docFile];
+        if (res && edit !== "none") {
+          if (res && res.writers.length > 0) {
+            self.usersStatus.className = "users-write";
+          }
+          else if (res && res.readers.length > 0) {
+            self.usersStatus.className = "users-read";        
+          }
+          else {
+            self.usersStatus.className = "";
+          }
         }
-        else if (res && res.readers > 0) {
-          self.usersStatus.className = "users-read";        
-        }
-        else {
-          self.usersStatus.className = "";
-        }
-      }
+      });
     });
   }
 
