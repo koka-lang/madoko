@@ -87,25 +87,26 @@ public function fmtHtmlCodeTable( context : inlineContext, ct : codeTable, attrs
 function fmtCtRows( context : inlineContext, rows : list<crow> ) : string {
   rows.map( fun(row) {
     tag("tr", row.mapIndexed( fun(i,cell) {
+                val empty = cell.content.isAllWhite
                 val expander = if (row.length==i+1) then " expander" else ""
-                if (cell.content.isHtmlWhite) {
-                  list(1,cell.span).map(fun(_i) {
-                    tag("td","&nbsp;"," class='empty'")
-                  }).join()
-                }
-                else {
-                  val classes = "colspan" + cell.span.show + (if (cell.content.isHtmlWhite) then " empty" else "") + expander
-                  val attrs = " class='" + classes + "'" + (if (cell.span > 1) then " colspan='" + cell.span.show + "'" else "")
-                  tag("td", if (cell.content.isHtmlWhite) then "&nbsp;" else cell.content, attrs )
-                }
+                val classes = "colspan" + cell.span.show + expander + (if (empty) then " empty" else "")
+                val attrs = " class='" + classes + "'" + (if (cell.span > 1) then " colspan='" + cell.span.show + "'" else "")
+                tag("td", if (empty) then "&nbsp;" else cell.content, attrs )                
               }).join, "")
   }).join("\n")  
 }
 
+function isAllWhite( s : string ) : bool {
+  s.contains(rxWhite)
+}
+val rxWhite = regex(@"^\s*$")
+
+/*
 function isHtmlWhite( s : string ) : bool {
   s.find(rxAllWhite).bool
 }
 val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b[^>]*>(\s|&nbsp;)*</span>)*$")
+*/
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {

@@ -31,6 +31,17 @@ Doc Class   : article
 [TITLE]
 [TOC]
 
+parser
+
+    effect parser<e,a> = string -> e list<(a,string)> {
+      function unit( x ) {
+        return fun(s) { [(x,s)] }
+      }
+      function bind( p, f ) {
+        return fun(s) { p(s).concatMap( fun(r) { f(r.fst)(r.snd) } ) }
+      }
+    }
+
 Pretty koka:
 
 	function test( xs : list<int> ) {

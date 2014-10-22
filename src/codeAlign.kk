@@ -123,7 +123,8 @@ function tagsLength( cap : matched ) : int {
   cap.matched.length - cap.tagsSpaces.length
 }
 
-val rxTags = regex(@"<ESCAPED\s*(?:width=(\d*)\s*)?>[\s\S]*?</ESCAPED>|</?\w+\b[^>]*>|&(?:\w+|#[xX]?[\da-fA-F]+);")
+val rxHtmlTags = @"</?\w+\b[^>]*>";
+val rxTags = regex(@"<ESCAPED\s*(?:width=(\d*)\s*)?>[\s\S]*?</ESCAPED>|" + rxHtmlTags + @"|&(?:\w+|#[xX]?[\da-fA-F]+);")
 
 function merge( alignss : list<list<int>> ) : list<int>
 {
@@ -148,14 +149,15 @@ function makeRow( acols : list<int>, line : string, lineCols : list<int>, sep : 
          " line:\n" + line + "\n" +
          " parts:\n  " + 
            parts1.map(fun(p) { p.fst.show + ": " + p.snd }).join("\n  "))
-  */           
+  */
   val rxEndSpaces = regex( string(sep,' ') + "$")
   alignParts( acols, parts1, rxEndSpaces  )
 }
 
 public function isWhite( s : string ) : bool {
-  s.list.all(isWhite)
+  s.replaceAll(rxWhite,"") == ""
 }
+val rxWhite = regex(rxHtmlTags + @"|\s+")
 
 function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces : regex ) : list<ccell> {
   match( parts ) {
@@ -167,8 +169,8 @@ function alignParts( acols : list<int>, parts : list<(int,string)>, rxEndSpaces 
       val ccells = if (text.isWhite) 
        then {
          val pre = string(col,' ')
-         val ws = splitColumns( pre + text, col, spanCols )         
-         ws.mapIndexed( fun(i,w) { Ccell(1,False, if (i+1 < span) then " " else w.snd ) }) // this is for better spacing in latex
+         val ws = splitColumns( pre, col, spanCols )         
+         ws.map( fun(_) { Ccell(1,False, " ") }) 
        }
        else {
          val stext = text.replace(rxEndSpaces," ")
