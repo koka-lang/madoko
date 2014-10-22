@@ -5,7 +5,6 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
-
 // -------------------------------------------------------------
 // Passprases
 // -------------------------------------------------------------
@@ -30,21 +29,21 @@ var hour      = 60*minute;
 var day       = 24*hour;
 
 var limits = {
-  requestsPerDomain: 100,     // at most 100 concurrent requests per domain
-  requestsPerUser  : 5,       // at most 5 concurrent requests per user
-  requestNewUser   : 10,      // at most 10 users per hour per domain
+  requestsPerDomain: 100,     // at most X concurrent requests per domain
+  requestsPerUser  : 10,      // at most X concurrent requests per user
+  requestNewUser   : 10,      // at most X users per hour per domain
   maxProcesses: 10, 
   hashLength  : 16,  
   fileSize    : 8*mb,         
   cookieAge   : 30*day,       // our session cookie expires after one month
   timeoutPDF  : 5*minute,
-  timeoutMath : minute,
-  timeoutGET  : 5*second,
+  timeoutMath : 2*minute,
+  timeoutGET  : 30*second,
   atomicDelay : 1*minute,     // a push to cloud storage is assumed visible everywhere after this time
   editDelay   : 30*second,  
   logFlush    : 1*minute,
   logDigest   : 30*minute,
-  rmdirDelay  : 3*second,
+  rmdirDelay  : 5*second,
   tokenExpires: 7*day,        // we disable access_tokens older than this time
 };
 
