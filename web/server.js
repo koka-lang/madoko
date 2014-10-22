@@ -42,7 +42,7 @@ var limits = {
   atomicDelay : 1*minute,     // a push to cloud storage is assumed visible everywhere after this time
   editDelay   : 30*second,  
   logFlush    : 1*minute,
-  logDigest   : 30*minute,
+  logDigest   : 15*minute,
   rmdirDelay  : 5*second,
   tokenExpires: 7*day,        // we disable access_tokens older than this time
 };
@@ -840,16 +840,16 @@ function oauthLogin(req,res) {
     }
     return makeRequest( options ).then( function(info) {
       // console.log(info);
-      var userName = info.display_name || info.name || "<unknown>";
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
+        name: info.display_name || info.name || "?";
         access_token: tokenInfo.access_token,
         created:  new Date().toISOString(),
         nonce: uniqueHash(),
       };
       // store info in our encrypted cookie
       req.session.logins[remote.name] = userInfo;
-      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: userName, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
+      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: info.name, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
       return redirectPage(remote);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
