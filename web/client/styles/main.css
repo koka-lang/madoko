@@ -651,26 +651,6 @@ div.boxed {
   background-color: #00004b;
 }
 
-.monaco-editor .token.code {
-  color: purple;
-}
-
-.monaco-editor .token.comment {
-  color: gray;
-}
-
-.monaco-editor .token.code.latex {
-  xbackground-color: #F4F4F4;
-  xcolor: inherit;
-  color: purple;
-}
-
-.monaco-editor .token.code.latex.keyword,
-.monaco-editor .token.code.latex.special,
-.monaco-editor .token.code.latex.delimiter {
-  color: #801500;
-}
-
 .monaco-editor .token.open, .monaco-editor .token.close {
   color: inherit;
 }
@@ -712,9 +692,47 @@ div.boxed {
 .monaco-editor .token.bold            { font-weight: bold; }
 .monaco-editor .token.italic          { font-style: italic; }
 
+.monaco-editor .token.comment {
+  color: gray;
+}
+
+
+
 /*
 .monaco-editor .token.keyword.heading 
 */
+.monaco-editor .latex { 
+  color: maroon;
+}
+.monaco-editor .delimiter.latex {
+  color: maroon !important;
+}
+.monaco-editor .keyword.latex {
+  color: #4E0000;
+}
+.monaco-editor .keyword.predefined.latex {
+  color: #4E0000;
+}
+.monaco-editor .latex.inline {
+  color: black;
+}
+
+.monaco-editor.vs-dark .latex { 
+  color: #897;
+}
+.monaco-editor.vs-dark .delimiter.latex {
+  color: #897 !important;
+}
+.monaco-editor.vs-dark .keyword.latex {
+  color: #B5CEA8;
+}
+.monaco-edito.vs-dark .keyword.predefined.latex {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .latex.inline {
+  color: #CCC;
+}
+
 .monaco-editor .token.link.special {
   font-weight: bold;
   color: inherit;
@@ -743,7 +761,7 @@ div.boxed {
   color: #BD5050;
 }
 .monaco-editor.vs-dark .token.string.escape {
-  color: #CE9178;
+  color: #999; /* #CE9178; */
 }
 .monaco-editor, .monaco-editor .lines-decorations {
   background-color: #FFFAF4;
