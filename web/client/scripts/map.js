@@ -123,6 +123,15 @@ define([],function() {
       });
       return res;
     }
+ 
+ 	Map.prototype.keys = function() {
+      var self = this;
+      var res = [];
+      self.forEach( function(name,elem) {
+        res.push( name );
+      });
+      return res;
+    }
 
     return Map;
   })();

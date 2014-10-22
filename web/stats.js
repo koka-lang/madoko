@@ -14,6 +14,14 @@ var Promise = require("./client/scripts/promise.js");
 var Map     = require("./client/scripts/map.js");
 var date    = require("./client/scripts/date.js");
 
+function jsonParse(s,def) {
+  try {
+  	return JSON.parse(s);
+  }
+  catch(exn) {
+  	return def;
+  }
+}
 
 function readDir(dir) {
   return new Promise( function(cont) { 
@@ -47,7 +55,7 @@ function parseLogs(dir) {
 				if (content[0] === "[") return JSON.parse(content); // older log
 			  var lines = content.split("\n");
 			  return lines.map(function(line){ 
-			  	return (line ? JSON.parse(line) : {type:"none"});   // new logs are line separated JSON objects
+			  	return (line ? jsonParse(line,{type:"none"}) : {type:"none"});   // new logs are line separated JSON objects
 			  });
 			});
 			var entries = [].concat.apply([],datas);
@@ -107,7 +115,8 @@ function userVal(user) {
 	return user.reqCount + (user.uid ? 10000 : 0);
 }
 
-function digestUsers(entries) {
+function digestUsers(entries, all) {
+	//console.log("digest users")
 	var users = new Map();
 
 	function userGet(id) {
@@ -137,6 +146,9 @@ function digestUsers(entries) {
 		if (id === uid || (user1 && user2 && user1.id === user2.id)) {
 			return user1;
 		}
+		else if (!user1 && !user2) {
+			return null;
+		}
 		else if (!user1) {
 			users.set(id, { redirect: uid });
 			return user2;
@@ -158,9 +170,12 @@ function digestUsers(entries) {
 
 	entries.forEach( function(entry) {
 		var user;
-		if (entry.type === "uid" || entry.type==="login") {
-			userGetOrCreate(entry.uid,{ name: entry.name, remote: entry.remote, email: entry.email, entries: [] });
-			user = userLink(entry.id,entry.uid);			
+		if (entry.type === "login" || entry.type==="uid") {
+			//if (entry.type==="uid" && entry.name != null) entry.uid = entry.name;
+			var uid = entry.name || entry.uid;
+			userGetOrCreate(uid,{ name: entry.name, email: entry.email, entries: [] });
+			userLink(entry.id,uid);
+			user = userLink(entry.uid,uid);			
 		}
 		else if (entry.user && entry.user.id) {
 			user = userGetOrCreate(entry.user.id, { name: "", email: "", entries: [] });
@@ -177,7 +192,10 @@ function digestUsers(entries) {
 		var delta = 10*60*1000; // 10 minutes
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
-		user.entries.sort( function(x,y) { return x.dateTime - y.dateTime; } ).forEach( function(entry) {
+		var remotes = new Map();
+		user.entries = user.entries.sort( function(x,y) { return y.dateTime - x.dateTime; } );
+		user.entries.forEach( function(entry) {
+			if (entry.remote!=null && !remotes.contains(entry.remote)) remotes.set(entry.remote,true);
 			var nextTime = entry.dateTime;
 			if (prevTime + delta > nextTime) {
 				total += (nextTime - prevTime);
@@ -187,7 +205,7 @@ function digestUsers(entries) {
 		return {
 			reqCount: user.entries.length,
 			name: user.name || user.id,
-			remote: user.remote,
+			remote: remotes.keys().sort().join(","),
 			//email: user.email,
 			workTime: Math.ceil(total/(60*1000)),
 			id: id,
@@ -288,6 +306,12 @@ function anonDomain(d) {
 	return d.toString();
 }
 
+function onDate(d1,d2) {
+	var t1 = date.dateFromISO(d1.date).getTime();
+	var t2 = date.dateFromISO(d2.date).getTime();
+	return (t2 < t1 ? -1 : (t2 > t1 ? 1 : 0));
+}
+
 function digestErrors( entries ) {
 	var errors = [];
 	var scans = new Map();
@@ -296,7 +320,7 @@ function digestErrors( entries ) {
 	entries.forEach( function(entry) {
 		if (!((entry.type === "error" && entry.error) || entry.type==="static-scan")) return;
 		if (entry.type === "static-scan") {
-			if (!(/^\/(styles|preview)\/math\/math-|\/templates\/(article|default|presentation|webpage).mdk$/.test(entry.url))) {
+			if (!(/^\/(styles|preview)\/.*|\/templates\/(article|default|presentation|webpage).mdk$/.test(entry.url))) {
 				var e = scans.getOrCreate(entry.url,{ url: entry.url, domain:"", count: 0, ip:anonIP(entry.ip), });
 				e.domain += anonDomain(entry.domains || entry.domain);
 				e.date = entry.date;
@@ -319,7 +343,12 @@ function digestErrors( entries ) {
 			});
 		}
 	});
-	return { errors: errors.slice(0,100), rejects: rejects, pushfails: pushfails, scans: reverse(scans.elems()) };
+	return { 
+		errors: errors.sort(onDate), 
+		rejects: rejects, 
+		pushfails: pushfails, 
+		scans: scans.elems().sort(onDate), 
+	};
 }
 
 function digestDomains(entries) {
@@ -365,7 +394,8 @@ function writeStatsPage( fname ) {
 		console.log("stats: total errors: " + errors.errors.length );
 		console.log("stats: total scans: " + errors.scans.length );
 		var domains  = digestDomains(entries);
-		var users   = digestUsers(xentries);
+		var users   = digestUsers(xentries,true);
+		errors.errors = errors.errors.slice(0,50);
 		return resolveDomains(domains).then( function() {
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),
