@@ -6,6 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 var dns     = require("dns");
+var Cp 			= require("child_process");
+
 
 var Fs      = require("fs");
 var Path    = require("path");
@@ -193,7 +195,7 @@ function digestUsers(entries, all) {
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
 		var remotes = new Map();
-		user.entries = user.entries.sort( function(x,y) { return y.dateTime - x.dateTime; } );
+		user.entries = user.entries.sort( function(x,y) { return x.dateTime - y.dateTime; } );
 		user.entries.forEach( function(entry) {
 			if (entry.remote!=null && !remotes.contains(entry.remote)) remotes.set(entry.remote,true);
 			var nextTime = entry.dateTime;
@@ -400,7 +402,7 @@ function writeStatsPage( fname ) {
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),
 				errors: errors,
-				users: users.slice(0,25),
+				users: users.slice(0,50),
 				domains: domains,
 				userCount: users.length,
 				date: new Date(),
@@ -413,13 +415,33 @@ function writeStatsPage( fname ) {
 	}, function(err) {
 		console.log("unable to write stats:")
 		console.log(err.stack);
-	});
+	});;
 };
 
-module.exports.writeStatsPage = writeStatsPage;
+
+// run in a separate process so the website stays reactive
+function asyncWriteStatsPage() {
+	var command = /* "madoko */ "node ./stats.js --sync";
+	return new Promise( function(cont) {
+  	console.log("> " + command);
+  	Cp.exec( command, {timeout: 60000, maxBuffer: 512*1024 }, function(err,stdout,stderr) {
+  		console.log(stdout);
+  		console.log(stderr);
+  		cont(err);
+  	});
+	}).then( function() { }, function(err) {
+		console.log("unable to write stats:")
+		console.log(err.stack);
+	}); 
+}
+
+module.exports.writeStatsPage = asyncWriteStatsPage;
 
 if (!module.parent) {
-	writeStatsPage();
+	if (process.argv[2] === "--async") 
+		asyncWriteStatsPage();
+	else 
+		writeStatsPage();
 }
 
 
