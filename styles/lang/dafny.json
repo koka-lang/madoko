@@ -20,48 +20,61 @@
     "old","forall","exists","new","calc","modify","in","this","fresh",
     "match","case","false","true","null"
   ],
-
+  
   "extraKeywords": [
   ],
-
+  
   "verifyKeywords": [
     "requires","ensures","modifies","reads","free","invariant","decreases"
   ],
-
+  
   "extraVerifyKeywords": [
   ],
-
+  
   "types": [
     "bool","int","nat","real",
     "set","multiset","seq","map",
-    "object","array","array2","array3"
+    "object","array" 
   ],
-
+  
   "extraTypes": [
   ],
 
-
+  
   "brackets": [
     ["{","}","delimiter.curly"],  
     ["[","]","delimiter.square"],  
     ["(",")","delimiter.parenthesis"] 
   ],
+  
+  "autoClosingPairs": [["\"","\""], ["@brackets"]],
 
   
-  "escapes": "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
-
+  "escapes": "\\\\(?:[nrt\\\\\"'0]|u[0-9A-Fa-f]{4})",
+  
+  "digits": "[0-9](_?[0-9])*",
+  "hexdigits": "[0-9a-fA-F](_?[0-9a-fA-F])*",
+  "identifier": "[a-zA-Z'_\\?][\\w'\\?]*",
+  
   "tokenizer": {
     "root": [
       
+      ["(\\{)(\\s*:\\s*@identifier)", ["@brackets","meta.attribute"]],
+      
+      
+      ["(')(@escapes)(')", ["string.char","string.char.escape","string.char" ]],
+      ["'[^\\\\'\\n\\r]'", "string.char" ],
+      
+      
       ["array([2-9]\\d*|1\\d+)", "type.keyword" ],
-      ["[a-zA-Z'_\\?\\\\][\\w'\\?\\\\]*", { "cases": {
-          "@keywords": "keyword",
-          "@extraKeywords": "keyword",
-          "@verifyKeywords": "constructor.identifier",
-          "@extraVerifyKeywords": "constructor.identifier",
-          "@types"   : "type.keyword",
-          "@extraTypes": "type.keyword",
-          "@default" : "identifier" }}],            
+      ["@identifier", { 
+        "cases": {"@keywords": "keyword",
+                "@extraKeywords": "keyword",
+                "@verifyKeywords": "constructor.identifier",
+                "@extraVerifyKeywords": "constructor.identifier",
+                "@types"   : "type.keyword",
+                "@extraTypes" : "type.keyword",
+                "@default" : "identifier" }}],            
       [":=","keyword"],
       
       
@@ -69,13 +82,18 @@
       
       ["[{}()\\[\\]]", "@brackets"],
       ["[;]", "delimiter"],
+
       
-      ["[0-9]+\\.[0-9]+", "number"],      
-      ["0x[A-Fa-f0-9]+",  "number"],
-      ["[0-9]+", "number.dec"],
+      ["@digits\\.@digits", "number"],      
+      ["0x@hexdigits",  "number"],
+      ["@digits", "number.dec"],
+
       
       ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
-      ["\"",  "string", "@string" ]
+      ["\"",  "string", "@string" ],
+      
+      
+      ["@\"", { "token": "string.quote", "bracket": "@open", "next": "@litstring" } ]      
     ],
 
     "whitespace": [
@@ -96,6 +114,12 @@
       ["@escapes", "string.escape"],
       ["\\\\.",      "string.escape.invalid"],
       ["\"",        "string", "@pop" ]
+    ],
+    
+    "litstring": [
+      ["[^\"]+",    "string"],
+      ["\"\"",       "string.escape"],
+      ["\"",        { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
     ]
   }
 }
