@@ -195,8 +195,14 @@ function digestUsers(entries, all) {
 		var total = 60*1000;    // 1 minute
 		var prevTime = 0;
 		var remotes = new Map();
+		var editTime = 0;
+		var viewTime = 0;
 		user.entries = user.entries.sort( function(x,y) { return x.dateTime - y.dateTime; } );
 		user.entries.forEach( function(entry) {
+			if (entry.type==="stat") {
+				if (entry.editTime) editTime += entry.editTime;
+				if (entry.viewTime) viewTime += entry.viewTime;				
+			}
 			if (entry.remote!=null && !remotes.contains(entry.remote)) remotes.set(entry.remote,true);
 			var nextTime = entry.dateTime;
 			if (prevTime + delta > nextTime) {
@@ -210,6 +216,8 @@ function digestUsers(entries, all) {
 			remote: remotes.keys().sort().join(","),
 			//email: user.email,
 			workTime: Math.ceil(total/(60*1000)),
+			editTime: Math.ceil(editTime/(60*1000)),
+			viewTime: Math.ceil(viewTime/(60*1000)),
 			id: id,
 			uid: (user.name != ""),
 		}
@@ -402,7 +410,7 @@ function writeStatsPage( fname ) {
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),
 				errors: errors,
-				users: users.slice(0,50),
+				users: users.slice(0,100),
 				domains: domains,
 				userCount: users.length,
 				date: new Date(),

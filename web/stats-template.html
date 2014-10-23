@@ -154,7 +154,7 @@ table tr:nth-child(even), table thead tr {
     rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
     rows("scans", {url: "url", count: "count", domain:"domain", date: "date" }, stats.errors.scans );
     rows("domains", { count: "count", ip: "ip", domain: "domain" }, stats.domains );
-    rows("users", { name: "name", remote: "remote", count: "reqCount", minutes: "workTime" }, stats.users );
+    rows("users", { name: "name", remote: "remote", count: "reqCount", minutes: "workTime", editTime: "editTime", viewTime: "viewTime"  }, stats.users );
   }
  
   var stats = <STATS>;

@@ -160,7 +160,7 @@ function discard(storage,docName) {
   var params = {
     command: "alert",
     alert: "true",
-    header: Util.escape(Util.combine(storage.folder(),docName))
+    header: Util.escape(Util.combine(storage.folder(),docName || ""))
   };
   params.remote = storage.remote.type();
   params.headerLogo = "images/dark/" + storage.remote.logo();

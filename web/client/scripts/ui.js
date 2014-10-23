@@ -126,6 +126,13 @@ var UI = (function() {
     self.docText = "";
     self.htmlText = "";
 
+    self.stat = {
+      editLast: 0,
+      editDelta: 30*1000,
+      editTotal: 0,
+      viewStart: Date.now(),
+    };
+
     //Monaco.Editor.createCustomMode(MadokoMode.mode);
     window.onbeforeunload = function(ev) { 
       //if (self.storage.isSynced()) return;
@@ -622,9 +629,12 @@ var UI = (function() {
         Util.message("Madoko has been updated. Please reload.", Util.Msg.Status);     
         window.location.reload(true);        // force reload. TODO: ask the user? show a sticky status message?   
       }
+
       // check the version number on the server every minute
       if (now - self.lastVersionCheck >= 60000) {  
         self.lastVersionCheck = now;
+        // first post stats
+        self.postStat();
         // request lastest appversion from the server 
         Util.getAppVersionInfo(true).then( function(version) {
           if (!version) return;
@@ -1085,6 +1095,14 @@ var UI = (function() {
 
   UI.prototype.viewHTML = function( html, time0 ) {
     var self = this;
+
+    // update working stats.
+    var now = Date.now();
+    if (self.stat.editLast + self.stat.editDelta > self.lastEditChange) {
+      self.stat.editTotal += (self.lastEditChange - self.stat.editLast);
+    }
+    self.stat.editLast = self.lastEditChange;
+    
     
     function updateFull() {
       update();
@@ -1404,9 +1422,10 @@ var UI = (function() {
     if (cap) {
       var url = Util.dirname(cap[1]);
       var doc = Util.basename(cap[1]);
-      return self.checkSynced( function() {
+      return self.checkSynced().then( function(yes) {
+        if (!yes) throw new Error("operation cancelled");
         return Storage.httpOpenFile(url,doc);
-      }).then( function(res) { 
+      }).then( function(res) {
         return self.openFile(res.storage,res.docName); 
       }).then( function() {
         return true;
@@ -1530,6 +1549,13 @@ var UI = (function() {
     // });    
   }
 
+  UI.prototype.localLoadStorage = function() {
+    var self = this;
+    var json = localStorageLoad("local");
+    if (json==null) return null;
+    return Storage.unpersistStorage(json.storage);  
+  }
+
   UI.prototype.localLoad = function() {
     var self = this;
     var json = localStorageLoad("local");
@@ -1547,13 +1573,21 @@ var UI = (function() {
     }
   }
 
-  UI.prototype.checkSynced = function( makePromise ) {
+  UI.prototype.checkSynced = function() {
     var self = this;
-    if (self.storage && !self.storage.isSynced()) {
-      var ok = window.confirm( "The current document has not been saved yet!\n\nDo you want to discard these changes?");
-      if (!ok) return Promise.rejected("the operation was cancelled");
+    var stg = self.storage;
+    if (!stg) {
+      // not yet loaded...
+      stg = self.localLoadStorage();
     }
-    return makePromise();
+    if (stg && !stg.isSynced()) {
+      //var ok = window.confirm( "The current local document has changes that not been saved yet to cloud storage!\n\nDo you want to discard these changes?");
+      //if (!ok) return Promise.rejected("the operation was cancelled");
+      return Storage.discard(stg);
+    }
+    else {
+      return Promise.resolved(true);
+    }
   }
 
   UI.prototype.openFile = function(storage,fname) {
@@ -1641,7 +1675,7 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
-    if (!self.storage.remote.canSync || self.disableServer) {  // unconnected storage (null or http)
+    if (!self.storage.remote.canSync || self.settings.disableServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
@@ -1687,6 +1721,21 @@ var UI = (function() {
     });
   }
 
+
+  UI.prototype.postStat = function() {
+    var self = this;
+    if (self.settings.disableServer) return;
+
+    var now = Date.now();
+    var body = {
+      editTime: self.stat.editTotal,
+      viewTime: now - self.stat.viewStart, 
+    };
+    self.stat.editTotal = 0;
+    self.stat.viewStart = now;
+
+    Util.requestPUT( "/rest/stat", {}, body );
+  }
 
   /*---------------------------------------------------
     Generating HTML & PDF
@@ -3875,6 +3924,7 @@ var symbolsMath = [
     });
   }
 
+
   UI.prototype._synchronize = function() {
     var self = this;
     self.lastSync = Date.now();
@@ -3884,6 +3934,8 @@ var symbolsMath = [
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
+      if (!self.storage.remote.canSync) return Promise.resolved();
+
       return self.withSyncSpinner( function() {
         return self.storage.sync( Editor.diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
           var line1 = cursors["/" + self.docName];
