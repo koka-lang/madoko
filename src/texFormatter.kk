@@ -77,11 +77,27 @@ public function fmtTexCodePlain( context : inlineContext, txt : string ) : strin
 
 public function fmtTexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
-  txt.unTokenize(startLine)
+  unTokenize(txt,startLine)
+}
+
+public function fmtTexCodeToken(classes : list<string>, txt : string ) : string
+{
+  val start = if (classes.any(fun(cname) { cname=="white" })) 
+                then "{"  // so preindent can match
+                else {
+                  val cclasses = classes.map(fun(cname) { 
+                                    cname.replaceAll(regex(@"(?:^|[^a-z]+)(?:([a-z])([a-z]*))?",ignoreCase=True),fun(ccap) {
+                                      ccap.groups[1].toUpper() + ccap.groups[2]
+                                    }).replaceAll(regex(@"[^a-zA-Z]+"),"")
+                                  }).filter( fun(cname) { cname != "" && cname != "Token" })
+                  @"\mdToken{" + cclasses.join(",") + "}{"
+                }
+  val end = "}"
+  start + txt + end     
 }
 
 function unTokenize( txt : string, startLine : bool ) : string {
-  var nl := True // startLine
+  var nl := startLine
   txt.replaceAll(rxTagged, fun(cap) {
         if (cap.groups.matchedOn(1)) {
           val res = cap.matched.texText.preSpace(nl)
@@ -95,19 +111,8 @@ function unTokenize( txt : string, startLine : bool ) : string {
         else cap.matched
       })
       .replaceAll(rxToken, fun(cap) {
-        val classes=cap.groups[1].toLower.trim.split(rxSpaces).list.filter( fun(cname) { cname != "token" } )
-        val start = if (classes.any(fun(cname) { cname=="white" })) 
-                      then "{"  // so preindent can match
-                      else {
-                        val cclasses = classes.map(fun(cname) { 
-                                          cname.replaceAll(regex(@"(?:^|[^a-z]+)(?:([a-z])([a-z]*))?",ignoreCase=True),fun(ccap) {
-                                            ccap.groups[1].toUpper() + ccap.groups[2]
-                                          }).replaceAll(regex(@"[^a-zA-Z]+"),"")
-                                        }).filter( fun(cname) { cname != "" })
-                        @"\mdToken{" + cclasses.join(",") + "}{"
-                      }
-        val end = "}"
-        start + cap.groups[2] + end                  
+        val classes=cap.groups[1].toLower.trim.split(rxSpaces).list
+        fmtTexCodeToken( classes, cap.groups[2] )    
       })
 } 
 val rxToken = regex(@"<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)

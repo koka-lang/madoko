@@ -156,6 +156,10 @@ public function fmtHtmlCodeHilite( context : inlineContext, txt : string, startL
 }
 val rxEndSpaces = regex(@"  +$")
 
+public function fmtHtmlCodeToken( classes : list<string> , txt : string ) : string {
+  "<span class='" + classes.join(" ").replaceAll("'","") + "'>" + txt + "</span>"
+}
+
 /* --------------------------------------
  Format attributes 
 ---------------------------------------- */

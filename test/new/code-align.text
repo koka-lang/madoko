@@ -3,11 +3,14 @@ author	   	: Daan
 author note : &time;
 Doc Class   : article
 
-~Pre        : replace=//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g 
+~Pre        : replace=//\\(?![()])/\(&lambda;\)//g 
 ~Pre,~Code  		: .pretty
 .pre-indented: .pretty language=koka
 .code2      : language=haskell
-.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
+~Pre,~Code  : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" 
+              replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
+              replace="//->/\(->|&rarr;\)//</\(<|&lang;\)//>/\(>|&rang;\)//g"
+
 .language-koka: replace="/\/\/(.*)/\(\/\/|&emsp;&fslash;&fslash;\1\)/g"
 .language-haskell: replace="/(?=--)/\(|&emsp;\)/g"
 
@@ -26,6 +29,9 @@ Doc Class   : article
 }
 </style>
 
+~ TexRaw
+\newcommand{\mdTokenPrettyType}[1]{\textcolor{Teal}{#1}}
+~
 
 
 [TITLE]
@@ -153,13 +159,13 @@ function xor() {
 ```
 
 ``` koka
-function parse( p : () -> 〈parser|e〉 a, input : string ) : e list〈(a,string)〉 {
+function parse( p : () -> <parser|e> a, input : string ) : e list<(a,string)> {
     from_parser(p)(input)
 }
 
 function succeed( x : a ) : parser a { to_parser fun(input) { [(x,input)] }
 
-function satisfy( pred : (string) -> maybe〈(a,string〉) ) : 〈parser〉 a {
+function satisfy( pred : (string) -> maybe(<a,string>) ) : <parser> a {
     to_parser fun(input) {
         match(pred(input)) {
             Just((x,rest))  -> [(x,rest)]
@@ -167,7 +173,7 @@ function satisfy( pred : (string) -> maybe〈(a,string〉) ) : 〈parser〉 a {
     }}
 }
 
-function choice( p1 : () → 〈parser|e〉 a, p2 : () -> 〈parser|e〉 a ) : 〈parser|e〉 a {
+function choice( p1 : () -> <parser|e> a, p2 : () -> <parser|e> a ) : <parser|e> a {
     to_parser fun(input) {
         match (parse(p1,input)) {
             Nil -> parse(p2,input)
@@ -175,3 +181,4 @@ function choice( p1 : () → 〈parser|e〉 a, p2 : () -> 〈parser|e〉 a ) : �
     }}
 }
 ```
+-->

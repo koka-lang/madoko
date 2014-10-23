@@ -124,6 +124,7 @@ public function inlineContext( fmt : formatter,
                  fmt.pick(fmtHtmlEnv,fmtTexEnv),
                  fmt.pick(fmtHtmlCodePlain,fmtTexCodePlain),
                  fmt.pick(fmtHtmlCodeHilite,fmtTexCodeHilite),
+                 fmt.pick(fmtHtmlCodeToken,fmtTexCodeToken),
                  fmt.pick(fmtHtmlLineInfo, fmtTexLineInfo),
                  fmt.pick(fmtHtmlCodeTable, fmtTexCodeTable),
                  fmt 
@@ -319,13 +320,17 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
           } 
   }
 
+  function colorToken( classes : list<string>, content : string ) : string {
+    if (plain || classes.isNil) then content else context.fmtCodeToken(classes,content)
+  }
+
   function codeEscape( code : string ) : string {
-    context.fmtCodeEscaped(txt,colorize,attrs).fst   // possibly tokenize with colors, and process escapes     
+    context.fmtCodeEscaped(txt,colorize,colorToken,attrs).fst   // possibly tokenize with colors, and process escapes     
   }
 
   function codeUnescape( ecode : string, col : int ) : string {
-    fmtCodeUnescape( ecode, fun(s) { 
-      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s, col==0)
+    fmtCodeUnescape( ecode, fun(s,startLine) { 
+      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s, startLine /* col==0 */)
     })
   }
 
@@ -345,12 +350,12 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
 
 
 
-function fmtCodeUnescape( txt : string, fmt : string -> string ) : string {
+function fmtCodeUnescape( txt : string, fmt : (string,bool) -> string ) : string {
   function unspan(caps : list<matched>, i : int ) {
     match(caps) {
-      Nil -> txt.substr(i).fmt
+      Nil -> txt.substr(i).fmt(i==0)
       Cons(cap,rest) -> {
-        txt.substr(i,cap.index - i).fmt + cap.groups[1] + unspan(rest, cap.next)
+        txt.substr(i,cap.index - i).fmt(i==0) + cap.groups[1] + unspan(rest, cap.next)
       }
     }
   }
@@ -360,6 +365,7 @@ function fmtCodeUnescape( txt : string, fmt : string -> string ) : string {
 val rxEscaped = regex(@"<ESCAPED\b[^>]*>([\s\S]*?)</ESCAPED>")
 
 function fmtCodeEscaped( context : inlineContext, txt : string, format : (string,maybe<a>) -> (string,maybe<a>), 
+                         formatToken : (list<string>,string) -> string,
                          attrs : attrs = attrsNone, st : maybe<a> = Nothing ) : (string,maybe<a>) {
   if (attrs.hasClass("noescape")) return format(txt,st)
 
@@ -370,18 +376,20 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
         val (fmt1,st1) = format(src.substr(0,cap.index),st0)
         val subcode    = cap.groups[2].replaceAll(regex(@"\\([^\w])"), "$1")
         val width      = if (cap.groups.matchedOn(1)) then cap.groups[1].parseInt.maybe(1,id)  
-                         elif (cap.groups.matchedOn(2)) then cap.groups[2].length
+                         elif (cap.groups.matchedOn(2)) then subcode.length
                          else 1
         val (fmt2,st2) = format(subcode,st1) // for colorization, use the provided substitution
-        // trace("subcode: " + fmt2)
-        val class2     = match(fmt2.find(rxClass)) {
+        val classes2   = match(fmt2.find(rxClass)) {
                            Just(ccap) -> (ccap.groups[1] + ccap.groups[2] + ccap.groups[3]).split(" ").list
                            Nothing    -> []
-                         }
+                         }  
+
         val fmt3       = "<ESCAPED width=" + width.show + ">" +
-                            context.fmtCmd("span", context.formatInline(cap.groups[3]), 
-                              context.formatDefaults(attrsNone.addClasses( Cons("code-escaped",class2)))) +
+                            formatToken( classes2, 
+                              context.fmtCmd("span", context.formatInline(cap.groups[3]), 
+                                context.formatDefaults(attrsNone.addClass( "code-escaped" )))) +
                          "</ESCAPED>"
+
         val (fmt4,st3) = codeEscape(src.substr1(cap.next),st2)
         (fmt1 + fmt3 + fmt4, st3)
       }
@@ -392,7 +400,7 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
 }
 //val rxCodeEscaped = regex(@"\\\((?:(\d+):)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
 val rxCodeEscaped = regex(@"\\\((?:(\d+):)?(?:((?:[^\\\|]|\\[^\)])*)\|)?((?:[^\\\r\n]|\\\n|\\[^\)])*)\\\)")
-val rxClass       = regex(@"<span\s+class=(?:""([^""]*)""|'([^']*)'|([^\s\&<>]+))\s*>",ignoreCase=True)
+val rxClass       = regex(@"^<span\s+class=(?:""([^""]*)""|'([^']*)'|([^\s\&<>]+))\s*>",ignoreCase=True)
 
 function escapeTexPre( txt : string ) : string {
   txt.replaceAll(regex(@"\$"),@"$\text{\tt\textdollar}$")

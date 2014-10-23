@@ -59,6 +59,7 @@ public rectype inlineContext {
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
                  xfmtCodeHilite : (context : inlineContext, txt : string, startLine: bool ) -> (string),
+                 xfmtCodeToken : (classes: list<string>, txt : string) -> string,
                  xfmtLineInfo : (context : inlineContext, lineInfo : string ) -> string,
                  xfmtCodeTable : (context : inlineContext, ct : codeTable, attrs : attrs ) -> string,
                  fmt : formatter
@@ -99,6 +100,10 @@ public function fmtCodePlain( context : inlineContext, txt : string ) : string {
 
 public function fmtCodeHilite( context : inlineContext, txt : string, startLine : bool = True ) : (string) {
   (context.xfmtCodeHilite)(context,txt,startLine)
+}
+
+public function fmtCodeToken( context: inlineContext, classes : list<string>, txt : string ) : string {
+  (context.xfmtCodeToken)(classes,txt)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {
@@ -156,6 +161,7 @@ public function copy( self : inlineContext,
                        xfmtEnv = self.xfmtEnv,
                        xfmtCodePlain = self.xfmtCodePlain,
                        xfmtCodeHilite = self.xfmtCodeHilite,
+                       xfmtCodeToken = self.xfmtCodeToken,
                        xfmtLineInfo = self.xfmtLineInfo,
                        xfmtCodeTable = self.xfmtCodeTable,
                        fmt : formatter = self.fmt  ) : inlineContext
@@ -163,7 +169,7 @@ public function copy( self : inlineContext,
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,prettyAlign,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
-                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtLineInfo, xfmtCodeTable, fmt )
+                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtCodeToken, xfmtLineInfo, xfmtCodeTable, fmt )
 }
 
 public function sanitize( context : inlineContext ) : bool {
