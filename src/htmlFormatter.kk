@@ -274,21 +274,25 @@ function tagBlock( tagName : string, body : string, attrs : string = "" ) : stri
 /* --------------------------------------
   Title 
 ---------------------------------------- */
+function fmtField( context: inlineContext, elem :string, class : string, txt : string ) : string {
+  if (txt=="") return ""
+  tag(elem, context.formatInline(txt), " class='" + class + "'")
+}
+
 public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : string {
   tag("section", 
     [tag("h1",context.formatInline(titleinfo.title)," class='title' data-line='1'"),
      if (titleinfo.subtitle=="") then "" else tag("h2",context.formatInline(titleinfo.subtitle)," class='subtitle'"),
+     context.fmtField("div","titlenote",titleinfo.note),     
      tag("table",
       tag("tr", 
        titleinfo.authors.map(fun(author) {
-        tag("td", context.formatInline("[" + author.name + "]{.author}" + 
-                                        (if (author.address!="") then "<br>[" + author.address + "]{.affiliation .address}" else "") +
-                                        (if (author.email!="") then "<br>[" + author.email + "]{.email}" else "") +
-                                             (if (author.note=="") then "" else 
-                                             "[&br;" + author.note + "]{.authornote}") )
+        tag("td", context.fmtField("div","author",author.name) +
+                  context.fmtField("div","affiliation address",author.address) +
+                  context.fmtField("div","email",author.email) +
+                  context.fmtField("div","authornote",author.note)
            ," class='authorblock align-center'")
        }).join("\n"))),
-     if (titleinfo.note=="") then "" else "<div class=note>" + context.formatInline(titleinfo.note) + "</div>"
     ].join("\n"),
     " class='titleblock align-center'")
    

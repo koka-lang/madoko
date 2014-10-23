@@ -225,12 +225,12 @@ hr.madoko, .madoko hr {
 }
 
 .authorblock .author {
-  display: block;
   font-size: large;
 }
 
-.authorblock .email {
-  font-family: monospace;
+.titlenote {
+  margin-top: -0.5ex;
+  margin-bottom: 1.5ex;
 }
 
 /* Lists */
@@ -402,7 +402,7 @@ body.madoko.preview {
 }
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token.indent, .madoko .reveal pre, .madoko .reveal code {
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token.indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
   font-size: 0.85em;
 }
