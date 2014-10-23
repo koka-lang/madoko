@@ -23,7 +23,7 @@
   "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))[\\w\\-\\.,#~]*( +?[\\w\\-]+){0,2}\\\\*?\\*?)[ \\t]*[:]",  
 
   "metadata": [
-    "Title","Subtitle","Author","Affiliation","Email","Toc Depth","Heading Depth",
+    "Title","Subtitle", "Sub Title", "Title Note","Author","Affiliation","Email","Toc Depth","Heading Depth",
     "Heading Base","Section Depth","Section Base","Bib","Bibliography",
     "Bib Style","Biblio Style","Bibliography Style","Cite Style","Cite All","Bib Search Url",
     "Bibtex","Pdf Latex",
@@ -47,9 +47,9 @@
       
       
       ["^@metakey", { "cases": {
-        "$2@metadata": { "token": "namespace.metadata.key", "next": "metadata" },
-        "$3": { "token": "namespace.metadata.key", "next": "metadata" },
-        "@default": { "token": "" } 
+          "$2@metadata": { "token": "namespace.metadata.key", "next": "metadata.$2" },
+          "$3": { "token": "namespace.metadata.key", "next": "metadata" },
+          "@default": { "token": "" } 
       }}],
       
       
@@ -102,7 +102,7 @@
     "metadata": [
       ["^(@metakey)", { "token": "@rematch", "next": "@pop" } ],
       ["^(?!\\s\\s\\s)", { "token": "@rematch", "next": "@pop" }],
-      [".+", "string.escape" ]
+      [".+", "string.escape.meta-$S2" ]
     ],
     
     "codeblock": [      
