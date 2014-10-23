@@ -122,9 +122,9 @@ function setMathMode( options : options, value : string ) : options {
 }
 
 
-function appendValue( xs : list<string>, x : string ) : list<string> {
+function appendValue( xs : list<string>, x : string, sep : string = "&br;" ) : list<string> {
   match(xs.reverse) {
     Nil -> [x]
-    Cons(y,yy) -> if (y=="") then Cons(x,yy).reverse else Cons(x,xs).reverse
+    Cons(y,yy) -> if (y=="") then Cons(x,yy).reverse else Cons(y + sep + x,yy).reverse
   }
 }
