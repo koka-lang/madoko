@@ -40,6 +40,8 @@ val linkid   = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
 val linktxt  = @"\[(?!\^)((?:\[(?:[^\[\]]|\[[^\]]*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*)\]"
 val linkreg  = linktxt + @"((?:\(" + linkhref + @"\)|\s*\[" + linkid + @"\])?(?:" + attrs + @")?)"
 
+public val rxLink = regex(linkreg)
+
 function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = [
   Rule("itext",     regex(@"^" + normal + "+"), inlineNormal ),
 

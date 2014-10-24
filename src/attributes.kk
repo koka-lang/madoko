@@ -93,13 +93,16 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(name = name.substr(1).definitionId, label = if (value!="") then value else acc.label)
     }  
     elif (start==".") {
-      acc(classes = acc.classes + [name.substr(1)])
+      val cname = name.substr(1)
+      if (acc.classes.any( fun(nm) { nm == cname } )) 
+       then acc else acc(classes = acc.classes + [cname])
     }
     elif (start=="@") {
       acc(counters = Cons((name.substr(1), value), acc.counters))
     }
     elif (name=="elem") {
-      acc(elem = value.definitionId, classes = [value.definitionId] + acc.classes )
+      val ename = value.definitionId
+      acc(elem = ename, classes = [ename] + acc.classes.filter(fun(nm) { nm != ename }) )
     }
     elif (name=="tex-elem") {
       acc(texelem = value )
@@ -112,7 +115,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       acc(name = value.definitionId )
     }
     elif (name=="class") {
-      acc( classes = acc.classes + [value.definitionId] )
+      val cname = value.definitionId
+      if (acc.classes.any( fun(nm) { nm == cname } )) 
+       then acc else acc( classes = acc.classes + [cname] )
     }
     elif (name=="label") {
       acc(label = value)

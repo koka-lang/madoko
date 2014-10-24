@@ -13,12 +13,14 @@ import std/dict
 import std/regex
 import std/log
 import std/path
+import std/string
 import common
 import options
 import attributes
 import block
 import inline     
 import formatBlock   // just the formatContext
+import formatInline  // just for rxLink
 import texParser
 
 // Parse source into blocks (see "parseBlocks") and 
@@ -114,7 +116,20 @@ function parseDefinitionsFull(
 
     // expand counters in label
     val cmdata = fcontext.inlineContext.metadata
-    val attrsx = attrsd.expandCounters(counters,cmdata).expand(cmdata)
+    val attrsx0 = attrsd.expandCounters(counters,cmdata).expand(cmdata)
+
+    // create a nice caption for headings
+    val attrsx  = match (block) {
+                    Heading(_,txt) -> {
+                      val caption = attrsx0.lookupKey("caption",txt)
+                      val ecaption = attrsx0.transformText(caption,dict(),fcontext.inlineContext.metadata)
+                      val xcaption = ecaption.expandKeys(attrsx0.source,attrsx0,dict(),fcontext.inlineContext.metadata)
+                      val kvs = [("caption",xcaption)] + (if (!attrsx0.hasKey("toc").bool) then [] else [("bookmark",xcaption.unformat)])
+                      attrsx0.addKeyvals(kvs)
+                    }
+                    _ -> attrsx0
+                  }
+
 
     // set label
     if (attrsx.name != "") then {
@@ -621,6 +636,13 @@ function showRLetterBase( value : int, baseChar : char ) : div list<char> {
   Cons(mod.char + baseChar, next.showRLetterBase(baseChar))
 }
 
+//--------------------------------------------------------
+// Unformat
+//--------------------------------------------------------
+
+function unformat( s : string ) : string {
+  s.replaceAll(rxLink, fun(cap) { cap.groups[1].replaceAll(rxLink,"$1") } ).trim
+}
 
 //--------------------------------------------------------
 // Block names

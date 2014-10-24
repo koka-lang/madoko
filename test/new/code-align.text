@@ -4,10 +4,10 @@ author note : &time;
 Doc Class   : article
 
 ~Pre        : replace=//\\(?![()])/\(&lambda;\)//g 
-~Pre,~Code  		: .pretty
-.pre-indented: .pretty language=koka
+~Pre,~Code  : .pretty
+.pre-indented: language=koka
 .code2      : language=haskell
-~Pre,~Code  : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" 
+.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" 
               replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
               replace="//->/\(->|&rarr;\)//</\(<|&lang;\)//>/\(>|&rang;\)//g"
 

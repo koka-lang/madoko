@@ -362,7 +362,7 @@ public function addClasses( attrs : attrs, classes : list<string> ) : attrs {
 
 public function addClass( attrs: attrs, cname : string ) : attrs {
   if (cname=="") then return attrs
-  if (attrs.classes.find( fun(nm) { cname == nm }).bool)
+  if (attrs.classes.any( fun(nm) { nm == cname } ))
    then attrs
    else attrs(classes=attrs.classes + [cname], text=attrs.text+" class='" + cname + "'", empty=False)
 }
@@ -415,16 +415,13 @@ public function hasClass( attrs : attrs, className : string ) : bool {
 
 
 // Generate a fresh id if it is not specified
-public function generateHeaderId( attrs : attrs, heading : string ) : attrs {
+public function generateHeaderId( attrs : attrs, heading : string, pre : string = "sec-") : attrs {
   val attrs1 = if (attrs.name!="") then attrs else {
     val newid = heading.normalizeId
-    val newname = if (newid=="") then "section" else newid
+    val newname = if (newid=="") then "section" else pre + newid
     attrs(text=attrs.text + " id='" + newname + "'", name = newname, empty=False)
   }
-  match (attrs1.hasKey("caption")) {
-    Nothing -> attrs1.addKeyval("caption",heading)
-    Just()  -> attrs1
-  }
+  attrs1
 }
 
  
