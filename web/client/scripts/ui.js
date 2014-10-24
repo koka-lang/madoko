@@ -1885,7 +1885,7 @@ var UI = (function() {
     Editor operations
   -------------------------------------------------- */
   function reformatTable( lines, column ) {
-    var rxCell = /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?![:~=-]|$))+)([|]+|[+]+(?= *[:~=-]|$)|$)/g;
+    var rxCell = /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?!$|[:~=\-\r\n]))+)([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/g;
     var rows = lines.map( function(line) {
        var cells = [];
        var cap;
@@ -1905,13 +1905,29 @@ var UI = (function() {
       row.forEach( function(cell,i) {
         if (i%2 === 0) return; // skip columns
         var len = cell.length;
-        var span = (i < row.length-1 ? row[i+1].length : 1);
+        var span = row[i+1].length || 1;
         if (span === 1) {
           if (mwidths.length <= r) {
             mwidths.push( len );
           }
           else if (mwidths[r] < len) {
             mwidths[r] = len;
+          }
+        }
+        else {
+          // spanning multipe columns
+          var totalWidth = 0;
+          for( var j = r; j < r+span; j++) totalWidth += (mwidths[j] || 0);
+          if (totalWidth < len) {
+            var clen = Math.ceil(len / span);
+            for( var j = r; j < r+span; j++) {
+              if (mwidths.length <= j) {
+                mwidths.push(clen);
+              }
+              else if (mwidths[j] < clen) {
+                mwidths[j] = clen;
+              }
+            }
           }
         }
         r = r + span;
@@ -1924,10 +1940,10 @@ var UI = (function() {
         var len = cell.length;
         var newlen = mwidths[r];
         r++;
-        var span = (i < row.length-1 ? row[i+1].length : 1);
+        var span = row[i+1].length || 1;
         newlen = newlen - (span-1);
         while (span > 1) {
-          newlen = newlen + 1 + mwidths[r];
+          newlen = newlen + 1 + (mwidths[r] || 0);
           r++;
           span--;
         }
