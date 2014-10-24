@@ -456,6 +456,9 @@ val rxLineBreak = regex(@"\\\n\r?[ \t]*")
 val mimes = dict([
   ("","text/plain"),
   ("mdk","text/plain"),
+  ("md","text/plain"),
+  ("mkdn","text/plain"),
+  ("markdown","text/plain"),
   ("txt","text/plain"),
   ("css","text/css"),
   ("html","text/html"),
@@ -467,6 +470,7 @@ val mimes = dict([
   ("cls","text/latex"),
   ("bib","text/plain"),
   ("bbl","text/plain"),
+  ("bst","text/plain"),
   ("aux","text/plain"),
 
   ("png","image/png"),

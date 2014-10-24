@@ -415,7 +415,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".js",".css",".json",".mdk",".cls",".bib"].join(";");  // .bbl
+  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".bib"].join(";");  // .bbl
   function hasEmbedExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;
@@ -423,7 +423,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
 
-  var dropExts = [".js",".css","mdk","md","bib","cls","sty","tex","png","jpg","jpeg","gif","svg","eps"].join(";");
+  var dropExts = [".js",".css",".mdk",".md",".mkdn",".markdown",".bib",".cls",".sty",".tex",".png",".jpg",".jpeg",".gif",".svg",".eps"].join(";");
   function hasDropExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;

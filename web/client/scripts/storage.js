@@ -74,7 +74,7 @@ function picker( storage, params ) {
 function openFile(storage) {
   var params = {
     command: "open",   
-    extensions: "remote folder .mdk .md .madoko .mkdn", 
+    extensions: "remote folder .mdk .md .markdown .mkdn", 
   }
   if (storage && storage.remote.canSync) { 
     params.remote = storage.remote.type();
