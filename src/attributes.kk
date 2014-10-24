@@ -394,14 +394,14 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
 
   function replaceGroups( cap : matched ) {
     val repl = rtxt.replaceAll( rxCaptureGroup, fun(gcap) {
-      if (gcap.groups.matchedOn(1)) {
+      if (gcap.groups[1] != "\\") {
         val i = gcap.groups[1].parseInt.maybe(0,id)
         if (convCase) 
          then cap.groups[i].replaceAll( rxCaseEsc, @"\\$2$1" ) // escape replacement
          else cap.groups[i]   
       }
       else {
-        gcap.matched
+        gcap.groups[1]
       }
     })
     if (convCase)
@@ -415,7 +415,7 @@ function regexReplacer( rxText : string, rtxt : string, flags : string, txt : st
   gtxt
 }
 
-val rxCaptureGroup = regex(@"\\(?:(\d)|\\)")
+val rxCaptureGroup = regex(@"\\([\d\\])")
 val rxCaseEsc = regex(@"\\((\\)|[/ulULE])")
 //val rxRegEsc  = regex(@"\\((\\)|[/])")
 
