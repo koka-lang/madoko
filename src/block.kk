@@ -366,7 +366,7 @@ function columnStyles( row : string ) : list<attrs> {
 }
 
 function columnStyle( style : string ) : attrs {
-  match(style.find(regex(@"^([|+])? *(:)?([ ~=-]*)(?:" + xattrs + ")?([ ~=-]*)(:)? *([|+] *)?$"))) {
+  match(style.find(regex(@"^([|+])? *(:)?([ ~=-]*)(?:" + xattrs + ")?([ ~=-]*)(:)? *(?:([|+]) *)?$"))) {
     Nothing    -> attrsNone // should not happen?
     Just(ccap) -> {
       val align = if (ccap.groups.matchedOn(2))
