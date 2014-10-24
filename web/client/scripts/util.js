@@ -422,14 +422,6 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (contains(embedExts,ext));
   }
 
-
-  var dropExts = [".js",".css",".mdk",".md",".mkdn",".markdown",".bib",".cls",".sty",".tex",".png",".jpg",".jpeg",".gif",".svg",".eps"].join(";");
-  function hasDropExt(fname) {
-    var ext = Stdpath.extname(fname);
-    if (!ext) return false;
-    return (contains(dropExts,ext));
-  }
-
   function isTextMime( mime ) {
     return (startsWith(mime,"text/") || mime==="application/json");
   }
@@ -1587,7 +1579,6 @@ doc.execCommand("SaveAs", null, filename)
 
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
-    hasDropExt: hasDropExt,
     hasImageExt: hasImageExt,
     mimeFromExt: mimeFromExt,
     isTextMime: isTextMime,

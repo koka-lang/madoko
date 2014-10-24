@@ -2,7 +2,7 @@
   "displayName": "Madoko",
   "name": "madoko",
   "mimeTypes": ["text/madoko","text/markdown"],
-  "fileExtensions": ["mdk"],
+  "fileExtensions": ["mdk","md","mkdn","markdown"],
   "editorOptions": { "tabSize": 4, "insertSpaces": true },
   "ignoreCase": true,
 

@@ -395,6 +395,8 @@ function extend(target, obj) {
 var mimeTypes = {    
   mdk: "text/madoko",
   md: "text/markdown",
+  mkdn: "text/markdown",
+  markdown: "text/markdown",
 
   txt: "text/plain",
   css: "text/css",
