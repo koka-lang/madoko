@@ -89,10 +89,12 @@ function createFile(storage) {
     command: "new", 
     extensions: "remote folder",
   }
+  /* // always start at the root for a new file?
   if (storage && !storage.remote.readonly) {
     params.remote = storage.remote.type();
     params.folder = storage.remote.getFolder();
   }
+  */
   return picker(storage, params).then( function(res) {
     if (!res) return null;
     return createFromTemplate( res.storage, res.docName, res.template || "default" ).then( function(content) {

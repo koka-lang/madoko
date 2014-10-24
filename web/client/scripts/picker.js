@@ -63,7 +63,7 @@ var Picker = (function() {
   //  header-logo: <img path>
   function Picker( opts, end ) {
     var self = this;
-    self.current = remotes.dropbox;
+    self.current = remotes.me;
     self.options = Util.copy(opts);
     self.endCont = end;
     self.buttonActive = null;
@@ -75,7 +75,7 @@ var Picker = (function() {
 
     // update persistent remotes
     var data = JSON.parse( localStorage.picker || "null");
-    if (data) {
+    if (data && self.options.command !== "new") {
       if (!self.options.remote) self.options.remote = data.remote;
       remotes.dropbox.folder  = data.dropbox || "";
       remotes.onedrive.folder = data.onedrive || "";
