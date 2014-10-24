@@ -785,7 +785,9 @@
 \newcommand{\cssNewInlineElemCmd}[4]{%
 	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{\cssWrapCmd{#4}}{##2}}}
 
-
+\newcommand{\cssInitKeys}[1]{%
+  \@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline}{#1}%
+}
 
 % cssText is just for font attributes; no padding or margins
 \newcommand{\cssTextX}[2]%

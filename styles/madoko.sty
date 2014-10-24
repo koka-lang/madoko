@@ -270,15 +270,16 @@
 %-------------------------------------------------------------
 \cssNewKey{css}{bookmark}{\cssBookmark}{}
 \newcommand{\mdBookmark}[3]{\eifstrequal{#2}{}{}{\pdfbookmark[#1]{#2}{#3}}}
+\newcommand{\mdHBookmark}[2]{\cssInitKeys{#2}\mdBookmark{#1}{\cssBookmark}{\cssId}}
 
-\newcommand{\mdH}[2][]{\part*{\cssInline[elem=h0,#1]{\mdBookmark{0}{\cssBookmark}{\cssId}#2}}}
-\newcommand{\mdHx}[2][]{\chapter*{\cssInline[elem=h1,#1]{\mdBookmark{1}{\cssBookmark}{\cssId}#2}}}
-\newcommand{\mdHxx}[2][]{\section*{\cssInline[elem=h2,#1]{\mdBookmark{2}{\cssBookmark}{\cssId}#2}}}
-\newcommand{\mdHxxx}[2][]{\subsection*{\cssInline[elem=h3,#1]{\mdBookmark{3}{\cssBookmark}{\cssId}#2}}}
-\newcommand{\mdHxxxx}[2][]{\subsubsection*{\cssInline[elem=h4,#1]{\mdBookmark{4}{\cssBookmark}{\cssId}#2}}}
+\newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\part*{\cssInline[elem=h0,#1]{#2}}}
+\newcommand{\mdHx}[2][]{\mdHBookmark{1}{#1}\chapter*{\cssInline[elem=h1,#1]{#2}}}
+\newcommand{\mdHxx}[2][]{\mdHBookmark{2}{#1}\section*{\cssInline[elem=h2,#1]{#2}}}
+\newcommand{\mdHxxx}[2][]{\mdHBookmark{3}{#1}\subsection*{\cssInline[elem=h3,#1]{#2}}}
+\newcommand{\mdHxxxx}[2][]{\mdHBookmark{4}{#1}\subsubsection*{\cssInline[elem=h4,#1]{#2}}}
 \newcommand{\mdHxxxxx}[2][]{\paragraph*{\cssInline[elem=h5,#1]{#2}}}
 \newcommand{\mdHxxxxxx}[2][]{\paragraph*{\cssInline[elem=h6,#1]{#2}}}
-\newenvironment{mdSection}[1][]{\begin{mdDiv}[#1]}{\end{mdDiv}}
+\newenvironment{mdSection}[1][]{\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %\patchcmd{\@startsection}%
 %	{\@ssect{#3}{#4}{#5}{#6}}%
