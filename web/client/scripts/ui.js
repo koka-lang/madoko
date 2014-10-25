@@ -3839,7 +3839,7 @@ var symbolsMath = [
         lineNo = Math.round(startLine + ((endLine - startLine + 1)/2));
       }
       // exit quickly if same line
-      if (lineNo === self.lastLineNo && lineNo !== endLine && !options.force) return false;
+      if (lineNo === self.lastLineNo && !options.force) return false;
       self.lastLineNo = lineNo;
 
       // use physical textline; 
