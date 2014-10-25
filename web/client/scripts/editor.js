@@ -318,6 +318,7 @@ function create( domElem, options ) {
 return {
   diff: diff,
   create: create,
+  ReplaceCommandWithSelection: ReplaceCommandWithSelection,
 };
 
 });

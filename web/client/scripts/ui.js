@@ -3502,7 +3502,7 @@ var symbolsMath = [
         // firefox has trouble with "WithSelection
         command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
       } else {
-        command = new ReplaceCommandWithSelection(select,newText);
+        command = new Editor.ReplaceCommandWithSelection(select,newText);
       } 
       self.editor.executeCommand("madoko",command);      
     }
