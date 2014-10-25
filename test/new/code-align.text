@@ -111,9 +111,9 @@ Rep-min problem:
 rep_alg         =  (  \_          -> \m ->  Leaf m
                    ,  \lfun rfun  -> \m ->  let  lt = lfun m
                                                  rt = rfun m
-                                            in   Bin lt rt "hi"
+                                            in Bin lt rt "hi"
                    )
-replace_min’ t  =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
+replace_min’ t  =  (cata_tree rep_alg t) (cata_tree min_alg t)
 ```
 
 ``` koka
