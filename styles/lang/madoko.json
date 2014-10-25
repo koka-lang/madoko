@@ -60,17 +60,16 @@
         "cases": {
           "$2": { "token": "keyword.header.custom.$2", "bracket": "@open" },
           "$3": { "token": "keyword.header.custom.$3", "bracket": "@close" },
-          "$4~(equation|texraw|math|mathpre|mathdefs)": { "token": "keyword.header.custom.$1", "bracket": "@open", "nextEmbedded": "text/latex", "next": "@xlatexdisplay.$1" },
+          "$4~(equation|texraw|math|mathpre|mathdefs|snippet)": { "token": "keyword.header.custom.$1", "bracket": "@open", "nextEmbedded": "text/latex", "next": "@xlatexdisplay.$1" },
           "$4": { "token": "keyword.header.custom.$1", "bracket": "@open" },
           "@default": { "token": "keyword.header.custom.$1", "bracket": "@close" }
         }}],      
       
       ["^\\s{0,3}>+", "string.quote" ],  
-      ["^(\\t|[ ]{4}(?:\\S|\\s+\\S)*)(\\s*$)", ["namespace.code","invalid"], "@codeblock" ], 
+      ["^(\\t|[ ]{4})\\s*$", "invalid"],
+      ["^(\\t|[ ]{4}(?:\\S|\\s+\\S)*)(\\s*$)", ["namespace.code","invalid"], "@codeblock" ],
       
-      
-      
-      ["^\\s*(```+)\\s*(?:([^\\s\\{]+)\\s*)?(?:\\{[^}]+\\}\\s*)?$", { "cases": {
+      ["^\\s*(```+)\\s*(?:([^\\s\\{]+)\\s*)?(?:\\{[^}]+\\}?\\s*)?$", { "cases": {
         "$2==javascript": { "token": "keyword.header.codeblock", "bracket": "@open", "next": "@codeblockgh.$1.javascript", "nextEmbedded": "text/javascript" },
         "$2==json": { "token": "keyword.header.codeblock", "bracket": "@open", "next": "@codeblockgh.$1.json", "nextEmbedded": "application/json" },
         "$2~\\w+/.*": { "token": "keyword.header.codeblock", "bracket": "@open", "next": "@codeblockgh.$1.$2", "nextEmbedded": "$2" },
@@ -106,6 +105,7 @@
     ],
     
     "codeblock": [      
+      ["^(\\t|[ ]{4})\\s*$", "invalid"],
       ["^((?:\\t|[ ]{4})(?:\\S|\\s+\\S)*)(\\s*)$", ["namespace.code","invalid"] ], 
       [".", { "token": "@rematch", "next": "@pop"} ]
     ],
