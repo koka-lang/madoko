@@ -32,8 +32,8 @@
   ],
   
   "types": [
-    "bool","int","nat","real",
-    "set","multiset","seq","map",
+    "bool","char","int","nat","real",
+    "set","multiset","seq","string","map",
     "object","array" 
   ],
   
@@ -62,7 +62,7 @@
       ["(\\{)(\\s*:\\s*@identifier)", ["@brackets","meta.attribute"]],
       
       
-      ["(')(@escapes)(')", ["string.char","string.char.escape","string.char" ]],
+      ["(')(@escapes)(')(?![\\w'\\?])", ["string.char","string.char.escape","string.char" ]],
       ["'[^\\\\'\\n\\r]'", "string.char" ],
       
       
