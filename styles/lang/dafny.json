@@ -63,7 +63,7 @@
       
       
       ["(')(@escapes)(')(?![\\w'\\?])", ["string.char","string.char.escape","string.char" ]],
-      ["'[^\\\\'\\n\\r]'", "string.char" ],
+      ["'[^\\\\'\\n\\r]'(?![\\w'\\?])", "string.char" ],
       
       
       ["array([2-9]\\d*|1\\d+)", "type.keyword" ],
