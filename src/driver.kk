@@ -460,7 +460,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
     }
   }
 
-  val rxRange = regex(@"^(\d+)(?:-(\d+))?$")
+  val rxRange = regex(@"^(\d+)(?:--?(\d+))?$")
   val rxSnippetName = regex(@"^(\w+)$")
   function findRange( incfile: string, incline: string, range : string, content : string, fname : string, lineNo : int ) : io (string,int,string)
   {
