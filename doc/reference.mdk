@@ -22,7 +22,7 @@ Package     : amscd
 MathJax Ext : mhchem
 Package     : [version=3]mhchem
 
-Math Embed  : 512 
+Math Embed  : 512
 
 Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}               
 
@@ -49,6 +49,12 @@ Indigo      : #4B0082
 Colorizer   : javascript
 Colorizer   : javascript5
 Colorizer   : ruby
+Colorizer   : madoko
+Colorizer   : latex
+
+.pre-indented: language=madoko
+
+~MadokoNet  : before="[madoko.net]: " background-color=Gainsboro
 
 Script      : https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
 
@@ -75,6 +81,9 @@ Madoko is a fast javascript [Markdown] processor written in [Koka]
 It started out as a demo program for the new, strongly typed, [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
+Madoko can both be run local as a command-line program, or as a full
+online experience on [Madoko.net] with storage and collaboration through [dropbox].
+
 ## Madoko philosophy
 
 The main design goal of Madoko is to enable light-weight creation of 
@@ -85,12 +94,12 @@ plain text readability.
 The popularity of Markdown is not accidental, and it is great for writing
 prose: it is super simple and straightforward to create good looking HTML
 documents. But for more serious use Markdown falls short in several areas,
-and Madoko provides many essential additions:
+and Madoko provides many essential additions for larger documents:
 
 * Extensive support for labeling and in-document [references][#sec-ids-labels].
 * [Tables][#sec-table] with custom borders, column alignment, multicolumn spans, colors etc.
 * Great [citation][#sec-bib] support, using standard BibTeX entries and styles.
-* Excellent support for static [syntax highlighting][#sec-code] code fragments.
+* Excellent support for static [syntax highlighting][#sec-pre] code fragments.
 * Automatic [numbering][#sec-numbering] of sections, figures, etc. 
 * Title page and [table-of-contents][#sec-special] generation.
 * Support for [custom blocks][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
@@ -107,7 +116,7 @@ Instead of a plethora of backends, Madoko concentrates on generating either
 HTML or high-quality PDF files through [LaTeX]. There has been a lot of effort
 in Madoko to make the LaTeX generation robust and customizable while
 integrating well with the various academic document- and bibliography styles.
-This makes it possible to write articles using just Madoko and get both a
+This makes it great for writing articles using just Madoko and get both a
 high-quality print format (PDF) and a great looking HTML page. Look at this
 scientific article for an example: 
 
@@ -159,7 +168,7 @@ In the future, we plan to support e-books through the [ePub] format too.
 
 ## Performance and License
 
-Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
+Madoko is a javascript program (written in [Koka]) that runs on [Node.js]. It is about 30% faster
 then [Marked] \(one of the fastest Javascript markdown implementations), and
 about 6 to 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
 available as a .NET executable on windows.
@@ -182,10 +191,17 @@ Madoko is free software available under the [Apache 2.0 license] at [madoko.code
 
 [Apache 2.0 license]: https://madoko.codeplex.com/license
 [madoko.codeplex.com]: http://madoko.codeplex.com
+[Dropbox]: https://www.dropbox.com/home
 
 # Installation and usage
 
-The easiest way to use Madoko is as a command line tool using Node.js (which
+The recommended way to use Madoko now is online on [Madoko.net] in combination
+with [Dropbox] to store your files and collaborate and share with other
+users.
+
+Nevertheless, Madoko works great as a command line tool as well, and it 
+is good to have a solid backup.
+The easiest way to use Madoko is as a command line tool is by using Node.js (which
 works on many platforms, like Windows, MacOSX, Linux etc). Madoko can also run
 inside a web browser or as a .NET executable. Installation under Node.js is very
 easy:
@@ -202,18 +218,21 @@ and you are done. Translating a markdown document is done simply as:
 which generates `mydoc.html`. The `-v` flag gives more verbose output.
 To also generate a PDF file, use:
 
-* `madoko --pdf -vv mydoc`
+* `madoko --pdf -vv --odir=out mydoc`
 
+where `--odir` puts all output files in the `out` directory.
 To generate a PDF, you need to have LaTeX installed on your system,
 which is also required for mathematics and bibliographies.
-Popular LaTeX systems include [MikTeX] for Windows, and [MacTeX] for MacOSX. 
+We recommend the full [TeXLive] LaTeX system as it is available for
+Wndows, Linux and MacOSX, and is used on the [Madoko.net] server as well.
 
 For PDF output, we added an extra verbose flag in order to see any warnings
 LaTeX produces. A full description of all command line options can be found in
 Appendix [#sec-commandline].
 
-[MikTeX]: http://miktex.org/
+[TexLive]: https://www.tug.org/texlive
 [MacTeX]: http://tug.org/mactex/
+[Madoko.net]: https://www.madoko.net
 
 # Syntax: Inline elements
 
@@ -244,14 +263,15 @@ Or use __strong emphasis__, or like **this**.
 
 ## Code
 
-You can include pre-formatted text in regular text using back-quotes (`` ` ``).
+You can include pre-formatted text in regular text using back-quotes
+(`` ` ``).
 
 ~ Sample
 For emphasis, use the `<strong>` tag in HTML.
 We can use back-quotes by using multiple ``back`quotes``. 
 ~
 
-Section [#sec-code] discusses code in more detail including syntax highlighting.
+Section [#sec-pre] discusses code in more detail including syntax highlighting.
 
 ## Sub- and super-script
 
@@ -363,6 +383,12 @@ A butterfly: ![bfly].
 
 This example also shows the use of attributes (Section [#sec-attr]) where
 we can specifiy the `width`, `height`, or `vertical-align` of the image.
+
+~ MadokoNet
+You can use to the toolbox menu to include images or just drag&drop
+them directly into the editor. Just watch the filesize as images
+larger than about 1mb are rejected by the Madoko server.
+~
 
 ## Footnotes  { #sec-footnotes }
 
@@ -512,6 +538,11 @@ Also, any local link, like "Section [#myheading]" or a citation like
 is determined by the `caption` attribute of the target element.
 For headings, this is by default the heading text.
 
+~ MadokoNet
+In the toolbox menu you can insert local references under
+the `#` menu which shows all labels in the document.
+~
+
 ## Figures and images { #sec-figure }
 
 Figures can be included using the `Figure` custom block (see Section [#sec-custom]):
@@ -633,10 +664,10 @@ Let's start a block quote:
 
 Just like lists, block quotes can be nested and contain other block elements.
 
-## Code blocks  { #sec-code }
+## Code blocks  { #sec-pre }
 
 You can write preformatted code simply by indenting the code with a tab
-character or at least four spaces. For example:
+character or at least _four_ spaces. For example:
 
 ~ Sample
     <a href="foo.com">a link in html</a>
@@ -741,22 +772,25 @@ This can be used to for example render all escaped text in a serif font:
 
 Finally, you can use the `.noescape` class to suppress escaping.
 
+When encountering a replaced piece of text, the syntax highlighter treats
+it by default as whitespace. It is possible to specify though what characters
+the syntax highlighter sees using the bar format `\(<highlight>|<escaped>\)`.
+For example, to colorize our implication symbol as a keyword, we can do:
+
+~ Sample
+Look at highlighted implication (1) in the following code:
+```javascript   
+function implies(x,y) { x \(return|&rArr;\) y }  \((**1**)\)
+```
+~
+
 ### Advanced: Pretty code alignment
 
 When writing high quality articles containing code fragments, it often
 looks best when using a serif font instead of monospace. However, it becomes
 hard to align the code properly in such cases. Madoko offers a special
 `pretty` mode for advanced code alignment inspired by the excellent [lhs2tex]
-tool by Andres  L&ouml;h. 
-
-<style>
-.pretty code { 
-  font-family: sans-serif;
-}
-.pretty .token.identifier {
-  font-style: italic;
-}
-</style>
+tool by Andres  L&ouml;h.
 
 ~ Sample
 We use a proportional font, but everything preceded by 2 or more spaces
@@ -777,7 +811,7 @@ Even though the font used is proportional everything which is preceded by
 default indentation being added. For example:
 
 ~ Sample
-``` haskell { .pretty replace="/->/\(2:&rarr;\)/g" } 
+``` haskell { .pretty replace="/->/\(->|&rarr;\)/g" } 
 substitute1  :: (String, Int) -> Exp -> Exp
 substitute1  (var, val) exp = subst exp where
   subst (Number i)       =  Number i
@@ -792,15 +826,12 @@ substitute1  (var, val) exp = subst exp where
 ~ 
 
 Note that we used a replacement expression to replace arrows with their
-proper symbol. To make alignment work properly, we can denote in the replacement
-expression for how many characters it should count with regard to alignment.
-In this case we wrote `\(2:` which makes the replacement count for 2 characters.
-
-Internally, Madoko uses tables to align `.pretty` code but not all
-browsers display the alignment as well as others. For example, in
-Chrome the above example has a bit too much whitespace after the
-`substitute1` identifier. However, in LaTeX the samples generally align
-nicely. Here is how the above example is rendered in LaTeX:
+proper symbol. To make alignment and syntax highlighting work properly,
+we used the bar format. In this case we wrote `\(->|` which makes the
+replacement count for 2 characters for alignment purposes (and uses `->`
+for the syntax highlighter). In LaTeX the samples generally align very
+nice. Here is how the above example is rendered in LaTeX (where
+we defined `\mdTokenPrettyType` to show a teal color):
 
 ![aligned]
 
@@ -809,15 +840,15 @@ replacements. For example, here is a sample from the [lhs2tex] manual:
 
 ~ Sample
 ``` Haskell { .pretty \
-              replace="//->/\(2:&rarr;\)//\\(?![()])/\(&lambda;\)//g" \
-              replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" \
-              replace="/([a-zA-Z])(\d+)\b/\(\1~\2~\)/g" }
+              replace="//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g" \
+              replace="/_(?=[a-zA-Z])/\(_|&lowline;\)/g" \
+              replace="/([a-zA-Z])(\d)\b/\(\1~\2~\)/g" }
 rep_alg         =  (  \_          -> \m ->  Leaf m
                    ,  \lfun rfun  -> \m ->  let  lt = lfun m
                                                  rt = rfun m
-                                            in   Bin lt rt "hi"
+                                            in Bin lt rt "hi"
                    )
-replace_min t   =  (cata_Tree rep_alg t) (cata_Tree min_alg t)
+replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
 ```
 ~
 
@@ -825,7 +856,7 @@ In LaTeX this sample is rendered as:
 
 ![aligned2]
 
-Note that to improve the renderening, we added replacements for underscores inside
+Note that to improve the renderning, we added replacements for underscores inside
 identifiers with `&lowline;` and subscripted digits that end an identifier. Also,
 we replaced right arrows and lambda bindings. 
 
@@ -852,25 +883,26 @@ To customize the appearance in HTML, just use a CSS style declaration:
 <style>
   .token.identifier    { font-style: italic }
   .token.string.escape { font-weight: bold }
-</style>  
+</style>
 ```
 
 In LaTeX, just define a `\mdToken`_token_ command. For example:
 
 ``` madoko
 ~ TexRaw
-\renewcommand{\mdTokenIdentifier}[1]{\textit{#1}}
-\renewcommand{\mdTokenEscape}[1]{\textbf{#1}}
+\defcommand{\mdTokenIdentifier}[1]{\textit{#1}}
+\defcommand{\mdTokenEscape}[1]{\textbf{#1}}
 ~
 ```
-
+We use `\defcommand` which is like `\newcommand` but doesn't fail if
+the command was already defined.
 For identifiers in _pretty_ code, the token rendering is determined 
 by `mdTokenPretty`_token_ commands. By default, these tokens are not
 colorized in LaTex but this is easy to customize:
 
 ```madoko
 ~ TexRaw
-\renewcommand{\mdTokenPrettyKeyword}[1]{\textcolor{blue}{\textsf{#1}}}
+\defcommand{\mdTokenPrettyKeyword}[1]{\textcolor{blue}{\textsf{#1}}}
 ~
 ```
 
@@ -934,6 +966,43 @@ As an aside, note that colorization is done statically by Madoko, and not
 dynamically when a user views your document (and therefore, it works
 in LaTeX/PDF too).
 
+There are many built-in languages in Madoko, and you can look
+at their JSON definitions. Here are a few:
+[Java](https://www.madoko.net/styles/lang/java.json),
+[Dafny](https://www.madoko.net/styles/lang/dafny.json),
+[C#](https://www.madoko.net/styles/lang/csharp.json),
+[Javascript](https://www.madoko.net/styles/lang/javascript.json),
+[HTML](https://www.madoko.net/styles/lang/html.json),
+[LaTeX](https://www.madoko.net/styles/lang/latex.json), 
+[BibTeX](https://www.madoko.net/styles/lang/bibtex.json), 
+[Madoko](https://www.madoko.net/styles/lang/madoko.json),
+[Python](https://www.madoko.net/styles/lang/python.json), 
+[Ruby](https://www.madoko.net/styles/lang/ruby.json), 
+[SMT](https://www.madoko.net/styles/lang/smt.json), 
+[Koka](https://www.madoko.net/styles/lang/koka.json),
+[C++](https://www.madoko.net/styles/lang/cpp.json),
+etc. If you write your own JSON description, you can simply
+include it yourself through the `Colorizer` metadata key.
+
+### Advanced: taking over code blocks
+
+It is possible to 'take over' code blocks and use them for
+example for mathematics. For example, here is how to make
+all code blocks use pre-formatted math (Section [#sec-mathpre]):
+
+``` madoko
+~Pre,~Code: input=mathpre
+```
+
+Moreover, you can selectively only take over different kinds
+of code. Use `.code`_n_ for inline code with _n_ quotes, and 
+`.pre-indented` or `pre-fenced` for indented or fenced code blocks.
+For example, here is how to use a default language only for 
+indented and double quoted (``` `` ```) code:
+
+``` madoko
+.pre-indented,.code2: language=koka
+```
 
 ## Tables { #sec-table }
 
@@ -989,6 +1058,12 @@ some vertical lines. Also, we use two header rows.
 | 2    |   doodad   |     Collects *gizmos*      |  23.80  |
 | 10   |  dojigger  |           Foo              |  102.98 |
 | 1024 | Self-explanatory, no?                  ||    0.99 |
+~
+
+~ MadokoNet
+You can press `Alt-Q` to reformat tables (or paragraphs) and align all columns.
+Also, pressing `enter` in a table will add a new row (use `ctrl-enter` to 
+use a regular line break if needed).
 ~
 
 ### Horizontal rules
@@ -1133,9 +1208,9 @@ and we can refer to Equation [#eq-gaussian] like any heading.
 ~~
 
 Block equations can also be included use the `Math` custom block which
-is just like the standard LaTeX display environment using (`$$` or
+is just like the standard LaTeX display environment (using `$$` or
 `\[`). However, the `Equation` block is preferred as it takes care of
-numbering, alignment, etc. See also Section [#sec-custom] on custom
+numbering, and alignment. See also Section [#sec-custom] on custom
 blocks that support mathematics, like `Theorem`, `Lemma`, `Proof`, etc.
 Madoko does not support the `\(`, `\[`, and `$$` commands to enclose
 mathematics since those are escape sequences in Madoko.
@@ -1184,6 +1259,12 @@ U \ar@/_/[ddr]_y \ar@/^/[drr]^x
 As a hint to understand the above code, note that `\ar@/_/[ddr]_y` denotes an arrow,
 left curved (`@/_/`), going down, down, right (`[ddr]`), with a label `y`
 underneath. See the package [user guide][xypic] for more examples.
+
+~ MadokoNet
+You can by default include any package included in [TexLive] (which are many).
+If you need to include a local package (or document class, bibliography etc)
+you can either use the toolbox menu or just drag&drop it into the editor.
+~
 
 ### Math commands   { #sec-mathdefs }
 
@@ -1609,27 +1690,34 @@ Section [#sec-replace]):
 
 ~~ Sample
 ~ MathPre   { replace="/->/\rightarrow/g" }
-random &: () -> ndet double
-print  &: string -> io ()
-error  &: \forall\alpha. string -> exn \alpha
+random &: () -> ndet double; 
+print  &: string -> io ();
+error  &: \forall\langle\alpha\rangle\ string -> exn \alpha; 
 ~
+~~
+
+Of course, you can often achieve a similar effect by using good
+replacers with `.pretty` code directly (Section [#sec-advanced--pretty-code-alignment]):
+
+~~ Sample
+``` koka   { .pretty \
+             replace="//->/\(->|&rarr;\)//</\(<|&lang;\)//>/\(>|&rang;\)//g" \
+             replace="//\bforall\b/\(forall|&forall;\)//\balpha\b/\(alpha|&alpha;\)//g" }
+random  : () -> ndet double;
+print   : string -> io ();
+error   : forall<alpha> string -> exn alpha;
+```
 ~~
 
 ### Setting all code to preformatted math
 
-If you want to typeset all code using preformatted math, you can actually 'take over'
-the standard code blocks in Madoko and set the input of those to `mathpre`. For example,
-in the earlier scientific article, the document starts with the following 
-[metadata rules][#sec-rules]:
+If you want to typeset all math using preformatted math, you can actually 'take over'
+the standard math blocks in Madoko and set the input of those to `mathpre`. 
+For example:
 
-    ~Pre,~Code  : input=mathpre 
-                    replace="/\|->>/{\dlongmapsto}/g"
-                    replace="/->/{\rightarrow}/g"
-                    replace="/</{\langle}/g"
-                    replace="/>/{\rangle}/g"
+    .Math-Inline,.Math-Display: input=mathpre 
 
-These set both block- and inline-code to the `mathpre` input mode and define a set of
-useful replacements.
+These set both display- and inline-math to the `mathpre` input mode.
 
 
 ## Table of contents  { #sec-toc }
@@ -1955,7 +2043,10 @@ Madoko supports some special block elements that get expanded automatically.
     Include files are first searched relative to the current directory, then
     the directory of the input file, followed by the output directory, and finally
     the `styles` directory in the installation directory of Madoko.
-
+    
+    The `INCLUDE` element can also be used to include parts of a file,
+    see Section [#sec-includefrag] for more information.
+    
 * `[BIB]`: Includes the bibliography entry file (`.bbl`) generated by BibTex. Internally
     expands to:
     ```
@@ -1964,6 +2055,76 @@ Madoko supports some special block elements that get expanded automatically.
     ~ End TeX   
     ```
     See also Section [#sec-bib].
+
+### Advanced: including file fragments  { #sec-includefrag } 
+
+The full syntax of the `INCLUDE` element is:
+
+`[INCLUDE`(`=`_file_)?(`:`_range_)?`]`
+
+where the _range_ is either a _fragment name_ or line range. For
+example we can include part of file by using:
+
+    [INCLUDE=foo.hs:10-18]
+
+or
+
+    [INCLUDE=foo.hs:20]
+
+which would include lines 10 to 18 and just line 20 from `foo.hs`. 
+Of course remembering line ranges can be error prone, so we can also
+give names to fragments of files and use those to refer to them.
+For example, we may have code samples in `foo.hs` as:
+
+``` haskell
+-- BEGIN:Var
+-- BEGIN:Syntax
+data Exp  =  Number     Int
+          |  Add        Exp Exp
+          |  Subtract   Exp Exp
+          |  Multiply   Exp Exp
+          |  Divide     Exp Exp
+-- END:Syntax
+          |  Variable   String;
+-- END:Var                     
+
+--BEGIN:Eval
+evaluate :: Exp -> Int
+evaluate (Number i)      = i
+evaluate (Add a b)       = evaluate a + evaluate b
+evaluate (Subtract a b)  = evaluate a - evaluate b
+evaluate (Multiply a b)  = evaluate a * evaluate b
+evaluate (Divide a b)    = evaluate a `div` evaluate b
+--END:Eval
+```
+
+Where the `BEGIN `_name_ and `END `_name_ delimit file fragments. Note that
+the fragments can be nested. We can now include particular fragments as:
+
+    [INCLUDE=foo.hs:Var]
+    [INCLUDE=foo.hs:Eval]
+
+for example. Sometimes, it can be a hassle to always mention the full
+file name. In that case, we can first do a few empty includes of all
+the needed files (so Madoko knows the fragment names), and then just use
+the fragment names directly, e.g. first an empty include at the start of
+the document by using line number 0:
+
+    [INCLUDE=foo.hs:0]
+
+and later in the document, we can refer to fragments in that file using:
+
+    [INCLUDE:Syntax]
+
+The delimiters for fragments are always '_start_ `BEGIN`|`END` _name_' where
+_start_ includes most of the usual comment characters, namely,
+`//`, `--`, `#`, and `%`. If you need some other sequence, you can
+customize this using the `Fragment Start` and `Fragment End` metadata keys.
+For example, the default is set as:
+
+    Fragment Start : ^(?:\/\/|--|[#%]) *BEGIN *: *(\w+) *$
+    Fragment End   : ^(?:\/\/|--|[#%]) *END *(?:[:] *(\w+) *)?$
+
 
 # Syntax: Metadata and Styling
 
@@ -1996,18 +2157,21 @@ Any metadata key and value can be given (and referred to using
 
 * `Subtitle`: An optional subtitle.
 
-* `Title Date`: The date the document was written. Used in the `[TITLE]`
+* `Title Note`: A general note about the document. Used in the `[TITLE]`
     element where it is put below the title and authors. 
     ```
-    Title Date: &date; (version 1.0)
+    Title Note: Draft, &date; (version 1.0)
     ```
 
-* `Author`, `Affiliation`, `Email`: the author name, affiliation, and
-    email. There can be  multiple authors. The author info is also used by the
-    `[TITLE]` element to generate a proper document title header.
-    The authors are also written to the author `<meta>` tag. In the case of
-    multiple authors, the affiliation and email always belong to the last
-    defined author.
+* `Author`, `Address`, `Affiliation`, `Email`, `Author Note`: the author
+    name, address, affiliation, email, and general note. There can be
+    multiple authors. The author info is also used by the `[TITLE]`
+    element to generate a proper document title header. The authors are
+    also written to the author `<meta>` tag. In the case of multiple
+    authors, the address, affiliation, author note, and email always
+    belong to the last defined author. If you define multiple 
+    `Address` or `Affiliation` entries for one author, they are placed
+    above each other.
 
 * `Toc depth` (=3): The maximum depth of headings that are included in the
     table of contents (Section [#sec-toc]). 
@@ -2053,6 +2217,9 @@ Any metadata key and value can be given (and referred to using
 
 * `Pdf Latex` (=`xelatex`): The command used to run the LaTeX program when the `--pdf`
     command line flag is present. 
+    
+* `Fragment Start`, `Fragment End`: Used to specify file fragment delimiters,
+    see Section [#sec-includefrag].
 
 The following keys are not used as this moment but have a standard meaning:
 
@@ -2062,7 +2229,6 @@ The following keys are not used as this moment but have a standard meaning:
 * `Description`: A short description of the document. Written to the description `<meta>` tag.
 * `Comment`: General comments.
 * `Revision`: Revision of the document.
-* `Address`: Address of an author.
 * `Phone`: Phone number of an author.
 
 ### HTML keys
@@ -2078,12 +2244,26 @@ Some keys are only interpreted for HTML output:
     ```
     Use `Css: clear` to clear the list of CSS files. This can be used for example
     to not include the default `madoko.css` style file.
+    
+    ~ MadokoNet
+    When not giving an extension or full path, Madoko will try to load
+    the css file from the Madoko server's `/style` directory. 
+    This is used for the standard `madoko.css` file. 
+    ~
 
 * `Script`: Specify a Javascript file that needs to be included in the HTML output
     via a `<script>` tag. There can be many script keys present.
     ```
     Script: lib/main.js
     ```
+    ~ MadokoNet 
+    Usually, scripts are _not_ loaded in the preview as this may lead
+    to performance problems. You can use the `preview` class to signify
+    that the script should be loaded in the preview too:
+    ```
+    Script: reveal.js {.preview}
+    ```
+    ~  
 * `HTML Meta`: Specify content included in a `<meta>` tag. There can be many
     meta tags specified. 
     ```
@@ -2143,6 +2323,12 @@ For LaTeX output, the following keys are relevant:
    prefixed with its options using square brackets:
 
         Document Class: [9pt]article
+  
+  ~ MadokoNet
+  When leaving out the extension, Madoko assumes this
+  is a standard LaTeX document class (available from CTAN). If an extension
+  is given, the file is loaded (or created) from the current directory.
+  ~
 
 * `Package`: Specify a LaTeX package that is included via `\usepackage`.
     The package name can be prefixed with its options using square brackets.
@@ -2163,6 +2349,12 @@ For LaTeX output, the following keys are relevant:
     ```
     Package*: pgfplots
     ```
+
+    ~ MadokoNet
+    When leaving out the extension, Madoko assumes this
+    is a standard LaTeX package (available from CTAN). If an extension
+    is given, the file is loaded (or created) from the current directory.
+    ~
 
 * `Tex Header`: The value is included as is before
     the `\begin{document}` command of the LaTeX output. 
@@ -2795,7 +2987,7 @@ where the options can consist of:
 {.booktable}
 
 All the boolean flags can be negated by prefixing them with `no`, for example
-to suppress LaTeX output, use `--notex`.
+to suppress a full document use `--nofull`.
 
 The verbose flag (`-v`) can be repeated to become more verbose. For example, 
 by using `-vv` LaTeX warnings and the size of math images are displayed.
@@ -2818,10 +3010,8 @@ document is self sufficient and contains for example for HTML proper `<head>`
 and `<body>` elements instead of just the markup for the content. Similarly,
 for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
 and necessary `\usepackage` commands. The `--full` flag is usually not
-necessary since Madoko will generate a full document whenever one of the
-following [metadata][#sec-metadata] keys is present in the document: `Title`,
-`Css`, `Script`, `Package`, `HTML Header` or `Tex Header`. In most stand-alone
-documents this is the case.
+necessary since Madoko will generate a full document by default, but 
+it can be suppressed using `--nofull`.
 
 The `-m` flag can be used to set metadata values. For example, when specifying
 what command to use to invoke LaTeX, we can say `-mpdflatex:/foo/bar/xelatex`
@@ -3117,7 +3307,7 @@ where `text-indent` is stored in `\cssTextIndent`, or `border-left-style` as
 As an advanced example, here is how `madoko.sty` defines the rules for the 
 `Figure` custom block:
 
-``` tex
+``` latex
 \cssNewKey{css}{page-align}{\cssPageAlign}{}
 \cssElemRuleDo{figure}{%
   \eifstrequal{\cssPageAlign}{top}%
@@ -3211,7 +3401,7 @@ Some attributes have a special meaning to Madoko. In particular:
 * `-`: clear any attributes that have been set before (usually through metadata rules).
 * `input=`_input_. Sets the input mode of this block which determines how the content
     of this block is processed. One of:
-    - `pre`: Preformatted code (Section [#sec-code]).
+    - `pre`: Preformatted code (Section [#sec-pre]).
     - `raw`: Raw unprocessed input that is passed directly to the output.
     - `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
     - `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
@@ -3255,7 +3445,7 @@ Some class attributes are treated specially by Madoko. In particular:
 *  `.long`. Used to signify that a table might span multiple pages so that
     the LaTeX backend can use the `longtable` environment instead of the 
     regular `tabular` environment (which cannot break across pages).
-* `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-code]).
+* `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-pre]).
 * `.list-star`, `.list-dash`, `.list-plus`. Used to customize appearance of 
   bullets in a list.
 
@@ -3282,7 +3472,7 @@ You can define your own definition for it using the
 LaTeX `\mdDefineUnicode` command in a `TexRaw` block at the start of the
 document. For example:
 
-```tex  
+``` latex
 ~ TeXRaw
 \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
 \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
