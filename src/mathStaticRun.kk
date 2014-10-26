@@ -525,8 +525,12 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
   xopts.print("> " + cmd,3)
   system(cmd,fun(err2,stdout2,stderr2) {
     if (err2 != 0) {
+      val output = stdout2 + stderr2
       xopts.printErr("> " + cmd)
-      xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+      xopts.printErr("error: failure while typesetting math: \n" + output)      
+      if (output.contains("Invalid Parameter -")) then {
+        xopts.printErr("hint: perhaps you forgot to install ImageMagick?\n      (http://www.imagemagick.org/script/binary-releases.php)")
+      }
     }
     continue(err2)
   },0,dir)
