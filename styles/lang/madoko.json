@@ -31,7 +31,8 @@
     "Css","Script","Html Header","Html Footer","Html Meta",
     "Math Mode","Math Embed","Math Dir","Math Dpi","Math Scale",
     "Latex","Convert","Dvipng","Math Pdf Latex","MathJax","MathJax Ext",
-    "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*"
+    "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*",
+    "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url"
   ],
   
   
@@ -112,7 +113,7 @@
 
     
     "codeblockgh": [      
-      ["(```+)\\s*$", { "cases": {
+      ["\\s*(```+)\\s*$", { "cases": {
         "$1==$S2": { "cases": {
           "$S3": { "token": "@rematch", "bracket": "@close", "switchTo": "@codeblockghend", "nextEmbedded": "@pop" },
           "@default": { "token": "@rematch", "bracket": "@close", "switchTo": "@codeblockghend" }
@@ -120,8 +121,8 @@
         "@default": "namespace.code" 
       }} ],
       ["\\s+$", "invalid"],
-      ["(?:\\S|\\s+\\S)+", "namespace.code" ],
-      ["[^`]*$", "namespace.code" ]
+      ["(?:[^`\\s]|\\s+[^`\\s])+", "namespace.code" ],
+      ["[^`]+$", "namespace.code" ]
     ],
     
     "codeblockghend": [
