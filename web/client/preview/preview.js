@@ -10,6 +10,8 @@ var Preview = (function() {
 
   // initialize
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
+  var isIE   = Object.hasOwnProperty.call(window, "ActiveXObject");
+ 
 
   // Refresh message after some seconds
   setTimeout(function() {
@@ -523,13 +525,13 @@ var Preview = (function() {
     var elem = document.querySelectorAll("div.reveal")[0];
     if (elem) elem.className="reveal";
 
-    // turn of fragments in preview or IE throws an exception
+    // turn of fragments in preview or IE throws an exception on a complex query string
     try {
-      Reveal.config.fragments = true;
+      Reveal.config.fragments = !isIE || (document.body.getAttribute("data-view") === "full");
       Reveal.availableFragments();
     }
     catch(exn) {
-      Reveal.config.fragments = (document.body.getAttribute("data-view") === "full");
+      Reveal.config.fragments = false;
     }
 
     // re-initialize and restore position
