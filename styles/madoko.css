@@ -187,6 +187,10 @@ a.localref:hover {
   display: none;
 }
 
+.madoko code, .madoko .code {
+  white-space: pre-wrap;
+}
+
 hr.madoko, .madoko hr {
   border: none;
   border-bottom: black solid 1px;
