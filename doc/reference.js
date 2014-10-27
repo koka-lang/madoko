@@ -39,3 +39,4 @@ function initTOC() {
  document.addEventListener("DOMContentLoaded", function(event) {
    initTOC();
  });
+ 

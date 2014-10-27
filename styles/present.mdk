@@ -165,7 +165,7 @@ Html Header   :
         center: true,
     };
     document.addEventListener("DOMContentLoaded", function(event) {
-        if (!Reveal.isReady()) {
+        if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
           [].forEach.call(document.querySelectorAll( ".fragmented>li" ), function(li) {
             if (li && !/\bfragment\b/.test(li.className)) li.className = li.className + " fragment";
           });
