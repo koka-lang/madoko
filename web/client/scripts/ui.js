@@ -248,6 +248,13 @@ var UI = (function() {
     });
     
     self.updateSettings( Util.jsonParse(json,{}) );
+
+    // read from hash
+    var cap = /[#&\?]options=([^=&#;]+)/.exec(window.location.hash);
+    if (cap) {
+      json = decodeURIComponent(cap[1]);
+      self.updateSettings( Util.jsonParse(json,{}) );
+    }    
   }
 
   UI.prototype.updateSettings = function(obj) {
