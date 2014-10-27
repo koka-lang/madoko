@@ -523,6 +523,15 @@ var Preview = (function() {
     var elem = document.querySelectorAll("div.reveal")[0];
     if (elem) elem.className="reveal";
 
+    // turn of fragments in preview or IE throws an exception
+    try {
+      Reveal.config.fragments = true;
+      Reveal.availableFragments();
+    }
+    catch(exn) {
+      Reveal.config.fragments = (document.body.getAttribute("data-view") === "full");
+    }
+
     // re-initialize and restore position
     Reveal.initialize(Reveal.config);
     Reveal.slide(pos.h,pos.v,pos.f);      
@@ -552,6 +561,7 @@ var Preview = (function() {
     }
     else if (info.eventType==="view") {
       document.body.setAttribute("data-view",info.view);
+      revealRefresh(); 
     }
     else if (info.eventType==="viewSync") {
       viewSynchronize();
