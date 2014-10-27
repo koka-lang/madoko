@@ -23,10 +23,10 @@
   "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))[\\w\\-\\.,#~]*( +?[\\w\\-]+){0,2}\\\\*?\\*?)[ \\t]*[:]",  
 
   "metadata": [
-    "Title","Subtitle", "Sub Title", "Title Note","Author","Affiliation","Email","Toc Depth","Heading Depth",
-    "Heading Base","Section Depth","Section Base","Bib","Bibliography",
+    "Title","Subtitle", "Sub Title", "Title Note","Author","Author Note","Affiliation","Email",
+    "Toc Depth","Heading Depth","Heading Base","Section Depth","Section Base","Bib","Bibliography",
     "Bib Style","Biblio Style","Bibliography Style","Cite Style","Cite All","Bib Search Url",
-    "Bibtex","Pdf Latex","Fragment Start","Fragment End",
+    "Bibtex","Pdf Latex","Fragment Start","Fragment End","Colorizer",
     "Copyright","License","Keywords","Comment","Description","Revision","Address","Phone",
     "Css","Script","Html Header","Html Footer","Html Meta",
     "Math Mode","Math Embed","Math Dir","Math Dpi","Math Scale",
