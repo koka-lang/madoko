@@ -1210,7 +1210,9 @@ app.put( "/rest/stat", function(req,res) {
       editTime: req.body.editTime || 0,
       viewTime: req.body.viewTime || 0,
     };
-    console.log("stat user: " + (req.session.logins.dropbox.name || req.session.userid) + ": editing: " + stat.editTime.toString() + "ms, viewing: " + stat.viewTime.toString() + "ms");
+    var login = req.session.logins.dropbox || req.session.logins.onedrive || null;
+    var name  = (login ? login.name : null) || req.session.userid;    
+    console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, viewing: " + stat.viewTime.toString() + "ms");
     log.entry( {
       type: "stat", 
       user: { id: req.session.userid },
