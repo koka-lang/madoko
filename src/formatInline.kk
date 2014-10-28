@@ -463,7 +463,8 @@ function inlineImg( cap : matched, context : inlineContext ) : string {
 function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) : string {
   // cap.groups = 1:optional spaces, 2:txt, 3:everything after it, 
   //               AND 4:href, 5:href-title, OR 6: linkid, AND 7:span attributes
-  val attrs  = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
+  val attrs0  = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
+  val attrs   = context.applyDefaults(if (isImage) then "img" else "a", attrs0)
   
   val nbsp = if (cap.groups[1] != "" && cap.groups[1].list.all(fun(c){c==' '})) 
               then context.fmtText("&nbsp;") else cap.groups[1]
