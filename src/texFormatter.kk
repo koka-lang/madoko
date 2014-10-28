@@ -325,7 +325,9 @@ function texAttrsX( attrs : attrs = attrsNone ) : string {
                 if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
                 if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
                 attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
-                  kv.fst.normalizeId + "={" + kv.snd.normalizeVal + "}" 
+                  val (name0,value) = kv
+                  val name = if (name0.startsWith("tex-")) then name0.substr(4) else name0    
+                  name.normalizeId + "={" + value.normalizeVal + "}" 
                 }),          
               ].concat.join(",") 
     if (txt=="") then "" else "[" + txt + "]"
@@ -340,14 +342,17 @@ function nosuppressKey( kv : (string,string) ) : bool {
 
 function normalizeVal( v : string ) : string {
   match(v.find(rxPerc)) {
-    Just(cap) -> "0." + cap.groups[1] + "\\linewidth"
+    Just(cap) -> {
+      val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
+      perc.showFixed(2) + "\\linewidth"
+    }
     Nothing -> match(v.find(rxPixels)) {
       Just(cap) -> cap.groups[1] + "\\cssPixel"
       Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
     }
   }
 }
-val rxPerc = regex(@"\s*(\d\d?)%\s*")
+val rxPerc = regex(@"\s*(\d{1,3})%\s*")
 val rxPixels = regex(@"\s*(\d+(?:\.\d+)?)px\s*")
 
 function capitalize( s : string ) : string {
