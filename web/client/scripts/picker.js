@@ -280,7 +280,7 @@ var Picker = (function() {
       elem = elem.parentNode;
     }
     if (Util.hasClassName(elem,"dir")) {
-      var path = elem.getAttribute("data-path");
+      var path = decodeURIComponent(elem.getAttribute("data-path"));
       self.itemEnterFolder(path);
     }
   };    
@@ -339,7 +339,7 @@ var Picker = (function() {
     var items = parent.children;
     for(var i = 0; i < items.length; i++) {
       if (Util.hasClassName(items[i],"selected")) {
-        return items[i].getAttribute("data-path");
+        return decodeURIComponent(items[i].getAttribute("data-path"));
       }
     }
     return null;
@@ -393,7 +393,7 @@ var Picker = (function() {
       }
 
       var type = elem.getAttribute("data-type");
-      var path = elem.getAttribute("data-path");
+      var path = decodeURIComponent(elem.getAttribute("data-path"));
       if (ev.target.nodeName === "INPUT") {
         itemSelect(parent,elem);
       }
@@ -595,7 +595,7 @@ var Picker = (function() {
         var disable = (!item.disabled && canSelect(item.path,item.type,self.options.extensions)) ? "" : " disabled";
         return "<div class='item item-" + item.type + disable + 
                       "' data-type='" + item.type + 
-                      "' data-path='" + Util.escape(item.path) + 
+                      "' data-path='" + encodeURIComponent(item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
@@ -646,14 +646,14 @@ var Picker = (function() {
       }
     }
     var parts = (self.options.command==="connect" ? [] : folder.split("/"));
-    var html = "<span class='dir' data-path='//'>me</span><span class='dirsep'>/</span>";
+    var html = "<span class='dir' data-path='%2F%2F'>me</span><span class='dirsep'>/</span>";
     if (folder!=="//") {
-      html = html + "<span class='dir' data-path='" + root + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";
+      html = html + "<span class='dir' data-path='" + encodeURIComponent(root) + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";
       var partial = root;
       parts.forEach( function(part) {
         if (part) {
           partial = Util.combine(partial,part);
-          html = html + "<span class='dir' data-path='" + Util.escape(partial) + "'>" + Util.escape(part) + "</span><span class='dirsep'>/</span>";
+          html = html + "<span class='dir' data-path='" + encodeURIComponent(partial) + "'>" + Util.escape(part) + "</span><span class='dirsep'>/</span>";
         }
       });
     }

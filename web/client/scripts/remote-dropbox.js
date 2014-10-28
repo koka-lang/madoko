@@ -34,6 +34,11 @@ var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
 var sharedFoldersUrl = "https://api.dropbox.com/1/shared_folders/";
 
+function encodeURIPath(s) {
+  var p = escape(s);
+  return p.replace(/%2F/g,"/");
+}
+
 
 function addPathInfo(info) {
   return dropbox.withUserId( function(uid) {
@@ -54,7 +59,7 @@ function addPathInfo(info) {
 }
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + fname, timeout: longTimeout, binary: binary };
+  var opts = { url: contentUrl + encodeURIPath(fname), timeout: longTimeout, binary: binary };
   return dropbox.requestGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
@@ -64,22 +69,22 @@ function pullFile(fname,binary) {
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: metadataUrl + fname } );
+  return dropbox.requestGET( { url: metadataUrl + encodeURIPath(fname) } );
 }
 
 function sharedFolderInfo(id) {
-  var url = sharedFoldersUrl + id;
+  var url = sharedFoldersUrl + encodeURIPath(id);
   // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
   return dropbox.requestGET( { url: url, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
-  var url = metadataUrl + fname;
+  var url = metadataUrl + encodeURIPath(fname);
   return dropbox.requestGET( { url: url }, { list: true });
 }
 
 function pushFile(fname,content) {
-  var url = pushUrl + fname; 
+  var url = pushUrl + encodeURIPath(fname); 
   return dropbox.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return addPathInfo(info);
@@ -97,7 +102,7 @@ function createFolder( dirname ) {
 }
 
 function getShareUrl( fname ) {
-  var url = Util.combine(sharesUrl,fname);
+  var url = sharesUrl + encodeURIPath(fname);
   return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
     return (info.url || null);
   }, function(err) {
