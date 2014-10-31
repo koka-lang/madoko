@@ -12,8 +12,9 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
         "../scripts/remote-http",
+        "../scripts/remote-github",
         "../scripts/picker",
-        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Picker) {
+        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,GithubRemote,Picker) {
 
 
 var Encoding = {
@@ -200,6 +201,9 @@ function unpersistRemote(remoteType,obj) {
     }
     else if (remoteType===HttpRemote.type()) {
       return HttpRemote.unpersist(obj);
+    }
+    else if (remoteType===GithubRemote.type()) {
+      return GithubRemote.unpersist(obj);
     }
   }
   return LocalRemote.unpersist();

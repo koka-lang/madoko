@@ -10,7 +10,8 @@ define(["../scripts/promise","../scripts/util",
         "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
-        ], function(Promise,Util,LocalRemote,Dropbox,Onedrive) {
+        "../scripts/remote-github",
+        ], function(Promise,Util,LocalRemote,Dropbox,Onedrive,Github) {
 
 
 
@@ -42,6 +43,7 @@ var Picker = (function() {
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
+    github: { remote: new Github.Github(), folder: "" },
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
     me: { remote: new LocalRemote.LocalRemote(), folder: "//" },
   };
@@ -397,7 +399,7 @@ var Picker = (function() {
       if (ev.target.nodeName === "INPUT") {
         itemSelect(parent,elem);
       }
-      else if (type==="folder") {
+      else if (Util.startsWith(type,"folder")) {
         picker.itemEnterFolder(path);
       }
       else if (type==="remote") {
@@ -534,10 +536,12 @@ var Picker = (function() {
             self.setCurrent(remotes.me);
           }    
           self.setActive();            
-          self.current.remote.getUserName().then( function(userName) {
+          return self.current.remote.getUserName().then( function(userName) {
             document.getElementById("remote-username").innerHTML = Util.escape( userName );
             return self.displayFolder();
           });
+        }).then( null, function(err) {
+          listing.textContent = "Error: " + (err.message ? err.message : err.toString());
         });
       };
     }
@@ -592,14 +596,16 @@ var Picker = (function() {
     return getListing.then( function(items) {
       //console.log(items);
       var html = items.map( function(item) {
-        var disable = (!item.disabled && canSelect(item.path,item.type,self.options.extensions)) ? "" : " disabled";
-        return "<div class='item item-" + item.type + disable + 
+        var types = item.type.split(".");
+        var type  = types[0];
+        var disable = (!item.disabled && canSelect(item.path,type,self.options.extensions)) ? "" : " disabled";
+        return "<div class='item " + types.map(function(tp) { return "item-" + tp; }).join(" ") + disable + 
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
-                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
+                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
                   (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnect.png' />" : "") +
                   "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
                "</div>";

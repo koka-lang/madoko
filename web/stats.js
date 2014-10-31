@@ -175,9 +175,11 @@ function digestUsers(entries, all) {
 		if (entry.type === "login" || entry.type==="uid") {
 			//if (entry.type==="uid" && entry.name != null) entry.uid = entry.name;
 			var uid = entry.name || entry.uid;
-			userGetOrCreate(uid,{ name: entry.name, email: entry.email, entries: [] });
-			userLink(entry.id,uid);
-			user = userLink(entry.uid,uid);			
+			if (uid != null) {
+				userGetOrCreate(uid,{ name: entry.name, email: entry.email, entries: [] });
+				userLink(entry.id,uid);
+				user = userLink(entry.uid,uid);			
+			}
 		}
 		else if (entry.user && entry.user.id) {
 			user = userGetOrCreate(entry.user.id, { name: "", email: "", entries: [] });
@@ -187,6 +189,7 @@ function digestUsers(entries, all) {
 		}
 		if (user) {
 			entry.dateTime = date.dateFromISO(entry.date).getTime();
+			if (!user.entries) console.log(user)
 			user.entries.push(entry);
 		}
 	});

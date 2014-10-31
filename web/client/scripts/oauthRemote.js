@@ -22,6 +22,7 @@ var OAuthRemote = (function() {
     self.logoutTimeout  = opts.logoutTimeout || false;
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = (opts.useAuthHeader !== false);
+    self.headers        = opts.headers || {};
     self.access_token   = null;
     self.userName       = null;
     self.userId         = null;
@@ -109,9 +110,9 @@ var OAuthRemote = (function() {
   OAuthRemote.prototype._requestXHR = function( options, params, body ) {
     var self = this;
     if (typeof options === "string") options = { url: options };
+    if (!options.headers) options.headers = self.headers;
     return self._withAccessToken( function(token) {
       if (options.useAuthHeader !== false && self.useAuthHeader) {
-        if (!options.headers) options.headers = {};
         options.headers.Authorization = "Bearer " + token;
       }  
       else {
@@ -215,11 +216,20 @@ var OAuthRemote = (function() {
     });
   }
 
+  OAuthRemote.prototype.getUserLogin = function() {
+    var self = this;
+    if (self.userLogin) return Promise.resolved(self.userLogin);
+    return self.getUserInfo().then( function(info) {
+      return self.userLogin;
+    });
+  }
+
   OAuthRemote.prototype.getUserInfo = function() {
     var self = this;
     return self.requestGET( { url: self.accountUrl } ).then( function(info) {
       self.userId = info.uid || info.id || info.userId || info.user_id || null;
       self.userName = info.display_name || info.name || null;
+      self.userLogin = info.login || self.userId;
       return info;
     });
   }

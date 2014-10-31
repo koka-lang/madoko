@@ -335,7 +335,7 @@ app.use(function(req, res, next){
     else if (req.path==="/editor.html") {
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
-      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net";
+      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.github.com";
     } 
     else if (endsWith(req.path,".svg")) { 
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.
@@ -784,6 +784,8 @@ function oauthLogin(req,res) {
   res.status(200);
   var remote = null;
 
+  console.log("oauth login request: " + req.path + ", " + JSON.stringify(req.query) );
+
   // check if this is a logout request..
   if (req.query.code == null) {
     return redirectPage(remote,"Logged out");
@@ -824,24 +826,25 @@ function oauthLogin(req,res) {
     client_secret: remote.client_secret,
   };
   return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
-    if (!tokenInfo || !tokenInfo.access_token) {
-      return redirectError("Failed to get access token from the token server.");
-    }
     console.log(tokenInfo);
+    if (!tokenInfo || !tokenInfo.access_token) {
+      return redirectError(remote, "Failed to get access token from the token server.");
+    }
     //req.session[remote.name] = { access_token: info.access_token };
     var options = { 
       url: remote.account_url, 
       secure: true, 
-      json: true 
+      json: true,
+      headers: { "User-Agent": "Madoko" },
     };
     if (remote.useAuthHeader) {
-      options.headers = { Authorization: "Bearer " + tokenInfo.access_token };
+      options.headers.Authorization = "Bearer " + tokenInfo.access_token;
     }
     else {
       options.query = { access_token: tokenInfo.access_token };
     }
     return makeRequest( options ).then( function(info) {
-      // console.log(info);
+      console.log(info);
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
         name: info.display_name || info.name || "",
@@ -893,6 +896,19 @@ function oauthLogout(req,res,remoteName,login) {
 // content request over our server
 // -------------------------------------------------------------
 
+function urlParamsDecode(hash) {
+  if (!hash) return {};
+  if (hash[0]==="#" || hash[0]==="?") hash = hash.substr(1);
+  var obj = {};
+  hash.split("&").forEach( function(part) {
+    var i = part.indexOf("=");
+    var key = decodeURIComponent(i < 0 ? part : part.substr(0,i));
+    var val = decodeURIComponent(i < 0 ? "" : part.substr(i+1));
+    obj[key] = val;
+  });
+  return obj;
+}
+
 function urlParamsEncode( obj ) {
   var vals = [];
   properties(obj).forEach( function(prop) {
@@ -939,7 +955,7 @@ function makeRequest(options,obj) {
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
     console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
-    //console.log(options);
+    console.log(options);
     req = (options.secure===false ? http : https).request(options, function(res) {
       if (options.encoding) res.setEncoding(options.encoding);
       var body = "";
@@ -956,7 +972,9 @@ function makeRequest(options,obj) {
             body = JSON.parse(body);
           }
           catch(exn) {
-            body = null;
+            if (typeof body === "string") {
+              body = urlParamsDecode(body);
+            }
           }
         }
         cont( null, body ); //(encoding ? new Buffer(body,encoding) : body) );
