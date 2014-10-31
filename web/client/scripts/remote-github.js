@@ -47,7 +47,7 @@ function getItems( owner, repo, branch, tpath, full ) {
     var items = tree.tree;
     if (!tpath) return items;
     return items.filter( function(item) {
-      return Util.startsWith(item.path,tpath + "/");
+      return Util.dirname(item.path) === tpath;
     });
   });
 }
