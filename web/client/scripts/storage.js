@@ -16,6 +16,12 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/picker",
         ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,GithubRemote,Picker) {
 
+var remotes = {
+  dropbox: Dropbox,
+  github: GithubRemote,
+  http: HttpRemote,
+  local: LocalRemote,
+};
 
 var Encoding = {
   Base64: "base64",
@@ -66,9 +72,10 @@ function picker( storage, params ) {
       folder = res.path;
       fileName = Util.basename(res.path) + ".mdk";
     }
-    var remote = unpersistRemote( res.remote, { folder: folder } );
-    if (!remote) throw new Error("canceled");
-    return { storage: new Storage(remote), docName: fileName, template: res.template }
+    return remotes[res.remote].createAt( folder ).then( function(remote) {
+      return { storage: new Storage(remote), docName: fileName, template: res.template }      
+    })    
+    //var remote = unpersistRemote( res.remote, { folder: folder } );
   });
 }
 
@@ -193,17 +200,12 @@ function serverGetInitialContent(fpath) {
 
 function unpersistRemote(remoteType,obj) {
   if (obj && remoteType) {
-    if (remoteType===Onedrive.type()) {
-      return Onedrive.unpersist(obj);
-    }
-    else if (remoteType===Dropbox.type()) {
-      return Dropbox.unpersist(obj);
-    }
-    else if (remoteType===HttpRemote.type()) {
-      return HttpRemote.unpersist(obj);
-    }
-    else if (remoteType===GithubRemote.type()) {
-      return GithubRemote.unpersist(obj);
+    var rs = Util.properties(remotes);
+    for (var i = 0; i < rs.length; i++) {
+      var remote = remotes[rs[i]];
+      if (remoteType == remote.type()) {
+        return remote.unpersist(obj);
+      }
     }
   }
   return LocalRemote.unpersist();

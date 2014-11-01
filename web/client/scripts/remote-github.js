@@ -121,17 +121,42 @@ function getListing(path) {
 }
 
 
+function getHeadCommitUrl(path) {
+  var rpath = splitPath(path);
+  return github.requestGET( "repos/" + rpath.owner + "/" + rpath.repo +
+                             "/git/refs/heads/" + rpath.branch )
+              .then( function(ref) {
+    return ref.object.url;
+  });
+}
+
+function withPathUrl( tree, path, action ) {
+  for(var i = 0; i < tree.length; i++) {
+    if (tree[i].path === path) return action(tree[i].url);
+  }
+  return Promise.rejected("File not found: " + path);
+}
+
+function pullFile( tree, path, binary ) {
+  return withPathUrl( tree, path, function(url) {
+    var headers = { Accept: "application/vnd.github.3.raw" };
+    return github.requestGET( { url: url, binary: binary, cache: 30000, headers: headers } );
+  });
+}
+
 /* ----------------------------------------------
    Main entry points
 ---------------------------------------------- */
 
 
-function createAt( folder ) {
-  throw "not implemented"
+function createAt( path ) {
+  return getHeadCommitUrl(path).then( function(commitUrl) {
+    return new Github(path,commitUrl);
+  });
 }
 
 function unpersist(obj) {
-  return new Github(obj.folder);
+  return new Github(obj.folder, obj.commit);
 }
 
 function type() {
@@ -148,13 +173,16 @@ function logo() {
 
 var Github = (function() {
 
-  function Github( folder ) {
+  function Github( path, commitUrl ) {
     var self = this;
-    self.folder = folder || "";
+    self.path      = path || "";
+    self.commitUrl = commitUrl || "";
+    self.tree   = null;
+    self.commit = null;
   }
 
-  Github.prototype.createNewAt = function(folder) {
-    return createAt(folder);
+  Github.prototype.createNewAt = function(path) {
+    return createAt(path);
   }
 
   Github.prototype.type = function() {
@@ -171,17 +199,23 @@ var Github = (function() {
 
   Github.prototype.getFolder = function() {
     var self = this;
-    return self.folder;
+    return self.path;
   }
 
   Github.prototype.persist = function() {
     var self = this;
-    return { folder: self.folder };
+    return { folder: self.path, commit: self.commitUrl };
   }
 
   Github.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.folder,fname);
+    return Util.combine(self.path,fname);
+  }
+
+  Github.prototype.localPath = function(fname) {
+    var self = this;
+    var rpath = splitPath( self.fullPath(fname) );
+    return rpath.tpath;
   }
 
   Github.prototype.connect = function() {
@@ -200,6 +234,29 @@ var Github = (function() {
     return github.getUserName();
   }
 
+  Github.prototype._withCommit = function(action) {
+    var self = this;
+    if (self.commit) return action(self.commit);
+    return github.requestGET( { url: self.commitUrl, cache: 10000 } ).then( function(commit) {
+      self.commit = commit;
+      return action(self.commit);
+    });
+  }
+
+  Github.prototype._withTree = function(action) {
+    var self = this;
+    if (self.tree) return action(self.tree, self.commit);
+    return self._withCommit( function(commit) {
+      return github.requestGET( { url: commit.tree.url, cache: 10000 }, { recursive: 1 } ).then( function(tree) {
+        var localPath = self.localPath("");
+        self.tree = tree.tree.filter( function(item) {
+          return Util.startsWith( item.path, localPath );
+        });
+        return action(self.tree,self.commit);
+      });
+    });
+  }
+
   Github.prototype.pushFile = function( fpath, content ) {
     var self = this;
     throw "not implemented";
@@ -207,7 +264,19 @@ var Github = (function() {
 
   Github.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    throw "not implemented";
+    return self._withTree( function(tree,commit) {
+      var localPath = self.localPath(fpath);
+      return pullFile( tree, localPath, binary ).then( function(content) {
+        var fullPath = self.fullPath(fpath);
+        return {
+          path: fpath,
+          content: content,
+          createdTime: Util.dateFromISO(commit.author.date),
+          globalPath: "//github/shared/" + self.fullPath(fpath),
+          //sharedPath: sharedPath,
+        };
+      });
+    });
   }
 
   Github.prototype.getRemoteTime = function( fpath ) {    
