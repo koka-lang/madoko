@@ -29,7 +29,9 @@ var Picker = (function() {
   var buttonCancel  = document.getElementById("button-cancel");
   var buttonDiscard = document.getElementById("button-discard");
   var commandName   = document.getElementById("command-name");
-
+  var commitMessage = document.getElementById("commit-message");
+  var commitModified = document.getElementById("commit-modified");
+  
   var buttons = [];
   var child = document.getElementById("picker-buttons").firstChild;
   while (child) {
@@ -102,6 +104,7 @@ var Picker = (function() {
     self.display();
     app.style.display= "block";
     app.focus();
+    if (self.options.command==="commit") commitMessage.focus();
   }
 
 
@@ -120,6 +123,7 @@ var Picker = (function() {
         remote: self.current.remote.type(),
         onedrive: remotes.onedrive.folder,
         dropbox: remotes.dropbox.folder,
+        github: remotes.github.folder,
         created: new Date().toISOString(),
       };
       localStorage.picker = JSON.stringify(data);
@@ -286,6 +290,15 @@ var Picker = (function() {
       self.itemEnterFolder(path);
     }
   };    
+
+  // ------------------------------------------------------------------------------------
+  // Commit
+  // ------------------------------------------------------------------------------------
+  document.getElementById("button-commit").onclick = function(ev) { if (picker) picker.onCommit(); };
+
+  Picker.prototype.onCommit = function() {
+    picker.onEnd({message: commitMessage.value});
+  }
 
   // ------------------------------------------------------------------------------------
   // Upload
@@ -506,12 +519,17 @@ var Picker = (function() {
       self.setActive();
       return Promise.resolved();
     }
-    else if (self.options.command==="message") {
+    else if (/message|upload/.test(self.options.command)) {
       self.setActive();
       return Promise.resolved();
     }
-    else if (self.options.command==="upload") {
+    else if (self.options.command === "commit") {
       self.setActive();
+      commitModified.innerHTML = self.options.modified.map( function(p) { 
+        return "<li>" + Util.escape(p) + "</li>"; 
+      }).join(""); 
+      commitMessage.value = "";
+      commitMessage.focus();
       return Promise.resolved();
     }
     else if (self.options.page==="template") {

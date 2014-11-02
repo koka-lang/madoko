@@ -62,6 +62,8 @@
         <hr/>
           <div id="pull" class="button" title="Pull from repository"
           ><span class="icon"><img src="images/icon-sync.png"/></span>Pull</div>
+          <div id="commit" class="button" title="Commit to repository"
+          ><span class="icon"><img src="images/icon-sync.png"/></span>Commit &amp; Push...</div>
         <hr/>
         <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
@@ -251,11 +253,20 @@
       </div>
       <small>(Or select manually: <input type="file" id="pickfiles" name="Choose" multiple /><br/>Also, you can directly drop files into the editor pane)</small>
     </div>
+    <div id="commit">
+       <p>Commit message:<br>
+       <input id="commit-message" type="text" />
+       </p>
+       <div>Modified:</div>
+       <ul id="commit-modified">
+       </ul>
+    </div>
   </div>
 </div>
 <div id="picker-footer" class="app-footer header-bar">
   <div id="login-info"><span id="remote-username"></span> <div id="button-signout" class="button">sign out</div></div>  
   <div id="picker-buttons">
+    <div id="button-commit" class="button">Commit</div>
     <div id="button-signin" class="button">Sign in</div>
     <div id="button-discard" class="button">Discard</div>
     <div id="button-open" class="button">Open</div>

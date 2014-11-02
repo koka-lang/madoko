@@ -1218,6 +1218,7 @@ x#picker.page-template #message-template {
 #picker.command-save #button-save,
 #picker.command-new #button-new,
 #picker.command-push #button-push,
+#picker.command-commit #button-commit,
 #picker.page-alert #button-discard,
 #picker #button-signout,
 #picker #button-cancel,
@@ -1248,13 +1249,25 @@ x#picker.page-template #message-template {
   display: none;
 }
 
-#picker #upload {
+#picker #upload, #picker #commit {
   display: none;
 }
 
-#picker.command-upload #upload {
+#picker.command-upload #upload,
+#picker.command-commit #commit {
   display: block;
 }
+
+#picker #commit-message {
+  font-size: 1em;
+  vertical-align: middle;
+  width: 80%;
+}
+
+#picker #commit ul {
+  margin: 0pt;
+}
+
 
 #picker #upload {
   margin: 1em 0em;

@@ -61,7 +61,10 @@ var Encoding = {
 
 
 function picker( storage, params ) {
-  if (storage && !storage.isSynced() && (params.command !== "save" && params.command !== "connect" && params.command !== "signin" && params.command !== "push" && params.command !== "message" && params.command !== "upload")) params.page = "alert";
+  if (storage && !storage.isSynced() && 
+       !(/save|connect|signin|push|upload|commit|message/.test(params.command))) {
+    params.page = "alert";
+  }
   return Picker.show(params).then( function(res) {
     if (!res || res.canceled) throw new Error("canceled");
     if (!res.path) return res;
@@ -165,6 +168,19 @@ function uploadLocal(storage,message,header,headerLogo) {
     return res.files;
   });
 }
+
+function commitMessage(storage,modified,header,headerLogo) {
+  var params = {
+    command: "commit",    
+    modified: modified,
+    header: header,
+    headerLogo: headerLogo,
+  };
+  return picker(storage,params).then( function(res) {
+    return res;
+  });
+}
+
 
 function discard(storage,docName) {
   var params = {
@@ -512,6 +528,7 @@ var Storage = (function() {
       file.encoding  = file.encoding || opts.encoding;
       file.mime      = file.mime || opts.mime;
       file.modified  = file.modified || (content !== file.content);
+      file.sha       = file.modified ? null : file.sha;
       file.content   = content;
       file.position  = opts.position || file.position;
       self._updateFile(file);
@@ -624,7 +641,7 @@ var Storage = (function() {
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);
-    return self.remote.pullFile(fpath,opts.encoding !== Encoding.Utf8,opts.url).then( function(file) {
+    return self.remote.pullFile(fpath,opts.encoding !== Encoding.Utf8).then( function(file) {
       file.path      = file.path || fpath;
       file.mime      = opts.mime;
       file.encoding  = opts.encoding;
@@ -907,6 +924,7 @@ var Storage = (function() {
           remoteFile.original = file.original; // so next merge does not get too confused
           remoteFile.content  = res.merged;
           remoteFile.modified = true;
+          remoteFile.sha      = null;      
           self._updateFile(remoteFile);
           if (!pullOnly) throw new Error( self._syncMsg( file, "merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
           return self._syncMsg( file, "merged from server but conflicts detected", "merge from server" );
@@ -917,6 +935,7 @@ var Storage = (function() {
           var filex = Util.copy(remoteFile);
           filex.content  = res.merged;
           filex.modified = true;
+          filex.sha      = null;
           self._updateFile(filex);
           if (pullOnly) 
             return self._syncMsg( file, "merged from server", "merge from server" );
@@ -938,6 +957,7 @@ var Storage = (function() {
         if (file1) { // could be deleted in the mean-time?
           file1.original    = file0.content;
           file1.modified    = (file1.content !== file0.content); // could be modified in the mean-time
+          file1.sha         = file1.modified ? null : file1.sha;
           file1.createdTime = info.createdTime;
           // these can be updated for newly created files
           if (info.globalPath) file1.globalPath = info.globalPath;
@@ -984,7 +1004,7 @@ var Storage = (function() {
   Storage.prototype.pull = function(diff,cursors,showMerges) {
     var self = this;
     var merges = [];
-    if (!self.remote.canCommit) return Promise.rejected("Cannot pull from this remote storage");
+    if (!self.remote.canCommit) return Promise.rejected("Can only pull from repositories");
 
     return self.login().then( function() {      
       return self.remote.pull( function(info) {
@@ -1020,6 +1040,24 @@ var Storage = (function() {
     var opts = Util.copy(file);
     return self._pullFile( file.path, opts ).then( function(remoteFile) {
       return self._syncPull(diff,cursors,merges,file,remoteFile,true);
+    });
+  }
+
+  Storage.prototype.commit = function() {
+    var self = this;
+    if (!self.remote.canCommit) return Promise.rejected("Can only commit to repositories");
+
+    return self.login().then( function() {
+      return self.remote.isAtHead().then( function(atHead) {
+        if (!atHead) return Promise.rejected("Please pull first, the document is not up-to-date with the repository");
+        return self.remote.filterChanged( self.files.elems() ).then( function(modified) {
+          return commitMessage(self, modified.map( function(item) { return item.path; } ),
+                                self.remote.getFolder(), 
+                                "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
+            return self.remote.commit( res.message, modified );
+          });
+        });
+      });
     });
   }
 

@@ -111,7 +111,7 @@ function getListing(path) {
           return {
             type: (item.type === "blob" ? "file" : "folder"),
             path: joinPath(q),
-            url : item.url,
+            sha : item.sha,
             readonly: Util.endsWith(item.mode,"755"),
           };
         });
@@ -132,7 +132,7 @@ function getHeadCommitUrl(path) {
 
 function withPathUrl( tree, path, action ) {
   for(var i = 0; i < tree.length; i++) {
-    if (tree[i].path === path) return action(tree[i].url);
+    if (tree[i].path === path) return action(tree[i].url, tree[i] );
   }
   return Promise.rejected("File not found: " + path);
 }
@@ -148,8 +148,11 @@ function pullFileUrl( url, binary ) {
 }
 
 function pullFile( tree, path, binary ) {
-  return withPathUrl( tree, path, function(url) {
-    return pullFileUrl( url, binary );
+  return withPathUrl( tree, path, function(url, info) {
+    return pullFileUrl( url, binary ).then( function(item) {
+      item.sha = info.sha;
+      return item;
+    });
   });
 }
 
@@ -302,7 +305,7 @@ var Github = (function() {
         return {
           path: fpath,
           content: info.content,
-          url: info.url,
+          sha: info.sha,
           createdTime: Util.dateFromISO(commit.committer.date),
           globalPath: "//github/shared/" + self.fullPath(fpath),
           //sharedPath: sharedPath,
@@ -331,6 +334,13 @@ var Github = (function() {
     return null;
   };
 
+  Github.prototype.isAtHead = function() {
+    var self = this;
+    return getHeadCommitUrl(self.path).then( function(commitUrl) {
+      return (self.context.commitUrl === commitUrl);
+    });
+  }
+
   Github.prototype.pull = function(action) {
     var self = this;
     return getHeadCommitUrl(self.path).then( function(commitUrl) {
@@ -358,6 +368,17 @@ var Github = (function() {
     });
   }
 
+  Github.prototype.filterChanged = function(files) {
+    var self = this;
+    return self._withTree( function(tree,commit) {
+      return Promise.resolved(treeUpdates(tree,files));
+    });
+  }
+
+  Github.prototype.commit = function( message, files ) {
+    var self = this;
+    return;
+  }
 
   return Github;
 })();   

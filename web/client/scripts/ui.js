@@ -483,6 +483,10 @@ var UI = (function() {
       self.pull();
     };
 
+    document.getElementById("commit").onclick = function(ev) {
+      self.commit();
+    };
+
     self.lastMouseUp = 0;
     self.editor.addListener("mouseup", function(ev) {
       var now = Date.now();
@@ -3457,7 +3461,7 @@ var symbolsMath = [
       else if (tool.upload) {
         var msg = tool.upload;
         if (tool.exts) msg = msg + " (" + tool.exts.join(",") + ")";
-        return Storage.upload(self.storage, msg, tool.header || "Upload", "images/dark/icon-upload.png").then( function(files) {
+        return Storage.upload(self.storage, msg, tool.header || "", "images/dark/icon-upload.png").then( function(files) {
           return self.insertFiles(files);
         });
       }
@@ -3991,6 +3995,12 @@ var symbolsMath = [
     }
   }
 
+  UI.prototype.commit = function() {
+    var self = this;
+    return self.event( "", "", State.Syncing, function() {
+      return self.storage.commit();
+    });
+  }
 
 
   // object    
