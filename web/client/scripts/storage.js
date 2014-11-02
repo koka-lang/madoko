@@ -624,7 +624,7 @@ var Storage = (function() {
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);
-    return self.remote.pullFile(fpath,opts.encoding !== Encoding.Utf8).then( function(file) {
+    return self.remote.pullFile(fpath,opts.encoding !== Encoding.Utf8,opts.url).then( function(file) {
       file.path      = file.path || fpath;
       file.mime      = opts.mime;
       file.encoding  = opts.encoding;
@@ -840,7 +840,7 @@ var Storage = (function() {
     }
   }
 
-  Storage.prototype._syncPull = function(diff,cursors,merges,file,remoteFile) {
+  Storage.prototype._syncPull = function(diff,cursors,merges,file,remoteFile,pullOnly) {
     var self = this;
     var canMerge = isEditable(file); // Util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
@@ -848,7 +848,7 @@ var Storage = (function() {
       if (rxConflicts.test(file.content)) {
         throw new Error( self._syncMsg(file, "cannot update from server: resolve merge conflicts first!", "update from server" ));
       }
-      return self._syncMerge(diff,cursors,merges,file,remoteFile);
+      return self._syncMerge(diff,cursors,merges,file,remoteFile,pullOnly);
     }
     else {
       // overwrite with server content
@@ -881,14 +881,14 @@ var Storage = (function() {
     }
   }
 
-  Storage.prototype._syncMerge = function(diff,cursors,merges,file,remoteFile) {
+  Storage.prototype._syncMerge = function(diff,cursors,merges,file,remoteFile,pullOnly) {
     var self = this;
+    self._fireEvent("flush", { path: file.path }); // save editor state, changes file
     var original = (file.original != null ? file.original : file.content);
     var content  = file.content;
     return Merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                         original, remoteFile.content, file.content).then( 
       function(res) {
-        self._fireEvent("flush", { path: file.path }); // save editor state
         // push merge fragments for display in UI
         res.merges.forEach( function(m) {
           m.path = file.path;
@@ -904,11 +904,12 @@ var Storage = (function() {
         }
         if (res.conflicts) {
           // don't save if there were real conflicts
-          remoteFile.original = file.orginal; // so next merge does not get too confused
+          remoteFile.original = file.original; // so next merge does not get too confused
           remoteFile.content  = res.merged;
           remoteFile.modified = true;
           self._updateFile(remoteFile);
-          throw new Error( self._syncMsg( file, "merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
+          if (!pullOnly) throw new Error( self._syncMsg( file, "merged from server but cannot save: resolve merge conflicts first!", "merge from server") );
+          return self._syncMsg( file, "merged from server but conflicts detected", "merge from server" );
         }
         else {
           // write back merged result
@@ -917,7 +918,10 @@ var Storage = (function() {
           filex.content  = res.merged;
           filex.modified = true;
           self._updateFile(filex);
-          return self._syncWriteBack( filex, remoteTime, "merge to server" );          
+          if (pullOnly) 
+            return self._syncMsg( file, "merged from server", "merge from server" );
+          else 
+            return self._syncWriteBack( filex, remoteTime, "merge to server" );          
         }
       }
     );
@@ -975,6 +979,48 @@ var Storage = (function() {
     var message = file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
     Util.message(message,Util.Msg.Trace);
     return message;
+  }
+
+  Storage.prototype.pull = function(diff,cursors,showMerges) {
+    var self = this;
+    var merges = [];
+    if (!self.remote.canCommit) return Promise.rejected("Cannot pull from this remote storage");
+
+    return self.login().then( function() {      
+      return self.remote.pull( function(info) {
+        if (!info) {
+          Util.message( "Nothing to pull", Util.Msg.Status );
+        }
+        else if (info.updates.length===0) {
+          Util.message( "Pulled from server, but no document changes", Util.Msg.Status );
+        }
+        else {
+          var syncs = info.updates.map( function(item) { 
+                        return self._pullUpdate(diff,cursors,merges,item); 
+                      });
+          return Promise.when( syncs ).then( function(res) {
+            Util.message("Pulled from " + self.remote.type() + " storage", Util.Msg.Status );
+            return true;
+          }, function(err) {
+            //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
+            if (err.message) err.message = "Pull failed: " + err.message; 
+            throw err;
+          }).always( function() {
+            if (showMerges) showMerges(merges);
+          });
+        }
+      });
+    });
+  }
+
+  Storage.prototype._pullUpdate = function(diff,cursors,merges,item) {
+    var self = this;
+    var file = self.files.get(item.path);
+    if (!file) return Promise.rejected("internal error: cannot pull " + item.path); // should never happen
+    var opts = Util.copy(file);
+    return self._pullFile( file.path, opts ).then( function(remoteFile) {
+      return self._syncPull(diff,cursors,merges,file,remoteFile,true);
+    });
   }
 
   return Storage;

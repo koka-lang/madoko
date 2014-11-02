@@ -479,6 +479,10 @@ var UI = (function() {
       self.synchronize(true);
     };
 
+    document.getElementById("pull").onclick = function(ev) {
+      self.pull();
+    };
+
     self.lastMouseUp = 0;
     self.editor.addListener("mouseup", function(ev) {
       var now = Date.now();
@@ -3947,8 +3951,19 @@ var symbolsMath = [
     });
   }
 
-
   UI.prototype._synchronize = function() {
+    var self = this;
+    return self._syncPull( false );
+  }
+
+  UI.prototype.pull = function() {
+    var self = this;
+    return self.event( "", "", State.Syncing, function() {
+      return self._syncPull( true );
+    });
+  }
+
+  UI.prototype._syncPull = function(isPull) {
     var self = this;
     self.lastSync = Date.now();
     if (self.storage) {
@@ -3957,10 +3972,11 @@ var symbolsMath = [
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
-      if (!self.storage.remote.canSync) return Promise.resolved();
+      if (isPull ? !self.storage.remote.canCommit : !self.storage.remote.canSync) return Promise.resolved();
 
       return self.withSyncSpinner( function() {
-        return self.storage.sync( Editor.diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
+        var syncFun = isPull ? self.storage.pull : self.storage.sync;
+        return syncFun.call( self.storage, Editor.diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
           var line1 = cursors["/" + self.docName];
           var pos = self.editor.getPosition();
           if (pos.lineNumber >= line0) {
@@ -3974,6 +3990,8 @@ var symbolsMath = [
       return Promise.resolved();
     }
   }
+
+
 
   // object    
   return UI;
