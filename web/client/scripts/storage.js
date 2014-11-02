@@ -1051,6 +1051,10 @@ var Storage = (function() {
       return self.remote.isAtHead().then( function(atHead) {
         if (!atHead) return Promise.rejected("Please pull first, the document is not up-to-date with the repository");
         return self.remote.filterChanged( self.files.elems() ).then( function(modified) {
+          if (!modified || modified.length===0) {
+            Util.message( "Nothing to commit.", Util.Msg.Status );
+            return;
+          }
           return commitMessage(self, modified.map( function(item) { return item.path; } ),
                                 self.remote.getFolder(), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
