@@ -24,8 +24,7 @@ var OAuthRemote = (function() {
     self.useAuthHeader  = (opts.useAuthHeader !== false);
     self.headers        = opts.headers || {};
     self.access_token   = null;
-    self.userName       = null;
-    self.userId         = null;
+    self.user           = {};
     self.dialogWidth    = opts.dialogWidth || 600;
     self.dialogHeight   = opts.dialogHeight || 600;
     self.timeout        = opts.timeout || 10000;  // should be short, real timeout can be 3 times as large, see primRequestXHR
@@ -107,7 +106,7 @@ var OAuthRemote = (function() {
       });
   }
 
-  OAuthRemote.prototype._requestXHR = function( options, params, body ) {
+  OAuthRemote.prototype.requestXHR = function( options, params, body ) {
     var self = this;
     if (typeof options === "string") options = { url: options };
     if (!options.headers) options.headers = self.headers;
@@ -133,14 +132,14 @@ var OAuthRemote = (function() {
     var self = this;
     if (typeof options === "string") options = { url: options };
     options.method = "POST";
-    return self._requestXHR(options,params,content);
+    return self.requestXHR(options,params,content);
   }
 
   OAuthRemote.prototype.requestPUT = function( options, params, content ) {
     var self = this;
     if (typeof options === "string") options = { url: options };
     options.method = "PUT";
-    return self._requestXHR(options,params,content);
+    return self.requestXHR(options,params,content);
   }
 
   OAuthRemote.prototype.requestGET = function( options, params ) {
@@ -148,7 +147,7 @@ var OAuthRemote = (function() {
     if (typeof options === "string") options = { url: options };
     options.method = "GET";
     if (options.contentType === undefined) options.contentType = ";";
-    return self._requestXHR(options,params);
+    return self.requestXHR(options,params);
   }
 
   OAuthRemote.prototype.logout = function(force) {
@@ -158,8 +157,7 @@ var OAuthRemote = (function() {
       self.access_token = null;
       self.nextTry    = -1; // no need to ever try to get the token
       self.lastTryErr = self.logoutErr;
-      self.userId   = null;
-      self.userName = null;
+      self.user = {};
       Util.message("Logged out from " + self.name, Util.Msg.Status);
 
 
@@ -202,34 +200,37 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype.withUserId = function(action) {
     var self = this;
-    if (self.userId) return Promise.wrap(action, self.userId);
+    if (self.user.id) return Promise.wrap(action, self.user.id);
     return self.getUserInfo().then( function(info) {
-      return action(self.userId);
+      return action(self.user.id);
     });
   }
 
   OAuthRemote.prototype.getUserName = function() {
     var self = this;
-    if (self.userName) return Promise.resolved(self.userName);
+    if (self.user.name) return Promise.resolved(self.user.name);
     return self.getUserInfo().then( function(info) {
-      return self.userName;
-    });
-  }
-
-  OAuthRemote.prototype.getUserLogin = function() {
-    var self = this;
-    if (self.userLogin) return Promise.resolved(self.userLogin);
-    return self.getUserInfo().then( function(info) {
-      return self.userLogin;
+      return self.user.name;
     });
   }
 
   OAuthRemote.prototype.getUserInfo = function() {
     var self = this;
+    if (self.user.id) return Promise.resolved(self.user);
+    return self._getUserInfo().then( function(info) {
+      return self.user;
+    });
+  }
+
+  OAuthRemote.prototype._getUserInfo = function() {
+    var self = this;
     return self.requestGET( { url: self.accountUrl } ).then( function(info) {
-      self.userId = info.uid || info.id || info.userId || info.user_id || null;
-      self.userName = info.display_name || info.name || null;
-      self.userLogin = info.login || self.userId;
+      self.user = {
+        id: info.uid || info.id || info.userId || info.user_id || null,
+        name: info.display_name || info.name || null,
+        email: info.email || null,
+      };
+      self.user.login = info.login || self.user.id;
       return info;
     });
   }

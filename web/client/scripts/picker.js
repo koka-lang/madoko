@@ -525,8 +525,8 @@ var Picker = (function() {
     }
     else if (self.options.command === "commit") {
       self.setActive();
-      commitModified.innerHTML = self.options.modified.map( function(p) { 
-        return "<li>" + Util.escape(p) + "</li>"; 
+      commitModified.innerHTML = self.options.changes.map( function(change) { 
+        return "<li class='change-" + change.change + "'>" + Util.escape(change.path) + "</li>"; 
       }).join(""); 
       commitMessage.value = "";
       commitMessage.focus();
@@ -702,7 +702,13 @@ function show( options0 ) {
       });    
     }
     catch(exn) {
-      if (picker) picker.onEnd();
+      if (picker) {
+        picker.onEnd();
+      }
+      else {
+        app.style.display = "none";
+        if (fade) fade.style.display = "none";
+      }
       cont(exn,null);
     }
   }).then( function(res) { 

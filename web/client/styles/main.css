@@ -1268,6 +1268,16 @@ x#picker.page-template #message-template {
   margin: 0pt;
 }
 
+#picker #commit .change-add {
+  color: Darkgreen;
+}
+#picker #commit .change-update {
+  color: Navy;
+}
+#picker #commit .change-delete {
+  color: Maroon;
+}
+
 
 #picker #upload {
   margin: 1em 0em;

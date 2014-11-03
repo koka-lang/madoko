@@ -55,12 +55,14 @@ function getItems( owner, repo, branch, tpath, full ) {
 
 function splitPath(path) {
   var parts = path.split("/");
-  return {
+  var p = {
     owner : parts[0],
     repo  : parts[1],
     branch: parts[2],
     tpath : parts.slice(3).join("/"),
   };
+  p.repoPath = "repos/" + p.owner + "/" + p.repo;
+  return p;
 }
 
 function joinPath(p) {
@@ -68,11 +70,11 @@ function joinPath(p) {
 }
 
 function getListing(path) {
-  return github.getUserLogin().then( function(login) {
+  return github.getUserInfo().then( function(info) {
     var p = splitPath(path);
     if (!p.owner) {
       return [{
-        path: login,
+        path: info.login,
         type: "folder.owner",
         readOnly: false,
         isShared: false,
@@ -122,9 +124,8 @@ function getListing(path) {
 
 
 function getHeadCommitUrl(path) {
-  var rpath = splitPath(path);
-  return github.requestGET( "repos/" + rpath.owner + "/" + rpath.repo +
-                             "/git/refs/heads/" + rpath.branch )
+  var p = splitPath(path);
+  return github.requestGET( p.repoPath + "/git/refs/heads/" + p.branch )
               .then( function(ref) {
     return ref.object.url;
   });
@@ -156,6 +157,46 @@ function pullFile( tree, path, binary ) {
   });
 }
 
+function pushBlob( path, content, encoding ) {
+  var p = splitPath(path);
+  return github.requestPOST( p.repoPath + "/git/blobs", {}, { content: content, encoding: encoding || "utf-8" }).then( function(blob) {
+    if (blob) {
+      blob.path = p.tpath;
+      blob.type = "blob";
+      blob.mode = "100644";
+      blob.content = content;
+      blob.encoding = encoding;
+    }
+    return blob;
+  });
+}
+
+function createTree( path, baseTreeSha, blobs ) {
+  var p = splitPath(path);
+  var tree = blobs.map( function(blob) {
+    return {
+      path: blob.path,
+      mode: blob.mode || "100644",
+      type: blob.type || "blob",
+      sha : blob.sha,
+    };
+  });
+  return github.requestPOST( p.repoPath + "/git/trees", {},
+                             { tree: tree, base_tree: baseTreeSha } );
+}
+
+function createCommit( path, message, treeSha, parents ) {
+  var p = splitPath(path);
+  return github.requestPOST( p.repoPath + "/git/commits", {},
+                             { message: message, tree: treeSha, parents: parents} );
+}
+
+function updateHead( path, commitSha ) {
+  var p = splitPath(path);
+  return github.requestXHR( { method: "PATCH", url: p.repoPath + "/git/refs/heads/" + p.branch }, {},
+                            { sha: commitSha, force: false } );
+}
+
 function getCommitTree( commitUrl, path ) {
   return github.requestGET( { url: commitUrl, cache: 10000 } ).then( function(commit) {
     return github.requestGET( { url: commit.tree.url, cache: 10000 }, { recursive: 1 } ). then( function(tree) {
@@ -173,17 +214,39 @@ function getCommitTree( commitUrl, path ) {
 }
 
 
-function treeFind( tree, item ) {
+var Change = { Add: "add", Update: "update", Delete: "delete", None: "none" };
+
+// find the changed item with respect to a tree
+// : [{path,sha}], [{path,sha}] -> [{path,sha,update}]
+function treeChange( tree, item ) {
   for( var i = 0; i < tree.length; i++ ) {
-    if (tree[i].sha === item.sha) return true;
+    if (tree[i].sha === item.sha) return Change.None;
+    if (tree[i].path === item.path) return Change.Update;
   }
-  return false;
+  return Change.Add;
 }
 
-function treeUpdates( tree0, tree1 ) {
-  return tree1.filter( function(item) {
-    return !treeFind( tree0, item );
+function findChanges( tree, items ) {
+  var changes = [];
+  items.forEach( function(item) {
+    var change = treeChange(tree,item);
+    if (change && change !== Change.None) {
+      changes.push({ 
+        path: item.path, 
+        sha: item.sha, 
+        change: change,
+        // the following fields may or may not be there
+        content: item.content,
+        encoding: item.encoding
+      });    
+    }
   });
+  return changes;
+}
+
+// Get the updated items in a tree
+function treeUpdates( tree0, tree1 ) {
+  return findChanges(tree0,tree1);
 }
 
 
@@ -368,16 +431,48 @@ var Github = (function() {
     });
   }
 
-  Github.prototype.filterChanged = function(files) {
+  Github.prototype.getChanges = function(files) {
     var self = this;
     return self._withTree( function(tree,commit) {
-      return Promise.resolved(treeUpdates(tree,files));
+      return Promise.resolved(findChanges(tree,files));
     });
   }
 
-  Github.prototype.commit = function( message, files ) {
+  Github.prototype.commit = function( message, changes ) {
     var self = this;
-    return;
+    return self._withTree( function(tree,commit) {
+      var pushBlobs = changes.map( function(change) { 
+        return pushBlob(self.fullPath(change.path),change.content,change.encoding).then( function(blob) {
+          blob.localPath = change.path;
+          return blob;
+        }); 
+      });
+      return Promise.when( pushBlobs ).then(function(blobs) {
+        return createTree(self.path,commit.tree.sha, blobs).then(function(newTree) {
+          return createCommit(self.path,message,newTree.sha,[commit.sha]).then(function(newCommit) {
+            return updateHead(self.path,newCommit.sha).then(function(res) {
+              // update ourself to the latest commit
+              return getCommitTree( newCommit.url, self.treePath() ).then( function(info) {
+                self.context = {
+                  commitUrl: newCommit.url,
+                  commit: info.commit,
+                  tree: info.tree,
+                };
+                // return commit info so we can update the file modified flags.
+                return {
+                  date: Util.dateFromISO(commit.committer.date),
+                  blobs: blobs.map( function(blob) { 
+                    blob.path = blob.localPath;
+                    delete blob.localPath;
+                    return blob;
+                  }),
+                };
+              });
+            });
+          });
+        });
+      });
+    });
   }
 
   return Github;
@@ -390,7 +485,8 @@ return {
   unpersist: unpersist,
   type     : type,
   logo     : logo,
-  Github  : Github,
+  Github   : Github,
+  Change   : Change,
 }
 
 });

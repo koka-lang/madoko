@@ -14,11 +14,11 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-http",
         "../scripts/remote-github",
         "../scripts/picker",
-        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,GithubRemote,Picker) {
+        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Github,Picker) {
 
 var remotes = {
   dropbox: Dropbox,
-  github: GithubRemote,
+  github: Github,
   http: HttpRemote,
   local: LocalRemote,
 };
@@ -169,10 +169,10 @@ function uploadLocal(storage,message,header,headerLogo) {
   });
 }
 
-function commitMessage(storage,modified,header,headerLogo) {
+function commitMessage(storage,changes,header,headerLogo) {
   var params = {
     command: "commit",    
-    modified: modified,
+    changes: changes,
     header: header,
     headerLogo: headerLogo,
   };
@@ -1050,15 +1050,31 @@ var Storage = (function() {
     return self.login().then( function() {
       return self.remote.isAtHead().then( function(atHead) {
         if (!atHead) return Promise.rejected("Please pull first, the document is not up-to-date with the repository");
-        return self.remote.filterChanged( self.files.elems() ).then( function(modified) {
-          if (!modified || modified.length===0) {
+        return self.remote.getChanges( self.files.elems() ).then( function(changes0) {
+          // filter out additions to 'out/'
+          var changes = changes0.filter( function(change) {
+            if (change.change === Github.Change.Add && Util.startsWith(change.path,"out/")) return false;
+            return true; 
+          });
+          if (changes.length===0) {
             Util.message( "Nothing to commit.", Util.Msg.Status );
             return;
           }
-          return commitMessage(self, modified.map( function(item) { return item.path; } ),
-                                self.remote.getFolder(), 
+          // Commit
+          return commitMessage(self, changes, self.remote.getFolder(), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
-            return self.remote.commit( res.message, modified );
+            return self.remote.commit( res.message, res.changes || changes ).then( function(commit) {
+              // update file sha & modified flag
+              commit.blobs.forEach( function(blob) {
+                var file = self.files.get(blob.path);
+                if (file && file.content === blob.content) {
+                  file.modified = false;
+                  file.sha      = blob.sha;
+                  file.createdTime = commit.date;
+                  self._updateFile(file);
+                }
+              });
+            });
           });
         });
       });
