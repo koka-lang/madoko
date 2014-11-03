@@ -1240,6 +1240,7 @@ x#picker.page-template #message-template {
   display: none;
 }
 
+#picker.page-repo #button-new,
 #picker.page-me #button-new,
 #picker.page-me #button-open,
 #picker.page-me #button-save,

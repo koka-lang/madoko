@@ -214,7 +214,9 @@ var Picker = (function() {
     }
   }
 
-  document.getElementById("button-new").onclick = function(ev) { if (picker) picker.onNew(); }
+  document.getElementById("button-new").onclick = function(ev) { 
+    if (picker && isEnabled(ev.target)) picker.onNew(); 
+  }
 
   Picker.prototype.onNew = function() {
     var self = this;
@@ -553,26 +555,36 @@ var Picker = (function() {
           if (status===401) {
             self.setCurrent(remotes.me);
           }    
-          self.setActive();            
           return self.current.remote.getUserName().then( function(userName) {
             document.getElementById("remote-username").innerHTML = Util.escape( userName );
             return self.displayFolder();
           });
-        }).then( null, function(err) {
+        }).then( function() {
+          self.setActive();            
+        }, function(err) {
           listing.textContent = "Error: " + (err.message ? err.message : err.toString());
         });
       };
     }
   }
 
+  function isVisible(elem) {
+    return (elem.offsetParent !== null);
+  }
+  function isEnabled(elem) {
+    if (!isVisible(elem)) return false;
+    var style = window.getComputedStyle(elem);
+    return (Util.startsWith(style.color,"rgb(255"));
+  }
+
   Picker.prototype.setActive = function() {
     var self = this;
-    if (self.buttonActive === null || self.buttonActive.offsetParent === null) {
+    if (self.buttonActive === null || !isVisible(self.buttonActive)) {
       self.buttonActive = null;
       // Set active button (after making the app appear)
       setTimeout( function() { 
         buttons.every( function(button) {
-          if (button !== buttonDiscard && button.offsetParent !== null) {
+          if (button !== buttonDiscard && isVisible(button)) {
             self.buttonActive = button;
             Util.addClassName(button,"active");
             return false; // break
@@ -585,14 +597,15 @@ var Picker = (function() {
 
   Picker.prototype.nextActive = function() {
     var self = this;
-    if (!self.buttonActive || self.buttonActive.offsetParent === null) return;
+    if (!self.buttonActive || !isVisible(self.buttonActive)) return;
     var next = self.buttonActive;
     do {
       next = (next.nextSibling ? next.nextSibling : next.parentNode.firstChild);
-      if (Util.hasClassName(next,"button") && next.offsetParent !== null) {
+      if (Util.hasClassName(next,"button") && isVisible(next)) {
         Util.removeClassName(self.buttonActive,"active");
         self.buttonActive = next;
-        Util.addClassName(self.buttonActive,"active");        
+        Util.addClassName(self.buttonActive,"active");
+        return;
       }
     }
     while( next && next !== self.buttonActive)
@@ -600,7 +613,7 @@ var Picker = (function() {
 
   Picker.prototype.clickActive = function() {
     var self = this;
-    if (!self.buttonActive || self.buttonActive.offsetParent === null) return;
+    if (!self.buttonActive || !isEnabled(self.buttonActive)) return;
     Util.dispatchEvent( self.buttonActive, "click" );
   }
 
@@ -682,6 +695,9 @@ var Picker = (function() {
       });
     }
     document.getElementById("folder-name").innerHTML = html;
+    if (self.current.remote.canCommit && parts.length < 3) {
+      Util.addClassName(app,"page-repo");
+    }
   }
 
   return Picker;
