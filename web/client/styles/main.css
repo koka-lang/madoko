@@ -420,6 +420,11 @@ span.save-link:hover {
   color: #888;
 }
 
+.file-status {
+  font-size: 0.7em;
+  vertical-align: 0.2em;
+}
+
 .exported .disable {
   color: black;
 }

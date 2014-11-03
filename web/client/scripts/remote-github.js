@@ -467,7 +467,7 @@ var Github = (function() {
       return Promise.when( pushBlobs ).then(function(blobs) {
         return createTree(self.path,commit.tree.sha, blobs).then(function(newTree) {
           return createCommit(self.path,message,newTree.sha,[commit.sha]).then(function(newCommit) {
-            return updateHead(self.path,newCommit.sha).then(function(res) {
+            return updateHead(self.path,newCommit.sha).then(function() {
               // update ourself to the latest commit
               return getCommitTree( newCommit.url, self.treePath() ).then( function(info) {
                 self.context = {
@@ -477,6 +477,7 @@ var Github = (function() {
                 };
                 // return commit info so we can update the file modified flags.
                 return {
+                  committed: true,
                   date: Util.dateFromISO(commit.committer.date),
                   blobs: blobs.map( function(blob) { 
                     blob.path = blob.localPath;
@@ -485,6 +486,11 @@ var Github = (function() {
                   }),
                 };
               });
+            }, function(err) {
+              if (err && err.httpCode === 422) {  // updates in the meantime
+                return { committed: false };
+              }
+              throw err;
             });
           });
         });

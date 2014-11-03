@@ -74,8 +74,7 @@ function fileInfo(fname) {
 
 function sharedFolderInfo(id) {
   var url = sharedFoldersUrl + encodeURIPath(id);
-  // TODO: pass access_token as a header; for now this does not work on dropbox due to a CORS bug.
-  return dropbox.requestGET( { url: url, cache: -1000, useAuthHeader: false, contentType: null } );  // cached, retry after 60 seconds;
+  return dropbox.requestGET( { url: url, cache: -60000, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {

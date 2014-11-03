@@ -1056,7 +1056,8 @@ var Storage = (function() {
 
     return self.login().then( function() {
       return self.remote.isAtHead().then( function(atHead) {
-        if (!atHead) return Promise.rejected("Please pull first, the document is not up-to-date with the repository");
+        var msgNotAtHead = "Commit failed: Please pull first, the document is not up-to-date with the repository";
+        if (!atHead) throw new Error(msgNotAtHead);
         return self.remote.getChanges( self.files.elems() ).then( function(changes) {
           /*
           // filter out additions to 'out/'
@@ -1066,23 +1067,29 @@ var Storage = (function() {
           });
           */
           if (changes.length===0) {
-            Util.message( "Nothing to commit.", Util.Msg.Status );
+            Util.message( "There are no changes to commit.", Util.Msg.Status );
             return;
           }
           // Commit
           return commitMessage(self, changes, self.remote.getFolder(), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
             return self.remote.commit( res.message, res.changes || changes ).then( function(commit) {
+              if (!commit.committed) {
+                throw new Error(msgNotAtHead);
+              }
               // update file sha & modified flag
               commit.blobs.forEach( function(blob) {
                 var file = self.files.get(blob.path);
-                if (file && file.content === blob.content) {
-                  file.modified = false;
-                  file.sha      = blob.sha;
+                if (file) {
+                  file.original    = blob.content;
                   file.createdTime = commit.date;
+                  file.modified    = (file.content !== blob.content);
+                  file.sha         = (file.modified ? null : blob.sha);
                   self._updateFile(file);
                 }
               });
+              var paths = commit.blobs.map( function(blob) { return blob.path; });
+              Util.message("Committed files:\n  " + paths.join("\n  "), Util.Msg.Info );
               Util.message("Committed: " + res.message, Util.Msg.Status );
             });
           });

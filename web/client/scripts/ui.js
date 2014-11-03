@@ -1615,11 +1615,15 @@ var UI = (function() {
 
 
   UI.prototype.displayFile = function(file,extensive) {
+    var self = this;
     var disable = (Storage.isEditable(file) ? "" : " disable");
-    var icon = "<span class='file-status'>" + (file.modified? "&bull;" : "") + "</span>";
+    var sym  = ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") + 
+                (file.modified ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "");
+    var icon = "<span class='file-status'>" + sym + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + Util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
+      var len = file.content.length;        
       if (Storage.isEditable(file)) {
         var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
         var words   = matches ? matches.length : 0;
@@ -1628,7 +1632,6 @@ var UI = (function() {
         }
       }
       else {
-        var len = file.content.length;
         if (file.encoding === Storage.Encoding.Base64) len = (len/4)*3;
         var kb = (len + 1023)/1024; // round up..
         if (kb >= 0) {
@@ -1639,7 +1642,7 @@ var UI = (function() {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
         extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
-      if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps") {
+      if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 128*1024) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
       }
     }
@@ -3901,14 +3904,17 @@ var symbolsMath = [
   UI.prototype.onFileUpdate = function(file) {
     var self = this;
     if (file.path===self.editName) {
-      var folder = self.storage.folder();
-      if (folder.length > 35) folder = "..." + folder.substr(folder.length-35);
+      var fullFolder = self.storage.folder();
+      var folder = fullFolder;
+      if (folder.length > 30) folder = "..." + folder.substr(folder.length-30);
       var prefix = "<span class='folder'>" + folder + (folder ? "/" : "") + "</span>";
       
-      var fileDisplay = prefix + self.displayFile(file);
+      var postfix = self.displayFile(file);
+      var fileDisplay = prefix + postfix;
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
         self.fileDisplay = fileDisplay;
-        self.editSelectHeader.innerHTML = fileDisplay;
+        var title = "//" + self.storage.remote.type() + "/" + fullFolder + (fullFolder ? "/" : "") + file.path;
+        self.editSelectHeader.innerHTML = "<span title='" + Util.escape(title) + "'>" + fileDisplay + "</span>";
       }
       if (self.editContent !== file.content) { // only update edit text if content update 
         self.setEditText(file.content);

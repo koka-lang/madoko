@@ -110,10 +110,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       txt = msg.toString();
     }
 
-    txt = capitalize(txt);
+    txt = capitalize(strip(txt));
 
     if (!kind) kind = Msg.Normal;
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
+    if (!txt) return;
 
     if (kind !== Msg.Trace && consoleOut) {
     
@@ -126,7 +127,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
           }
         }
         var content = spanLines(htmlEscape(xtxt),"msg-line");
-        return "<span class='msg-" + kind + "'>" + (linkFun ? linkFun(content) : content)  + "</span>";
+        return "<span class='msg-" + kind + "' title='" + htmlEscape(txt) + "'>" + (linkFun ? linkFun(content) : content)  + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";
