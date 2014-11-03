@@ -451,7 +451,8 @@ var UI = (function() {
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
-
+    bindKey( "Alt-C",  function()   { self.commit(); } );
+    
     // --- save links
     var saveLink = function(ev) {
       var elem = ev.target;
@@ -2469,7 +2470,6 @@ var symbolsMath = [
     toolInline("code","`","`",{  // TODO: make smart about quotes
       icon    : true,
       title   : "Inline code",
-      keys    : ["Alt-C"]
     }),
     { name    : "link", 
       icon    : true,
@@ -3998,7 +3998,9 @@ var symbolsMath = [
   UI.prototype.commit = function() {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
-      return self.storage.commit();
+      return self.withSyncSpinner( function() {
+        return self.storage.commit();
+      });
     });
   }
 

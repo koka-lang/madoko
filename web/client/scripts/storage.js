@@ -1010,8 +1010,15 @@ var Storage = (function() {
       return self.remote.pull( function(info) {
         if (!info) {
           Util.message( "Nothing to pull", Util.Msg.Status );
+          return;
         }
-        else if (info.updates.length===0) {
+        
+        var pmsgs = info.commits.map( function(commit) {
+          return (commit.author.name || commit.author.id) + ": " + commit.message;
+        });
+        Util.message( "Pulled:\n  " + pmsgs.join("\n  "), Util.Msg.Info );
+
+        if (info.updates.length===0) {     
           Util.message( "Pulled from server, but no document changes", Util.Msg.Status );
         }
         else {
@@ -1019,7 +1026,7 @@ var Storage = (function() {
                         return self._pullUpdate(diff,cursors,merges,item); 
                       });
           return Promise.when( syncs ).then( function(res) {
-            Util.message("Pulled from " + self.remote.type() + " storage", Util.Msg.Status );
+            Util.message("Pulled " + info.commits.length.toString() + " update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Status );
             return true;
           }, function(err) {
             //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
@@ -1050,12 +1057,14 @@ var Storage = (function() {
     return self.login().then( function() {
       return self.remote.isAtHead().then( function(atHead) {
         if (!atHead) return Promise.rejected("Please pull first, the document is not up-to-date with the repository");
-        return self.remote.getChanges( self.files.elems() ).then( function(changes0) {
+        return self.remote.getChanges( self.files.elems() ).then( function(changes) {
+          /*
           // filter out additions to 'out/'
           var changes = changes0.filter( function(change) {
             if (change.change === Github.Change.Add && Util.startsWith(change.path,"out/")) return false;
             return true; 
           });
+          */
           if (changes.length===0) {
             Util.message( "Nothing to commit.", Util.Msg.Status );
             return;
@@ -1074,6 +1083,7 @@ var Storage = (function() {
                   self._updateFile(file);
                 }
               });
+              Util.message("Committed: " + res.message, Util.Msg.Status );
             });
           });
         });

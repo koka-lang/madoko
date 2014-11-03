@@ -1266,6 +1266,8 @@ x#picker.page-template #message-template {
 
 #picker #commit ul {
   margin: 0pt;
+  padding-left: 0pt;
+  list-style-type: none;
 }
 
 #picker #commit .change-add {

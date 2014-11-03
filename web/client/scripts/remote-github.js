@@ -81,7 +81,7 @@ function getListing(path) {
       }];
     }
     else if (!p.repo) {
-      if (p.owner === login) {
+      if (p.owner === info.login) {
         return getRepos().then( function(repos) {
           return repos.map( function(repo) {
             return {
@@ -214,6 +214,12 @@ function getCommitTree( commitUrl, path ) {
 }
 
 
+function getCommits( path, commit ) {
+  var p = splitPath(path);
+  return github.requestGET( p.repoPath + "/commits", 
+                            { sha: commit.sha, path: p.tpath, since: commit.committer.date } );
+}
+
 var Change = { Add: "add", Update: "update", Delete: "delete", None: "none" };
 
 // find the changed item with respect to a tree
@@ -236,6 +242,7 @@ function findChanges( tree, items ) {
         sha: item.sha, 
         change: change,
         // the following fields may or may not be there
+        type: item.type,
         content: item.content,
         encoding: item.encoding
       });    
@@ -246,7 +253,9 @@ function findChanges( tree, items ) {
 
 // Get the updated items in a tree
 function treeUpdates( tree0, tree1 ) {
-  return findChanges(tree0,tree1);
+  return findChanges(tree0,tree1).filter( function(change) {
+    return (change.type === "blob");
+  });
 }
 
 
@@ -394,7 +403,7 @@ var Github = (function() {
 
   Github.prototype.getShareUrl = function(fname) {
     var self = this;
-    return null;
+    return Promise.resolved(null);
   };
 
   Github.prototype.isAtHead = function() {
@@ -409,22 +418,30 @@ var Github = (function() {
     return getHeadCommitUrl(self.path).then( function(commitUrl) {
       if (self.context.commitUrl === commitUrl) return action(null); // same commit
       return self._withTree( function(tree,commit) {
-        return getCommitTree( commitUrl, self.treePath() ).then( function(info) {
-          var updateInfo = {
-            commit  : info.commit,
-            tree    : info.tree,
-            updates : treeUpdates( tree, info.tree ),
-          };
-          // update context .. but restore if action fails
-          var oldContext = self.context;
-          self.context = {
-            commitUrl: commitUrl,
-            tree: info.tree,
-            commit: info.commit,
-          };
-          return Promise.wrap( action, updateInfo ).then( function(x) { return x; }, function(err) {
-            self.context = oldContext; // restore old context
-            throw err; // re-throw
+        return getCommits( self.path, commit ).then( function(commits) {
+          return getCommitTree( commitUrl, self.treePath() ).then( function(info) {
+            var updateInfo = {
+              commit  : info.commit,
+              tree    : info.tree,
+              updates : treeUpdates( tree, info.tree ),
+              commits : commits.map( function(commit) {
+                return { 
+                  message: commit.commit.message,
+                  author : commit.commit.author,
+                };
+              }),
+            };
+            // update context .. but restore if action fails
+            var oldContext = self.context;
+            self.context = {
+              commitUrl: commitUrl,
+              tree: info.tree,
+              commit: info.commit,
+            };
+            return Promise.wrap( action, updateInfo ).then( function(x) { return x; }, function(err) {
+              self.context = oldContext; // restore old context
+              throw err; // re-throw
+            });
           });
         });
       });  
