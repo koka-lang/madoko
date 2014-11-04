@@ -636,7 +636,7 @@ var Picker = (function() {
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
-                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + type + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
+                  "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type.replace(/\./g,"-") + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
                   (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnect.png' />" : "") +
                   "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
                "</div>";
