@@ -219,7 +219,10 @@ function getCommitTree( commitUrl, path ) {
 function getCommits( path, commit ) {
   var p = splitPath(path);
   return github.requestGET( p.repoPath + "/commits", 
-                            { sha: commit.sha, path: p.tpath, since: commit.committer.date } );
+                            { path: p.tpath, since: commit.committer.date } ).then( function(commits) {
+    commits.pop(); // do not include our latest commit
+    return commits;
+  });
 }
 
 var Change = { Add: "add", Update: "update", Delete: "delete", None: "none" };
