@@ -1108,7 +1108,8 @@ div.modal {
 }
 
 #picker.page-me #file-name,
-#picker.page-alert #file-name {
+#picker.page-alert #file-name,
+#picker.page-repo #file-name {
   display: none;
 }
 

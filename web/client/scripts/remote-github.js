@@ -36,13 +36,13 @@ function getRepos() {
   return github.requestGET("user/repos");
 }
 
-function getBranches(owner,repo) {
-  return github.requestGET("repos/" + owner + "/" + repo + "/git/refs/heads");
+function getBranches(repoPath) {
+  return github.requestGET(repoPath + "/git/refs/heads");
 }
 
-function getItems( owner, repo, branch, tpath, full ) {
+function getItems( repoPath, branch, tpath, full ) {
   if (!branch) branch = "master";
-  return github.requestGET( "repos/" + owner + "/" + repo + "/git/trees/" + branch, 
+  return github.requestGET( repoPath + "/git/trees/" + branch, 
                             (full || tpath) ? { recursive: 1 } : {} ).then( function(tree) {
     var items = tree.tree;
     if (!tpath) return items;
@@ -53,60 +53,62 @@ function getItems( owner, repo, branch, tpath, full ) {
 }
 
 
+function getAllRepos() {
+  return github.requestGET("user/orgs").then(function(orgs) {
+    var getrepos = orgs.map( function(org) { return github.requestGET(org.url + "/repos"); } );
+    getrepos.unshift( getRepos() );
+    return Promise.when( getrepos ).then( function(reposs) {
+      return [].concat.apply([],reposs);
+    });
+  });
+}
+
 function splitPath(path) {
-  var parts = path.split("/");
+  var parts = Util.splitCPath(path);
   var p = {
-    owner : parts[0],
-    repo  : parts[1],
-    branch: parts[2],
-    tpath : parts.slice(3).join("/"),
+    repo  : parts[0],    
+    branch: parts[1],
+    tpath : parts.slice(2).join("/"),
   };
-  p.repoPath = "repos/" + p.owner + "/" + p.repo;
+  p.repoPath = "repos/" + p.repo;
   return p;
 }
 
 function joinPath(p) {
-  return [p.owner,p.repo,p.branch,p.tpath].join("/");
+  return [p.repo,p.branch,p.tpath].join(":");
 }
 
 function getListing(path) {
   return github.getUserInfo().then( function(info) {
     var p = splitPath(path);
-    if (!p.owner) {
-      return [{
-        path: info.login,
-        type: "folder.owner",
-        readOnly: false,
-        isShared: false,
-      }];
-    }
-    else if (!p.repo) {
-      if (p.owner === info.login) {
-        return getRepos().then( function(repos) {
-          return repos.map( function(repo) {
-            return {
-              type: "folder.repo",
-              path: repo.full_name,
-              readonly: !repo.permissions.push,
-              isShared: repo.private,
-            };
-          });
+    if (!p.repo) {
+      return getAllRepos().then( function(repos) {
+        return repos.map( function(repo) {
+          return {
+            type: "folder.repo",
+            path: repo.full_name + ":",
+            display: repo.full_name,
+            readonly: !repo.permissions.push,
+            isShared: !repo.private,
+          };
         });
-      }
+      });
     }
     else if (!p.branch) {
-      return getBranches(p.owner,p.repo).then( function(branches) {
+      return getBranches(p.repoPath).then( function(branches) {
         return branches.map(function(branch) {
+          var branchName = branch.ref.split("/").slice(2).join("/");
           return {
             type: "folder.branch",
-            path: path + "/" + Util.basename(branch.ref),
+            path: p.repo + ":" + branchName + ":",
+            display: branchName,
             url : branch.url,            
           };
         });
       }); 
     }
     else {
-      return getItems(p.owner,p.repo,p.branch,p.tpath).then( function(items) {
+      return getItems(p.repoPath,p.branch,p.tpath).then( function(items) {
         return items.map( function(item) {
           var q = Util.copy(p);
           q.tpath = item.path;
@@ -318,7 +320,7 @@ var Github = (function() {
 
   Github.prototype.getFolder = function() {
     var self = this;
-    return self.path;
+    return Util.cpathToPath(self.path);
   }
 
   Github.prototype.persist = function() {
@@ -329,12 +331,18 @@ var Github = (function() {
   Github.prototype.fullPath = function(fname) {
     var self = this;
     if (fname == null) fname = "";
+    return Util.combine(self.getFolder(),fname);
+  }
+
+  Github.prototype.cPath = function(fname) {
+    var self = this;
+    if (fname == null) fname = "";
     return Util.combine(self.path,fname);
   }
 
   Github.prototype.treePath = function(fname) {
     var self = this;
-    var p = splitPath(self.fullPath(fname));
+    var p = splitPath(self.cPath(fname));
     return p.tpath;
   }
 
@@ -373,7 +381,6 @@ var Github = (function() {
     var self = this;
     return self._withTree( function(tree,commit) {
       return pullFile( tree, fpath, binary ).then( function(info) {
-        var fullPath = self.fullPath(fpath);
         return {
           path: fpath,
           content: info.content,
@@ -398,7 +405,7 @@ var Github = (function() {
 
   Github.prototype.listing = function( fpath ) {
     var self = this;
-    return getListing(self.fullPath(fpath));
+    return getListing(self.cPath(fpath));
   }
 
   Github.prototype.getShareUrl = function(fname) {
@@ -459,7 +466,7 @@ var Github = (function() {
     var self = this;
     return self._withTree( function(tree,commit) {
       var pushBlobs = changes.map( function(change) { 
-        return pushBlob(self.fullPath(change.path),change.content,change.encoding).then( function(blob) {
+        return pushBlob(self.cPath(change.path),change.content,change.encoding).then( function(blob) {
           blob.localPath = change.path;
           return blob;
         }); 

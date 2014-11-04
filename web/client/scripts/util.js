@@ -365,6 +365,31 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return dir.replace(/[\/\\].*$/, "");
   }
 
+  function splitCPath(cpath) {
+    if (!cpath) return [];
+    var parts = cpath.split(":");
+    var last = parts.pop();
+    if (!last) return parts;
+    var sparts = last.split("/");
+    return parts.concat(sparts);    
+  }
+
+  function cpathToPath(cpath) {
+    return cpath.replace(/:/g,"/");
+  }
+
+  function dirname(path) {
+    var cap = /[\\\/:][^\\\/:]*$/.exec(path);
+    if (!cap) return "";
+    return path.substr(0,cap.index);
+  }
+
+  function basename(path) {
+    if (!path) return "";
+    var cap = /[\\\/:]([^\\\/:]*)$/.exec(path);
+    if (!cap) return path;
+    return cap[1];    
+  }
 
   var mimeTypes = {    
     mdk: "text/madoko",
@@ -1571,12 +1596,14 @@ doc.execCommand("SaveAs", null, filename)
     
     changeExt: Stdpath.changeExt,
     extname: Stdpath.extname,
-    basename: Stdpath.basename,
-    dirname: Stdpath.dirname,
+    basename: basename,
+    dirname: dirname,
     stemname: Stdpath.stemname,
     isRelative: isRelative,
     combine: Stdpath.combine,
     firstdirname: firstdirname,
+    splitCPath  : splitCPath,
+    cpathToPath : cpathToPath,
 
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
