@@ -33,16 +33,16 @@ var github = new OAuthRemote( {
 ---------------------------------------------- */
 
 function getRepos() {
-  return github.requestGET("user/repos");
+  return github.requestGET( { url: "user/repos", cache: 10000 } );
 }
 
 function getBranches(repoPath) {
-  return github.requestGET(repoPath + "/git/refs/heads");
+  return github.requestGET( { url: repoPath + "/git/refs/heads", cache: 10000 } );
 }
 
 function getItems( repoPath, branch, tpath, full ) {
   if (!branch) branch = "master";
-  return github.requestGET( repoPath + "/git/trees/" + branch, 
+  return github.requestGET( {url: repoPath + "/git/trees/" + branch, cache: 10000 },
                             (full || tpath) ? { recursive: 1 } : {} ).then( function(tree) {
     var items = tree.tree;
     if (!tpath) return items;
@@ -54,8 +54,8 @@ function getItems( repoPath, branch, tpath, full ) {
 
 
 function getAllRepos() {
-  return github.requestGET("user/orgs").then(function(orgs) {
-    var getrepos = orgs.map( function(org) { return github.requestGET(org.url + "/repos"); } );
+  return github.requestGET( { url: "user/orgs", cache: 10000 } ).then(function(orgs) {
+    var getrepos = orgs.map( function(org) { return github.requestGET( { url: org.url + "/repos", cache: 10000 } ); } );
     getrepos.unshift( getRepos() );
     return Promise.when( getrepos ).then( function(reposs) {
       return [].concat.apply([],reposs);
@@ -132,8 +132,7 @@ function getListing(path) {
 
 function getHeadCommitUrl(path) {
   var p = splitPath(path);
-  return github.requestGET( p.repoPath + "/git/refs/heads/" + p.branch )
-              .then( function(ref) {
+  return github.requestGET( p.repoPath + "/git/refs/heads/" + p.branch ).then( function(ref) {
     return ref.object.url;
   });
 }
