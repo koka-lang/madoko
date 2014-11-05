@@ -294,11 +294,14 @@ var Editor = (function(_super) {
     var content0 = self.getValue();
     if (content0 !== content) {
       var pos = self.getPosition();
-      self.model.setValue(content,mode);    
+      self.model.setValue(content0,mode);
       if (pos.lineNumber !== 1 && !mode) {
         // set by a merge
         self.setPosition(pos,true,true);
-      }
+      }      
+      var rng = self.model.getFullModelRange();
+      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition(rng,content);      
+      self.executeCommand("madoko",command);
     }
 
     // update options
