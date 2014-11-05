@@ -1273,6 +1273,7 @@ x#picker.page-template #message-template {
 
 #picker #commit ul {
   margin: 0pt;
+  margin-bottom: 1ex;
   padding-left: 0pt;
   list-style-type: none;
 }

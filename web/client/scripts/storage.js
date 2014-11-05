@@ -1073,7 +1073,12 @@ var Storage = (function() {
           // Commit
           return commitMessage(self, changes, self.remote.getFolder(), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
-            return self.remote.commit( res.message, res.changes || changes ).then( function(commit) {
+            if (res.changes) changes = res.changes;
+            if (changes.length===0) {
+              Util.message("Nothing was selected to commit.", Util.Msg.Status );
+              return;
+            }
+            return self.remote.commit( res.message, changes ).then( function(commit) {
               if (!commit.committed) {
                 throw new Error(msgNotAtHead);
               }

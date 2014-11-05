@@ -6,12 +6,12 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util", 
+define(["../scripts/promise","../scripts/map","../scripts/util", 
         "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
         "../scripts/remote-github",
-        ], function(Promise,Util,LocalRemote,Dropbox,Onedrive,Github) {
+        ], function(Promise,Map,Util,LocalRemote,Dropbox,Onedrive,Github) {
 
 
 
@@ -31,6 +31,8 @@ var Picker = (function() {
   var commandName   = document.getElementById("command-name");
   var commitMessage = document.getElementById("commit-message");
   var commitModified = document.getElementById("commit-modified");
+  var commitAll      = document.getElementById("commit-all");
+  
   
   var buttons = [];
   var child = document.getElementById("picker-buttons").firstChild;
@@ -299,7 +301,24 @@ var Picker = (function() {
   document.getElementById("button-commit").onclick = function(ev) { if (picker) picker.onCommit(); };
 
   Picker.prototype.onCommit = function() {
-    picker.onEnd({message: commitMessage.value});
+    var self = this;
+    var selected = new Map();
+    var inputs = commitModified.querySelectorAll("li>input");
+    [].forEach.call( inputs, function(input) {
+      if (input.checked) selected.set( decodeURIComponent(input.getAttribute("data-path")), true );
+    });
+    var newChanges = self.options.changes.filter( function(change) { return selected.contains(change.path); } ); 
+    picker.onEnd({message: commitMessage.value, changes: newChanges });
+  }
+
+  commitAll.onchange = function(ev) { if (picker) picker.onCommitCheckAll(); };
+
+  Picker.prototype.onCommitCheckAll = function() {
+    var self = this;
+    var inputs = commitModified.querySelectorAll("li>input");
+    [].forEach.call(inputs,function(input) {
+      input.checked = commitAll.checked;
+    });
   }
 
   // ------------------------------------------------------------------------------------
@@ -528,7 +547,10 @@ var Picker = (function() {
     else if (self.options.command === "commit") {
       self.setActive();
       commitModified.innerHTML = self.options.changes.map( function(change) { 
-        return "<li class='change-" + change.change + "'>" + Util.escape(change.path) + "</li>"; 
+        return "<li class='change-" + change.change + "'>" + 
+               "<input type='checkbox' data-path='" + encodeURIComponent(change.path) + "' " + 
+               (change.change==="add" ? "" : "checked") + "></input>" +
+                Util.escape(change.path) + "</li>"; 
       }).join(""); 
       commitMessage.value = "";
       commitMessage.focus();
