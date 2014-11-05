@@ -1026,7 +1026,7 @@ var Storage = (function() {
                         return self._pullUpdate(diff,cursors,merges,item); 
                       });
           return Promise.when( syncs ).then( function(res) {
-            Util.message("Pulled " + info.commits.length.toString() + " update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Status );
+            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Status );
             return true;
           }, function(err) {
             //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );

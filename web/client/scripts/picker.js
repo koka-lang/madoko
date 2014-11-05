@@ -630,7 +630,6 @@ var Picker = (function() {
         var types = item.type.split(".");
         var type  = types[0];
         var disable = (!item.disabled && canSelect(item.path,type,self.options.extensions)) ? "" : " disabled";
-        var basename = Util.splitCPath(item.path).filter(function(p) { return (p!=null); }).pop();
         return "<div class='item " + types.map(function(tp) { return "item-" + tp; }).join(" ") + disable + 
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
@@ -639,7 +638,7 @@ var Picker = (function() {
                   //"<input type='checkbox' class='item-select'></input>" +
                   "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type.replace(/\./g,"-") + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
                   (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnect.png' />" : "") +
-                  "<span class='item-name'>" + Util.escape(item.display || basename) + "</span>" +
+                  "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
                "</div>";
 
       });
@@ -683,30 +682,20 @@ var Picker = (function() {
         root = "";
       }
     }
-    var cparts = (self.options.command==="connect" ? [] : folder.split(":"));
+    var parts = (self.options.command==="connect" ? [] : folder.split("/"));
     var html = "<span class='dir' data-path='%2F%2F'>me</span><span class='dirsep'>/</span>";
     if (folder!=="//") {
       html = html + "<span class='dir' data-path='" + encodeURIComponent(root) + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";
       var partial = root;
-      var parts = cparts.pop().split("/");
-      if (cparts.length > 0 && partial != "") {
-        partial = partial + ":";
-      }
-      cparts.forEach( function(cpart) {
-        if (cpart) {
-          partial = partial + cpart + ":";
-          html = html + "<span class='dir' data-path='" + encodeURIComponent(partial) + "'>" + Util.escape(cpart) + "</span><span class='dirsep'>/</span>";
-        }
-      });  
       parts.forEach( function(part) {
         if (part) {
-          partial = (partial && !Util.endsWith(partial,":") ? partial + "/" + part : partial + part);
-          html = html + "<span class='dir' data-path='" + encodeURIComponent(partial) + "'>" + Util.escape(part) + "</span><span class='dirsep'>/</span>";
+          partial = Util.combine(partial,part);
+          html = html + "<span class='dir' data-path='" + encodeURIComponent(partial) + "'>" + Util.escape(decodeURIComponent(part)) + "</span><span class='dirsep'>/</span>";
         }
       });
     }
     document.getElementById("folder-name").innerHTML = html;
-    if (self.current.remote.canCommit && cparts.length < 2) {
+    if (self.current.remote.canCommit && parts.length < 2) {
       Util.addClassName(app,"page-repo");
     }
   }

@@ -379,14 +379,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function dirname(path) {
-    var cap = /[\\\/:][^\\\/:]*$/.exec(path);
+    var cap = /[\\\/][^\\\/]*$/.exec(path);
     if (!cap) return "";
     return path.substr(0,cap.index);
   }
 
   function basename(path) {
     if (!path) return "";
-    var cap = /[\\\/:]([^\\\/:]*)$/.exec(path);
+    var cap = /[\\\/]([^\\\/]*)$/.exec(path);
     if (!cap) return path;
     return cap[1];    
   }
@@ -1012,6 +1012,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     var promise = new Promise();
 
     function reject(message,httpCode) {
+      if (httpCode==null) httpCode = req.status || 400;
       try {
         if (timeout) clearTimeout(timeout);
         
@@ -1039,13 +1040,15 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         else if (startsWith(type,"text/") && req.responseText) {
           msg = msg + ": " + req.responseText;
         }
+
+        if (httpCode===404 && req.statusText) msg = msg + ": " + domain;
         
         //cont(msg, res, req.response);
         console.log(msg + "\n request: " + method + ": " + reqparam.url );
-        promise.reject( { message: msg, httpCode: httpCode || req.status || 400 } );
+        promise.reject( { message: msg, httpCode: httpCode } );
       }
       catch(exn) {
-        promise.reject( { message: exn.toString(), httpCode: httpCode || 400 } );
+        promise.reject( { message: exn.toString(), httpCode: httpCode } );
       }
     }
 
