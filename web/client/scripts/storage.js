@@ -464,14 +464,16 @@ var Storage = (function() {
         path: path,
         mime: file.mime,
         len : file.content.length + file.original.length,
-        vital: Util.isTextMime(file.mime) && !Util.hasGeneratedExt(path),
+        vital: (Util.isTextMime(file.mime) && !Util.hasGeneratedExt(path)),
       });
     });
-    infos.sort( function(i1,i2) {
-      var x1 = (i1.vital ? 0 : i1.len);
-      var x2 = (i2.vital ? 0 : i2.len);
-      return (i1 - i2);
-    });
+    function weight(info) {
+      var w = info.len+1;
+      if (info.vital) return (w / 1e10); // user text 
+      if (!Util.hasGeneratedExt(info.path)) return w;  // images etc.
+      return w * 10; // generated output
+    }
+    infos.sort( function(i1,i2) { return (weight(i1) - weight(i2)); });
 
     // Then add up to the limit
     var pfiles = new Map();
