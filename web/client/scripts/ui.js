@@ -1617,8 +1617,8 @@ var UI = (function() {
   UI.prototype.displayFile = function(file,extensive) {
     var self = this;
     var disable = (Storage.isEditable(file) ? "" : " disable");
-    var sym  = ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") + 
-                (file.modified ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "");
+    var sym  = // ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") + 
+                (file.modified || (self.storage.remote.canCommit && file.sha===null) ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "");
     var icon = "<span class='file-status'>" + sym + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + Util.escape(file.path) + icon + "</span>";
     var extra = "";
@@ -3949,31 +3949,28 @@ var symbolsMath = [
     return self.event( "", "", State.Syncing, function() {
       if (!self.isConnected && login) {
         return self.login().then( function() {  
-          return self._synchronize(); 
+          return self._synchronize(false); 
         });
       }
-      else if (self.storage && !self.storage.remote.canSync) {
+      else if (self.storage && self.storage.remote.readonly) {
         self.saveTo();
       }
       else {
-        return self._synchronize();
+        return self._synchronize(!login);
       }
     });
-  }
-
-  UI.prototype._synchronize = function() {
-    var self = this;
-    return self._syncPull( false );
   }
 
   UI.prototype.pull = function() {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
-      return self._syncPull( true );
+      return self.login().then( function() {  
+        return self._synchronize(true);
+      });
     });
   }
 
-  UI.prototype._syncPull = function(isPull) {
+  UI.prototype._synchronize = function(pullOnly) {
     var self = this;
     self.lastSync = Date.now();
     if (self.storage) {
@@ -3982,32 +3979,25 @@ var symbolsMath = [
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
-      if (isPull ? !self.storage.remote.canCommit : !self.storage.remote.canSync) return Promise.resolved();
+      if (!self.storage.remote.canSync) return Promise.resolved();
 
       return self.withSyncSpinner( function() {
-        var syncFun = isPull ? self.storage.pull : self.storage.sync;
-        return syncFun.call( self.storage, Editor.diff, cursors, function(merges) { self.showMerges(merges); } ).then( function() {
+        var syncFun = self.storage.remote.canCommit ? self.storage.pull : self.storage.sync;
+        return syncFun.call( self.storage, Editor.diff, cursors, function(merges) { self.showMerges(merges); }, pullOnly ).then( function() {
           var line1 = cursors["/" + self.docName];
           var pos = self.editor.getPosition();
           if (pos.lineNumber >= line0) {
             pos.lineNumber += (line1 - line0);
             self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
           }
+          if (!self.storage.remote.canCommit || pullOnly) return;
+          return self.storage.commit();
         });
       });
     }
     else {
       return Promise.resolved();
     }
-  }
-
-  UI.prototype.commit = function() {
-    var self = this;
-    return self.event( "", "", State.Syncing, function() {
-      return self.withSyncSpinner( function() {
-        return self.storage.commit();
-      });
-    });
   }
 
 

@@ -320,14 +320,14 @@ var Github = (function() {
     return logo();
   }
 
-  Github.prototype.readonly = false;
-  Github.prototype.canSync  = false;
+  Github.prototype.readonly   = false;
+  Github.prototype.canSync    = true;
   Github.prototype.needSignin = true;
-  Github.prototype.canCommit = true;
+  Github.prototype.canCommit  = true;
 
   Github.prototype.getFolder = function() {
     var self = this;
-    return decodeURIComponent(self.path);
+    return self.path;
   }
 
   Github.prototype.persist = function() {

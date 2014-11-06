@@ -58,12 +58,11 @@
         <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure ...</div>
         <hr/>
-          <div id="sync-now" class="button" title="Force synchronization with cloud storage (done automatically every 30 seconds)"
-          ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize now <span class="shortcut">(Ctrl-S / Alt-S)</span></div>                          
-          <div id="pull" class="button" title="Pull from repository"
-          ><span class="icon"><img src="images/icon-pull.png"/></span>Pull</div>
-          <div id="commit" class="button" title="Commit to repository"
-          ><span class="icon"><img src="images/icon-commit.png"/></span>Commit &amp; Push... <span class="shortcut">(Alt-C)</span></div>
+          <div id="pull" class="button" title="Pull updates from cloud storage or repository."
+          ><span class="icon"><img src="images/icon-pull.png"/></span>Pull Only</div>
+          <div id="sync-now" class="button" title="Synchronize with cloud storage, or pull/commit/push with a repository
+(done automatically every 30 seconds)"
+          ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize<span class="shortcut">(Ctrl-S / Alt-S)</span></div>                          
         <hr/>
         <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
         <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page</div>
@@ -108,7 +107,8 @@
       <div id="menu-settings" class="popup no-close-on-click">
         <img class="button" src="images/dark/button-settings.png" />
         <div id="menu-settings-content" class="menu boxed">
-          <div class="button" title="Synchronize automatically with cloud storage (every 30 seconds)">
+          <div class="button" title="Synchronize automatically with cloud storage, or pull automatically from a repository
+(every 30 seconds)">
             <input type="checkbox" id="checkAutoSync" checked/> Synchronize automatically</div>
           <div class="button" title="Show line numbers in the editor">
             <input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>

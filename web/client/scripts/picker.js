@@ -549,7 +549,7 @@ var Picker = (function() {
       commitModified.innerHTML = self.options.changes.map( function(change) { 
         return "<li class='change-" + change.change + "'>" + 
                "<input type='checkbox' data-path='" + encodeURIComponent(change.path) + "' " + 
-               (change.change==="add" ? "" : "checked") + "></input>" +
+               (change.change===Github.Change.Add && Util.startsWith(change.path,"out/") ? "" : "checked") + "></input>" +
                 Util.escape(change.path) + "</li>"; 
       }).join(""); 
       commitMessage.value = "";

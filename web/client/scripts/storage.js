@@ -509,7 +509,7 @@ var Storage = (function() {
     var self = this;
     var synced = true;
     self.forEachFile( function(file) {
-      if (file.modified && (full || !Util.hasGeneratedExt(file.path))) {
+      if ((file.modified || file.sha===null) && (full || !Util.hasGeneratedExt(file.path))) {
         synced = false;
         return false; // break
       }
@@ -789,14 +789,14 @@ var Storage = (function() {
 
   var rxConflicts = /^ *<!-- *begin +merge +.*?--> *$/im;
 
-  Storage.prototype.sync = function( diff, cursors, showMerges ) {
+  Storage.prototype.sync = function( diff, cursors, showMerges, pullOnly ) {
     var self = this;
     var remotes = new Map();
     var merges = [];
     if (!self.remote.canSync) return Promise.resolved(true); // can happen during generateHTML/PDF
 
     return self.login(self.isSynced()).then( function() {      
-      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file); } );
+      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file,pullOnly); } );
       return Promise.when( syncs ).then( function(res) {
         Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
         return true;
@@ -810,7 +810,7 @@ var Storage = (function() {
     });
   }
 
-  Storage.prototype._syncFile = function(diff,cursors,merges,file) {  // : Promise<string>
+  Storage.prototype._syncFile = function(diff,cursors,merges,file,pullOnly) {  // : Promise<string>
     var self = this;
     if (file.nosync) return Promise.resolved( self._syncMsg(file,"no sync") );
     return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
@@ -819,8 +819,11 @@ var Storage = (function() {
       }
       if (file.createdTime.getTime() < remoteTime.getTime()) {
         return self._pullFile(file.path, file).then( function(remoteFile) {
-          return self._syncPull(diff,cursors,merges,file,remoteFile);
+          return self._syncPull(diff,cursors,merges,file,remoteFile,pullOnly);
         });
+      }
+      else if (pullOnly) {
+        return self._syncMsg(file,"no changes on server");
       }
       else {
         return self._syncPush(file,remoteTime);
@@ -1009,7 +1012,7 @@ var Storage = (function() {
     return self.login().then( function() {      
       return self.remote.pull( function(info) {
         if (!info) {
-          Util.message( "Nothing to pull", Util.Msg.Status );
+          Util.message( "Nothing to pull", Util.Msg.Info );
           return;
         }
         
@@ -1019,14 +1022,14 @@ var Storage = (function() {
         Util.message( "Pulled:\n  " + pmsgs.join("\n  "), Util.Msg.Info );
 
         if (info.updates.length===0) {     
-          Util.message( "Pulled from server, but no document changes", Util.Msg.Status );
+          Util.message( "Pulled from server, but no document changes", Util.Msg.Info );
         }
         else {
           var syncs = info.updates.map( function(item) { 
                         return self._pullUpdate(diff,cursors,merges,item); 
                       });
           return Promise.when( syncs ).then( function(res) {
-            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Status );
+            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Info );
             return true;
           }, function(err) {
             //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
@@ -1070,8 +1073,21 @@ var Storage = (function() {
             Util.message( "There are no changes to commit.", Util.Msg.Status );
             return;
           }
+
+          // Sort in order of relevance
+          function changeVal(c) {
+            var hasDir= Util.dirname(c.path) ? "1" : "0";
+            var isOut = Util.startsWith(c.path,"out/") ? "1" : "0";
+            return (hasDir + isOut + c.path);
+          }
+          changes.sort( function(c1,c2) {
+            var s1 = changeVal(c1);
+            var s2 = changeVal(c2);
+            return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
+          });
+
           // Commit
-          return commitMessage(self, changes, self.remote.getFolder(), 
+          return commitMessage(self, changes, decodeURIComponent(self.remote.getFolder()), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
             if (res.changes) changes = res.changes;
             if (changes.length===0) {
