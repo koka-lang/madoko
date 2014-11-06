@@ -34,7 +34,7 @@ var limits = {
   requestNewUser   : 10,      // at most X users per hour per domain
   maxProcesses: 10, 
   hashLength  : 16,  
-  fileSize    : 8*mb,         
+  fileSize    : 16*mb,         
   cookieAge   : 30*day,       // our session cookie expires after one month
   timeoutPDF  : 5*minute,
   timeoutMath : 2*minute,

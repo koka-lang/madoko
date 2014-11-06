@@ -3567,8 +3567,11 @@ var symbolsMath = [
       }
       content = cap[3];  
     }
-    if (content.length >= 500*1024) {
-      throw new Error("file size is too large (maximum is about 384kb)");
+    if (content.length >= 1.34*1024*1024) {
+      throw new Error("file size is too large (maximum insertion size is about 1mb)");
+    }
+    else if (content.length >= 1.34*512*1024) {
+      Util.message("file size is very large; consider resizing to keep it under 512kb", Util.Msg.Warning);
     }
 
     self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
