@@ -186,7 +186,7 @@ function discard(storage,docName) {
   var params = {
     command: "alert",
     alert: "true",
-    header: Util.escape(Util.combine(storage.folder(),docName || ""))
+    header: Util.escape(Util.combine(storage.remote.getDisplayFolder(),docName || ""))
   };
   params.remote = storage.remote.type();
   params.headerLogo = "images/dark/" + storage.remote.logo();
@@ -289,7 +289,7 @@ function saveTo(  storage, toStorage, docStem, newStem )
   var newName = (newStem ? newStem : docStem) + ".mdk";
   return toStorage.readFile( newName, false ).then( 
     function(file) {
-      throw new Error( "cannot save, document already exists: " + Util.combine(toStorage.folder(), newName) );
+      throw new Error( "cannot save, document already exists: " + Util.combine(toStorage.remote.getDisplayFolder(), newName) );
     },
     function(err) {
       storage.forEachFile( function(file) {
@@ -349,7 +349,7 @@ function publishSite(  storage, docName, indexName )
       }) ).then( function() {
         var params = {
           command: "message",
-          header: Util.escape(toStorage.folder()),
+          header: Util.escape(toStorage.remote.getDisplayFolder()),
           headerLogo: headerLogo,
           message: 
               ["<p>Website saved.</p>",
@@ -360,7 +360,7 @@ function publishSite(  storage, docName, indexName )
               ].join("\n")
         };
         return picker( storage, params ).then( function() {
-          return toStorage.folder();
+          return toStorage.remote.getFolder();
         });
       });
     });
@@ -406,7 +406,7 @@ function createSnapshot( storage, docName ) {
       toStorage.writeFile( file.path, file.content, opts );
     });
     return toStorage.sync().then( function() {
-      Util.message( "snapshot saved to: " + toStorage.folder(), Util.Msg.Info );
+      Util.message( "snapshot saved to: " + toStorage.remote.getDisplayFolder(), Util.Msg.Info );
     });
   });
 }
@@ -451,11 +451,6 @@ var Storage = (function() {
       clearInterval( self.pullIval );
       self.pullIval = 0;
     }
-  }
-
-  Storage.prototype.folder = function() {
-    var self = this;
-    return self.remote.getFolder();
   }
 
   Storage.prototype.persist = function(limit) {
@@ -1056,7 +1051,7 @@ var Storage = (function() {
                         return self._pullUpdate(diff,cursors,merges,item); 
                       });
           return Promise.when( syncs ).then( function(res) {
-            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getFolder(), Util.Msg.Info );
+            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getDisplayFolder(), Util.Msg.Info );
             return true;
           }, function(err) {
             //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
@@ -1114,7 +1109,7 @@ var Storage = (function() {
           });
 
           // Commit
-          return commitMessage(self, changes, decodeURIComponent(self.remote.getFolder()), 
+          return commitMessage(self, changes, self.remote.getDisplayFolder(), 
                                 "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
             if (res.changes) changes = res.changes;
             if (changes.length===0) {

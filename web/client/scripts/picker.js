@@ -576,7 +576,10 @@ var Picker = (function() {
         return self.current.remote.connect(true /* verify */).then( function(status) {
           if (status===401) {
             self.setCurrent(remotes.me);
-          }    
+          }
+          self.displayFolderName();
+          var spinner = "<img class='spinner spin' style='height:1em' src='images/icon-spinner.gif'></img>";
+          listing.innerHTML = spinner + " Loading...";
           return self.current.remote.getUserName().then( function(userName) {
             document.getElementById("remote-username").innerHTML = Util.escape( userName );
             return self.displayFolder();
@@ -641,9 +644,6 @@ var Picker = (function() {
 
   Picker.prototype.displayFolder = function() {
     var self = this;
-    self.displayFolderName();
-    var spinner = "<img class='spinner spin' style='height:1em' src='images/icon-spinner.gif'></img>";
-    listing.innerHTML = spinner + " Loading...";
     var folder = self.current.folder;
     var getListing = (folder==="//" ? self.getRoots() : self.current.remote.listing(folder));
     return getListing.then( function(items) {

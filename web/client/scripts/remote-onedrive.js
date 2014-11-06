@@ -226,6 +226,11 @@ var Onedrive = (function() {
     return self.folder;
   }
 
+  Onedrive.prototype.getDisplayFolder = function() {
+    var self = this;
+    return self.getFolder();
+  }
+
   Onedrive.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };

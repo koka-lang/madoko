@@ -69,6 +69,11 @@ var HttpRemote = (function() {
     return self.url;
   }
 
+  HttpRemote.prototype.getDisplayFolder = function() {
+    var self = this;
+    return self.getFolder();
+  }
+
   HttpRemote.prototype.persist = function() {
     var self = this;
     return { url: self.url };

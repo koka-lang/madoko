@@ -53,6 +53,11 @@ var LocalRemote = (function() {
     return self.folder;
   }
 
+  LocalRemote.prototype.getDisplayFolder = function() {
+    var self = this;
+    return self.getFolder();
+  }
+
   LocalRemote.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };

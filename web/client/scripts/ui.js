@@ -1418,6 +1418,7 @@ var UI = (function() {
     var self = this;
     self.flush();
     self.saveSettings();
+    if (!self.storage) return;
     var pos  = self.editor.getPosition();    
     var json = { 
       docName: self.docName, 
@@ -3905,7 +3906,7 @@ var symbolsMath = [
   UI.prototype.onFileUpdate = function(file) {
     var self = this;
     if (file.path===self.editName) {
-      var fullFolder = self.storage.folder();
+      var fullFolder = self.storage.remote.getDisplayFolder();
       var folder = fullFolder;
       if (folder.length > 30) folder = "..." + folder.substr(folder.length-30);
       var prefix = "<span class='folder'>" + folder + (folder ? "/" : "") + "</span>";

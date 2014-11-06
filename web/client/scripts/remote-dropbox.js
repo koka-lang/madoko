@@ -164,6 +164,11 @@ var Dropbox = (function() {
     return self.folder;
   }
 
+  Dropbox.prototype.getDisplayFolder = function() {
+    var self = this;
+    return self.getFolder();
+  }
+
   Dropbox.prototype.persist = function() {
     var self = this;
     return { folder: self.folder };

@@ -80,7 +80,7 @@ function joinPath(p) {
 
 function normalizePath(path) {
   var p = splitPath(path);
-  return [p.repo,p.branch,p.tpath].join("/");
+  return [p.repo,p.branch,p.tpath].filter(function(s) { return (s != ""); }).join("/");
 }
 
 function getListing(path) {
@@ -328,6 +328,11 @@ var Github = (function() {
   Github.prototype.getFolder = function() {
     var self = this;
     return self.path;
+  }
+
+  Github.prototype.getDisplayFolder = function() {
+    var self = this;
+    return normalizePath(self.path);
   }
 
   Github.prototype.persist = function() {

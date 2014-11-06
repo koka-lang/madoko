@@ -264,6 +264,7 @@ var Editor = (function(_super) {
   Editor.prototype.editFile = function( editName, content, options, mime) {
     var self = this;
     var mode = null;
+    var initial = true;
     if (!mime && options) {
       if (typeof options.mode === "string") mime = options.mode;
       else if (options.mime) mime = options.mime;
@@ -277,6 +278,7 @@ var Editor = (function(_super) {
       var state = self.editState.get(self.editName);
       if (state && state.modelState) {
         // restore previous state
+        initial = false;
         self.setModel( Model.hydrate(state.modelState) );
         self.restoreViewState(state.viewState);
       }
@@ -294,14 +296,22 @@ var Editor = (function(_super) {
     var content0 = self.getValue();
     if (content0 !== content) {
       var pos = self.getPosition();
-      self.model.setValue(content0,mode);
-      if (pos.lineNumber !== 1 && !mode) {
-        // set by a merge
+      if (initial) {
+        // not loaded before
+        self.model.setValue(content,mode);
         self.setPosition(pos,true,true);
-      }      
-      var rng = self.model.getFullModelRange();
-      var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition(rng,content);      
-      self.executeCommand("madoko",command);
+      }
+      else {
+        self.model.setValue(content0,mode);
+      
+        if (pos.lineNumber !== 1 && !mode) {
+          // set by a merge
+          self.setPosition(pos,true,true);
+        }      
+        var rng = self.model.getFullModelRange();
+        var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition(rng,content);      
+        self.executeCommand("madoko",command);
+      }
     }
 
     // update options
