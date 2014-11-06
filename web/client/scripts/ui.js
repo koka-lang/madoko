@@ -54,6 +54,7 @@ function bindKey( key, action ) {
   keyHandlers.push( { code: code, action: action, stop: key.stop || false } );
 }
 
+var localStorageLimit = 5000000; // (~5mb)
 
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
@@ -69,7 +70,7 @@ function localStorageSave( fname, obj, createMinimalObj ) {
     if (createMinimalObj) {
       try {
         localStorage.setItem( key, JSON.stringify(createMinimalObj()) );
-        Util.message("full local backup is too large; using minimal backup instead", Util.Msg.Trace);
+        Util.message("full local backup is too large; using minimal backup instead", Util.Msg.Info);
         return true;
       }
       catch(e2) {};
@@ -690,7 +691,7 @@ var UI = (function() {
     var openEvent = function(ev) {
       self.event( "loaded", "loading...", State.Loading, function() {
         return Storage.openFile(self.storage).then( function(res) { 
-          self.updateConnectionStatus().then( function() {
+          return self.updateConnectionStatus().then( function() {
             if (!res) return Promise.resolved(); // canceled
             return self.openFile(res.storage,res.docName); 
           });
@@ -1422,12 +1423,12 @@ var UI = (function() {
       docName: self.docName, 
       editName: self.editName, 
       pos: pos, 
-      storage: self.storage.persist(minimal),      
+      storage: self.storage.persist(minimal ? 0 : localStorageLimit),      
     };
     return localStorageSave("local", json, 
       (//minimal ? undefined : 
        function() {
-        json.storage = self.storage.persist(true); // persist minimally
+        json.storage = self.storage.persist(0); // persist minimally
         return json;
       }));
   }

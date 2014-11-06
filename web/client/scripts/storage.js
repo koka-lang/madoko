@@ -458,13 +458,39 @@ var Storage = (function() {
     return self.remote.getFolder();
   }
 
-  Storage.prototype.persist = function(minimal) {
+  Storage.prototype.persist = function(limit) {
     var self = this;
-    var pfiles = self.files.copy();
-    pfiles.forEach( function(path,file) {
-      if (file.nosync || (minimal && (!Util.isTextMime(file.mime) || Util.hasGeneratedExt(path)))) pfiles.remove(path);
-    });
     
+    // First sort in order of relevance and size
+    var infos = [];
+    self.files.forEach( function(path,file) {
+      if (file.nosync) return;
+      infos.push({
+        path: path,
+        mime: file.mime,
+        len : file.content.length + file.original.length,
+        vital: Util.isTextMime(file.mime) && !Util.hasGeneratedExt(path),
+      });
+    });
+    infos.sort( function(i1,i2) {
+      var x1 = (i1.vital ? 0 : i1.len);
+      var x2 = (i2.vital ? 0 : i2.len);
+      return (i1 - i2);
+    });
+
+    // Then add up to the limit
+    var pfiles = new Map();
+    var total = 0;
+    infos.forEach( function(info) {
+      total = total + info.len;
+      if (info.vital || total <= limit) {
+        pfiles.set( info.path, self.files.get(info.path) );
+      }
+      else {
+        Util.message("Over limit, not persisting: " + info.path, Util.Msg.Trace);
+      }
+    });
+
     return { 
       remote: self.remote.persist(), 
       remoteType: self.remote.type(),
@@ -663,6 +689,7 @@ var Storage = (function() {
         return file;
       }, function(err) {
         if (dirs.length===0) return null;
+        if (err.httpCode && err.httpCode !== 404) throw err;
         return self._pullFileSearch( fbase, opts, dirs );
       });
   }
@@ -722,7 +749,7 @@ var Storage = (function() {
           }
           else {
             self.pullFails.set(fpath,true);
-            throw new Error("cannot find file: " + fpath);
+            throw new Error("Cannot find file: " + fpath);
           }
         }
 
@@ -745,7 +772,7 @@ var Storage = (function() {
             return self.files.get(opath);
           },
           function(err) {
-            Util.message( err, Util.Msg.Exn );
+            Util.message( err, Util.Msg.Info );
             return noContent();
           });
       }      
