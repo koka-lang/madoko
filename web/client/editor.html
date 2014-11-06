@@ -59,7 +59,7 @@
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure ...</div>
         <hr/>
           <div id="pull" class="button" title="Pull updates from cloud storage or repository."
-          ><span class="icon"><img src="images/icon-pull.png"/></span>Pull Only</div>
+          ><span class="icon"><img src="images/icon-pull2.png"/></span>Pull Only</div>
           <div id="sync-now" class="button" title="Synchronize with cloud storage, or pull/commit/push with a repository
 (done automatically every 30 seconds)"
           ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize<span class="shortcut">(Ctrl-S / Alt-S)</span></div>                          
@@ -94,10 +94,14 @@
         <div id="edit-select-files"></div>        
       </div
     ></div>
-    <span id="users-status">
-      <img id="icon-users" class="status" src="images/dark/icon-users.png" title="Document is viewed concurrently by other users"/>
-      <img id="icon-users-edit" class="status" src="images/dark/icon-users-edit.png" title="Document is edited concurrently by other users"/>
-    </span>
+    <div id="users-menu" class="popup">
+      <span id="users-status">
+        <img id="icon-users" class="status" src="images/dark/icon-users.png" title="Document is viewed concurrently by other users"/>
+        <img id="icon-users-edit" class="status" src="images/dark/icon-users-edit.png" title="Document is edited concurrently by other users"/>
+      </span>
+      <div id="users-panel" class="menu boxed">
+      </div>
+    </div>
     <img id="sync-spinner" class="button gspinner" src="images/dark/spinner-sync.gif" title="Synchronizing with cloud storage..."/>
       
     <div class="right">

@@ -795,12 +795,21 @@ div.boxed {
 /* status icons */
 #users-status img {
   vertical-align: -0.5ex;
-  visibility: hidden;
+  display: none;
 }
 
 #users-status.users-read img#icon-users,
 #users-status.users-write img#icon-users-edit {
-  visibility: visible;
+  display: inline;
+}
+
+#users-status {
+  display: none;
+}
+
+#users-status.users-read,
+#users-status.users-write {
+  display: inline;
 }
 
 
@@ -941,6 +950,10 @@ div.pinned.boxed.menu {
   top: -20rem;
   height: 20rem;
   padding: 0pt;
+}
+
+#users-panel {
+  width: 10em;
 }
 
 
@@ -1256,7 +1269,8 @@ x#picker.page-template #message-template {
   display: none;
 }
 
-#picker #upload, #picker #commit {
+#picker #upload, 
+#picker #commit {
   display: none;
 }
 

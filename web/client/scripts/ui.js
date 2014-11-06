@@ -350,6 +350,7 @@ var UI = (function() {
 
     // common elements
     self.usersStatus = document.getElementById("users-status");
+    self.usersPanel  = document.getElementById("users-panel");
     self.spinner = document.getElementById("view-spinner");    
     self.spinner.spinDelay = 750;
     self.syncer  = document.getElementById("sync-spinner");  
@@ -1726,8 +1727,21 @@ var UI = (function() {
         remote: self.storage.remote.type(),
       };
       Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
-        var res = data[docFile];
+        var res = data[docFile];        
         if (res && edit !== "none") {
+          // build panel
+          var status = "";
+          var users = new Map();
+          res.readers.forEach( function(user) { users.set(user.name,false); } );
+          res.writers.forEach( function(user) { users.set(user.name,true); } );
+          users.forEach( function(name,isWriter) {
+            status = status + "<div class='button user-" + (isWriter ? "write" : "read") + "' " +
+                              "title='" + (isWriter ? "Editing document" : "Viewing document") + "'>" + 
+                      "<span class='icon'><img src='images/icon-user-" + (isWriter ? "write" : "read") + ".png'></span>" +
+                      Util.escape(name) + 
+                      "</div>";
+          });
+          self.usersPanel.innerHTML = status;
           if (res && res.writers.length > 0) {
             self.usersStatus.className = "users-write";
           }
