@@ -463,14 +463,14 @@ function inlineImg( cap : matched, context : inlineContext ) : string {
 function inlineLinkEx( isImage : bool, cap : matched, context : inlineContext ) : string {
   // cap.groups = 1:optional spaces, 2:txt, 3:everything after it, 
   //               AND 4:href, 5:href-title, OR 6: linkid, AND 7:span attributes
-  val attrs0  = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
-  val attrs   = context.applyDefaults(if (isImage) then "img" else "a", attrs0)
+  val attrs  = if (cap.groups.matchedOn(7)) then context.formatAttrs(cap.groups[7].parseAttrs) else attrsNone
+  //val attrs   = context.applyDefaults(if (isImage) then "img" else "a", attrs0)
   
   val nbsp = if (cap.groups[1] != "" && cap.groups[1].list.all(fun(c){c==' '})) 
               then context.fmtText("&nbsp;") else cap.groups[1]
   if (cap.groups.matchedOn(4)) {
     // direct url link:  [text](url title){attrs}
-    val attrsd = context.defaults.matchRules("a",attrs)
+    val attrsd = context.defaults.matchRules( if (isImage) then "img" else "a", attrs)
     nbsp + context.fmtLink(isImage, newLink(cap.groups[4],cap.groups[5],attrsd,bench=context.bench), 
                                  context.formatInline(cap.groups[2]))
   }
@@ -584,9 +584,10 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
                           attrs : attrs, context : inlineContext ) : string 
 {    
   val id = if (ref != "") then ref.definitionId else txt.definitionId
+  val elemName = if (isImage) then "img" else "a"
   match(context.links[id]) {
     Just(link) -> {
-      val attrsd = context.defaults.matchRules("a",attrs)
+      val attrsd = context.defaults.matchRules(elemName,attrs)
       val xlink = if (attrs.empty) then link else link( linkattrs = attrsd.mergeDefault(link.linkattrs) )
       nbsp + context.fmtLink(isImage, xlink, context.formatInline(txt))         
     }
@@ -596,7 +597,7 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
       match(context.labels[labelId]) {
         Just(lab) -> {
           // Label reference
-          val attrsd = context.defaults.matchRules("a",attrs)
+          val attrsd = context.defaults.matchRules(elemName,attrs)
           val lattrs = attrsd.addKeyval("target-element",lab.element)
           val llink  = newLink(id,context.formatInline(lab.labelCaption),lattrs,bench=context.bench)
           nbsp + context.fmtLink(isImage,llink,context.formatInline(
