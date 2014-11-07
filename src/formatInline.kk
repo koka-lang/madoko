@@ -588,7 +588,7 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
   match(context.links[id]) {
     Just(link) -> {
       val attrsd = context.defaults.matchRules(elemName,attrs)
-      val xlink = if (attrs.empty) then link else link( linkattrs = attrsd.mergeDefault(link.linkattrs) )
+      val xlink = if (attrsd.empty) then link else link( linkattrs = attrsd.mergeDefault(link.linkattrs) )
       nbsp + context.fmtLink(isImage, xlink, context.formatInline(txt))         
     }
     Nothing -> {
