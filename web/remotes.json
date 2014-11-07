@@ -17,6 +17,6 @@
     "xclient_secret": "wYsZMyNcx3oDjS3qM8vkGJtlicSotccSOYkCCgkLkBqzhnG77isOqIiVRkzQWqhy",
     "token_url"     : "https://github.com/login/oauth/access_token",
     "account_url"   : "https://api.github.com/user",
-    "revoke_url"    : "https://api.github.com/applications/:client_id/tokens/:access_token"
+    "disable_basic_url": "https://api.github.com/applications/:client_id/tokens/:access_token"
   }
 }

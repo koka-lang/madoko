@@ -450,6 +450,7 @@ var UI = (function() {
     bindKey( "Alt-S",  function()   { self.synchronize(true); } );
     bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
+    bindKey( "Alt-P",  function()   { self.pull(); } );
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
@@ -861,7 +862,7 @@ var UI = (function() {
 //      self.app.setAttribute("data-view",view);
 //      self.dispatchViewEvent( { eventType: "view", view: view } );
 
-    bindKey("Alt-P", toggleFullView );
+    bindKey("Alt-V", toggleFullView );
     bindKey({code:27,stop:true}, closeFullView );
 
     document.getElementById("close-fullview").onclick = function(ev) {
@@ -2063,9 +2064,12 @@ var UI = (function() {
       var cap = /^(\s*)/.exec(line);
       return (cap ? cap[1].length : 0);
     });
+    
+    var listCap = /^[ \t]*(([\*\+\-]|\d\.)[ \t]+)/.exec(text);
+    var listHang = listCap ? listCap[0].length : 0;
       
     var hang0  = new Array(indents[0]+1).join(" ");
-    var indent = Math.max( indents[0], (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
+    var indent = Math.max( Math.max(indents[0],listHang), (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
     var hang   = new Array(indent+1).join(" ");
     
     // reformat
@@ -3025,6 +3029,10 @@ var symbolsMath = [
       }
       else if (postxt[1] === "]" || postxt[1] === ";") {
         return ";@" + cite;
+      }
+      else if (postxt[1] === "[") {
+        rng.startColumn++;
+        return {content: "[@" + cite + ";", range: rng };
       }
       else if (postxt[0] === "]") {
         rng.endColumn--;
