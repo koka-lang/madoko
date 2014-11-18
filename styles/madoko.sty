@@ -714,8 +714,11 @@
   \renewcommand{\mdHxx}[2][]{\frametitle{\cssInline[elem=h2,#1]{#2}}}%
   \renewenvironment{mdSection}[1][]{\begin{mdDiv}[#1]\begin{frame}}{\end{frame}\end{mdDiv}}%
   % handle fragments
-  \cssClassRuleDoBefore{fragment}{\begin{onlyenv}<+->}%
-  \cssClassRuleDoAfter{fragment}{\end{onlyenv}}%
+  \cssClassRuleDo{fragment}{%
+    \eifstrequal{\cssDisplay}{inline}%
+    {\cssWrapCmd{\only<+->}}%
+    {\cssDoBefore{\begin{onlyenv}<+->}\cssDoAfter{\end{onlyenv}}}%
+  }
   \cssClassRuleDoBefore{pause}{\pause{}}%
   % item appearance on a list defined with a fragmented class
   \let\old@mdLi\mdLi%
