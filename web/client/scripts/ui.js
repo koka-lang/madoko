@@ -1855,6 +1855,31 @@ var UI = (function() {
     return Promise.resolved( _saveUserContent( Util.basename(path), mime, content ) );
   }
 
+  UI.prototype._trySynchronize = function() {
+    var self = this;
+    if (!self.storage || self.storage.remote.canCommit) return Promise.rejected("Cannot automatically synchronize with this remote storage.");
+    return self._synchronize();
+  }
+
+  UI.prototype._viewGenerated = function( name, mime ) {
+    var self = this;
+    var message = Util.basename(mime).toUpperCase() + " exported";
+
+    function directView() {
+      return self.saveUserContent( name, mime ).then( function() {
+        Util.message( message, Util.Msg.Status );
+      });
+    }
+
+    self._trySynchronize().then( function() {
+      var link = self.getViewLink(name,mime);
+      if (link) return Util.message( { message: message, link: link }, Util.Msg.Status );
+      return directView();
+    }, function(err) {
+      return directView();
+    });
+  }
+
   UI.prototype.generatePdf = function() {
     var self = this;
     var ctx = { 
@@ -1872,21 +1897,10 @@ var UI = (function() {
       self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
         if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
         var name = "out/" + Util.changeExt(self.docName,".pdf");
-        return self._synchronize().always( function() {
-          var link = self.getViewLink(name,"application/pdf");
-          if (link) {
-            Util.message( { message: "PDF exported", link: link }, Util.Msg.Status );
-          }
-          else { 
-            return self.saveUserContent( name, "application/pdf" ).then( function() {
-              Util.message( "PDF exported", Util.Msg.Status );
-            });
-          }
-        });
+        return self._viewGenerated(name,"application/pdf");
       })
     );
   }
-
 
   UI.prototype.generateHtml = function() {
     var self = this;
@@ -1894,17 +1908,7 @@ var UI = (function() {
       self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
         var name = "out/" + Util.changeExt(self.docName,".html");
         self.storage.writeFile( name, content );
-        return self._synchronize().always( function() {
-          var link = self.getViewLink(name,"text/html");
-          if (link) {
-            Util.message( { message: "HTML exported", link: link }, Util.Msg.Status );
-          }
-          else {            
-            return self.saveUserContent( name, "text/html" ).then( function() {
-              Util.message( "HTML exported", Util.Msg.Status );
-            });
-          }
-        });
+        return self._viewGenerated(name,"text/html");
       })
     );
   }
