@@ -712,7 +712,7 @@
   \renewcommand{\mdH}[2][]{\frametitle{\cssInline[elem=h0,#1]{#2}}}%
   \renewcommand{\mdHx}[2][]{\frametitle{\cssInline[elem=h1,#1]{#2}}}%
   \renewcommand{\mdHxx}[2][]{\frametitle{\cssInline[elem=h2,#1]{#2}}}%
-  \renewenvironment{mdSection}[1][]{\begin{mdDiv}[#1]\begin{frame}}{\end{frame}\end{mdDiv}}%
+  \renewenvironment{mdSection}[1][]{\begin{mdDiv}[#1]\begin{frame}\stepcounter{beamerpauses}}{\end{frame}\end{mdDiv}}%
   % handle fragments
   \cssClassRuleDo{fragment}{%
     \eifstrequal{\cssDisplay}{inline}%
