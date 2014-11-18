@@ -110,6 +110,11 @@ Html Header   :
     .reveal .toc>.tocblock .tocblock .tocblock {
         margin-left: 1em;
     }
+    .reveal .bibliography {
+      height: 15em;
+      overflow-y: auto;
+      font-size: 0.8em;
+    }
     /* Display in the preview window */
     html, body.madoko.preview, .preview body {
       height  : 100% !important;
