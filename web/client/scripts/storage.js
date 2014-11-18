@@ -483,7 +483,7 @@ var Storage = (function() {
       if (info.vital || total <= limit) {
         pfiles.set( info.path, self.files.get(info.path) );
       }
-      else {
+      else if (limit > 0) {
         Util.message("Over limit, not persisting: " + info.path, Util.Msg.Trace);
       }
     });
