@@ -19,7 +19,7 @@ var Preview = (function() {
     if (p) {
       p.className = p.className.replace(/\bpreview-hidden\b/g,"");
     }
-  }, 7500);
+  }, 10000);
 
 
   
@@ -577,6 +577,9 @@ var Preview = (function() {
     }
     else if (info.eventType==="viewSync") {
       viewSynchronize();
+    }
+    else if (info.eventType==="reload") {
+      window.location.reload();
     }
   });
 
