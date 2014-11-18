@@ -399,6 +399,7 @@ var Preview = (function() {
 
   // we only load script tags once in the preview (and never remote them)
   var loadedScripts = {};
+  var inlineScripts = [];
 
   function onLoaded(src) {
     if (src) {
@@ -407,7 +408,15 @@ var Preview = (function() {
     for(var script in loadedScripts) {
       if (loadedScripts[script] !== true) return;
     }
-    dispatchEvent(document,"load");
+    // if all scripts are loaded:
+    // execute all inline scripts and fire the "load" event.
+    inlineScripts.forEach( function(text) { 
+      eval(text);       
+    });
+    dispatchEvent(document,"load"); 
+    window.setTimeout( function() {
+      dispatchEvent(window,"resize"); 
+    }, 100 );
   }
 
   function loadContent(info) {
@@ -425,13 +434,14 @@ var Preview = (function() {
     // note: add a final element to help the scrolling to the end.
     var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
     document.body.innerHTML = info.content + finalElem;
-    // execute inline scripts
+    // collect inline scripts and referenced scripts
+    inlineScripts = [];
     var scripts = document.body.getElementsByTagName("script");   
     for(var i=0;i<scripts.length;i++) {  
       var script = scripts[i];
       var src = script.getAttribute("src");
       if (!src) {
-        eval(scripts[i].text);  
+        inlineScripts.push( scripts[i].text );  
       }
       else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
         loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
