@@ -532,7 +532,7 @@ var Storage = (function() {
     var self = this;
     var synced = true;
     self.forEachFile( function(file) {
-      if ((file.modified || file.sha===null) && (full || !Util.hasGeneratedExt(file.path))) {
+      if ((file.modified || (self.remote.canCommit && file.sha===null)) && (full || !Util.hasGeneratedExt(file.path))) {
         synced = false;
         return false; // break
       }
