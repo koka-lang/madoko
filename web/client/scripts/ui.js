@@ -850,9 +850,11 @@ var UI = (function() {
     //}, false);
 
     function toggleFullView() {
+      /*
       if (!self.settings.viewFull) {
         fullHeaderStart();
       }
+      */
       self.updateSettings({viewFull: !self.settings.viewFull });
     }
 
@@ -882,6 +884,7 @@ var UI = (function() {
       self.updateSettings({viewMode:"wide"});
     }
 
+    /*
     var fullh = document.getElementById("fullview-header");
     var fullTimeout = null;
     function fullHeaderCollapse() {
@@ -903,7 +906,8 @@ var UI = (function() {
       }
       Util.removeClassName(fullh,"collapsed");
     });
-
+    */
+    
     // font size
     document.getElementById("font-small").onclick = function(ev) {
       self.updateSettings ({fontScale:"small"});
@@ -1471,7 +1475,8 @@ var UI = (function() {
             self.storage.destroy();     // clears all event listeners
             self.updateCitations(null); // clears citations
             self.updateLabels(null,null); // clears references
-            self.viewHTML( "<p>Rendering...</p>", Date.now() );
+            self.dispatchViewEvent({eventType: "reload"});      
+            //self.viewHTML( "<p>Rendering...</p>", Date.now() );
             //self.storage.clearEventListener(self);
           }
           self.storage = stg;
