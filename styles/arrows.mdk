@@ -1,0 +1,205 @@
+JQueryVersion : 1.9.0
+JQueryUrl     : https://ajax.googleapis.com/ajax/libs/jquery/&JQueryVersion;/jquery.min.js
+JsPlumbVersion: 1.4.1
+JsPlumbUrl    : https://cdnjs.cloudflare.com/ajax/libs/jsPlumb/&JsPlumbVersion;/jquery.jsPlumb-&JsPlumbVersion;-all.js
+Script        : &JQueryUrl; {.preview}
+Script        : &JsPlumbUrl; {.preview}
+Package       : tikz
+
+.arrow: replace="/(\w+)\((\w+)\)([^\w]+)(\w+)\((\w+)\)(([\^\_])(.*))?/[\8]{data-arrow-target=\5 data-arrow-source=\2 data-arrow-start=\u\1 data-arrow-end=\u\4 data-arrow-style='\3' data-arrow-label-placement='\7' .xarrow}/gc"
+
+TeX Header    : 
+  \usetikzlibrary{arrows,shapes}
+  \tikzstyle{every picture}+=[remember picture]
+  \cssClassRuleCmd{node}{\mdNode}
+  \newcommand{\mdNode}[1]{\tikz[baseline]{\node[anchor=base,inner sep=0pt] (\cssId) {#1};}}
+  \cssClassRuleCmd{xarrow}{\mdArrow}
+  \cssNewKey{css}{data-arrow-source}{\arrowSource}{n1}
+  \cssNewKey{css}{data-arrow-target}{\arrowTarget}{t1}
+  \cssNewKey{css}{data-arrow-style}{\arrowStyle}{->}
+  \cssNewKey{css}{data-arrow-start}{\arrowStart}{Right}
+  \cssNewKey{css}{data-arrow-end}{\arrowEnd}{Left}
+  \cssNewKey{css}{data-arrow-label-placement}{\arrowLabelPlacement}{\textasciicircum}
+  \makeatletter
+  \newcommand{\setArrowDegree}[1]{%
+    \eifstrequal{#1}{Top}{\global\def\@arrowDegree{90}}%
+    {\eifstrequal{#1}{Left}{\global\def\@arrowDegree{180}}%
+    {\eifstrequal{#1}{Right}{\global\def\@arrowDegree{0}}%
+    {\eifstrequal{#1}{Bottom}{\global\def\@arrowDegree{-90}}%
+    {\global\def\@arrowDegree{0}}}}}%
+  }
+  \newcommand{\mdArrow}[1]{%
+    \begin{tikzpicture}[overlay]%
+      \setArrowDegree{\arrowStart}\edef\@outdeg{\@arrowDegree}%
+      \setArrowDegree{\arrowEnd}\edef\@indeg{\@arrowDegree}%
+      \eifstrequal{\arrowLabelPlacement}{\_}{\edef\@placement{swap}}{\edef\@placement{}}%
+      % start path
+      \eifstrequal{\arrowStyle}{{\textless}-{\textgreater}}{\path[<->]}%
+      {\eifstrequal{\arrowStyle}{{\textless}-}{\path[<-]}%
+      {\eifstrequal{\arrowStyle}{--}{\path}%
+      {\path[->]}}}%
+      (\arrowSource) edge [in=\@indeg, out=\@outdeg] node[auto,\@placement]{#1} (\arrowTarget);%
+    \end{tikzpicture}%
+  }
+  \makeatother
+
+Html Footer:
+  <script>
+  //jsPlumb.bind("ready", initializeArrows );
+  document.addEventListener( "load", function() {
+    if (typeof jsPlumb === "undefined") return;
+    if (jsPlumb.Defaults.Initialized) initializeArrows(); 
+  });
+  window.addEventListener( "load", initializeArrows );
+  window.addEventListener("resize", refreshArrows );
+  function refreshArrows() { 
+    if (typeof jsPlumb === "undefined") return;
+    if (!jsPlumb.Defaults.Initialized) initializeArrows();
+    jsPlumb.repaintEverything(); 
+  };
+  
+  var arrows = {}; // map from arrow element id's to arrow connections
+  
+  function arrowAddClass(arrow,cls) {
+    arrow.addClass(cls,true);
+    arrow.getOverlays().forEach( function(overlay) {
+      if (overlay.addClass) overlay.addClass(cls);
+    });
+  }
+  function arrowRemoveClass(arrow,cls) {
+    arrow.removeClass(cls,true);
+    arrow.getOverlays().forEach( function(overlay) {
+      if (overlay.removeClass) overlay.removeClass(cls);
+    });
+  }
+  function arrowSetVisible(arrowElem,visible) {
+    if (!arrowElem || !arrows) return;
+    var arrow = arrows[arrowElem.id];
+    if (!arrow) return;
+    if (visible) 
+      arrowRemoveClass(arrow, "invisible");
+    else
+      arrowAddClass(arrow, "invisible");
+  }
+  
+  function initializeArrows() {
+    if (typeof jsPlumb === "undefined") return;
+    
+    // clean up any previous initialization
+    if (jsPlumb.Defaults.Initialized) {
+      for(var elem in arrows) {
+        var arrow = arrows[elem];
+        jsPlumb.detach(arrow);
+      }
+      arrows = {}
+    }
+    
+    // set defaults
+    jsPlumb.importDefaults({
+      PaintStyle:{ 
+        lineWidth:1,
+        strokeStyle:"black",
+      },
+      Connector:[ "Bezier", { curviness: 150 } ],
+      Endpoint: "Blank",
+      //Overlays: [["Arrow", { width:6, length:6, location:1 } ]],
+      ArrowWidth: 6,
+      ArrowLength: 6,
+      Initialized: true,
+    });
+    
+    console.log(jsPlumb);
+    var arrowWidth = jsPlumb.Defaults.ArrowWidth || 6;
+    var arrowLen   = jsPlumb.Defaults.ArrowWidth || 6;
+    [].forEach.call( document.querySelectorAll("[data-arrow-target]"), function(elem,elemIdx) {
+      // get options
+      var target = elem.getAttribute("data-arrow-target");
+      if (!target) {
+        return; 
+      }
+      
+      var source = elem.getAttribute("data-arrow-source") || elem.id;
+      var start = elem.getAttribute("data-arrow-start") || "AutoDefault";
+      var end   = elem.getAttribute("data-arrow-end") || "AutoDefault";
+      var line  = elem.getAttribute("data-arrow-line");
+      var style = elem.getAttribute("data-arrow-style");
+      var cls   = elem.getAttribute("data-arrow-class");
+      var curve   = elem.getAttribute("data-arrow-curve");
+      var labelHtml      = elem.innerHTML;
+      var labelLoc       = elem.getAttribute("data-arrow-label-location") || "0.5";
+      var labelPlacement = elem.getAttribute("data-arrow-label-placement") || "^";
+      
+      var opts = {
+        source: source,
+        target: target,
+        anchors: [start,end],      
+      };
+      
+      // calculate initial arrow style
+      var overlays = [];
+      if (style==="<->") 
+        overlays = [["Arrow", { width:arrowWidth, length:arrowLen, location:1 } ],
+                    ["Arrow", { width:arrowWidth, length:arrowLen, location:0, direction:-1 } ]];
+      else if (style==="<-") 
+        overlays = [["Arrow", { width:arrowWidth, length:arrowLen, location:0, direction:-1 } ]];
+      else if (style==="->") 
+        overlays = [["Arrow", { width:arrowWidth, length:arrowLen, location:1 } ]];
+      
+      // set temporary label
+      var labelId = source + "_label";
+      if (labelHtml) {
+        overlays.push( ["Label",{label:" ", id: labelId, location: parseInt(labelLoc) || 0.2 }] );
+      }
+            
+      // set final jsplumb options
+      if (line) { opts.connector = line; };
+      if (overlays.length > 0) { opts.overlays = overlays; };
+      if (curve) { opts.connector = [ line||"Bezier", {curviness:curve}]; };
+      
+      // set local container
+      var container = elem.offsetParent;
+      if (jsPlumb.setContainer) 
+        jsPlumb.setContainer(container);
+      else 
+        jsPlumb.Container = container;
+      
+      // and create
+      var arrow = jsPlumb.connect( opts );
+      
+      // parent is the arrow element; track visibility for fragments in presentations
+      var arrowElem = elem.parentNode;
+      if (!arrowElem.id) arrowElem.id = "_arrow_elem_" + elemIdx.toString();
+      arrows[arrowElem.id] = arrow;
+      if (/\bfragment\b/.test(arrowElem.className)) arrowSetVisible(arrowElem,false);
+      
+      // now set the real label content so it can use HTML
+      if (labelHtml) {
+        var lab = arrow.getOverlay(labelId);
+        var labElem = lab.getElement()
+        labElem.innerHTML = labelHtml;
+        elem.textContent = "";   
+        if (jsPlumb.setContainer != null) { // version after 1.6.1
+          var box = labElem.getBoundingClientRect();
+          var shift = box.width;
+          if (labelPlacement === "^") shift = -shift;
+          labElem.style.marginLeft = shift.toString() + "px";
+        }   
+      }    
+    });
+    
+    if (typeof Reveal !== "undefined") {      
+      Reveal.addEventListener("ready", function() {
+        jsPlumb.repaintEverything();
+      });
+      Reveal.addEventListener("slidechanged", function() {
+        setTimeout( refreshArrows, 750 );
+      });
+      Reveal.addEventListener("fragmenthidden", function(ev) {
+        arrowSetVisible(ev.fragment,false);
+      });
+      Reveal.addEventListener("fragmentshown", function(ev) {
+        arrowSetVisible(ev.fragment,true);
+      });
+    }
+  };
+  </script>
