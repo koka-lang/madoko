@@ -1,11 +1,3 @@
-/*---------------------------------------------------------------------------
-  Copyright 2013 Microsoft Corporation.
- 
-  This is free software; you can redistribute it and/or modify it under the
-  terms of the Apache License, Version 2.0. A copy of the License can be
-  found in the file "license.txt" at the root of this distribution.
----------------------------------------------------------------------------*/
-
 /* ---------------------------------------------------
    Various settings to display madoko elements correctly.
    For example, lines in tables or a table of contents.
@@ -185,6 +177,17 @@ a.localref:hover {
 
 .hidden {
   display: none;
+}
+
+.invisible {
+  visibility: hidden;
+}
+body.preview .invisible {
+  visibility: visible;
+  opacity: 0.5;
+}
+body.preview[data-view=full] .invisible {
+  visibility: hidden;
 }
 
 .madoko code.code, .madoko span.code {
