@@ -439,7 +439,12 @@ function include( text : string, fast : bool, inName : string, outName : string,
       }
     }
     else {
-      match (trySearchReadTextFile(fname,dirs,".mdk")) {
+      // avoid including recursively
+      val searchName = if (fname.extname == "") then fname + ".mdk" else fname;
+      val searchDirs = if (inName.basename != searchName) then dirs 
+                        else dirs.filter( fun(dir) { dir != inName.dirname });
+      // .. and search
+      match (trySearchReadTextFile(fname,searchDirs,".mdk")) {
         Nothing -> {
           val fileName = if (extname(fname)=="") then fname + ".mdk" else fname
           log("files", fileName)
