@@ -854,7 +854,16 @@ function oauthLogin(req,res) {
       };
       // store info in our encrypted cookie
       req.session.logins[remote.name] = userInfo;
-      if (log) log.entry( { type: "login", id: req.session.userid, uid: userInfo.uid, remote: remote.name, name: info.name, email: info.email, date: userInfo.created, ip: req.ip, url: req.url } );
+      if (log) {
+        log.entry( { 
+          type: "login", id: req.session.userid, 
+          uid: userInfo.uid, 
+          remote: remote.name, 
+          name: userInfo.name, 
+          email: info.email || "", 
+          date: userInfo.created, ip: req.ip, url: req.url 
+        });
+      }
       return redirectPage(remote);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
