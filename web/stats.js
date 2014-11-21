@@ -6,8 +6,7 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 var dns     = require("dns");
-var Cp 			= require("child_process");
-
+var Cp      = require("child_process");
 
 var Fs      = require("fs");
 var Path    = require("path");
@@ -18,10 +17,10 @@ var date    = require("./client/scripts/date.js");
 
 function jsonParse(s,def) {
   try {
-  	return JSON.parse(s);
+    return JSON.parse(s);
   }
   catch(exn) {
-  	return def;
+    return def;
   }
 }
 
@@ -182,7 +181,7 @@ function digestUsers(entries, all) {
 			}
 		}
 		else if (entry.user && entry.user.id) {
-			user = userGetOrCreate(entry.user.id, { name: "", email: "", entries: [] });
+			user = userGetOrCreate(entry.user.id, { name: entry.user.name || "", email: "", entries: [] });
 		}
 		else {
 			user = null;
@@ -408,7 +407,7 @@ function writeStatsPage( fname ) {
 		console.log("stats: total scans: " + errors.scans.length );
 		var domains  = digestDomains(entries);
 		var users   = digestUsers(xentries,true);
-		errors.errors = errors.errors.slice(0,50);
+		errors.errors = errors.errors.slice(0,25);
 		return resolveDomains(domains).then( function() {
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),

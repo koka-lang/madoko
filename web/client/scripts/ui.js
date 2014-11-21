@@ -1122,7 +1122,7 @@ var UI = (function() {
     // update working stats.
     var now = Date.now();
     if (self.stat.editLast + self.stat.editDelta > self.lastEditChange) {
-      self.stat.editTotal += (self.lastEditChange - self.stat.editLast);
+      self.stat.editTotal = self.stat.editTotal + (self.lastEditChange - self.stat.editLast);
     }
     self.stat.editLast = self.lastEditChange;
     

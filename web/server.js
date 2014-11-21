@@ -1237,12 +1237,16 @@ app.put( "/rest/stat", function(req,res) {
       editTime: req.body.editTime || 0,
       viewTime: req.body.viewTime || 0,
     };
-    var login = req.session.logins.dropbox || req.session.logins.onedrive || null;
-    var name  = (login ? login.name : null) || req.session.userid;    
+    var login = null;
+    properties(remotes).some( function(name) {
+      login = req.session.logins[name];
+      return (login != null);
+    });
+    var name = (login ? login.name : null) || req.session.userid;    
     console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, viewing: " + stat.viewTime.toString() + "ms");
     log.entry( {
       type: "stat", 
-      user: { id: req.session.userid },
+      user: { id: req.session.userid, name: name },
       editTime: stat.editTime,
       viewTime: stat.viewTime,
       ip: req.ip,
