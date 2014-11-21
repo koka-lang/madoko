@@ -136,7 +136,11 @@ function digestUsers(entries, all) {
 
 	function userGetOrCreate(id,defaultVal) {
 		var user = userGet(id);
-		if (user) return user;
+		if (user) {
+			if (!user.name && defaultVal.name) user.name = defaultVal.name;
+			if (!user.email && defaultVal.email) user.email = defaultVal.email;
+			return user;
+		}
 		return userSet(id,defaultVal);
 	}
 
