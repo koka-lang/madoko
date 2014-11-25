@@ -305,7 +305,7 @@ function saveTo(  storage, toStorage, docStem, newStem )
         }        
         toStorage.writeFile( path, file.content, opts );
       });
-      return toStorage.sync().then( function(){ return {storage: toStorage, docName: newName }; } );
+      return toStorage.syncOrCommit().then( function(){ return {storage: toStorage, docName: newName }; } );
     }
   );
 }  
@@ -389,8 +389,8 @@ function createSnapshotFolder(remote, docstem, stem, num ) {
 }
 
 function createSnapshot( storage, docName ) {
-  if (!storage.remote.canSync) {
-    return Promise.rejected( "Cannot create snapshot on local- or readonly storage. (Use 'Save To' to save to cloud storage first)");
+  if (!storage.remote.canSync || storage.remote.canCommit) {
+    return Promise.rejected( "Cannot create snapshot on local-, readonly, or repository storage. (Use 'Save To' to save to cloud storage first)");
   }
   return storage.login().then( function() {
     return createSnapshotFolder( storage.remote, Util.stemname(docName) );
@@ -405,7 +405,7 @@ function createSnapshot( storage, docName ) {
       opts.globalPath = null;
       toStorage.writeFile( file.path, file.content, opts );
     });
-    return toStorage.sync().then( function() {
+    return toStorage.syncOrCommit().then( function() {
       Util.message( "snapshot saved to: " + toStorage.remote.getDisplayFolder(), Util.Msg.Info );
     });
   });
@@ -886,7 +886,7 @@ var Storage = (function() {
 
   Storage.prototype._syncPull = function(diff,cursors,merges,file,remoteFile,pullOnly) {
     var self = this;
-    var canMerge = isEditable(file); // Util.isTextMime(file.mime);
+    var canMerge = isEditable(file) && diff; // Util.isTextMime(file.mime);
     // file.createdTime < remoteFile.createdTime
     if (file.modified && canMerge) {
       if (rxConflicts.test(file.content)) {
@@ -930,6 +930,7 @@ var Storage = (function() {
     self._fireEvent("flush", { path: file.path }); // save editor state, changes file
     var original = (file.original != null ? file.original : file.content);
     var content  = file.content;
+    if (!cursors) cursors = {};
     return Merge.merge3(diff, null, cursors["/" + file.path] || 1, 
                         original, remoteFile.content, file.content).then( 
       function(res) {
@@ -1141,6 +1142,19 @@ var Storage = (function() {
         });
       });
     });
+  }
+
+  Storage.prototype.syncOrCommit = function(diff,cursors,showMerges,pullOnly) {
+    var self = this;
+    if (self.remote.canCommit) {
+      return self.pull(diff,cursors,showMerges).then( function() {
+        if (pullOnly) return;
+        return self.commit();
+      });
+    }
+    else {
+      return self.sync(diff,cursors,showMerges,pullOnly);
+    }
   }
 
   return Storage;

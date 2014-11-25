@@ -4018,16 +4018,14 @@ var symbolsMath = [
       if (!self.storage.remote.canSync) return Promise.resolved();
 
       return self.withSyncSpinner( function() {
-        var syncFun = self.storage.remote.canCommit ? self.storage.pull : self.storage.sync;
-        return syncFun.call( self.storage, Editor.diff, cursors, function(merges) { self.showMerges(merges); }, pullOnly ).then( function() {
+        // var syncFun = self.storage.remote.canCommit ? self.storage.pull : self.storage.sync;
+        return self.storage.syncOrCommit( Editor.diff, cursors, function(merges) { self.showMerges(merges); }, pullOnly ).then( function() {
           var line1 = cursors["/" + self.docName];
           var pos = self.editor.getPosition();
           if (pos.lineNumber >= line0) {
             pos.lineNumber += (line1 - line0);
             self.editor.setPosition(pos); // does not reveal the position, so no scrolling happens.
           }
-          if (!self.storage.remote.canCommit || pullOnly) return;
-          return self.storage.commit();
         });
       });
     }
