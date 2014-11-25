@@ -87,6 +87,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)
       elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
       elif (key=="pretty-align") options(prettyAlign=ivalue)
+      elif (key=="logo") options(logo=(lvalue=="true"))
 
       // can only set program options if not running in a sandbox
       elif (!(options.sandbox)) {

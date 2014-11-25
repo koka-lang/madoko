@@ -99,6 +99,9 @@
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
+% logo
+\cssClassRuleDoBefore{madokologo}{\vfill}
+
 
 % We need to call \mdLabeltarget for any structure that can set label
 \newcounter{@mdTargetCount}
@@ -597,6 +600,7 @@
        \smash{\usebox{\@sidebox}}%
     }%  
 }
+
 
 %-------------------------------------------------------------
 % Code and syntax highlighting 

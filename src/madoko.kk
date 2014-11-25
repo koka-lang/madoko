@@ -57,6 +57,8 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
 {  
   // first normalize the input: all tabs to 4 spaces.
   val (options,src) = parseMeta(options0,fmt,src0.normalizeSource)
+  val xfull = options.full.maybe(True,id)     
+  val logo  = if (xfull && options.logo) then "\n\n~Begin MadokoLogo\n&MadokoLogo;\n~End MadokoLogo\n" else "\n"
 
   if (options.verbose>=4) then trace("parse blocks")
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
@@ -76,7 +78,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
     = parseBody(initialFormatContext(icontext,options.lineMap,options.titleInfo(icontext.metadata),
                                       options.headingBase,options.pedantic,fmt), 
                 options.lineNo,
-                src,
+                src + logo,
                 options.metadata, options.tocDepth,
                 options.sectionBase,options.sectionMax)
 
@@ -99,7 +101,6 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   }
 
   // generate full html/tex if needed
-  val xfull = options.full.maybe(True,id)     
   val res = if (xfull) 
              then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options,fcontext.inlineContext.metadata)
              else body 

@@ -76,6 +76,7 @@ public struct options(
   sectionBase   : int  = 1, // starting section level.
   starBold      : bool = False, // use * for bold?
   prettyAlign   : int  = 2, // default alignment spaces for .pretty mode
+  logo          : bool = True, // generate a logo at the end of the document
   
   mathmode      : mathmode = Static,  // mode used to render math
   mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
@@ -84,7 +85,7 @@ public struct options(
   mathImgDir    : string = "math",    // directory for static math images
   mathScale     : int    = 108,       // math scaling in percentage
   mathDpi       : int    = 300,       // math resolution 
-  mathEmbedLimit: int    = 1024,      // maximal embedded image size  
+  mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
   
   highlight     : bool = True,
@@ -104,7 +105,7 @@ public struct options(
   metadata      : metadata = [],
   mathdim       : dict<mathinfo> = dict(),  // static math dimension information
   embedinfos    : dict<embedinfo> = dict(),   // embed data, used in a browser
-  embedLimit    : int = 0,                    // limit for embedding data
+  embedLimit    : int = 512*1024,             // limit for embedding data (javascript, css, etc.)
   lineNo        : int = 1,                  // emit line no's. Use 0 to suppress.
   lineNoWeb     : bool = False,             // emit line no info in html pages. 
   copyStyles    : bool = True,              // copy standard style files
@@ -174,7 +175,8 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Output a LaTeX file too"),
       Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),      
       
-      Option( "f", ["full"],     oflag(fun(o,v) { o(full=Just(v)) }), "Generate a full html/latex document"),
+      Option( "f", ["fragment"], oflag(fun(o,v) { o(full=Just(!v)) }), "Generate a fragment instead of a full document"),
+      Option( "",  ["logo"],     oflag(fun(o,v) { o(logo=v) }),        "Generate a logo at the end of the document" ),
       Option( "",  ["sanitize"], oflag(fun(o,v) { o(sanitize = v) }), "Always escape or suppress user defined html"),
       Option( "" , ["sandbox"],  oflag(fun(o,v) { o(sandbox=v) }),    "Run in a sandbox for secure server execution"),
       Option( "",  ["pedantic"], oflag(fun(o,v) { o(pedantic = v) }), "Pedantic mode"),
@@ -209,12 +211,11 @@ public function parseOptions( extra : string = "") : io maybe<commandOptions>
 
 public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOptions>
 {
-  val header = "usage:\n madoko [options] files\n\noptions:"
   // testOptions.usageInfo( header ).println
   val (options,args,errs) = parse( CommandOptions(), optionsDesc, cmdargs )
   
   if (!(errs.isNil)) {
-    println( errs.join("\n") + "\n" + optionsDesc.usageInfo(header) )    
+    println( errs.join("\n") + "\n" + fullUsageInfo() )    
     Nothing
   }
   elif (options.showVersion) {
@@ -222,12 +223,17 @@ public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOpt
     Nothing
   }
   elif (args.isNil) {
-    optionsDesc.usageInfo(header).println
+    fullUsageInfo().println
     Nothing
   }    
   else {
     Just(options(inputs = args).check())
   }
+}
+
+function fullUsageInfo() {
+  val header = "usage:\n madoko [options] files\n\noptions:"
+  optionsDesc.usageInfo(header) + "\n\nPrefix a flag with 'no-' to negate it. For example '--no-logo'."
 }
 
 // sanitize options
