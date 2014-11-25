@@ -47,7 +47,8 @@ public function processContent( inName : string, outName : string, content : str
     val date   = now()                             
     val opts1  = opts0(lineMap=lmap, metadata=opts0.metadata 
                        + [("docname",inName.stemname),("filename",inName)]
-                       + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5))] )
+                       + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5)),
+                          ("year",date.year.show),("month",(date.month+1).show),("day",(date.day+1).show)] )
 
     val mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
                   else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
