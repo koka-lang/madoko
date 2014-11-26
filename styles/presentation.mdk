@@ -35,6 +35,7 @@ Heading Depth : 0
 Toc Depth     : 2
 Section Base  : 2
 Section Depth : 2
+.MadokoLogo   : font-size=50%
 ~Notes        : html-elem=aside .notes
 .Author       : font-size=xx-large
 .Affiliation  : font-size=x-large
