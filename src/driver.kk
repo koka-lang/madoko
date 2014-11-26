@@ -49,7 +49,7 @@ public function processContent( inName : string, outName : string, content : str
                        + [("docname",inName.stemname),("filename",inName)]
                        + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5)),
                           ("year",date.year.show),("month",date.month.show2),("day",date.day.show2),
-                          ("hour",date.hour.show2),("minutes",date.minutes.show2),("seconds",date.seconds.show2)] )
+                          ("hours",date.hours.show2),("minutes",date.minutes.show2),("seconds",date.seconds.show2)] )
 
     val mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
                   else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
