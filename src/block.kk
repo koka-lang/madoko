@@ -193,7 +193,9 @@ function blockCode( cap : matched, context ) : block  {
 function blockFencedCode( cap : matched, context : blockContext ) {
   val attrs = cap.groups[3].parseAttrs
   Code(cap.groups[4], cap.groups[2], 
-        if (!(context.pedantic || context.bench)) then attrs.addClass("pre-fenced") else attrs)
+        if (!(context.pedantic || context.bench)) 
+          then attrs.addClasses(["pre-fenced","pre-fenced" + cap.groups[1].length.show]) 
+          else attrs)
 }
 
 function blockQuote( cap : matched, context : blockContext ) : block {
