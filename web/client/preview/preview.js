@@ -439,25 +439,28 @@ var Preview = (function() {
     var scripts = document.body.getElementsByTagName("script");   
     for(var i=0;i<scripts.length;i++) {  
       var script = scripts[i];
-      var src = script.getAttribute("src");
-      if (!src) {
-        inlineScripts.push( scripts[i].text );  
-      }
-      else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
-        loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
-        var xscript = document.createElement("script");     
-        // listen for load events
-        xscript.onreadystatechange = function(ev) {
-          if (this.readyState==="complete" || this.readyState==="loaded") {
-            onLoaded( this.src );
-          }
+      var stype  = script.getAttribute("type");
+      if (stype==null || stype==="" || stype==="text/javascript") {
+        var src = script.getAttribute("src");
+        if (!src) {
+          inlineScripts.push( scripts[i].text );  
         }
-        xscript.onload = function(ev) { onLoaded(this.src); }
-        var attrs = script.attributes;
-        for(var j = 0; j < attrs.length; j++) {
-          xscript.setAttribute( attrs[j].name, attrs[j].value );
-        }              
-        document.documentElement.appendChild(xscript);
+        else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
+          loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
+          var xscript = document.createElement("script");     
+          // listen for load events
+          xscript.onreadystatechange = function(ev) {
+            if (this.readyState==="complete" || this.readyState==="loaded") {
+              onLoaded( this.src );
+            }
+          }
+          xscript.onload = function(ev) { onLoaded(this.src); }
+          var attrs = script.attributes;
+          for(var j = 0; j < attrs.length; j++) {
+            xscript.setAttribute( attrs[j].name, attrs[j].value );
+          }              
+          document.documentElement.appendChild(xscript);
+        }
       }
     }  
     // append script to detect onload event
