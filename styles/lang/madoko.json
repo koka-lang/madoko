@@ -164,7 +164,7 @@
       ["\\b_[^_]+_\\b", "emphasis"],
       ["\\*([^\\\\*]|@escapes)+\\*", "emphasis"],
       ["(`)((?:[^`])+)(`)", ["","namespace.code",""] ],
-      ["\\$", { "token": "latex.inline", "next": "@xlatexinline", "nextEmbedded": "latex", "bracket": "@open", "log": "inline" } ],
+      ["\\$", { "token": "latex.inline", "next": "@xlatexinline", "nextEmbedded": "latex", "bracket": "@open" } ],
       ["<<|>>", ""],
       
       
