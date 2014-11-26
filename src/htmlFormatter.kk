@@ -370,7 +370,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       }).join 
     }) +
    (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
-      ["  <script type=\"text/x-mathjax-config\">",
+      ["<script type=\"text/x-mathjax-config\">",
        "  MathJax.Hub.Config({",
        "    tex2jax: {inlineMath: [['$','$']]},",
        @"     TeX: { ",
@@ -385,7 +385,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
        "    MathJax.InputJax.TeX.Definitions.environment['mdMathprearray'] = ['AMSarray',null,null,null,'l','0em','0em'];", 
        "  });", 
        "</script>",
-       "<script type=\"text/javascript\"",
+       "<script type=\"text/javascript\" class=\"preview\"",
        "  src=\"" + options.getMathjax.expand.escape + "\">",
        "</script>\n"
       ].join("\n  ")
