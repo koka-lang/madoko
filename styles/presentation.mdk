@@ -61,6 +61,10 @@ Html Header   :
       margin: 0pt;
       padding: 0pt;      
     }   
+    .reveal .authorblock .author {
+        font-size: 120%;
+        margin-bottom: 1ex;
+    }
     .reveal p { 
         text-align: center; 
     }    
