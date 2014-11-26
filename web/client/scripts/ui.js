@@ -636,7 +636,7 @@ var UI = (function() {
           else { // force login if not connected
             if (self.settings.autoSync && self.state === State.Normal) { 
               if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
-                self.synchronize();
+                self.synchronize(true);
               }
             }
           }
