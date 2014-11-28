@@ -294,7 +294,7 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   "~ Begin Bibitem { id=\"" + key.definitionId + "\" " + 
                   (if (lab=="") then "" else "cite-label=\"" + lab + "\" " ) +
                   (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label=\"" + lab + "\" " else "") +
-                   "caption=\"" + caption + "\" searchterm=\"" + search + "\" " +
+                   "caption='" + caption + "' searchterm=\"" + search + "\" " +
                   "}\n" +
    md + 
    "\n~ End Bibitem\n"
