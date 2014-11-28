@@ -455,6 +455,8 @@ var UI = (function() {
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
     bindKey( "Alt-C",  function()   { self.commit(); } );
+    bindKey( "Alt-H",  function()   { self.generateHtml(); } );
+    bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     
     // --- save links
     var saveLink = function(ev) {
@@ -746,21 +748,15 @@ var UI = (function() {
     }
     
     document.getElementById("export-html").onclick = function(ev) {
-      self.event( null, "exporting...", State.Exporting, function() { 
-        return self.generateHtml(); 
-      });
+      self.generateHtml(); 
     }
 
     document.getElementById("azure").onclick = function(ev) {
-      self.event( "Saved website", "exporting...", State.Exporting, function() { 
-        return self.generateSite(); 
-      });
+      self.generateSite(); 
     }
 
     document.getElementById("export-pdf").onclick = function(ev) {
-      self.event( null, "exporting...",  State.Exporting, function() { 
-        return self.generatePdf(); 
-      });
+      return self.generatePdf(); 
     }
 
     document.getElementById("snapshot").onclick = function(ev) {
@@ -1882,47 +1878,53 @@ var UI = (function() {
 
   UI.prototype.generatePdf = function() {
     var self = this;
-    var ctx = { 
-      round: 0, 
-      docname: self.docName, 
-      pdf: true, 
-      includeImages: true,
-      showErrors: function(errs) { self.showErrors(errs,true); } 
-    };
-    if (self.settings.disableServer) {
-      Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
-      return;
-    }
-    return self.spinWhile( self.exportSpinner, 
-      self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
-        if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
-        var name = "out/" + Util.changeExt(self.docName,".pdf");
-        return self._viewGenerated(name,"application/pdf");
-      })
-    );
+    self.event( null, "exporting...", State.Exporting, function() { 
+      var ctx = { 
+        round: 0, 
+        docname: self.docName, 
+        pdf: true, 
+        includeImages: true,
+        showErrors: function(errs) { self.showErrors(errs,true); } 
+      };
+      if (self.settings.disableServer) {
+        Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
+        return;
+      }
+      return self.spinWhile( self.exportSpinner, 
+        self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
+          if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
+          var name = "out/" + Util.changeExt(self.docName,".pdf");
+          return self._viewGenerated(name,"application/pdf");
+        })
+      );
+    });
   }
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    return self.spinWhile( self.exportSpinner, 
-      self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        var name = "out/" + Util.changeExt(self.docName,".html");
-        self.storage.writeFile( name, content );
-        return self._viewGenerated(name,"text/html");
-      })
-    );
+    self.event( null, "exporting...", State.Exporting, function() { 
+      return self.spinWhile( self.exportSpinner, 
+        self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
+          var name = "out/" + Util.changeExt(self.docName,".html");
+          self.storage.writeFile( name, content );
+          return self._viewGenerated(name,"text/html");
+        })
+      );
+    });
   }
 
 
   UI.prototype.generateSite = function() {
     var self = this;
-    return self.spinWhile( self.exportSpinner, 
-      self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
-        var name = "out/" + Util.changeExt(self.docName,".html");
-        self.storage.writeFile( name, content );
-        return Storage.publishSite( self.storage, self.docName, name );
-      })
-    );
+    self.event( "Saved website", "exporting...", State.Exporting, function() { 
+      return self.spinWhile( self.exportSpinner, 
+        self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
+          var name = "out/" + Util.changeExt(self.docName,".html");
+          self.storage.writeFile( name, content );
+          return Storage.publishSite( self.storage, self.docName, name );
+        })
+      );
+    });
   }
 
 
