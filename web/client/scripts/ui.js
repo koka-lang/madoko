@@ -503,7 +503,7 @@ var UI = (function() {
           if (ev.target.type === 6) { // on text
             var lineNo = ev.target.position.lineNumber; 
             var line   = self.editor.getModel().getLineContent(lineNo);
-            var cap = /^\s*\[\s*INCLUDE\s*=?["']?([^"'\]\s]+)["']?\s*\]\s*$/.exec(line)
+            var cap = /^\s*\[\s*INCLUDE\s*=["']?([^"'\]\s:]+)["']?\s*(:\s*\w+\s*)?\]\s*$/.exec(line)
             if (cap) {
               var fileName = cap[1]; // TODO use file
               if (Util.extname(fileName)==="") fileName = fileName + ".mdk";
@@ -1267,13 +1267,14 @@ var UI = (function() {
     if (!elem) elem = self.spinner; // default spinner
     if (elem.spinners == null) elem.spinners = 0;
     if (elem.spinDelay == null) elem.spinDelay = self.refreshRate * 2;
+    if (elem.spinners < 0) elem.spinners = 0;
 
     if (enable && elem.spinners === 0) {      
       setTimeout( function() {
         if (elem.spinners >= 1) Util.addClassName(elem,"spin");
       }, elem.spinDelay );
     }
-    else if (!enable && elem.spinners === 1) {
+    else if (!enable && elem.spinners <= 1) {
       Util.removeClassName(elem,"spin");
       // for IE
       var vis = elem.style.visibility;
@@ -1281,7 +1282,7 @@ var UI = (function() {
       elem.style.visibility=vis;
     }
     if (enable) elem.spinners++;
-    else if (elem.spinners > 0) elem.spinners--;
+           else elem.spinners--;
   }
 
   UI.prototype.initRunners = function() {
