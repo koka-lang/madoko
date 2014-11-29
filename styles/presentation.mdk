@@ -60,7 +60,13 @@ Html Header   :
     body.madoko {
       margin: 0pt;
       padding: 0pt;      
-    }   
+    }
+    .madoko .reveal h1 {
+        font-size: 3.7em;
+    }
+    .madoko .reveal h2 {
+        font-size: 2.1em;
+    }
     .reveal .authorblock .author {
         font-size: 120%;
         margin-bottom: 1ex;
