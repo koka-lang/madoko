@@ -5,41 +5,41 @@
    All rules use specific madoko classes and never just
    a generic element. This means one can safely include
    this CSS into any web page without affecting non-madoko
-   content (as long as the class names are different)
+   content.
 ----------------------------------------------------*/
 
 /* The table of contents */
-.toc>.tocblock .tocblock .tocblock {
+.madoko .toc>.tocblock .tocblock .tocblock {
   margin-left: 2.5em;
 }
 
-.toc>.tocblock .tocblock {
+.madoko .toc>.tocblock .tocblock {
   margin-left: 1.7em;
 }
 
-.toc>.tocblock>.tocitem {
+.madoko .toc>.tocblock>.tocitem {
   font-weight: bold;
 }
 
-.toc {
+.madoko .toc {
   margin-top: 1em;
 }
 
 /* Paragraphs */
-p.para-continue {
+.madoko p.para-continue {
   margin-bottom: 0pt;
 }
 
-.para-block+p {
+.madoko .para-block+p {
   margin-top: 0pt;
 }
 
-ul.para-block, ol.para-block {
+.madoko ul.para-block, .madoko ol.para-block {
   margin-top: 0pt;
   margin-bottom: 0pt;
 }
 
-ul.para-end, ol.para-end {
+.madoko ul.para-end, .madoko ol.para-end {
   margin-bottom: 1em;
 }
 
@@ -48,40 +48,40 @@ ul.para-end, ol.para-end {
 }
 
 /* Local page links do not get an underline unless hovering */
-a.localref {
+.madoko a.localref {
   text-decoration: none;
 }
-a.localref:hover {
+.madoko a.localref:hover {
   text-decoration: underline;
 }
 
 /* Footnotes */
-.footnotes {
+.madoko .footnotes {
   font-size: smaller;
   margin-top: 2em;
 }
 
-.footnotes hr {
+.madoko .footnotes hr {
   width: 50%;
   text-align: left;
 }
 
-.footnote { 
+.madoko .footnote { 
   margin-left: 1em;
 }
-.footnote-before {
+.madoko .footnote-before {
   margin-left: -1em;
   width: 1em;
   display: inline-block;
 }
 
 /* Abstract */
-.abstract>p:first-child:before {
+.madoko .abstract>p:first-child:before {
   content: "Abstract. ";
   font-weight: bold;
 }
 
-.abstract {
+.madoko .abstract {
   margin-left: 2.7em;
   margin-right: 2.7em;
   font-size: small;
@@ -89,74 +89,74 @@ a.localref:hover {
 
 
 /* Alignment */
-.align-center, .align-center>p {
+.madoko .align-center, .madoko .align-center>p {
   text-align: center !important;
 }
 
-.align-center pre {
+.madoko .align-center pre {
   text-align: left;
 }
 
-.align-center>* {
+.madoko .align-center>* {
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-.align-left, .align-left>p {
+.madoko .align-left, .madoko .align-left>p {
   text-align: left !important;
 }
 
-.align-left>* {
+.madoko .align-left>* {
   margin-left: 0pt !important;
   margin-right: auto !important;
 }
 
-.align-right, .align-right>p {
+.madoko .align-right, .madoko .align-right>p {
   text-align: right !important;
 }
 
-.align-right>* {
+.madoko .align-right>* {
   margin-left: auto !important;
   margin-right: 0pt !important;
 }
 
-.align-center>table,
-.align-left>table,
-.align-right>table {
+.madoko .align-center>table,
+.madoko .align-left>table,
+.madoko .align-right>table {
   text-align: left !important;
 }
 
 
 /* Equations, Figure's etc. */
-.equation-before {
+.madoko .equation-before {
   float: right;
 }
 
 
 /* Bibliography */
-.bibitem {
+.madoko .bibitem {
   font-size: smaller;
 }
 
-.bib-numeric .bibitem {
+.madoko .bib-numeric .bibitem {
   margin-left: 3em;
   text-indent: -3em;
 }
 
-.bibitem-before {
+.madoko .bibitem-before {
   display: none;
 }
 
-.bib-numeric .bibitem-before {
+.madoko .bib-numeric .bibitem-before {
   display: inline-block;
   width: 3em;
   text-align: right;
 }
 
-.bibliography {
+.madoko .bibliography {
 }
 
-.bibsearch {
+.madoko .bibsearch {
   font-size: x-small;
   text-decoration:none;
   color: black;
@@ -164,29 +164,30 @@ a.localref:hover {
 }
 
 /* General */
-.block, .figure, .bibitem, .equation {
+.madoko .block, .madoko .figure, .madoko .bibitem, .madoko .equation {
   margin-top: 1ex;
   margin-bottom: 1ex;
 }
 
-.figure {
+.madoko .figure {
   padding: 0.5em;
   margin-left: 0pt;
   margin-right: 0pt;
 }
 
-.hidden {
+.madoko .hidden {
   display: none;
 }
 
-.invisible {
+.madoko .invisible {
   visibility: hidden;
 }
-body.preview .invisible {
+
+.madoko.preview .invisible {
   visibility: visible;
   opacity: 0.5;
 }
-body.preview[data-view=full] .invisible {
+.madoko.preview[data-view=full] .invisible {
   visibility: hidden;
 }
 
@@ -194,74 +195,74 @@ body.preview[data-view=full] .invisible {
   white-space: pre-wrap;
 }
 
-hr.madoko, .madoko hr {
+.madoko hr, hr.madoko {
   border: none;
   border-bottom: black solid 1px;
   margin-bottom: 0.5ex;
 }
 
-.framed>*:first-child {
+.madoko .framed>*:first-child {
   margin-top: 0pt;
 }
-.framed>*:last-child {
+.madoko .framed>*:last-child {
   margin-bottom: 0pt;
 }
 
 
 /* Title, authors */
-.title {
+.madoko .title {
   font-size: xx-large;
   font-weight: bold;
   margin-bottom: 1ex;
 }
 
-.subtitle {
+.madoko .subtitle {
   font-size: x-large;
   margin-bottom: 1ex;
   margin-top: -1ex;
 }
 
-.titleblock>* {
+.madoko .titleblock>* {
   margin-left: auto;
   margin-right: auto;
   text-align: center;
 }
 
-.titleblock table {
+.madoko .titleblock table {
   width: 80%;
 }
 
-.authorblock .author {
+.madoko .authorblock .author {
   font-size: large;
 }
 
-.titlenote {
+.madoko .titlenote {
   margin-top: -0.5ex;
   margin-bottom: 1.5ex;
 }
 
 /* Lists */
 
-ul.list-star {
+.madoko ul.list-star {
   list-style-type: disc;
 }
 
-ul.list-dash {
+.madoko ul.list-dash {
     list-style-type: none !important;
 }
 
-ul.list-dash > li:before {
+.madoko ul.list-dash > li:before {
     content: "\2013"; 
     position: absolute;
     margin-left: -1em; 
 }
 
-ul.list-plus {
+.madoko ul.list-plus {
   list-style-type: square;
 }
 
 /* Tables */
-table.madoko {
+.madoko table.madoko {
   border-collapse: collapse;
 }
 .madoko td, .madoko th {
@@ -296,16 +297,16 @@ table.madoko {
 
 
 /* Math Pre */
-.input-mathpre .MathJax_Display, .input-mathpre .math-display {
+.madoko .input-mathpre .MathJax_Display, .madoko .input-mathpre .math-display {
   text-align: left !important;
 }
 
-div.input-mathpre {
+.madoko div.input-mathpre {
   margin-top: 1.5ex;
   margin-bottom: 1ex;
 }
 
-.math-rendering {
+.madoko .math-rendering {
   color: gray;
 }
 
@@ -437,7 +438,7 @@ body.madoko.preview {
 ----------------------------------------------------*/
 
 @media print {
-  body.madoko {
+  body.madoko, .madoko-body {
     font-size: 10pt;
   }
   @page {
@@ -450,8 +451,8 @@ body.madoko.preview {
 ----------------------------------------------------*/
 
 @media only screen and (max-device-width:1024px) {
-  body.madoko {
-    margin-left: 1em;
-    margin-right: 1em;
+  body.madoko, .madoko-body {
+    padding-left: 1em;
+    padding-right: 1em;
   }
 }
