@@ -12,7 +12,6 @@ Bib style   : plainnat
 Bibliography: example
 Heading base: 2
 Doc class   : [reprint,nocopyrightspace]sigplanconf.cls
-.rulename   : replace=/(.*)/(\1)/ font-variant=small-caps
 
 [TITLE]
 
@@ -29,12 +28,11 @@ mauris condimentum nibh, ut fermentum massa justo sit amet.
 \keywords{Games for learning, white box testing}
 ~
 
-
 # Introduction     { #sec-intro }
 
 Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
 Note that you can drag&drop images into the editor pane to include them in
-the document.
+the document, and similarly with bibtex files, latex style files, etc.
 
 ~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
 ![butterfly]
@@ -47,10 +45,8 @@ Our contributions are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And [references] to Tex books [@Knuth:tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+* And references to Tex books [@Knuth:tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
   Textual citations, like @Knuth:tex are also possible.
-
-[references]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#sec-bib
 
 # Content
 
@@ -75,51 +71,7 @@ function hello() {
 The syntax highlighting works in PDF too.
 ~
 
-# Advanced math
-
-Commonly used mathematic definitions can be put in [`MathDefs` block][mathdefs]
-~ MathDefs
-% any command definitions needed for mathematics
-\newcommand{\infer}[3]{#1 \vdash #2\,:\,#3}
-\newcommand{\xlet}[2]{\textsf{let}\,#1\,\textsf{in}\,#2}
-~
-
-A type inference rule $\infer{\Gamma}{e}{\tau}$ states that an expression $e$ has type $\tau$ under
-a type environment $\Gamma$.
-
-~ Figure { #fig-typerules caption="Type rules" }
-
-[var]{.rulename} $\dfrac{x:\sigma \in \Gamma}{\infer{\Gamma}{x}{\sigma}}$ &quad;
-[app]{.rulename} $\dfrac{\infer{\Gamma}{e_1}{\tau_2 \rightarrow \tau} \quad \infer{\Gamma}{e_2}{\tau_2}}{\infer{\Gamma}{e_1\,e_2}{\tau}}$
-\
-\
-[lam]{.rulename} $\dfrac{\infer{\Gamma,x:\tau_x}{e}{\tau}}{\infer{\Gamma}{\lambda x.e}{\tau_x \rightarrow \tau}}$
-
-~
-
-Here is how to use a [table] for alignment:
-
-| ~~~~~ | :~~~~~~: | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~~~~~~~~~~~~~                             |
-| $e$   | $::=$    | $x$ &bar; $p$ &bar; $e_1\,e_2$ &bar; $\lambda x. e$  | (variables, primitives, applications, functions) |
-|       | &bar;    | $\xlet{x = e_1}{e_2}$                                | (sequence and let bindings)                      |
-| $p$   | $::=$    | $()$ &bar; $\textsf{fix}$                            | (primitives)                                     |
-
-
-Finally, you can use `MathPre` to do [preformatted math][mathpre] which respects whitespace and identifiers:
-
-~ MathPre
-e & ::= & x | p | e_1 e_2 | \lambda x. e
-  &   | & @let x = e_1 @in e_2
-p & ::= & () | @fix | function
-~
-
-[mathpre]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#sec-mathpre
-[table]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#sec-table
-[mathdefs]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#sec-mathdefs
-
 # Conclusion
-
-Use the `generate PDF` command in the top-right menu to generate a PDF document in the sigplan conference style.
 
 Really fun to write Markdown :-)
 

@@ -1,14 +1,11 @@
-[INCLUDE=present.mdk]
+[INCLUDE=presentation]
 Title         : Demo presentation in Madoko
 Sub Title     : In both HTML and PDF
 Author        : Daan Leijen
 Affiliation   : Microsoft Research
 Email         : daan@microsoft.com
-Reveal Theme  : solarized
+Reveal Theme  : sky
 Beamer Theme  : singapore
-Package       : pstricks
-Package       : pst-plot
-@html .math-inline, .math-display: color=#586e75
 
 [TITLE]
 
@@ -16,16 +13,16 @@ Package       : pst-plot
 
 [TOC]
 
-# Madoko Presentations
+# Madoko Presentation
 
 Using [Madoko] it is easy to create beautiful presentations.
 
-* [html][slide]\
+* [Html][slide]:
   Uses the `Reveal.js` library by [Hakim El Hattab](http://hakim.se).\
   This slide demo in Madoko is an adaption of his online demo.
-* [pdf][slide-pdf]\
+* [Pdf][slide-pdf]:
   Uses the `Beamer` package for LaTeX
-* [source][slide-mdk]\
+* [Source][slide-mdk]:
   Click to see the source of this presentation.
 
 
@@ -37,14 +34,14 @@ Using [Madoko] it is easy to create beautiful presentations.
 HTML. You'll need a browser with support for CSS 3D transforms to see it in
 its full glory. 
 
-And any Madoko features just work. Here is some math.
+And any Madoko features just work. Here is some math:
 
-~ Begin Framed { padding-right=1ex }
-A famous equation is $e = mc^2 $, but this one is 
+~ Begin Framed { padding=1ex margin-top=1ex }
+A famous equation is $e = mc^2$, but this one is 
 famous too:
 
 ~ Equation  {#eq-gaussian}
-\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}
+\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
 ~
 ~ End Framed
 
@@ -82,11 +79,22 @@ try pressing [down].
 Press down or up to navigate.
 
 ## Basement Level 2
-Butterfly
 
+Use `columns` to put blocks next to each other:
+
+~ Begin Columns
+~ Column { width=50% }
+A monarch butterfly (as shown in Figure [#fig-bfly])
+spends the winter in Mexico.
+~
+~ Column
+~~ Figure { #fig-bfly caption="A monarch" }
 [![butterfly]][butterfly]
+~~
+~
+~ End Columns
 
-[butterfly]: images/butterfly.png "Butterfly" { width=280px  }
+[butterfly]: images/butterfly.png "Butterfly" { width=280px vertical-align=middle }
 [cornify]: http://cornify.com {.test}
 
 
@@ -170,6 +178,8 @@ Hold down alt and click on any element to zoom in on it using
 Try it out! You can swipe through the slides and pinch your way to the
 overview.
 
-[slide]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.html
-[slide-pdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.pdf
-[slide-mdk]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.mdk.txt
+## Thanks for looking :-)
+
+[slide]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/out/slidedemo.html
+[slide-mdk]: https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/slidedemo.mdk&options={"delayedUpdate":"true"}
+[slide-pdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/out/slidedemo.pdf
