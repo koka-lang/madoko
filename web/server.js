@@ -1274,7 +1274,9 @@ app.get("/oauth/token", function(req,res) {
     var remoteName = req.param("remote");
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
-    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") return { httpCode: 401, message: "Not logged in to " + remoteName };
+    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") {
+      return { httpCode: 401, message: "Not logged in to " + remoteName };
+    }
 
     // check expiration date: we expire tokens ourselves for extra security
     var created = date.dateFromISO(login.created);
