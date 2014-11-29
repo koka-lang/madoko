@@ -357,8 +357,8 @@ function include( text : string, fast : bool, inName : string, outName : string,
 
   val includes : mdict<global,string> = mdict()
   val snippets : mdict<global,snippet> = mdict()
-  val rxSnippetStart = regex(options.extractStart)
-  val rxSnippetEnd = regex(options.extractEnd)
+  val rxSnippetStart = regex(options.extractStart, multiline=True, ignoreCase=True)
+  val rxSnippetEnd = regex(options.extractEnd, multiline=True, ignoreCase=True)
 
   function warning( msg, lineNo = 0, fileName = "") {
     options.printErr( "warning: " + 
@@ -411,6 +411,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
     match(content) {
       Nil -> ()
       Cons(line,lines) -> {
+        trace("find snippet: " + line)
         match(line.find(rxSnippetStart)) {
           Nothing -> findSnippets( lines, fname, lineNo+1 )
           Just(cap) -> {
