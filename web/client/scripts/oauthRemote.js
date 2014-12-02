@@ -38,7 +38,7 @@ var OAuthRemote = (function() {
 
     self.nextTry     = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
     self.lastTryErr  = null;
-    self.tryDelay    = 10000; 
+    self.tryDelay    = 30000; 
     self.logoutErr   = { httpCode: 401, message: "Not logged in to " + self.name };
   }
 
