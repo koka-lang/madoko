@@ -8,9 +8,6 @@
   "blockCommentStart": "/*",
   "blockCommentEnd":   "*/",
 
-  
-  
-
   "keywords": [
     "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", 
     "catch", "char", "char16_t", "char32_t", "class", "compl", "const", "constexpr", "const_cast", 
@@ -24,10 +21,14 @@
     "xor", "xor_eq" 
   ],
 
+  "extraKeywords": [],
+
   "typeKeywords": [
     "bool", "double", "byte", "int", "short", "char", "void", "long", "float",
     "char32_t", "unsigned", "wchar_t", "char16_t"
   ],
+
+  "extraTypeKeywords": [],
   
   "directives": [
     "include","if","endif","ifdef","define","line","warning","error"
@@ -41,7 +42,8 @@
     "^=", "%=", "<<=", ">>=", ">>>="
   ],
 
-  
+  "extraOperators": [],
+
   "symbols":  "[=><!~?:&|+\\-*\\/\\^%]+",
   "escapes":  "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
     
@@ -53,9 +55,12 @@
       ["\\w+::(?=\\w)", "namespace" ],
       ["(namespace)(\\s*)((?:\\w+::)*\\w+)", ["keyword","white","namespace"] ],
       
-      ["[a-z_$][\\w]*",  { "cases": { "@typeKeywords": "keyword.type",
-                                   "@keywords": "keyword",
-                                   "@default": "identifier" } }],
+      ["[a-z_$][\\w]*",  { "cases": { 
+        "@typeKeywords": "keyword.type",
+        "@extraTypeKeywords": "keyword.type.extra",
+        "@keywords": "keyword",
+        "@extraKeywords": "keyword.extra",
+        "@default": "identifier" } }],
       ["(\\.|\\->)([A-Z][\\w]*)", ["keyword", "identifier"] ],  
       ["[A-Z][\\w]*(?!\\s*[\\w\\(])", "type.identifier" ], 
       ["[A-Z][A-Z0-9_]*(?![\\w\\(])", "type.identifier" ],
@@ -65,16 +70,15 @@
           "$2@directives": ["namespace","namespace","string"],
           "@default": ["meta","meta","string"]
       }}],
-      
-      
+            
       { "include": "@whitespace" },
-      
-      
+            
       ["[{}()\\[\\]]", "@brackets"],
       ["[<>](?!@symbols)", "@brackets"],
-      ["@symbols", { "cases": { "@operators": "operator", 
-                              "@default"  : "" } } ],
-
+      ["@symbols", { "cases": { 
+        "@operators": "operator", 
+        "@extraOperators": "operator.extra", 
+        "@default"  : "" } } ],
       
       ["\\d*\\.\\d+([eE][\\-+]?\\d+)?[fFdD]?", "number.float"],
       ["0[xX][0-9a-fA-F_]*[0-9a-fA-F][Ll]?", "number.hex"],
