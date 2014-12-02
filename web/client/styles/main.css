@@ -19,6 +19,19 @@ html,body,#main {
 }
 
 
+.load-error {
+  display: none;
+  margin: 1em 16% 1em 16%;
+  padding: 0em 1em;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: Gainsboro;
+}
+
+#nojscript {
+  display: block;
+}
+
 /* Colors */
 #main, .spinner.spin {
   background-color: white;  
@@ -83,7 +96,7 @@ html,body,#main {
   padding: 0pt;
 }
 
-.header-bar, .toolbar, modal {
+.header-bar, .toolbar, modal, .load-error {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
