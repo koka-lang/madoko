@@ -26,19 +26,33 @@
 
 <body class="theme-dark" >
 <noscript>
+<div id="nojscript" class="load-error">
 <p>Madoko is a dynamic application that requires JavaScript.</p>
 <p>Please enable JavaScript in your browser and reload.</p>
+</div>
 </noscript>
-<div id="oldbrowser" style="display:none; padding: 1ex">
+<div id="oldbrowser" class="load-error" style="display:none">
 <p>Madoko uses HTML5 features and requires a recent browser version to work correctly.</p>
 <p>Please upgrade your browser to a more recent version.</p>
 <p>Madoko is known to work with IE 10+, Chrome 31+, Safari 7+, and Firefox 27+.</p>
 </div>
-<div id="multibrowser" style="display:none; padding: 1ex">
+<div id="multibrowser" class="load-error" style="display:none">
 <p>Snap! You already have Madoko open in another window.</p>
 <p>Unfortunately, Madoko only works within a single browser window.</p>
 <p></p>
 <p>This page will try to reload automatically after <span id="reload-delay">?</span> seconds...</p>
+<p>&nbsp;</p>
+<hr>
+<small>
+<p>Note: you can work around this limitation by:</p>
+<ol>
+<li>Opening <a href="https://www.madoko.net">Madoko.net</a> in a different browser</li>
+<li>Use Chrome <em>incognito</em> mode (Ctrl+Shift+N), or Firefox and IE's <em>private browsing</em> mode (Ctrl+Shift+P), to open 
+    another instance of <a href="https://www.madoko.net">Madoko.net</a>. However, in such mode your local changes are 
+    <em>not</em> saved when closing the browser, so make sure your work is synchronized with the cloud. As such, a private
+    mode works best for temporarily viewing other documents.</li>
+</ol>  
+</small>  
 </div>
 
 <div id="main" style="display:none">
@@ -264,7 +278,7 @@
        </p>
        <ul id="commit-modified">
        </ul>
-       <div><input id="commit-all" type="checkbox" title="(Un)check all"></input></div>
+       <div><input id="commit-all" type="checkbox" title="(Un)check all"></div>
     </div>
   </div>
 </div>
@@ -286,6 +300,5 @@
 <!-- use the monaco loader to implement "require" -->
 <script type="text/javascript" data-main="scripts/startup.js" src="lib/vs/loader.js"></script>
 
-</div>
 </body>
 </html>
