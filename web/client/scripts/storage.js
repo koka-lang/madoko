@@ -120,7 +120,7 @@ function createFromTemplate( storage, docName, template )
   return Util.requestGET( "templates/" + template + ".mdk" ).then( function(content) {
     return content;
   }, function(err) {
-    return "Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n");
+    return "Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n";
   }).then( function(content) {
     storage.writeFile(docName, content);      
     return content;
