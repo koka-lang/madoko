@@ -120,9 +120,7 @@ function createFromTemplate( storage, docName, template )
   return Util.requestGET( "templates/" + template + ".mdk" ).then( function(content) {
     return content;
   }, function(err) {
-    var elem = document.getElementById("template-" + template);
-    if (!elem) elem = document.getElementById("template-default");
-    return (elem ? elem.textContent : "");
+    return "Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n");
   }).then( function(content) {
     storage.writeFile(docName, content);      
     return content;
@@ -269,7 +267,7 @@ function saveAs( storage, docName ) {
   var stem = Util.stemname(docName);
   var params = {
     command: "save",
-    commandDisplay: "Save To",
+    commandDisplay: "Save To Folder",
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
   }
   if (storage && !storage.remote.readonly) {
