@@ -322,6 +322,7 @@ app.use(function(req, res, next){
     csp["sandbox"]      = "allow-scripts allow-popups"; // already set in document, but just to be sure :-)    
   }
   else {
+    // Don't allow content to be loaded in an iframe
     res.setHeader("X-Frame-Options","DENY");              
     // index uses bootstrap theme
     if (req.path==="/" || req.path==="/index.html") {
@@ -331,7 +332,6 @@ app.use(function(req, res, next){
       csp["script-src"]   = "'self' https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com";
     }
     // the editor can use only server resources and connect to dropbox, onedrive.
-    // also prevent loading the editor in a frame
     else if (req.path==="/editor.html") {
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
