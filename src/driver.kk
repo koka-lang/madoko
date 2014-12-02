@@ -411,7 +411,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
     match(content) {
       Nil -> ()
       Cons(line,lines) -> {
-        trace("find snippet: " + line)
+        //trace("find snippet: " + line)
         match(line.find(rxSnippetStart)) {
           Nothing -> findSnippets( lines, fname, lineNo+1 )
           Just(cap) -> {
@@ -499,7 +499,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
         if (start<=0) return (incfile,0,"")
         val end   = max(start,cap.groups[2].parseInt().maybe(start,id))
         val fragment = content.lines.list.drop(start-1).take((end - start) + 1).join("\n")
-        trace("include: " + start.show + "," + end.show + ":\n" + fragment)
+        //trace("include: " + start.show + "," + end.show + ":\n" + fragment)
         (incfile,start,fragment)
       }
     }
