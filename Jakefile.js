@@ -129,6 +129,7 @@ task("webcopy", ["web"], function() {
   // copy sty files to local texmf tree
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
   copyFiles(styleDir,sty.toArray(),localTexDir);
+  copyFiles(styleDir,sty.toArray(),path.join(webclient,styleDir,"latex"))
 }); 
 
 
