@@ -342,14 +342,14 @@
   {\setlength{\arraycolsep}{0pt}\begin {array}{llllllll}}%
   {\end{array}\hspace*{\linewidth minus \linewidth}} % flush left
 
-\newcommand{\mathkw}[1]{\mathsf{{#1}}}
-\newcommand{\mathid}[1]{\mathit{#1}}
+\defcommand{\mathkw}[1]{\mathsf{{#1}}}
+\defcommand{\mathid}[1]{\mathit{#1}}
 
-\newcommand{\smallstrut}{\mbox{\rule{0ex}{1ex}}}
+\defcommand{\smallstrut}{\mbox{\rule{0ex}{1ex}}}
 
-\newcommand{\mathspace}[1]{\mskip\numexpr4*#1\relax mu plus #1mu minus #1mu\smallstrut}
-\newcommand{\mathindent}[1]{\mskip\numexpr8*#1\relax mu\smallstrut}
-\newcommand{\mathbr}{\\}
+\newcommand{\mdMathspace}[1]{\mskip\numexpr4*#1\relax mu plus #1mu minus #1mu\smallstrut}
+\newcommand{\mdMathindent}[1]{\mskip\numexpr8*#1\relax mu\smallstrut}
+\newcommand{\mdMathbr}{\\}
 
 % Equation tags are stored in mdTag (which resets automatically after each math display)
 \newcommand{\mdTag}{}
