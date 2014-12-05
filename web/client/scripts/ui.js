@@ -447,8 +447,8 @@ var UI = (function() {
     
     // Key bindings
 
-    bindKey( "Alt-S",  function()   { self.synchronize(true); } );
-    bindKey( "Ctrl-S", function()   { self.synchronize(true); } );
+    bindKey( "Alt-S",  function()   { self.synchronize(); } );
+    bindKey( "Ctrl-S", function()   { self.synchronize(); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
     bindKey( "Alt-P",  function()   { self.pull(); } );
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
@@ -482,7 +482,7 @@ var UI = (function() {
     // ----
     
     document.getElementById("sync-now").onclick = function(ev) {
-      self.synchronize(true);
+      self.synchronize();
     };
 
     document.getElementById("pull").onclick = function(ev) {
@@ -638,7 +638,7 @@ var UI = (function() {
           else { // force login if not connected
             if (self.settings.autoSync && self.state === State.Normal) { 
               if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
-                self.synchronize(true);
+                self.synchronize(self.storage.remote.canCommit); // pull only?
               }
             }
           }
@@ -3983,19 +3983,19 @@ var symbolsMath = [
     });
   }
 
-  UI.prototype.synchronize = function(login) {
+  UI.prototype.synchronize = function(pullOnly) {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
       if (!self.isConnected && login) {
         return self.login().then( function() {  
-          return self._synchronize(false); 
+          return self._synchronize(pullOnly); 
         });
       }
       else if (self.storage && self.storage.remote.readonly) {
         self.saveTo();
       }
       else {
-        return self._synchronize(!login);
+        return self._synchronize(pullOnly);
       }
     });
   }
