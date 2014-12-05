@@ -45,6 +45,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   var escapes_regex = new RegExp("[" + Object.keys(escapes).join("") + "]", "g");
 
   function htmlEscape(txt) {
+    if (txt==null) return "";    
     return txt.replace(escapes_regex, function (s) {
       var r = escapes[s];
       return (r ? r : "");
@@ -52,6 +53,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
   
   function stringEscape(txt) {
+    if (txt==null) return "";
     return txt.replace(/["'\\\n\r]/g, function(s) {
       if (s==="\n") return "\\n";
       else if (s==="\r") return "\\r";
