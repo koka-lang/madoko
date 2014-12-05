@@ -29,8 +29,12 @@ var OAuthRemote = (function() {
     self.dialogHeight   = opts.dialogHeight || 600;
     self.timeout        = opts.timeout || 10000;  // should be short, real timeout can be 3 times as large, see primRequestXHR
 
-    if (!self.loginParams.redirect_uri)  self.loginParams.redirect_uri  = location.origin + "/oauth/redirect";
-    if (!self.loginParams.response_type) self.loginParams.response_type = "code";
+    if (!self.loginParams.redirect_uri)  {
+      self.loginParams.redirect_uri  = location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : "") + "/oauth/redirect";
+    }
+    if (!self.loginParams.response_type) {
+      self.loginParams.response_type = "code";
+    }
 
     self.logoutParams = opts.logoutParams || {};
     if (!self.logoutParams.client_id) self.logoutParams.client_id = self.loginParams.client_id;
