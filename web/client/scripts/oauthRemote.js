@@ -231,7 +231,7 @@ var OAuthRemote = (function() {
     return self.requestGET( { url: self.accountUrl } ).then( function(info) {
       self.user = {
         id: info.uid || info.id || info.userId || info.user_id || null,
-        name: info.display_name || info.name || null,
+        name: info.display_name || info.name || info.login || null,
         email: info.email || null,
       };
       self.user.login = info.login || self.user.id;
