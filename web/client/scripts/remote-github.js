@@ -33,11 +33,11 @@ var github = new OAuthRemote( {
 ---------------------------------------------- */
 
 function getRepos() {
-  return github.requestGET( { url: "user/repos", cache: 10000 } );
+  return github.requestGET( { url: "user/repos", cache: 10000 }, { per_page:100 } );
 }
 
 function getBranches(repoPath) {
-  return github.requestGET( { url: repoPath + "/git/refs/heads", cache: 10000 } );
+  return github.requestGET( { url: repoPath + "/git/refs/heads", cache: 10000 }, { per_page:100 } );
 }
 
 function getItems( repoPath, branch, tpath, full ) {
@@ -54,8 +54,8 @@ function getItems( repoPath, branch, tpath, full ) {
 
 
 function getAllRepos() {
-  return github.requestGET( { url: "user/orgs", cache: 10000 } ).then(function(orgs) {
-    var getrepos = orgs.map( function(org) { return github.requestGET( { url: org.url + "/repos", cache: 10000 } ); } );
+  return github.requestGET( { url: "user/orgs", cache: 10000 }, { per_page:100 } ).then(function(orgs) {
+    var getrepos = orgs.map( function(org) { return github.requestGET( { url: org.url + "/repos", cache: 10000 }, { per_page:100 } ); } );
     getrepos.unshift( getRepos() );
     return Promise.when( getrepos ).then( function(reposs) {
       return [].concat.apply([],reposs);
