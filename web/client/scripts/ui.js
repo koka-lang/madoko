@@ -977,7 +977,7 @@ var UI = (function() {
       if (stg.remote.needSignin && isConnected) {
         stg.remote.getUserName().then( function(userName) {
           // TODO: check for race?
-          document.getElementByName("connection-content").setAttribute("title", "As " + userName);
+          document.getElementById("connection-content").setAttribute("title", "As " + userName);
         });
       }
     }
