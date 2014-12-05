@@ -974,12 +974,13 @@ var UI = (function() {
     if (stg && stg.remote) {
       var remoteLogo = "images/dark/" + stg.remote.logo();
       if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
+      /*
       if (stg.remote.needSignin && isConnected) {
         stg.remote.getUserName().then( function(userName) {
-          // TODO: check for race?
           document.getElementById("connection-content").setAttribute("title", "As " + userName);
         });
       }
+      */
     }
   }
 
