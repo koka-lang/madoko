@@ -143,6 +143,34 @@ html,body,#main {
 }
 
 
+#main .app-body {
+  background-color: #135;
+}
+
+#main .pane-view {
+  height: 100%;
+  width: 100%;
+}
+
+.rounded #main .pane-view {
+  margin: 5px;
+  border: 0px solid white;
+  border-radius: 10px;
+  overflow: hidden;
+  height: calc(100% - 10px);
+  width: calc(100% - 10px);
+}
+
+.rounded div.boxed {
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.squared #main .pane-view {
+  margin: 0px 5px;
+  width: calc(100% - 10px);
+}
+
 /* header & footer */
 
 .header-bar img {
@@ -197,13 +225,7 @@ img#console-ok {
 
 /* Main elements in panes */
 
-#editor {
-  height: 100%;
-}
-
 .view {
-  height: 100%;
-  width: 100%;
   border: none;
 }
 
@@ -720,20 +742,22 @@ div.boxed {
 .monaco-editor .token.keyword.heading 
 */
 .monaco-editor .latex { 
-  color: maroon;
+  color: #006 !important;
+  font-style: normal;
 }
-.monaco-editor .delimiter.latex {
-  color: maroon !important;
+.monaco-editor .delimiter.latex,
+.monaco-editor .number.latex {
+  font-style: normal;
 }
-.monaco-editor .keyword.latex {
-  color: #4E0000;
+.monaco-editor .keyword.latex,
+.monaco-editor .latex.constructor  {
+  font-style: italic;
 }
-.monaco-editor .keyword.predefined.latex,
-.monaco-editor .latex.number {
-  color: #4E0000;
-}
-.monaco-editor .latex.inline {
-  color: black;
+
+/* .monaco-editor .keyword.predefined.latex, 
+.monaco-editor .latex.number, */
+.monaco-editor .latex.constructor {
+  font-style:italic; /* #4E0000; */
 }
 
 .monaco-editor.vs-dark .latex { 

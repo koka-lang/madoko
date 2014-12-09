@@ -24,7 +24,7 @@
 
 </head>
 
-<body class="theme-dark" >
+<body class="theme-dark squared" >
 <noscript>
 <div id="nojscript" class="load-error">
 <p>Madoko is a dynamic application that requires JavaScript.</p>
@@ -194,17 +194,16 @@
 <div id="main-body" class="app-body">
   <div id="editorpane" class="pane left">
     <div class="pane-content" >
-      <div id="editor"></div>
+      <div id="editor" class="pane-view"></div>
     </div>
   </div>
   <div id="viewpane" class="pane right normal">
-    <div class="pane-content" id="view-container">
-      <div id="fullview-header" class="header-bar"
-      ><span class="content">Madoko viewer
+      <div class="pane-content" id="view-container">
+      <div id="fullview-header" class="header-bar">
+        <span class="content">Madoko viewer
          <span class="right"><span id="close-fullview" class="button" title="Close the preview window (Alt-V)"><img src="images/dark/icon-close.png"/></span></span>
-       </span>
-      </div
-      ><iframe id="view" class="view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
+        </span></div>
+      <iframe id="view" class="pane-view view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
     </div>
   </div>
 </div>
