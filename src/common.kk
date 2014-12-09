@@ -479,6 +479,8 @@ val mimes = dict([
   ("gif","image/gif"),
   ("svg","image/svg+xml"),
   ("eps","image/eps"),
+
+  ("pdf","application/pdf"),
 ]);
 
 public function mimeFromExt( fname : string ) : string {

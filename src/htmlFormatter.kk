@@ -110,7 +110,8 @@ val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b[^>]*>(\s|&nbsp;)*</span>)*$")
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
   if (isImage) {
-    val imgref = if (link.href.relative && link.href.extname == ".eps") then link.href.changeExt(".png") else link.href
+    val isPS   = link.href.extname == ".eps" || link.href.extname == ".pdf"
+    val imgref = if (link.href.relative && isPS) then link.href.changeExt(".png") else link.href
           
     val href = match (context.embedinfos[imgref]) {
       Just(info) | info.embedData != "" -> {
@@ -119,7 +120,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
       }
       _          -> {
         if (imgref.relative) then {
-          if (link.href.extname == ".eps") log("filesRefer",link.href) // refer to eps too
+          if (isPS) log("filesRefer",link.href) // refer to eps/pdf too
           log("filesRefer",imgref);
           log("embed", imgref);
         }
