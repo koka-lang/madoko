@@ -11,7 +11,7 @@
   "lineComment": "",
   "blockCommentStart": "<!--\n",
   "blockCommentEnd":   "\n-->",
-  "escapes":  "\\\\[^a-zA-Z0-9]",  
+  "escapes":  "\\\\(?:[^a-zA-Z0-9\\r]|$)",  
   "jsescapes":  "\\\\(?:[btnfr\\\\\"']|[0-7][0-7]?|[0-3][0-7]{2})",
   
   "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))[\\w\\-\\.,#~]*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*[:]",  
@@ -57,7 +57,7 @@
       }}],
       ["^(\\s{0,3})(#+)((?:[^\\\\\\{]|@escapes)+)", ["white","keyword.heading.level$2.delimiter","keyword.heading.level$2"]],
       ["^\\s{0,3}(=+|\\-+)\\s*$", "keyword.heading.level0.delimiter"],      
-      ["^\\s{0,3}((\\*[ ]?)+)\\s*$", "keyword.header.hr"],
+      ["^\\s{0,3}(([\\*_\\-]\\s*){3})\\s*(?=$|\\{)", "keyword.header.hr"],
       ["^(\\s{0,3})(~+)(\\s*(?:begin\\s+)?(?:@latexblock)\\s*)(\\{)([^\\}]+)(\\})(\\s*)$",
         ["white","keyword.header.custom.delimiter",
           { "token": "keyword.header.custom.$2.delimiter", "bracket": "@open" },

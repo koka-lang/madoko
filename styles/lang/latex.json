@@ -29,28 +29,24 @@
     "uline", "underbrace", "underline", "unitlength", "usebox", "usecounter", "uwave", "value", "vbox", "vcenter", "vdots",
     "vector", "verb", "vfill", "vline", "vphantom", "vspace",
     
-    "RequirePackage", "NeedsTeXFormat", "usepackage", "input", "include", "documentclass", "documentstyle"
+    "RequirePackage", "NeedsTeXFormat", "usepackage", "input", "include", "documentclass", "documentstyle",
+    "def","edef","defcommand","if","ifdim","ifnum","ifx","fi","else","begingroup","endgroup",
+    "definecolor","textcolor","color",
+    "eifstrequal","eeifstrequal"
   ],
-
-
-  
   "tokenizer": {
     "root": [
-      
-      ["(\\\\begin)(\\s*)(\\{)([\\w\\-\\*]+)(\\})", 
-          ["keyword.predefined","white","@brackets",{ "token": "constructor.env-$4", "bracket": "@open" },"@brackets"]],
-      ["(\\\\end)(\\s*)(\\{)([\\w\\-\\*]+)(\\})", 
-          ["keyword.predefined","white","@brackets",{ "token": "constructor.env-$4", "bracket": "@close" }, "@brackets" ]],          
+      ["(\\\\begin)(\\s*)(\\{)([\\w\\-\\*\\@]+)(\\})", 
+          ["keyword.predefined","white","@brackets",{ "token": "tag.env-$4", "bracket": "@open" },"@brackets"]],
+      ["(\\\\end)(\\s*)(\\{)([\\w\\-\\*\\@]+)(\\})", 
+          ["keyword.predefined","white","@brackets",{ "token": "tag.env-$4", "bracket": "@close" }, "@brackets" ]],          
       ["\\\\[^a-zA-Z@]", "keyword" ],  
+      ["\\@[a-zA-Z@]+", "keyword.at" ],  
       ["\\\\([a-zA-Z@]+)", { "cases": {
         "$1@builtin": "keyword.predefined",
         "@default": "keyword" 
       }}],  
-      
-      
       { "include": "@whitespace" },
-      
-      
       ["[{}()\\[\\]]", "@brackets"],
       ["#+\\d", "number.arg"],
       ["\\-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*(?:em|ex|pt|pc|sp|cm|mm|in)", "number.len"]

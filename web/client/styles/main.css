@@ -741,15 +741,17 @@ div.boxed {
 /*
 .monaco-editor .token.keyword.heading 
 */
-.monaco-editor .latex { 
-  color: #006 !important;
+#main .monaco-editor .latex { 
+  color: #048;
   font-style: normal;
 }
 .monaco-editor .delimiter.latex,
 .monaco-editor .number.latex {
   font-style: normal;
 }
-.monaco-editor .keyword.latex,
+#main .monaco-editor .keyword.latex {
+  color: #008;
+}
 .monaco-editor .latex.constructor  {
   font-style: italic;
 }
@@ -760,21 +762,15 @@ div.boxed {
   font-style:italic; /* #4E0000; */
 }
 
-.monaco-editor.vs-dark .latex { 
+#main .monaco-editor.vs-dark .latex { 
   color: #897;
 }
-.monaco-editor.vs-dark .delimiter.latex {
-  color: #897 !important;
-}
-.monaco-editor.vs-dark .keyword.latex {
+#main .monaco-editor.vs-dark .keyword.latex {
   color: #B5CEA8;
 }
-.monaco-editor.vs-dark .keyword.predefined.latex,
-.monaco-editor.vs-dark .latex.number {
+#main .monaco-editor.vs-dark .keyword.predefined.latex,
+#main .monaco-editor.vs-dark .latex.number {
   color: #B5CEA8;
-}
-.monaco-editor.vs-dark .latex.inline {
-  color: #CCC;
 }
 
 .monaco-editor .token.link.special {
@@ -844,27 +840,33 @@ div.boxed {
 }
 
 .monaco-editor .token.madoko.keyword.heading {
-  font-size: 1.2em;
+  font-size: 1.4em;  
 }
 
+.monaco-editor .token.escape,
 .monaco-editor .token.open.madoko,
 .monaco-editor .token.close.madoko,
-.monaco-editor .token.delimiter.madoko,
-.monaco-editor .token.madoko.link.internal {
+.monaco-editor .token.delimiter.madoko {
   color: gray !important;
   font-weight: normal !important;
   font-style: normal !important;
   text-decoration: none !important;
 }
 
-.monaco-editor .token.madoko.custom.delimiter,
+.monaco-editor .token.madoko.custom.delimiter {
+  color: gray !important;
+  font-weight: bold !important;
+}
 .monaco-editor .token.madoko.keyword.heading.delimiter {
   color: inherit !important;
   font-weight: bold !important;
 }
 
-.monaco-editor .token.madoko.attrs.delimiter,
+.monaco-editor .token.madoko.attrs,
 .monaco-editor .token.madoko.metadata.key {  
+  color: gray !important;
+}
+.monaco-editor .token.madoko.link.internal {  
   color: gray !important;
 }
 
