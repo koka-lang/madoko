@@ -209,7 +209,7 @@ function createNullStorage() {
 function serverGetInitialContent(fpath) {
   if (!Util.extname(fpath)) fpath = fpath + ".mdk";
   if (!Util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
-  return Util.requestGET( { url: fpath,  binary: Util.hasImageExt(fpath) } );
+  return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } );
 }
 
 function unpersistRemote(remoteType,obj) {

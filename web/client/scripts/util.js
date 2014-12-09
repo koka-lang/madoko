@@ -435,7 +435,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
 
-  function hasImageExt(fname) {
+  function hasBinaryExt(fname) {
     return startsWith(mimeFromExt(fname),"image/");
   }
 
@@ -452,6 +452,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   function isTextMime( mime ) {
     return (startsWith(mime,"text/") || mime==="application/json");
+  }
+
+  function isImageMime(mime) {
+    return (startsWith(mime,"image/") || mime=="application/pdf");
   }
   
   var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html",".log"].join(";");
@@ -1612,9 +1616,11 @@ doc.execCommand("SaveAs", null, filename)
 
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
-    hasImageExt: hasImageExt,
+    hasBinaryExt: hasBinaryExt,
+
     mimeFromExt: mimeFromExt,
     isTextMime: isTextMime,
+    isImageMime: isImageMime,
 
     startsWith: startsWith,
     endsWith: endsWith,

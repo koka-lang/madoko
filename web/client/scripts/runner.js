@@ -98,16 +98,7 @@ var Runner = (function() {
                           Util.combine("out", Util.changeExt(res.name, ".pdf")) 
                         ]);
     var referred = filesReferred.map( function(file) {
-      return self.loadFile(ctx.round, file, !Util.hasEmbedExt(file));
-      /*      
-      if (Util.hasImageExt(file)) {
-        return self.loadFile(ctx.round, file, true);
-      }
-      else if (Util.hasEmbedExt(file)) {
-        return self.loadFile(ctx.round, file, true);
-      }
-      else return Promise.resolved(0);
-      */
+      return self.loadFile(ctx.round, file, !Util.hasEmbedExt(file));      
     });
     
     var texts = res.filesRead.map( function(file) {
