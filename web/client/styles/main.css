@@ -144,7 +144,7 @@ html,body,#main {
 
 
 #main .app-body {
-  background-color: #135;
+  xbackground-color: #135;
 }
 
 #main .pane-view {
@@ -732,144 +732,11 @@ div.boxed {
 .monaco-editor .token.bold            { font-weight: bold; }
 .monaco-editor .token.italic          { font-style: italic; }
 
-.monaco-editor .token.madoko.comment {
-  color: gray;
-}
+.monaco-editor .token.madoko.comment { color: gray; }
 
-
-
-/*
-.monaco-editor .token.keyword.heading 
-*/
-#main .monaco-editor .latex { 
-  color: #048;
-  font-style: normal;
-}
-.monaco-editor .delimiter.latex,
-.monaco-editor .number.latex {
-  font-style: normal;
-}
-#main .monaco-editor .keyword.latex {
-  color: #008;
-}
-.monaco-editor .latex.constructor  {
-  font-style: italic;
-}
-
-/* .monaco-editor .keyword.predefined.latex, 
-.monaco-editor .latex.number, */
-.monaco-editor .latex.constructor {
-  font-style:italic; /* #4E0000; */
-}
-
-#main .monaco-editor.vs-dark .latex { 
-  color: #897;
-}
-#main .monaco-editor.vs-dark .keyword.latex {
-  color: #B5CEA8;
-}
-#main .monaco-editor.vs-dark .keyword.predefined.latex,
-#main .monaco-editor.vs-dark .latex.number {
-  color: #B5CEA8;
-}
-
-.monaco-editor .token.link.special {
-  font-weight: bold;
-  color: inherit;
-}
-
-.monaco-editor .token.code.keyword {
-  color: navy;
-}
-.monaco-editor .token.metadata {
-  color: navy;
-}
-.monaco-editor .token.string.escape {
-  color: gray;
-}
-.monaco-editor .token.invalid {
-  border-bottom: Gray dotted 2px;
-}
-
-.monaco-editor.vs-dark .token.code {
-  color: #897;
-}
-.monaco-editor.vs-dark .token.code.keyword {
-  color: #B5CEA8;
-}
-.monaco-editor.vs-dark .token.metadata {
-  color: #BD5050;
-}
-.monaco-editor.vs-dark .token.string.escape {
-  color: #999; /* #CE9178; */
-}
-.monaco-editor, .monaco-editor .lines-decorations {
-  background-color: #FFFAF4;
-}
-
-.monaco-editor.vs .line-numbers {
-  background-color: Gainsboro;
-}
-
-
-
-
-.monaco-editor .token.code { 
-  color: #006;
-}
-
-.monaco-editor .token.madoko.link { 
-  color: inherit;
-}
-
-.monaco-editor .token.madoko.link.escape,
-.monaco-editor .token.madoko.definition.escape {
-  color: gray;
-}
-
-
-.monaco-editor .token.madoko.keyword.heading,
-.monaco-editor .token.madoko.keyword.heading.delimiter,
-.monaco-editor .token.madoko.keyword.list,
-.monaco-editor .token.madoko.keyword.quote,
-.monaco-editor .token.madoko.keyword.image,
-.monaco-editor .token.madoko.metadata.special,
-.monaco-editor .token.madoko.metadata.key {
-  color: inherit;
-  font-weight: bold;
-}
-
-.monaco-editor .token.madoko.keyword.heading {
-  font-size: 1.4em;  
-}
-
-.monaco-editor .token.escape,
-.monaco-editor .token.open.madoko,
-.monaco-editor .token.close.madoko,
-.monaco-editor .token.delimiter.madoko {
-  color: gray !important;
-  font-weight: normal !important;
-  font-style: normal !important;
-  text-decoration: none !important;
-}
-
-.monaco-editor .token.madoko.custom.delimiter {
-  color: gray !important;
-  font-weight: bold !important;
-}
-.monaco-editor .token.madoko.keyword.heading.delimiter {
-  color: inherit !important;
-  font-weight: bold !important;
-}
-
-.monaco-editor .token.madoko.attrs,
-.monaco-editor .token.madoko.metadata.key {  
-  color: gray !important;
-}
-.monaco-editor .token.madoko.link.internal {  
-  color: gray !important;
-}
-
+/*----------------------------------------
+  madoko font sizes
+  ---------------------------------------- */
 
 .monaco-editor.font-small {
   font-size: 12px;
@@ -885,6 +752,200 @@ div.boxed {
   font-size: 18px;
   line-height: 24px;
 }
+
+
+/*----------------------------------------
+  madoko specific
+  ---------------------------------------- */
+
+.monaco-editor .latex.constructor {
+  font-style:italic; /* #4E0000; */
+}
+
+.monaco-editor .token.link.special {
+  font-weight: bold;
+  color: inherit;
+}
+
+.monaco-editor .token.code.keyword {
+  color: navy;
+}
+
+.monaco-editor .token.metadata {
+  color: navy;
+}
+
+.monaco-editor .token.string.escape {
+  color: gray;
+}
+
+.monaco-editor .token.invalid {
+  border-bottom: Gray dotted 2px;
+}
+
+.monaco-editor, .monaco-editor .lines-decorations {
+  background-color: #FFFAF4;
+}
+
+.monaco-editor.vs .line-numbers {
+  background-color: Gainsboro;
+}
+
+.monaco-editor .token.madoko.link.escape,
+.monaco-editor .token.madoko.definition.escape {
+  color: gray;
+}
+
+.monaco-editor .token.madoko.keyword.heading,
+.monaco-editor .token.madoko.keyword.heading.delimiter,
+.monaco-editor .token.madoko.keyword.list,
+.monaco-editor .token.madoko.keyword.quote,
+.monaco-editor .token.madoko.keyword.image,
+.monaco-editor .token.madoko.metadata.special,
+.xmonaco-editor .token.madoko.metadata.key {
+  color: inherit;
+  font-weight: bold;
+}
+
+.monaco-editor .token.madoko.keyword.heading {
+  font-size: 1.4em;  
+}
+
+.monaco-editor .token.escape,
+.monaco-editor .token.open.madoko,
+.monaco-editor .token.close.madoko,
+.monaco-editor .token.delimiter.madoko {
+  color: silver;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.monaco-editor .token.madoko.custom.delimiter {
+  color: inherit !important;
+  font-weight: bold;
+}
+.monaco-editor .token.madoko.keyword.heading.delimiter {
+  color: inherit;
+  font-weight: bold;
+}
+
+.monaco-editor .token.madoko.attrs,
+.monaco-editor .token.madoko.metadata.key,
+.monaco-editor .token.madoko.link.internal,
+.monaco-editor .token.madoko.entity {  
+  color: gray;
+}
+
+
+/*----------------------------------------
+  vs theme
+  ---------------------------------------- */
+.monaco-editor.vs, .monaco-editor.vs .lines-decorations {
+  background-color: #F8F2E8;
+}
+
+.monaco-editor.vs, .monaco-editor.vs .token.madoko { 
+  color: #2e1c1c;
+}
+
+.monaco-editor.vs .token.madoko.comment {
+  color: gray;
+}
+
+.monaco-editor.vs .latex.token.delimiter,
+.monaco-editor.vs .latex.token { 
+  color: #6c1c1c; /* #048; */
+}
+.monaco-editor.vs .latex.keyword {
+  color: #411; /* #008 */
+}
+.monaco-editor.vs .latex.constructor  {
+  color: #894949;
+}
+
+.monaco-editor.vs .token.escape,
+.monaco-editor.vs .token.string.escape,
+.monaco-editor.vs .token.open.madoko,
+.monaco-editor.vs .token.close.madoko,
+.monaco-editor.vs .token.delimiter.madoko {
+  color: #a69797;
+}
+
+.monaco-editor.vs .token.madoko.attrs,
+.monaco-editor.vs .token.madoko.metadata.key,
+.monaco-editor.vs .token.madoko.link,
+.monaco-editor.vs .token.madoko.entity,
+.monaco-editor.vs .token.madoko.escape.definition {  
+  color: #836d6d;
+}
+
+.monaco-editor.vs .token.code { 
+  color: #6c1c1c;
+}
+
+
+/* -----------------------------------------
+   ivory theme
+   ----------------------------------------- */
+
+.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations {
+  background-color: white;
+}
+
+.monaco-editor.ivory .latex.token.delimiter,
+.monaco-editor.ivory .latex.token { 
+  color: #048; 
+}
+.monaco-editor.ivory .latex.keyword {
+  color: #008;
+}
+.monaco-editor.ivory .latex.constructor  {
+  font-style: italic;
+}
+
+.monaco-editor.ivory .token.code { 
+  color: #006;
+}
+
+
+/* -----------------------------------------
+   vs-dark theme
+   ----------------------------------------- */
+
+.monaco-editor.vs-dark .latex,
+.monaco-editor.vs-dark .token.delimiter.latex { 
+  color: #897;
+}
+.monaco-editor.vs-dark .keyword.latex {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .keyword.predefined.latex,
+.monaco-editor.vs-dark .latex.number {
+  color: #B5CEA8;
+}
+
+.monaco-editor.vs-dark .token.code {
+  color: #897;
+}
+.monaco-editor.vs-dark .token.code.keyword {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .token.metadata {
+  color: #BD5050;
+}
+.monaco-editor.vs-dark .token.string.escape {
+  color: #999; /* #CE9178; */
+}
+
+.monaco-editor.vs-dark .token.escape,
+.monaco-editor.vs-dark .token.string.escape,
+.monaco-editor.vs-dark .token.open.madoko,
+.monaco-editor.vs-dark .token.close.madoko,
+.monaco-editor.vs-dark .token.delimiter.madoko {
+  color: gray;
+}
+
 
 
 /* status icons */
