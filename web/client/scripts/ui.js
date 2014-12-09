@@ -920,10 +920,13 @@ var UI = (function() {
     
     // Theme
     document.getElementById("theme-ivory").onclick = function(ev) {
-      self.updateSettings({theme:"vs"})
+      self.updateSettings({theme:"ivory"})
     }
     document.getElementById("theme-midnight").onclick = function(ev) {
       self.updateSettings({theme:"vs-dark"})
+    }
+    document.getElementById("theme-zen").onclick = function(ev) {
+      self.updateSettings({theme:"vs"})
     }
 
     // toolbox
@@ -3579,7 +3582,7 @@ var symbolsMath = [
     var ext  = Util.extname(file.name);
     var stem = Util.stemname(file.name);
     var name = Util.basename(file.name);      
-    if (Util.startsWith(mime,"image/")) name = "images/" + name;    
+    if (Util.isImageMime(mime)) name = "images/" + name;    
     if (encoding===Storage.Encoding.Base64) {
       var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
       if (!cap) {
@@ -3598,7 +3601,7 @@ var symbolsMath = [
     self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
     
     var text = "";
-    if (Util.startsWith(mime,"image/")) {
+    if (Util.isImageMime(mime)) {
       self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto }\n');
       text = "![" + stem + "]";
     }
@@ -3641,7 +3644,7 @@ var symbolsMath = [
     for (var i = 0, f; f = files[i]; i++) {      
       var encoding = Storage.Encoding.fromExt(f.name);      
       var mime = f.type || Util.mimeFromExt(f.name);
-      if (!(Util.startsWith(mime,"image/") || Util.isTextMime(mime))) { // only images or text..
+      if (!(Util.isImageMime(mime) || Util.isTextMime(mime))) { // only images or text..
         continue;
       }
       
