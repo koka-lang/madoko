@@ -710,7 +710,7 @@ div.boxed {
 .monaco-editor .token.bold            { font-weight: bold; }
 .monaco-editor .token.italic          { font-style: italic; }
 
-.monaco-editor .token.comment {
+.monaco-editor .token.madoko.comment {
   color: gray;
 }
 
@@ -728,7 +728,8 @@ div.boxed {
 .monaco-editor .keyword.latex {
   color: #4E0000;
 }
-.monaco-editor .keyword.predefined.latex {
+.monaco-editor .keyword.predefined.latex,
+.monaco-editor .latex.number {
   color: #4E0000;
 }
 .monaco-editor .latex.inline {
@@ -744,7 +745,8 @@ div.boxed {
 .monaco-editor.vs-dark .keyword.latex {
   color: #B5CEA8;
 }
-.monaco-edito.vs-dark .keyword.predefined.latex {
+.monaco-editor.vs-dark .keyword.predefined.latex,
+.monaco-editor.vs-dark .latex.number {
   color: #B5CEA8;
 }
 .monaco-editor.vs-dark .latex.inline {
@@ -788,6 +790,60 @@ div.boxed {
 .monaco-editor.vs .line-numbers {
   background-color: Gainsboro;
 }
+
+
+
+
+.monaco-editor .token.code { 
+  color: #006;
+}
+
+.monaco-editor .token.madoko.link { 
+  color: inherit;
+}
+
+.monaco-editor .token.madoko.link.escape,
+.monaco-editor .token.madoko.definition.escape {
+  color: gray;
+}
+
+
+.monaco-editor .token.madoko.keyword.heading,
+.monaco-editor .token.madoko.keyword.heading.delimiter,
+.monaco-editor .token.madoko.keyword.list,
+.monaco-editor .token.madoko.keyword.quote,
+.monaco-editor .token.madoko.keyword.image,
+.monaco-editor .token.madoko.metadata.special,
+.monaco-editor .token.madoko.metadata.key {
+  color: inherit;
+  font-weight: bold;
+}
+
+.monaco-editor .token.madoko.keyword.heading {
+  font-size: 1.2em;
+}
+
+.monaco-editor .token.open.madoko,
+.monaco-editor .token.close.madoko,
+.monaco-editor .token.delimiter.madoko,
+.monaco-editor .token.madoko.link.internal {
+  color: gray !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  text-decoration: none !important;
+}
+
+.monaco-editor .token.madoko.custom.delimiter,
+.monaco-editor .token.madoko.keyword.heading.delimiter {
+  color: inherit !important;
+  font-weight: bold !important;
+}
+
+.monaco-editor .token.madoko.attrs.delimiter,
+.monaco-editor .token.madoko.metadata.key {  
+  color: gray !important;
+}
+
 
 .monaco-editor.font-small {
   font-size: 12px;
