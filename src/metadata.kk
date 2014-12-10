@@ -84,7 +84,7 @@ function defaultMeta( options : options ) : string {
 
       @"~Note     : .block before='[**Note**. ]{.note-before}&nl;'",
       @"~Remark   : .block before='[**Remark**. ]{.remark-before}&nl;'",
-      @"~Proof    : .block before='[**Proof**. ]{.proof-before}&nl;'",
+      @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
 
       @"~Framed   : border-style=solid border-color=black border-width=1px",
       @"~Center   : .align-center",
@@ -96,14 +96,14 @@ function defaultMeta( options : options ) : string {
       @"~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em",
       @"~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold",
       
-      @"~Tex      : input=tex",
+      @"~Tex      : input=tex notag",
       @"~TexRaw   : input=texraw",
       @"~HtmlRaw  : input=htmlraw",
       @"~Math     : input=math .para-block",
       @"~MathPre  : input=mathpre .para-block",
       @"~MathDefs : input=mathdefs .hidden",
-      @"~HtmlOnly : input=htmlonly",
-      @"~TexOnly  : input=texonly",
+      @"~HtmlOnly : input=htmlonly notag",
+      @"~TexOnly  : input=texonly notag",
       @"~math-inline: input=math",
       @"~math-display: input=math",
 
@@ -133,6 +133,9 @@ function defaultMeta( options : options ) : string {
       @"MadokoLogo: Created with [Madoko.net](https://www.madoko.net).",
       @".MadokoLogo: .block text-align=right font-size=xx-small margin-top=4em tight",
 
+      @".thm-caption-content: font-style=italic",
+      @"thm-caption-end     : &&;br;",
+      @".thm-caption        : replace='?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;'",
       theorem("Theorem"),
       theorem("Lemma"),
       theorem("Proposition"),
@@ -149,7 +152,7 @@ function defaultMeta( options : options ) : string {
 function theorem( prose : string ) {
   val name = prose.toLower
   "~" + prose + ": .block label='[@" + name + "]{." + name + "-label}' " +
-      "before='[**" + prose + "\\ &label;.** ]{." + name + "-before}'"
+      "before='[**" + prose + "\\ &label;.** [&caption;]{.thm-caption}]{." + name + "-before}'"
 }
 
 function heading( depth : int, headingDepth : int, tocDepth : int ) {
