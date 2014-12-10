@@ -27,7 +27,8 @@
     "Latex","Convert","Dvipng","Math Pdf Latex","MathJax","MathJax Ext",
     "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*",
     "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url","Description",
-    "Embed", "Embed Limit", "Math Embed Limit"
+    "Embed", "Embed Limit", "Math Embed Limit",
+    "Logo","Refer","Keywords","Classification","Title Running","Author Running"
   ],
   "empty": [
     "area", "base", "basefont", "br", "col", "frame", 
