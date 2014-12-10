@@ -123,7 +123,8 @@ task("webcopy", ["web"], function() {
                               .include(path.join(contribDir,"styles","*.bib"))
                               .include(path.join(contribDir,"styles","*.cls"));
   copyFiles(path.join(contribDir,"styles"),js.toArray(),path.join(webclient,styleDir));
-  js     = new jake.FileList().include(path.join(contribDir,"images","*.png"));
+  js     = new jake.FileList().include(path.join(contribDir,"images","*.png"))
+                              .include(path.join(contribDir,"images","*.pdf"));
   copyFiles(contribDir,js.toArray(),path.join(webclient,styleDir));
   
   // copy sty files to local texmf tree
