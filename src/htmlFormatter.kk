@@ -120,7 +120,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
       }
       _          -> {
         if (imgref.relative) then {
-          if (isPS) log("filesRefer",link.href) // refer to eps/pdf too
+          if (isPS) then log("filesRefer",link.href) // refer to eps/pdf too
           log("filesRefer",imgref);
           log("embed", imgref);
         }
