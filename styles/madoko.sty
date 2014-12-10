@@ -132,15 +132,14 @@
 
 % If there is no \authorinfo, we provide a simple one that works
 % with some other common styles
-\newcounter{@mdAuthorcount}
+\newcounter{mdAuthorCount}
 \newcommand{\@mdauthors}{}   % fancy list of authors
-\newcommand{\@mdauthorss}{}  % simple list of authors
 \newcommand{\@mdinsts}{}
 \providerobustcmd{\@and}{\and}
 \providecommand{\authorinfo}[3]{%
-  \stepcounter{@mdAuthorcount}%
+  \stepcounter{mdAuthorCount}%
   \ifdef{\institute}{%  
-    \ifnum\value{@mdAuthorcount}>1%
+    \ifnum\value{mdAuthorCount}>1%
      \gappto\@mdauthors{\@and}%
      \ifx\relax#2\else\gappto\@mdinsts{\@and}\fi
     \fi%    
@@ -157,14 +156,14 @@
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
-   \ifnum\value{@mdAuthorcount}>1%
+   \ifnum\value{mdAuthorCount}>1%
      \gappto\@mdauthors{\\[2ex]}%
    \fi%
    \gappto\@mdauthors{{\large #1}}%
    \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex]\normalsize #2}\fi%
    \ifx\relax#3\relax\else\gappto\@mdauthors{\\\normalsize\email{#3}}\fi%
   }%
-  \ifnum\value{@mdAuthorcount}>1%
+  \ifnum\value{mdAuthorCount}>1%
     \gappto\@mdauthorsx{, #1}%
   \else
     \global\def\@mdauthorsx{#1}%
@@ -189,7 +188,7 @@
   \authorinfo{#1}{\mdAuthorAddressNote{#2}{#4}}{#3}%
 }
 \newcommand{\mdMaketitle}[1]{%  
-  \ifnum\value{@mdAuthorcount}>0%
+  \ifnum\value{mdAuthorCount}>0%
     \author{\@mdauthors}%
     \ifdef\inst{\ifdef\institute{\institute{\@mdinsts}}{}}{}%
   \fi
@@ -275,13 +274,23 @@
 \newcommand{\mdBookmark}[3]{\eifstrequal{#2}{}{}{\pdfbookmark[#1]{#2}{#3}}}
 \newcommand{\mdHBookmark}[2]{\cssInitKeys{#2}\mdBookmark{#1}{\cssBookmark}{\cssId}}
 
-\newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\part*{\cssInline[elem=h0,#1]{#2}}}
-\newcommand{\mdHx}[2][]{\mdHBookmark{1}{#1}\chapter*{\cssInline[elem=h1,#1]{#2}}}
-\newcommand{\mdHxx}[2][]{\mdHBookmark{2}{#1}\section*{\cssInline[elem=h2,#1]{#2}}}
-\newcommand{\mdHxxx}[2][]{\mdHBookmark{3}{#1}\subsection*{\cssInline[elem=h3,#1]{#2}}}
-\newcommand{\mdHxxxx}[2][]{\mdHBookmark{4}{#1}\subsubsection*{\cssInline[elem=h4,#1]{#2}}}
-\newcommand{\mdHxxxxx}[2][]{\paragraph*{\cssInline[elem=h5,#1]{#2}}}
-\newcommand{\mdHxxxxxx}[2][]{\paragraph*{\cssInline[elem=h6,#1]{#2}}}
+\cssNewKey{css}{starform}{\cssStarForm}{}
+\newcommand{\mdCommandStar}[3][]{%
+  \cssInitKeys{#1}%
+  \eifstrequal{\cssStarForm}{true}{\csname #2\endcsname*{#3}}{\csname #2\endcsname{#3}}%
+}
+\newcommand{\mdCommandUnStar}[3][]{%
+  \cssInitKeys{#1}%
+  \eifstrequal{\cssStarForm}{false}{\csname #2\endcsname{#3}}{\csname #2\endcsname*{#3}}%
+}
+
+\newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
+\newcommand{\mdHx}[2][]{\mdHBookmark{1}{#1}\mdCommandUnStar[#1]{chapter}{\cssInline[elem=h1,#1]{#2}}}
+\newcommand{\mdHxx}[2][]{\mdHBookmark{2}{#1}\mdCommandUnStar[#1]{section}{\cssInline[elem=h2,#1]{#2}}}
+\newcommand{\mdHxxx}[2][]{\mdHBookmark{3}{#1}\mdCommandUnStar[#1]{subsection}{\cssInline[elem=h3,#1]{#2}}}
+\newcommand{\mdHxxxx}[2][]{\mdHBookmark{4}{#1}\mdCommandUnStar[#1]{subsubsection}{\cssInline[elem=h4,#1]{#2}}}
+\newcommand{\mdHxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h5,#1]{#2}}}
+\newcommand{\mdHxxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h6,#1]{#2}}}
 \newenvironment{mdSection}[1][]{\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %\patchcmd{\@startsection}%
@@ -432,7 +441,7 @@
 
 
 \newcommand{\mdBibDisplay}{inline}
-
+\newcommand{\mdBibBefore}{\vspace{-4ex}}
 \newcommand{\@ignore}[2][]{} % ignore argument (and optional argument)
 
 \newenvironment{mdBibliography}[1][]{%
@@ -441,7 +450,7 @@
   \ifdef\chapter{\def\chapter{\@ifstar\@ignore\@ignore}}{}% suppress bibliography header
   \providecommand{\markboth}[2]{}%
   \cssIfHasClass{bib-authoryear}{\def\mdBibDisplay{hidden}}{}%
-  \begin{thebibliography}{\cssCaption}\setlength{\topsep}{0pt}\vspace{-4ex}}%
+  \begin{thebibliography}{\cssCaption}\setlength{\topsep}{0pt}\mdBibBefore}%
   {\markboth{}{}\end{thebibliography}\end{mdDiv}}
 
 
