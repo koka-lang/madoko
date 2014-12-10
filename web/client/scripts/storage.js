@@ -749,7 +749,8 @@ var Storage = (function() {
         }
 
         // only try standard style if necessary
-        if (!Util.hasEmbedExt(fpath) && Util.extname(fpath) !== ".png") {
+        var mime = Util.mimeFromExt(fpath);
+        if (!Util.hasEmbedExt(fpath) && !Util.isImageMime(mime)) {
           return noContent();
         }
 
@@ -757,7 +758,7 @@ var Storage = (function() {
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
         if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) spath = "styles/lang/" + fpath;
-        if (Util.extname(fpath) === ".png") opath = fpath;
+        if (Util.isImageMime(mime)) opath = fpath;
 
         return serverGetInitialContent(spath).then( function(content,req) {
             if (!content) return noContent();
