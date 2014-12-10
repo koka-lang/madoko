@@ -436,7 +436,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
 
   function hasBinaryExt(fname) {
-    return startsWith(mimeFromExt(fname),"image/");
+    return isImageMime(mimeFromExt(fname));
   }
 
   function hasTextExt(fname) {
