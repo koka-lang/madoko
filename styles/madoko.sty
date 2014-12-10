@@ -371,6 +371,20 @@
 \cssClassRuleCmd{equation-before}{\mdEquationbefore}
 
 
+%-------------------------------------------------------------
+% Helper to allow use of standard math environments
+%-------------------------------------------------------------
+
+\cssNewKey{css}{env}{\cssEnv}{theorem}
+\newsavebox{\mdThmBox}
+\newenvironment{mdThmCaption}[1][]
+  {\global\setbox\mdThmBox\hbox\bgroup\ignorespaces}
+  {\egroup}
+\newenvironment{mdThm}[1][]%
+  {\cssInitKeys{#1}\begin{\cssEnv}%
+   \global\setbox\mdThmBox\hbox{}}%
+  {\end{\cssEnv}}
+
 
 %-------------------------------------------------------------
 % Lists
