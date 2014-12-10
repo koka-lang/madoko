@@ -26,7 +26,8 @@
     "Math Mode","Math Embed","Math Dir","Math Dpi","Math Scale",
     "Latex","Convert","Dvipng","Math Pdf Latex","MathJax","MathJax Ext",
     "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*",
-    "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url","Description"
+    "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url","Description",
+    "Embed", "Embed Limit", "Math Embed Limit"
   ],
   "empty": [
     "area", "base", "basefont", "br", "col", "frame", 
@@ -47,7 +48,7 @@
         ["white","@brackets.special","namespace.metadata.special.$3","@brackets.special","white"]],
       ["^(\\s{0,3})(\\[)(TOC|INCLUDE)(=|:)([^\\]\\r\\n]+)(\\])(\\s*)", 
         ["white","@brackets.special","namespace.metadata.special.$3", 
-          "namespace.metadata.keyword", 
+          "namespace.metadata.special", 
           "namespace.metadata.string.escape", 
           "@brackets.special","white"]],
       ["^@metakey", { "cases": {
@@ -106,7 +107,7 @@
     "metadata": [
       ["^(@metakey)", { "token": "@rematch", "next": "@pop" } ],
       ["^(?!\\s\\s\\s)", { "token": "@rematch", "next": "@pop" }],
-      [".+", "namespace.metadata.string.escape" ]
+      [".+", "attrs.string.escape" ]
     ],
     
     "codeblock": [      
@@ -165,7 +166,7 @@
     ],
     
     "linecontent": [ 
-      ["&#?\\w+;", "string.escape"],      
+      ["&#?\\w+;", "entity.string"],      
       ["@escapes", "escape" ],
       ["\\b(__)((?:[^\\\\_]|@escapes|_(?!_))+)(__)\\b", ["strong.delimiter","strong","strong.delimiter"]],
       ["(\\*\\*)((?:[^\\\\*]|@escapes|\\*(?!\\*))+)(\\*\\*)", ["strong.delimiter","strong","strong.delimiter"]],
@@ -176,12 +177,12 @@
       ["<<|>>", ""],
       ["(\\{)([^}]+)(\\})", ["@brackets.attrs.string.escape","attrs.string.escape","@brackets.attrs.string.escape"]],
       ["(!?\\[)((?:#|\\^|[\\-\\+!]?\\@)(?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(])",
-        [{"token":"delimiter.square.link.internal", "bracket":"@open"},"string.link.internal","@brackets.link.internal"]],          
+        [{"token":"delimiter.square.link.internal", "bracket":"@open"},"string.link.internal",{"token":"delimiter.square.link.internal", "bracket":"@close"}]],          
       ["(!?\\[)((?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(])",
-        [{"token":"delimiter.square.link", "bracket":"@open"},"string.link","@brackets.link"]],          
+        [{"token":"delimiter.square.link", "bracket":"@open"},"string.link",{"token":"delimiter.square.link", "bracket":"@close"}]],          
       ["(!?\\[)", {"token":"delimiter.square.link", "bracket":"@open"} ],
-      ["(\\])([ \\t]*)(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])", ["@brackets","white","@brackets.link","string.escape.link","@brackets.link"]],
-      ["(\\])([ \\t]*)(\\()((?:[^\\)\\\\]|@escapes)+)(\\))", ["@brackets","white","@brackets.link","string.escape.link","@brackets.link"]],
+      ["(\\])([ \\t]*)(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])", [{"token":"delimiter.square.link", "bracket":"@close"},"white","@brackets.link","string.escape.link","@brackets.link"]],
+      ["(\\])([ \\t]*)(\\()((?:[^\\)\\\\]|@escapes)+)(\\))", [{"token":"delimiter.square.link", "bracket":"@close"},"white","@brackets.link","string.escape.link","@brackets.link"]],
       { "include": "html" } 
     ],
     
