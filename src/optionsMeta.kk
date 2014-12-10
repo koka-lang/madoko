@@ -88,6 +88,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
       elif (key=="pretty-align") options(prettyAlign=ivalue)
       elif (key=="logo") options(logo=(lvalue=="true"))
+      elif (key=="refer") { log("filesRefer",value); options }
 
       // can only set program options if not running in a sandbox
       elif (!(options.sandbox)) {
