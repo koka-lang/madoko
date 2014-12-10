@@ -178,7 +178,8 @@ function texEntity( cap : matched ) {
 }
 
 function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : string = "md" ) : string {
-  "\\" + pre + cmd.normalizeCmd.capitalize + attrs.texAttrsX + "{" + body + "}"
+  val cmdName = if (attrs.texelem != "") then attrs.texelem else (pre + cmd.normalizeCmd.capitalize)
+  "\\" + cmdName + attrs.texAttrsX + "{" + body + "}"
 }
 
 public function fmtTexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
@@ -359,10 +360,6 @@ function capitalize( s : string ) : string {
   s.substr(0,1).toUpper + s.substr(1)
 }
 
-
-function texCmdPlain( cmd : string, body : string, pre : string = "md" ) : string {
-  "\\" + pre + cmd.normalizeCmd.capitalize + "{" + body + "}"
-}
 
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
   texEnvPlain(env,body,attrs)
