@@ -1,0 +1,12 @@
+Description: 
+   Use LaTeX `theorem`, `lemma`, etc. environments directly and without using
+   the Madoko labeling and numbering. Useful for certain document classes.
+@tex ~Theorem    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=theorem}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Lemma      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=lemma}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Corollary  : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=corollary}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Proposition: before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=proposition}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Definition : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=definition}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Example    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=example}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~Proof      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=proof}&nl;&source;&nl;~End Thm&nl;" notag
+@tex ~ThmCaption : tex-elem=mdThmCaption tight
+@tex ~Thm        : tex-elem=mdThm tight 

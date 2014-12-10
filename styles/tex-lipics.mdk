@@ -1,0 +1,33 @@
+Description:
+    Madoko settings for the LIPIcs LaTeX document class.
+    Set the following keys:
+    * Keywords
+    * Classification
+    * Copyright
+Keywords    : Set the `Keywords` metadata key 
+Classification: Set the ACM `Classification` metadata key
+Copyright   : Set the `Copyright` metadata key
+Doc Class   : [UKenglish]lipics.cls
+Bib style   : plainnat
+Heading base: 2
+Refer       : images/cc-by.pdf
+Refer       : images/lipics-logo-bw.pdf
+~Lemma      : @Theorem label="[@Theorem]{.Lemma-label}"
+~Corollary  : @Theorem label="[@Theorem]{.Corollary-label}"
+~Definition : @Theorem label="[@Theorem]{.Definition-label}"
+~Example    : @Theorem label="[@Theorem]{.Example-label}"
+Tex Header  :
+    \hypersetup{colorlinks=false}
+    \graphicspath{{images/}}
+    \renewcommand{\mdBibBefore}{}
+    \renewcommand{\mdMaketitle}{\maketitle}
+    \renewcommand{\mdAuthor}[4]{%
+      \stepcounter{mdAuthorCount}%
+      \author[\arabic{mdAuthorCount}]{#1}\affil[\arabic{mdAuthorCount}]{\mdAuthorAddressNote{#2}{#3}\texttt{#4}}%
+    }
+Tex Header* :
+    \Copyright{&Copyright;}
+    \subjclass{&Classification;}
+    \keywords{&Keywords;}
+[INCLUDE=tex-nostarsections]
+[INCLUDE=tex-amsthms]
