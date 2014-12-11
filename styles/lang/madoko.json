@@ -17,7 +17,8 @@
   "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))[\\w\\-\\.,#~]*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*[:]",  
 
   "metadata": [
-    "Title","Subtitle","Sub Title","Title Note", "Author","Affiliation","Email","Toc Depth","Heading Depth",
+    "Title","Subtitle","Sub Title","Title Note", "Author","Author Note","Affiliation","Email",
+    "Toc Depth","Heading Depth",
     "Heading Base","Section Depth","Section Base","Bib","Bibliography",
     "Bib Style","Biblio Style","Bibliography Style","Cite Style","Cite All","Bib Search Url",
     "Bibtex","Pdf Latex","Fragment End","Fragment Start","Colorizer",
@@ -28,7 +29,7 @@
     "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*",
     "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url","Description",
     "Embed", "Embed Limit", "Math Embed Limit",
-    "Logo","Refer","Keywords","Classification","Title Running","Author Running"
+    "Logo","Refer","Classification","Title Running","Author Running"
   ],
   "empty": [
     "area", "base", "basefont", "br", "col", "frame", 
@@ -50,7 +51,7 @@
       ["^(\\s{0,3})(\\[)(TOC|INCLUDE)(=|:)([^\\]\\r\\n]+)(\\])(\\s*)", 
         ["white","@brackets.special","namespace.metadata.special.$3", 
           "namespace.metadata.special", 
-          "namespace.metadata.string.escape", 
+          "attrs.string.escape", 
           "@brackets.special","white"]],
       ["^@metakey", { "cases": {
         "$2@metadata": { "token": "namespace.metadata.key", "next": "metadata" },
@@ -149,16 +150,14 @@
     ],
     
     "xlatexinline": [
-      ["([^\\\\\\$]|\\\\(.|$))+", {"token": "latex.source", "switchTo":"@xxlatexinline" } ]
-    ],
-    
-    "xxlatexinline": [
-      ["(^\\S)|\\$", { "token": "@rematch", "nextEmbedded": "@pop", "switchTo":"@xlatexinline_end"} ],
-      ["([^\\\\\\$]|\\\\(.|$))+", {"token": "latex.source" } ]
+      ["([^\\\\\\$%]|\\\\.)+(?![\\r\\n]|$)", "latex.source" ],
+      ["%[^\\$]*\\r?$", "latex.source" ],
+      [".|\\r|\\n", { "token": "@rematch", "nextEmbedded": "@pop", "switchTo":"@xlatexinline_end"} ]      
     ],
     
     "xlatexinline_end": [
-      [".|$", { "token": "latex.inline.delimiter", "bracket": "@close", "next": "@pop" }]
+      ["\\$",   { "token": "math.delimiter", "bracket": "@close", "next": "@pop" }],
+      [".|$",  { "token": "math.delimiter.invalid", "next": "@pop" }]
     ],
     
     "indented": [
@@ -168,22 +167,23 @@
     
     "linecontent": [ 
       ["&#?\\w+;", "entity.string"],      
-      ["@escapes", "escape" ],
+      ["@escapes", "entity.string" ],
       ["\\b(__)((?:[^\\\\_]|@escapes|_(?!_))+)(__)\\b", ["strong.delimiter","strong","strong.delimiter"]],
       ["(\\*\\*)((?:[^\\\\*]|@escapes|\\*(?!\\*))+)(\\*\\*)", ["strong.delimiter","strong","strong.delimiter"]],
       ["\\b(_)([^_]+)(_)\\b", ["emphasis.delimiter","emphasis","emphasis.delimiter"]],
       ["(\\*)((?:[^\\\\*]|@escapes)+)(\\*)", ["emphasis.delimiter","emphasis","emphasis.delimiter"]],
       ["(`)((?:[^`])+)(`)", ["namespace.code.delimiter","namespace.code","namespace.code.delimiter"] ],
-      ["\\$(?!\\$)", { "token": "latex.inline.delimiter", "next": "@xlatexinline", "nextEmbedded": "text/latex", "bracket": "@open" } ],
+      ["\\$(?!\\$)", { "token": "math.delimiter", "next": "@xlatexinline", "nextEmbedded": "text/latex", "bracket": "@open" } ],
       ["<<|>>", ""],
       ["(\\{)([^}]+)(\\})", ["@brackets.attrs.string.escape","attrs.string.escape","@brackets.attrs.string.escape"]],
-      ["(!?\\[)((?:#|\\^|[\\-\\+!]?\\@)(?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(])",
+      ["(!?\\[)((?:#|\\^|[\\-\\+!]?\\@)(?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(\\{])",
         [{"token":"delimiter.square.link.internal", "bracket":"@open"},"string.link.internal",{"token":"delimiter.square.link.internal", "bracket":"@close"}]],          
-      ["(!?\\[)((?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(])",
+      ["(!?\\[)((?:[^\\]\\\\]|@escapes)+)(\\])(?![ \\t]*[\\[\\(\\{])",
         [{"token":"delimiter.square.link", "bracket":"@open"},"string.link",{"token":"delimiter.square.link", "bracket":"@close"}]],          
       ["(!?\\[)", {"token":"delimiter.square.link", "bracket":"@open"} ],
       ["(\\])([ \\t]*)(\\[)((?:[^\\]\\\\]|@escapes)+)(\\])", [{"token":"delimiter.square.link", "bracket":"@close"},"white","@brackets.link","string.escape.link","@brackets.link"]],
       ["(\\])([ \\t]*)(\\()((?:[^\\)\\\\]|@escapes)+)(\\))", [{"token":"delimiter.square.link", "bracket":"@close"},"white","@brackets.link","string.escape.link","@brackets.link"]],
+      ["\\](?=[ \\t]*\\{)", {"token":"delimiter.square.link", "bracket":"@close"}],
       { "include": "html" } 
     ],
     

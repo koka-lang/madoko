@@ -787,10 +787,6 @@ div.boxed {
   background-color: #FFFAF4;
 }
 
-.monaco-editor .line-numbers {
-  background-color: Gainsboro;
-}
-
 .monaco-editor .token.madoko.link.escape,
 .monaco-editor .token.madoko.definition.escape {
   color: gray;
@@ -846,7 +842,7 @@ div.boxed {
 }
 
 .monaco-editor.vs .glyph-margin {
-  background-color: #E8E2D8;
+  background-color: #E8E2D8; 
 }
 
 .monaco-editor.vs .line-numbers {
@@ -870,8 +866,11 @@ div.boxed {
 .monaco-editor.vs .latex.keyword {
   color: #404; /* #008 */
 }
+.monaco-editor.vs .latex.comment {
+  color: gray; /* #008 */
+}
 .monaco-editor.vs .latex.constructor  {
-  color: #894949;
+  color: #6c6060; /* #894949; */
 }
 
 .monaco-editor.vs .token.escape,
@@ -879,7 +878,7 @@ div.boxed {
 .monaco-editor.vs .token.open.madoko,
 .monaco-editor.vs .token.close.madoko,
 .monaco-editor.vs .token.delimiter.madoko {
-  color: #a69797;
+  color: #aba4a4; /* #a69797; */
 }
 
 .monaco-editor.vs .token.madoko.attrs,
@@ -887,7 +886,7 @@ div.boxed {
 .monaco-editor.vs .token.madoko.link,
 .monaco-editor.vs .token.madoko.entity,
 .monaco-editor.vs .token.madoko.escape.definition {  
-  color: #836d6d;
+  color: #817676; /* #836d6d; */
 }
 
 .monaco-editor.vs .token.code { 
@@ -902,6 +901,10 @@ div.boxed {
 .monaco-editor.ivory, .monaco-editor.ivory .lines-decorations {
   background-color: Floralwhite;
 }
+.monaco-editor.ivory .line-numbers {
+  background-color: Gainsboro;
+}
+
 
 .monaco-editor.ivory .latex.token.delimiter,
 .monaco-editor.ivory .latex.token { 
