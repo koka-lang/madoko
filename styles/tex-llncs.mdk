@@ -1,0 +1,8 @@
+Description :
+    Madoko settings for the LLNCS LaTeX document class.
+Doc Class   : llncs.cls
+Bib Style   : splncs03.bst
+Heading Base: 2
+Tex Header  :    
+    \pagestyle{plain}
+    \renewcommand{\mdBibBefore}{\vspace{-4ex}}
