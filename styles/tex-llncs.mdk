@@ -5,4 +5,3 @@ Bib Style   : splncs03.bst
 Heading Base: 2
 Tex Header  :    
     \pagestyle{plain}
-    \renewcommand{\mdBibBefore}{\vspace{-4ex}}
