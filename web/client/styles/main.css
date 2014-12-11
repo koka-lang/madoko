@@ -898,11 +898,14 @@ div.boxed {
    ivory theme
    ----------------------------------------- */
 
-.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations {
+.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations, .monaco-editor.ivory .current-line {
   background-color: Floralwhite;
 }
 .monaco-editor.ivory .line-numbers {
   background-color: Gainsboro;
+}
+.monaco-editor.ivory .current-line {
+  border: 2px solid #EEE;
 }
 
 
