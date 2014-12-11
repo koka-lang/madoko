@@ -68,8 +68,8 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
   Rule("ielipsis",  regex(@"^\.\.\."), inlineDots ),
   
-  Rule("texinline", regex(@"^\$((?:[^\\\$]|\\.)+)\$(?:" + attrs + ")?"), inlineMath ),
-  Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\.|\$[^\$])*)\$\$]"), inlineMathBlock ),
+  Rule("texinline", regex(@"^\$((?:[^\\\$]|\\[\s\S])+)\$(?:" + attrs + ")?"), inlineMath ),
+  Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$]"), inlineMathBlock ),
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
 
   Rule("textcite",  regex(@"^([\n ]*)(([\-+!]?)@" + rxCitename + ")"), inlineCite ),
@@ -680,9 +680,9 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
 }
 
 function mathUnline( txt : string ) {
-  txt.replaceAll(rxNl,"")  // allow line breaks in inline-math
+  txt.replaceAll(rxCont,"$1")  // allow line breaks in inline-math
 }
-val rxNl = regex(@"\\?\n[ \t]*")  
+val rxCont = regex(@"(\\%)|(?:%.*)?\n[ \t]*")  
 
 // Format a citation link
 function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs ) : string 
