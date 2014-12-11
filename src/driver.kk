@@ -323,7 +323,7 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
 function writeCitations( auxData : string, bibData : string, auxName : string, docName : string, opts : options, required : bool ) : io bool {
-  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle.noext else "plainnat"
+  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle.basename.noext else "plainnat"
       
   val oldData = readTextFileDef(auxName,"",required)
   val initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")
