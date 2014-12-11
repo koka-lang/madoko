@@ -59,7 +59,7 @@ public struct options(
   
   packages : string = "madoko",  // link to latex packages (.sty)
   packagesx: string = "",        // packages in non-math mode only
-  docClass : string = "book",    // latex document class (.cls)
+  docClass : string = "",        // latex document class (.cls)
   
   author   : list<string> = [],
   affiliation: list<string> = [],
