@@ -86,7 +86,7 @@ function defaultMeta( options : options ) : string {
       @"~Remark   : .block before='[**Remark**. ]{.remark-before}&nl;'",
       @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
 
-      @"~Framed   : border-style=solid border-color=black border-width=1px",
+      @".Framed   : border-style=solid border-color=black border-width=1px",
       @"~Center   : .align-center",
 
       @"~Pre      : input=pre .para-block",
