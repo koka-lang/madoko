@@ -406,6 +406,10 @@ body.madoko.preview {
 }
 .madoko h5, .madoko h6 { 
   margin-top: 1ex;
+  font-size: 0.9em;
+}
+.madoko h5 { 
+  margin-bottom: 0.5ex;
 }
 .madoko h6 { 
   margin-bottom: 0pt;

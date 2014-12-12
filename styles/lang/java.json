@@ -8,9 +8,6 @@
   "blockCommentStart": "/*",
   "blockCommentEnd":   "*/",
 
-  
-  
-
   "keywords": [
     "abstract", "continue", "for", "new", "switch", "assert", "default", 
     "goto", "package", "synchronized", "boolean", "do", "if", "private", 
@@ -20,10 +17,14 @@
     "interface", "static", "void", "class", "finally", "long", "strictfp", 
     "volatile", "const", "float", "native", "super", "while", "true", "false"
   ],
+  
+  "extraKeywords": [],
 
   "typeKeywords": [
     "boolean", "double", "byte", "int", "short", "char", "void", "long", "float"
   ],
+
+  "extraTypeKeywords": [],
 
   "operators": [
     "=", ">", "<", "!", "~", "?", ":", 
@@ -32,49 +33,33 @@
     ">>", ">>>", "+=", "-=", "*=", "/=", "&=", "|=", 
     "^=", "%=", "<<=", ">>=", ">>>="
   ],
-
   
+  "extraOperators": [],
   "symbols":  "[=><!~?:&|+\\-*\\/\\^%]+",
   "escapes":  "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
-    
-  
   "tokenizer": {
     "root": [
-      
-      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword",
+      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword.type",
+                                   "@extraTypeKeywords": "keyword.type.extra",
                                    "@keywords": "keyword",
+                                   "@extraKeywords": "keyword.extra",
                                    "@default": "identifier" } }],
       ["[A-Z][\\w\\$]*", "type.identifier" ],  
-      
-      
       { "include": "@whitespace" },
-      
-      
       ["[{}()\\[\\]]", "@brackets"],
       ["[<>](?!@symbols)", "@brackets"],
       ["@symbols", { "cases": { "@operators": "operator", 
+                              "@extraOperators": "operator.extra", 
                               "@default"  : "" } } ],
-
-      
-      
-      
       ["@\\s*[a-zA-Z_\\$][\\w\\$]*", { "token": "meta", "log": "meta token: $0" }], 
-      
-      
       ["\\d*\\.\\d+([eE][\\-+]?\\d+)?[fFdD]?", "number.float"],
       ["0[xX][0-9a-fA-F_]*[0-9a-fA-F][Ll]?", "number.hex"],
       ["0[0-7_]*[0-7][Ll]?", "number.octal"],
       ["0[bB][0-1_]*[0-1][Ll]?", "number.binary"],
       ["\\d+[lL]?", "number"],
-
-      
       ["[;,.]", "delimiter"],
-      
-      
       ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
       ["\"",  "string", "@string" ],
-      
-      
       ["'[^\\\\']'", "string"],
       ["(')(@escapes)(')", ["string","string.escape","string"]],
       ["'", "string.invalid"]
@@ -88,7 +73,6 @@
 
     "comment": [
       ["[^\\/*]+", "comment" ],
-      
       ["\\/\\*",    "comment.invalid" ],
       ["\\*/",    "comment", "@pop"  ],
       ["[\\/*]",   "comment" ]
