@@ -69,7 +69,7 @@ function rootInfo() {
 }
 
 function _getListing( folderId ) {
-  return onedrive.requestGET( { url: folderId + "/files", timeout: 5000, cache: 30000 } ).then( function(res) {
+  return onedrive.requestGET( { url: folderId + "/files", timeout: 5000 } ).then( function(res) {
     return res.data || [];
   });
 }
