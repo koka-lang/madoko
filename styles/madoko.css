@@ -396,7 +396,7 @@ body.madoko.preview {
   text-align: justify;
 }
 
-/* style headings nicer */
+/* style headings nicer, especially h5 and h6 */
 .madoko h1, .madoko h2, .madoko h3, .madoko h4 { 
   margin-top: 1.22em; 
   margin-bottom: 1ex;
@@ -406,6 +406,13 @@ body.madoko.preview {
 }
 .madoko h5, .madoko h6 { 
   margin-top: 1ex;
+  font-size: 1em;
+}
+.madoko h5 { 
+  margin-bottom: 0.5ex;
+}
+.madoko h5 + p {
+  margin-top: 0.5ex;
 }
 .madoko h6 { 
   margin-bottom: 0pt;
