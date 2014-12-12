@@ -179,10 +179,10 @@ function pushFile( path, content ) {
 ---------------------------------------------- */
 
 function createAt( folder ) {
-  return login().then( function() {
+  return onedrive.login().then( function() {
     return ensurePath(folder);
   }).then( function(info) {
-    return new Onedrive(info.id,folder);
+    return new Onedrive(folder);
   });
 }
 

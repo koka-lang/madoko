@@ -18,6 +18,7 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
 
 var remotes = {
   dropbox: Dropbox,
+  onedrive: Onedrive,
   github: Github,
   http: HttpRemote,
   local: LocalRemote,
