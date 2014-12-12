@@ -20,10 +20,14 @@
     "interface", "static", "void", "class", "finally", "long", "strictfp", 
     "volatile", "const", "float", "native", "super", "while", "true", "false"
   ],
+  
+  "extraKeywords": [],
 
   "typeKeywords": [
     "boolean", "double", "byte", "int", "short", "char", "void", "long", "float"
   ],
+  
+  "extraTypeKeywords": [],
 
   "operators": [
     "=", ">", "<", "!", "~", "?", ":", 
@@ -32,6 +36,10 @@
     ">>", ">>>", "+=", "-=", "*=", "/=", "&=", "|=", 
     "^=", "%=", "<<=", ">>=", ">>>="
   ],
+  
+  "keywordOperators": [],
+  "typeOperators": [],
+  "extraOperators": [],
 
   
   "symbols":  "[=><!~?:&|+\\-*\\/\\^%]+",
@@ -41,8 +49,10 @@
   "tokenizer": {
     "root": [
       
-      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword",
+      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword.type",
+                                   "@extraTypeKeywords": "keyword.type.extra",
                                    "@keywords": "keyword",
+                                   "@extraKeywords": "keyword.extra",
                                    "@default": "identifier" } }],
       ["[A-Z][\\w\\$]*", "type.identifier" ],  
       
@@ -53,6 +63,9 @@
       ["[{}()\\[\\]]", "@brackets"],
       ["[<>](?!@symbols)", "@brackets"],
       ["@symbols", { "cases": { "@operators": "operator", 
+                              "@keywordOperators": "operator.keyword",
+                              "@typeOperators": "operator.type",
+                              "@extraOperators": "operator.extra",
                               "@default"  : "" } } ],
 
       
