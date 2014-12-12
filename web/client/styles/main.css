@@ -803,8 +803,12 @@ div.boxed {
   font-weight: bold;
 }
 
-.monaco-editor .token.madoko.keyword.heading {
+.monaco-editor .token.madoko.keyword.heading.level1,
+.monaco-editor .token.madoko.keyword.heading.level2 {
   font-size: 1.4em;  
+}
+.monaco-editor .token.madoko.keyword.heading.level3 {
+  font-size: 1.2em;  
 }
 
 .monaco-editor .token.escape,
