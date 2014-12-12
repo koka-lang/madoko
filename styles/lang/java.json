@@ -49,10 +49,10 @@
   "tokenizer": {
     "root": [
       
-      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword.type",
-                                   "@extraTypeKeywords": "keyword.type.extra",
-                                   "@keywords": "keyword",
+      ["[a-z_$][\\w$]*", { "cases": { "@extraTypeKeywords": "keyword.type.extra",
+                                   "@typeKeywords": "keyword.type",
                                    "@extraKeywords": "keyword.extra",
+                                   "@keywords": "keyword",
                                    "@default": "identifier" } }],
       ["[A-Z][\\w\\$]*", "type.identifier" ],  
       
@@ -62,10 +62,10 @@
       
       ["[{}()\\[\\]]", "@brackets"],
       ["[<>](?!@symbols)", "@brackets"],
-      ["@symbols", { "cases": { "@operators": "operator", 
-                              "@keywordOperators": "operator.keyword",
+      ["@symbols", { "cases": { "@keywordOperators": "operator.keyword",
                               "@typeOperators": "operator.type",
                               "@extraOperators": "operator.extra",
+                              "@operators": "operator", 
                               "@default"  : "" } } ],
 
       
