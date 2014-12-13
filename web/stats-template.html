@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 
@@ -84,7 +85,7 @@ table tr:nth-child(even), table thead tr {
 <h2>Top Users</h2>
 <div id="users"></div>
 
-</page>
+</div>
 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
@@ -137,6 +138,9 @@ table tr:nth-child(even), table thead tr {
   }
 
   function drawCharts() {
+    var statsStr = document.getElementById("stats").textContent;
+    stats = JSON.parse(decodeURIComponent(statsStr));
+
     var date = new Date(stats.date);
     document.getElementById("date").innerHTML = date.toUTCString() + "<span class='local-time'>(local time: " + date.toLocaleString() + ")</span>";
     document.getElementById("userCount").innerHTML = stats.userCount;
@@ -157,8 +161,10 @@ table tr:nth-child(even), table thead tr {
     rows("users", { name: "name", remote: "remote", count: "reqCount", minutes: "workTime", editTime: "editTime", viewTime: "viewTime"  }, stats.users );
   }
  
-  var stats = <STATS>;
+var stats = {};
 </script>
+
+<pre id="stats" style="display:none">STATSHERE</pre>
 
 
 </body>

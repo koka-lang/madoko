@@ -235,7 +235,7 @@ function writeStats( fname, obj ) {
   return readFile("stats-template.html",{encoding:"utf-8"}).then( function(content) {
   	var json = JSON.stringify(obj);
   	JSON.parse(json);
-    content = content.replace("<STATS>",json);
+    content = content.replace(/\bSTATSHERE\b/i,encodeURIComponent(json));
     return writeFile(fname,content);
   });
 }
