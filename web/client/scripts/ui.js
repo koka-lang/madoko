@@ -638,6 +638,7 @@ var UI = (function() {
           else { // force login if not connected
             if (self.settings.autoSync && self.state === State.Normal) { 
               if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
+                self.lastSync = Date.now(); // set last sync so we won't popup too many dialogs..
                 self.synchronize(self.storage.remote.canCommit); // pull only?
               }
             }
@@ -3990,7 +3991,7 @@ var symbolsMath = [
   UI.prototype.synchronize = function(pullOnly) {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
-      if (!self.isConnected && login) {
+      if (!self.isConnected) {
         return self.login().then( function() {  
           return self._synchronize(pullOnly); 
         });
