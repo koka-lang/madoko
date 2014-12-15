@@ -457,13 +457,14 @@ var Storage = (function() {
     
     // First sort in order of relevance and size
     var infos = [];
+    var standardFiles = ["madoko.css"];
     self.files.forEach( function(path,file) {
       if (file.nosync) return;
       infos.push({
         path: path,
         mime: file.mime,
         len : file.content.length + file.original.length,
-        vital: (Util.isTextMime(file.mime) && !Util.hasGeneratedExt(path)),
+        vital: (Util.isTextMime(file.mime) && !Util.hasGeneratedExt(path)) || Util.contains(standardFiles,Util.basename(path)),
       });
     });
     function weight(info) {
