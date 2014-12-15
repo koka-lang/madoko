@@ -415,6 +415,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     bbl: "text/tex",
     aux: "text/tex",
     dimx: "text/plain",
+    dim: "text/plain",
     log: "text/plain",
 
     png:  "image/png",
@@ -458,7 +459,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (startsWith(mime,"image/") || mime=="application/pdf");
   }
   
-  var generatedExts = [".bbl",".dimx",".aux",".dvi",".pdf",".html",".log"].join(";");
+  var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
   function hasGeneratedExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;
