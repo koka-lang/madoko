@@ -777,12 +777,13 @@ var Storage = (function() {
     });    
   }
 
+  var rootExts = [".pdf",".dim",".dimx",".html",".tex"];
   function isRoot( fpath, roots ) {
     if (Util.contains(roots,fpath)) return true;
     if (Util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
       if (Util.contains(roots,fpath.substr(4))) return true;
     }
-    if (Util.extname(fpath) === ".pdf" || Util.extname(fpath) === ".html" || Util.extname(fpath) === ".tex") return true;
+    if (Util.contains(rootExts,Util.extname(fpath))) return true;
     return false;
   }
 
