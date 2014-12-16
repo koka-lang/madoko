@@ -1129,7 +1129,8 @@ div.pinned.boxed.menu {
 }
 
 #users-panel {
-  width: 10em;
+  width: 12em;
+  font-size: 90%;
 }
 
 
