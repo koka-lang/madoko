@@ -1384,7 +1384,13 @@ var httpApp = express();
 
 httpApp.use(function(req, res, next) {
   logRequest(req,"http-redirection");
-  res.redirect("https://" + (req.hostname || req.host) + req.path);
+  // don't allow queries
+  if (req.url.indexOf("?") >= 0) { 
+    res.status(403).send("Can only serve through secure connections.");
+  }
+  else {
+    res.redirect("https://" + (req.hostname || req.host) + req.path); 
+  }
 });
 
 http.createServer(httpApp).listen(80);
