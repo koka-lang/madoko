@@ -79,11 +79,11 @@ table tr:nth-child(even), table thead tr {
 <h2>Recent errors</h2>
 <div id="errors"></div>
 
-<h2>Recent scans</h2>
-<div id="scans"></div>
-
 <h2>Top Users</h2>
 <div id="users"></div>
+
+<h2>Recent scans</h2>
+<div id="scans"></div>
 
 </div>
 
@@ -156,7 +156,7 @@ table tr:nth-child(even), table thead tr {
     draw("dailyx", "max latex run","maxSTm","Maximum LaTeX job per day (in milliseconds)");
 
     rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
-    rows("scans", {url: "url", count: "count", domain:"domain", date: "date" }, stats.errors.scans );
+    rows("scans", {url: "url", count: "count", domain:"domain", ip: "ip", date: "date" }, stats.errors.scans );
     rows("domains", { count: "count", ip: "ip", domain: "domain" }, stats.domains );
     rows("users", { name: "name", remote: "remote", count: "reqCount", minutes: "workTime", editTime: "editTime", viewTime: "viewTime"  }, stats.users );
   }

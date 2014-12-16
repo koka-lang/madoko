@@ -296,12 +296,13 @@ function digestDaily(entries) {
 }
 
 function anonIP(ip) {
-	return (ip ? ip.replace(/\.\d+\s*$/, ".***") : "");
+	return ip;
+	// return (ip ? ip.replace(/\.\d+\s*$/, ".***") : "");
 }
 
 function anon(s) {
 	if (!s) return "";
-	return s.replace(/[a-zA-Z]:[\\\/][\w\-\_\.\\\/]*\bmadoko[\/\\]/,"");
+	return s.replace(/(https?:\/\/)|[a-zA-Z]:[\\\/][\w\-\_\.\\\/]*\bmadoko[\/\\]/,"$1");
 }
 
 function anonURL(s) {
@@ -338,8 +339,11 @@ function digestErrors( entries ) {
 		if (entry.type === "static-scan") {
 			if (!(/^\/(styles|preview)\/.*|\/templates\/(article|default|presentation|webpage).mdk$/.test(entry.url))) {
 				var e = scans.getOrCreate(entry.url,{ url: entry.url, domain:"", count: 0, ip:anonIP(entry.ip), });
-				e.domain += anonDomain(entry.domains || entry.domain);
+				var dom = anonDomain(entry.domains || entry.domain);
+				if (!e.domain) e.domain = dom;
+				else if (e.domain != dom) e.domain += "," + dom;
 				e.date = entry.date;
+				e.ip   = anonIP(entry.ip);
 				e.count++;
 			}
 		}
@@ -383,26 +387,27 @@ function digestDomains(entries) {
 	return reverse(domains.elems()).sort( function(x,y) { return y.count - x.count; }).slice(0,25);
 }
 
+function dnsReverse( ip ) {
+	return new Promise( function(cont) {
+		dns.reverse( ip, cont );		
+	});
+}
+
 function resolveDomains(entries) {
 	return Promise.when( entries.map( function(entry) {
 		if (entry.domain || !entry.ip) return Promise.resolved();
-		try {
-			return dns.reverse(entry.ip, function(err,doms) {
-				if (err || !doms) return;
-				console.log(doms)
-				entry.domain = doms.join(",");
-			});
-		}
-		catch(exn) {
-			//entry.domain = exn.toString();
-			return Promise.resolved();
-		}
+		return dnsReverse(entry.ip).then( function(doms) {
+			if (doms) entry.domain = doms.join(",");		
+		}, function(err) {
+			return;
+		});
 	}));
 }
 
 function writeStatsPage( fname ) {
 	if (!fname) fname = "client/private/stats.html";
-	var start = Date.now();
+	console.log("stats: reading files...");
+	var start = Date.now();	
 	return parseLogs().then( function(entries) {
 		console.log("stats: total entries: " + entries.length );
 		var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
@@ -410,9 +415,11 @@ function writeStatsPage( fname ) {
 		console.log("stats: total errors: " + errors.errors.length );
 		console.log("stats: total scans: " + errors.scans.length );
 		var domains  = digestDomains(entries);
+		console.log("stats: digest users...");
 		var users   = digestUsers(xentries,true);
 		errors.errors = errors.errors.slice(0,25);
-		return resolveDomains(domains).then( function() {
+		// return resolveDomains(domains).then( function() {
+			console.log("stats: digest daily...");
 			var stats = {
 				daily: digestDaily(xentries).keyElems(),
 				errors: errors,
@@ -423,7 +430,7 @@ function writeStatsPage( fname ) {
 			};
 			console.log("stats: total time: " + (Date.now() - start).toString() + " ms");
 			return writeStats( fname, stats );
-		});
+		//});
 	}).then( function() {
 		console.log("updated stats.");
 	}, function(err) {
