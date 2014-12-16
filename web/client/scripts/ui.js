@@ -1693,8 +1693,8 @@ var UI = (function() {
     }
     */
     div.innerHTML = 
+      (finals.length > 0 ? "<div class='exported'>" + finals.sort().join("\n") + "</div><hr/>" : "") +
       files.sort().join("\n") + 
-      (finals.length > 0 ? "<hr/><div class='exported'>" + finals.sort().join("\n") + "</div>" : "") +
       (images.length > 0 || generated.length > 0 ? 
           "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
   }
