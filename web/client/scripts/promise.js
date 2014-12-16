@@ -145,15 +145,7 @@ define([],function() {
     Promise.whenBatched = function(promises,batch) { 
       return promiseWhenBatched(promises,batch);
     }
-
-    Promise.timeout = function(msecs,err) {
-      var self = this;
-      setTimeout( function() {
-        if (!self.completed) self.reject(err || "Asynchronous operation timed out.");
-      }, msecs );
-      return self;
-    }
-
+    
     Promise.createQueue = function() {
       return new Queue();
     }
@@ -213,6 +205,14 @@ define([],function() {
       catch(exn) {
         return Promise.rejected(exn);
       }
+    }
+
+    Promise.prototype.timeout = function(msecs,err) {
+      var self = this;
+      setTimeout( function() {
+        if (!self.completed) self.reject(err || "Asynchronous operation timed out.");
+      }, msecs );
+      return self;
     }
 
     Promise.prototype.always = function( action ) {
