@@ -822,8 +822,12 @@ var Storage = (function() {
     if (!self.remote.canSync) return Promise.resolved(true); // can happen during generateHTML/PDF
 
     return self.login(self.isSynced()).then( function() {      
-      var syncs = self.files.elems().map( function(file) { return self._syncFile(diff,cursors,merges,file,pullOnly); } );
-      return Promise.when( syncs ).then( function(res) {
+      var syncs = self.files.elems().map( function(file) { 
+        return (function() { 
+          return self._syncFile(diff,cursors,merges,file,pullOnly); 
+        }); 
+      });
+      return Promise.whenBatched( syncs, 5 ).then( function(res) {
         Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
         return true;
       }, function(err) {
@@ -1052,10 +1056,12 @@ var Storage = (function() {
           Util.message( "Pulled from server, but no document changes", Util.Msg.Info );
         }
         else {
-          var syncs = info.updates.map( function(item) { 
-                        return self._pullUpdate(diff,cursors,merges,item); 
+          var syncs = info.updates.map( function(item) {
+                        return (function() {
+                          return self._pullUpdate(diff,cursors,merges,item); 
+                        });
                       });
-          return Promise.when( syncs ).then( function(res) {
+          return Promise.whenBatched( syncs, 5 ).then( function(res) {
             Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getDisplayFolder(), Util.Msg.Info );
             return true;
           }, function(err) {

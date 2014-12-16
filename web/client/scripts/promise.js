@@ -20,27 +20,49 @@ define([],function() {
 
   function promiseWhen() {
     var ps = (arguments.length > 1 ? Array.prototype.slice.call(arguments) : (arguments[0] ? arguments[0] : []));
+    return promiseWhenBatched(ps);
+  }
+
+  function promiseWhenBatched(ps,batch) {
+    if (ps==null) ps = [];
     var total = ps ? ps.length : 0;
     var count = 0;
     var result = [];
     var error = null;
     var continuation = new Promise();
+    if (batch==null || typeof batch !== "number" || batch <= 0) batch = total;
 
+    var top = 0;
     function setup(i) {
+      if (i >= total) return;
       result[i] = undefined;
-      ps[i].then( function(res) {
-        result[i] = res; 
+      if (top <= i) top = i+1;
+      try {
+        if (ps[i] == null) return done();
+      
+        if (!(ps[i].then)) {
+          ps[i] = ps[i]();  // call anonymous function for a batched when.
+        }
+
+        ps[i].then( function(res) {
+          result[i] = res; 
+          done();
+        }, function(err) {
+          error = err; 
+          done();
+        });    
+      }
+      catch(exn) {
+        error = exn;
         done();
-      }, function(err) {
-        error = err; 
-        done();
-      });    
+      }
     }
     
     function done() {
       count++;
       if (count<total) {
         if (total > 0) continuation.progress( count/total );
+        if (top < total) setup(top); // for batched when, initiate next promise
       }
       else if (error) {
         continuation.reject(error);
@@ -54,7 +76,8 @@ define([],function() {
       delayed( function() { continuation.resolve(result); } );
     }
     else {      
-      for(var i = 0; i < total; i++) {
+      var n = (batch < total ? batch : total);
+      for(var i = 0; i < n; i++) {
         setup(i);
       }
     }
@@ -118,6 +141,9 @@ define([],function() {
 
     Promise.when = function(promises) { 
       return promiseWhen(promises);
+    }
+    Promise.whenBatched = function(promises,batch) { 
+      return promiseWhenBatched(promises,batch);
     }
 
     Promise.createQueue = function() {
