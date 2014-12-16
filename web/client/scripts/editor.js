@@ -75,12 +75,14 @@ var ReplaceCommandWithSelection = (function (_super) {
     })(ReplaceCommand.ReplaceCommand);
 
 function diff( original, modified ) {
-  var originalModel = Monaco.Editor.createModel(original, "text/plain");
-  var modifiedModel = Monaco.Editor.createModel(modified, "text/plain"); 
-  var diffSupport   = modifiedModel.getMode().diffSupport;
-  var diff = diffSupport.computeDiff( 
-                originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );
-  return new Promise(diff); // wrap promise
+  return Promise.do( function() {
+    var originalModel = Monaco.Editor.createModel(original, "text/plain");
+    var modifiedModel = Monaco.Editor.createModel(modified, "text/plain"); 
+    var diffSupport   = modifiedModel.getMode().diffSupport;
+    var diff = diffSupport.computeDiff( 
+                  originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );    
+    return new Promise(diff).timeout(5000,new Error("Diff operation timed out")); // wrap promise
+  });
 }
 
 

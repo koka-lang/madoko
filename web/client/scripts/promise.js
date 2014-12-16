@@ -146,6 +146,14 @@ define([],function() {
       return promiseWhenBatched(promises,batch);
     }
 
+    Promise.timeout = function(msecs,err) {
+      var self = this;
+      setTimeout( function() {
+        if (!self.completed) self.reject(err || "Asynchronous operation timed out.");
+      }, msecs );
+      return self;
+    }
+
     Promise.createQueue = function() {
       return new Queue();
     }
