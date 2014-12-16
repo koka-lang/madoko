@@ -517,7 +517,10 @@ var logev  = log; // new Log("log-event");
 function logRequest(req,msg) {
   var date = new Date().toISOString() ;
   dns.reverse( req.ip, function(err,doms) {
-    if (err) doms = null;
+    if (err) doms = [];
+    var mdoms = new Map();
+    doms.forEach( function(dom) { mdoms.set(dom,true); } );
+    doms = mdoms.keys();
     log.entry( { type: msg, ip: req.ip, url: req.url, domains: doms, date: date });
   });
 }
@@ -1339,6 +1342,12 @@ function staticPage(req,res,next) {
   if (!staticDirs.test(dir)) {
     logRequest(req,"static-scan");
   }
+  // don't allow queries
+  var props = properties(req.query);
+  if !(props == null || props.length === 0 || (props.length===1 && props["nocache"])) {
+    onError( req, res, { httpCode: 403, message: "Sorry, queries are not allowed on this resource." } );
+    return;
+  }
   pagesCount++;
   pages.set(req.path, 1 + pages.getOrCreate(req.path,0));
   return (mode===Mode.Maintenance ? staticMaintenance : staticClient)(req,res,next);
@@ -1347,7 +1356,7 @@ function staticPage(req,res,next) {
 app.use('/private', function(req,res,next) {
   console.log("private request: " + req.url)
   if (!privateIps.test(req.ip)) {
-    onError( req, res, { httpCode: 401, message: "sorry, ip " + req.ip + " is not allowed access to private data" } );
+    onError( req, res, { httpCode: 403, message: "sorry, ip " + req.ip + " is not allowed access to private data" } );
   }
   else {
     return staticPage(req,res,next);
