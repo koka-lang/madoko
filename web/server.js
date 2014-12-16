@@ -1344,7 +1344,7 @@ function staticPage(req,res,next) {
   }
   // don't allow queries
   var props = properties(req.query);
-  if !(props == null || props.length === 0 || (props.length===1 && props["nocache"])) {
+  if (!(props == null || props.length === 0 || (props.length===1 && props[0] === "nocache"))) {
     onError( req, res, { httpCode: 403, message: "Sorry, queries are not allowed on this resource." } );
     return;
   }
