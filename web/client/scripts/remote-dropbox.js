@@ -103,7 +103,10 @@ function createFolder( dirname ) {
 function getShareUrl( fname ) {
   var url = sharesUrl + encodeURIPath(fname);
   return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
-    return (info.url || null);
+    if (!info.url) return null;
+    var share = info.url;
+    if (Util.extname(fname) === ".html") share = share.replace(/\bdl=0\b/,"dl=1");
+    return share;
   }, function(err) {
     Util.message( err, Util.Msg.Trace );
     return null;
