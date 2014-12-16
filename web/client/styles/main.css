@@ -105,6 +105,11 @@ html,body,#main {
   padding-bottom: 0.1rem;
 }
 
+.app-header.header-bar .menu {
+  font-size: 90%;
+}
+
+
 .app-footer.header-bar {
   padding-top: 0.1rem;
 }
@@ -1019,7 +1024,7 @@ div.boxed {
   top: 1.25em;
   left: 0pt;
   background-color: white;
-  max-height: 20rem;  
+  max-height: 24rem;  
   padding: 0.5ex;
   overflow-y: auto;
 }
