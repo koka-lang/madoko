@@ -939,6 +939,9 @@ var UI = (function() {
     // pinned menus
     var pin = Util.enablePinned();
 
+    // resizable panels
+    Util.enablePanels();
+
     /*
     // if first time, pin the tool menu
     if (firstTime) {

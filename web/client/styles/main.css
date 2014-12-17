@@ -126,12 +126,35 @@ html,body,#main {
 }
 
 .pane.left {
-  width: calc(53%);
+  width: calc(53% - 5px);
 }
 .pane.right {
   width: calc(47%);
 }
-
+#main-body {
+  position:relative;
+}
+.pane-divider.vertical:hover {
+  cursor: col-resize;
+}
+.pane-divider.horizontal:hover {
+  cursor: row-resize;
+}
+.pane-divider.vertical {
+  height: 100%;
+  width: 5px;
+  background-color: #135;
+  float: left;
+}
+.pane-divider.horizontal {
+  height: 5px;
+  width: 100%;
+  background-color: #135;
+}
+.pane-divider.resizing {
+  position: absolute;
+  opacity : 0.8;
+}
 #main[data-view=wide] .pane.right, #main[data-view=narrow] .pane.left {  
   width: 70%;
 }

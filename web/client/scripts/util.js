@@ -1483,7 +1483,104 @@ doc.execCommand("SaveAs", null, filename)
     return pin;
   }
 
+/*--------------------------------------------------------------------------------------------------
+  Resizeable panels
+--------------------------------------------------------------------------------------------------*/
+  function renderPanel( id, ratio ) {
+    var panel = document.getElementById(id);
+    var isVertical = (panel.getAttribute("data-panel") === "vertical");
 
+    var paneA = panel.firstElementChild;
+    var paneB = panel.lastElementChild;
+    var bar   = paneA.nextElementSibling;
+    var panelRect  = panel.getBoundingClientRect();
+    var barRect    = bar.getBoundingClientRect();
+
+    if (isVertical) {
+      var left = Math.round(panelRect.width * ratio);
+      bar.style.left = left.toFixed(0) + "px";
+      paneA.style.width = left.toFixed(0) + "px";
+      paneB.style.width = (panelRect.width - left - barRect.width).toFixed(0) + "px";
+    }
+    else {
+      var top = Math.round(panelRect.height * ratio);
+      paneA.style.height = top.toFixed(0) + "px";
+      paneB.style.height = (panelRect.height - top - barRect.height).toFixed(0) + "px";        
+    }     
+  }
+
+  function enablePanels() 
+  {
+    var info = null;
+    
+    function resizeStart(newInfo,ev) {
+      info = newInfo;      
+      info.barRect = info.bar.getBoundingClientRect();
+      info.offsetX = ev.clientX - info.barRect.left;
+      info.offsetY = ev.clientY - info.barRect.top;    
+      info.boundRect = info.bar.parentNode.getBoundingClientRect();
+      var hideid  = info.bar.getAttribute("data-hide");
+      if (hideid) {
+        info.hide = document.getElementById(hideid);
+        info.hide.style.visibility = "hidden";
+      }
+      addClassName(info.bar,"resizing");
+      moveTo( info.bar, info.barRect.left, info.barRect.top );
+      window.addEventListener( "mousemove", resizeMove, true );
+    }
+
+    function resizeMove(ev) {
+      if (!info) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      var x = info.barRect.left;
+      var y = info.barRect.top;
+      if (info.isVertical) {
+        x = ev.clientX - info.offsetX;
+        var border = 2*info.barRect.width;
+        x = Math.min(info.boundRect.width - border, Math.max(border, x));
+      }
+      else {
+        y = ev.clientY - info.offsetY;
+        var border = 2*info.barRect.height;
+        y = Math.min(info.boundRect.height - border, Math.max(border, y));
+      }
+      moveTo( info.bar, x, y );
+    }
+
+
+
+    window.addEventListener("mouseup", function(ev) {
+      if (!info) return;      
+      ev.stopPropagation();
+      ev.preventDefault();
+      window.removeEventListener("mousemove", resizeMove, true);
+      if (info.hide) info.hide.style.visibility = "visible";
+
+      var ratio = (info.bar.offsetLeft / info.boundRect.width);
+      var panelId = info.bar.parentNode.id;
+      setTimeout( function() { renderPanel( panelId, ratio ); }, 10  );
+      removeClassName(info.bar,"resizing");
+      info = null;      
+    });
+
+    [].forEach.call( document.getElementsByClassName("pane-divider"), function(bar) {
+      var info = {
+        bar   : bar,
+        pane1 : bar.previousElementSibling,
+        pane2 : bar.nextElementSibling,
+        parent : bar.parentNode,
+        isVertical : hasClassName(bar,"vertical"),
+      };
+      bar.addEventListener("mousedown", function(ev) {
+        resizeStart(info,ev);
+      });    
+    });
+  }
+
+/*--------------------------------------------------------------------------------------------------
+  Popup click hovering
+--------------------------------------------------------------------------------------------------*/
 
   function enablePopupClickHovering() 
   {
@@ -1655,6 +1752,8 @@ doc.execCommand("SaveAs", null, filename)
     //openAuthPopup: openAuthPopup,
     enablePopupClickHovering: enablePopupClickHovering,
     enablePinned: enablePinned,
+    enablePanels: enablePanels,
+
     openModalPopup: openModalPopup,
     
     //withOAuthState: generateOAuthState,
