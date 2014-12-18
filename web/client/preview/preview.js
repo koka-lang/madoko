@@ -433,6 +433,12 @@ var Preview = (function() {
     // note: add a final element to help the scrolling to the end.
     var finalElem = (typeof info.lineCount === "number" ? "<div data-line='" + info.lineCount.toFixed(0) + "'></div>" : "");
     document.body.innerHTML = info.content + finalElem;
+    // remove nopreview elements
+    [].forEach.call( document.getElementsByClassName("nopreview"), function(elem) {
+      var parent = elem.parentNode;
+      if (!parent) return;
+      parent.removeChild(elem);
+    });
     // collect inline scripts and referenced scripts
     inlineScripts = [];
     var scripts = document.body.getElementsByTagName("script");   
