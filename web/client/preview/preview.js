@@ -489,6 +489,10 @@ var Preview = (function() {
     if (typeof(Reveal) !== "undefined") {
       revealRefresh();
     }
+    // mathjax support
+    if (typeof MathJax !== "undefined") {
+      MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+    }
   });
 
   function revealRefresh( query ) {
