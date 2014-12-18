@@ -179,11 +179,16 @@ Html Header   :
     <script>    
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
-    var revealConfig = {
+    window.revealConfig = {
         controls: true,
         progress: true,
         history: false,
         center: true,
+        dependencies: [
+          { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+        ],
     };
     document.addEventListener("DOMContentLoaded", function(event) {
         if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
