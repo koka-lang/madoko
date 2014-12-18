@@ -336,16 +336,21 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       "  <title>" + escape(options.title.expand) + "</title>\n") +
    (if (options.css == "") then "" else {
       val links = options.css.expand.splitPaths
-      links.map(fun(link) { 
+      links.map(fun(xlink) { 
+        val (link,attrs) = match(xlink.find(rxScript)) {
+          Nothing   -> (xlink,attrsNone)
+          Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "link"))
+        }
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
-            "  <style>\n" + info.embedData + "\n  </style>\n"
+            "  <style " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </style>\n"
           _ -> {
             if (link.relative) then {
               log("filesRefer",link);
               log("embed",link);
             }
-            "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\">\n"             
+            "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\" " + 
+                    attrs.htmlFormat("link",False) + ">\n"             
           }
         }
       }).join 
