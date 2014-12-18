@@ -1,61 +1,71 @@
-Title 		: Madoko
+Title 	  	: Madoko
+Author      : Daan Leijen
 Heading Base: 2
 
 # Madoko -- a Fast Scholarly Markdown Processor
 
 Madoko is a fast javascript [Markdown] processor written in [Koka]
-It started out as a demo program for the new [Koka] language and
+It started out as a demo program for the new, strongly typed, [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
-Madoko is a javascript program that runs on [Node.js]. It is about 30% faster
-then [Marked] (one of the fastest Javascript markdown implementations), and
-about 8 times faster than [Showdown] and [Markdown.js]. Madoko is also
-available as a .NET executable on windows.
+Madoko can both be run local as a command-line program, or as a full
+online experience on [Madoko.net] with storage and collaboration through [dropbox] or [github].
 
-Even though Madoko is fast, the main design goal is not efficiency: I wanted
-to extend Markdown to make it suitable to create high-quality scholarly and
-industrial documents for the web and print, while maintaining John Gruber's
-Markdown philosophy of simplicity and focus on plain text readability.
+## Using Madoko
 
-Besides HTML output, also generates high-quality PDF files through LaTeX. Even
+The best experience is online at: <https://www.madoko.net>
+
+Otherwise, you can run Madoko on the command line:
+
+* Ensure you have [Node.js](http://nodejs.org) installed on your system.
+
+* Open a command line window and run the Node package manager to install Madoko:
+
+  `npm install madoko -g`
+
+and you are done. Translating a markdown document is done simply as:
+
+* `madoko -v mydoc.mdk`
+
+which generates `mydoc.html`. The `-v` flag gives more verbose output.
+To also generate a PDF file, use:
+
+* `madoko --pdf -vv --odir=out mydoc`
+
+where `--odir` puts all output files in the `out` directory. To generate
+a PDF, you need to have LaTeX installed on your system, which is also
+required for mathematics and bibliographies. We recommend the
+full [TeXLive] LaTeX system as it is available for Windows, Linux and
+MacOSX, and is used on the [Madoko.net] server as well.
+
+[TexLive]:    https://www.tug.org/texlive
+[MacTeX]:     http://tug.org/mactex/
+[Madoko.net]: https://www.madoko.net
+
+## Madoko philosophy
+
+The main design goal of Madoko is to enable light-weight creation of 
+high-quality scholarly and industrial documents for the web and print,
+while maintaining John Gruber's Markdown philosophy of simplicity and focus on
+plain text readability.
+
+The popularity of Markdown is not accidental, and it is great for writing
+prose: it is super simple and straightforward to create good looking HTML
+documents. But for more serious use Markdown falls short in several areas,
+and Madoko provides many essential additions for larger documents.
+
+Besides HTML output, Madoko also generates high-quality PDF files through LaTeX. Even
 though more Markdown implementations support this, there has been a lot of
 effort in Madoko to make the LaTeX generation robust and customizable. This
 makes it possible to write high-quality articles using just Madoko and get
 both a high-quality print format (PDF) and a good looking HTML page.
 
-For more information look at the [Madoko documentation][doc] in the `doc` directory.
+For more information look at the [Madoko manual](http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html)
 
 Have fun,
 -- Daan
 
-[Koka]: 		http://koka.codeplex.com
-[Markdown]: 	http://daringfireball.net/projects/markdown/syntax
-[Markdown.js]: 	https://github.com/evilstreak/markdown-js
-[Showdown]: 	https://github.com/coreyti/showdown
-[Marked]: 		https://github.com/chjj/marked
-[Node.js]:		http://nodejs.org	
-
-[doc]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html
-
-## Performance
-
-Aug 5th, 2013 (on an ASUS zenbook with an i5):
-```
->jake bench
-> node test --bench --gfm
-benchmarking (best of 10 times 50 repetitions on 57 files)
- madoko (bench, gfm)        : completed in 766ms.
- marked (bench, gfm)        : completed in 1157ms.
-Could not bench robotskirt.
- showdown (reuse converter) : completed in 6469ms.
- showdown (new converter)   : completed in 7110ms.
- markdown.js                : completed in 6859ms.
-
-relative to madoko:
- madoko (bench, gfm)        : 1
- marked (bench, gfm)        : 1.51x slower
- showdown (reuse converter) : 8.45x slower
- showdown (new converter)   : 9.28x slower
- markdown.js                : 8.95x slower
-```
-
+[Koka]:     http://koka.codeplex.com
+[dropbox]:  http://dropbox.com
+[github]:   http://github.com
+[markdown]: http://daringfireball.net/projects/markdown/
