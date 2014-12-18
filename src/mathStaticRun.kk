@@ -89,7 +89,8 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                     showWarnings : bool = True,
                     continue : (err : int) -> io () )
 {
-  val latexCmd = texCmd.quote + " -output-directory=" + texFile.dirname.norm.quote + 
+  val dir = texFile.dirname.norm
+  val latexCmd = texCmd.quote + " -output-directory=" + (if (dir=="") then "." else dir).quote + 
                        " -halt-on-error -interaction=batchmode" + 
                       " " + texFile.norm.quote
 
