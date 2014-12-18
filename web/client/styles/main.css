@@ -146,12 +146,12 @@ html,body,#main {
 }
 .panel.vertical>.panel-bar {
   height: 100%;
-  width: 5px;
+  width: 2px;
   background-color: #135;
   float: left;
 }
 .panel.horizontal>.panel-bar {
-  height: 5px;
+  height: 2px;
   width: 100%;
   background-color: #135;
 }
@@ -161,7 +161,7 @@ html,body,#main {
 }
 .panel.vertical>div:last-child {
   float: right;
-  width: calc(50% - 5px);
+  width: calc(50% - 2px);
 }
 .panel.vertical>div:first-child {
   float: left;
