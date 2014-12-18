@@ -194,4 +194,25 @@ Html Header   :
           console.log("Reveal intialized.");
        }
     });
+    // add support for printing:
+    // use  ?print-pdf to get a pdf-printable version (in Chrome)
+    // use  ?print-paper to get a paper-printable version.
+    revealConfig.initPrint = function() {
+      var cssLink = null;
+      if (/\bprint-pdf\b/i.test(window.location.search)) {
+        cssLink = "&reveal-url;/css/print/pdf.css";
+      }
+      else if (/\bprint-paper\b/i.test(window.location.search)) {
+        cssLink = "&reveal-url;/css/print/paper.css";
+      }
+      if (cssLink) {
+        var link  = document.createElement( "link" );
+        link.rel  = "stylesheet";
+        link.type = "text/css";
+        link.href = cssLink;
+        var head = document.getElementsByTagName( 'head' )[0];
+        if (head) head.appendChild( link );
+      }
+    };
+    revealConfig.initPrint();
     </script>
