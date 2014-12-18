@@ -212,9 +212,6 @@ var UI = (function() {
       autoSync         : true,
     };
     var defaultSettings = Util.extend( Util.copy(defaultCheckBoxes), {
-      //theme            : "vs",
-      //fontScale        : "medium",      
-      //viewMode         : "normal",
       viewFull         : false,
     });
 
@@ -245,7 +242,6 @@ var UI = (function() {
     self.updateSettings( {
       theme            : "vs",
       fontScale        : "medium",      
-      viewMode         : "normal",
     });
     
     self.updateSettings( Util.jsonParse(json,{}) );
@@ -285,6 +281,9 @@ var UI = (function() {
     var oldValue = self.settings[name];
     if (oldValue === value) return;
 
+    // ignore legacy
+    if (name==="viewMode") return;
+
     // set value
     self.settings[name] = value;
     self.saveSettings();
@@ -319,14 +318,11 @@ var UI = (function() {
       }
       self.app.setAttribute("data-fontscale",value);
     }
-    else if (name==="viewMode") {
-      self.app.setAttribute("data-view",value);
-      self.dispatchViewEvent( { eventType: "view", view: value } );
-    }
     else if (name==="viewFull") {
-      var view = value ? "full" : self.settings.viewMode;
+      var view = value ? "full" : "normal";
       self.app.setAttribute("data-view",view);
-      self.dispatchViewEvent( { eventType: "view", view: view } );
+      self.dispatchViewEvent( { eventType: "view", view: view } );      
+      setTimeout( function(ev) { Util.dispatchEvent(window,"resize"); }, 100 );
     }
   }
 
@@ -378,6 +374,9 @@ var UI = (function() {
       });
     }
 
+    // resizable panels
+    self.panels = Util.enablePanels();
+
     // start editor
     self.editor = Editor.create(document.getElementById("editor"), {
       value: content,
@@ -389,7 +388,7 @@ var UI = (function() {
       tabSize: 2,
       insertSpaces: true,
       wrappingColumn: (self.settings.wrapLines ? 0 : -1),
-      automaticLayout: true,
+      //automaticLayout: true,
       glyphMargin: true,
       scrollbar: {
         vertical: "auto",
@@ -401,6 +400,11 @@ var UI = (function() {
         //arrowSize: 10,
       }
     });    
+
+    Util.onResize( function() {
+      self.editor.layout();      
+      self.syncView({force: true});
+    });
     
     // synchronize on scrolling
     self.syncInterval = 0;
@@ -421,6 +425,9 @@ var UI = (function() {
         //scroll();
       }
     });  
+
+
+
     
     self.changed = false;
     self.lastEditChange = 0;
@@ -871,39 +878,6 @@ var UI = (function() {
     document.getElementById("view-full").onclick = function(ev) {
       toggleFullView();
     }
-    document.getElementById("view-narrow").onclick = function(ev) {
-      self.updateSettings({viewMode:"narrow"});
-    }
-    document.getElementById("view-normal").onclick = function(ev) {
-      self.updateSettings({viewMode:"normal"});
-    }
-    document.getElementById("view-wide").onclick = function(ev) {
-      self.updateSettings({viewMode:"wide"});
-    }
-
-    /*
-    var fullh = document.getElementById("fullview-header");
-    var fullTimeout = null;
-    function fullHeaderCollapse() {
-      fullTimeout = window.setTimeout( function() {
-        Util.addClassName(fullh,"collapsed");        
-      }, 3000 );
-    };
-    function fullHeaderStart() {
-      Util.removeClassName(fullh,"collapsed");
-      fullHeaderCollapse();
-    }
-    fullh.addEventListener("mouseout", function() {
-      fullHeaderCollapse();
-    });
-    fullh.addEventListener("mouseover", function() {
-      if (fullTimeout) {
-        window.clearTimeout(fullTimeout);
-        fullTimeout = null;
-      }
-      Util.removeClassName(fullh,"collapsed");
-    });
-    */
     
     // font size
     document.getElementById("font-small").onclick = function(ev) {
@@ -938,9 +912,6 @@ var UI = (function() {
     
     // pinned menus
     var pin = Util.enablePinned();
-
-    // resizable panels
-    Util.enablePanels();
 
     /*
     // if first time, pin the tool menu

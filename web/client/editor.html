@@ -147,12 +147,6 @@
             <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
          <hr/>
          <div>
-          <span class="menu-label">View:</span> 
-            <span id="view-wide" class="button"><img src="images/icon-view-wide.png"/> Wide</span>
-            <span id="view-normal" class="button"><img src="images/icon-view-normal.png"/> Normal</span>
-            <span id="view-narrow" class="button"><img src="images/icon-view-narrow.png"/>&thinsp;Narrow</span>
-         </div>
-         <div>
           <span class="menu-label">Theme:</span> 
             <span id="theme-zen" class="button"><span class="color-box" style="background-color:#836d6d">&nbsp;</span> Autumn</span>
             <span id="theme-ivory" class="button"><span class="color-box" style="background-color:Floralwhite">&nbsp;</span> Ivory</span>
@@ -192,14 +186,13 @@
     </div>  
 </div>
 
-<div id="main-body" class="app-body panel" data-panel="vertical">
+<div id="main-body" class="app-body panel vertical" data-panel-hide="view">
   <div id="editorpane" class="pane left">
     <div class="pane-content" >
       <div id="editor" class="pane-view"></div>
     </div>
-  </div>
-  <div class="pane-divider vertical" data-hide="view"></div>
-  <div id="viewpane" class="pane right normal">
+  </div  
+  ><div id="viewpane" class="pane right normal">
       <div class="pane-content" id="view-container">
       <div id="fullview-header" class="header-bar">
         <span class="content">Madoko viewer
@@ -207,8 +200,8 @@
         </span></div>
       <iframe id="view" class="pane-view view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
     </div>
-  </div>
-</div>
+  </div
+></div>
 
 <div class="app-footer header-bar">
   <div id="view-message" class="popup no-close-on-click">

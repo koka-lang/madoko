@@ -131,43 +131,44 @@ html,body,#main {
 .pane.right {
   width: calc(47%);
 }
-#main-body {
+
+/* ------------------------------------------------------
+    panels
+----------------------------------------------------------*/
+.panel {
   position:relative;
 }
-.pane-divider.vertical:hover {
+.panel.vertical>.panel-bar:hover {
   cursor: col-resize;
 }
-.pane-divider.horizontal:hover {
+.panel.horizontal>.panel-bar:hover {
   cursor: row-resize;
 }
-.pane-divider.vertical {
+.panel.vertical>.panel-bar {
   height: 100%;
   width: 5px;
   background-color: #135;
   float: left;
 }
-.pane-divider.horizontal {
+.panel.horizontal>.panel-bar {
   height: 5px;
   width: 100%;
   background-color: #135;
 }
-.pane-divider.resizing {
+.panel-bar.resizing {
   position: absolute;
   opacity : 0.8;
 }
-#main[data-view=wide] .pane.right, #main[data-view=narrow] .pane.left {  
-  width: 70%;
-}
-#main[data-view=narrow] .pane.right, #main[data-view=wide] .pane.left {
-  width: 30%;
-}
-
-.pane.right {
+.panel.vertical>div:last-child {
   float: right;
+  width: calc(50% - 5px);
 }
-
-.pane.left {
+.panel.vertical>div:first-child {
   float: left;
+  width: 50%;
+}
+.panel.horizontal>div:first-child {
+  height: 50%;
 }
 
 
@@ -632,10 +633,15 @@ div.boxed {
 } 
 
 #main[data-view=full] #editorpane,
+#main[data-view=full] #main-body .panel-bar,
 #main[data-view=full] .pinned,
 #main[data-view=full] .app-header,
 #main[data-view=full] .app-footer {
   display: none !important;
+}
+
+#main[data-view=full] .app-body {
+  height: 100%;
 }
 
 #main[data-view=full] #viewpane {

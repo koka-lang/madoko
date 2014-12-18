@@ -810,7 +810,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       }
       else if (info.messageId === 0) {
         self.ready = true;
-        self.postqueue.forEach( function(elem) {  // post delayed messages
+        self.postqueue.forEach( function(elem) {  // post    messages
           self.postMessage( elem.info, elem.timeout ).then(elem.promise);
         });
       }
@@ -1348,6 +1348,12 @@ doc.execCommand("SaveAs", null, filename)
     return (box.width>0 && box.height>0);
   }
 
+  function isDisplayed(elem) {
+    if (!elem) return false;
+    var style = window.getComputedStyle(elem);
+    return (style.display !== "none");
+  }
+
   function moveTo( elem, x, y, boundid ) {
     if (!isVisible(elem)) return;
     var doc = getCombinedOffset(elem.parentNode);          
@@ -1375,7 +1381,7 @@ doc.execCommand("SaveAs", null, filename)
     window.addEventListener("unload", function() {
       localStorage.setItem("pinned", JSON.stringify(pinned.persist()));
     });
-    window.addEventListener("resize", function() { 
+    onResize( function() { 
       positionPinned();
     });
 
@@ -1486,9 +1492,8 @@ doc.execCommand("SaveAs", null, filename)
 /*--------------------------------------------------------------------------------------------------
   Resizeable panels
 --------------------------------------------------------------------------------------------------*/
-  function renderPanel( id, ratio ) {
-    var panel = document.getElementById(id);
-    var isVertical = (panel.getAttribute("data-panel") === "vertical");
+  function renderPanel( panel, ratio ) {
+    var isVertical = hasClassName(panel,"vertical");
 
     var paneA = panel.firstElementChild;
     var paneB = panel.lastElementChild;
@@ -1496,36 +1501,106 @@ doc.execCommand("SaveAs", null, filename)
     var panelRect  = panel.getBoundingClientRect();
     var barRect    = bar.getBoundingClientRect();
 
+    if (!isDisplayed(paneA)) {
+      if (!isDisplayed(paneB)) return;
+      ratio = 0;
+    }
+    else if (!isDisplayed(paneB)) {
+      ratio = 1.0;
+    }
+
     if (isVertical) {
       var left = Math.round(panelRect.width * ratio);
       bar.style.left = left.toFixed(0) + "px";
-      paneA.style.width = left.toFixed(0) + "px";
-      paneB.style.width = (panelRect.width - left - barRect.width).toFixed(0) + "px";
+      paneA.style.width = ratio>=1 ? "100%" : left.toFixed(0) + "px";
+      paneB.style.width = ratio<=0 ? "100%" : Math.floor(panelRect.width - left - barRect.width).toFixed(0) + "px";
     }
     else {
       var top = Math.round(panelRect.height * ratio);
-      paneA.style.height = top.toFixed(0) + "px";
-      paneB.style.height = (panelRect.height - top - barRect.height).toFixed(0) + "px";        
+      paneA.style.height = ratio>=1 ? "100%" : top.toFixed(0) + "px";
+      paneB.style.height = ratio<=0 ? "100%" : Math.floor(panelRect.height - top - barRect.height).toFixed(0) + "px";        
     }     
+  }
+
+  function onResize( action, delay ) {
+    var timeOut = null;
+    window.addEventListener("resize", function(ev) {
+      if (timeOut) {
+        window.clearTimeout(timeOut);
+      }
+      else {
+        action();
+      }
+      timeOut = setTimeout( function() {
+        timeOut = null;
+        action();
+      }, delay || 200 );
+    });
   }
 
   function enablePanels() 
   {
+    // persist panel ratios
+    var panels = Map.unpersist(jsonParse(localStorage.getItem("panels"),{}));
+    
+    // set default ratios 
+    [].forEach.call( document.getElementsByClassName("panel"), function(panel) {
+      if (!panels.contains(panel.id)) {
+        var dataRatio = panel.getAttribute("data-ratio");
+        var ratio = dataRatio ? parseFloat(dataRatio) : 0.5;
+        if (ratio==null || isNaN(ratio)) ratio = 0.5;
+        panels.set(panel.id,ratio);
+      }
+      // initialize dividers
+      var bar = document.createElement("div");
+      bar.className = "panel-bar";
+      var paneB = panel.lastElementChild;
+      panel.insertBefore(bar,paneB);
+      bar.addEventListener("mousedown", function(ev) {
+        resizeStart(panel,ev.target,ev);
+      });    
+    });
+
+    // render panels
+    renderPanels();  
+    onResize( function() {
+      renderPanels();
+    });
+
+    function renderPanels() {
+      panels.forEach( function(panelId,ratio) {
+        var panel = document.getElementById(panelId);
+        if (!panel) {
+          panels.remove(panelId);
+          return;
+        }
+        renderPanel( panel, ratio );
+      });
+      // persist panels too
+      localStorage.setItem("panels", JSON.stringify(panels.persist()));    
+    }
+
+    // react to panel resizing
     var info = null;
     
-    function resizeStart(newInfo,ev) {
-      info = newInfo;      
-      info.barRect = info.bar.getBoundingClientRect();
-      info.offsetX = ev.clientX - info.barRect.left;
-      info.offsetY = ev.clientY - info.barRect.top;    
-      info.boundRect = info.bar.parentNode.getBoundingClientRect();
-      var hideid  = info.bar.getAttribute("data-hide");
+    function resizeStart(panel,bar,ev) {
+      var barRect = bar.getBoundingClientRect();
+      info = {    
+        panel   : panel,
+        isVertical: hasClassName(panel,"vertical"),
+        bar     : bar,
+        barRect : barRect, 
+        offsetX : ev.clientX - barRect.left,
+        offsetY : ev.clientY - barRect.top,
+        boundRect: panel.getBoundingClientRect(),
+        hide    : null,
+      };
+      var hideid  = panel.getAttribute("data-panel-hide");
       if (hideid) {
         info.hide = document.getElementById(hideid);
-        info.hide.style.visibility = "hidden";
+        if (info.hide) info.hide.style.visibility = "hidden";
       }
-      addClassName(info.bar,"resizing");
-      moveTo( info.bar, info.barRect.left, info.barRect.top );
+      addClassName(bar,"resizing");
       window.addEventListener( "mousemove", resizeMove, true );
     }
 
@@ -1548,34 +1623,27 @@ doc.execCommand("SaveAs", null, filename)
       moveTo( info.bar, x, y );
     }
 
-
-
     window.addEventListener("mouseup", function(ev) {
       if (!info) return;      
       ev.stopPropagation();
       ev.preventDefault();
       window.removeEventListener("mousemove", resizeMove, true);
       if (info.hide) info.hide.style.visibility = "visible";
-
       var ratio = (info.bar.offsetLeft / info.boundRect.width);
-      var panelId = info.bar.parentNode.id;
-      setTimeout( function() { renderPanel( panelId, ratio ); }, 10  );
-      removeClassName(info.bar,"resizing");
+      panels.set(info.panel.id, ratio);
+      removeClassName(info.bar,"resizing");      
+      dispatchEvent(window,"resize");
       info = null;      
     });
 
-    [].forEach.call( document.getElementsByClassName("pane-divider"), function(bar) {
-      var info = {
-        bar   : bar,
-        pane1 : bar.previousElementSibling,
-        pane2 : bar.nextElementSibling,
-        parent : bar.parentNode,
-        isVertical : hasClassName(bar,"vertical"),
-      };
-      bar.addEventListener("mousedown", function(ev) {
-        resizeStart(info,ev);
-      });    
-    });
+    return {
+      setRatio: function(id,ratio) {
+        if (!panels.contains(id)) return;
+        panels.set(id,ratio);
+        renderPanels();
+      },
+      render: renderPanels,
+    };
   }
 
 /*--------------------------------------------------------------------------------------------------
@@ -1711,6 +1779,8 @@ doc.execCommand("SaveAs", null, filename)
     firstdirname: firstdirname,
     splitCPath  : splitCPath,
     cpathToPath : cpathToPath,
+
+    onResize: onResize,
 
     hasEmbedExt: hasEmbedExt,
     hasGeneratedExt: hasGeneratedExt,
