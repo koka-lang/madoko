@@ -49,15 +49,15 @@ public function parsePlainMeta( txt : string, fmt : formatter, modes : string, m
       (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
-      val matchMode = if (cap.groups[2] == "") then True
-                      elif (cap.groups[1] == "!") then !(fmt.matchFmt(cap.groups[2],modes))
-                      else fmt.matchFmt(cap.groups[2],modes)
+      val matchMode = if (cap.groups[1].startsWith("no")) 
+                       then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
+                       else fmt.matchFmt( cap.groups[1], modes)      
       val kvs = if (matchMode) then {
-                  val value = cap.groups[5].joinLines.trim
+                  val value = cap.groups[4].joinLines.trim
                   //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
-                  if (cap.groups.matchedOn(4))
-                   then cap.groups[3].toLower.split(",").list.map(fun(k) { (k.trim,value) })
-                   else [(cap.groups[3].normalizeId, value)]
+                  if (cap.groups.matchedOn(3))
+                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
+                   else [(cap.groups[2].normalizeId, value)]
                 }
                 else []
       val lines2 = txt.substr(0,cap.next).count("\n")
@@ -66,7 +66,8 @@ public function parsePlainMeta( txt : string, fmt : formatter, modes : string, m
   }
 } 
 val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-val metaKey = @"(?:@(!)?(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
+val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
+
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End Math&nl;' tight .para-block line-adjust=0",
