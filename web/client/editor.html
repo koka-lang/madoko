@@ -68,7 +68,7 @@
           ><span class="icon"><img src="images/icon-disk.png"/></span>Save To ...</div>        
         <hr/>      
         <div id="snapshot" class="button" title="Save a full copy of the current document in a 'snapshots/<document>-<date>' sub-folder on the cloud storage"
-          ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot</div>        
+          ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot ...</div>        
         <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
           ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure ...</div>
         <hr/>
@@ -274,11 +274,17 @@
        </ul>
        <div><input id="commit-all" type="checkbox" title="(Un)check all"></div>
     </div>
+    <div id="snapshot">
+       <p>Snapshot description:<br>
+       <input id="snapshot-message" type="text" />
+       </p>
+    </div>
   </div>
 </div>
 <div id="picker-footer" class="app-footer header-bar">
   <div id="login-info"><span id="remote-username"></span> <div id="button-signout" class="button">sign out</div></div>  
   <div id="picker-buttons">
+    <div id="button-snapshot" class="button">Save Snapshot</div>
     <div id="button-commit" class="button">Commit</div>
     <div id="button-signin" class="button">Sign in</div>
     <div id="button-discard" class="button">Discard</div>

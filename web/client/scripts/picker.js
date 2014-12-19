@@ -32,8 +32,8 @@ var Picker = (function() {
   var commitMessage = document.getElementById("commit-message");
   var commitModified = document.getElementById("commit-modified");
   var commitAll      = document.getElementById("commit-all");
-  
-  
+  var snapshotMessage  = document.getElementById("snapshot-message");
+    
   var buttons = [];
   var child = document.getElementById("picker-buttons").firstChild;
   while (child) {
@@ -107,6 +107,7 @@ var Picker = (function() {
     app.style.display= "block";
     app.focus();
     if (self.options.command==="commit") commitMessage.focus();
+    else if (self.options.command==="snapshot") snapshotMessage.focus();
   }
 
 
@@ -319,6 +320,16 @@ var Picker = (function() {
     [].forEach.call(inputs,function(input) {
       input.checked = commitAll.checked;
     });
+  }
+
+  // ------------------------------------------------------------------------------------
+  // Snapshot
+  // ------------------------------------------------------------------------------------
+  document.getElementById("button-snapshot").onclick = function(ev) { if (picker) picker.onSnapshot(); };
+
+  Picker.prototype.onSnapshot = function() {
+    var self = this;
+    picker.onEnd({message: snapshotMessage.value });
   }
 
   // ------------------------------------------------------------------------------------
@@ -554,6 +565,13 @@ var Picker = (function() {
       }).join(""); 
       commitMessage.value = "";
       commitMessage.focus();
+      return Promise.resolved();
+    }
+    else if (self.options.command === "snapshot") {
+      self.setActive();
+      //snapshotStem.textContent = (self.options.stem ? self.options.stem + " " : "");
+      snapshotMessage.value = "";
+      snapshotMessage.focus();
       return Promise.resolved();
     }
     else if (self.options.page==="template") {

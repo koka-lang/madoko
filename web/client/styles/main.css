@@ -1449,6 +1449,7 @@ x#picker.page-template #message-template {
 #picker.command-new #button-new,
 #picker.command-push #button-push,
 #picker.command-commit #button-commit,
+#picker.command-snapshot #button-snapshot,
 #picker.page-alert #button-discard,
 #picker #button-signout,
 #picker #button-cancel,
@@ -1481,16 +1482,19 @@ x#picker.page-template #message-template {
 }
 
 #picker #upload, 
-#picker #commit {
+#picker #commit,
+#picker #snapshot {
   display: none;
 }
 
 #picker.command-upload #upload,
-#picker.command-commit #commit {
+#picker.command-commit #commit,
+#picker.command-snapshot #snapshot {
   display: block;
 }
 
-#picker #commit-message {
+#picker #commit-message,
+#picker #snapshot-message {
   font-size: 1em;
   vertical-align: middle;
   width: 80%;

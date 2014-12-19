@@ -63,7 +63,7 @@ var Encoding = {
 
 function picker( storage, params ) {
   if (storage && !storage.isSynced() && 
-       !(/save|connect|signin|push|upload|commit|message/.test(params.command))) {
+       !(/save|connect|signin|push|upload|commit|snapshot|message/.test(params.command))) {
     params.page = "alert";
   }
   return Picker.show(params).then( function(res) {
@@ -177,6 +177,16 @@ function commitMessage(storage,changes,header,headerLogo) {
   };
   return picker(storage,params).then( function(res) {
     return res;
+  });
+}
+
+function snapshotMessage(storage,stem) {
+  var params = {
+    command: "snapshot",    
+    header: stem,
+  };
+  return picker(storage,params).then( function(res) {
+    return res.message;
   });
 }
 
@@ -364,26 +374,37 @@ function publishSite(  storage, docName, indexName )
       });
     });
   });
+}
+
+function getSnapshotStem(docstem) {
+  var now = new Date();
+  var month = now.getMonth()+1;
+  var day   = now.getDate();
+          
+  var stem = [docstem, 
+              now.getFullYear().toString(),
+              Util.lpad( month.toString(), 2, "0" ),
+              Util.lpad( day.toString(), 2, "0" ),
+             ].join("-");
+  return stem;
+}
+
+function folderSafe(s) {
+  return s.replace(/[^\w\-,\(\)\[\]\{\}]+/g,"-");
+}
+
+function getSnapshotFolder(stem,description,num) {             
+  return "snapshots/" + folderSafe(stem + (num ? "-v" + num.toString() : "") + (description ? "-" + description : ""));  
 }  
 
-function createSnapshotFolder(remote, docstem, stem, num ) {
-  if (!stem) {
-    var now = new Date();
-    var month = now.getMonth()+1;
-    var day   = now.getDate();
-            
-    stem = [docstem, 
-            now.getFullYear().toString(),
-            Util.lpad( month.toString(), 2, "0" ),
-            Util.lpad( day.toString(), 2, "0" ),
-           ].join("-");
-  }
-  var folder = "snapshots/" + stem + (num ? "-v" + num.toString() : "");
+function createSnapshotFolder(remote, docstem, stem, description, num ) {
+  if (!stem) stem = getSnapshotStem(docstem);
+  var folder = getSnapshotFolder(stem,description,num);
 
   return remote.createSubFolder(folder).then( function(info) {
     if (info && info.created) return info.folder;
     if (num && num >= 100) throw new Error("too many snapshot verions");  // don't loop forever...
-    return createSnapshotFolder(remote, docstem, stem, (num ? num+1 : 2));
+    return createSnapshotFolder(remote, docstem, stem, description, (num ? num+1 : 2));
   });
 }
 
@@ -391,10 +412,15 @@ function createSnapshot( storage, docName ) {
   if (!storage.remote.canSync || storage.remote.canCommit) {
     return Promise.rejected( "Cannot create snapshot on local-, readonly, or repository storage. (Use 'Save To' to save to cloud storage first)");
   }
+  var docstem =Util.stemname(docName);
+  var stem = getSnapshotStem(docstem);
+
   return storage.login().then( function() {
-    return createSnapshotFolder( storage.remote, Util.stemname(docName) );
+    return snapshotMessage(storage, storage.remote.getDisplayFolder() + "/" + getSnapshotFolder(stem)).then( function(description) {
+      return createSnapshotFolder( storage.remote, docstem, stem, description );
+    });
   }).then( function(folder) {
-    return storage.remote.createNewAt( folder );
+      return storage.remote.createNewAt( folder );
   }).then( function(toRemote) {
     var toStorage = new Storage(toRemote);
     storage.forEachFile( function(file) {
