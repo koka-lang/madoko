@@ -48,17 +48,32 @@ html,body,#main {
   background-color: white;
 }
 
+/*---------------------------------------------------------
+    theme dark
+---------------------------------------------------------*/
+
 .theme-dark .app-body {
   background-color: white;      
 }
 .theme-dark #main,
 .theme-dark .spinner.spin, 
 .theme-dark .output,
-.theme-dark .header-bar  {
+.theme-dark .header-bar,
+.theme-dark .panel-bar,
+.theme-dark div.modal {
   background-color: #135;
+  border-color: #135;
+  box-shadow-color: #135;
   border-style: none;
   color: white;
 }
+
+.theme-dark #toolbox .menu,
+.theme-dark div.modal {
+  color: #135;
+}
+
+
 .theme-dark .header-bar .menu {
   color: black;
 }
@@ -76,6 +91,51 @@ html,body,#main {
 .theme-dark .header-bar .button:hover {
   background-color: #357;
 }
+
+/*---------------------------------------------------------
+    theme steel
+---------------------------------------------------------*/
+
+.theme-steel .app-body {
+  background-color: white;      
+}
+.theme-steel #main,
+.theme-steel .spinner.spin, 
+.theme-steel .output,
+.theme-steel .header-bar,
+.theme-steel .panel-bar,
+.theme-steel div.modal {
+  background-color: #58626f;
+  border-color: #58626f;
+  box-shadow-color: #58626f;
+  border-style: none;
+  color: white;
+}
+
+.theme-steel #toolbox .menu {
+  color: #58626f;
+}
+
+.theme-steel .header-bar .menu,
+.theme-steel div.modal {
+  color: black;
+}
+.theme-steel .header-bar .menu .button:hover {
+  background-color: Gainsboro;
+}
+
+.theme-steel .monaco-editor.vs .clnr {
+  color: #666;
+}
+
+.theme-steel .popup:hover,
+.theme-steel .popup>.button:hover,
+.theme-steel .header-bar a:hover,
+.theme-steel .header-bar .button:hover {
+  background-color: #58626f;
+}
+
+
 
 #edit-select-directory {
   display: none;
@@ -147,13 +207,11 @@ html,body,#main {
 .panel.vertical>.panel-bar {
   height: 100%;
   width: 2px;
-  background-color: #135;
   float: left;
 }
 .panel.horizontal>.panel-bar {
   height: 2px;
   width: 100%;
-  background-color: #135;
 }
 .panel-bar.resizing {
   position: absolute;
@@ -171,10 +229,6 @@ html,body,#main {
   height: 50%;
 }
 
-
-#main .app-body {
-  xbackground-color: #135;
-}
 
 #main .pane-view {
   height: 100%;
@@ -366,11 +420,6 @@ span.save-link:hover {
   padding: 0em 0.5em;
 }
 
-.theme-dark #toolbox .menu {
-  color: #135;
-  border-color: #135;
-  box-shadow-color: #135;
-}
 
 #toolbox>div>div.button {
   display: inline-block;
@@ -1177,12 +1226,12 @@ div.modal {
   position: absolute; 
   left: 25%; 
   top: 25%; 
-  border: 2px solid #135;
+  border: 2px solid;
   background-color: white;
   width: 50%;
   height: 50%;
   z-index: 100; 
-
+ 
   font-family: "Segoe UI", sans-serif;
 }
 
