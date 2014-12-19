@@ -22,12 +22,12 @@ import optionsMeta
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
-  val (mdata2,rest,lineCount) = parsePlainMeta(txt, fmt, verbose=options0.verbose >= 4)
+  val (mdata2,rest,lineCount) = parsePlainMeta(txt, fmt, options0.modes, verbose=options0.verbose >= 4)
   val options1 = options0.fromMeta(mdata2)
   val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
     else { 
-      val mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, verbose=options1.verbose >= 4).fst      
+      val mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, options1.modes, verbose=options1.verbose >= 4).fst      
       val mdataFull = mdataDef + options0.metadata + mdata2
       val options2  = options0.fromMeta(mdataFull)
       options2( metadata = mdataFull)
@@ -41,7 +41,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
 
 
 
-public function parsePlainMeta( txt : string, fmt : formatter, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
+public function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
 {
   match(txt.find(rxMeta)) {
     Nothing   -> {
@@ -49,21 +49,24 @@ public function parsePlainMeta( txt : string, fmt : formatter, metadata : metada
       (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
-      val kvs = if (fmt.matchFmt(cap.groups[1])) then {
-                  val value = cap.groups[4].joinLines.trim
-                  //if (verbose) then trace("meta data:" + cap.groups[2] + ": " + value )
-                  if (cap.groups.matchedOn(3))
-                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
-                   else [(cap.groups[2].normalizeId, value)]
+      val matchMode = if (cap.groups[2] == "") then True
+                      elif (cap.groups[1] == "!") then !(fmt.matchFmt(cap.groups[2],modes))
+                      else fmt.matchFmt(cap.groups[2],modes)
+      val kvs = if (matchMode) then {
+                  val value = cap.groups[5].joinLines.trim
+                  //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
+                  if (cap.groups.matchedOn(4))
+                   then cap.groups[3].toLower.split(",").list.map(fun(k) { (k.trim,value) })
+                   else [(cap.groups[3].normalizeId, value)]
                 }
                 else []
       val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose, lines+lines2 )
+      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
     }
   }
 } 
 val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
+val metaKey = @"(?:@(!)?(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End Math&nl;' tight .para-block line-adjust=0",

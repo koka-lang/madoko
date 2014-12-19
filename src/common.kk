@@ -282,13 +282,13 @@ public function (==)( x : formatter, y : formatter ) : bool {
 }
 
 // See if a string matches the format. An empty string always matches.
-public function matchFmt( fmt : formatter, fmtstr : string ) : bool {
+public function matchFmt( fmt : formatter, fmtstr : string, modes : string = "" ) : bool {
   if (fmtstr=="") return True
   val s = fmtstr.toLower
   match(fmt) {
     FmtHtml | s == "html" -> True
     FmtTex  | s == "tex"  -> True
-    _ -> False
+    _ -> modes.split(";").list.any( fun(mode) { mode == s } )
   }
 }
 
