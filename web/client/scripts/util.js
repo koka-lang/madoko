@@ -1492,6 +1492,8 @@ doc.execCommand("SaveAs", null, filename)
 /*--------------------------------------------------------------------------------------------------
   Resizeable panels
 --------------------------------------------------------------------------------------------------*/
+  var panelBound = 10;
+
   function renderPanel( panel, ratio ) {
     var isVertical = hasClassName(panel,"vertical");
 
@@ -1510,15 +1512,15 @@ doc.execCommand("SaveAs", null, filename)
     }
 
     if (isVertical) {
-      var left = Math.round(panelRect.width * ratio);
+      var left = Math.max(panelBound, Math.min( panelRect.width - panelBound, Math.round(panelRect.width * ratio)));      
       bar.style.left = left.toFixed(0) + "px";
-      paneA.style.width = ratio>=1 ? "100%" : left.toFixed(0) + "px";
-      paneB.style.width = ratio<=0 ? "100%" : Math.floor(panelRect.width - left - barRect.width).toFixed(0) + "px";
+      paneA.style.width = left.toFixed(0) + "px";
+      paneB.style.width = Math.floor(panelRect.width - left - barRect.width).toFixed(0) + "px";
     }
     else {
-      var top = Math.round(panelRect.height * ratio);
-      paneA.style.height = ratio>=1 ? "100%" : top.toFixed(0) + "px";
-      paneB.style.height = ratio<=0 ? "100%" : Math.floor(panelRect.height - top - barRect.height).toFixed(0) + "px";        
+      var top =  Math.max(panelBound, Math.min( panelRect.height - panelBound,Math.round(panelRect.height * ratio)));
+      paneA.style.height = top.toFixed(0) + "px";
+      paneB.style.height = Math.floor(panelRect.height - top - barRect.height).toFixed(0) + "px";        
     }     
   }
 
@@ -1612,13 +1614,12 @@ doc.execCommand("SaveAs", null, filename)
       var y = info.barRect.top;
       if (info.isVertical) {
         x = ev.clientX - info.offsetX;
-        var border = 2*info.barRect.width;
-        x = Math.min(info.boundRect.width - border, Math.max(border, x));
+        x = Math.min(info.boundRect.width - panelBound, Math.max(panelBound, x));
       }
       else {
         y = ev.clientY - info.offsetY;
         var border = 2*info.barRect.height;
-        y = Math.min(info.boundRect.height - border, Math.max(border, y));
+        y = Math.min(info.boundRect.height - panelBound, Math.max(panelBound, y));
       }
       moveTo( info.bar, x, y );
     }
