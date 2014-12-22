@@ -84,6 +84,10 @@ Html Header   :
     .reveal h2 {
         margin-bottom: 0.7em;
     }
+    .reveal section ul,
+    .reveal section ol {
+        margin-top: 0.35em;
+    }
     .reveal section img.math-display {
         padding: 1em;
         box-shadow: none;
