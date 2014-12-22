@@ -190,25 +190,38 @@ Html Header   :
           { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
         ],
     };
-    document.addEventListener("DOMContentLoaded", function(event) {
-        if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
-          [].forEach.call(document.querySelectorAll( ".fragmented>li" ), function(li) {
-            if (li && !/\bfragment\b/.test(li.className)) li.className = li.className + " fragment";
-          });
-          Reveal.initialize(revealConfig);
-          console.log("Reveal intialized.");
-       }
+    function revealAddFragments(query) {
+      [].forEach.call(document.querySelectorAll( query ), function(elem0) {
+        var elem = (/^H\d$/.test(elem0.nodeName) ? elem0.parentNode : elem0);
+        [].forEach.call(elem.children, function(item) {
+          if (item==elem0) return;
+          if (item && !/\bfragment\b/.test(item.className && item.nodeType===1)) {
+            item.className = item.className + " fragment";
+          }
+        });
+      });
+    }
+    function revealOnLoad(ev) {
+      revealAddFragments(".fragmented");
+      revealAddFragments(".build");
+    }
+    document.addEventListener("load",revealOnLoad);    
+    document.addEventListener("DOMContentLoaded", function() {
+      if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
+        revealOnLoad();
+        Reveal.initialize(revealConfig);
+      }
     });
     // add support for printing:
     // use  ?print-pdf to get a pdf-printable version (in Chrome)
     // use  ?print-paper to get a paper-printable version.
     revealConfig.initPrint = function() {
       var cssLink = null;
-      if (/\bprint-pdf\b/i.test(window.location.search)) {
-        cssLink = "&reveal-url;/css/print/pdf.css";
-      }
-      else if (/\bprint-paper\b/i.test(window.location.search)) {
-        cssLink = "&reveal-url;/css/print/paper.css";
+      var bodyClass = null;
+      var cap = window.location.search.match(/\bprint-(\w+)\b/);
+      if (cap) {
+        bodyClass = cap[0];
+        cssLink = "&reveal-url;/css/print/" + cap[1] + ".css";
       }
       if (cssLink) {
         var link  = document.createElement( "link" );
@@ -217,6 +230,11 @@ Html Header   :
         link.href = cssLink;
         var head = document.getElementsByTagName( 'head' )[0];
         if (head) head.appendChild( link );
+      }
+      if (bodyClass) {
+        document.addEventListener("DOMContentLoaded", function() {
+          document.body.className = document.body.className + " " + bodyClass;
+        });
       }
     };
     revealConfig.initPrint();
