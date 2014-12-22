@@ -201,7 +201,19 @@ Html Header   :
         });
       });
     }
+    function revealQuotedList(listType) {
+      //compatibility with Rmarkdown slides
+      [].forEach.call( document.querySelectorAll("blockquote>" + listType), function(ul) {
+        ul.className = ul.className + " fragmented";
+        var quote = ul.parentNode;
+        if (quote.childElementCount===1) {
+          quote.parentNode.replaceChild(ul,quote);
+        }
+      });
+    }
     function revealOnLoad(ev) {
+      revealQuotedList("ul");
+      revealQuotedList("ol");
       revealAddFragments(".fragmented");
       revealAddFragments(".build");
     }
