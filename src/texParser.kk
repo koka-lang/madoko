@@ -18,6 +18,7 @@ import std/string
 import std/regex
 import common
 import entity
+import texCommon
 
 /* --------------------------------------
   Latex grammar 
@@ -26,29 +27,36 @@ alias texRule = rule<string,texContext>
 
 val special = @"\\{}~*_\[\]#\$`";
 
-
-
-function texnest(s:string)  = @"(?:" + texval + @"|(?:\{" + s + @"\}))"
-val texcmd   = @"\\[@a-zA-Z]+\b\s*"
-val texval   = @"(?:[^\\{}]|" + texcmd + @"|\\.\s*)"
-val texarg0  = texval + "*"
-val texarg1  = texnest(texarg0) + "*"
-val texarg2  = texnest(texarg1) + "*"
-val texarg3  = texnest(texarg2) + "*"
-val texarg   = @"(" + texnest(texarg3) + @")"
-val texargs  = @"(" + texnest(texarg3) + "*)"
-
-val optarg   = @"(?:\[([^\]]*)\])"
-val optargs  = optarg + @"*"
 val texenv1  = @"(thebibliography)"
 val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
-// captures most tex commands
-public val rxTexCmd = @"(?:\\(?:begin|end)\b\s*" + optargs + texarg + "|" + texcmd + optargs + ")"
+val texsects = ["part","chapter","section","subsection","subsubsection","paragraph"]
+val texsect  = "(" + texsects.join("|") + ")"
 
 val texGrammar : grammar<string,texContext> = [
   Rule("texnormal",   regex(@"^(?:[^" + special + "])+"), texNormal ),
+
+  /* Block elements */
+  Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
+
+  Rule("texcomment",  regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
+  Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
+  Rule("textabularx",  regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
+  Rule("textabular",  regex(@"^\\begin{tabular}\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*?)\\end{tabular}"), texTabular ),
+
+  Rule("texitem",     regex(@"^\\item\b\s*" + optarg + @"?\s*"), texItem ),
+  Rule("texlist",     regex(@"^\\begin\{(itemize|enumerate)\}\s*" + optarg + @"?\s*(\\item\b\s*" + optarg + @"\s*)?"), texList ),
+  Rule("texendlist",  regex(@"^\\end\{(itemize|enumerate)\}\s*"), texEmptyLine ),
+
+  Rule("texlisting",  regex(@"^\\begin{(lstlisting|verbatim|code|alltt)}\s*" + optarg + @"?\s*"), texListing ),
+  Rule("texlistingend",regex(@"^\\end{(lstlisting|verbatim|code|alltt)}\s*"), texListingEnd ),
+
+  Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?)\r?\n[ \t]*\r?\n"), texNoIndent ),
+
+  /* Common inline elements */
+  Rule("texref",      regex(@"^(~)?\\ref\b" + texarg), texRef ),
+  Rule("texverb",     regex(@"^\\(?:verb|lstinline)([!\+%\*\|\.\^#@])(.*?)\1"), texVerb ),
   
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texNormal ),
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texNormal ),
@@ -72,7 +80,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texbf",       regex(@"^\{\\bffamily\b\s*" + texargs + @"\}"), texStrong ),
   Rule("texbold",     regex(@"^\\textbf\b\s*" + texarg), texStrong ),
   Rule("textt1",      regex(@"^\{\\ttfamily\b\s*" + texargs + @"\}"), texCode ),
-  Rule("textt2",      regex(@"^\\texttt\b\s*" + texarg), texCode ),
+  Rule("textt2",      regex(@"^\\(?:texttt|code|verb|lstinline)\b\s*" + texarg), texCode ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
 
   Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
@@ -82,6 +90,12 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texdquot",    regex(@"^``((?:[^'\\]|\\.|'(?!'))*)''"), texDquot ),
   Rule("texsquot",    regex(@"^`((?:[^'\\]|\\.)*)'"), texSquot ),
 
+  /* environments */
+  Rule("texenvbegin", regex(@"^\\begin\{([a-zA-Z@]+)(\*)?\}\s*"), texEnvBegin),
+  Rule("texenvend",   regex(@"^\\end\{([a-zA-Z@]+)\*?\}\s*"), texEnvEnd),
+
+
+  /* Catch all's */
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
 
   Rule("texgroup",    regex(@"^\{" + texargs + @"\}" ), texGroup ),  
@@ -104,6 +118,176 @@ public rectype texContext {
 }
 
 /* --------------------------------------
+ Latex block functions 
+---------------------------------------- */
+function toIdentifier(s) {
+  s.unbrace.replaceAll(rxNonIdChar,"-")
+}
+val rxNonIdChar = regex(@"[^\w\-]+")
+
+function texSection( cap : matched, context ) : string {
+  val n = max(1, texsects.indexOf(fun(s) { s == cap.groups[1] }) - 1);
+  val caption = parseTexX( cap.groups[3].unbrace, context )
+  val attrs = (if (cap.groups[2]=="*") then " -" else "") + 
+              (if (cap.groups[4] != "") then " #" + cap.groups[3].toIdentifier else "")
+
+  string(n,'#') + " " + caption + (if (attrs!="") then " { " + attrs + " }" else "") 
+}
+
+function texComment( cap : matched, _context ) : string {
+  "<!--" + cap.groups[1] + "-->"
+}
+
+function texRef( cap : matched, _context ) : string {
+   (if (cap.groups[1]=="~") then " " else cap.groups[1]) + "[#" + cap.groups[2].toIdentifier + "]" 
+}
+
+function capitalize( s ) {
+  s.substr(0,1).toUpper + s.substr(1)
+}
+
+function texEnvBegin( cap : matched, _context ) : string {
+  "~ Begin " + cap.groups[1].capitalize + "\n"
+}
+
+function texEnvEnd( cap : matched, _context ) : string {
+  "~ End " + cap.groups[1].capitalize + "\n"
+}
+
+function texItem( cap : matched, context ) : string {
+  texItemX( "*", cap.groups[1], context )
+}
+
+function texItemX( bullet : string, caption : string, context ) : string {
+  bullet + " " + (if (caption=="") then "" else "**" + parseTexX(caption,context) + "**")
+}
+
+function texList( cap: matched, context ) : string {
+  val bullet = if (cap.groups[1]=="itemize") then "*" else "1."
+  if (cap.groups[3]=="") then "\n" else {
+    "\n" + texItemX( bullet, cap.groups[4], context )
+  }
+}
+
+function texEmptyLine( _cap, _context ) : string {
+  "\n"
+}
+
+function texListing( cap : matched, context ) : string {
+  val attrs = if (cap.groups[2]=="") then "" else {
+    " { " + cap.groups[2].findAll(rxKeyVal).map( fun(kcap) { 
+              val key = kcap.groups[1]
+              val value = kcap.groups[2] 
+              if (key=="language") then "language='" + value + "'"
+              elif (key=="caption") then "caption='" + parseTexX( value.unbrace, context ) + "'"
+              elif (key=="label") then "#" + value.toIdentifier
+              else ""
+            }).join(" ") + " }"
+  }
+  "```" + attrs + "\n"
+}
+val rxKeyVal = regex(@"\b(\w+)=(\{[^\}]*\}|[^\s\}]*)")
+
+function texListingEnd( _cap, _context ) : string {
+  "```\n"
+}
+
+function texCaptioned( cap : matched, context ) : string {
+  var label := "";
+  var caption := "";
+  val wide = if (cap.groups[2]=="*") then ".wide" else ""
+  val content = cap.groups[3].replace( rxCaption, fun(ccap) {
+    caption := "caption='" + ccap.groups[1].unbrace.parseTexX(context) + "'"
+    if (ccap.groups[2] != "") label := "#" + ccap.groups[2].toIdentifier
+    "" 
+  })
+  val attrs = " { " + [label,caption,wide].join(" ") + " }"
+  "~ Begin " + cap.groups[1].capitalize + attrs +
+  content.parseTexX(context) +
+  "~ End " + cap.groups[1].capitalize + "\n"
+}
+
+val rxCaption = regex(@"\\caption\b" + texarg + @"\s*(?:\\label\b" + texarg + ")?" )
+
+function texNoIndent( cap : matched, context ) : string {
+  cap.groups[1].parseTexX(context) + "\n{.noindent}\n\n"
+}
+
+function texTabularX( cap : matched, context ) : string {
+  texTabularDo( cap.groups[2], cap.groups[3], cap.groups[4], cap.groups[5], cap, context )
+}
+
+function texTabular( cap : matched, context ) : string {
+  texTabularDo( cap.groups[1], "", cap.groups[2], cap.groups[3], cap, context )
+}
+
+function texTabularDo( pos :string, width: string, spec : string, content : string, cap: matched, context ) : string {
+  function toColSpecs( xs : list<matched> ) {
+    match(xs) {
+      Nil -> [("|","","")]
+      Cons(xcap,ys) -> {
+        if (xcap.groups[1] == "") {
+          // no explicit separator
+          [("|",xcap.matched.substr(0,1).toLower,if (xcap.groups[2]=="") then "" else "{ width='" + xcap.groups[2] + "' }")] + toColSpecs(ys)
+        }
+        else {
+          // is separator
+          match(ys) {
+            Nil -> {
+              // final separator
+              [("+","","")]
+            }
+            Cons(ycap,zs) -> {
+              [("+",ycap.matched.substr(0,1).toLower,if (ycap.groups[2]=="") then "" else "{ width='" + ycap.groups[2] + "' }")] + toColSpecs(zs)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function expand( xs : list<string>, n : int ) : list<string> {
+    xs + list(1,n - xs.length).map(fun(i) { "" })
+  }
+
+  function makeLine( double : bool, columns : int ) : string {
+    "|" + list(1,columns).map( fun(i) { if (double) then "===" else "---" } ).join("|") + "|\n"
+  }
+
+  function renderRow( row : string, columns : int) : string {
+    val (line,rest) = match(row.find(rxHline)) {
+      Nothing   -> ("",row)
+      Just(rcap) -> (makeLine(rcap.groups[1]!="", columns), rcap.groups[3])
+    }
+    line + "|" + rest.split("&").list.map( fun(cell) { cell.parseTexX(context) } ).expand(columns).join("|") + "|"
+  }
+
+  val colspecs = spec.replaceAll(rxNoSpec,"").findAll(rxSpec).list.toColSpecs
+  val header   = colspecs.map( fun(cspec) {
+    val (sep,kind,attrs) = cspec
+    if (kind=="") 
+     then sep 
+     else sep + (if (kind=="c" || kind=="l") then ":" else "") + "---" + attrs + "---" + (if (kind=="c" || kind=="r") then ":" else "")
+  }).join("");
+  val colcount = (if (colspecs.length > 1) then colspecs.length-1 else 1)
+  
+  val attrs = "{ .booktable " + 
+                (if (width!="") then "width='" + width + "' " else "") + 
+                (if (pos=="b") then "vertical-align=bottom " elif (pos=="t") then "vertical-align=top " else "") + "}"
+
+  val rows = content.split(rxRowEnd).map( fun(row) { row.replaceAll(rxRowNl," ") } )
+  val body = rows.map( fun(row) { renderRow( row, colcount ) } ).join("\n")
+  
+  header + "\n" + body + "\n" + attrs
+}
+
+val rxHline  = regex(@"^\s*(?:\\hline\b\s*(\\hline\b\s*)?|\\cline\b" + texarg + @"\s*)([\s\S]*)")
+val rxRowEnd = regex(@"\\\\[ \t]*(?:\r?\n)*")
+val rxRowNl  = regex(@"\r?\n")
+val rxSpec   = regex(@"(\|\|?)|[lcr]|[pmb]\{([^\}]*)\}")
+val rxNoSpec = regex(@"\s|[^pmb](?=\{)" + texarg)
+
+/* --------------------------------------
  Latex grammar functions 
 ---------------------------------------- */
 
@@ -119,7 +303,7 @@ function texChar( cap : matched, _context ) : string {
 
 function texOther( cap : matched, _context ) : string {
   val char = cap.matched
-  if (char == "~") then @"&nbsp;"
+  if (char == "~") then @"\ "
   elif (char=="*") then @"\*"
   elif (char=="_") then @"\_"
   elif (char=="[") then @"\["
@@ -128,17 +312,6 @@ function texOther( cap : matched, _context ) : string {
   elif (char=="`") then @"\`"  
   else char 
 }
-
-public val texAccents = [
-  ("`","grave"),
-  ("'","acute"),
-  ("^","circ"),
-  ("\"","uml"),
-  ("~","tilde"),
-  ("r","ring"),
-  ("c","cedil"),
-  ("v","caron"),  
-].dict
 
 
 function texAccent( cap : matched, _context ) : string {
@@ -151,12 +324,15 @@ function texAccent( cap : matched, _context ) : string {
 }
 
 function texGenericCommand( cap : matched, context : texContext ) : string {
-  if (cap.groups[2]!="") then (if (context.ignore) then "" else cap.matched)     // ignore
-   else texCmdToEntity(cap.groups[1])
+  if (context.ignore) {
+    if (cap.groups[2]!="") then "" else texCmdToEntity(cap.groups[1])
+  }
+  else cap.matched
 }
 
 function texGroup( cap : matched, context : texContext ) : string {
-  parseTexX( cap.groups[1], context )
+  val body = parseTexX( cap.groups[1], context )
+  if (context.ignore) then body else "{" + body + "}"
 }
 
 function texCommandClass( cap : matched, context : texContext ) : string {
@@ -188,6 +364,11 @@ function texStrong( cap : matched, context : texContext ) : string {
 
 function texCode( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
+  if (txt=="") then "" else "`" + txt.parseTexX(context) + "`"
+}
+
+function texVerb( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[2]
   if (txt=="") then "" else "`" + txt.parseTexX(context) + "`"
 }
 
@@ -307,8 +488,6 @@ val rxNonSearch = regex(@"(&#?\w+;|\]\{[^\}]*\}|[^\w\+\-])+|\b(?:\d\w+|[\w\+\-]{
 
 val rxAuthorTitle = regex(@"^\s*(.*?(?:\n?\[\]\{\.newblock\}\s*))(.*?)(?:\n?\[\]\{\.newblock\})")
 
-public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\(?)(\d\d\d\d[\w\-]*)\)?(?: *[,;] *)?(.*)$")
-
 function unbrace(s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) 
    then s.substr(1,s.length-2) else s
@@ -327,11 +506,18 @@ public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbos
                  .replaceAll(regex(@"\t"),"   ")
                  // strip off comments
                  // little conservative but % sometimes occurs inside url's
-                 .replaceAll(regex(@"(^|[^\\])%[^\n}]*"),@"$1") 
+                 .replaceAll(rxTexComment, fun(cap) {
+                    if (cap.groups[1] != "") { "\\begin{comment}\n" + cap.groups[1] + "\\end{comment}\n" }
+                    elif (cap.groups[2] != "") { cap.groups[2] }
+                    else ""  // end-of-line comment
+                  }) 
   val md = parseTexX(normTxt,TexContext(texGrammar,citestyle,ignore))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
+
+val rxTexComment = regex(@"^((?:[ \t]*%.*\r?\n)+)|(\\%|\\url\{[^\}]*\})|%.*",multiline=True)
+
 
 public function parseTexX( txt : string, context : texContext, newlineToSpace : bool = False) : string
 {
