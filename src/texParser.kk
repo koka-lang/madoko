@@ -100,7 +100,7 @@ val texGrammar : grammar<string,texContext> = [
 ---------------------------------------- */
 public rectype texContext {
   // The parse context for latex elements. 
-  TexContext( grammar : grammar<string,texContext> = texGrammar, citestyle : citestyle = citeAuto )                 
+  TexContext( grammar : grammar<string,texContext> = texGrammar, citestyle : citestyle = citeAuto, ignore : bool = True )                 
 }
 
 /* --------------------------------------
@@ -151,7 +151,7 @@ function texAccent( cap : matched, _context ) : string {
 }
 
 function texGenericCommand( cap : matched, context : texContext ) : string {
-  if (cap.groups[2]!="") then ""      // ignore
+  if (cap.groups[2]!="") then (if (context.ignore) then "" else cap.matched)     // ignore
    else texCmdToEntity(cap.groups[1])
 }
 
@@ -168,7 +168,7 @@ function texAttribute( cap : matched, context : texContext ) : string {
 }
 
 function texIgnore( cap : matched, context : texContext ) : string {
-  ""
+  if (context.ignore) then "" else cap.matched
 }
 
 function texEmph( cap : matched, context : texContext ) : string {
@@ -321,14 +321,14 @@ function unbrace(s : string ) : string {
 
 
 // Parse TeX elements and return Markdown
-public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False  ) : string
+public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False, ignore : bool = True  ) : string
 {
   val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
                  .replaceAll(regex(@"\t"),"   ")
                  // strip off comments
                  // little conservative but % sometimes occurs inside url's
                  .replaceAll(regex(@"(^|[^\\])%[^\n}]*"),@"$1") 
-  val md = parseTexX(normTxt,TexContext(texGrammar,citestyle))
+  val md = parseTexX(normTxt,TexContext(texGrammar,citestyle,ignore))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
