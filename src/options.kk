@@ -130,9 +130,9 @@ public function getMathjax( opts : options ) : string {
    else "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 }
 
-
 public struct commandOptions(
   showVersion : bool = False,
+  convertTex  : bool = False,
   outputDir   : string = "",
   installDir  : string = "",
   inputs      : list<string> = [],
@@ -173,8 +173,9 @@ val optionsDesc : list<option<commandOptions>>
       Option( "v", ["verbose"], oflag(fun(o,v) { o(verbose = if (v) then o.verbose + 1 else 0) }),     "Be more verbose"),
       Option( "",  ["odir"],    creq(fun(co,s) { co(outputDir=s) },"DIR"), "Write output files to the specified directory" ),
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
-      Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Output a LaTeX file too"),
+      Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Generate a LaTeX file too"),
       Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),      
+      Option( "",  ["convert-tex"], cflag(fun(co,v) { co(convertTex=v) }), "Convert input from TeX to Markdown"),
       
       Option( "f", ["fragment"], oflag(fun(o,v) { o(full=Just(!v)) }), "Generate a fragment instead of a full document"),
       Option( "",  ["logo"],     oflag(fun(o,v) { o(logo=v) }),        "Generate a logo at the end of the document" ),

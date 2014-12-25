@@ -13,7 +13,6 @@ import std/string
 import std/regex
 import common
 import attributes
-import texParser
 
 /* --------------------------------------
  Block elements 
