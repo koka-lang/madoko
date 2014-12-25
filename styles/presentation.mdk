@@ -154,7 +154,19 @@ Html Header   :
     }    
     body.preview[data-view=full] .reveal .slides .fragment.visible {
       visibility: visible;
-    }    
+    }
+    .preview .reveal div.notes,
+    .preview .reveal aside.notes {
+      display  : block;
+      position : absolute;
+      width    : 25%;
+      left     : left;
+      top      : -15%;
+      font-size: 60%;
+      border   : 1px solid black;
+      border-radius   : 10px;
+      background-color: white;
+    }
     /* 'static' display in the preview window, unused for now */
     body.preview.static div.reveal, 
     body.preview.static div.ticreveal .slides, 
@@ -194,12 +206,12 @@ Html Header   :
           { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
         ],
     };
-    function revealAddFragments(query) {
-      [].forEach.call(document.querySelectorAll( query ), function(elem0) {
+    function revealAddFragments() {
+      [].forEach.call(document.querySelectorAll( ".fragmented" ), function(elem0) {
         var elem = (/^H\d$/.test(elem0.nodeName) ? elem0.parentNode : elem0);
         [].forEach.call(elem.children, function(item) {
           if (item==elem0) return;
-          if (item && !/\bfragment\b/.test(item.className && item.nodeType===1)) {
+          if (item && !/\bfragment(ed)?\b/.test(item.className) && item.nodeType===1) {
             item.className = item.className + " fragment";
           }
         });
@@ -208,23 +220,32 @@ Html Header   :
     function revealQuotedList(listType) {
       //compatibility with Rmarkdown slides
       [].forEach.call( document.querySelectorAll("blockquote>" + listType), function(ul) {
-        ul.className = ul.className + " fragmented";
+        if (!/\bfragmented\b/.test(ul.className)) {
+          ul.className = ul.className + " fragmented";
+        }        
         var quote = ul.parentNode;
         if (quote.childElementCount===1) {
           quote.parentNode.replaceChild(ul,quote);
         }
       });
     }
-    function revealOnLoad(ev) {
+    function revealBuildToFragmented() {
+      [].forEach.call(document.querySelectorAll( ".build" ), function(elem) {
+        if (elem && !/\bfragmented\b/.test(elem.className) && elem.nodeType===1) {
+          elem.className = elem.className + " fragmented";
+        }
+      });
+    }
+    revealConfig.onLoad = function() {
       revealQuotedList("ul");
       revealQuotedList("ol");
-      revealAddFragments(".fragmented");
-      revealAddFragments(".build");
-    }
-    document.addEventListener("load",revealOnLoad);    
+      revealBuildToFragmented();
+      revealAddFragments();
+    };
+    document.addEventListener("load",revealConfig.onLoad);    
     document.addEventListener("DOMContentLoaded", function() {
       if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
-        revealOnLoad();
+        revealConfig.onLoad();
         Reveal.initialize(revealConfig);
       }
     });
@@ -248,10 +269,11 @@ Html Header   :
         if (head) head.appendChild( link );
       }
       if (bodyClass) {
-        document.addEventListener("DOMContentLoaded", function() {
-          document.body.className = document.body.className + " " + bodyClass;
-        });
+        document.body.className = document.body.className + " " + bodyClass;
       }
     };
-    revealConfig.initPrint();
     </script>
+HTML Footer:
+    <script>
+    revealConfig.initPrint();
+    </script>    
