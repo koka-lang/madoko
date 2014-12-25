@@ -222,13 +222,19 @@ function texTabular( cap : matched, context ) : string {
 }
 
 function texTabularDo( pos :string, width: string, spec : string, content : string, cap: matched, context ) : string {
+  function texWidth( w ) {
+    w.unbrace.replaceAll(regex(@"0\.(\d\d?)\\(text|line)width\b"),fun(wcap) {
+      val n = wcap.groups[1].parseInt().maybe(0,id)
+      if (n < 10) then n.show + "0%" else n.show + "%"
+    });
+  }
   function toColSpecs( xs : list<matched> ) {
     match(xs) {
       Nil -> [("|","","")]
       Cons(xcap,ys) -> {
         if (xcap.groups[1] == "") {
           // no explicit separator
-          [("|",xcap.matched.substr(0,1).toLower,if (xcap.groups[2]=="") then "" else "{ width='" + xcap.groups[2] + "' }")] + toColSpecs(ys)
+          [("|",xcap.matched.substr(0,1).toLower,if (xcap.groups[2]=="") then "" else "{ width='" + xcap.groups[2].texWidth + "' }")] + toColSpecs(ys)
         }
         else {
           // is separator
@@ -238,7 +244,7 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
               [("+","","")]
             }
             Cons(ycap,zs) -> {
-              [("+",ycap.matched.substr(0,1).toLower,if (ycap.groups[2]=="") then "" else "{ width='" + ycap.groups[2] + "' }")] + toColSpecs(zs)
+              [("+",ycap.matched.substr(0,1).toLower,if (ycap.groups[2]=="") then "" else "{ width='" + ycap.groups[2].texWidth + "' }")] + toColSpecs(zs)
             }
           }
         }
@@ -246,43 +252,84 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
     }
   }
 
-  function expand( xs : list<string>, n : int ) : list<string> {
-    xs + list(1,n - xs.length).map(fun(i) { "" })
+  function expand( cells : list<(int,string)>, n : int ) : list<string> {
+    val (cs,xs) = cells.unzip
+    xs + list(1,n - cs.sum).map(fun(i) { "" })
   }
 
   function makeLine( double : bool, columns : int ) : string {
-    "|" + list(1,columns).map( fun(i) { if (double) then "===" else "---" } ).join("|") + "|\n"
+    "|" + list(1,columns).map( fun(i) { if (double) then "===" else "---" } ).join("|") + "|"
   }
 
+  val rxMultiColumn = regex(@"\\multicolumn\b\s*\{(\d+)\}\s*" + texarg + texarg)
+  function renderCell( cell : string ) : (int,string) {
+    match(cell.find(rxMultiColumn)) {
+      Nothing    -> (1, cell.parseTexX(context))
+      Just(ccap) -> {
+        val n = ccap.groups[1].unbrace.parseInt.maybe(1,id)
+        (n, ccap.groups[3].unbrace.parseTexX(context) + string(n-1,'|') )
+      }
+    }
+  }
+  
   function renderRow( row : string, columns : int) : string {
     val (line,rest) = match(row.find(rxHline)) {
       Nothing   -> ("",row)
       Just(rcap) -> (makeLine(rcap.groups[1]!="", columns), rcap.groups[3])
     }
-    line + "|" + rest.split("&").list.map( fun(cell) { cell.parseTexX(context) } ).expand(columns).join("|") + "|"
+    if (rest.trim == "") 
+     then line
+     else line + (if (line=="") then "" else "\n") + 
+          "| " + rest.split("&").list.map( renderCell ).expand(columns).join("| ") + "|"
   }
+
+  function rowSanitize( row : string ) {
+    row.replaceAll(rxRowNl," ").replaceAll(rxNoAlign,"")
+  }
+
+  val rows = content.split(rxRowEnd).list.map( fun(row) { row.rowSanitize } )
+  val (topRows,headerSep,bodyRows) =
+    match(rows) {
+      Cons(row0,Cons(row1,rest)) -> match(row1.find(rxHline)) {
+        Just(hcap) -> ([row0], if (hcap.groups[1].isEmpty) then "---" else "===", Cons(hcap.groups[3], rest) )
+        Nothing    -> match(row0.find(rxHline)) {
+          Just(hcap0) -> ([], if (hcap0.groups[1].isEmpty) then "---" else "===", Cons(hcap0.groups[3], Cons(row1,rest)) )
+          Nothing     -> ([], "~~~", rows)
+        }
+      }
+      Cons(row0,rest) -> match(row0.find(rxHline)) {
+        Just(hcap0) -> ([], if (hcap0.groups[1].isEmpty) then "---" else "===", Cons(hcap0.groups[3], rest) )
+        Nothing     -> ([], "~~~", rows)
+      }
+      Nil -> ([],"",[])
+    }
+
 
   val colspecs = spec.replaceAll(rxNoSpec,"").findAll(rxSpec).list.toColSpecs
   val header   = colspecs.map( fun(cspec) {
     val (sep,kind,attrs) = cspec
     if (kind=="") 
      then sep 
-     else sep + (if (kind=="c" || kind=="l") then ":" else "") + "---" + attrs + "---" + (if (kind=="c" || kind=="r") then ":" else "")
+     else sep + (if (kind=="c" || kind=="l") then ":" else "") + headerSep + attrs + headerSep + (if (kind=="c" || kind=="r") then ":" else "")
   }).join("");
   val colcount = (if (colspecs.length > 1) then colspecs.length-1 else 1)
   
-  val attrs = "{ .booktable " + 
-                (if (width!="") then "width='" + width + "' " else "") + 
+  val attrs = "{ .textable " + 
+                (if (width!="") then "width='" + width.texWidth + "' " else "") + 
                 (if (pos=="b") then "vertical-align=bottom " elif (pos=="t") then "vertical-align=top " else "") + "}"
 
-  val rows = content.split(rxRowEnd).map( fun(row) { row.replaceAll(rxRowNl," ") } )
-  val body = rows.map( fun(row) { renderRow( row, colcount ) } ).join("\n")
-  
-  header + "\n" + body + "\n" + attrs
+  function renderRows( rs ) {
+    rs.map( fun(row) { renderRow( row, colcount ) } ).remove(isEmpty).join("\n")
+  }
+
+  val top  = topRows.renderRows
+  val body = bodyRows.renderRows
+  "\n" + (if (top.isEmpty) then "" else top + "\n") + header + "\n" + body + "\n" + attrs
 }
 
-val rxHline  = regex(@"^\s*(?:\\hline\b\s*(\\hline\b\s*)?|\\cline\b" + texarg + @"\s*)([\s\S]*)")
-val rxRowEnd = regex(@"\\\\[ \t]*(?:\r?\n)*")
+val rxNoAlign= regex(@"\\noalign\b\s*" + texarg)
+val rxHline  = regex(@"^\s*(?:\\(?:hline|firsthline|lasthline|toprule|bottomrule|midrule)\b\s*(\\hline\b\s*)?|\\(?:cline|cmidrule)\b(?:\(\w\))?" + texarg + @"\s*)([\s\S]*)")
+val rxRowEnd = regex(@"\\\\(?:\[(?:[^\]\r\n]*)\])?[ \t]*(?:\r?\n)*")
 val rxRowNl  = regex(@"\r?\n")
 val rxSpec   = regex(@"(\|\|?)|[lcr]|[pmb]\{([^\}]*)\}")
 val rxNoSpec = regex(@"\s|[^pmb](?=\{)" + texarg)

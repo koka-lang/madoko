@@ -159,3 +159,36 @@ FC Copenhagen     & 6 & 2 & 1 & 3 &  5 & 8 &  7  \\
   \hline
 \end{tabular*}
 
+
+
+...
+\begin{tabular}{llr}
+\toprule
+\multicolumn{2}{c}{Item} \\
+\cmidrule(r){1-2}
+Animal    & Description & Price (\$) \\
+\midrule
+Gnat      & per gram    & 13.65      \\
+          & each        & 0.01       \\
+Gnu       & stuffed     & 92.50      \\
+Emu       & stuffed     & 33.33      \\
+Armadillo & frozen      & 8.99       \\
+\bottomrule
+\end{tabular}
+
+...
+\begin{tabular}{llr}
+\firsthline
+\multicolumn{2}{c}{Item} \\
+\cline{1-2}
+Animal    & Description & Price (\$) \\
+\hline
+Gnat      & per gram    & 13.65      \\
+          & each        & 0.01       \\
+Gnu       & stuffed     & 92.50      \\
+Emu       & stuffed     & 33.33      \\
+Armadillo & frozen      & 8.99       \\
+\lasthline
+\end{tabular}
+
+
