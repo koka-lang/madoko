@@ -192,3 +192,50 @@ Armadillo & frozen      & 8.99       \\
 \end{tabular}
 
 
+
+\begin{flushleft}
+\begin{tabular}{@{}c@{\hspace{10mm}}c}
+\begin{lstlisting}
+cloud table Birds {
+  name : str;
+  count: nr;
+}
+\end{lstlisting}
+&
+\begin{lstlisting}
+function sighting(name: string) {
+  var bird = find(name);  
+  bird.count.add(1);
+}
+\end{lstlisting}
+\end{tabular}
+\begin{tabular}{@{}c}
+\begin{lstlisting}
+function find( name : string ) {
+  var bird;
+  foreach( bird in Birds ) {
+    if (bird.name.get() == name) 
+      return bird;
+  }
+  bird = Birds.new();
+  bird.name.set( name );
+  return bird;
+}
+\end{lstlisting}
+\end{tabular}
+\end{flushleft}
+
+\begin{center}
+\begin{tabular}{c|c}
+\begin{lstlisting}
+ write A, 2; yield %\quad%
+ read  B, 0
+\end{lstlisting}
+&
+\begin{lstlisting}
+ write B, 1; yield %\quad%
+ write A, 1; yield
+ read  A, 2
+\end{lstlisting}\\
+\end{tabular}
+\end{center}

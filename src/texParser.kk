@@ -287,7 +287,20 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
     row.replaceAll(rxRowNl," ").replaceAll(rxNoAlign,"")
   }
 
-  val rows = content.split(rxRowEnd).list.map( fun(row) { row.rowSanitize } )
+  function createColumn( col ) {
+    "\n~Begin Column\n" + col.parseTexX(context) + "\n~ End Column"
+  }
+  function createColumns( _colspecs, row ) {
+    val cols = row.split("&")
+    "\n~Begin Columns" + cols.map(createColumn).join() + "\n~ End Columns\n" 
+  }
+
+  // Split into rows
+  val rawRows = content.split(rxRowEnd).list.remove(fun(row) { row.trim.isEmpty } )
+  val rows = rawRows.map( fun(row) { row.rowSanitize } )
+
+
+  // figure out where to place the table specification/header line
   val (topRows,headerSep,bodyRows) =
     match(rows) {
       Cons(row0,Cons(row1,rest)) -> match(row1.find(rxHline)) {
@@ -304,7 +317,7 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
       Nil -> ([],"",[])
     }
 
-
+  // Create a header line from the tabular specification
   val colspecs = spec.replaceAll(rxNoSpec,"").findAll(rxSpec).list.toColSpecs
   val header   = colspecs.map( fun(cspec) {
     val (sep,kind,attrs) = cspec
@@ -313,11 +326,20 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
      else sep + (if (kind=="c" || kind=="l") then ":" else "") + headerSep + attrs + headerSep + (if (kind=="c" || kind=="r") then ":" else "")
   }).join("");
   val colcount = (if (colspecs.length > 1) then colspecs.length-1 else 1)
+
+  // use 'column' block for single line tabular's with new lines in it
+  if (rawRows.length==1 && rawRows.any(fun(row) { row.contains(rxRowNl) })) 
+   then return createColumns(colspecs,rawRows.take(1).join)
+
+  //trace("|rawrows| = " + rawRows.length.show + "\n[" + rawRows.join(",") + "]\n\n")
+
   
+  // create attributes
   val attrs = "{ .textable " + 
                 (if (width!="") then "width='" + width.texWidth + "' " else "") + 
                 (if (pos=="b") then "vertical-align=bottom " elif (pos=="t") then "vertical-align=top " else "") + "}"
 
+  // render rows                
   function renderRows( rs ) {
     rs.map( fun(row) { renderRow( row, colcount ) } ).remove(isEmpty).join("\n")
   }
@@ -569,7 +591,7 @@ val rxTexComment = regex(@"^((?:[ \t]*%.*\r?\n)+)|(\\%|\\url\{[^\}]*\})|%.*",mul
 public function parseTexX( txt : string, context : texContext, newlineToSpace : bool = False) : string
 {
   if (txt=="") then "" else {
-    val res = parseTexAcc(context,builder(), txt)
+    val res = parseTexAcc(context,builder(), txt.unbrace)
     if (!newlineToSpace) then res else res.replaceAll(rxNl," ")
   }
 }
