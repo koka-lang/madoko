@@ -236,10 +236,23 @@ Html Header   :
         }
       });
     }
+    function revealDivNotesToAside() {
+      [].forEach.call(document.querySelectorAll("div.notes"), function(elem) {
+        var aside = document.createElement("ASIDE");
+        if (elem.id) aside.id = elem.id;
+        aside.className = elem.className;
+        [].forEach.call(elem.attributes, function(attr) {
+          aside.setAttribute( attr.name, attr.value );
+        });
+        aside.innerHTML = elem.innerHTML;
+        elem.parentNode.replaceChild(aside,elem);
+      });
+    }
     revealConfig.onLoad = function() {
       revealQuotedList("ul");
       revealQuotedList("ol");
       revealBuildToFragmented();
+      revealDivNotesToAside();
       revealAddFragments();
     };
     document.addEventListener("load",revealConfig.onLoad);    
