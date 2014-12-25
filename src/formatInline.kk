@@ -19,7 +19,7 @@ import attributes
 import inline
 import htmlFormatter
 import texFormatter
-import texParser   // rxAuthorYear
+import texCommon   // rxAuthorYear
 import entity
 import hilite // inlineMode
 import codeAlign

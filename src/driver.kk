@@ -24,6 +24,7 @@ import storage
 import hilite
 import mathParse
 import mathStatic
+import texParser
 
 public struct runners(
   runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
@@ -37,8 +38,14 @@ public function processContent( inName : string, outName : string, content : str
                           continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
 {
   if (opts.options.sandbox) enforceSandbox()
+  if (opts.convertTex) {
+    val output = content.parseTex(ignore=False)
+    writeTextFileSync(outName,output)
+    return continue( output, inName, outName, opts.options );
+  }
+
   val styleDir = opts.installDir + "/../styles"
-  val searchDirs = [inName.dirname,outName.dirname,styleDir];
+  val searchDirs = [inName.dirname,outName.dirname,styleDir]
   content.include(False, inName, outName, searchDirs, opts.options) fun(icontent,lmap) {
     // set up options
     val opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
@@ -562,7 +569,7 @@ function trySearchReadTextFile( fname : string, dirs : list<string>, ext : strin
 
 public function outputName( inputName : string, options : commandOptions ) : string {
   val noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 
-  val outName = noextName + ".html"
+  val outName = if (options.convertTex) then inputName + ".mdk" else noextName + ".html"
   if (options.outputDir=="") 
    then outName 
    else options.outputDir + "/" + outName.basename                  
