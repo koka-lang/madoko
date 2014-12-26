@@ -41,8 +41,9 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
 
   Rule("texcomment",  regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
-  Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
-  Rule("textabularx",  regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
+  Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
+  Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
+  Rule("textabularx", regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
   Rule("textabular",  regex(@"^\\begin{tabular}\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*?)\\end{tabular}"), texTabular ),
 
   Rule("texitem",     regex(@"^\\item\b\s*" + optarg + @"?\s*"), texItem ),
@@ -58,8 +59,10 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texref",      regex(@"^(~)?\\ref\b" + texarg), texRef ),
   Rule("texverb",     regex(@"^\\(?:verb|lstinline)([!\+%\*\|\.\^#@])(.*?)\1"), texVerb ),
   
-  Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texNormal ),
-  Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texNormal ),
+  Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texMathInline ),
+  Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texMathDisplay ),
+  Rule("texmathenv1",  regex(@"^\\begin\{(equation)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathEnv ),
+  Rule("texmathenv2",  regex(@"^\\begin\{(gather|align|alignat|multline|eqnarray|flalign)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathSnippet ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texBibliography ),
   Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n(?= *\n|\\bibitem)"), texBibitem ),
@@ -129,7 +132,7 @@ function texSection( cap : matched, context ) : string {
   val n = max(1, texsects.indexOf(fun(s) { s == cap.groups[1] }) - 1);
   val caption = parseTexX( cap.groups[3].unbrace, context )
   val attrs = (if (cap.groups[2]=="*") then " -" else "") + 
-              (if (cap.groups[4] != "") then " #" + cap.groups[3].toIdentifier else "")
+              (if (cap.groups[4] != "") then " #" + cap.groups[4].toIdentifier else "")
 
   string(n,'#') + " " + caption + (if (attrs!="") then " { " + attrs + " }" else "") 
 }
@@ -173,6 +176,37 @@ function texEmptyLine( _cap, _context ) : string {
   "\n"
 }
 
+function trimx( s : string, n : int ) : string {
+  s.substr(n,s.length-(2*n))
+}
+
+function texMathDisplay( cap : matched, _context ) {
+  "\n~ Math\n" + cap.matched.trimx(2) + "\n~\n"
+}
+
+function texMathInline( cap : matched, _context ) {
+  "$" + cap.matched.trimx(1).replaceAll(rxMathNl," %\n") + "$"
+}
+val rxMathNl = regex(@"\r?\n")
+
+function texMathEnv( cap : matched, context ) {
+  val envName = cap.groups[1].capitalize
+  val (content,labelCaption) = cap.groups[3].extractLabelCaption(context)
+  val attrs = ((if (cap.groups[2]=="*") then "- " else "") + labelCaption).trim
+  val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
+  "~ " + envName + attrsStr + "\n" +
+  content +
+  "\n~\n"
+}
+
+function texMathSnippet( cap : matched, context ) {
+  val (content,labelCaption) = cap.matched.extractLabelCaption(context)
+  val attrsStr = if (labelCaption.isEmpty) then "" else " {" + labelCaption + "}"
+  "\n<!-- tex conversion hint: try to use MathPre instead of Snippet -->\n~ Snippet" + attrsStr + "\n" +
+  content +
+  "\n~\n"
+}
+
 function texListing( cap : matched, context ) : string {
   val attrs = if (cap.groups[2]=="") then "" else {
     " { " + cap.groups[2].findAll(rxKeyVal).map( fun(kcap) { 
@@ -193,21 +227,35 @@ function texListingEnd( _cap, _context ) : string {
 }
 
 function texCaptioned( cap : matched, context ) : string {
-  var label := "";
-  var caption := "";
-  val wide = if (cap.groups[2]=="*") then ".wide" else ""
-  val content = cap.groups[3].replace( rxCaption, fun(ccap) {
-    caption := "caption='" + ccap.groups[1].unbrace.parseTexX(context) + "'"
-    if (ccap.groups[2] != "") label := "#" + ccap.groups[2].toIdentifier
-    "" 
-  })
-  val attrs = " { " + [label,caption,wide].join(" ") + " }"
-  "~ Begin " + cap.groups[1].capitalize + attrs +
+  texCaptionedX( cap, if (cap.groups[2].isEmpty) then "" else ".wide", context )
+}
+function texLabeled( cap : matched, context ) : string {
+  texCaptionedX( cap, "", context )
+}
+function texCaptionedX( cap : matched, extraAttrs : string, context ) : string {
+  val (content,labelCaption) = extractLabelCaption( cap.groups[4], context, cap.groups[3].parseTexX(context), "" )
+  val attrs = (extraAttrs + " " + labelCaption).trim
+  val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
+  "~ Begin " + cap.groups[1].capitalize + attrsStr + "\n" +
   content.parseTexX(context) +
   "~ End " + cap.groups[1].capitalize + "\n"
 }
 
-val rxCaption = regex(@"\\caption\b" + texarg + @"\s*(?:\\label\b" + texarg + ")?" )
+function extractLabelCaption( content : string, context, defCaption = "", defLabel = "" ) : (string,string) {
+  var label := defLabel
+  var caption := defCaption 
+  val content1 = content.replace( rxCaption, fun(ccap) {
+    caption := ccap.groups[1].parseTexX(context)
+    ""
+  }).replace( rxLabel, fun(lcap) {
+    label := "#" + lcap.groups[1].toIdentifier
+    ""
+  })
+  (content1, (label + " " + (if (caption != "") then "caption='" + caption + "'" else "")).trim )
+}
+
+val rxCaption = regex(@"\\caption\b" + texarg)
+val rxLabel   = regex(@"\\label\b" + texarg)
 
 function texNoIndent( cap : matched, context ) : string {
   cap.groups[1].parseTexX(context) + "\n{.noindent}\n\n"
@@ -393,10 +441,11 @@ function texAccent( cap : matched, _context ) : string {
 }
 
 function texGenericCommand( cap : matched, context : texContext ) : string {
+  val entity = texCmdToEntity(cap.groups[1])
   if (context.ignore) {
-    if (cap.groups[2]!="") then "" else texCmdToEntity(cap.groups[1])
+    if (cap.groups[2]!="") then "" else entity
   }
-  else cap.matched
+  elif (entity.isEmpty) then cap.matched else entity
 }
 
 function texGroup( cap : matched, context : texContext ) : string {
