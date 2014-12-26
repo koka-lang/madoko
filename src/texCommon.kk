@@ -36,10 +36,10 @@ val texarg1  = texnest(texarg0) + "*"
 val texarg2  = texnest(texarg1) + "*"
 val texarg3  = texnest(texarg2) + "*"
 
-public val texarg   = @"(" + texnest(texarg3) + @")"
+public val texarg   = @"(?:(" + texnest(texarg3) + @")\s*)"
 public val texargs  = @"(" + texnest(texarg3) + "*)"
 
-public val optarg   = @"(?:\[([^\]]*)\])"
+public val optarg   = @"(?:\[([^\]]*)\]\s*)"
 public val optargs  = optarg + @"*"
 
 // captures most tex commands
