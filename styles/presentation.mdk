@@ -26,6 +26,8 @@ Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2
 Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
+Reveal Long   : false
+Reveal Details: false
 Document Class: [xcolor=table]beamer
 Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
@@ -40,10 +42,12 @@ Section Depth : 2
 .Author       : font-size=xx-large
 .Affiliation  : font-size=x-large
 .Email        : font-size=x-large
-~Body         : before="~ Begin Reveal {line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
+~Body         : before="~ Begin Reveal { data-long=&reveal-long; data-details=&reveal-details; &reveal-attrs; line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
                 after="~ End Slides&nl;~ End Reveal&nl;" 
 ~Slide        : .section html-elem=section tex-elem=mdSection
 ~Vertical     : .section html-elem=section
+.smaller      : data-smaller
+.long         : data-long
 @tex ~Notes   : display=none
 @tex ~Vertical: notag
 Tex Header*   :
@@ -87,6 +91,7 @@ Html Header   :
     .reveal section ul,
     .reveal section ol {
         margin-top: 0.35em;
+        margin-bottom: 0.35em;
     }
     .reveal section img.math-display {
         padding: 1em;
@@ -134,6 +139,19 @@ Html Header   :
       height: 15em;
       overflow-y: auto;
       font-size: 0.8em;
+    }
+    .reveal section[data-smaller=""],
+    .reveal section[data-smaller="true"] {
+      font-size: 80%;
+      width: 110%;
+      left: -55%;
+    }
+    .reveal .details {
+      display: none;
+    }
+    .reveal[data-details=""] .details,
+    .reveal[data-details="true"] .details {
+      display: initial;
     }
     /* Display in the preview window */
     html, body.madoko.preview, .preview body {
@@ -191,6 +209,13 @@ Html Header   :
     body.madoko.preview.static .reveal pre {
       width: 95%;
     }    
+    body.preview .reveal[data-details="false"] .details {
+      display: initial;
+      color: gray;
+    }
+    body.preview .reveal[data-long="false"] section[data-long] {
+      border-left: 2px black solid;
+    }
     </style>
     <script>    
     // Full list of configuration options available here:
@@ -248,7 +273,29 @@ Html Header   :
         elem.parentNode.replaceChild(aside,elem);
       });
     }
+    function revealDataQuery() {
+      var reveal = document.querySelector(".reveal");
+      if (!reveal) return;
+      window.location.search.replace(/\bdata-(\w+)(?:=(\w+))?\b/g, function(matched,key,value) {
+        reveal.setAttribute("data-" + key, (value ? value : ""));
+        return matched;
+      });
+    }
+    function revealRemoveLong() {
+      // remove parts for 'long' presentation
+      if (/\bpreview\b/.test(document.body.className)) return;
+      var reveal = document.querySelector(".reveal");
+      if (!reveal) return;
+      var value = reveal.hasAttribute("data-long") ? reveal.getAttribute("data-long") : null;
+      if (value==null || value=="false" || value=="0") {
+        [].forEach.call( document.querySelectorAll("section[data-long]"), function(elem) {
+          elem.parentNode.removeChild(elem);
+        });
+      }
+    }
     revealConfig.onLoad = function() {
+      revealDataQuery();
+      revealRemoveLong();
       revealQuotedList("ul");
       revealQuotedList("ol");
       revealBuildToFragmented();
@@ -261,7 +308,7 @@ Html Header   :
         revealConfig.onLoad();
         Reveal.initialize(revealConfig);
       }
-    });
+    });    
     // add support for printing:
     // use  ?print-pdf to get a pdf-printable version (in Chrome)
     // use  ?print-paper to get a paper-printable version.
@@ -288,5 +335,6 @@ Html Header   :
     </script>
 HTML Footer:
     <script>
+    // initialize printing
     revealConfig.initPrint();
-    </script>    
+    </script>
