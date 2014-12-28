@@ -27,6 +27,11 @@ alias texRule = rule<string,texContext>
 
 val special = @"\\{}~*_\[\]#\$`";
 
+val texargg = @"(?:\{" + texargs + @"\})"
+
+/* use entity for these commands */
+val texEntityCmd0 = "@(vfill|qed|LaTeX|LaTeXe|BibTeX|AmSTeX|TeX|eg|etal|ie)"
+
 /* Use TexRaw for the following commands */
 val texRawCmd0 = "@(vfill)"
 val texRawCmd1 = "@(pagestyle)"
@@ -91,7 +96,7 @@ val texGrammar : grammar<string,texContext> = [
   
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texMathInline ),
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texMathDisplay ),
-  Rule("texmathenv1",  regex(@"^\\begin\{(equation)(\*)?\}([\s\S]*?)\\end{\1\2}"), texMathEnv ),
+  Rule("texmathenv1",  regex(@"^\\begin\{(equation|displaymath)(\*)?\}([\s\S]*?)\\end{\1\2}"), texMathEnv ),
   Rule("texmathenv2",  regex(@"^\\begin\{(gather|align|alignat|multline|eqnarray|flalign)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathSnippet ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
@@ -109,13 +114,13 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texsl",       regex(@"^\{\\(?:text)?sl\b" + texargs + @"\}"), texSlanted ),
   Rule("texsl2",      regex(@"^\\{\\slshape\b\s*" + texargs + @"\}"), texSlanted ),
-  Rule("texsc",       regex(@"^\\(?:text)?sc\b" + texargs + @"\}"), texSmallcaps ),
-  Rule("texsc2",      regex(@"^\{\\scshape\b\s*" + texargs + @"\}"), texSmallcaps ),
+  Rule("texsc",       regex(@"^\\textsc\b\s*" + texargs + @"\}"), texSmallcaps ),
+  Rule("texsc2",      regex(@"^\{\\sc(?:shape)?\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
   Rule("texit2",      regex(@"^\{\\(?:itshape|em)\b\s*" + texargs + @"\}"), texEmph ),
   Rule("texbf",       regex(@"^\\textbf\b\s*" + texarg), texStrong ),
-  Rule("texbf2",      regex(@"^\{\\bffamily\b\s*" + texargs + @"\}"), texStrong ),
-  Rule("texcode",     regex(@"^\\(?:code|verb|lstinline)\b\s*" + texarg), texCode ),
+  Rule("texbf2",      regex(@"^\{\\bfseries\b\s*" + texargs + @"\}"), texStrong ),
+  Rule("texcode",     regex(@"^\\(code|verb|lstinline)\b\s*" + texarg), texCode ),
   Rule("textt1",      regex(@"^\\texttt\b\s*" + texarg), texMonospace ),
   Rule("textt2",      regex(@"^\{\\tt(?:family)?\b\s*" + texargs + @"\}"), texMonospace ),
   Rule("texup",       regex(@"^\\textup\b" + texargs + @"\}"), texUpright ),
@@ -143,6 +148,8 @@ val texGrammar : grammar<string,texContext> = [
 
   /* Catch all's */
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
+
+  Rule("texentity",   regex(@"^\\" + texEntityCmd0 + @"\b\s*" + optargs), texEntityCmd ),
 
   Rule("texraw0",     regex(@"^\\" + texRawCmd0 + @"\b\s*" + optargs), texRaw ),
   Rule("texraw1",     regex(@"^\\" + texRawCmd1 + @"\b\s*" + optargs + texarg), texRaw ),
@@ -182,15 +189,15 @@ struct mRule(
 
 val metadataGrammar = [
   MRule(regex(@"\\usepackage\b\s*" + optarg + @"?\s*" + texarg), ["Package"], metaOptionValue, metaEmpty ),
-  MRule(regex(@"\\title\b\s*" + texarg), ["Title"], metaTexValue, metaEmpty ),
-  MRule(regex(@"\\subtitle\b\s*" + texarg), ["Sub Title"], metaTexValue, metaEmpty ),
-  MRule(regex(@"\\bibliographystyle\b\s*" + texarg), ["Bib Style"], metaValue, metaEmpty ),  
-  MRule(regex(@"\\bibliography\b\s*" + texarg), ["Bibliography"], metaValue, metaKeep ),
-  MRule(regex(@"\\authorinfo\b\s*" + texarg + texarg + texarg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
-  MRule(regex(@"\\author\b\s*" + texarg), ["Author"], metaTexValue, metaEmpty ),
-  MRule(regex(@"\\address\b\s*" + texarg), ["Address"], metaTexValue, metaEmpty ),
-  MRule(regex(@"\\email\b\s*" + texarg), ["Email"], metaTexValue, metaEmpty ),
-  MRule(regex(@"\\(?:institute|affiliation)\b\s*" + texarg), ["Affiliation"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\title\b\s*" + texargg), ["Title"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\subtitle\b\s*" + texargg), ["Sub Title"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\bibliographystyle\b\s*" + texargg), ["Bib Style"], metaValue, metaEmpty ),  
+  MRule(regex(@"\\bibliography\b\s*" + texargg), ["Bibliography"], metaValue, metaKeep ),
+  MRule(regex(@"\\authorinfo\b\s*" + texargg + texargg + texargg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
+  MRule(regex(@"\\author\b\s*" + texargg), ["Author"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\address\b\s*" + texargg), ["Address"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\email\b\s*" + texargg), ["Email"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\(?:institute|affiliation)\b\s*" + texargg), ["Affiliation"], metaTexValue, metaEmpty ),
 ]
 
 
@@ -407,7 +414,7 @@ function extractLabelCaption( content : string, context, defCaption = "", defLab
   var label := defLabel
   var caption := defCaption 
   val content1 = content.replace( rxCaption, fun(ccap) {
-    caption := ccap.groups[1].parseTexX(context)
+    caption := ccap.groups[1].parseTexX(context).replaceAll(rxNl,"&nl;")
     ""
   }).replace( rxLabel, fun(lcap) {
     label := "#" + lcap.groups[1].toIdentifier
@@ -647,6 +654,11 @@ function texIgnore( cap : matched, context : texContext ) : string {
   if (context.ignore) then "" else cap.matched
 }
 
+function texEntityCmd( cap : matched, _context ) : string {
+  "&" + cap.groups[1] + ";"
+}
+
+
 function texRaw( cap : matched, _context ) : string {
   "\n~ TexRaw\n" + cap.matched + "\n~\n"
 }
@@ -696,7 +708,7 @@ function texStrong( cap : matched, context : texContext ) : string {
 }
 
 function texCode( cap : matched, context : texContext ) : string {
-  val txt = cap.groups[1]
+  val txt = cap.groups[2]
   if (txt=="") then "" else "`" + txt + "`"
 }
 
@@ -838,13 +850,15 @@ public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbos
 {
   val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
                  .replaceAll(regex(@"\t"),"   ")
+                 // strip initial comments
+                 .replaceAll(regex(@"^(\s|%.*)+"),"") 
                  // strip off comments
                  // little conservative but % sometimes occurs inside url's
                  .replaceAll(rxTexComment, fun(cap) {
                     if (cap.groups[1] != "") { "\\begin{comment}\n" + cap.groups[1] + "\\end{comment}\n" }
                     elif (cap.groups[2] != "") { cap.groups[2] }
                     else ""  // end-of-line comment
-                  }) 
+                  })
   val md = parseTexX(normTxt,TexContext(texGrammar,citestyle,ignore))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
@@ -860,7 +874,7 @@ public function parseTexX( txt : string, context : texContext, newlineToSpace : 
     if (!newlineToSpace) then res else res.replaceAll(rxNl," ")
   }
 }
-val rxNl = regex(@"\n")
+val rxNl = regex(@"\r?\n")
 
 
 
