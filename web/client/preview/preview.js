@@ -586,13 +586,14 @@ var Preview = (function() {
     else if (info.eventType==="view") {
       document.body.setAttribute("data-view",info.view);
       var cname = document.body.className.replace(/\s*\bpreview(-\w+)?\b/g, "");
-      if (view==="full") {
+      if (info.view==="full") {
         document.body.className = cname + " preview-full";
       }
       else {
         document.body.className = cname + " preview preview-" + info.view;
       }
-      revealRefresh(); 
+      // revealRefresh(); 
+      dispatchEvent(document,"load");
     }
     else if (info.eventType==="viewSync") {
       viewSynchronize();

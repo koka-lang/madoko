@@ -154,7 +154,7 @@ Html Header   :
       display: initial;
     }
     /* Display in the preview window */
-    html, body.madoko.preview, .preview body {
+    html, body.madoko.preview, body.madoko.preview-full {
       height  : 100% !important;
       width   : auto!important;
       padding : 0pt !important;
@@ -277,7 +277,7 @@ Html Header   :
     }
     function revealRemoveLong() {
       // remove parts for 'long' presentation
-      if (/\bpreview\b/.test(document.body.className)) return;
+      if (/\bpreview(?![\w\-])/.test(document.body.className)) return;
       var reveal = document.querySelector(".reveal");
       if (!reveal) return;
       var value = reveal.hasAttribute("data-long") ? reveal.getAttribute("data-long") : null;
