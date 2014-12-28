@@ -505,14 +505,18 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                   Just(cap) -> cap.matched.parseInt.maybe(0,id)
                   Nothing   -> 0
                 }
+  //trace("citeLabel: " + name + ": " + citeLabel)
   val (number,authors,year) = 
     match(citeLabel.find(rxAuthorYear)) {
       Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
-      Just(cap) -> (numlab, 
-                    if (modifier=="+" && cap.groups[3]!="") 
-                      then cap.groups[3] 
-                      else cap.groups[1], //.replaceAll(rxEtAl,"_et al._"),
-                    cap.groups[2])
+      Just(cap) -> {
+        //trace(" matched: " + cap.groups[1] + ", " + cap.groups[2] + ", " + cap.groups[3] ) 
+        (numlab, 
+          if (modifier=="+" && cap.groups[3]!="") 
+            then cap.groups[3] 
+            else cap.groups[1], //.replaceAll(rxEtAl,"_et al._"),
+          cap.groups[2])
+      }
     }     
   
   match (post.find(rxCommaAt)) {
