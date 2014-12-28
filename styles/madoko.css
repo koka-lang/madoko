@@ -187,9 +187,6 @@
   visibility: visible;
   opacity: 0.5;
 }
-.madoko.preview[data-view=full] .invisible {
-  visibility: hidden;
-}
 
 .madoko code.code, .madoko span.code {
   white-space: pre-wrap;
@@ -383,7 +380,7 @@ body.madoko, .madoko-body {
   -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
 }
 
-body.madoko, .madoko-body, body.madoko.preview[data-view=full] {
+body.madoko, .madoko-body {
   padding: 1em 16% 1em 12%;
 }
 

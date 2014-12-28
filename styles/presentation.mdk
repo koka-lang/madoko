@@ -167,12 +167,6 @@ Html Header   :
     body.preview .reveal .slides .fragment.visible {
       opacity: 1.0;
     }
-    body.preview[data-view=full] .reveal .slides .fragment {
-      visibility: hidden;
-    }    
-    body.preview[data-view=full] .reveal .slides .fragment.visible {
-      visibility: visible;
-    }
     .preview .reveal div.notes,
     .preview .reveal aside.notes {
       display  : block;
