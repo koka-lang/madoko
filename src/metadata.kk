@@ -22,7 +22,8 @@ import optionsMeta
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
-  val (mdata2,rest,lineCount) = parsePlainMeta(txt, fmt, options0.modes, verbose=options0.verbose >= 4)
+  val txt1 = stripInitialWhite(txt)
+  val (mdata2,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4)
   val options1 = options0.fromMeta(mdata2)
   val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
@@ -38,10 +39,15 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    else (options,rest)  
 }
 
+function stripInitialWhite( txt : string ) : string {
+  match(txt.find(rxInitialWhite)) {
+    Nothing   -> txt
+    Just(cap) -> txt.substr(cap.next)
+  }
+}
+val rxInitialWhite = regex(@"^(\s|<!--[\s\S]*?-->)+")
 
-
-
-public function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
+function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
 {
   match(txt.find(rxMeta)) {
     Nothing   -> {
@@ -116,6 +122,10 @@ function defaultMeta( options : options ) : string {
       @"            before='[\/^&label;.^ ]{.footnote-before}'",
       @"            after='&nl;[&#8617;](#back-&id;){.footnote-backref}' line-adjust=0",
 
+      @"~FlushLeft : .align-left",
+      @"~FlushRight: .align-right",
+      @"~Comment   : .exclude",
+
       @"Madoko Version: " + version,
       @"Defaults  : True",
 
@@ -133,6 +143,8 @@ function defaultMeta( options : options ) : string {
       @"eg          : e.g.",
       @"ie          : i.e.",
       @"etal        : et al.",
+      @"vfill       : ",
+      @"@tex vfill  : [\vfill]{input=texraw}",
 
       @"MadokoLogo: Created with [Madoko.net](https://www.madoko.net).",
       @".MadokoLogo: .block text-align=right font-size=xx-small margin-top=4em tight",

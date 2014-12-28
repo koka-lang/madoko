@@ -27,6 +27,11 @@ alias texRule = rule<string,texContext>
 
 val special = @"\\{}~*_\[\]#\$`";
 
+/* Use TexRaw for the following commands */
+val texRawCmd0 = "@(vfill)"
+val texRawCmd1 = "@(pagestyle)"
+val texRawCmd2 = "@(markboth)"
+
 /* ignore the following commands and environments */
 val texenv0  = @"(document)"
 val texenv1  = @"(thebibliography)"
@@ -52,7 +57,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texdocclass", regex(@"^\\documentclass\b\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*)"), texDocClass ),
 
   /* Block elements */
-  Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
+  Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?\s*" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
 
   Rule("texcomment",  regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
   Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
@@ -64,8 +69,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texlist",     regex(@"^\\begin\{(itemize|enumerate)\}\s*" + optarg + @"?\s*(\\item\b\s*" + optarg + @"\s*)?"), texList ),
   Rule("texendlist",  regex(@"^\\end\{(itemize|enumerate)\}\s*"), texEmptyLine ),
 
-  Rule("texlisting",  regex(@"^\\begin{(lstlisting|verbatim|code|alltt)}\s*" + optarg + @"?\s*"), texListing ),
-  Rule("texlistingend",regex(@"^\\end{(lstlisting|verbatim|code|alltt)}\s*"), texListingEnd ),
+  Rule("texlisting",  regex(@"^\\begin{(lstlisting|verbatim|code|alltt)}\s*" + optarg + @"?([\s\S]*?)\\end{\1}\s*"), texListing ),
 
   Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?)\r?\n[ \t]*\r?\n"), texNoIndent ),
 
@@ -83,11 +87,11 @@ val texGrammar : grammar<string,texContext> = [
 
   /* Common inline elements */
   Rule("texref",      regex(@"^(~)?\\ref\b" + texarg), texRef ),
-  Rule("texverb",     regex(@"^\\(?:verb|lstinline)([!\+%\*\|\.\^#@])(.*?)\1"), texVerb ),
+  Rule("texverb",     regex(@"^\\(?:verb|lstinline)\*?([!\+%\|\.\^#@])(.*?)\1"), texCode ),
   
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texMathInline ),
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texMathDisplay ),
-  Rule("texmathenv1",  regex(@"^\\begin\{(equation)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathEnv ),
+  Rule("texmathenv1",  regex(@"^\\begin\{(equation)(\*)?\}([\s\S]*?)\\end{\1\2}"), texMathEnv ),
   Rule("texmathenv2",  regex(@"^\\begin\{(gather|align|alignat|multline|eqnarray|flalign)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathSnippet ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
@@ -103,23 +107,34 @@ val texGrammar : grammar<string,texContext> = [
   Rule("cite",        regex(@"^\\(short)?[Cc]ite(?:(author)|(year(?:par)?)|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
   Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
 
-  Rule("texemph",     regex(@"^\{\\em\b" + texargs + @"\}"), texEmph ),
-  Rule("texsl",       regex(@"^\{\\sl\b" + texargs + @"\}"), texSlanted ),
+  Rule("texsl",       regex(@"^\{\\(?:text)?sl\b" + texargs + @"\}"), texSlanted ),
+  Rule("texsl2",      regex(@"^\\{\\slshape\b\s*" + texargs + @"\}"), texSlanted ),
+  Rule("texsc",       regex(@"^\\(?:text)?sc\b" + texargs + @"\}"), texSmallcaps ),
+  Rule("texsc2",      regex(@"^\{\\scshape\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
-  Rule("texbf",       regex(@"^\{\\bffamily\b\s*" + texargs + @"\}"), texStrong ),
-  Rule("texbold",     regex(@"^\\textbf\b\s*" + texarg), texStrong ),
-  Rule("textt1",      regex(@"^\{\\ttfamily\b\s*" + texargs + @"\}"), texCode ),
-  Rule("textt2",      regex(@"^\\(?:texttt|code|verb|lstinline)\b\s*" + texarg), texCode ),
+  Rule("texit2",      regex(@"^\{\\(?:itshape|em)\b\s*" + texargs + @"\}"), texEmph ),
+  Rule("texbf",       regex(@"^\\textbf\b\s*" + texarg), texStrong ),
+  Rule("texbf2",      regex(@"^\{\\bffamily\b\s*" + texargs + @"\}"), texStrong ),
+  Rule("texcode",     regex(@"^\\(?:code|verb|lstinline)\b\s*" + texarg), texCode ),
+  Rule("textt1",      regex(@"^\\texttt\b\s*" + texarg), texMonospace ),
+  Rule("textt2",      regex(@"^\{\\tt(?:family)?\b\s*" + texargs + @"\}"), texMonospace ),
+  Rule("texup",       regex(@"^\\textup\b" + texargs + @"\}"), texUpright ),
+  Rule("texup2",      regex(@"^\\{\\upshape\b\s*" + texargs + @"\}"), texUpright ),
+  Rule("texrm1",      regex(@"^\\textrm\b\s*" + texarg), texRoman ),
+  Rule("texrm2",      regex(@"^\{\\rmfamily\b\s*" + texargs + @"\}"), texRoman ),
+  Rule("texsf1",      regex(@"^\\textsf\b\s*" + texarg), texSans ),
+  Rule("texsf2",      regex(@"^\{\\sffamily\b\s*" + texargs + @"\}"), texSans ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
 
   Rule("texsize",     regex(@"^\{\\(" + texFontSizes + @")\b\s*" + texargs + @"\}"), texFontSize ),
-
   Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),
   
   Rule("texdquot",    regex(@"^``((?:[^'\\]|\\.|'(?!'))*)''"), texDquot ),
   Rule("texsquot",    regex(@"^`((?:[^'\\]|\\.)*)'"), texSquot ),
+
+  Rule("texrule",     regex(@"^\\rule\b\s*" + optarg + "?" + texarg + texarg ), texRule ),
 
   /* environments */
   Rule("texenvbegin", regex(@"^\\begin\{([a-zA-Z@]+)(\*)?\}\s*"), texEnvBegin),
@@ -128,6 +143,10 @@ val texGrammar : grammar<string,texContext> = [
 
   /* Catch all's */
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
+
+  Rule("texraw0",     regex(@"^\\" + texRawCmd0 + @"\b\s*" + optargs), texRaw ),
+  Rule("texraw1",     regex(@"^\\" + texRawCmd1 + @"\b\s*" + optargs + texarg), texRaw ),
+  Rule("texraw2",     regex(@"^\\" + texRawCmd2 + @"\b\s*" + optargs + texarg + texarg), texRaw ),
 
   Rule("texgroup",    regex(@"^\{" + texargs + @"\}" ), texGroup ),  
   Rule("texenv0",     regex(@"^\\begin\{" + texenv0 + @"\}\s*" + optargs), texAlwaysIgnore ),
@@ -168,12 +187,15 @@ val metadataGrammar = [
   MRule(regex(@"\\bibliographystyle\b\s*" + texarg), ["Bib Style"], metaValue, metaEmpty ),  
   MRule(regex(@"\\bibliography\b\s*" + texarg), ["Bibliography"], metaValue, metaKeep ),
   MRule(regex(@"\\authorinfo\b\s*" + texarg + texarg + texarg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
-   
+  MRule(regex(@"\\author\b\s*" + texarg), ["Author"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\address\b\s*" + texarg), ["Address"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\email\b\s*" + texarg), ["Email"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\(?:institute|affiliation)\b\s*" + texarg), ["Affiliation"], metaTexValue, metaEmpty ),
 ]
 
 
 function metaEmpty( cap : matched ) : string {
-  ""
+  " "
 }
 
 function metaKeep( cap : matched ) : string {
@@ -203,7 +225,7 @@ function texMeta( key, value ) {
 val rxMetaNL = regex(@"\r?\n(?:[ ]{1,4}|\t)?")
 
 function texDocClass( cap : matched, context ) : string {
-  val mdata0 = zipWith(["DocClass"], metaOptionValue(cap,context), texMeta)
+  val mdata0 = zipWith(["Doc Class"], metaOptionValue(cap,context), texMeta)
   val (mdata,content) = extractMeta( cap.groups[3], context, mdata0 )
   mdata.join("\n") + "\n\n" + content.parseTexX(context)
 }
@@ -254,7 +276,7 @@ function texSection( cap : matched, context ) : string {
   val attrs = (if (cap.groups[2]=="*") then " -" else "") + 
               (if (cap.groups[4] != "") then " #" + cap.groups[4].toIdentifier else "")
 
-  string(n,'#') + " " + caption + (if (attrs!="") then " { " + attrs + " }" else "") 
+  string(n,'#') + " " + caption + (if (attrs!="") then " { " + attrs + " }" else "") + "\n"
 }
 
 function texFontSize( cap : matched, context ) : string {
@@ -279,7 +301,7 @@ function texEnvBegin( cap : matched, _context ) : string {
 }
 
 function texEnvEnd( cap : matched, _context ) : string {
-  "~ End " + cap.groups[1].capitalize + "\n"
+  "\n~ End " + cap.groups[1].capitalize + "\n"
 }
 
 function texBeginMinipage( cap : matched, _context ) : string {
@@ -313,6 +335,12 @@ function trimx( s : string, n : int ) : string {
   s.substr(n,s.length-(2*n))
 }
 
+function trimNL( s : string ) : string {
+  s.replaceAll(rxNL0,"")
+}
+
+val rxNL0 = regex(@"^[ \t]*\r?\n|\r?\n$")
+
 function texMathDisplay( cap : matched, _context ) {
   "\n~ Math\n" + cap.matched.trimx(2) + "\n~\n"
 }
@@ -328,7 +356,7 @@ function texMathEnv( cap : matched, context ) {
   val attrs = ((if (cap.groups[2]=="*") then "- " else "") + labelCaption).trim
   val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
   "~ " + envName + attrsStr + "\n" +
-  content +
+  content.trimNL +
   "\n~\n"
 }
 
@@ -336,7 +364,7 @@ function texMathSnippet( cap : matched, context ) {
   val (content,labelCaption) = cap.matched.extractLabelCaption(context)
   val attrsStr = if (labelCaption.isEmpty) then "" else " {" + labelCaption + "}"
   "\n<!-- tex conversion hint: try to use MathPre instead of Snippet -->\n~ Snippet" + attrsStr + "\n" +
-  content +
+  content.trimNL +
   "\n~\n"
 }
 
@@ -351,7 +379,8 @@ function texListing( cap : matched, context ) : string {
               else ""
             }).join(" ") + " }"
   }
-  "```" + attrs + "\n"
+
+  "```" + attrs + "\n" + cap.groups[3].trimNL + " \n```\n"
 }
 val rxKeyVal = regex(@"\b(\w+)=(\{[^\}]*\}|[^\s\}]*)")
 
@@ -369,9 +398,9 @@ function texCaptionedX( cap : matched, extraAttrs : string, context ) : string {
   val (content,labelCaption) = extractLabelCaption( cap.groups[4], context, cap.groups[3].parseTexX(context), "" )
   val attrs = (extraAttrs + " " + labelCaption).trim
   val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
-  "~ Begin " + cap.groups[1].capitalize + attrsStr + "\n" +
-  content.parseTexX(context) +
-  "~ End " + cap.groups[1].capitalize + "\n"
+  "\n~ Begin " + cap.groups[1].capitalize + attrsStr + "\n" +
+  content.trimNL.parseTexX(context) +
+  "\n~ End " + cap.groups[1].capitalize + "\n"
 }
 
 function extractLabelCaption( content : string, context, defCaption = "", defLabel = "" ) : (string,string) {
@@ -579,6 +608,16 @@ function texAccent( cap : matched, _context ) : string {
   }
 }
 
+function texRule( cap : matched, _context ) : string {
+  val widthHeight = "width='" + texLength(cap.groups[2]) + "' height='" + texLength(cap.groups[3]) + "'"
+  if (cap.groups[1] != "") then {
+    "[ ]{ background-color=black vertical-align='" + texLength(cap.groups[1]) + "' " + widthHeight + " }"
+  }
+  else {
+    "\n-------- { " + widthHeight + " }\n"
+  }
+}
+
 function texGenericCommand( cap : matched, context : texContext ) : string {
   val entity = texCmdToEntity(cap.groups[1])
   if (context.ignore) {
@@ -608,6 +647,10 @@ function texIgnore( cap : matched, context : texContext ) : string {
   if (context.ignore) then "" else cap.matched
 }
 
+function texRaw( cap : matched, _context ) : string {
+  "\n~ TexRaw\n" + cap.matched + "\n~\n"
+}
+
 function texVSpace( cap : matched, _context ) : string {
   "\n~ Empty { height='" + texLength(cap.groups[1]) + "' }\n\n~\n"
 }
@@ -626,6 +669,27 @@ function texSlanted( cap : matched, context : texContext ) : string {
   if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-style=oblique}"
 }
 
+function texSmallcaps( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-variant=small-caps}"
+}
+
+function texUpright( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-style=normal}"
+}
+
+function texRoman( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-family=serif}"
+}
+
+function texSans( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-family=sans-serif}"
+}
+
+
 function texStrong( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
   if (txt=="") then "" else "**" + txt.parseTexX(context) + "**"
@@ -633,13 +697,14 @@ function texStrong( cap : matched, context : texContext ) : string {
 
 function texCode( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "`" + txt.parseTexX(context) + "`"
+  if (txt=="") then "" else "`" + txt + "`"
 }
 
-function texVerb( cap : matched, context : texContext ) : string {
-  val txt = cap.groups[2]
-  if (txt=="") then "" else "`" + txt.parseTexX(context) + "`"
+function texMonospace( cap : matched, context : texContext ) : string {
+  val txt = cap.groups[1]
+  if (txt=="") then "" else "[" + txt.parseTexX(context) + "]{font-family=monospace}"
 }
+
 
 function texUrl( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
