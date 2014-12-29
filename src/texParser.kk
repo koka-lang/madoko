@@ -34,9 +34,9 @@ val texargg = @"(?:\{" + texargs + @"\})"
 val texEntityCmd0 = @"(vfill|qed|LaTeX|LaTeXe|BibTeX|AmSTeX|TeX|eg|etal|ie)"
 
 /* Use TexRaw for the following commands */
-val texRawCmd0 = "@(vfill)"
-val texRawCmd1 = "@(pagestyle)"
-val texRawCmd2 = "@(markboth)"
+val texRawCmd0 = @"(vfill)"
+val texRawCmd1 = @"((?:this)pagestyle)"
+val texRawCmd2 = @"(markboth)"
 
 /* ignore the following commands and environments */
 val texenv0  = @"(document)"
@@ -77,7 +77,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texlisting",  regex(@"^\\begin{(lstlisting|verbatim|code|alltt)}\s*" + optarg + @"?([\s\S]*?)\\end{\1}\s*"), texListing ),
 
-  Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?)\r?\n[ \t]*\r?\n"), texNoIndent ),
+  Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?\n)[ \t]*\n"), texNoIndent ),
 
   Rule("texminipage", regex(@"^\\begin{minipage}\s*" + optarg + "?" + optarg + "?" + optarg + "?" + texarg ), texBeginMinipage ),
   Rule("texvspace",   regex(@"^\\vspace\b\s*" + texarg), texVSpace ),
@@ -341,7 +341,7 @@ function texBeginMinipage( cap : matched, _context ) : string {
 }
 
 function texItem( cap : matched, context ) : string {
-  texItemX( "*", cap.groups[1], context )
+  texItemX( "\n*", cap.groups[1], context )
 }
 
 function texItemX( bullet : string, caption : string, context ) : string {
@@ -448,7 +448,7 @@ val rxCaption = regex(@"\\caption\b" + texarg)
 val rxLabel   = regex(@"\\label\b" + texarg)
 
 function texNoIndent( cap : matched, context ) : string {
-  cap.groups[1].parseTexX(context) + "\n{.noindent}\n\n"
+  cap.groups[1].parseTexX(context) + "{.noindent}\n\n"
 }
 
 /* --------------------------------------
@@ -660,7 +660,7 @@ function texGenericCommand( cap : matched, context : texContext ) : string {
 
 function texGroup( cap : matched, context : texContext ) : string {
   val body = parseTexX( cap.groups[1], context )
-  if (context.ignore) then body else "{" + body + "}"
+  if (context.ignore || body=="") then body else "{" + body + "}"
 }
 
 function texCommandClass( cap : matched, context : texContext ) : string {

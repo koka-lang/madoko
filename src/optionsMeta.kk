@@ -11,6 +11,8 @@ module optionsMeta
 
 import std/log
 import std/path
+import std/regex
+import std/string
 import common
 import options
 
@@ -28,12 +30,21 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
     elif (key=="html-meta")    options(htmlMeta=if (value=="") then "" else options.htmlMeta + ";" + value)
     elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
-    elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
-    elif (key=="package-")  options(packagesx=if (value=="") then "" else options.packagesx + ";" + value)
+    elif (key=="package")  {
+      packageRefer(value,".sty")
+      options(packages=if (value=="") then "" else options.packages + ";" + value)
+    }
+    elif (key=="package-")  {
+      packageRefer(value,".sty")
+      options(packagesx=if (value=="") then "" else options.packagesx + ";" + value)
+    }
     elif (key=="toc-depth" && ivalue >= 0) options(tocDepth = ivalue)
     elif ((key=="heading-depth" || key=="header-depth") && ivalue >= 0) options(headingDepth = ivalue)
     elif ((key=="heading-base" || key=="header-base" || key=="base-header-level") && ivalue >= 0) options(headingBase = ivalue)
-    elif (key=="document-class" || key=="doc-class") options(docClass=value)
+    elif (key=="document-class" || key=="doc-class") {
+      packageRefer(value,".cls")
+      options(docClass=value)
+    }
     //elif (key=="bib" || key=="bibliography" || key=="bib-data") options(bib=if (value=="") then "" else options.bib + ";" + value)
     elif (key=="bib" || key=="bibliography" || key=="bib-data") {
       if (value!="") log("files", value.changeExt(".bib"))
@@ -113,6 +124,21 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     }
   }
 }
+
+function packageRefer( pkg0 : string, ext : string ) : () {
+  val pkg = pkg0.trim
+  val pname = match(pkg.find(rxPkgOpt)) {
+    Nothing -> pkg
+    Just(cap) -> cap.groups[2]
+  }
+  if (pname.extname!="" || pname.dirname!="") {
+   log("filesRefer", changeExt(pname,ext) );
+  }
+}
+
+
+public val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
+
 
 function setMathMode( options : options, value : string ) : options {
   val nvalue = value.normalizeId

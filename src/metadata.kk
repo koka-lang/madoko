@@ -148,9 +148,9 @@ function defaultMeta( options : options ) : string {
       @"etal        : et al.",
       @"vfill       : \/",
       @"@tex vfill  : [\vfill]{input=texraw}",
-      @"latex       : $\mbox{LaTeX}$",
-      @"tex         : $\mbox{TeX}$",
-      @"latexe      : $\mbox{LaTeXe}$",
+      @"latex       : $\mbox{\LaTeX}$",
+      @"tex         : $\mbox{\TeX}$",
+      @"latexe      : $\mbox{\LaTeXe}$",
       @"bibtex      : $\mbox{\sc{Bib}\TeX}$",
       @"amstex      : $\mbox{\AmSTeX}$",
 
