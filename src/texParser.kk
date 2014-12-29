@@ -41,7 +41,7 @@ val texRawCmd2 = @"(markboth)"
 /* ignore the following commands and environments */
 val texenv0  = @"(document)"
 val texenv1  = @"(thebibliography)"
-val texcmd0  = @"(leavevmode)"
+val texcmd0  = @"(leavevmode|protect)"
 val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut|protect)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
@@ -212,7 +212,7 @@ val metadataGrammar = [
 
 
 function metaEmpty( cap : matched ) : string {
-  "%" + cap.matched
+  " " 
 }
 
 function metaKeep( cap : matched ) : string {
@@ -706,9 +706,19 @@ function texSkip( cap : matched, _context ) : string {
   "\n~ Empty { height='" + height + "' }\n\n~\n"
 }
 
+function texAlign( s : string ) : string {
+  if (s=="l") then "left"
+  elif (s=="r") then "right"
+  elif (s=="s") then "justify"
+  elif (s=="c") then "center"
+  else "left"
+}
+
 function texMBox( cap : matched, context ) : string {
   val width = if (cap.groups[2]=="") then "" else "width='" + texLength(cap.groups[2]) + "'"
-  val pos   = if (cap.groups[3]=="") then "" else "text-align='" + (cap.groups[2]) + "'"
+  val pos   = if (cap.groups[3]=="") then "" else "text-align='" + texAlign(cap.groups[2]) + "'"
+  val border = if (cap.groups[1].startsWith("f")) then ".framed" else ""
+  "[" + cap.groups[4].parseTexX(context) + "]{" + [border,width,pos].join(" ") + "}"
 }
 
 
