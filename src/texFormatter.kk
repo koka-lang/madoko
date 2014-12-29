@@ -466,14 +466,14 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
         log("filesRefer", changeExt(pname,ext) );
       }
       (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") + 
-        "{" + (if (ext==".cls") then pname.noext else pname) + "}"
+        "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname) + "}"
     }
     Nothing  -> {
       val pname = pkg.trim
       if (pname.extname!="" || pname.dirname!="") {
         log("filesRefer", changeExt(pname,ext) )
       }
-      "{" + (if (ext==".cls") then pname.noext else pname) + "}"
+      "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname) + "}"
     }
   })
 } 

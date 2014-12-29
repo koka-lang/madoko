@@ -16,6 +16,7 @@ module texParser
 import std/dict
 import std/string
 import std/regex
+import std/crypto
 import common
 import entity
 import texCommon
@@ -30,7 +31,7 @@ val special = @"\\{}~*_\[\]#\$`";
 val texargg = @"(?:\{" + texargs + @"\})"
 
 /* use entity for these commands */
-val texEntityCmd0 = "@(vfill|qed|LaTeX|LaTeXe|BibTeX|AmSTeX|TeX|eg|etal|ie)"
+val texEntityCmd0 = @"(vfill|qed|LaTeX|LaTeXe|BibTeX|AmSTeX|TeX|eg|etal|ie)"
 
 /* Use TexRaw for the following commands */
 val texRawCmd0 = "@(vfill)"
@@ -66,7 +67,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texcomment",  regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
   Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
-  Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
+  Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof|example)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
   Rule("textabularx", regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
   Rule("textabular",  regex(@"^\\begin{tabular}\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*?)\\end{tabular}"), texTabular ),
 
@@ -89,9 +90,12 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texclear",    regex(@"^\\(pagebreak|newpage|clearpage)\b\s*"), texPageBreak ),
   Rule("texappendix", regex(@"^\\appendix\b\s*"), texAppendix ),
+  Rule("textoc",      regex(@"^\\tableofcontents\b\s*"), texToc ),
+  Rule("textof",      regex(@"^\\tableoffigures\b\s*"), texTof ),
+  Rule("texfootnote", regex(@"^\\footnote\b\s*" + texargg + @"([\s\S]*?)\n[ \t\r]*\n"), texFootnote),
 
   /* Common inline elements */
-  Rule("texref",      regex(@"^(~)?\\ref\b" + texarg), texRef ),
+  Rule("texref",      regex(@"^(~)?\\ref\b" + texargg), texRef ),
   Rule("texverb",     regex(@"^\\(?:verb|lstinline)\*?([!\+%\|\.\^#@])(.*?)\1"), texCode ),
   
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texMathInline ),
@@ -117,9 +121,9 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsc",       regex(@"^\\textsc\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texsc2",      regex(@"^\{\\sc(?:shape)?\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
-  Rule("texit2",      regex(@"^\{\\(?:itshape|em)\b\s*" + texargs + @"\}"), texEmph ),
+  Rule("texit2",      regex(@"^\{\\(?:itshape|em)\b\s*" + texargs + @"\}(\s)?"), texEmph ),
   Rule("texbf",       regex(@"^\\textbf\b\s*" + texarg), texStrong ),
-  Rule("texbf2",      regex(@"^\{\\bfseries\b\s*" + texargs + @"\}"), texStrong ),
+  Rule("texbf2",      regex(@"^\{\\bfseries\b\s*" + texargs + @"\}(\s)?"), texStrong ),
   Rule("texcode",     regex(@"^\\(code|verb|lstinline)\b\s*" + texarg), texCode ),
   Rule("textt1",      regex(@"^\\texttt\b\s*" + texarg), texMonospace ),
   Rule("textt2",      regex(@"^\{\\tt(?:family)?\b\s*" + texargs + @"\}"), texMonospace ),
@@ -130,6 +134,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsf1",      regex(@"^\\textsf\b\s*" + texarg), texSans ),
   Rule("texsf2",      regex(@"^\{\\sffamily\b\s*" + texargs + @"\}"), texSans ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
+  Rule("texeol",      regex(@"^\\\\" + optarg + "?"), texLineBreak ),
 
   Rule("texsize",     regex(@"^\{\\(" + texFontSizes + @")\b\s*" + texargs + @"\}"), texFontSize ),
   Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
@@ -149,7 +154,7 @@ val texGrammar : grammar<string,texContext> = [
   /* Catch all's */
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
 
-  Rule("texentity",   regex(@"^\\" + texEntityCmd0 + @"\b\s*" + optargs), texEntityCmd ),
+  Rule("texentity",   regex(@"^\\" + texEntityCmd0 + @"\b\s*"), texEntityCmd ),
 
   Rule("texraw0",     regex(@"^\\" + texRawCmd0 + @"\b\s*" + optargs), texRaw ),
   Rule("texraw1",     regex(@"^\\" + texRawCmd1 + @"\b\s*" + optargs + texarg), texRaw ),
@@ -193,7 +198,7 @@ val metadataGrammar = [
   MRule(regex(@"\\subtitle\b\s*" + texargg), ["Sub Title"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\bibliographystyle\b\s*" + texargg), ["Bib Style"], metaValue, metaEmpty ),  
   MRule(regex(@"\\bibliography\b\s*" + texargg), ["Bibliography"], metaValue, metaKeep ),
-  MRule(regex(@"\\authorinfo\b\s*" + texargg + texargg + texargg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
+  MRule(regex(@"\\authorinfo\b\s*" + texargg + @"\s*" + texargg + @"\s*" + texargg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
   MRule(regex(@"\\author\b\s*" + texargg), ["Author"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\address\b\s*" + texargg), ["Address"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\email\b\s*" + texargg), ["Email"], metaTexValue, metaEmpty ),
@@ -270,6 +275,22 @@ function texPageBreak( _cap : matched, _context ) {
 
 function texAppendix( _cap : matched, _context ) {
   "\n# Appendix { @h1='A' }\n"
+}
+
+function texToc( _cap : matched, _context ) {
+  "\n[TOC]\n"
+}
+function texTof( _cap : matched, _context ) {
+  "\n[TOC=tof]\n"
+}
+
+function indent4( txt : string ) : string {
+  txt.split("\n").map(fun(s) { "    " + s }).join("\n")
+}
+
+function texFootnote( cap : matched, context ) : string {
+  val fn = "^fn-" + cap.groups[1].md5.substr(0,3)
+  "[" + fn + "]" + cap.groups[2].parseTexX(context) + "\n\n[" + fn + "]: \n" + cap.groups[1].parseTexX(context).indent4 + "\n\n"
 }
 
 function toIdentifier(s) {
@@ -443,10 +464,10 @@ function texTabular( cap : matched, context ) : string {
 }
 
 function texLength( w ) {
-  w.unbrace.replaceAll(regex(@"0\.(\d\d?)\\(text|line)width\b"),fun(wcap) {
+  w.unbrace.replace(regex(@"0\.(\d\d?)\\(text|line)width\b"),fun(wcap) {
     val n = wcap.groups[1].parseInt().maybe(0,id)
     if (n < 10) then n.show + "0%" else n.show + "%"
-  });
+  }).replace(regex(@"\\(text|line)width\b"), "100%");
 }
 
 function texTabularDo( pos :string, width: string, spec : string, content : string, cap: matched, context ) : string {
@@ -625,6 +646,10 @@ function texRule( cap : matched, _context ) : string {
   }
 }
 
+function texLineBreak( cap : matched, _context ) : string {
+  (if (cap.groups[1] != "") then "[ ]{margin-bottom='" + texLength(cap.groups[1]) + "'}" else "") + "&br;"
+}
+
 function texGenericCommand( cap : matched, context : texContext ) : string {
   val entity = texCmdToEntity(cap.groups[1])
   if (context.ignore) {
@@ -673,7 +698,8 @@ function texHSpace( cap : matched, _context ) : string {
 
 function texEmph( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "_" + txt.parseTexX(context) + "_"
+  val end = if (cap.groups[2] != "") then cap.groups[2] else "\\/"
+  if (txt=="") then "" else "_" + txt.parseTexX(context) + "_" + end
 }
 
 function texSlanted( cap : matched, context : texContext ) : string {
@@ -704,7 +730,8 @@ function texSans( cap : matched, context : texContext ) : string {
 
 function texStrong( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "**" + txt.parseTexX(context) + "**"
+  val end = if (cap.groups[2] != "") then cap.groups[2] else "\\/"
+  if (txt=="") then "" else "**" + txt.parseTexX(context) + "**" + end
 }
 
 function texCode( cap : matched, context : texContext ) : string {
