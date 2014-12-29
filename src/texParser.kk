@@ -41,7 +41,8 @@ val texRawCmd2 = @"(markboth)"
 /* ignore the following commands and environments */
 val texenv0  = @"(document)"
 val texenv1  = @"(thebibliography)"
-val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut)"
+val texcmd0  = @"(leavevmode)"
+val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut|protect)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
 /* sections, sizes, etc */
@@ -82,6 +83,9 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texminipage", regex(@"^\\begin{minipage}\s*" + optarg + "?" + optarg + "?" + optarg + "?" + texarg ), texBeginMinipage ),
   Rule("texvspace",   regex(@"^\\vspace\b\s*" + texarg), texVSpace ),
   Rule("texhspace",   regex(@"^\\vspace\b\s*" + texarg), texHSpace ),
+  Rule("texskip",    regex(@"^\\(?:big|med|small)skip\b\s*" + texarg), texSkip ),
+  Rule("texhspace",   regex(@"^\\vspace\b\s*" + texarg), texHSpace ),
+  Rule("texmbox",     regex(@"^\\(m|make|f|frame)box\b\s*" + optarg + "?" + optarg + "?" + texargg ), texMBox ),
 
   /* Specials */
   Rule("texinclude",  regex(@"^\\(include(?:only)?|input)\b\s*" + texarg + eol), texInclude ),
@@ -165,6 +169,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texenv1",     regex(@"^\\begin\{" + texenv1 + @"\}\s*" + optargs + texarg), texAlwaysIgnore ),
   Rule("texcmd2",     regex(@"^\\(" + texcmd2 + @")\b\s*" + optargs + texarg + optargs + texarg), texIgnore ),
   Rule("texcmd1",     regex(@"^\\(" + texcmd1 + @")\b\s*" + optargs + texarg), texIgnore ),
+  Rule("texcmd0",     regex(@"^\\(" + texcmd0 + @")\b\s*" + optargs), texIgnore ),
   Rule("texcmd",      regex(@"^(\\[a-zA-Z@]+)\b\s*(" + optargs + ")"), texGenericCommand ),
 
   Rule("texchar",     regex(@"^\\[^a-zA-Z]"), texChar ),
@@ -207,7 +212,7 @@ val metadataGrammar = [
 
 
 function metaEmpty( cap : matched ) : string {
-  " "
+  "%" + cap.matched
 }
 
 function metaKeep( cap : matched ) : string {
@@ -695,6 +700,17 @@ function texVSpace( cap : matched, _context ) : string {
 function texHSpace( cap : matched, _context ) : string {
   "[]{width='" + texLength(cap.groups[1]) + @"'}"
 }
+
+function texSkip( cap : matched, _context ) : string {
+  val height = if (cap.groups[1]=="big") then "12pt" elif (cap.groups[1]=="med") then "6pt" else "3pt"
+  "\n~ Empty { height='" + height + "' }\n\n~\n"
+}
+
+function texMBox( cap : matched, context ) : string {
+  val width = if (cap.groups[2]=="") then "" else "width='" + texLength(cap.groups[2]) + "'"
+  val pos   = if (cap.groups[3]=="") then "" else "text-align='" + (cap.groups[2]) + "'"
+}
+
 
 function texEmph( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]

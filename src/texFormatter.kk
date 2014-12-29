@@ -18,7 +18,6 @@ import common
 import entity
 import inline
 import options
-import optionsMeta    // rxPkgOpt
 import texCommon      // for texAccents et al
 import htmlFormatter  // for htmlEscape
 import hilite
@@ -479,3 +478,5 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
   })
 } 
 
+
+val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
