@@ -3722,7 +3722,7 @@ var symbolsMath = [
 
     var decs = [];
     errors.forEach( function(error) {
-      if (!error.range.fileName) error.range.fileName = self.editName;
+      if (!error.range.fileName) error.range.fileName = self.docName;
       decs.push( { 
         id: null, 
         type: error.type || type,
