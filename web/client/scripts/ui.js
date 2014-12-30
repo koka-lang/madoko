@@ -3734,7 +3734,7 @@ var symbolsMath = [
         expire: 0, // does not expire
       });
       var msg = (error.type || type) + ": " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
-      Util.message( msg, Util.Msg.Error );
+      Util.message( msg, error.type || type );
     });
 
     self.removeDecorations(true,type);
