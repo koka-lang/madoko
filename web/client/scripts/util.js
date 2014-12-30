@@ -21,6 +21,13 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     Prof: "prof",
   };
 
+  function messageOrd(msg) {
+    if (msg==Msg.Error || msg==Msg.Exn) return 3;
+    if (msg==Msg.Warning) return 2;
+    if (msg==Msg.Tool || msg==Msg.Trace || msg==Msg.Prof) return 0;
+    return 1;
+  }
+
   var status;
   var consoleOut;
   var iconOk;
@@ -73,10 +80,25 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   var maxConsole = 32*1024;
 
   var messageTimeout = 0;
+  var messageKind = Msg.Trace;
+  function setStatusHTML( html, kind ) {
+    if (messageTimeout) {
+      if (messageOrd(kind) < messageOrd(messageKind)) return; // keep more important message
+      clearTimeout(messageTimeout);
+    }
 
-  function setStatusHTML( html ) {
-    if (messageTimeout) clearTimeout(messageTimeout);
-    messageTimeout = setTimeout( function() { status.innerHTML = ""; }, 10000 ); // fade after 10 secs
+    function fade() { 
+      if (status.parentNode.querySelector("#status:hover") == status) {
+        messageTimeout = setTimeout(fade,5000);
+      }
+      else {
+        messageKind      = Msg.Trace;
+        messageTimeout   = 0;
+        status.innerHTML = ""; 
+      }
+    };
+    messageTimeout = setTimeout( fade, 15000 ); // fade after 15 secs
+    messageKind      = kind;
     status.innerHTML = html;
   }
 
@@ -129,7 +151,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
           }
         }
         var content = spanLines(htmlEscape(xtxt),"msg-line");
-        return "<span class='msg-" + kind + "' title='" + htmlEscape(txt) + "'>" + (linkFun ? linkFun(content) : content)  + "</span>";
+        return "<span class='msg-" + kind + "' title='" + htmlEscape(txt).replace(/<br>/g,"\n") + "'>" + (linkFun ? linkFun(content) : content)  + "</span>";
       }
 
       var prefix  = "<div class=\"msg-section\">";
@@ -150,10 +172,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       consoleOut.innerHTML = prefix + dprefix + span() + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        setStatusHTML(span(60));
+        setStatusHTML(span(60),kind);
       }
       else if (kind===Msg.Status) {
-        setStatusHTML(span(60))
+        setStatusHTML(span(60),kind)
       }
     }
   }
