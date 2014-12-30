@@ -70,7 +70,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (s.substr(0,1).toUpperCase() + s.substr(1));
   }
 
-  var maxConsole = 8*1024;
+  var maxConsole = 32*1024;
 
   var messageTimeout = 0;
 
