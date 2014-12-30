@@ -27,7 +27,7 @@ import texCommon
 ---------------------------------------- */
 alias texRule = rule<string,texContext>
 
-val special = @"\\{}~*_\[\]#\$`";
+val special = @"\\{}~*_\[\]#\$`%";
 
 val texargg = @"(?:\{" + texargs + @"\})"
 
@@ -67,7 +67,9 @@ val texGrammar : grammar<string,texContext> = [
   /* Block elements */
   Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?\s*" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
 
-  Rule("texcomment",  regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
+  Rule("texcomment1", regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
+  Rule("texcomment2", regex(@"^(\n *%.*\n(?: *%.*\n)*)"), texComment),
+  Rule("texlcomment", regex(@"^(%.*)"), texComment),  
   Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
   Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof|example)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
   Rule("textabularx", regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
@@ -379,6 +381,29 @@ function trimNL( s : string ) : string {
   s.replaceAll(rxNL0,"")
 }
 
+function quote( s : string ) : string {
+  val hasdquot = s.contains("\"")
+  val hassquot = s.contains("\'")
+  if (s.contains("\"")) then {
+    if (s.contains("\'")) 
+     then "\"" + s.replaceAll("\"","&dquot;") + "\""
+     else "'" + s + "'"
+  }
+  else "\"" + s + "\""
+}
+
+function makeAttr( key : string, value : string ) {
+  if (value=="")
+   then ""
+   else key + "=" + value.replaceAll(rxNl,"&nl;").quote
+}
+
+function joinAttrs( keyvals : list<string> ) {
+  val kvs = keyvals.remove(isEmpty).join(" ")
+  if (kvs=="") then "" else " { " + kvs + " }"
+}
+
+
 val rxNL0 = regex(@"^[ \t]*\r?\n|\r?\n$")
 
 function texMathDisplay( cap : matched, _context ) {
@@ -393,17 +418,16 @@ val rxMathNl = regex(@"\r?\n")
 function texMathEnv( cap : matched, context ) {
   val envName = cap.groups[1].capitalize
   val (content,labelCaption) = cap.groups[3].extractLabelCaption(context)
-  val attrs = ((if (cap.groups[2]=="*") then "- " else "") + labelCaption).trim
-  val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
-  "~ " + envName + attrsStr + "\n" +
+  val attrs = ([if (cap.groups[2]=="*") then "-" else ""] + labelCaption).joinAttrs
+  "~ " + envName + attrs + "\n" +
   content.trimNL +
   "\n~\n"
 }
 
 function texMathSnippet( cap : matched, context ) {
   val (content,labelCaption) = cap.matched.extractLabelCaption(context)
-  val attrsStr = if (labelCaption.isEmpty) then "" else " {" + labelCaption + "}"
-  "\n<!-- tex conversion hint: try to use MathPre instead of Snippet -->\n~ Snippet" + attrsStr + "\n" +
+  val attrs = labelCaption.joinAttrs
+  "\n<!-- tex conversion hint: try to use MathPre instead of Snippet -->\n~ Snippet" + attrs + "\n" +
   content.trimNL +
   "\n~\n"
 }
@@ -429,31 +453,30 @@ function texListingEnd( _cap, _context ) : string {
 }
 
 function texCaptioned( cap : matched, context ) : string {
-  texCaptionedX( cap, if (cap.groups[2].isEmpty) then "" else ".wide", context )
+  texCaptionedX( cap, if (cap.groups[2].isEmpty) then [] else [".wide"], context )
 }
 function texLabeled( cap : matched, context ) : string {
-  texCaptionedX( cap, "", context )
+  texCaptionedX( cap, [], context )
 }
-function texCaptionedX( cap : matched, extraAttrs : string, context ) : string {
+function texCaptionedX( cap : matched, extraAttrs : list<string>, context ) : string {
   val (content,labelCaption) = extractLabelCaption( cap.groups[4], context, cap.groups[3].parseTexX(context), "" )
-  val attrs = (extraAttrs + " " + labelCaption).trim
-  val attrsStr = if (attrs.isEmpty) then "" else " {" + attrs + "}"
-  "\n~ Begin " + cap.groups[1].capitalize + attrsStr + "\n" +
+  val attrs = (extraAttrs + labelCaption).joinAttrs
+    "\n~ Begin " + cap.groups[1].capitalize + attrs + "\n" +
   content.trimNL.parseTexX(context) +
   "\n~ End " + cap.groups[1].capitalize + "\n"
 }
 
-function extractLabelCaption( content : string, context, defCaption = "", defLabel = "" ) : (string,string) {
+function extractLabelCaption( content : string, context, defCaption = "", defLabel = "" ) : (string,list<string>) {
   var label := defLabel
   var caption := defCaption 
   val content1 = content.replace( rxCaption, fun(ccap) {
-    caption := ccap.groups[1].parseTexX(context).replaceAll(rxNl,"&nl;")
+    caption := ccap.groups[1].parseTexX(context)
     ""
   }).replace( rxLabel, fun(lcap) {
     label := "#" + lcap.groups[1].toIdentifier
     ""
   })
-  (content1, (label + " " + (if (caption != "") then "caption='" + caption + "'" else "")).trim )
+  (content1, [label,makeAttr("caption",caption)] )
 }
 
 val rxCaption = regex(@"\\caption\b" + texarg)
@@ -899,13 +922,16 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
                 .replaceAll(rxSpaces," ").trim
                 
   val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
+  val label   = if (lab!="" && !(lab.contains(rxAuthorYear))) then lab else ""
+
+  val attrs   = [makeAttr("id", key.definitionId),
+                 makeAttr("cite-label", lab),
+                 makeAttr("label", label),
+                 makeAttr("caption", caption),
+                 makeAttr("searchterm", search )].joinAttrs
 
   //trace("bibitem: lab: " + labx + " -> " + lab)
-  "~ Begin Bibitem { id=\"" + key.definitionId + "\" " + 
-                  (if (lab=="") then "" else "cite-label=\"" + lab + "\" " ) +
-                  (if (lab!="" && !(lab.contains(rxAuthorYear))) then "label=\"" + lab + "\" " else "") +
-                   "caption='" + caption + "' searchterm=\"" + search + "\" " +
-                  "}\n" +
+  "~ Begin Bibitem" + attrs + "\n" +
    md + 
    "\n~ End Bibitem\n"
 }
@@ -931,8 +957,8 @@ function unbrace(s : string ) : string {
 // Parse TeX elements and return Markdown
 public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False, ignore : bool = True  ) : string
 {
-  val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n")
-                 .replaceAll(regex(@"\t"),"   ")
+  val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n").replaceAll(regex(@"\t"),"   ")
+                 /*
                  // strip initial comments
                  .replaceAll(regex(@"^(\s|%.*)+"),"") 
                  // strip off comments
@@ -942,12 +968,13 @@ public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbos
                     elif (cap.groups[2] != "") { cap.groups[2] }
                     else ""  // end-of-line comment
                   })
+                  */
   val md = parseTexX(normTxt,TexContext(texGrammar,citestyle,ignore))
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
 
-val rxTexComment = regex(@"^((?:[ \t]*%.*\r?\n)+)|(\\%|\\url\{[^\}]*\})|%.*",multiline=True)
+// val rxTexComment = regex(@"^((?:[ \t]*%.*\r?\n)+)|(\\%|\\url\{[^\}]*\})|%.*",multiline=True)
 
 
 public function parseTexX( txt : string, context : texContext, newlineToSpace : bool = False) : string
