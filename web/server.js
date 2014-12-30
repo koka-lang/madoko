@@ -644,7 +644,7 @@ function saveFiles( userpath, files ) {
 function readFiles( userpath, docname, pdf, out ) {
   var ext    = path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
-  var fnames = [".dimx", "-math-dvi.dim", "-math-pdf.dim", "-math-dvi.final.tex", "-math-pdf.final.tex", "-bib.bbl", "-bib.aux"]
+  var fnames = [".dimx", "-math-dvi.dim", "-math-pdf.dim", "-math-dvi.tex", "-math-pdf.tex", "-bib.bbl", "-bib.aux"]
                 .concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); });
   // find last log file
