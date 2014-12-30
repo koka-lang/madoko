@@ -269,6 +269,7 @@ function extractMeta( text0 : string, context, mdata0 : list<string> ) : (list<s
  Latex block functions 
 ---------------------------------------- */
 function texInclude( cap : matched, _context ) {
+  val fname = cap.groups[2].unbrace  
   "\n[INCLUDE=" + cap.groups[2].unbrace + "]\n"
 }
 
@@ -381,7 +382,7 @@ function trimNL( s : string ) : string {
 val rxNL0 = regex(@"^[ \t]*\r?\n|\r?\n$")
 
 function texMathDisplay( cap : matched, _context ) {
-  "\n~ Math\n" + cap.matched.trimx(2) + "\n~\n"
+  "\n~ Math\n" + cap.matched.trimx(2).trim + "\n~\n"
 }
 
 function texMathInline( cap : matched, _context ) {
