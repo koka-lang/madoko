@@ -138,7 +138,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
     }
   },0,srcFile.dirname)
 } 
-val rxLatexErr = regex(@"^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?)[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
+val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
