@@ -61,11 +61,13 @@ public struct options(
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "",        // latex document class (.cls)
   
-  author   : list<string> = [],
-  affiliation: list<string> = [],
-  email    : list<string> = [],
-  authorNotes : list<string> = [],
-  titleNote: string = "",
+  author        : list<string> = [],
+  affiliation   : list<string> = [],
+  email         : list<string> = [],
+  authorNotes   : list<string> = [],
+  titleNote     : string = "",
+  titleRunning  : string = "",
+  authorRunning : string = "",
 
   citestyle     : citestyle = citeNumeric,     
   citeAll       : bool = False,

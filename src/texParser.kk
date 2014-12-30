@@ -17,6 +17,7 @@ import std/dict
 import std/string
 import std/regex
 import std/crypto
+import std/path
 import common
 import entity
 import texCommon
@@ -76,7 +77,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texlist",     regex(@"^\\begin\{(itemize|enumerate)\}\s*" + optarg + @"?\s*(\\item\b\s*" + optarg + @"\s*)?"), texList ),
   Rule("texendlist",  regex(@"^\\end\{(itemize|enumerate)\}\s*"), texEmptyLine ),
 
-  Rule("texlisting",  regex(@"^\\begin{(lstlisting|verbatim|code|alltt)}\s*" + optarg + @"?([\s\S]*?)\\end{\1}\s*"), texListing ),
+  Rule("texlisting",  regex(@"^\\begin\{(lstlisting|verbatim|code|alltt)\}\s*" + optarg + @"?([\s\S]*?)\\end\{\1\}\s*"), texListing ),
 
   Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?\n)[ \t]*\n"), texNoIndent ),
 
@@ -86,7 +87,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texskip",    regex(@"^\\(?:big|med|small)skip\b\s*" + texarg), texSkip ),
   Rule("texhspace",   regex(@"^\\vspace\b\s*" + texarg), texHSpace ),
   Rule("texmbox",     regex(@"^\\(m|make|f|frame)box\b\s*" + optarg + "?" + optarg + "?" + texargg ), texMBox ),
-
+  
   /* Specials */
   Rule("texinclude",  regex(@"^\\(include(?:only)?|input)\b\s*" + texarg + eol), texInclude ),
   Rule("textitle",    regex(@"^\\maketitle\b" + eol), texMakeTitle ),
@@ -97,6 +98,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textoc",      regex(@"^\\tableofcontents\b\s*"), texToc ),
   Rule("textof",      regex(@"^\\tableoffigures\b\s*"), texTof ),
   Rule("texfootnote", regex(@"^\\footnote\b\s*" + texargg + @"([\s\S]*?)\n[ \t\r]*\n"), texFootnote),
+  Rule("teximg",      regex(@"^\\includegraphics\b\s*" + optarg + "?" + texargg + @"([\s\S]*?)\n[ \t\r]*\n"), texImage ),
 
   /* Common inline elements */
   Rule("texref",      regex(@"^(~)?\\ref\b" + texargg), texRef ),
@@ -125,7 +127,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsc",       regex(@"^\\textsc\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texsc2",      regex(@"^\{\\sc(?:shape)?\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
-  Rule("texit2",      regex(@"^\{\\(?:itshape|em)\b\s*" + texargs + @"\}(\s)?"), texEmph ),
+  Rule("texit2",      regex(@"^\{\\(?:itshape|em|it)\b\s*" + texargs + @"\}(\s)?"), texEmph ),
   Rule("texbf",       regex(@"^\\textbf\b\s*" + texarg), texStrong ),
   Rule("texbf2",      regex(@"^\{\\bfseries\b\s*" + texargs + @"\}(\s)?"), texStrong ),
   Rule("texcode",     regex(@"^\\(code|verb|lstinline)\b\s*" + texarg), texCode ),
@@ -142,11 +144,13 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texsize",     regex(@"^\{\\(" + texFontSizes + @")\b\s*" + texargs + @"\}"), texFontSize ),
   Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
+
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),
-  
-  Rule("texdquot",    regex(@"^``((?:[^'\\]|\\.|'(?!'))*)''"), texDquot ),
-  Rule("texsquot",    regex(@"^`((?:[^'\\]|\\.)*)'"), texSquot ),
+
+  Rule("texdquot",    regex(@"^``((?:[^'\\\n]|\\.|'(?!'))*)''"), texDquot ),
+  Rule("texsquot",    regex(@"^`((?:[^'\\\n]|\\.)*)'"), texSquot ),
+  Rule("texdquot1",   regex(@"^``"), texOther ),  
 
   Rule("texrule",     regex(@"^\\rule\b\s*" + optarg + "?" + texarg + texarg ), texRule ),
 
@@ -208,6 +212,8 @@ val metadataGrammar = [
   MRule(regex(@"\\address\b\s*" + texargg), ["Address"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\email\b\s*" + texargg), ["Email"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\(?:institute|affiliation)\b\s*" + texargg), ["Affiliation"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\authorrunning\b\s*" + texargg), ["Author Running"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\titlerunning\b\s*" + texargg), ["Title Running"], metaTexValue, metaEmpty ),
 ]
 
 
@@ -628,6 +634,7 @@ function texOther( cap : matched, _context ) : string {
   elif (char=="]") then @"\]"  
   elif (char=="#") then @"\#"  
   elif (char=="`") then @"\`"  
+  elif (char=="``") then "\""
   else char 
 }
 
@@ -721,6 +728,23 @@ function texMBox( cap : matched, context ) : string {
   "[" + cap.groups[4].parseTexX(context) + "]{" + [border,width,pos].join(" ") + "}"
 }
 
+function texImage( cap : matched, context ) : string {
+  val kvs = cap.groups[1].findAll(rxKeyVal).list.map( fun(kcap) {
+              val key = kcap.groups[1]
+              val value = kcap.groups[2].unbrace
+              if (key=="width") then "width=\"" + texLength(value) + "\""
+              elif (key=="height") then "height=\"" + texLength(value) + "\""
+              elif (key=="scale") then "transform=\"scale(" + value + ")\""
+              elif (key=="angle") then "transform=\"rotate(" + value + "deg)\""              
+              else ""
+            }).join(" ")
+  val fname = cap.groups[2].unbrace
+  val imgname = if (fname.extname=="") then fname + ".eps" else fname
+  val imgkey  = imgname.stemname.replaceAll(regex(@"[^\w\-]+"),"")
+  "![" + imgkey + "]" + cap.groups[3].parseTexX(context) + "\n\n[" + imgkey + "]: " + imgname + " (image title) { " + kvs + " }\n"
+}
+
+
 
 function texEmph( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
@@ -773,7 +797,10 @@ function texMonospace( cap : matched, context : texContext ) : string {
 
 function texUrl( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1].unbrace
-  if (txt=="") then "" else ("[" + txt + "](" + txt.urlEncode + ")")
+  val url = txt.urlEncode
+  if (txt=="") then "" 
+  elif (txt==url) then "<" + txt + ">"
+  else ("[" + txt + "](" + txt.urlEncode + ")")
 }
 
 function texUrlPrefix( cap : matched, context : texContext ) : string {
@@ -865,9 +892,11 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
               Just(cap) -> (cap.groups[1],cap.groups[2])
               Nothing   -> ("",md)
             }
-  val caption = (authors + "\n" + title).replaceAll(rxNewblock,"&nl;")
+  val caption = (authors + "\n" + title) //.trim.parseTexX(context)
+                .replaceAll(rxNewblock,"&nl;")
                 .replaceAll("\n"," ").replaceAll("'","&apos;").replaceAll("\\","&bslash;")
                 .replaceAll(rxSpaces," ").trim
+                
   val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
 
   //trace("bibitem: lab: " + labx + " -> " + lab)

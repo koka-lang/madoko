@@ -63,6 +63,8 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       elif (key=="email") options(email=if (value=="") then [] else appendValue(options.email,value))
       elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then [] else appendValue(options.authorNotes,value))
       elif (key=="title-note" || key=="title-date") options(titleNote=value)
+      elif (key=="title-running") options(titleRunning=value)
+      elif (key=="author-running") options(authorRunning=value)
       elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
       elif (key=="cite-all") options(citeAll=(value!="")) 
       elif (key=="math-mode") options.setMathMode(value)
