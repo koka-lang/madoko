@@ -642,7 +642,7 @@ div.boxed {
   color: red;
 }
 .msg-warning {
-  color: maroon;
+  color: #cc0000;
 }
 
 .msg-section .msg-status {
