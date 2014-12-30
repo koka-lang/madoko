@@ -318,12 +318,16 @@ var Runner = (function() {
       }
     }
 
+    // after bug fix in latex error regex in madoko this seems no longer necessary?
     // other errors
-    rx = /^[ \t]*![ \t]*LaTeX Error:(.+)/mgi;    
+    rx = /^(.*)\r?\n[ \t]*![ \t]*LaTeX Error:(.+)/mgi;    
     while ((cap = rx.exec(output)) != null) {
-      var range = { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1, fileName: docname};
-      errors.push( { type: "error", range: range, message: cap[1] } ); 
+      if (!(/^[ \t]*error:[ \t]*source line:/.test(cap[1]))) {
+        var range = { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1, fileName: docname};
+        errors.unshift( { type: "error", range: range, message: cap[2] } ); 
+      }
     }
+    
     
     show(errors);
     if (errors.length > 0) {
