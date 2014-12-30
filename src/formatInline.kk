@@ -196,8 +196,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
       val mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
       if (context.mathStatic || mode=="math-pdf") {
         val digest = md5(txt)
-        log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%\n" + 
-                      texcmd + "\n\\end{md" + kind + "Snippet}")
+        log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
+                      texcmd + "\n\\end{md" + kind + "Snippet}%mdk")
         //trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))

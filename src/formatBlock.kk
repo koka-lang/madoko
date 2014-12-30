@@ -147,7 +147,7 @@ function lineText( b :  block ) {
 
 function getLineInfo( attrs : attrs ) : string {
   match(attrs.hasKey("data-line")) {
-    Just(info) -> "% data-line={" + info + "}\n" 
+    Just(info) -> "%mdk-data-line={" + info + "}\n" 
     Nothing    -> ""    
   }
 }
@@ -233,9 +233,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           match(context.fmt) {
             FmtTex  -> lineInfo + mtxt
             FmtHtml -> {
-              log("math-pdf","% math definitions\n" + lineInfo + txt + "\n")
+              log("math-pdf","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
               if (context.inlineContext.mathStatic) {
-                log("math-dvi","% math definitions\n" + lineInfo + txt + "\n")
+                log("math-dvi","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
                 ""
               }
               else {

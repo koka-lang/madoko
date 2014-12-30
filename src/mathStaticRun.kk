@@ -144,7 +144,7 @@ val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=Tr
 
 function mathHeader( xopts : options, mode : string ) : string 
 {
-  val initial = ["% MathDpi: " + xopts.mathDpi.show,
+  val initial = ["%mdk MathDpi: " + xopts.mathDpi.show,
              "MathImgDir: " + xopts.mathImgDir,
              "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
              "MathDocClass: " + xopts.mathDocClass
@@ -164,7 +164,7 @@ function mathHeader( xopts : options, mode : string ) : string
 
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {
   val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
-  val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
+  val xbody = "\\begin{mdSnippets}%mdk\n" + body + "\n\\end{mdSnippets}%mdk"
   opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
 }
 
@@ -270,7 +270,9 @@ function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe
     Nothing -> Nothing
     Just(cap) -> {
       val lineNo = cap.groups[1].parseInt.maybe(0,id)
-      findLatexLineData(0, texSrc.lines.list.take(lineNo-1).reverse )
+      val searchLines = texSrc.lines.list.take(lineNo-1).reverse
+      //trace("latex lineno: " + lineNo.show + "\n" + searchLines.join("\n") + "\n\n")
+      findLatexLineData(0, searchLines )
       /*
       lineStart0 = cap.groups[2]
       lineStart = if (!(lineStart0.contains(rxLatexEndSnippet))) then lineStart0
@@ -300,6 +302,7 @@ function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> 
         }
         Just(cap) -> {
           val last = cap.groups[1].split(";").list.reverse.take(1).join()
+          //trace(" found line info: " + cap.matched + ", last: " + last + ", delta: " + delta.show)
           match( last.find(rxLineNo) ) {
             Nothing -> Nothing
             Just(cap2) -> Just(cap2.groups[1]  + (cap2.groups[2].parseInt.maybe(0,id) + delta).show)
@@ -309,9 +312,9 @@ function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> 
     }
   }
 }
-val rxLineData    = regex( @"^(?:[^\\%]|\\.)*% *data-line=\{([^\}]*)\} *$" )
+val rxLineData    = regex( @"^(?:[^\\%]|\\.)*% *(?:mdk-)?data-line=\{([^\}]*)\} *$" )
 val rxLineNo      = regex( @"^([^:]*:)?(\d+)$" )
-val rxEndComment  = regex( @"^(?:[^\\%]|\\.)*%.*$" )
+val rxEndComment  = regex( @"^(?:[^\\%]|\\.)*%mdk.*$" )
 
 
 public function latexStrip( s : string ) : string

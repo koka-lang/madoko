@@ -201,7 +201,7 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
   val location  = linePrefix + lineNo.show
   val lineInfo  = if (lineNo <= 0) then "" else context.fmtLineInfo( location )
   if (lineNo > 0) {
-    val texLineInfo = "% data-line={" + location + "}"
+    val texLineInfo = "%mdk-data-line={" + location + "}"
     log("math-dvi", texLineInfo)
     log("math-pdf", texLineInfo)
     logLocation(location)  // for warnings
@@ -240,5 +240,5 @@ public function mathPre( txt : string ) : string
 public function mathPreBlock( txt : string) : string
 {
   val pre = mathPre(txt)
-  "\\begin{mdMathprearray}%\n" + pre + "\n\\end{mdMathprearray}"     
+  "\\begin{mdMathprearray}%mdk\n" + pre + "\n\\end{mdMathprearray}%mdk"     
 }
