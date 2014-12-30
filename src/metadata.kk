@@ -148,11 +148,6 @@ function defaultMeta( options : options ) : string {
       @"etal        : et al.",
       @"vfill       : \/",
       @"@tex vfill  : [\vfill]{input=texraw}",
-      @"latex       : $\mbox{\LaTeX}$",
-      @"tex         : $\mbox{\TeX}$",
-      @"latexe      : $\mbox{\LaTeXe}$",
-      @"bibtex      : $\mbox{\sc{Bib}\TeX}$",
-      @"amstex      : $\mbox{\AmSTeX}$",
 
       @"MadokoLogo: Created with [Madoko.net](https://www.madoko.net).",
       @".MadokoLogo: .block text-align=right font-size=xx-small margin-top=4em tight",
