@@ -439,7 +439,7 @@ function fmtTexFullX(body : string, options : options, metadata : dict<string>, 
    pkgs.map(fun(pkg) { 
       match (pkg.find(rxTexFile)) {
         Just -> {
-          log("filesRefer", changeExt(pkg,".tex") );
+          log("files", changeExt(pkg,".tex") );
           @"\input{" + pkg + "}"
         }
         Nothing -> fmtOptArg(@"\usepackage",pkg,snippets)
@@ -463,7 +463,7 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
     Just(cap) -> {
       val pname = cap.groups[2]
       if (pname.extname!="" || pname.dirname!="") {
-        log("filesRefer", changeExt(pname,ext) );
+        log("files", changeExt(pname,ext) );
       }
       (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") + 
         "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname) + "}"
@@ -471,7 +471,7 @@ function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : st
     Nothing  -> {
       val pname = pkg.trim
       if (pname.extname!="" || pname.dirname!="") {
-        log("filesRefer", changeExt(pname,ext) )
+        log("files", changeExt(pname,ext) )
       }
       "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname) + "}"
     }
