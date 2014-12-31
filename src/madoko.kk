@@ -58,7 +58,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   // first normalize the input: all tabs to 4 spaces.
   val (options,src) = parseMeta(options0,fmt,src0.normalizeSource)
   val xfull = options.full.maybe(True,id)     
-  val logo  = if (xfull && options.logo) then "\n\n~Begin MadokoLogo\n&MadokoLogo;\n~End MadokoLogo\n" else "\n"
+  val logo  = if (xfull && options.logo) then "\n\n~Begin LogoMadoko\n&LogoMadoko;\n~End LogoMadoko\n" else "\n"
 
   if (options.verbose>=4) then trace("parse blocks")
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )

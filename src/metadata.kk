@@ -148,9 +148,14 @@ function defaultMeta( options : options ) : string {
       @"etal        : et al.",
       @"vfill       : \/",
       @"@tex vfill  : [\vfill]{input=texraw}",
+      @"LogoLatex       : $\mbox{\LaTeX}$",
+      @"LogoTex         : $\mbox{\TeX}$",
+      @"LogoLatexe      : $\mbox{\LaTeXe}$",
+      @"LogoBibtex      : $\mbox{\sc{Bib}\TeX}$",
+      @"LogoAmstex      : $\mbox{\AmSTeX}$",
 
-      @"MadokoLogo: Created with [Madoko.net](https://www.madoko.net).",
-      @".MadokoLogo: .block text-align=right font-size=xx-small margin-top=4em tight",
+      @"LogoMadoko: Created with [Madoko.net](https://www.madoko.net).",
+      @".LogoMadoko: .block text-align=right font-size=xx-small margin-top=4em tight",
 
       @".thm-caption-content: font-style=italic",
       @"thm-caption-end     : &&;br;",
