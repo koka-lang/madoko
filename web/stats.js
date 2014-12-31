@@ -445,7 +445,7 @@ function asyncWriteStatsPage() {
 	var command = /* "madoko */ "node ./stats.js --sync";
 	return new Promise( function(cont) {
   	console.log("> " + command);
-  	Cp.exec( command, {timeout: 60000, maxBuffer: 512*1024 }, function(err,stdout,stderr) {
+  	Cp.exec( command, {timeout: 90000, maxBuffer: 512*1024 }, function(err,stdout,stderr) {
   		console.log(stdout);
   		console.log(stderr);
   		cont(err);
