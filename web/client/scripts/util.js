@@ -466,7 +466,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".bib"].join(";");  // .bbl
+  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst"].join(";");  // .bbl
   function hasEmbedExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;
@@ -478,7 +478,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
 
   function isImageMime(mime) {
-    return (startsWith(mime,"image/") || mime=="application/pdf");
+    return (startsWith(mime,"image/") || mime=="application/pdf" || mime=="application/postscript");
   }
   
   var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
