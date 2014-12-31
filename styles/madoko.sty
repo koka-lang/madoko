@@ -329,8 +329,9 @@
   \cssNewLengthKey{csspre}{height}{\cssImageHeight}
   \cssInline[elem=img,#1]{%   
     \renewcommand{\@imgArgs}{keepaspectratio=true}%
-    \ifdim\cssImageWidth=0pt\else\appto{\@imgArgs}{,width=\cssImageWidth}\fi
-    \ifdim\cssImageHeight=0pt\else\appto{\@imgArgs}{,height=\cssImageHeight}\fi
+    \ifdim\cssImageWidth=2sp\def\cssImageWidth{\linewidth}\fi%
+    \ifdim\cssImageWidth<3sp\else\appto{\@imgArgs}{,width=\cssImageWidth}\fi%
+    \ifdim\cssImageHeight<3sp\else\appto{\@imgArgs}{,height=\cssImageHeight}\fi
     \eifstrequal{\@imgArgs}{}%
       {\includegraphics{#2}}%
     {\eifstrequal{\cssVerticalAlign}{top}%
