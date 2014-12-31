@@ -41,7 +41,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     }
     elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") {
       if (value.extname!="" || value.dirname!="") {
-        log("filesRefer", if (value.extname=="") then value.changeExt(".bst") else value)
+        log("files", if (value.extname=="") then value.changeExt(".bst") else value)
       }
       options(bibStyle=value)
     }
