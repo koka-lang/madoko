@@ -95,6 +95,10 @@
 % short underscore
 \mdDefineUnicode{818}{\leavevmode\kern 0.06em\vbox{\hrule width 0.3em}}
 
+% qed
+\providecommand{\qedsymbol}{\ensuremath{\Box}}
+\providecommand{\qed}{\hfill\qedsymbol}
+
 % break and nbsp
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
@@ -407,7 +411,8 @@
 
 \cssNewKey{css}{start}{\cssStart}{}
 \newenvironment{mdOl}[1][]%
-  {\begin{mdDiv}[#1]%
+  {\ifdef\@enhook{\PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak use the "enumitem" package instead\MessageBreak (which is available by default)}{}}{}%
+  \begin{mdDiv}[#1]%
   \advance\c@mdListNesting by 1% use advance to be local
   \setlength{\xtopsep}{\topsep}%
   \addtolength{\topsep}{-\cssMarginTop}%
@@ -548,7 +553,8 @@
 % Figures
 % ---------------------------------------------------
 \cssNewKey{css}{page-align}{\cssPageAlign}{}
-\cssElemRuleDo{figure}{%
+\cssNewKey{css}{float-env}{\cssFloatEnv}{figure}
+\newcommand{\mdFloating}{%
   \eifstrequal{\cssPageAlign}{top}%
     {\def\@pagealign{t}}%
   {\eifstrequal{\cssPageAlign}{bottom}%
@@ -566,11 +572,12 @@
   {\eifstrequal{\cssFloat}{right}%
     {}%
   {\cssIfHasClass{wide}%
-    {\cssDoBefore{\@expandafter{\begin{figure*}[}{\@pagealign}]}\cssDoAfter{\end{figure*}}}%
-    {\cssDoBefore{\@expandafter{\begin{figure}[}{\@pagealign}]}\cssDoAfter{\end{figure}}}%
+    {\cssDoBefore{\@expandafter{\begin{\cssFloatEnv*}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv*}}}%
+    {\cssDoBefore{\@expandafter{\begin{\cssFloatEnv}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv}}}%
   }}%
   %\cssDoBefore{\cssSaveFootnotes}%
 }
+\cssElemRuleDo{floating}{\mdFloating}
 
 \newlength{\mdCaptionlen}
 \newcommand{\mdCaption}[1]{%
