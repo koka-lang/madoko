@@ -310,11 +310,11 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
 
 // Get hashes of bib files
 function createBibData( auxName : string, docName : string, searchDirs : list<string>, bibNames : list<string> ) : io string {
-  bibNames.map( fun(bibName) {
+  val (bibStems,bibContents) = bibNames.map( fun(bibName) {
     match(trySearchReadTextFile(bibName,searchDirs,".bib")) {
       Nothing -> {
         println( "warning: unable to find bibliography file: " + bibName )
-        ""
+        []
       }
       Just((bibFile,content)) -> {
         if (dirname(bibFile) != dirname(auxName)) {
@@ -322,10 +322,13 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
             println("warning: unable to copy bibliography file to output directory: " + bibName)
           }
         }
-        "\\bibdata{" + stemname(bibFile) + "}\n%md5:" + md5(content) + "\n"
+        // "\\bibdata{" + stemname(bibFile) + "}\n%md5:" + md5(content) + "\n"
+        [(stemname(bibFile),content)]
       }
     }
-  }).join
+  }).concat.unzip
+  val digest = bibContents.join.md5
+  "\\bibdata{" + bibStems.join(",") + "}\n%md5:" + digest + "\n"
 }
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
