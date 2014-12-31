@@ -22,10 +22,11 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   };
 
   function messageOrd(msg) {
-    if (msg==Msg.Error || msg==Msg.Exn) return 3;
+    if (msg==Msg.Error || msg==Msg.Exn) return 4;
+    if (msg==Msg.Status) return 3;
     if (msg==Msg.Warning) return 2;
-    if (msg==Msg.Tool || msg==Msg.Trace || msg==Msg.Prof) return 0;
-    return 1;
+    if (msg==Msg.Normal || msg==Msg.Info) return 1;
+    return 0;
   }
 
   var status;
