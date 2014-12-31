@@ -77,10 +77,13 @@ val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 function defaultMeta( options : options ) : string {
   ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End Math&nl;' tight .para-block line-adjust=0",
-      @"~Figure   : label='[@figure]{.figure-label}' .align-center html-elem=figure",
-      @"~Figure   : after='&nl;********* {.figureline}&nl;[[**Figure\ &label;.** ]\
-                           {.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
-      @"~Figure   : toc=tof toc-line='&label;. &caption;'",
+
+      @"~TableFigure : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table",
+      @"~Figure      : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure",
+      
+      @".Floating    : .align-center elem=floating html-elem=figure",
+      @".Floating    : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
+      @".Floating    : toc-line='&label;. &caption;'",
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'",
       @"            before='[\[&label;\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
