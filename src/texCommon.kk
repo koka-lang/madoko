@@ -44,3 +44,6 @@ public val optargs  = optarg + @"*"
 
 // captures most tex commands
 public val rxTexCmd = @"(?:\\(?:begin|end)\b\s*" + optargs + texarg + "|" + texcmd + optargs + ")"
+
+public val texlen  = @"\-?\d+(?:\.\d+)?(?:pt|mm|cm|in|ex|em|bp|pc|dd|cc|sp|fil{1,3})\b"
+public val texdim  = @"(" + texlen + @")\s*(?:plus\b\s*(" + texlen + @")\s*)?(?:minus\b\s*(" + texlen + @")\s*)?"
