@@ -249,6 +249,10 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           if (context.inlineContext.sanitize) then ""
           else match(monly) {
             Nothing -> txt
+            Just(FmtTex) | context.fmt == FmtTex -> {
+              val lineInfo = getLineInfo(parentAttrs)
+              "%mdk-begin-texraw\n" + lineInfo + txt
+            }
             Just(f) | f == context.fmt -> txt
             _       -> "" 
           }
