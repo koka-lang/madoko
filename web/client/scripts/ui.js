@@ -3577,7 +3577,7 @@ var symbolsMath = [
     
     var text = "";
     if (Util.isImageMime(mime)) {
-      self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto }\n');
+      self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
       text = "![" + stem + "]";
     }
     else if (ext===".mdk" || ext===".md") {
