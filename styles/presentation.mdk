@@ -28,6 +28,7 @@ Beamer Theme  : default
 Beamer Theme Options: 
 Reveal Long   : false
 Reveal Details: false
+Reveal SlideNumber: true
 Document Class: [xcolor=table]beamer
 Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
@@ -171,10 +172,10 @@ Html Header   :
     .preview .reveal aside.notes {
       display  : block;
       position : absolute;
-      width    : 25%;
-      left     : left;
+      width    : 30%;
+      left     : 70%;
       top      : -15%;
-      font-size: 60%;
+      font-size: 50%;
       border   : 1px solid black;
       border-radius   : 10px;
       background-color: white;
@@ -219,6 +220,7 @@ Html Header   :
         progress: true,
         history: false,
         center: true,
+        slideNumber: /^\s*(true|1)\s*$/i.test("&reveal-slidenumber;"),
         dependencies: [
           { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
           { src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
