@@ -240,5 +240,5 @@ public function mathPre( txt : string ) : string
 public function mathPreBlock( txt : string) : string
 {
   val pre = mathPre(txt)
-  "\\begin{mdMathprearray}%mdk\n" + pre + "\n\\end{mdMathprearray}%mdk"     
+  "\\begin{mdMathprearray}%mdk\n" + pre + "\n\\end{mdMathprearray}%mdk\n"     
 }
