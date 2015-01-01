@@ -1525,23 +1525,30 @@ doc.execCommand("SaveAs", null, filename)
     var bar   = paneA.nextElementSibling;
     var panelRect  = panel.getBoundingClientRect();
     var barRect    = bar.getBoundingClientRect();
+    var bound      = panelBound;
 
     if (!isDisplayed(paneA)) {
       if (!isDisplayed(paneB)) return;
       ratio = 0;
+      bound = 0;
     }
     else if (!isDisplayed(paneB)) {
       ratio = 1.0;
+      bound = 0;
+    }
+    if (!isDisplayed(bar)) {
+      barRect.width = 0;
+      barRect.height = 0;
     }
 
     if (isVertical) {
-      var left = Math.max(panelBound, Math.min( panelRect.width - panelBound, Math.round(panelRect.width * ratio)));      
+      var left = Math.max(bound, Math.min( panelRect.width - bound, Math.round(panelRect.width * ratio)));      
       bar.style.left = left.toFixed(0) + "px";
       paneA.style.width = left.toFixed(0) + "px";
       paneB.style.width = Math.floor(panelRect.width - left - barRect.width).toFixed(0) + "px";
     }
     else {
-      var top =  Math.max(panelBound, Math.min( panelRect.height - panelBound,Math.round(panelRect.height * ratio)));
+      var top =  Math.max(bound, Math.min( panelRect.height - bound,Math.round(panelRect.height * ratio)));
       paneA.style.height = top.toFixed(0) + "px";
       paneB.style.height = Math.floor(panelRect.height - top - barRect.height).toFixed(0) + "px";        
     }     
