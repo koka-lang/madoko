@@ -1626,7 +1626,7 @@ var UI = (function() {
       }
       if (file.shareUrl) {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
-        extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
+        extra = extra + "<a class='external file-share' target='_blank' title='Shared link to the online document' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
       if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 128*1024) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
@@ -1760,15 +1760,16 @@ var UI = (function() {
   -------------------------------------------------- */
 
 
-  function _saveUserContent( name, mime, content, tryOpenFirst ) {
+  function _saveUserContent( path, mime, content, tryOpenFirst ) {
     // blob is created in our origin; 
     // so we should make sure a user can only save, not open a window in our domain
     // since a html page could read our local storage or do rest calls with our cookie.
     // (this could be problem if a user opens a document with 'evil' content)
 
+    var name = Util.basename(path)
     var blob = new Blob([content], { type: mime });
     var url  = URL.createObjectURL(blob);
-    setTimeout( function() { URL.revokeObjectURL(url); }, 250 );
+    setTimeout( function() { URL.revokeObjectURL(url); }, 1000 );
 
     if (tryOpenFirst) {
       // IE will throw an exception,
@@ -1797,7 +1798,13 @@ var UI = (function() {
       saveBlob.call(navigator, blob, name);
     }
     else {  // fallback
-      window.open(url,name);
+      try {
+        window.open(url,name);
+      }
+      catch(exn) { // on mobile
+        var link = self.getViewLink(path,mime);
+        if (link) return Util.message( { message: "Document exported", link: link }, Util.Msg.Status );        
+      }
     }
   }
 
@@ -1829,7 +1836,7 @@ var UI = (function() {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
     var content = self.storage.readLocalRawContent( path );
-    return Promise.resolved( _saveUserContent( Util.basename(path), mime, content ) );
+    return Promise.resolved( _saveUserContent( path, mime, content ) );
   }
 
   UI.prototype._trySynchronize = function() {
@@ -1838,8 +1845,9 @@ var UI = (function() {
     return self._synchronize();
   }
 
-  UI.prototype._viewGenerated = function( name, mime ) {
+  UI.prototype.viewGenerated = function( name, mime ) {
     var self = this;
+    if (!mime) mime = Util.mimeFromExt(name);
     var message = Util.basename(mime).toUpperCase() + " exported";
 
     function directView() {
@@ -1875,7 +1883,7 @@ var UI = (function() {
         self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
           if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
           var name = "out/" + Util.changeExt(self.docName,".pdf");
-          return self._viewGenerated(name,"application/pdf");
+          return self.viewGenerated(name,"application/pdf");
         })
       );
     });
@@ -1888,7 +1896,7 @@ var UI = (function() {
         self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
           self.storage.writeFile( name, content );
-          return self._viewGenerated(name,"text/html");
+          return self.viewGenerated(name,"text/html");
         })
       );
     });
