@@ -1458,6 +1458,7 @@ var UI = (function() {
           self.storage = stg;
           self.docName = docName;
           self.docText = file.content;
+          document.title = "Madoko - " + Util.stemname(self.docName);
 
           // initialize citations
           self.storage.forEachFile( function( file ) {
