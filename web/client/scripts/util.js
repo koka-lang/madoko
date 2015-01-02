@@ -1250,12 +1250,17 @@ doc.execCommand("SaveAs", null, filename)
       "menubar=no",
       "scrollbars=yes"];
 
-    var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
-    if (popup && (opts.focus !== false)) {
-      popup.focus();
-    }
+    try {
+      var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
+      if (popup && (opts.focus !== false)) {
+        popup.focus();
+      }
 
-    return popup;
+      return popup;
+    }
+    catch(exn) {
+      return null;
+    }
   }
 
   function openModalPopup( opts, params ) {
