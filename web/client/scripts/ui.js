@@ -1310,7 +1310,7 @@ var UI = (function() {
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
-                Util.message("ready", Util.Msg.Status);
+                Util.message("ready", Util.Msg.Info);
                 self.removeDecorations(false,"error");
               }
               self.removeDecorations(false,"merge");
@@ -3565,7 +3565,8 @@ var symbolsMath = [
     if (pos) pos.column = 0;
     var ext  = Util.extname(file.name);
     var stem = Util.stemname(file.name);
-    var name = Util.basename(file.name);      
+    var name = Storage.sanitizeFileName(Util.basename(file.name));
+
     if (Util.isImageMime(mime)) name = "images/" + name;    
     if (encoding===Storage.Encoding.Base64) {
       var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
@@ -3582,43 +3583,80 @@ var symbolsMath = [
       Util.message("file size is very large; consider resizing to keep it under 512kb", Util.Msg.Warning);
     }
 
-    self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
     
     var text = "";
+    var message = "inserted"; 
     if (Util.isImageMime(mime)) {
-      self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
+      var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
+      if (isNew) {
+        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
+      }
+      else {
+        message = "referred to";
+      }
       text = "![" + stem + "]";
     }
     else if (ext===".mdk" || ext===".md") {
-      text = "[INCLUDE=\"" + name + "\"]";
-    }
-    else {
-      if (ext===".json") {
-        text="Colorizer   : " + name;
-      }
-      else if (ext===".css") {
-        text="Css         : " + name;
-      }
-      else if (ext===".bib") {
-        text="Bibliography: " + name;
-      }
-      else if (ext===".bst") {
-        text="Bib Style   : " + name;
-      }
-      else if (ext===".cls") {
-        text="Doc Class   : " + name;
-      }
-      else if (ext===".sty" || ext===".tex") {
-        text="Package     : " + name;
+      var isNew = self.storage.writeAppendFile( name, content, {encoding:encoding,mime:mime});
+      if (isNew) {
+        text = "[INCLUDE=\"" + name + "\"]";
       }
       else {
-        Util.message( "unsupported drop file extension: " + ext, Util.Msg.Info );
-        return;
+        message = "appended";
       }
-      var lineNo = findMetaPos(self.getEditText());      
-      if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
     }
-    self.insertText( text + "\n", pos );
+    else if (ext===".tex" || ext==".latex") {
+      message = "converting";
+      var storage = self.storage;
+      var mdkName = Util.changeExt(name,".mdk");
+      if (!self.storage.existsLocal(mdkName)) {
+        text = "[INCLUDE=\"" + mdkName + "\"]";
+      }
+      self.runner.runMadokoLocal( name, content, { convertTex: true } ).then( function(mdkContent) {
+        var isNew = storage.writeAppendFile( mdkName, mdkContent, { encoding:Storage.Encoding.Utf8, mime:"text/madoko"} );
+        Util.message("Converted and " + (isNew ? "inserted" : "appended") + " " + mdkName, Util.Msg.Status );
+      }, function(err) {
+        Util.message("Failed to convert " + name + ": " + err.toString(), Util.Msg.Error );
+      });      
+    }
+    else {
+      var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
+      if (!isNew) {
+        message = "overwrote"
+      }
+      else {
+        if (ext===".json") {
+          text="Colorizer   : " + name;
+        }
+        else if (ext===".css") {
+          text="Css         : " + name;
+        }
+        else if (ext===".bib") {
+          text="Bibliography: " + name;
+        }
+        else if (ext===".bst") {
+          text="Bib Style   : " + name;
+        }
+        else if (ext===".cls") {
+          text="Doc Class   : " + name;
+        }
+        else if (ext===".sty" || ext===".tex") {
+          text="Package     : " + name;
+        }
+        else {
+          Util.message( "unsupported drop file extension: " + ext, Util.Msg.Warning );
+          return;
+        }
+        var lineNo = findMetaPos(self.getEditText());      
+        if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
+      }
+    }
+    if (text) {
+      self.insertText( text + "\n", pos );
+    }
+    if (message) {
+      Util.message( message + " " + name, Util.Msg.Status );
+    }
   }
 
   UI.prototype.insertFiles = function(files,pos) {
