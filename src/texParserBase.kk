@@ -121,6 +121,7 @@ val metadataGrammar = [
   MRule(regex(@"\\usepackage\b\s*" + optarg + @"?\s*" + texarg), ["Package"], metaOptionValue, metaEmpty ),
   MRule(regex(@"\\title\b\s*" + texargg), ["Title"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\subtitle\b\s*" + texargg), ["Sub Title"], metaTexValue, metaEmpty ),
+  MRule(regex(@"\\date\b\s*" + texargg), ["Title Note"], metaTexValue, metaEmpty ),
   MRule(regex(@"\\bibliographystyle\b\s*" + texargg), ["Bib Style"], metaValueBibStyle, metaEmpty ),  
   MRule(regex(@"\\bibliography\b\s*" + texargg), ["Bibliography"], metaValueBib, metaKeep ),
   MRule(regex(@"\\authorinfo\b\s*" + texargg + @"\s*" + texargg + @"\s*" + texargg), ["Author","Address","Email"], metaTexValue3, metaEmpty ),
@@ -194,7 +195,7 @@ val rxMetaNL = regex(@"\r?\n(?:[ ]{1,4}|\t)?")
 function removeSections( txt : string ) : string {
   txt.replaceAll(rxSection,"")
 }
-val rxSection = regex(@"\\(sub)?section\b\*?\s*" + texarg + @"\s*")
+val rxSection = regex(@"\\(sub)?section\b\*?\s*" + optarg + @"?" + texarg + @"\s*")
 
 public function texDocClass( cap : matched, context : texContext ) : string {
   val docClass = cap.groups[2].unbrace.trim
@@ -208,9 +209,11 @@ public function texDocClass( cap : matched, context : texContext ) : string {
     Nothing    -> (content.parse(context), mdata2)
     Just(ccap) -> {
       val header = ccap.groups[1].trim
-      val hdata = if (header.isEmpty) then []
-                   else ["TeX Header  :\n" + header.trim.indent4] // \n~ TexRaw\n" + header + "\n~\n\n") 
-      (ccap.groups[2].parse(context), mdata2 + hdata)
+      val hdata = if (header.isEmpty) then ""
+                   else //["TeX Header  :\n" + header.trim.indent4] // 
+                       "\n<!-- LaTeX definitions; use ~ MathDefs for commands needed for mathematics -->" +
+                       "\n~ TexRaw\n" + header + "\n~\n\n" 
+      (hdata + ccap.groups[2].parse(context), mdata2)
     }
   }
   mdata.join("\n") + "\n\n" + body

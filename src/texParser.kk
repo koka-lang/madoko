@@ -60,6 +60,8 @@ val texFontSizeMap = [("tiny","xx-small"),("scriptsize","x-small"),("footnotesiz
                       ("LARGE","xx-large"),("Huge","xx-large")].dict
 val texFontSizes   = texFontSizeMap.keys.join("|")             
 
+val texenvcaption = "block|alertblock|exampleblock"
+
 val eol = @"(?:[ \t]*(?:%.*)?\r?\n)?"
 
 /* main grammar */
@@ -71,18 +73,18 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texdocclass", regex(@"^\\documentclass\b\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*)"), texDocClass ),
 
   /* Block elements */
-  Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?\s*" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
+  Rule("texsection",  regex(@"^\\" + texsect + @"\b(\*)?\s*" + optarg + "?" + texarg + @"(?:\s*\\label\b" + texarg + @")?" ), texSection ),
 
   Rule("texcomment1", regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
   Rule("texcomment2", regex(@"^(\n *%.*\n(?: *%.*\n)*)"), texComment),
   Rule("texlcomment", regex(@"^(%.*)"), texComment),  
   Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
   Rule("texwfigure",  regex(@"^\\begin{wrapfigure}" + optarg + texarg + texarg + @"?([\s\S]*?)\\end{wrapfigure}"), texWrapFigure ),
-  Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof|example)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
+  Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof|example|thm|dfn)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
   Rule("textabularx", regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
   Rule("textabular",  regex(@"^\\begin{tabular}\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*?)\\end{tabular}"), texTabular ),
 
-  Rule("texitemp",    regex(@"^\\pause\b\s*\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItemPause ),
+  Rule("texitemp",    regex(@"^\\pause\b\s*" + optarg + @"?\s*" + @"\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItemPause ),
   Rule("texitem",     regex(@"^\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItem ),
   Rule("texlist",     regex(@"^\\begin\{(itemize|enumerate)\}\s*" + optarg + @"?\s*((\\pause\b\s*)?\\item\b\s*" + overlay + "?" + optarg + @"?\s*)?"), texList ),
   Rule("texendlist",  regex(@"^\\end\{(itemize|enumerate)\}\s*"), texEmptyLine ),
@@ -103,9 +105,12 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texhskip",    regex(@"^\\hskip\b\s*" + texdim), texHSkip ),
 
   /* beamer */
-  Rule("texframe",    regex(@"^\\begin{frame}\s*" + overlay + "?" + optarg + "?" + texargg + @"?\s*" + texargg + "?" + @"([\s\S]*?)\\end{frame}"), texFrame ),
+  Rule("texframe",    regex(@"^\\begin{(?:frame|slide)}\s*" + overlay + "?" + optarg + "?" + texargg + @"?\s*" + texargg + "?" + @"([\s\S]*?)\\end{frame}"), texFrame ),
   Rule("texframeCmd", regex(@"^\\frame\b\s*" + overlay + "?" + optarg + "?" + texargg), texFrameCmd ),
   Rule("texcolumn",   regex(@"^\\begin{column}\s*" + texargg), texColumn ),
+  Rule("texonly",     regex(@"^\\(uncover|only|visible)\b\s*" + overlay + "?" + texargg), texUncover ),
+  Rule("texbcblock",  regex(@"^\\begin{(" + texenvcaption + @")}\s*" + overlay + "?" + texargg), texBeginCaptionBlock ),
+  Rule("texecblock",  regex(@"^\\end{(" + texenvcaption + @")}"), texEndCaptionBlock ),
   
   /* Specials */
   Rule("texinclude",  regex(@"^\\(include(?:only)?|input)\b\s*" + texarg + eol), texInclude ),
@@ -162,7 +167,11 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsf1",      regex(@"^\\textsf\b\s*" + texarg), texSans ),
   Rule("texsf2",      regex(@"^\{\\sffamily\b\s*" + texargs + @"\}"), texSans ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
+  Rule("texccmd",     regex(@"^\\(alert)\b\s*" + texarg), texClassCmd ),  
   Rule("texeol",      regex(@"^\\\\" + optarg + "?"), texLineBreak ),
+  Rule("texcolor1",   regex(@"^\\textcolor\b\s*" + optarg + "?" + texargg + texargg), texTextColor ),
+  Rule("texcolor2",   regex(@"^\{\s*\\color\b\s*" + optarg + "?" + texargg + texargs + @"\}"), texTextColor ),
+  Rule("texcolor3",   regex(@"^\\(f)?colorbox\b\s*" + optarg + "?" + texargg + texargg), texColorBox ),
 
   Rule("texinst",     regex(@"^\\(?:inst|IEEEauthorrefmark)\b\s*" + texarg), texInst ),
 
@@ -191,7 +200,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texignore1",  regex(@"^\\(" + texignore1 + @")\b\s*" + optargs + texarg), texAlwaysIgnore3 ),
   Rule("texignore0",  regex(@"^\\(" + texignore0 + @")\b\s*" + optargs), texAlwaysIgnore ),
   
-  Rule("texenvbegin", regex(@"^\\begin\{([a-zA-Z@]+)(\*)?\}\s*"), texEnvBegin),
+  Rule("texenvbegin", regex(@"^\\begin\{([a-zA-Z@]+)(\*)?\}\s*" + overlay + "?" + optarg + @"?\s*"), texEnvBegin),
   Rule("texenvend",   regex(@"^\\end\{([a-zA-Z@]+)\*?\}\s*"), texEnvEnd),
 
 
@@ -259,11 +268,13 @@ val rxNonIdChar = regex(@"[^\w\-]+")
 
 function texSection( cap : matched, context ) : string {
   val n = max(1, texsects.indexOf(fun(s) { s == cap.groups[1] }) - 1);
-  val caption = parse( cap.groups[3].unbrace, context )
-  val attrs = (if (cap.groups[2]=="*") then " -" else "") + 
-              (if (cap.groups[4] != "") then " #" + cap.groups[4].toIdentifier else "")
+  val caption = parse( cap.groups[4].unbrace, context )
+  val attrs = [if (cap.groups[2]=="*") then " -" else "",
+               if (cap.groups[5] != "") then " #" + cap.groups[5].toIdentifier else "",
+               makeAttr("toc-line", cap.groups[3])
+              ].joinAttrs
 
-  string(n,'#') + " " + caption + (if (attrs!="") then " { " + attrs + " }" else "") + "\n"
+  string(n,'#') + " " + caption + " " + attrs + "\n"
 }
 
 function texFontSize( cap : matched, context ) : string {
@@ -288,7 +299,8 @@ function capitalize( s ) {
 }
 
 function texEnvBegin( cap : matched, _context ) : string {
-  "~ Begin " + cap.groups[1].capitalize + "\n"
+  val attrs = [if (cap.groups[1].isEmpty) then "" else ".fragment"].joinAttrs
+  "\n~ Begin " + cap.groups[1].capitalize + " " + attrs + "\n"
 }
 
 function texEnvEnd( cap : matched, _context ) : string {
@@ -300,7 +312,7 @@ function texBeginMinipage( cap : matched, _context ) : string {
   val height = texLength(cap.groups[2])
   val attrs = [makeAttr("width",width),
                makeAttr("height",height)].joinAttrs
-  "~ Begin Minipage " + attrs + "\n"             
+  "\n~ Begin Minipage " + attrs + "\n"             
 }
 
 function texItemPause( cap : matched, context ) : string {
@@ -368,7 +380,7 @@ function texListing( cap : matched, context ) : string {
 
   "```" + attrs + "\n" + cap.groups[3].trimNL + " \n```\n"
 }
-val rxKeyVal = regex(@"\b(\w+)=(\{[^\}]*\}|[^\s\}]*)")
+val rxKeyVal = regex(@"\b(\w+)=(\{[^\}]*\}|[^;,\s\}]*)")
 
 function texListingEnd( _cap, _context ) : string {
   "```\n"
@@ -598,6 +610,9 @@ function beamerOptions( opts : string ) : (string,list<string>) {
       title := value
       ""
     }
+    elif (key=="squeeze" || key=="shrink" || key=="plain") {
+      ".smaller"
+    }
     else ""
   })
   (title,attrs)
@@ -646,6 +661,21 @@ function texColumn( cap : matched, context ) : string {
   "~ Begin Column " + attrs
 }
 
+function texUncover( cap : matched, context ) : string {
+  "[" + cap.groups[3].parse(context) + "]{.fragment}"
+}
+
+function texBeginCaptionBlock( cap : matched, context ) : string {
+  val attrs = ["." + cap.groups[1],
+               if (cap.groups[2].isEmpty) then "" else ".fragment",
+               makeAttr("caption", cap.groups[3].parse(context)) 
+              ].joinAttrs
+  "\n~ Begin Captioned " + attrs + "\n"
+}
+
+function texEndCaptionBlock( cap : matched, context ) : string {
+  "\n~ End Captioned\n"
+}
 
 /* --------------------------------------
  Latex grammar functions 
@@ -857,6 +887,74 @@ function texToday( cap : matched, context : texContext ) : string {
 function texFilename( cap : matched, context : texContext ) : string {
   "&filename;"
 }
+
+function texClassCmd( cap : matched, context : texContext ) : string {
+  "[" + cap.groups[2].parse(context) + "]{." + cap.groups[1].toIdentifier + "}"
+}
+
+
+function parseColor( c : string ) : string {
+  val n = c.parseIntDefault(0)
+  if (n < 0 || n > 255) 
+   then "00"
+   else n.showHex(2)   
+}
+
+function parseFloatColor( c : string ) : string {
+  val n = c.parseFixedDefault()
+  if (n < 0.0 || n > 1.0)
+   then "00"
+   else catch({(n * 255.0).floor.int.showHex(2)},fun(_exn) { "00" })
+}
+
+function parseColors(r,g,b) : string {
+  "#" + parseColor(r) + parseColor(g) + parseColor(b) 
+}
+
+function parseFloatColors(r,g,b) : string {
+  "#" + parseFloatColor(r) + parseFloatColor(g) + parseFloatColor(b) 
+}
+
+
+function extractColorX( model : string, value : string ) : string {
+  if (model=="") then return value.toIdentifier
+  val (r,g,b) = match(value.split(",").list) {
+    Cons(x,Nil) -> (x,x,x)
+    Cons(x,Cons(y,Cons(z,Nil))) -> (x,y,z)
+    _ -> ("","","")
+  }
+
+  if (model=="gray") {
+    parseFloatColors(r,r,r)
+  }
+  elif (model=="rgb") {
+    parseFloatColors(r,g,b)
+  }
+  elif (model=="RGB") {
+    parseColors(r,g,b)
+  }
+  elif (model=="HTML") {
+    "#" + r + g + b
+  }
+  else "black"
+}
+
+function extractColor( model : string, value : string  ) : list<string> {
+  [makeAttr("color",extractColorX(model,value))]  
+}
+
+function texTextColor( cap : matched, context ) : string {
+  val attrs = extractColor(  cap.groups[1], cap.groups[2] )
+  "[" + cap.groups[3].parse(context) + "]" + attrs.joinAttrs
+}
+
+function texColorBox( cap : matched, context ) : string {
+  val attrs = [makeAttr("background-color", extractColorX(  cap.groups[2], cap.groups[3] )),
+               if (cap.groups[1].isEmpty) then "" else ".framed"]
+  "[" + cap.groups[3].parse(context) + "]" + attrs.joinAttrs
+}
+
+
 
 function texEmph( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
