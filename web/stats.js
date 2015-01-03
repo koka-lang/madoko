@@ -353,6 +353,9 @@ function digestErrors( entries ) {
 		else if (entry.url==="/rest/push-atomic" && /^failed\b/.test(entry.error.message)) {
 			pushfails++;
 		}
+		else if (/^not found:/.test(entry.error.message)) {
+			return;
+		}
 		else {
 			errors.unshift( {
 				msg: anon(entry.error.message || "<unknown>"),
