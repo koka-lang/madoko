@@ -299,7 +299,7 @@ function capitalize( s ) {
 }
 
 function texEnvBegin( cap : matched, _context ) : string {
-  val attrs = [if (cap.groups[1].isEmpty) then "" else ".fragment"].joinAttrs
+  val attrs = [if (cap.groups[3].isEmpty) then "" else ".fragment"].joinAttrs
   "\n~ Begin " + cap.groups[1].capitalize + " " + attrs + "\n"
 }
 
