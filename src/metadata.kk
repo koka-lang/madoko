@@ -22,8 +22,8 @@ import optionsMeta
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
 {
-  val txt1 = stripInitialWhite(txt)
-  val (mdata2,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4)
+  val (txt1,lineCount0) = stripInitialWhite(txt)
+  val (mdata2,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
   val options1 = options0.fromMeta(mdata2)
   val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
@@ -39,10 +39,10 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    else (options,rest)  
 }
 
-function stripInitialWhite( txt : string ) : string {
+function stripInitialWhite( txt : string ) : (string,int) {
   match(txt.find(rxInitialWhite)) {
-    Nothing   -> txt
-    Just(cap) -> txt.substr(cap.next)
+    Nothing   -> (txt,0)
+    Just(cap) -> (txt.substr(cap.next), txt.substr(0,cap.next).count("\n"))
   }
 }
 val rxInitialWhite = regex(@"^(\s|<!--[\s\S]*?-->)+")
@@ -58,16 +58,21 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
       val matchMode = if (cap.groups[1].startsWith("no")) 
                        then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
                        else fmt.matchFmt( cap.groups[1], modes)      
-      val kvs = if (matchMode) then {
+      val (kvs,delta) = if (matchMode) then {
                   val value = cap.groups[4].joinLines.trim
                   //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
                   if (cap.groups.matchedOn(3))
-                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
-                   else [(cap.groups[2].normalizeId, value)]
+                   then (cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) }), 0)
+                   else {
+                    val key = cap.groups[2].normalizeId
+                    if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
+                     then ([(key,"%mdk-data-line={" + (lines+1).show + "}\n" + value)], 1)
+                     else ([(key,value)],0)
+                   }
                 }
-                else []
+                else ([],0)
       val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
+      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2+delta )
     }
   }
 } 
