@@ -46,10 +46,10 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       options(bibStyle=value)
     }
     elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
-    elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader + "\n" + value)
-    elif (key=="html-footer") options(htmlFooter=if(value=="") then "" else options.htmlFooter + "\n" + value)
-    elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader + "\n" + value)
-    elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx + "\n" + value)
+    elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader.appendNL(value))
+    elif (key=="html-footer") options(htmlFooter=if(value=="") then "" else options.htmlFooter.appendNL(value))
+    elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader.appendNL(value))
+    elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx.appendNL(value))
     elif (key=="author") {
       if (value=="") then options(author=[]) else {
         options(author=options.author + [value], 
@@ -114,6 +114,10 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       }
     }
   }
+}
+
+function appendNL(s : string, t : string ) : string {
+  if (s == "" || s.endsWith("\n")) then s + t else s + "\n" + t
 }
 
 function setMathMode( options : options, value : string ) : options {

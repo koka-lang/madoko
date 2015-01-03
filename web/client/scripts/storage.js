@@ -59,7 +59,9 @@ var Encoding = {
   },
 };
 
-
+function sanitizeFileName( fname ) {
+  return fname.replace(/\\/g,"/").replace(/[^\w\-\+%\\\/\.\(\)]+/g, "-");
+}
 
 function picker( storage, params ) {
   if (storage && !storage.isSynced() && 
@@ -566,6 +568,12 @@ var Storage = (function() {
     return synced;
   }
 
+  Storage.prototype.writeAppendFile = function( fpath, content, opts ) {
+    var self = this;    
+    var file = self.files.get(fpath);
+    return self.writeFile( fpath, (file ? file.content + content : content), opts )
+  }
+  
   Storage.prototype.writeFile = function( fpath, content, opts ) {
     var self = this;    
     var file = self.files.get(fpath);
@@ -581,6 +589,7 @@ var Storage = (function() {
       file.content   = content;
       file.position  = opts.position || file.position;
       self._updateFile(file);
+      return false;
     }
     else {
       // create new file
@@ -595,6 +604,7 @@ var Storage = (function() {
         position  : opts.position,
         nosync    : opts.nosync,
       });
+      return true;
     }
   }
 
@@ -1215,6 +1225,7 @@ return {
   getEditPosition : getEditPosition,
 
   publishSite     : publishSite,
+  sanitizeFileName: sanitizeFileName,
 }
 
 });

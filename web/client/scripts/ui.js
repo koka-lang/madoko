@@ -1310,7 +1310,7 @@ var UI = (function() {
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
-                Util.message("ready", Util.Msg.Status);
+                Util.message("ready", Util.Msg.Info);
                 self.removeDecorations(false,"error");
               }
               self.removeDecorations(false,"merge");
@@ -1458,6 +1458,7 @@ var UI = (function() {
           self.storage = stg;
           self.docName = docName;
           self.docText = file.content;
+          document.title = "Madoko - " + Util.stemname(self.docName);
 
           // initialize citations
           self.storage.forEachFile( function( file ) {
@@ -1625,7 +1626,7 @@ var UI = (function() {
       }
       if (file.shareUrl) {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
-        extra = extra + "<a class='external file-share' target='_blank' title='Shared link' href='" + file.shareUrl + "'>" + linkText + "</a>"
+        extra = extra + "<a class='external file-share' target='_blank' title='Shared link to the online document' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
       if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 128*1024) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
@@ -1759,15 +1760,16 @@ var UI = (function() {
   -------------------------------------------------- */
 
 
-  function _saveUserContent( name, mime, content, tryOpenFirst ) {
+  function _saveUserContent( path, mime, content, tryOpenFirst ) {
     // blob is created in our origin; 
     // so we should make sure a user can only save, not open a window in our domain
     // since a html page could read our local storage or do rest calls with our cookie.
     // (this could be problem if a user opens a document with 'evil' content)
 
+    var name = Util.basename(path)
     var blob = new Blob([content], { type: mime });
     var url  = URL.createObjectURL(blob);
-    setTimeout( function() { URL.revokeObjectURL(url); }, 250 );
+    setTimeout( function() { URL.revokeObjectURL(url); }, 1000 );
 
     if (tryOpenFirst) {
       // IE will throw an exception,
@@ -1796,7 +1798,13 @@ var UI = (function() {
       saveBlob.call(navigator, blob, name);
     }
     else {  // fallback
-      window.open(url,name);
+      try {
+        window.open(url,name);
+      }
+      catch(exn) { // on mobile
+        var link = self.getViewLink(path,mime);
+        if (link) return Util.message( { message: "Document exported", link: link }, Util.Msg.Status );        
+      }
     }
   }
 
@@ -1828,7 +1836,7 @@ var UI = (function() {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
     var content = self.storage.readLocalRawContent( path );
-    return Promise.resolved( _saveUserContent( Util.basename(path), mime, content ) );
+    return Promise.resolved( _saveUserContent( path, mime, content ) );
   }
 
   UI.prototype._trySynchronize = function() {
@@ -1837,8 +1845,9 @@ var UI = (function() {
     return self._synchronize();
   }
 
-  UI.prototype._viewGenerated = function( name, mime ) {
+  UI.prototype.viewGenerated = function( name, mime ) {
     var self = this;
+    if (!mime) mime = Util.mimeFromExt(name);
     var message = Util.basename(mime).toUpperCase() + " exported";
 
     function directView() {
@@ -1874,7 +1883,7 @@ var UI = (function() {
         self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
           if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
           var name = "out/" + Util.changeExt(self.docName,".pdf");
-          return self._viewGenerated(name,"application/pdf");
+          return self.viewGenerated(name,"application/pdf");
         })
       );
     });
@@ -1887,7 +1896,7 @@ var UI = (function() {
         self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
           self.storage.writeFile( name, content );
-          return self._viewGenerated(name,"text/html");
+          return self.viewGenerated(name,"text/html");
         })
       );
     });
@@ -3556,7 +3565,8 @@ var symbolsMath = [
     if (pos) pos.column = 0;
     var ext  = Util.extname(file.name);
     var stem = Util.stemname(file.name);
-    var name = Util.basename(file.name);      
+    var name = Storage.sanitizeFileName(Util.basename(file.name));
+
     if (Util.isImageMime(mime)) name = "images/" + name;    
     if (encoding===Storage.Encoding.Base64) {
       var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
@@ -3573,43 +3583,80 @@ var symbolsMath = [
       Util.message("file size is very large; consider resizing to keep it under 512kb", Util.Msg.Warning);
     }
 
-    self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
     
     var text = "";
+    var message = "inserted"; 
     if (Util.isImageMime(mime)) {
-      self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
+      var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
+      if (isNew) {
+        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
+      }
+      else {
+        message = "referred to";
+      }
       text = "![" + stem + "]";
     }
     else if (ext===".mdk" || ext===".md") {
-      text = "[INCLUDE=\"" + name + "\"]";
-    }
-    else {
-      if (ext===".json") {
-        text="Colorizer   : " + name;
-      }
-      else if (ext===".css") {
-        text="Css         : " + name;
-      }
-      else if (ext===".bib") {
-        text="Bibliography: " + name;
-      }
-      else if (ext===".bst") {
-        text="Bib Style   : " + name;
-      }
-      else if (ext===".cls") {
-        text="Doc Class   : " + name;
-      }
-      else if (ext===".sty" || ext===".tex") {
-        text="Package     : " + name;
+      var isNew = self.storage.writeAppendFile( name, content, {encoding:encoding,mime:mime});
+      if (isNew) {
+        text = "[INCLUDE=\"" + name + "\"]";
       }
       else {
-        Util.message( "unsupported drop file extension: " + ext, Util.Msg.Info );
-        return;
+        message = "appended";
       }
-      var lineNo = findMetaPos(self.getEditText());      
-      if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
     }
-    self.insertText( text + "\n", pos );
+    else if (ext===".tex" || ext==".latex") {
+      message = "converting";
+      var storage = self.storage;
+      var mdkName = Util.changeExt(name,".mdk");
+      if (!self.storage.existsLocal(mdkName)) {
+        text = "[INCLUDE=\"" + mdkName + "\"]";
+      }
+      self.runner.runMadokoLocal( name, content, { convertTex: true } ).then( function(mdkContent) {
+        var isNew = storage.writeAppendFile( mdkName, mdkContent, { encoding:Storage.Encoding.Utf8, mime:"text/madoko"} );
+        Util.message("Converted and " + (isNew ? "inserted" : "appended") + " " + mdkName, Util.Msg.Status );
+      }, function(err) {
+        Util.message("Failed to convert " + name + ": " + err.toString(), Util.Msg.Error );
+      });      
+    }
+    else {
+      var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
+      if (!isNew) {
+        message = "overwrote"
+      }
+      else {
+        if (ext===".json") {
+          text="Colorizer   : " + name;
+        }
+        else if (ext===".css") {
+          text="Css         : " + name;
+        }
+        else if (ext===".bib") {
+          text="Bibliography: " + name;
+        }
+        else if (ext===".bst") {
+          text="Bib Style   : " + name;
+        }
+        else if (ext===".cls") {
+          text="Doc Class   : " + name;
+        }
+        else if (ext===".sty" || ext===".tex") {
+          text="Package     : " + name;
+        }
+        else {
+          Util.message( "unsupported drop file extension: " + ext, Util.Msg.Warning );
+          return;
+        }
+        var lineNo = findMetaPos(self.getEditText());      
+        if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
+      }
+    }
+    if (text) {
+      self.insertText( text + "\n", pos );
+    }
+    if (message) {
+      Util.message( message + " " + name, Util.Msg.Status );
+    }
   }
 
   UI.prototype.insertFiles = function(files,pos) {

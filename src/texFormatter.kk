@@ -38,7 +38,7 @@ public function fmtTexCmd(context : inlineContext, cmd : string, txt : string, a
 }
 
 public function fmtTexLineInfo( context : inlineContext, lineInfo : string ) : string {
-  "% data-line={" + lineInfo + "}\n{}"
+  "%mdk-data-line={" + lineInfo + "}\n{}"
 }
 
 public function fmtTexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
@@ -442,7 +442,7 @@ function fmtTexFullX(body : string, options : options, metadata : dict<string>, 
           log("files", changeExt(pkg,".tex") );
           @"\input{" + pkg + "}"
         }
-        Nothing -> fmtOptArg(@"\usepackage",pkg,snippets)
+        Nothing -> fmtOptArg(@"\usepackage",pkg)
       }
     }).join("\n"),
    options.texHeader.expand,
@@ -457,7 +457,7 @@ function fmtTexFullX(body : string, options : options, metadata : dict<string>, 
 
 val rxTexFile = regex(@"^[^\n\r\[\]]+?\.tex$",ignoreCase=True)
 
-function fmtOptArg( pre:string, pkg : string,  snippets : bool = False, ext : string = ".sty" ) : string 
+function fmtOptArg( pre:string, pkg : string,  ext : string = ".sty" ) : string 
 {
   pre + (match(pkg.find(rxPkgOpt)) {
     Just(cap) -> {

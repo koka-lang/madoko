@@ -163,12 +163,13 @@ var Runner = (function() {
     });
   }
 
-  Runner.prototype.runMadokoLocal = function(docName,text) 
+  Runner.prototype.runMadokoLocal = function(docName,text,extraOptions) 
   {
     var self = this;
     var ctx = { round: -1, includeImages: true, docname: docName, storageId: self.storage.storageId };
     var options = Util.copy(self.options);
     options.lineNo = 0;
+    Util.extend(options,extraOptions);
     return self.runMadoko( text, ctx, options ).then( function(res) {
       if (!self.storage || ctx.storageId !== self.storage.storageId) throw new Error("stale request");
       if (res.runAgain) {

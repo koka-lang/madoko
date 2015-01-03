@@ -49,7 +49,7 @@ public function addImage( embeds : dict<embedinfo>, imageName : string, data : s
 }
 
 
-public function markdown( inputName : string, input : string, outdir : string, options : options,
+public function markdown( inputName : string, input : string, outdir : string, options : options, convertTex : bool,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,
                                       files:string,filesRefer:string,filesWrite:string,labels:string,links:string) -> io () ) : io () 
 { 
@@ -57,7 +57,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
     log("stdout",s)
   });
 
-  val copts = coptions(options = options, outputDir = outdir)
+  val copts = coptions(options = options, outputDir = outdir, convertTex = convertTex)
   val outName = outputName(inputName,copts)
   
   var rerun := False;

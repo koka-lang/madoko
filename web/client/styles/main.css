@@ -235,6 +235,10 @@ html,body,#main {
   width: 100%;
 }
 
+#main[data-view=full] .pane-view {
+  height: calc(100% - 1.4rem); /* minus header bar */
+}
+
 .rounded #main .pane-view {
   margin: 5px;
   border: 0px solid white;
@@ -1192,7 +1196,7 @@ div.pinned.boxed.menu {
 }
 
 #connection-content {
-  min-width: 8em;
+  min-width: 10em;
 }
 
 #help-content,
