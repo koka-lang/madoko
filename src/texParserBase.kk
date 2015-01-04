@@ -200,7 +200,7 @@ val rxSection = regex(@"\\(sub)?section\b\*?\s*" + optarg + @"?" + texarg + @"\s
 public function texDocClass( cap : matched, context : texContext ) : string {
   val docClass = cap.groups[2].unbrace.trim
   val mdata0 = if (docClass=="beamer") 
-                then ["[INCLUDE=presentation]"] 
+                then ["[INCLUDE=presentation]","Reveal Theme: sky"] 
                 else zipWith(["Doc Class"], metaOptionValue(cap,context), texMeta)
   val (mdata1,content0) = extractMeta( cap.groups[3], context, mdata0 )
   val mdata2 = mdata1 + [if (docClass == "book") then "" else "Heading Base: 2","Logo        : True"]
@@ -209,11 +209,11 @@ public function texDocClass( cap : matched, context : texContext ) : string {
     Nothing    -> (content.parse(context), mdata2)
     Just(ccap) -> {
       val header = ccap.groups[1].trim
-      val hdata = if (header.isEmpty) then ""
-                   else //["TeX Header  :\n" + header.trim.indent4] // 
-                       "\n<!-- LaTeX definitions; use ~ MathDefs for commands needed for mathematics -->" +
-                       "\n~ TexRaw\n" + header + "\n~\n\n" 
-      (hdata + ccap.groups[2].parse(context), mdata2)
+      val hdata = if (header.isEmpty) then []
+                   else ["TeX Header  :\n    % Latex definitions.\n    % (Use metadata 'Tex Header*' for commands excluded in math)\n" + header.trim.indent4] // 
+                       //"\n<!-- LaTeX definitions; use ~ MathDefs for commands needed for mathematics -->" +
+                       //"\n~ TexRaw\n" + header + "\n~\n\n" 
+      (ccap.groups[2].parse(context), mdata2 + hdata)
     }
   }
   mdata.join("\n") + "\n\n" + body
