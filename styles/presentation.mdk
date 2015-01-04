@@ -51,6 +51,23 @@ Section Depth : 2
 .long         : data-long
 @tex ~Notes   : display=none
 @tex ~Vertical: notag
+Tex Header    :
+    \ifbeamer\relax\else
+      \providecommand{\usetheme}[2][]{}
+      \providecommand{\usecolortheme}[2][]{}
+      \providecommand{\usefonttheme}[2][]{}
+      \providecommand{\pause}[1][]{}
+      \providecommand{\AtBeginSection}[2][]{}
+      \providecommand{\AtBeginSubsection}[2][]{}
+      \providecommand{\AtBeginSubsubsection}[2][]{}
+      \providecommand{\AtBeginPart}[2][]{}
+      \providecommand{\AtBeginLecture}[2][]{}
+      \providecommand{\theoremstyle}[2][]{}
+      \makeatletter
+      \def\newtheorem{\@ifstar\newtheoremx\newtheoremx}
+      \makeatother
+      \providecommand{\newtheoremx}[3][]{}{}
+    \fi
 Tex Header*   :
     \ifbeamer\usetheme[&beamer-theme-options;]{&beamer-theme;}\fi
 Html Header   :         
