@@ -1225,7 +1225,7 @@ return {
   getEditPosition : getEditPosition,
 
   publishSite     : publishSite,
-  sanitizeFileName: sanitizeFileName,
+  sanitizeFileName: sanitizeFileName,  
 }
 
 });

@@ -199,6 +199,11 @@ val rxSection = regex(@"\\(sub)?section\b\*?\s*" + optarg + @"?" + texarg + @"\s
 
 public function texDocClass( cap : matched, context : texContext ) : string {
   val docClass = cap.groups[2].unbrace.trim
+  val comment  = [ "<!-- LaTeX conversion",
+                   "     Drag&Drop further .tex/.bib/.cls/.sty/.bst or image files in the editor window",
+                   "     Conversion reference at: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#texconv",
+                   "-->"                                 
+                 ].join("\n")
   val mdata0 = if (docClass=="beamer") 
                 then ["[INCLUDE=presentation]","Reveal Theme: sky"] 
                 else zipWith(["Doc Class"], metaOptionValue(cap,context), texMeta)
@@ -213,7 +218,7 @@ public function texDocClass( cap : matched, context : texContext ) : string {
                    else ["TeX Header  :\n    % Latex definitions.\n    % (Use metadata 'Tex Header*' for commands excluded in math)\n" + header.trim.indent4] // 
                        //"\n<!-- LaTeX definitions; use ~ MathDefs for commands needed for mathematics -->" +
                        //"\n~ TexRaw\n" + header + "\n~\n\n" 
-      (ccap.groups[2].parse(context), mdata2 + hdata)
+      (ccap.groups[2].parse(context), [comment] + mdata2 + hdata)
     }
   }
   mdata.join("\n") + "\n\n" + body

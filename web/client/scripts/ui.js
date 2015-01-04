@@ -714,6 +714,14 @@ var UI = (function() {
       });
     };
     document.getElementById("open").onclick = openEvent;
+
+    document.getElementById("import-tex").onclick = function(ev) {
+      self.event( "imported", "importing...", State.Loading, function() {
+        return self.importTex().always( function() { 
+          return self.updateConnectionStatus();
+        });
+      });
+    };
     
     document.getElementById("signin").onclick = function(ev) {
       if (self.storage && self.storage.remote.needSignin) {        
@@ -1416,6 +1424,23 @@ var UI = (function() {
       }));
   }
 
+  UI.prototype.importTex = function() {
+    var self = this;
+    return self.checkSynced().then( function(yes) {
+      if (!yes) throw new Error("operation cancelled");
+      return Storage.upload( null, "Please select a LaTeX file (.tex)", "Import LaTeX file", "images/dark/icon-upload.png").then( function(files) {
+        var fname = (files && files[0]) ? files[0].name : null;
+        if (!fname || Util.extname(fname) !== ".tex") throw new Error("Sorry, can only import .tex files.");
+        var docName = Storage.sanitizeFileName(Util.stemname(fname)) + ".mdk";
+        var stg = Storage.createNullStorage();        
+        stg.writeFile(docName,"")
+        return self.setStorage(stg,docName).then( function() {
+          self.insertFiles(files);
+        });
+      });
+    });
+  }
+
   UI.prototype.loadFromHash = function() {
     var self = this;
     var cap = /[#&\?]url=(https?:\/\/[^=&#;]+)/.exec(window.location.hash);
@@ -1484,6 +1509,7 @@ var UI = (function() {
 
   UI.prototype.initializeStorage = function(stg,docName,cont) {
     var self = this;
+    docName = docName || "document.mdk";        
     var cap = /[#&]template=([^=&#;]+)/.exec(window.location.hash);
     if (cap) window.location.hash = "";
     if (cap || !stg) {
@@ -1491,7 +1517,6 @@ var UI = (function() {
         if (!discard) return cont(stg,docName);
 
         // initialize fresh from template
-        docName = "document.mdk";
         stg = Storage.createNullStorage();
         var template = (cap ? cap[1] : "default");
         return Storage.createFromTemplate(stg,docName,template).then( function() {
@@ -2994,7 +3019,7 @@ var symbolsMath = [
         { name    : "CSS style", 
           helpLink: "#html-keys",
           title   : "Include a CSS style file (.css)",
-          upload  : "Please select a CSS style file (.css).",
+          upload  : "Please select a CSS style file.",
           exts    : [".css"],
         },
         { name    : "LaTeX package", 
@@ -3615,6 +3640,7 @@ var symbolsMath = [
       self.runner.runMadokoLocal( name, content, { convertTex: true } ).then( function(mdkContent) {
         var isNew = storage.writeAppendFile( mdkName, mdkContent, { encoding:Storage.Encoding.Utf8, mime:"text/madoko"} );
         Util.message("Converted and " + (isNew ? "inserted" : "appended") + " " + mdkName, Util.Msg.Status );
+        self.setStale();
       }, function(err) {
         Util.message("Failed to convert " + name + ": " + err.toString(), Util.Msg.Error );
       });      
