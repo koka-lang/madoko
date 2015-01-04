@@ -50,6 +50,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
     elif (key=="html-footer") options(htmlFooter=if(value=="") then "" else options.htmlFooter.appendNL(value))
     elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader.appendNL(value))
     elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx.appendNL(value))
+    elif (key=="tex-footer") options(texFooter =if(value=="") then "" else options.texFooter.appendNL(value))
     elif (key=="author") {
       if (value=="") then options(author=[]) else {
         options(author=options.author + [value], 

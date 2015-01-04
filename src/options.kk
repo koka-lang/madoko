@@ -53,6 +53,7 @@ public struct options(
   htmlMeta : string = "name=\"viewport\" content=\"initial-scale=1.0\"",  // html meta tags
   texHeader: string= "",   // literal tex header
   texHeaderx: string= "",  // literal tex header in non-math mode only
+  texFooter: string= "",   // literal tex footer 
   
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
