@@ -782,6 +782,12 @@ div.boxed {
   color: inherit;
 }
 
+.monaco-editor .glyph-edit {
+  background-image: url(../images/icon-user-read.png);
+  background-size: 100%;
+}
+
+
 .monaco-editor                        { color: black; }
 .monaco-editor .token.identifier      { }
 .monaco-editor .token.operators       { }

@@ -1125,14 +1125,13 @@ function resolveAlias(name) {
 
 // return a record { readers, writers } that show how many
 // other readers and writers there are.
-function getEditInfo( id, name ) {
-  var res = { readers: [], writers: [] };
-  var info = edits.get(name);
+function getEditInfo( id, fname ) {
+  var res = { fileName: fname, users: [] };
+  var info = edits.get(fname);
   if (info && info.users) {
     info.users.forEach( function(uid,user) {
       if (uid !== id) {
-        res.readers.push( { name: user.name } );
-        if (user.editing) res.writers.push( {name: user.name} )
+        res.users.push( { name: user.name, kind: user.kind, line: user.line } );
       }
     });
   }
@@ -1141,40 +1140,45 @@ function getEditInfo( id, name ) {
 
 var EditOp = { None: "none", View: "read", Edit:"write" }
 
-function updateEditInfo( id, name, editop, userName ) {
-  if (!name) return;
-  var info = edits.get(name);
+function updateEditInfo( id, fname, editInfo, userName ) {
+  if (!fname) return;
+  var info = edits.get(fname);
   if (!info) {
-    if (editop === EditOp.None);
+    if (editInfo.kind === EditOp.None) return;
     info = { users : new Map() };
-    edits.set(name,info);
+    edits.set(fname,info);
   }
 
-  if (editop === EditOp.None) {
+  if (editInfo.kind === EditOp.None) {
     info.users.remove( id );
-    if (info.users.count === 0) edits.remove(name);
+    if (info.users.count === 0) edits.remove(fname);
   }
   else {
-    var user = info.users.getOrCreate( id, { lastUpdate: 0, editing: false, name: (userName || "?") });
+    var user = info.users.getOrCreate( id, { lastUpdate: 0, kind: editInfo.kind, line: editInfo.line, name: (userName || "?") });
     user.lastUpdate = Date.now();
-    user.editing = (editop === EditOp.Edit);    
-  }2
+    user.kind = editInfo.kind;
+    user.line = editInfo.line;
+  }
 }
 
 // given a list of file names with their edit operation,
 // return a list those file names with the number of readers and writers for each.
-function editUpdate( req, userid, names, userName ) {
-  if (!names) return {};
+function editUpdate( req, userid, files, userName ) {
+  if (!files) return {};
   var res = {};
   var logit = false;
-  properties(names).forEach( function(name) {
-    if (!name || name[0] !== "/") return;
-    if (typeof names[name] !== "string") return;
-    if (names[name] === EditOp.Edit) logit = true;
-    var realname = resolveAlias(name);
-    updateEditInfo( userid, realname, names[name], userName);
-    res[name] = getEditInfo(userid, realname);
-    console.log("user: " + (userName || userid) + ": " + name + ": " + (realname == name ? "" : "as " + realname + ": ") + names[name] + "(" + res[name].readers + "," + res[name].writers + ")");
+  properties(files).forEach( function(fname) {
+    if (!fname || fname[0] !== "/") return;
+    var info = files[fname];
+    if (!info) return;
+    if (typeof info === "string") info = { kind: info, line: 0 }; //legacy
+    if (typeof info !== "object") return;
+    if (info.kind === EditOp.Edit) logit = true;
+    var realname = resolveAlias(fname);
+    updateEditInfo( userid, realname, info, userName);
+    res[fname] = getEditInfo(userid, realname);
+    console.log("user: " + (userName || userid) + ": " + fname + ": " + (realname == fname ? "" : "as " + realname + ": ") + 
+                  info.kind + ":" + info.line + "\n  " + JSON.stringify(res[fname]));
   });
   if (log && logit) {
     log.entry({ 

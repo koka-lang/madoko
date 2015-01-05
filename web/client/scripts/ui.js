@@ -1718,14 +1718,18 @@ var UI = (function() {
     else if (!edit) {
       edit = (self.storage && self.storage.isModified(self.editName)) ? "write" : "read";
     }
+    var editInfo = {
+      kind: edit,
+      line: 0,
+    };
 
     var files = {};
     var docFile = self.storage.getSharedPath(self.docName);
     var editFile = self.storage.getSharedPath(self.editName);
     if (!editFile || !docFile) return;
     docFile = docFile + "*"; // special name for overall document
-    files[docFile] = edit;
-    files[editFile] = edit;
+    files[docFile] = { kind: edit, line: 0 };
+    files[editFile] = { kind: edit, line: self.editor.getPosition().lineNumber };
     
     self.lastConUsersCheck = Date.now();
     self.storage.remote.getUserName().then( function(name) {
@@ -1735,31 +1739,55 @@ var UI = (function() {
         remote: self.storage.remote.type(),
       };
       Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
-        var res = data[docFile];        
-        if (res && edit !== "none") {
-          // build panel
-          var status = "";
-          var users = new Map();
-          res.readers.forEach( function(user) { users.set(user.name,false); } );
-          res.writers.forEach( function(user) { users.set(user.name,true); } );
-          users.forEach( function(name,isWriter) {
-            status = status + "<div class='button user-" + (isWriter ? "write" : "read") + "' " +
-                              "title='" + (isWriter ? "Editing document" : "Viewing document") + "'>" + 
-                      "<span class='icon'><img src='images/icon-user-" + (isWriter ? "write" : "read") + ".png'></span>" +
-                      Util.escape(name) + 
-                      "</div>";
-          });
-          self.usersPanel.innerHTML = status;
-          if (res && res.writers.length > 0) {
-            self.usersStatus.className = "users-write";
+        var users = new Map();
+        Util.forEachProperty( data, function(fileName,file) {
+          if (file.users) {
+            var fname = Util.basename(fileName);
+            file.users.forEach( function(user) {
+              Util.extend(user,{ path: fname });
+              var info = users.getOrCreate(user.name,user);
+              if (user.kind==="write") {
+                info.path = fname;
+                info.kind = user.kind;           
+                info.line = user.line;
+              }
+              else if (!Util.endsWith(fileName,"*")) {
+                info.fileName = fname;
+              }
+            });
           }
-          else if (res && res.readers.length > 0) {
-            self.usersStatus.className = "users-read";        
+        });
+
+        // build panel
+        var edits = [];
+        var status = "";
+        users.forEach( function(userName,user) {
+          var isWriter = (user.kind === "write")
+          if (isWriter) {
+            user.message = user.name + " is editing here."
+            edits.push(user);
           }
-          else {
-            self.usersStatus.className = "";
-          }
+          status = status + "<div class='button user-" + (isWriter ? "write" : "read") + "' " +
+                            "title='" + (isWriter ? "Editing document" : "Viewing document") + " " + Util.escape(Util.basename(user.path)) + "'>" + 
+                    "<span class='icon'><img src='images/icon-user-" + (isWriter ? "write" : "read") + ".png'></span>" +
+                    Util.escape(user.name) + 
+                    "</div>";
+        });
+        self.usersPanel.innerHTML = status;
+      
+        if (edits.length > 0) {
+          self.usersStatus.className = "users-write";
         }
+        else if (users.count() > 0) {
+          self.usersStatus.className = "users-read";        
+        }
+        else {
+          self.usersStatus.className = "";
+        }
+
+        // decorations
+        self.showConcurrentEdits(edits);
+        
       });
     });
   }
@@ -3838,6 +3866,33 @@ var symbolsMath = [
       self.removeDecorations(false,"merge");
       self.addDecorations(decs);      
     });
+  }
+
+  UI.prototype.showConcurrentEdits = function( edits ) {
+    var self = this;
+    var decs = [];
+    var now = Date.now();
+    edits.forEach( function(edit) {
+      if (!edit.path) edit.path = self.editName;
+      decs.push( {
+        id: null,
+        type: "edit",
+        glyphType: "edit",
+        sticky: false,
+        outdated: false,
+        expire: now + 5000,
+        message: edit.message || "Being edited concurrently",
+        range: {
+          fileName: edit.path,
+          startLineNumber: edit.line,
+          endLineNumber: edit.line,
+          startColumn: 1,
+          endColumn: 1,
+        }
+      });
+    });
+    self.removeDecorations(false,"edit");
+    self.addDecorations(decs);
   }
 
   UI.prototype.addDecorations = function( decs ) {
