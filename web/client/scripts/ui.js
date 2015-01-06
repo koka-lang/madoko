@@ -537,7 +537,7 @@ var UI = (function() {
         else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
                  && ev.target.position && ev.target.element) 
         {
-          var msg = self.getDecorationMessage(self.editName,ev.target.position.lineNumber);
+          var msg = self.getDecorationMessage(self.editName,ev.target.position.lineNumber, ev.target.type===2);
           ev.target.element.title = msg;
         }
       }, [State.Syncing]);
@@ -634,7 +634,7 @@ var UI = (function() {
       self.updateConnectionStatus().then( function(status) {        
         if (self.storage.remote.canSync) {
           if (status===0) {
-            if (now - self.lastConUserCheck >= 10000) {
+            if (now - self.lastConUsersCheck >= 5000) {
               self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
             }
           }
@@ -3768,11 +3768,10 @@ var symbolsMath = [
           newdecs.push(decoration);
           decoration.outdated = true;
           if (decoration.id && decoration.range.fileName === self.editName) {
-            changeAccessor.changeDecorationOptions(decoration.id,{
-              isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + decoration.glyphType + '.outdated',
-              linesDecorationsClassName: 'line-' + decoration.type + '.outdated',
-            });
+            var dec = { isWholeLine : true };
+            if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + '.outdated';
+            if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated'; 
+            changeAccessor.changeDecorationOptions(decoration.id, dec );
           }
           else if (decoration.id) {
             changeAccessor.removeDecoration(decoration.id);
@@ -3806,12 +3805,10 @@ var symbolsMath = [
         }
         if (decoration.range.fileName === self.editName) {
           var postfix = (decoration.outdated ? ".outdated" : "" );
-          decoration.id = changeAccessor.addDecoration( decoration.range, 
-            { isWholeLine: true,
-              glyphMarginClassName: 'glyph-' + decoration.glyphType + postfix,
-              linesDecorationsClassName: 'line-' + decoration.type + postfix
-            }
-          );            
+          var dec = { isWholeLine: true };
+          if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + postfix;
+          if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + postfix;
+          decoration.id = changeAccessor.addDecoration( decoration.range, dec );
         }
       });
     });
@@ -3848,7 +3845,7 @@ var symbolsMath = [
     var now = Date.now();
     merges.forEach( function(merge) {
       if (!merge.path) merge.path = self.editName;
-      decs.push( { 
+      var dec = { 
         id: null, 
         type: "merge.merge-" + merge.type,
         sticky: true, 
@@ -3862,10 +3859,12 @@ var symbolsMath = [
           startColumn: 1,
           endColumn: 1,
         } 
-      });
-      self.removeDecorations(false,"merge");
-      self.addDecorations(decs);      
+      };
+      dec.marginType = dec.type;
+      decs.push(dec);      
     });
+    self.removeDecorations(false,"merge");
+    self.addDecorations(decs);      
   }
 
   UI.prototype.showConcurrentEdits = function( edits ) {
@@ -3878,9 +3877,9 @@ var symbolsMath = [
         id: null,
         type: "edit",
         glyphType: "edit",
-        sticky: false,
+        sticky: true,
         outdated: false,
-        expire: now + 5000,
+        expire: now + 15000,
         message: edit.message || "Being edited concurrently",
         range: {
           fileName: edit.path,
@@ -3910,13 +3909,20 @@ var symbolsMath = [
           var dec2 = self.decorations[j];
           // overlapping range?
           // todo: check column range, perhaps merge messages?
-          if (dec.range.fileName === dec2.range.fileName && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
+          if (dec.type == dec2.type &&
+              dec.range.fileName === dec2.range.fileName && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
             if (!dec.outdated && dec2.outdated) {
               // swap, so we remove the outdated one
               self.decorations[j] = dec;
               dec = dec2;
               dec2 = self.decorations[j];
             }
+   
+            // update dec2 to merge
+            if (dec.message !== dec2.message) dec2.message = dec2.message + "\n-----\n" + dec.message;
+            if (dec.marginType && !dec2.marginType) dec2.marginType = dec.marginType;
+            if (dec.glyphType && !dec2.glyphType)   dec2.glyphType = dec.glyphType;
+
             // remove dec
             if (dec.id) {
               changeAccessor.removeDecoration( dec.id );
@@ -3934,12 +3940,13 @@ var symbolsMath = [
     self.showDecorations();
   }
 
-  UI.prototype.getDecorationMessage = function( fileName, lineNo ) {
+  UI.prototype.getDecorationMessage = function( fileName, lineNo, isGlyph ) {
     var self = this;
     if (!fileName) fileName = self.editName;
     for (var i = 0; i < self.decorations.length; i++) {
       var dec = self.decorations[i];
-      if (dec.range.fileName === fileName && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo) {
+      if (dec.range.fileName === fileName && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
+          (isGlyph ? dec.glyphType : dec.marginType) ) {
         return dec.message;
       }
     }    

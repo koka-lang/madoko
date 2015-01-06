@@ -743,38 +743,38 @@ div.boxed {
   background-color: orange !important;
 }
 
-.monaco-editor .xline-error {
+.monaco-editor .xmargin-error {
   background-color: red;
   xwidth: 5px !important;
   xleft: 2px;
 }
 
-.monaco-editor .line-merge {
+.monaco-editor .margin-merge {
   background-color: #7e0000;
   width: 6px !important;
   left: 2px;
 }
 
-.monaco-editor .line-merge.merge-change,
-.monaco-editor .line-merge.merge-deletion,
-.monaco-editor .line-merge.merge-conflict {
+.monaco-editor .margin-merge.merge-change,
+.monaco-editor .margin-merge.merge-deletion,
+.monaco-editor .margin-merge.merge-conflict {
   background-color: #7e0000;
 }
-.monaco-editor .line-merge.outdated {
+.monaco-editor .margin-merge.outdated {
   background-color: #4b0000;
 }
 
-.monaco-editor .line-merge.merge-insertion {
+.monaco-editor .margin-merge.merge-insertion {
   background-color: #007e00;
 }
-.monaco-editor .line-merge.merge-insertion.outdated {
+.monaco-editor .margin-merge.merge-insertion.outdated {
   background-color: #004b00;
 }
 
-.monaco-editor .line-merge.merge-original {
+.monaco-editor .margin-merge.merge-original {
   background-color: #00007e;
 }
-.monaco-editor .line-merge.merge-original.outdated {
+.monaco-editor .margin-merge.merge-original.outdated {
   background-color: #00004b;
 }
 
