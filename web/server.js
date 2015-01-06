@@ -1138,18 +1138,16 @@ function getEditInfo( id, fname ) {
   return res;
 }
 
-var EditOp = { None: "none", View: "read", Edit:"write" }
-
 function updateEditInfo( id, fname, editInfo, userName ) {
   if (!fname) return;
   var info = edits.get(fname);
   if (!info) {
-    if (editInfo.kind === EditOp.None) return;
+    if (editInfo.kind === "none") return;
     info = { users : new Map() };
     edits.set(fname,info);
   }
 
-  if (editInfo.kind === EditOp.None) {
+  if (editInfo.kind === "none") {
     info.users.remove( id );
     if (info.users.count === 0) edits.remove(fname);
   }
@@ -1166,29 +1164,19 @@ function updateEditInfo( id, fname, editInfo, userName ) {
 function editUpdate( req, userid, files, userName ) {
   if (!files) return {};
   var res = {};
-  var logit = false;
   properties(files).forEach( function(fname) {
     if (!fname || fname[0] !== "/") return;
     var info = files[fname];
     if (!info) return;
     if (typeof info === "string") info = { kind: info, line: 0 }; //legacy
     if (typeof info !== "object") return;
-    if (info.kind === EditOp.Edit) logit = true;
+    if (info.kind==null || info.kind=="remove") info.kind = "none";
     var realname = resolveAlias(fname);
     updateEditInfo( userid, realname, info, userName);
     res[fname] = getEditInfo(userid, realname);
     console.log("user: " + (userName || userid) + ": " + fname + ": " + (realname == fname ? "" : "as " + realname + ": ") + 
                   info.kind + ":" + info.line + "\n  " + JSON.stringify(res[fname]));
   });
-  if (log && logit) {
-    log.entry({ 
-      type: "edit", 
-      user: { id: userid },
-      ip: req.ip,
-      url: req.url,      
-      date: new Date().toISOString()
-    });
-  }
   return res;
 }
 
@@ -1247,6 +1235,7 @@ app.put( "/rest/stat", function(req,res) {
     var stat = {
       editTime: req.body.editTime || 0,
       viewTime: req.body.viewTime || 0,
+      activeTime: req.body.activeTime || 0,
     };
     var login = null;
     properties(remotes).some( function(name) {
@@ -1254,12 +1243,13 @@ app.put( "/rest/stat", function(req,res) {
       return (login != null);
     });
     var name = (login ? login.name : null) || req.session.userid;    
-    console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, viewing: " + stat.viewTime.toString() + "ms");
+    console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, active: " + stat.activeTime.toString() + "ms");
     log.entry( {
       type: "stat", 
       user: { id: req.session.userid, name: name },
       editTime: stat.editTime,
       viewTime: stat.viewTime,
+      activeTime: stat.activeTime,
       ip: req.ip,
       url: req.url,      
       date: new Date().toISOString()

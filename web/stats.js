@@ -197,31 +197,25 @@ function digestUsers(entries, all) {
 		}
 	});
 	users = users.filter( function(id,user) { return user.entries != null; } ).map( function(id,user) {
-		var delta = 10*60*1000; // 10 minutes
-		var total = 60*1000;    // 1 minute
-		var prevTime = 0;
 		var remotes = new Map();
 		var editTime = 0;
 		var viewTime = 0;
+		var activeTime = 0;
 		user.entries = user.entries.sort( function(x,y) { return x.dateTime - y.dateTime; } );
 		user.entries.forEach( function(entry) {
 			if (entry.type==="stat") {
 				if (entry.editTime) editTime += entry.editTime;
 				if (entry.viewTime) viewTime += entry.viewTime;				
+				if (entry.activeTime) activeTime += entry.activeTime;				
 			}
 			if (entry.remote!=null && !remotes.contains(entry.remote)) remotes.set(entry.remote,true);
-			var nextTime = entry.dateTime;
-			if (prevTime + delta > nextTime) {
-				total += (nextTime - prevTime);
-			}
-			prevTime = nextTime;
 		});
 		return {
 			reqCount: user.entries.length,
 			name: user.name || user.id,
 			remote: remotes.keys().sort().join(","),
 			//email: user.email,
-			workTime: Math.ceil(total/(60*1000)),
+			workTime: Math.ceil(activeTime/(60*1000)),
 			editTime: Math.ceil(editTime/(60*1000)),
 			viewTime: Math.ceil(viewTime/(60*1000)),
 			id: id,
@@ -269,8 +263,8 @@ function digestDaily(entries) {
 			})),
 			reqCount: dentries.length,
 			runCount: runEntries.length,
-			avgWTm: Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
-			maxWTm : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) / (60*1000) ),
+			avgWTm: Math.ceil( avg( users.map( function(entry) { return entry.workTime; }) ) ),
+			maxWTm : Math.ceil( max( users.map( function(entry) { return entry.workTime; }) ) ),
 			avgSTm: avg( runEntries.map( function(entry) { return entry.time; }) ),
 			maxSTm: max( runEntries.map( function(entry) { return entry.time; }) ),
 			avgSTm: avg( runEntries.map( function(entry) { return entry.size; }) ),
