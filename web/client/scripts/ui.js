@@ -401,14 +401,24 @@ var UI = (function() {
       }
     });    
 
+
+    self.lastActivity = 0;
+
+    window.addEventListener("click",function(ev) {
+      self.lastActivity = ev.timeStamp || Date.now();
+    });
+    
     Util.onResize( function() {
       self.editor.layout();      
       self.syncView({force: true});
+      self.lastActivity = Date.now();
     });
-    
+
+
+
     // synchronize on scrolling
     self.syncInterval = 0;
-    self.editor.addListener("scroll", function (e) {    
+    self.editor.addListener("scroll", function (ev) {    
       function scroll() { 
         self.anonEvent( function() {
           var scrolled = self.syncView(); 
@@ -419,6 +429,7 @@ var UI = (function() {
         }, [State.Syncing]);
       }
 
+      self.lastActivity = ev.timeStamp || Date.now();
       // use interval since the editor is asynchronous, this way  the start line number can stabilize.
       if (!self.syncInterval) {
         self.syncInterval = setInterval(scroll, 100);
@@ -426,17 +437,16 @@ var UI = (function() {
       }
     });  
 
-
-
-    
     self.changed = false;
     self.lastEditChange = 0;
-    self.editor.addListener("change", function (e) {    
+    self.editor.addListener("change", function (ev) {  
       self.changed = true;
-      self.lastEditChange = Date.now();
+      self.lastEditChange = ev.timeStamp || Date.now();
+      self.lastActivity = self.lastEditChange;
     });
-    self.editor.addListener("keydown", function (e) {    
-      if (self.stale || self.changed) self.lastEditChange = Date.now(); // so delayed refresh keeps being delayed even on cursor keys.
+    self.editor.addListener("keydown", function (ev) { 
+      self.lastActivity = ev.timeStamp || Date.now();   
+      if (self.stale || self.changed) self.lastEditChange = self.lastActivity; // so delayed refresh keeps being delayed even on cursor keys.
     });
     
     self.editor.getHandlerService().bind({ key: 'Alt-Q' }, function(ev) { 
@@ -1705,18 +1715,25 @@ var UI = (function() {
   -------------------------------------------------- */
   UI.prototype.showConcurrentUsers = function(quick, edit) {
     var self = this;
+    var now = Date.now();
+
     if (!self.storage.remote.canSync || self.settings.disableServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
       return; 
     }
-    else if (quick && self.usersStatus.className === "") {  // don't do a get request for a quick check
+    else if (quick && (self.usersStatus.className === "" || self.usersStatus.className === "users-open" )) {  // don't do a get request for a quick check
       return;
     }
     else if (edit==="none") {
       self.usersStatus.className = "";
     }
     else if (!edit) {
-      edit = (self.storage && self.storage.isModified(self.editName)) ? "write" : "read";
+      if (self.storage && self.storage.isModified(self.editName)) 
+        edit = "write";
+      else if (now > self.lastActivity + 60000)  // after 60 secs on non-activity, become open which reduces get requests to server
+        edit = "open";
+      else 
+        edit = "read";
     }
     var editInfo = {
       kind: edit,
@@ -1745,6 +1762,8 @@ var UI = (function() {
             var fname = Util.basename(fileName);
             file.users.forEach( function(user) {
               Util.extend(user,{ path: fname });
+              if (typeof user.kind !== "string") user.kind = "open";
+              if (typeof user.line !== "number") user.line = 0;
               var info = users.getOrCreate(user.name,user);
               if (user.kind==="write") {
                 info.path = fname;
@@ -1761,15 +1780,19 @@ var UI = (function() {
         // build panel
         var edits = [];
         var status = "";
+        var readers = false;
         users.forEach( function(userName,user) {
-          var isWriter = (user.kind === "write")
-          if (isWriter) {
+          if (user.kind==="write") {
             user.message = user.name + " is editing here."
             edits.push(user);
           }
-          status = status + "<div class='button user-" + (isWriter ? "write" : "read") + "' " +
-                            "title='" + (isWriter ? "Editing document" : "Viewing document") + " " + Util.escape(Util.basename(user.path)) + "'>" + 
-                    "<span class='icon'><img src='images/icon-user-" + (isWriter ? "write" : "read") + ".png'></span>" +
+          else if (user.kind==="read") {
+            readers = true;
+          }
+          status = status + "<div class='button user-" + user.kind + "' " +
+                            "title='" + (user.kind==="write" ? "Editing document" : (user.kind==="read" ? "Viewing document" : "Opened document")) + 
+                                      " " + Util.escape(Util.basename(user.path)) + "'>" + 
+                    "<span class='icon'><img src='images/icon-user-" + user.kind + ".png'></span>" +
                     Util.escape(user.name) + 
                     "</div>";
         });
@@ -1779,7 +1802,7 @@ var UI = (function() {
           self.usersStatus.className = "users-write";
         }
         else if (users.count() > 0) {
-          self.usersStatus.className = "users-read";        
+          self.usersStatus.className = (readers ? "users-read" : "users-open");        
         }
         else {
           self.usersStatus.className = "";
@@ -1802,6 +1825,8 @@ var UI = (function() {
       editTime: self.stat.editTotal,
       viewTime: now - self.stat.viewStart, 
     };
+    body.activeTime = (now < self.lastActivity + 60000 ? 60000 : 0); // any activity in the last minute?
+     
     self.stat.editTotal = 0;
     self.stat.viewStart = now;
 
