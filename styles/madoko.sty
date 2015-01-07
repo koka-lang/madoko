@@ -131,7 +131,12 @@
 % LATEX: \author{ ... } \date
 
 \ifdef\date{\date{}}{}
-\providecommand{\email}[1]{\textsf{#1}}%
+\providecommand{\email}[1]{\normalsize\textsf{#1}}%
+\providecommand{\affaddr}[1]{\normalsize{#1}}%
+\providecommand{\alignauthor}{}
+\providecommand{\aufnt}[1]{{\large #1}}
+\providecommand{\numberofauthors}[1]{}
+
 \ifbeamer\providecommand{\inst}[1]{$^{\mbox{#1}}$}\fi%
 
 % If there is no \authorinfo, we provide a simple one that works
@@ -160,12 +165,14 @@
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
-   \ifnum\value{mdAuthorCount}>1%
-     \gappto\@mdauthors{\\[2ex]}%
-   \fi%
-   \gappto\@mdauthors{{\large #1}}%
-   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex]\normalsize #2}\fi%
-   \ifx\relax#3\relax\else\gappto\@mdauthors{\\\normalsize\email{#3}}\fi%
+   \ifdef{\alignauthor}{\appto\@mdauthors{\alignauthor}}{%
+     \ifnum\value{mdAuthorCount}>1%
+       \gappto\@mdauthors{\\[2ex]}%
+     \fi%
+   }%
+   \gappto\@mdauthors{\aufnt{#1}}%
+   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex] \affaddr{#2}}\fi%
+   \ifx\relax#3\relax\else\gappto\@mdauthors{\\\email{#3}}\fi%
   }%
   \ifnum\value{mdAuthorCount}>1%
     \gappto\@mdauthorsx{, #1}%
@@ -193,6 +200,7 @@
 }
 \newcommand{\mdMaketitle}[1]{%  
   \ifnum\value{mdAuthorCount}>0%
+    \@expandafter{\numberofauthors}{\arabic{mdAuthorCount}}%
     \author{\@mdauthors}%
     \ifdef\inst{\ifdef\institute{\institute{\@mdinsts}}{}}{}%
   \fi
@@ -201,7 +209,7 @@
     {%\gappto\@mdTitle{\titlenote{#1}}\title{\@mdTitle}}
      \mdSubtitle{\normalfont\normalsize #1}}%
      % {\date{#1}}%
-  \fi%
+  \fi%  
   \maketitle%
 }
 
