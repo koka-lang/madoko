@@ -169,7 +169,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
   Rule("texccmd",     regex(@"^\\(alert)\b\s*" + texarg), texClassCmd ),  
   Rule("texeol",      regex(@"^\\\\" + optarg + "?"), texLineBreak ),
-  Rule("texcolor1",   regex(@"^\\textcolor\b\s*" + optarg + "?" + texargg + texargg), texTextColor ),
+  Rule("texcolor1",   regex(@"^\\(?:text|cell)color\b\s*" + optarg + "?" + texargg + texargg), texTextColor ),
   Rule("texcolor2",   regex(@"^\{\s*\\color\b\s*" + optarg + "?" + texargg + texargs + @"\}"), texTextColor ),
   Rule("texcolor3",   regex(@"^\\(f)?colorbox\b\s*" + optarg + "?" + texargg + texargg), texColorBox ),
 
@@ -592,7 +592,7 @@ val rxNoAlign= regex(@"\\noalign\b\s*" + texarg)
 val rxHline  = regex(@"^\s*(?:\\(?:hline|firsthline|lasthline|toprule|bottomrule|midrule)\b\s*(\\hline\b\s*)?|\\(?:cline|cmidrule)\b(?:\(\w\))?" + texarg + @"\s*)([\s\S]*)")
 val rxRowEnd = regex(@"\\\\(?:\[(?:[^\]\r\n]*)\])?[ \t]*(?:\r?\n)*")
 val rxRowNl  = regex(@"\r?\n")
-val rxSpec   = regex(@"(\|\|?)|[lcr]|[pmb]\{([^\}]*)\}")
+val rxSpec   = regex(@"(\|\|?)|[lcrX]|[pmb]\{([^\}]*)\}")
 val rxNoSpec = regex(@"\s|[^pmb](?=\{)" + texarg)
 
 
@@ -917,7 +917,9 @@ function parseFloatColors(r,g,b) : string {
 
 
 function extractColorX( model : string, value : string ) : string {
-  if (model=="") then return value.toIdentifier
+  if (model=="") then {
+    return value.toIdentifier
+  }
   val (r,g,b) = match(value.split(",").list) {
     Cons(x,Nil) -> (x,x,x)
     Cons(x,Cons(y,Cons(z,Nil))) -> (x,y,z)
