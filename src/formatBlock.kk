@@ -248,13 +248,13 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         Raw(monly)-> {
           if (context.inlineContext.sanitize) then ""
           else match(monly) {
-            Nothing -> txt
+            Nothing -> txt + "\n"
             Just(FmtTex) | context.fmt == FmtTex -> {
               val lineInfo = getLineInfo(parentAttrs)
-              "%mdk-begin-texraw\n" + lineInfo + txt
+              "%mdk-begin-texraw\n" + lineInfo + txt + "\n"
             }
-            Just(f) | f == context.fmt -> txt
-            _       -> "" 
+            Just(f) | f == context.fmt -> txt + "\n"
+            _       -> "\n" 
           }
         }
         // these should not happen by now

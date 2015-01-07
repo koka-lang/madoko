@@ -193,7 +193,7 @@
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
 \newcommand{\mdAuthorAddressNote}[2]{%
   #1%
-  \ifx\relax#2\relax\else\\ #2\fi%
+  \ifx\relax#2\relax\else\mdBr #2\fi%
 }
 \newcommand{\mdAuthor}[4]{%
   \authorinfo{#1}{\mdAuthorAddressNote{#2}{#4}}{#3}%
