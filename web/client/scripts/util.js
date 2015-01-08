@@ -333,6 +333,18 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return false;
   }
 
+  function lineCount(txt) {
+    if (!txt) return 0;
+    var i = txt.indexOf("\n");
+    var n = 0;
+    while( i >= 0 ) {
+      n++;
+      i = txt.indexOf("\n", i+1);
+    }
+    return n;
+  }
+
+
   function hasClassName( elem, cname ) {    
     if (!elem || elem.className==null) return false;
     var names = elem.className.split(/\s+/);
@@ -1796,6 +1808,7 @@ doc.execCommand("SaveAs", null, filename)
     lpad: lpad,
     rpad: rpad,
     strip: strip,
+    lineCount: lineCount,
     message: message,
     assert: assert,
     escape: htmlEscape,
