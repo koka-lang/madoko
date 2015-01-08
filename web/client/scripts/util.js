@@ -1639,6 +1639,7 @@ doc.execCommand("SaveAs", null, filename)
       }
       addClassName(bar,"resizing");
       window.addEventListener( "mousemove", resizeMove, true );
+      window.addEventListener( "click", endMove, true );
     }
 
     function resizeMove(ev) {
@@ -1659,18 +1660,19 @@ doc.execCommand("SaveAs", null, filename)
       moveTo( info.bar, x, y );
     }
 
-    window.addEventListener("mouseup", function(ev) {
+    function endMove(ev) {
       if (!info) return;      
       ev.stopPropagation();
       ev.preventDefault();
       window.removeEventListener("mousemove", resizeMove, true);
+      window.removeEventListener("click", endMove, true);
       if (info.hide) info.hide.style.visibility = "visible";
       var ratio = (info.bar.offsetLeft / info.boundRect.width);
       panels.set(info.panel.id, ratio);
       removeClassName(info.bar,"resizing");      
       dispatchEvent(window,"resize");
       info = null;      
-    });
+    };
 
     return {
       setRatio: function(id,ratio) {
