@@ -206,7 +206,7 @@ html,body,#main {
 }
 .panel.vertical>.panel-bar {
   height: 100%;
-  width: 2px;
+  width: 10px;
   float: left;
 }
 .panel.horizontal>.panel-bar {

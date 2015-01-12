@@ -1606,8 +1606,14 @@ doc.execCommand("SaveAs", null, filename)
       var paneB = panel.lastElementChild;
       panel.insertBefore(bar,paneB);
       bar.addEventListener("mousedown", function(ev) {
-        resizeStart(panel,ev.target,ev);
-      });    
+        resizeStart(panel, ev.target, ev);
+      });
+      /*
+      bar.addEventListener("click", function(ev) {
+        if (info) endMove(ev)
+             else resizeStart(panel,ev.target,ev);
+      });
+      */    
     });
 
     // render panels
@@ -1633,6 +1639,7 @@ doc.execCommand("SaveAs", null, filename)
     var info = null;
     
     function resizeStart(panel,bar,ev) {
+      if (info) return; 
       var barRect = bar.getBoundingClientRect();
       info = {    
         panel   : panel,
@@ -1643,6 +1650,7 @@ doc.execCommand("SaveAs", null, filename)
         offsetY : ev.clientY - barRect.top,
         boundRect: panel.getBoundingClientRect(),
         hide    : null,
+        moved   : false,
       };
       var hideid  = panel.getAttribute("data-panel-hide");
       if (hideid) {
@@ -1651,11 +1659,12 @@ doc.execCommand("SaveAs", null, filename)
       }
       addClassName(bar,"resizing");
       window.addEventListener( "mousemove", resizeMove, true );
-      window.addEventListener( "click", endMove, true );
+      window.addEventListener( "mouseup", endMove, false );
     }
 
     function resizeMove(ev) {
       if (!info) return;
+      info.moved = true;
       ev.stopPropagation();
       ev.preventDefault();
       var x = info.barRect.left;
@@ -1673,11 +1682,11 @@ doc.execCommand("SaveAs", null, filename)
     }
 
     function endMove(ev) {
-      if (!info) return;      
+      if (!info || !info.moved) return;      
       ev.stopPropagation();
       ev.preventDefault();
       window.removeEventListener("mousemove", resizeMove, true);
-      window.removeEventListener("click", endMove, true);
+      window.removeEventListener("mouseup", endMove, true);
       if (info.hide) info.hide.style.visibility = "visible";
       var ratio = (info.bar.offsetLeft / info.boundRect.width);
       panels.set(info.panel.id, ratio);
