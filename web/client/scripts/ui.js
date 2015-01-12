@@ -1687,10 +1687,11 @@ var UI = (function() {
           var line = "<div data-file='" + Util.escape(file.path) + "' " +
                         "class='button file hoverbox" + disable + main + hide + "'>" + 
                             self.displayFile(file,true) + "</div>";
-          if (Util.startsWith(file.mime,"image/")) images.push(line); 
-          else if (!disable) files.push(line);
-          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(line)
-          else generated.push(line)
+          var info = { line: line, path: file.path }                            
+          if (Util.startsWith(file.mime,"image/")) images.push(info); 
+          else if (!disable) files.push(info);
+          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(info)
+          else generated.push(info)
         }
       });
     };
@@ -1702,11 +1703,27 @@ var UI = (function() {
                         Util.escape( self.storage.folder() ) + "<hr/>";
     }
     */
+    function fcmp(info1,info2) {
+      var d1 = Util.dirname(info1.path);
+      var d2 = Util.dirname(info2.path);
+      var b1 = Util.basename(info1.path);
+      var b2 = Util.basename(info2.path);
+      if (d1 < d2) return -1;
+      if (d1 > d2) return 1;
+      if (b1 < b2) return -1;
+      if (b1 > b2) return 1;
+      return 0;
+    }
+
+    function joinLines(infos) {
+      return infos.sort(fcmp).map(function(info) { return info.line; }).join("\n");
+    }
+
     div.innerHTML = 
-      (finals.length > 0 ? "<div class='exported'>" + finals.sort().join("\n") + "</div><hr/>" : "") +
-      files.sort().join("\n") + 
+      (finals.length > 0 ? "<div class='exported'>" + joinLines(finals) + "</div><hr/>" : "") +
+      joinLines(files) + 
       (images.length > 0 || generated.length > 0 ? 
-          "<hr/><div class='binaries'>" + images.sort().join("\n") + generated.sort().join("\n") + "</div>" : "");
+          "<hr/><div class='binaries'>" + joinLines(images) + joinLines(generated) + "</div>" : "");
   }
 
 
