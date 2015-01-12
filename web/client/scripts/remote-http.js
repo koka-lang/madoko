@@ -135,6 +135,11 @@ var HttpRemote = (function() {
     return Promise.resolved(null); // self.fullPath(fname));  
   }
 
+  HttpRemote.prototype.getInviteUrl = function() {
+    return null;
+  };
+
+
   return HttpRemote;
 })();
 

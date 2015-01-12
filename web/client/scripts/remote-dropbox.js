@@ -105,7 +105,7 @@ function getShareUrl( fname ) {
   return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
     if (!info.url) return null;
     var share = info.url;
-    if (Util.extname(fname) === ".html") share = share.replace(/\bdl=0\b/,"dl=1");
+    // if (Util.extname(fname) === ".html") share = share.replace(/\bdl=0\b/,"dl=1");
     return share;
   }, function(err) {
     Util.message( err, Util.Msg.Trace );
@@ -260,6 +260,11 @@ var Dropbox = (function() {
   Dropbox.prototype.getShareUrl = function(fname) {
     var self = this;
     return getShareUrl( self.fullPath(fname) );
+  };
+
+  Dropbox.prototype.getInviteUrl = function() {
+    var self = this;
+    return Util.combine("https://www.dropbox.com/home", self.folder + "?share=1");
   };
 
   return Dropbox;

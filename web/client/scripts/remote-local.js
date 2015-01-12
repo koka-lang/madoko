@@ -109,6 +109,11 @@ var LocalRemote = (function() {
     return Promise.resolved(null);
   }
 
+  LocalRemote.prototype.getInviteUrl = function() {
+    return null;
+  };
+
+
   return LocalRemote;
 })();
 

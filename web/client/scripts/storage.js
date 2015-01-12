@@ -697,6 +697,11 @@ var Storage = (function() {
     return (file && file.shareUrl ? file.shareUrl : "");
   }
 
+  Storage.prototype.getInviteUrl = function() {
+    var self = this;
+    return self.remote.getInviteUrl();
+  }
+
   Storage.prototype._pullFile = function( fpath, opts ) {
     var self = this;
     opts = self._initFileOptions(fpath,opts);

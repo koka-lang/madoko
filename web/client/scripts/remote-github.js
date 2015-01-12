@@ -419,6 +419,13 @@ var Github = (function() {
     return Promise.resolved(null);
   };
 
+  Github.prototype.getInviteUrl = function() {
+    var self = this;
+    var info = splitPath(self.path);
+    return Util.combine("https://github.com", info.repo + "/settings/collaboration");
+  };
+
+
   Github.prototype.isAtHead = function() {
     var self = this;
     return getHeadCommitUrl(self.path).then( function(commitUrl) {

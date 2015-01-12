@@ -398,7 +398,7 @@ span.save-link:hover {
   visibility: visible;
 }
 
-#signin, #signout, #local-message, #http-message {
+#signin, #signout, #local-message, #http-message, #invite {
   display: none;
 }
 
@@ -413,6 +413,11 @@ span.save-link:hover {
 }
 
 .connected #signout {
+  display: block;
+}
+
+.remote-dropbox #invite,
+.remote-github #invite {
   display: block;
 }
 
@@ -624,6 +629,7 @@ div.boxed {
   color: DimGray;
 }
 
+#connection a img,
 #help-content a img {
   height: 0.5em;
   margin-right: 0.1em;
@@ -633,10 +639,15 @@ div.boxed {
 
 #help-content>a {
   display: block;
+}
+
+#connection a,
+#help-content>a {
   color: black;
   text-decoration: none;
 }
 
+#connection a:hover,
 #help-content>a:hover {
   background-color: Gainsboro;
 }
@@ -1204,7 +1215,7 @@ div.pinned.boxed.menu {
 }
 
 #connection-content {
-  min-width: 10em;
+  min-width: 12em;
 }
 
 #help-content,

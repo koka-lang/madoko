@@ -967,17 +967,21 @@ var UI = (function() {
       Util.addClassName(self.app,"disconnected");
     }
     
+    var inviteUrl = "";
     if (stg && stg.remote) {
       var remoteLogo = "images/dark/" + stg.remote.logo();
       if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
+      inviteUrl = stg.getInviteUrl(self.docName);
+
       /*
       if (stg.remote.needSignin && isConnected) {
         stg.remote.getUserName().then( function(userName) {
           document.getElementById("connection-content").setAttribute("title", "As " + userName);
         });
       }
-      */
+      */    
     }
+    document.getElementById("invite-link").href = inviteUrl;
   }
 
   UI.prototype.updateConnectionStatus = function (stg) {
@@ -1511,7 +1515,11 @@ var UI = (function() {
           */
           self.editor.clearEditState();
           self.editName = "";
-          return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { return fresh; });
+          return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { 
+            return self.updateConnectionStatus().then( function() {
+              return fresh; 
+            });
+          });
         });
       });
     });

@@ -316,6 +316,11 @@ var Onedrive = (function() {
     });
   }
 
+  Onedrive.prototype.getInviteUrl = function() {
+    return null;
+  };
+
+
   return Onedrive;
 })();   
 
