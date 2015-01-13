@@ -23,9 +23,11 @@ syntax:regexp
 ^web/client/jquery-ui/
 ^web/client/highlight.js$
 ^web/client/madoko.css$
+^web/client/templates
 ^web/users/
 ^web/ssl/
 ^web/log/
 ^web/run/
 ^web/node_modules/
 ^test/new/out
+^test/tex
