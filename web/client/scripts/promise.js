@@ -145,6 +145,9 @@ define([],function() {
     Promise.whenBatched = function(promises,batch) { 
       return promiseWhenBatched(promises,batch);
     }
+    Promise.map = function(xs,f) {
+      return promiseWhen(xs.map(f));
+    }
     
     Promise.createQueue = function() {
       return new Queue();

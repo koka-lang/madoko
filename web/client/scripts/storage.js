@@ -120,13 +120,21 @@ function createFile(storage) {
 function createFromTemplate( storage, docName, template )
 {
   if (!template) template = "default";
-  return Util.requestGET( "templates/" + template + ".mdk" ).then( function(content) {
-    return content;
-  }, function(err) {
-    return "Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n";
-  }).then( function(content) {
-    storage.writeFile(docName, content);      
-    return content;
+  var templates = template.split(";");
+  storage.writeFile(docName,"Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n");
+  return Promise.map( templates, function(temp) {
+    var srcName = temp;
+    var tgtName = temp;
+    if (Util.extname(temp) === "") {
+      srcName = temp + ".mdk";
+      tgtName = docName;
+    }
+    return Util.requestGET( { url: "templates/" + srcName, binary:  Util.hasBinaryExt(srcName) } ).then( function(content) {
+      storage.writeFile(tgtName, Encoding.encode( Encoding.fromExt(srcName), content ));
+      return null;
+    }, function(err) {
+      return err;
+    });
   });
 }
 

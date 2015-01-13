@@ -118,15 +118,23 @@ task("webcopy", ["web"], function() {
                               .include(path.join(styleDir,"*.mdk"))
                               .include(path.join(styleDir,"lang","*.json"));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
+  
   js     = new jake.FileList().include(path.join(contribDir,"styles","*.css"))
                               .include(path.join(contribDir,"styles","*.mdk"))
                               .include(path.join(contribDir,"styles","*.bib"))
                               .include(path.join(contribDir,"styles","*.cls"));
   copyFiles(path.join(contribDir,"styles"),js.toArray(),path.join(webclient,styleDir));
+  
   js     = new jake.FileList().include(path.join(contribDir,"images","*.png"))
                               .include(path.join(contribDir,"images","*.pdf"));
   copyFiles(contribDir,js.toArray(),path.join(webclient,styleDir));
   
+  jake.mkdirP(path.join(webclient,"templates","style"));
+  var templateDir = path.join(contribDir,"templates");
+  js     = new jake.FileList().include(path.join(templateDir,"*"))
+                              .include(path.join(templateDir,"style","*"));
+  copyFiles(templateDir,js.toArray(),path.join(webclient,"templates"));
+
   // copy sty files to local texmf tree
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
   copyFiles(styleDir,sty.toArray(),localTexDir);

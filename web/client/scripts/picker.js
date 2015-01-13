@@ -436,6 +436,7 @@ var Picker = (function() {
       if (!picker) return;
       var elem = ev.target;
       while (elem && elem.nodeName !== "DIV" && !Util.hasClassName(elem,"item") && elem != parent) {
+        if (elem.nodeName==="A") return; // don't react on link clicks
         elem = elem.parentNode;
       }
 
