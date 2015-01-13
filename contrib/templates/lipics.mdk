@@ -1,0 +1,178 @@
+[INCLUDE=style/lipics]
+Title         : [Sample article for the LIPIcs series]{.caption}
+Author        : John Q. Open
+Affiliation   : Research institute
+Email         : you@bar.com
+
+Author        : Joan R. Access
+Affiliation   : Other institute
+Email         : other@bar.com
+
+Bibliography  : example.bib
+Copyright     : John Q. Open and Joan R. Access
+Keywords      : keyword1 
+Classification: ACM classification
+Logo          : True
+
+
+[TITLE]
+
+~ Abstract
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent
+convallis orci arcu, eu mollis dolor. Aliquam eleifend suscipit lacinia.
+Maecenas quam mi, porta ut lacinia sed, convallis ac dui. Lorem ipsum
+dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.
+~
+
+# Introduction     { #sec-intro }
+
+Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch
+butterfly. Note that you can drag&drop images into the editor pane to
+include them in the document, and similarly with bibtex files, latex
+style files, etc.
+
+~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=top}
+![butterfly]
+~
+
+[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+
+Our contributions are:
+
+* A figure of a _butterfly_;
+* Some **mathematics**;
+* And some source code;
+* And references to Tex books [@Knuth:tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:tex are also possible.
+
+# Content
+
+A definition of $e$ is shown in Equation [#euler]:
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+Let's program some Javascript:
+``` javascript
+function hello() {
+  return "hello world!"
+}
+```
+
+## Lorem ipsum dolor sit amet
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent
+convallis orci arcu, eu mollis dolor. Aliquam eleifend suscipit lacinia.
+Maecenas quam mi, porta ut lacinia sed, convallis ac dui. Lorem ipsum
+dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. Donec
+eget odio et magna ullamcorper vehicula ut vitae libero. Maecenas lectus
+nulla, auctor nec varius ac, ultricies et turpis. Pellentesque id ante
+erat. In hac habitasse platea dictumst. Curabitur a scelerisque odio.
+Pellentesque elit risus, posuere quis elementum at, pellentesque ut diam.
+Quisque aliquam libero id mi imperdiet quis convallis turpis eleifend.
+
+
+~ Lemma { #lemma-test caption="Lorem __ipsum__" }
+Vestibulum sodales dolor et dui cursus iaculis. Nullam ullamcorper purus
+vel turpis lobortis eu tempus lorem semper. Proin facilisis gravida
+rutrum. Etiam sed sollicitudin lorem. Proin pellentesque risus at elit
+hendrerit pharetra. Integer at turpis varius libero rhoncus fermentum
+vitae vitae metus.
+~
+
+~ Proof { caption="Of Lemma [#lemma-test]" }
+Cras purus lorem, pulvinar et fermentum sagittis.
+~
+
+
+## Curabitur dictum felis id sapien
+
+Curabitur dictum felis id sapien mollis ut venenatis tortor feugiat.
+Curabitur sed velit diam. Integer aliquam, nunc ac egestas lacinia, nibh
+est vehicula nibh, ac auctor velit tellus non arcu. Vestibulum lacinia
+ipsum vitae nisi ultrices eget gravida turpis laoreet. Duis rutrum
+dapibus ornare. Nulla vehicula vulputate iaculis. Proin a consequat
+neque. Donec ut rutrum urna. Morbi scelerisque turpis sed elit sagittis
+eu scelerisque quam condimentum. Pellentesque habitant morbi tristique
+senectus et netus et malesuada fames ac turpis egestas. Aenean nec
+faucibus leo. Cras ut nisl odio, non tincidunt lorem. Integer purus
+ligula, venenatis et convallis lacinia, scelerisque at erat. Fusce risus
+libero, convallis at fermentum in, dignissim sed sem. Ut dapibus orci
+vitae nisl viverra nec adipiscing tortor condimentum. Donec non suscipit
+lorem. Nam sit amet enim vitae nisl accumsan pretium.
+
+    for i:=maxint to 0 do 
+    begin 
+        j:=square(root(i));
+    end;
+
+
+## Proin ac fermentum augue
+
+Proin ac fermentum augue. Nullam bibendum enim sollicitudin tellus
+egestas lacinia euismod orci mollis. Nulla facilisi. Vivamus volutpat
+venenatis sapien, vitae feugiat arcu fringilla ac. Mauris sapien tortor,
+sagittis eget auctor at, vulputate pharetra magna. Sed congue, dui nec
+vulputate convallis, sem nunc adipiscing dui, vel venenatis mauris sem in
+dui. Praesent a pretium quam. Mauris non mauris sit amet eros rutrum
+aliquam id ut sapien. Nulla aliquet fringilla sagittis. Pellentesque eu
+metus posuere nunc tincidunt dignissim in tempor dolor. Nulla cursus
+aliquet enim. Cras sapien risus, accumsan eu cursus ut, commodo vel
+velit. Praesent aliquet consectetur ligula, vitae iaculis ligula interdum
+vel. Integer faucibus faucibus felis.
+
+* Ut vitae diam augue. 
+* Integer lacus ante, pellentesque sed sollicitudin et, pulvinar
+  adipiscing sem.
+* Maecenas facilisis, leo quis tincidunt egestas, magna ipsum condimentum
+  orci, vitae facilisis nibh turpis et elit.
+
+## Pellentesque quis tortor
+
+Nec urna malesuada sollicitudin. Nulla facilisi. Vivamus aliquam tempus
+ligula eget ornare. Praesent eget magna ut turpis mattis cursus. Aliquam
+vel condimentum orci. Nunc congue, libero in gravida convallis, orci nibh
+sodales quam, id egestas felis mi nec nisi. Suspendisse tincidunt, est ac
+vestibulum posuere, justo odio bibendum urna, rutrum bibendum dolor sem
+nec tellus.
+
+~ Lemma { caption="Quisque blandit tempus nunc" }
+Sed interdum nisl pretium non. Mauris
+sodales consequat risus vel consectetur. Aliquam erat volutpat. Nunc sed
+sapien ligula. Proin faucibus sapien luctus nisl feugiat convallis
+faucibus elit cursus. Nunc vestibulum nunc ac massa pretium pharetra.
+Nulla facilisis turpis id augue venenatis blandit. Cum sociis natoque
+penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+~
+
+Fusce eu leo nisi. Cras eget orci neque, eleifend dapibus felis. Duis et
+leo dui. Nam vulputate, velit et laoreet porttitor, quam arcu facilisis
+dui, sed malesuada risus massa sit amet neque.
+
+
+### Acknowledgements {-}
+
+I would like to thank ...
+
+[BIB]
+
+
+~TexRaw
+\appendix
+~
+
+# Morbi eros magna { @h1="A" }
+
+Morbi eros magna, vestibulum non posuere non, porta eu quam. Maecenas
+vitae orci risus, eget imperdiet mauris. Donec massa mauris, pellentesque
+vel lobortis eu, molestie ac turpis. Sed condimentum convallis dolor, a
+dignissim est ultrices eu. Donec consectetur volutpat eros, et ornare dui
+ultricies id. Vivamus eu augue eget dolor euismod ultrices et sit amet
+nisi. Vivamus malesuada leo ac leo ullamcorper tempor. Donec justo mi,
+tempor vitae aliquet non, faucibus eu lacus. Donec dictum gravida neque,
+non porta turpis imperdiet eget. Curabitur quis euismod ligula.
+
+# Conclusion
+
+Really fun to write Markdown :-)
