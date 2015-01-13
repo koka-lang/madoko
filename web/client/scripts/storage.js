@@ -1120,11 +1120,19 @@ var Storage = (function() {
   Storage.prototype._pullUpdate = function(diff,cursors,merges,item) {
     var self = this;
     var file = self.files.get(item.path);
-    if (!file) return Promise.rejected("internal error: cannot pull " + item.path); // should never happen
-    var opts = Util.copy(file);
-    return self._pullFile( file.path, opts ).then( function(remoteFile) {
-      return self._syncPull(diff,cursors,merges,file,remoteFile,true);
-    });
+    if (!file) {
+      // can happen if new files are added but not yet referenced locally, or generic updates by git under the document tree
+      // return Promise.rejected("internal error: cannot pull " + item.path); // should never happen
+      var msg = "pull ignore: " + item.path;
+      Util.message(msg,Util.Msg.Trace);
+      return Promise.resolved(msg);
+    }
+    else {
+      var opts = Util.copy(file);
+      return self._pullFile( file.path, opts ).then( function(remoteFile) {
+        return self._syncPull(diff,cursors,merges,file,remoteFile,true);
+      });
+    }
   }
 
   Storage.prototype.commit = function() {
