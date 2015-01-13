@@ -487,7 +487,7 @@ var Storage = (function() {
     var infos = [];
     var standardFiles = ["madoko.css"];
     self.files.forEach( function(path,file) {
-      if (file.nosync) return;
+      // if (file.nosync) return;  // we want to keep these files in case of working off-line.
       infos.push({
         path: path,
         mime: file.mime,
