@@ -1,0 +1,7 @@
+Some paragraph
+
+~ MathDefs
+[INCLUDE=mathdefs.tex]
+~
+
+A test formula $\test$.

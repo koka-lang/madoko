@@ -1,0 +1,6 @@
+Title		: Math Example
+Heading Base: 2
+
+# Math and colors
+
+Test: $\mbox{Madoko} = \mbox{\LaTeX} \times \mbox{Markdown}${background-color=Navy color=white}
