@@ -806,7 +806,7 @@ function oauthLogin(req,res) {
   
   remote = remotes[state.remote];
   if (!remote) {
-    return redirectError(remote, "Could not login; unknown remote service." );
+    return redirectError(remote, "Unknown remote service." );
   }
   if (remote.flow === "token") {
     return redirectPage(remote,"","token");

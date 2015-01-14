@@ -479,6 +479,10 @@ var Picker = (function() {
     else {
       return remote.remote.login().then( function() {
         return self.onRemote(remote);
+      }, function(err) {
+        if (err.url == null) throw err;
+        self.options.message = "Popup was blocked: login through this <a href='" + err.url + "'>link</a> instead.";
+        self.display();
       });
     }
   }

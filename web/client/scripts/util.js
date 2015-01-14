@@ -1262,6 +1262,7 @@ doc.execCommand("SaveAs", null, filename)
       "menubar=no",
       "scrollbars=yes"];
 
+    //return null;
     try {
       var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
       if (popup && (opts.focus !== false)) {
@@ -1278,7 +1279,11 @@ doc.execCommand("SaveAs", null, filename)
   function openModalPopup( opts, params ) {
     if (typeof opts==="string") opts = { url: opts };
     var w = _openWindow( opts, params );
-    if (!w) return Promise.rejected( new Error("popup was blocked") );
+    if (!w) {
+      var err = new Error("popup was blocked");
+      err.url = opts.url;
+      return Promise.rejected( err );
+    }
     if (opts.timeout && opts.timeout > 0) {
       setTimeout( function() { 
         w.close(); 
@@ -1753,8 +1758,9 @@ doc.execCommand("SaveAs", null, filename)
     var state = Date.now().toFixed(0) + "-" + (Math.random() * 99999999).toFixed(0);
     var key   = "oauth/state";
     setCookie(key,JSON.stringify({ remote: remote, state: state}),{maxAge: 30, httpOnly: true, secure: true});
-    return action(state).always( function() {
+    return action(state).then( function(x) {
       setCookie(key,"",{maxAge: 0});
+      return x;
     });
   }
 
