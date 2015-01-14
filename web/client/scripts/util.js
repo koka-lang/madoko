@@ -1262,7 +1262,7 @@ doc.execCommand("SaveAs", null, filename)
       "menubar=no",
       "scrollbars=yes"];
 
-    //return null;
+    // return null;
     try {
       var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
       if (popup && (opts.focus !== false)) {

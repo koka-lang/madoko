@@ -541,12 +541,12 @@ var Storage = (function() {
     return self.remote.connect();
   }
 
-  Storage.prototype.login = function(dontForce) {
+  Storage.prototype.login = function(dontForce,message) {
     var self = this;
     return self.remote.connect().then( function(status) {
       if (status===0) return;
       if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.type() );
-      return login(self, "Cannot synchronize changes with " + Util.capitalize(self.remote.type()) + ". Please sign in to synchronize.").then( function() {
+      return login(self, message || "Cannot synchronize changes with " + Util.capitalize(self.remote.type()) + ". Please sign in to synchronize.").then( function() {
         return self.remote.connect().then( function(status2) {
           if (status2 === 0) return;
           throw new Error("Synchronization failed: cannot connect to " + self.remote.type() );

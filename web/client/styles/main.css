@@ -21,6 +21,9 @@ html,body,#main {
 
 .load-error {
   display: none;
+}
+
+.load-error, .auth-redirect {
   margin: 1em 16% 1em 16%;
   padding: 0em 1em;
   border: 1px solid black;
@@ -156,7 +159,7 @@ html,body,#main {
   padding: 0pt;
 }
 
-.header-bar, .toolbar, modal, .load-error {
+.header-bar, .toolbar, modal, .load-error, .auth-redirect {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 

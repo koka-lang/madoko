@@ -11,7 +11,12 @@ var remote  = (script ? script.getAttribute("data-remote") : "");
 var status  = (script ? script.getAttribute("data-status") : "unknown");
 
 document.getElementById("button-close").onclick = function() {
-  window.close();
+  if (window.opener) {
+    window.close();
+  }
+  else {
+    window.history.back();
+  }
 };
 
 if (status === "ok") {

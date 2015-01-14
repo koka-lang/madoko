@@ -184,6 +184,8 @@ var Picker = (function() {
           self.display();
         });
       }
+    }, function(err) {
+      self.onLoginBlocked(err);
     });
   }
 
@@ -191,6 +193,8 @@ var Picker = (function() {
     var self = this;
     //if (!self.current.remote.connected()) return;
     return self.current.remote.logout(true).then( function() {   // true does full logout
+      self.display();
+    }, function(err) { //popup blocked
       self.display();
     });
   }
@@ -480,11 +484,17 @@ var Picker = (function() {
       return remote.remote.login().then( function() {
         return self.onRemote(remote);
       }, function(err) {
-        if (err.url == null) throw err;
-        self.options.message = "Popup was blocked: login through this <a href='" + err.url + "'>link</a> instead.";
-        self.display();
+        self.onLoginBlocked(err);
       });
     }
+  }
+
+  Picker.prototype.onLoginBlocked = function(err) {
+    var self = this;
+    if (err==null || err.url==null) throw err;
+    self.options.page = "page-alert";
+    self.options.message = "Popup was blocked: login through this <a href='" + err.url + "'>link</a> instead.";
+    self.display();
   }
 
   

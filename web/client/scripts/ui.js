@@ -736,9 +736,7 @@ var UI = (function() {
     document.getElementById("signin").onclick = function(ev) {
       if (self.storage && self.storage.remote.needSignin) {        
         return self.anonEvent( function() {
-          return self.storage.remote.login().then( function() {
-            return self.updateConnectionStatus();
-          });
+          return self.login(" ");
         });      
       }
     };
@@ -941,10 +939,10 @@ var UI = (function() {
     return;
   }
 
-  UI.prototype.login = function() {
+  UI.prototype.login = function(message) {
     var self = this;
     if (!self.storage) return Promise.resolved(false);
-    return self.storage.login().always( function() {
+    return self.storage.login(false,message).always( function() {
       return self.updateConnectionStatus();
     });
   }

@@ -772,12 +772,14 @@ function redirectPage(remote, message, status ) {
     '<html>',
     '<head>',
     '  <title>Madoko ' + remote.name + ' login</title>',
-    '  <link rel="stylesheet" type="text/css" href="styles/main.css">',
+    '  <link rel="stylesheet" type="text/css" href="../styles/main.css">',
     '</head>',
     '<body id="auth-redirect">',
-    '  <p id="message">' + message + '</p>',
-    '  <p><button id="button-close">Close Window</button></p>', 
-    '  <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '  <div class="auth-redirect">',
+    '    <p id="message">' + message + '</p>',
+    '    <p><button id="button-close">Close Window</button></p>', 
+    '    <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '  </div>',
     '</body>',    
     '</html>'
   ].join("\n");
