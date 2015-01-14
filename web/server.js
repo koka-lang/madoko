@@ -434,7 +434,7 @@ function mimeFromExt( fname ) {
 
 function encodingFromExt(fname) {
   var mime = mimeFromExt(fname);
-  return (mime.indexOf("text/") === 0 ? "utf8" : "base64" );
+  return (mime.indexOf("text/") === 0 || mime==="application/json" ? "utf8" : "base64" );
 }
 
 
@@ -936,6 +936,7 @@ function urlParamsEncode( obj ) {
 }
 
 function requestGET(query, encoding) {
+  if (!encoding || encoding==="base64") encoding = "binary";
   return makeRequest( { url: query, encoding: encoding } );
 }
 
@@ -1318,9 +1319,11 @@ app.get("/rest/remote/onedrive", function(req,res) {
 app.get("/rest/remote/http", function(req,res) {
   event( req, res, false, function() {
     console.log("remote http get: " + req.query.url );
-    return requestGET( req.query.url, "binary" ).then( function(content) {
+    return requestGET( req.query.url, encodingFromExt(req.query.url) ).then( function(content) {
       res.set('Content-Disposition',';');
-      if (!/\.html?$/.test(req.query.url) && /^\s*<! *DOCTYPE\b/.test(content)) {
+      if (content==="Not Found" || // github
+          (!/\.html?$/.test(req.query.url) && /^\s*<! *DOCTYPE\b/.test(content)) // generic
+         ) {
         console.log(content.substr(0,40));
         throw { httpCode: 404, message: "not found: " + req.query.url };
       }
