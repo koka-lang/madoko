@@ -14,7 +14,7 @@ define([],function() {
     Map.unpersist = function(obj) {
       var map = new Map();
       for(var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
+        if (obj.hasOwnProperty(prop) && prop[0]==="/") {
           map[prop] = obj[prop];
         }
       };

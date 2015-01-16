@@ -233,7 +233,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.persist = function() {
     var self = this;
-    return { folder: self.folder };
+    return { type: self.type(), folder: self.folder };
   }
   
   Onedrive.prototype.fullPath = function(fname) {

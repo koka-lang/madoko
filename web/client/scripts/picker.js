@@ -80,7 +80,7 @@ var Picker = (function() {
     if (!self.options.file) self.options.file = "document";
 
     // update persistent remotes
-    var data = JSON.parse( localStorage.picker || "null");
+    var data = window.tabStorage.getItem("picker");
     if (data && self.options.command !== "new") {
       if (!self.options.remote) self.options.remote = data.remote;
       remotes.dropbox.folder  = data.dropbox || "";
@@ -129,7 +129,7 @@ var Picker = (function() {
         github: remotes.github.folder,
         created: new Date().toISOString(),
       };
-      localStorage.picker = JSON.stringify(data);
+      window.tabStorage.setItem("picker",data);
     }
 
     // focus back to editor

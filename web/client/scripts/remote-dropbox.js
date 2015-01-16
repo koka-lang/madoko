@@ -174,7 +174,7 @@ var Dropbox = (function() {
 
   Dropbox.prototype.persist = function() {
     var self = this;
-    return { folder: self.folder };
+    return { type: self.type(), folder: self.folder };
   }
 
   Dropbox.prototype.fullPath = function(fname) {

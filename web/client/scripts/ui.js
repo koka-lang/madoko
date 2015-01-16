@@ -108,7 +108,7 @@ var State = { Normal:"normal",
 
 var UI = (function() {
 
-  function UI( runner )
+  function UI( runner, tabDb )
   {
     var self = this;
     self.state  = State.Init;
@@ -118,6 +118,7 @@ var UI = (function() {
     self.refreshRate = 500;
     self.serverRefreshRate = 2500;
     self.runner = runner;
+    self.tabDb = tabDb;
     //self.runner.setStorage(self.storage);
 
     self.stale = true;
@@ -233,23 +234,32 @@ var UI = (function() {
     }
 
     // read first, before calling updateSettings (as that saves right away)
-    var json = localStorage.getItem("settings");
-    if (!json) { //legacy
-      json = localStorage.getItem("local/local");
+    var lsettings = window.tabStorage.getItem("settings");
+    if (!lsettings) lsettings = window.tabStorage.getItemFrom(1, "settings"); // take for the first tab as default
+    if (!lsettings) {
+      // legacy
+      var json = localStorage.getItem("settings");
+      if (!json) { 
+        json = localStorage.getItem("local/local");
+      }
+      if (json) lsettings = Util.jsonParse(json,{});
+      localStorage.removeItem("settings")
     }
-    
+
     self.settings = Util.copy(defaultSettings);
     self.updateSettings( {
       theme            : "vs",
       fontScale        : "medium",      
     });
     
-    self.updateSettings( Util.jsonParse(json,{}) );
+    if (lsettings) {
+      self.updateSettings( lsettings );
+    }
 
     // read from hash
     var cap = /[#&\?]options=([^=&#;]+)/.exec(window.location.hash);
     if (cap) {
-      json = decodeURIComponent(cap[1]);
+      var json = decodeURIComponent(cap[1]);
       self.updateSettings( Util.jsonParse(json,{}) );
     }    
   }
@@ -331,7 +341,7 @@ var UI = (function() {
     if (self.settings) {
       var toSave = Util.copy(self.settings);
       delete toSave.viewFull;
-      localStorage.setItem("settings", JSON.stringify(toSave));
+      window.tabStorage.setItem("settings", toSave);
     }
   }
 
@@ -617,6 +627,7 @@ var UI = (function() {
 
     // Buttons and checkboxes
 
+    self.lastSave = 0;
     self.lastSync = 0;
     self.lastConUsersCheck = 0;
     self.iconDisconnect = document.getElementById("icon-disconnect");
@@ -641,6 +652,13 @@ var UI = (function() {
     
     var autoSync = function() {
       var now = Date.now();
+
+      // do a full save?
+      if (self.lastSave===0 || (now - self.lastSave >= 20000)) {
+        self.localFullSave(); // async
+      }
+
+      // update connection status and synchronize
       self.updateConnectionStatus().then( function(status) {        
         if (self.storage.remote.canSync) {
           if (status===0) {
@@ -662,6 +680,7 @@ var UI = (function() {
           }
         }
       });
+
       // check if an app update happened 
       if (self.state === State.Normal && self.appUpdateReady) {
         self.appUpdateReady = false;        
@@ -1306,7 +1325,7 @@ var UI = (function() {
         return true;
       },
       function(round) {
-        self.localSave(true); // minimal save
+        self.localSave(); // minimal save
         self.stale = false;
         if (!self.runner) return cont();
         if (self.editName === self.docName) {
@@ -1322,7 +1341,8 @@ var UI = (function() {
               var quick = self.viewHTML(res.content, res.ctx.time0);
               self.updateLabels(res.labels,res.links);
               if (res.runAgain) {
-                self.stale=true;              
+                self.stale=true;
+                self.localFullSave(); // async full save as probably files are added
               }
               if (res.runOnServer && !self.settings.disableServer && self.asyncServer 
                     && self.lastMathDoc !== res.mathDoc) { // prevents infinite math rerun on latex error
@@ -1412,28 +1432,54 @@ var UI = (function() {
     var pos  = self.editor.getPosition();
     var text = self.getEditText();
     self.editContent = text;
-    self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly     
+    if (self.storage)  self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly     
   }
 
-  // save entire state to local disk
-  UI.prototype.localSave = function(minimal) {
+  // synchronous save state to local disk
+  UI.prototype.localSave = function() {
     var self = this;
-    self.flush();
     self.saveSettings();
-    if (!self.storage) return;
+    if (!self.storage) return {};
+    
+    self.flush();    
     var pos  = self.editor.getPosition();    
-    var json = { 
+    var doc = { 
       docName: self.docName, 
       editName: self.editName, 
-      pos: pos, 
-      storage: self.storage.persist(minimal ? 0 : localStorageLimit),      
+      pos: pos,
+      storage: self.storage.persist(self.tabDb.limit()),      
     };
-    return localStorageSave("local", json, 
-      (//minimal ? undefined : 
-       function() {
-        json.storage = self.storage.persist(0); // persist minimally
-        return json;
-      }));
+    window.tabStorage.setItem( "document", doc );
+    window.tabStorage.setItem( "editContent", self.editContent ); // updated by flush    
+    return doc;
+  }
+
+  // Asynchonous full save
+  UI.prototype.localFullSave = function() {
+    var self = this;
+    var doc = self.localSave();
+    if (!self.storage || !doc || !doc.storage.files) return Promise.resolved();
+    return Promise.map( doc.storage.files, function(fname) {
+      var key = "/" + fname;
+      var info = self.storage.persistFile(fname);
+      if (!info) return;
+      return self.tabDb.setItem(key, info);
+    }).then( function() {
+      // remove deleted files
+      return self.tabDb.keys().then( function(keys) {
+        var rkeys = [];
+        keys.forEach( function(key) {
+          if (Util.startsWith(key,"/") && !self.storage.existsLocal(key.substr(1))) {
+            rkeys.push(key);
+          }
+        });
+        return Promise.map( rkeys, function(rkey) {
+          return self.tabDb.removeItem(rkey);
+        }).then( function() {
+          self.lastSave = Date.now();
+        });
+      });
+    });
   }
 
   UI.prototype.importTex = function() {
@@ -1556,6 +1602,9 @@ var UI = (function() {
   UI.prototype.editFile = function(fpath,pos) {
     var self = this;
     var loadEditor;
+    if (self.editName) {
+      self.flush(self.editName);
+    }
     //self.state = State.Loading;            
     if (fpath===self.editName) loadEditor = Promise.resolved(null) 
      else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
@@ -1586,51 +1635,69 @@ var UI = (function() {
       }
       self.showDecorations();
       self.showConcurrentUsers(false);
+      self.localFullSave();
     }); 
     // .always( function() { 
     //   self.state = State.Normal; 
     // });    
   }
 
-  UI.prototype.localLoadStorage = function() {
-    var self = this;
-    var json = localStorageLoad("local");
-    if (json==null) return null;
-    return Storage.unpersistStorage(json.storage);  
-  }
-
   UI.prototype.localLoad = function() {
     var self = this;
-    var json = localStorageLoad("local");
-    if (json!=null) {
-      // we ran before
-      var docName = json.docName;
-      var stg = Storage.unpersistStorage(json.storage);
-      return self.setStorage( stg, docName ).then( function(fresh) {
+
+    // legacy local storage
+    var json = localStorage.getItem("local/local");
+    if (json) {
+      var obj = JSON.parse(json);
+      localStorage.removeItem("local/local"); // and remove it.
+      var stg = Storage.unpersistStorage(obj.storage);
+      return self.setStorage( stg, obj.docName ).then( function(fresh) {
         if (fresh) return; // loaded template instead of local document
-        return self.editFile( json.editName, json.pos );
+        return self.editFile( obj.editName, obj.pos );
       });
     }
-    else {
-      return self.setStorage( null, null );
-    }
+
+    // load from page storage
+    var obj = window.tabStorage.getItem("document");
+    if (obj==null || obj.storage == null) return self.setStorage(null,null);
+             
+    // read needed files
+    return Promise.map( obj.storage.files, function(fname) {
+      var key = "/" + fname;
+      return self.tabDb.getItem(key).then( function(info) {
+        if (info!=null) obj.storage[key] = info;
+      });
+    }).then( function() {
+      var stg = Storage.unpersistStorage(obj.storage);
+      var editContent = window.tabStorage.getItem("editContent");
+      if (editContent!=null) {
+        stg.writeFile( obj.editName, editContent, { position: obj.pos })
+      }
+      return self.setStorage( stg, obj.docName ).then( function(fresh) {
+        if (fresh) return; // loaded template instead of local document
+        return self.editFile( obj.editName, obj.pos );
+      });
+    });
   }
+
 
   UI.prototype.checkSynced = function() {
     var self = this;
-    var stg = self.storage;
-    if (!stg) {
-      // not yet loaded...
-      stg = self.localLoadStorage();
-    }
-    if (stg && !stg.isSynced()) {
-      //var ok = window.confirm( "The current local document has changes that not been saved yet to cloud storage!\n\nDo you want to discard these changes?");
-      //if (!ok) return Promise.rejected("the operation was cancelled");
-      return Storage.discard(stg);
-    }
-    else {
-      return Promise.resolved(true);
-    }
+    return Promise.do( function() { 
+      if (self.storage) 
+        return self.storage;
+      else 
+        return self.localLoad().then( function() { return self.localStorage; });
+    }).then( function(stg) {
+      if (stg && !stg.isSynced()) {
+        //var ok = window.confirm( "The current local document has changes that not been saved yet to cloud storage!\n\nDo you want to discard these changes?");
+        //if (!ok) return Promise.rejected("the operation was cancelled");
+        return Storage.discard(stg);
+      }
+      else {
+        return true;
+      }
+    });
   }
 
   UI.prototype.openFile = function(storage,fname) {
@@ -4175,7 +4242,6 @@ var symbolsMath = [
     var self = this;
     self.lastSync = Date.now();
     if (self.storage) {
-      self.localSave();
       var cursors = {};        
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;

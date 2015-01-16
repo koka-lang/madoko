@@ -6,7 +6,14 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
-define(["../promise.js"],function(Promise) {
+define(["../scripts/promise"],function(Promise) {
+
+
+  /*-------------------------------------------------------------------------
+    Defines a local database abstraction: using IndexedDB when possible
+    since it has a higher storage limit (50mb), but falling back to regular
+    localStorage otherwise (limit 5mb)
+  -------------------------------------------------------------------------*/
 
   var Local = (function() {
     function Local(root) {
@@ -22,14 +29,19 @@ define(["../promise.js"],function(Promise) {
     Local.prototype.getItem = function(key) {
       var self = this;
       return Promise.do( function() {
-        return JSON.parse(localStorage.getItem( self.getKey(key) ));
+        try {
+          return JSON.parse(localStorage.getItem( self.getKey(key) ));
+        }
+        catch(exn) {
+          return null;
+        }
       });
     }
 
     Local.prototype.setItem = function(key,value) {
       var self = this;
       return Promise.do( function() {
-        return JSON.stringify(localStorage.setItem( self.getKey(key),value));
+        return localStorage.setItem( self.getKey(key), JSON.stringify(value));
       });
     }
 
@@ -77,21 +89,34 @@ define(["../promise.js"],function(Promise) {
       });
     }
 
+    Local.prototype.limit = function() {
+      return (2.5*1024*1024);
+    }
+
+    return Local;
   })();
 
   var indexedDb = indexedDB || window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
-  var rw = (window.IDBTransaction || window.webkitIDBTransaction || { READ_WRITE: 'readwrite' }).READ_WRITE;
+  var rw = ((window.IDBTransaction || window.webkitIDBTransaction || {}).READ_WRITE) || "readwrite";
 
-  function openIndexedDB(root,version) {
+  function openIndexedDB(root,storeName,version) {
     if (root==null) root = "local";
     if (version==null) version = 1;
+    if (storeName==null) storeName = "local";
     return new Promise( function(cont) {
-      var req = indexedDB.open(root, version || 1);
+      var req = indexedDB.open(root, version);
       req.onerror = function() {
         cont(req.error);
       };
       req.onupgradeneeded = function() {
-        req.result.createObjectStore(root);
+        var db = req.result;
+        if (!db) return;
+        [].forEach.call(db.objectStoreNames, function(name) {
+          if (name !== storeName) db.deleteObjectStore(name);
+        });
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName);
+        }
       };
       req.onsuccess = function() {
         cont(null,req.result);
@@ -106,7 +131,7 @@ define(["../promise.js"],function(Promise) {
       self.storeName = storeName || "local";
     }
 
-    IDb.protoype.getItem = function(key) {
+    IDb.prototype.getItem = function(key) {
       var self = this;
       return new Promise( function(cont) {
         var transaction = self.db.transaction([self.storeName], 'readonly')
@@ -215,21 +240,26 @@ define(["../promise.js"],function(Promise) {
       });
     }
 
+    IDb.prototype.limit = function() {
+      return (50*1024*1024);
+    }
+
+    return IDb;
   })();
 
 
-  function createLocalStore() {
+  function create(storeName) {
     if (indexedDB != null) {  // prefer indexedDB since the storage limit is much higher and it provides true atomic updates
-      return openIndexedDB("local",1).then( function(db) {
-        return new IDb(db,"local");
+      return openIndexedDB("local",storeName,3).then( function(db) {
+        return new IDb(db,storeName);
       });
     }
     else {
-      return Promise.resolved( new Local() );
+      return Promise.resolved( new Local(storeName) );
     }
   }
 
   return {
-    createLocalStore: createLocalStore,
+    create: create,
   }
 });

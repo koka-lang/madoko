@@ -337,7 +337,7 @@ var Github = (function() {
 
   Github.prototype.persist = function() {
     var self = this;
-    return { folder: self.path, commit: self.context.commitUrl };
+    return { type: self.type(), folder: self.path, commit: self.context.commitUrl };
   }
 
   Github.prototype.fullPath = function(fname) {

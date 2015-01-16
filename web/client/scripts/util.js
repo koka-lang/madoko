@@ -258,8 +258,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         proto = src.constructor.prototype;
       }
       var dest = Object.create(proto);
-      for(var key in src){
-        dest[key] = (deep ? clone(src[key],true,_visited) : src[key]);
+      for(var key in src) {
+        var value = src[key];
+        var recurse = deep || value instanceof Date || value instanceof RegExp;
+        dest[key] = (recurse ? clone(value,deep,_visited) : value);
       }
       return dest;
     }
@@ -967,7 +969,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   function urlParamsDecode(hash) {
     if (!hash) return {};
-    if (hash[0]==="#" || hash[0]==="?") hash = hash.substr(1);
+    if (hash[0]==="?") hash = hash.substr(1);
+    if (hash[0]==="#") hash = hash.substr(1);
     var obj = {};
     hash.split("&").forEach( function(part) {
       var i = part.indexOf("=");
@@ -1422,9 +1425,9 @@ doc.execCommand("SaveAs", null, filename)
   function enablePinned() 
   {
     // Persistance
-    var pinned = Map.unpersist(jsonParse(localStorage.getItem("pinned"),{}));
+    var pinned = Map.unpersist( window.tabStorage.getItem("pinned") || {});
     window.addEventListener("unload", function() {
-      localStorage.setItem("pinned", JSON.stringify(pinned.persist()));
+      window.tabStorage.setItem("pinned", pinned.persist());
     });
     onResize( function() { 
       positionPinned();
@@ -1595,7 +1598,7 @@ doc.execCommand("SaveAs", null, filename)
   function enablePanels() 
   {
     // persist panel ratios
-    var panels = Map.unpersist(jsonParse(localStorage.getItem("panels"),{}));
+    var panels = Map.unpersist( window.tabStorage.getItem("panels") || {} );
     
     // set default ratios 
     [].forEach.call( document.getElementsByClassName("panel"), function(panel) {
@@ -1637,7 +1640,7 @@ doc.execCommand("SaveAs", null, filename)
         renderPanel( panel, ratio );
       });
       // persist panels too
-      localStorage.setItem("panels", JSON.stringify(panels.persist()));    
+      window.tabStorage.setItem("panels", panels.persist());    
     }
 
     // react to panel resizing

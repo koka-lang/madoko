@@ -121,7 +121,6 @@ function createFromTemplate( storage, docName, template )
 {
   if (!template) template = "default";
   var templates = template.split(";");
-  storage.writeFile(docName,"Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n");
   return Promise.map( templates, function(temp) {
     var srcName = temp;
     var tgtName = temp;
@@ -135,6 +134,12 @@ function createFromTemplate( storage, docName, template )
     }, function(err) {
       return err;
     });
+  }).then( function() {
+    // ensure the main file exists
+    if (!storage.existsLocal(docName)) {
+      storage.writeFile(docName,"Title         : Welcome to Madoko\nHeading Base  : 2\nAuthor        : You\n\n[TITLE]\n\n# Madoko\n\nEnjoy!\n");
+    }
+    return;
   });
 }
 
@@ -233,7 +238,8 @@ function serverGetInitialContent(fpath) {
   return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } );
 }
 
-function unpersistRemote(remoteType,obj) {
+function unpersistRemote(obj,remoteType) {
+  if (remoteType==null) remoteType = obj.type;
   if (obj && remoteType) {
     var rs = Util.properties(remotes);
     for (var i = 0; i < rs.length; i++) {
@@ -251,27 +257,45 @@ function makeDefaultGlobalPath(remoteType,path) {
 }
   
 function unpersistStorage( obj ) {
-  var remote = unpersistRemote( obj.remoteType, obj.remote );
-  var storage = new Storage(remote);
-  storage.files = Map.unpersist( obj.files );
-  // be downward compatible with old storage..
-  storage.files.forEach( function(fpath,file) {
-    if (file.kind) {
-      file.encoding = Encoding.fromExt(fpath);
-      file.mime = Util.mimeFromExt(fpath);
-      delete file.url;
-    }
-    if (typeof file.createdTime === "string") {
-      file.createdTime = new Date(file.createdTime);
-    }
-    else if (!file.createdTime) {
-      file.createdTime = new Date(1);
-    }
-    if (!file.globalPath) {
-      file.globalPath = makeDefaultGlobalPath(remote.type(),file.path);
-    }
-    delete file.generated;
-  });
+  // legacy support
+  if (obj.remoteType) {
+    var remote = unpersistRemote( obj.remote, obj.remoteType );
+    var storage = new Storage(remote);
+    storage.files = Map.unpersist( obj.files );
+    // be downward compatible with old storage..
+    storage.files.forEach( function(fpath,file) {
+      if (file.kind) {
+        file.encoding = Encoding.fromExt(fpath);
+        file.mime = Util.mimeFromExt(fpath);
+        delete file.url;
+      }
+      if (typeof file.createdTime === "string") {
+        file.createdTime = new Date(file.createdTime);
+      }
+      else if (!file.createdTime) {
+        file.createdTime = new Date(1);
+      }
+      if (!file.globalPath) {
+        file.globalPath = makeDefaultGlobalPath(remote.type(),file.path);
+      }
+      delete file.generated;
+    });
+  }
+  else {
+    // recent versions: 0.8.5+
+    var remote  = unpersistRemote( obj.remote );
+    var storage = new Storage(remote);
+    obj.files.forEach( function(fname) {
+      var info = obj["/" + fname];
+      if (info) {
+        if (info.original==null) info.original = info.content;
+        if (typeof info.createdTime === "string") {
+          info.createdTime = new Date(info.createdTime);
+        }
+        storage.files.set( fname, info );
+      }
+    });
+  }
   return storage;
 }
 
@@ -512,24 +536,34 @@ var Storage = (function() {
     infos.sort( function(i1,i2) { return (weight(i1) - weight(i2)); });
 
     // Then add up to the limit
-    var pfiles = new Map();
+    var fnames = [];
     var total = 0;
     infos.forEach( function(info) {
       total = total + info.len;
       if (info.vital || total <= limit) {
-        pfiles.set( info.path, self.files.get(info.path) );
+        fnames.push(info.path);
       }
       else if (limit > 0) {
         Util.message("Over limit, not persisting: " + info.path, Util.Msg.Trace);
       }
     });
 
-    return { 
+    return {
+      synced: self.isSynced(),
       remote: self.remote.persist(), 
-      remoteType: self.remote.type(),
-      files: pfiles.persist(), 
+      files: fnames,
     };
   };
+
+  Storage.prototype.persistFile = function(fname) {
+    var self = this;
+    var file = self.files.get(fname);
+    if (!file) return null;
+    var pfile = Util.copy(file);
+    if (pfile.content === pfile.original) delete pfile.original;
+    pfile.createdTime = pfile.createdTime.toString();
+    return pfile;
+  }
 
   Storage.prototype.createSnapshot = function(docName) {
     var self = this;

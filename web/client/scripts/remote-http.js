@@ -76,7 +76,7 @@ var HttpRemote = (function() {
 
   HttpRemote.prototype.persist = function() {
     var self = this;
-    return { url: self.url };
+    return { type: self.type(), url: self.url };
   }
 
   HttpRemote.prototype.fullPath = function(fname) {
