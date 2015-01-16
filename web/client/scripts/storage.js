@@ -518,8 +518,10 @@ var Storage = (function() {
     // First sort in order of relevance and size
     var infos = [];
     var standardFiles = ["madoko.css"];
+    var isShared = false;
     self.files.forEach( function(path,file) {
       // if (file.nosync) return;  // we want to keep these files in case of working off-line.
+      if (file.sharedPath!=null) isShared = true;
       infos.push({
         path: path,
         mime: file.mime,
@@ -550,6 +552,7 @@ var Storage = (function() {
 
     return {
       synced: self.isSynced(),
+      shared: isShared,
       remote: self.remote.persist(), 
       files: fnames,
     };

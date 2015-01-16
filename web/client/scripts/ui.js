@@ -1551,7 +1551,7 @@ var UI = (function() {
           self.storage = stg;
           self.docName = docName;
           self.docText = file.content;
-          document.title = "Madoko - " + Util.stemname(self.docName);
+          document.title = "Madoko" + (window.tabStorage.tabNo > 1 ? "/" + window.tabStorage.tabNo.toString() : "") + " - " + Util.stemname(self.docName);
 
           // initialize citations
           self.storage.forEachFile( function( file ) {
@@ -1669,8 +1669,9 @@ var UI = (function() {
     }
 
     // load from page storage
+    if (!TabStorage.claim(tabNo)) throw new Error("Cannot open document: it is already opened in another tab");
     var obj = window.tabStorage.getItemFrom(tabNo,"document");
-    if (!TabStorage.claim(tabNo) || obj==null || obj.storage == null) return self.setStorage(null,null);
+    if (obj==null || obj.storage == null) return self.setStorage(null,null);
              
     // read needed files
     return Promise.map( obj.storage.files, function(fname) {

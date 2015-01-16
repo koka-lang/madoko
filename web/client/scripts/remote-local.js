@@ -112,9 +112,10 @@ var LocalRemote = (function() {
             path: path,
             display: path, 
             type: "file",
-            isShared: false,
+            iconName: "icon-" + doc.storage.remote.type + ".png",
             isOpened: (window.tabStorage.getItemFrom(item.tabNo,"ticks") != null),
-            isSynced: (doc.synced===true),
+            isShared: (doc.storage.shared===true),
+            isSynced: (doc.storage.synced===true),
           });
         });
       }

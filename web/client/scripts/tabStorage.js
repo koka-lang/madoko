@@ -16,7 +16,7 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
   };
 
   var tabTickIval = 10000; // in milliseconds
-  var tabMax = 2;
+  var tabMax = 4;
 
   function tabTicksKey(n) {
     return "tab/" + n.toString() + "/ticks";
