@@ -968,9 +968,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   })();
 
   function urlParamsDecode(hash) {
-    if (!hash) return {};
-    if (hash[0]==="?") hash = hash.substr(1);
-    if (hash[0]==="#") hash = hash.substr(1);
+    if (!hash) return {}; 
+    if (hash[0]==="?") { hash = hash.substr(1); }
+    if (hash[0]==="#") { hash = hash.substr(1); }
     var obj = {};
     hash.split("&").forEach( function(part) {
       var i = part.indexOf("=");
