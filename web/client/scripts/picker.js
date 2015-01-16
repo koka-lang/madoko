@@ -233,7 +233,7 @@ var Picker = (function() {
       var fileName = self.getFileName();
       if (fileName) {
         if (Util.extname(fileName) == "") { // directory
-          fileName = Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
+          fileName = (self.current.remote.type()==="local") ? fileName + ".mdk" : Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
           self.setFileName(fileName);
         }
         self.options.path = Util.combine(self.current.folder,fileName);
@@ -694,6 +694,7 @@ var Picker = (function() {
                   "<img class='item-icon' src='images/" + (item.iconName || ("icon-" + item.type.replace(/\./g,"-") + (item.isShared ? "-shared" : "") + ".png")) + "'/>" +
                   (item.connected===false ?  "<img class='item-icon item-disconnect' src='images/icon-disconnect.png' />" : "") +
                   "<span class='item-name'>" + Util.escape(item.display || Util.basename(item.path)) + "</span>" +
+                  (item.isSynced===false ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "") +
                "</div>";
 
       });
@@ -716,7 +717,7 @@ var Picker = (function() {
           iconName: remote.logo(), 
           type: "remote", 
           isShared: false,
-          disabled: (remote.type()==="me" || (self.options.command!=="new" && remote.type()==="local")),
+          disabled: (remote.type()==="me" || (!Util.contains(["new","open"],self.options.command) && remote.type()==="local")),
           connected: (status===0),
         };
       });      

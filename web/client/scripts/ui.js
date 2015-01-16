@@ -6,10 +6,10 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/promise","../scripts/util",
+define(["../scripts/map","../scripts/promise","../scripts/util","../scripts/tabStorage",
         "../scripts/storage",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor"],
-        function(Map,Promise,Util,Storage,Range,Selection,ReplaceCommand,Editor) {
+        function(Map,Promise,Util,TabStorage,Storage,Range,Selection,ReplaceCommand,Editor) {
 
 
 // Constants
@@ -1477,8 +1477,12 @@ var UI = (function() {
           return self.tabDb.removeItem(rkey);
         }).then( function() {
           self.lastSave = Date.now();
+          return true;
         });
       });
+    }, function(err) {
+      Util.message("Unable to save document to persistent storage: " + err.toString(), Util.Msg.Error);
+      return false;
     });
   }
 
@@ -1527,6 +1531,12 @@ var UI = (function() {
     var self = this;
     return self.initializeStorage(stg0,docName0, function(stg,docName,fresh) {
       return self.updateConnectionStatus(stg).then( function() {
+        if (stg.remote.type()==="local") {
+          var tabNo = Number(stg.remote.getFolder());
+          if (!isNaN(tabNo) && tabNo > 0) {
+            return self.localLoad(tabNo);
+          }
+        }
         return self.withSyncSpinner( function() {
           return stg.readFile(docName, false);
         }).then( function(file) {           
@@ -1585,7 +1595,7 @@ var UI = (function() {
           return cont(stg,docName,true);
         });
       });
-    }
+    } 
     else {
       return cont(stg,docName,false);
     }
@@ -1642,8 +1652,9 @@ var UI = (function() {
     // });    
   }
 
-  UI.prototype.localLoad = function() {
+  UI.prototype.localLoad = function(tabNo) {
     var self = this;
+    if (tabNo==null) tabNo = window.tabStorage.tabNo;
 
     // legacy local storage
     var json = localStorage.getItem("local/local");
@@ -1658,18 +1669,18 @@ var UI = (function() {
     }
 
     // load from page storage
-    var obj = window.tabStorage.getItem("document");
-    if (obj==null || obj.storage == null) return self.setStorage(null,null);
+    var obj = window.tabStorage.getItemFrom(tabNo,"document");
+    if (!TabStorage.claim(tabNo) || obj==null || obj.storage == null) return self.setStorage(null,null);
              
     // read needed files
     return Promise.map( obj.storage.files, function(fname) {
       var key = "/" + fname;
-      return self.tabDb.getItem(key).then( function(info) {
+      return self.tabDb.getItemFrom(tabNo,key).then( function(info) {
         if (info!=null) obj.storage[key] = info;
       });
     }).then( function() {
       var stg = Storage.unpersistStorage(obj.storage);
-      var editContent = window.tabStorage.getItem("editContent");
+      var editContent = window.tabStorage.getItemFrom(tabNo,"editContent");
       if (editContent!=null) {
         stg.writeFile( obj.editName, editContent, { position: obj.pos })
       }
@@ -1677,6 +1688,11 @@ var UI = (function() {
         if (fresh) return; // loaded template instead of local document
         return self.editFile( obj.editName, obj.pos );
       });
+    }).always( function() {
+      if (tabNo !== window.tabStorage.tabNo) {
+        window.tabStorage.clear(tabNo);
+        TabStorage.unClaim(tabNo);
+      }
     });
   }
 

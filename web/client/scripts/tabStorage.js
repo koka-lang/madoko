@@ -41,21 +41,34 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
     localStorage.removeItem(key);
   }
 
-  function tabClaim(n) {
+  function tabClaim(n, noupdate) {
     var t    = tabGetTicks(n);
     var diff = t + tabTickIval - Date.now();
     if (diff < 0) {  
       // it's old: claim it
       tabSetTicks(n); 
-      setInterval( function() { tabSetTicks(n); }, tabTickIval/2 );  
-      window.addEventListener( "unload", function() { tabRemoveTicks(n); } );
-      // set hash
-      var h = window.location.hash.replace(/^#|\btab=\d($|[&])/g, "");
-      if (n > 1 && h.length > 0) h = "&" + h;
-      window.location.hash = "#" + (n > 1 ? "tab=" + n.toString() : "") + h;
+      if (!noupdate) {
+        setInterval( function() { tabSetTicks(n); }, tabTickIval/2 );  
+        window.addEventListener( "unload", function() { tabRemoveTicks(n); } );
+        // set hash
+        var h = window.location.hash.replace(/^#|\btab=\d($|[&])/g, "");
+        if (n > 1 && h.length > 0) h = "&" + h;
+        window.location.hash = "#" + (n > 1 ? "tab=" + n.toString() : "") + h;
+      }
       return true;
     }
     return false;
+  }
+
+  function claim(n) {
+    if (window.tabStorage.tabNo === n) return true;
+    return tabClaim(n,true);
+  }
+
+  function unClaim(n) {
+    if (window.tabStorage.tabNo !== n) {
+      tabRemoveTicks(n);
+    }
   }
 
   function tabClaimTabNo() {
@@ -101,14 +114,6 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
       return tabKey + (key == null ? "" : "/" + key);
     }
 
-    TabStore.prototype._encode = function(value) {
-      return value;
-    }
-
-    TabStore.prototype._decode = function(value) {
-      return value;
-    }
-
     TabStore.prototype.getItem = function(key) {
       var self = this;
       return self.getItemFrom(self.tabNo,key);
@@ -116,23 +121,33 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
 
     TabStore.prototype.getItemFrom = function(tabNo,key) {
       var self = this;
-      return self._decode(self.store.getItem( self._getKey(key,tabNo) ));
+      return self.store.getItem( self._getKey(key,tabNo) );
     }
 
     TabStore.prototype.setItem = function(key,value) {
       var self = this;
-      return self.store.setItem( self._getKey(key), self._encode(value) );
+      return self.store.setItem( self._getKey(key), value );
     }
-
+    
     TabStore.prototype.removeItem = function(key) {
       var self = this;
-      return self.store.removeItem( self._getKey(key) );
+      return self.store.removeItemFrom( self.tabNo, key );
     }
 
-    TabStore.prototype.keys = function() {
+    TabStore.prototype.removeItemFrom = function(tabNo,key) {
       var self = this;
-      return self.store.keys().then(function(keys) {
-        var prefix = self._getKey("");
+      return self.store.removeItem( self._getKey(key,tabNo) );
+    }
+
+    TabStore.prototype._allKeys = function(f) {
+      var self = this;
+      return self.store.keys().then( function(keys) { return f(keys); });
+    }
+
+    TabStore.prototype.keys = function(tabNo) {
+      var self = this;
+      return self._allKeys( function(keys) {
+        var prefix = self._getKey("",tabNo);
         return keys.map( function(key) {
           return (key.indexOf(prefix) === 0 ? key.substr(prefix.length) : null);
         }).filter( function(key) {
@@ -170,11 +185,49 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
       }    
     }
 
+    TabStorage.prototype.getItemFrom = function(tabNo,key) {
+      var self = this;
+      return self._decode( self.store.getItem( self._getKey(key,tabNo) ) );
+    }
+
+    TabStorage.prototype.setItem = function(key,value) {
+      var self = this;
+      return self.store.setItem( self._getKey(key), self._encode(value) );
+    }
+
+    TabStorage.prototype._allKeys = function(f) {
+      var self = this;
+      var keys = [];
+      for(var i = 0; i < self.store.length; i++) {
+        keys.push(self.store.key(i));
+      }
+      return f(keys);
+    }
+
+    TabStorage.prototype.getItemFromAll = function(key) {
+      var self = this;
+      var values = [];
+      for(var i = 1; i <= tabMax; i++) {
+        var value = self.getItemFrom(i,key);
+        if (value != null) values.push({ tabNo: i, value: value });
+      }
+      return values;
+    }
+
+    TabStorage.prototype.clear = function(tabNo) {
+      var self = this;
+      self.keys(tabNo).forEach( function(key) {
+        self.removeItemFrom(tabNo,key);
+      });
+    }
+
     return TabStorage;
   })(TabStore);
 
   return {
     createTabDb: createTabDb,
     initialize: initialize,
+    claim : claim,
+    unClaim: unClaim,
   }
 });

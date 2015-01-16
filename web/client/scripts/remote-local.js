@@ -102,7 +102,24 @@ var LocalRemote = (function() {
   }
 
   LocalRemote.prototype.listing = function( fpath ) {
-    return Promise.resolved([]);
+    return Promise.do(function() {
+      var files = [];
+      if (window.tabStorage) {
+        window.tabStorage.getItemFromAll("document").forEach( function(item) {
+          var doc = item.value;
+          var path = item.tabNo.toString() + "/" + doc.docName;
+          files.push({
+            path: path,
+            display: path, 
+            type: "file",
+            isShared: false,
+            isOpened: (window.tabStorage.getItemFrom(item.tabNo,"ticks") != null),
+            isSynced: (doc.synced===true),
+          });
+        });
+      }
+      return files;
+    });
   }
 
   LocalRemote.prototype.getShareUrl = function(fname) {
