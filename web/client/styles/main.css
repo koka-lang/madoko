@@ -1442,7 +1442,7 @@ div.item:hover {
 }
 
 div.item.disabled {
-  display: none;
+  display: none; 
 }
 
 .item-icon {
@@ -1490,7 +1490,8 @@ div.item.disabled {
 }
 
 .item-file.disabled {
-  display: none;
+  /* display: none; */
+  display: inline-block !important;
   color: #AAA;
 }
 
@@ -1539,6 +1540,7 @@ x#picker.page-template #message-template {
 
 #picker.page-me #button-signin,
 #picker.page-me #button-signout,
+#picker.remote-local #button-signout,
 #picker.page-alert #button-new,
 #picker.page-alert #button-save,
 #picker.page-alert #button-open,

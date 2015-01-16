@@ -108,12 +108,14 @@ var LocalRemote = (function() {
         window.tabStorage.getItemFromAll("document").forEach( function(item) {
           var doc = item.value;
           var path = item.tabNo.toString() + "/" + doc.docName;
+          var opened = (window.tabStorage.getItemFrom(item.tabNo,"ticks") != null);
           files.push({
             path: path,
             display: path, 
             type: "file",
+            disabled: opened,
             iconName: "icon-" + doc.storage.remote.type + ".png",
-            isOpened: (window.tabStorage.getItemFrom(item.tabNo,"ticks") != null),
+            isOpened: opened,
             isShared: (doc.storage.shared===true),
             isSynced: (doc.storage.synced===true),
           });

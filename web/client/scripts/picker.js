@@ -524,7 +524,7 @@ var Picker = (function() {
   Picker.prototype.display = function() {
     var self = this;
 
-    app.className = "modal command-" + self.options.command;    
+    app.className = "modal command-" + self.options.command + " remote-" + self.current.remote.type();    
     listing.innerHTML = "";
       
     if (self.options.page==="template") {
@@ -681,11 +681,17 @@ var Picker = (function() {
     var getListing = (folder==="//" ? self.getRoots() : self.current.remote.listing(folder));
     return getListing.then( function(items) {
       //console.log(items);
+      items.map( function(item) {
+        if (item.types==null) item.types = item.type.split(".");
+        if (!item.disabled && !canSelect(item.path,item.types[0],self.options.extensions)) item.disabled = true;
+      });
+      items = items.sort(function(i1,i2) {
+        var s1 = (i1.disabled ? "1" : "0") + Util.basename(i1.path);
+        var s2 = (i2.disabled ? "1" : "0") + Util.basename(i2.path);
+        return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
+      });
       var html = items.map( function(item) {
-        var types = item.type.split(".");
-        var type  = types[0];
-        var disable = (!item.disabled && canSelect(item.path,type,self.options.extensions)) ? "" : " disabled";
-        return "<div class='item " + types.map(function(tp) { return "item-" + tp; }).join(" ") + disable + 
+        return "<div class='item " + item.types.map(function(tp) { return "item-" + tp; }).join(" ") + (item.disabled ? " disabled" : "")  + 
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
