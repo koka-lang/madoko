@@ -164,7 +164,7 @@
 }
 
 /* General */
-.madoko .block, .madoko .figure, .madoko .bibitem, .madoko .equation {
+.madoko .block, .madoko .figure, .madoko .bibitem, .madoko .equation, .madoko div.math {
   margin-top: 1ex;
   margin-bottom: 1ex;
 }
@@ -294,17 +294,23 @@
 
 
 /* Math Pre */
-.madoko .input-mathpre .MathJax_Display, .madoko .input-mathpre .math-display {
+.madoko .input-mathpre .MathJax_Display {
   text-align: left !important;
 }
 
 .madoko div.input-mathpre {
+  text-align: left;
   margin-top: 1.5ex;
   margin-bottom: 1ex;
 }
 
 .madoko .math-rendering {
   color: gray;
+}
+
+/* Math */
+.madoko .mathdisplay {
+  text-align: center;
 }
 
 
@@ -462,7 +468,7 @@ body.madoko.preview {
 
 @media only screen and (max-device-width:1024px) {
   body.madoko, .madoko-body {
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-left: 1ex;
+    padding-right: 1ex;
   }
 }

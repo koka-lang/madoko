@@ -81,7 +81,8 @@ val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation : label='[(@equation)]{.equation-label}' .align-center replace='[&label;]{.equation-before}&nl;~ Begin Math { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End Math&nl;' tight .para-block line-adjust=0",
+  ( [ @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
+      @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
 
       @"~TableFigure : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table",
       @"~Figure      : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure",
@@ -100,8 +101,9 @@ function defaultMeta( options : options ) : string {
       @"~Aside    : html-elem='aside'",
       @"~Nav      : html-elem='nav'",
 
-      @"~Note     : .block before='[**Note**. ]{.note-before}&nl;'",
-      @"~Remark   : .block before='[**Remark**. ]{.remark-before}&nl;'",
+      @".Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note' margin-left=1em",
+      @"~Remark   : .Note caption='Remark'",
+      @"~Todo     : .Note caption='Todo'",
       @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
 
       @".Framed   : border-style=solid border-color=black border-width=1px",
@@ -114,17 +116,17 @@ function defaultMeta( options : options ) : string {
       @"~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em",
       @"~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold",
       
-      @"~Tex      : input=tex notag",
-      @"~TexRaw   : input=texraw",
-      @"~HtmlRaw  : input=htmlraw",
-      @"~Math     : input=math .para-block",
-      @"~MathPre  : input=mathpre .para-block",
-      @"~MathDefs : input=mathdefs .hidden",
-      @"~HtmlOnly : input=htmlonly notag",
-      @"~TexOnly  : input=texonly notag",
-      @"~math-inline : input=math",
+      @"~Tex        : input=tex notag",
+      @".TexRaw     : input=texraw",
+      @".HtmlRaw    : input=htmlraw",
+      @".MathInline : input=math",
+      @"~MathDisplay: input=math .para-block",
+      @"~MathPre    : input=mathpre .para-block",
+      @"~MathDefs   : input=mathdefs .hidden",
+      @"~HtmlOnly   : input=htmlonly notag",
+      @"~TexOnly    : input=texonly notag",
+      @"~math-inline: input=math",
       @"~math-display: input=math",
-      @"~displaymath : input=math",
 
       @"~Snippet  : input=math .block snippet-needpdf=true",
       @"~Footnote : label='[@footnote]{.footnote-label}'",
