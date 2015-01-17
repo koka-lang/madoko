@@ -142,39 +142,6 @@ val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argum
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
-function mathHeader( xopts : options, mode : string ) : string 
-{
-  val initial = ["%mdk MathDpi: " + xopts.mathDpi.show,
-             "MathImgDir: " + xopts.mathImgDir,
-             "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
-             "MathDocClass: " + xopts.mathDocClass
-            ]
-  val dviDeps = ["Dvipng: " + xopts.dvipng,
-             "Latex: " + xopts.latex, 
-             "MathConvert: " + xopts.mathconvert 
-            ]
-  val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
-             "PdfLatex: " + xopts.pdflatex, 
-             "Convert: " + xopts.convert,
-             "Dvips: " + xopts.dvips,
-             "Ps2pdf: " + xopts.ps2pdf 
-            ]
-  (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
-}
-
-function mathContent( xopts : options, mode : string, body : string = "" ) : string {
-  val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
-  val xbody = "\\begin{mdSnippets}%mdk\n" + body + "\n\\end{mdSnippets}%mdk"
-  opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
-}
-
-function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)
-{
-  val texName = outName.appendStem("-math-" + mode).changeExt(".tex")
-  val texFinalName = texName.changeExt(".final.tex")  
-  (texName,texFinalName,mathContent(xopts,mode,math))
-}
-
 public function runMathStatic( content : string, inName: string, outName : string,
                         texNameDvi : string, texNamePdf : string,
                         dviPages : pages, pdfPages : pages,
@@ -564,7 +531,7 @@ function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, p
                          continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
   val dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
-  val mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale)
+  val mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale, xopts.mathBaseline)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( Just(mdim2) )
 }

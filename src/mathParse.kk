@@ -15,9 +15,10 @@ import common
 
 
 // parse a dimension file written by latex snippets
-public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale : int  ) : dict<mathinfo> {
+public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale : int, imgBaseline : int  ) : dict<mathinfo> {
   val mi = mdict()
   val scale = imgScale.double / 100.0
+  val baseline = imgBaseline.double / 100.0
   txt.findAll(rxDimLine).foreach fun(cap) {
     val imageName = imgPrefix + "/math-" + cap.groups[3] + ".png"
     val page      = cap.groups[2].parseInt.maybe(0,id)
@@ -35,7 +36,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
     val depth  = ptdepth * (height / ptheight)
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
-    mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,scale*depth,
+    mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
                                     pxwidth,pxheight,size,cap.groups[14])
   }
   return mi.freeze()

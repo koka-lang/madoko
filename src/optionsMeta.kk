@@ -71,6 +71,7 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
       elif (key=="math-mode") options.setMathMode(value)
       elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (lvalue=="true") then "math" else value)
       elif (key=="math-scale") options(mathScale=ivalue)
+      elif (key=="math-baseline") options(mathBaseline=ivalue)
       elif (key=="math-dpi") options(mathDpi=ivalue) 
       elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
       elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))

@@ -89,6 +89,7 @@ public struct options(
   mathImgDir    : string = "math",    // directory for static math images
   mathScale     : int    = 108,       // math scaling in percentage
   mathDpi       : int    = 300,       // math resolution 
+  mathBaseline  : int    = 0,         // math baseline offset in percentage of 1pt
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
   

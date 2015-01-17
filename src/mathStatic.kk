@@ -40,9 +40,11 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 function mathHeader( xopts : options, mode : string ) : string 
 {
   val initial = ["% MathDpi: " + xopts.mathDpi.show,
-                 "MathImgDir: " + xopts.mathImgDir,
                  "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
-                 "MathDocClass: " + xopts.mathDocClass
+                 "MathScale: " + xopts.mathScale.show,
+                 "MathBaseline: " + xopts.mathBaseline.show,
+                 "MathDocClass: " + xopts.mathDocClass,
+                 "MathImgDir: " + xopts.mathImgDir
                 ]
   val dviDeps = ["Dvipng: " + xopts.dvipng,
                  "Latex: " + xopts.latex, 
