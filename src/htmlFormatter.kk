@@ -381,7 +381,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
        "    tex2jax: {inlineMath: [['$','$']]},",
        @"     TeX: { ",
        @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],",
-       @"                 mathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mathindent: ['\\hspace{#1ex}',1], mathbr: ['\\\\'],",
+       @"                 mdMathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mdMathindent: ['\\hspace{#1ex}',1], mdMathbr: ['\\\\'],",
        @"               },",
        if (extensions=="") then "" 
         else @"       extensions: [" + extensions + "]",
