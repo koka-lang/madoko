@@ -131,7 +131,7 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
     
     TabStore.prototype.removeItem = function(key) {
       var self = this;
-      return self.store.removeItemFrom( self.tabNo, key );
+      return self.removeItemFrom( self.tabNo, key );
     }
 
     TabStore.prototype.removeItemFrom = function(tabNo,key) {
@@ -159,6 +159,15 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
     TabStore.prototype.limit = function() {
       var self = this;
       return (typeof self.store.limit === "function" ? self.store.limit() : 2.5*1024*1024);
+    }
+
+    TabStore.prototype.clear = function(tabNo) {
+      var self = this;
+      return self.keys(tabNo).then( function(keys) {
+        return Promise.map( keys, function(key) {
+          return self.removeItemFrom(tabNo,key);
+        });
+      });
     }
 
     return TabStore;
@@ -216,8 +225,8 @@ define(["../scripts/promise","../scripts/localDb"],function(Promise,LocalDb) {
 
     TabStorage.prototype.clear = function(tabNo) {
       var self = this;
-      self.keys(tabNo).forEach( function(key) {
-        self.removeItemFrom(tabNo,key);
+      return self.keys(tabNo).map( function(key) {
+        return self.removeItemFrom(tabNo,key);
       });
     }
 

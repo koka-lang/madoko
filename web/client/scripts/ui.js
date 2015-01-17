@@ -1475,11 +1475,11 @@ var UI = (function() {
         });
         return Promise.map( rkeys, function(rkey) {
           return self.tabDb.removeItem(rkey);
-        }).then( function() {
-          self.lastSave = Date.now();
-          return true;
         });
       });
+    }).then( function() {
+      self.lastSave = Date.now();
+      return true;
     }, function(err) {
       Util.message("Unable to save document to persistent storage: " + err.toString(), Util.Msg.Error);
       return false;
@@ -1689,11 +1689,12 @@ var UI = (function() {
         if (fresh) return; // loaded template instead of local document
         return self.editFile( obj.editName, obj.pos );
       });
+    }).then( function() {
+      if (tabNo === window.tabStorage.tabNo) return;
+      window.tabStorage.clear(tabNo);
+      return self.tabDb.clear(tabNo);
     }).always( function() {
-      if (tabNo !== window.tabStorage.tabNo) {
-        window.tabStorage.clear(tabNo);
-        TabStorage.unClaim(tabNo);
-      }
+       TabStorage.unClaim(tabNo);
     });
   }
 

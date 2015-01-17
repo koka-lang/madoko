@@ -155,10 +155,10 @@ define(["../scripts/promise"],function(Promise) {
         var transaction = self.db.transaction([self.storeName], rw);
         var store = transaction.objectStore(self.storeName);
         var req = store.put(value, key);
-        transaction.oncomplete = function() {
-          cont(null,value);
+        req.onsuccess = function() {
+          cont(null,req.result);
         };
-        transaction.onabort = transaction.onerror = function() {
+        req.onerror = function() {
           cont(req.error);
         };
       });
@@ -170,15 +170,12 @@ define(["../scripts/promise"],function(Promise) {
         var transaction = self.db.transaction([self.storeName], rw);
         var store = transaction.objectStore(self.storeName);
         var req = store['delete'](key);
-        transaction.oncomplete = function() {
+        req.onsuccess = function() {
           cont();
         };
-        transaction.onerror = function() {
+        req.onerror = function() {
           cont(req.error);
         };
-        transaction.onabort = function(event) {
-          cont(event.target.error);
-        }
       });
     }
 
