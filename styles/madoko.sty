@@ -421,16 +421,20 @@
 \cssNewKey{css}{list-style-type}{\cssListStyleType}{}
 
 \newcommand{\@mdSetListLabel}{%
+  \cssIfHasClass{list-sep-paren}%
+    {\def\@labelsep{)}%
+     \eifstrequal{\cssListStyleType}{}{\def\cssListStyleType{decimal}}{}}%
+    {\def\@labelsep{.}}
   \eifstrequal{\cssListStyleType}{lower-roman}%
-    {\def\@label{label=\roman*.}}%
+    {\def\@label{label=\roman*\@labelsep}}%
   {\eifstrequal{\cssListStyleType}{upper-roman}%
-    {\def\@label{label=\Roman*.}}%
+    {\def\@label{label=\Roman*\@labelsep}}%
   {\eifstrequal{\cssListStyleType}{lower-alpha}%
-    {\def\@label{label=\alph*.}}%
+    {\def\@label{label=\alph*\@labelsep}}%
   {\eifstrequal{\cssListStyleType}{upper-alpha}%
-    {\def\@label{label=\Alph*.}}%
+    {\def\@label{label=\Alph*\@labelsep}}%
   {\eifstrequal{\cssListStyleType}{decimal}%
-    {\def\@label{label=\arabic*.}}%
+    {\def\@label{label=\arabic*\@labelsep}}%
   {\eifstrequal{\cssListStyleType}{disc}%
     {\def\@label{label=\textbullet}}%
   {\eifstrequal{\cssListStyleType}{circle}%
