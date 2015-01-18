@@ -403,31 +403,54 @@
 % Lists
 %-------------------------------------------------------------
 
-\newcounter{mdListNesting}
-
 
 \newlength{\xtopsep}
 \newenvironment{mdUl}[1][]%
   {\begin{mdDiv}[#1]%
-   \advance\c@mdListNesting by 1% use advance to be local
    \setlength{\xtopsep}{\topsep}%
    \addtolength{\topsep}{-\cssMarginTop}%
-   \begin{itemize}[topsep=\xtopsep]%
+   \eifstrequal{\cssListStyleType}{}%
+     {\def\@endlist{\end{itemize}}\begin{itemize}[topsep=\xtopsep]}%
+     {\@mdSetListLabel%
+      \def\@endlist{\end{enumerate}}\@expandafter{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]}%
    \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
-  {\strut\end{itemize}\end{mdDiv}}
+  {\strut\@endlist\end{mdDiv}}
 
-\cssNewKey{css}{start}{\cssStart}{}
+\cssNewKey{css}{start}{\cssStart}{1}
+\cssNewKey{css}{list-style-type}{\cssListStyleType}{}
+
+\newcommand{\@mdSetListLabel}{%
+  \eifstrequal{\cssListStyleType}{lower-roman}%
+    {\def\@label{label=\roman*.}}%
+  {\eifstrequal{\cssListStyleType}{upper-roman}%
+    {\def\@label{label=\Roman*.}}%
+  {\eifstrequal{\cssListStyleType}{lower-alpha}%
+    {\def\@label{label=\alph*.}}%
+  {\eifstrequal{\cssListStyleType}{upper-alpha}%
+    {\def\@label{label=\Alph*.}}%
+  {\eifstrequal{\cssListStyleType}{decimal}%
+    {\def\@label{label=\arabic*.}}%
+  {\eifstrequal{\cssListStyleType}{disc}%
+    {\def\@label{label=\textbullet}}%
+  {\eifstrequal{\cssListStyleType}{circle}%
+    {\def\@label{label=$\circ$}}%
+  {\eifstrequal{\cssListStyleType}{square}%
+    {\def\@label{label=$\blacksquare$}}%
+  {\eifstrequal{\cssListStyleType}{dash}%
+    {\def\@label{label={--}}}%
+  {\eifstrequal{\cssListStyleType}{none}%
+    {\def\@label{label=}}%
+    {\def\@label{}}}}}}}}}}}%
+}
+
 \newenvironment{mdOl}[1][]%
   {\ifdef\@enhook{\PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak use the "enumitem" package instead\MessageBreak (which is available by default)}{}}{}%
   \begin{mdDiv}[#1]%
-  \advance\c@mdListNesting by 1% use advance to be local
   \setlength{\xtopsep}{\topsep}%
   \addtolength{\topsep}{-\cssMarginTop}%
-  \begin{enumerate}[topsep=\xtopsep]%
-  \eifstrequal{\cssStart}{}{}%
-    {\addtocounter{enum\roman{mdListNesting}}{\cssStart}%
-     \addtocounter{enum\roman{mdListNesting}}{-1}}%
+  \@mdSetListLabel%
+  \@expandafter{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]%
   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
   {\strut\end{enumerate}\end{mdDiv}}
@@ -436,7 +459,6 @@
 
 \newenvironment{mdDl}[1][]%
   {\begin{mdDiv}[#1]%
-   \advance\c@mdListNesting by 1% use advance to be local
    \setlength{\xtopsep}{\topsep}%
    \addtolength{\topsep}{-\cssMarginTop}%
    \begin{itemize}[leftmargin=0pt,topsep=\xtopsep]%
