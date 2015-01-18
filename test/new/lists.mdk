@@ -1,0 +1,48 @@
+title		: test lists
+
+3. Start at 3
+4. Apple
+5. Banana
+
+And more:
+
+4. Start at 4 in lower roman
+6. Apple
+7. Banana
+{ list-style-type=lower-roman }
+
+And more:
+
+i. First
+ii. Second
+iii. Third
+
+And more:
+
+A. First
+B. Second
+C. Third
+
+A\. Russel is a philosopher.
+
+(C) 2004
+
+And start somewhere
+
+I. Fourth
+#. Fifth
+#. Sixth'
+{ start=4 }
+
+
+#. Default ordered
+#. Two
+#. Three
+
+And some parens list:
+
+1) One
+2) Two
+3) Three
+
+Done.
