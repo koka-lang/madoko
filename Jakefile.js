@@ -106,7 +106,7 @@ task("web", [], function() {
 
 var localTexDir = "c:/texlive/texmf-local/tex/latex/local";
 desc("setup web");
-task("webcopy", ["web"], function() {
+task("justcopy", [], function() {
   // copy all madoko sources
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
@@ -141,6 +141,8 @@ task("webcopy", ["web"], function() {
   copyFiles(styleDir,sty.toArray(),path.join(webclient,styleDir,"latex"))
 }); 
 
+task("webcopy",["web","justcopy"], function() {
+});
 
 //-----------------------------------------------------
 // Tasks: test 
