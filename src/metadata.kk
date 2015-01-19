@@ -58,21 +58,21 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
       val matchMode = if (cap.groups[1].startsWith("no")) 
                        then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
                        else fmt.matchFmt( cap.groups[1], modes)      
-      val (kvs,delta) = if (matchMode) then {
+      val (kvs) = if (matchMode) then {
                   val value = cap.groups[4].joinLines.trim
                   //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
                   if (cap.groups.matchedOn(3))
-                   then (cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) }), 0)
+                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
                    else {
                     val key = cap.groups[2].normalizeId
                     if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
-                     then ([(key,"%mdk-data-line={" + (lines+1).show + "}\n" + value)], 1)
-                     else ([(key,value)],0)
+                     then [(key,"%mdk-data-line={" + (lines+1).show + "}\n" + cap.groups[4])]
+                     else [(key,value)]
                    }
                 }
-                else ([],0)
+                else []
       val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2+delta )
+      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
     }
   }
 } 
@@ -81,8 +81,8 @@ val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 
 function defaultMeta( options : options ) : string {
-  ( [ @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
-      @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0 }&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
+  ( [ @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
+      @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block",
 
       @"~TableFigure : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table",
       @"~Figure      : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure",
