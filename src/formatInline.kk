@@ -179,7 +179,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     if (attrs.hasClass("snippet")) 
      then (if (isDisplay) then "Display" else "Inline","","")
     elif (isDisplay) 
-     then ("Display","\\[","\\]") 
+     then ("Display","\\[","\n\\]")  // add newline because of comments in latex (and we do use trimLines on the content)
      else ("Inline","$","$")
   val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   val lkind  = kind.toLower
