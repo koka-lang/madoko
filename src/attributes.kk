@@ -85,8 +85,11 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
         acc(keyvals = acc.keyvals.filter( fun(k) { k.fst != name }))  
       }
     }
-    elif (name=="-") {
+    elif (name=="clear") {
       Attrs(text=attrsx.text,defaults=False)
+    }
+    elif (name=="-" || name=="clearnum") {
+      acc( counters=[], label="" )
     }
     elif (start=="#") {
       //trace("attrs name: " + name + ": " + value.show)
