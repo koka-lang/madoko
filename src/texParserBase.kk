@@ -50,12 +50,12 @@ public val overlay = @"(?:<([^>\n]*)>)"
 
 /* don't include these as packages */
 public val stdPackages = ["iftex","etoolbox","xkeyval","xcolor","mdframed","graphicx","tablefootnote",
-                   "css","array","longtable","enumitem","booktabs","hyperref",,"pdfcomment","wrapfig","madoko",
+                   "css","array","longtable","enumitem","booktabs","hyperref","pdfcomment","wrapfig","madoko",
                    "amsmath","amsfonts","amssymb","stmaryrd","textcomp","pifont",
                    // the following should really not be included as they clash with the standard ones
                    "inputenc","fontenc","ae","aecompl","enumerate", 
                    // the next ones are just superfluous
-                   "amsthm","color","multirow","multicol",
+                   "color",
                   ].join(";")
 
 public function unbrace(s : string ) : string {
@@ -204,8 +204,8 @@ val rxSection = regex(@"\\(sub)?section\b\*?\s*" + optarg + @"?" + texarg + @"\s
 public function texDocClass( cap : matched, context : texContext ) : string {
   val docClass = cap.groups[2].unbrace.trim
   val comment  = [ "<!-- LaTeX conversion",
-                   "     Drag&Drop further .tex/.bib/.cls/.sty/.bst or image files in the editor window",
-                   "     Conversion reference at: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#texconv",
+                   "  Drag&Drop further .tex/.bib/.cls/.sty/.bst or image files in the editor window",
+                   "  Conversion reference at: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#texconv",
                    "-->"                                 
                  ].join("\n")
   val mdata0 = if (docClass=="beamer") 
@@ -219,7 +219,11 @@ public function texDocClass( cap : matched, context : texContext ) : string {
     Just(ccap) -> {
       val header = ccap.groups[1].trim
       val hdata = if (header.isEmpty) then []
-                   else ["TeX Header  :\n    % Latex definitions.\n    % (Use metadata 'Tex Header*' for commands excluded in math)\n" + header.trim.indent4] // 
+                   else [["TeX Header  :\n    % Latex definitions. If you get errors in math- or PDF generation:",
+                          "    % * Move commands that are not used in math under 'Tex Header*' metadata",
+                          "    % * Move commands specific to math in a '~ MathDefs' block",
+                          "    ",
+                          header.trim.indent4].join("\n")] // 
                        //"\n<!-- LaTeX definitions; use ~ MathDefs for commands needed for mathematics -->" +
                        //"\n~ TexRaw\n" + header + "\n~\n\n" 
       (ccap.groups[2].parse(context), [comment] + mdata2 + hdata)

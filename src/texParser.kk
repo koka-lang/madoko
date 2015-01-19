@@ -84,8 +84,8 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textabularx", regex(@"^\\begin\{(tabular[xy\*])\}\s*" + optarg + @"?\s*" + texarg + @"\s*" + texarg + @"([\s\S]*?)\\end\{\1\}"), texTabularX ),
   Rule("textabular",  regex(@"^\\begin{tabular}\s*" + optarg + @"?\s*" + texarg + @"([\s\S]*?)\\end{tabular}"), texTabular ),
 
-  Rule("texitemp",    regex(@"^\\pause\b\s*" + optarg + @"?\s*" + @"\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItemPause ),
-  Rule("texitem",     regex(@"^\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItem ),
+  Rule("texitemp",    regex(@"^(?:[ \t]*\r?\n)*\\pause\b\s*" + optarg + @"?\s*" + @"\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItemPause ),
+  Rule("texitem",     regex(@"^(?:[ \t]*\r?\n)*\\item\b\s*" + overlay + "?" + optarg + @"?\s*"), texItem ),
   Rule("texlist",     regex(@"^\\begin\{(itemize|enumerate)\}\s*" + optarg + @"?\s*((\\pause\b\s*)?\\item\b\s*" + overlay + "?" + optarg + @"?\s*)?"), texList ),
   Rule("texendlist",  regex(@"^\\end\{(itemize|enumerate)\}\s*"), texEmptyLine ),
 
@@ -135,6 +135,8 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texMathDisplay ),
   Rule("texmathenv1",  regex(@"^\\begin\{(equation|displaymath)(\*)?\}([\s\S]*?)\\end{\1\2}"), texMathEnv ),
   Rule("texmathenv2",  regex(@"^\\begin\{(gather|align|alignat|multline|eqnarray|flalign)(\*)?\}" + texarg + @"?([\s\S]*?)\\end{\1\2}"), texMathSnippet ),
+  Rule("textikz1",     regex(@"^\\begin\{tikzpicture\}([\s\S]*?)\\end{tikzpicture}"), texTikzEnv ),
+  Rule("textikz2",     regex(@"^\\tikz\b\s*" + optarg + @"?\s*" + texarg), texTikzCmd ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
   Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n(?= *\n|\\bibitem)"), texBibitem ),
@@ -316,11 +318,11 @@ function texBeginMinipage( cap : matched, _context ) : string {
 }
 
 function texItemPause( cap : matched, context ) : string {
-  texItemX( "\n* {.fragment}", cap.groups[2], context )
+  texItemX( "\n\n* {.fragment}", cap.groups[2], context )
 }
 
 function texItem( cap : matched, context ) : string {
-  val bullet = if (cap.groups[1].isEmpty) then "\n*" else "\n* {.fragment}"
+  val bullet = if (cap.groups[1].isEmpty) then "\n\n*" else "\n\n* {.fragment}"
   texItemX( bullet, cap.groups[2], context )
 }
 
@@ -332,7 +334,7 @@ function texList( cap: matched, context ) : string {
   val bullet = if (cap.groups[1]=="itemize") then "*" else "1."
   if (cap.groups[3]=="") then "\n" else {
     val post = if (cap.groups[4].isEmpty && cap.groups[5].isEmpty) then "" else " {.fragment}"
-    "\n" + texItemX( bullet + post, cap.groups[6], context )
+    "\n\n" + texItemX( bullet + post, cap.groups[6], context )
   }
 }
 
@@ -351,20 +353,36 @@ function texMathInline( cap : matched, _context ) {
 val rxMathNl = regex(@"\r?\n")
 
 function texMathEnv( cap : matched, context ) {
-  val envName = cap.groups[1].capitalize
   val (content,labelCaption,pre,post) = cap.groups[3].extractLabelCaption(context)
   val attrs = ([if (cap.groups[2]=="*") then "-" else ""] + labelCaption).joinAttrs
+  val envName = if (cap.groups[2]=="*") then "Math" else "Equation"
   "~ " + envName + " " + attrs + "\n" + pre +
-  content.trimNL +
+  content.trimLines +
   post + "\n~\n"
 }
 
 function texMathSnippet( cap : matched, context ) {
-  val (content,labelCaption,pre,post) = cap.matched.extractLabelCaption(context)
-  val attrs = labelCaption.joinAttrs
-  "\n<!-- tex conversion hint: try to use MathPre instead of Snippet -->\n~ Snippet " + attrs + "\n" +
-  pre + content.trimNL + post + "\n~\n"
+  val env = cap.groups[1]
+  val lenv = 
+    if (env=="gather") then "gathered"
+    elif (env=="align" || env=="multline" || env=="flalign" || env=="eqnarray") then "aligned"
+    else ""
+  val (pre,post) = if (lenv.bool) then ("\\begin{" + lenv + "}\n","\n\\end{" + lenv + "}") else ("","")
+  val (content,labelCaption,_pre,_post) = cap.groups[4].extractLabelCaption(context)
+  val attrs = ([if (cap.groups[2]=="*") then "-" else ""] + labelCaption).joinAttrs
+  val envName = if (lenv.isEmpty) then "Snippet" elif (cap.groups[2]=="*") then "Math" else "Equation"
+  "~ " + envName + " " + attrs + "\n" + pre +
+  content.trimLines +
+  post + "\n~\n"
 }
+
+function texTikzEnv( cap : matched, context ) {
+  "~ Snippet\n\\begin{tikzpicture}" + cap.groups[1] + "\\end{tikzpicture}\n~\n"
+}
+function texTikzCmd( cap : matched, context ) {
+  "$\\tikz[" + cap.groups[1] + "]{" + cap.groups[2] + "}${math-needpdf=true}"
+}
+
 
 function texListing( cap : matched, context ) : string {
   val attrs = if (cap.groups[2]=="") then "" else {
