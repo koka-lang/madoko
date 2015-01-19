@@ -174,7 +174,7 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
   context.fmtMath(True,cap.groups[1],attrsd)
 }
 
-public function fmtMath( context : inlineContext, isDisplay : bool, txt : string, attrs : attrs = attrsNone, lineInfo : string = "" ) : string {
+public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : string, attrs : attrs = attrsNone, lineInfo : string = "" ) : string {
   val (kind,left,right) = 
     if (attrs.hasClass("snippet")) 
      then (if (isDisplay) then "Display" else "Inline","","")
@@ -186,6 +186,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt : string
   val class  = "math-" + lkind
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
+  val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
                 then context.fmtTexCmd("span", left+lineInfo+txt+right, attrsd)
                 else context.fmtTexEnv("div",  left+lineInfo+txt+right, attrsd)
