@@ -50,8 +50,12 @@ public val overlay = @"(?:<([^>\n]*)>)"
 
 /* don't include these as packages */
 public val stdPackages = ["iftex","etoolbox","xkeyval","xcolor","mdframed","graphicx","tablefootnote",
-                   "css","array","longtable","enumitem","booktabs","hyperref","amsmath","amsfonts",
-                   "amssymb","stmaryrd","textcomp","pifont","pdfcomment","wrapfig","madoko",
+                   "css","array","longtable","enumitem","booktabs","hyperref",,"pdfcomment","wrapfig","madoko",
+                   "amsmath","amsfonts","amssymb","stmaryrd","textcomp","pifont",
+                   // the following should really not be included as they clash with the standard ones
+                   "inputenc","fontenc","ae","aecompl","enumerate", 
+                   // the next ones are just superfluous
+                   "amsthm","color","multirow","multicol",
                   ].join(";")
 
 public function unbrace(s : string ) : string {
