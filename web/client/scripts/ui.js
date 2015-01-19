@@ -1490,7 +1490,7 @@ var UI = (function() {
     var self = this;
     return self.checkSynced().then( function(yes) {
       if (!yes) throw new Error("operation cancelled");
-      return Storage.upload( null, "Please select a LaTeX file (.tex)", "Import LaTeX file", "images/dark/icon-upload.png").then( function(files) {
+      return Storage.upload( null, "Please select the main LaTeX file (.tex)<br>(After importing, you can drag&drop further includes, style files, bibliographies, etc. right into the editor)", "Import LaTeX file", "images/dark/icon-upload.png").then( function(files) {
         var fname = (files && files[0]) ? files[0].name : null;
         if (!fname || Util.extname(fname) !== ".tex") throw new Error("Sorry, can only import .tex files.");
         var docName = Storage.sanitizeFileName(Util.stemname(fname)) + ".mdk";
