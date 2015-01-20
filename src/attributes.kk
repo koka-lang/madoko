@@ -101,7 +101,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
        then acc else acc(classes = acc.classes + [cname])
     }
     elif (start=="@") {
-      acc(counters = Cons((name.substr(1), value), acc.counters))
+      acc(counters = acc.counters + [(name.substr(1), value)] )
     }
     elif (name=="elem") {
       val ename = value.definitionId
@@ -174,7 +174,16 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     }
     else {
       //trace("key " + name + "=" + value)
-      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name}) + [(name,value)])
+      val cntrs = if (name=="start") then match (value.trim.parseInt) {
+                    Just(i) -> acc.counters + [(acc.elem + "-li",(i-1).show)] 
+                    Nothing -> acc.counters
+                  }
+                  elif (name=="list-style-type") then {
+                    trace("list-style-type: @" + acc.elem + "-li=" + value.trim )
+                    acc.counters + [(acc.elem + "-li",value.trim)] 
+                  }
+                  else acc.counters
+      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name}) + [(name,value)], counters = cntrs)
     }
   }
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'

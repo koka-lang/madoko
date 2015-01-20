@@ -74,10 +74,11 @@ val endlist     = hr + @"|\n(?! )(?!\1" + bull + @" )"
 val alist       = @"( *)(" + bull + @") [\s\S]+?(?=\n(?:" + endlist + @")|$)\n?"
 val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + linkid + @"\]:|" 
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
-val bspecial    = @" \[\*\-_\+\d><#`~\n|iIaA"  // Special block start characters 
+
+val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\n]|[iIaA](?!\.))" // not special block start sequence
 
 // deflist
-val defitem     = @"([^" + bspecial + @"].*)\n\n?" 
+val defitem     = @"(" + notbspecial + @".*)\n\n?" 
 val defstart    = @"(?:[:]| {1,2}[~:])"
 val defdef      = @"(?:.*(?:\n|$)(?:(?:    .*)?(?:\n|$))*)"
 val defdefs     = @"(?:" + defstart + defdef + ")+"
@@ -92,7 +93,7 @@ val rxtableBody   = @"((?: *(?:\||\+[-=]).*(?:\n|$))+)"
 val blockGrammar : grammar<block,blockContext> = [
   Rule("lheading",   regex(@"^(?!    )([^ \n].*?)" + iattrs + @"\n *(===+|---+) *(?:\n+|$)"), blockHeadingLine ), 
   Rule("deflist",    regex(deflist), blockDefList ),
-  Rule("parax",      regex(@"^([^" + bspecial + @"][^|\n]*?(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 
+  Rule("parax",      regex(@"^(" + notbspecial + @"[^|\n]*?(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
   Rule("html",       regex(@"^ *" + html), blockHtml ),
@@ -118,7 +119,7 @@ val blockGrammar : grammar<block,blockContext> = [
 ]
 
 val ruleLine = Rule("para-line",  regex(@"^.+(\n|$)"), blockLine)
-val ruleLineX= Rule("parax-line", regex(@"^[^" + bspecial + @"].*(\n|$)"), blockLine)
+val ruleLineX= Rule("parax-line", regex(@"^" + notbspecial + @".*(\n|$)"), blockLine)
 
 val blockListGrammar = blockGrammar.ruleReplace( True, ruleLineX )
                                    .ruleReplace( True, ruleLine  )
@@ -233,7 +234,7 @@ function blockDefList( cap : matched, context : blockContext ) : block {
     val item = icap.groups[3].replaceAll(rxindent4,"") 
     val attrs = icap.groups[2].parseAttrs("dd",source=item)
     val dterm = if (icap.groups[1]=="") then [] else {
-                  val attrsd = parseAttrs("","dt",source=icap.groups[1])
+                  val attrsd = parseAttrs(".dl-li","dt",source=icap.groups[1])
                   [Div([Line(icap.groups[1])],attrsd)]
                 }
     val ddesc = Div(parseBlocks(icontext,item,line), 
@@ -249,26 +250,27 @@ val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @
 // Lists
 
 function blockList( cap : matched, context : blockContext ) : block {
+  val tag  = if (cap.groups[2].length > 1) then "ol" else "ul"
+
   function parseItem( icap : matched, line : int, icontext : blockContext ) :  list<block> {
     val item = icap.groups[4].replaceAll(if (icontext.pedantic) 
                                            then rxindent4
                                            else rxindent(icap.groups[1].length) ,"") 
-    val attrs = icap.groups[3].parseAttrs
+    val attrs = ("." + tag + "-li " + icap.groups[3]).parseAttrs("li", item)
     [Item(parseBlocks(icontext,item,line), 
            if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))]
   }
 
-  val tag  = if (cap.groups[2].length > 1) then "ol" else "ul"
   val bull = cap.groups[2].substr(0,1)
-  val attrs0  = if (bull=="*")    then ".list-star"
+  val attrs0  = if (bull=="*")   then ".list-star"
                  elif (bull=="+") then ".list-plus"
                  elif (bull=="-") then ".list-dash"
                  elif (bull=="i") then "list-style-type=lower-roman"
                  elif (bull=="I") then "list-style-type=upper-roman"
                  elif (bull=="a") then "list-style-type=lower-alpha"
-                 elif (bull=="A") then "list-style-type=lower-alpha"
+                 elif (bull=="A") then "list-style-type=upper-alpha"
                  else ""
-  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren" else attrs0                 
+  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren" else attrs0
   blockListX( cap.matched, context, tag, attrs1, rxitem, parseItem )
 }
 val rxitem      = regex(@"^(( *)(?:" + bullrest + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bullrest + @" ).*)*\n?)",multiline=True);
@@ -297,7 +299,7 @@ function blockListX( text : string, context : blockContext,
     Just(acap) -> (text.substr(0,text.length - acap.matched.length), attrsInit + " " + acap.groups[1])
     Nothing    -> (text,attrsInit)
   }
-  val attrs0 = attrsTxt.parseAttrs.addClasses( [if (loose) then "loose" else "compact"] )
+  val attrs0 = attrsTxt.parseAttrs(tag).addClasses( [if (loose) then "loose" else "compact"] )
   val attrs = match (txt.find(rxFirstNum)) {
                 Nothing    -> attrs0
                 Just(icap) -> {

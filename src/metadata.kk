@@ -115,6 +115,14 @@ function defaultMeta( options : options ) : string {
       @"~Table    : .madoko",
       @"~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em",
       @"~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold",
+
+      @".Ul-Li    : @ul-li label=""[(@ul-li)]{.ul-li-label}""",
+      @".Ol-Li    : @ol-li label=""[(@ol-li)]{.ol-li-label}""",
+      @".Dl-Li    : @dl-li label=""[(@dl-li)]{.dl-li-label}""",
+      @"~Ol       : @ol-li=decimal",
+      @"~Ul       : @ul-li=decimal",
+      @"~Dl       : @dl-li=decimal",
+      @".li-label : display=inline-block width=2.5em margin-left=-3em margin-right=0.5em text-align=right",
       
       @"~Tex        : input=tex notag",
       @".TexRaw     : input=texraw",

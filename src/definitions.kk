@@ -287,6 +287,7 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
     Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Table(h,cattrs,cells) -> Table(h,cattrs,cells,xs)
     List(tag,items)     -> List(tag,items,xs)
+    Item(content)       -> transformItem(content,xs)
     Div( content  )     -> transformDiv(content, xs, fcontext )
     Quote( content )    -> Quote(content, xs)     
     Code( text, lang)   -> {
@@ -297,6 +298,14 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
     _                   -> block
   }
 } 
+
+function transformItem( blocks : list<block>, attrs: attrs ) : block {
+  if (attrs.hasKey("display").maybe("",id) == "none") return Empty
+  match(attrs.hasKey("li-label")) {
+    Nothing   -> Item(blocks,attrs)
+    Just(txt) -> Item([Line("[" + txt + "]{.li-label}")]+blocks,attrs)
+  }
+}
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
   if (attrs.hasKey("display").maybe("",id) == "none") return Empty
@@ -514,10 +523,17 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
 
 // expand counters in label,
 function expandCounters( attrs : attrs, counters : mdict<h,counter>, metadata : dict<string> ) : read<h> attrs {
-  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expandCounter(counters) 
-  if (xlab != attrs.label)
-   then attrs(label=xlab)
-   else attrs
+
+
+  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expandCounter(counters)
+  val attrs1 = if (xlab != attrs.label) then attrs(label=xlab) else attrs
+  attrs1( keyvals = attrs1.keyvals.map(fun(kv) {
+    val (key,value) = kv
+    if (key=="start" || key.endsWith("-label")) {
+      (key, value.expandKeys(attrs1.source,attrs1,dict(),metadata).expandCounter(counters))
+    }
+    else kv
+  }))
 }
 
 // expand the counters in a string
@@ -545,11 +561,14 @@ function adjustCounter(counters : mdict<h,counter>,name : string, value : string
 // increment or set a count to a value
 function increment(counter :counter, xvalue : string) : counter {
   val v = xvalue.toLower
-  if (v=="upper-case") then counter(counter.value,Uppercase)
-  elif (v=="lower-case") then counter(counter.value,Lowercase)
-  elif (v=="arabic") then counter(counter.value,Arabic)
-  elif (v=="arabic0") then counter(counter.value,Arabic0)
-  elif (v=="") then counter(value=counter.value+1)
+  if (v=="upper-alpha" || v=="upper-case") then counter(counter.value,Uppercase)
+  elif (v=="lower-alpha" || v=="lower-case") then counter(counter.value,Lowercase)
+  elif (v=="decimal" || v=="arabic") then counter(counter.value,Arabic)
+  elif (v=="decimal0" || v=="arabic0") then counter(counter.value,Arabic0)
+  elif (v=="lower-roman") then counter(counter.value,LowerRoman)
+  elif (v=="upper-roman") then counter(counter.value,UpperRoman)
+  elif (v=="--") then counter(value=counter.value-1)
+  elif (v=="++" || v=="") then counter(value=counter.value+1)
   else match(xvalue.list) {
     Cons(d,Nil) | d >= 'a' && d <= 'z' -> Counter((d-'a').int+1,Lowercase)
     Cons(d,Nil) | d >= 'A' && d <= 'Z' -> Counter((d-'A').int+1,Uppercase)
@@ -609,7 +628,8 @@ type format {
   Arabic
   Uppercase
   Lowercase
-  // Roman
+  LowerRoman
+  UpperRoman
 }
 
 struct counter( value :int = 0, format :format = Arabic  )
@@ -618,6 +638,8 @@ function show( counter : counter ) : string {
   match(counter.format) {
     Uppercase -> counter.value.showLetterBase('A')
     Lowercase -> counter.value.showLetterBase('a')
+    LowerRoman -> counter.value.showRoman.toLower
+    UpperRoman -> counter.value.showRoman
     Arabic0   -> (counter.value-1).show
     _ -> counter.value.show
   }
@@ -634,6 +656,18 @@ function showRLetterBase( value : int, baseChar : char ) : div list<char> {
   val next = value/26
   val mod  = value%26 - (if (next == 0) then 1 else 0)
   Cons(mod.char + baseChar, next.showRLetterBase(baseChar))
+}
+
+function showRoman( value : int ) {
+  val huns = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"]
+  val tens = ["", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"]
+  val ones = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
+
+  if (value==0) then "0"
+  else (if (value < 0) then "-" else "") +
+       huns[(value%1000)/100].string +
+       tens[(value%100)/10].string +
+       ones[(value%10)].string
 }
 
 //--------------------------------------------------------

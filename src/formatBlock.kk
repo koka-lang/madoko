@@ -197,7 +197,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Item(bs,attrs)  -> {
-      context.fmtEnv("li", formatBlocksX(context,bs), attrs)    
+      context.fmtEnv("li",formatBlocksX(context,bs), attrs)    
     }
      
     Heading(d,txt,attrs) -> { 
