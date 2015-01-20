@@ -37,8 +37,7 @@
     "Beamer Theme","Beamer Theme Options","Reveal Theme","Reveal Url","Description",
     "Embed", "Embed Limit", "Math Embed Limit",
     "Logo","Refer","Classification","Title Running","Author Running",
-    "Rebuild","Star Bold","Line No","Line No Web",
-    "Fragment Start", "Fragment End","Pretty Align","Mode"
+    "Rebuild","Star Bold","Line No","Line No Web","Pretty Align","Mode"
   ],
   
   
@@ -107,7 +106,7 @@
       
       
       ["^\\s*`(``+)\\s*(?:([^\\s\\{]+)\\s*)?(?:\\{[^}]+\\}?\\s*)?$", { "cases": {
-        "$2==javascript": { "token": "keyword.header.codeblock.delimiter", "bracket": "@open", "next": "@codeblockgh.$1.javascript", "nextEmbedded": "text/javascript", "log": "javascript" },
+        "$2==javascript": { "token": "keyword.header.codeblock.delimiter", "bracket": "@open", "next": "@codeblockgh.$1.javascript", "nextEmbedded": "text/javascript" },
         "$2==json": { "token": "keyword.header.codeblock.delimiter", "bracket": "@open", "next": "@codeblockgh.$1.json", "nextEmbedded": "application/json" },
         "$2~\\w+/.*": { "token": "keyword.header.codeblock.delimiter", "bracket": "@open", "next": "@codeblockgh.$1.$2", "nextEmbedded": "$2" },
         "$2": { "token": "keyword.header.codeblock.delimiter", "bracket": "@open", "next": "@codeblockgh.$1.$2", "nextEmbedded": "text/$2" },
@@ -136,7 +135,7 @@
     ],
     
     "codeline": [
-      ["(.*)", { "token": "namespace.code", "next": "@pop", "log": "codeline: $1" } ]
+      ["(.*)", { "token": "namespace.code", "next": "@pop" } ]
     ],
     
     "metadata": [
@@ -154,8 +153,8 @@
     "codeblockgh": [      
       ["\\s*`(?=(``+)\\s*$)", { "cases": {
         "$1==$S2": { "cases": {
-          "$S3": { "token": "@rematch", "switchTo":"codeblockgh_end", "nextEmbedded": "@pop", "log": "pop $1 - $S2 - $S3" },
-          "@default": { "token": "@rematch", "switchTo":"codeblockgh_end", "log": "pop $1 - $S2 - $S3"  }
+          "$S3": { "token": "@rematch", "switchTo":"codeblockgh_end", "nextEmbedded": "@pop" },
+          "@default": { "token": "@rematch", "switchTo":"codeblockgh_end" }
         }},
         "@default": "namespace.code" 
       }} ],
