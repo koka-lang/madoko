@@ -230,7 +230,7 @@ val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|)(?:[:](sort|nosor
  Links 
 ---------------------------------------- */
 // A url link.
-public struct link( href : string, title : string = "", linkattrs : attrs = attrsNone )
+public struct link( href : string, title : string = "", linkattrs : attrs = attrsNone, linkid : string = "" )
 
 // A definition identifier is always lower case and sequences of spaces are replaced by a single space.
 // Used for links for example.
@@ -239,11 +239,12 @@ public function definitionId( s : string ) : string {
 }
 val rxspaces = regex(@"\s+")
 
-public function newLink( href : string, title : string = "", linkattrs : attrs = attrsNone, bench : bool ) : link {
+public function newLink( href : string, title : string = "", linkattrs : attrs = attrsNone, linkid : string = "", bench : bool ) : link {
   Link(href,title,
        if (!bench && href.startsWith("#"))
         then linkattrs.addClass("localref") 
-        else linkattrs)
+        else linkattrs,
+       linkid)
 }
 
 // Info for static math based on images

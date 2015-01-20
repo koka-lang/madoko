@@ -62,7 +62,7 @@ val battrs      = @"(?:\n {0,3}" + xattrs + ")?"  // after a block element
 val lattrs      = @"\n {0,3}" + xattrs + @"\s*$"  // after a list (separate for efficiency)
 
 // Various
-val linkid      = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
+val xlinkid     = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
 val hr          = @"(?:[*_\-](?: *[*_\-]){2,}) *" + iattrs + @"(?:\n+|$)"
 
 val bull        = @"(?:[*+\-]|(?:\d+|[#iIaA])[\.\)])"
@@ -72,7 +72,7 @@ val uroman      = @"(?:X?(?:I(?:V|X|I|II)?|[VX]I{0,3}))"
 
 val endlist     = hr + @"|\n(?! )(?!\1" + bull + @" )"
 val alist       = @"( *)(" + bull + @") [\s\S]+?(?=\n(?:" + endlist + @")|$)\n?"
-val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + linkid + @"\]:|" 
+val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + xlinkid + @"\]:|" 
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
 
 val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
@@ -97,8 +97,8 @@ val blockGrammar : grammar<block,blockContext> = [
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
   Rule("html",       regex(@"^ *" + html), blockHtml ),
-  Rule("deflink",    regex(@"^ *\[(?!\^)" + linkid + @"\]: *<?((?:[^\\\s>]|\\(?:.|\n *))+)>?(?: +[""(]((?:[^\n\\]|\\(?:.|\n *))+)["")])?(?: |\\\n *)*" +iattrs+ @"(\n+|$)"), blockDefLink ),
-  Rule("deffootnote",regex(@"^ *\[\^" + linkid + @"\]: *(?:\n {4})?(.*(?:\n+ {4}.*)*)(?:\n+|$)"), blockDefFootnote),
+  Rule("deflink",    regex(@"^ *\[(?!\^)" + xlinkid + @"\]: *<?((?:[^\\\s>]|\\(?:.|\n *))+)>?(?: +[""(]((?:[^\n\\]|\\(?:.|\n *))+)["")])?(?: |\\\n *)*" +iattrs+ @"(\n+|$)"), blockDefLink ),
+  Rule("deffootnote",regex(@"^ *\[\^" + xlinkid + @"\]: *(?:\n {4})?(.*(?:\n+ {4}.*)*)(?:\n+|$)"), blockDefFootnote),
   Rule("hline",      regex(@"^ *" + hr), blockHLine ),
     
   Rule("list",       regex(@"^" + alist), blockList ),  // before heading due to #.
@@ -157,7 +157,8 @@ function blockPara( cap : matched, _context ) : block {
 }
   
 function blockDefLink( cap : matched, context : blockContext ) :  block {
-  DefLink(cap.groups[1].definitionId, newLink(cap.groups[2].joinLines, cap.groups[3].joinLines, cap.groups[4].parseAttrs, context.bench ))
+  val id = cap.groups[1].definitionId
+  DefLink(id, newLink(cap.groups[2].joinLines, cap.groups[3].joinLines, cap.groups[4].parseAttrs, id, context.bench ))
 }
 
 function blockLine( cap : matched, context : blockContext ) : block {

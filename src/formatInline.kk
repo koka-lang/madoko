@@ -36,9 +36,9 @@ val normalbench  = @"(?:[^""'`*_\\~&<>\^#\$\[!]| (?! \n))"
 val attrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}"  // allow optional colon for maraku compat
 
 val linkhref = @"\s*<?([^\s>)]*)>?(?:\s+['""](.*?)['""])?\s*"
-val linkid   = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
+val xlinkid   = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
 val linktxt  = @"\[(?!\^)((?:\[(?:[^\[\]]|\[[^\]]*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*)\]"
-val linkreg  = linktxt + @"((?:\(" + linkhref + @"\)|\s*\[" + linkid + @"\])?(?:" + attrs + @")?)"
+val linkreg  = linktxt + @"((?:\(" + linkhref + @"\)|\s*\[" + xlinkid + @"\])?(?:" + attrs + @")?)"
 
 public val rxLink = regex(linkreg)
 
@@ -51,7 +51,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
   
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
-  Rule("ifootnote", regex(@"^\[\^" + linkid + @"\]"), inlineFootnote ),
+  Rule("ifootnote", regex(@"^\[\^" + xlinkid + @"\]"), inlineFootnote ),
   Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>"), inlineAutoLink ),  
   Rule("istrong_",  regex(@"^__((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),

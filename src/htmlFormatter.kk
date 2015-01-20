@@ -108,7 +108,7 @@ function isHtmlWhite( s : string ) : bool {
 val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b[^>]*>(\s|&nbsp;)*</span>)*$")
 */
 
-public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string) {
+public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   if (isImage) {
     val isPS   = link.href.extname == ".eps" || link.href.extname == ".pdf"
     val imgref = if (link.href.relative && isPS) then link.href.changeExt(".png") else link.href
@@ -130,11 +130,14 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
     "<img src=\"" + href + "\"" +
       (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       (if (content != "") then " alt=\"" + content.escape + "\"" else "") +
+      " data-path=\"" + imgref.escape + "\"" +
+      (if (link.linkid != "") then " data-linkid=\"" + link.linkid.escape + "\"" else "") +
       link.linkattrs.htmlFormat("img",context.sanitize) + ">"
   }
   else {
     "<a href=\"" + link.href.escape + "\"" +
       (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
+      (if (link.linkid != "") then " data-linkid=\"" + link.linkid.escape + "\"" else "") +
       link.linkattrs.htmlFormat("a",context.sanitize) + ">" + 
       content + "</a>"
   }

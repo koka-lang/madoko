@@ -307,6 +307,7 @@ Html Header   :
       }
     }
     revealConfig.onLoad = function() {
+      revealConfig.getEmbeddedImages();
       revealDataQuery();
       revealRemoveLong();
       revealQuotedList("ul");
@@ -345,9 +346,34 @@ Html Header   :
         document.body.className = document.body.className + " " + bodyClass;
       }
     };
+    revealConfig.getEmbeddedImages = function() {
+      var images = {};
+      [].forEach.call( document.querySelectorAll("img[data-linkid]"), function(img) {
+        var linkid = img.getAttribute("data-linkid");
+        if (linkid) images["/" + linkid] = img.src;
+        var path = img.getAttribute("data-path");
+        if (path) images["/" + path] = img.src;
+      });     
+      [].forEach.call( document.querySelectorAll("section"), function(slide) {
+        var attrName = "data-background";
+        var image = slide.getAttribute(attrName);
+        if (!image) {
+          attrName = "data-background-image";
+          image = slide.getAttribute(attrName);
+        }
+        if (!image) return;
+        var cap = /^\s*!?\[([^\]]+)\]\s*$/.exec(image);
+        var href = images["/" + (cap ? cap[1] : image)];
+        if (!href) return;
+        if (attrName==="data-background" && /^data:/.test(href)) href = "url(" + href + ")";
+        slide.setAttribute(attrName, href);
+      });
+    };    
     </script>
 HTML Footer:
     <script>
     // initialize printing
     revealConfig.initPrint();
+    // initialize background embedded images
+    revealConfig.getEmbeddedImages();
     </script>

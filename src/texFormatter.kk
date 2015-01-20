@@ -54,11 +54,12 @@ public function fmtTexFootnote(context : inlineContext, id : string, fn : footno
 }
 
 public function fmtTexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
+  val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
   if (isImage) {
-    texCmd("img",link.href,link.linkattrs)
+    texCmd("img",link.href,attrs)
   }
   else {
-    texCmd("a", texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),link.linkattrs) +
+    texCmd("a", texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),attrs) +
       "{" + (if (link.linkattrs.hasClass("tex-tooltip")) then extractText(link.title) else "") + "}" +
       "{" + content + "}"    
   }
