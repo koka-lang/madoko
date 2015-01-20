@@ -75,7 +75,7 @@ val alist       = @"( *)(" + bull + @") [\s\S]+?(?=\n(?:" + endlist + @")|$)\n?"
 val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + linkid + @"\]:|" 
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
 
-val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\n]|[iIaA](?!\.))" // not special block start sequence
+val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
 
 // deflist
 val defitem     = @"(" + notbspecial + @".*)\n\n?" 
@@ -229,12 +229,12 @@ function blockDefFootnote( cap : matched, context : blockContext ) :  block {
 // Definition Lists
 
 function blockDefList( cap : matched, context : blockContext ) : block {
-  function parseItem( icap : matched, line : int, icontext : blockContext ) :  list<block> {
+  function parseItem( extraAttrs : string, icap : matched, line : int, icontext : blockContext ) :  list<block> {
     //trace("item:\n" + icap.matched)
     val item = icap.groups[3].replaceAll(rxindent4,"") 
     val attrs = icap.groups[2].parseAttrs("dd",source=item)
     val dterm = if (icap.groups[1]=="") then [] else {
-                  val attrsd = parseAttrs(".dl-li","dt",source=icap.groups[1])
+                  val attrsd = parseAttrs(extraAttrs,"dt",source=icap.groups[1])
                   [Div([Line(icap.groups[1])],attrsd)]
                 }
     val ddesc = Div(parseBlocks(icontext,item,line), 
@@ -242,7 +242,7 @@ function blockDefList( cap : matched, context : blockContext ) : block {
     [ddesc] + dterm
   }
 
-  blockListX( cap.matched.trim, context, "dl", "", rxDefItem, parseItem )
+  blockListX( cap.matched.trim, context, "dl", ".dl", rxDefItem, parseItem )
 }
 val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @")? *(" + defdef + ")" )
 
@@ -252,11 +252,11 @@ val rxDefItem = regex( @"^(?:" + defitem + @")?" + defstart + "(?:" + iattrs + @
 function blockList( cap : matched, context : blockContext ) : block {
   val tag  = if (cap.groups[2].length > 1) then "ol" else "ul"
 
-  function parseItem( icap : matched, line : int, icontext : blockContext ) :  list<block> {
+  function parseItem( extraAttrs : string, icap : matched, line : int, icontext : blockContext ) :  list<block> {
     val item = icap.groups[4].replaceAll(if (icontext.pedantic) 
                                            then rxindent4
                                            else rxindent(icap.groups[1].length) ,"") 
-    val attrs = ("." + tag + "-li " + icap.groups[3]).parseAttrs("li", item)
+    val attrs = (extraAttrs + " " + icap.groups[3]).parseAttrs("li", item)
     [Item(parseBlocks(icontext,item,line), 
            if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))]
   }
@@ -271,12 +271,12 @@ function blockList( cap : matched, context : blockContext ) : block {
                  elif (bull=="A") then "list-style-type=upper-alpha"
                  else ""
   val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren" else attrs0
-  blockListX( cap.matched, context, tag, attrs1, rxitem, parseItem )
+  blockListX( cap.matched, context, tag, "." + tag + " " + attrs1, rxitem, parseItem )
 }
 val rxitem      = regex(@"^(( *)(?:" + bullrest + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bullrest + @" ).*)*\n?)",multiline=True);
 
 function blockListX( text : string, context : blockContext, 
-                     tag : string, attrsInit : string, rxParseItem : regex, parseItem : (matched,int,blockContext) -> list<block> ) : block
+                     tag : string, attrsInit : string, rxParseItem : regex, parseItem : (string,matched,int,blockContext) -> list<block> ) : block
 {  
   val loose = text.contains(blankline)
   // we should merge any text blocks into a paragraph for a loose list
@@ -285,15 +285,6 @@ function blockListX( text : string, context : blockContext,
                          context.listGrammar,
                          loose = loose) // if (context.sane) then False else loose)
   
-  function parseItems( src : string, line : int, acc : list<block> = Nil ) {
-    match (src.find(rxParseItem)) {
-      Nothing    -> acc.reverse
-      Just(icap) -> {
-        val newline = if (line <= 0) then line else line + icap.matched.count("\n") 
-        parseItems( src.substr1(icap.next), newline, parseItem(icap,line,icontext) + acc)
-      }
-    }
-  }
 
   val (txt,attrsTxt) = match(text.find(rxlattrs)) {
     Just(acap) -> (text.substr(0,text.length - acap.matched.length), attrsInit + " " + acap.groups[1])
@@ -308,6 +299,19 @@ function blockListX( text : string, context : blockContext,
                    else attrs0.addKeyval("start",icap.groups[1])
                 }
               } 
+
+  val extraAttrs = attrs.classes.map( fun(cls) { "." + cls + "-li" } ).join(" ")              
+
+  function parseItems( src : string, line : int, acc : list<block> = Nil ) {
+    match (src.find(rxParseItem)) {
+      Nothing    -> acc.reverse
+      Just(icap) -> {
+        val newline = if (line <= 0) then line else line + icap.matched.count("\n") 
+        parseItems( src.substr1(icap.next), newline, parseItem(extraAttrs,icap,line,icontext) + acc)
+      }
+    }
+  }
+  
   // if loose then add a blank at the end of the last item so it has a Blank
   val items = parseItems( txt + (if (loose) then "\n\n" else ""), context.lineNo ) 
   List(tag,items,attrs)
