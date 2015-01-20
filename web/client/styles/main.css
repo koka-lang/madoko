@@ -757,6 +757,12 @@ div.boxed {
 
 
 /* Monaco token classes */
+.monaco-editor .glyph-warning {
+  background: url(../images/glyph-warning.png) no-repeat center;
+}
+.monaco-editor .glyph-error {
+  background: url(../images/glyph-error.png) no-repeat center;
+}
 .monaco-editor .glyph-error.outdated,
 .monaco-editor .glyph-warning.outdated {
   background-color: orange !important;
