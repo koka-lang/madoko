@@ -354,7 +354,7 @@ val rxMathNl = regex(@"\r?\n")
 
 function texMathEnv( cap : matched, context ) {
   val (content,labelCaption,pre,post) = cap.groups[3].extractLabelCaption(context)
-  val attrs = ([if (cap.groups[2]=="*") then "-" else ""] + labelCaption).joinAttrs
+  val attrs = labelCaption.joinAttrs
   val envName = if (cap.groups[2]=="*") then "Math" else "Equation"
   "~ " + envName + " " + attrs + "\n" + pre +
   content.trimLines +
@@ -369,7 +369,7 @@ function texMathSnippet( cap : matched, context ) {
     else ""
   val (pre,post) = if (lenv.bool) then ("\\begin{" + lenv + "}\n","\n\\end{" + lenv + "}") else ("","")
   val (content,labelCaption,_pre,_post) = cap.groups[4].extractLabelCaption(context)
-  val attrs = ([if (cap.groups[2]=="*") then "-" else ""] + labelCaption).joinAttrs
+  val attrs = labelCaption.joinAttrs
   val envName = if (lenv.isEmpty) then "Snippet" elif (cap.groups[2]=="*") then "Math" else "Equation"
   "~ " + envName + " " + attrs + "\n" + pre +
   content.trimLines +
