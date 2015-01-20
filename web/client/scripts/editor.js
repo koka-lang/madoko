@@ -238,32 +238,29 @@ var Model = (function() {
 // Our editor remembers undo/redo and view state 
 //---------------------------------------------------------------------------
 
-var Editor = (function(_super) {
-  Util.__extends(Editor, _super);
-  function Editor(domElem,options) {
+var Editor = {
+  ctor : function(editName) {
     var self = this;
-    self.editName = "";
+    self.editName = editName || "";
     self.editState = new Map();
-    _super.call(self,domElem,options);
-    if (options.editName) self.editName = options.editName;
-  }
+  },
 
-  Editor.prototype.clearEditState = function() {
+  clearEditState : function() {
     var self = this;
     self.editState = new Map();
     self.editName  = "";
-  }
+  },
 
-  Editor.prototype.saveEditState = function() {
+  saveEditState : function() {
     var self = this;
     var state = {
       modelState: Model.dehydrate(self.getModel()),
       viewState : self.saveViewState(),
     }
     self.editState.set(self.editName,state);
-  }
+  },
 
-  Editor.prototype.editFile = function( editName, content, options, mime) {
+  editFile : function( editName, content, options, mime) {
     var self = this;
     var mode = null;
     var initial = true;
@@ -320,13 +317,15 @@ var Editor = (function(_super) {
     if (options && options.mime) delete options.mime;
     if (options) self.updateOptions(options);            
   }
-
-  return Editor;
-})(Monaco.Editor.CodeEditor);
-
+};
 
 function create( domElem, options ) {
-  return new Editor(domElem,options);
+  var base = Monaco.Editor.create(domElem,options);
+  if (base) {
+    Util.extend(base,Editor);
+    base.ctor(options.editName);
+  }
+  return base;
 }
 
 // module
