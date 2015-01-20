@@ -89,7 +89,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       Attrs(text=attrsx.text,defaults=False)
     }
     elif (name=="-" || name=="clearnum") {
-      acc( counters=[], label="" )
+      acc( counters=[], label="", replacers=[] )
     }
     elif (start=="#") {
       //trace("attrs name: " + name + ": " + value.show)
