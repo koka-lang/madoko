@@ -178,8 +178,8 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
                     Just(i) -> acc.counters + [(acc.elem + "-li",(i-1).show)] 
                     Nothing -> acc.counters
                   }
-                  elif (name=="list-style-type") then {
-                    trace("list-style-type: @" + acc.elem + "-li=" + value.trim )
+                  elif (name=="list-style-type" && acc.elem.bool) then {
+                    //trace("list-style-type: @" + acc.elem + "-li=" + value.trim )
                     acc.counters + [(acc.elem + "-li",value.trim)] 
                   }
                   else acc.counters
