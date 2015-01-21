@@ -420,7 +420,7 @@ public function fmtTexFull(body : string, options : options, metadata : dict<str
 }
 
 public function fmtTexMathFull( requireDvi : bool, body : string, options : options ) : string {
-  fmtTexFullX(body,options,dict(), if (requireDvi) then "dvi" else "pdf" )
+  fmtTexFullX(body,options,[("heading-base","1")].dict, if (requireDvi) then "dvi" else "pdf" )
 }
 
 function fmtTexFullX(body : string, options : options, metadata : dict<string>, mathmode : string = "") : string 

@@ -58,7 +58,7 @@ public struct options(
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
   
-  packages : string = "madoko",  // link to latex packages (.sty)
+  packages : string = "[heading-base=&heading-base;]madoko",  // link to latex packages (.sty)
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "",        // latex document class (.cls)
   

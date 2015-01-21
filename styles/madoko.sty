@@ -22,6 +22,16 @@
 \RequirePackage{pifont}
 \RequirePackage{wrapfig}
 
+%-------------------------------------------------------------
+% Process options 
+%-------------------------------------------------------------
+\newcommand{\mdHeadingBase}{1}
+\DeclareOptionX{heading-base}[1]{\gdef\mdHeadingBase{#1}}
+\ProcessOptionsX
+
+%-------------------------------------------------------------
+% Conditionals
+%-------------------------------------------------------------
 % conditionals
 \newif\ifmathmode
 \newif\ifbeamer
@@ -285,7 +295,10 @@
 %-------------------------------------------------------------
 \cssNewKey{css}{bookmark}{\cssBookmark}{}
 \newcommand{\mdBookmark}[3]{\eifstrequal{#2}{}{}{\pdfbookmark[#1]{#2}{#3}}}
-\newcommand{\mdHBookmark}[2]{\cssInitKeys{#2}\mdBookmark{#1}{\cssBookmark}{\cssId}}
+\newcommand{\mdHBookmark}[2]{%
+  \ifnum#1<\mdHeadingBase\edef\@mdlevel{#1}\else\edef\@mdlevel{\the\numexpr#1-\mdHeadingBase}\fi%
+  \cssInitKeys{#2}\mdBookmark{\@mdlevel}{\cssBookmark}{\cssId}%
+}
 
 \cssNewKey{css}{starform}{\cssStarForm}{}
 \newcommand{\mdCommandStar}[3][]{%
