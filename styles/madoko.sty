@@ -12,14 +12,14 @@
 \RequirePackage{longtable}
 \RequirePackage{enumitem}
 \RequirePackage{booktabs}
-\RequirePackage{hyperref}
+\RequirePackage{pdfcomment}
+%\RequirePackage[bookmarks=true]{hyperref} % loaded by pdfcomment
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
 \RequirePackage{stmaryrd}
 \RequirePackage{textcomp}
 \RequirePackage{pifont}
-\RequirePackage{pdfcomment}
 \RequirePackage{wrapfig}
 
 % conditionals
@@ -41,7 +41,7 @@
 
 % hyperref
 \hypersetup{
-  colorlinks=true,linkcolor=Navy,urlcolor=Blue,filecolor=Maroon,bookmarks=true,bookmarksdepth=3,bookmarksopenlevel=1
+  colorlinks=true,linkcolor=Navy,urlcolor=Blue,filecolor=Maroon,bookmarksdepth=3,bookmarksopenlevel=1
 }
 
 % booktabs
@@ -100,7 +100,7 @@
 \providecommand{\qed}{\hfill\qedsymbol}
 
 % break and nbsp
-\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\}
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
 % logo
@@ -171,7 +171,7 @@
      \fi%
    }%
    \gappto\@mdauthors{\aufnt{#1}}%
-   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex] \affaddr{#2}}\fi%
+   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex] #2}\fi%
    \ifx\relax#3\relax\else\gappto\@mdauthors{\\\email{#3}}\fi%
   }%
   \ifnum\value{mdAuthorCount}>1%
@@ -188,11 +188,13 @@
 }
 \cssClassRuleCmd{inst}{\mdInst}
 
-
 \newcommand{\mdTitle}[1]{\gdef\@mdTitle{#1}\title{\@mdTitle}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
-\providerobustcmd{\mdAuthorAddressNote}[2]{%
-  #1{} #2%
+
+\newcommand{\mdAuthorAddressNote}[2]{%
+  \ifx\relax#1\relax \affaddr{#2}\else%
+    \affaddr{#1}\ifx\relax#2\relax\else\mdBr\affaddr{#2}\fi%
+  \fi%
 }
 \newcommand{\mdAuthor}[4]{%
   \authorinfo{#1}{\mdAuthorAddressNote{#2}{#4}}{#3}%
@@ -305,10 +307,10 @@
 \newenvironment{mdSection}[1][]{\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %\patchcmd{\@startsection}%
-%	{\@ssect{#3}{#4}{#5}{#6}}%
-%	{\@dblarg{\@sect{#1}{\@m}{#3}{#4}{#5}{#6}}}%
-%	{}%
-%	{\PackageError{madoko}{Unable to patch \string\@startsection}\@ehd}
+% {\@ssect{#3}{#4}{#5}{#6}}%
+% {\@dblarg{\@sect{#1}{\@m}{#3}{#4}{#5}{#6}}}%
+% {}%
+% {\PackageError{madoko}{Unable to patch \string\@startsection}\@ehd}
 
 %-------------------------------------------------------------
 % Common block elements
