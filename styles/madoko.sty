@@ -145,7 +145,7 @@
 \newcommand{\@mdauthors}{}   % fancy list of authors
 \newcommand{\@mdinsts}{}
 \providerobustcmd{\@and}{\and}
-\providecommand{\authorinfo}[3]{%
+\providerobustcmd{\authorinfo}[3]{%
   \stepcounter{mdAuthorCount}%
   \ifdef{\institute}{%  
     \ifnum\value{mdAuthorCount}>1%
@@ -191,9 +191,8 @@
 
 \newcommand{\mdTitle}[1]{\gdef\@mdTitle{#1}\title{\@mdTitle}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
-\newcommand{\mdAuthorAddressNote}[2]{%
-  #1%
-  \ifx\relax#2\relax\else\mdBr #2\fi%
+\providerobustcmd{\mdAuthorAddressNote}[2]{%
+  #1{} #2%
 }
 \newcommand{\mdAuthor}[4]{%
   \authorinfo{#1}{\mdAuthorAddressNote{#2}{#4}}{#3}%
