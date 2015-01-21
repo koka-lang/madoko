@@ -1,6 +1,7 @@
 Title       : My Academic Paper
 Author      : You
-Affiliation : Research institute
+xAffiliation : Research institute
+Note        : A note
 Email       : you@bar.com
 
 Author      : My co-author
@@ -38,7 +39,7 @@ the document, and similarly with bibtex files, latex style files, etc.
 ![butterfly]
 ~
 
-[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+[butterfly]: ../butterfly.png "butterfly"  { width=4em }
 
 Our contributions are:
 
