@@ -54,7 +54,7 @@ public rectype inlineContext {
                  xfmtEscape : (ctx:inlineContext,body:string,allowEntity:bool) -> string,
                  xfmtLink: (ctx:inlineContext,isImage : bool, link : link, content : string ) -> string,
                  xfmtFootnote: (context : inlineContext, id : string, fn : footnote ) -> string,
-                 xfmtTitle: (context : inlineContext, titleinfo : titleinfo ) -> string,
+                 xfmtTitle: (context : inlineContext, titleinfo : titleinfo, attrs : attrs ) -> string,
                  xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, colattrs: list<attrs>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,

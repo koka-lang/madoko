@@ -283,7 +283,7 @@ function fmtField( context: inlineContext, elem :string, class : string, txt : s
   tag(elem, context.formatInline(txt), " class='" + class + "'")
 }
 
-public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo ) : string {
+public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo, attrs : attrs ) : string {
   tag("section", 
     [tag("h1",context.formatInline(titleinfo.title)," class='title' data-line='1'"),
      if (titleinfo.subtitle=="") then "" else tag("h2",context.formatInline(titleinfo.subtitle)," class='subtitle'"),

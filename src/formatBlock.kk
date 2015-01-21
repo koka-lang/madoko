@@ -60,8 +60,8 @@ function fmtText( context : formatContext, txt : string ) : string {
   }
 }
 
-function fmtTitle( context : formatContext ) : string {
-  (context.inlineContext.xfmtTitle)(context.inlineContext,context.titleinfo)
+function fmtTitle( context : formatContext, attrs : attrs ) : string {
+  (context.inlineContext.xfmtTitle)(context.inlineContext,context.titleinfo,attrs)
 }
 
 function fmtTable( context : formatContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs = attrsNone ) : string {
@@ -303,13 +303,14 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         else context.fmtEnv("div",txt,attrs.addInputClass)
     }
 
-    Special(name,value) -> {
+    Special(name,value,attrs) -> {
+      val linfo = context.inlineContext.fmtLineInfo(attrs.hasKey("data-line").string)
       if (name.toLower=="toc") then {
         val blk = context.tocBlocks[value.toLower].maybe(Empty,id)
-        formatBlock(context,blk)
+        linfo + formatBlock(context,blk)
       }
-      elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then formatBlock(context,context.footnoteBlock)
-      elif (name.toLower=="title") then context.fmtTitle()
+      elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then linfo + formatBlock(context,context.footnoteBlock)
+      elif (name.toLower=="title") then linfo + context.fmtTitle(attrs)
       else "" // formatBlock(context,Para("[" + name + "]\n"))
     }
     

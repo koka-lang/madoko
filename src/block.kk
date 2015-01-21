@@ -35,7 +35,7 @@ public type block {
   Empty()
   Div( content : list<block>, attrs : attrs = attrsNone )
   Source( text : string, input : input = Markdown(), parentAttrs : attrs = attrsNone )     // raw content
-  Special( name : string, value : string = "" )  // Special blocks, like [TOC] or [FOOTNOTES]
+  Special( name : string, value : string = "", attrs : attrs = attrsNone )  // Special blocks, like [TOC] or [FOOTNOTES]
 }
 
 /* --------------------------------------
@@ -495,7 +495,7 @@ function adjustAttrs( b : block, adjust : (attrs : attrs) -> attrs ) : block
     //DefLink( id, link) ->
     //DefFootnote( id, content) ->
     //Empty() ->    
-    //Special( name, value) ->  // Special blocks, like [TOC] or [FOOTNOTES]
+    Special( name, value, attrs) ->  Special(name,value, adjust(attrs))// Special blocks, like [TOC] or [FOOTNOTES]
     _ -> b
   }
 }
