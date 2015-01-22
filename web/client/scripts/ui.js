@@ -1819,7 +1819,7 @@ var UI = (function() {
       self.storage.forEachFile( function(file) {
         if (file) {
           var ext = Util.extname(file.path)
-          var disable = (Storage.isEditable(file) ? "": " disable");
+          var disable = (Storage.isEditable(file) && ext !== ".dic" ? "": " disable");
           var main    = (file.path === self.docName ? " main" : "");
           var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
           var line = "<div data-file='" + Util.escape(file.path) + "' " +
