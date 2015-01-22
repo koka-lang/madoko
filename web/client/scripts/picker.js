@@ -678,6 +678,7 @@ var Picker = (function() {
   Picker.prototype.displayFolder = function() {
     var self = this;
     var folder = self.current.folder;
+    var folderStem = Util.stemname(folder);
     var getListing = (folder==="//" ? self.getRoots() : self.current.remote.listing(folder));
     return getListing.then( function(items) {
       //console.log(items);
@@ -691,7 +692,10 @@ var Picker = (function() {
         return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
       });
       var html = items.map( function(item) {
-        return "<div class='item " + item.types.map(function(tp) { return "item-" + tp; }).join(" ") + (item.disabled ? " disabled" : "")  + 
+        var mime = item.mime || Util.mimeFromExt(item.path)
+        return "<div class='item " + item.types.map(function(tp) { return "item-" + tp; }).join(" ") + 
+                          (item.disabled ? " disabled" : "")  + 
+                          (Util.stemname(item.path) === folderStem && (mime==="text/madoko" || mime==="text/markdown") ? " document" : "") +
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
