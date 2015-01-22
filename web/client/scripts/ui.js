@@ -493,6 +493,7 @@ var UI = (function() {
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
     bindKey( "Alt-C",  function()   { self.spellCheck(); } );
+    bindKey( "Alt-E",  function()   { self.gotoNextError(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     
@@ -1656,7 +1657,7 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.editFile = function(fpath,pos) {
+  UI.prototype.editFile = function(fpath,pos,reveal) {
     var self = this;
     var loadEditor;
     if (self.editName) {
@@ -1688,7 +1689,9 @@ var UI = (function() {
       if (!pos) pos = posx;
       if (pos) {
         self.editor.setPosition(pos, true, true );
-        //self.editor.revealPosition( pos, true, true );
+        if (reveal) {
+          self.editor.revealPosition( pos, true, true );    
+        }                
       }
       self.showDecorations();
       self.showConcurrentUsers(false);
@@ -4011,6 +4014,12 @@ var symbolsMath = [
     });
   }
 
+  function newRange( rng ) {
+    var range =  new Range.Range( rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn );
+    if (rng.fileName) range.fileName = rng.fileName;
+    return range;
+  }
+
   UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
     if (!type) type = "error";
@@ -4025,7 +4034,7 @@ var symbolsMath = [
         sticky: sticky, 
         outdated: false, 
         message: error.message, 
-        range: error.range,
+        range: newRange(error.range),
         expire: 0, // does not expire
       });
       var msg = (error.type || type) + ": " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
@@ -4049,13 +4058,13 @@ var symbolsMath = [
         outdated: false, 
         expire: now + (60000), // expire merges after 1 minute?
         message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
-        range: {
+        range: newRange({
           fileName: merge.path,
           startLineNumber: merge.startLine,
           endLineNumber: merge.endLine,
           startColumn: 1,
           endColumn: 1,
-        } 
+        })
       };
       dec.marginType = dec.type;
       decs.push(dec);      
@@ -4078,7 +4087,7 @@ var symbolsMath = [
         //glyphType: "spellcheck",
         //expire: now + (60000), // expire merges after 1 minute?
         message: err.message, 
-        range: err.range,
+        range: newRange(err.range),
         options: { isWholeLine: false, inlineClassName: "redsquiggly.spellerror", stickiness: 1 },
       };
       decs.push(dec);      
@@ -4102,13 +4111,13 @@ var symbolsMath = [
         outdated: false,
         expire: now + 15000,
         message: edit.message || "Being edited concurrently",
-        range: {
+        range: newRange({
           fileName: edit.path,
           startLineNumber: edit.line,
           endLineNumber: edit.line,
           startColumn: 1,
           endColumn: 1,
-        }
+        })
       });
     });
     self.removeDecorations(false,"edit");
@@ -4174,20 +4183,54 @@ var symbolsMath = [
     return "";
   }
 
-  UI.prototype.getDecorationAt = function( position, fileName ) {
+  UI.prototype.gotoNextError = function() {
     var self = this;
-    if (!fileName) fileName = self.editName;
-    for (var i = 0; i < self.decorations.length; i++) {
-      var dec = self.decorations[i];
-      if (dec.range.fileName === fileName && 
-          dec.range.startLineNumber <= position.lineNumber && dec.range.endLineNumber >= position.lineNumber &&
-          dec.range.startColumn <= position.column && dec.range.endColumn >= position.column) {
-        return dec;
+    self.anonEvent( function() {
+      function isErrorType(dec) {
+        return (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error");
       }
-    }
-    return null;
-  }
 
+      var found = null;
+      var fileName = self.editName;
+      var position = self.editor.getPosition();
+      self.decorations.forEach( function(dec) {
+        if (isErrorType(dec)) {
+          if (dec.range.fileName === fileName) {
+            if (position.isBefore(dec.range.getStartPosition())) {
+              if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
+                found = dec;
+              }
+            }
+          }
+        }
+      });
+      if (!found) {
+        var seenFile = false;
+        self.decorations.some( function(dec) {
+          if (dec.range.fileName === fileName) {
+            seenFile = true;
+          }
+          else if (seenFile) {
+            found = dec;
+            return true;
+          }
+        });
+        if (!found) {
+          self.decorations.some( function(dec) {
+            if (isErrorType(dec)) {
+              found = dec;
+              return true;
+            }
+          });
+        }
+      }
+      if (!found) return;
+      return self.editFile(found.range.fileName).then( function() {
+        var r = found.range;
+        self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
+      });
+    });
+  }
 
   /* --------------------------------------------------------------
      View synchronization 
