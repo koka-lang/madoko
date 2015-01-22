@@ -8,8 +8,8 @@
 
 define(["../scripts/map","../scripts/promise","../scripts/util","../scripts/tabStorage",
         "../scripts/storage","../scripts/spellcheck",
-        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor"],
-        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,Range,Selection,ReplaceCommand,Editor) {
+        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
+        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
 
 // Constants
@@ -119,7 +119,7 @@ var UI = (function() {
     self.serverRefreshRate = 2500;
     self.runner = runner;
     self.tabDb = tabDb;
-    self.spellChecker = new SpellCheck();
+    self.spellChecker = new SpellCheck.SpellChecker();
     //self.runner.setStorage(self.storage);
 
     self.stale = true;
@@ -600,6 +600,7 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
+    CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu());
 
 
     // synchronize on cursor position changes

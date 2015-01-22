@@ -9,6 +9,33 @@
 define(["../scripts/map","../scripts/util","../scripts/promise"],
         function(Map,Util,Promise) {
 
+var SpellCheckMenu = (function() {
+  function SpellCheckMenu() {
+    var self = this;
+  }
+
+  SpellCheckMenu.prototype.setContext = function( range, text, tokenType ) {
+    var self = this;
+    self.range = range;
+    self.text = text;
+    self.tokenType = tokenType;
+  }
+
+  SpellCheckMenu.prototype.getContent = function() {
+    var self = this;
+    return ("text: " + self.text );
+  }
+
+  SpellCheckMenu.prototype.asyncGetContent = function() {
+    var self = this;
+    return Promise.delayed(500).then( function() {
+      return ("<br>async text");
+    });
+  }
+
+  return SpellCheckMenu;
+})();          
+
 var SpellChecker = (function() {
 
   function SpellChecker() {
@@ -119,5 +146,9 @@ var SpellChecker = (function() {
 })();
 
 // module:
-return SpellChecker;
+return {
+  SpellChecker: SpellChecker,
+  SpellCheckMenu: SpellCheckMenu,
+};
+
 });
