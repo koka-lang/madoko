@@ -7,9 +7,9 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/util","../scripts/tabStorage",
-        "../scripts/storage",
+        "../scripts/storage","../scripts/spellcheck",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor"],
-        function(Map,Promise,Util,TabStorage,Storage,Range,Selection,ReplaceCommand,Editor) {
+        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,Range,Selection,ReplaceCommand,Editor) {
 
 
 // Constants
@@ -119,6 +119,7 @@ var UI = (function() {
     self.serverRefreshRate = 2500;
     self.runner = runner;
     self.tabDb = tabDb;
+    self.spellChecker = new SpellCheck();
     //self.runner.setStorage(self.storage);
 
     self.stale = true;
@@ -482,7 +483,7 @@ var UI = (function() {
     bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
-    bindKey( "Alt-C",  function()   { self.commit(); } );
+    bindKey( "Alt-C",  function()   { self.spellCheck(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     
@@ -1016,6 +1017,7 @@ var UI = (function() {
   UI.prototype.setEditText = function( text, options, mode ) {
     var self = this;
     self.editor.editFile(self.editName,text,options,mode)    
+    self.lastSpellCheck = 0;
   }
 
   UI.prototype.getEditText = function() { 
@@ -1424,6 +1426,25 @@ var UI = (function() {
         );     
       }
     );
+
+    self.lastSpellCheck = 0;
+    self.asyncSpellCheck = new Util.AsyncRunner( 2000, null, 
+      function() {
+        var now = Date.now();
+        return (self.lastEditChange > self.lastSpellCheck && ((now - self.lastEditChange) > 1000));
+      },
+      function(round) {
+        var ctx = {
+          fileName: self.editName,
+          round: round,
+          show: function(errs) { self.showSpellErrors(errs); },
+        };
+        return self.spellChecker.check( self.editor.getValue(), ctx ).then( function(res) {
+          self.lastSpellCheck = Date.now();
+          return "Spell check done.";
+        });
+      }
+    );
   }
 
   UI.prototype.getMathDoc = function() {
@@ -1570,6 +1591,7 @@ var UI = (function() {
           
           self.storage.addEventListener("update",self);
           self.runner.setStorage(self.storage);
+          self.spellChecker.setStorage(self.storage);
           /*
           var remoteLogo = self.storage.remote.logo();
           var remoteType = self.storage.remote.type();
@@ -3911,7 +3933,7 @@ var symbolsMath = [
           newdecs.push(decoration);
           decoration.outdated = true;
           if (decoration.id && decoration.range.fileName === self.editName) {
-            var dec = { isWholeLine : true };
+            var dec = decoration.options || { isWholeLine : true };
             if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + '.outdated';
             if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated'; 
             changeAccessor.changeDecorationOptions(decoration.id, dec );
@@ -3948,7 +3970,7 @@ var symbolsMath = [
         }
         if (decoration.range.fileName === self.editName) {
           var postfix = (decoration.outdated ? ".outdated" : "" );
-          var dec = { isWholeLine: true };
+          var dec = decoration.options || { isWholeLine: true };
           if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + postfix;
           if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + postfix;
           decoration.id = changeAccessor.addDecoration( decoration.range, dec );
@@ -4010,6 +4032,29 @@ var symbolsMath = [
     self.addDecorations(decs);      
   }
 
+  UI.prototype.showSpellErrors = function( errors ) {
+    var self = this;
+    var decs = [];
+    var now = Date.now();
+    errors.forEach( function(err) {
+      var dec = { 
+        id: null, 
+        type: "spellcheck",
+        sticky: true, 
+        outdated: false, 
+        //glyphType: "spellcheck",
+        //expire: now + (60000), // expire merges after 1 minute?
+        message: err.message, 
+        range: err.range,
+        options: { isWholeLine: false, className: "redsquiggly", isOverlay: true, stickiness: 1 },
+      };
+      decs.push(dec);      
+    });
+    self.removeDecorations(true,"spellcheck");
+    self.addDecorations(decs);      
+  }
+
+
   UI.prototype.showConcurrentEdits = function( edits ) {
     var self = this;
     var decs = [];
@@ -4052,7 +4097,7 @@ var symbolsMath = [
           var dec2 = self.decorations[j];
           // overlapping range?
           // todo: check column range, perhaps merge messages?
-          if (dec.type == dec2.type &&
+          if (dec.type == dec2.type && (dec.options==null || dec.options.isWholeLine===true) &&
               dec.range.fileName === dec2.range.fileName && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
             if (!dec.outdated && dec2.outdated) {
               // swap, so we remove the outdated one
@@ -4291,6 +4336,20 @@ var symbolsMath = [
     else {
       return Promise.resolved();
     }
+  }
+
+  UI.prototype.spellCheck = function() {
+    var self = this;
+    return self.anonEvent( function() {
+      var ctx = { 
+        round: 0, 
+        fileName: self.editName, 
+        show: function(errors) { return self.showSpellErrors(errors); } 
+      };
+      return self.spellChecker.check( self.editor.getValue(), ctx ).then( function(res) {
+        Util.message("Spell check done.", Util.Msg.Status);
+      });
+    });
   }
 
 

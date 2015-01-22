@@ -468,6 +468,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     dimx: "text/plain",
     dim: "text/plain",
     log: "text/plain",
+    dic: "text/plain",
 
     png:  "image/png",
     jpg:  "image/jpg",
@@ -780,7 +781,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   }
   
   var ContWorker = (function() {
-    function ContWorker( scriptName ) {
+    function ContWorker( scriptName, notimeout ) {
       var self = this;
       self.promises = {};
       self.unique = 1;
@@ -792,12 +793,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
       // check heartbeat
       self.lastBeat;
-      setInterval( function() {
-        if (self.lastBeat - self.heartbeat > 45000) {
-           self.restart(); 
-        }
-        self.lastBeat = Date.now();
-      }, 15000 );
+      if (notimeout!==true) {
+        setInterval( function() {
+          if (self.lastBeat - self.heartbeat > 120000) {
+             self.restart(); 
+          }
+          self.lastBeat = Date.now();
+        }, 30000 );
+      }
     }
 
     ContWorker.prototype.restart = function() {
@@ -1079,6 +1082,13 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
           cached.lastUpdate = Date.now();
           return promise.resolve(cached.value);
         }
+
+        // return default content if available
+        if (httpCode===404 && reqparam.defaultContent != null) {
+          promise.resolve(reqparam.defaultContent,req);
+          return;
+        }
+
 
         // otherwise, construct an error reply
         var domain = reqparam.url.replace( /^([^\?\#]+).*$/, "$1" );

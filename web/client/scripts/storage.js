@@ -863,7 +863,7 @@ var Storage = (function() {
     });    
   }
 
-  var rootExts = [".pdf",".dim",".dimx",".html",".tex"];
+  var rootExts = [".pdf",".dim",".dimx",".html",".tex",".dic"];
   function isRoot( fpath, roots ) {
     if (Util.contains(roots,fpath)) return true;
     if (Util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected

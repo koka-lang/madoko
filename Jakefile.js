@@ -135,6 +135,15 @@ task("justcopy", [], function() {
                               .include(path.join(templateDir,"style","*"));
   copyFiles(templateDir,js.toArray(),path.join(webclient,"templates"));
 
+  // spell checks
+  jake.mkdirP(path.join(webclient,"dictionaries","en_US"));
+  js = new jake.FileList().include(path.join(contribDir,"dictionaries","en_US","*"));
+  copyFiles(contribDir,js.toArray(),webclient);
+
+  js = new jake.FileList().include(path.join(contribDir,"typo","*"));
+  copyFiles(path.join(contribDir,"typo"),js.toArray(),path.join(webclient,"lib","typo"));
+
+
   // copy sty files to local texmf tree
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
   copyFiles(styleDir,sty.toArray(),localTexDir);

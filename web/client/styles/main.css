@@ -757,7 +757,7 @@ div.boxed {
 
 
 /* Monaco token classes */
-.monaco-editor .glyph-warning {
+.monaco-editor .glyph-warning, .monaco-editor .glyph-spellcheck {
   background: url(../images/glyph-warning.png) no-repeat center;
 }
 .monaco-editor .glyph-error {
