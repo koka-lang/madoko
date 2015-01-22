@@ -1189,7 +1189,7 @@ function contextParse( context : texContext, txt : string ) : string {
 
 function parseTexAcc( context : texContext, acc : builder<h>, txt : string ) : st<h> string
 {
-  if (txt=="") return acc.string
+  if (txt=="") return acc.build
   val (s,next,_) = matchRules(context.grammar,context,txt,id)
   parseTexAcc(context, acc.append(s), txt.substr1(next))  
 }

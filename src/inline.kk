@@ -197,7 +197,7 @@ val rxDataLine = regex( @"^(.*:)?(\d+)$")
 function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : string, 
                           lineNo : int, linePrefix : string ) : st<h> string
 {
-  if (txt=="") return acc.string
+  if (txt=="") return acc.build
   val location  = linePrefix + lineNo.show
   val lineInfo  = if (lineNo <= 0) then "" else context.fmtLineInfo( location )
   if (lineNo > 0) {

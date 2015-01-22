@@ -420,13 +420,17 @@ public function fmtTexFull(body : string, options : options, metadata : dict<str
 }
 
 public function fmtTexMathFull( requireDvi : bool, body : string, options : options ) : string {
-  fmtTexFullX(body,options,[("heading-base","1")].dict, if (requireDvi) then "dvi" else "pdf" )
+  fmtTexFullX(body,options,dict(), if (requireDvi) then "dvi" else "pdf" )
 }
 
-function fmtTexFullX(body : string, options : options, metadata : dict<string>, mathmode : string = "") : string 
+function fmtTexFullX(body : string, options : options, metadata0 : dict<string>, mathmode : string = "") : string 
 {
+  val metadata = match(metadata0["heading-base"]) {
+    Just -> metadata0
+    Nothing -> metadata0 + [("heading-base",options.headingBase.show)].dict
+  }
   function expand(s) { s.expandKeys(metadata) }
-  
+    
   val basicMath = (mathmode == "dvi")
   val pkgs = (options.packages.expand + (if (basicMath) then "" else options.packagesx.expand)).splitPaths 
   val doc0 = if (options.docClass != "") then options.docClass 

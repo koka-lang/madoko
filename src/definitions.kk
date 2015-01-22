@@ -665,9 +665,9 @@ function showRoman( value : int ) {
 
   if (value==0) then "0"
   else (if (value < 0) then "-" else "") +
-       huns[(value%1000)/100].string +
-       tens[(value%100)/10].string +
-       ones[(value%10)].string
+       huns[(value%1000)/100].mbstring +
+       tens[(value%100)/10].mbstring +
+       ones[(value%10)].mbstring
 }
 
 //--------------------------------------------------------

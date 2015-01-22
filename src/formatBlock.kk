@@ -93,7 +93,7 @@ public function formatBlocksX( context : formatContext, blocks : list<block> ) :
 function formatBlocksAcc( context : formatContext, blocks : list<block>, acc : builder<h> ) : <st<h>,div> string
 {
   match(blocks) {
-    Nil -> acc.string
+    Nil -> acc.build
     Cons(block,rest) -> {
       match(block) {
         // inside lists we do not parse paragraphs, but parse per line
@@ -304,7 +304,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
 
     Special(name,value,attrs) -> {
-      val linfo = context.inlineContext.fmtLineInfo(attrs.hasKey("data-line").string)
+      val linfo = context.inlineContext.fmtLineInfo(attrs.hasKey("data-line").mbstring)
       if (name.toLower=="toc") then {
         val blk = context.tocBlocks[value.toLower].maybe(Empty,id)
         linfo + formatBlock(context,blk)
