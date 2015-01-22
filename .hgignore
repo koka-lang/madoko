@@ -24,6 +24,7 @@ syntax:regexp
 ^web/client/highlight.js$
 ^web/client/madoko.css$
 ^web/client/templates
+^web/client/dictionaries/
 ^web/users/
 ^web/ssl/
 ^web/log/
