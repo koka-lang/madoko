@@ -16,12 +16,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     Error: "error", 
     Exn: "exception",
     Status: "status",
+    HiStatus: "histatus",
     Tool: "tool",
     Trace: "trace",
     Prof: "prof",
   };
 
   function messageOrd(msg) {
+    if (msg==Msg.HiStatus) return 5;
     if (msg==Msg.Error || msg==Msg.Exn) return 4;
     if (msg==Msg.Status) return 3;
     if (msg==Msg.Warning) return 2;
@@ -101,6 +103,15 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     messageTimeout = setTimeout( fade, 15000 ); // fade after 15 secs
     messageKind      = kind;
     status.innerHTML = html;
+    return messageTimeout;
+  }
+
+  function messageClear(id) {
+    if (id && id !== messageTimeout) return;
+    if (messageTimeout) clearTimeout(messageTimeout);
+    messageTimeout = 0;
+    messageKind = Msg.Trace;
+    status.innerHTML = "";
   }
 
   // Call for messages
@@ -173,10 +184,13 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       consoleOut.innerHTML = prefix + dprefix + span() + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        setStatusHTML(span(60),kind);
+        return setStatusHTML(span(60),kind);
       }
-      else if (kind===Msg.Status) {
-        setStatusHTML(span(60),kind)
+      else if (kind===Msg.Status || kind===Msg.HiStatus) {
+        return setStatusHTML(span(60),kind)
+      }
+      else {
+        return 0;
       }
     }
   }
@@ -1828,6 +1842,7 @@ doc.execCommand("SaveAs", null, filename)
     strip: strip,
     lineCount: lineCount,
     message: message,
+    messageClear: messageClear,
     assert: assert,
     escape: htmlEscape,
     stringEscape: stringEscape,

@@ -178,6 +178,7 @@ var UI = (function() {
       }
     }
     try {
+      if (state===State.Exporting) Util.messageClear();
       if (pre) Util.message( pre, Util.Msg.Status);
       var res = action();
       if (res && res.then) {
@@ -249,7 +250,7 @@ var UI = (function() {
     self.settings = Util.copy(defaultSettings);
     self.updateSettings( {
       theme            : "vs",
-      fontScale        : "medium",      
+      fontScale        : "medium"
     });
     
     if (lsettings) {
@@ -1317,8 +1318,10 @@ var UI = (function() {
         self.storage.setEditPosition( self.editName, self.editor.getPosition() );
         if (!self.stale) return false;
 
-        if (self.settings.delayedUpdate && self.lastEditChange) {
-          if (Date.now() - self.lastEditChange < 1000) {
+        if (self.lastEditChange) {
+          var now = Date.now();
+          var diff = (self.lastRenderWasSlow || self.settings.delayedUpdate) ? 1000 : 50;
+          if (Date.now() - self.lastEditChange < diff) {
             return false;
           }
         }
@@ -1355,6 +1358,10 @@ var UI = (function() {
               }
               self.removeDecorations(false,"merge");
               self.showConcurrentUsers( true );
+
+              // adjust delayed view?
+              self.lastRenderWasSlow = (res.avgTime > 400);
+              
               
               /*
               // adjust refresh rate dynamically
@@ -1384,7 +1391,8 @@ var UI = (function() {
                         (quick ? "  (quick view update)" : "") + 
                         (!self.settings.delayedUpdate ? " (continuous)" : "") +
                         //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
-                        "\n  avg: " + res.avgTime.toFixed(0) + "ms");                                                        
+                        "\n  avg: " + res.avgTime.toFixed(0) + "ms" +
+                        " (" + (self.lastRenderWasSlow ? "slow" : "quick") + ")");                                                        
             },
             function(err) {
               self.onError(err);              
@@ -1402,10 +1410,12 @@ var UI = (function() {
           round:round,
           showErrors: function(errs) { self.showErrors(errs,false); },
         };
+        var msgid = Util.message("Rendering math...", Util.Msg.Status );
         return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
             // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
+            Util.messageClear(msgid);
             return self.asyncMadoko.run(true);
           },
           function(err) {
