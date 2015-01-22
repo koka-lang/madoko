@@ -152,7 +152,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       if (req.type === "suggest" && checker != null) {
-        var suggestions = checker.suggest(req.word, req.limit || 5);
+        var suggestions = checker.suggest(req.text, req.limit || 5);
         var time   = (Date.now() - t0).toString();
         console.log("spell check: " + time + "ms\n  suggest: " + req.word + ": "+ JSON.stringify(suggestions));
         self.postMessage( {

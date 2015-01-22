@@ -600,7 +600,12 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
-    CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu());
+    CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
+      var command = new ReplaceCommand.ReplaceCommand( range, replacement );
+      self.editor.executeCommand("madoko",command);
+    }, function(id) {
+      self.removeDecoration(id);
+    }));
 
 
     // synchronize on cursor position changes
@@ -3947,6 +3952,23 @@ var symbolsMath = [
       });
       self.decorations = newdecs;
     });    
+  }
+
+  UI.prototype.removeDecoration = function(id) {
+    var self = this;
+    self.editor.changeDecorations( function(changeAccessor) {
+      var newdecs = [];
+      self.decorations.forEach( function(decoration) {
+        if (id === decoration.id) {
+          changeAccessor.removeDecoration( decoration.id );
+          decoration.id = null;
+        }
+        else {
+          newdecs.push(decoration);
+        }
+      });
+      self.decorations = newdecs;
+    });
   }
 
   UI.prototype.hideDecorations = function() {

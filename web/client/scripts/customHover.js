@@ -21,24 +21,31 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     setContext: function (elem, range, text, info) {
       this.menu.setContext(elem, range,text,info);
       this.content = "";
+      this.contentAsync = "";
+    },
+
+    _fullContent: function() {
+      return this.contentAsync + this.content;
     },
     
     computeAsync: function () {
       return WinJS.Promise.timeout(1).then(function() {
-        return this.menu.asyncGetContent();
+        return this.menu.asyncGetContent().then( function( res ) {
+          this.contentAsync = res;
+          return;
+        }.bind(this));
       }.bind(this));
     },
     
     computeSync: function () {
-      return this.menu.getContent();
+      this.content = this.menu.getContent();
     },
     
     onResult: function(r) {
-      this.content = this.content + r;
     },
     
     getResult: function() {
-      return this.content;
+      return this.contentAsync + this.content;
     }
   });
 
@@ -46,6 +53,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     ContentHoverWidget.ContentHoverWidget.call(this, 'custom.hover.widget.id', editor);
     this.lastRange = null;
     this.menu = customMenu;
+    this.menu.setWidget(this);
     this.computer = new ContentComputer(customMenu);
     this.hoverOperation = new HoverOperation.HoverOperation(
       this.computer,

@@ -10,13 +10,24 @@ define(["../scripts/map","../scripts/util","../scripts/promise"],
         function(Map,Util,Promise) {
 
 var SpellCheckMenu = (function() {
-  function SpellCheckMenu() {
+  function SpellCheckMenu(checker,replacer,remover) {
     var self = this;
+    self.checker = checker;
+    self.replacer = replacer;
+    self.remover  = remover;
     self.text = null;
   }
   
   SpellCheckMenu.prototype.triggerOn = function( elem, range, text, info ) {
     return Util.hasClassName(elem,"spellerror");
+  }
+
+  SpellCheckMenu.prototype.setWidget = function( widget ) {
+    var self = this;
+    self.widget = widget;
+    widget._domNode.addEventListener("click", function(ev) {
+      self.onClick(ev);
+    });
   }
   
   SpellCheckMenu.prototype.setContext = function( elem, range, text, info ) {
@@ -28,14 +39,32 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return ("word: " + self.text );
+    return "<div class='button' data-ignore='true'>Ignore " + Util.escape(self.text) + "</div>"
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
-    return Promise.delayed(500).then( function() {
-      return ("<br>async");
+    return self.checker.suggest(self.text,{}).then( function(res) {
+      var buttons = res.suggestions.map( function(suggest) {
+        return "<div class='button' data-replace='" + encodeURIComponent(suggest) + "'>" + Util.escape(suggest) + "</div>"
+      });
+      return buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : "");
     });
+  }
+
+  SpellCheckMenu.prototype.onClick = function(ev) {
+    var self = this;
+    if (!ev.target || !Util.hasClassName(ev.target,"button")) return;
+    var replace = ev.target.getAttribute("data-replace");
+    if (self.replacer && replace) {
+      self.replacer( self.range, decodeURIComponent(replace) );
+      if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
+    }
+    else if (ev.target.getAttribute("data-ignore")) {
+      self.checker.ignore( self.text );
+      if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration   
+    }
+    self.widget.hide();
   }
 
   return SpellCheckMenu;
@@ -79,6 +108,10 @@ var SpellChecker = (function() {
     }
   }
 
+  SpellChecker.prototype.ignore = function(word) {
+    console.log("ignore: " + word );
+  }
+
   SpellChecker.prototype.addDictionary = function(lang) {
     var self = this;
     if (!lang) lang = "en_US";
@@ -119,6 +152,24 @@ var SpellChecker = (function() {
           throw new Error("spell checker time-out");
         }
         return self.onCheckComplete(res,ctx);
+      });
+    });
+  }
+
+  SpellChecker.prototype.suggest = function(text,options) 
+  {
+    var self = this;
+    return self.addDictionary().then( function() {
+      var msg = {
+        type   : "suggest",
+        text   : text,
+        options: options,
+      };
+      return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
+        if (res.timedOut) {
+          throw new Error("spell checker time-out");
+        }
+        return res;
       });
     });
   }
