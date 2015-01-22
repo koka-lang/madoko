@@ -127,7 +127,7 @@ var Runner = (function() {
         });
       }
 
-      var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
+      var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / (self.times.length || 1);
       return { 
         content: res.content, 
         ctx: ctx, 
