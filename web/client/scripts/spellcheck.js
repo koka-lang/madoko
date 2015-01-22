@@ -154,10 +154,17 @@ var SpellChecker = (function() {
   {
     var self = this;
     return self.addDictionary().then( function() {
+      var files = [];
+      if (ctx.fileName) files.push( { fileName: ctx.fileName, text: text } );
+      self.storage.forEachFile( function(file) {
+        if (file.path !== ctx.fileName && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
+          files.push({fileName: file.path, text: file.content});
+        }
+      });
       Util.message( "spell check " + ctx.round + " start", Util.Msg.Trace );
       var msg = {
         type   : "check",
-        text   : text,
+        files  : files,
         options: options,
       };
       return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
@@ -169,13 +176,13 @@ var SpellChecker = (function() {
     });
   }
 
-  SpellChecker.prototype.suggest = function(text,options) 
+  SpellChecker.prototype.suggest = function(word,options) 
   {
     var self = this;
     return self.addDictionary().then( function() {
       var msg = {
         type   : "suggest",
-        text   : text,
+        word   : word,
         options: options,
       };
       return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
@@ -202,7 +209,7 @@ var SpellChecker = (function() {
             endLineNumber: err.line,
             startColumn: err.column,
             endColumn: err.column + err.length,
-            fileName: ctx.fileName,
+            fileName: err.fileName || ctx.fileName,
           },
           message: "possibly invalid word",
         });

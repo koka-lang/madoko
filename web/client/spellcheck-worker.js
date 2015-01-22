@@ -152,7 +152,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       if (req.type === "suggest" && checker != null) {
-        var suggestions = checker.suggest(req.text, req.limit || 8);
+        var suggestions = checker.suggest(req.word || "", req.limit || 8);
         var time   = (Date.now() - t0).toString();
         console.log("spell check: " + time + "ms\n  suggest: " + req.word + ": "+ JSON.stringify(suggestions));
         self.postMessage( {
@@ -164,7 +164,11 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       else if (req.type==="check" && checker != null) {
-        var errors = checkText( req.text, req.options );
+        var errors = [];
+        req.files.forEach( function(file) {
+          var errs = checkText( file.text, req.options ).map( function(err) { err.fileName = file.fileName; return err; } );
+          errors = errors.concat(errs);
+        });
         var time   = (Date.now() - t0).toString();
         console.log("spell check: " + time + "ms\n" + errors.map(function(err) { return JSON.stringify(err); }).join("\n") );
         self.postMessage( {

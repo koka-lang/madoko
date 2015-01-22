@@ -493,7 +493,7 @@ var UI = (function() {
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
     bindKey( "Alt-C",  function()   { self.spellCheck(); } );
-    bindKey( "Alt-E",  function()   { self.gotoNextError(); } );
+    bindKey( "Alt-X",  function()   { self.gotoNextError(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     
@@ -4216,10 +4216,11 @@ var symbolsMath = [
           }
         });
         if (!found) {
-          self.decorations.some( function(dec) {
+          self.decorations.forEach( function(dec) {
             if (isErrorType(dec)) {
-              found = dec;
-              return true;
+              if (found==null || (found.range.fileName===dec.range.fileName && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
+                found = dec;
+              }
             }
           });
         }
