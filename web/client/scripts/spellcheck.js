@@ -62,7 +62,7 @@ var SpellCheckMenu = (function() {
     }
     else if (ev.target.getAttribute("data-ignore")) {
       self.checker.ignore( self.text );
-      if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration   
+      if (self.remover) self.remover(null,self.text); // remove decoration   
     }
     self.widget.hide();
   }
@@ -77,7 +77,6 @@ var SpellChecker = (function() {
     self.scWorker = new Util.ContWorker("spellcheck-worker.js", true); 
     self.dictionaries = new Map();
     self.storage = null;
-    self.ignores = null;
   }
 
   SpellChecker.prototype.setStorage = function(stg) {
@@ -85,9 +84,6 @@ var SpellChecker = (function() {
     self.storage = stg;
     if (self.storage) {
       self.storage.addEventListener("update",self);
-      self.storage.readFile("ignores.dic",false).then( function(file) {
-        self.ignores = file.content;
-      });
     }
   }
 
@@ -95,10 +91,9 @@ var SpellChecker = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update" && ev.file && ev.file.path === "ignores.dic") { 
-      self.ignores = ev.file.content;
       self.scWorker.postMessage({
         type: "ignores",
-        ignores: self.ignores,
+        ignores: ev.file.content,
       })
     }
     else if (ev.type==="destroy") {
@@ -109,7 +104,22 @@ var SpellChecker = (function() {
   }
 
   SpellChecker.prototype.ignore = function(word) {
-    console.log("ignore: " + word );
+    var self = this;
+    if (!word || !self.storage) return Promise.resolved();
+    return self._readIgnores().then( function(ignores) {
+      var newignores = ignores + (ignores.length > 0 ? "\n" : "") + word.replace(/\s+/g,"");
+      self.storage.writeFile("ignores.dic", newignores );
+    });
+  }
+
+  SpellChecker.prototype._readIgnores = function() {
+    var self = this;
+    if (!self.storage) return Promise.resolved("");
+    return self.storage.readFile( "ignores.dic", false ).then( function(file) { 
+      return file.content;
+    }, function(err) { 
+      return ""; 
+    });
   }
 
   SpellChecker.prototype.addDictionary = function(lang) {
@@ -117,18 +127,21 @@ var SpellChecker = (function() {
     if (!lang) lang = "en_US";
     if (self.dictionaries.contains(lang)) return Promise.resolved();
     var dicPath = "dictionaries/" + lang + "/" + lang;
+
     return Util.requestGET( dicPath + ".aff" ).then( function(affData) {
       return Util.requestGET( dicPath + ".dic" ).then( function(dicData) {
         return Util.requestGET( { url: dicPath + "_extra.dic", defaultContent: "" } ).then( function(dicExtraData) {
           return Util.requestGET( { url: "dictionaries/generic.dic", defaultContent: "" } ).then( function(dicGeneric) {
-            return self.scWorker.postMessage( { 
-              type: "dictionary",
-              lang: lang,
-              affData: affData,
-              dicData: dicData + "\n" + dicExtraData + "\n" + dicGeneric,
-              ignores: self.ignores,
-            }).then( function() {
-              self.dictionaries.set(lang,true);
+            return self._readIgnores().then( function(ignores) {
+              return self.scWorker.postMessage( { 
+                type: "dictionary",
+                lang: lang,
+                affData: affData,
+                dicData: dicData + "\n" + dicExtraData + "\n" + dicGeneric,
+                ignores: ignores,
+              }).then( function() {
+                self.dictionaries.set(lang,true);
+              });
             });
           });
         });
@@ -183,6 +196,7 @@ var SpellChecker = (function() {
       res.errors.forEach( function(err) {
         errors.push({
           type: "spellcheck",
+          tag: err.word,
           range: {
             startLineNumber: err.line,
             endLineNumber: err.line,

@@ -511,7 +511,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (startsWith(mime,"image/") || mime=="application/pdf" || mime=="application/postscript");
   }
   
-  var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
+  var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log",".dic"].join(";");
   function hasGeneratedExt(fname) {
     var ext = Stdpath.extname(fname);
     if (!ext) return false;

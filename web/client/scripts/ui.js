@@ -213,6 +213,7 @@ var UI = (function() {
       wrapLines        : false,
       delayedUpdate    : false,
       autoSync         : true,
+      spellCheck       : true,
     };
     var defaultSettings = Util.extend( Util.copy(defaultCheckBoxes), {
       viewFull         : false,
@@ -317,6 +318,14 @@ var UI = (function() {
       } 
       else {
         self.asyncMadoko.resume();
+      }
+    }
+    else if (name=="spellCheck") {
+      if (value) {
+        self.spellCheck();
+      }
+      else {
+        self.removeDecorations(true,"spellcheck");
       }
     }
     else if (name==="fontScale") {
@@ -603,8 +612,8 @@ var UI = (function() {
     CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
       var command = new ReplaceCommand.ReplaceCommand( range, replacement );
       self.editor.executeCommand("madoko",command);
-    }, function(id) {
-      self.removeDecoration(id);
+    }, function(id,tag) {
+      self.removeDecorationsOn(id,tag);
     }));
 
 
@@ -1437,7 +1446,7 @@ var UI = (function() {
     self.asyncSpellCheck = new Util.AsyncRunner( 2000, null, 
       function() {
         var now = Date.now();
-        return (self.lastEditChange > self.lastSpellCheck && ((now - self.lastEditChange) > 1000));
+        return (self.settings.spellCheck && self.lastEditChange > self.lastSpellCheck && ((now - self.lastEditChange) > 1000));
       },
       function(round) {
         var ctx = {
@@ -3954,12 +3963,12 @@ var symbolsMath = [
     });    
   }
 
-  UI.prototype.removeDecoration = function(id) {
+  UI.prototype.removeDecorationsOn = function(id,tag) {
     var self = this;
     self.editor.changeDecorations( function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
-        if (id === decoration.id) {
+        if ((id && id === decoration.id) || (tag && tag === decoration.tag)) {
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4062,6 +4071,7 @@ var symbolsMath = [
     errors.forEach( function(err) {
       var dec = { 
         id: null, 
+        tag: err.tag,
         type: "spellcheck",
         sticky: true, 
         outdated: false, 

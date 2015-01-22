@@ -873,11 +873,15 @@ var Storage = (function() {
     return false;
   }
 
+  function isWeakRoot(fpath) {
+    return Util.extname(fpath)===".dic";
+  }
+
   Storage.prototype.collect = function( roots ) {
     var self = this;
     var now = Date.now();
     self.forEachFile( function(file) {
-      if (!isRoot(file.path,roots) && 
+      if ((!isRoot(file.path,roots) || (isWeakRoot(file.path) && !file.content)) && 
           (file.createdTime.getTime() + 60000 < now) && // at least one minute old
             (!file.content || !isEditable(file) || !file.modified) ) {  
         self._removeFile(file.path);
