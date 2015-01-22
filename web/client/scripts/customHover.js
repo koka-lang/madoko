@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
@@ -18,8 +18,8 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
   var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) { 
     this.menu = customMenu;
   }, { 
-    setContext: function (range, text, tokenType) {
-      this.menu.setContext(range,text,tokenType);
+    setContext: function (elem, range, text, info) {
+      this.menu.setContext(elem, range,text,info);
       this.content = "";
     },
     
@@ -45,6 +45,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
   var ContentWidget = WinJS.Class.derive(ContentHoverWidget.ContentHoverWidget, function ContentWidget(editor,customMenu) {
     ContentHoverWidget.ContentHoverWidget.call(this, 'custom.hover.widget.id', editor);
     this.lastRange = null;
+    this.menu = customMenu;
     this.computer = new ContentComputer(customMenu);
     this.hoverOperation = new HoverOperation.HoverOperation(
       this.computer,
@@ -54,9 +55,12 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     );
   }, {
     
-    startShowingAt: function (range, text, tokenType) {
+    startShowingAt: function (element, range, text, info) {
       if (this.lastRange && this.lastRange.equalsRange(range)) {
         // We have to show the widget at the exact same range as before, so no work is needed
+        return;
+      }
+      if (this.menu.triggerOn && !this.menu.triggerOn(element,range,text,info)) {
         return;
       }
       
@@ -64,7 +68,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       this.hide();
       
       this.lastRange = range;
-      this.computer.setContext(range, text, tokenType);
+      this.computer.setContext(element, range, text, info);
       this.hoverOperation.start();
     },
     
@@ -101,18 +105,35 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         // mouse moved on top of content hover widget
         return;
       }
+
+
       
-      if (targetType === Editor.MouseTargetType.CONTENT_TEXT) {
-        // Extract current token under cursor
-        var currentTokenInfo = null;
-        editor.getModel().tokenIterator(e.target.position, function (it) {
-          currentTokenInfo = it.next();
+      if (targetType === Editor.MouseTargetType.CONTENT_TEXT && e.target.element != null) {
+        // get range
+        var range = null;
+        var info  = null;
+
+        // first look at decorations
+        var decs = editor.getModel().getLineDecorations(e.target.position.lineNumber);
+        decs.forEach( function(dec) {
+          if (dec.range.containsPosition(e.target.position)) {
+            if (range==null || range.containsRange(dec.range)) {
+              range = dec.range;
+              info = dec;
+            }
+          }
         });
         
-        if(currentTokenInfo) {
-          var showRange = new Range.Range(currentTokenInfo.lineNumber, currentTokenInfo.startColumn, currentTokenInfo.lineNumber, currentTokenInfo.endColumn);
-        
-          contentWidget.startShowingAt(showRange, editor.getModel().getValueInRange(showRange), currentTokenInfo.token.type);
+        if (range==null) {
+          editor.getModel().tokenIterator(e.target.position, function (it) {
+            info = it.next();             
+            range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
+          });
+        }
+
+        if (range) {
+          var text = editor.getModel().getValueInRange(range);
+          contentWidget.startShowingAt(e.target.element, range, text, info );
         }
       } else {
         hide();

@@ -4047,7 +4047,7 @@ var symbolsMath = [
         //expire: now + (60000), // expire merges after 1 minute?
         message: err.message, 
         range: err.range,
-        options: { isWholeLine: false, className: "redsquiggly", isOverlay: true, stickiness: 1 },
+        options: { isWholeLine: false, inlineClassName: "redsquiggly.spellerror", stickiness: 1 },
       };
       decs.push(dec);      
     });
@@ -4140,6 +4140,20 @@ var symbolsMath = [
       }
     }    
     return "";
+  }
+
+  UI.prototype.getDecorationAt = function( position, fileName ) {
+    var self = this;
+    if (!fileName) fileName = self.editName;
+    for (var i = 0; i < self.decorations.length; i++) {
+      var dec = self.decorations[i];
+      if (dec.range.fileName === fileName && 
+          dec.range.startLineNumber <= position.lineNumber && dec.range.endLineNumber >= position.lineNumber &&
+          dec.range.startColumn <= position.column && dec.range.endColumn >= position.column) {
+        return dec;
+      }
+    }
+    return null;
   }
 
 

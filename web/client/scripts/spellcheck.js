@@ -12,24 +12,29 @@ define(["../scripts/map","../scripts/util","../scripts/promise"],
 var SpellCheckMenu = (function() {
   function SpellCheckMenu() {
     var self = this;
+    self.text = null;
   }
-
-  SpellCheckMenu.prototype.setContext = function( range, text, tokenType ) {
+  
+  SpellCheckMenu.prototype.triggerOn = function( elem, range, text, info ) {
+    return Util.hasClassName(elem,"spellerror");
+  }
+  
+  SpellCheckMenu.prototype.setContext = function( elem, range, text, info ) {
     var self = this;
     self.range = range;
     self.text = text;
-    self.tokenType = tokenType;
+    self.info = info;
   }
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return ("text: " + self.text );
+    return ("word: " + self.text );
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
     return Promise.delayed(500).then( function() {
-      return ("<br>async text");
+      return ("<br>async");
     });
   }
 
