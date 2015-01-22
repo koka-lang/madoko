@@ -1451,6 +1451,10 @@ div.item.disabled {
   display: none; 
 }
 
+div.item.document {
+  font-weight: bold;
+}
+
 .item-icon {
   height: 1.5em;
   width : 1.5em;
