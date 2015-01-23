@@ -390,6 +390,7 @@ span.save-link:hover {
   margin: 0;
 } 
 
+
 #icon-disconnect {
   visibility: hidden;
   height: 0.5em;
@@ -577,7 +578,12 @@ span.save-link:hover {
   float: right;
   font-size: x-small;
   padding-top: 0.5em;
+  margin-left: 1em;
   color: inherit;
+}
+
+.spellcheck .shortcut {
+  padding-top: 0em;
 }
 
 span.shortcut {

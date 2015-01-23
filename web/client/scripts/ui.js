@@ -615,7 +615,9 @@ var UI = (function() {
       self.editor.executeCommand("madoko",command);
       setTimeout( function() { self.gotoNextError(); }, 50 );
     }, function(id,tag) {
-      self.removeDecorationsOn(id,tag);
+      if (id||tag) {
+        self.removeDecorationsOn(id,tag);
+      }
       self.gotoNextError();
     }));
 
@@ -3971,6 +3973,7 @@ var symbolsMath = [
 
   UI.prototype.removeDecorationsOn = function(id,tag) {
     var self = this;
+    if (id==null && tag==null) return;
     self.editor.changeDecorations( function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {

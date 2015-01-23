@@ -43,7 +43,9 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return "<div class='button' data-ignore='true'><span class='info'>Ignore: </span><span class='word'>" + Util.escape(self.text) + "</span></div>"
+    return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
+                "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
+            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-X)</span><span class='info'>Jump to next error</span></div>");
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
@@ -67,9 +69,13 @@ var SpellCheckMenu = (function() {
       self.replacer( self.range, decodeURIComponent(replace) );
       if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
     }
-    else if (target.getAttribute("data-ignore")) {
+    var cmd = target.getAttribute("data-cmd");
+    if (cmd==="ignore") {
       self.checker.ignore( self.text );
       if (self.remover) self.remover(null,self.text); // remove decoration   
+    }
+    else if (cmd==="next" && self.remover) {
+      self.remover(null,null);
     }
     self.widget.hide();
   }
