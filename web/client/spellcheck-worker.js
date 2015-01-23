@@ -168,7 +168,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
       if (req.type === "suggest" && checker != null) {
         console.log("spell check: suggest: " + req.word);
         var suggestions = [];
-        if (req.word && req.word.length <= 8) { // current algorithm takes too long on longer words...
+        if (req.word) { // current algorithm takes too long on longer words...
           suggestions = checker.suggest(req.word || "", req.limit || 8);
         }
         var time   = (Date.now() - t0).toString();

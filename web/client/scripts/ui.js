@@ -4186,27 +4186,29 @@ var symbolsMath = [
     return "";
   }
 
-  UI.prototype.nextDocumentFile = function(path) {
+  UI.prototype.documentFilesFrom = function(path) {
     var self = this;
     if (!path) path = self.editName;
-    if (!self.fileOrder) return null;
+    if (!self.fileOrder) return [];
     for(var i = 0; i < self.fileOrder.length; i++) {
       if (self.fileOrder[i] === path) {
-        return (i+1 >= self.fileOrder.length ? self.fileOrder[0] : self.fileOrder[i+1]);
+        return self.fileOrder.slice(i+1).concat(self.fileOrder.slice(0,i+1));
       }
     }
-    return null;
+    return [];
   }
 
   UI.prototype.gotoNextError = function() {
     var self = this;
     self.anonEvent( function() {
+      var path = self.editName;
+      
       function isErrorType(dec) {
-        return (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error");
+        return (//(dec.path !== path || dec.id != null) && 
+                (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error"));
       }
 
       var found = null;
-      var path = self.editName;
       var position = self.editor.getPosition();
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
@@ -4220,16 +4222,16 @@ var symbolsMath = [
         }
       });
       if (!found) {
-        var nextPath = path;
-        while( !found && (nextPath = self.nextDocumentFile(nextPath)) && nextPath !== path) {
+        self.documentFilesFrom(path).some( function(fpath) {
           self.decorations.forEach( function(dec) {
-            if (isErrorType(dec) && dec.range.path === nextPath) {
+            if (isErrorType(dec) && dec.range.path === fpath) {
               if (found==null || (found.range.path===dec.range.path && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
                 found = dec;
               }
             }
           });
-        }       
+          return (found!=null);
+        });
       }
       if (!found) return;
       return self.editFile(found.range.path).then( function() {
@@ -4366,6 +4368,7 @@ var symbolsMath = [
     if (Util.extname(file.path) === ".bib") {
       self.updateCitations(file.path,file.content);
     }
+    self.lastSpellCheck = 0;
   }
 
   UI.prototype.saveTo = function() {

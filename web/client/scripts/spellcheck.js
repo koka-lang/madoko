@@ -43,7 +43,7 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return "<div class='button' data-ignore='true'><span class='info'>Ignore </span><span class='word'>" + Util.escape(self.text) + "</span></div>"
+    return "<div class='button' data-ignore='true'><span class='info'>Ignore: </span><span class='word'>" + Util.escape(self.text) + "</span></div>"
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
@@ -74,6 +74,17 @@ var SpellCheckMenu = (function() {
     self.widget.hide();
   }
 
+  SpellCheckMenu.prototype.onKeyDown = function(ev) {
+    var self = this;
+    if (ev.key==="I" && ev.altKey) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      self.checker.ignore( self.text );
+      if (self.remover) self.remover(null,self.text); // remove decoration   
+      self.widget.hide();
+    }
+  }
+
   return SpellCheckMenu;
 })();          
 
@@ -100,13 +111,15 @@ var SpellChecker = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update" && ev.file && ev.file.path === "ignores.dic") { 
+      self.files = new Map();
       self.scWorker.postMessage({
         type: "ignores",
         ignores: ev.file.content,
-      })
+      });
     }
     else if (ev.type==="delete") {
       self.files.remove(ev.file.path);
+      if (ev.file.path==="ignores.dic") self.files = new Map();
     }
     else if (ev.type==="destroy") {
       //self.scWorker.postMessage( { type: "clear" } );

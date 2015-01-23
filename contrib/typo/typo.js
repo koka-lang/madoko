@@ -720,7 +720,18 @@ Typo.prototype = {
 		function correct(word) {
 			// Get the edit-distance-1 and edit-distance-2 forms of this word.
 			var ed1 = edits1([word]);
-			var ed2 = edits1(ed1);
+
+			// Daan: Add some limits to reduce compute time to about 500ms
+			var n  = word.length;
+			var ms = [600,500,450,400,375,350,325,300,275,250,225,200];
+			var m  = (n < 8 ? ed1.length : (n >= 20 ? (n > 70 ? 100 : 240 - 2*n) : ms[word.length-8]));
+			
+			var ed2 = edits1(ed1.slice(0,m-25));
+			//console.log("typo suggests: ed1: " + ed1.length + ", ed2: " + ed2.length );
+			ed2 = ed2.slice(0,200000);
+
+			var corrections = known(ed1).concat(known(ed2));
+
 			
 			var corrections = known(ed1).concat(known(ed2));
 			

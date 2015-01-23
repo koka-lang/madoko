@@ -66,7 +66,6 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
   }, {
     
     startShowingAt: function (element, range, text, info) {
-      this.mouseOver = false;
       if (this.lastRange && this.lastRange.equalsRange(range)) {
         // We have to show the widget at the exact same range as before, so no work is needed
         return;
@@ -82,9 +81,19 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       this.computer.setContext(element, range, text, info);
       this.hoverOperation.start();
     },
+
+    onKeyDown: function(ev) {
+      if (this.isVisible) {
+        this.menu.onKeyDown(ev);
+      }
+    },
+
+    isVisible: function() {
+      return (this.lastRange != null);
+    },
     
     hide: function () {
-      this.mouseOver = false;
+      if (!this.isVisible()) return; // not shown
       this.lastRange = null;
       if (this.hoverOperation) {
         this.hoverOperation.cancel();
@@ -109,17 +118,30 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     function hide() {
       contentWidget.hide();
     }
-    
-    function onMouseMove(e) {
-      var targetType = e.target.type;
-      
-      if (targetType === Editor.MouseTargetType.CONTENT_WIDGET && e.target.detail === 'custom.hover.widget.id') {
-        // mouse moved on top of content hover widget
-        contentWidget.mouseOver = true;
+
+    function onKeyDown(ev) {
+      if (contentWidget.isVisible()) {
+        contentWidget.onKeyDown(ev);
+        hide();
+      }
+    }
+
+    function onMouseDown(ev) {
+      if (!contentWidget.isVisible()) return;
+      if (ev.target.type === Editor.MouseTargetType.CONTENT_WIDGET && ev.target.detail === 'custom.hover.widget.id') {
+        // mouse down on top of content hover widget
         return;
       }
+      hide();
+    }
+    
+    function onMouseMove(e) {    
+      if (!e.target) return;
+      var targetType = e.target.type;
 
-
+      if (targetType === Editor.MouseTargetType.CONTENT_WIDGET && e.target.detail === 'custom.hover.widget.id') {
+        return;
+      }
       
       if (targetType === Editor.MouseTargetType.CONTENT_TEXT && e.target.element != null) {
         // get range
@@ -147,12 +169,10 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         if (range) {
           var text = editor.getModel().getValueInRange(range);
           contentWidget.startShowingAt(e.target.element, range, text, info );
-        }
-      } else {
-        if (contentWidget.mouseOver) {
-          // hide();
+          return;
         }
       }
+      //hide();
     }
     
     function setup(ed,customMenu) {
@@ -161,8 +181,9 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       
       editor.addListener(Constants.EventType.MouseMove, onMouseMove);
       editor.addListener(Constants.EventType.MouseLeave, hide);
-      editor.addListener(Constants.EventType.KeyDown, hide);
+      editor.addListener(Constants.EventType.KeyDown, onKeyDown);
       editor.addListener(Constants.EventType.ModelChanged, hide);
+      editor.addListener(Constants.EventType.MouseDown, onMouseDown);
       editor.addListener('scroll', hide);
 
       return contentWidget;
