@@ -77,11 +77,13 @@ var SpellChecker = (function() {
     self.scWorker = new Util.ContWorker("spellcheck-worker.js", true); 
     self.dictionaries = new Map();
     self.storage = null;
+    self.files = new Map();
   }
 
   SpellChecker.prototype.setStorage = function(stg) {
     var self = this;
     self.storage = stg;
+    self.files = new Map();
     if (self.storage) {
       self.storage.addEventListener("update",self);
     }
@@ -96,9 +98,13 @@ var SpellChecker = (function() {
         ignores: ev.file.content,
       })
     }
+    else if (ev.type==="delete") {
+      self.files.remove(ev.file.path);
+    }
     else if (ev.type==="destroy") {
       //self.scWorker.postMessage( { type: "clear" } );
       self.storage = null;
+      self.files = new Map();
       return;
     }
   }
@@ -155,10 +161,22 @@ var SpellChecker = (function() {
     var self = this;
     return self.addDictionary().then( function() {
       var files = [];
-      if (ctx.fileName) files.push( { fileName: ctx.fileName, text: text } );
+      if (ctx.path && text) {
+        var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
+        files.push( { path: ctx.path, text: info.text } );
+      }
       self.storage.forEachFile( function(file) {
-        if (file.path !== ctx.fileName && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
-          files.push({fileName: file.path, text: file.content});
+        if (file.path !== ctx.path && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
+          var info = self.files.get(file.path);
+          if (info) {
+            if (info.text === file.content) return; // already done, skip
+            info.text = file.content;
+            info.errors = [];
+          }
+          else {
+            self.files.set(file.path,{ text: file.content, errors: [] });
+          }
+          files.push({path: file.path, text: file.content});
         }
       });
       Util.message( "spell check " + ctx.round + " start", Util.Msg.Trace );
@@ -171,7 +189,10 @@ var SpellChecker = (function() {
         if (res.timedOut) {
           throw new Error("spell checker time-out");
         }
-        return self.onCheckComplete(res,ctx);
+        else if (res.err) {
+          throw err;
+        }
+        else return self.onCheckComplete(res,ctx);
       });
     });
   }
@@ -198,25 +219,33 @@ var SpellChecker = (function() {
     var self = this;
     if (res.message) Util.message(res.message, Util.Msg.Tool);
 
-    if (res.errors != null && res.errors.length > 0 && ctx.show) {
-      var errors = [];
-      res.errors.forEach( function(err) {
-        errors.push({
-          type: "spellcheck",
-          tag: err.word,
-          range: {
-            startLineNumber: err.line,
-            endLineNumber: err.line,
-            startColumn: err.column,
-            endColumn: err.column + err.length,
-            fileName: err.fileName || ctx.fileName,
-          },
-          message: "possibly invalid word",
-        });
-      });
-      ctx.show(errors);
-    }
-  }  
+    res.files.forEach( function(file) {
+      var info = self.files.get(file.path);
+      if (info) {
+        info.errors = [];
+        file.errors.forEach( function(err) {
+          info.errors.push({
+            type: "spellcheck",
+            tag: err.word,
+            range: {
+              startLineNumber: err.line,
+              endLineNumber: err.line,
+              startColumn: err.column,
+              endColumn: err.column + err.length,
+              path: file.path,
+            },
+            message: "possibly invalid word",
+          });
+        });          
+      }
+    });
+
+    var allErrors = [];
+    self.files.elems().forEach( function(info) { 
+      allErrors = allErrors.concat(info.errors); 
+    });
+    ctx.show(allErrors);
+  } 
 
 
   return SpellChecker;

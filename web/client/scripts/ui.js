@@ -1451,7 +1451,7 @@ var UI = (function() {
       },
       function(round) {
         var ctx = {
-          fileName: self.editName,
+          path: self.editName,
           round: round,
           show: function(errs) { self.showSpellErrors(errs); },
         };
@@ -3950,7 +3950,7 @@ var symbolsMath = [
         else {
           newdecs.push(decoration);
           decoration.outdated = true;
-          if (decoration.id && decoration.range.fileName === self.editName) {
+          if (decoration.id && decoration.range.path === self.editName) {
             var dec = decoration.options || { isWholeLine : true };
             if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + '.outdated';
             if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated'; 
@@ -4003,7 +4003,7 @@ var symbolsMath = [
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
-        if (decoration.range.fileName === self.editName) {
+        if (decoration.range.path === self.editName) {
           var postfix = (decoration.outdated ? ".outdated" : "" );
           var dec = decoration.options || { isWholeLine: true };
           if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + postfix;
@@ -4016,7 +4016,7 @@ var symbolsMath = [
 
   function newRange( rng ) {
     var range =  new Range.Range( rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn );
-    if (rng.fileName) range.fileName = rng.fileName;
+    if (rng.path) range.path = rng.path;
     return range;
   }
 
@@ -4026,7 +4026,7 @@ var symbolsMath = [
 
     var decs = [];
     errors.forEach( function(error) {
-      if (!error.range.fileName) error.range.fileName = self.docName;
+      if (!error.range.path) error.range.path = self.docName;
       decs.push( { 
         id: null, 
         type: error.type || type,
@@ -4037,7 +4037,7 @@ var symbolsMath = [
         range: newRange(error.range),
         expire: 0, // does not expire
       });
-      var msg = (error.type || type) + ": " + error.range.fileName + ":" + error.range.startLineNumber.toString() + ": " + error.message;
+      var msg = (error.type || type) + ": " + error.range.path + ":" + error.range.startLineNumber.toString() + ": " + error.message;
       Util.message( msg, error.type || type );
     });
 
@@ -4059,7 +4059,7 @@ var symbolsMath = [
         expire: now + (60000), // expire merges after 1 minute?
         message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
         range: newRange({
-          fileName: merge.path,
+          path: merge.path,
           startLineNumber: merge.startLine,
           endLineNumber: merge.endLine,
           startColumn: 1,
@@ -4112,7 +4112,7 @@ var symbolsMath = [
         expire: now + 15000,
         message: edit.message || "Being edited concurrently",
         range: newRange({
-          fileName: edit.path,
+          path: edit.path,
           startLineNumber: edit.line,
           endLineNumber: edit.line,
           startColumn: 1,
@@ -4140,7 +4140,7 @@ var symbolsMath = [
           // overlapping range?
           // todo: check column range, perhaps merge messages?
           if (dec.type == dec2.type && (dec.options==null || dec.options.isWholeLine===true) &&
-              dec.range.fileName === dec2.range.fileName && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
+              dec.range.path === dec2.range.path && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
             if (!dec.outdated && dec2.outdated) {
               // swap, so we remove the outdated one
               self.decorations[j] = dec;
@@ -4170,12 +4170,12 @@ var symbolsMath = [
     self.showDecorations();
   }
 
-  UI.prototype.getDecorationMessage = function( fileName, lineNo, isGlyph ) {
+  UI.prototype.getDecorationMessage = function( path, lineNo, isGlyph ) {
     var self = this;
-    if (!fileName) fileName = self.editName;
+    if (!path) path = self.editName;
     for (var i = 0; i < self.decorations.length; i++) {
       var dec = self.decorations[i];
-      if (dec.range.fileName === fileName && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
+      if (dec.range.path === path && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
           (isGlyph ? dec.glyphType : dec.marginType) ) {
         return dec.message;
       }
@@ -4191,11 +4191,11 @@ var symbolsMath = [
       }
 
       var found = null;
-      var fileName = self.editName;
+      var path = self.editName;
       var position = self.editor.getPosition();
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
-          if (dec.range.fileName === fileName) {
+          if (dec.range.path === path) {
             if (position.isBefore(dec.range.getStartPosition())) {
               if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
                 found = dec;
@@ -4207,7 +4207,7 @@ var symbolsMath = [
       if (!found) {
         var seenFile = false;
         self.decorations.some( function(dec) {
-          if (dec.range.fileName === fileName) {
+          if (dec.range.path === path) {
             seenFile = true;
           }
           else if (seenFile) {
@@ -4218,7 +4218,7 @@ var symbolsMath = [
         if (!found) {
           self.decorations.forEach( function(dec) {
             if (isErrorType(dec)) {
-              if (found==null || (found.range.fileName===dec.range.fileName && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
+              if (found==null || (found.range.path===dec.range.path && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
                 found = dec;
               }
             }
@@ -4226,7 +4226,7 @@ var symbolsMath = [
         }
       }
       if (!found) return;
-      return self.editFile(found.range.fileName).then( function() {
+      return self.editFile(found.range.path).then( function() {
         var r = found.range;
         self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
       });
@@ -4434,7 +4434,7 @@ var symbolsMath = [
     return self.anonEvent( function() {
       var ctx = { 
         round: 0, 
-        fileName: self.editName, 
+        path: self.editName, 
         show: function(errors) { return self.showSpellErrors(errors); } 
       };
       return self.spellChecker.check( self.editor.getValue(), ctx ).then( function(res) {

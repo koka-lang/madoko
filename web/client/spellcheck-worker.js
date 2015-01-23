@@ -164,19 +164,19 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       else if (req.type==="check" && checker != null) {
-        var errors = [];
+        var files = [];
         req.files.forEach( function(file) {
-          var errs = checkText( file.text, req.options ).map( function(err) { err.fileName = file.fileName; return err; } );
-          errors = errors.concat(errs);
+          var errs = checkText( file.text, req.options );
+          files.push({ path: file.path, errors: errs });
         });
         var time   = (Date.now() - t0).toString();
-        console.log("spell check: " + time + "ms\n" + errors.map(function(err) { return JSON.stringify(err); }).join("\n") );
+        console.log("spell check: " + time + "ms" );
         self.postMessage( {
           messageId  : req.messageId, // message id is required to call the right continuation
           message    : "",
           err        : null,
           time       : time,
-          errors     : errors,
+          files      : files,
         });      
       }
       else if (req.type==="clear") {
