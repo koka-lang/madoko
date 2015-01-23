@@ -38,7 +38,7 @@ var ErrorMenu = (function() {
     var self = this;
     var message = self.info && self.info.options ? self.info.options.htmlMessage : "<unknown error>";
     return ("<div class='info'>" + message + "</div><hr>" + 
-            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-X)</span><span class='info'>Jump to next error</span></div>");
+            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
   }
 
   ErrorMenu.prototype.asyncGetContent = function() {

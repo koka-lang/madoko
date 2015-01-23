@@ -717,26 +717,7 @@ Typo.prototype = {
 			return rv;
 		}
 		
-		function correct(word) {
-			if (word==null) return [];
-
-			// Get the edit-distance-1 and edit-distance-2 forms of this word.
-			var ed1 = edits1([word]);
-
-			// Daan: Add some limits to reduce compute time to about 500ms
-			var n  = word.length;
-			var ms = [1000,1000,1000,1000,900,800,700,600,550,500,450,400,375,350,325,300,275,250,225,200];
-			var m  = (n < ms.length ? ms[n] : (n > 70 ? 100 : 240 - 2*n));
-			
-			var ed2 = edits1(ed1.slice(0,m-50));
-			//console.log("typo suggests: ed1: " + ed1.length + ", ed2: " + ed2.length );
-			ed2 = ed2.slice(0,200000);
-
-			var corrections = known(ed1).concat(known(ed2));
-
-			
-			var corrections = known(ed1).concat(known(ed2));
-			
+		function order( corrections, climit ) {
 			// Sort the edits based on how many different ways they were created.
 			var weighted_corrections = {};
 			
@@ -767,13 +748,33 @@ Typo.prototype = {
 			
 			var rv = [];
 			
-			for (var i = 0, _len = Math.min(limit, sorted_corrections.length); i < _len; i++) {
+			for (var i = 0, _len = Math.min(climit, sorted_corrections.length); i < _len; i++) {
 				if (!self.hasFlag(sorted_corrections[i][0], "NOSUGGEST")) {
 					rv.push(sorted_corrections[i][0]);
 				}
 			}
 			
 			return rv;
+		}
+		
+		function correct(word) {
+			if (word==null) return [];
+
+			// Get the edit-distance-1 and edit-distance-2 forms of this word.
+			var ed1 = edits1([word]);
+	
+			// Daan: limit the size of the edit-distance-2 to limit compute times.	
+		  var edx = ed1.slice(0); // copy
+		  if (edx.length > 250) {
+		  	var m = Math.max(100, Math.min(250, 250 - word.length*4))
+		  	edx = order(edx,m);
+		  }
+			var ed2 = edits1(edx);
+			ed2 = ed2.slice(0,200000);
+
+			var corrections = known(ed1).concat(known(ed2));
+			return order(corrections,limit);
+			
 		}
 		
 		return correct(word);

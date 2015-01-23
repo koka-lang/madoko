@@ -56,18 +56,32 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   var rxCode   = /(`+)(?:(?:[^`]|(?!\1)`)*)\2/;
   var rxRefer  = /[#@][\w\-:]+/;
   var rxEntity = /&(#?[\w\-:]*);/;
-  var rxSpecial= /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\]/;
   var rxUrl    = /(?:ftp|https?):\/\/[\w\-\.~:\/\?#\[\]@!\$&'\(\)\*\+,;=]+/;
+  var rxCustom = /^ *~+ *(?:begin|end)? *[\w\d\-]*/;
 
-  var linkhref = /\s*<?[^\s>)]*>?(?:\s+['""](.*?)['""])?\s*/;
-  var linkid   = /(?:[^\[\]\n]|\[[^\]\n]*\])*"/;
+  var linkhref = /\s*<?[^\s>)]*>?(?:\s+['"](.*?)['"])?\s*/;
+  var linkid   = /(?:[^\[\]\n]|\[[^\]\n]*\])*/;
   var linktxt  = /\[\^?(?:\[(?:[^\[\]]|\[[^\]]*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*\]/;
-  var rxLink    = regexJoin([ 
+  var rxLink   = regexJoin([ 
                     "!?", linktxt, 
                     "(?!\\(", linkhref, 
                     "\\)|\\s*\\[", linkid, 
                     "\\])" ]);
-  var rxInlineParts  = regexOr([rxUrl,rxWord,rxLink,rxCode,rxEntity,rxRefer,rxSpecial,rxLink],"gi");
+	var rxHrefLink= regexJoin([ 
+                    /\]\(/, linkhref, 
+                    /\)/ 
+									]);
+
+  var rxLinkDef = regexJoin([
+  									/^ *\[(?!\^)/, linkid, 
+  									/\]: *<?(?:[^\\\s>]|\\(?:.|\n *))+>?/
+  								]);
+  var rxFootnote= regexJoin([
+  								  /^ *\[\^/, linkid, 
+  								  /\]:/ 
+  								]);
+
+  var rxInlineParts  = regexOr([rxUrl,rxWord,rxLinkDef,rxFootnote,rxCode,rxEntity,rxRefer,rxLink,rxHrefLink,rxCustom],"gi");
 
   function checkLine( line, lineNo, options ) {
     rxWord.lastIndex = 0; // reset
@@ -99,7 +113,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
 
   var metaKey = /(?:@(?:\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]/;
   var rxMeta = new RegExp("^("+ metaKey.source + " *)((?:.*(?:\n .*)*)(?:\\n+(?=\\n|" + metaKey.source + ")|$))", "g");
-  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips)/;
+  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips|author|address|affiliation|email|(reveal|beamer)-(url|theme))/;
 
   function sanitizeMeta( text ) {
     var res = "";
@@ -126,20 +140,40 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
     });
   }
 
+  
+  var rxToken = /(?:'(?:[^\n\\']|\\.)*'|"(?:[^\n\\"]|\\.)*"|(?:[^\\""'\s]|\\.)+)/;
+  var rxAttrCheck = regexJoin( ["(", /\b(?:author|title|caption|alt) *= */, rxToken, ")"] );
+  var rxAttrTokens = regexOr( [/(\n)/, rxAttrCheck, rxToken, /[^\n]/ ], "g");
+
+  function whitenAttrs(attrs) {
+  	return attrs.replace(rxAttrTokens, function(matched,nl,checked,other) {
+  		return (nl || checked || Array(matched.length+1).join(" "));
+  	});
+  }
+
+  var rxAttrs = /\{:?((?:[^\\'"\}\n]|\\[.\n]|'[^']*'|"[^"]*")*)\}/g;
+	function sanitizeAttributes( text ) {
+  	return text.replace( rxAttrs, function(matched) {
+  		return whitenAttrs(matched);
+  	});
+  }
+
+	var rxSpecial= /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\] */g;
   var rxMathEnv = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\1 *(?=\n|$)/;
   var rxMath    = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
   var rxFenced  = /\n *(```+).*\n[\s\S]+?\n *\1 *(?=\n+|$)/;
   var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMath],"gi");
 
   function checkText( text, options ) {
-    var text1 = text.replace(/\t/g,"    ").replace(/\r/g,"")
+    var text1 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"");
     var text2 = sanitizeMeta(text1);
     var text3 = text2.replace(rxBlockParts,function(matched) {
       return whiten(matched);
     });
     var text4 = sanitizeIndentedCode(text3);
+    var text5 = sanitizeAttributes(text4);
 
-    var lines = text4.split("\n");
+    var lines = text5.split("\n");
     var errorss = lines.map( function(line,idx) {
       return checkLine( line, idx+1, options );
     });

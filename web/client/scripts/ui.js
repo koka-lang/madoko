@@ -489,11 +489,11 @@ var UI = (function() {
     bindKey( "Ctrl-S", function()   { self.synchronize(); } );
     bindKey( "Alt-O",  function(ev) { openEvent(ev); });
     bindKey( "Alt-P",  function()   { self.pull(); } );
-    bindKey( "Alt-N",  function(ev) { newEvent(ev); });
+    // bindKey( "Alt-N",  function(ev) { newEvent(ev); });
     bindKey( "Ctrl-Z", function()   { self.commandUndo(); } );
     bindKey( "Ctrl-Y", function()   { self.commandRedo(); } );
     bindKey( "Alt-C",  function()   { self.spellCheck(); } );
-    bindKey( "Alt-X",  function()   { self.gotoNextError(); } );
+    bindKey( "Alt-N",  function()   { self.gotoNextError(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     
@@ -2751,12 +2751,12 @@ var symbolsMath = [
     toolInline("bold","**","**",{
       icon    : true,
       title   : "Strong emphasis (bold)",
-      keys    : ["Ctrl-B","Alt-B"]
+      keys    : ["Ctrl-B"]
     }),
     toolInline("italic","_","_",{
       icon    : true,
       title   : "Emphasis (italic)",
-      keys    : ["Ctrl-I","Alt-I"]
+      keys    : ["Ctrl-I"]
     }),
     toolInline("code","`","`",{  // TODO: make smart about quotes
       icon    : true,

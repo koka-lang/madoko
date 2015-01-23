@@ -38,13 +38,13 @@ var SpellCheckMenu = (function() {
     var self = this;
     return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
                 "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
-            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-X)</span><span class='info'>Jump to next error</span></div>");
+            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
     return self.checker.suggest(self.text,{}).then( function(res) {
-      var buttons = res.suggestions.map( function(suggest) {
+      var buttons = res.suggestions.reverse().map( function(suggest) {
         return "<div class='button' data-replace='" + encodeURIComponent(suggest) + "'><span class='word'>" +Util.escape(suggest) + "</span></div>"
       });
       return (buttons.length === 0 ? "<div class='button'><span class='info'>No suggestions found</span></div><hr>" : buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : ""));
@@ -80,6 +80,7 @@ var SpellCheckMenu = (function() {
       ev.stopPropagation();
       self.checker.ignore( self.text );
       if (self.remover) self.remover(null,self.text); // remove decoration   
+      if (self.gotoNext) self.gotoNext(self.range.getStartPosition());
     }
   }
 
