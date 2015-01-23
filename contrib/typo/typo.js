@@ -718,15 +718,17 @@ Typo.prototype = {
 		}
 		
 		function correct(word) {
+			if (word==null) return [];
+
 			// Get the edit-distance-1 and edit-distance-2 forms of this word.
 			var ed1 = edits1([word]);
 
 			// Daan: Add some limits to reduce compute time to about 500ms
 			var n  = word.length;
-			var ms = [600,500,450,400,375,350,325,300,275,250,225,200];
-			var m  = (n < 8 ? ed1.length : (n >= 20 ? (n > 70 ? 100 : 240 - 2*n) : ms[word.length-8]));
+			var ms = [1000,1000,1000,1000,900,800,700,600,550,500,450,400,375,350,325,300,275,250,225,200];
+			var m  = (n < ms.length ? ms[n] : (n > 70 ? 100 : 240 - 2*n));
 			
-			var ed2 = edits1(ed1.slice(0,m-25));
+			var ed2 = edits1(ed1.slice(0,m-50));
 			//console.log("typo suggests: ed1: " + ed1.length + ", ed2: " + ed2.length );
 			ed2 = ed2.slice(0,200000);
 
