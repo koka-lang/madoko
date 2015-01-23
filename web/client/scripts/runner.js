@@ -136,7 +136,8 @@ var Runner = (function() {
         runOnServer: runOnServer, 
         mathDoc: res.mathDoc,
         links: res.links,
-        labels: res.labels
+        labels: res.labels,
+        fileOrder: [res.name].concat(res.filesRead).concat(filesReferred),
       };      
     });
   }

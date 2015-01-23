@@ -17,9 +17,13 @@ var SpellCheckMenu = (function() {
     self.remover  = remover;
     self.text = null;
   }
-  
+
+  SpellCheckMenu.prototype.getClassName = function() {
+    return "menu spellcheck";
+  }  
+
   SpellCheckMenu.prototype.triggerOn = function( elem, range, text, info ) {
-    return Util.hasClassName(elem,"spellerror");
+    return (elem==null || Util.hasClassName(elem,"spellerror"));
   }
 
   SpellCheckMenu.prototype.setWidget = function( widget ) {
@@ -39,28 +43,31 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return "<div class='button' data-ignore='true'>Ignore " + Util.escape(self.text) + "</div>"
+    return "<div class='button' data-ignore='true'><span class='info'>Ignore </span><span class='word'>" + Util.escape(self.text) + "</span></div>"
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
     return self.checker.suggest(self.text,{}).then( function(res) {
       var buttons = res.suggestions.map( function(suggest) {
-        return "<div class='button' data-replace='" + encodeURIComponent(suggest) + "'>" + Util.escape(suggest) + "</div>"
+        return "<div class='button' data-replace='" + encodeURIComponent(suggest) + "'><span class='word'>" +Util.escape(suggest) + "</span></div>"
       });
-      return buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : "");
+      return (buttons.length === 0 ? "<div class='button'><span class='info'>No suggestions found</span></div><hr>" : buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : ""));
     });
   }
 
   SpellCheckMenu.prototype.onClick = function(ev) {
     var self = this;
-    if (!ev.target || !Util.hasClassName(ev.target,"button")) return;
-    var replace = ev.target.getAttribute("data-replace");
+    var target = ev.target;
+    while( target && target.nodeName !== "DIV" ) target = target.parentNode;
+    if (!target || !Util.hasClassName(target,"button")) return;
+
+    var replace = target.getAttribute("data-replace");
     if (self.replacer && replace) {
       self.replacer( self.range, decodeURIComponent(replace) );
       if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
     }
-    else if (ev.target.getAttribute("data-ignore")) {
+    else if (target.getAttribute("data-ignore")) {
       self.checker.ignore( self.text );
       if (self.remover) self.remover(null,self.text); // remove decoration   
     }
@@ -163,6 +170,8 @@ var SpellChecker = (function() {
       var files = [];
       if (ctx.path && text) {
         var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
+        info.text = text;
+        info.errors = [];
         files.push( { path: ctx.path, text: info.text } );
       }
       self.storage.forEachFile( function(file) {
@@ -206,9 +215,9 @@ var SpellChecker = (function() {
         word   : word,
         options: options,
       };
-      return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
+      return self.scWorker.postMessage( msg, 10000 ).then( function(res) {
         if (res.timedOut) {
-          throw new Error("spell checker time-out");
+          throw new Error("spell checker suggest time-out");
         }
         return res;
       });

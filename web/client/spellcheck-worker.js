@@ -48,17 +48,26 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   function regexOr( rxs, flags ) {
     return new RegExp( rxs.map( function(rx) { return "(?:" + rx.source + ")"; } ).join("|"), flags );
   }
+  function regexJoin( rxs, flags ) {
+    return new RegExp( rxs.map( function(rx) { return (typeof rx === "string" ? rx : rx.source); } ).join(""), flags );    
+  }
 
   var rxWord   = /([a-zA-Z\u00C0-\u1FFF\u2C00-\uD7FF]+(?:'[st])?)/;
   var rxCode   = /(`+)(?:(?:[^`]|(?!\1)`)*)\2/;
   var rxRefer  = /[#@][\w\-:]+/;
   var rxEntity = /&(#?[\w\-:]*);/;
-  var rxSpecial= /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\]/
-  var rxInlineParts  = regexOr([rxWord,rxCode,rxEntity,rxRefer,rxSpecial],"gi");
+  var rxSpecial= /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\]/;
+  var rxUrl    = /(?:ftp|https?):\/\/[\w\-\.~:\/\?#\[\]@!\$&'\(\)\*\+,;=]+/;
 
-  var rxMathEnv = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\1 *(?:\n|$)/;
-  var rxMath   = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
-  var rxBlockParts  = regexOr([rxMathEnv,rxMath],"gi");
+  var linkhref = /\s*<?[^\s>)]*>?(?:\s+['""](.*?)['""])?\s*/;
+  var linkid   = /(?:[^\[\]\n]|\[[^\]\n]*\])*"/;
+  var linktxt  = /\[\^?(?:\[(?:[^\[\]]|\[[^\]]*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*\]/;
+  var rxLink    = regexJoin([ 
+                    "!?", linktxt, 
+                    "(?!\\(", linkhref, 
+                    "\\)|\\s*\\[", linkid, 
+                    "\\])" ]);
+  var rxInlineParts  = regexOr([rxUrl,rxWord,rxLink,rxCode,rxEntity,rxRefer,rxSpecial,rxLink],"gi");
 
   function checkLine( line, lineNo, options ) {
     rxWord.lastIndex = 0; // reset
@@ -117,6 +126,11 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
     });
   }
 
+  var rxMathEnv = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\1 *(?=\n|$)/;
+  var rxMath    = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
+  var rxFenced  = /\n *(```+).*\n[\s\S]+?\n *\1 *(?=\n+|$)/;
+  var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMath],"gi");
+
   function checkText( text, options ) {
     var text1 = text.replace(/\t/g,"    ").replace(/\r/g,"")
     var text2 = sanitizeMeta(text1);
@@ -152,9 +166,13 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       if (req.type === "suggest" && checker != null) {
-        var suggestions = checker.suggest(req.word || "", req.limit || 8);
+        console.log("spell check: suggest: " + req.word);
+        var suggestions = [];
+        if (req.word && req.word.length <= 8) { // current algorithm takes too long on longer words...
+          suggestions = checker.suggest(req.word || "", req.limit || 8);
+        }
         var time   = (Date.now() - t0).toString();
-        console.log("spell check: " + time + "ms\n  suggest: " + req.word + ": "+ JSON.stringify(suggestions));
+        console.log("spell check: suggest: " + time + "ms");
         self.postMessage( {
           messageId  : req.messageId, // message id is required to call the right continuation
           message    : "",
@@ -166,11 +184,12 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
       else if (req.type==="check" && checker != null) {
         var files = [];
         req.files.forEach( function(file) {
+          console.log("spell check: " + file.path);
           var errs = checkText( file.text, req.options );
           files.push({ path: file.path, errors: errs });
         });
         var time   = (Date.now() - t0).toString();
-        console.log("spell check: " + time + "ms" );
+        console.log("spell check time: " + time + "ms" );
         self.postMessage( {
           messageId  : req.messageId, // message id is required to call the right continuation
           message    : "",

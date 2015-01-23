@@ -610,11 +610,13 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
-    CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
+    self.spellCheckMenu = CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
       var command = new ReplaceCommand.ReplaceCommand( range, replacement );
       self.editor.executeCommand("madoko",command);
+      setTimeout( function() { self.gotoNextError(); }, 50 );
     }, function(id,tag) {
       self.removeDecorationsOn(id,tag);
+      self.gotoNextError();
     }));
 
 
@@ -1359,6 +1361,7 @@ var UI = (function() {
                   showErrors: function(errs) { self.showErrors(errs,false,"warning"); }
                 }).then( function(res) {
               self.htmlText = res.content; 
+              self.fileOrder = res.fileOrder || []; // used for gotoNextError
               var quick = self.viewHTML(res.content, res.ctx.time0);
               self.updateLabels(res.labels,res.links);
               if (res.runAgain) {
@@ -4088,7 +4091,7 @@ var symbolsMath = [
         //expire: now + (60000), // expire merges after 1 minute?
         message: err.message, 
         range: newRange(err.range),
-        options: { isWholeLine: false, inlineClassName: "redsquiggly.spellerror", stickiness: 1 },
+        options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 1 },
       };
       decs.push(dec);      
     });
@@ -4183,6 +4186,18 @@ var symbolsMath = [
     return "";
   }
 
+  UI.prototype.nextDocumentFile = function(path) {
+    var self = this;
+    if (!path) path = self.editName;
+    if (!self.fileOrder) return null;
+    for(var i = 0; i < self.fileOrder.length; i++) {
+      if (self.fileOrder[i] === path) {
+        return (i+1 >= self.fileOrder.length ? self.fileOrder[0] : self.fileOrder[i+1]);
+      }
+    }
+    return null;
+  }
+
   UI.prototype.gotoNextError = function() {
     var self = this;
     self.anonEvent( function() {
@@ -4205,30 +4220,25 @@ var symbolsMath = [
         }
       });
       if (!found) {
-        var seenFile = false;
-        self.decorations.some( function(dec) {
-          if (dec.range.path === path) {
-            seenFile = true;
-          }
-          else if (seenFile) {
-            found = dec;
-            return true;
-          }
-        });
-        if (!found) {
+        var nextPath = path;
+        while( !found && (nextPath = self.nextDocumentFile(nextPath)) && nextPath !== path) {
           self.decorations.forEach( function(dec) {
-            if (isErrorType(dec)) {
+            if (isErrorType(dec) && dec.range.path === nextPath) {
               if (found==null || (found.range.path===dec.range.path && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
                 found = dec;
               }
             }
           });
-        }
+        }       
       }
       if (!found) return;
       return self.editFile(found.range.path).then( function() {
         var r = found.range;
-        self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
+        var x = self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
+        if (found.type==="spellcheck") {
+          var text = self.editor.getModel().getValueInRange(found.range);
+          setTimeout( function() { self.spellCheckMenu.startShowingAt(null, found.range, text, found); }, 50 );
+        }
       });
     });
   }

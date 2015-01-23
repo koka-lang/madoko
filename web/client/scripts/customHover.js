@@ -45,7 +45,9 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     },
     
     getResult: function() {
-      return this.contentAsync + this.content;
+      var className = this.menu.getClassName() || "";
+      className = className.replace(/\./g," ");
+      return "<div class='" + className + "'>" + this.contentAsync + this.content + "</div>";
     }
   });
 
@@ -64,11 +66,12 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
   }, {
     
     startShowingAt: function (element, range, text, info) {
+      this.mouseOver = false;
       if (this.lastRange && this.lastRange.equalsRange(range)) {
         // We have to show the widget at the exact same range as before, so no work is needed
         return;
       }
-      if (this.menu.triggerOn && !this.menu.triggerOn(element,range,text,info)) {
+      if (element && this.menu.triggerOn && !this.menu.triggerOn(element,range,text,info)) {
         return;
       }
       
@@ -81,6 +84,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     },
     
     hide: function () {
+      this.mouseOver = false;
       this.lastRange = null;
       if (this.hoverOperation) {
         this.hoverOperation.cancel();
@@ -101,7 +105,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     
     var editor = null;
     var contentWidget = null;
-    
+
     function hide() {
       contentWidget.hide();
     }
@@ -111,6 +115,7 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       
       if (targetType === Editor.MouseTargetType.CONTENT_WIDGET && e.target.detail === 'custom.hover.widget.id') {
         // mouse moved on top of content hover widget
+        contentWidget.mouseOver = true;
         return;
       }
 
@@ -144,7 +149,9 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
           contentWidget.startShowingAt(e.target.element, range, text, info );
         }
       } else {
-        hide();
+        if (contentWidget.mouseOver) {
+          // hide();
+        }
       }
     }
     
@@ -157,6 +164,8 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       editor.addListener(Constants.EventType.KeyDown, hide);
       editor.addListener(Constants.EventType.ModelChanged, hide);
       editor.addListener('scroll', hide);
+
+      return contentWidget;
     }
     
     return setup;

@@ -1,9 +1,11 @@
-Haskell/S
-HTML
-Javascript/S
-Koka/S
-Madoko/S
-Markdown/S
+Haskell/M
+HTML/M
+Javascript/M
+Koka/M
+madoko/M
+markdown/M
+offline
+online
 PDF
 bibtex
 tex

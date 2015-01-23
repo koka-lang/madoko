@@ -80,6 +80,7 @@ html,body,#main {
 .theme-dark .header-bar .menu {
   color: black;
 }
+
 .theme-dark .header-bar .menu .button:hover {
   background-color: Gainsboro;
 }
@@ -159,7 +160,7 @@ html,body,#main {
   padding: 0pt;
 }
 
-.header-bar, .toolbar, modal, .load-error, .auth-redirect {
+.header-bar, .toolbar, modal, .load-error, .auth-redirect, .spellcheck .info {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
@@ -757,6 +758,9 @@ div.boxed {
 
 
 /* Monaco token classes */
+.monaco-editor .spellerror {
+  border-bottom: 1px dotted red;
+}
 .monaco-editor .glyph-warning, .monaco-editor .glyph-spellcheck {
   background: url(../images/glyph-warning.png) no-repeat center;
 }
