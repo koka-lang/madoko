@@ -13,49 +13,53 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         'vs/editor/editor',
         'vs/editor/contrib/hover/hoverOperation',
         'vs/editor/contrib/hover/hoverWidgets'],
-        function(Map,Promise,Util,WinJS,Constants,Range,Editor,HoverOperation,ContentHoverWidget) {
+        function(Map,Promise,Util,WinJS,Constants,Range,Editor,HoverOperation,HoverWidgets) {
 
-  var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) { 
-    this.menu = customMenu;
-  }, { 
-    setContext: function (elem, range, text, info) {
-      this.menu.setContext(elem, range,text,info);
-      this.content = "";
-      this.contentAsync = "";
-    },
+var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) { 
+  this.menu = customMenu;
+}, { 
+  setContext: function (elem, range, text, info) {
+    this.menu.setContext(elem, range,text,info);
+    this.content = "";
+    this.contentAsync = "";
+  },
 
-    _fullContent: function() {
-      return this.contentAsync + this.content;
-    },
-    
-    computeAsync: function () {
-      return WinJS.Promise.timeout(1).then(function() {
-        return this.menu.asyncGetContent().then( function( res ) {
-          this.contentAsync = res;
-          return;
-        }.bind(this));
+  _fullContent: function() {
+    return this.contentAsync + this.content;
+  },
+  
+  computeAsync: function () {
+    return WinJS.Promise.timeout(1).then(function() {
+      return this.menu.asyncGetContent().then( function( res ) {
+        this.contentAsync = res;
+        return;
       }.bind(this));
-    },
-    
-    computeSync: function () {
-      this.content = this.menu.getContent();
-    },
-    
-    onResult: function(r) {
-    },
-    
-    getResult: function() {
-      var className = this.menu.getClassName() || "";
-      className = className.replace(/\./g," ");
-      return "<div class='" + className + "'>" + this.contentAsync + this.content + "</div>";
-    }
-  });
+    }.bind(this));
+  },
+  
+  computeSync: function () {
+    this.content = this.menu.getContent();
+  },
+  
+  onResult: function(r) {
+  },
+  
+  getResult: function() {
+    var className = this.menu.getClassName() || "";
+    className = className.replace(/\./g," ");
+    return "<div class='" + className + "'>" + this.contentAsync + this.content + "</div>";
+  }
+});
 
-  var ContentWidget = WinJS.Class.derive(ContentHoverWidget.ContentHoverWidget, function ContentWidget(editor,customMenu) {
-    ContentHoverWidget.ContentHoverWidget.call(this, 'custom.hover.widget.id', editor);
+var visibleHover = null;
+
+function createHoverWidget(superClass) {
+  return WinJS.Class.derive(superClass, function ContentWidget(widgetId,editor,customMenu) {
+    superClass.call(this, widgetId, editor);
+    this.superClass = superClass;
+    this.id = widgetId;
     this.lastRange = null;
     this.menu = customMenu;
-    this.menu.setWidget(this);
     this.computer = new ContentComputer(customMenu);
     this.hoverOperation = new HoverOperation.HoverOperation(
       this.computer,
@@ -63,6 +67,10 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       null,
       this.withResult.bind(this)
     );
+    this._domNode.addEventListener("click", function(ev) {
+      if (this.menu && this.menu.onClick && this.isVisible()) this.menu.onClick(ev);
+      this.hide();
+    }.bind(this));
   }, {
     
     startShowingAt: function (element, range, text, info) {
@@ -76,14 +84,16 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
       
       this.hoverOperation.cancel();
       this.hide();
+      if (visibleHover) visibleHover.hide();
       
       this.lastRange = range;
       this.computer.setContext(element, range, text, info);
       this.hoverOperation.start();
+      visibleHover = this;
     },
 
     onKeyDown: function(ev) {
-      if (this.isVisible) {
+      if (this.isVisible()) {
         this.menu.onKeyDown(ev);
       }
     },
@@ -95,102 +105,103 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
     hide: function () {
       if (!this.isVisible()) return; // not shown
       this.lastRange = null;
+      if (this===visibleHover) visibleHover = null;
       if (this.hoverOperation) {
         this.hoverOperation.cancel();
       }
-      ContentHoverWidget.ContentHoverWidget.prototype.hide.call(this);
+      this.superClass.prototype.hide.call(this);
     },
     
     withResult: function (content) {
       this._domNode.innerHTML = content;
-      this.showAt({
-        lineNumber: this.lastRange.startLineNumber,
-        column: this.lastRange.startColumn
-      });
+      if (this._showAtLineNumber) {
+        this.showAt( this.lastRange.startLineNumber );
+      }
+      else {
+        this.showAt(this.lastRange.getStartPosition());
+      }
     }
   });
+}
 
-  var addCustomHover = (function() {
-    
-    var editor = null;
-    var contentWidget = null;
+var ContentWidget = createHoverWidget(HoverWidgets.ContentHoverWidget);
+var GlyphWidget   = createHoverWidget(HoverWidgets.GlyphHoverWidget);
 
-    function hide() {
-      contentWidget.hide();
-    }
+function addCustomHover(widgetId,ed,customMenu) {
+  
+  var editor = ed;
+  var contentWidget = (widgetId.indexOf("glyph") >= 0 ? new GlyphWidget(widgetId,editor,customMenu) : new ContentWidget(widgetId,editor,customMenu));
+ 
+  function hide() {
+    contentWidget.hide();
+  }
 
-    function onKeyDown(ev) {
-      if (contentWidget.isVisible()) {
-        contentWidget.onKeyDown(ev);
-        hide();
-      }
-    }
-
-    function onMouseDown(ev) {
-      if (!contentWidget.isVisible()) return;
-      if (ev.target.type === Editor.MouseTargetType.CONTENT_WIDGET && ev.target.detail === 'custom.hover.widget.id') {
-        // mouse down on top of content hover widget
-        return;
-      }
+  function onKeyDown(ev) {
+    if (contentWidget.isVisible()) {
+      contentWidget.onKeyDown(ev);
       hide();
     }
-    
-    function onMouseMove(e) {    
-      if (!e.target) return;
-      var targetType = e.target.type;
+  }
 
-      if (targetType === Editor.MouseTargetType.CONTENT_WIDGET && e.target.detail === 'custom.hover.widget.id') {
+  function onMouseDown(ev) {
+    if (!ev.target) return
+    if (!contentWidget.isVisible()) return;
+    var targetType = ev.target.type;
+    if ((targetType !== Editor.MouseTargetType.CONTENT_WIDGET && targetType !== Editor.MouseTargetType.OVERLAY_WIDGET) || e.target.detail !== contentWidget.id) {
+      hide();
+      return;
+    }
+  }
+ 
+  function onMouseMove(e) {    
+    if (!e.target) return;
+    var targetType = e.target.type;
+
+    if ((targetType === Editor.MouseTargetType.CONTENT_WIDGET || targetType === Editor.MouseTargetType.OVERLAY_WIDGET) && e.target.detail === contentWidget.id) {
+      return;
+    }
+    
+    if ((targetType === Editor.MouseTargetType.CONTENT_TEXT || targetType===Editor.MouseTargetType.GUTTER_GLYPH_MARGIN) && e.target.element != null) {
+      // get range
+      var range = null;
+      var info  = null;
+
+      // first look at decorations
+      var decs = editor.getModel().getLineDecorations(e.target.position.lineNumber);
+      decs.forEach( function(dec) {
+        if (dec.range.containsPosition(e.target.position)) {
+          if (range==null || range.containsRange(dec.range)) {
+            range = dec.range;
+            info = dec;
+          }
+        }
+      });
+      
+      if (range==null) {
+        editor.getModel().tokenIterator(e.target.position, function (it) {
+          info = it.next();             
+          range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
+        });
+      }
+
+      if (range) {
+        var text = editor.getModel().getValueInRange(range);
+        contentWidget.startShowingAt(e.target.element, range, text, info );
         return;
       }
-      
-      if (targetType === Editor.MouseTargetType.CONTENT_TEXT && e.target.element != null) {
-        // get range
-        var range = null;
-        var info  = null;
-
-        // first look at decorations
-        var decs = editor.getModel().getLineDecorations(e.target.position.lineNumber);
-        decs.forEach( function(dec) {
-          if (dec.range.containsPosition(e.target.position)) {
-            if (range==null || range.containsRange(dec.range)) {
-              range = dec.range;
-              info = dec;
-            }
-          }
-        });
-        
-        if (range==null) {
-          editor.getModel().tokenIterator(e.target.position, function (it) {
-            info = it.next();             
-            range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
-          });
-        }
-
-        if (range) {
-          var text = editor.getModel().getValueInRange(range);
-          contentWidget.startShowingAt(e.target.element, range, text, info );
-          return;
-        }
-      }
-      //hide();
     }
-    
-    function setup(ed,customMenu) {
-      editor = ed;
-      contentWidget = new ContentWidget(editor,customMenu);
-      
-      editor.addListener(Constants.EventType.MouseMove, onMouseMove);
-      editor.addListener(Constants.EventType.MouseLeave, hide);
-      editor.addListener(Constants.EventType.KeyDown, onKeyDown);
-      editor.addListener(Constants.EventType.ModelChanged, hide);
-      editor.addListener(Constants.EventType.MouseDown, onMouseDown);
-      editor.addListener('scroll', hide);
+    //hide();
+  }
 
-      return contentWidget;
-    }
-    
-    return setup;
-  })();
+  editor.addListener(Constants.EventType.MouseMove, onMouseMove);
+  editor.addListener(Constants.EventType.MouseLeave, hide);
+  editor.addListener(Constants.EventType.KeyDown, onKeyDown);
+  editor.addListener(Constants.EventType.ModelChanged, hide);
+  editor.addListener(Constants.EventType.MouseDown, onMouseDown);
+  editor.addListener('scroll', hide);
+
+  return contentWidget;
+}
 
 return {
   create: addCustomHover,

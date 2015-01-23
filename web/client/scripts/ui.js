@@ -7,9 +7,9 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/util","../scripts/tabStorage",
-        "../scripts/storage","../scripts/spellcheck",
+        "../scripts/storage","../scripts/spellcheck","../scripts/errormenu",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
-        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,Range,Selection,ReplaceCommand,Editor,CustomHover) {
+        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
 
 // Constants
@@ -570,7 +570,9 @@ var UI = (function() {
                  && ev.target.position && ev.target.element) 
         {
           var msg = self.getDecorationMessage(self.editName,ev.target.position.lineNumber, ev.target.type===2);
-          ev.target.element.title = msg;
+          if (msg) {
+            ev.target.element.title = msg;
+          }
         }
       }, [State.Syncing]);
     });
@@ -610,15 +612,18 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
-    self.spellCheckMenu = CustomHover.create(self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
+    self.spellCheckMenu = CustomHover.create("spellcheck.content.hover.menu",self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
       var command = new ReplaceCommand.ReplaceCommand( range, replacement );
       self.editor.executeCommand("madoko",command);
       setTimeout( function() { self.gotoNextError(); }, 50 );
     }, function(id,tag) {
-      if (id||tag) {
-        self.removeDecorationsOn(id,tag);
-      }
-      self.gotoNextError();
+      self.removeDecorationsOn(id,tag);
+    }, function(pos) {
+      self.gotoNextError(pos);
+    }));
+
+    self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor, new ErrorMenu.ErrorMenu( function(pos) {
+      self.gotoNextError(pos);
     }));
 
 
@@ -871,10 +876,14 @@ var UI = (function() {
         if (elem && (elem.id === "status" || elem.className==="msg-line" || elem.className==="msg-section")) {
           var line = elem.textContent;
           var cap = /\bline(?:\s|&nbsp;)*:(?:\s|&nbsp;)*(\d+)/i.exec(line);
+          var pos = null;
+          var path = null;
           if (cap) {
             var lineNo = parseInt(cap[1]);
             if (!isNaN(lineNo)) {
-              self.editor.setPosition( { lineNumber: lineNo, column: 1 }, true, true );
+              //self.gotoPosition( { lineNumber: lineNo, column: 1 } );
+              pos = { lineNumber: lineNo, column: 1 };
+              path = self.editName;
             }
           }
           else {
@@ -883,8 +892,19 @@ var UI = (function() {
               var lineNo = parseInt(cap[2]);
               var fileName = cap[1]; // TODO use file
               if (!isNaN(lineNo)) {
-                self.editFile( fileName, { lineNumber: lineNo, column: 1 } );
+                // self.editFile( fileName, { lineNumber: lineNo, column: 1 }, true );
+                pos = { lineNumber: lineNo, column: 1 };
+                path = self.editName;
               }
+            }
+          }
+          if (pos && path) {
+            var dec = self.findErrorDecoration(path,pos);
+            if (dec) {
+              self.gotoDecoration(dec);
+            }
+            else {
+              self.editFile(path,pos,true);
             }
           }
         }
@@ -1693,10 +1713,7 @@ var UI = (function() {
     return loadEditor.then( function(posx) {      
       if (!pos) pos = posx;
       if (pos) {
-        self.editor.setPosition(pos, true, true );
-        if (reveal) {
-          self.editor.revealPosition( pos, true, true );    
-        }                
+        self.gotoPosition(pos, reveal );
       }
       self.showDecorations();
       self.showConcurrentUsers(false);
@@ -1705,6 +1722,16 @@ var UI = (function() {
     // .always( function() { 
     //   self.state = State.Normal; 
     // });    
+  }
+
+  UI.prototype.gotoPosition = function( pos, reveal ) {
+    var self = this;
+    self.editor.setPosition(pos,true,true);
+    if (reveal) {
+      self.editor.revealPosition( pos, true, true );    
+
+    }               
+
   }
 
   UI.prototype.localLoad = function(tabNo) {
@@ -4039,7 +4066,8 @@ var symbolsMath = [
         glyphType: error.glyphType || error.type || type,
         sticky: sticky, 
         outdated: false, 
-        message: error.message, 
+        //message: error.message, 
+        options: { htmlMessage: Util.escape(error.message), isWholeLine: true },
         range: newRange(error.range),
         expire: 0, // does not expire
       });
@@ -4094,7 +4122,7 @@ var symbolsMath = [
         //expire: now + (60000), // expire merges after 1 minute?
         message: err.message, 
         range: newRange(err.range),
-        options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 1 },
+        options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 0 },
       };
       decs.push(dec);      
     });
@@ -4201,18 +4229,19 @@ var symbolsMath = [
     return [];
   }
 
-  UI.prototype.gotoNextError = function() {
+  function isErrorType(dec) {
+    return (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error");
+  }
+
+  UI.prototype.gotoNextError = function(position) {
     var self = this;
     self.anonEvent( function() {
-      var path = self.editName;
-      
-      function isErrorType(dec) {
-        return (//(dec.path !== path || dec.id != null) && 
-                (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error"));
-      }
-
       var found = null;
-      var position = self.editor.getPosition();
+      var path = self.editName;
+      if (!position) position = self.editor.getPosition();
+      
+ 
+
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
           if (dec.range.path === path) {
@@ -4237,14 +4266,39 @@ var symbolsMath = [
         });
       }
       if (!found) return;
-      return self.editFile(found.range.path).then( function() {
-        var r = found.range;
-        var x = self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
-        if (found.type==="spellcheck") {
-          var text = self.editor.getModel().getValueInRange(found.range);
-          setTimeout( function() { self.spellCheckMenu.startShowingAt(null, found.range, text, found); }, 50 );
+      return self.gotoDecoration(found);
+    });
+  }
+
+  UI.prototype.findErrorDecoration = function(path,pos) {
+    var self = this;
+    var found = null;
+    self.decorations.forEach( function(dec) {
+      if (isErrorType(dec)) {
+        if (dec.range.path === path) {
+          if (dec.range.containsPosition(pos) || dec.range.getStartPosition().equals(pos)) {
+            if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
+              found = dec;
+            }
+          }
         }
-      });
+      }
+    });
+    return found;
+  }
+
+  UI.prototype.gotoDecoration = function( dec ) {
+    var self = this;
+    var r = dec.range;
+    return self.editFile(r.path).then( function() {
+      var menu = dec.type==="spellcheck" ? self.spellCheckMenu : (dec.type==="error" || dec.type==="warning" ? self.errorMenu : null);
+      if (menu) {
+        self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
+        var text = self.editor.getModel().getValueInRange(r);
+        setTimeout( function() { 
+          menu.startShowingAt(null, r, text, dec); 
+        }, 50 );        
+      }
     });
   }
 

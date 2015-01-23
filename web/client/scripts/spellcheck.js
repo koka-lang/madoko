@@ -10,28 +10,21 @@ define(["../scripts/map","../scripts/util","../scripts/promise"],
         function(Map,Util,Promise) {
 
 var SpellCheckMenu = (function() {
-  function SpellCheckMenu(checker,replacer,remover) {
+  function SpellCheckMenu(checker,replacer,remover,gotoNext) {
     var self = this;
     self.checker = checker;
     self.replacer = replacer;
     self.remover  = remover;
+    self.gotoNext = gotoNext;
     self.text = null;
   }
 
   SpellCheckMenu.prototype.getClassName = function() {
-    return "menu spellcheck";
+    return "menu hover spellcheck";
   }  
 
   SpellCheckMenu.prototype.triggerOn = function( elem, range, text, info ) {
     return (elem==null || Util.hasClassName(elem,"spellerror"));
-  }
-
-  SpellCheckMenu.prototype.setWidget = function( widget ) {
-    var self = this;
-    self.widget = widget;
-    widget._domNode.addEventListener("click", function(ev) {
-      self.onClick(ev);
-    });
   }
   
   SpellCheckMenu.prototype.setContext = function( elem, range, text, info ) {
@@ -73,11 +66,11 @@ var SpellCheckMenu = (function() {
     if (cmd==="ignore") {
       self.checker.ignore( self.text );
       if (self.remover) self.remover(null,self.text); // remove decoration   
+      if (self.gotoNext) self.gotoNext(self.range.getStartPosition());
     }
-    else if (cmd==="next" && self.remover) {
-      self.remover(null,null);
+    else if (cmd==="next" && self.gotoNext) {
+      self.gotoNext(self.range.getStartPosition());
     }
-    self.widget.hide();
   }
 
   SpellCheckMenu.prototype.onKeyDown = function(ev) {
@@ -87,7 +80,6 @@ var SpellCheckMenu = (function() {
       ev.stopPropagation();
       self.checker.ignore( self.text );
       if (self.remover) self.remover(null,self.text); // remove decoration   
-      self.widget.hide();
     }
   }
 

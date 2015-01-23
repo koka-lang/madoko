@@ -160,7 +160,7 @@ html,body,#main {
   padding: 0pt;
 }
 
-.header-bar, .toolbar, modal, .load-error, .auth-redirect, .spellcheck .info {
+.header-bar, .toolbar, modal, .load-error, .auth-redirect, .menu.hover .info {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
@@ -582,7 +582,7 @@ span.save-link:hover {
   color: inherit;
 }
 
-.spellcheck .shortcut {
+.menu.hover .shortcut {
   padding-top: 0em;
 }
 
