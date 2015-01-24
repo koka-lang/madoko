@@ -1,4 +1,4 @@
-Description: 
+Documentation: 
    Use LaTeX `theorem`, `lemma`, etc. environments directly and without using
    the Madoko labeling and numbering. Useful for certain document classes.
 @tex ~Theorem    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=theorem}&nl;&source;&nl;~End Thm&nl;" notag

@@ -387,14 +387,13 @@ body.madoko, .madoko-body {
 }
 
 body.madoko, .madoko-body {
-  padding: 1em 2em;
-  max-width: 45em;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 0em 2em;
+  max-width: 90ex; /* about 90 characters */
+  margin: 1em auto;
 }
 
 body.madoko.preview {
-  padding: 0em 2em 0em 2em;
+  padding: 0em 1em;
 }
 
 .madoko p,
@@ -471,7 +470,6 @@ body.madoko.preview {
 
 @media only screen and (max-device-width:1024px) {
   body.madoko, .madoko-body {
-    padding-left: 1ex;
-    padding-right: 1ex;
+    padding: 0ex 1ex;
   }
 }

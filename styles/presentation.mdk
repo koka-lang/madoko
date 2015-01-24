@@ -1,4 +1,4 @@
-Description: 
+Documentation: 
     Include this file to create slide shows using [Reveal.js] for HTML and
     the [Beamer] package for LaTeX.
     * Slides are started on a level 1 `#` or 2 `##` header.
@@ -79,7 +79,7 @@ Html Header   :
     <script src="&reveal-url;/lib/js/html5shiv.js"></script>
     <![endif]-->
     <style>
-    body.madoko {
+    body.madoko-body {
       margin: 0pt;
       padding: 0pt;
       max-width: 100%;      
@@ -177,6 +177,7 @@ Html Header   :
       height  : 100% !important;
       width   : auto!important;
       padding : 0pt !important;
+      margin  : 0pt !important;
       overflow: hidden !important;
     }            
     body.preview .reveal .slides .fragment {
@@ -217,7 +218,7 @@ Html Header   :
       font-size: 75%;
     }
     body.madoko.preview.static {
-      padding: 0em 1em 0em 1em !important;
+      padding: 0em 1em !important;
     }
     body.madoko.preview.static .reveal pre {
       width: 95%;
