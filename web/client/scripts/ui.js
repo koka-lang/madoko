@@ -4084,7 +4084,8 @@ var symbolsMath = [
         glyphType: error.glyphType || error.type || type,
         sticky: sticky, 
         outdated: false, 
-        //message: error.message, 
+        // message: error.message, 
+        // menu: self.errorMenu,
         options: { htmlMessage: Util.escape(error.message), isWholeLine: true },
         range: newRange(error.range),
         expire: 0, // does not expire
@@ -4138,7 +4139,8 @@ var symbolsMath = [
         outdated: false, 
         //glyphType: "spellcheck",
         //expire: now + (60000), // expire merges after 1 minute?
-        message: err.message, 
+        // message: err.message, 
+        menu: self.spellCheckMenu,
         range: newRange(err.range),
         options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 0 },
       };
@@ -4257,9 +4259,7 @@ var symbolsMath = [
       var found = null;
       var path = self.editName;
       if (!position) position = self.editor.getPosition();
-      
  
-
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
           if (dec.range.path === path) {
@@ -4309,7 +4309,7 @@ var symbolsMath = [
     var self = this;
     var r = dec.range;
     return self.editFile(r.path).then( function() {
-      var menu = dec.type==="spellcheck" ? self.spellCheckMenu : (dec.type==="error" || dec.type==="warning" ? self.errorMenu : null);
+      var menu = dec.menu;
       if (menu) {
         self.editor.focus();
         self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
