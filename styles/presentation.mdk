@@ -81,7 +81,8 @@ Html Header   :
     <style>
     body.madoko {
       margin: 0pt;
-      padding: 0pt;      
+      padding: 0pt;
+      max-width: 100%;      
     }
     .madoko .reveal h1 {
         font-size: 3.7em;

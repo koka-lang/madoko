@@ -387,7 +387,10 @@ body.madoko, .madoko-body {
 }
 
 body.madoko, .madoko-body {
-  padding: 1em 16% 1em 12%;
+  padding: 1em 2em;
+  max-width: 45em;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 body.madoko.preview {

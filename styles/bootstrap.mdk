@@ -15,7 +15,11 @@ Html Header   :
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <style>
-      body.madoko, body.madoko.preview[data-view=full] { padding: 0pt; }
+      body.madoko, body.madoko.preview[data-view=full] { 
+        padding: 0pt;
+        margin: 0pt;
+        max-width: 100%;
+      }
     </style>
 Html Footer   :
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
