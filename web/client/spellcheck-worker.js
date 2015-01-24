@@ -27,7 +27,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
     // restore base dictionary
     if (!checker.baseDictionaryTable) checker.baseDictionaryTable = checker.dictionaryTable;
     checker.dictionaryTable = Util.copy(checker.baseDictionaryTable);
-    if (ignores) {
+    if (ignores && checker.ignores !== ignores) {
       // add ignores
       if (!/^\d+\r?\n/.test(ignores)) ignores = "0\n" + ignores;
       // parse ignores as dictionary
@@ -40,8 +40,9 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
           }
           checker.dictionaryTable[word].push(rules);
         }
-      });  
+      });
     }
+    checker.ignores = ignores;  
   }
 
 
@@ -186,7 +187,9 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
       var t0 = Date.now();            
       if (req.type === "dictionary") {
         checker = new Typo( req.lang, req.affData, req.dicData, req.options );   
-        if (req.ignores) updateIgnores(req.ignores); 
+        if (req.ignores != null) {
+          updateIgnores(req.ignores); 
+        }
         self.postMessage( {
           messageId: req.messageId,
           err: null,
@@ -200,13 +203,12 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       if (req.type === "suggest" && checker != null) {
-        console.log("spell check: suggest: " + req.word);
         var suggestions = [];
         if (req.word) { // current algorithm takes too long on longer words...
           suggestions = checker.suggest(req.word || "", req.limit || 8);
         }
         var time   = (Date.now() - t0).toString();
-        console.log("spell check: suggest: " + time + "ms");
+        console.log("spell check: suggest: " + req.word + ", length " + req.word.length.toString() + ", in " + time.toString() + "ms");
         self.postMessage( {
           messageId  : req.messageId, // message id is required to call the right continuation
           message    : "",
@@ -216,9 +218,12 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
         });
       }
       else if (req.type==="check" && checker != null) {
+        if (req.ignores != null) {
+          updateIgnores(req.ignores);
+        }
         var files = [];
         req.files.forEach( function(file) {
-          console.log("spell check: " + file.path);
+          //console.log("spell check: " + file.path);
           var errs = checkText( file.text, req.options );
           files.push({ path: file.path, errors: errs });
         });

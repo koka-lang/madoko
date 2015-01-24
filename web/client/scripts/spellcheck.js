@@ -44,8 +44,10 @@ var SpellCheckMenu = (function() {
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
     return self.checker.suggest(self.text,{}).then( function(res) {
-      var buttons = res.suggestions.reverse().map( function(suggest) {
-        return "<div class='button' data-replace='" + encodeURIComponent(suggest) + "'><span class='word'>" +Util.escape(suggest) + "</span></div>"
+      self.suggestions = res.suggestions;
+      var buttons = res.suggestions.map( function(suggest, idx) {
+        return "<div class='button' data-replace='" + idx.toString() + "'><span class='word'>" +Util.escape(suggest) + "</span>" +
+                     "<span class='shortcut info'>(Alt-" + (idx+1).toString() + ")</span></div>";
       });
       return (buttons.length === 0 ? "<div class='button'><span class='info'>No suggestions found</span></div><hr>" : buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : ""));
     });
@@ -57,10 +59,9 @@ var SpellCheckMenu = (function() {
     while( target && target.nodeName !== "DIV" ) target = target.parentNode;
     if (!target || !Util.hasClassName(target,"button")) return;
 
-    var replace = target.getAttribute("data-replace");
-    if (self.replacer && replace) {
-      self.replacer( self.range, decodeURIComponent(replace) );
-      if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
+    var replace = parseInt(target.getAttribute("data-replace"));
+    if (self.replacer && !isNaN(replace)) {
+      self.replaceWith(replace);
     }
     var cmd = target.getAttribute("data-cmd");
     if (cmd==="ignore") {
@@ -73,14 +74,21 @@ var SpellCheckMenu = (function() {
     }
   }
 
-  SpellCheckMenu.prototype.onKeyDown = function(ev) {
+  SpellCheckMenu.prototype.ignore = function(ev) {
     var self = this;
-    if (ev.key==="I" && ev.altKey) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      self.checker.ignore( self.text );
-      if (self.remover) self.remover(null,self.text); // remove decoration   
-      if (self.gotoNext) self.gotoNext(self.range.getStartPosition());
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (self.checker)  self.checker.ignore( self.text );
+    if (self.remover)  self.remover(null,self.text); // remove decoration   
+    if (self.gotoNext) self.gotoNext(self.range.getStartPosition());    
+  }
+
+  SpellCheckMenu.prototype.replaceWith = function(i) {
+    var self = this;
+    var replace = self.suggestions[i];
+    if (replace && self.replacer) {
+      self.replacer( self.range, replace );
+      if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
     }
   }
 
@@ -111,10 +119,12 @@ var SpellChecker = (function() {
     var self = this;
     if (ev.type === "update" && ev.file && ev.file.path === "ignores.dic") { 
       self.files = new Map();
+      /*
       self.scWorker.postMessage({
         type: "ignores",
         ignores: ev.file.content,
       });
+      */
     }
     else if (ev.type==="delete") {
       self.files.remove(ev.file.path);
@@ -157,17 +167,15 @@ var SpellChecker = (function() {
       return Util.requestGET( dicPath + ".dic" ).then( function(dicData) {
         return Util.requestGET( { url: dicPath + "_extra.dic", defaultContent: "" } ).then( function(dicExtraData) {
           return Util.requestGET( { url: "dictionaries/generic.dic", defaultContent: "" } ).then( function(dicGeneric) {
-            return self._readIgnores().then( function(ignores) {
-              return self.scWorker.postMessage( { 
-                type: "dictionary",
-                lang: lang,
-                affData: affData,
-                dicData: dicData + "\n" + dicExtraData + "\n" + dicGeneric,
-                ignores: ignores,
-              }).then( function() {
-                self.dictionaries.set(lang,true);
-              });
+            return self.scWorker.postMessage( { 
+              type: "dictionary",
+              lang: lang,
+              affData: affData,
+              dicData: dicData + "\n" + dicExtraData + "\n" + dicGeneric,
+            }).then( function() {
+              self.dictionaries.set(lang,true);
             });
+          
           });
         });
       });
@@ -179,41 +187,44 @@ var SpellChecker = (function() {
   {
     var self = this;
     return self.addDictionary().then( function() {
-      var files = [];
-      if (ctx.path && text) {
-        var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
-        info.text = text;
-        info.errors = [];
-        files.push( { path: ctx.path, text: info.text } );
-      }
-      self.storage.forEachFile( function(file) {
-        if (file.path !== ctx.path && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
-          var info = self.files.get(file.path);
-          if (info) {
-            if (info.text === file.content) return; // already done, skip
-            info.text = file.content;
-            info.errors = [];
+      return self._readIgnores().then( function(ignores) {
+        var files = [];
+        if (ctx.path && text) {
+          var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
+          info.text = text;
+          info.errors = [];
+          files.push( { path: ctx.path, text: info.text } );
+        }
+        self.storage.forEachFile( function(file) {
+          if (file.path !== ctx.path && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
+            var info = self.files.get(file.path);
+            if (info) {
+              if (info.text === file.content) return; // already done, skip
+              info.text = file.content;
+              info.errors = [];
+            }
+            else {
+              self.files.set(file.path,{ text: file.content, errors: [] });
+            }
+            files.push({path: file.path, text: file.content});
           }
-          else {
-            self.files.set(file.path,{ text: file.content, errors: [] });
+        });
+        Util.message( "spell check " + ctx.round + " start", Util.Msg.Trace );
+        var msg = {
+          type   : "check",
+          files  : files,
+          options: options,
+          ignores: ignores,
+        };
+        return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
+          if (res.timedOut) {
+            throw new Error("spell checker time-out");
           }
-          files.push({path: file.path, text: file.content});
-        }
-      });
-      Util.message( "spell check " + ctx.round + " start", Util.Msg.Trace );
-      var msg = {
-        type   : "check",
-        files  : files,
-        options: options,
-      };
-      return self.scWorker.postMessage( msg, 30000 ).then( function(res) {
-        if (res.timedOut) {
-          throw new Error("spell checker time-out");
-        }
-        else if (res.err) {
-          throw err;
-        }
-        else return self.onCheckComplete(res,ctx);
+          else if (res.err) {
+            throw err;
+          }
+          else return self.onCheckComplete(res,ctx);
+        });
       });
     });
   }

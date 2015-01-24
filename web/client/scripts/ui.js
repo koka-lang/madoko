@@ -42,7 +42,7 @@ function bindKey( key, action ) {
   if (typeof key === "string") key = { key: key, stop: true };
   var code = key.code || 0;
   if (code===0) {
-    var cap = /(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z])/.exec(key.key.toUpperCase());
+    var cap = /^(ALT[\+\-])?(CTRL[\+\-])?(META[\+\-])?(SHIFT[\+\-])?([A-Z0-9])$/.exec(key.key.toUpperCase());
     if (cap) {
       code = cap[5].charCodeAt(0);
       if (cap[1]) code |= KeyMask.altKey;
@@ -496,7 +496,25 @@ var UI = (function() {
     bindKey( "Alt-N",  function()   { self.gotoNextError(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
-    
+    bindKey( { key: "Alt-I", stop: true },  function(ev)   { 
+      if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
+        self.spellCheckMenu.menu.ignore(ev);
+        self.spellCheckMenu.hide();
+      }
+    });
+    for(var i = 1; i <= 8; i++) {
+      (function(idx) { 
+        bindKey( "Alt-" + idx.toString(),  function(ev)   { 
+          if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            self.spellCheckMenu.menu.replaceWith(idx-1);
+            self.spellCheckMenu.hide();
+          }
+        });
+      })(i);
+    };
+
     // --- save links
     var saveLink = function(ev) {
       var elem = ev.target;
@@ -4293,6 +4311,7 @@ var symbolsMath = [
     return self.editFile(r.path).then( function() {
       var menu = dec.type==="spellcheck" ? self.spellCheckMenu : (dec.type==="error" || dec.type==="warning" ? self.errorMenu : null);
       if (menu) {
+        self.editor.focus();
         self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
         var text = self.editor.getModel().getValueInRange(r);
         setTimeout( function() { 

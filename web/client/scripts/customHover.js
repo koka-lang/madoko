@@ -54,7 +54,7 @@ var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) {
 var visibleHover = null;
 
 function createHoverWidget(superClass) {
-  return WinJS.Class.derive(superClass, function ContentWidget(widgetId,editor,customMenu) {
+  return WinJS.Class.derive(superClass, function HoverWidget(widgetId,editor,customMenu) {
     superClass.call(this, widgetId, editor);
     this.superClass = superClass;
     this.id = widgetId;
@@ -92,11 +92,13 @@ function createHoverWidget(superClass) {
       visibleHover = this;
     },
 
+    /*
     onKeyDown: function(ev) {
       if (this.isVisible()) {
         this.menu.onKeyDown(ev);
       }
     },
+    */
 
     isVisible: function() {
       return (this.lastRange != null);
@@ -130,24 +132,24 @@ var GlyphWidget   = createHoverWidget(HoverWidgets.GlyphHoverWidget);
 function addCustomHover(widgetId,ed,customMenu) {
   
   var editor = ed;
-  var contentWidget = (widgetId.indexOf("glyph") >= 0 ? new GlyphWidget(widgetId,editor,customMenu) : new ContentWidget(widgetId,editor,customMenu));
+  var widget = (widgetId.indexOf("glyph") >= 0 ? new GlyphWidget(widgetId,editor,customMenu) : new ContentWidget(widgetId,editor,customMenu));
  
   function hide() {
-    contentWidget.hide();
+    widget.hide();
   }
 
   function onKeyDown(ev) {
-    if (contentWidget.isVisible()) {
-      contentWidget.onKeyDown(ev);
+    if (widget.isVisible() && !ev.altKey) {
+      // widget.onKeyDown(ev);
       hide();
     }
   }
 
   function onMouseDown(ev) {
     if (!ev.target) return
-    if (!contentWidget.isVisible()) return;
+    if (!widget.isVisible()) return;
     var targetType = ev.target.type;
-    if ((targetType !== Editor.MouseTargetType.CONTENT_WIDGET && targetType !== Editor.MouseTargetType.OVERLAY_WIDGET) || e.target.detail !== contentWidget.id) {
+    if ((targetType !== Editor.MouseTargetType.CONTENT_WIDGET && targetType !== Editor.MouseTargetType.OVERLAY_WIDGET) || e.target.detail !== widget.id) {
       hide();
       return;
     }
@@ -157,7 +159,7 @@ function addCustomHover(widgetId,ed,customMenu) {
     if (!e.target) return;
     var targetType = e.target.type;
 
-    if ((targetType === Editor.MouseTargetType.CONTENT_WIDGET || targetType === Editor.MouseTargetType.OVERLAY_WIDGET) && e.target.detail === contentWidget.id) {
+    if ((targetType === Editor.MouseTargetType.CONTENT_WIDGET || targetType === Editor.MouseTargetType.OVERLAY_WIDGET) && e.target.detail === widget.id) {
       return;
     }
     
@@ -186,7 +188,7 @@ function addCustomHover(widgetId,ed,customMenu) {
 
       if (range) {
         var text = editor.getModel().getValueInRange(range);
-        contentWidget.startShowingAt(e.target.element, range, text, info );
+        widget.startShowingAt(e.target.element, range, text, info );
         return;
       }
     }
@@ -200,7 +202,7 @@ function addCustomHover(widgetId,ed,customMenu) {
   editor.addListener(Constants.EventType.MouseDown, onMouseDown);
   editor.addListener('scroll', hide);
 
-  return contentWidget;
+  return widget;
 }
 
 return {

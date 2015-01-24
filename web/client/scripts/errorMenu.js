@@ -58,10 +58,6 @@ var ErrorMenu = (function() {
     }
   }
 
-  ErrorMenu.prototype.onKeyDown = function(ev) {
-    var self = this;
-  }
-
   return ErrorMenu;
 })();          
 

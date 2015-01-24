@@ -1121,7 +1121,7 @@ var Storage = (function() {
   Storage.prototype._syncMsg = function( file, msg, action ) {
     var self = this;
     var message = file.path + (action ? ": " + action : "") + (msg ? ": " + msg : "");
-    Util.message(message,Util.Msg.Trace);
+    if (!Util.startsWith(msg,"up-to-date")) Util.message(message,Util.Msg.Trace);
     return message;
   }
 
