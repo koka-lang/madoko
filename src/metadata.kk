@@ -101,7 +101,7 @@ function defaultMeta( options : options ) : string {
       @"~Aside    : html-elem='aside'",
       @"~Nav      : html-elem='nav'",
 
-      @".Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note' margin-left=1em",
+      @".Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'",
       @"~Remark   : .Note caption='Remark'",
       @"~Todo     : .Note caption='Todo'",
       @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
