@@ -103,7 +103,7 @@ function defaultMeta( options : options ) : string {
 
       @".Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'",
       @"~Remark   : .Note caption='Remark'",
-      @"~Todo     : .Note caption='Todo'",
+      @".Todo     : .Note caption='Todo'",
       @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
 
       @".Framed   : border-style=solid border-color=black border-width=1px",

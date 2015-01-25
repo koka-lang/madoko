@@ -10,8 +10,9 @@ define(["../scripts/map","../scripts/util","../scripts/promise"],
         function(Map,Util,Promise) {
 
 var SpellCheckMenu = (function() {
-  function SpellCheckMenu(checker,replacer,remover,gotoNext) {
+  function SpellCheckMenu(checker,findDecoration,replacer,remover,gotoNext) {
     var self = this;
+    self.findDecoration = findDecoration;
     self.checker = checker;
     self.replacer = replacer;
     self.remover  = remover;
@@ -31,11 +32,22 @@ var SpellCheckMenu = (function() {
     var self = this;
     self.range = range;
     self.text = text;
-    self.info = info;
+    self.info = info; 
+  }
+
+  SpellCheckMenu.prototype._init = function() {
+    var self = this;
+    if (!self.info) return;
+    self.decoration = self.findDecoration(self.info.id);
+    if (self.decoration) {
+      self.range = self.decoration.range;
+      self.text = self.decoration.tag;
+    }
   }
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
+    self._init();
     return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
                 "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
             "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
@@ -43,13 +55,14 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
+    self._init();
     return self.checker.suggest(self.text,{}).then( function(res) {
       self.suggestions = res.suggestions;
       var buttons = res.suggestions.map( function(suggest, idx) {
         return "<div class='button' data-replace='" + idx.toString() + "'><span class='word'>" +Util.escape(suggest) + "</span>" +
                      "<span class='shortcut info'>(Alt-" + (idx+1).toString() + ")</span></div>";
       });
-      return (buttons.length === 0 ? "<div class='button'><span class='info'>No suggestions found</span></div><hr>" : buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : ""));
+      return (buttons.length === 0 ? "<div><span class='info'>No suggestions found</span></div><hr>" : buttons.join("") + (res.suggestions.length > 0 ? "<hr>" : ""));
     });
   }
 

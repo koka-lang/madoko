@@ -68,8 +68,8 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
   Rule("ielipsis",  regex(@"^\.\.\."), inlineDots ),
   
-  Rule("texinline", regex(@"^\$((?:[^\\\$]|\\[\s\S])+)\$(?:" + attrs + ")?"), inlineMath ),
-  Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$]"), inlineMathBlock ),
+  Rule("texinline", regex(@"^\$(?!\$)((?:[^\\\$]|\\[\s\S])+)\$(?:" + attrs + ")?"), inlineMath ),
+  Rule("texblock1", regex(@"^\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$"), inlineMathBlock ),
   Rule("texblock2", regex(@"^\\\[( *\n(?:[^\\]|\\[^\]])*)\\\]"), inlineMathBlock ),
 
   Rule("textcite",  regex(@"^([\n ]*)(([\-+!]?)@" + rxCitename + ")"), inlineCite ),

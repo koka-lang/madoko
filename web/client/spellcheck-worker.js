@@ -159,11 +159,15 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   	});
   }
 
-	var rxSpecial= /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\] */g;
-  var rxMathEnv = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\1 *(?=\n|$)/;
-  var rxMath    = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
-  var rxFenced  = /\n *(```+).*\n[\s\S]+?\n *\1 *(?=\n+|$)/;
-  var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMath],"gi");
+	var rxSpecial  = /\[(?:INCLUDE|BIB|TITLE|TOC|FOOTNOTES)\b[^\]]*\] */g;
+  var rxFenced   = /\n *(```+).*\n[\s\S]+?\n *\1 *(?=\n+|$)/;
+  var rxMathEnv  = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\2 *(?=\n|$)/;
+  var rxMathEnv2 = /\n *(~+) *Begin +(Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\3 *End +\4(?=\n|$)/;
+  var rxHtml     = /\n *<(\w+)[^\n>]*>[\s\S]*?\n *<\/\5 *> *(?=\n|$)/;
+  var rxMathEnv3 = /\n *\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$ *(?=\n|$)/;
+  var rxMathEnv4 = /\n *\\\[( *\n(?:[^\\]|\\[^\]])*)\\\] *(?=\n|$)/;
+  var rxMath     = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
+  var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMathEnv2,rxHtml,rxMath,rxMathEnv3,rxMathEnv4],"gi");
 
   function checkText( text, options ) {
     var text1 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"");

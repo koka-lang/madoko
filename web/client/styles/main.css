@@ -767,7 +767,7 @@ div.boxed {
 .monaco-editor .spellerror {
   border-bottom: 1px dotted red;
 }
-.monaco-editor .glyph-warning, .monaco-editor .glyph-spellcheck {
+.monaco-editor .glyph-warning, .monaco-editor .glyph-spellerror {
   background: url(../images/glyph-warning.png) no-repeat center;
 }
 .monaco-editor .glyph-error {

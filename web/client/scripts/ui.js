@@ -630,15 +630,22 @@ var UI = (function() {
       ev.dataTransfer.dropEffect = "copy";
     }, false);
     
-    self.spellCheckMenu = CustomHover.create("spellcheck.content.hover.menu",self.editor, new SpellCheck.SpellCheckMenu(self.spellChecker, function(range,replacement) {
-      var command = new ReplaceCommand.ReplaceCommand( range, replacement );
-      self.editor.executeCommand("madoko",command);
-      setTimeout( function() { self.gotoNextError(); }, 50 );
-    }, function(id,tag) {
-      self.removeDecorationsOn(id,tag);
-    }, function(pos) {
-      self.gotoNextError(pos);
-    }));
+    self.spellCheckMenu = CustomHover.create("spellcheck.content.hover.menu",self.editor, 
+      new SpellCheck.SpellCheckMenu(self.spellChecker, 
+        function(id) {
+          return self.findDecorationById(id);
+        },
+        function(range,replacement) {
+          var command = new ReplaceCommand.ReplaceCommand( range, replacement );
+          self.editor.executeCommand("madoko",command);
+          setTimeout( function() { self.gotoNextError(); }, 50 );
+        }, 
+        function(id,tag) {
+          self.removeDecorationsOn(id,tag);
+        }, 
+        function(pos) {
+          self.gotoNextError(pos);
+        }));
 
     self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor, new ErrorMenu.ErrorMenu( function(pos) {
       self.gotoNextError(pos);
@@ -4085,7 +4092,7 @@ var symbolsMath = [
         sticky: sticky, 
         outdated: false, 
         // message: error.message, 
-        // menu: self.errorMenu,
+        menu: self.errorMenu,
         options: { htmlMessage: Util.escape(error.message), isWholeLine: true },
         range: newRange(error.range),
         expire: 0, // does not expire
@@ -4134,7 +4141,7 @@ var symbolsMath = [
       var dec = { 
         id: null, 
         tag: err.tag,
-        type: "spellcheck",
+        type: "spellerror",
         sticky: true, 
         outdated: false, 
         //glyphType: "spellcheck",
@@ -4146,7 +4153,7 @@ var symbolsMath = [
       };
       decs.push(dec);      
     });
-    self.removeDecorations(true,"spellcheck");
+    self.removeDecorations(true,"spellerror");
     self.addDecorations(decs);      
   }
 
@@ -4250,7 +4257,8 @@ var symbolsMath = [
   }
 
   function isErrorType(dec) {
-    return (dec.type==="spellcheck" || dec.type==="warning" || dec.type==="error");
+    var type = dec.type || dec.glyphMarginClassName || dec.linesDecorationsClassName || dec.inlineClassName;
+    return (/\b(spellerror|error|warning)\b/.test(type));
   }
 
   UI.prototype.gotoNextError = function(position) {
@@ -4259,7 +4267,15 @@ var symbolsMath = [
       var found = null;
       var path = self.editName;
       if (!position) position = self.editor.getPosition();
- 
+      var decs = self.editor.getModel().getAllDecorations();
+      decs.forEach( function(dec) {
+        if (position.isBefore(dec.range.getStartPosition())) {
+          if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
+            found = self.findDecorationById(dec.id, dec.range);
+          }
+        }
+      });
+      /*
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
           if (dec.range.path === path) {
@@ -4271,6 +4287,7 @@ var symbolsMath = [
           }
         }
       });
+      */
       if (!found) {
         self.documentFilesFrom(path).some( function(fpath) {
           self.decorations.forEach( function(dec) {
@@ -4286,6 +4303,23 @@ var symbolsMath = [
       if (!found) return;
       return self.gotoDecoration(found);
     });
+  }
+
+  UI.prototype.findDecorationById = function(id, newrange ) {
+    var self = this;
+    var found = null;
+    self.decorations.some( function(dec) {
+      if (dec.id === id) {
+        if (newrange) {
+          var path = dec.range.path;
+          dec.range = newRange(newrange);
+          dec.range.path = path;
+        }
+        found = dec;
+        return true;
+      }
+    });
+    return found;
   }
 
   UI.prototype.findErrorDecoration = function(path,pos) {
@@ -4308,11 +4342,11 @@ var symbolsMath = [
   UI.prototype.gotoDecoration = function( dec ) {
     var self = this;
     var r = dec.range;
-    return self.editFile(r.path).then( function() {
+    return self.editFile(dec.path || r.path).then( function() {
+      self.editor.focus();
+      self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
       var menu = dec.menu;
       if (menu) {
-        self.editor.focus();
-        self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
         var text = self.editor.getModel().getValueInRange(r);
         setTimeout( function() { 
           menu.startShowingAt(null, r, text, dec); 
