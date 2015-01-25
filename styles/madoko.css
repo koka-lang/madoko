@@ -388,7 +388,7 @@ body.madoko, .madoko-body {
 
 body.madoko, .madoko-body {
   padding: 0em 2em;
-  max-width: 90ex; /* about 90 characters */
+  max-width: 80ex; /* about 80 characters */
   margin: 1em auto;
 }
 
