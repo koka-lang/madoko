@@ -291,9 +291,8 @@ var Runner = (function() {
           endLineNumber: line,
           startColumn: 1,
           endColumn: 1,
-          fileName: fileName,
         };
-        errors.push( { type: cap[1].toLowerCase(), range: range, message: message } );  
+        errors.push( { type: cap[1].toLowerCase(), range: range, path: fileName, message: message } );  
       }
     }
 
@@ -314,9 +313,8 @@ var Runner = (function() {
           endLineNumber: line,
           startColumn: 1,
           endColumn: 1,
-          fileName: fileName,
         };
-        errors.push( { type: cap[1].toLowerCase(), glyphType: "error", range: range, message: message } );  
+        errors.push( { type: cap[1].toLowerCase(), glyphType: "error", path: fileName, range: range, message: message } );  
       }
     }
 
@@ -325,8 +323,8 @@ var Runner = (function() {
     rx = /^(.*)\r?\n[ \t]*![ \t]*LaTeX Error:(.+)/mgi;    
     while ((cap = rx.exec(output)) != null) {
       if (!(/^[ \t]*error:[ \t]*source line:/.test(cap[1]))) {
-        var range = { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1, fileName: docname};
-        errors.unshift( { type: "error", range: range, message: cap[2] } ); 
+        var range = { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1 };
+        errors.unshift( { type: "error", path: docname, range: range, message: cap[2] } ); 
       }
     }
     
@@ -335,7 +333,7 @@ var Runner = (function() {
     if (errors.length > 0) {
       var err = errors[0]; 
       var msg = err.message.replace(/^\s*(.*)[\s\S]*/,"$1"); // just the first line    
-      return (err.type + ": " + err.range.fileName + ":" + err.range.startLineNumber + ": " + msg);
+      return (err.type + ": " + err.path + ":" + err.range.startLineNumber + ": " + msg);
     }
     else {
       var log = Util.basename(docname) + ".log";

@@ -35,9 +35,11 @@ var SpellCheckMenu = (function() {
     self.info = info; 
   }
 
-  SpellCheckMenu.prototype._init = function() {
+  SpellCheckMenu.prototype._update = function() {
     var self = this;
     if (!self.info) return;
+    // try to improve info with the latest found decoration information
+    // in particular, the range&text may have changed due to a previous replacement and re-spellcheck
     self.decoration = self.findDecoration(self.info.id);
     if (self.decoration) {
       self.range = self.decoration.range;
@@ -47,7 +49,7 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    self._init();
+    self._update();
     return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
                 "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
             "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
@@ -55,7 +57,7 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
     var self = this;
-    self._init();
+    self._update();
     return self.checker.suggest(self.text,{}).then( function(res) {
       self.suggestions = res.suggestions;
       var buttons = res.suggestions.map( function(suggest, idx) {
@@ -78,11 +80,9 @@ var SpellCheckMenu = (function() {
     }
     var cmd = target.getAttribute("data-cmd");
     if (cmd==="ignore") {
-      self.checker.ignore( self.text );
-      if (self.remover) self.remover(null,self.text); // remove decoration   
-      if (self.gotoNext) self.gotoNext(self.range.getStartPosition());
+      self.ignore(ev);
     }
-    else if (cmd==="next" && self.gotoNext) {
+    else if (cmd==="next" && self.gotoNext) {      
       self.gotoNext(self.range.getStartPosition());
     }
   }
@@ -91,6 +91,7 @@ var SpellCheckMenu = (function() {
     var self = this;
     ev.preventDefault();
     ev.stopPropagation();
+    self._update();
     if (self.checker)  self.checker.ignore( self.text );
     if (self.remover)  self.remover(null,self.text); // remove decoration   
     if (self.gotoNext) self.gotoNext(self.range.getStartPosition());    
@@ -98,6 +99,7 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.replaceWith = function(i) {
     var self = this;
+    self._update();
     var replace = self.suggestions[i];
     if (replace && self.replacer) {
       self.replacer( self.range, replace );
@@ -272,12 +274,12 @@ var SpellChecker = (function() {
           info.errors.push({
             type: "spellcheck",
             tag: err.word,
+            path: file.path,
             range: {
               startLineNumber: err.line,
               endLineNumber: err.line,
               startColumn: err.column,
               endColumn: err.column + err.length,
-              path: file.path,
             },
             message: "possibly invalid word",
           });

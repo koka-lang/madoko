@@ -638,18 +638,24 @@ var UI = (function() {
         function(range,replacement) {
           var command = new ReplaceCommand.ReplaceCommand( range, replacement );
           self.editor.executeCommand("madoko",command);
-          setTimeout( function() { self.gotoNextError(); }, 50 );
+          setTimeout( function() { self.gotoNextError(); }, 100 );
         }, 
         function(id,tag) {
           self.removeDecorationsOn(id,tag);
         }, 
         function(pos) {
           self.gotoNextError(pos);
-        }));
+        }
+      )
+    );
 
-    self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor, new ErrorMenu.ErrorMenu( function(pos) {
-      self.gotoNextError(pos);
-    }));
+    self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor, 
+      new ErrorMenu.ErrorMenu( 
+        function(pos) {
+          self.gotoNextError(pos);
+        }
+      )
+    );
 
 
     // synchronize on cursor position changes
@@ -4007,7 +4013,7 @@ var symbolsMath = [
         else {
           newdecs.push(decoration);
           decoration.outdated = true;
-          if (decoration.id && decoration.range.path === self.editName) {
+          if (decoration.id && decoration.path === self.editName) {
             var dec = decoration.options || { isWholeLine : true };
             if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + '.outdated';
             if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated'; 
@@ -4061,7 +4067,7 @@ var symbolsMath = [
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
-        if (decoration.range.path === self.editName) {
+        if (decoration.path === self.editName) {
           var postfix = (decoration.outdated ? ".outdated" : "" );
           var dec = decoration.options || { isWholeLine: true };
           if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + postfix;
@@ -4073,9 +4079,18 @@ var symbolsMath = [
   }
 
   function newRange( rng ) {
-    var range =  new Range.Range( rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn );
-    if (rng.path) range.path = rng.path;
-    return range;
+    if (typeof rng === "number") { // a line number
+      return new Range.Range( rng, 1, rng, 1 );
+    }
+    if (rng.endColumn != null) {
+      return  new Range.Range( rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn );
+    }
+    else if (rng.lineNumber != null) { // it's a position 
+      return new Range.Range( rng.lineNumber, rng.column, rng.lineNumber, rng.column );
+    }
+    else {
+      return new Range.Range( 1, 0, 1, 0 );
+    }
   }
 
   UI.prototype.showErrors = function( errors, sticky, type ) {
@@ -4084,7 +4099,7 @@ var symbolsMath = [
 
     var decs = [];
     errors.forEach( function(error) {
-      if (!error.range.path) error.range.path = self.docName;
+      if (!error.path) error.path = self.docName;
       decs.push( { 
         id: null, 
         type: error.type || type,
@@ -4094,10 +4109,11 @@ var symbolsMath = [
         // message: error.message, 
         menu: self.errorMenu,
         options: { htmlMessage: Util.escape(error.message), isWholeLine: true },
+        path: error.path,
         range: newRange(error.range),
         expire: 0, // does not expire
       });
-      var msg = (error.type || type) + ": " + error.range.path + ":" + error.range.startLineNumber.toString() + ": " + error.message;
+      var msg = (error.type || type) + ": " + error.path + ":" + error.range.startLineNumber.toString() + ": " + error.message;
       Util.message( msg, error.type || type );
     });
 
@@ -4118,13 +4134,8 @@ var symbolsMath = [
         outdated: false, 
         expire: now + (60000), // expire merges after 1 minute?
         message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
-        range: newRange({
-          path: merge.path,
-          startLineNumber: merge.startLine,
-          endLineNumber: merge.endLine,
-          startColumn: 1,
-          endColumn: 1,
-        })
+        path: merge.path,
+        range: newRange( merge.startLine )
       };
       dec.marginType = dec.type;
       decs.push(dec);      
@@ -4138,6 +4149,7 @@ var symbolsMath = [
     var decs = [];
     var now = Date.now();
     errors.forEach( function(err) {
+      if (!err.path) err.path = self.editName;
       var dec = { 
         id: null, 
         tag: err.tag,
@@ -4148,6 +4160,7 @@ var symbolsMath = [
         //expire: now + (60000), // expire merges after 1 minute?
         // message: err.message, 
         menu: self.spellCheckMenu,
+        path: err.path,
         range: newRange(err.range),
         options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 0 },
       };
@@ -4172,13 +4185,8 @@ var symbolsMath = [
         outdated: false,
         expire: now + 15000,
         message: edit.message || "Being edited concurrently",
-        range: newRange({
-          path: edit.path,
-          startLineNumber: edit.line,
-          endLineNumber: edit.line,
-          startColumn: 1,
-          endColumn: 1,
-        })
+        path: edit.path,
+        range: newRange( edit.line ),
       });
     });
     self.removeDecorations(false,"edit");
@@ -4201,7 +4209,9 @@ var symbolsMath = [
           // overlapping range?
           // todo: check column range, perhaps merge messages?
           if (dec.type == dec2.type && (dec.options==null || dec.options.isWholeLine===true) &&
-              dec.range.path === dec2.range.path && dec.range.startLineNumber <= dec2.range.endLineNumber && dec.range.endLineNumber >= dec2.range.startLineNumber) {
+              dec.path === dec2.path && 
+                dec.range.startLineNumber <= dec2.range.endLineNumber && 
+                 dec.range.endLineNumber >= dec2.range.startLineNumber) {
             if (!dec.outdated && dec2.outdated) {
               // swap, so we remove the outdated one
               self.decorations[j] = dec;
@@ -4236,8 +4246,9 @@ var symbolsMath = [
     if (!path) path = self.editName;
     for (var i = 0; i < self.decorations.length; i++) {
       var dec = self.decorations[i];
-      if (dec.range.path === path && dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
-          (isGlyph ? dec.glyphType : dec.marginType) ) {
+      if (dec.path === path && 
+            dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
+              (isGlyph ? dec.glyphType : dec.marginType) ) {
         return dec.message;
       }
     }    
@@ -4278,7 +4289,7 @@ var symbolsMath = [
       /*
       self.decorations.forEach( function(dec) {
         if (isErrorType(dec)) {
-          if (dec.range.path === path) {
+          if (dec.path === path) {
             if (position.isBefore(dec.range.getStartPosition())) {
               if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
                 found = dec;
@@ -4291,8 +4302,8 @@ var symbolsMath = [
       if (!found) {
         self.documentFilesFrom(path).some( function(fpath) {
           self.decorations.forEach( function(dec) {
-            if (isErrorType(dec) && dec.range.path === fpath) {
-              if (found==null || (found.range.path===dec.range.path && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
+            if (isErrorType(dec) && dec.path === fpath) {
+              if (found==null || (found.path===dec.path && dec.range.getStartPosition().isBefore(found.range.getStartPosition()))) {
                 found = dec;
               }
             }
@@ -4310,11 +4321,7 @@ var symbolsMath = [
     var found = null;
     self.decorations.some( function(dec) {
       if (dec.id === id) {
-        if (newrange) {
-          var path = dec.range.path;
-          dec.range = newRange(newrange);
-          dec.range.path = path;
-        }
+        if (newrange) dec.range = newRange(newrange);
         found = dec;
         return true;
       }
@@ -4327,7 +4334,7 @@ var symbolsMath = [
     var found = null;
     self.decorations.forEach( function(dec) {
       if (isErrorType(dec)) {
-        if (dec.range.path === path) {
+        if (dec.path === path) {
           if (dec.range.containsPosition(pos) || dec.range.getStartPosition().equals(pos)) {
             if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
               found = dec;
@@ -4342,7 +4349,7 @@ var symbolsMath = [
   UI.prototype.gotoDecoration = function( dec ) {
     var self = this;
     var r = dec.range;
-    return self.editFile(dec.path || r.path).then( function() {
+    return self.editFile(dec.path).then( function() {
       self.editor.focus();
       self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
       var menu = dec.menu;
