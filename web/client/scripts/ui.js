@@ -325,7 +325,7 @@ var UI = (function() {
         self.spellCheck();
       }
       else {
-        self.removeDecorations(true,"spellcheck");
+        self.removeDecorations(true,"spellerror");
       }
     }
     else if (name==="fontScale") {
