@@ -4195,6 +4195,7 @@ var symbolsMath = [
         range: newRange(err.range),
         options: { 
           isOverlay:true, 
+          stickiness: 1, /* never grows at edges */
           inlineClassName: "spellerror",
           overviewRuler: {
             color: rulerColorError,
@@ -4331,19 +4332,6 @@ var symbolsMath = [
           }
         }
       });
-      /*
-      self.decorations.forEach( function(dec) {
-        if (isErrorType(dec)) {
-          if (dec.path === path) {
-            if (position.isBefore(dec.range.getStartPosition())) {
-              if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
-                found = dec;
-              }
-            }
-          }
-        }
-      });
-      */
       if (!found) {
         self.documentFilesFrom(path).some( function(fpath) {
           self.decorations.forEach( function(dec) {
@@ -4391,23 +4379,11 @@ var symbolsMath = [
     return found;
   }
 
-  UI.prototype.findEditDecoration = function(dec) {
-    if (dec.path !== self.editName) return null;
-    var decs = self.editor.getModel().getAllDecorations();
-    decs.forEach( function(edec) {
-      if (edec.id === dec.id) {
-        return edec;
-      }
-    });
-    return null;
-  }
-
   UI.prototype.gotoDecoration = function( dec ) {
     var self = this;
     var r = dec.range;
     return self.editFile(dec.path).then( function() {
       self.editor.focus();
-      var edec = self.findEditDecoration(dec);
       self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
       var menu = dec.menu;
       if (menu) {

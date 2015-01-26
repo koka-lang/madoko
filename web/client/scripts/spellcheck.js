@@ -79,7 +79,7 @@ var SpellCheckMenu = (function() {
     ev.stopPropagation();
     if (self.checker)  self.checker.ignore( self.text );
     if (self.remover)  self.remover(null,self.text); // remove decoration   
-    if (self.gotoNext) self.gotoNext(self.range.getStartPosition());    
+    if (self.gotoNext) self.gotoNext(self.range.getEndPosition());
   }
 
   SpellCheckMenu.prototype.replaceWith = function(i) {
@@ -88,7 +88,13 @@ var SpellCheckMenu = (function() {
     if (replace && self.replacer) {
       self.replacer( self.range, replace );
       if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
-      if (self.gotoNext) self.gotoNext(self.range.getStartPosition());
+      if (self.gotoNext) {
+        setTimeout( function() {
+          var pos = self.range.getStartPosition();
+          pos.column = pos.column + replace.length;
+          self.gotoNext(pos);
+        }, 100 );
+      }
     }
   }
 
