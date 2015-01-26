@@ -594,6 +594,8 @@ var UI = (function() {
         }
       }, [State.Syncing]);
     });
+
+    self.editor.addListener("")
     
     self.editorPane = document.getElementById("editor");
     self.editorPane.addEventListener("drop", function(ev) {      
@@ -638,7 +640,8 @@ var UI = (function() {
         function(range,replacement) {
           var command = new ReplaceCommand.ReplaceCommand( range, replacement );
           self.editor.executeCommand("madoko",command);
-          setTimeout( function() { self.gotoNextError(); }, 100 );
+          var adjust = replacement.length - (range.endColumn - range.startColumn + 1);
+          self.adjustDecorations( range.getStartPosition(), adjust );
         }, 
         function(id,tag) {
           self.removeDecorationsOn(id,tag);
@@ -4078,6 +4081,17 @@ var symbolsMath = [
     });
   }
 
+  UI.prototype.adjustDecorations = function(pos,colAdjust) {
+    var self = this;
+    var decs = self.editor.getModel().getLineDecorations( pos.lineNumber );
+    decs.forEach( function(dec) {
+      var r = dec.range;
+      if (pos.isBefore(r.getStartPosition())) {
+        dec.range = new Range.Range( r.startLineNumber, r.startColumn + colAdjust, r.endLineNumber, r.endColumn + colAdjust );
+      }
+    });
+  }
+
   function newRange( rng ) {
     if (typeof rng === "number") { // a line number
       return new Range.Range( rng, 1, rng, 1 );
@@ -4092,6 +4106,10 @@ var symbolsMath = [
       return new Range.Range( 1, 0, 1, 0 );
     }
   }
+
+  var rulerColorError = 'rgba(255,18,18,0.7)';
+  var rulerColorWarning= 'rgba(18,136,18,0.7)';
+  var rulerColorConcurrent = 'rgba(18,18,255,0.7)';
 
   UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
@@ -4108,7 +4126,14 @@ var symbolsMath = [
         outdated: false, 
         // message: error.message, 
         menu: self.errorMenu,
-        options: { htmlMessage: Util.escape(error.message), isWholeLine: true },
+        options: { 
+          htmlMessage: Util.escape(error.message), 
+          isWholeLine: true,
+          overviewRuler: {
+            color: error.type === "warning" ? rulerColorWarning : rulerColorError,
+            position: 4 /* Right */
+          },          
+        },
         path: error.path,
         range: newRange(error.range),
         expire: 0, // does not expire
@@ -4135,7 +4160,14 @@ var symbolsMath = [
         expire: now + (60000), // expire merges after 1 minute?
         message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
         path: merge.path,
-        range: newRange( merge.startLine )
+        range: newRange( merge.startLine ),
+        options: {
+          isWholeLine: true,
+          overviewRuler: {
+            color: rulerColorConcurrent,
+            position: 4 /* Right */
+          },
+        }        
       };
       dec.marginType = dec.type;
       decs.push(dec);      
@@ -4162,7 +4194,14 @@ var symbolsMath = [
         menu: self.spellCheckMenu,
         path: err.path,
         range: newRange(err.range),
-        options: { isWholeLine: false, inlineClassName: "spellerror", stickiness: 0 },
+        options: { 
+          isOverlay:true, 
+          inlineClassName: "spellerror",
+          overviewRuler: {
+            color: rulerColorError,
+            position: 4 /* Right */
+          },
+        },
       };
       decs.push(dec);      
     });
@@ -4187,6 +4226,13 @@ var symbolsMath = [
         message: edit.message || "Being edited concurrently",
         path: edit.path,
         range: newRange( edit.line ),
+        options: {
+          isWholeLine: true,
+          overviewRuler: {
+            color: rulerColorConcurrent,
+            position: 7 /* full */
+          },
+        }
       });
     });
     self.removeDecorations(false,"edit");
@@ -4346,11 +4392,23 @@ var symbolsMath = [
     return found;
   }
 
+  UI.prototype.findEditDecoration = function(dec) {
+    if (dec.path !== self.editName) return null;
+    var decs = self.editor.getModel().getAllDecorations();
+    decs.forEach( function(edec) {
+      if (edec.id === dec.id) {
+        return edec;
+      }
+    });
+    return null;
+  }
+
   UI.prototype.gotoDecoration = function( dec ) {
     var self = this;
     var r = dec.range;
     return self.editFile(dec.path).then( function() {
       self.editor.focus();
+      var edec = self.findEditDecoration(dec);
       self.editor.setSelection(new Selection.Selection(r.endLineNumber,r.endColumn,r.startLineNumber,r.startColumn),true,true,true);
       var menu = dec.menu;
       if (menu) {

@@ -15,8 +15,7 @@ var ErrorMenu = (function() {
     self.gotoNext = gotoNext;
     self.message = null;
     self.range = null;
-    self.text = null;
-    self.info = null;
+    self.message = null;
   }
 
   ErrorMenu.prototype.getClassName = function() {
@@ -28,16 +27,14 @@ var ErrorMenu = (function() {
   }
   
   ErrorMenu.prototype.setContext = function( elem, range, text, info ) {
-    var self = this;
-    self.range = range;
-    self.text = text;
-    self.info = info;
+    var self     = this;
+    self.range   = range;
+    self.message = self.info && self.info.options ? self.info.options.htmlMessage : "<unknown error>";
   }
 
   ErrorMenu.prototype.getContent = function() {
     var self = this;
-    var message = self.info && self.info.options ? self.info.options.htmlMessage : "<unknown error>";
-    return ("<div class='info'>" + message + "</div><hr>" + 
+    return ("<div class='info'>" + self.message + "</div><hr>" + 
             "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
   }
 
