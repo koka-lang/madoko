@@ -4011,7 +4011,7 @@ var symbolsMath = [
         else if (discardSticky || !decoration.sticky ||
                   (decoration.expire && decoration.expire < now)) {
           if (decoration.id) {
-            decoration.range = model.getDecorationRange(decoration.id);
+            updateDecorationRange(decoration, model);
             changeAccessor.removeDecoration(decoration.id);
             decoration.id = null;          
           }
@@ -4026,7 +4026,7 @@ var symbolsMath = [
             changeAccessor.changeDecorationOptions(decoration.id, dec );
           }
           else if (decoration.id) {
-            decoration.range = model.getDecorationRange(decoration.id);
+            updateDecorationRange(decoration, model);
             changeAccessor.removeDecoration(decoration.id);
             decoration.id = null;          
           }
@@ -4044,7 +4044,7 @@ var symbolsMath = [
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
         if ((id && id === decoration.id) || (tag && tag === decoration.tag)) {
-          decoration.range = model.getDecorationRange(decoration.id);
+          updateDecorationRange(decoration, model);
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4062,7 +4062,7 @@ var symbolsMath = [
     self.editor.changeDecorations( function(changeAccessor) {
       self.decorations.forEach( function(decoration) {
         if (decoration.id) {
-          decoration.range = model.getDecorationRange(decoration.id);
+          updateDecorationRange(decoration, model);
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4076,7 +4076,7 @@ var symbolsMath = [
     self.editor.changeDecorations( function(changeAccessor) {
       self.decorations.forEach( function(decoration) {
         if (decoration.id) {
-          decoration.range = newRange(model.getDecorationRange(decoration.id));
+          updateDecorationRange(decoration, model);
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4106,10 +4106,16 @@ var symbolsMath = [
     }
   }
 
-  var rulerColorError = 'rgba(255,18,18,0.7)';
-  var rulerColorWarning= 'rgba(18,136,18,0.7)';
-  var rulerColorConcurrent = 'rgba(18,18,255,0.7)';
+  function updateDecorationRange( decoration, model ) {
+    var range = model.getDecorationRange(decoration.id);
+    if (range) decoration.range = newRange(range);
+  }
 
+  var rulerColorError      = 'rgba(255,18,18,0.7)';
+  var rulerColorWarning    = 'rgba(18,136,18,0.7)';
+  var rulerColorConcurrent = 'rgba(18,18,255,0.7)';
+  var rulerColorMerge      = 'rgba(18,136,18,0.7)';
+  
   UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
     if (!type) type = "error";
@@ -4163,7 +4169,7 @@ var symbolsMath = [
         options: {
           isWholeLine: true,
           overviewRuler: {
-            color: rulerColorConcurrent,
+            color: rulerColorMerge,
             position: 4 /* Right */
           },
         }        
@@ -4222,7 +4228,7 @@ var symbolsMath = [
         glyphType: "edit",
         sticky: true,
         outdated: false,
-        expire: now + 15000,
+        expire: now + 20000,
         message: edit.message || "Being edited concurrently",
         path: edit.path,
         range: newRange( edit.line ),
@@ -4328,7 +4334,10 @@ var symbolsMath = [
       decs.forEach( function(dec) {
         if (position.isBefore(dec.range.getStartPosition())) {
           if (found==null || dec.range.getStartPosition().isBefore(found.range.getStartPosition())) {
-            found = self.findDecorationById(dec.id, dec.range);
+            var decoration = self.findDecorationById(dec.id, dec.range);
+            if (decoration && isErrorType(decoration)) {
+              found = decoration;
+            }
           }
         }
       });
