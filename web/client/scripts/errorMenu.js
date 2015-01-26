@@ -15,7 +15,6 @@ var ErrorMenu = (function() {
     self.gotoNext = gotoNext;
     self.message = null;
     self.range = null;
-    self.message = null;
   }
 
   ErrorMenu.prototype.getClassName = function() {
@@ -29,7 +28,7 @@ var ErrorMenu = (function() {
   ErrorMenu.prototype.setContext = function( elem, range, text, info ) {
     var self     = this;
     self.range   = range;
-    self.message = self.info && self.info.options ? self.info.options.htmlMessage : "<unknown error>";
+    self.message = info && info.options ? info.options.htmlMessage : "<unknown error>";
   }
 
   ErrorMenu.prototype.getContent = function() {

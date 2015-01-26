@@ -640,8 +640,6 @@ var UI = (function() {
         function(range,replacement) {
           var command = new ReplaceCommand.ReplaceCommand( range, replacement );
           self.editor.executeCommand("madoko",command);
-          var adjust = replacement.length - (range.endColumn - range.startColumn + 1);
-          self.adjustDecorations( range.getStartPosition(), adjust );
         }, 
         function(id,tag) {
           self.removeDecorationsOn(id,tag);
@@ -924,11 +922,10 @@ var UI = (function() {
             cap = /\b(?:warning|error|line):(?:\s|&nbsp;)*([\w\\\/\.\-]*)(?:\s|&nbsp;)*:?\(?(\d+)(?:-\d+)?\)?/i.exec(line)
             if (cap) {
               var lineNo = parseInt(cap[2]);
-              var fileName = cap[1]; // TODO use file
+              var path = cap[1]; // TODO use file
               if (!isNaN(lineNo)) {
                 // self.editFile( fileName, { lineNumber: lineNo, column: 1 }, true );
                 pos = { lineNumber: lineNo, column: 1 };
-                path = self.editName;
               }
             }
           }
@@ -1756,6 +1753,10 @@ var UI = (function() {
     // .always( function() { 
     //   self.state = State.Normal; 
     // });    
+  }
+
+  UI.prototype.onContentChanged = function(ev) {
+    console.log(ev);
   }
 
   UI.prototype.gotoPosition = function( pos, reveal ) {
@@ -3999,16 +4000,18 @@ var symbolsMath = [
   UI.prototype.removeDecorations = function(discardSticky,type) {
     var self = this;
     var now = Date.now();
+    var model = self.editor.getModel();
     self.editor.changeDecorations(function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
         if (type && !Util.startsWith(decoration.type,type)) {
-          // do nothing
+          // do nothing          
           newdecs.push(decoration);          
         }
         else if (discardSticky || !decoration.sticky ||
                   (decoration.expire && decoration.expire < now)) {
           if (decoration.id) {
+            decoration.range = model.getDecorationRange(decoration.id);
             changeAccessor.removeDecoration(decoration.id);
             decoration.id = null;          
           }
@@ -4023,6 +4026,7 @@ var symbolsMath = [
             changeAccessor.changeDecorationOptions(decoration.id, dec );
           }
           else if (decoration.id) {
+            decoration.range = model.getDecorationRange(decoration.id);
             changeAccessor.removeDecoration(decoration.id);
             decoration.id = null;          
           }
@@ -4035,10 +4039,12 @@ var symbolsMath = [
   UI.prototype.removeDecorationsOn = function(id,tag) {
     var self = this;
     if (id==null && tag==null) return;
+    var model = self.editor.getModel();
     self.editor.changeDecorations( function(changeAccessor) {
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
         if ((id && id === decoration.id) || (tag && tag === decoration.tag)) {
+          decoration.range = model.getDecorationRange(decoration.id);
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4052,9 +4058,11 @@ var symbolsMath = [
 
   UI.prototype.hideDecorations = function() {
     var self = this;
+    var model = self.editor.getModel();
     self.editor.changeDecorations( function(changeAccessor) {
       self.decorations.forEach( function(decoration) {
         if (decoration.id) {
+          decoration.range = model.getDecorationRange(decoration.id);
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4064,9 +4072,11 @@ var symbolsMath = [
 
   UI.prototype.showDecorations = function() {
     var self = this;
+    var model = self.editor.getModel();
     self.editor.changeDecorations( function(changeAccessor) {
       self.decorations.forEach( function(decoration) {
         if (decoration.id) {
+          decoration.range = newRange(model.getDecorationRange(decoration.id));
           changeAccessor.removeDecoration( decoration.id );
           decoration.id = null;
         }
@@ -4078,17 +4088,6 @@ var symbolsMath = [
           decoration.id = changeAccessor.addDecoration( decoration.range, dec );
         }
       });
-    });
-  }
-
-  UI.prototype.adjustDecorations = function(pos,colAdjust) {
-    var self = this;
-    var decs = self.editor.getModel().getLineDecorations( pos.lineNumber );
-    decs.forEach( function(dec) {
-      var r = dec.range;
-      if (pos.isBefore(r.getStartPosition())) {
-        dec.range = new Range.Range( r.startLineNumber, r.startColumn + colAdjust, r.endLineNumber, r.endColumn + colAdjust );
-      }
     });
   }
 
@@ -4304,13 +4303,13 @@ var symbolsMath = [
   UI.prototype.documentFilesFrom = function(path) {
     var self = this;
     if (!path) path = self.editName;
-    if (!self.fileOrder) return [];
+    if (!self.fileOrder || self.fileOrder.length===0) return [];
     for(var i = 0; i < self.fileOrder.length; i++) {
       if (self.fileOrder[i] === path) {
         return self.fileOrder.slice(i+1).concat(self.fileOrder.slice(0,i+1));
       }
     }
-    return [];
+    return self.fileOrder;
   }
 
   function isErrorType(dec) {
