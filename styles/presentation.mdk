@@ -163,6 +163,9 @@ Html Header   :
     .reveal section[data-smaller="true"] {
       font-size: 80%;
       width: 110%;
+    }
+    .reveal .slides>section[data-smaller=""],
+    .reveal .slides>section[data-smaller="true"] {
       left: -55%;
     }
     .reveal .details {
