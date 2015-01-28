@@ -3904,7 +3904,7 @@ var symbolsMath = [
     if (Util.isImageMime(mime)) {
       var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
       if (isNew) {
-        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=100% }\n');
+        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=90% }\n');
       }
       else {
         message = "referred to";
