@@ -196,10 +196,13 @@ var SpellChecker = (function() {
       return self._readIgnores().then( function(ignores) {
         var files = [];
         if (ctx.path && text) {
-          var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
-          info.text = text;
-          info.errors = [];
-          files.push( { path: ctx.path, text: info.text } );
+          var mime = Util.mimeFromExt(ctx.path);
+          if (mime==="text/markdown" || mime==="text/madoko") {
+            var info = self.files.getOrCreate(ctx.path, { text: text, errors: [] });
+            info.text = text;
+            info.errors = [];
+            files.push( { path: ctx.path, text: info.text } );
+          }
         }
         self.storage.forEachFile( function(file) {
           if (file.path !== ctx.path && (file.mime === "text/markdown" || file.mime === "text/madoko")) {
@@ -215,6 +218,10 @@ var SpellChecker = (function() {
             files.push({path: file.path, text: file.content});
           }
         });
+        if (files.length===0) {
+          Util.message("(spell check: nothing to do)", Util.Msg.Trace);
+          return Promise.resolved();
+        }
         Util.message( "spell check " + ctx.round + " start", Util.Msg.Trace );
         var msg = {
           type   : "check",
