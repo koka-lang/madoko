@@ -25,7 +25,7 @@ public val texAccents = [
   ("v","caron"),  
 ].dict
 
-public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?(.*)$")
+public val rxAuthorYear = regex(@"(.*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
 
 
 function texnest(s:string)  = @"(?:" + texval + @"|(?:\{" + s + @"\}))"
