@@ -22,6 +22,7 @@
 \RequirePackage{pifont}
 \RequirePackage{wrapfig}
 
+
 %-------------------------------------------------------------
 % Process options 
 %-------------------------------------------------------------
@@ -112,6 +113,10 @@
 % break and nbsp
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+% fix nobreakspace in case the user loads a T1 encoding in LaTeX
+\DeclareTextCommandDefault{\nobreakspace}{\leavevmode\nobreak\ }
+
 
 % logo
 \cssClassRuleDoBefore{madokologo}{\vfill}
