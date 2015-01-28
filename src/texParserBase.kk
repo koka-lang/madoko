@@ -69,7 +69,7 @@ public function quote( s : string ) : string {
   val hassquot = s.contains("\'")
   if (s.contains("\"")) then {
     if (s.contains("\'")) 
-     then "\"" + s.replaceAll("\"","&dquot;") + "\""
+     then "\"" + s.replaceAll("\"","&quot;") + "\""
      else "'" + s + "'"
   }
   else "\"" + s + "\""

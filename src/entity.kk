@@ -84,6 +84,7 @@ public function texCmdToEntity( cmd : string ) : string {
 val entities : list<entity> = [
   // named entities 
   Entity("quot", 34, @"""", False),
+  Entity("dquot", 34, @"""", False),  // legacy, use 'quot'
   Entity("hash", 35, @"\#", False),
   Entity("dollar", 36, @"\$", False),
   Entity("perc", 37, @"\%", False),
@@ -202,6 +203,8 @@ val entities : list<entity> = [
   Entity("yacute", 253, @"\'{y}", False), // accent
   Entity("thorn", 254, @"\th", False),
   Entity("yuml", 255, @"\""{y}", False), // accent
+  Entity("Ccaron", 268, @"\u{C}", False), // accent
+  Entity("ccaron", 269, @"\u{c}", False), // accent
   Entity("Lstroke", 321, @"\L", False),  
   Entity("lstroke", 322, @"\l", False),  
   Entity("OElig", 338, @"\OE", False),

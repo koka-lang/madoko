@@ -153,7 +153,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texsl",       regex(@"^\{\\(?:text)?sl\b" + texargs + @"\}"), texSlanted ),
   Rule("texsl2",      regex(@"^\\{\\slshape\b\s*" + texargs + @"\}"), texSlanted ),
-  Rule("texsc",       regex(@"^\\textsc\b\s*" + texargs + @"\}"), texSmallcaps ),
+  Rule("texsc",       regex(@"^\\textsc\b\s*" + texarg), texSmallcaps ),
   Rule("texsc2",      regex(@"^\{\\sc(?:shape)?\b\s*" + texargs + @"\}"), texSmallcaps ),
   Rule("texit",       regex(@"^\\(?:textit|emph)\b\s*" + texarg), texEmph ),
   Rule("texit2",      regex(@"^\{\\(?:itshape|em|it)\b\s*" + texargs + @"\}(\s)?"), texEmph ),
@@ -729,12 +729,13 @@ function texOther( cap : matched, _context ) : string {
 
 function texAccent( cap : matched, _context ) : string {
   val accent = cap.groups[1]
-  val letter = cap.groups[2].unbrace
+  val letter = cap.groups[2].replaceAll(rxNonLetter,"")
   match (texAccents[cap.groups[1]]) {
     Just(name) -> "&" + letter + name + ";"
     Nothing -> letter 
   }
 }
+val rxNonLetter = regex(@"[^\w]+");
 
 function texRule( cap : matched, _context ) : string {
   val widthHeight = [makeAttr("width",texLength(cap.groups[2])),
