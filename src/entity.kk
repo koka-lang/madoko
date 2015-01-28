@@ -203,8 +203,37 @@ val entities : list<entity> = [
   Entity("yacute", 253, @"\'{y}", False), // accent
   Entity("thorn", 254, @"\th", False),
   Entity("yuml", 255, @"\""{y}", False), // accent
-  Entity("Ccaron", 268, @"\u{C}", False), // accent
-  Entity("ccaron", 269, @"\u{c}", False), // accent
+  
+  /* extended latin */
+  Entity("Amacron", 256, @"\={A}", False),
+  Entity("amacron", 257, @"\={a}", False),
+  Entity("Abreve", 258, @"\u{A}", False),
+  Entity("abreve", 259, @"\u{a}", False),
+  Entity("Aogonek", 260, @"\k{A}", False),
+  Entity("aogonek", 261, @"\k{a}", False),
+  Entity("Cacute", 262, @"\'{C}", False),  
+  Entity("cacute", 263, @"\'{c}", False),
+  Entity("Ccirc", 264, @"\^{C}", False),
+  Entity("ccirc", 265, @"\^{c}", False),
+  Entity("Cdota", 266, @"\.{C}", False),
+  Entity("cdota", 267, @"\.{c}", False),
+  Entity("Ccaron", 268, @"\v{C}", False), 
+  Entity("ccaron", 269, @"\v{c}", False), 
+  Entity("Dcaron", 270, @"\v{D}", False), 
+  Entity("dcaron", 271, @"\v{d}", False), 
+  Entity("Dstroke", 272, @"{D}", False),  // todo
+  Entity("dstroke", 273, @"{d}", False),  // todo
+  Entity("Emacron", 274, @"\={E}", False),
+  Entity("emacron", 275, @"\={e}", False),
+  Entity("Ebreve", 276, @"\u{E}", False),
+  Entity("ebreve", 277, @"\u{e}", False),
+  Entity("Edota", 278, @"\.{E}", False),
+  Entity("edota", 279, @"\.{e}", False),
+  Entity("Eogonek", 280, @"\k{E}", False),
+  Entity("eogonek", 281, @"\k{e}", False),
+  Entity("Ecaron", 282, @"\v{E}", False),   
+  Entity("ecaron", 283, @"\v{e}", False), 
+
   Entity("Lstroke", 321, @"\L", False),  
   Entity("lstroke", 322, @"\l", False),  
   Entity("OElig", 338, @"\OE", False),
@@ -212,6 +241,14 @@ val entities : list<entity> = [
   Entity("Scaron", 352, @"\u{S}", False), // accent
   Entity("scaron", 353, @"\u{s}", False), // accent
   Entity("Yuml", 376, @"\""{Y}", False), // accent
+
+  Entity("Zacute", 377, @"\'{Z}", False),  
+  Entity("zacute", 378, @"\'{z}", False),
+  Entity("Zdota", 379, @"\.{Z}", False),
+  Entity("zdota", 380, @"\.{z}", False),
+  Entity("Zcaron", 381, @"\v{Z}", False),
+  Entity("zcaron", 382, @"\v{z}", False),
+  
   Entity("fnof", 402, @"\textit{f}", False),
   Entity("circ", 710, @"\textasciicircum", False),
   Entity("tilde", 732, @"\textasciitilde", False),

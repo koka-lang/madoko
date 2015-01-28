@@ -22,7 +22,16 @@ public val texAccents = [
   ("~","tilde"),
   ("r","ring"),
   ("c","cedil"),
-  ("v","caron"),  
+  ("v","caron"), 
+  ("u","breve"),
+  ("=","macron"),
+  ("k","ogonek"),
+  (".","dota"),
+  ("d","dotb"), 
+  ("H","huml"),
+  ("b","barb"),
+  ("r","ring"),
+  ("t","tie")
 ].dict
 
 public val rxAuthorYear = regex(@"((?:[^&\\]|\\.|&#?\w+;|[\\&])*?)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
