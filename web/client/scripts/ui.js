@@ -380,6 +380,9 @@ var UI = (function() {
     self.connectionLogo = document.getElementById("connection-logo");
     self.connectionMessage = document.getElementById("connection-message");
 
+    self.lastRenderWasSlow = false;
+    self.lastViewRenderWasSlow = false;
+
     // listen to application cache    
     self.appUpdateReady = false;
     if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
@@ -673,13 +676,22 @@ var UI = (function() {
         // check origin and source so no-one but our view can send messages
         if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
         if (ev.source !== self.view.contentWindow) return;      
+        console.log("preview event: " + ev.data);
         var info = JSON.parse(ev.data);
-        if (!info || !info.eventType) return;
+        if (!info || !info.eventType) return;        
         if (info.eventType === "previewContentLoaded") {
           return self.viewLoaded();
         }
         else if (info.eventType === "previewSyncEditor" && typeof info.line === "number") {
           return self.editFile( info.path ? info.path : self.docName, { lineNumber: info.line, column: 0 } );
+        }
+        else if (info.eventType === "contentLoaded") {
+          if (!self.viewTimes) self.viewTimes = [];
+          self.viewTimes.push(info.time);
+          if (self.viewTimes.length > 5) self.viewTimes.shift();
+          var avgTime = self.viewTimes.reduce( function(prev,t) { return prev+t; }, 0 ) / (self.viewTimes.length || 1);
+          console.log("** view render: " + avgTime.toString() + "ms");
+          self.lastViewRenderWasSlow = (avgTime > 300);
         }
       }, [State.Syncing,State.Exporting]);
     }, false);
@@ -1393,7 +1405,7 @@ var UI = (function() {
 
         if (self.lastEditChange) {
           var now = Date.now();
-          var diff = (self.lastRenderWasSlow || self.settings.delayedUpdate) ? 1000 : 50;
+          var diff = (self.lastRenderWasSlow || self.lastViewRenderWasSlow || self.settings.delayedUpdate) ? 1000 : 50;
           if (Date.now() - self.lastEditChange < diff) {
             return false;
           }
@@ -1466,7 +1478,7 @@ var UI = (function() {
                         (!self.settings.delayedUpdate ? " (continuous)" : "") +
                         //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
                         "\n  avg: " + res.avgTime.toFixed(0) + "ms" +
-                        " (" + (self.lastRenderWasSlow ? "slow" : "quick") + ")");                                                        
+                        " (" + (self.lastRenderWasSlow ? "slow" : (self.lastViewRenderWasSlow ? "slow-view" : "quick")) + ")");                                                        
             },
             function(err) {
               self.onError(err);              

@@ -11,6 +11,7 @@ var Preview = (function() {
   // initialize
   var origin = window.location.origin || window.location.protocol + "//" + window.location.host;
   var isIE   = Object.hasOwnProperty.call(window, "ActiveXObject");
+  var onLoadDone = null;
  
 
   // Refresh message after some seconds
@@ -416,6 +417,8 @@ var Preview = (function() {
     window.setTimeout( function() {
       dispatchEvent(window,"resize"); 
     }, 100 );
+
+    if (onLoadDone) onLoadDone();
   }
 
   function loadContent(info) {
@@ -426,6 +429,7 @@ var Preview = (function() {
         // yes!
         console.log("preview: quick view update" );
         elem.textContent = info.newText;        
+        if (onLoadDone) onLoadDone();
         return;
       }
     }
@@ -580,8 +584,16 @@ var Preview = (function() {
       setScrollTop(window,info.scrollY);
     }
     else if (info.eventType==="loadContent") {      
+      var t0 = Date.now(); 
+      onLoadDone = function() { 
+        var t1 = Date.now();
+        window.parent.postMessage( JSON.stringify({ 
+          eventType: 'contentLoaded',
+          time: t1 - t0,
+        }), origin );
+        onLoadDone = null;
+      }
       loadContent(info);
-      //ev.source.postMessage('contentLoaded',ev.origin);
     }
     else if (info.eventType==="view") {
       document.body.setAttribute("data-view",info.view);
