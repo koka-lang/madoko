@@ -1337,7 +1337,7 @@ var staticOptions = {
 }
 var staticClient      = express.static( combine(__dirname, "client"), staticOptions);
 var staticMaintenance = express.static( combine(__dirname, "maintenance"), staticOptions);
-var staticDirs = /\/(images(\/dark)?|scripts|styles(\/(lang|out|math))?|lib(\/vs(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
 
 function staticPage(req,res,next) {
   var dir = path.dirname(req.path);
