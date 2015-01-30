@@ -289,6 +289,29 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     d.prototype = new __();
   };
 
+  // turns out the timeout action is not always called after a computer
+  // wakes up from sleep; but setInterval seems to work so we will use this.
+  function robustTimeout( action, ms ) {
+    var id = 0;
+    var clear = function() {
+      if (id!==0) {
+        clearInterval(id);
+        id = 0;
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+    id = setInterval( function() {
+      if (clear()) {
+        action();
+      }
+    }, ms );
+    
+    return {clear: clear};
+  }
+
   function dateFromISO(s) {
     function parseNum(n) {
       var i = parseInt(n,10);
@@ -1070,13 +1093,15 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     // Open request
     req.open( method, reqparam.url, true );
     
-    var timeout = 0;  // timeout handler id.
+    var timeout = null;  // timeout handler id.
     var promise = new Promise();
 
     function reject(message,httpCode) {
       if (httpCode==null) httpCode = req.status || 400;
       try {
-        if (timeout) clearTimeout(timeout);
+        if (timeout) { 
+          timeout.clear();
+        }
         
         if (cached) {  // we retried, but failed: return the previous cached value
           cached.lastUpdate = Date.now();
@@ -1123,7 +1148,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
     req.onload = function(ev) {
       if (req.readyState === 4 && req.status >= 200 && req.status <= 299) {
-        if (timeout) clearTimeout(timeout);
+        if (timeout) {
+          timeout.clear();
+        }
         // parse result
         var type = req.getResponseHeader("Content-Type") || req.responseType;
         var res;
@@ -1157,7 +1184,13 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     req.ontimeout = function(ev) {
       reject("request timed out", 408);
     }
-    if (reqparam.timeout != null) req.timeout = reqparam.timeout;
+
+    if (reqparam.timeout != null) {
+      req.timeout = reqparam.timeout;
+      // the req.timeout does not always seem to work after a computer goes to sleep and wakes up
+      // so we use our own robustTimeout too which usually will never fire as we add a second to it.
+      timeout = robustTimeout( reqparam.timeout + 1000 );
+    }
     
     
     // Encode content
