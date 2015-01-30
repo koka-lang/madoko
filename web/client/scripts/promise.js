@@ -60,15 +60,21 @@ define([],function() {
     
     function done() {
       count++;
-      if (count<total) {
-        if (total > 0) continuation.progress( count/total );
+      if (continuation==null) return; // an error has happened already
+
+      if (error) {
+        var cont = continuation;
+        continuation = null;
+        cont.reject(error);
+      }
+      else if (count<total) {
+        if (total > 0)   continuation.progress( count/total );
         if (top < total) setup(top); // for batched when, initiate next promise
       }
-      else if (error) {
-        continuation.reject(error);
-      }
       else {
-        continuation.resolve(result);
+        var cont = continuation;
+        continuation = null;
+        cont.resolve(result);
       }
     }
     
