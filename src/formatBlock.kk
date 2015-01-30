@@ -291,7 +291,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           }
         }
       }
-      context.fmtTable(Nil,[Row(cols)],cols.map(fun(c){ attrsNone }),attrs)
+      context.fmtTable(Nil,[Row(cols)],cols.map(fun(c){ c.cellAttrs }),attrs)
     }    
     
     Div(content,attrs) -> {    

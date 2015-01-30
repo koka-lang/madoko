@@ -90,6 +90,13 @@ function defaultMeta( options : options ) : string {
       @".Floating    : .align-center elem=floating html-elem=figure",
       @".Floating    : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
       @".Floating    : toc-line='&label;. &caption;'",
+
+      @"~SubFigureRow  : .columns .align-center",
+      @"~SubFigure     : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''",
+      @"           after='&br;[&toc-line;]{.subfig-caption}' tight text-align=center .column",
+      @"          toc-line='[&fig-label; ]{.caption-before} &caption;'",
+      @"          toc=tof toc-depth=2",
+
       
       @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'",
       @"            before='[\[&label;\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
