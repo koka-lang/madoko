@@ -221,8 +221,8 @@ val entities : list<entity> = [
   Entity("ccaron", 269, @"\v{c}", False), 
   Entity("Dcaron", 270, @"\v{D}", False), 
   Entity("dcaron", 271, @"\v{d}", False), 
-  Entity("Dstroke", 272, @"{D}", False),  // todo
-  Entity("dstroke", 273, @"{d}", False),  // todo
+  Entity("Dstroke", 272, @"\DH", False),  // todo
+  Entity("dstroke", 273, @"\dh", False),  // todo
   Entity("Emacron", 274, @"\={E}", False),
   Entity("emacron", 275, @"\={e}", False),
   Entity("Ebreve", 276, @"\u{E}", False),
@@ -233,13 +233,107 @@ val entities : list<entity> = [
   Entity("eogonek", 281, @"\k{e}", False),
   Entity("Ecaron", 282, @"\v{E}", False),   
   Entity("ecaron", 283, @"\v{e}", False), 
+  Entity("Gcirc", 284, @"\^{G}", False),
+  Entity("gcirc", 285, @"\^{g}", False),
+  Entity("Gbreve", 286, @"\u{G}", False),
+  Entity("gbreve", 287, @"\u{g}", False),
+  Entity("Gdota", 288, @"\.{G}", False),
+  Entity("gdota", 289, @"\.{g}", False),
+  Entity("Gcedil", 290, @"\c{G}", False),
+  Entity("gcedil", 291, @"\c{g}", False),
+  Entity("Hcirc", 292, @"\^{H}", False),
+  Entity("hcirc", 293, @"\^{h}", False),
+  Entity("Hstroke", 294, @"\B{H}", False),
+  Entity("hstroke", 295, @"\b{h}", False),
+  Entity("Itilde", 296, @"\~{I}", False),
+  Entity("itilde", 297, @"\~{\i}", False),
+  Entity("Imacron", 298, @"\={I}", False),
+  Entity("imacron", 299, @"\={\i}", False),
+  Entity("Ibreve", 300, @"\u{I}", False),
+  Entity("ibreve", 301, @"\u{i}", False),
+  Entity("Iogonek", 302, @"\k{I}", False),
+  Entity("iogonek", 303, @"\k{\i}", False),
+  Entity("Idota", 304, @"\.{I}", False),
+  Entity("idotless", 305, @"\i", False),
+  Entity("IJ", 306, @"IJ", False),
+  Entity("ij", 307, @"ij", False),
+  Entity("Jcirc", 308, @"\^{J}", False),
+  Entity("jcirc", 309, @"\^{j}", False),
+  Entity("Kcedil", 310, @"\c{K}", False),
+  Entity("kcedil", 311, @"\c{k}", False),
+  Entity("Lacute", 313, @"\'{L}", False),  
+  Entity("lacute", 314, @"\'{l}", False),
+  Entity("Lcedil", 315, @"\c{L}", False),
+  Entity("lcedil", 316, @"\c{l}", False),
+  Entity("Lcaron", 317, @"\v{L}", False),   
+  Entity("lcaron", 318, @"\v{l}", False), 
+  // Entity("Ldotm", 319, @"\mdDotm{L}", False),   
+  // Entity("ldotm", 320, @"\mdDotm{l}", False), 
 
   Entity("Lstroke", 321, @"\L", False),  
   Entity("lstroke", 322, @"\l", False),  
+
+  Entity("Nacute", 323, @"\'{N}", False),  
+  Entity("nacute", 324, @"\'{n}", False),
+  Entity("Ncedil", 325, @"\c{N}", False),
+  Entity("ncedil", 326, @"\c{n}", False),
+  Entity("Ncaron", 327, @"\v{N}", False),   
+  Entity("ncaron", 328, @"\v{n}", False), 
+
+  Entity("napos", 329, @"{'n}", False),  
+  Entity("Neng", 330, @"\NG", False),
+  Entity("neng", 331, @"\ng", False),
+  
+  Entity("Omacron", 332, @"\={O}", False),
+  Entity("omacron", 333, @"\={o}", False),
+  Entity("Obreve", 334, @"\u{O}", False),
+  Entity("obreve", 335, @"\u{o}", False),
+  Entity("Odacute", 336, @"\H{O}", False),
+  Entity("odacute", 337, @"\H{o}", False),
+  
   Entity("OElig", 338, @"\OE", False),
   Entity("oelig", 339, @"\oe", False),
+
+  Entity("Racute", 340, @"\'{R}", False),  
+  Entity("racute", 341, @"\'{r}", False),
+  Entity("Rcedil", 342, @"\c{R}", False),
+  Entity("rcedil", 343, @"\c{r}", False),
+  Entity("Rcaron", 344, @"\v{R}", False),   
+  Entity("rcaron", 345, @"\v{r}", False), 
+
+  Entity("Sacute", 346, @"\'{S}", False),  
+  Entity("sacute", 347, @"\'{s}", False),
+  Entity("Scirc", 348, @"\^{S}", False),
+  Entity("scirc", 349, @"\^{s}", False),
+  Entity("Scedil", 350, @"\c{S}", False),
+  Entity("scedil", 351, @"\c{s}", False),
+
   Entity("Scaron", 352, @"\u{S}", False), // accent
   Entity("scaron", 353, @"\u{s}", False), // accent
+
+  Entity("Tcedil", 354, @"\c{T}", False),
+  Entity("tcedil", 355, @"\c{t}", False),
+  Entity("Tcaron", 356, @"\v{T}", False),   
+  Entity("tcaron", 357, @"\v{t}", False), 
+  Entity("Tstroke", 358, @"\mdUnicode{358}", False),  
+  Entity("tstroke", 359, @"\mdUnicode{359}", False),  
+  Entity("Utilde", 360, @"\~{U}", False),
+  Entity("utilde", 361, @"\~{u}", False),
+  Entity("Umacron", 362, @"\={U}", False),
+  Entity("umacron", 363, @"\={u}", False),
+  Entity("Ubreve", 364, @"\u{U}", False),
+  Entity("ubreve", 365, @"\u{u}", False),
+  Entity("Uring", 366, @"\r{U}", False),
+  Entity("uring", 367, @"\r{u}", False),
+  Entity("Udacute", 368, @"\H{U}", False),
+  Entity("udacute", 369, @"\H{u}", False),
+  Entity("Uogonek", 370, @"\k{U}", False),
+  Entity("uogonek", 371, @"\k{u}", False),
+  Entity("Wcirc", 372, @"\^{W}", False),
+  Entity("wcirc", 373, @"\^{w}", False),
+  Entity("Ycirc", 374, @"\^{Y}", False),
+  Entity("ycirc", 375, @"\^{y}", False),
+
   Entity("Yuml", 376, @"\""{Y}", False), // accent
 
   Entity("Zacute", 377, @"\'{Z}", False),  
@@ -248,7 +342,8 @@ val entities : list<entity> = [
   Entity("zdota", 380, @"\.{z}", False),
   Entity("Zcaron", 381, @"\v{Z}", False),
   Entity("zcaron", 382, @"\v{z}", False),
-  
+  Entity("slong", 383, @"\mdUnicode{383}", False),
+
   Entity("fnof", 402, @"\textit{f}", False),
   Entity("circ", 710, @"\textasciicircum", False),
   Entity("tilde", 732, @"\textasciitilde", False),
@@ -420,6 +515,18 @@ val entities : list<entity> = [
   Entity("bcheckmark", 10004, @"\ding{52}", False ),   
   Entity("xmark", 10007, @"\ding{55}", False ),
   Entity("bxmark", 10008, @"\ding{56}", False ),   
-  Entity("mglass", 128270, @"\mdUnicode{128270}", False )
+  Entity("mglass", 128270, @"\mdUnicode{128270}", False ),
+
+  // circled numbers
+  Entity("circled1", 9312, @"\ding{192}", False),
+  Entity("circled2", 9313, @"\ding{193}", False),
+  Entity("circled3", 9314, @"\ding{194}", False),
+  Entity("circled4", 9315, @"\ding{195}", False),
+  Entity("circled5", 9316, @"\ding{196}", False),
+  Entity("circled6", 9317, @"\ding{197}", False),
+  Entity("circled7", 9318, @"\ding{198}", False),
+  Entity("circled8", 9319, @"\ding{199}", False),
+  Entity("circled9", 9320, @"\ding{200}", False),
+  Entity("circled10", 9321, @"\ding{201}", False),
 ]
 
