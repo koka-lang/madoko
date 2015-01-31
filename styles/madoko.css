@@ -47,6 +47,12 @@
   margin-left: 0em;
 }
 
+.madoko blockquote {
+  border-left: 5px Gainsboro solid;
+  padding-left: 1ex;
+  margin-left: 1em;
+}
+
 /* Local page links do not get an underline unless hovering */
 .madoko a.localref {
   text-decoration: none;
