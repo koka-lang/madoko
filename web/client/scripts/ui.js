@@ -2183,6 +2183,7 @@ var UI = (function() {
   UI.prototype.generatePdf = function() {
     var self = this;
     self.event( null, "exporting...", State.Exporting, function() { 
+      self.localSave();
       var ctx = { 
         round: 0, 
         docname: self.docName, 
@@ -2207,6 +2208,7 @@ var UI = (function() {
   UI.prototype.generateHtml = function() {
     var self = this;
     self.event( null, "exporting...", State.Exporting, function() { 
+      self.localSave();
       return self.spinWhile( self.exportSpinner, 
         self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
