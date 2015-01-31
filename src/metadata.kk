@@ -179,6 +179,14 @@ function defaultMeta( options : options ) : string {
       @"LogoBibtex      : $\mbox{\sc{Bib}\TeX}$",
       @"LogoAmstex      : $\mbox{\AmSTeX}$",
 
+      @".noindent     : text-indent=0em",
+      @"smallskip     : []{display=block margin-bottom=0.5em}",
+      @"@tex smallskip: [\smallskip]{input=texraw}",
+      @"medskip     : []{display=block margin-bottom=1em}",
+      @"@tex medskip: [\medskip]{input=texraw}",
+      @"bigskip     : []{display=block margin-bottom=2em}",
+      @"@tex bigskip: [\bigskip]{input=texraw}",
+
       @"LogoMadoko: Created with [Madoko.net](https://www.madoko.net).",
       @".LogoMadoko: .block text-align=right font-size=xx-small margin-top=4em tight",
 
