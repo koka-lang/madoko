@@ -34,6 +34,7 @@ define([],function() {
 
     var top = 0;
     function setup(i) {
+      if (i==null) i = top;
       if (i >= total) return;
       result[i] = undefined;
       if (top <= i) top = i+1;
@@ -59,22 +60,16 @@ define([],function() {
     }
     
     function done() {
-      count++;
-      if (continuation==null) return; // an error has happened already
-
+      count++;  
       if (error) {
-        var cont = continuation;
-        continuation = null;
-        cont.reject(error);
+        continuation.reject(error);
       }
       else if (count<total) {
-        if (total > 0)   continuation.progress( count/total );
+        // if (total > 0)   continuation.progress( count/total );
         if (top < total) setup(top); // for batched when, initiate next promise
       }
       else {
-        var cont = continuation;
-        continuation = null;
-        cont.resolve(result);
+        continuation.resolve(result);
       }
     }
     
@@ -82,9 +77,8 @@ define([],function() {
       delayed( function() { continuation.resolve(result); } );
     }
     else {      
-      var n = (batch < total ? batch : total);
-      for(var i = 0; i < n; i++) {
-        setup(i);
+      for(var i = 0; i < batch; i++) {
+        setup(top);
       }
     }
 
