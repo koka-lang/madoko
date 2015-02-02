@@ -196,7 +196,7 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
   lines[Side.B] = blines;
   lines[Side.O] = olines;
 
-  chunks.forEach( function(c) {
+  chunks.forEach( function(c,idx) {
     if (c.end < c.start) {
       // something was deleted
       if (c.side === Side.A) {
@@ -204,10 +204,20 @@ function mergeChunks( markers, cursorLine, olines, alines, blines, chunks )
       }
     }
     else if (c.side !== Side.None) {
+      // something inserted
+      // check if next chunk inserts same content (and ignore if exactly the same)
+      if (idx+1<chunks.length) {
+        var d = chunks[idx+1];
+        if (d.side !== c.side && d.side !== Side.O && c.side !== Side.O &&
+            d.start === c.start && d.end === c.end && subtxt(lines[c.side], c.start, c.end) === subtxt(lines[d.side], d.start, d.end)) {
+          return;  // ignore this chunck if the next chunk inserts exactly the same content at the same place
+        }
+      }
       mergePush( subtxt(lines[c.side], c.start, c.end ), (c.side===Side.A ? "insertion" : null) );
       if (c.side === Side.B) adjustCursor( c.start, c.end );
     }
     else {
+      // conflicting
       var otxt = subtxt( lines[Side.O], c.start, c.end );
       var atxt = subtxt( lines[Side.A], c.astart, c.aend );
       var btxt = subtxt( lines[Side.B], c.bstart, c.bend );
