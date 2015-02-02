@@ -234,7 +234,7 @@ var SpellChecker = (function() {
             throw new Error("spell checker time-out");
           }
           else if (res.err) {
-            throw err;
+            throw res.err;
           }
           else return self.onCheckComplete(res,ctx);
         });
