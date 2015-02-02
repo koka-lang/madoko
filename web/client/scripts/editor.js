@@ -5,12 +5,13 @@
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
-
 define(["../scripts/map","../scripts/promise","../scripts/util",
         "../scripts/madokoMode","vs/editor/modes/monarch/monarch",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","vs/base/network",
-         "vs/platform/services","vs/editor/modes/modesExtensions", "vs/platform/platform","vs/editor/standalone/standaloneCodeEditor"],
-        function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Services,ModesExtensions,Platform,StandaloneCodeEditor) {
+         "vs/platform/services","vs/editor/modes/modesExtensions", "vs/platform/platform", "vs/editor/diff",
+         "vs/editor/standalone/standaloneCodeEditor"],
+        function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Services,ModesExtensions,Platform,Diff,StandaloneCodeEditor) {
+
 
 
 //---------------------------------------------------------------------------
@@ -76,12 +77,17 @@ var ReplaceCommandWithSelection = (function (_super) {
 
 function diff( original, modified ) {
   return Promise.do( function() {
+    var olines = original.split("\n");
+    var mlines = modified.split("\n");
+    return new Diff.DiffComputer(olines,mlines,true,false).computeDiff();
+    /*
     var originalModel = Monaco.Editor.createModel(original, "text/plain");
     var modifiedModel = Monaco.Editor.createModel(modified, "text/plain"); 
     var diffSupport   = modifiedModel.getMode().diffSupport;
     var diff = diffSupport.computeDiff( 
                   originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );    
     return new Promise(diff); // wrap promise
+    */
   }).timeout(5000,new Error("Diff operation timed out"));
 }
 
