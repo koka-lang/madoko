@@ -1189,7 +1189,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       req.timeout = reqparam.timeout;
       // the req.timeout does not always seem to work after a computer goes to sleep and wakes up
       // so we use our own robustTimeout too which usually will never fire as we add a second to it.
-      timeout = robustTimeout( reqparam.timeout + 1000 );
+      timeout = robustTimeout( function() { reject("request timed out", 408 ); }, reqparam.timeout + 1000 );
     }
     
     
