@@ -456,6 +456,9 @@ body.madoko.preview {
 .madoko .remote {
   background-color: #F0FFF0;
 }
+.madoko .remote + * {
+  margin-top: 0pt;
+}
 
 /* ---------------------------------------------------
    Print settings

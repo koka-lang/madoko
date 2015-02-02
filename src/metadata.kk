@@ -115,6 +115,7 @@ function defaultMeta( options : options ) : string {
 
       @".Framed   : border-style=solid border-color=black border-width=1px",
       @"~Center   : .align-center",
+      @"~Remote   : tight margin-bottom=0pt",
 
       @"~Pre      : input=pre .para-block",
       @"~Code     : input=pre",
