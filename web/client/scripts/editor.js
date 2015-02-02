@@ -82,7 +82,7 @@ function diff( original, modified ) {
     var diff = diffSupport.computeDiff( 
                   originalModel.getAssociatedResource(), modifiedModel.getAssociatedResource() );    
     return new Promise(diff); // wrap promise
-  }).timeout(2500,new Error("Diff operation timed out"));
+  }).timeout(5000,new Error("Diff operation timed out"));
 }
 
 
