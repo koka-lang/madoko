@@ -911,6 +911,24 @@ var UI = (function() {
       });
     };
 
+    self.usersPanel.onclick = function(ev) {
+      self.anonEvent( function() {
+        var elem = ev.target;
+        while(elem && elem.nodeName !== "DIV") {
+          elem = elem.parentNode;          
+        }
+        if (!elem) return;
+        var epath = elem.getAttribute("data-path");
+        var eline = elem.getAttribute("data-line");
+        if (!epath || !eline) return;
+        var path = decodeURIComponent(epath);
+        var line = parseInt(decodeURIComponent(eline));
+        if (!path || isNaN(line)) return;
+        return self.editFile(path, (line > 0 ? { lineNumber: line, column: 0 } : null));
+      }, [State.Syncing,State.Exporting]);
+    };
+
+
     function messageDblClick(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
@@ -1967,7 +1985,7 @@ var UI = (function() {
     else if (!edit) {
       if (self.storage && self.storage.isModified(self.editName)) 
         edit = "write";
-      else if (now > self.lastActivity + 60000)  // after 60 secs on non-activity, become open which reduces get requests to server
+      else if (now > self.lastActivity + 120000)  // after 2 minutes of non-activity, become open which reduces get requests to server
         edit = "open";
       else 
         edit = "read";
@@ -1997,6 +2015,7 @@ var UI = (function() {
         Util.forEachProperty( data, function(fileName,file) {
           if (file.users) {
             var fname = Util.basename(fileName);
+            if (Util.endsWith(fname,"*")) fname = fname.substr(0, fname.length-1);
             file.users.forEach( function(user) {
               Util.extend(user,{ path: fname });
               if (typeof user.kind !== "string") user.kind = "open";
@@ -2008,7 +2027,7 @@ var UI = (function() {
                 info.line = user.line;
               }
               else if (!Util.endsWith(fileName,"*")) {
-                info.fileName = fname;
+                info.path = fname;
               }
             });
           }
@@ -2028,7 +2047,12 @@ var UI = (function() {
           }
           status = status + "<div class='button user-" + user.kind + "' " +
                             "title='" + (user.kind==="write" ? "Editing document" : (user.kind==="read" ? "Viewing document" : "Opened document")) + 
-                                      " " + Util.escape(Util.basename(user.path)) + "'>" + 
+                                      " " + Util.escape(Util.basename(user.path)) + 
+                                      (user.line>0 ? ":" + Util.escape(user.line.toString()) : "") + 
+                                      "' " +
+                            "data-path='" + encodeURIComponent(user.path) + "' " + 
+                            (user.line != null ? "data-line='" + encodeURIComponent(user.line.toString()) + "' " : "") +
+                            ">" + 
                     "<span class='icon'><img src='images/icon-user-" + user.kind + ".png'></span>" +
                     Util.escape(user.name) + 
                     "</div>";
