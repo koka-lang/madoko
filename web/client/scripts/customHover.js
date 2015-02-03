@@ -149,7 +149,7 @@ function addCustomHover(widgetId,ed,customMenu) {
     if (!ev.target) return
     if (!widget.isVisible()) return;
     var targetType = ev.target.type;
-    if ((targetType !== Editor.MouseTargetType.CONTENT_WIDGET && targetType !== Editor.MouseTargetType.OVERLAY_WIDGET) || e.target.detail !== widget.id) {
+    if ((targetType !== Editor.MouseTargetType.CONTENT_WIDGET && targetType !== Editor.MouseTargetType.OVERLAY_WIDGET) || ev.target.detail !== widget.id) {
       hide();
       return;
     }
@@ -184,9 +184,6 @@ function addCustomHover(widgetId,ed,customMenu) {
           info = it.next();    
           if (info && info.lineNumber) {
             range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
-          }
-          else {
-            console.log("** no line number on hover: " + JSON.stringify(info));
           }         
         });
       }
