@@ -48,8 +48,8 @@
 <div class="app-header header-bar">
     <!-- <a href="https://www.madoko.net" title="Madoko home page"><img id="madoko-logo" class="button" src="images/dark/icon-madoko.png"/></a>
     -->
-    <div id="document" class="popup">
-      <img id="cloud" class="button" src="images/dark/button-folder.png"/>
+    <div id="document" class="popup"
+      ><img id="cloud" src="images/dark/button-folder.png"/>
       <div id="document-content" class="menu boxed">
         <div id="new" class="button" title="Create a new document"
           ><span class="icon"><img src="images/icon-plus.png"/></span>New ... </div>
@@ -121,7 +121,7 @@
       <img id="view-sync" class="button" src="images/dark/button-view-sync.png" title="Synchronize editor with the preview (or double-click in the preview)"/>      
       <img id="view-full" class="button" src="images/dark/icon-view-full.png" title="Switch to full screen preview (Alt-V)"/>
       <div id="menu-settings" class="popup no-close-on-click">
-        <img class="button" src="images/dark/button-settings.png" />
+        <img src="images/dark/button-settings.png" />
         <div id="menu-settings-content" class="menu boxed">
           <div class="button" title="Synchronize automatically with cloud storage, or pull automatically from a repository
 (every 30 seconds)">
@@ -162,15 +162,15 @@
         </div>
       </div
       ><div id="help" class="popup">
-        <img class="button" src="images/dark/button-help.png" title="About"/>
+        <img src="images/dark/button-help.png" title="About"/>
         <div id="help-content" class="menu boxed">
-          <a target="_blank" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">
+          <a target="_blank" class="button" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">
             Madoko reference manual <img src="images/icon-link.png"/></a>
-          <a target="_blank" href="https://www.madoko.net">
+          <a target="_blank" class="button" href="https://www.madoko.net">
             Madoko home page <img src="images/icon-link.png"/></a>
-          <a target="_blank" href="http://madoko.codeplex.com/discussions">
+          <a target="_blank" class="button" href="http://madoko.codeplex.com/discussions">
             Participate in a discussion <img src="images/icon-link.png"/></a> 
-          <a target="_blank" href="http://madoko.codeplex.com/workitem/list/basic">
+          <a target="_blank" class="button" href="http://madoko.codeplex.com/workitem/list/basic">
             Report an issue <img src="images/icon-link.png"/></a>
           <hr/>
           <div class="notice"
@@ -204,8 +204,8 @@
 
 <div class="app-footer header-bar">
   <div id="view-message" class="popup no-close-on-click">
-    <img id="console-ok" class="button" src="images/dark/button-console.png"/>    
-    <img id="console-warn" class="button hide" src="images/dark/button-console-warn.png"/>    
+    <img id="console-ok" src="images/dark/button-console.png"/>    
+    <img id="console-warn" class="hide" src="images/dark/button-console-warn.png"/>    
     <div id="console" class="madoko menu boxed">
       <div id="console-out" class="monospace short"></div>
     </div>

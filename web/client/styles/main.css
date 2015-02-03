@@ -151,7 +151,7 @@ html,body,#main {
 }
 
 .app-body {
-  height: calc(100% - 4.2rem);
+  height: calc(100% - 4.5rem);
 }
 
 .header-bar {
@@ -160,28 +160,24 @@ html,body,#main {
   padding: 0pt;
 }
 
-.header-bar, .toolbar, modal, .load-error, .auth-redirect, .menu.hover .info {
+.header-bar, .toolbar, modal, .load-error, .auth-redirect, .menu.hover .info, input {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
 .header-bar {
   font-weight: 100;
-}
-.header-bar div.menu {
-  font-weight: normal;
-}
-
-.app-header.header-bar {
   padding: 0.5rem;
+}
+.header-bar>div {
+  vertical-align: top;
 }
 
 .app-header.header-bar .menu {
   font-size: 90%;
 }
 
-
 .app-footer.header-bar {
-  padding: 0.2rem 0.5rem;
+  padding-bottom: 0.2rem;
 }
 
 .pane {
@@ -275,17 +271,14 @@ html,body,#main {
   vertical-align: -0.1em;
 }
 
+.header-bar>img {
+  height: 1.1em;
+}
+
 .header-bar .right {
   float: right;
 }
 
-#main .header-bar .right img {
-  margin: 0em 0.2em;
-}
-
-#main .header-bar .right #help>.button {
-  margin-right: 0em;
-}
 
 img#console-ok {
   height: 1.4em;
@@ -387,16 +380,12 @@ span.save-link:hover {
   border-top: solid #AAA 1px;
 }
 
-.menu div {
-  padding: 0.1em 0em;
-}
-
 .menu div .icon, .menu div input {
   display: inline-block;
-  width: 1.75em;
+  width: 1em;
   text-align: center;
   padding: 0;
-  margin: 0;
+  margin-right: 0.5em;
 } 
 
 
@@ -420,6 +409,7 @@ span.save-link:hover {
 .remote-http #http-message {
   display: block;
   font-size: smaller;
+  padding: 0.5ex;
 }
 
 .disconnected #signin {
@@ -435,12 +425,9 @@ span.save-link:hover {
   display: block;
 }
 
-#connection {
-  padding: 0em 0.4em;
-}
 
-#toolbox {
-  padding: 0em 0.5em;
+.header-bar div.popup, .header-bar>img {
+  padding: 0em 0.4em;
 }
 
 
@@ -502,6 +489,7 @@ span.save-link:hover {
 
 #toolbox .named ~ .named {
   border-left: 1px solid #135;
+  border-radius: 0px;
 }
 
 #toolbox div.menu div.menu, #toolbox .named {
@@ -540,11 +528,19 @@ span.save-link:hover {
 /* File items */
 
 .disable, .file.generated, .file.image {
-  color: #AAA;
+  color: #888;
+}
+
+#connection {
+  padding-right: 0em;
+}
+#edit-select {
+  padding: 0em;
 }
 
 #edit-select-header {
   padding-left: 0.25em;
+  cursor: default;
 }
 
 #edit-select-header .folder {
@@ -575,7 +571,7 @@ span.save-link:hover {
 }
 
 .file.main {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .file.hide {
@@ -586,17 +582,12 @@ span.save-link:hover {
   display: inline-block;
   float: right;
   font-size: x-small;
-  padding-top: 0.5em;
-  margin-left: 1em;
+  margin: 0.5ex;
   color: inherit;
 }
 
 .menu.hover .shortcut {
   padding-top: 0em;
-}
-
-span.shortcut {
-  padding-right: 0.25em;
 }
 
 .file-share {
@@ -630,9 +621,6 @@ div.boxed {
 
 
 /* Editor Header */
-#document {
-  padding-right: 0.2em;
-}
 
 #edit-select {
   width: 40%;
@@ -679,9 +667,11 @@ div.boxed {
 
 .msg-error, .msg-exception {
   color: red;
+  font-weight: normal;
 }
 .msg-warning {
   color: #cc0000;
+  font-weight: normal;
 }
 
 .msg-section .msg-status {
@@ -1316,8 +1306,7 @@ div.modal {
 }
 
 .modal .header-bar {
-  padding: 0.7rem 0.5em 0.3rem 1em !important;
-  height: 2rem;
+  padding: 1rem;
   white-space: nowrap;
 }
 
@@ -1332,8 +1321,7 @@ div.modal {
 
 .modal .app-footer {
   text-align: right;
-  padding-top: 0.5em;
-}
+  }
 
 .modal .button {
   display: inline;
@@ -1361,8 +1349,16 @@ div.modal {
   background-color: Gainsboro !important;
 }
 
+.modal .header-bar>div {
+  vertical-align: text-bottom;
+}
+
 
 /* view */
+
+#picker, #picker input {
+  font-weight: 100;
+}
 
 #picker .message {
   display: none;
@@ -1423,7 +1419,8 @@ div.modal {
   width: 11em;
   display: none;
   font-size: 1em;
-  vertical-align: 0.2em;
+  border: 1px;
+  padding-left: 0.1em;
 }
 
 #picker #file-name[readonly] {
@@ -1471,7 +1468,7 @@ div.item.disabled {
 }
 
 div.item.document {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .item-icon {
@@ -1521,7 +1518,7 @@ div.item.document {
 .item-file.disabled {
   /* display: none; */
   display: inline-block !important;
-  color: #AAA;
+  color: #888;
 }
 
 .item.disabled input {
@@ -1549,7 +1546,7 @@ div.item.document {
 #picker.command-signin #message-signin, 
 #picker.command-message #message-message,
 #picker.page-alert #message-alert,
-x#picker.page-template #message-template {
+#picker.page-template #message-template {
   display: block;
 }
 
@@ -1678,6 +1675,7 @@ x#picker.page-template #message-template {
 #picker #command-name {
   font-size: larger;
   padding-right: 0.75em;
+  vertical-align: -0.1em; /* aligns with all */
 }
 
 
@@ -1727,4 +1725,22 @@ iframe.viewer {
   text-align: center; 
   font-size: large; 
   margin-top: 1em;
+}
+
+.button, .popup>div, .monaco-editor-hover {
+  /* border-radius: 3px; */
+  padding: 0.25ex 0.5ex !important;
+}
+
+/*
+.popup>div, .monaco-editor-hover {
+  border-radius: 5px;
+  border: 1px solid black;
+  padding: 0.5ex !important;
+}
+*/
+
+.monaco-editor-hover .shortcut {
+  margin: 0em;
+  padding-left: 0.5em;
 }
