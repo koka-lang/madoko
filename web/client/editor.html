@@ -48,7 +48,7 @@
 <div class="app-header header-bar">
     <!-- <a href="https://www.madoko.net" title="Madoko home page"><img id="madoko-logo" class="button" src="images/dark/icon-madoko.png"/></a>
     -->
-    <div id="document" class="popup"
+    <div id="document" class="popup touch"
       ><img id="cloud" src="images/dark/button-folder.png"/>
       <div id="document-content" class="menu boxed">
         <div id="new" class="button" title="Create a new document"
@@ -78,7 +78,7 @@
         <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document<span class="shortcut">(Alt-L)</span></div>
       </div
     ></div
-    ><div id="toolbox" class="popup">
+    ><div id="toolbox" class="popup touch">
       <img src="images/dark/icon-toolbox.png"/>
       <div id="toolbox-content" class="menu boxed pinnable" data-bounded="editorpane">
       </div>
@@ -118,9 +118,13 @@
       
     <div class="right">
       <img id="view-spinner" class="gspinner" src="images/dark/spinner-view.gif" title="Rendering..."/>
-      <img id="view-sync" class="button" src="images/dark/button-view-sync.png" title="Synchronize editor with the preview (or double-click in the preview)"/>      
-      <img id="view-full" class="button" src="images/dark/icon-view-full.png" title="Switch to full screen preview (Alt-V)"/>
-      <div id="menu-settings" class="popup no-close-on-click">
+      <div class="button touch">
+        <img id="view-sync" class="" src="images/dark/button-view-sync.png" title="Synchronize editor with the preview (or double-click in the preview)"/>      
+      </div>
+      <div class="button touch">
+        <img id="view-full" class="" src="images/dark/icon-view-full.png" title="Switch to full screen preview (Alt-V)"/>
+      </div>
+      <div id="menu-settings" class="popup touch no-close-on-click">
         <img src="images/dark/button-settings.png" />
         <div id="menu-settings-content" class="menu boxed">
           <div class="button" title="Synchronize automatically with cloud storage, or pull automatically from a repository
@@ -161,7 +165,7 @@
          <div></div>       
         </div>
       </div
-      ><div id="help" class="popup">
+      ><div id="help" class="popup touch">
         <img src="images/dark/button-help.png" title="About"/>
         <div id="help-content" class="menu boxed">
           <a target="_blank" class="button" href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html">

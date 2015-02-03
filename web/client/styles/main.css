@@ -271,8 +271,8 @@ html,body,#main {
   vertical-align: -0.1em;
 }
 
-.header-bar>img {
-  height: 1.1em;
+.header-bar div.button.touch {
+  display: inline-block;
 }
 
 .header-bar .right {
@@ -430,7 +430,7 @@ span.save-link:hover {
 }
 
 
-.header-bar div.popup, .header-bar>img {
+.header-bar div.popup, .header-bar>div.button {
   padding: 0em 0.4em;
 }
 
@@ -1745,3 +1745,22 @@ iframe.viewer {
   margin: 0em;
   padding-left: 0.5em;
 }
+
+/*
+div.touch {
+  display: inline-block;
+  width: 1.5em !important;
+  height: 1.5em !important;
+  padding: 0pt !important;
+  border: 1px solid white;
+  border-radius: 8em;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0ex 0.5ex;
+}
+
+
+.touch>div {
+  text-align: left;
+}
+*/
