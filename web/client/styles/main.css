@@ -164,9 +164,10 @@ html,body,#main {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
-.header-bar, .monaco-editor-hover {
-  font-weight: 100;
+.header-bar, .monaco-editor-hover, #picker, #picker input {
+  /* font-weight: 100; */
 }
+
 .header-bar {
   padding: 0.5rem;
 }
@@ -371,13 +372,16 @@ span.save-link:hover {
 
 
 /* menus */
+.menu {
+  font-size: 90%;
+}
 
 .menu hr {
   margin-top: 0.3em;
   margin-bottom: 0.2em;
   border: none;
   box-shadow: none;
-  border-top: solid #CCC 1px;
+  border-top: solid #AAA 1px;
 }
 
 .menu div .icon, .menu div input {
@@ -492,7 +496,7 @@ span.save-link:hover {
   border-radius: 0px;
 }
 
-#toolbox div.menu div.menu, #toolbox .named {
+#toolbox div.menu div.menu {
   font-size: small;
 }
 
@@ -576,7 +580,7 @@ span.save-link:hover {
 }
 
 .file.main {
-  font-weight: normal;
+  font-weight: bolder;
 }
 
 .file.hide {
@@ -597,7 +601,6 @@ span.save-link:hover {
 
 .file-share {
   padding-right: 0.5em;
-  font-weight: normal;
 }
 
 a.file-share:hover {
@@ -1353,10 +1356,6 @@ div.modal {
 
 /* view */
 
-#picker, #picker input {
-  font-weight: 100;
-}
-
 #picker .message {
   display: none;
 }
@@ -1465,7 +1464,7 @@ div.item.disabled {
 }
 
 div.item.document {
-  font-weight: normal;
+  font-weight: bolder;
 }
 
 .item-icon {
@@ -1515,7 +1514,8 @@ div.item.document {
 .item-file.disabled {
   /* display: none; */
   display: inline-block !important;
-  color: #888;
+  /* color: #888; */
+  opacity: 0.4;
 }
 
 .item.disabled input {
@@ -1576,8 +1576,11 @@ div.item.document {
 #picker.page-me #button-open,
 #picker.page-me #button-save,
 #picker.page-me #button-push {
+  /*
   border-color: #AAA;
   color: #AAA;
+  */
+  opacity: 0.5;
 }
 
 #picker.command-signin #login-info,
