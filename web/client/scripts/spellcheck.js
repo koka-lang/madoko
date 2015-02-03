@@ -39,7 +39,7 @@ var SpellCheckMenu = (function() {
     var self = this;
     return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
                 "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
-            "<div class='button' data-cmd='next'><span class='shortcut info'>(Alt-N)</span><span class='info'>Jump to next error</span></div>");
+            "<div class='button' data-cmd='next'><span class='info'>Jump to next error<span class='shortcut info'>(Alt-N)</span></span></div>");
   }
 
   SpellCheckMenu.prototype.asyncGetContent = function() {
