@@ -181,8 +181,13 @@ function addCustomHover(widgetId,ed,customMenu) {
       
       if (range==null) {
         editor.getModel().tokenIterator(e.target.position, function (it) {
-          info = it.next();             
-          range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
+          info = it.next();    
+          if (info && info.lineNumber) {
+            range = new Range.Range(info.lineNumber, info.startColumn, info.lineNumber, info.endColumn);
+          }
+          else {
+            console.log("** no line number on hover: " + JSON.stringify(info));
+          }         
         });
       }
 
