@@ -164,6 +164,13 @@ html,body,#main {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
+.header-bar {
+  font-weight: 100;
+}
+.header-bar div.menu {
+  font-weight: normal;
+}
+
 .app-header.header-bar {
   padding: 0.5rem;
 }
@@ -325,7 +332,6 @@ img#console-ok {
 
 #console-out {
   overflow: scroll;
-  font-size: 8pt;
   padding: 0.5rem;
   transition: height 0.8s;
   height: calc(100% - 1rem);
