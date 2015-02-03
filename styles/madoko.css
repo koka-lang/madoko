@@ -479,6 +479,6 @@ body.madoko.preview {
 
 @media only screen and (max-device-width:1024px) {
   body.madoko, .madoko-body {
-    padding: 0ex 1ex;
+    padding: 0em 1em;
   }
 }
