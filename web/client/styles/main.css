@@ -164,17 +164,16 @@ html,body,#main {
   font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
 }
 
-.header-bar {
+.header-bar, .monaco-editor-hover {
   font-weight: 100;
+}
+.header-bar {
   padding: 0.5rem;
 }
 .header-bar>div {
   vertical-align: top;
 }
 
-.app-header.header-bar .menu {
-  font-size: 90%;
-}
 
 .app-footer.header-bar {
   padding-bottom: 0.2rem;
@@ -377,7 +376,8 @@ span.save-link:hover {
   margin-top: 0.3em;
   margin-bottom: 0.2em;
   border: none;
-  border-top: solid #AAA 1px;
+  box-shadow: none;
+  border-top: solid #CCC 1px;
 }
 
 .menu div .icon, .menu div input {
@@ -528,7 +528,7 @@ span.save-link:hover {
 /* File items */
 
 .disable, .file.generated, .file.image {
-  color: #888;
+  color: #AAA;
 }
 
 #connection {
@@ -558,9 +558,14 @@ span.save-link:hover {
 }
 
 .exported .disable {
-  color: black;
+  color: black;  
 }
 
+/*
+.binaries {
+  background-color: #F8F8F8;
+}
+*/
 
 .theme-dark #edit-select-header .disable {
   color: #BBB;
@@ -592,6 +597,7 @@ span.save-link:hover {
 
 .file-share {
   padding-right: 0.5em;
+  font-weight: normal;
 }
 
 a.file-share:hover {
@@ -608,15 +614,6 @@ a.file-share:hover {
 .boxed {
   border: 1px solid !important;
   border-color: black;
-}
-
-.menu.boxed {
-  margin: 2px;
-  /* box-shadow: 1px 1px 0px; */
-}
-
-div.boxed {
-  padding: 1.4px;
 }
 
 
@@ -1731,6 +1728,7 @@ iframe.viewer {
   /* border-radius: 3px; */
   padding: 0.25ex 0.5ex !important;
 }
+
 
 /*
 .popup>div, .monaco-editor-hover {
