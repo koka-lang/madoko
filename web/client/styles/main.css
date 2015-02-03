@@ -147,11 +147,11 @@ html,body,#main {
 
 /* Application panes */
 #main {
-  padding: 0em 0.25em;
+  padding: 0em;
 }
 
 .app-body {
-  height: calc(100% - 3.2rem);
+  height: calc(100% - 4.2rem);
 }
 
 .header-bar {
@@ -165,8 +165,7 @@ html,body,#main {
 }
 
 .app-header.header-bar {
-  padding-top: 0.2rem;
-  padding-bottom: 0.1rem;
+  padding: 0.5rem;
 }
 
 .app-header.header-bar .menu {
@@ -175,7 +174,7 @@ html,body,#main {
 
 
 .app-footer.header-bar {
-  padding-top: 0.1rem;
+  padding: 0.2rem 0.5rem;
 }
 
 .pane {
@@ -275,6 +274,10 @@ html,body,#main {
 
 #main .header-bar .right img {
   margin: 0em 0.2em;
+}
+
+#main .header-bar .right #help>.button {
+  margin-right: 0em;
 }
 
 img#console-ok {
