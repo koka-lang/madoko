@@ -188,7 +188,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       }
     }
     
-    Code(txt,_,attrs) -> {      
+    Code(txt,_,attrs) -> {  
+      attrs.logDataLine 
       context.inlineContext.fmtCode( "pre", txt, attrs)
     }
 
@@ -212,6 +213,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
     
     Source(txt,input,parentAttrs) -> {
+      parentAttrs.logDataLine 
       match(input) {
         Pre       -> {
           context.inlineContext.fmtCode("pre",txt,parentAttrs.deriveCodeLineInfo)
