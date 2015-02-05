@@ -258,12 +258,21 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 // Fixup locations in warnings:
 function fixWarnings(txt : string) : string {
   var location := "";
+  val hist = mdict();
   val ls = txt.lines.list.map fun(line) {
     match(line.find(rxLocation)) {
       Nothing -> {
         match(line.find(rxWarning)) {
           Nothing   -> Just(line + "\n")
-          Just(cap) -> Just(cap.groups[1] + location + cap.groups[2] + "\n")
+          Just(cap) -> {
+            val count = hist[line].mbint
+            hist[line] := count+1
+            if (count == 4) 
+             then Just("warning: " + location + " ignoring from now on:" + line + "\n")
+            elif (count > 4)
+             then Nothing
+             else Just(cap.groups[1] + location + cap.groups[2] + "\n")
+          }
         }
       }
       Just(cap) -> {
