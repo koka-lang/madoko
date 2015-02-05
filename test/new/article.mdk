@@ -12,7 +12,6 @@ Colorizer   : javascript
 Bib style   : plainnat
 Bibliography: ../example.bib
 Heading base: 2
-Doc class   : [reprint,nocopyrightspace]sigplanconf.cls
 
 [TITLE]
 
@@ -22,12 +21,6 @@ egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
 ~
 
-~ TexRaw
-% any commands necessary for your particular style
-\category{D.2.5}{Software Engineering}{Testing and Debugging}[symbolic execution]
-\terms{Algorithms, Experimentation}
-\keywords{Games for learning, white box testing}
-~
 
 # Introduction     { #sec-intro }
 

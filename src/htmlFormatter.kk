@@ -407,7 +407,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     "<head>\n" +
     htmlHead.indent +
     "</head>\n" +
-    "<body class=\"madoko madoko-body\">\n" + 
+    "<body class=\"madoko\">\n" + 
     html +
     "\n</body>\n" +
     options.htmlFooter.expand + "\n" + 

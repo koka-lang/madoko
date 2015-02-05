@@ -176,13 +176,15 @@ Html Header   :
       display: initial;
     }
     /* Display in the preview window */
-    html, body.madoko.preview, body.madoko.preview-full {
+    html, body.madoko.preview, body.madoko.preview-full, .body.madoko {
       height  : 100% !important;
       width   : auto!important;
       padding : 0pt !important;
       margin  : 0pt !important;
+    }
+    body.madoko.preview, body.madoko.preview-full, .preview .body.madoko {
       overflow: hidden !important;
-    }            
+    }
     body.preview .reveal .slides .fragment {
       visibility: visible;
       opacity: 0.5;

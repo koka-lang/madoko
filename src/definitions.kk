@@ -33,7 +33,7 @@ public function parseBody( fcontext : formatContext,
                            secBase : int,
                            secDepth : int ) :  div (list<block>,formatContext)
 {
-  parseDefinitions(fcontext, [Div([],("notag line-adjust=0 line=" + lineNo.show).parseAttrs("body",src))], 
+  parseDefinitions(fcontext, [Div([],(".madoko line-adjust=0 line=" + lineNo.show).parseAttrs("body",src))], 
                    metadata,tocDepth,secBase,secDepth)
 }
 
