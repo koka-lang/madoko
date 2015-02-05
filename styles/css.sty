@@ -543,7 +543,7 @@
 % css: Textalign, textindent etc 
 %-------------------------------------------------------------
 
-\cssNewLengthKey{css}{text-indent}{\cssTextIndent}
+\cssNewLengthKey[1sp]{css}{text-indent}{\cssTextIndent}
 \cssNewKey{css}{text-align}{\cssTextAlign}{justify}
 \cssNewLengthKey{css}{line-height}{\cssLineHeight}
 \cssNewKey{css}{float}{\cssFloat}{}
@@ -576,7 +576,7 @@
 		{\cssDoBefore{\protect\centering}}%
 	{}}}%
 	\ifdim\cssLineHeight=0pt\else\setlength{\baselineskip}{\cssLineHeight}\fi
-	\noindent\ifdim\cssTextIndent=0pt\else\hspace*{\cssTextIndent}\fi	
+	\ifdim\cssTextIndent=1sp\else\noindent\hspace*{\cssTextIndent}\fi	
 }
 
 \newcommand{\@cssInlineText}{%
@@ -632,7 +632,7 @@
       	{\cssDoBefore\upshape}%
       	{}}%
   	\eifstrequal{\cssFontStyle}{italic}%
-    	{\cssDoBefore\itshape\hspace{-0.2ex}}%
+    	{\cssDoBefore\itshape}%
     {\eifstrequal{\cssFontStyle}{oblique}%
    		{\cssDoBefore\slshape}%
     {\eifstrequal{\cssFontStyle}{normal}%
@@ -653,7 +653,8 @@
 		{\cssDoBefore\Large}%
 	{\eifstrequal{\cssFontSize}{xx-large}%
 		{\cssDoBefore\LARGE}%
-		{}}}}}}}}%
+		{\cssDoBefore{\fontsize{\cssFontSize}{1em}\selectfont}%
+	}}}}}}}}%
 	%
 	\eifstrequal{\cssColor}{}{}%
 		{\strsplit{\cssColor}%			
@@ -755,9 +756,10 @@
 	 \@cssElemDoRules%
 	 \@cssProcessMargins\@cssProcessPadding%
 	 \@cssClassDoRules%
-	 \@cssProcessText\@cssProcessFont%
+	 \@cssProcessText%
+	 \@cssProcessFont%
 	 \@cssApplyBefore}%
-	{\@cssApplyAfter}
+	{\@cssApplyAfter}%
 
 \newenvironment{cssBlock}[1][]%
 	{\begin{cssBlockX}{}{#1}}{\end{cssBlockX}}
