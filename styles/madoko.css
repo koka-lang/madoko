@@ -48,9 +48,7 @@
 }
 
 .madoko blockquote {
-  border-left: 5px Gainsboro solid;
-  padding-left: 1ex;
-  margin-left: 1em;
+  font-style: italic;
 }
 
 /* Local page links do not get an underline unless hovering */
