@@ -49,6 +49,7 @@ public struct options(
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
   htmlHeader: string= "",  // literal html header
+  cssHeader: string = "",  // literal css header
   htmlFooter: string= "",  // literal html footer
   htmlMeta : string = "name=\"viewport\" content=\"initial-scale=1.0\"",  // html meta tags
   texHeader: string= "",   // literal tex header

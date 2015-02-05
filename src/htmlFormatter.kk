@@ -330,14 +330,14 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
               makeMeta("keywords",",") + 
               makeMeta("author",",") +
               makeMeta("description") 
-              
-  "<!DOCTYPE html>\n<html>\n<head>\n" +
-   "  <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n" +
-   "  <meta name=\"generator\" content=\"Madoko, version " + version + "\" />\n" +
-   meta.map(fun(m) { "  <meta " + m + " />\n" }).join +
-   (if (options.title=="") then "" else
-      "  <title>" + escape(options.title.expand) + "</title>\n") +
-   (if (options.css == "") then "" else {
+                
+  val htmlHead =              
+    "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n" +
+    "<meta name=\"generator\" content=\"Madoko, version " + version + "\" />\n" +
+    meta.map(fun(m) { "<meta " + m + " />\n" }).join +
+    (if (options.title=="") then "" else
+      "<title>" + escape(options.title.expand) + "</title>\n") +
+    (if (options.css == "") then "" else {
       val links = options.css.expand.splitPaths
       links.map(fun(xlink) { 
         val (link,attrs) = match(xlink.find(rxScript)) {
@@ -346,66 +346,74 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
         }
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
-            "  <style " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </style>\n"
+            "<style " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </style>\n"
           _ -> {
             if (link.relative) then {
               log("filesRefer",link);
               log("embed",link);
             }
-            "  <link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\" " + 
+            "<link rel=\"stylesheet\" type=\"text/css\" href=\"" + escape(link) + "\" " + 
                     attrs.htmlFormat("link",False) + ">\n"             
           }
         }
       }).join 
-    }) +
-   (if (options.scripts == "") then "" else {
-      val xlinks = options.scripts.expand.splitPaths
-      xlinks.map(fun(xlink) { 
-        val (link,attrs) = match(xlink.find(rxScript)) {
-          Nothing   -> (xlink,attrsNone)
-          Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "script"))
-        }
-        match(options.embedinfos[link]) {
-          Just(info) | info.embedData != "" -> 
-            "  <script " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </script>\n"
-          _ -> {
-            if (link.relative) then {
-              log("filesRefer",link);
-              log("embed",link);
-            }
-            "  <script src=\"" + escape(link) + "\" " + attrs.htmlFormat("script",False) + "></script>\n" 
+     }) +
+     (if (options.scripts == "") then "" else {
+        val xlinks = options.scripts.expand.splitPaths
+        xlinks.map(fun(xlink) { 
+          val (link,attrs) = match(xlink.find(rxScript)) {
+            Nothing   -> (xlink,attrsNone)
+            Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "script"))
           }
-        }
-      }).join 
-    }) +
-   (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
-      ["<script type=\"text/x-mathjax-config\">",
-       "  MathJax.Hub.Config({",
-       "    tex2jax: {inlineMath: [['$','$']]},",
-       @"     TeX: { ",
-       @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],",
-       @"                 mdMathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mdMathindent: ['\\hspace{#1ex}',1], mdMathbr: ['\\\\'],",
-       @"               },",
-       if (extensions=="") then "" 
-        else @"       extensions: [" + extensions + "]",
-       @"     }",
-       "  });",
-       "  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { ",
-       "    MathJax.InputJax.TeX.Definitions.environment['mdMathprearray'] = ['AMSarray',null,null,null,'l','0em','0em'];", 
-       "  });", 
-       "</script>",
-       "<script type=\"text/javascript\" class=\"preview\"",
-       "  src=\"" + options.getMathjax.expand.escape + "\">",
-       "</script>\n"
-      ].join("\n  ")
-   }) +
-   options.htmlHeader.expand + "\n" + 
-   "</head>\n" +
-   "<body class=\"madoko madoko-body\">\n" + 
-   html +
-   "\n</body>\n" +
-   options.htmlFooter.expand + "\n" + 
-   "</html>\n"
+          match(options.embedinfos[link]) {
+            Just(info) | info.embedData != "" -> 
+              "<script " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </script>\n"
+            _ -> {
+              if (link.relative) then {
+                log("filesRefer",link);
+                log("embed",link);
+              }
+              "<script src=\"" + escape(link) + "\" " + attrs.htmlFormat("script",False) + "></script>\n" 
+            }
+          }
+        }).join 
+      }) +
+     (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
+        ["<script type=\"text/x-mathjax-config\">",
+         "  MathJax.Hub.Config({",
+         "    tex2jax: {inlineMath: [['$','$']]},",
+         @"     TeX: { ",
+         @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1], mathkw: ['\\mathsf{#1}',1],",
+         @"                 mdMathspace: ['\\hspace{#1pt}\\hspace{#1pt}\\hspace{#1pt}',1], mdMathindent: ['\\hspace{#1ex}',1], mdMathbr: ['\\\\'],",
+         @"               },",
+         if (extensions=="") then "" 
+          else @"       extensions: [" + extensions + "]",
+         @"     }",
+         "  });",
+         "  MathJax.Hub.Register.StartupHook('TeX AMSmath Ready',function () { ",
+         "    MathJax.InputJax.TeX.Definitions.environment['mdMathprearray'] = ['AMSarray',null,null,null,'l','0em','0em'];", 
+         "  });", 
+         "</script>",
+         "<script type=\"text/javascript\" class=\"preview\"",
+         "  src=\"" + options.getMathjax.expand.escape + "\">",
+         "</script>\n"
+        ].join("\n")
+     }) +
+     options.htmlHeader.expand + "\n" +
+     (if (options.cssHeader == "") then "" else "<style>\n" + options.cssHeader.expand.indent + "\n</style>\n")
+
+  val htmlDoc = 
+    "<!DOCTYPE html>\n<html>\n" +
+    "<head>\n" +
+    htmlHead.indent +
+    "</head>\n" +
+    "<body class=\"madoko madoko-body\">\n" + 
+    html +
+    "\n</body>\n" +
+    options.htmlFooter.expand + "\n" + 
+    "</html>\n"
+
+  htmlDoc
 }
 
 val rxScript = regex(@"([^\{\s]+)\s*(?:\{((?:[^\\\}]|\\.)*)\})?")

@@ -52,6 +52,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   }
   elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
   elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader.appendNL(value))
+  elif (key=="css-header") options(cssHeader=if(value=="") then "" else options.cssHeader.appendNL(value))
   elif (key=="html-footer") options(htmlFooter=if(value=="") then "" else options.htmlFooter.appendNL(value))
   elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader.appendNL(value))
   elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx.appendNL(value))
