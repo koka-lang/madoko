@@ -178,6 +178,7 @@ var SpellChecker = (function() {
               lang: lang,
               affData: affData,
               dicData: dicData + "\n" + dicExtraData + "\n" + dicGeneric,
+              // options: { flags: { KEEPCASE: true } },
             }).then( function() {
               self.dictionaries.set(lang,true);
             });

@@ -756,12 +756,36 @@ Typo.prototype = {
 			
 			return rv;
 		}
+
+		// Daan: do small 'obvious' fixes, like capitilizing the first letter
+		function editsSmall(word) {
+			function anyuppers( w ) {
+				var res = [];
+				for (var i = 0; i < w.length; i++) {
+					res.push( w.substr(0,i) + w.substr(i,1).toUpperCase() + w.substr(i+1) );
+				}	
+				return res;
+			}
+			if (word==null || word.length <= 0) return [];
+			var lcap = word.substr(0,1).toLowerCase() + word.substr(1);
+			var ucap = word.substr(0,1).toUpperCase() + word.substr(1);
+			var lower = word.toLowerCase();
+			var upper = word.toUpperCase();
+						
+			var suggestions = [lcap,ucap,lower,upper].concat(anyuppers(word)).concat(anyuppers(ucap));
+			return suggestions.filter( 
+				function(suggest) { 
+					return (suggest !== word && self.checkExact(suggest)); 
+				} 
+			);
+		}
 		
 		function correct(word) {
 			if (word==null) return [];
 
 			// Get the edit-distance-1 and edit-distance-2 forms of this word.
-			var ed1 = edits1([word]);
+			var ed0 = editsSmall(word);
+			var ed1 = ed0.concat( edits1([word]) );
 	
 			// Daan: limit the size of the edit-distance-2 to limit compute times.	
 		  var edx = ed1.slice(0); // copy
