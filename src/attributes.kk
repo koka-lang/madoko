@@ -446,21 +446,6 @@ function caseConvert( txt : string ) : string {
   }) 
 }
 
-type peano {
-  Succ(prev:peano)
-  Zero
-}
-
-function peano(n : int ) : peano {
-  var p := Zero
-  repeat(n) {
-    p := Succ(p)
-  }
-  p
-}
-
-val peano10= peano(10)
-val peanoN = peano(100)
 
 public function expand( attrs : attrs, metadata : dict<string>, labels : dict<label> = dict() ) : attrs {
   if (attrs.empty) return attrs 

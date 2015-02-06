@@ -56,7 +56,8 @@ public function normalizeSource( src : string ) : string {
 function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
 {  
   // first normalize the input: all tabs to 4 spaces.
-  val (options,src) = parseMeta(options0,fmt,src0.normalizeSource)
+  val (options1,src) = parseMeta(options0,fmt,src0.normalizeSource)
+  val options = options1.filterMeta
   val xfull = options.full.maybe(True,id)     
   val logo  = if (xfull && options.logo) then "\n\n~Begin LogoMadoko\n&LogoMadoko;\n~End LogoMadoko\n" else "\n"
   

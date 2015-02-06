@@ -28,7 +28,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
   val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options1(metadata = options1.metadata + mdata2) 
     else { 
-      val mdataDef  = parsePlainMeta(defaultMeta(options1), fmt, options1.modes, verbose=options1.verbose >= 4).fst      
+      val mdataDef  = parsePlainMeta(defaultMeta(options1,fmt), fmt, options1.modes, verbose=options1.verbose >= 4).fst      
       val mdataFull = mdataDef + options0.metadata + mdata2
       val options2  = options0.fromMeta(mdataFull)
       options2( metadata = mdataFull)
@@ -39,6 +39,58 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    else (options,rest)  
 }
 
+public function filterMeta( options : options ) : options {
+  val mdata = options.metadata
+  val truths = extractTrueKeys(mdata,peano10)
+  val mdata1 = mdata.filterModed(truths)
+  //trace("truths: " + truths.keys.join(","))
+  //trace("mdata: " + mdata1.map(fst).join(","))
+  options( metadata = mdata1 )
+}
+
+function filterModed( mdata :metadata, truths : dict<bool> ) {
+  mdata.map( fun(kv) {
+    match(truths.isMatch(kv.fst)) {
+      Just(key) -> Just((key,kv.snd))
+      Nothing   -> Nothing
+    }
+  }).concatMaybe
+}
+
+function isMatch( truths: dict<bool>, key : string ) : maybe<string> {
+  match(key.find(rxModed)) {
+    Nothing   -> Just(key)
+    Just(cap) -> {
+      val neg = cap.groups[1] == "no"
+      val mode = cap.groups[2]
+      val isTrue = (mode=="" || truths.containsKey(mode))
+      if ((isTrue && !neg) || (!isTrue && neg))
+       then Just(cap.groups[3])
+       else Nothing
+    }
+  }
+}
+
+function isTruth( key, value, acc ) {
+  val xvalue = value.trim.toLower
+  if (xvalue == "true" || xvalue=="1") 
+   then acc.isMatch(key)
+   else Nothing      
+}
+function extractTrueKeys( mdata : metadata, p0 : peano, acc : dict<bool> = dict() ) : dict<bool> {
+  match(p0) {
+    Zero -> acc
+    Succ(p) -> {
+      val more = mdata.map( fun(kv) { isTruth(kv.fst,kv.snd,acc) } ).concatMaybe.map(fun(key) { (key,True) })
+      if (more.isNil)
+       then acc
+       else mdata.extractTrueKeys( p, more.dict + acc )
+    }
+  }
+}
+
+val rxModed = regex(@"@(no)?(\w+)-(.*)")
+
 function stripInitialWhite( txt : string ) : (string,int) {
   match(txt.find(rxInitialWhite)) {
     Nothing   -> (txt,0)
@@ -47,30 +99,32 @@ function stripInitialWhite( txt : string ) : (string,int) {
 }
 val rxInitialWhite = regex(@"^(\s|<!--[\s\S]*?-->)+")
 
+function makeKey(k,pre,value,rawvalue,lines) {
+  val key = if (pre=="") then k.trim.normalizeId else pre + k.trim.toLower
+  if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
+   then (key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
+   else (key,value)
+}                 
+
 function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
-{
+{ 
   match(txt.find(rxMeta)) {
     Nothing   -> {
       //if (metadata.isNil) trace("no metadata?: " + txt.substr(0,100))
       (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
-      val matchMode = if (cap.groups[1].startsWith("no")) 
-                       then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
-                       else fmt.matchFmt( cap.groups[1], modes)      
-      val (kvs) = if (matchMode) then {
-                  val value = cap.groups[4].joinLines.trim
-                  //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
-                  if (cap.groups.matchedOn(3))
-                   then cap.groups[2].toLower.split(",").list.map(fun(k) { (k.trim,value) })
-                   else {
-                    val key = cap.groups[2].normalizeId
-                    if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
-                     then [(key,"%mdk-data-line={" + (lines+1).show + "}\n" + cap.groups[4])]
-                     else [(key,value)]
-                   }
-                }
-                else []
+      //val matchMode = if (cap.groups[1].startsWith("no")) 
+      //                 then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
+      //                 else fmt.matchFmt( cap.groups[1], modes)      
+      val value = cap.groups[4].joinLines.trim
+      //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
+      val rawkeys = if (cap.groups.matchedOn(3))
+                      then cap.groups[2].split(",").list
+                      else [cap.groups[2]]     
+      val kstart = cap.groups[2].substr(0,1)              
+      val pre = if (cap.groups[1] != "" || kstart=="#" || kstart=="." || kstart=="~") then "@" + cap.groups[1] + "-" else ""
+      val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,cap.groups[4],lines ) } );                
       val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
     }
@@ -80,8 +134,9 @@ val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + "
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 
-function defaultMeta( options : options ) : string {
-  ( [ @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
+function defaultMeta( options : options, fmt : formatter ) : string {
+  ( [ fmt.showFormatter + ": True",
+      @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
       @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block",
 
       @"~TableFigure : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table",
@@ -200,7 +255,7 @@ function defaultMeta( options : options ) : string {
       theorem("Corollary"),
       theorem("Example"),
       theorem("Definition"),
-    ] +
+   ] +
     list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
     +
     ["\n"]

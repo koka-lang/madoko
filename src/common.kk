@@ -23,6 +23,23 @@ public function logLocation( lineInfo: string, logname : string = "warning" ) : 
   log(logname,"  location: " + lineInfo)
 }
 
+public type peano {
+  Succ(prev:peano)
+  Zero
+}
+
+public function peano(n : int ) : peano {
+  var p := Zero
+  repeat(n) {
+    p := Succ(p)
+  }
+  p
+}
+
+public val peano10= peano(10)
+public val peanoN = peano(100)
+
+
 /* --------------------------------------
   Grammar rules 
 ---------------------------------------- */
@@ -317,8 +334,8 @@ public function showInput( r : input ) {
 
 public function showFormatter( f : formatter ) {
   match(f) {
-    FmtTex -> "FmtTex"
-    FmtHtml -> "FmtHtml"
+    FmtTex -> "tex"
+    FmtHtml -> "html"
   }
 }
 
