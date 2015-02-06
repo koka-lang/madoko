@@ -219,9 +219,10 @@ type line {
 val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 
 function fmtColorArg( clr : string ) : string {
-  if (clr.startsWith("#")) 
-    then "[HTML]{" + clr.substr(1) + "}"
-    else "{" + clr.substr(0,1).toUpper + clr.substr(1).toLower + "}"
+  val c = clr.normalizeColor  
+  if (c.startsWith("#")) 
+    then "[HTML]{" + c.substr(1) + "}"
+    else "{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
 }
 
 function fmtColumn( colattr : attrs ) : string {
@@ -329,7 +330,7 @@ function texAttrsX( attrs : attrs = attrsNone ) : string {
                 attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
                   val (name0,value) = kv
                   val name = if (name0.startsWith("tex-")) then name0.substr(4) else name0    
-                  name.normalizeId + "={" + value.normalizeVal + "}" 
+                  showAttr( name, value )
                 }),          
               ].concat.join(",") 
     if (txt=="") then "" else "[" + txt + "]"
@@ -342,7 +343,24 @@ function nosuppressKey( kv : (string,string) ) : bool {
   (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
 }
 
-function normalizeVal( v : string ) : string {
+
+function showAttr( key, value ) {
+  key.normalizeId + "={" + (if (key=="color" || key.endsWith("-color")) then value.normalizeColor else value.normalizeVal) + "}" 
+}
+
+function normalizeColor( v : string ) : string {
+  match(v.find(rxRgbX)) {
+    Just(cap) -> {
+      if (cap.groups[4]=="")
+       then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
+       else v.trim.toUpper
+    }
+    Nothing -> normalizeVal(v)
+  }
+}
+
+function normalizeVal( v0 : string ) : string {
+  val v = v0.splitExclude(rxComma,rxQuoted).join(",")
   match(v.find(rxPerc)) {
     Just(cap) -> {
       val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
@@ -350,12 +368,59 @@ function normalizeVal( v : string ) : string {
     }
     Nothing -> match(v.find(rxPixels)) {
       Just(cap) -> cap.groups[1] + "\\cssPixel"
-      Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
+      Nothing   -> match(v.find(rxRgb)) {
+        Just(cap) -> {
+          val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
+          val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
+          "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
+        }
+        Nothing   -> match(v.find(rxHsl)) {
+          Just(cap) -> {
+            val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
+            "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
+          }
+          Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
+        }
+      }
     }
   }
 }
-val rxPerc = regex(@"\s*(\d{1,3})%\s*")
-val rxPixels = regex(@"\s*(\d+(?:\.\d+)?)px\s*")
+
+val rxPerc = regex(@"^\s*(\d{1,3})%\s*$")
+val rxPixels = regex(@"^\s*(\d+(?:\.\d+)?)px\s*$")
+
+val rxRgbX = regex(@"^\s*#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9]{3})?")
+val rxRgb = regex(@"^\s*rgba?\((\d+)(%)?,(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
+val rxHsl = regex(@"^\s*hsla?\((\d+),(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
+
+val rxComma  = regex(@"\s*,\s*")
+val rxQuoted = regex(@"'[^']*'|""[^""]*""")
+
+function hslToRgb(hi, si, li){
+  val h = (hi%360).double / 360.0;
+  val s = si.double * 0.01;
+  val l = li.double * 0.01;
+
+  if (s==0.0) {
+    val x = (l*255.0).int
+    return (x,x,x)
+  }
+
+  val q = if (l < 0.5) then l * (1.0 + s) else l + (s - (l * s));
+  val p = (2.0 * l) - q;
+  
+  function hue2rgb(t0) {
+    val t = if (t0 < 0.0) then t0+1.0 elif (t0 > 1.0) then t0-1.0 else t0;
+    val c = if (t < 1.0/6.0) then p + (q - p) * 6.0 * t
+            elif (t < 0.5) then q
+            elif (t < 2.0/3.0) then p + (q - p) * (2.0/3.0 - t) * 6.0
+            else p
+    (c * 255.0).int            
+  }
+
+  (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
+}
+
 
 function capitalize( s : string ) : string {
   s.substr(0,1).toUpper + s.substr(1)
