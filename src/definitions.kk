@@ -321,7 +321,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   match(attrs.input) {
     Tex -> {      
       Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4)
-        .parseBlocks(attrs.lineNo+1,fcontext.lineMap,citestyle),attrs)
+        .parseBlocks(attrs.lineNo+1,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
     Markdown(monly) -> {
       match(monly) {
@@ -331,7 +331,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
             Nothing -> attrs.lineNo + 1
             Just(d) -> attrs.lineNo + (d.parseInt().maybe(0,id))
           }
-          Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle),attrs)
+          Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
         }
       }
     }

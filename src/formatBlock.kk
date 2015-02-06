@@ -312,7 +312,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         linfo + formatBlock(context,blk)
       }
       elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then linfo + formatBlock(context,context.footnoteBlock)
-      elif (name.toLower=="title") then linfo + context.fmtTitle(attrs)
+      elif (name.toLower=="title") then {
+        linfo + context.fmtTitle(attrs)
+      }
       else "" // formatBlock(context,Para("[" + name + "]\n"))
     }
     

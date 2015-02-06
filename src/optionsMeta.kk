@@ -59,14 +59,6 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="tex-footer") options(texFooter =if(value=="") then "" else options.texFooter.appendNL(value))
   elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)
   elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
-  elif (key=="author") {
-    if (value=="") then options(author=[]) else {
-      options(author=options.author + [value], 
-              affiliation=options.affiliation + [""], 
-              email=options.email + [""],
-              authorNotes=options.authorNotes + [""])
-    }
-  }
   else {
     options.update2( key, lvalue, value, ivalue, mdata )
   }
@@ -74,7 +66,15 @@ function update( options : options, key : string, xvalue : string, mdata : metad
 
 function update2( options : options, key : string, lvalue : string, value : string, ivalue : int, mdata : metadata ) : options 
 {
-  if (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then [] else appendValue(options.affiliation,value))
+  if (key=="author") {
+    if (value=="") then options(author=[]) else {
+      options(author=options.author + [value], 
+              affiliation=options.affiliation + [""], 
+              email=options.email + [""],
+              authorNotes=options.authorNotes + [""])
+    }
+  }
+  elif (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then [] else appendValue(options.affiliation,value))
   elif (key=="email") options(email=if (value=="") then [] else appendValue(options.email,value))
   elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then [] else appendValue(options.authorNotes,value))
   elif (key=="title-note" || key=="title-date") options(titleNote=value)

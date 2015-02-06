@@ -11,6 +11,7 @@ module block
 
 import std/string
 import std/regex
+import std/dict
 import common
 import attributes
 
@@ -135,6 +136,7 @@ rectype blockContext {
   BlockContext( grammar : grammar<block,blockContext>,
                 listGrammar : grammar<block,blockContext>,
                 citestyle : citestyle,
+                metadata : dict<string>,
                 bench   : bool,
                 pedantic : bool,
                 loose   : bool = False,
@@ -149,7 +151,53 @@ rectype blockContext {
  Block element functions 
 ---------------------------------------- */
 function blockSpecial( cap : matched, context : blockContext ) : block {  
-  Special(cap.groups[1],cap.groups[2])
+  function entry(name,className = name) {
+    match(context.metadata[name]) {
+      Just(value) | value.trim != "" -> "[&" + name + ";]{." + className + "}\n"
+      _ -> ""
+    }
+  }
+  function readInt(name,default = 0) {
+    match(context.metadata[name]) {
+      Just(value) -> value.trim.parseIntDefault(default)
+      Nothing     -> default
+    }
+  }
+  function group( xs : list<a>, n : int = 3, acc : list<a> = xs ) : list<list<a>> {
+    match(xs) {
+      Nil -> Nil
+      Cons(_,xx) -> { // just for termination proof
+        match( acc ) {
+          Nil -> Nil
+          _   -> Cons( acc.take(n), group(xx, n, acc.drop(n) ) )
+        }
+      }
+    }
+  }
+  function author( idx : int ) : string {
+    "~ Begin Author\n" +
+    [entry("author" + idx.show, "author-name"),
+     entry("affiliation" + idx.show, "author-affiliation .author-address"),
+     entry("author-note" + idx.show, "author-note"),
+     entry("email" + idx.show, "author-email")].join +
+    "~ End Author\n"
+  }
+  function authorRow( idxs : list<int> ) : string {
+    "~ Begin AuthorRow\n" + idxs.map(author).join + "~ End AuthorRow\n"
+  }
+  if (cap.groups[1].toLower == "title") {
+    val titleBlock = [
+      entry("title"),
+      entry("subtitle"),
+      entry("title-note"),
+      list(1,readInt("author-count")).group(readInt("author-columns",3)).map(authorRow).join,
+      entry("title-footer")
+    ].join
+    Div( [], "".parseAttrs("titleblock",source=titleBlock))
+  }
+  else {
+    Special(cap.groups[1],cap.groups[2])
+  }
 }
 
 function blockPara( cap : matched, _context ) : block {
@@ -186,7 +234,7 @@ function blockHeadingLine( cap : matched, context : blockContext ) : block {
               cap.groups[1], cap.groups[2].parseAttrs )
 }
 
-function blockCode( cap : matched, context ) : block  {
+function blockCode( cap : matched, context : blockContext ) : block  {
   val source = cap.groups[1].replaceAll(rxindent4,"")
   Code(source, "", 
           if (!(context.pedantic || context.bench)) then attrsNone.addClass("pre-indented") else attrsNone)
@@ -406,12 +454,12 @@ function columnStyle( style : string ) : attrs {
 
 // Parse text into blocks
 public function parseBlocks( src : string, lineNo : int, lineMap : lineMap,
-                             citestyle : citestyle = citeAuto, 
+                             citestyle : citestyle = citeAuto, mdata : dict<string>,
                              bench : bool = False,
                              pedantic : bool = False
                              )  : list<block>
 {
-  val bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,bench,pedantic, False, lineNo, lineMap)
+  val bcontext = BlockContext(blockGrammar,blockListGrammar,citestyle,mdata, bench,pedantic, False, lineNo, lineMap)
   parseBlocks(bcontext,src)
 }
 
