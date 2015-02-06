@@ -148,7 +148,7 @@
 \ifdef\date{\date{}}{}
 \providecommand{\email}[1]{\normalsize\textsf{#1}}%
 \providecommand{\affaddr}[1]{\normalsize{#1}}%
-\providecommand{\alignauthor}{}
+\providecommand{\alignauthor}{\\[2ex]}
 \providecommand{\aufnt}[1]{{\large #1}}
 \providecommand{\numberofauthors}[1]{}
 
@@ -180,11 +180,9 @@
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
-   \ifdef{\alignauthor}{\appto\@mdauthors{\alignauthor}}{%
-     \ifnum\value{mdAuthorCount}>1%
-       \gappto\@mdauthors{\\[2ex]}%
-     \fi%
-   }%
+   \ifnum\value{mdAuthorCount}>1%
+     \gappto\@mdauthors{\alignauthor}%
+   \fi%
    \gappto\@mdauthors{\aufnt{#1}}%
    \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex] #2}\fi%
    \ifx\relax#3\relax\else\gappto\@mdauthors{\\\email{#3}}\fi%
