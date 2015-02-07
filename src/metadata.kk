@@ -20,19 +20,22 @@ import optionsMeta
 
 // Parse the meta-data at the start of a document,
 // and return updated options and the rest of the document
-public function parseMeta( options0 : options, fmt : formatter, txt : string ) : (options, string) 
+public function parseMeta( options0 : options, fmt : formatter, txt : string ) : div (options, string) 
 {
   val (txt1,lineCount0) = stripInitialWhite(txt)
   val (mdata2,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
   val options1 = options0.fromMeta(mdata2)
-  val options = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
-    then options1(metadata = options1.metadata + mdata2) 
+  val mdataFull = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
+    then options0.metadata + mdata2
     else { 
       val mdataDef  = parsePlainMeta(defaultMeta(options1,fmt), fmt, options1.modes, verbose=options1.verbose >= 4).fst      
-      val mdataFull = mdataDef + options0.metadata + mdata2
-      val options2  = options0.fromMeta(mdataFull)
-      options2( metadata = mdataFull)
+      mdataDef + options0.metadata + mdata2
+      //val options2  = options0.fromMeta(mdataFull)
+      //options2( metadata = mdataFull)
     }
+  val mdataModed = mdataFull.filterModed
+  val options2 = options0.fromMeta(mdataModed)
+  val options = options2( metadata = mdataModed )
 
   if (options.lineNo > 0)
    then (options(lineNo = options.lineNo + lineCount),rest)
@@ -71,7 +74,7 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
                       then cap.groups[2].split(",").list
                       else [cap.groups[2]]     
       val kstart = cap.groups[2].substr(0,1)              
-      val pre = if (cap.groups[1] != "" || kstart=="#" || kstart=="." || kstart=="~") then "@" + cap.groups[1] + "-" else ""
+      val pre = if (cap.groups[1] != "" || kstart=="#" || kstart=="." || kstart=="~") then "@" + cap.groups[1] + " " else ""
       val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,cap.groups[4],lines ) } );                
       val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
@@ -115,6 +118,7 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
 public function filterModed( mdata :metadata ) : <div> metadata {
   val modes = mdict()
   mdata.map( fun(kv) {
+    //trace("filter: " + kv.fst)
     match(modes.unMode(kv,mdata)) {
       Just(key) -> Just((key,kv.snd))
       Nothing   -> Nothing
@@ -130,7 +134,8 @@ function unMode( modes : mdict<h,bool>, kv : (string,string), mdata : metadata )
       val neg  = cap.groups[1] == "no"
       val mode = cap.groups[2]
       val isTrue = (mode=="" || modes.getMode(mode,mdata))
-      if ((isTrue && !neg) || (!isTrue && neg))
+      val keep = ((isTrue && !neg) || (!isTrue && neg))
+      if (keep)
        then Just(cap.groups[3])
        else Nothing
      }
@@ -142,19 +147,25 @@ function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <di
     Just(value) -> value
     Nothing -> {
       modes[mode] := False  // prevent infinite recursion
-      mdata.reverse.foreachUntil( fun(kv) { 
-        match( modes.unMode(kv,mdata) ) {
-          Just(key) | key == mode  -> {
-            val value = kv.snd.trim.toLower
-            val res = (value=="true" || value=="1")
-            modes[mode] := res
-            Just(res)  
+      val mbRes = mdata.reverse.foreachUntil( fun(kv) { 
+        match( kv.fst.find(rxModed)) {
+          Nothing   | kv.fst==mode -> Just(kv.snd) 
+          Just(cap) | cap.groups[3] == mode -> {
+            match(modes.unMode(kv,mdata)) { // may recurse
+              Just(_) -> Just(kv.snd)
+              Nothing -> Nothing
+            }
           }
           _ -> Nothing
-        }
+        }        
       })
-      match(modes[mode]) {
-        Just(value) -> value
+      match(mbRes) {
+        Just(raw) -> {
+          val value = raw.trim.toLower
+          val res = (value=="true" || value=="1")
+          modes[mode] := res
+          res        
+        }
         Nothing     -> False
       }
     }
@@ -162,7 +173,7 @@ function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <di
 }
 
 
-val rxModed = regex(@"@(no)?(\w*)-(.*)")
+val rxModed = regex(@"@(no)?(\w*) (.*)")
 
 
 // --------------------------------------------------------------
