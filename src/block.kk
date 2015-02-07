@@ -151,10 +151,17 @@ rectype blockContext {
  Block element functions 
 ---------------------------------------- */
 function blockSpecial( cap : matched, context : blockContext ) : block {  
-  function entry(name,className = name) {
+  function joinnl( lines : list<string> ) : string {
+    lines.map(fun(line) { line + "\n" }).join
+  }
+  function mkblock( name, content : list<string>, lineno = context.lineNo ) : list<string> {
+    ["~ Begin " + name + " { line-adjust=0 line=" + lineno.show + " }"] + content + ["~ End " + name]
+  }
+  function entry(name, className = name) {
     match(context.metadata[name]) {
-      Just(value) | value.trim != "" -> "[&" + name + ";]{." + className + " }"
-      _ -> ""
+      Just(value) | value.trim != "" 
+        -> mkblock(className, ["&" + name + ";"])
+      _ -> []
     }
   }
   function readInt(name,default = 0) {
@@ -174,25 +181,22 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
       }
     }
   }
-  function author( idx : int ) : string {
-    "\n~ Begin Author { line-adjust=0 line=" + context.lineNo.show + " }\n" +
-    [entry("author" + idx.show, "author-name"),
-     entry("affiliation" + idx.show, "author-affiliation .author-address"),
-     entry("author-note" + idx.show, "author-note"),
-     entry("email" + idx.show, "author-email")].join +
-    "\n~ End Author"
+  function author( idx : int ) : list<string> {
+    mkblock("Author", 
+      [entry("author" + idx.show, "AuthorName"),
+       entry("affiliation" + idx.show, "AuthorAffiliation"),
+       entry("author-note" + idx.show, "AuthorNote"),
+       entry("email" + idx.show, "AuthorEmail")].concat)
   }
-  function authorRow( idxs : list<int> ) : string {
-    "\n~ Begin AuthorRow { line-adjust=0 data-line=" + context.lineNo.show + " }" + idxs.map(author).join + "\n~ End AuthorRow"
+  function authorRow( idxs : list<int> ) : list<string> {
+    mkblock("AuthorRow", idxs.concat(author))
   }
   if (cap.groups[1].toLower == "title") {
     val titleBlock = [
-      entry("title"),
-      entry("subtitle"),
-      entry("title-note"),
-      list(1,readInt("author-count")).group(readInt("author-columns",3)).map(authorRow).join + "\n",
-      entry("title-footer")
-    ].join
+        mkblock("TitleHeader", entry("title","Title") + entry("subtitle","Subtitle") + entry("title-note","TitleNote") ),
+        mkblock("Authors", list(1,readInt("author-count")).group(readInt("author-columns",3)).concat(authorRow) ),
+        entry("title-footer","TitleFooter")
+      ].concat.join("\n")
     Div( [], "line-adjust=0".parseAttrs("titleblock",source=titleBlock))
   }
   else {
