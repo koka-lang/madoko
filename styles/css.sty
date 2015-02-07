@@ -162,7 +162,7 @@
 \newcommand{\@doAfter}{}
 \newcommand{\@wrapCmd}[1]{#1}
 
-\newcommand{\@cssUseCmd}{\renewcommand{\@wrapCmd}[1]{##1}\@usewraptrue}
+\newcommand{\@cssUseCmd}{\renewcommand{\@wrapCmd}[1]{##1}\renewcommand{\@doAfter}{}\@usewraptrue}
 \newcommand{\@cssUseEnv}{\renewcommand{\@doBefore}{}\renewcommand{\@doAfter}{}\@usewrapfalse}
 
 \newcommand{\@cssApplyCmd}[1]{{\@wrapCmd{#1}}}
@@ -181,8 +181,12 @@
 \newcommand{\@cmdAfter}[2]{#2#1}
 
 \newcommand{\cssWrapCmd}[1]{\apptox{\@wrapCmd}{#1}}
+\newcommand{\cssDoBeforeX}[1]{#1}
+\newcommand{\cssDoAfterX}[1]{\preto\@doAfter{#1}}
 \newcommand{\cssDoBefore}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
 \newcommand{\cssDoAfter}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
+%\newcommand{\cssDoBeforeX}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
+%\newcommand{\cssDoAfterX}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
 
 \newcommand{\cssDoEnv}[1]{\cssDoBefore{\protect\begin{#1}}\cssDoAfter{\protect\end{#1}}}
 \newcommand{\cssDoEnvOpt}[2]{\cssDoBefore{\begin{#1}[#2]}\cssDoAfter{\end{#1}}}
@@ -265,7 +269,7 @@
 }
 
 \newcommand{\@cssBlockEndPar}{%
-	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfter{\relax\ifhmode\par\global\hangindent=0pt\fi}}%
+	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfterX{\leavevmode\par\global\hangindent=0pt\relax}}%
 }
 
 \newif\if@hasdim
@@ -294,8 +298,8 @@
 			\addtolength{\cssWidthFull}{\cssWidth}%
 		\fi%
 		%minipage				
-		\ifdim\cssMarginTop=0pt\else\cssDoBefore{\vspace{\cssMarginTop}}\fi
-		\ifdim\cssMarginLeft=0pt\else\cssDoBefore{\hspace*{\cssMarginLeft}}\fi
+		\ifdim\cssMarginTop=0pt\else\cssDoBeforeX{\vspace{\cssMarginTop}}\fi
+		\ifdim\cssMarginLeft=0pt\else\cssDoBeforeX{\hspace*{\cssMarginLeft}}\fi
 		\setlength{\@cssParIndent}{\parindent}% save parskip and parindent since minipage resets it
 		\setlength{\@cssParSkip}{\parskip}%
 		\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
@@ -303,15 +307,15 @@
 		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
 		{\def\@cssValign{c}}}}% including `middle`
 		\ifdim\cssHeight=1sp%
-	   		\cssDoBefore{\begin{minipage}[\@cssValign]{\cssWidthFull}}%
+	   		\cssDoBeforeX{\begin{minipage}[\@cssValign]{\cssWidthFull}}%
 		\else
-			\cssDoBefore{\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
+			\cssDoBeforeX{\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
 		\fi
-		\cssDoBefore{\cssSaveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
+		\cssDoBeforeX{\cssSaveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
 		%note: DoAfter prepends, so in opposite order
-		\ifdim\cssMarginBottom=0pt\else\cssDoAfter{\vspace{\cssMarginBottom}}\fi
-		\ifdim\cssMarginRight=0pt\else\cssDoAfter{\hspace*{\cssMarginRight}}\fi
-		\cssDoAfter{\end{minipage}\cssRestoreFootnotes}%
+		\ifdim\cssMarginBottom=0pt\else\cssDoAfterX{\vspace{\cssMarginBottom}}\fi
+		\ifdim\cssMarginRight=0pt\else\cssDoAfterX{\hspace*{\cssMarginRight}}\fi
+		\cssDoAfterX{\end{minipage}\cssRestoreFootnotes}%
 	\else
 		% no height/width: trivlist
 		\@hasdimfalse
@@ -319,9 +323,9 @@
 		\ifdim\cssMarginRight=0pt\else\@hasdimtrue\fi
 		\ifdim\cssMarginTop=0pt\else\@hasdimtrue\fi
 		\ifdim\cssMarginBottom=0pt\else\@hasdimtrue\fi
-	  	\if@hasdim
+	  \if@hasdim
 			\setlength{\@cssMarginAfter}{\dimexpr\cssMarginBottom-\cssMarginTop\relax}%
-			\cssDoEnvArgII{list}{}{%
+			\list{}{%
 				\leftmargin=\cssMarginLeft%
 				\rightmargin=\cssMarginRight%
 				\topsep=\cssMarginTop%
@@ -331,10 +335,11 @@
 				\partopsep=0pt%	
 				\listparindent=\parindent%	
 			}%
+			\cssDoAfterX{\endlist}%
 			\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
 			\cssIfHasClass{math-display}%
-				{\cssDoBefore{\item\@cssFixMathSpacing}}%
-				{\cssDoBefore{\item}}%	\fi
+				{\item\@cssFixMathSpacing}%
+				{\item\relax}%	
 		\fi
 	\fi
 }
@@ -765,13 +770,13 @@
 	{\begin{cssBlockX}{}{#1}}{\end{cssBlockX}}
 
 \newcommand{\cssInlineX}[4]%
-	{\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline,#1}{#2}%
+	{\begingroup\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline,#1}{#2}%
 	 \@cssElemDoRules%
 	 \@cssProcessMargins\@cssProcessPadding%
 	 \@cssClassDoRules%
 	 #3%
 	 \@cssProcessText\@cssProcessFont%
-	 \@cssApplyCmd{#4}%
+	 \@cssApplyCmd{#4}\@cssApplyAfter\endgroup%
 	}%	 
 
 \newcommand{\cssInline}[2][]{\cssInlineX{}{#1}{}{#2}}
