@@ -39,58 +39,6 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    else (options,rest)  
 }
 
-public function filterMeta( options : options ) : options {
-  val mdata = options.metadata
-  val truths = extractTrueKeys(mdata,peano10)
-  val mdata1 = mdata.filterModed(truths)
-  //trace("truths: " + truths.keys.join(","))
-  //trace("mdata: " + mdata1.map(fst).join(","))
-  options( metadata = mdata1 )
-}
-
-function filterModed( mdata :metadata, truths : dict<bool> ) {
-  mdata.map( fun(kv) {
-    match(truths.isMatch(kv.fst)) {
-      Just(key) -> Just((key,kv.snd))
-      Nothing   -> Nothing
-    }
-  }).concatMaybe
-}
-
-function isMatch( truths: dict<bool>, key : string ) : maybe<string> {
-  match(key.find(rxModed)) {
-    Nothing   -> Just(key)
-    Just(cap) -> {
-      val neg = cap.groups[1] == "no"
-      val mode = cap.groups[2]
-      val isTrue = (mode=="" || truths.containsKey(mode))
-      if ((isTrue && !neg) || (!isTrue && neg))
-       then Just(cap.groups[3])
-       else Nothing
-    }
-  }
-}
-
-function isTruth( key, value, acc ) {
-  val xvalue = value.trim.toLower
-  if (xvalue == "true" || xvalue=="1") 
-   then acc.isMatch(key)
-   else Nothing      
-}
-function extractTrueKeys( mdata : metadata, p0 : peano, acc : dict<bool> = dict() ) : dict<bool> {
-  match(p0) {
-    Zero -> acc
-    Succ(p) -> {
-      val more = mdata.map( fun(kv) { isTruth(kv.fst,kv.snd,acc) } ).concatMaybe.map(fun(key) { (key,True) })
-      if (more.isNil)
-       then acc
-       else mdata.extractTrueKeys( p, more.dict + acc )
-    }
-  }
-}
-
-val rxModed = regex(@"@(no)?(\w+)-(.*)")
-
 function stripInitialWhite( txt : string ) : (string,int) {
   match(txt.find(rxInitialWhite)) {
     Nothing   -> (txt,0)
@@ -161,11 +109,69 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
 }
 
 // --------------------------------------------------------------
+// Filter moded keys
+// --------------------------------------------------------------
+
+public function filterModed( mdata :metadata ) : <div> metadata {
+  val modes = mdict()
+  mdata.map( fun(kv) {
+    match(modes.unMode(kv,mdata)) {
+      Just(key) -> Just((key,kv.snd))
+      Nothing   -> Nothing
+    }
+  }).concatMaybe
+}
+
+
+function unMode( modes : mdict<h,bool>, kv : (string,string), mdata : metadata ) : <div,st<h>> maybe<string> {
+  match(kv.fst.find(rxModed)) {
+    Nothing   -> Just(kv.fst) 
+    Just(cap) -> {
+      val neg  = cap.groups[1] == "no"
+      val mode = cap.groups[2]
+      val isTrue = (mode=="" || modes.getMode(mode,mdata))
+      if ((isTrue && !neg) || (!isTrue && neg))
+       then Just(cap.groups[3])
+       else Nothing
+     }
+   }
+}
+
+function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <div,st<h>> bool {
+  match(modes[mode]) {
+    Just(value) -> value
+    Nothing -> {
+      modes[mode] := False  // prevent infinite recursion
+      mdata.reverse.foreachUntil( fun(kv) { 
+        match( modes.unMode(kv,mdata) ) {
+          Just(key) | key == mode  -> {
+            val value = kv.snd.trim.toLower
+            val res = (value=="true" || value=="1")
+            modes[mode] := res
+            Just(res)  
+          }
+          _ -> Nothing
+        }
+      })
+      match(modes[mode]) {
+        Just(value) -> value
+        Nothing     -> False
+      }
+    }
+  }
+}
+
+
+val rxModed = regex(@"@(no)?(\w*)-(.*)")
+
+
+// --------------------------------------------------------------
 // Default metadata
 // --------------------------------------------------------------
 
 function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ fmt.showFormatter + ": True",
+      @"@tex maketitle: True",
       @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
       @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block",
 

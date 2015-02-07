@@ -153,7 +153,7 @@ rectype blockContext {
 function blockSpecial( cap : matched, context : blockContext ) : block {  
   function entry(name,className = name) {
     match(context.metadata[name]) {
-      Just(value) | value.trim != "" -> "[&" + name + ";]{." + className + "}\n"
+      Just(value) | value.trim != "" -> "[&" + name + ";]{." + className + " }"
       _ -> ""
     }
   }
@@ -175,25 +175,25 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
     }
   }
   function author( idx : int ) : string {
-    "~ Begin Author\n" +
+    "\n~ Begin Author { line-adjust=0 line=" + context.lineNo.show + " }\n" +
     [entry("author" + idx.show, "author-name"),
      entry("affiliation" + idx.show, "author-affiliation .author-address"),
      entry("author-note" + idx.show, "author-note"),
      entry("email" + idx.show, "author-email")].join +
-    "~ End Author\n"
+    "\n~ End Author"
   }
   function authorRow( idxs : list<int> ) : string {
-    "~ Begin AuthorRow\n" + idxs.map(author).join + "~ End AuthorRow\n"
+    "\n~ Begin AuthorRow { line-adjust=0 data-line=" + context.lineNo.show + " }" + idxs.map(author).join + "\n~ End AuthorRow"
   }
   if (cap.groups[1].toLower == "title") {
     val titleBlock = [
       entry("title"),
       entry("subtitle"),
       entry("title-note"),
-      list(1,readInt("author-count")).group(readInt("author-columns",3)).map(authorRow).join,
+      list(1,readInt("author-count")).group(readInt("author-columns",3)).map(authorRow).join + "\n",
       entry("title-footer")
     ].join
-    Div( [], "".parseAttrs("titleblock",source=titleBlock))
+    Div( [], "line-adjust=0".parseAttrs("titleblock",source=titleBlock))
   }
   else {
     Special(cap.groups[1],cap.groups[2])
