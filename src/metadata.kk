@@ -51,10 +51,11 @@ function stripInitialWhite( txt : string ) : (string,int) {
 val rxInitialWhite = regex(@"^(\s|<!--[\s\S]*?-->)+")
 
 function makeKey(k,pre,value,rawvalue,lines) {
-  val key = if (pre=="") then k.trim.normalizeId else pre + k.trim.toLower
+  val kstart = k.substr(0,1) 
+  val key = if (kstart=="#" || kstart=="." || kstart=="~") then k.trim.toLower else k.trim.normalizeId
   if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
-   then (key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
-   else (key,value)
+   then (pre + key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
+   else (pre + key,value)
 }                 
 
 function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
@@ -73,8 +74,7 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
       val rawkeys = if (cap.groups.matchedOn(3))
                       then cap.groups[2].split(",").list
                       else [cap.groups[2]]     
-      val kstart = cap.groups[2].substr(0,1)              
-      val pre = if (cap.groups[1] != "" || kstart=="#" || kstart=="." || kstart=="~") then "@" + cap.groups[1] + " " else ""
+      val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
       val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,cap.groups[4],lines ) } );                
       val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
