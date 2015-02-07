@@ -337,6 +337,13 @@
 			}%
 			\cssDoAfterX{\endlist}%
 			\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
+			\eifstrequal{\cssTextAlign}{left}% we need to do alignment here for inline cmds' with a display=block
+				{\raggedright}%
+			{\eifstrequal{\cssTextAlign}{right}%
+				{\raggedleft}%
+			{\eifstrequal{\cssTextAlign}{center}%
+				{\centering}%
+			{}}}%
 			\cssIfHasClass{math-display}%
 				{\item\@cssFixMathSpacing}%
 				{\item\relax}%	
@@ -573,7 +580,7 @@
 
 \newcommand{\@cssBlockText}{%
 	\eifstrequal{\cssId}{}{}{\label{\cssId}}% set label
-		\eifstrequal{\cssTextAlign}{left}%
+	\eifstrequal{\cssTextAlign}{left}%
 		{\cssDoBefore{\protect\raggedright}}%
 	{\eifstrequal{\cssTextAlign}{right}%
 		{\cssDoBefore{\protect\raggedleft}}%
