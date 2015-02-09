@@ -268,7 +268,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       context.fmtEnv("blockquote", formatBlocksX(context,bs), attrs)
     }
     
-    Table(header,colstyles,cells,attrs) -> {
+    Table(header,colstyles0,cells,attrs) -> {
+      val colstyles = colstyles0.map( fun(colstyle) { context.inlineContext.defaults.matchRules("tc",colstyle) } )
       val thead = formatRows(header,colstyles,context,attrs,False)
       val tbody = formatRows(cells,colstyles,context,attrs,True)
       context.fmtTable(thead,tbody, colstyles, attrs.addClass("madoko"))  
@@ -341,7 +342,21 @@ function formatRows( rows : list<row>,
 {
   if (rows.isNil) then return Nil
 
-  function formatRow( row : list<cell>, cols : list<attrs>, rowstyle : attrs ) : list<cell> {    
+  function defaultCellKeyvals( colNum : int, rowstyle : attrs ) : list<(string,string)> {
+    val mod  = if (colNum.even) then "even-" else "odd-"
+    val elem = if (isBody) then "td-" else "th-"
+    val idx  = colNum.show + "-"
+    val allkvs  = attrs.keyvals + rowstyle.keyvals
+    val kvs = allkvs.filterKeyvals("col-" + idx) +
+               allkvs.filterKeyvals("col-" + mod ) +
+                allkvs.filterKeyvals("col-" ) +
+                 allkvs.filterKeyvals(elem + idx) +
+                  allkvs.filterKeyvals(elem + mod ) 
+                   allkvs.filterKeyvals(elem ) 
+    kvs
+  }
+
+  function formatRow( colNum : int, row : list<cell>, cols : list<attrs>, rowstyle : attrs ) : list<cell> {    
     match(row) {
       Cons(cell,rs) -> {
         match(cols) {
@@ -369,14 +384,18 @@ function formatRows( rows : list<row>,
                                       }
                                     }
             // horizontal line?
-            val (colstyle2,txt2) = if (txt1.contains(rxDashes))
-                                    then (colstyle1.addClass("cell-line"), "")
+            val (colstyle2,txt2,elemName) = if (txt1.contains(rxDashes))
+                                    then (colstyle1.addClass("cell-line"), "","tl")
                                    elif (txt1.contains(rxDDashes))
-                                    then (colstyle1.addClass("cell-double-line"), "")
-                                    else (colstyle1,txt1)
+                                    then (colstyle1.addClass("cell-double-line"), "","tl")
+                                    else (colstyle1,txt1,if (isBody) then "td" else "th")
             
-            val elem = Cell(context.inlineContext.formatInline(txt2,colstyle2), colstyle2)
-            Cons(elem, formatRow(rs,cs1, rowstyle))        
+            val colstyle3 = colstyle2.addClass(if (colNum.even) then "col-even" else "col-odd")
+                                     .addKeyval("data-col",colNum.show)
+            val colstyle4 = colstyle3.addKeyvals(defaultCellKeyvals(colNum,rowstyle))
+            val colstyle5 = context.inlineContext.defaults.matchRules(elemName, colstyle4)
+            val elem = Cell(context.inlineContext.formatInline(txt2,colstyle5), colstyle5)
+            Cons(elem, formatRow( colNum+1, rs, cs1, rowstyle))        
           }
           _ -> Nil
         }
@@ -398,15 +417,21 @@ function formatRows( rows : list<row>,
   function filterKeyvals( keyvals : list<(string,string)>, pre : string ) : list<(string,string)> {
     keyvals.filterMap fun(kv) {
       val (key,value) = kv
-      if (key.startsWith(pre)) then Just( (key.substr(pre.length), value) ) else Nothing
+      if (key.startsWith(pre)) then {
+        val skey = key.substr(pre.length)
+        if (skey.find(rxSubSelect).isJust) then Nothing else Just((skey,value))
+      }
+      else Nothing
     }
   }
 
   function defaultKeyvals( hasLine :  bool, rowNum : int ) : list<(string,string)> {
     val mod = if (rowNum.even && rowNum != 0) then "even-" else "odd-"
-    val kvs = attrs.keyvals.filterKeyvals("cell-") +
-               attrs.keyvals.filterKeyvals(if (isBody) then "tr-" else "th-") +
-                attrs.keyvals.filterKeyvals((if (isBody) then "tr-" else "th-") + mod) 
+    val row = if (isBody) then "tbody-" else "thead-"
+    val kvs = attrs.keyvals.filterKeyvals("tr-" + mod) +
+               attrs.keyvals.filterKeyvals("tr-") +
+                attrs.keyvals.filterKeyvals(row + mod) +
+                  attrs.keyvals.filterKeyvals(row) 
     if (hasLine)
      then kvs.filter(fun(kv){kv.fst.startsWith("background-color") || kv.fst.startsWith("rule") })
      else kvs
@@ -420,11 +445,16 @@ function formatRows( rows : list<row>,
   var rowCount := 0
   val firstHasLine = rows.take(1).all(containsDashes)
   val lastHasLine  = rows.reverse.take(1).all(containsDashes)
+  val defaults = context.inlineContext.defaults
   rows.map fun(row) {
     rowCount := rowCount+1
     val hasLine = row.containsDashes
     if (!hasLine) then rowNum := rowNum+1  
-    val rowstyle = row.rowAttrs.addKeyvals( 
+    val extraClasses = [if (isBody) then "tbody" else "thead",
+                        if (rowNum.even) then "tr-even" else "tr-odd"]
+    val rowstyle0 = defaults.matchRules("tr", 
+                      row.rowAttrs.addClasses(extraClasses).addKeyval("data-row",rowNum.show))
+    val rowstyle = rowstyle0.addKeyvals( 
         addRowKey("rule-width", "rule-top-width", !isBody && rowNum==0 ) +
         addRowKey("rule-width", "rule-mid-width", isBody && rowNum==0 ) +
         addRowKey("rule-width", "rule-bottom-width", isBody && hasLine && rowCount == rows.length ) +
@@ -435,9 +465,10 @@ function formatRows( rows : list<row>,
         addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && lastHasLine && rowCount == rows.length-1 ) 
       )
       .addKeyvals( defaultKeyvals(hasLine,rowNum) )
-    Row(formatRow(row.cells,colstyles,rowstyle),rowstyle)
+    Row(formatRow(1,row.cells,colstyles,rowstyle),rowstyle)
   }
 }
 val rxbars = regex(@"[|+]+$")
+val rxSubSelect = regex(@"^(even|odd|\d+)\-")
 
 function noalign( s : string ) : bool = !(s.startsWith("align-"))

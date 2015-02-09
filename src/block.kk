@@ -418,11 +418,11 @@ function rows( body : string ) : list<string> {
 }
 
 // Split a row into cells, keeping final separators ("|" or "+") at the end of each cell.
-function columns( row : string, context : blockContext, ofs: int  ) : row {
+function columns( row : string, context : blockContext, ofs: int ) : row {
   // Note: we allow "+" to separate for dashed lines. So we carefully split on "+" too
   // as long as such "+" is followed by dashes or double-dash.
   val cells = row.findAll(rxCell).list.map( fun(cap) { Cell(cap.groups[1]) })
-  val attrs = row.find(rxRowAttr).maybe(attrsNone, fun(cap) { cap.groups[1].parseAttrs("row")  })
+  val attrs = row.find(rxRowAttr).maybe(attrsNone, fun(cap) { cap.groups[1].parseAttrs("tr")  })
   Row(cells,attrs.setLineNo(context.lineMap, context.lineNo + ofs))
 }
 
@@ -431,7 +431,8 @@ val rxRowAttr = regex(@"[\+\|]" + xattrs + "$")
 
 // split the separator row in cells, and include the separators for determining the column style
 function columnStyles( row : string ) : list<attrs> {
-  row.findAll(regex(@"[|+][^|+]+(?:[|+] *$)?")).list.map(fun(cap) { cap.matched }).map(columnStyle) 
+  row.findAll(regex(@"[|+][^|+]+(?:[|+] *$)?")).list
+    .map(fun(cap) { cap.matched }).map(columnStyle) 
 }
 
 function columnStyle( style : string ) : attrs {
@@ -445,7 +446,7 @@ function columnStyle( style : string ) : attrs {
                     (if (ccap.groups[7]!="+") then "" else " .cell-border-right")
       val c = (ccap.groups[3] + ccap.groups[5]).trim.substr(0,1)
       val content = if (c=="=") then "===" elif (c=="-") then "---" else ""
-      (ccap.groups[4] + align + borders).parseAttrs("",content)
+      (ccap.groups[4] + align + borders).parseAttrs("col",content)
     }
   }
 }

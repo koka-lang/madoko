@@ -222,6 +222,8 @@ function fmtColorArg( clr : string ) : string {
   val c = clr.normalizeColor  
   if (c.startsWith("#")) 
     then "[HTML]{" + c.substr(1) + "}"
+  elif (c.startsWith("\\#")) 
+    then "[HTML]{" + c.substr(2) + "}"
     else "{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
 }
 
@@ -314,7 +316,7 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
                  then texEnv(elem,body,attrsx)
                  else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
                  
-  if (colspan=="1" && fmt=="l") then content 
+  if (colspan=="1" && fmt=="l" && bcolor=="") then content 
    else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
 }
 
@@ -353,7 +355,7 @@ function normalizeColor( v : string ) : string {
     Just(cap) -> {
       if (cap.groups[4]=="")
        then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
-       else v.trim.toUpper
+       else "\\" + v.trim.toUpper
     }
     Nothing -> normalizeVal(v)
   }

@@ -260,9 +260,9 @@ function defaultMeta( options : options, fmt : formatter ) : string {
 
       @".booktable:  
           rule-top-width=2px rule-bottom-width=2px 
-          rule-mid-width=1.35px th-font-weight=normal   
+          rule-mid-width=1.35px thead-font-weight=normal   
           rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
-          th-padding-top=3pt th-padding-bottom=3pt",
+          thead-padding-top=3pt thead-padding-bottom=3pt",
     
       @"~Bibitem: replace='?if &bib-search-url; && &searchterm;\
                           ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'",
