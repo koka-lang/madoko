@@ -312,23 +312,6 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return {clear: clear};
   }
 
-  function dateFromISO(s) {
-    function parseNum(n) {
-      var i = parseInt(n,10);
-      return (isNaN(i) ? undefined : i);
-    }
-
-    var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d))?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
-    var cap = rxISO.exec( s.replace(/\s+/g, "") );
-    if (!cap) return new Date(0);    
-    var utc  = new Date( Date.UTC( parseNum(cap[1]), parseNum(cap[2])-1, parseNum(cap[3]),
-                                   parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]) ) );
-    if (!utc || isNaN(utc)) return new Date(0);
-    var tz = (cap[9]=="+" ? -1 : 0) * ((parseNum(cap[8])||0) * 60 + (parseNum(cap[9])||0));
-    if (tz !== 0) utc.setUTCMinutes( utc.getUTCMinutes + tz );
-    return utc;
-  }
-
   function replicate(s,n) {
     var acc = "";
     for(var i = 0; i < n; i++) {
@@ -1871,6 +1854,11 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
+  function miniMarkdown(s) {
+    return s.replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\n  /g,"<br>");
+  }
+
   return {
     properties: properties,
     forEachProperty: forEachProperty,
@@ -1922,7 +1910,7 @@ doc.execCommand("SaveAs", null, filename)
     contains: contains,
     decodeBase64: decodeBase64,
     encodeBase64: encodeBase64,
-    dateFromISO: dateFromISO,
+
     getCookie: getCookie,
     setCookie: setCookie,
     
@@ -1962,6 +1950,8 @@ doc.execCommand("SaveAs", null, filename)
   
     getAppVersionInfo: getAppVersionInfo,
     randomHash8      : randomHash8,
+
+    miniMarkdown     : miniMarkdown,
 
     ContWorker: ContWorker,
     AsyncRunner: AsyncRunner,

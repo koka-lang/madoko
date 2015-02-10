@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/map","../scripts/util","../scripts/oauthRemote"], 
-        function(Promise,Map,Util,OAuthRemote) {
+define(["../scripts/promise","../scripts/date","../scripts/map","../scripts/util","../scripts/oauthRemote"], 
+        function(Promise,StdDate,Map,Util,OAuthRemote) {
 
 
 var onedrive = new OAuthRemote( {
@@ -261,7 +261,7 @@ var Onedrive = (function() {
   Onedrive.prototype.pushFile = function( fpath, content ) {
     var self = this;
     return pushFile( self.fullPath(fpath), content ).then( function(info) {
-      return { createdTime: Util.dateFromISO(info.updated_time) };
+      return { createdTime: StdDate.dateFromISO(info.updated_time) };
     });
   }
 
@@ -275,7 +275,7 @@ var Onedrive = (function() {
           var file = {
           path: fpath,
           content: req.responseText,
-          createdTime: Util.dateFromISO(info.updated_time),
+          createdTime: StdDate.dateFromISO(info.updated_time),
           // shareUrl: info.source,
         };
         return file;        
@@ -286,7 +286,7 @@ var Onedrive = (function() {
   Onedrive.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return infoFromPath( self.fullPath(fpath) ).then( function(info) {
-      return (info ? Util.dateFromISO(info.updated_time) : null);
+      return (info ? StdDate.dateFromISO(info.updated_time) : null);
     });
   }
 

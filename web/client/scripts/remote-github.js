@@ -6,8 +6,8 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util","../scripts/oauthRemote"], 
-        function(Promise,Util,OAuthRemote) {
+define(["../scripts/promise","../scripts/date","../scripts/util","../scripts/oauthRemote"], 
+        function(Promise,StdDate,Util,OAuthRemote) {
 
 var github = new OAuthRemote( {
   name         : "github",
@@ -391,7 +391,7 @@ var Github = (function() {
           path: fpath,
           content: info.content,
           sha: info.sha,
-          createdTime: Util.dateFromISO(commit.committer.date),
+          createdTime: StdDate.dateFromISO(commit.committer.date),
           globalPath: "//github/shared/" + normalizePath(self.fullPath(fpath)),
           //sharedPath: sharedPath,
         };
@@ -498,7 +498,7 @@ var Github = (function() {
                 // return commit info so we can update the file modified flags.
                 return {
                   committed: true,
-                  date: Util.dateFromISO(commit.committer.date),
+                  date: StdDate.dateFromISO(commit.committer.date),
                   blobs: blobs.map( function(blob) { 
                     blob.path = blob.localPath;
                     delete blob.localPath;
