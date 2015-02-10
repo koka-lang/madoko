@@ -89,7 +89,7 @@ var Picker = (function() {
 
     // init UI
     buttonCancel.textContent  = (self.options.command==="connect" || self.options.command==="message") ? "Close" : "Cancel";
-    commandName.textContent   = (self.options.commandDisplay || Util.capitalize(self.options.command));
+    commandName.textContent   = (self.options.commandDisplay!=null ? self.options.commandDisplay : Util.capitalize(self.options.command));
     
     if (self.options.remote && remotes[self.options.remote] && self.options.remote !== "local") {
       if (self.options.folder) remotes[self.options.remote].folder = self.options.folder;
