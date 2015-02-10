@@ -201,14 +201,14 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
           err: null,
         });
       }
-      if (req.type === "ignores") {
+      else if (req.type === "ignores") {
         updateIgnores(req.ignores);
         self.postMessage( {
           messageId: req.messageId,
           err: null,
         });
       }
-      if (req.type === "suggest" && checker != null) {
+      else if (req.type === "suggest" && checker != null) {
         var suggestions = [];
         if (req.word) { // current algorithm takes too long on longer words...
           suggestions = checker.suggest(req.word || "", req.limit || 8);
