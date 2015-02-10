@@ -167,6 +167,7 @@ function message(storage,message,header,headerLogo) {
     message: message,
     header: header,
     headerLogo: headerLogo,
+    commandDisplay: "",
   };
   return picker(storage,params);
 }
