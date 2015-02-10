@@ -165,18 +165,18 @@
   \ifdef{\institute}{%  
     \ifnum\value{mdAuthorCount}>1%
      \gappto\@mdauthors{\@and}%
-     \ifx\relax#2\else\gappto\@mdinsts{\@and}\fi
+     \ifx\relax#2\relax\else\gappto\@mdinsts{\@and}\fi%
     \fi%    
     \ifdef{\inst}%
     {%LLNCS, Beamer
       \gappto\@mdauthors{#1}%
-      \gappto\@mdinsts{#2}%
-      \ifx\relax#3\else\gappto\@mdinsts{\mdBr\email{#3}}\fi
+      \ifx\relax#2\relax\else\gappto\@mdinsts{#2}\fi%
+      \ifx\relax#3\relax\else\gappto\@mdinsts{\mdBr\email{#3}}\fi
     }%
     {% EPTCS
       \gappto\@mdauthors{#1%
-        \ifx\relax#2\else\protect\institute{#2}\fi%
-        \ifx\relax#3\else\protect\email{#3}\fi}%
+        \ifx\relax#2\relax\else\protect\institute{#2}\fi%
+        \ifx\relax#3\relax\else\protect\email{#3}\fi}%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
@@ -205,7 +205,7 @@
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
 
 \newcommand{\mdAuthorAddressNote}[2]{%
-  \ifx\relax#1\relax \affaddr{#2}\else%
+  \ifx\relax#1\relax\affaddr{#2}\else%
     \affaddr{#1}\ifx\relax#2\relax\else\mdBr\affaddr{#2}\fi%
   \fi%
 }
