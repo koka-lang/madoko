@@ -190,7 +190,7 @@ function defaultMeta( options : options, fmt : formatter ) : string {
       @"~Figure      : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure",
       
       @".Floating    : .align-center elem=floating html-elem=figure",
-      @".Floating    : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}&caption;]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
+      @".Floating    : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
       @".Floating    : toc-line='&label;. &caption;'",
 
       @"~SubFigureRow  : .columns .align-center",

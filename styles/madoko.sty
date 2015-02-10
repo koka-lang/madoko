@@ -680,8 +680,25 @@
     \parbox{\linewidth}{\noindent #1}%
   \fi%
 }
+
 \cssClassRuleCmd{figure-caption}{\mdCaption}
 \cssClassRule{figure-caption}{text-align=justify}% prevents insertion of hspace{\fill} due to outer align-center
+
+% participate in listoffigures and listoftables
+\newcommand{\mdCaptionText}[1]{%
+  \addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
+    {\protect\numberline{\@mdCaptionLabel}{\ignorespaces #1}}%
+  #1    
+}
+\cssClassRuleCmd{caption-text}{\mdCaptionText}
+
+\newcommand{\mdCaptionLabel}[1]{%
+  \global\gdef\@mdCaptionLabel{#1}%
+  #1
+}
+\cssClassRuleCmd{figure-label}{\mdCaptionLabel}
+\cssClassRuleCmd{table-label}{\mdCaptionLabel}
+
 
 \newcommand{\mdHr}[2][]{%
   \begingroup%  
