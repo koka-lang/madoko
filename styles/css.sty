@@ -54,11 +54,27 @@
 \definecolor{Aqua}{HTML}{00FFFF}
 \definecolor{Fuchsia}{HTML}{FF00FF}
 
-\newcommand{\@swap}[2]{#2{#1}}
-\newcommand{\@expandafter}[2]{\expandafter\@swap\expandafter{#2}{#1}}
+% ---------------------------------------------
+% Basic LaTeX helpers
+% ---------------------------------------------
+
+% use '\defcommand' to define a command no matter if it is predefined or not
+\def\defcommand{\@ifstar\defcommand@S\defcommand@N}
+\def\defcommand@S#1{\let#1\outer\renewcommand*#1}
+\def\defcommand@N#1{\let#1\outer\renewcommand#1} 
+
+\def\providecsgdef#1{\ifcsdef{#1}{\providecommand\@foo}{\csgdef{#1}}}
+
+\providecommand\@swap[2]{#2#1}
+\providecommand\@swaparg[2]{#2{#1}}
+\providecommand\expandnext[2]{\expandafter\@swaparg\expandafter{#2}{#1}}
+\newcommand\@expandafter\expandnext %legacy
+\newcommand\expandnextii[3]{\expandnext{\expandnext{#1}{#2}}{#3}}
+\newcommand\expandnextiii[4]{\expandnext{\expandnextii{#1}{#2}{#3}}{#4}}
+\newcommand\expandnextiv[5]{\expandnext{\expandnextiii{#1}{#2}{#3}{#4}}{#5}}   
 
 \newcommand{\eifstrequal}{\expandafter\ifstrequal\expandafter}
-\newcommand{\eeifstrequal}[2]{\@expandafter{\eifstrequal{#1}}{#2}}
+\newcommand{\eeifstrequal}[2]{\expandnext{\eifstrequal{#1}}{#2}}
 
 \providecommand\providelength[1]{%
   \begingroup
@@ -438,8 +454,8 @@
 		\eifstrequal{\cssBorderRightStyle}{none}{\appto{\@cssFramedArgs}{,rightline=false}}%		
 			{\addtolength{\cssBorderWidthTotal}{\cssBorderWidth}}%	
 		\cssIfHasClass{math-display}%
-			{\@expandafter{\cssDoEnvOpt{mdmathframed}}{\@cssFramedArgs}}%
-			{\@expandafter{\cssDoEnvOpt{mdframed}}{\@cssFramedArgs}}%
+			{\expandnext{\cssDoEnvOpt{mdmathframed}}{\@cssFramedArgs}}%
+			{\expandnext{\cssDoEnvOpt{mdframed}}{\@cssFramedArgs}}%
 		% insert a minipage if height or width was set so the frame is as large
 		\@hasdimfalse
 		\ifdim\cssWidth=1sp\else\@hasdimtrue\fi
@@ -702,7 +718,7 @@
   \@for\@ii:=#3\do{%
     \ifcsmacro{@rule@#1@\@ii}{%
       \edef\@args{\csname @rule@#1@\@ii\endcsname}%
-      \@expandafter{\setkeys{#2}}{\@args}%
+      \expandnext{\setkeys{#2}}{\@args}%
     }{}%
   }%	
 }

@@ -40,10 +40,6 @@
 \@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
 \ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
 
-% use '\defcommand' to define a command no matter if it is predefined or not
-\def\defcommand{\@ifstar\defcommand@S\defcommand@N}
-\def\defcommand@S#1{\let#1\outer\renewcommand*#1}
-\def\defcommand@N#1{\let#1\outer\renewcommand#1} 
 
 %-------------------------------------------------------------
 % Setup packages 
@@ -113,6 +109,12 @@
 % break and nbsp
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+\newcommand{\mdBrSep}[2]{%
+  \expandafter\ifx#1\relax\relax #2\else
+  \expandafter\ifx#2\relax\relax #1\else
+  #1\mdBr #2\fi\fi
+}
 
 % fix nobreakspace in case the user loads a T1 encoding in LaTeX
 \DeclareTextCommandDefault{\nobreakspace}{\leavevmode\nobreak\ }
@@ -184,8 +186,10 @@
      \gappto\@mdauthors{\alignauthor}%
    \fi%
    \gappto\@mdauthors{\aufnt{#1}}%
-   \ifx\relax#2\relax\else\gappto\@mdauthors{\\[0.25ex] #2}\fi%
-   \ifx\relax#3\relax\else\gappto\@mdauthors{\\\email{#3}}\fi%
+   \protected@edef\@more{#2#3}%
+   \expandafter\ifx\@more\relax\relax \else
+     \gappto\@mdauthors{\\[0.25ex]\mdBrSep{#2}{#3}}%
+   \fi   
   }%
   \ifnum\value{mdAuthorCount}>1%
     \gappto\@mdauthorsx{, #1}%
@@ -204,17 +208,15 @@
 \newcommand{\mdTitle}[1]{\gdef\@mdTitle{#1}\title{\@mdTitle}\mdTitlerunning{#1}}
 \newcommand{\mdSubtitle}[1]{\gappto\@mdTitle{\\{\Large #1}}\title{\@mdTitle}}
 
-\newcommand{\mdAuthorAddressNote}[2]{%
-  \ifx\relax#1\relax\affaddr{#2}\else%
-    \affaddr{#1}\ifx\relax#2\relax\else\mdBr\affaddr{#2}\fi%
-  \fi%
-}
+% legacy
 \newcommand{\mdAuthor}[4]{%
-  \authorinfo{#1}{\mdAuthorAddressNote{#2}{#4}}{#3}%
+  \authorinfo{#1}{\mdBrSep{#2}{#4}}{#3}%
 }
+
+% and finally maketitle
 \newcommand{\mdMaketitle}[1]{%  
   \ifnum\value{mdAuthorCount}>0%
-    \@expandafter{\numberofauthors}{\arabic{mdAuthorCount}}%
+    \expandnext{\numberofauthors}{\arabic{mdAuthorCount}}%
     \author{\@mdauthors}%
     \ifdef\inst{\ifdef\institute{\institute{\@mdinsts}}{}}{}%
   \fi
@@ -241,6 +243,45 @@
       \rightmargin\leftmargin}\item[\hskip\labelsep\bfseries Abstract.]}
     {\endlist}
 }
+
+
+%-------------------------------------------------------------
+% Hooks to use maketitle from standard title blocks
+%-------------------------------------------------------------
+
+\def\@mdTitleNote{}
+\newcounter{mdxAuthorCount} 
+\defcommand{\mdxTitle}[2][]{\mdTitle{\mdSpan[#1]{#2}}}
+\defcommand{\mdxTitleNote}[2][]{\gdef\@mdTitleNote{\mdSpan[#1]{#2}}}
+\defcommand{\mdxTitleFooter}[2][]{\gappto{\@mdauthors}{\\[1ex]\mdSpan[#1]{#2}}}
+\defcommand{\mdxSubTitle}[2][]{\mdSubtitle{\mdSpan[#1]{#2}}}    
+\defcommand{\mdxAuthorName}[2][]{\csgdef{@mdAuthorName\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+\defcommand{\mdxAuthorAddress}[2][]{\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+\defcommand{\mdxAuthorEmail}[2][]{\csgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{\mdSpan[#1]{\email{#2}}}}
+\defcommand{\mdxAuthorNote}[2][]{%
+  \ifcsdef{@mdAuthorAff\the\value{mdxAuthorCount}}%
+    {\csgappto{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdBr\mdSpan[#1]{#2}}}
+    {\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+ }
+\cssClassRuleDoBefore{titleblockmaketitle}{%
+  \setcounter{mdxAuthorCount}{0}%
+}
+\cssClassRuleDoBefore{authormaketitle}{%
+  \global\stepcounter{mdxAuthorCount}%
+}
+\cssClassRuleDoAfter{authormaketitle}{%
+  \providecsgdef{@mdAuthorName\the\value{mdxAuthorCount}}{}%
+  \providecsgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{}%
+  \providecsgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{}%
+  \expandnextiii{\authorinfo}%
+      {\csname @mdAuthorName\the\value{mdxAuthorCount}\endcsname}%
+      {\csname @mdAuthorAff\the\value{mdxAuthorCount}\endcsname}%
+      {\csname @mdAuthorEmail\the\value{mdxAuthorCount}\endcsname}%
+}
+\cssClassRuleDoAfter{titleblockmaketitle}{%
+  \mdMaketitle{\@mdTitleNote}%
+}
+
 
 %-------------------------------------------------------------
 % Paragraphs and indentation 
@@ -364,10 +405,10 @@
     \eifstrequal{\@imgArgs}{}%
       {\includegraphics{#2}}%
     {\eifstrequal{\cssVerticalAlign}{top}%
-      {\@expandafter{\@imgInclude{t}{\cssImageWidth}{#2}}{\@imgArgs}}%
+      {\expandnext{\@imgInclude{t}{\cssImageWidth}{#2}}{\@imgArgs}}%
     {\eifstrequal{\cssVerticalAlign}{middle}%
-      {\@expandafter{\@imgInclude{c}{\cssImageWidth}{#2}}{\@imgArgs}}%
-      {\@expandafter{\@imgInclude{b}{\cssImageWidth}{#2}}{\@imgArgs}}}%
+      {\expandnext{\@imgInclude{c}{\cssImageWidth}{#2}}{\@imgArgs}}%
+      {\expandnext{\@imgInclude{b}{\cssImageWidth}{#2}}{\@imgArgs}}}%
     }%
   }%
   \endgroup%
@@ -429,7 +470,7 @@
    \eifstrequal{\cssListStyleType}{}%
      {\def\@endlist{\end{itemize}}\begin{itemize}[topsep=\xtopsep]}%
      {\@mdSetListLabel%
-      \def\@endlist{\end{enumerate}}\@expandafter{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]}%
+      \def\@endlist{\end{enumerate}}\expandnext{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]}%
    \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
   {\strut\@endlist\end{mdDiv}}
@@ -471,7 +512,7 @@
   \setlength{\xtopsep}{\topsep}%
   \addtolength{\topsep}{-\cssMarginTop}%
   \@mdSetListLabel%
-  \@expandafter{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]%
+  \expandnext{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]%
   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
   {\strut\end{enumerate}\end{mdDiv}}
@@ -623,8 +664,8 @@
   {\eifstrequal{\cssFloat}{right}%
     {}%
   {\cssIfHasClass{wide}%
-    {\cssDoBefore{\@expandafter{\begin{\cssFloatEnv*}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv*}}}%
-    {\cssDoBefore{\@expandafter{\begin{\cssFloatEnv}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv}}}%
+    {\cssDoBefore{\expandnext{\begin{\cssFloatEnv*}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv*}}}%
+    {\cssDoBefore{\expandnext{\begin{\cssFloatEnv}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv}}}%
   }}%
   %\cssDoBefore{\cssSaveFootnotes}%
 }

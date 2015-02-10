@@ -35,6 +35,17 @@ Tex Header    :
       \stepcounter{mdAuthorCount}%
       \author[\arabic{mdAuthorCount}]{#1}\affil[\arabic{mdAuthorCount}]{\mdAuthorAddressNote{#2}{#3}\texttt{#4}}%
     }
+    \makeatletter
+    \renewcommand{\authorinfo}[3]{%
+      \stepcounter{mdAuthorCount}%
+      \csgdef{@sep\the\value{mdAuthorCount}}{\Authsep}% lipics does not use \global :(
+      \author[\arabic{mdAuthorCount}]{#1}%     
+      \protected@edef\@more{#2#3}%
+      \expandafter\ifx\@more\relax\relax\else
+        \affil[\arabic{mdAuthorCount}]{\mdBrSep{#2}{#3}}%
+      \fi
+    }
+    \makeatother
     \newcommand{\mdCaptionOf}[1]{\captionof{figure}{#1}}
 Tex Header*   :
     \Copyright{&Copyright;}

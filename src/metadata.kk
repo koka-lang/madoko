@@ -306,7 +306,7 @@ function defaultMeta( options : options, fmt : formatter ) : string {
     list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
     +
     ["\n"]
-  ).join("\n")
+  ).join("\n") + metadataTitle
 }
 
 function theorem( prose : string ) {
@@ -330,3 +330,39 @@ function heading( depth : int, headingDepth : int, tocDepth : int ) {
 function headingCounter( depth : int) : string {
   "@" + list(1,depth).map( fun(i) { "h" + i.show } ).join("-")
 }
+
+
+val metadataTitle : string = 
+@"
+@maketitle ~Author        : display=inline-block .AuthorMaketitle
+@maketitle ~TitleBlock    : display=inline-block .TitleBlockMaketitle
+@maketitle ~TitleHeader,~Authors,~AuthorRow: notag
+@maketitle ~Title         : replace=""[&source;]{ tex-elem=mdxTitle }"" notag
+@maketitle ~Subtitle      : replace=""[&source;]{ tex-elem=mdxSubTitle }"" notag
+@maketitle ~TitleNote     : replace=""[&source;]{ tex-elem=mdxTitleNote }"" notag
+@maketitle ~TitleFooter   : replace=""[&source;]{ tex-elem=mdxTitleFooter }"" notag
+@maketitle ~AuthorName    : replace=""[&source;]{ tex-elem=mdxAuthorName }"" notag
+@maketitle ~AuthorAddress : replace=""[&source;]{ tex-elem=mdxAuthorAddress }"" notag
+@maketitle ~AuthorNote    : replace=""[&source;]{ tex-elem=mdxAuthorNote }""  notag
+@maketitle ~AuthorEmail   : replace=""[&source;]{ tex-elem=mdxAuthorEmail }"" notag
+
+~TitleBlock,~TitleHeader  : tight
+~Title,~Subtitle          : tight
+~TitleNote,~TitleFooter   : tight  
+~Authors,~AuthorRow,~Author: tight
+~AuthorName,~AuthorAddress: tight
+~AuthorEmail,~AuthorNote  : tight 
+
+@nomaketitle ~TitleBlock,~TitleHeader,~Authors,~TitleFooter: .align-center
+@nomaketitle ~TitleBlock,~Title,~Subtitle,~TitleNote:.para-block
+
+@nomaketitle ~Authors     : width=80%
+@nomaketitle ~AuthorRow   : .columns margin-top=2ex width=100% 
+@nomaketitle ~Author      : .column text-align=center
+@nomaketitle .AuthorEmail : .email
+
+@nomaketitle .Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
+@nomaketitle .Subtitle    : font-size=x-large margin-bottom=0.5ex
+@nomaketitle .AuthorName  : font-size=large
+@nomaketitle ~TitleFooter : margin-top=0.5ex
+"
