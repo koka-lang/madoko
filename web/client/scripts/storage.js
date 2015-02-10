@@ -129,7 +129,8 @@ function createFromTemplate( storage, docName, template )
       tgtName = docName;
     }
     return Util.requestGET( { url: "templates/" + srcName, binary:  Util.hasBinaryExt(srcName) } ).then( function(content) {
-      storage.writeFile(tgtName, Encoding.encode( Encoding.fromExt(srcName), content ));
+      storage.writeFile(tgtName, "");
+      storage.writeFile(tgtName, Encoding.encode( Encoding.fromExt(srcName), content )); // ensure it is created as modified to prevent garbage collection
       return null;
     }, function(err) {
       return err;
