@@ -54,7 +54,6 @@ public rectype inlineContext {
                  xfmtEscape : (ctx:inlineContext,body:string,allowEntity:bool) -> string,
                  xfmtLink: (ctx:inlineContext,isImage : bool, link : link, content : string ) -> string,
                  xfmtFootnote: (context : inlineContext, id : string, fn : footnote ) -> string,
-                 xfmtTitle: (context : inlineContext, titleinfo : titleinfo, attrs : attrs ) -> string,
                  xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, colattrs: list<attrs>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
                  xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
@@ -156,7 +155,6 @@ public function copy( self : inlineContext,
                        xfmtEscape = self.xfmtEscape,
                        xfmtLink = self.xfmtLink,
                        xfmtFootnote = self.xfmtFootnote,
-                       xfmtTitle = self.xfmtTitle,
                        xfmtTable = self.xfmtTable,
                        xfmtEnv = self.xfmtEnv,
                        xfmtCodePlain = self.xfmtCodePlain,
@@ -168,7 +166,7 @@ public function copy( self : inlineContext,
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,prettyAlign,
-                 xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTitle,xfmtTable,
+                 xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTable,
                  xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtCodeToken, xfmtLineInfo, xfmtCodeTable, fmt )
 }
 

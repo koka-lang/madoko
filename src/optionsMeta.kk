@@ -29,7 +29,6 @@ function update( options : options, key : string, xvalue : string, mdata : metad
 
   //trace("from meta: " + key + "=" + value)
   if   (key=="title")  options(title=value)
-  elif (key=="sub-title" || key=="subtitle")  options(subtitle=value)
   elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
   elif (key=="html-meta")    options(htmlMeta=if (value=="") then "" else options.htmlMeta + ";" + value)
   elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
@@ -66,21 +65,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
 
 function update2( options : options, key : string, lvalue : string, value : string, ivalue : int, mdata : metadata ) : options 
 {
-  if (key=="author") {
-    if (value=="") then options(author=[]) else {
-      options(author=options.author + [value], 
-              affiliation=options.affiliation + [""], 
-              email=options.email + [""],
-              authorNotes=options.authorNotes + [""])
-    }
-  }
-  elif (key=="affiliation" || key=="institute" || key=="address") options(affiliation=if (value=="") then [] else appendValue(options.affiliation,value))
-  elif (key=="email") options(email=if (value=="") then [] else appendValue(options.email,value))
-  elif (key=="author-note" || key=="note") options(authorNotes=if (value=="") then [] else appendValue(options.authorNotes,value))
-  elif (key=="title-note" || key=="title-date") options(titleNote=value)
-  elif (key=="title-running") options(titleRunning=value)
-  elif (key=="author-running") options(authorRunning=value)
-  elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+  if (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
   elif (key=="cite-all") options(citeAll=(value!="")) 
   elif (key=="math-mode") options.setMathMode(value)
   elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (lvalue=="true") then "math" else value)

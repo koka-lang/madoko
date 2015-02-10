@@ -45,7 +45,6 @@ public struct options(
   sandbox  : bool = False,  // run in a sandbox: only allow reading/writing from a subdirectory
   
   title    : string = "",  // html title 
-  subtitle : string = "",  // sub title 
   css      : string = "madoko.css",  // link to css style
   scripts  : string = "",  // link to javascript file
   htmlHeader: string= "",  // literal html header
@@ -63,14 +62,6 @@ public struct options(
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "",        // latex document class (.cls)
   
-  author        : list<string> = [],
-  affiliation   : list<string> = [],
-  email         : list<string> = [],
-  authorNotes   : list<string> = [],
-  titleNote     : string = "",
-  titleRunning  : string = "",
-  authorRunning : string = "",
-
   citestyle     : citestyle = citeNumeric,     
   citeAll       : bool = False,
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents

@@ -26,7 +26,6 @@ public struct formatContext(
   inlineContext : inlineContext,
   tocBlocks   : dict<block>,
   footnoteBlock : block,
-  titleinfo : titleinfo,
   headingBase: int,
   langPrefix : string,
   pedantic : bool,
@@ -34,9 +33,9 @@ public struct formatContext(
   fmt : formatter = FmtHtml
 )
 
-public function initialFormatContext( icontext : inlineContext, lineMap: lineMap, titleinfo : titleinfo, 
+public function initialFormatContext( icontext : inlineContext, lineMap: lineMap, 
                                       headingBase : int, pedantic : bool, fmt : formatter ) {
-  FormatContext(icontext,dict(),Empty,titleinfo,headingBase,"language-",pedantic, lineMap, fmt)
+  FormatContext(icontext,dict(),Empty,headingBase,"language-",pedantic, lineMap, fmt)
 }
 
 function fmtEnv( context : formatContext, env : string, txt : string, attrs : attrs = attrsNone ) : string {
@@ -58,10 +57,6 @@ function fmtText( context : formatContext, txt : string ) : string {
     FmtHtml -> txt  // inline for efficiency
     _       -> (context.inlineContext.xfmtCmd)(context.inlineContext,"",txt,attrsNone)
   }
-}
-
-function fmtTitle( context : formatContext, attrs : attrs ) : string {
-  (context.inlineContext.xfmtTitle)(context.inlineContext,context.titleinfo,attrs)
 }
 
 function fmtTable( context : formatContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs = attrsNone ) : string {
@@ -313,9 +308,6 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         linfo + formatBlock(context,blk)
       }
       elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then linfo + formatBlock(context,context.footnoteBlock)
-      elif (name.toLower=="title") then {
-        linfo + context.fmtTitle(attrs)
-      }
       else "" // formatBlock(context,Para("[" + name + "]\n"))
     }
     
@@ -342,17 +334,15 @@ function formatRows( rows : list<row>,
 {
   if (rows.isNil) then return Nil
 
-  function defaultCellKeyvals( colNum : int, rowstyle : attrs ) : list<(string,string)> {
+  function defaultCellKeyvals( colNum : int, rowstyle : attrs, isLast : bool ) : list<(string,string)> {
     val mod  = if (colNum.even) then "even-" else "odd-"
     val elem = if (isBody) then "td-" else "th-"
     val idx  = colNum.show + "-"
+    val prefixes = ["cell-","col-","col-" + mod, "col-" + idx,
+                    elem, elem + mod, elem+idx] +
+                   (if (isLast) then ["col-last-",elem + "last-"] else [])
     val allkvs  = attrs.keyvals + rowstyle.keyvals
-    val kvs = allkvs.filterKeyvals("col-" + idx) +
-               allkvs.filterKeyvals("col-" + mod ) +
-                allkvs.filterKeyvals("col-" ) +
-                 allkvs.filterKeyvals(elem + idx) +
-                  allkvs.filterKeyvals(elem + mod ) 
-                   allkvs.filterKeyvals(elem ) 
+    val kvs = allkvs.filterKeyvals(prefixes)
     kvs
   }
 
@@ -362,7 +352,7 @@ function formatRows( rows : list<row>,
         match(cols) {
           Cons(colstyle,cs) -> {
             // merge with row style
-            val colstyle0 = colstyle.mergeDefault(rowstyle)
+            val colstyle0 = rowstyle.mergeDefault(colstyle)
 
             // span multiple columns?
             val (txt1,colspan) = match(cell.text.find(rxbars)) {
@@ -390,12 +380,17 @@ function formatRows( rows : list<row>,
                                     then (colstyle1.addClass("cell-double-line"), "","tl")
                                     else (colstyle1,txt1,if (isBody) then "td" else "th")
             
-            val colstyle3 = colstyle2.addClass(if (colNum.even) then "col-even" else "col-odd")
+            val isLast = rs.isNil
+            val extraClasses = [if (colNum.even) then "col-even" else "col-odd"] +
+                                (if (isLast) then ["col-last"] else []) +
+                                (if (colNum==1) then ["col-first"] else [])
+
+            val colstyle3 = colstyle2.addClasses(extraClasses)
                                      .addKeyval("data-col",colNum.show)
-            val colstyle4 = colstyle3.addKeyvals(defaultCellKeyvals(colNum,rowstyle))
+            val colstyle4 = colstyle3.addKeyvals(defaultCellKeyvals(colNum,rowstyle,isLast))
             val colstyle5 = context.inlineContext.defaults.matchRules(elemName, colstyle4)
             val elem = Cell(context.inlineContext.formatInline(txt2,colstyle5), colstyle5)
-            Cons(elem, formatRow( colNum+1, rs, cs1, rowstyle))        
+            Cons(elem, formatRow( colNum+colspan, rs, cs1, rowstyle))        
           }
           _ -> Nil
         }
@@ -414,24 +409,27 @@ function formatRows( rows : list<row>,
     }
   }
 
-  function filterKeyvals( keyvals : list<(string,string)>, pre : string ) : list<(string,string)> {
+  function filterKeyvals( keyvals : list<(string,string)>, prefixes : list<string> ) : list<(string,string)> {
     keyvals.filterMap fun(kv) {
       val (key,value) = kv
-      if (key.startsWith(pre)) then {
-        val skey = key.substr(pre.length)
-        if (skey.find(rxSubSelect).isJust) then Nothing else Just((skey,value))
+      match (prefixes.reverse.find(fun(pre) { key.startsWith(pre) })) {
+        Just(pre) -> {
+          val skey = key.substr(pre.length)
+          if (skey.find(rxSubSelect).isJust) then Nothing else Just((skey,value))
+        }
+        Nothing -> Nothing
       }
-      else Nothing
     }
   }
 
-  function defaultKeyvals( hasLine :  bool, rowNum : int ) : list<(string,string)> {
+  function defaultKeyvals( hasLine :  bool, rowNum : int, isLast : bool ) : list<(string,string)> {
     val mod = if (rowNum.even && rowNum != 0) then "even-" else "odd-"
-    val row = if (isBody) then "tbody-" else "thead-"
-    val kvs = attrs.keyvals.filterKeyvals("tr-" + mod) +
-               attrs.keyvals.filterKeyvals("tr-") +
-                attrs.keyvals.filterKeyvals(row + mod) +
-                  attrs.keyvals.filterKeyvals(row) 
+    val row = if (isBody) then "tbody-tr-" else "thead-tr-"
+    val idx = rowNum.show + "-"
+    val prefixes = ["tr-","tr-" + mod,"tr-" + idx,
+                    row, row + mod, row + idx ] + 
+                   (if (isLast) then ["tr-last-",row + "last-"] else [])
+    val kvs = attrs.keyvals.filterKeyvals(prefixes)
     if (hasLine)
      then kvs.filter(fun(kv){kv.fst.startsWith("background-color") || kv.fst.startsWith("rule") })
      else kvs
@@ -449,9 +447,13 @@ function formatRows( rows : list<row>,
   rows.map fun(row) {
     rowCount := rowCount+1
     val hasLine = row.containsDashes
+    val isLast  = !hasLine && (rowCount == rows.length - (if (lastHasLine) then 1 else 0)) 
     if (!hasLine) then rowNum := rowNum+1  
+
     val extraClasses = [if (isBody) then "tbody" else "thead",
-                        if (rowNum.even) then "tr-even" else "tr-odd"]
+                        if (rowNum.even) then "tr-even" else "tr-odd"] +
+                       (if (isLast) then ["tr-last"] else []) +
+                       (if (rowNum==1) then ["tr-first"] else [])
     val rowstyle0 = defaults.matchRules("tr", 
                       row.rowAttrs.addClasses(extraClasses).addKeyval("data-row",rowNum.show))
     val rowstyle = rowstyle0.addKeyvals( 
@@ -461,14 +463,14 @@ function formatRows( rows : list<row>,
         addRowKey("rule-width", "rule-width", True ) +
         addRowKey("padding-top", "rule-top-sep", !isBody && firstHasLine && rowNum==1 && !hasLine ) +
         addRowKey("padding-top", "rule-mid-sep", isBody && rowNum==1 && !hasLine) +
-        addRowKey("padding-bottom", "rule-mid-sep", !isBody && !hasLine && rowCount == rows.length ) +
-        addRowKey("padding-bottom", "rule-bottom-sep", isBody && !hasLine && lastHasLine && rowCount == rows.length-1 ) 
+        addRowKey("padding-bottom", "rule-mid-sep", !isBody && isLast ) +
+        addRowKey("padding-bottom", "rule-bottom-sep", isBody && isLast ) 
       )
-      .addKeyvals( defaultKeyvals(hasLine,rowNum) )
+      .addKeyvals( defaultKeyvals(hasLine,rowNum,isLast) )
     Row(formatRow(1,row.cells,colstyles,rowstyle),rowstyle)
   }
 }
 val rxbars = regex(@"[|+]+$")
-val rxSubSelect = regex(@"^(even|odd|\d+)\-")
+val rxSubSelect = regex(@"^(even|odd|last|\d+)\-")
 
 function noalign( s : string ) : bool = !(s.startsWith("align-"))

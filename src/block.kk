@@ -184,7 +184,8 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
   function author( idx : int ) : list<string> {
     mkblock("Author", 
       [entry("author" + idx.show, "AuthorName"),
-       entry("affiliation" + idx.show, "AuthorAffiliation"),
+       entry("affiliation" + idx.show, "AuthorAddress"),
+       entry("address" + idx.show, "AuthorAddress"),
        entry("author-note" + idx.show, "AuthorNote"),
        entry("email" + idx.show, "AuthorEmail")].concat)
   }

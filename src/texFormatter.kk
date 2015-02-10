@@ -462,22 +462,6 @@ val rxDigits = regex(@"\d+")
 val rxCmdSpecial = regex(@"[^a-zA-Z0-9]")
 
 
-/* --------------------------------------
-  Title 
----------------------------------------- */
-public function fmtTexTitle(context : inlineContext, titleinfo : titleinfo, attrs : attrs ) : string {
-  [@"\mdTitle{" + context.formatInline(titleinfo.title) + "}",
-   if (titleinfo.subtitle=="") then "" else @"\mdSubtitle{" + context.formatInline(titleinfo.subtitle) + "}",
-   titleinfo.authors.map(fun(author) {
-     @"\mdAuthor{" + context.formatInline(author.name) + "}{" + 
-                      context.formatInline(author.address) + "}{" + 
-                      context.formatInline(author.email) + "}{" +
-                      context.formatInline(author.note) + "}"
-   }).join("\n"),
-   @"\mdMaketitle{" + context.formatInline(titleinfo.note) + "}",""].join("\n")
-}
-
-
 
 /* --------------------------------------
   Full header 

@@ -76,7 +76,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
                                     options.highlight,options.starBold,options.prettyAlign) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
-    = parseBody(initialFormatContext(icontext,options.lineMap,options.titleInfo(icontext.metadata),
+    = parseBody(initialFormatContext(icontext,options.lineMap,
                                       options.headingBase,options.pedantic,fmt), 
                 options.lineNo,
                 src + logo,
@@ -124,39 +124,6 @@ function json(s : string) : string {
     else "\\u" + c.int.showHex(4)
   }
   return "\"" + cs.join + "\""
-}
-
-function titleInfo( options : options, metadata : dict<string> ) : div titleinfo {
-  function expand(s) { s.expandKeys(metadata) }  
-  val authors = zipAuthors(options.author.map(expand), options.affiliation.map(expand), 
-                           options.email.map(expand), options.authorNotes.map(expand)) 
-  Titleinfo(options.title.expand, options.subtitle.expand, authors, options.titleNote.expand)
-}
-
-function zipAuthors(xs,ys,zs,qs,acc=[]) : div list<authorinfo> {
-  function zipZs(x,xx,y,yy) {
-    function zipQs(z,zz) {
-      match(qs) {
-        Nil -> zipAuthors(xx,yy,zz,qs,Cons(Authorinfo(x,y,z,""),acc))
-        Cons(q,qq) -> zipAuthors(xx,yy,zz,qq,Cons(Authorinfo(x,y,z,q),acc))
-      }
-    }           
-
-    match(zs) {
-      Nil -> zipQs("",Nil)
-      Cons(z,zz) -> zipQs(z,zz) 
-    }
-  }
-
-  match(xs) {
-    Nil -> acc.reverse
-    Cons(x,xx) -> {
-      match(ys) {
-        Nil -> zipZs(x,xx,"",Nil)
-        Cons(y,yy) -> zipZs(x,xx,y,yy)
-      }
-    }
-  }
 }
 
 

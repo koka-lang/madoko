@@ -283,25 +283,6 @@ function fmtField( context: inlineContext, elem :string, class : string, txt : s
   tag(elem, context.formatInline(txt), " class='" + class + "'")
 }
 
-public function fmtHtmlTitle(context : inlineContext, titleinfo : titleinfo, attrs : attrs ) : string {
-  tag("section", 
-    [tag("h1",context.formatInline(titleinfo.title)," class='title' data-line='1'"),
-     if (titleinfo.subtitle=="") then "" else tag("h2",context.formatInline(titleinfo.subtitle)," class='subtitle'"),
-     context.fmtField("div","titlenote",titleinfo.note),     
-     tag("table",
-      tag("tr", 
-       titleinfo.authors.map(fun(author) {
-        tag("td", context.fmtField("div","author",author.name) +
-                  context.fmtField("div","affiliation address",author.address) +
-                  context.fmtField("div","email",author.email) +
-                  context.fmtField("div","authornote",author.note)
-           ," class='authorblock align-center'")
-       }).join("\n"))),
-    ].join("\n"),
-    " class='titleblock align-center'")
-   
-}
-
 /* --------------------------------------
   Full header 
 ---------------------------------------- */

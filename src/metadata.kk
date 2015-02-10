@@ -72,7 +72,7 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
       val value = cap.groups[4].joinLines.trim
       //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
       val rawkeys = if (cap.groups.matchedOn(3))
-                      then cap.groups[2].split(",").list
+                      then cap.groups[2].split(",").list.map(trim)
                       else [cap.groups[2]]     
       val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
       val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,cap.groups[4],lines ) } );                
@@ -260,9 +260,9 @@ function defaultMeta( options : options, fmt : formatter ) : string {
 
       @".booktable:  
           rule-top-width=2px rule-bottom-width=2px 
-          rule-mid-width=1.35px thead-font-weight=normal   
+          rule-mid-width=1.35px thead-tr-font-weight=normal   
           rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
-          thead-padding-top=3pt thead-padding-bottom=3pt",
+          thead-tr-1-padding-top=3pt thead-tr-padding-bottom=3pt",
     
       @"~Bibitem: replace='?if &bib-search-url; && &searchterm;\
                           ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'",
