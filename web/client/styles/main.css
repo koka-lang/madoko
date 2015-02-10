@@ -1690,11 +1690,14 @@ div.item.document {
   vertical-align: middle;
 }
 
+#picker .version-display {
+  text-align: left;
+}
+
 #picker .version-display .version-alert {
-  font-weight: bold;
+  font-weight: bold;  
 }
 #picker .version-display .version-updates {
-  text-align: left;
   font-size: smaller;
   margin-top: 1ex;
 }
