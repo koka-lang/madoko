@@ -730,9 +730,7 @@ var UI = (function() {
       } 
     });
     document.getElementById("showversion").onclick = function() {
-      self.anonEvent( function() {
-        self.showUpdateMessage();
-      });
+      self.showUpdateMessage();
     };
     
     var autoSync = function() {
@@ -4669,14 +4667,16 @@ var symbolsMath = [
 
   UI.prototype.showUpdateMessage = function() {
     var self = this;
-    var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
-    var shortDate   = self.version.date.substr(0,10);
-    var htmlMessage = "<div class='version-display'>" + 
-                  (!self.version.log.alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log.alert) + "</div>") +
-                  (!self.version.log.message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log.message) + "</div>") +
-                  ("<div class='version-updates'>Updates:<ul>" + self.version.log.updates.map(function(item) { return "<li>" + Util.miniMarkdown(item) + "</li>"; }).join("") + "</ul></div>") +
-                  "</div>";
-    return Storage.message(self.storage,htmlMessage,"Madoko has been updated to " + self.version.version + ", " + shortDate + " " + shortDigest, "images/dark/icon-madoko.png");
+    self.anonEvent( function() {        
+      var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
+      var shortDate   = self.version.date.substr(0,10);
+      var htmlMessage = "<div class='version-display'>" + 
+                    (!self.version.log.alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log.alert) + "</div>") +
+                    (!self.version.log.message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log.message) + "</div>") +
+                    ("<div class='version-updates'>Updates:<ul>" + self.version.log.updates.map(function(item) { return "<li>" + Util.miniMarkdown(item) + "</li>"; }).join("") + "</ul></div>") +
+                    "</div>";
+      return Storage.message(self.storage,htmlMessage,"Madoko has been updated to " + self.version.version + ", " + shortDate + " " + shortDigest, "images/dark/icon-madoko.png");
+    });
   }
 
 
