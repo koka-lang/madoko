@@ -295,11 +295,6 @@ img#console-ok {
   margin-top: 0.1em;
 }
 
-#madokoDigest {
-  padding-left: 1em;
-  color: Dimgray;
-}
-
 .app-footer a.external {
   text-decoration: underline;
 }
@@ -639,6 +634,11 @@ a.file-share:hover {
 #help .notice {
   font-size: small;
   color: DimGray;
+  padding-left: 0.5ex;
+}
+
+#help .notice .button {
+  padding-left: 0ex !important;
 }
 
 #connection a img,
@@ -1221,10 +1221,13 @@ div.pinned.boxed.menu {
 }
 
 #document-content {
-  width: 16em;
+  width: 18em;
 }
 
-#help-content,
+#help-content {
+  width: 21em;
+}
+
 #menu-settings-content {
   width: 20em;
 }
@@ -1685,6 +1688,18 @@ div.item.document {
   margin-top: -0.2em;
   padding-top: 0.2em;
   vertical-align: middle;
+}
+
+#picker .version-display .version-alert {
+  font-weight: bold;
+}
+#picker .version-display .version-updates {
+  text-align: left;
+  font-size: smaller;
+  margin-top: 1ex;
+}
+#picker .version-updates ul {
+  margin-top: 0ex;
 }
 
 

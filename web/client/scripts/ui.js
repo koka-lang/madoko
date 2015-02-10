@@ -6,10 +6,10 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/promise","../scripts/util","../scripts/tabStorage",
+define(["../scripts/map","../scripts/promise","../scripts/date","../scripts/util","../scripts/tabStorage",
         "../scripts/storage","../scripts/spellcheck","../scripts/errormenu",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
-        function(Map,Promise,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Range,Selection,ReplaceCommand,Editor,CustomHover) {
+        function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
 
 // Constants
@@ -709,17 +709,31 @@ var UI = (function() {
     Util.getAppVersionInfo(false).then( function(version) {
       if (version) {
         self.version = version;
+        var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
+        var shortDate   = self.version.date.substr(0,10);
         var elem = document.getElementById("madokoWebVersion");
         if (elem) elem.textContent = self.version.version || "?";       
         elem = document.getElementById("madokoVersion");
         if (elem) elem.textContent = self.version.madokoVersion || "?";
         elem = document.getElementById("madokoDigest");
         if (elem) {
-          elem.textContent = "(" + self.version.digest.substr(0,6) + ")" || "";
+          elem.textContent = ", " + shortDate + " " + shortDigest;
           elem.setAttribute("title","digest: " + self.version.digest);
         }
-      }
+      
+        // check if we just updated
+        var localVersion = Util.jsonParse(localStorage.getItem("version"));
+        if (localVersion==null || localVersion.digest !== version.digest) {
+          localStorage.setItem("version", JSON.stringify(version));
+          self.showUpdateMessage();
+        }
+      } 
     });
+    document.getElementById("showversion").onclick = function() {
+      self.anonEvent( function() {
+        self.showUpdateMessage();
+      });
+    };
     
     var autoSync = function() {
       var now = Date.now();
@@ -4651,6 +4665,18 @@ var symbolsMath = [
         Util.message("Spell check done.", Util.Msg.Status);
       });
     });
+  }
+
+  UI.prototype.showUpdateMessage = function() {
+    var self = this;
+    var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
+    var shortDate   = self.version.date.substr(0,10);
+    var htmlMessage = "<div class='version-display'>" + 
+                  (!self.version.log.alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log.alert) + "</div>") +
+                  (!self.version.log.message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log.message) + "</div>") +
+                  ("<div class='version-updates'>Updates:<ul>" + self.version.log.updates.map(function(item) { return "<li>" + Util.miniMarkdown(item) + "</li>"; }).join("") + "</ul></div>") +
+                  "</div>";
+    return Storage.message(self.storage,htmlMessage,"Madoko has been updated to " + self.version.version + ", " + shortDate + " " + shortDigest, "images/dark/icon-madoko.png");
   }
 
 

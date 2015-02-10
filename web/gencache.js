@@ -4,6 +4,8 @@ var Path    = require("path");
 var Promise = require("./client/scripts/promise.js");
 var match   = require("minimatch");
 
+var versionLog    = JSON.parse(Fs.readFileSync("../versionlog.json"));
+
 var madokoVersion = JSON.parse(Fs.readFileSync("../package.json")).version;
 var appVersion 		= JSON.parse(Fs.readFileSync("package.json")).version;
 var options 			= JSON.parse(Fs.readFileSync("cache-config.json"));
@@ -78,6 +80,8 @@ function createCache(fnames,digest) {
 		version: appVersion,
 		madokoVersion: madokoVersion,
 		digest: digest,
+		date: new Date().toISOString(),
+		log: versionLog.log[0],
 	});
 	Fs.writeFileSync(Path.join(options.rootPath,"version.json"),header + "\n");
 	return [
