@@ -40,9 +40,11 @@ Section Base  : 2
 Section Depth : 2
 .MadokoLogo   : font-size=50%
 ~Notes        : html-elem=aside .notes
-.Author       : font-size=xx-large
-.Affiliation  : font-size=x-large
-.Email        : font-size=x-large
+~Author       : font-size=x-large
+~TitleBlock   : html-elem=section
+~Title        : font-size=3em html-elem=h1
+~AuthorName   : font-size=1.4em
+~SubTitle     : font-size=1.8em html-elem=h2
 ~Body         : before="~ Begin Reveal { data-long=&reveal-long; data-details=&reveal-details; &reveal-attrs; line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
                 after="~ End Slides&nl;~ End Reveal&nl;" 
 ~Slide        : .section html-elem=section tex-elem=mdSection
