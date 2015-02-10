@@ -357,7 +357,7 @@ var Picker = (function() {
     ev.stopPropagation;
     ev.preventDefault();
     var files = ev.target.files;
-    ev.target.files = null;
+    //ev.target.files = null; // TODO: how to reset the files?
     picker.onEnd({files:files});
   });
 

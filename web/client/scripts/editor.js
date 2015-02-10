@@ -275,6 +275,7 @@ var Editor = {
       else if (options.mime) mime = options.mime;
       else mime = "text/plain";
     }
+    if (mime==="text/markdown") mime = "text/madoko";
     
     if (editName !== self.editName) {
       // switch file..
