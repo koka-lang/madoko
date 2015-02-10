@@ -1,0 +1,21 @@
+{
+  "log" : [
+    {
+      "alert": "The standard madoko style has changed: please re-open currently open documents",
+      "updates": [
+        "Updated table formatting attributes. The new prefixes are `tr-`, `thead-tr-`, `tbody-tr-`, `col-`, `cell-`, `td-` and `th-`.\n  New modifiers are `even-`, `odd-`, `last-` and `-n` where `n` is the column/row number",
+        "Completely new title block formatting where every item can be individually formatted. Use `Maketitle: True` to use the `maketitle` command in LaTeX.",
+        "New metadata key `Author Columns (:3)` to determine how many author columns there are.",
+        "Fix bug where class rules were not applied in tables.",
+        "Fix infinite reloading bug.",
+        "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
+        "Improved spell checking for capitalization mistakes.",
+        "Modes in metadata now apply to any metadata key (instead of just rules) and can be arbitrary boolean metadata keys.",
+        "Support full CSS colors, including `rgb(r,g,b)`, `hsl(0-360,s%,l%)`, `#xxx` and `#xxxxxx`.",
+        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules.",
+        "Fixed syntax highlighting of `.md` files.",
+        "Fix spell checking on IE."
+      ]
+    }
+  ]
+}
