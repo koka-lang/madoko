@@ -361,8 +361,8 @@ val metadataTitle : string =
 @nomaketitle ~Author      : .column text-align=center
 @nomaketitle .AuthorEmail : .email
 
-@nomaketitle .Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
-@nomaketitle .Subtitle    : font-size=x-large margin-bottom=0.5ex
-@nomaketitle .AuthorName  : font-size=large
+@nomaketitle ~Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
+@nomaketitle ~Subtitle    : font-size=x-large margin-bottom=0.5ex
+@nomaketitle ~AuthorName  : font-size=large
 @nomaketitle ~TitleFooter : margin-top=0.5ex
 "
