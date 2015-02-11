@@ -182,7 +182,6 @@ val rxModed = regex(@"@(no)?(\w*) (.*)")
 
 function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ fmt.showFormatter + ": True",
-      @"@tex maketitle: True",
       @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
       @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block",
 
