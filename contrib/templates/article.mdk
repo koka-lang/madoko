@@ -1,17 +1,18 @@
-Title       : My Academic Paper
-Author      : You
-Affiliation : Research institute
-Email       : you@bar.com
+Title         : My Academic Paper
+Author        : You
+Affiliation   : Research institute
+Email         : you@bar.com
 
-Author      : My co-author
-Affiliation : Other institute
-Email       : other@bar.com
+Author        : My co-author
+Affiliation   : Other institute
+Email         : other@bar.com
 
-Colorizer   : javascript
-Bib style   : plainnat
-Bibliography: example
-Heading base: 2
-Doc class   : [reprint,nocopyrightspace]sigplanconf.cls
+Colorizer     : javascript
+Bib style     : plainnat
+Bibliography  : example
+Heading base  : 2
+
+Doc class     : [10pt]article
 
 [TITLE]
 
@@ -21,12 +22,6 @@ egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
 ~
 
-~ TexRaw
-% any commands necessary for your particular style
-\category{D.2.5}{Software Engineering}{Testing and Debugging}[symbolic execution]
-\terms{Algorithms, Experimentation}
-\keywords{Games for learning, white box testing}
-~
 
 # Introduction     { #sec-intro }
 

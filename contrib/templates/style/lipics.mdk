@@ -12,6 +12,8 @@ Doc Class     : [UKenglish]style/lipics.cls
 Heading base  : 2
 Refer         : cc-by.pdf
 Refer         : lipics-logo-bw.pdf
+@tex Maketitle: True
+
 ~Lemma        : @Theorem label="[@Theorem]{.Lemma-label}"
 ~Corollary    : @Theorem label="[@Theorem]{.Corollary-label}"
 ~Definition   : @Theorem label="[@Theorem]{.Definition-label}"

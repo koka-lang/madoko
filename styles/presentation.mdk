@@ -53,6 +53,7 @@ Section Depth : 2
 .long         : data-long
 @tex ~Notes   : display=none
 @tex ~Vertical: notag
+@tex Maketitle: True
 Tex Header    :
     \ifbeamer\relax\else
       \providecommand{\usetheme}[2][]{}

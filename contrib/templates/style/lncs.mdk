@@ -1,6 +1,7 @@
 Description:
     Madoko settings for the LLNCS LaTeX document class.
 Heading base  : 2
+@tex Maketitle: True
 Doc Class     : style/llncs.cls
 Tex Header*   :
     \pagestyle{plain}
