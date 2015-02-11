@@ -341,17 +341,17 @@
 \newcommand{\mdBookmark}[3]{\eifstrequal{#2}{}{}{\pdfbookmark[#1]{#2}{#3}}}
 \newcommand{\mdHBookmark}[2]{%
   \ifnum#1<\mdHeadingBase\edef\@mdlevel{#1}\else\edef\@mdlevel{\the\numexpr#1-\mdHeadingBase}\fi%
-  \cssInitKeys{#2}\mdBookmark{\@mdlevel}{\cssBookmark}{\cssId}%
+  \begingroup\cssInitKeys{#2}\mdBookmark{\@mdlevel}{\cssBookmark}{\cssId}\endgroup%
 }
 
 \cssNewKey{css}{starform}{\cssStarForm}{}
 \newcommand{\mdCommandStar}[3][]{%
-  \cssInitKeys{#1}%
-  \eifstrequal{\cssStarForm}{true}{\csname #2\endcsname*{#3}}{\csname #2\endcsname{#3}}%
+  \begingroup\cssInitKeys{#1}%
+  \eifstrequal{\cssStarForm}{true}{\csname #2\endcsname*{#3}}{\csname #2\endcsname{#3}}\endgroup%
 }
 \newcommand{\mdCommandUnStar}[3][]{%
-  \cssInitKeys{#1}%
-  \eifstrequal{\cssStarForm}{false}{\csname #2\endcsname{#3}}{\csname #2\endcsname*{#3}}%
+  \begingroup\cssInitKeys{#1}%
+  \eifstrequal{\cssStarForm}{false}{\csname #2\endcsname{#3}}{\csname #2\endcsname*{#3}}\endgroup%
 }
 
 \newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
@@ -660,9 +660,9 @@
     {\def\@pagealign{tbp}}}}}}% default tbp
   %\cssDoAfter{\cssRestoreFootnotes}%
   \eifstrequal{\cssFloat}{left}%
-    {}%
+    {\def\@captype{\cssFloatEnv}}%
   {\eifstrequal{\cssFloat}{right}%
-    {}%
+    {\def\@captype{\cssFloatEnv}}%
   {\cssIfHasClass{wide}%
     {\cssDoBefore{\expandnext{\begin{\cssFloatEnv*}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv*}}}%
     {\cssDoBefore{\expandnext{\begin{\cssFloatEnv}[}{\@pagealign}]}\cssDoAfter{\end{\cssFloatEnv}}}%
@@ -688,13 +688,13 @@
 \newcommand{\mdCaptionText}[1]{%
   \addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
     {\protect\numberline{\@mdCaptionLabel}{\ignorespaces #1}}%
-  #1    
+  #1%    
 }
 \cssClassRuleCmd{caption-text}{\mdCaptionText}
 
 \newcommand{\mdCaptionLabel}[1]{%
   \global\gdef\@mdCaptionLabel{#1}%
-  #1
+  #1%
 }
 \cssClassRuleCmd{figure-label}{\mdCaptionLabel}
 \cssClassRuleCmd{table-label}{\mdCaptionLabel}
@@ -797,7 +797,7 @@
 
 \newcommand{\@tokenPostfix}{}
 \newcommand{\@tokencmd}[1]{#1}
-\newcommand{\mdToken}[2]{%
+\newrobustcmd{\mdToken}[2]{%
   \renewcommand{\@tokencmd}[1]{##1}%
   \@for\@tname:=#1\do{%
     \ifcsdef{mdToken\@tokenPostfix\@tname}{\apptox{\@tokencmd}{\csname mdToken\@tokenPostfix\@tname\endcsname}}{}%

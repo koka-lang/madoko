@@ -199,7 +199,7 @@
 \newcommand{\cssWrapCmd}[1]{\apptox{\@wrapCmd}{#1}}
 \newcommand{\cssDoBeforeX}[1]{#1}
 \newcommand{\cssDoAfterX}[1]{\preto\@doAfter{#1}}
-\newcommand{\cssDoBefore}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
+\newrobustcmd{\cssDoBefore}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
 \newcommand{\cssDoAfter}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
 %\newcommand{\cssDoBeforeX}[1]{\if@usewrap\cssWrapCmd{\@cmdBefore{#1}}\else #1\fi}
 %\newcommand{\cssDoAfterX}[1]{\if@usewrap\cssWrapCmd{\@cmdAfter{#1}}\else\preto\@doAfter{#1}\fi}
@@ -207,7 +207,7 @@
 \newcommand{\cssDoEnv}[1]{\cssDoBefore{\protect\begin{#1}}\cssDoAfter{\protect\end{#1}}}
 \newcommand{\cssDoEnvOpt}[2]{\cssDoBefore{\begin{#1}[#2]}\cssDoAfter{\end{#1}}}
 \newcommand{\cssDoEnvArg}[2]{\cssDoBefore{\begin{#1}{#2}}\cssDoAfter{\end{#1}}}
-\newcommand{\cssDoEnvArgII}[3]{\cssDoBefore{\begin{#1}{#2}{#3}}\cssDoAfter{\end{#1}}}
+\newrobustcmd{\cssDoEnvArgII}[3]{\cssDoBefore{\begin{#1}{#2}{#3}}\cssDoAfter{\end{#1}}}
 
 \newcommand{\newKey}[4][]{\define@key{#2}{#3}[#1]{#4}}
 \newcommand{\newLength}[2]{\providelength{#1}\setlength{#1}{#2}}
@@ -285,7 +285,7 @@
 }
 
 \newcommand{\@cssBlockEndPar}{%
-	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfterX{\leavevmode\par\global\hangindent=0pt\relax}}%
+	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfterX{\relax\ifhmode\par\global\hangindent=0pt\fi}}%
 }
 
 \newif\if@hasdim
@@ -349,9 +349,10 @@
 				\parsep=0pt%
 				\parskip=0pt%
 				\partopsep=0pt%	
-				\listparindent=\parindent%	
+				\listparindent=\parindent%
+				x
 			}%
-			\cssDoAfterX{\endlist}%
+			\cssDoAfterX{x\endlist}%
 			\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
 			\eifstrequal{\cssTextAlign}{left}% we need to do alignment here for inline cmds' with a display=block
 				{\raggedright}%
@@ -361,8 +362,8 @@
 				{\centering}%
 			{}}}%
 			\cssIfHasClass{math-display}%
-				{\item\@cssFixMathSpacing}%
-				{\item\relax}%	
+				{\item y\@cssFixMathSpacing}%
+				{\item y\relax}%	
 		\fi
 	\fi
 }
@@ -792,7 +793,7 @@
 \newenvironment{cssBlock}[1][]%
 	{\begin{cssBlockX}{}{#1}}{\end{cssBlockX}}
 
-\newcommand{\cssInlineX}[4]%
+\newrobustcmd{\cssInlineX}[4]%
 	{\begingroup\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline,#1}{#2}%
 	 \@cssElemDoRules%
 	 \@cssProcessMargins\@cssProcessPadding%
@@ -802,18 +803,18 @@
 	 \@cssApplyCmd{#4}\@cssApplyAfter\endgroup%
 	}%	 
 
-\newcommand{\cssInline}[2][]{\cssInlineX{}{#1}{}{#2}}
-\newcommand{\cssInlineCmd}[3][]{\cssInlineX{}{#1}{\cssWrapCmd{#2}}{#3}}
+\newrobustcmd{\cssInline}[2][]{\cssInlineX{}{#1}{}{#2}}
+\newrobustcmd{\cssInlineCmd}[3][]{\cssInlineX{}{#1}{\cssWrapCmd{#2}}{#3}}
 
 \newcommand{\cssNewBlockElem}[3]{%
 	\newenvironment{#1}[1][]{\begin{cssBlockX}{elem=#2,#3}{##1}}{\end{cssBlockX}}}
 
 \newcommand{\cssNewInlineElem}[3]{%
-	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{}{##2}}}
+	\newrobustcmd{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{}{##2}}}
 
 
 \newcommand{\cssNewInlineElemCmd}[4]{%
-	\newcommand{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{\cssWrapCmd{#4}}{##2}}}
+	\newrobustcmd{#1}[2][]{\cssInlineX{elem=#2,#3}{##1}{\cssWrapCmd{#4}}{##2}}}
 
 \newcommand{\cssInitKeys}[1]{%
   \@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline}{#1}%
@@ -821,12 +822,13 @@
 
 % cssText is just for font attributes; no padding or margins
 \newcommand{\cssTextX}[2]%
-	{\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline}{#1}%
+	{\begingroup\@cssReset\@cssUseCmd\@cssProcessAttrs{display=inline}{#1}%
 	 \@cssElemDoRules%
 	 %\@cssProcessMargins\@cssProcessPadding%
 	 \@cssClassDoRules%
 	 \@cssProcessText\@cssProcessFont%
 	 \@cssApplyCmd{#2}%
+	 \endgroup%
 	}%
 
 
