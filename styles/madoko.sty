@@ -22,7 +22,6 @@
 \RequirePackage{pifont}
 \RequirePackage{wrapfig}
 
-
 %-------------------------------------------------------------
 % Process options 
 %-------------------------------------------------------------
@@ -354,14 +353,14 @@
   \eifstrequal{\cssStarForm}{false}{\csname #2\endcsname{#3}}{\csname #2\endcsname*{#3}}\endgroup%
 }
 
-\newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
-\newcommand{\mdHx}[2][]{\mdHBookmark{1}{#1}\mdCommandUnStar[#1]{chapter}{\cssInline[elem=h1,#1]{#2}}}
-\newcommand{\mdHxx}[2][]{\mdHBookmark{2}{#1}\mdCommandUnStar[#1]{section}{\cssInline[elem=h2,#1]{#2}}}
-\newcommand{\mdHxxx}[2][]{\mdHBookmark{3}{#1}\mdCommandUnStar[#1]{subsection}{\cssInline[elem=h3,#1]{#2}}}
-\newcommand{\mdHxxxx}[2][]{\mdHBookmark{4}{#1}\mdCommandUnStar[#1]{subsubsection}{\cssInline[elem=h4,#1]{#2}}}
-\newcommand{\mdHxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h5,#1]{#2}}}
-\newcommand{\mdHxxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h6,#1]{#2}}}
-\newenvironment{mdSection}[1][]{\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
+\newcommand{\mdH}[2][]{\leavevmode\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
+\newcommand{\mdHx}[2][]{\leavevmode\mdHBookmark{1}{#1}\mdCommandUnStar[#1]{chapter}{\cssInline[elem=h1,#1]{#2}}}
+\newcommand{\mdHxx}[2][]{\leavevmode\mdHBookmark{2}{#1}\mdCommandUnStar[#1]{section}{\cssInline[elem=h2,#1]{#2}}}
+\newcommand{\mdHxxx}[2][]{\leavevmode\mdHBookmark{3}{#1}\mdCommandUnStar[#1]{subsection}{\cssInline[elem=h3,#1]{#2}}}
+\newcommand{\mdHxxxx}[2][]{\leavevmode\mdHBookmark{4}{#1}\mdCommandUnStar[#1]{subsubsection}{\cssInline[elem=h4,#1]{#2}}}
+\newcommand{\mdHxxxxx}[2][]{\leavevmode\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h5,#1]{#2}}}
+\newcommand{\mdHxxxxxx}[2][]{\leavevmode\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h6,#1]{#2}}}
+\newenvironment{mdSection}[1][]{\leavevmode\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %\patchcmd{\@startsection}%
 % {\@ssect{#3}{#4}{#5}{#6}}%
@@ -419,7 +418,7 @@
 %-------------------------------------------------------------
 
 \newenvironment{mdMathprearray}%
-  {\setlength{\arraycolsep}{0pt}\begin {array}{llllllll}}%
+  {\setlength{\arraycolsep}{0pt}\begin{array}{llllllll}}%
   {\end{array}\hspace*{\linewidth minus \linewidth}} % flush left
 
 \defcommand{\mathkw}[1]{\mathsf{{#1}}}
@@ -452,9 +451,9 @@
   {\global\setbox\mdThmBox\hbox\bgroup\ignorespaces}
   {\egroup}
 \newenvironment{mdThm}[1][]%
-  {\cssInitKeys{#1}\begin{\cssEnv}%
+  {\begingroup\cssInitKeys{#1}\begin{\cssEnv}%
    \global\setbox\mdThmBox\hbox{}}%
-  {\end{\cssEnv}}
+  {\end{\cssEnv}\endgroup}
 
 
 %-------------------------------------------------------------
@@ -465,6 +464,7 @@
 \newlength{\xtopsep}
 \newenvironment{mdUl}[1][]%
   {\begin{mdDiv}[#1]%
+   \leavevmode%
    \setlength{\xtopsep}{\topsep}%
    \addtolength{\topsep}{-\cssMarginTop}%
    \eifstrequal{\cssListStyleType}{}%
@@ -509,6 +509,7 @@
 \newenvironment{mdOl}[1][]%
   {\ifdef\@enhook{\PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak use the "enumitem" package instead\MessageBreak (which is available by default)}{}}{}%
   \begin{mdDiv}[#1]%
+  \leavevmode%
   \setlength{\xtopsep}{\topsep}%
   \addtolength{\topsep}{-\cssMarginTop}%
   \@mdSetListLabel%
@@ -687,7 +688,7 @@
 % participate in listoffigures and listoftables
 \newcommand{\mdCaptionText}[1]{%
   \addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
-    {\protect\numberline{\@mdCaptionLabel}{\ignorespaces #1}}%
+    {\protect\numberline{\@mdCaptionLabel}{\protecting{\ignorespaces #1}}{}}%
   #1%    
 }
 \cssClassRuleCmd{caption-text}{\mdCaptionText}
@@ -703,10 +704,9 @@
 \newcommand{\mdHr}[2][]{%
   \begingroup%  
   \cssNewLengthKey{csspre}{width}{\cssHrWidth}% capture width 
-  %\relax\ifhmode\par\fi%
-  \begin{mdDiv}[height=1ex,vertical-align=center,text-align=center,#1]{%
+  \begin{mdDiv}[height=1ex,text-align=center,text-indent=0pt,#1]{%
     \ifdim\cssHrWidth=0pt\setlength{\cssHrWidth}{\linewidth}\fi%
-    \rule{\cssHrWidth}{\cssPixel}#2}%
+    \leavevmode\rule{\cssHrWidth}{\cssPixel}#2}%
   \end{mdDiv}%
   \endgroup}
 
@@ -719,6 +719,7 @@
 \newlength{\@sideheight}
 \newsavebox{\@sidebox}
 \newcommand{\mdFloatBox}[3]{
+  \leavehmode%
   \savebox{\@sidebox}{#3}%
   \ifdim\ht\@sidebox>0pt\relax%
     \savebox{\@sidebox}{\raisebox{-\ht\@sidebox}{\usebox{\@sidebox}}}% top-align the box

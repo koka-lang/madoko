@@ -277,15 +277,17 @@
 
 \newcommand{\@cssProcessMargins}{%
 	\eifstrequal{\cssDisplay}{block}%
-		{\@cssBlockEndPar\@cssBlockMargins}%
+		{\cssDoBeforeX{\@cssBlockEndPar}\@cssBlockMargins}%
 	{\eifstrequal{\cssDisplay}{inline-block}%
 		{\@cssBlockMargins}%
 		{\@cssInlineMargins}%
 	}%
 }
 
+\newcommand\leavehmode{\ifhmode\par\relax\fi}
+
 \newcommand{\@cssBlockEndPar}{%
-	\cssIfHasClass{para-continue,para-block}{}{\cssDoAfterX{\relax\ifhmode\par\global\hangindent=0pt\fi}}%
+	\cssIfHasClass{para-continue}{}{\cssDoAfterX{\relax\ifhmode\par\global\hangindent=0pt\fi}}%
 }
 
 \newif\if@hasdim
@@ -314,8 +316,8 @@
 			\addtolength{\cssWidthFull}{\cssWidth}%
 		\fi%
 		%minipage				
-		\ifdim\cssMarginTop=0pt\else\cssDoBeforeX{\vspace{\cssMarginTop}}\fi
-		\ifdim\cssMarginLeft=0pt\else\cssDoBeforeX{\hspace*{\cssMarginLeft}}\fi
+		\ifdim\cssMarginTop=0pt\else\cssDoBeforeX{\removelastskip\vspace{\cssMarginTop}}\fi%
+		\ifdim\cssMarginLeft=0pt\else\cssDoBeforeX{\hspace*{\cssMarginLeft}}\fi%
 		\setlength{\@cssParIndent}{\parindent}% save parskip and parindent since minipage resets it
 		\setlength{\@cssParSkip}{\parskip}%
 		\eifstrequal{\cssVerticalAlign}{bottom}{\def\@cssValign{b}}%
@@ -323,37 +325,38 @@
 		{\eifstrequal{\cssVerticalAlign}{top}{\def\@cssValign{t}}%
 		{\def\@cssValign{c}}}}% including `middle`
 		\ifdim\cssHeight=1sp%
-	   		\cssDoBeforeX{\begin{minipage}[\@cssValign]{\cssWidthFull}}%
+	   	\cssDoBeforeX{\noindent\begin{minipage}[\@cssValign]{\cssWidthFull}}%
 		\else
-			\cssDoBeforeX{\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
+			\cssDoBeforeX{\noindent\begin{minipage}[\@cssValign][\cssHeightFull]{\cssWidthFull}}%
 		\fi
 		\cssDoBeforeX{\cssSaveFootnotes\setlength{\parskip}{\@cssParSkip}\setlength{\parindent}{\@cssParIndent}}%
 		%note: DoAfter prepends, so in opposite order
-		\ifdim\cssMarginBottom=0pt\else\cssDoAfterX{\vspace{\cssMarginBottom}}\fi
+		\ifdim\cssMarginBottom=0pt\else\cssDoAfterX{\removelastskip\vspace{\cssMarginBottom}}\fi
 		\ifdim\cssMarginRight=0pt\else\cssDoAfterX{\hspace*{\cssMarginRight}}\fi
 		\cssDoAfterX{\end{minipage}\cssRestoreFootnotes}%
 	\else
 		% no height/width: trivlist
 		\@hasdimfalse
+		\ifdim\cssMarginTop=0pt\else\cssDoBeforeX{\removelastskip\vspace{\cssMarginTop}}\fi%			
+		\ifdim\cssMarginBottom=0pt\else\cssDoAfterX{\removelastskip\vspace{\cssMarginBottom}}\fi%
 		\ifdim\cssMarginLeft=0pt\else\@hasdimtrue\fi
 		\ifdim\cssMarginRight=0pt\else\@hasdimtrue\fi
-		\ifdim\cssMarginTop=0pt\else\@hasdimtrue\fi
-		\ifdim\cssMarginBottom=0pt\else\@hasdimtrue\fi
+		%\ifdim\cssMarginTop=0pt\else\@hasdimtrue\fi
+		%\ifdim\cssMarginBottom=0pt\else\@hasdimtrue\fi
 	  \if@hasdim
-			\setlength{\@cssMarginAfter}{\dimexpr\cssMarginBottom-\cssMarginTop\relax}%
-			\list{}{%
+			%\setlength{\@cssMarginAfter}{\dimexpr\cssMarginBottom-\cssMarginTop\relax}%
+			\cssDoBeforeX{\list{}{%
 				\leftmargin=\cssMarginLeft%
 				\rightmargin=\cssMarginRight%
-				\topsep=\cssMarginTop%
+				\topsep=0pt%
 				\itemsep=0pt%
 				\parsep=0pt%
 				\parskip=0pt%
 				\partopsep=0pt%	
 				\listparindent=\parindent%
-				x
-			}%
-			\cssDoAfterX{x\endlist}%
-			\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
+			}}%
+			\cssDoAfterX{\endlist}%
+			%\ifdim\@cssMarginAfter=0pt\else\cssDoAfter{\vspace{\@cssMarginAfter}}\fi%
 			\eifstrequal{\cssTextAlign}{left}% we need to do alignment here for inline cmds' with a display=block
 				{\raggedright}%
 			{\eifstrequal{\cssTextAlign}{right}%
@@ -361,10 +364,8 @@
 			{\eifstrequal{\cssTextAlign}{center}%
 				{\centering}%
 			{}}}%
-			\cssIfHasClass{math-display}%
-				{\item y\@cssFixMathSpacing}%
-				{\item y\relax}%	
-		\fi
+			\cssDoBeforeX{\item\relax}%
+		\fi					
 	\fi
 }
 
@@ -605,7 +606,7 @@
 		{\cssDoBefore{\protect\centering}}%
 	{}}}%
 	\ifdim\cssLineHeight=0pt\else\setlength{\baselineskip}{\cssLineHeight}\fi
-	\ifdim\cssTextIndent=1sp\else\noindent\hspace*{\cssTextIndent}\fi	
+	\noindent\ifdim\cssTextIndent=1sp\else\hspace*{\cssTextIndent}\fi	
 }
 
 \newcommand{\@cssInlineText}{%
