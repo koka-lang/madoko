@@ -117,9 +117,9 @@ function formatBlocksAcc( context : formatContext, blocks : list<block>, acc : b
             Cons(Div(_,attrsd),_) | attrsd.hasClass("para-block") -> {
               formatBlocksAcc(context,rest,acc.append(formatBlock(context,Para(text,attrs.addClass("para-continue")))))
             }
-            Cons(List,_) -> {
-              formatBlocksAcc(context,rest,acc.append(formatBlock(context,Para(text,attrs.addClass("para-continue")))))
-            }
+            //Cons(List,_) -> {
+            //  formatBlocksAcc(context,rest,acc.append(formatBlock(context,Para(text,attrs.addClass("para-continue")))))
+            //}
             _ -> {
               formatBlocksAcc(context,rest, acc.append(formatBlock(context,block)))
             } 
