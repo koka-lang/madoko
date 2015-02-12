@@ -12,7 +12,6 @@ Heading Base  : 2
 Bib style     : plainnat
 Bibliography  : example.bib
 Doc class     : [reprint,nocopyrightspace]style/sigplanconf.cls
-@tex Maketitle: True 
 
 [TITLE]
 

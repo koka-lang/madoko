@@ -13,6 +13,7 @@ Heading base  : 2
 Refer         : cc-by.pdf
 Refer         : lipics-logo-bw.pdf
 @tex Maketitle: True
+@tex ~Body    : display=inline-block
 
 ~Lemma        : @Theorem label="[@Theorem]{.Lemma-label}"
 ~Corollary    : @Theorem label="[@Theorem]{.Corollary-label}"
@@ -40,7 +41,11 @@ Tex Header    :
     \makeatletter
     \renewcommand{\authorinfo}[3]{%
       \stepcounter{mdAuthorCount}%
-      \csgdef{@sep\the\value{mdAuthorCount}}{\Authsep}% lipics does not use \global :(
+      \ifnum\the\value{mdAuthorCount}>1%
+        \csgdef{@sep\the\value{mdAuthorCount}}{\Authsep}% lipics does not use \global :(
+      \else
+        \csgdef{@sep\the\value{mdAuthorCount}}{}
+      \fi
       \author[\arabic{mdAuthorCount}]{#1}%     
       \protected@edef\@more{#2#3}%
       \expandafter\ifx\@more\relax\relax\else
