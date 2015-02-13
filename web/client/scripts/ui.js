@@ -4050,6 +4050,7 @@ var symbolsMath = [
   UI.prototype.removeDecorations = function(discardSticky,type) {
     var self = this;
     var now = Date.now();
+    if (!self.editor) return;
     var model = self.editor.getModel();
     self.editor.changeDecorations(function(changeAccessor) {
       var newdecs = [];
