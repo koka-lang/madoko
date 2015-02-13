@@ -258,14 +258,14 @@
 
 \def\@mdTitleNote{}
 \newcounter{mdxAuthorCount} 
-\defcommand{\mdxTitle}[2][]{\mdTitle{\mdSpan[#1]{#2}}}
-\defcommand{\mdxTitleNote}[2][]{\gdef\@mdTitleNote{\mdSpan[#1]{#2}}}
-\defcommand{\mdxTitleFooter}[2][]{\gappto{\@mdauthors}{\\[1ex]\mdSpan[#1]{#2}}}
-\defcommand{\mdxSubTitle}[2][]{\mdSubtitle{\mdSpan[#1]{#2}}}    
-\defcommand{\mdxAuthorName}[2][]{\csgdef{@mdAuthorName\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
-\defcommand{\mdxAuthorAddress}[2][]{\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
-\defcommand{\mdxAuthorEmail}[2][]{\csgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
-\defcommand{\mdxAuthorNote}[2][]{%
+\newcommand{\mdxTitle}[2][]{\mdTitle{\mdSpan[#1]{#2}}}
+\newcommand{\mdxTitleNote}[2][]{\gdef\@mdTitleNote{\mdSpan[#1]{#2}}}
+\newcommand{\mdxTitleFooter}[2][]{\gappto{\@mdauthors}{\\[1ex]\mdSpan[#1]{#2}}}
+\newcommand{\mdxSubTitle}[2][]{\mdSubtitle{\mdSpan[#1]{#2}}}    
+\newcommand{\mdxAuthorName}[2][]{\csgdef{@mdAuthorName\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+\newcommand{\mdxAuthorAddress}[2][]{\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+\newcommand{\mdxAuthorEmail}[2][]{\csgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
+\newcommand{\mdxAuthorNote}[2][]{%
   \ifcsdef{@mdAuthorAff\the\value{mdxAuthorCount}}%
     {\csgappto{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdBr\mdSpan[#1]{#2}}}
     {\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
