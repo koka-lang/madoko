@@ -17,8 +17,7 @@ import std/crypto
 import common
 import attributes
 import inline
-import htmlFormatter
-import texFormatter
+import htmlFormatter  // htmlEscape
 import texCommon   // rxAuthorYear
 import entity
 import hilite // inlineMode
@@ -89,7 +88,7 @@ function stripFancyRules( g : grammar<string,inlineContext> ) : grammar<string,i
    .ruleRemove(True,["idashes","ielipsis","tex","iguil","textcite"])
 }
 
-function inlineGrammar( fmt : formatter, bench : bool = False ) {
+public function inlineGrammar( fmt : formatter, bench : bool = False ) {
   if (bench) then benchGrammar else inlineCoreGrammar(fmt)
   /* for gfm style line breaks */
   /*
@@ -97,39 +96,6 @@ function inlineGrammar( fmt : formatter, bench : bool = False ) {
    .ruleReplace( breaks, Rule("itext", regex(@"^(?:[^\n" + special + "])+"), inlineNormal ))
    .ruleReplace( breaks, Rule("ibr",   regex(@"^\n(?!\s*$)"), inlineBreak ))
   */
-}
-
-
-// Create an ":inlineContext"
-public function inlineContext( fmt : formatter, 
-                               metadata : dict<string>,
-                               mathinfos : dict<mathinfo>,
-                               embedinfos : dict<embedinfo>,
-                               citestyle : citestyle = citeAuto,
-                               sanitize : bool = False,
-                               bench: bool = False,
-                               verbose : int = 0,
-                               mathStatic : bool = False,
-                               highlight : bool = True,
-                               starBold : bool = False,
-                               prettyAlign : int = 2 ) : inlineContext
-{
-  InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
-                 metadata, mathinfos, embedinfos,
-                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, prettyAlign,
-                 fmt.pick(fmtHtmlCmd,fmtTexCmd), 
-                 fmt.pick(fmtHtmlEscape,fmtTexEscape), 
-                 fmt.pick(fmtHtmlLink,fmtTexLink), 
-                 fmt.pick(fmtHtmlFootnote,fmtTexFootnote),
-                 fmt.pick(fmtHtmlTable,fmtTexTable),
-                 fmt.pick(fmtHtmlEnv,fmtTexEnv),
-                 fmt.pick(fmtHtmlCodePlain,fmtTexCodePlain),
-                 fmt.pick(fmtHtmlCodeHilite,fmtTexCodeHilite),
-                 fmt.pick(fmtHtmlCodeToken,fmtTexCodeToken),
-                 fmt.pick(fmtHtmlLineInfo, fmtTexLineInfo),
-                 fmt.pick(fmtHtmlCodeTable, fmtTexCodeTable),
-                 fmt 
-               )
 }
 
 
@@ -187,8 +153,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
-                then context.fmtTexCmd("span", left+lineInfo+txt+right, attrsd)
-                else context.fmtTexEnv("div",  left+lineInfo+txt+right, attrsd)
+                then context.fmtMathCmd("span", left+lineInfo+txt+right, attrsd)
+                else context.fmtMathEnv("div",  left+lineInfo+txt+right, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {
