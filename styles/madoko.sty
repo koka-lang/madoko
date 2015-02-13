@@ -154,6 +154,7 @@
 \providecommand{\numberofauthors}[1]{}
 
 \ifbeamer\providecommand{\inst}[1]{$^{\mbox{#1}}$}\fi%
+\newif\ifinstemail
 
 % If there is no \authorinfo, we provide a simple one that works
 % with some other common styles
@@ -164,20 +165,27 @@
 \providerobustcmd{\authorinfo}[3]{%
   \stepcounter{mdAuthorCount}%
   \ifdef{\institute}{%  
+    \protected@edef\md@more{#2#3}%
+    \expandafter\ifx\md@more\relax\relax\instemailfalse\else\instemailtrue\fi%
     \ifnum\value{mdAuthorCount}>1%
      \gappto\@mdauthors{\@and}%
-     \ifx\relax#2\relax\else\gappto\@mdinsts{\@and}\fi%
-    \fi%    
+     \ifinstemail\gappto\@mdinsts{\@and}\fi%
+    \fi%
     \ifdef{\inst}%
     {%LLNCS, Beamer
       \gappto\@mdauthors{#1}%
-      \ifx\relax#2\relax\else\gappto\@mdinsts{#2}\fi%
-      \ifx\relax#3\relax\else\gappto\@mdinsts{\mdBr\email{#3}}\fi
+      \ifinstemail%
+        \gappto\@mdinsts{\mdBrSep{#2}{\email{#3}}}%
+        %\ifx\relax#2\relax\else\gappto\@mdinsts{#2}\fi%
+        %\ifx\relax#3\relax\else\gappto\@mdinsts{#3}\fi%
+      \fi%
     }%
     {% EPTCS
       \gappto\@mdauthors{#1%
+      \ifinstemail%
         \ifx\relax#2\relax\else\protect\institute{#2}\fi%
         \ifx\relax#3\relax\else\protect\email{#3}\fi}%
+      \fi%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
@@ -225,7 +233,7 @@
      \mdSubtitle{\normalfont\normalsize #1}}%
      % {\date{#1}}%
   \fi%  
-  \maketitle%
+  \maketitle
 }
 
 % Use the pre-defined abstract environment
@@ -256,7 +264,7 @@
 \defcommand{\mdxSubTitle}[2][]{\mdSubtitle{\mdSpan[#1]{#2}}}    
 \defcommand{\mdxAuthorName}[2][]{\csgdef{@mdAuthorName\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
 \defcommand{\mdxAuthorAddress}[2][]{\csgdef{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
-\defcommand{\mdxAuthorEmail}[2][]{\csgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{\mdSpan[#1]{\email{#2}}}}
+\defcommand{\mdxAuthorEmail}[2][]{\csgdef{@mdAuthorEmail\the\value{mdxAuthorCount}}{\mdSpan[#1]{#2}}}
 \defcommand{\mdxAuthorNote}[2][]{%
   \ifcsdef{@mdAuthorAff\the\value{mdxAuthorCount}}%
     {\csgappto{@mdAuthorAff\the\value{mdxAuthorCount}}{\mdBr\mdSpan[#1]{#2}}}
@@ -346,11 +354,11 @@
 \cssNewKey{css}{starform}{\cssStarForm}{}
 \newcommand{\mdCommandStar}[3][]{%
   \begingroup\cssInitKeys{#1}%
-  \eifstrequal{\cssStarForm}{true}{\csname #2\endcsname*{#3}}{\csname #2\endcsname{#3}}\endgroup%
+  \eifstrequal{\cssStarForm}{true}{\endgroup\csname #2\endcsname*{#3}}{\endgroup\csname #2\endcsname{#3}}%
 }
 \newcommand{\mdCommandUnStar}[3][]{%
   \begingroup\cssInitKeys{#1}%
-  \eifstrequal{\cssStarForm}{false}{\csname #2\endcsname{#3}}{\csname #2\endcsname*{#3}}\endgroup%
+  \eifstrequal{\cssStarForm}{false}{\endgroup\csname #2\endcsname{#3}}{\endgroup\csname #2\endcsname*{#3}}%
 }
 
 \newcommand{\mdH}[2][]{\leavevmode\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
@@ -464,9 +472,8 @@
 \newlength{\xtopsep}
 \newenvironment{mdUl}[1][]%
   {\begin{mdDiv}[#1]%
-   \leavevmode%
    \setlength{\xtopsep}{\topsep}%
-   \addtolength{\topsep}{-\cssMarginTop}%
+   \addtolength{\xtopsep}{-\cssMarginTop}%
    \eifstrequal{\cssListStyleType}{}%
      {\def\@endlist{\end{itemize}}\begin{itemize}[topsep=\xtopsep]}%
      {\@mdSetListLabel%
@@ -509,9 +516,8 @@
 \newenvironment{mdOl}[1][]%
   {\ifdef\@enhook{\PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak use the "enumitem" package instead\MessageBreak (which is available by default)}{}}{}%
   \begin{mdDiv}[#1]%
-  \leavevmode%
   \setlength{\xtopsep}{\topsep}%
-  \addtolength{\topsep}{-\cssMarginTop}%
+  \addtolength{\xtopsep}{-\cssMarginTop}%
   \@mdSetListLabel%
   \expandnext{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]%
   \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%

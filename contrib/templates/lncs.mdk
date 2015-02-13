@@ -2,14 +2,13 @@
 Title       : Sample article for the Springer LNCS style
 Author      : John Q. Open^1^
 Affiliation : Research institute
-Email       : you@bar.com
+Email       : {you,third}@bar.com
 
 Author      : Joan R. Access^2^
 Affiliation : Other institute
 Email       : other@bar.com
 
 Author      : Third^1^
-Email       : test@third
 
 Bibliography: example.bib
 Logo        : True

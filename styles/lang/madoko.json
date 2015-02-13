@@ -20,7 +20,7 @@
   
   "jsescapes":  "\\\\(?:[btnfr\\\\\"']|[0-7][0-7]?|[0-3][0-7]{2})",
   
-  "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))([\\w\\-\\.#~]|, *)*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*[:]",  
+  "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))(?:[\\w\\-\\.#~]|, *)*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*[:]",  
 
   "metadata": [
     "Title","Subtitle","Sub Title","Title Note", "Author","Author Note","Affiliation","Email",
@@ -29,7 +29,7 @@
     "Bib Style","Biblio Style","Bibliography Style","Cite Style","Cite All","Bib Search Url",
     "Bibtex","Pdf Latex","Fragment End","Fragment Start","Colorizer",
     "Copyright","License","Keywords","Comment","Revision","Address","Phone",
-    "Css","Script","Html Header","Html Footer","Html Meta",
+    "Css","Script","Html Header","Html Footer","Html Meta","Css Header",
     "Math Mode","Math Embed","Math Dir","Math Dpi","Math Scale",
     "Latex","Convert","Dvipng","Math Pdf Latex","MathJax","MathJax Ext",
     "Doc Class","Document Class","Package","Tex Header","Tex Header*","Package*",
@@ -37,7 +37,7 @@
     "Reveal Theme","Reveal Url","Reveal Details","Reveal Long","Reveal SlideNumber",
     "Description","Documentation",
     "Embed", "Embed Limit", "Math Embed Limit",
-    "Logo","Refer","Classification","Title Running","Author Running","Author Columns","Maketitle"
+    "Logo","Refer","Classification","Title Running","Author Running","Author Columns", "Maketitle"
   ],
   
   
@@ -224,7 +224,6 @@
       ["\\](?=[ \\t]*\\{)", {"token":"delimiter.square.link", "bracket":"@close"}],
       
       { "include": "html" }, 
-      
       
       ["\\w+",""]
     ],

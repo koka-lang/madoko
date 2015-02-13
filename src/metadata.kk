@@ -333,6 +333,8 @@ function headingCounter( depth : int) : string {
 
 val metadataTitle : string = 
 @"
+@tex maketitle            : true
+
 @maketitle ~Author        : display=inline-block .AuthorMaketitle
 @maketitle ~TitleBlock    : display=inline-block .TitleBlockMaketitle
 @maketitle ~TitleHeader,~Authors,~AuthorRow: notag
