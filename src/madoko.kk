@@ -21,6 +21,7 @@ import formatInline
 import definitions
 import htmlFormatter    // for full
 import texFormatter     // for full
+import latexFormatter
 import attributes       // expandKeys
 import std/log
 
@@ -136,4 +137,50 @@ public function initialOptions() {
 
 public function traceRuleHist() {
   common/traceRuleHist()
+}
+
+
+
+
+// Create an ":inlineContext"
+function inlineContext( fmt : formatter, 
+                               metadata : dict<string>,
+                               mathinfos : dict<mathinfo>,
+                               embedinfos : dict<embedinfo>,
+                               citestyle : citestyle = citeAuto,
+                               sanitize : bool = False,
+                               bench: bool = False,
+                               verbose : int = 0,
+                               mathStatic : bool = False,
+                               highlight : bool = True,
+                               starBold : bool = False,
+                               prettyAlign : int = 2 ) : inlineContext
+{
+  function pickx(f,g,h) {
+    match(fmt) {
+      FmtTex -> match(metadata["latex"]) {
+                  Just(value) | value.toLower == "true"  -> h
+                  _ -> g
+                }
+      FmtHtml -> f
+    }                
+  }
+  InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
+                 metadata, mathinfos, embedinfos,
+                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, prettyAlign,
+                 pickx(fmtHtmlCmd,fmtTexCmd,fmtLatexCmd), 
+                 pickx(fmtHtmlEscape,fmtTexEscape,fmtLatexEscape), 
+                 pickx(fmtHtmlLink,fmtTexLink,fmtLatexLink), 
+                 pickx(fmtHtmlFootnote,fmtTexFootnote,fmtLatexFootnote),
+                 pickx(fmtHtmlTable,fmtTexTable,fmtLatexTable),
+                 pickx(fmtHtmlEnv,fmtTexEnv,fmtLatexEnv),
+                 pickx(fmtHtmlCodePlain,fmtTexCodePlain,fmtLatexCodePlain),
+                 pickx(fmtHtmlCodeHilite,fmtTexCodeHilite,fmtLatexCodeHilite),
+                 pickx(fmtHtmlCodeToken,fmtTexCodeToken,fmtLatexCodeToken),
+                 pickx(fmtHtmlLineInfo, fmtTexLineInfo, fmtLatexLineInfo),
+                 pickx(fmtHtmlCodeTable, fmtTexCodeTable, fmtLatexCodeTable),
+                 pickx(fmtTexCmd,fmtTexCmd,fmtLatexCmd), // math cmd
+                 pickx(fmtTexEnv,fmtTexEnv,fmtLatexEnv), // math env
+                 fmt 
+               )
 }
