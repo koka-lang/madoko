@@ -215,15 +215,6 @@ type line {
 
 val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 
-function fmtColorArg( clr : string ) : string {
-  val c = clr.normalizeColor  
-  if (c.startsWith("#")) 
-    then "[HTML]{" + c.substr(1) + "}"
-  elif (c.startsWith("\\#")) 
-    then "[HTML]{" + c.substr(2) + "}"
-    else "{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
-}
-
 function fmtColumn( colattr : attrs ) : string {
   "l"
 }
@@ -255,7 +246,7 @@ function fmtLine( lines : list<line>, row : row ) : string
 {
   function width( cattrs : attrs ) {
     match(cattrs.hasKey("rule-width")) {
-      Just(wd) -> "[" + wd.normalizeVal + "]"
+      Just(wd) -> "[" + wd.cssWidth + "]"
       Nothing  -> ""
     }
   }
@@ -301,7 +292,7 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
                 }
   val bcolor  = match (attrs.hasKey("background-color")) {
                   Nothing   -> ""
-                  Just(clr) -> "{\\cellcolor" + fmtColorArg(clr) + "}"
+                  Just(clr) -> "{\\cellcolor" + cssColorArg(clr) + "}"
                 }            
   val fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
                 (if (attrs.hasClass("cell-border-right")) then "|" else "")
@@ -453,8 +444,12 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
-  val kvs = dict(defaults + attrs.keyvals)
-  body.applyCmd(kvs,"tex-innercmd").applyCmd(kvs,"tex-cmd").applyEnv(kvs,"tex-env",elem).applyCmd(kvs,"tex-outercmd")
+  val kvs = dict(defaults + attrs.keyvals).cssExpandKeys
+  body.applyCmd(kvs,"tex-innercmd")
+      .applyCmd(kvs,"tex-cmd")
+      .applyEnv(kvs,"tex-env",elem)
+      .cssOuter(kvs)
+      .applyCmd(kvs,"tex-outercmd")
   /*
   if (attrs.empty) then "" else {
     val txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
@@ -476,7 +471,7 @@ function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> 
-      (if (cmd.startsWith("+")) then "\n" + cmd.substr(1) else cmd) + body.braced
+      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced + "\n"
   }
 }
 
@@ -484,7 +479,7 @@ function applyEnv( body : string, kvs : dict<string>, key : string, elem : strin
   match(kvs[key]) {
     Nothing -> {
       if (elem=="p") {
-        "\n" + body + "\n"
+        body + "\n" // body will already end in \n 
       }
       else {
         body
@@ -495,14 +490,104 @@ function applyEnv( body : string, kvs : dict<string>, key : string, elem : strin
                                Just(cap) -> (cap.groups[1],cap.groups[2])
                                Nothing   -> (env,"")
                              }
-      "\n%mdk\\begin{" + envName + "}" + envArgs + "%mdk\n" + body + "%mdk\n\\end{" + envName + "}%mdk\n"
+      "%mdk\n\\begin{" + envName + "}" + envArgs + "%mdk\n" + body + "%mdk\n\\end{" + envName + "}%mdk\n"
     }
   }
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
 
+function cssOuter( body0 : string, kvs : dict<string> ) : string {
+  body0.onKeys(kvs,["padding-left","padding-right"], fun(body) {
+         "\n\\begin{mdMarginLR}" + [kvs.find("padding-right"),kvs.find("padding-left")].texArgs +
+         "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
+       })
+       .onKey(kvs,"padding-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
+       .onKey(kvs,"padding-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+       .onKeys(kvs,["border-style","border-top-style","border-bottom-style","border-left-style","border-right-style","background-color"], 
+          fun(body) { body.cssBorder(kvs) } )
+       .onKeys(kvs,["margin-left","margin-right"], fun(body) {
+         "\n\\begin{mdMarginLR}" + [kvs.find("margin-right"),kvs.find("margin-left")].texArgs +
+         "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
+       })
+       .onKey(kvs,"margin-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
+       .onKey(kvs,"margin-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+}
+
+function cssBorder( body : string, kvs : dict<string> ) : string {
+  function hasStyle(side) {
+    match(kvs["border-" + side + "-style"]) {
+      Just(value) | value != "none" -> [] 
+      _ -> [side+"line=false"]
+    }
+  }
+
+  "\n\\begin{mdBorder}" + 
+    cssWidth(kvs.find("border-width","1px")).braced +
+    cssColorArgHtml(kvs.find("border-color","#000")) +
+    cssColorArgHtml(kvs.find("background-color","#FFF")) +
+    ["top","right","bottom","left"].concat(hasStyle).join(",").braced + "%mdk\n"
+    + body.trim + 
+    "\n\\end{mdBorder}%mdk\n"
+}
+
+
+function cssExpandKeys( kvs : dict<string> ) : dict<string> {
+  val xs = [
+    kvs.cssExpandTRBL("margin"),
+    kvs.cssExpandTRBL("padding"),
+    kvs.cssExpandTRBL("border-style"),
+  ].concat
+  xs.dict + kvs
+}
+
+function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,string)> {
+  val i = key.lastIndexOf('-')
+  val (pre,post) = if (i < 0) then (key,"") else (key.substr(0,i),key.substr(i))
+  match(kvs[key]) {
+    Nothing -> []
+    Just(value) -> {
+      val vs = value.cssSplitValues
+      val ks = ["top","right","bottom","left"].map(fun(side) { pre + "-" + side + post })
+      val zs = zip(ks,[vs,vs,vs,vs].concat)
+      if (zs.length == 4) then zs else {
+        warning("Unable to parse CSS values: " + value)
+        []
+      }
+    }
+  }
+}
+
+function cssSplitValues( s : string ) : list<string> {
+  s.findAll(rxCssTerm).list.map(fun(cap) { cap.matched })
+}
+
+val rxEsc   = @"\\(?:[0-9a-fA-F]{1,6}\s*|.)"
+val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|-?[a-zA-Z_]\w*\([^\)]*\)|(?:[^'""\\\s]|" + rxEsc + ")+)")
+
+
+function onKey( body : string, kvs : dict<string>, key : string, action ) : string {
+  match(kvs[key]) {
+    Nothing -> body
+    Just(value) -> action(value,body)
+  }
+}
+
+function onKeys( body : string, kvs : dict<string>, keys : list<string>, action ) : string {
+  if (kvs.containsAny(keys)) then action(body) else body
+}
+
+function texArgs( xs : list<string> ) = xs.map(braced).join
+
 function braced( s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
+}
+
+function containsAny( d : dict<a>, keys : list<string> ) : bool {
+  keys.any( fun(key) { d.containsKey(key) })
+}
+
+function find( d : dict<string>, key : string, default = "" ) : string {
+  d[key].maybe(default,id)
 }
 
 function nosuppressKey( kv : (string,string) ) : bool {
@@ -511,23 +596,54 @@ function nosuppressKey( kv : (string,string) ) : bool {
 }
 
 
-function showAttr( key, value ) {
-  key.normalizeId + "={" + (if (key=="color" || key.endsWith("-color")) then value.normalizeColor else value.normalizeVal) + "}" 
+function cssColorCmd( v : string ) : string {
+  "\\color"
 }
 
-function normalizeColor( v : string ) : string {
+function cssColorArg( v : string ) : string {
+  val c = v.cssColor
+  if (c.startsWith("#")) 
+    then "[HTML]{" + c.substr(1) + "}"
+  elif (c.startsWith("\\#")) 
+    then "[HTML]{" + c.substr(2) + "}"
+    else "{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
+}
+
+function cssColorArgHtml( v : string ) : string {
+  val c = v.cssColor
+  if (c.startsWith("#")) 
+    then c.substr(1).braced + "{}"
+  elif (c.startsWith("\\#")) 
+    then c.substr(2).braced + "{}"
+    else "{}{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
+}
+
+
+function cssColor( v : string ) : string {
   match(v.find(rxRgbX)) {
     Just(cap) -> {
       if (cap.groups[4]=="")
        then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
        else "\\" + v.trim.toUpper
     }
-    Nothing -> normalizeVal(v)
+    Nothing -> match(v.find(rxRgb)) {
+      Just(cap) -> {
+        val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
+        val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
+        "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
+      }
+      Nothing   -> match(v.find(rxHsl)) {
+        Just(cap) -> {
+          val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
+          "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
+        }
+        Nothing -> cssValue(v)
+      }
+    }
   }
 }
 
-function normalizeVal( v0 : string ) : string {
-  val v = v0.splitExclude(rxComma,rxQuoted).join(",")
+function cssWidth( v : string ) : string {
   match(v.find(rxPerc)) {
     Just(cap) -> {
       val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
@@ -535,22 +651,13 @@ function normalizeVal( v0 : string ) : string {
     }
     Nothing -> match(v.find(rxPixels)) {
       Just(cap) -> cap.groups[1] + "\\cssPixel"
-      Nothing   -> match(v.find(rxRgb)) {
-        Just(cap) -> {
-          val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
-          val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
-          "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
-        }
-        Nothing   -> match(v.find(rxHsl)) {
-          Just(cap) -> {
-            val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
-            "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
-          }
-          Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
-        }
-      }
+      Nothing   -> cssValue(v)
     }
   }
+}
+
+function cssValue( v : string ) : string {
+  v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
 }
 
 val rxPerc = regex(@"^\s*(\d{1,3})%\s*$")
@@ -559,9 +666,6 @@ val rxPixels = regex(@"^\s*(\d+(?:\.\d+)?)px\s*$")
 val rxRgbX = regex(@"^\s*#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9]{3})?")
 val rxRgb = regex(@"^\s*rgba?\((\d+)(%)?,(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
 val rxHsl = regex(@"^\s*hsla?\((\d+),(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
-
-val rxComma  = regex(@"\s*,\s*")
-val rxQuoted = regex(@"'[^']*'|""[^""]*""")
 
 function hslToRgb(hi, si, li){
   val h = (hi%360).double / 360.0;

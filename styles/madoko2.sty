@@ -74,6 +74,20 @@
 \setlength{\belowrulesep}{0pt}
 \setlength{\doublerulesep}{\heavyrulewidth}
 
+% mdframed
+\mdfsetup{%
+  leftmargin=0pt,%
+  rightmargin=0pt,%
+  skipabove=0pt,%
+  skipbelow=0pt,%
+  innertopmargin=0pt,%
+  innerbottommargin=0pt,%
+  innerleftmargin=0pt,%
+  innerrightmargin=0pt,%
+  middlelinewidth=0pt,%
+  linewidth=0pt,%
+  outerlinewidth=0pt,innerlinewidth=0pt%
+}
 
 %-------------------------------------------------------------
 % Util
@@ -90,6 +104,9 @@
         \reserved@a
 }
 \def\dummy@environ{}
+
+\newcommand\leavehmode{\ifhmode\par\fi}
+\newlength{\cssPixel}\setlength{\cssPixel}{0.4pt}% assume 180 dpi
 
 %-------------------------------------------------------------
 % Colors
@@ -196,6 +213,61 @@
 % ---------------------------------------------------
 \newcommand*\mdkline[1]{} %ignore
 
+% ---------------------------------------------------
+% Margins
+% ---------------------------------------------------
+\newenvironment{mdMarginLR}[2]{%
+  \topsep\z@
+  \partopsep\z@
+  \trivlist
+  \@ifmtarg{#1}{}{\rightmargin=#2}%
+  \@ifmtarg{#2}{}{\leftmargin=#1}%
+  \parskip\parsep
+  \parindent\listparindent
+  \advance\linewidth -\rightmargin
+  \advance\linewidth -\leftmargin
+  \advance\@totalleftmargin \leftmargin
+  \parshape \@ne \@totalleftmargin \linewidth
+  \item[]}%
+{\endtrivlist}
+
+\newcommand\mdMarginTop[1]{\addvspace{#1}\ignorespaces}
+\newcommand\mdMarginBottom[1]{\addvspace{#1}\ignorespaces}
+
+
+%-------------------------------------------------------------
+% Save footnotes inside mdframed and minipage environments
+%-------------------------------------------------------------
+\newif\if@saveFootnotes
+\newcommand{\cssSaveFootnotes}%
+  {\if@saveFootnotes\else%
+    \let\footnote\tablefootnote%
+   \fi%
+   \@saveFootnotestrue}%
+\newcommand{\cssRestoreFootnotes}%   
+  {\if@saveFootnotes\else%
+    \tfn@tablefootnoteprintout% 
+    \gdef\tfn@fnt{0}%
+   \fi}% 
+
+%-------------------------------------------------------------
+% Borders
+%-------------------------------------------------------------
+\newlength{\md@linewidth}
+\newcommand{\md@definecolor}[3]{%
+  \@ifmtarg{#2}%
+    {\csedef{#1}{#3}}%
+    {\definecolor{#1}{HTML}{#2}%
+     \csedef{#1}{#1}}%
+}
+\newenvironment{mdBorder}[6]{%
+  \md@definecolor{md@linecolor}{#2}{#3}%
+  \md@definecolor{md@backgroundcolor}{#4}{#5}%
+  \setlength{\md@linewidth}{#1}%
+  \begin{mdframed}[linewidth=\the\md@linewidth,linecolor=\md@linecolor,backgroundcolor=\md@backgroundcolor,#6]%
+}{%
+  \end{mdframed}%
+}
 
 % ---------------------------------------------------
 % Math snippets for static image generation
