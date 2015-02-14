@@ -81,6 +81,7 @@ public function processContent( inName : string, outName : string, content : str
       if (xopts.tex || xopts.mathmode.isStatic) {
         tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
         tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
+        tryCopyTextFileFromTo( "madoko2.sty", styleDir, outName.dirname)
         ()
       }
     }

@@ -67,8 +67,12 @@ public function entityNameToNum( name : string ) : string
 }
 
 function entityCmd( entity : entity ) : string {
-  val cmd = "{" + entity.ecmd + "}"
-  if (entity.emath) then @"\ensuremath" + cmd else cmd
+  val cmd = entity.ecmd
+  if (entity.emath) 
+   then @"\ensuremath{" + cmd + "}"
+  elif (cmd.endsWith("}"))
+   then cmd
+   else cmd + "{}"
 }
 
 // Translate a TeX command to an entity (or empty if unknown)
@@ -399,9 +403,9 @@ val entities : list<entity> = [
   Entity("thetasym", 977, @"\vartheta", True),
   Entity("upsih", 978, @"\Upsilon", True ),
   Entity("piv", 982, @"\varpi", True ),
-  Entity("ensp", 8194, @"\hspace*{0.5em}", False),
-  Entity("emsp", 8195, @"\hspace*{1em}", False),
-  Entity("quad", 8195, @"\hspace*{1em}", False),
+  Entity("ensp", 8194, @"\enskip", False),
+  Entity("emsp", 8195, @"\quad", False),
+  Entity("quad", 8195, @"\quad", False),
   Entity("thicksp", 8196, @"\;", True ),
   Entity("medsp", 8197, @"\:", True ),
   Entity("thinsp", 8201, @"\,", True ),

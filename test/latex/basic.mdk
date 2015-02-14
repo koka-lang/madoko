@@ -1,0 +1,15 @@
+Tex2      : True
+Package   : clear
+Package   : madoko2.sty
+Logo      : False
+
+~H1       : tex-cmd=+\section*
+
+# Introduction { #sec-intro }
+
+Testing new latex output.
+
+Testing new latex output.
+
+Testing new latex output.
+

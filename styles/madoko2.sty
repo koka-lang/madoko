@@ -1,0 +1,243 @@
+%---------------------------------------------------------------------------
+%  Copyright 2013 Microsoft Corporation.
+% 
+%  This is free software; you can redistribute it and/or modify it under the
+%  terms of the Apache License, Version 2.0. A copy of the License can be
+%  found in the file "license.txt" at the root of this distribution.
+%---------------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+
+\RequirePackage{iftex}
+\RequirePackage{etoolbox}
+
+%-------------------------------------------------------------
+% Conditionals
+%-------------------------------------------------------------
+
+\newif\ifmathmode
+\newif\ifbeamer
+
+\@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
+\ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
+
+%-------------------------------------------------------------
+% Packages
+%-------------------------------------------------------------
+
+\RequirePackage[table]{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{amsmath}
+\RequirePackage{amsfonts}
+\RequirePackage{amssymb}
+\RequirePackage{stmaryrd}
+\RequirePackage{textcomp}
+\RequirePackage{pifont}
+
+\RequirePackage{pdfcomment}
+\RequirePackage{booktabs}
+%\RequirePackage[bookmarks=true]{hyperref} % loaded by pdfcomment
+
+% package only loaded outside snippets
+\ifmathmode\else
+\RequirePackage{tablefootnote}
+\RequirePackage{mdframed}
+\RequirePackage{array}
+\RequirePackage{longtable}
+\RequirePackage{enumitem}
+\fi
+
+% font selection
+\ifXeTeX\RequirePackage{fontspec}\else
+\ifLuaTeX\RequirePackage{fontspec}\else
+\RequirePackage[utf8]{inputenc}
+\providecommand{\fontspec}[2][]{}
+\fi\fi
+
+%-------------------------------------------------------------
+% Process options 
+%-------------------------------------------------------------
+\newcommand{\mdHeadingBase}{1}
+\DeclareOptionX{heading-base}[1]{\gdef\mdHeadingBase{#1}}
+\ProcessOptionsX
+
+%-------------------------------------------------------------
+% Setup packages 
+%-------------------------------------------------------------
+
+% hyperref
+\hypersetup{
+  colorlinks=true,linkcolor=Navy,urlcolor=Blue,filecolor=Maroon,bookmarksdepth=3,bookmarksopenlevel=1
+}
+
+% booktabs
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\setlength{\doublerulesep}{\heavyrulewidth}
+
+
+%-------------------------------------------------------------
+% Util
+%-------------------------------------------------------------
+\def\defcommand{\@ifstar\defcommand@S\defcommand@N}
+\def\defcommand@S#1{\let#1\outer\renewcommand*#1}
+\def\defcommand@N#1{\let#1\outer\renewcommand#1} 
+
+\def\provideenvironment{\@star@or@long\provide@environment}
+\def\provide@environment#1{%
+        \@ifundefined{#1}%
+                {\def\reserved@a{\newenvironment{#1}}}%
+                {\def\reserved@a{\renewenvironment{dummy@environ}}}%
+        \reserved@a
+}
+\def\dummy@environ{}
+
+%-------------------------------------------------------------
+% Colors
+%-------------------------------------------------------------
+
+% Define CSS 17 standard colors
+\definecolor{Red}{HTML}{FF0000}
+\definecolor{Lime}{HTML}{00FF00}
+\definecolor{Blue}{HTML}{0000FF}
+
+\definecolor{Yellow}{HTML}{FFFF00}
+\definecolor{Cyan}{HTML}{00FFFF}
+\definecolor{Magenta}{HTML}{FF00FF}
+
+\definecolor{Navy}{HTML}{000080}
+\definecolor{Maroon}{HTML}{800000}
+\definecolor{Green}{HTML}{008000}
+
+\definecolor{Teal}{HTML}{008080}
+\definecolor{Purple}{HTML}{800080}
+\definecolor{Olive}{HTML}{808000}
+
+\definecolor{Black}{HTML}{000000}
+\definecolor{Dimgray}{HTML}{696969}
+\definecolor{Gray}{HTML}{808080}
+\definecolor{Darkgray}{HTML}{A9A9A9}
+\definecolor{Silver}{HTML}{C0C0C0}
+\definecolor{Lightgray}{HTML}{D3D3D3}
+\definecolor{Gainsboro}{HTML}{DCDCDC}
+\definecolor{Floralwhite}{HTML}{FFFAF0}
+\definecolor{Ivory}{HTML}{FFFFF0}
+\definecolor{White}{HTML}{FFFFFF}
+
+\definecolor{Orange}{HTML}{FFA500}
+\definecolor{Aqua}{HTML}{00FFFF}
+\definecolor{Fuchsia}{HTML}{FF00FF}
+
+
+%-------------------------------------------------------------
+% Character commands 
+%-------------------------------------------------------------
+
+\providecommand{\lt}{\ensuremath{<}}
+\providecommand{\gt}{\ensuremath{>}}
+\providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
+\providecommand{\qedsymbol}{\ensuremath{\Box}}
+\providecommand{\qed}{\hfill\qedsymbol}
+
+% inserted for unknown html entities
+\newcommand{\mdUnknownEntity}[1]{\&#1;}
+\newcommand{\mdEntity}[1]{\protect\mdUnknownEntity{#1}}
+
+% allow the definition of new entities: \mdDefineEntity{bar}{\|}
+\newcommand{\mdDefineEntity}[2]{%
+  \protected@edef\mdEntity##1{\protect\eifstrequal{##1}{#1}{#2}{\mdEntity{##1}}}%
+}
+
+% inserted for unknown unicode entities
+\newcommand{\mdUnicodeUnknown}[1]{%
+  \ifXeTeX\mdUnicodeChar{#1}\else%
+  \ifLuaTeX\mdUnicodeChar{#1}\else%
+  \&\##1;\fi\fi
+}
+\newcommand{\mdUnicodeChar}[1]{\char#1} % directly insert the unicode glyph
+\newcommand{\mdUnicode}[1]{\protect\mdUnicodeUnknown{#1}}
+
+% allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\newcommand{\mdDefineUnicode}[2]{%
+  \protected@edef\mdUnicode##1{\protect\ifnum##1=#1{#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
+}
+
+% ballot boxes
+\mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\kern 0.1em\ding{51}}}
+\mdDefineUnicode{9746}{\rlap{$\square$}{\kern 0.1em\ding{55}}}
+% magnifying glass
+\mdDefineUnicode{128270}{\kern -0.75ex\protect\raisebox{-0.25ex}{$\arrownot$}\kern 1.05ex\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
+% short underscore
+\mdDefineUnicode{818}{\leavevmode\kern 0.06em\vbox{\hrule width 0.3em}}
+
+
+% break and nbsp
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
+\newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+\newcommand{\mdBrSep}[2]{%
+  \expandafter\ifx#1\relax\relax #2\else
+  \expandafter\ifx#2\relax\relax #1\else
+  #1\mdBr #2\fi\fi
+}
+
+% fix nobreakspace in case the user loads a T1 encoding in LaTeX
+\DeclareTextCommandDefault{\nobreakspace}{\leavevmode\nobreak\ }
+
+% ---------------------------------------------------
+% Labels and references
+% ---------------------------------------------------
+
+% We need to call \mdLabeltarget for any structure that can set label
+\newcounter{@mdTargetCount}
+\newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
+
+% ---------------------------------------------------
+% Line info
+% ---------------------------------------------------
+\newcommand*\mdkline[1]{} %ignore
+
+
+% ---------------------------------------------------
+% Math snippets for static image generation
+% ---------------------------------------------------
+
+% re-define some symbols
+\renewcommand{\notin}{\not\in}  %turns out the baseline for 'notin' is wrong
+
+% boxes and lengths
+\newsavebox{\@snippetBox}
+\newlength{\@snippetWidth}
+\newlength{\@snippetHeight}
+\newlength{\@snippetDepth}
+
+\newcounter{snippets}
+
+\newcommand{\@savedepth}{%
+  \setlength{\@snippetWidth}{\wd\@snippetBox}%
+  \setlength{\@snippetHeight}{\ht\@snippetBox}%
+  \setlength{\@snippetDepth}{\dp\@snippetBox}%
+  \addtolength{\@snippetHeight}{\@snippetDepth}%
+  \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
+  \noindent\usebox\@snippetBox%
+}
+
+\newenvironment{mdDisplaySnippet}[1][\arabic{snippets}]%
+  {\stepcounter{snippets}\edef\@snippetName{#1}%
+   \begin{lrbox}{\@snippetBox}\vbox\bgroup}%
+  {\egroup\end{lrbox}\@savedepth\newpage}
+
+\newenvironment{mdInlineSnippet}[1][\arabic{snippets}]%
+  {\stepcounter{snippets}\def\@snippetName{#1}%
+   \begin{lrbox}{\@snippetBox}}%
+  {\end{lrbox}\@savedepth\newpage}
+
+\newenvironment{mdSnippets}%
+    {\pagestyle{empty}%
+     \abovedisplayskip=0pt%
+     \belowdisplayskip=0pt%
+     \abovedisplayshortskip=0pt%
+     \belowdisplayshortskip=0pt%
+     \newwrite\foo\immediate\openout\foo=\jobname.dim%
+     \immediate\write\foo{\%ordinal,(hash)name,width,(total) height,depth,image width,image height,dpi,base64 encoding}%
+    }%
+    {\closeout\foo}

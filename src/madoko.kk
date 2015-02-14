@@ -158,7 +158,7 @@ function inlineContext( fmt : formatter,
 {
   function pickx(f,g,h) {
     match(fmt) {
-      FmtTex -> match(metadata["latex"]) {
+      FmtTex -> match(metadata["tex2"]) {
                   Just(value) | value.toLower == "true"  -> h
                   _ -> g
                 }

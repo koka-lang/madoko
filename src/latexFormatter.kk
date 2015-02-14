@@ -38,7 +38,8 @@ public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string,
 }
 
 public function fmtLatexLineInfo( context : inlineContext, lineInfo : string ) : string {
-  "%mdk-data-line={" + lineInfo + "}\n{}"
+  "%mdk-data-line={" + lineInfo + "}\n"
+  "\\mdkline{" + lineInfo + "}"
 }
 
 public function fmtLatexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
@@ -178,10 +179,6 @@ function texEntity( cap : matched ) {
   } 
 }
 
-function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : string = "md" ) : string {
-  val cmdName = if (attrs.texelem != "") then attrs.texelem else (pre + cmd.normalizeCmd.capitalize)
-  "\\" + cmdName + attrs.texAttrsX + "{" + body + "}"
-}
 
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
   val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
@@ -323,109 +320,23 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
 
 
 
-function texAttrsX( attrs : attrs = attrsNone ) : string {
-  if (attrs.empty) then "" else {
-    val txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
-                if (attrs.name=="") then [] else ["id=" + attrs.name],
-                if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
-                if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
-                attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
-                  val (name0,value) = kv
-                  val name = if (name0.startsWith("tex-")) then name0.substr(4) else name0    
-                  showAttr( name, value )
-                }),          
-              ].concat.join(",") 
-    if (txt=="") then "" else "[" + txt + "]"
-  }
-}
-
-
-function nosuppressKey( kv : (string,string) ) : bool {
-  val key = kv.fst
-  (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
-}
-
-
-function showAttr( key, value ) {
-  key.normalizeId + "={" + (if (key=="color" || key.endsWith("-color")) then value.normalizeColor else value.normalizeVal) + "}" 
-}
-
-function normalizeColor( v : string ) : string {
-  match(v.find(rxRgbX)) {
-    Just(cap) -> {
-      if (cap.groups[4]=="")
-       then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
-       else "\\" + v.trim.toUpper
-    }
-    Nothing -> normalizeVal(v)
-  }
-}
-
-function normalizeVal( v0 : string ) : string {
-  val v = v0.splitExclude(rxComma,rxQuoted).join(",")
-  match(v.find(rxPerc)) {
-    Just(cap) -> {
-      val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
-      perc.showFixed(2) + "\\linewidth"
-    }
-    Nothing -> match(v.find(rxPixels)) {
-      Just(cap) -> cap.groups[1] + "\\cssPixel"
-      Nothing   -> match(v.find(rxRgb)) {
-        Just(cap) -> {
-          val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
-          val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
-          "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
-        }
-        Nothing   -> match(v.find(rxHsl)) {
-          Just(cap) -> {
-            val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
-            "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
-          }
-          Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
-        }
-      }
-    }
-  }
-}
-
-val rxPerc = regex(@"^\s*(\d{1,3})%\s*$")
-val rxPixels = regex(@"^\s*(\d+(?:\.\d+)?)px\s*$")
-
-val rxRgbX = regex(@"^\s*#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9]{3})?")
-val rxRgb = regex(@"^\s*rgba?\((\d+)(%)?,(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
-val rxHsl = regex(@"^\s*hsla?\((\d+),(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
-
-val rxComma  = regex(@"\s*,\s*")
-val rxQuoted = regex(@"'[^']*'|""[^""]*""")
-
-function hslToRgb(hi, si, li){
-  val h = (hi%360).double / 360.0;
-  val s = si.double * 0.01;
-  val l = li.double * 0.01;
-
-  if (s==0.0) {
-    val x = (l*255.0).int
-    return (x,x,x)
-  }
-
-  val q = if (l < 0.5) then l * (1.0 + s) else l + (s - (l * s));
-  val p = (2.0 * l) - q;
-  
-  function hue2rgb(t0) {
-    val t = if (t0 < 0.0) then t0+1.0 elif (t0 > 1.0) then t0-1.0 else t0;
-    val c = if (t < 1.0/6.0) then p + (q - p) * 6.0 * t
-            elif (t < 0.5) then q
-            elif (t < 2.0/3.0) then p + (q - p) * (2.0/3.0 - t) * 6.0
-            else p
-    (c * 255.0).int            
-  }
-
-  (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
-}
-
 
 function capitalize( s : string ) : string {
   s.substr(0,1).toUpper + s.substr(1)
+}
+
+function texAttrsX( attrs : attrs ) : string {
+  ""
+}
+
+/* --------------------------------------
+  Command and env
+---------------------------------------- */
+
+function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : string = "md" ) : string {
+  // val cmdName = if (attrs.texelem != "") then attrs.texelem else (pre + cmd.normalizeCmd.capitalize)
+  // "\\" + cmdName + attrs.texAttrsX + "{" + body + "}"
+  attrs.cssAttrs(body,[("display","inline")],cmd)
 }
 
 
@@ -435,9 +346,9 @@ function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : stri
 
 function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
   val envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
-  val envCmd = "\\begin{" + envName + "}" + attrs.texAttrsX + "%mdk\n" +
-                body.trimRight + "%mdk\n" +
-               "\\end{" + envName + "}%mdk\n"
+  val envCmd = // "\\begin{" + envName + "}" + attrs.texAttrsX + "%mdk\n" +
+               attrs.cssAttrs(body,[("display","block")],env) // + "%mdk\n" +
+               // "\\end{" + envName + "}%mdk\n"
   match(attrs.hasKey("float")) {
     Nothing   -> envCmd
     Just(flt) -> "\\mdFloatBox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
@@ -448,10 +359,6 @@ function texClassName( attrs : attrs, def : string ) : (string,attrs) {
   val name = attrs.elementName(def)
   (name.normalizeCmd.capitalize,attrs(classes=attrs.classes.filter(fun(c){ c != name })))    
 }
-
-/* --------------------------------------
-  Entities 
----------------------------------------- */
 
 function normalizeCmd( cmd : string ) {
   cmd.replaceAll(rxCmdSpecial,"").replaceAll(rxDigits) fun(cap) {
@@ -537,3 +444,146 @@ function fmtOptArg( pre:string, pkg : string,  ext : string = ".sty" ) : string
 
 
 val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+
+function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
+  val kvs = dict(defaults + attrs.keyvals)
+  body.applyCmd(kvs,"tex-innercmd").applyCmd(kvs,"tex-cmd").applyEnv(kvs,"tex-env",elem).applyCmd(kvs,"tex-outercmd")
+  /*
+  if (attrs.empty) then "" else {
+    val txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
+                if (attrs.name=="") then [] else ["id=" + attrs.name],
+                if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
+                if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
+                attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
+                  val (name0,value) = kv
+                  val name = if (name0.startsWith("tex-")) then name0.substr(4) else name0    
+                  showAttr( name, value )
+                }),          
+              ].concat.join(",") 
+    if (txt=="") then "" else "[" + txt + "]"  
+  }
+  */
+}
+
+function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
+  match(kvs[key]) {
+    Nothing -> body
+    Just(cmd) -> 
+      (if (cmd.startsWith("+")) then "\n" + cmd.substr(1) else cmd) + body.braced
+  }
+}
+
+function applyEnv( body : string, kvs : dict<string>, key : string, elem : string) : string {
+  match(kvs[key]) {
+    Nothing -> {
+      if (elem=="p") {
+        "\n" + body + "\n"
+      }
+      else {
+        body
+      }
+    }
+    Just(env) -> {
+      val (envName,envArgs) = match(env.find(rxEnv)) {
+                               Just(cap) -> (cap.groups[1],cap.groups[2])
+                               Nothing   -> (env,"")
+                             }
+      "\n%mdk\\begin{" + envName + "}" + envArgs + "%mdk\n" + body + "%mdk\n\\end{" + envName + "}%mdk\n"
+    }
+  }
+}
+val rxEnv = regex(@"^(\w+)([\s\S]*)$")
+
+function braced( s : string ) : string {
+  if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
+}
+
+function nosuppressKey( kv : (string,string) ) : bool {
+  val key = kv.fst
+  (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
+}
+
+
+function showAttr( key, value ) {
+  key.normalizeId + "={" + (if (key=="color" || key.endsWith("-color")) then value.normalizeColor else value.normalizeVal) + "}" 
+}
+
+function normalizeColor( v : string ) : string {
+  match(v.find(rxRgbX)) {
+    Just(cap) -> {
+      if (cap.groups[4]=="")
+       then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
+       else "\\" + v.trim.toUpper
+    }
+    Nothing -> normalizeVal(v)
+  }
+}
+
+function normalizeVal( v0 : string ) : string {
+  val v = v0.splitExclude(rxComma,rxQuoted).join(",")
+  match(v.find(rxPerc)) {
+    Just(cap) -> {
+      val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
+      perc.showFixed(2) + "\\linewidth"
+    }
+    Nothing -> match(v.find(rxPixels)) {
+      Just(cap) -> cap.groups[1] + "\\cssPixel"
+      Nothing   -> match(v.find(rxRgb)) {
+        Just(cap) -> {
+          val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
+          val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
+          "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
+        }
+        Nothing   -> match(v.find(rxHsl)) {
+          Just(cap) -> {
+            val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
+            "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
+          }
+          Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
+        }
+      }
+    }
+  }
+}
+
+val rxPerc = regex(@"^\s*(\d{1,3})%\s*$")
+val rxPixels = regex(@"^\s*(\d+(?:\.\d+)?)px\s*$")
+
+val rxRgbX = regex(@"^\s*#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9]{3})?")
+val rxRgb = regex(@"^\s*rgba?\((\d+)(%)?,(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
+val rxHsl = regex(@"^\s*hsla?\((\d+),(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
+
+val rxComma  = regex(@"\s*,\s*")
+val rxQuoted = regex(@"'[^']*'|""[^""]*""")
+
+function hslToRgb(hi, si, li){
+  val h = (hi%360).double / 360.0;
+  val s = si.double * 0.01;
+  val l = li.double * 0.01;
+
+  if (s==0.0) {
+    val x = (l*255.0).int
+    return (x,x,x)
+  }
+
+  val q = if (l < 0.5) then l * (1.0 + s) else l + (s - (l * s));
+  val p = (2.0 * l) - q;
+  
+  function hue2rgb(t0) {
+    val t = if (t0 < 0.0) then t0+1.0 elif (t0 > 1.0) then t0-1.0 else t0;
+    val c = if (t < 1.0/6.0) then p + (q - p) * 6.0 * t
+            elif (t < 0.5) then q
+            elif (t < 2.0/3.0) then p + (q - p) * (2.0/3.0 - t) * 6.0
+            else p
+    (c * 255.0).int            
+  }
+
+  (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
+}
