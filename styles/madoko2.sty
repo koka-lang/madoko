@@ -40,7 +40,7 @@
 % package only loaded outside snippets
 \ifmathmode\else
 \RequirePackage{tablefootnote}
-\RequirePackage{mdframed}
+\RequirePackage[xcolor,framemethod=pgf]{mdframed}
 \RequirePackage{array}
 \RequirePackage{longtable}
 \RequirePackage{enumitem}
@@ -106,7 +106,7 @@
 \def\dummy@environ{}
 
 \newcommand\leavehmode{\ifhmode\par\fi}
-\newlength{\cssPixel}\setlength{\cssPixel}{0.4pt}% assume 180 dpi
+\newlength{\px}\setlength{\px}{0.4pt}% assume 180 dpi
 
 %-------------------------------------------------------------
 % Colors
@@ -216,14 +216,31 @@
 % ---------------------------------------------------
 % Margins
 % ---------------------------------------------------
+% calculate with dimensions
+% dimDefault(arg,default)  use default if arg is empty
+\newcommand\dimDefault[2]{\@ifmtarg{#1}{#2}{#1}}
+% dimMin,dimMax return minimum or maximum dimension
+\newcommand\dimMin[2]{%
+  \@ifmtarg{#2}{#1}{\@ifmtarg{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #2\else #1\fi}}%
+}
+\newcommand\dimMax[2]{%
+  \@ifmtarg{#2}{#1}{\@ifmtarg{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #1\else #2\fi}}%
+}
+
+% calculate the auto margin based on the width of the block and the width of 
+% the other margin; use an empty other margin if the other margin is also auto
+\newcommand\dimAuto[2]{%
+  \@ifmtarg{#2}{\the\dimexpr(\linewidth-#1)/2\relax}{\the\dimexpr\linewidth-#1-#2\relax}%
+}
+
 \newenvironment{mdMarginLR}[2]{%
   \topsep\z@
   \partopsep\z@
   \trivlist
-  \@ifmtarg{#1}{}{\rightmargin=#2}%
-  \@ifmtarg{#2}{}{\leftmargin=#1}%
-  \parskip\parsep
-  \parindent\listparindent
+  \rightmargin=\dimexpr\dimDefault{#2}{\z@}\relax
+  \leftmargin=\dimexpr\dimDefault{#1}{\z@}\relax
+  %\parskip\parsep
+  %\parindent\listparindent
   \advance\linewidth -\rightmargin
   \advance\linewidth -\leftmargin
   \advance\@totalleftmargin \leftmargin
@@ -257,8 +274,7 @@
 \newcommand{\md@definecolor}[3]{%
   \@ifmtarg{#2}%
     {\csedef{#1}{#3}}%
-    {\definecolor{#1}{HTML}{#2}%
-     \csedef{#1}{#1}}%
+    {\definecolor{#1}{HTML}{#2}\csedef{#1}{#1}}%
 }
 \newenvironment{mdBorder}[6]{%
   \md@definecolor{md@linecolor}{#2}{#3}%
@@ -266,8 +282,21 @@
   \setlength{\md@linewidth}{#1}%
   \begin{mdframed}[linewidth=\the\md@linewidth,linecolor=\md@linecolor,backgroundcolor=\md@backgroundcolor,#6]%
 }{%
+  \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
   \end{mdframed}%
 }
+
+%-------------------------------------------------------------
+% Background color
+%-------------------------------------------------------------
+\newenvironment{mdBackgroundColor}[2]{%
+  \md@definecolor{md@backgroundcolor}{#1}{#2}%
+  \begin{mdframed}[backgroundcolor=\md@backgroundcolor,hidealllines]%
+}{%
+  \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
+  \end{mdframed}%
+}
+
 
 % ---------------------------------------------------
 % Math snippets for static image generation

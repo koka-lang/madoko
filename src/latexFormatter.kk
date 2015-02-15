@@ -505,12 +505,51 @@ function cssOuter( body0 : string, kvs : dict<string> ) : string {
        .onKey(kvs,"padding-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
        .onKeys(kvs,["border-style","border-top-style","border-bottom-style","border-left-style","border-right-style","background-color"], 
           fun(body) { body.cssBorder(kvs) } )
-       .onKeys(kvs,["margin-left","margin-right"], fun(body) {
-         "\n\\begin{mdMarginLR}" + [kvs.find("margin-right"),kvs.find("margin-left")].texArgs +
+       .onKeys(kvs,["margin-left","margin-right"], fun(body) {  // note: width implies margin-right
+         "\n\\begin{mdMarginLR}" + kvs.marginLR +
          "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
        })
        .onKey(kvs,"margin-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
        .onKey(kvs,"margin-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+}
+
+
+function marginLR( kvs : dict<string> ) : string {
+  val left = kvs.find("margin-left").cssWidth
+  val right = kvs.find("margin-right").cssWidth
+  val width = kvs.dimBorderBoxWidth
+  if (left=="auto") {
+    if (right=="auto") {
+      val auto = dimAuto(width)
+      auto.braced + auto.braced
+    }
+    else dimAuto(width,right).braced + right.braced
+  }
+  elif (right=="auto") {
+    left.braced + dimAuto(width,left).braced
+  }
+  else {
+    left.braced + right.braced
+  }
+}
+
+function dimAuto( w : string, other : string = "" ) : string {
+  if (w.isEmpty) then "" else "\\dimAuto" + w.braced + other.braced
+}
+
+function dimBorderBoxWidth( kvs : dict<string> ) {
+  val w = kvs.find("width")
+  if (w.isEmpty) return ""
+  
+  val maxw = kvs.find("max-width")
+  val minw = kvs.find("min-width")
+  
+  val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimMin" + w.cssWidth.braced + maxw.cssWidth.braced
+  val width  = if (minw.isEmpty) then width0 else "\\dimMax" + width0.braced + minw.cssWidth.braced 
+  val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
+               kvs.find("border-right-width"),kvs.find("padding-right")
+              ].filter(bool).map(cssWidth)
+  ([width] + extra).join("+")
 }
 
 function cssBorder( body : string, kvs : dict<string> ) : string {
@@ -520,24 +559,37 @@ function cssBorder( body : string, kvs : dict<string> ) : string {
       _ -> [side+"line=false"]
     }
   }
+  val hides   = ["top","right","bottom","left"].map(hasStyle) 
+  val hideall = (kvs.find("border-width")=="0pt" || hides.all(isCons))
 
+  if (hideall) then {
+    "\n\\begin{mdBackgroundColor}" +     
+    cssColorArgHtml(kvs.find("background-color","#FFF")) + "%mdk\n" +
+    body.trim +
+    "\n\\end{mdBackgroundColor}%mdk\n"
+  }
+  else {
   "\n\\begin{mdBorder}" + 
     cssWidth(kvs.find("border-width","1px")).braced +
     cssColorArgHtml(kvs.find("border-color","#000")) +
     cssColorArgHtml(kvs.find("background-color","#FFF")) +
-    ["top","right","bottom","left"].concat(hasStyle).join(",").braced + "%mdk\n"
+    hides.concat.join(",").braced + "%mdk\n"
     + body.trim + 
     "\n\\end{mdBorder}%mdk\n"
+  }
 }
 
 
 function cssExpandKeys( kvs : dict<string> ) : dict<string> {
   val xs = [
+    if (kvs.containsKey("width")) then [("margin-right","auto")] else [], // ensures marginLR
+    if (kvs.containsKey("background-color")) then [("border-style","solid"),("border-width","0pt")] else [], // ensures cssborder
     kvs.cssExpandTRBL("margin"),
     kvs.cssExpandTRBL("padding"),
     kvs.cssExpandTRBL("border-style"),
+    kvs.cssExpandTRBL("border-width"),
   ].concat
-  xs.dict + kvs
+  xs.dict + kvs 
 }
 
 function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,string)> {
@@ -650,7 +702,7 @@ function cssWidth( v : string ) : string {
       perc.showFixed(2) + "\\linewidth"
     }
     Nothing -> match(v.find(rxPixels)) {
-      Just(cap) -> cap.groups[1] + "\\cssPixel"
+      Just(cap) -> cap.groups[1] + "\\px"
       Nothing   -> cssValue(v)
     }
   }
