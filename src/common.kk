@@ -513,3 +513,20 @@ public function relative( path : string ) : bool {
   !(path.contains(rxProtocol));
 }
 val rxProtocol = regex(@"^(\w+:|//)");
+
+
+
+public function htmlEscape( s : string, allowEntity : bool = False ) {
+  if (s.contains(rxhtml)) 
+   then s.replaceAll( if (allowEntity) then rxnoEntityAmp else rxamp,"&amp;")
+         .replaceAll(rxlt,"&lt;").replaceAll(rxgt,"&gt;")
+         .replaceAll(rxquot,"&quot;").replaceAll(rxapos,"&#39;")
+   else s        
+}
+val rxnoEntityAmp = regex(@"&(?!#?\w+;)")
+val rxamp = regex(@"&")
+val rxgt  = regex(@">")
+val rxlt  = regex(@"<")
+val rxquot = regex("\"")
+val rxapos = regex("'")
+val rxhtml = regex(@"[&<>""']")

@@ -14,15 +14,16 @@ import std/path
 import std/dict
 import std/string
 import std/regex
+
 import common
 import entity
 import inline
 import options
-import texCommon      // for texAccents et al
-import htmlFormatter  // for htmlEscape
-import hilite
 import attributes
 import codeAlign
+
+import texCommon      // for texAccents et al
+import cssFormatter
 
 public function fmtLatexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
@@ -292,7 +293,7 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
                 }
   val bcolor  = match (attrs.hasKey("background-color")) {
                   Nothing   -> ""
-                  Just(clr) -> "{\\cellcolor" + cssColorArg(clr) + "}"
+                  Just(clr) -> "{\\cellcolor[HTML]" + cssColorArg(clr) + "}"
                 }            
   val fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
                 (if (attrs.hasClass("cell-border-right")) then "|" else "")
@@ -564,15 +565,15 @@ function cssBorder( body : string, kvs : dict<string> ) : string {
 
   if (hideall) then {
     "\n\\begin{mdBackgroundColor}" +     
-    cssColorArgHtml(kvs.find("background-color","#FFF")) + "%mdk\n" +
+    cssColorArg(kvs.find("background-color","#FFF")) + "%mdk\n" +
     body.trim +
     "\n\\end{mdBackgroundColor}%mdk\n"
   }
   else {
   "\n\\begin{mdBorder}" + 
     cssWidth(kvs.find("border-width","1px")).braced +
-    cssColorArgHtml(kvs.find("border-color","#000")) +
-    cssColorArgHtml(kvs.find("background-color","#FFF")) +
+    cssColorArg(kvs.find("border-color","#000")) +
+    cssColorArg(kvs.find("background-color","#FFF")) +
     hides.concat.join(",").braced + "%mdk\n"
     + body.trim + 
     "\n\\end{mdBorder}%mdk\n"
@@ -630,9 +631,6 @@ function onKeys( body : string, kvs : dict<string>, keys : list<string>, action 
 
 function texArgs( xs : list<string> ) = xs.map(braced).join
 
-function braced( s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
-}
 
 function containsAny( d : dict<a>, keys : list<string> ) : bool {
   keys.any( fun(key) { d.containsKey(key) })
@@ -647,99 +645,3 @@ function nosuppressKey( kv : (string,string) ) : bool {
   (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
 }
 
-
-function cssColorCmd( v : string ) : string {
-  "\\color"
-}
-
-function cssColorArg( v : string ) : string {
-  val c = v.cssColor
-  if (c.startsWith("#")) 
-    then "[HTML]{" + c.substr(1) + "}"
-  elif (c.startsWith("\\#")) 
-    then "[HTML]{" + c.substr(2) + "}"
-    else "{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
-}
-
-function cssColorArgHtml( v : string ) : string {
-  val c = v.cssColor
-  if (c.startsWith("#")) 
-    then c.substr(1).braced + "{}"
-  elif (c.startsWith("\\#")) 
-    then c.substr(2).braced + "{}"
-    else "{}{" + c.substr(0,1).toUpper + c.substr(1).toLower + "}"
-}
-
-
-function cssColor( v : string ) : string {
-  match(v.find(rxRgbX)) {
-    Just(cap) -> {
-      if (cap.groups[4]=="")
-       then "\\#" + [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
-       else "\\" + v.trim.toUpper
-    }
-    Nothing -> match(v.find(rxRgb)) {
-      Just(cap) -> {
-        val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
-        val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
-        "\\#" + hrgb.map(fun(c) { c.showHex(2) } ).join
-      }
-      Nothing   -> match(v.find(rxHsl)) {
-        Just(cap) -> {
-          val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
-          "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
-        }
-        Nothing -> cssValue(v)
-      }
-    }
-  }
-}
-
-function cssWidth( v : string ) : string {
-  match(v.find(rxPerc)) {
-    Just(cap) -> {
-      val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
-      perc.showFixed(2) + "\\linewidth"
-    }
-    Nothing -> match(v.find(rxPixels)) {
-      Just(cap) -> cap.groups[1] + "\\px"
-      Nothing   -> cssValue(v)
-    }
-  }
-}
-
-function cssValue( v : string ) : string {
-  v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
-}
-
-val rxPerc = regex(@"^\s*(\d{1,3})%\s*$")
-val rxPixels = regex(@"^\s*(\d+(?:\.\d+)?)px\s*$")
-
-val rxRgbX = regex(@"^\s*#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9]{3})?")
-val rxRgb = regex(@"^\s*rgba?\((\d+)(%)?,(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
-val rxHsl = regex(@"^\s*hsla?\((\d+),(\d+)%?,(\d+)%?(?:,\d+%?)?\)\s*$")
-
-function hslToRgb(hi, si, li){
-  val h = (hi%360).double / 360.0;
-  val s = si.double * 0.01;
-  val l = li.double * 0.01;
-
-  if (s==0.0) {
-    val x = (l*255.0).int
-    return (x,x,x)
-  }
-
-  val q = if (l < 0.5) then l * (1.0 + s) else l + (s - (l * s));
-  val p = (2.0 * l) - q;
-  
-  function hue2rgb(t0) {
-    val t = if (t0 < 0.0) then t0+1.0 elif (t0 > 1.0) then t0-1.0 else t0;
-    val c = if (t < 1.0/6.0) then p + (q - p) * 6.0 * t
-            elif (t < 0.5) then q
-            elif (t < 2.0/3.0) then p + (q - p) * (2.0/3.0 - t) * 6.0
-            else p
-    (c * 255.0).int            
-  }
-
-  (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
-}

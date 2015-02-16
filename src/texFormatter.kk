@@ -19,8 +19,6 @@ import entity
 import inline
 import options
 import texCommon      // for texAccents et al
-import htmlFormatter  // for htmlEscape
-import hilite
 import attributes
 import codeAlign
 
