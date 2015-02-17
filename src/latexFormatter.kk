@@ -451,21 +451,6 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyEnv(kvs,"tex-env",elem)
       .cssOuter(kvs)
       .applyCmd(kvs,"tex-outercmd")
-  /*
-  if (attrs.empty) then "" else {
-    val txt = [ if (attrs.classes.isNil) then [] else ["class={" + attrs.classes.map(normalizeId).join(",") + "}"],  // so block goes first
-                if (attrs.name=="") then [] else ["id=" + attrs.name],
-                if (attrs.label=="") then [] else ["label={" + attrs.label.escapeEntity.texText + "}"],
-                if (attrs.elem=="") then [] else ["elem={" + attrs.elem.escapeEntity.texText + "}"],
-                attrs.keyvals.filter(nosuppressKey).map(fun(kv) { 
-                  val (name0,value) = kv
-                  val name = if (name0.startsWith("tex-")) then name0.substr(4) else name0    
-                  showAttr( name, value )
-                }),          
-              ].concat.join(",") 
-    if (txt=="") then "" else "[" + txt + "]"  
-  }
-  */
 }
 
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
@@ -562,21 +547,28 @@ function cssBorder( body : string, kvs : dict<string> ) : string {
   }
   val hides   = ["top","right","bottom","left"].map(hasStyle) 
   val hideall = (kvs.find("border-width")=="0pt" || hides.all(isCons))
+  val bcolor  = kvs.find("background-color","")
 
-  if (hideall) then {
-    "\n\\begin{mdBackgroundColor}" +     
-    cssColorArg(kvs.find("background-color","#FFF")) + "%mdk\n" +
+  if (hideall && bcolor!="") then {
+    "\n\\begin{mdBackgroundColor}" + cssColorArg(bcolor) + "%mdk\n" +
     body.trim +
     "\n\\end{mdBackgroundColor}%mdk\n"
   }
   else {
   "\n\\begin{mdBorder}" + 
-    cssWidth(kvs.find("border-width","1px")).braced +
-    cssColorArg(kvs.find("border-color","#000")) +
-    cssColorArg(kvs.find("background-color","#FFF")) +
-    hides.concat.join(",").braced + "%mdk\n"
+    ([ ["linewidth=" + cssWidth(kvs.find("border-width","1pt")).braced],
+       kvs.optionArg("border-color","linecolor",cssColor),
+       kvs.optionArg("background-color","backgroundcolor",cssColor),
+     ] + hides).concat.join(",").braced + "%mdk\n"
     + body.trim + 
     "\n\\end{mdBorder}%mdk\n"
+  }
+}
+
+function optionArg( kvs : dict<string>, key : string, cssKey : string, show : string -> string ) : list<string> {
+  match(kvs[key]) {
+    Nothing -> []
+    Just(value) -> [cssKey + "=" + value.show]
   }
 }
 
@@ -599,9 +591,14 @@ function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,strin
   match(kvs[key]) {
     Nothing -> []
     Just(value) -> {
-      val vs = value.cssSplitValues
+      val vs = match(value.cssSplitValues) {
+                 [v]           -> [v,v,v,v]
+                 [ver,hor]     -> [ver,hor,ver,hor]
+                 [top,hor,bot] -> [top,hor,bot]
+                 res -> res
+      }
       val ks = ["top","right","bottom","left"].map(fun(side) { pre + "-" + side + post })
-      val zs = zip(ks,[vs,vs,vs,vs].concat)
+      val zs = zip(ks,vs)
       if (zs.length == 4) then zs else {
         warning("Unable to parse CSS values: " + value)
         []

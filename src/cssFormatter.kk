@@ -19,41 +19,59 @@ public function braced( s : string ) : string {
 }
 
 public function cssColorCmd( v : string ) : string {
-  "\\color[HTML]" + v.cssColor.braced
+  if (v=="") then "" else "\\color[HTML]{" + v.cssColor + "}"
 }
 
 public function cssColorArg( v : string ) : string {
-  v.cssColor.braced
+  if (v=="") then "{}" else "{" + v.cssColor + "}"
 }
 
 public function cssColor( v0 : string ) : string {
-  val v = v0.cssNormalize
+  val v = v0.cssNormalize.toLower
   match(v.find(rxRgbX)) {
     Just(cap) -> {
-      if (cap.groups[4]=="")
-       then [1,1,2,2,3,3].map( fun(i) { cap.groups[i] } ).join.toUpper
-       else v.trim.toUpper
+      val rgbx = (1,2,3).map( fun(i) { if (cap.groups[4]=="") then cap.groups[i] + cap.groups[i] else cap.groups[2*i] + cap.groups[2*i + 1] } )
+      val rgb  = rgbx.map( fun(s) { s.parseIntDefault(0,hex=True) } )
+      cssRgb(rgb)
     }
     Nothing -> match(v.find(rxRgb)) {
       Just(cap) -> {
-        val rgb = [cap.groups[1],cap.groups[3],cap.groups[4]].map( fun(c) { c.parseIntDefault(0) } )
-        val hrgb = if (cap.groups[2]=="%") then rgb.map( fun(p) { (p.double * 2.55).int } ) else rgb
-        hrgb.map(fun(c) { c.showHex(2) } ).join
+        val rgb0 = (cap.groups[1],cap.groups[3],cap.groups[4]).map( fun(c) { c.parseIntDefault(0) } )
+        val rgb = if (cap.groups[2]=="%") then rgb0.map( fun(p) { (p.double * 2.55).int } ) else rgb0
+        cssRgb(rgb)
       }
-      Nothing   -> match(v.find(rxHsl)) {
+      Nothing -> match(v.find(rxHsl)) {
         Just(cap) -> {
-          val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
-          [r,g,b].map( fun(c) { c.showHex(2) } ).join
+          val rgb = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
+          cssRgb(rgb)
         }
-        Nothing -> match(cssNamedColors[v.toLower]) {
-          Nothing -> {
-            warning("unknown named css color: " + v)
-            "000000"
+        Nothing -> match(cssNamedStd[v]) {
+          Just    -> v.substr(0,1).toUpper + v.substr(1)
+          Nothing -> match(cssNamedColors[v]) { 
+            Just(clr) -> clr
+            Nothing   -> {
+              warning("unknown named css color: " + v)
+              v
+            }
           }
-          Just(clr) -> clr
         }
       }
     }
+  }
+}
+
+function cssRgb(rgb : (int,int,int) ) : string {
+  function mix(i,clr) {
+    clr + "," + (i.min(255).max(0)).show
+  }
+  val (r,g,b) = rgb
+  if (r==0 && g==0 && b==0) then "black"
+  elif (r>=255 && g>=255 && b>=255) then "white"
+  elif (r==g && g==b && r >= 0 && r <= 255) then {
+    ("rgb,255:" + r.mix("white")).braced
+  }
+  else {
+    ("rgb,255:" + [r.mix("red"), g.mix("green"), b.mix("blue")].join(";")).braced
   }
 }
 
@@ -62,10 +80,10 @@ public function cssWidth( v0 : string ) : string {
   match(v.find(rxPerc)) {
     Just(cap) -> {
       val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
-      perc.showFixed(2) + "\\linewidth"
+      "\\dimWidth" + perc.showFixed(2).braced
     }
     Nothing -> match(v.find(rxPixels)) {
-      Just(cap) -> cap.groups[1] + "\\px"
+      Just(cap) -> "\\dimPx" + cap.groups[1].braced
       Nothing   -> cssValue(v)
     }
   }
@@ -121,155 +139,161 @@ function hslToRgb(hi, si, li){
   (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
 }
 
+val cssNamedStd : dict<bool> = [
+  "red", "lime", "blue", "yellow", "cyan", "magenta", "navy", "maroon", "green", "teal", "purple", "olive",   
+  "black", "dimgray", "gray", "darkgray", "silver", "lightgray", "gainsboro", "floralwhite", "ivory", "white", 
+  "orange", "aqua", "fuchsia",
+].map(fun(s) { (s,True) }).dict
+
 val cssNamedColors : dict<string> = [
-  ("black", "000000"),   
-  ("silver", "C0C0C0"),   
-  ("gray", "808080"),
-  ("grey", "808080"),   
-  ("white", "FFFFFF"),   
-  ("maroon", "800000"),   
-  ("red", "FF0000"),   
-  ("purple", "800080"),   
-  ("fuchsia", "FF00FF"),   
-  ("green", "008000"),   
-  ("lime", "00FF00"),   
-  ("olive", "808000"),   
-  ("yellow", "FFFF00"),   
-  ("navy", "000080"),   
-  ("blue", "0000FF"),   
-  ("teal", "008080"),   
-  ("aqua", "00FFFF"),   
-  ("orange", "FFA500"),   
-  ("aliceblue", "F0F8FF"),   
-  ("antiquewhite", "FAEBD7"),   
-  ("aquamarine", "7FFFD4"),   
-  ("azure", "F0FFFF"),   
-  ("beige", "F5F5DC"),   
-  ("bisque", "FFE4C4"),   
-  ("blanchedalmond", "FFE4C4"),   
-  ("blueviolet", "8A2BE2"),   
-  ("brown", "A52A2A"),   
-  ("burlywood", "DEB887"),   
-  ("cadetblue", "5F9EA0"),   
-  ("chartreuse", "7FFF00"),   
-  ("chocolate", "D2691E"),   
-  ("coral", "FF7F50"),   
-  ("cornflowerblue", "6495ED"),   
-  ("cornsilk", "FFF8DC"),   
-  ("crimson", "DC143C"),   
-  ("darkblue", "00008B"),   
-  ("darkcyan", "008B8B"),   
-  ("darkgoldenrod", "B8860B"),   
-  ("darkgray", "A9A9A9"),
-  ("darkgrey", "A9A9A9"),   
-  ("darkgreen", "006400"),   
-  ("darkgray", "A9A9A9"),   
-  ("darkgrey", "A9A9A9"),   
-  ("darkkhaki", "BDB76B"),   
-  ("darkmagenta", "8B008B"),   
-  ("darkolivegreen", "556B2F"),   
-  ("darkorange", "FF8C00"),   
-  ("darkorchid", "9932CC"),   
-  ("darkred", "8B0000"),   
-  ("darksalmon", "E9967A"),   
-  ("darkseagreen", "8FBC8F"),   
-  ("darkslateblue", "483D8B"),   
-  ("darkslategray", "2F4F4F"),
-  ("darkslategrey", "2F4F4F"),   
-  ("darkturquoise", "00CED1"),   
-  ("darkviolet", "9400D3"),   
-  ("deeppink", "FF1493"),   
-  ("deepskyblue", "00BFFF"),   
-  ("dimgray", "696969"),
-  ("dimgrey", "696969"),   
-  ("dodgerblue", "1E90FF"),   
-  ("firebrick", "B22222"),   
-  ("floralwhite", "FFFAF0"),   
-  ("forestgreen", "228B22"),   
-  ("gainsboro", "DCDCDC"),   
-  ("ghostwhite", "F8F8FF"),   
-  ("gold", "FFD700"),   
-  ("goldenrod", "DAA520"),   
-  ("greenyellow", "ADFF2F"),   
-  ("grey", "808080"),   
-  ("honeydew", "F0FFF0"),   
-  ("hotpink", "FF69B4"),   
-  ("indianred", "CD5C5C"),   
-  ("indigo", "4B0082"),   
-  ("ivory", "FFFFF0"),   
-  ("khaki", "F0E68C"),   
-  ("lavender", "E6E6FA"),   
-  ("lavenderblush", "FFF0F5"),   
-  ("lawngreen", "7CFC00"),   
-  ("lemonchiffon", "FFFACD"),   
-  ("lightblue", "ADD8E6"),   
-  ("lightcoral", "F08080"),   
-  ("lightcyan", "E0FFFF"),   
-  ("lightgoldenrodyellow", "FAFAD2"),   
-  ("lightgray", "D3D3D3"),
-  ("lightgrey", "D3D3D3"),   
-  ("lightgreen", "90EE90"),   
-  ("lightpink", "FFB6C1"),   
-  ("lightsalmon", "FFA07A"),   
-  ("lightseagreen", "20B2AA"),   
-  ("lightskyblue", "87CEFA"),   
-  ("lightslategray", "778899"),
-  ("lightslategrey", "778899"),   
-  ("lightsteelblue", "B0C4DE"),   
-  ("lightyellow", "FFFFE0"),   
-  ("limegreen", "32CD32"),   
-  ("linen", "FAF0E6"),   
-  ("mediumaquamarine", "66CDAA"),   
-  ("mediumblue", "0000CD"),   
-  ("mediumorchid", "BA55D3"),   
-  ("mediumpurple", "9370DB"),   
-  ("mediumseagreen", "3CB371"),   
-  ("mediumslateblue", "7B68EE"),   
-  ("mediumspringgreen", "00FA9A"),   
-  ("mediumturquoise", "48D1CC"),   
-  ("mediumvioletred", "C71585"),   
-  ("midnightblue", "191970"),   
-  ("mintcream", "F5FFFA"),   
-  ("mistyrose", "FFE4E1"),   
-  ("moccasin", "FFE4B5"),   
-  ("navajowhite", "FFDEAD"),   
-  ("oldlace", "FDF5E6"),   
-  ("olivedrab", "6B8E23"),   
-  ("orangered", "FF4500"),   
-  ("orchid", "DA70D6"),   
-  ("palegoldenrod", "EEE8AA"),   
-  ("palegreen", "98FB98"),   
-  ("paleturquoise", "AFEEEE"),   
-  ("palevioletred", "DB7093"),   
-  ("papayawhip", "FFEFD5"),   
-  ("peachpuff", "FFDAB9"),   
-  ("peru", "CD853F"),   
-  ("pink", "FFC0CB"),   
-  ("plum", "DDA0DD"),   
-  ("powderblue", "B0E0E6"),   
-  ("rosybrown", "BC8F8F"),   
-  ("royalblue", "4169E1"),   
-  ("saddlebrown", "8B4513"),   
-  ("salmon", "FA8072"),   
-  ("sandybrown", "F4A460"),   
-  ("seagreen", "2E8B57"),   
-  ("seashell", "FFF5EE"),   
-  ("sienna", "A0522D"),   
-  ("skyblue", "87CEEB"),   
-  ("slateblue", "6A5ACD"),   
-  ("slategray", "708090"),
-  ("slategrey", "708090"),   
-  ("snow", "FFFAFA"),   
-  ("springgreen", "00FF7F"),   
-  ("steelblue", "4682B4"),   
-  ("tan", "D2B48C"),   
-  ("thistle", "D8BFD8"),   
-  ("tomato", "FF6347"),   
-  ("turquoise", "40E0D0"),   
-  ("violet", "EE82EE"),   
-  ("wheat", "F5DEB3"),   
-  ("whitesmoke", "F5F5F5"),   
-  ("yellowgreen", "9ACD32"),   
-  ("rebeccapurple", "663399"), 
-].dict
+  ("black", (0x00,0x00,0x00)),   
+  ("silver", (0xC0,0xC0,0xC0)),   
+  ("gray", (0x80,0x80,0x80)),
+  ("grey", (0x80,0x80,0x80)),   
+  ("white", (0xFF,0xFF,0xFF)),   
+  ("maroon", (0x80,0x00,0x00)),   
+  ("red", (0xFF,0x00,0x00)),   
+  ("purple", (0x80,0x00,0x80)),   
+  ("fuchsia", (0xFF,0x00,0xFF)),   
+  ("green", (0x00,0x80,0x00)),   
+  ("lime", (0x00,0xFF,0x00)),   
+  ("olive", (0x80,0x80,0x00)),   
+  ("yellow", (0xFF,0xFF,0x00)),   
+  ("navy", (0x00,0x00,0x80)),   
+  ("blue", (0x00,0x00,0xFF)),   
+  ("teal", (0x00,0x80,0x80)),   
+  ("aqua", (0x00,0xFF,0xFF)),   
+  ("orange", (0xFF,0xA5,0x00)),   
+  ("aliceblue", (0xF0,0xF8,0xFF)),   
+  ("antiquewhite", (0xFA,0xEB,0xD7)),   
+  ("aquamarine", (0x7F,0xFF,0xD4)),   
+  ("azure", (0xF0,0xFF,0xFF)),   
+  ("beige", (0xF5,0xF5,0xDC)),   
+  ("bisque", (0xFF,0xE4,0xC4)),   
+  ("blanchedalmond", (0xFF,0xE4,0xC4)),   
+  ("blueviolet", (0x8A,0x2B,0xE2)),   
+  ("brown", (0xA5,0x2A,0x2A)),   
+  ("burlywood", (0xDE,0xB8,0x87)),   
+  ("cadetblue", (0x5F,0x9E,0xA0)),   
+  ("chartreuse", (0x7F,0xFF,0x00)),   
+  ("chocolate", (0xD2,0x69,0x1E)),   
+  ("coral", (0xFF,0x7F,0x50)),   
+  ("cornflowerblue", (0x64,0x95,0xED)),   
+  ("cornsilk", (0xFF,0xF8,0xDC)),   
+  ("crimson", (0xDC,0x14,0x3C)),   
+  ("darkblue", (0x00,0x00,0x8B)),   
+  ("darkcyan", (0x00,0x8B,0x8B)),   
+  ("darkgoldenrod", (0xB8,0x86,0x0B)),   
+  ("darkgray", (0xA9,0xA9,0xA9)),
+  ("darkgrey", (0xA9,0xA9,0xA9)),   
+  ("darkgreen", (0x00,0x64,0x00)),   
+  ("darkgray", (0xA9,0xA9,0xA9)),   
+  ("darkgrey", (0xA9,0xA9,0xA9)),   
+  ("darkkhaki", (0xBD,0xB7,0x6B)),   
+  ("darkmagenta", (0x8B,0x00,0x8B)),   
+  ("darkolivegreen", (0x55,0x6B,0x2F)),   
+  ("darkorange", (0xFF,0x8C,0x00)),   
+  ("darkorchid", (0x99,0x32,0xCC)),   
+  ("darkred", (0x8B,0x00,0x00)),   
+  ("darksalmon", (0xE9,0x96,0x7A)),   
+  ("darkseagreen", (0x8F,0xBC,0x8F)),   
+  ("darkslateblue", (0x48,0x3D,0x8B)),   
+  ("darkslategray", (0x2F,0x4F,0x4F)),
+  ("darkslategrey", (0x2F,0x4F,0x4F)),   
+  ("darkturquoise", (0x00,0xCE,0xD1)),   
+  ("darkviolet", (0x94,0x00,0xD3)),   
+  ("deeppink", (0xFF,0x14,0x93)),   
+  ("deepskyblue", (0x00,0xBF,0xFF)),   
+  ("dimgray", (0x69,0x69,0x69)),
+  ("dimgrey", (0x69,0x69,0x69)),   
+  ("dodgerblue", (0x1E,0x90,0xFF)),   
+  ("firebrick", (0xB2,0x22,0x22)),   
+  ("floralwhite", (0xFF,0xFA,0xF0)),   
+  ("forestgreen", (0x22,0x8B,0x22)),   
+  ("gainsboro", (0xDC,0xDC,0xDC)),   
+  ("ghostwhite", (0xF8,0xF8,0xFF)),   
+  ("gold", (0xFF,0xD7,0x00)),   
+  ("goldenrod", (0xDA,0xA5,0x20)),   
+  ("greenyellow", (0xAD,0xFF,0x2F)),   
+  ("grey", (0x80,0x80,0x80)),   
+  ("honeydew", (0xF0,0xFF,0xF0)),   
+  ("hotpink", (0xFF,0x69,0xB4)),   
+  ("indianred", (0xCD,0x5C,0x5C)),   
+  ("indigo", (0x4B,0x00,0x82)),   
+  ("ivory", (0xFF,0xFF,0xF0)),   
+  ("khaki", (0xF0,0xE6,0x8C)),   
+  ("lavender", (0xE6,0xE6,0xFA)),   
+  ("lavenderblush", (0xFF,0xF0,0xF5)),   
+  ("lawngreen", (0x7C,0xFC,0x00)),   
+  ("lemonchiffon", (0xFF,0xFA,0xCD)),   
+  ("lightblue", (0xAD,0xD8,0xE6)),   
+  ("lightcoral", (0xF0,0x80,0x80)),   
+  ("lightcyan", (0xE0,0xFF,0xFF)),   
+  ("lightgoldenrodyellow", (0xFA,0xFA,0xD2)),   
+  ("lightgray", (0xD3,0xD3,0xD3)),
+  ("lightgrey", (0xD3,0xD3,0xD3)),   
+  ("lightgreen", (0x90,0xEE,0x90)),   
+  ("lightpink", (0xFF,0xB6,0xC1)),   
+  ("lightsalmon", (0xFF,0xA0,0x7A)),   
+  ("lightseagreen", (0x20,0xB2,0xAA)),   
+  ("lightskyblue", (0x87,0xCE,0xFA)),   
+  ("lightslategray", (0x77,0x88,0x99)),
+  ("lightslategrey", (0x77,0x88,0x99)),   
+  ("lightsteelblue", (0xB0,0xC4,0xDE)),   
+  ("lightyellow", (0xFF,0xFF,0xE0)),   
+  ("limegreen", (0x32,0xCD,0x32)),   
+  ("linen", (0xFA,0xF0,0xE6)),   
+  ("mediumaquamarine", (0x66,0xCD,0xAA)),   
+  ("mediumblue", (0x00,0x00,0xCD)),   
+  ("mediumorchid", (0xBA,0x55,0xD3)),   
+  ("mediumpurple", (0x93,0x70,0xDB)),   
+  ("mediumseagreen", (0x3C,0xB3,0x71)),   
+  ("mediumslateblue", (0x7B,0x68,0xEE)),   
+  ("mediumspringgreen", (0x00,0xFA,0x9A)),   
+  ("mediumturquoise", (0x48,0xD1,0xCC)),   
+  ("mediumvioletred", (0xC7,0x15,0x85)),   
+  ("midnightblue", (0x19,0x19,0x70)),   
+  ("mintcream", (0xF5,0xFF,0xFA)),   
+  ("mistyrose", (0xFF,0xE4,0xE1)),   
+  ("moccasin", (0xFF,0xE4,0xB5)),   
+  ("navajowhite", (0xFF,0xDE,0xAD)),   
+  ("oldlace", (0xFD,0xF5,0xE6)),   
+  ("olivedrab", (0x6B,0x8E,0x23)),   
+  ("orangered", (0xFF,0x45,0x00)),   
+  ("orchid", (0xDA,0x70,0xD6)),   
+  ("palegoldenrod", (0xEE,0xE8,0xAA)),   
+  ("palegreen", (0x98,0xFB,0x98)),   
+  ("paleturquoise", (0xAF,0xEE,0xEE)),   
+  ("palevioletred", (0xDB,0x70,0x93)),   
+  ("papayawhip", (0xFF,0xEF,0xD5)),   
+  ("peachpuff", (0xFF,0xDA,0xB9)),   
+  ("peru", (0xCD,0x85,0x3F)),   
+  ("pink", (0xFF,0xC0,0xCB)),   
+  ("plum", (0xDD,0xA0,0xDD)),   
+  ("powderblue", (0xB0,0xE0,0xE6)),   
+  ("rosybrown", (0xBC,0x8F,0x8F)),   
+  ("royalblue", (0x41,0x69,0xE1)),   
+  ("saddlebrown", (0x8B,0x45,0x13)),   
+  ("salmon", (0xFA,0x80,0x72)),   
+  ("sandybrown", (0xF4,0xA4,0x60)),   
+  ("seagreen", (0x2E,0x8B,0x57)),   
+  ("seashell", (0xFF,0xF5,0xEE)),   
+  ("sienna", (0xA0,0x52,0x2D)),   
+  ("skyblue", (0x87,0xCE,0xEB)),   
+  ("slateblue", (0x6A,0x5A,0xCD)),   
+  ("slategray", (0x70,0x80,0x90)),
+  ("slategrey", (0x70,0x80,0x90)),   
+  ("snow", (0xFF,0xFA,0xFA)),   
+  ("springgreen", (0x00,0xFF,0x7F)),   
+  ("steelblue", (0x46,0x82,0xB4)),   
+  ("tan", (0xD2,0xB4,0x8C)),   
+  ("thistle", (0xD8,0xBF,0xD8)),   
+  ("tomato", (0xFF,0x63,0x47)),   
+  ("turquoise", (0x40,0xE0,0xD0)),   
+  ("violet", (0xEE,0x82,0xEE)),   
+  ("wheat", (0xF5,0xDE,0xB3)),   
+  ("whitesmoke", (0xF5,0xF5,0xF5)),   
+  ("yellowgreen", (0x9A,0xCD,0x32)),   
+  ("rebeccapurple", (0x66,0x33,0x99)), 
+].map( fun(kv) { (kv.fst,kv.snd.cssRgb) }).dict
 

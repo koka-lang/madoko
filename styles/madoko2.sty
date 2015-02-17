@@ -112,7 +112,7 @@
 % Colors
 %-------------------------------------------------------------
 
-% Define CSS 17 standard colors
+% Define basic CSS colors
 \definecolor{Red}{HTML}{FF0000}
 \definecolor{Lime}{HTML}{00FF00}
 \definecolor{Blue}{HTML}{0000FF}
@@ -214,8 +214,12 @@
 \newcommand*\mdkline[1]{} %ignore
 
 % ---------------------------------------------------
-% Margins
+% Dimensions
 % ---------------------------------------------------
+
+% expressions for width percentage and pixels
+\newcommand\dimWidth[1]{\the\dimexpr #1\linewidth \relax}
+\newcommand\dimPx[1]{\the\dimexpr 0.4pt * #1\relax}
 
 % dimDefault(arg,default)  use default if arg is empty
 \newcommand\dimDefault[2]{\@ifmtarg{#1}{#2}{#1}}
@@ -227,6 +231,10 @@
 \newcommand\dimMax[2]{%
   \@ifmtarg{#2}{#1}{\@ifmtarg{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #1\else #2\fi}}%
 }
+
+% ---------------------------------------------------
+% Margins
+% ---------------------------------------------------
 
 % calculate the auto margin based on the (border-box) width of the block and the width of 
 % the other margin; use an empty other margin width if the other margin is also auto
@@ -256,14 +264,14 @@
 %-------------------------------------------------------------
 % Save footnotes inside mdframed and minipage environments
 %-------------------------------------------------------------
-\newif\if@saveFootnotes
-\newcommand{\cssSaveFootnotes}%
-  {\if@saveFootnotes\else%
+\newif\if@savefootnotes
+\newcommand{\md@savefootnotes}%
+  {\if@savefootnotes\else%
     \let\footnote\tablefootnote%
    \fi%
-   \@saveFootnotestrue}%
-\newcommand{\cssRestoreFootnotes}%   
-  {\if@saveFootnotes\else%
+   \@savefootnotestrue}%
+\newcommand{\md@restorefootnotes}%   
+  {\if@savefootnotes\else%
     \tfn@tablefootnoteprintout% 
     \gdef\tfn@fnt{0}%
    \fi}% 
@@ -276,38 +284,28 @@
 
 % md@definecolor{name}{html}: define a HTML color with a (temporary) name
 \newcommand{\md@definecolor}[2]{%
-  \definecolor{#1}{HTML}{#2}\csedef{#1}{#1}%
+  \@ifmtarg{#2}{\definecolor{#1}{HTML}{808080}}{\definecolor{#1}{HTML}{#2}}%
+  \csedef{#1}{#1}%
 }
 
-\newenvironment{mdBorder}[4]{%
-  \md@definecolor{md@linecolor}{#2}%
-  \md@definecolor{md@backgroundcolor}{#3}%
-  \setlength{\md@linewidth}{#1}%
-  \begin{mdframed}[%
-      linewidth=\the\md@linewidth,%
-      linecolor=\md@linecolor,%
-      backgroundcolor=\md@backgroundcolor,%
-      #4%
-  ]%
-}{%
-  \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
+\newenvironment{md@framed}{%
+  \begin{mdframed}
+}
+{ \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
   \end{mdframed}%
-  \unskip\setbox0=\hbox{M}%
+  \unskip\setbox0=\hbox{M}% adjust bottom separation; fails if the next line is higher than M
   \addvspace{\dimexpr-\baselineskip+\ht0}\relax%
 }
 
-%-------------------------------------------------------------
-% Background color
-%-------------------------------------------------------------
+
+\newenvironment{mdBorder}[1]{%
+  \begin{md@framed}[#1]%
+}{\end{md@framed}}
+
+
 \newenvironment{mdBackgroundColor}[1]{%
-  \md@definecolor{md@backgroundcolor}{#1}%
-  \begin{mdframed}[backgroundcolor=\md@backgroundcolor,hidealllines]%
-}{%
-  \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
-  \end{mdframed}%  
-  \unskip\setbox0=\hbox{M}%
-  \addvspace{\dimexpr-\baselineskip+\ht0}\relax%
-}
+  \begin{md@framed}[backgroundcolor=#1,hidealllines]%
+}{\end{md@framed}}
 
 
 % ---------------------------------------------------
