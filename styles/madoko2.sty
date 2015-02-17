@@ -217,9 +217,24 @@
 % Dimensions
 % ---------------------------------------------------
 
-% expressions for width percentage and pixels
-\newcommand\dimWidth[1]{\the\dimexpr #1\linewidth \relax}
+% expressions for various css units
 \newcommand\dimPx[1]{\the\dimexpr 0.4pt * #1\relax}
+\newcommand\dimRem[1]{\the\dimexpr #1\dim@rem\relax}
+\newcommand\dimCh[1]{\the\dimexpr #1\dim@ch\relax}
+\newcommand\dimVh[1]{\the\dimexpr #1\textheight\relax}
+\newcommand\dimVw[1]{\the\dimexpr #1\textwidth\relax}
+\newcommand\dimVmin[1]{\the\dimexpr #1\dimMin\textwidth\textheight\relax}
+\newcommand\dimVmax[1]{\the\dimexpr #1\dimMax\textwidth\textheight\relax}
+
+\newlength\dim@rem
+\newlength\dim@ch
+\AtBeginDocument{\setlength\dim@rem{1em}\settowidth\dim@ch{0}}
+
+% expressions for widht/height percentages
+\newcommand\md@height{\the\textheight}
+\newcommand\dimHeight[1]{\the\dimexpr \@md@height * #1\relax}
+\newcommand\dimWidth[1]{\the\dimexpr #1\linewidth \relax}
+
 
 % dimDefault(arg,default)  use default if arg is empty
 \newcommand\dimDefault[2]{\@ifmtarg{#1}{#2}{#1}}
@@ -260,6 +275,14 @@
 \newcommand\mdMarginTop[1]{\addvspace{#1}\ignorespaces}
 \newcommand\mdMarginBottom[1]{\addvspace{#1}\ignorespaces}
 
+\newrobustcmd\mdmargintb[3]{%
+   \setbox0=\hbox{#3}%
+   \@ifmtarg{#1}{}{\rule{0pt}{\the\dimexpr \ht0 + #1\relax}}%
+   \@ifmtarg{#2}{}{\rule[\the\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
+   \usebox0\relax%
+}
+
+
 
 %-------------------------------------------------------------
 % Save footnotes inside mdframed and minipage environments
@@ -280,14 +303,6 @@
 %-------------------------------------------------------------
 % Borders
 %-------------------------------------------------------------
-\newlength{\md@linewidth}
-
-% md@definecolor{name}{html}: define a HTML color with a (temporary) name
-\newcommand{\md@definecolor}[2]{%
-  \@ifmtarg{#2}{\definecolor{#1}{HTML}{808080}}{\definecolor{#1}{HTML}{#2}}%
-  \csedef{#1}{#1}%
-}
-
 \newenvironment{md@framed}{%
   \begin{mdframed}
 }
@@ -303,9 +318,31 @@
 }{\end{md@framed}}
 
 
-\newenvironment{mdBackgroundColor}[1]{%
+\newenvironment{mdBgColor}[1]{%
   \begin{md@framed}[backgroundcolor=#1,hidealllines]%
 }{\end{md@framed}}
+
+\let\mdbgcolor\colorbox
+\newrobustcmd\mdborder[3]{%
+  \begingroup
+  \@ifmtarg{#2}{}{\setlength\fboxrule{#2}}%
+  \fboxsep=\z@
+  \@ifmtarg{#1}%
+    {\fbox{#3}}%
+    {\colorlet{md@currentcolor}{.}\color{#1}\fbox{\color{md@currentcolor}#3}}%
+  \endgroup
+}
+
+% ---------------------------------------------------
+% Height
+% ---------------------------------------------------
+
+\newenvironment{mdHeight}[1]{%
+  \begin{minipage}[t][#1][t]{\linewidth}%
+  \def\md@height{#1}%
+}{\end{minipage}}
+
+
 
 
 % ---------------------------------------------------

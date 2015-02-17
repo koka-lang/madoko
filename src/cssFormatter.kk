@@ -14,6 +14,101 @@ import std/string
 import std/regex
 import common
 
+
+public function cssIsBlock( kvs : dict<string> ) : bool {
+  match (kvs["display"]) {
+    Nothing -> False
+    Just(value) -> {
+      val display = value.cssNormalize.toLower
+      (display=="block")
+    }
+  }
+}
+
+public function cssIsInlineBlock( kvs : dict<string> ) : bool {
+  match (kvs["display"]) {
+    Nothing -> False
+    Just(value) -> {
+      val display = value.cssNormalize.toLower
+      (display=="inline-block")
+    }
+  }
+}
+
+public function cssExpandKeys( kvs0 : dict<string> ) : dict<string> {
+  val kvs = kvs0.cssExpandMultiKeys
+  val xs = [
+    kvs.cssExpandTRBL("margin"),
+    kvs.cssExpandTRBL("padding"),
+    kvs.cssExpandTRBL("border-style"),
+    kvs.cssExpandTRBL("border-width"),
+  ].concat
+  xs.dict + kvs 
+}
+
+function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,string)> {
+  val i = key.lastIndexOf('-')
+  val (pre,post) = if (i < 0) then (key,"") else (key.substr(0,i),key.substr(i))
+  match(kvs[key]) {
+    Nothing -> []
+    Just(value) -> {
+      val vs = match(value.cssSplitValues) {
+                 [v]           -> [v,v,v,v]
+                 [ver,hor]     -> [ver,hor,ver,hor]
+                 [top,hor,bot] -> [top,hor,bot]
+                 res -> res
+      }
+      val ks = ["top","right","bottom","left"].map(fun(side) { pre + "-" + side + post })
+      val zs = zip(ks,vs)
+      if (zs.length == 4) then zs else {
+        warning("Unable to parse CSS values: " + value)
+        []
+      }
+    }
+  }
+}
+
+function cssExpandMultiKeys( kvs : dict<string> ) : dict<string> {
+  val xss = [
+    kvs.cssExpandBorder
+  ]
+  xss.concat.dict + kvs
+}
+
+function cssExpandBorder( kvs : dict<string> ) : list<(string,string)> {
+  match(kvs["border"]) {
+    Nothing -> []
+    Just(value) -> {
+      val terms = cssSplitValues(value)
+      terms.map( fun(term) {
+        if (term.cssIsLength) then ("border-width",term)
+        elif (term.cssIsColor) then ("border-color",term)
+        else ("border-style",term)
+      })
+    }
+  }
+}
+
+function cssIsLength( term : string ) : bool {
+  term.contains(rxLen)
+}
+val rxNum = @"([\-\+]?(?:\d+|\d*\.\d+)(?:[eE]\d+)?)"
+val rxLen = regex(rxNum + @"(em|ex|ch|rem|vh|vw|vmin|vmax|px|mm|cm|in|pt|pc)\b")
+
+
+function cssIsColor( term : string ) : bool {
+  term.contains(rxRgbX) || term.contains(rxRgb) || term.contains(rxHsl) || cssNamedColors.containsKey(term.cssNormalize.toLower)
+}
+
+
+function cssSplitValues( s : string ) : list<string> {
+  s.findAll(rxCssTerm).list.map(fun(cap) { cap.matched.cssNormalize })
+}
+
+val rxEsc   = @"\\(?:[0-9a-fA-F]{1,6}\s*|.)"
+val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|-?[a-zA-Z_]\w*\([^\)]*\)|(?:[^'""\\\s]|" + rxEsc + ")+)")
+
+
 public function braced( s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
 }
@@ -45,8 +140,8 @@ public function cssColor( v0 : string ) : string {
           val rgb = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
           cssRgb(rgb)
         }
-        Nothing -> match(cssNamedStd[v]) {
-          Just    -> v.substr(0,1).toUpper + v.substr(1)
+        Nothing -> match(cssStdNames[v]) {
+          Just    -> v.capitalize
           Nothing -> match(cssNamedColors[v]) { 
             Just(clr) -> clr
             Nothing   -> {
@@ -75,19 +170,31 @@ function cssRgb(rgb : (int,int,int) ) : string {
   }
 }
 
-public function cssWidth( v0 : string ) : string {
-  val v = v0.cssNormalize
+public function cssHeight( v : string ) : string {
+  cssWidth(v,"Height")
+}
+
+public function cssWidth( v0 : string, percOf : string = "Width" ) : string {
+
+  val v = v0.cssNormalize.toLower
   match(v.find(rxPerc)) {
     Just(cap) -> {
       val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
-      "\\dimWidth" + perc.showFixed(2).braced
+      "\\dim" + percOf + perc.showFixed(2).braced
     }
-    Nothing -> match(v.find(rxPixels)) {
-      Just(cap) -> "\\dimPx" + cap.groups[1].braced
-      Nothing   -> cssValue(v)
+    Nothing -> match(v.find(rxLen)) {
+      Just(cap) -> {
+        if (cssUnits.containsKey(cap.groups[2])) 
+         then "\\dim" + cap.groups[2].capitalize + cap.groups[1].braced
+         else cssValue(v)
+      }
+      Nothing -> cssValue(v)
     }
   }
 }
+
+
+
 
 public function cssValue( v : string ) : string {
   v.cssNormalize
@@ -139,13 +246,17 @@ function hslToRgb(hi, si, li){
   (hue2rgb(h + 1.0/3.0), hue2rgb(h), hue2rgb(h - 1.0/3.0))
 }
 
-val cssNamedStd : dict<bool> = [
+val cssUnits : dict<bool> = ["px","rem","vh","vw","vmin","vmax","ch"].map(fun(s) { (s,True) }).dict
+
+val cssStdNames : dict<bool> = cssStdNamesList.map(fun(s) { (s,True) }).dict
+val cssStdNamesList : list<string> = [
   "red", "lime", "blue", "yellow", "cyan", "magenta", "navy", "maroon", "green", "teal", "purple", "olive",   
   "black", "dimgray", "gray", "darkgray", "silver", "lightgray", "gainsboro", "floralwhite", "ivory", "white", 
   "orange", "aqua", "fuchsia",
-].map(fun(s) { (s,True) }).dict
+]
 
-val cssNamedColors : dict<string> = [
+val cssNamedColors : dict<string> = cssNamedColorsList.map( fun(kv) { (kv.fst,kv.snd.cssRgb) }).dict
+val cssNamedColorsList : list<(string,(int,int,int))> = [
   ("black", (0x00,0x00,0x00)),   
   ("silver", (0xC0,0xC0,0xC0)),   
   ("gray", (0x80,0x80,0x80)),
@@ -156,7 +267,7 @@ val cssNamedColors : dict<string> = [
   ("purple", (0x80,0x00,0x80)),   
   ("fuchsia", (0xFF,0x00,0xFF)),   
   ("green", (0x00,0x80,0x00)),   
-  ("lime", (0x00,0xFF,0x00)),   
+  ("lime", (0x00,0xFF,0x00)),     
   ("olive", (0x80,0x80,0x00)),   
   ("yellow", (0xFF,0xFF,0x00)),   
   ("navy", (0x00,0x00,0x80)),   
@@ -295,5 +406,5 @@ val cssNamedColors : dict<string> = [
   ("whitesmoke", (0xF5,0xF5,0xF5)),   
   ("yellowgreen", (0x9A,0xCD,0x32)),   
   ("rebeccapurple", (0x66,0x33,0x99)), 
-].map( fun(kv) { (kv.fst,kv.snd.cssRgb) }).dict
+]
 

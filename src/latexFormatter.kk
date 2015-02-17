@@ -313,9 +313,6 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
 
 
 
-function capitalize( s : string ) : string {
-  s.substr(0,1).toUpper + s.substr(1)
-}
 
 function texAttrsX( attrs : attrs ) : string {
   ""
@@ -445,8 +442,9 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
-  val kvs = dict(defaults + attrs.keyvals).cssExpandKeys
+  val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
   body.applyCmd(kvs,"tex-innercmd")
+      .cssInner(kvs)
       .applyCmd(kvs,"tex-cmd")
       .applyEnv(kvs,"tex-env",elem)
       .cssOuter(kvs)
@@ -482,28 +480,62 @@ function applyEnv( body : string, kvs : dict<string>, key : string, elem : strin
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
 
+function cssInner( body0 : string, kvs : dict<string> ) : string {
+  val body1 = 
+    if (kvs.cssIsBlock) then {
+      body0.onKey(kvs,"height", fun(height,body) {
+              "\n\\begin{mdHeight}" + height.cssHeight.braced + "%mdk\n" +
+              body.trim + "\n\\end{mdHeight}%mdk\n"
+           })
+           .onKeys(kvs,["padding-left","padding-right"], fun(body) {
+             "\n\\begin{mdMarginLR}" + [kvs.find("padding-right"),kvs.find("padding-left")].texArgs +
+             "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
+           })
+           .onKey(kvs,"padding-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
+           .onKey(kvs,"padding-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+    }
+    else {
+      body0.cssInlineMargin(kvs,"padding")
+    } 
+  body1.onKeys(kvs,["border-style","border-top-style","border-bottom-style","border-left-style","border-right-style","background-color"], 
+                fun(body) { body.cssBorder(kvs) } )
+}
+
 function cssOuter( body0 : string, kvs : dict<string> ) : string {
-  body0.onKeys(kvs,["padding-left","padding-right"], fun(body) {
-         "\n\\begin{mdMarginLR}" + [kvs.find("padding-right"),kvs.find("padding-left")].texArgs +
-         "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
-       })
-       .onKey(kvs,"padding-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
-       .onKey(kvs,"padding-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
-       .onKeys(kvs,["border-style","border-top-style","border-bottom-style","border-left-style","border-right-style","background-color"], 
-          fun(body) { body.cssBorder(kvs) } )
-       .onKeys(kvs,["margin-left","margin-right"], fun(body) {  // note: width implies margin-right
+  if (kvs.cssIsBlock) {
+   body0.onKeys(kvs,["margin-left","margin-right","width"], fun(body) {  
          "\n\\begin{mdMarginLR}" + kvs.marginLR +
          "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
        })
        .onKey(kvs,"margin-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
        .onKey(kvs,"margin-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+  }
+  else {
+    body0.cssInlineMargin(kvs,"margin")
+  }
 }
 
+function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) : string {
+  val body1 = body0.onKey(kvs,margin + "-left", fun(width,body) { 
+                "\\hspace*" + cssWidth(width).braced + body
+              })
+              .onKey(kvs,margin + "-right", fun(width,body) { 
+                body + "\\hspace*" + cssWidth(width).braced
+              })
+  if (kvs.cssIsInlineBlock) {
+    body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
+            "\\mdmargintb" + cssHeight(kvs.find(margin + "-top")).braced + cssHeight(kvs.find(margin + "-bottom")).braced + body.braced
+          })
+  }
+  else body1
+}
 
 function marginLR( kvs : dict<string> ) : string {
-  val left = kvs.find("margin-left").cssWidth
-  val right = kvs.find("margin-right").cssWidth
-  val width = kvs.dimBorderBoxWidth
+  val width  = kvs.dimBorderBoxWidth
+  val left  = kvs.find("margin-left").cssWidth
+  val mright = kvs.find("margin-right").cssWidth
+  val right  = if (width.bool && left.isEmpty && mright.isEmpty) then "auto" else mright
+
   if (left=="auto") {
     if (right=="auto") {
       val auto = dimAuto(width)
@@ -534,7 +566,7 @@ function dimBorderBoxWidth( kvs : dict<string> ) {
   val width  = if (minw.isEmpty) then width0 else "\\dimMax" + width0.braced + minw.cssWidth.braced 
   val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
                kvs.find("border-right-width"),kvs.find("padding-right")
-              ].filter(bool).map(cssWidth)
+              ].filter(bool).map( fun(wd) { wd.cssWidth })
   ([width] + extra).join("+")
 }
 
@@ -549,19 +581,26 @@ function cssBorder( body : string, kvs : dict<string> ) : string {
   val hideall = (kvs.find("border-width")=="0pt" || hides.all(isCons))
   val bcolor  = kvs.find("background-color","")
 
-  if (hideall && bcolor!="") then {
-    "\n\\begin{mdBackgroundColor}" + cssColorArg(bcolor) + "%mdk\n" +
-    body.trim +
-    "\n\\end{mdBackgroundColor}%mdk\n"
+  if (kvs.cssIsBlock) {
+    if (hideall && bcolor!="") then {
+      "\n\\begin{mdBgColor}" + cssColorArg(bcolor) + "%mdk\n" +
+      body.trim +
+      "\n\\end{mdBgColor}%mdk\n"
+    }
+    else {
+    "\n\\begin{mdBorder}" + 
+      ([ ["linewidth=" + cssWidth(kvs.find("border-width","1pt")).braced],
+         kvs.optionArg("border-color","linecolor",cssColor),
+         kvs.optionArg("background-color","backgroundcolor",cssColor),
+       ] + hides).concat.join(",").braced + "%mdk\n"
+      + body.trim + 
+      "\n\\end{mdBorder}%mdk\n"
+    }
   }
   else {
-  "\n\\begin{mdBorder}" + 
-    ([ ["linewidth=" + cssWidth(kvs.find("border-width","1pt")).braced],
-       kvs.optionArg("border-color","linecolor",cssColor),
-       kvs.optionArg("background-color","backgroundcolor",cssColor),
-     ] + hides).concat.join(",").braced + "%mdk\n"
-    + body.trim + 
-    "\n\\end{mdBorder}%mdk\n"
+    (if (hideall) then "" else "\\mdborder" + cssColorArg(kvs.find("border-color")).braced  + cssWidth(kvs.find("border-width","1px")).braced) +
+    (if (bcolor=="") then "" else "\\colorbox" + cssColorArg(bcolor)) + 
+    body.braced
   }
 }
 
@@ -571,48 +610,6 @@ function optionArg( kvs : dict<string>, key : string, cssKey : string, show : st
     Just(value) -> [cssKey + "=" + value.show]
   }
 }
-
-
-function cssExpandKeys( kvs : dict<string> ) : dict<string> {
-  val xs = [
-    if (kvs.containsKey("width")) then [("margin-right","auto")] else [], // ensures marginLR
-    if (kvs.containsKey("background-color")) then [("border-style","solid"),("border-width","0pt")] else [], // ensures cssborder
-    kvs.cssExpandTRBL("margin"),
-    kvs.cssExpandTRBL("padding"),
-    kvs.cssExpandTRBL("border-style"),
-    kvs.cssExpandTRBL("border-width"),
-  ].concat
-  xs.dict + kvs 
-}
-
-function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,string)> {
-  val i = key.lastIndexOf('-')
-  val (pre,post) = if (i < 0) then (key,"") else (key.substr(0,i),key.substr(i))
-  match(kvs[key]) {
-    Nothing -> []
-    Just(value) -> {
-      val vs = match(value.cssSplitValues) {
-                 [v]           -> [v,v,v,v]
-                 [ver,hor]     -> [ver,hor,ver,hor]
-                 [top,hor,bot] -> [top,hor,bot]
-                 res -> res
-      }
-      val ks = ["top","right","bottom","left"].map(fun(side) { pre + "-" + side + post })
-      val zs = zip(ks,vs)
-      if (zs.length == 4) then zs else {
-        warning("Unable to parse CSS values: " + value)
-        []
-      }
-    }
-  }
-}
-
-function cssSplitValues( s : string ) : list<string> {
-  s.findAll(rxCssTerm).list.map(fun(cap) { cap.matched })
-}
-
-val rxEsc   = @"\\(?:[0-9a-fA-F]{1,6}\s*|.)"
-val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|-?[a-zA-Z_]\w*\([^\)]*\)|(?:[^'""\\\s]|" + rxEsc + ")+)")
 
 
 function onKey( body : string, kvs : dict<string>, key : string, action ) : string {

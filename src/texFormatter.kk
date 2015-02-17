@@ -422,11 +422,6 @@ function hslToRgb(hi, si, li){
 }
 
 
-function capitalize( s : string ) : string {
-  s.substr(0,1).toUpper + s.substr(1)
-}
-
-
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
   texEnvPlain(env,body,attrs)
 }

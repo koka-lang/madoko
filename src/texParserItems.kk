@@ -108,9 +108,6 @@ function texRef( cap : matched, _context ) : string {
    (if (cap.groups[1]=="~") then " " else cap.groups[1]) + "[#" + cap.groups[2].toIdentifier + "]" 
 }
 
-function capitalize( s ) {
-  s.substr(0,1).toUpper + s.substr(1)
-}
 
 function texEnvBegin( cap : matched, _context ) : string {
   val attrs = [if (cap.groups[3].isEmpty) then "" else ".fragment"].joinAttrs
