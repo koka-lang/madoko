@@ -1,0 +1,430 @@
+%---------------------------------------------------------------------------
+%  Copyright 2013 Microsoft Corporation.
+% 
+%  This is free software; you can redistribute it and/or modify it under the
+%  terms of the Apache License, Version 2.0. A copy of the License can be
+%  found in the file "license.txt" at the root of this distribution.
+%---------------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+
+\RequirePackage{iftex}
+\RequirePackage{etoolbox}
+
+%-------------------------------------------------------------
+% Conditionals
+%-------------------------------------------------------------
+
+\newif\ifmathmode
+\newif\ifbeamer
+\newif\ifmdusetikz\mdusetikzfalse
+\newif\ifmdusefontspec\mdusefontspecfalse
+
+\@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
+\ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
+
+%-------------------------------------------------------------
+% Process options 
+%-------------------------------------------------------------
+\newcommand{\mdHeadingBase}{1}
+\DeclareOption{heading-base0}{\gdef\mdHeadingBase{0}}
+\DeclareOption{heading-base2}{\gdef\mdHeadingBase{2}}
+\DeclareOption{heading-base3}{\gdef\mdHeadingBase{3}}
+\DeclareOption{tikz}{\mdusetikztrue}
+\DeclareOption{fontspec}{\mdusefontspectrue}
+\DeclareOption{math}{\mathmodetrue}
+\ProcessOptions\relax
+
+%-------------------------------------------------------------
+% Packages
+%-------------------------------------------------------------
+
+\RequirePackage[table]{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{amsmath}
+\RequirePackage{amsfonts}
+\RequirePackage{amssymb}
+\RequirePackage{stmaryrd}
+\RequirePackage{textcomp}
+\RequirePackage{pifont}
+
+%\RequirePackage{pdfcomment}
+\RequirePackage[bookmarks=true]{hyperref} % loaded by pdfcomment
+
+% package only loaded outside snippets
+\ifmathmode\else
+  \RequirePackage{booktabs}
+  \RequirePackage{tablefootnote}
+  \RequirePackage{array}
+  \RequirePackage{longtable}
+  \RequirePackage{enumitem}
+  %\providecommand{\nopagecolor}{\pagecolor{white}}
+  %\RequirePackage{pagecolor}
+
+  % these last two packages about half the load time... 
+  % but are only required for:
+  % - border-style
+  % - breakable divs with borders or background colors
+  % - font-family with arbitrary font
+  \ifmdusetikz
+    \RequirePackage[breakable,skins]{tcolorbox}
+  \fi
+  \ifmdusefontspec
+     % font selection
+    \ifXeTeX\RequirePackage{fontspec}\else
+    \ifLuaTeX\RequirePackage{fontspec}\else
+    \RequirePackage[utf8]{inputenc}
+    \providecommand{\fontspec}[2][]{}
+    \fi\fi
+  \fi
+\fi
+
+
+
+
+%-------------------------------------------------------------
+% Setup packages 
+%-------------------------------------------------------------
+
+% hyperref
+\ifdefined\hypersetup
+\hypersetup{
+  colorlinks=true,linkcolor=Navy,urlcolor=Blue,filecolor=Maroon,bookmarksdepth=3,bookmarksopenlevel=1
+}
+\fi
+
+% booktabs
+\ifdefined\aboverulesep
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\setlength{\doublerulesep}{\heavyrulewidth}
+\fi
+
+% mdframed
+\ifdefined\mdfsetup
+\mdfsetup{%
+  leftmargin=0pt,%
+  rightmargin=0pt,%
+  skipabove=0pt,%
+  skipbelow=0pt,%
+  innertopmargin=0pt,%
+  innerbottommargin=0pt,%
+  innerleftmargin=0pt,%
+  innerrightmargin=0pt,%
+  middlelinewidth=0pt,%
+  linewidth=0pt,%
+  outerlinewidth=0pt,innerlinewidth=0pt%
+}
+\fi
+
+% tcolorbox
+
+
+%-------------------------------------------------------------
+% Util
+%-------------------------------------------------------------
+\def\defcommand{\@ifstar\defcommand@S\defcommand@N}
+\def\defcommand@S#1{\let#1\outer\renewcommand*#1}
+\def\defcommand@N#1{\let#1\outer\renewcommand#1} 
+
+\def\provideenvironment{\@star@or@long\provide@environment}
+\def\provide@environment#1{%
+        \@ifundefined{#1}%
+                {\def\reserved@a{\newenvironment{#1}}}%
+                {\def\reserved@a{\renewenvironment{dummy@environ}}}%
+        \reserved@a
+}
+\def\dummy@environ{}
+
+\newcommand\leavehmode{\ifhmode\par\fi}
+\newlength{\px}\setlength{\px}{0.4pt}% assume 180 dpi
+
+%-------------------------------------------------------------
+% Colors
+%-------------------------------------------------------------
+
+% Define basic CSS colors
+\definecolor{Red}{HTML}{FF0000}
+\definecolor{Lime}{HTML}{00FF00}
+\definecolor{Blue}{HTML}{0000FF}
+
+\definecolor{Yellow}{HTML}{FFFF00}
+\definecolor{Cyan}{HTML}{00FFFF}
+\definecolor{Magenta}{HTML}{FF00FF}
+
+\definecolor{Navy}{HTML}{000080}
+\definecolor{Maroon}{HTML}{800000}
+\definecolor{Green}{HTML}{008000}
+
+\definecolor{Teal}{HTML}{008080}
+\definecolor{Purple}{HTML}{800080}
+\definecolor{Olive}{HTML}{808000}
+
+\definecolor{Black}{HTML}{000000}
+\definecolor{Dimgray}{HTML}{696969}
+\definecolor{Gray}{HTML}{808080}
+\definecolor{Darkgray}{HTML}{A9A9A9}
+\definecolor{Silver}{HTML}{C0C0C0}
+\definecolor{Lightgray}{HTML}{D3D3D3}
+\definecolor{Gainsboro}{HTML}{DCDCDC}
+\definecolor{Floralwhite}{HTML}{FFFAF0}
+\definecolor{Ivory}{HTML}{FFFFF0}
+\definecolor{White}{HTML}{FFFFFF}
+
+\definecolor{Orange}{HTML}{FFA500}
+\definecolor{Aqua}{HTML}{00FFFF}
+\definecolor{Fuchsia}{HTML}{FF00FF}
+
+
+%-------------------------------------------------------------
+% Character commands 
+%-------------------------------------------------------------
+
+\providecommand{\lt}{\ensuremath{<}}
+\providecommand{\gt}{\ensuremath{>}}
+\providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
+\providecommand{\qedsymbol}{\ensuremath{\Box}}
+\providecommand{\qed}{\hfill\qedsymbol}
+
+% inserted for unknown html entities
+\newcommand{\mdUnknownEntity}[1]{\&#1;}
+\newcommand{\mdEntity}[1]{\protect\mdUnknownEntity{#1}}
+
+% allow the definition of new entities: \mdDefineEntity{bar}{\|}
+\newcommand{\mdDefineEntity}[2]{%
+  \protected@edef\mdEntity##1{\protect\eifstrequal{##1}{#1}{#2}{\mdEntity{##1}}}%
+}
+
+% inserted for unknown unicode entities
+\newcommand{\mdUnicodeUnknown}[1]{%
+  \ifXeTeX\mdUnicodeChar{#1}\else%
+  \ifLuaTeX\mdUnicodeChar{#1}\else%
+  \&\##1;\fi\fi
+}
+\newcommand{\mdUnicodeChar}[1]{\char#1} % directly insert the unicode glyph
+\newcommand{\mdUnicode}[1]{\protect\mdUnicodeUnknown{#1}}
+
+% allow the definition of new unicode entities: \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\newcommand{\mdDefineUnicode}[2]{%
+  \protected@edef\mdUnicode##1{\protect\ifnum##1=#1{#2}\protect\else{\mdUnicode{##1}}\protect\fi}%
+}
+
+% ballot boxes
+\mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\kern 0.1em\ding{51}}}
+\mdDefineUnicode{9746}{\rlap{$\square$}{\kern 0.1em\ding{55}}}
+% magnifying glass
+\mdDefineUnicode{128270}{\kern -0.75ex\protect\raisebox{-0.25ex}{$\arrownot$}\kern 1.05ex\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
+% short underscore
+\mdDefineUnicode{818}{\leavevmode\kern 0.06em\vbox{\hrule width 0.3em}}
+
+
+% break and nbsp
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
+\newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
+
+\newcommand{\mdBrSep}[2]{%
+  \expandafter\ifx#1\relax\relax #2\else
+  \expandafter\ifx#2\relax\relax #1\else
+  #1\mdBr #2\fi\fi
+}
+
+% fix nobreakspace in case the user loads a T1 encoding in LaTeX
+\DeclareTextCommandDefault{\nobreakspace}{\leavevmode\nobreak\ }
+
+% ---------------------------------------------------
+% Labels and references
+% ---------------------------------------------------
+
+% We need to call \mdLabeltarget for any structure that can set label
+\newcounter{@mdTargetCount}
+\newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
+
+% ---------------------------------------------------
+% Line info
+% ---------------------------------------------------
+\newcommand*\mdkline[1]{} %ignore
+
+% ---------------------------------------------------
+% Dimensions
+% ---------------------------------------------------
+
+% expressions for various css units
+\newcommand\dimPx[1]{\the\dimexpr 0.4pt * #1\relax}
+\newcommand\dimRem[1]{\the\dimexpr #1\dim@rem\relax}
+\newcommand\dimCh[1]{\the\dimexpr #1\dim@ch\relax}
+\newcommand\dimVh[1]{\the\dimexpr #1\textheight\relax}
+\newcommand\dimVw[1]{\the\dimexpr #1\textwidth\relax}
+\newcommand\dimVmin[1]{\the\dimexpr #1\dimMin\textwidth\textheight\relax}
+\newcommand\dimVmax[1]{\the\dimexpr #1\dimMax\textwidth\textheight\relax}
+
+\newlength\dim@rem
+\newlength\dim@ch
+\AtBeginDocument{\setlength\dim@rem{1em}\settowidth\dim@ch{0}}
+
+% expressions for widht/height percentages
+\newcommand\md@height{\the\textheight}
+\newcommand\dimHeight[1]{\the\dimexpr \@md@height * #1\relax}
+\newcommand\dimWidth[1]{\the\dimexpr #1\linewidth \relax}
+
+
+% dimDefault(arg,default)  use default if arg is empty
+\newcommand\dimDefault[2]{\@ifmtarg{#1}{#2}{#1}}
+
+% dimMin,dimMax return minimum or maximum dimension
+\newcommand\dimMin[2]{%
+  \@ifmtarg{#2}{#1}{\@ifmtarg{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #2\else #1\fi}}%
+}
+\newcommand\dimMax[2]{%
+  \@ifmtarg{#2}{#1}{\@ifmtarg{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #1\else #2\fi}}%
+}
+
+% ---------------------------------------------------
+% Margins
+% ---------------------------------------------------
+
+% calculate the auto margin based on the (border-box) width of the block and the width of 
+% the other margin; use an empty other margin width if the other margin is also auto
+\newcommand\dimAuto[2]{%
+  \@ifmtarg{#2}{\the\dimexpr(\linewidth-#1)/2\relax}{\the\dimexpr\linewidth-#1-#2\relax}%
+}
+
+\newenvironment{mdMarginLR}[2]{%
+  \topsep\z@
+  \partopsep\z@
+  \trivlist
+  \rightmargin=\dimexpr\dimDefault{#2}{\z@}\relax
+  \leftmargin=\dimexpr\dimDefault{#1}{\z@}\relax
+  %\parskip\parsep
+  %\parindent\listparindent
+  \advance\linewidth -\rightmargin
+  \advance\linewidth -\leftmargin
+  \advance\@totalleftmargin \leftmargin
+  \parshape \@ne \@totalleftmargin \linewidth
+  \item[]}%
+{\endtrivlist}
+
+\newcommand\mdMarginTop[1]{\addvspace{#1}\ignorespaces}
+\newcommand\mdMarginBottom[1]{\addvspace{#1}\ignorespaces}
+
+\newrobustcmd\mdmargintb[3]{%
+   \setbox0=\hbox{#3}%
+   \@ifmtarg{#1}{}{\rule{0pt}{\the\dimexpr \ht0 + #1\relax}}%
+   \@ifmtarg{#2}{}{\rule[\the\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
+   \usebox0\relax%
+}
+
+
+
+%-------------------------------------------------------------
+% Save footnotes inside mdframed and minipage environments
+%-------------------------------------------------------------
+\newif\if@savefootnotes
+\newcommand{\md@savefootnotes}%
+  {\if@savefootnotes\else%
+    \let\footnote\tablefootnote%
+   \fi%
+   \@savefootnotestrue}%
+\newcommand{\md@restorefootnotes}%   
+  {\if@savefootnotes\else%
+    \tfn@tablefootnoteprintout% 
+    \gdef\tfn@fnt{0}%
+   \fi}% 
+
+
+%-------------------------------------------------------------
+% Borders
+%-------------------------------------------------------------
+\ifdefined\mdframed
+
+\newenvironment{md@framed}{%
+  \begin{mdframed}
+}
+{ \vskip 0pt% preserve bottom vspace since mdframed does a remove last skip
+  \end{mdframed}%
+  \unskip\setbox0=\hbox{M}% adjust bottom separation; fails if the next line is higher than M
+  \addvspace{\dimexpr-\baselineskip+\ht0}\relax%
+}
+
+
+\newenvironment{mdBorder}[1]{%
+  \begin{md@framed}[#1]%
+}{\end{md@framed}}
+
+
+\newenvironment{mdBgColor}[1]{%
+  \begin{md@framed}[backgroundcolor=#1,hidealllines]%
+}{\end{md@framed}}
+\fi
+
+\ifdefined\tcolorbox
+
+\fi
+
+\let\mdbgcolor\colorbox
+\newrobustcmd\mdborder[3]{%
+  \begingroup
+  \@ifmtarg{#2}{}{\setlength\fboxrule{#2}}%
+  \fboxsep=\z@
+  \@ifmtarg{#1}%
+    {\fbox{#3}}%
+    {\colorlet{md@currentcolor}{.}\color{#1}\fbox{\color{md@currentcolor}#3}}%
+  \endgroup
+}
+
+
+
+% ---------------------------------------------------
+% Height
+% ---------------------------------------------------
+
+\newenvironment{mdHeight}[1]{%
+  \begin{minipage}[t][#1][t]{\linewidth}%
+  \def\md@height{#1}%
+}{\end{minipage}}
+
+
+
+
+% ---------------------------------------------------
+% Math snippets for static image generation
+% ---------------------------------------------------
+
+% re-define some symbols
+\renewcommand{\notin}{\not\in}  %turns out the baseline for 'notin' is wrong
+
+% boxes and lengths
+\newsavebox{\@snippetBox}
+\newlength{\@snippetWidth}
+\newlength{\@snippetHeight}
+\newlength{\@snippetDepth}
+
+\newcounter{snippets}
+
+\newcommand{\@savedepth}{%
+  \setlength{\@snippetWidth}{\wd\@snippetBox}%
+  \setlength{\@snippetHeight}{\ht\@snippetBox}%
+  \setlength{\@snippetDepth}{\dp\@snippetBox}%
+  \addtolength{\@snippetHeight}{\@snippetDepth}%
+  \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
+  \noindent\usebox\@snippetBox%
+}
+
+\newenvironment{mdDisplaySnippet}[1][\arabic{snippets}]%
+  {\stepcounter{snippets}\edef\@snippetName{#1}%
+   \begin{lrbox}{\@snippetBox}\vbox\bgroup}%
+  {\egroup\end{lrbox}\@savedepth\newpage}
+
+\newenvironment{mdInlineSnippet}[1][\arabic{snippets}]%
+  {\stepcounter{snippets}\def\@snippetName{#1}%
+   \begin{lrbox}{\@snippetBox}}%
+  {\end{lrbox}\@savedepth\newpage}
+
+\newenvironment{mdSnippets}%
+    {\pagestyle{empty}%
+     \abovedisplayskip=0pt%
+     \belowdisplayskip=0pt%
+     \abovedisplayshortskip=0pt%
+     \belowdisplayshortskip=0pt%
+     \newwrite\foo\immediate\openout\foo=\jobname.dim%
+     \immediate\write\foo{\%ordinal,(hash)name,width,(total) height,depth,image width,image height,dpi,base64 encoding}%
+    }%
+    {\closeout\foo}
