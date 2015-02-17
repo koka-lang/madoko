@@ -24,6 +24,13 @@
 % Packages
 %-------------------------------------------------------------
 
+% font selection
+\ifXeTeX\RequirePackage{fontspec}\else
+\ifLuaTeX\RequirePackage{fontspec}\else
+\RequirePackage[utf8]{inputenc}
+\providecommand{\fontspec}[2][]{}
+\fi\fi
+
 \RequirePackage[table]{xcolor}
 \RequirePackage{graphicx}
 \RequirePackage{amsmath}
@@ -40,18 +47,12 @@
 % package only loaded outside snippets
 \ifmathmode\else
 \RequirePackage{tablefootnote}
-\RequirePackage[xcolor,framemethod=pgf]{mdframed}
 \RequirePackage{array}
 \RequirePackage{longtable}
 \RequirePackage{enumitem}
+\RequirePackage[breakable,skins]{tcolorbox}
 \fi
 
-% font selection
-\ifXeTeX\RequirePackage{fontspec}\else
-\ifLuaTeX\RequirePackage{fontspec}\else
-\RequirePackage[utf8]{inputenc}
-\providecommand{\fontspec}[2][]{}
-\fi\fi
 
 %-------------------------------------------------------------
 % Process options 
@@ -75,6 +76,7 @@
 \setlength{\doublerulesep}{\heavyrulewidth}
 
 % mdframed
+\ifdefined\mdfsetup
 \mdfsetup{%
   leftmargin=0pt,%
   rightmargin=0pt,%
@@ -88,6 +90,10 @@
   linewidth=0pt,%
   outerlinewidth=0pt,innerlinewidth=0pt%
 }
+\fi
+
+% tcolorbox
+
 
 %-------------------------------------------------------------
 % Util
@@ -303,6 +309,8 @@
 %-------------------------------------------------------------
 % Borders
 %-------------------------------------------------------------
+\ifdefined\mdframed
+
 \newenvironment{md@framed}{%
   \begin{mdframed}
 }
@@ -321,6 +329,11 @@
 \newenvironment{mdBgColor}[1]{%
   \begin{md@framed}[backgroundcolor=#1,hidealllines]%
 }{\end{md@framed}}
+\fi
+
+\ifdefined\tcolorbox
+
+\fi
 
 \let\mdbgcolor\colorbox
 \newrobustcmd\mdborder[3]{%
@@ -332,6 +345,8 @@
     {\colorlet{md@currentcolor}{.}\color{#1}\fbox{\color{md@currentcolor}#3}}%
   \endgroup
 }
+
+
 
 % ---------------------------------------------------
 % Height
