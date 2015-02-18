@@ -16,24 +16,22 @@
   \@ifmtarg{#2}{\colorlet{#3}{#1}}{\expandafter\md@definecolorx #3\relax{#2}\relax}}%
 
 
-\newsavebox\md@tempbox
 \newcommand\md@borderbox[1]{%
   \leavevmode
   \setbox\@tempboxa\hbox{\color@begingroup #1\color@endgroup}%
-  \setbox\md@tempbox\vbox{\md@rulebottom}%
-  \@tempdima=\ht\md@tempbox
+  \@tempdima=\md@borderbottomwidth%
   \advance\@tempdima\dp\@tempboxa
   \hbox{%
     \lower\@tempdima\hbox{%
       \vbox{%
-        \md@ruletop
+        \md@bordertop%
         \hbox{%
-          \md@ruleleft
+          \md@borderleft
           \vbox{%
             \box\@tempboxa}%
-          \md@ruleright
+          \md@borderright
         }%
-        \md@rulebottom}%
+        \md@borderbottom}%
       }%
   }%
 }
@@ -49,28 +47,47 @@
               {\end{minipage}}%
 }
 
-\define@key{borderx}{boxrule}[]{\setkeys{border}{toprule=#1,bottomrule=#1,leftrule=#1,rightrule=#1}}
-\define@key{borderx}{colframe}{\setkeys{border}{topcolor=#1,bottomcolor=#1,leftcolor=#1,rightcolor=#1}}
-\define@cmdkeys{border}[md@]{toprule,bottomrule,leftrule,rightrule}[]
-\define@key{border}{topcolor}[black]{\mddefinecolor{md@topcolor}{#1}}
-\define@key{border}{rightcolor}[black]{\mddefinecolor{md@rightcolor}{#1}}
-\define@key{border}{bottomcolor}[black]{\mddefinecolor{md@bottomcolor}{#1}}
-\define@key{border}{leftcolor}[black]{\mddefinecolor{md@leftcolor}{#1}}
+% {side}{h|v}{width,color,style,...}
 
-\newcommand\mdxborder[1]{%
+\newcommand*\md@bordersolid[3]{\ifx#2h \hrule\@height #3\else\vrule\@width #3\fi}
+\newcommand*\md@bordernone[3]{}
+\def\md@stylenone{none}
+
+\def\md@defineborderx#1#2#3,#4,#5,#6\relax{%
+  \csedef{md@border#1width}{\@ifmtarg{#3}{0pt}{#3}}%
+  \mddefinecolor{md@border#1color}{#4}%
+  \ifdim\dimexpr\csname md@border#1width\endcsname\relax=0pt%
+    \csdef{md@border#1style}{none}\else
+    \csedef{md@border#1style}{\@ifmtarg{#5}{solid}{#5}}\fi
+  \ifcsequal{md@border#1style}{md@stylenone}{%
+    \csdef{md@border#1width}{-\dp\@tempboxa}}{}% ensure width = 0 and no lowering  
+  \edef\md@drawborder{md@border\csname md@border#1style\endcsname}%
+  \typeout{\md@drawborder}%
+  \ifcsdef{\md@drawborder}{}{%
+    \PackageWarning{madoko}{The border style "#5" is not supported; defaulting to "solid".}%
+    \edef\md@drawborder{md@bordersolid}%
+  }%
+  \csdef{md@border#1}{%
+    \color{md@border#1color}\csuse{\md@drawborder}{#1}{#2}{\csuse{md@border#1width}}%
+  }%  
+}
+\newcommand*\md@defineborder[3]{%
+  \md@defineborderx{#1}{#2}#3,,,\relax
+}
+
+\newcommand\mdxborderx[4]{%
   \begingroup
   \noindent
-  \setkeys{borderx,border}{boxrule=0pt,colframe=black}%
-  \setkeys{borderx,border}{#1}%
-  \def\md@ruletop{\ifdim\md@toprule=0pt \else{\color{md@topcolor}\hrule\@height \md@toprule}\fi}%
-  \def\md@ruleright{\ifdim\md@rightrule=0pt \else{\color{md@rightcolor}\vrule\@width \md@rightrule}\fi}%
-  \def\md@rulebottom{\ifdim\md@bottomrule=0pt \else{\color{md@bottomcolor}\hrule\@height \md@bottomrule}\fi}%
-  \def\md@ruleleft{\ifdim\md@leftrule=0pt \else{\color{md@leftcolor}\vrule\@width \md@leftrule}\fi}%
+  \md@defineborder{top}{h}{#1}%
+  \md@defineborder{right}{v}{#2}%
+  \md@defineborder{bottom}{h}{#3}%
+  \md@defineborder{left}{v}{#4}%
   \collectboxcheckenv{mdxborder}%
   \collectbox@{\begin{minipage}{\dimexpr\linewidth-\fboxrule*2\relax}}%
               {\noindent\md@borderbox{\color{black}\BOXCONTENT}\endgroup}%
               {\end{minipage}}%
 }
+\newcommand\mdxborder[1]{\mdxborderx{#1}{#1}{#1}{#1}}
 
 \ifdefined\tcolorbox
   \newenvironment{md@tcolorbox}[1][]{%
@@ -107,7 +124,7 @@
  
 \GFbox{Lorem ipsum} \fbox{dolor} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-\begin{mdxborder}{toprule=1pt,topcolor=red,bottomrule=2pt,bottomcolor=\#CDCDCD}%
+\begin{mdxborder}{1pt,red}%
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 \end{mdxborder}%
@@ -120,7 +137,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 \begin{mdMarginLR}{1em}{2em}%
-\begin{mdxborder}{colframe=blue,boxrule=1em}
+\begin{mdxborder}{1em,blue,dashed}
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 \end{mdxborder}
