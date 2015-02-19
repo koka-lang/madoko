@@ -4,17 +4,67 @@
 
  
 \usepackage[fontspec]{madoko-time}
-\usepackage{environ}
+\usepackage[breakable,skins]{tcolorbox}
 \usepackage{adjustbox}
 
 \makeatletter
+
+% ------------------------------------------------------------------------------
+% More etoolbox helpers:
+%  \eifstrequal    test string equality but first expands the first argument
+%  \cseifstrequal  test string equality but first expands the first csname argument
+
+\providecommand\eifstrequal{\expandafter\ifstrequal\expandafter}
+\providecommand\cseifstrequal[1]{\protected@edef\md@strtmp{#1}\eifstrequal{\md@strtmp}}
+
+% ------------------------------------------------------------------------------
+% Define a color name: either in terms a color name or as a HTML color (\#XXXXXX)
+% 
+% \mddefinecolor[<default>]{<colorname>}{<colorname|htmlcolor>}
 
 \def\md@colorhtml#1\relax#2\relax{\definecolor{#2}{HTML}{#1}}
 \def\md@colorlet#1\relax#2\relax{\colorlet{#2}{#1}}
 \def\md@definecolorx{\@ifnextchar \#{\@firstoftwo{\md@colorhtml}}{\md@colorlet}}
 \newcommand\mddefinecolor[3][black]{%
-  \@ifmtarg{#2}{\colorlet{#3}{#1}}{\expandafter\md@definecolorx #3\relax{#2}\relax}}%
+  \ifblank{#3}%
+    {\colorlet{#2}{#1}}%
+    {\expandafter\md@definecolorx #3\relax{#2}\relax}%
+}%
 
+
+% ------------------------------------------------------------------------------
+% Set the background color of a block (using colorbox)
+%
+% \begin{mdxbgcolor}{<color>}
+
+\newcommand\md@xbgcolor[2]{%
+  \begingroup
+  \noindent
+  \fboxsep\z@%
+  \mddefinecolor{md@bgcolor}{#2}%
+  \collectboxcheckenv{#1}%
+  \collectbox@{\begin{minipage}[t]{\linewidth}}%
+              {\strut\colorbox{md@bgcolor}{\BOXCONTENT}\md@adjustmargin\endgroup}%
+              {\end{minipage}}%
+}
+
+
+% adjust the bottom margin after a minipage
+\newcommand\md@adjustmargin[1][0pt]{%
+  \ifhmode \par\fi
+  \ifdim\dimexpr\baselineskip-1em-#1\relax>0pt%
+    \addvspace{\dimexpr\baselineskip-1em-#1\relax}\fi
+}
+
+\newcommand\mdxbgcolor[1]{\md@xbgcolor{mdxbgcolor}{#1}}
+
+
+% ------------------------------------------------------------------------------
+% Define our own fancy fbox called md@borderbox
+%
+% It uses the command \md@border<side> to draw each border side.
+
+% store dimension of the content and border box for rule drawing
 \newlength\md@borderboxwidth
 \newlength\md@borderboxheight
 \newlength\md@contentboxwidth
@@ -24,13 +74,16 @@
 \newcommand\md@borderbox[1]{%
   \leavevmode
   \setbox\@tempboxa\hbox{\color@begingroup #1\color@endgroup}%
-  \@tempdima=\md@borderbottomwidth%
+  \@tempdima=\md@borderbottomwidth
   \advance\@tempdima\dp\@tempboxa
-  \md@borderboxwidth=\dimexpr\wd\@tempboxa + \md@borderleftwidth + \md@borderrightwidth\relax%
-  \md@borderboxheight=\dimexpr\md@contentboxheight + \md@bordertopwidth + \md@borderbottomwidth\relax%
+  % define content dimensions since \@tempboxa is not available after being used
   \md@contentboxwidth=\wd\@tempboxa
   \md@contentboxdepth=\dp\@tempboxa
   \md@contentboxheight=\dimexpr\ht\@tempboxa + \dp\@tempboxa\relax
+  % border box
+  \md@borderboxwidth=\dimexpr\wd\@tempboxa + \md@borderleftwidth + \md@borderrightwidth\relax 
+  \md@borderboxheight=\dimexpr\md@contentboxheight + \md@bordertopwidth + \md@borderbottomwidth\relax
+  % create the frame
   \hbox{%
     \lower\@tempdima\hbox{%
       \vbox{%
@@ -47,22 +100,19 @@
   }%
 }
 
-\newcommand\mdxbgcolor[2][]{%
-  \begingroup
-  \noindent
-  \fboxsep\z@%
-  \mddefinecolor{md@bgcolor}{#2}%
-  \collectboxcheckenv{mdxbgcolor}%
-  \collectbox@{\begin{minipage}[t]{\linewidth}}%
-              {\strut\colorbox{md@bgcolor}{\BOXCONTENT}\md@adjustmargin\endgroup}%
-              {\end{minipage}}%
-}
-
-% {side}{h|v}{width,color,style,...}
+% ------------------------------------------------------------------------------
+% Define standard border styles
+%
+% a style has the form \md@border<style>{<side>}{<direction>}{<borderwidth>}
+% where <side> is the border side
+%       <direction> is either "h" or "v" (horizontal or vertical)
+%       <borderwidth> the width of the rule
+%
+% predefined styles: none, solid, transparent, dashed, and dotted.
 
 \newcommand*\md@bordernone[3]{}
-\newcommand*\md@bordersolid[3]{\ifx#2h \hrule\@height #3\else\vrule\@width #3\fi}
-
+\newcommand*\md@bordersolid[3]{\ifx#2h\relax \hrule\@height #3\else\vrule\@width #3\fi}
+\newcommand*\md@bordertransparent[3]{\ifx#2h\relax \rule{0pt}{#3}\else\rule{#3}{0pt}\fi}
 
 \newlength\md@dashlen
 \newcommand*\md@borderdashed@[2]{%
@@ -85,27 +135,55 @@
   \md@borderdashed@{#1}{#2}%
 }  
 
-\def\md@stylenone{none}
+% ------------------------------------------------------------------------------
+% Define a border from a <border spec>. A border specification has the form:
+%
+% <dimension>,<color>,<style>,...
+%
+% where every component is optional. 
+% For example: "1pt,blue", ",,solid", "2em", ",\#CDCDCD,dashed".
+%
+% The command:
+%    \md@defineborder{<side>}{<direction>}{<borderspec>}
+%
+% takes border specification (\md@defineborder{top}{h}{1pt,blue,dotted}) and generates definitions:
+%  md@border<side>width    (a width as a string)
+%  md@border<side>color    (a color name)
+%  md@border<side>style    (the style as a string)
+%  md@border<side>         (the command that draws this border (in \md@borderbox))
+
 \def\md@defineborderx#1#2#3,#4,#5,#6\relax{%
-  \csedef{md@border#1width}{\@ifmtarg{#3}{0pt}{#3}}%
-  \mddefinecolor{md@border#1color}{#4}%
-  \ifdim\dimexpr\csname md@border#1width\endcsname\relax=0pt%
+  \csedef{md@border#1width}{\ifblank{#3}{0pt}{#3}}%
+    \mddefinecolor{md@border#1color}{#4}%
+  \ifdim\dimexpr\csuse{md@border#1width}\relax=0pt%
     \csdef{md@border#1style}{none}\else
-    \csedef{md@border#1style}{\@ifmtarg{#5}{solid}{#5}}\fi
-  \ifcsequal{md@border#1style}{md@stylenone}{%
-    \csdef{md@border#1width}{0pt}}{}% ensure width = 0 and no lowering  
+    \csedef{md@border#1style}{\ifblank{#5}{solid}{#5}}\fi
+  \ifstrequal{#4}{transparent}{% if the color is transparent, we use the transparent style
+    \csdef{md@border#1style}{transparent}
+    \mddefinecolor{md@border#1color}{white}}{}% redefine to an existing color
+  \cseifstrequal{md@border#1style}{none}{%
+    \csdef{md@border#1width}{0pt}}{}% ensure width = 0 for none style
   \edef\md@drawborder{md@border\csname md@border#1style\endcsname}%
   \ifcsdef{\md@drawborder}{}{%
     \PackageWarning{madoko}{The border style "#5" is not supported; defaulting to "solid".}%
     \edef\md@drawborder{md@bordersolid}%
   }%
+  %\typeout{border: #1: \csuse{md@border#1width}, \csuse{md@border#1style}}%
+  \csletcs{md@draw#1border}\md@drawborder%  
   \csdef{md@border#1}{%
-    \color{md@border#1color}\csuse{\md@drawborder}{#1}{#2}{\csuse{md@border#1width}}%
-  }%  
+    \color{md@border#1color}%
+    \csuse{md@draw#1border}{#1}{#2}{\csuse{md@border#1width}}%
+  }%
 }
 \newcommand*\md@defineborder[3]{%
   \md@defineborderx{#1}{#2}#3,,,\relax
 }
+
+% ------------------------------------------------------------------------------
+%  Main css border command for blocks
+%
+% \mdxborderx{<top>}{<right>}{<bottom>}{<left>}
+% \mdxborder{<borderspec>}
 
 \newcommand\md@xborderx[5]{%
   \begingroup
@@ -119,37 +197,93 @@
               {\noindent\strut\md@borderbox{\color{black}\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
               {\end{minipage}}%
 }
-\newcommand\md@adjustmargin[1][0pt]{%
-  \ifhmode \par\fi
-  \ifdim\dimexpr\baselineskip-1em-#1\relax>0pt%
-    \addvspace{\dimexpr\baselineskip-1em-#1\relax}\fi
-}
 
-\newcommand\mdxborderx[4]{\md@xborderx{mdxborderx}{#1}{#2}{#3}{#4}}
-\newcommand\mdxborder[1]{\md@xborderx{mdxborder}{#1}{#1}{#1}{#1}}
 
+\newcommand\mdxborderx[5][]{\md@xborderx{mdxborderx}{#2}{#3}{#4}{#5}}
+\newcommand\mdxborder[2][]{\md@xborderx{mdxborder}{#2}{#2}{#2}{#2}}
+
+
+% ------------------------------------------------------------------------------
+% If we load tcolorbox, we can support rounded corners and breakable content
+% these environments have an extra x:
+%
+%   mdxxborder[<opts>]{<borderspec>}{<cornerradius>}
+%   mdxxborderx[<opts>]{<top?>}{<left>}{<bottom>}{<right>}{<cornerradius>}
+%   mdxxbgcolor[<opts>]{<color>}  (breakable background-color)
+%
+% in the <opts> we can specify things like:
+%   [breakable]
+%   [sharp corners=north]
+%
 \ifdefined\tcolorbox
-  \newenvironment{md@tcolorbox}[1][]{%
-  \begin{tcolorbox}[before=\noindent,after={},boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,arc=0pt,boxrule=0pt,colframe=white,colback=white,#1]\ignorespaces%
+  \newenvironment{md@tcolorbox}[1]{%
+  \begin{tcolorbox}[%
+    enhanced,%
+    before=\noindent,after={},%
+    boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,%
+    arc=0pt,boxrule=0pt,colback=white,colframe=white,%
+    #1]\ignorespaces%
   }{\end{tcolorbox}}
 
   \newenvironment{mdxxborder}[3][]{%
-    \mddefinecolor{md@framecolor}{#2}%
-    \begin{md@tcolorbox}[colframe=md@framecolor,boxrule=#3,#1]%
+    \begin{mdxxborderx}[#1]{#2}{#2}{#2}{#2}{#3}%
+  }{\end{mdxxborderx}}
+
+  \newenvironment{mdxxborderx}[6][]{%
+    % reuse defineborder from the plain boxes
+    \md@defineborder{top}{h}{#2}%
+    \md@defineborder{right}{v}{#3}%
+    \md@defineborder{bottom}{h}{#4}%
+    \md@defineborder{left}{v}{#5}%
+    \def\md@borderradius{\ifblank{#6}{0pt}{#6}}%
+    % if we have rounded corners, we can only have one line style, we pick the top style
+    \ifdim\dimexpr\md@borderradius\relax>0pt\relax
+      \begin{md@tcolorbox}{%
+         arc=\md@borderradius,rounded corners=all,
+         boxrule=\md@bordertopwidth,%
+         borderline={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
+         #1}%
+    % otherwise specify each style separately
+    \else
+      \begin{md@tcolorbox}{%
+        toprule=\md@bordertopwidth,rightrule=\md@borderrightwidth,bottomrule=\md@borderbottomwidth,leftrule=\md@borderleftwidth,%
+        borderline north={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
+        borderline east={\md@borderrightwidth}{0pt}{md@borderrightcolor,\md@borderrightstyle},%
+        borderline south={\md@borderbottomwidth}{0pt}{md@borderbottomcolor,\md@borderbottomstyle},%
+        borderline west={\md@borderleftwidth}{0pt}{md@borderleftcolor,\md@borderleftstyle},%
+        #1}%
+    \fi
   }{\end{md@tcolorbox}}
 
-  \newenvironment{mdxxbgcolor}[1]{%
-    \mddefinecolor{md@bgcolor}{#1}%
-    \begin{md@tcolorbox}[breakable,frame engine=empty,colback=md@bgcolor]\strut\ignorespaces%
+  % the mdxxbgcolor can be breakable
+  \newenvironment{mdxxbgcolor}[2][]{%
+    \mddefinecolor{md@bgcolor}{#2}%
+    \begin{md@tcolorbox}{frame engine=empty,colback=md@bgcolor,#1}\strut\ignorespaces%
   }{\end{md@tcolorbox}}
+
+% Put in proxies to our plain implementation if tcolorbox is not loaded.
 \else
-  \newenvironment{mdxxborder}[3][]{\mdxborder[#1]{#2}{#3}\bgroup}{\egroup}
-  \newenvironment{mdxxbgcolor}[2][]{\mdxbgcolor[#1]{#2}\bgroup}{\egroup}  
+  \newcommand\md@warnborder[1]{%
+    \ifblank{#1}{}{%
+      \PackageWarning{madoko}{%
+      Some CSS border features need the "tcolorbox" package. %
+      Set the "Tex Use Tikz: True" key for better emulation (of breakable bordered or colored blocks, and rounded corners)}%
+    }%
+  }
+  \newcommand\mdxxborderx[6][]{%
+    \md@warnborder{#1}%
+    \md@xborderx{mdxxborderx}{#2}{#3}{#4}{#5}%
+  }
+  \newcommand\mdxxborder[3][]{%
+    \md@warnborder{#1}%
+    \md@xborderx{mdxxborder}{#2}{#2}{#2}{#2}%
+  }
+  \newcommand\mdxxbgcolor[2][]{%
+    \md@warnborder{#1}%
+    \md@xbgcolor{mdxxbgcolor}{#2}%
+  }
 \fi
 
-\newcommand\GFbox{%
-  \collectbox*[\color{green}]{\fbox}%
-}
 
 \makeatother
 
@@ -161,27 +295,39 @@
  
 \section*{\mdkline{8}1.\enskip{}\mdkline{8}Introduction}
  
-\GFbox{Lorem ipsum} \fbox{dolor} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum \fbox{dolor} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-\begin{mdxborder}{2.7pt,red,dotted}%{0.7pt,red,dotted}{0.7pt,red,none}{0.7pt,red,dotted}%
+\begin{mdxborder}{1pt,red,dotted}
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 \end{mdxborder}%
 
-\begin{mdxborder}{0.4pt,\#DCDCDC,dashed}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim 
+veniam, quis nostrud
+exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+\begin{mdxxborderx}[sharp corners=north]{1pt,\#807060,solid}{3pt,purple,dotted}{2pt,blue,dashed}{1pt,red,solid}{0pt}
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-\end{mdxborder}
+\end{mdxxborderx}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim 
+veniam, quis nostrud
+exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
  
 \begin{mdxbgcolor}{Floralwhite}%
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
 exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 \begin{mdMarginLR}{1em}{2em}%
-\begin{mdxborder}{2pt,blue,dashed}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-\end{mdxborder}
+\begin{mdxborderx}{}{}{2pt,blue,solid}{}
+\begin{itemize}
+\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+\item Ut enim ad minim veniam, quis nostrud
+exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+\item Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\end{itemize}
+\end{mdxborderx}
 \end{mdMarginLR}
 \end{mdxbgcolor}
 
