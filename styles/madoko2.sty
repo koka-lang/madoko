@@ -115,14 +115,20 @@
 \newcommand\leavehmode{\ifhmode\par\fi}
 \newlength{\px}\setlength{\px}{0.4pt}% assume 180 dpi
 
+% Suppress the indentation on the following paragraph
+\providecommand\nofirstindent{\@afterindentfalse\@afterheading}
 
 % ------------------------------------------------------------------------------
 %  \eifstrequal    test string equality but first expands the first argument
 %  \cseifstrequal  test string equality but first expands the first csname argument
+%  \eifblank       test if a string is empty but first expand the argument
+%  \ifnotblank     test if a string is not blank but has only a then branch
 
-\providecommand\eifstrequal{\expandafter\ifstrequal\expandafter}
+\providecommand\eifstrequal[1]{\expandafter\ifstrequal\expandafter{#1}}
 \providecommand\cseifstrequal[1]{\protected@edef\md@strtmp{#1}\eifstrequal{\md@strtmp}}
 
+\providecommand\eifblank[1]{\expandafter\ifblank\expandafter{#1}}
+\providecommand\ifnotblank[2]{\ifblank{#1}{}{#2}}
 
 %-------------------------------------------------------------
 % Colors
@@ -240,52 +246,53 @@
 % ---------------------------------------------------
 % Line info
 % ---------------------------------------------------
-\newcommand*\mdkline[1]{} %ignore
+\newcommand*\mdline[1]{} %ignore
 
 % ---------------------------------------------------
 % Dimensions as strings
 % ---------------------------------------------------
 
 % expressions for various css units
-\newcommand\dimpx[1]{\the\dimexpr #1\px\relax}
-\newcommand\dimrem[1]{\the\dimexpr #1\dim@rem\relax}
-\newcommand\dimch[1]{\the\dimexpr #1\dim@ch\relax}
-\newcommand\dimvh[1]{\the\dimexpr #1\textheight\relax}
-\newcommand\dimvw[1]{\the\dimexpr #1\textwidth\relax}
-\newcommand\dimvmin[1]{\the\dimexpr #1\dimmin\textwidth\textheight\relax}
-\newcommand\dimvmax[1]{\the\dimexpr #1\dimmax\textwidth\textheight\relax}
+\newcommand*\dimeval[1]{\dimexpr #1\relax}
+\newcommand\dimpx[1]{#1\px}
+\newcommand\dimrem[1]{#1\dim@rem}
+\newcommand\dimch[1]{#1\dim@ch}
+\newcommand\dimvh[1]{#1\textheight}
+\newcommand\dimvw[1]{#1\textwidth}
+\newcommand\dimvmin[1]{\dimeval{\dimmin\textwidth\textheight * #1}}
+\newcommand\dimvmax[1]{\dimeval{\dimmax\textwidth\textheight * #1}}
 
 \newlength\dim@rem
 \newlength\dim@ch
-\AtBeginDocument{\setlength\dim@rem{1em}\settowidth\dim@ch{0}}
+\newlength\md@height
+\AtBeginDocument{\setlength\dim@rem{1em}\settowidth\dim@ch{0}\setlength{\md@height}{\textheight}}
 
 % expressions for widht/height percentages
-\newcommand\md@height{\the\textheight}
-\newcommand\dimheight[1]{\the\dimexpr\md@height * #1\relax}
-\newcommand\dimwidth[1]{\the\dimexpr #1\linewidth \relax}
+\newcommand\dimheight[1]{#1\md@height}
+\newcommand\dimwidth[1]{#1\linewidth}
 
 
 % dimdefault{arg}{default}  use default if arg is empty
 \newcommand\dimdefault[2]{\ifblank{#1}{#2}{#1}}
 
-% dimMin,dimMax return minimum or maximum dimension
+% dimmin/dimmax return minimum or maximum dimension
 \newcommand\dimmin[2]{%
-  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #2\else #1\fi}}%
+  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #2\else #1\fi}}%
 }
 \newcommand\dimmax[2]{%
-  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim\dimexpr #1\relax>\dimexpr #2\relax #1\else #2\fi}}%
+  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #1\else #2\fi}}%
 }
 
 % ifzero, ifbothzero  test for a blank string or 0 dimension
-\newcommand\ifzero[1]{%
-  \let\md@choose\@firstoftwo
-  \ifblank{#1}{}{\ifdim\dimexpr #1\relax=0pt\else\let\md@choose\@secondoftwo\fi}%
-  \md@choose}
+\providecommand\ifzero[1]{%
+  \ifblank{#1}{\@firstoftwo}{\ifdim #1=0pt\relax\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}%
+}
+\providecommand\ifbothzero[2]{%
+  \ifzero{#1}{\ifzero{#2}{\@firstoftwo}{\@secondoftwo}}{\@secondoftwo}%
+}
 
-\newcommand\ifbothzero[2]{%
-  \let\md@choosex\@secondoftwo
-  \ifzero{#1}{\ifzero{#2}{\let\md@choosex\@firstoftwo}{}}{}%
-  \md@choosex}
+% ifnotzero takes only a then branch
+\providecommand\ifnotzero[1]{\ifzero{#1}{}}
 
 % ---------------------------------------------------
 % Margins
@@ -296,57 +303,55 @@
 %  
 % \dimauto{<width>}{<other-margin>}
 \newcommand\dimauto[2]{%
-  \ifblank{#2}{\the\dimexpr(\linewidth-#1)/2\relax}{\the\dimexpr\linewidth-#1-#2\relax}%
+  \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
 }
 
 \newenvironment{md@marginlr}[2]{%
-  \ifbothzero{#1}{#2}{}{%
-    %\typeout{marginlr: #1 #2}%
-    \topsep\z@
-    \partopsep\z@
-    \trivlist
-    \rightmargin=\dimexpr\dimdefault{#2}{\z@}\relax
-    \leftmargin=\dimexpr\dimdefault{#1}{\z@}\relax
-    %\typeout{margins: \the\leftmargin, \the\rightmargin}
-    %\parskip\parsep
-    %\parindent\listparindent
-    \advance\linewidth -\rightmargin
-    \advance\linewidth -\leftmargin
-    \advance\@totalleftmargin \leftmargin
-    \parshape \@ne \@totalleftmargin \linewidth
-    \item[]%
-  }%
+  \topsep\z@
+  \partopsep\z@
+  \trivlist
+  \rightmargin=\dimdefault{#2}{\z@}%
+  \leftmargin=\dimdefault{#1}{\z@}%
+  \advance\linewidth -\rightmargin
+  \advance\linewidth -\leftmargin
+  \advance\@totalleftmargin \leftmargin
+  \parshape \@ne \@totalleftmargin \linewidth
+  \item[]%
 }%
-{\endtrivlist}
+{\endtrivlist} 
 
-\newcommand\md@margintop[1]{\ifzero{#1}{}{\leavevmode\addvspace{\the\dimexpr#1\relax}}}
-\newcommand\md@marginbottom[1]{\ifzero{#1}{}{\leavehmode\addvspace{1em}}}
+\newcommand*\md@margintop[1]{\ifnotzero{#1}{\addvspace{#1}}}
+\newcommand*\md@marginbottom[1]{\ifnotzero{#1}{\addvspace{#1}}}
 
 \newenvironment{mdxmargin}[1]{\begin{mdxmarginx}{#1}{#1}{#1}{#1}}{\end{mdxmarginx}}
 \newenvironment{mdxmarginx}[4]{%
   \edef\dim@marginbottom{#4}%  
   \md@margintop{#1}%
-  \md@marginlr{#2}{#3}%  
-}{
-  \expandafter\md@marginbottom\expandafter{\dim@marginbottom}%
+  \begin{md@marginlr}{#2}{#3}%  
+}{%
+  \end{md@marginlr}%
+  \expandafter\md@marginbottom\expandafter{\dim@marginbottom}%  
 }
+\AfterEndEnvironment{mdxmarginx}{\par}
 
-\newcommand\md@paddingtop[1]{\ifzero{#1}{}{\leavevmode\vspace{\the\dimexpr#1\relax}}}
-\newcommand\md@paddingbottom[1]{\ifzero{#1}{}{\leavehmode\vspace{\the\dimexpr#1\relax}}}
+\newcommand*\md@paddingtop[1]{\ifzero{#1}{}{\vspace{#1}}}
+\newcommand*\md@paddingbottom[1]{\ifzero{#1}{}{\vspace{#1}}}
 
 \newenvironment{mdxpadding}[1]{\begin{mdxpaddingx}{#1}{#1}{#1}{#1}}{\end{mdxpaddingx}}
 \newenvironment{mdxpaddingx}[4]{%
   \edef\dim@paddingbottom{#4}%
   \md@paddingtop{#1}%
-  \md@marginlr{#2}{#3}%
+  \begin{md@marginlr}{#2}{#3}%
 }{%
+  \end{md@marginlr}%
   \expandafter\md@paddingbottom\expandafter{\dim@paddingbottom}%
 }
+\AfterEndEnvironment{mdxpaddingx}{\par}
 
 \newrobustcmd\mdmargintb[3]{%
    \setbox0=\hbox{#3}%
-   \ifblank{#1}{}{\rule{0pt}{\the\dimexpr \ht0 + #1\relax}}%
-   \ifblank{#2}{}{\rule[\the\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
+   \ifnotblank{#1}{\rule{0pt}{\dimexpr \ht0 + #1\relax}}%
+   \ifnotblank{#2}{\rule[\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
    \usebox0\relax%
 }
 
@@ -355,7 +360,7 @@
 % ---------------------------------------------------
 
 \newenvironment{mdxheight}[1]{%
-  \edef\md@height{\the\dimexpr #1\relax}%
+  \md@height=#1%
   \noindent\begin{mdminipage}{t}{\md@height}{t}{\linewidth}%
 }{\end{mdminipage}\leavehmode}
 
@@ -363,7 +368,9 @@
 
 
 %-------------------------------------------------------------
-% Save footnotes inside minipage environments
+% A minipage environment that 
+% - maintains the listdepth, parindent, and parskip
+% - doesn't interfere with footnotes
 %-------------------------------------------------------------
 \newif\if@savefootnotes
 \newcommand{\md@savefootnotes}%
@@ -377,18 +384,21 @@
     \gdef\tfn@fnt{0}%
    \fi}% 
 
+\newlength{\md@parindent}
+\newskip{\md@parskip}
+\newcount{\md@listdepth}
+
 \newenvironment{mdminipage}[4]{%
-  \edef\md@parindent{\the\parindent}%
-  \edef\md@parskip{\the\parskip}%
-  %\let\md@listdepth{\the\@listdepth}%
-  %\let\md@mplistdepth{\the\@mplistdepth}%
+  \md@parindent=\parindent%
+  \md@parskip=\parskip%
+  \let\md@listdepth\@listdepth%
   \begin{minipage}[#1][#2][#3]{#4}%
-    \parindent=\dimexpr\md@parindent\relax
-    \parskip=\glueexpr\md@parskip\relax
-    \noindent
-    %\@listdepth=\md@listdepth%
-    %\@mplistdepth=\md@mplistdepth%
-}{\end{minipage}}
+    \md@savefootnotes%
+    \parindent=\md@parindent%
+    \parskip=\md@parskip%
+    \let\@listdepth\md@listdepth%
+    \nofirstindent%
+}{\end{minipage}\md@restorefootnotes}
 
 
 %-------------------------------------------------------------
@@ -418,7 +428,7 @@
 
 % adjust the bottom margin after a minipage
 \newcommand\md@adjustmargin[1][0pt]{%
-  \ifhmode \par\fi
+  \ifhmode\par\fi
   \ifdim\dimexpr\baselineskip-1em-#1\relax>0pt%
     \addvspace{\dimexpr\baselineskip-1em-#1\relax}\fi
 }
@@ -430,6 +440,7 @@
 % Define our own fancy fbox called md@borderbox
 %
 % It uses the command \md@border<side> to draw each border side.
+% The optional argument sets the box to a certain width
 
 % store dimension of the content and border box for rule drawing
 \newlength\md@borderboxwidth
@@ -438,9 +449,11 @@
 \newlength\md@contentboxdepth
 \newlength\md@contentboxheight
 
-\newcommand\md@borderbox[1]{%
+\newcommand\md@borderbox[2][]{%
   \leavevmode
-  \setbox\@tempboxa\hbox{\color@begingroup #1\color@endgroup}%
+  \ifblank{#1}%
+    {\setbox\@tempboxa\hbox{\color@begingroup #2\color@endgroup}}%
+    {\setbox\@tempboxa\hbox to #1 {\color@begingroup #2\hss\color@endgroup}}%
   \@tempdima=\md@borderbottomwidth
   \advance\@tempdima\dp\@tempboxa
   % define content dimensions since \@tempboxa is not available after being used
@@ -552,6 +565,7 @@
 % \mdxborderx{<top>}{<right>}{<bottom>}{<left>}
 % \mdxborder{<borderspec>}
 
+\newlength\md@boxwidth
 \newcommand\md@xborderx[5]{%
   \begingroup
   \noindent
@@ -559,9 +573,10 @@
   \md@defineborder{right}{v}{#3}%
   \md@defineborder{bottom}{h}{#4}%
   \md@defineborder{left}{v}{#5}%
+  \md@boxwidth=\dimexpr\linewidth-\md@borderleftwidth-\md@borderrightwidth\relax
   \collectboxcheckenv{#1}%
-  \collectbox@{\begin{mdminipage}{}{}{t}{\dimexpr\linewidth-\md@borderleftwidth-\md@borderrightwidth\relax}}%
-              {\noindent\strut\md@borderbox{\color{black}\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
+  \collectbox@{\begin{mdminipage}{}{}{t}{\md@boxwidth}}%
+              {\noindent\strut\md@borderbox[\md@boxwidth]{\color{black}\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
               {\end{mdminipage}}%
 }
 

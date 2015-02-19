@@ -39,8 +39,8 @@ public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string,
 }
 
 public function fmtLatexLineInfo( context : inlineContext, lineInfo : string ) : string {
-  "%mdk-data-line={" + lineInfo + "}\n"
-  "\\mdkline{" + lineInfo + "}"
+  //"%mdk-data-line={" + lineInfo + "}\n"
+  "\\mdline{" + lineInfo + "}"
 }
 
 public function fmtLatexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
@@ -569,7 +569,9 @@ function dimBorderBoxWidth( kvs : dict<string> ) {
   val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
                kvs.find("border-right-width"),kvs.find("padding-right")
               ].filter(bool).map( fun(wd) { wd.cssWidth })
-  ([width] + extra).join("+")
+  if (extra.isNil) 
+   then width
+   else "\\dimeval" + ([width] + extra).join("+").braced
 }
 
 struct borderspec( width:string, color:string, style:string)

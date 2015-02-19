@@ -7,9 +7,12 @@ Tex Header*: \parskip=0pt
 
 # Introduction { #sec-intro }
 
-Lorem ipsum [dolor]{margin-left=1em} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="solid red 1px"}am]{margin-top=2rem display=inline-block}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum [dolor]{margin-left=1em} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="solid red 1px"}am]{margin-top=2rem display=inline-block}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
 
-[\rule{2em}{2em}]{input=texraw}Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+[\the\parskip]{input=texraw}Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+{border="1px solid purple" margin="0pt 2em" padding="1ex"}
+
+[\rule{2em}{2em}]{input=texraw}Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
 
 ~ { margin-left=2em margin-right=2em  \
     border="solid 1px red" \
