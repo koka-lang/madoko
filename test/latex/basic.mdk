@@ -3,7 +3,7 @@ Package   : clear
 Package   : madoko2.sty
 Logo      : False
 ~H1       : tex-cmd=+\section*
-Tex Header*: \parskip=0pt
+Tex Header*: \parskip=2ex\parindent=0pt
 
 # Introduction { #sec-intro }
 

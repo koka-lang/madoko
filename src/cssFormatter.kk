@@ -142,7 +142,7 @@ public function cssColor( v0 : string ) : string {
           cssRgb(rgb)
         }
         Nothing -> match(cssStdNames[v]) {
-          Just    -> v.capitalize
+          Just    -> v
           Nothing -> match(cssNamedColors[v]) { 
             Just(clr) -> clr
             Nothing   -> {
@@ -264,6 +264,7 @@ val cssStdNamesList : list<string> = [
   "red", "lime", "blue", "yellow", "cyan", "magenta", "navy", "maroon", "green", "teal", "purple", "olive",   
   "black", "dimgray", "gray", "darkgray", "silver", "lightgray", "gainsboro", "floralwhite", "ivory", "white", 
   "orange", "aqua", "fuchsia",
+  "transparent","currentcolor",
 ]
 
 val cssNamedColors : dict<string> = cssNamedColorsList.map( fun(kv) { (kv.fst,kv.snd.cssRgb) }).dict

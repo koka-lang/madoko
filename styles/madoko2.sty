@@ -118,6 +118,22 @@
 % Suppress the indentation on the following paragraph
 \providecommand\nofirstindent{\@afterindentfalse\@afterheading}
 
+% addvskip is not suppressed in a minipage
+\providecommand\addvskip[1]{%
+  \ifvmode
+    \ifdim \lastskip =\z@
+      \vskip #1\relax
+    \else
+      \@tempskipb#1\relax\@xaddvskip
+    \fi
+  \else
+    \@noitemerr
+  \fi
+}
+
+% Suppress the paragraph skip on the following paragraph
+\providecommand\nofirstparskip{\addvskip{-\parskip}}
+
 % ------------------------------------------------------------------------------
 %  \eifstrequal    test string equality but first expands the first argument
 %  \cseifstrequal  test string equality but first expands the first csname argument
@@ -134,12 +150,12 @@
 % Colors
 %-------------------------------------------------------------
 
-% Define a color name: either in terms a color name or as a HTML color (\#XXXXXX)
+% Define a color name: either in terms a color specification or as a HTML color "\#XXXXXX"
 % 
-% \mddefinecolor[<default>]{<colorname>}{<colorname|htmlcolor>}
+% \mddefinecolor[<default>]{<colorname>}{<colorspec|htmlcolor>}
 
 \def\md@colorhtml#1\relax#2\relax{\definecolor{#2}{HTML}{#1}}
-\def\md@colorlet#1\relax#2\relax{\colorlet{#2}{#1}}
+\def\md@colorlet#1\relax#2\relax{\eifstrequal{#1}{currentcolor}{\colorlet{#2}{.}}{\colorlet{#2}{#1}}}
 \def\md@definecolorx{\@ifnextchar \#{\@firstoftwo{\md@colorhtml}}{\md@colorlet}}
 \newcommand\mddefinecolor[3][black]{%
   \ifblank{#3}%
@@ -148,37 +164,58 @@
 }
 
 % Define basic CSS colors
-\definecolor{Red}{HTML}{FF0000}
-\definecolor{Lime}{HTML}{00FF00}
-\definecolor{Blue}{HTML}{0000FF}
+\definecolor{red}{HTML}{FF0000}
+\definecolor{lime}{HTML}{00FF00}
+\definecolor{blue}{HTML}{0000FF}
 
-\definecolor{Yellow}{HTML}{FFFF00}
-\definecolor{Cyan}{HTML}{00FFFF}
-\definecolor{Magenta}{HTML}{FF00FF}
+\definecolor{yellow}{HTML}{FFFF00}
+\definecolor{cyan}{HTML}{00FFFF}
+\definecolor{magenta}{HTML}{FF00FF}
 
-\definecolor{Navy}{HTML}{000080}
-\definecolor{Maroon}{HTML}{800000}
-\definecolor{Green}{HTML}{008000}
+\definecolor{navy}{HTML}{000080}
+\definecolor{maroon}{HTML}{800000}
+\definecolor{green}{HTML}{008000}
 
-\definecolor{Teal}{HTML}{008080}
-\definecolor{Purple}{HTML}{800080}
-\definecolor{Olive}{HTML}{808000}
+\definecolor{teal}{HTML}{008080}
+\definecolor{purple}{HTML}{800080}
+\definecolor{olive}{HTML}{808000}
 
-\definecolor{Black}{HTML}{000000}
-\definecolor{Dimgray}{HTML}{696969}
-\definecolor{Gray}{HTML}{808080}
-\definecolor{Darkgray}{HTML}{A9A9A9}
-\definecolor{Silver}{HTML}{C0C0C0}
-\definecolor{Lightgray}{HTML}{D3D3D3}
-\definecolor{Gainsboro}{HTML}{DCDCDC}
-\definecolor{Floralwhite}{HTML}{FFFAF0}
-\definecolor{Ivory}{HTML}{FFFFF0}
-\definecolor{White}{HTML}{FFFFFF}
+\definecolor{black}{HTML}{000000}
+\definecolor{dimgray}{HTML}{696969}
+\definecolor{gray}{HTML}{808080}
+\definecolor{darkgray}{HTML}{A9A9A9}
+\definecolor{silver}{HTML}{C0C0C0}
+\definecolor{lightgray}{HTML}{D3D3D3}
+\definecolor{gainsboro}{HTML}{DCDCDC}
+\definecolor{floralwhite}{HTML}{FFFAF0}
+\definecolor{ivory}{HTML}{FFFFF0}
+\definecolor{white}{HTML}{FFFFFF}
 
-\definecolor{Orange}{HTML}{FFA500}
-\definecolor{Aqua}{HTML}{00FFFF}
-\definecolor{Fuchsia}{HTML}{FF00FF}
+\definecolor{orange}{HTML}{FFA500}
+\definecolor{aqua}{HTML}{00FFFF}
+\definecolor{fuchsia}{HTML}{FF00FF}
 
+% define these keywords as colors but need to be handled specially
+\colorlet{currentcolor}{black}
+\colorlet{transparent}{white}
+\colorlet{bgcolor}{white}
+
+
+\newrobustcmd\mdcolor[1]{%
+  \eifstrequal{#1}{transparent}{}{%
+    \mddefinecolor{currentcolor}{#1}% allow any color spec
+    \color{currentcolor}%
+  }%
+}
+
+\newrobustcmd\mdcolorbox[2]{%
+  \begingroup
+  \eifstrequal{#1}{transparent}{#2}{%
+    \mddefinecolor{bgcolor}{#1}% allow any color spec
+    \colorbox{bgcolor}{#2}%
+  }%
+  \endgroup
+}
 
 %-------------------------------------------------------------
 % Character commands 
@@ -306,12 +343,12 @@
   \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
 }
 
-\newenvironment{md@marginlr}[2]{%
+\newenvironment{mdmarginlr}[2]{%
   \topsep\z@
   \partopsep\z@
   \trivlist
   \rightmargin=\dimdefault{#2}{\z@}%
-  \leftmargin=\dimdefault{#1}{\z@}%
+  \leftmargin=\dimdefault{#1}{\z@}%  
   \advance\linewidth -\rightmargin
   \advance\linewidth -\leftmargin
   \advance\@totalleftmargin \leftmargin
@@ -319,34 +356,37 @@
   \item[]%
 }%
 {\endtrivlist} 
+\AfterEndEnvironment{mdmarginlr}{\par}
 
-\newcommand*\md@margintop[1]{\ifnotzero{#1}{\addvspace{#1}}}
-\newcommand*\md@marginbottom[1]{\ifnotzero{#1}{\addvspace{#1}}}
+\newcommand*\mdmargintop[1]{\ifnotzero{#1}{\addvspace{#1}}}
+\newcommand*\mdmarginbottom[1]{\ifnotzero{#1}{\addvspace{#1}}}
 
-\newenvironment{mdxmargin}[1]{\begin{mdxmarginx}{#1}{#1}{#1}{#1}}{\end{mdxmarginx}}
-\newenvironment{mdxmarginx}[4]{%
-  \edef\dim@marginbottom{#4}%  
-  \md@margintop{#1}%
-  \begin{md@marginlr}{#2}{#3}%  
+\newlength{\dim@marginbottom}
+\newenvironment{mdbmargin}[1]{\begin{mdbmarginx}{#1}{#1}{#1}{#1}}{\end{mdbmarginx}}
+\newenvironment{mdbmarginx}[4]{%
+  \dim@marginbottom=\dimdefault{#3}{0pt}%  
+  \mdmargintop{#1}%
+  \begin{mdmarginlr}{#4}{#2}%  
 }{%
-  \end{md@marginlr}%
-  \expandafter\md@marginbottom\expandafter{\dim@marginbottom}%  
+  \end{mdmarginlr}%
+  \mdmarginbottom{\dim@marginbottom}%  
 }
-\AfterEndEnvironment{mdxmarginx}{\par}
 
-\newcommand*\md@paddingtop[1]{\ifzero{#1}{}{\vspace{#1}}}
-\newcommand*\md@paddingbottom[1]{\ifzero{#1}{}{\vspace{#1}}}
+\newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace{#1}}}
+\newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace{#1}}}
 
-\newenvironment{mdxpadding}[1]{\begin{mdxpaddingx}{#1}{#1}{#1}{#1}}{\end{mdxpaddingx}}
-\newenvironment{mdxpaddingx}[4]{%
-  \edef\dim@paddingbottom{#4}%
-  \md@paddingtop{#1}%
-  \begin{md@marginlr}{#2}{#3}%
+\newlength{\dim@paddingbottom}
+\newenvironment{mdbpadding}[1]{\begin{mdbpaddingx}{#1}{#1}{#1}{#1}}{\end{mdbpaddingx}}
+\newenvironment{mdbpaddingx}[4]{%
+  \dim@paddingbottom=\dimdefault{#3}{0pt}%
+  \mdpaddingtop{#1}%
+  \begin{mdmarginlr}{#4}{#2}%
 }{%
-  \end{md@marginlr}%
-  \expandafter\md@paddingbottom\expandafter{\dim@paddingbottom}%
+  \end{mdmarginlr}%
+  \mdpaddingbottom{\dim@paddingbottom}%
 }
-\AfterEndEnvironment{mdxpaddingx}{\par}
+%\AfterEndEnvironment{mdbpaddingx}{\par}
+%\AfterEndEnvironment{mdbpadding}{\par}
 
 \newrobustcmd\mdmargintb[3]{%
    \setbox0=\hbox{#3}%
@@ -359,7 +399,7 @@
 % Height
 % ---------------------------------------------------
 
-\newenvironment{mdxheight}[1]{%
+\newenvironment{mdbheight}[1]{%
   \md@height=#1%
   \noindent\begin{mdminipage}{t}{\md@height}{t}{\linewidth}%
 }{\end{mdminipage}\leavehmode}
@@ -371,6 +411,7 @@
 % A minipage environment that 
 % - maintains the listdepth, parindent, and parskip
 % - doesn't interfere with footnotes
+% - suppresses the first indentation
 %-------------------------------------------------------------
 \newif\if@savefootnotes
 \newcommand{\md@savefootnotes}%
@@ -397,6 +438,7 @@
     \parindent=\md@parindent%
     \parskip=\md@parskip%
     \let\@listdepth\md@listdepth%
+    \nofirstparskip%
     \nofirstindent%
 }{\end{minipage}\md@restorefootnotes}
 
@@ -412,16 +454,15 @@
 % ------------------------------------------------------------------------------
 % Set the background color of a block (using colorbox)
 %
-% \begin{mdxbgcolor}{<color>}
+% \begin{mdbcolorbox}{<color>}
 
-\newcommand\md@xbgcolor[2]{%
+\newcommand\md@bcolorbox[2]{%
   \begingroup
   \noindent
   \fboxsep\z@%
-  \mddefinecolor{md@bgcolor}{#2}%
   \collectboxcheckenv{#1}%
   \collectbox@{\begin{minipage}[t]{\linewidth}}%
-              {\strut\colorbox{md@bgcolor}{\BOXCONTENT}\md@adjustmargin\endgroup}%
+              {\strut\mdcolorbox{#2}{\BOXCONTENT}\md@adjustmargin\endgroup}%
               {\end{minipage}}%
 }
 
@@ -433,7 +474,7 @@
     \addvspace{\dimexpr\baselineskip-1em-#1\relax}\fi
 }
 
-\newcommand\mdxbgcolor[1]{\md@xbgcolor{mdxbgcolor}{#1}}
+\newcommand\mdbcolorbox[1]{\md@bcolorbox{mdbcolorbox}{#1}}
 
 
 % ------------------------------------------------------------------------------
@@ -551,7 +592,7 @@
   %\typeout{border: #1: \csuse{md@border#1width}, \csuse{md@border#1style}}%
   \csletcs{md@draw#1border}\md@drawborder%  
   \csdef{md@border#1}{%
-    \color{md@border#1color}%
+    \mdcolor{md@border#1color}%
     \csuse{md@draw#1border}{#1}{#2}{\csuse{md@border#1width}}%
   }%
 }
@@ -562,11 +603,11 @@
 % ------------------------------------------------------------------------------
 %  Main css border command for blocks
 %
-% \mdxborderx{<top>}{<right>}{<bottom>}{<left>}
-% \mdxborder{<borderspec>}
+% \mdbborderx{<top>}{<right>}{<bottom>}{<left>}
+% \mdbborder{<borderspec>}
 
 \newlength\md@boxwidth
-\newcommand\md@xborderx[5]{%
+\newcommand\md@bborderx[5]{%
   \begingroup
   \noindent
   \md@defineborder{top}{h}{#2}%
@@ -576,22 +617,22 @@
   \md@boxwidth=\dimexpr\linewidth-\md@borderleftwidth-\md@borderrightwidth\relax
   \collectboxcheckenv{#1}%
   \collectbox@{\begin{mdminipage}{}{}{t}{\md@boxwidth}}%
-              {\noindent\strut\md@borderbox[\md@boxwidth]{\color{black}\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
+              {\noindent\strut\md@borderbox[\md@boxwidth]{\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
               {\end{mdminipage}}%
 }
 
 
-\newcommand\mdxborderx[5][]{\md@xborderx{mdxborderx}{#2}{#3}{#4}{#5}}
-\newcommand\mdxborder[2][]{\md@xborderx{mdxborder}{#2}{#2}{#2}{#2}}
+\newcommand\mdbborderx[5][]{\md@bborderx{mdbborderx}{#2}{#3}{#4}{#5}}
+\newcommand\mdbborder[2][]{\md@bborderx{mdbborder}{#2}{#2}{#2}{#2}}
 
 
 % ------------------------------------------------------------------------------
 % If we load tcolorbox, we can support rounded corners and breakable content
 % these environments have an extra x:
 %
-%   mdxxborder[<opts>]{<borderspec>}{<cornerradius>}
-%   mdxxborderx[<opts>]{<top?>}{<left>}{<bottom>}{<right>}{<cornerradius>}
-%   mdxxbgcolor[<opts>]{<color>}  (breakable background-color)
+%   mdbxborder[<opts>]{<borderspec>}{<cornerradius>}
+%   mdbxborderx[<opts>]{<top?>}{<left>}{<bottom>}{<right>}{<cornerradius>}
+%   mdbxbgcolor[<opts>]{<color>}  (breakable background-color)
 %
 % in the <opts> we can specify things like:
 %   [breakable]
@@ -607,11 +648,11 @@
     #1]\ignorespaces%
   }{\end{tcolorbox}}
 
-  \newenvironment{mdxxborder}[3][]{%
-    \begin{mdxxborderx}[#1]{#2}{#2}{#2}{#2}{#3}%
-  }{\end{mdxxborderx}}
+  \newenvironment{mdbxborder}[3][]{%
+    \begin{mdbxborderx}[#1]{#2}{#2}{#2}{#2}{#3}%
+  }{\end{mdbxborderx}}
 
-  \newenvironment{mdxxborderx}[6][]{%
+  \newenvironment{mdbxborderx}[6][]{%
     % reuse defineborder from the plain boxes
     \md@defineborder{top}{h}{#2}%
     \md@defineborder{right}{v}{#3}%
@@ -637,10 +678,10 @@
     \fi
   }{\end{md@tcolorbox}}
 
-  % the mdxxbgcolor can be breakable
-  \newenvironment{mdxxbgcolor}[2][]{%
-    \mddefinecolor{md@bgcolor}{#2}%
-    \begin{md@tcolorbox}{frame engine=empty,colback=md@bgcolor,#1}\strut\ignorespaces%
+  % the mdbxbgcolor can be breakable
+  \newenvironment{mdbxcolorbox}[2][]{%
+    \mddefinecolor{bgcolor}{#2}%
+    \begin{md@tcolorbox}{frame engine=empty,colback=bgcolor,#1}\strut\ignorespaces%
   }{\end{md@tcolorbox}}
 
 % Put in proxies to our plain implementation if tcolorbox is not loaded.
@@ -652,17 +693,17 @@
       Set the "Tex Use Tikz: True" key for better emulation (of breakable bordered or colored blocks, and rounded corners)}%
     }%
   }
-  \newcommand\mdxxborderx[6][]{%
+  \newcommand\mdbxborderx[6][]{%
     \md@warnborder{#1}%
-    \md@xborderx{mdxxborderx}{#2}{#3}{#4}{#5}%
+    \md@bborderx{mdbxborderx}{#2}{#3}{#4}{#5}%
   }
-  \newcommand\mdxxborder[3][]{%
+  \newcommand\mdbxborder[3][]{%
     \md@warnborder{#1}%
-    \md@xborderx{mdxxborder}{#2}{#2}{#2}{#2}%
+    \md@bborderx{mdbxborder}{#2}{#2}{#2}{#2}%
   }
-  \newcommand\mdxxbgcolor[2][]{%
+  \newcommand\mdbxcolorbox[2][]{%
     \md@warnborder{#1}%
-    \md@xbgcolor{mdxxbgcolor}{#2}%
+    \md@bcolorbox{mdbxcolorbox}{#2}%
   }
 \fi
 

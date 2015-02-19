@@ -449,47 +449,49 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyEnv(kvs,"tex-env",elem)
       .cssOuter(kvs)
       .applyCmd(kvs,"tex-outercmd")
+      .applyBlock(kvs)
+}
+
+function applyBlock( body : string, kvs : dict<string> ) : string {
+  if (kvs.cssIsBlock) then "\n" + body.trim + "%mdk\n" else body
 }
 
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> 
-      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced + "\n"
+      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced 
   }
 }
 
 function applyEnv( body : string, kvs : dict<string>, key : string, elem : string) : string {
   match(kvs[key]) {
-    Nothing -> {
-      if (elem=="p") {
-        body + "\n" // body will already end in \n 
-      }
-      else {
-        body
-      }
-    }
-    Just(env) -> {
-      val (envName,envArgs) = match(env.find(rxEnv)) {
-                               Just(cap) -> (cap.groups[1],cap.groups[2])
-                               Nothing   -> (env,"")
-                             }
-      "%mdk\n\\begin{" + envName + "}" + envArgs + "%mdk\n" + body + "%mdk\n\\end{" + envName + "}%mdk\n"
-    }
+    Nothing -> body
+    Just(env) -> match(env.find(rxEnv)) {
+                   Just(cap) -> body.blockEnv(cap.groups[1],cap.groups[2])
+                   Nothing   -> body.blockEnv(env)
+                 }
   }
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
+
+function blockEnv( body : string, env : string, args : string = "" ) {      
+  "\\begin{" + env + "}" + args + "%mdk\n" + body + "%mdk\n\\end{" + env + "}"
+}
+
+function trimEnv( body : string, env : string, args : string = "" ) {      
+  body.trim.blockEnv(env,args)
+}
 
 function cssInner( body0 : string, kvs : dict<string> ) : string {
   val body1 = 
     if (kvs.cssIsBlock) then {
       body0.onKey(kvs,"height", fun(height,body) {
-              "\n\\begin{mdxheight}" + height.cssHeight.braced + "%mdk\n" +
-              body.trim + "\n\\end{mdxheight}%mdk\n"
-           })
-           .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(body) {
-             kvs.margins(body,"padding")
-           })
+              body.trimEnv("mdbheight", height.cssHeight.braced)
+            })
+            .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(body) {  
+              body.padding(kvs)
+            })
     }
     else {
       body0.cssInlineMargin(kvs,"padding")
@@ -501,7 +503,7 @@ function cssInner( body0 : string, kvs : dict<string> ) : string {
 function cssOuter( body0 : string, kvs : dict<string> ) : string {
   if (kvs.cssIsBlock) {
    body0.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom","width"], fun(body) {  
-          kvs.margins(body)
+          body.margins(kvs)
         })
   }
   else {
@@ -524,15 +526,26 @@ function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) 
   else body1
 }
 
-function margins( kvs : dict<string>, body : string, pre = "margin" ) : string {
-  val top = kvs.find(pre + "-top").cssHeight
-  val bottom = kvs.find(pre + "-bottom").cssHeight
-  "\n\\begin{mdx" + pre + "x}" + top.braced + kvs.marginLR(pre) + bottom.braced + "%mdk\n" +
-  body.trim +
-  "\n\\end{mdx" + pre + "x}%mdk\n"
+function padding( body : string, kvs : dict<string> ) : string {
+  val ptop = kvs.find("padding-top").cssHeight
+  val pbottom = kvs.find("padding-bottom").cssHeight
+  val pleft = kvs.find("padding-left").cssHeight
+  val pright = kvs.find("padding-right").cssHeight
+  if (ptop==pbottom && pbottom==pleft && pleft==pright)
+   then body.trimEnv("mdbpadding", ptop.braced )
+   else body.trimEnv("mdbpaddingx", [ptop,pright,pbottom,pleft].map(braced).join )
 }
 
-function marginLR( kvs : dict<string>, pre = "margin") : string {
+function margins( body : string, kvs : dict<string> ) : string {
+  val mtop = kvs.find("margin-top").cssHeight
+  val mbottom = kvs.find("margin-bottom").cssHeight
+  val (mleft,mright) = kvs.marginLR
+  if (mtop==mbottom && mbottom==mleft && mleft==mright)
+   then body.trimEnv("mdbmargin", mtop.braced )
+   else body.trimEnv("mdbmarginx", [mtop,mright,mbottom,mleft].map(braced).join )
+}
+
+function marginLR( kvs : dict<string>, pre = "margin") : (string,string) {
   val width  = if (pre=="margin") then kvs.dimBorderBoxWidth else kvs.find("width","").cssWidth
   val left  = kvs.find(pre + "-left").cssWidth
   val mright = kvs.find(pre + "-right").cssWidth
@@ -541,15 +554,15 @@ function marginLR( kvs : dict<string>, pre = "margin") : string {
   if (left=="auto") {
     if (right=="auto") {
       val auto = dimAuto(width)
-      auto.braced + auto.braced
+      (auto,auto)
     }
-    else dimAuto(width,right).braced + right.braced
+    else (dimAuto(width,right),right)
   }
   elif (right=="auto") {
-    left.braced + dimAuto(width,left).braced
+    (left,dimAuto(width,left))
   }
   else {
-    left.braced + right.braced
+    (left,right)
   }
 }
 
@@ -558,6 +571,18 @@ function dimAuto( w : string, other : string = "" ) : string {
 }
 
 function dimBorderBoxWidth( kvs : dict<string> ) {
+  val width = kvs.dimContentWidth
+  if (width.isEmpty) return ""
+
+  val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
+               kvs.find("border-right-width"),kvs.find("padding-right")
+              ].filter(bool).map( fun(wd) { wd.cssWidth })
+  if (extra.isNil) 
+   then width
+   else "\\dimeval" + ([width] + extra).join("+").braced
+}
+
+function dimContentWidth( kvs : dict<string> ) {
   val w = kvs.find("width")
   if (w.isEmpty) return ""
   
@@ -566,12 +591,7 @@ function dimBorderBoxWidth( kvs : dict<string> ) {
   
   val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimmin" + w.cssWidth.braced + maxw.cssWidth.braced
   val width  = if (minw.isEmpty) then width0 else "\\dimmax" + width0.braced + minw.cssWidth.braced 
-  val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
-               kvs.find("border-right-width"),kvs.find("padding-right")
-              ].filter(bool).map( fun(wd) { wd.cssWidth })
-  if (extra.isNil) 
-   then width
-   else "\\dimeval" + ([width] + extra).join("+").braced
+  width
 }
 
 struct borderspec( width:string, color:string, style:string)
@@ -601,13 +621,9 @@ function cssBorder( body : string, kvs : dict<string> ) : string {
   val specargs = specs.map(cssSpec)
   if (kvs.cssIsBlock) {
     if (specargs.fst==specargs.snd && specargs.snd==specargs.thd && specargs.thd == specargs.field4) {
-      "\n\\begin{mdxborder}" + specargs.fst + "%mdk\n" +
-        body.trim +
-      "\n\\end{mdxborder}%mdk\n"
+      body.trimEnv("mdbborder", specargs.fst)
     } else {
-      "\n\\begin{mdxborderx}" + specargs.fst + specargs.snd + specargs.thd + specargs.field4 + "%mdk\n" +
-        body.trim +
-      "\n\\end{mdxborderx}%mdk\n"
+      body.trimEnv("mdbborderx", specargs.fst + specargs.snd + specargs.thd + specargs.field4 )
     }
   }
   else {
