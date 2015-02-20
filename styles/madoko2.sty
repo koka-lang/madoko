@@ -212,6 +212,8 @@
   \begingroup
   \eifstrequal{#1}{transparent}{#2}{%
     \mddefinecolor{bgcolor}{#1}% allow any color spec
+    \fboxsep=\z@%
+    \fboxrule=\z@%
     \colorbox{bgcolor}{#2}%
   }%
   \endgroup
@@ -394,6 +396,7 @@
    \ifnotblank{#2}{\rule[\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
    \usebox0\relax%
 }
+\let\mdpaddingtb\mdmargintb
 
 % ---------------------------------------------------
 % Height
@@ -462,7 +465,7 @@
   \fboxsep\z@%
   \collectboxcheckenv{#1}%
   \collectbox@{\begin{minipage}[t]{\linewidth}}%
-              {\strut\mdcolorbox{#2}{\BOXCONTENT}\md@adjustmargin\endgroup}%
+              {\strut\mdcolorbox{#2}{\vbox{\hbox to \linewidth{\BOXCONTENT}}}\md@adjustmargin\endgroup}%
               {\end{minipage}}%
 }
 
@@ -490,11 +493,12 @@
 \newlength\md@contentboxdepth
 \newlength\md@contentboxheight
 
-\newcommand\md@borderbox[2][]{%
+\newrobustcmd\md@borderbox[2][]{%
   \leavevmode
+  \mddefinecolor{md@savecolor}{currentcolor}%
   \ifblank{#1}%
-    {\setbox\@tempboxa\hbox{\color@begingroup #2\color@endgroup}}%
-    {\setbox\@tempboxa\hbox to #1 {\color@begingroup #2\hss\color@endgroup}}%
+    {\setbox\@tempboxa\hbox{\color@begingroup\mdcolor{md@savecolor}#2\color@endgroup}}%
+    {\setbox\@tempboxa\hbox to #1 {\color@begingroup\mdcolor{md@savecolor}#2\hss\color@endgroup}}%
   \@tempdima=\md@borderbottomwidth
   \advance\@tempdima\dp\@tempboxa
   % define content dimensions since \@tempboxa is not available after being used
@@ -521,6 +525,7 @@
   }%
 }
 
+
 % ------------------------------------------------------------------------------
 % Define standard border styles
 %
@@ -537,7 +542,7 @@
 
 \newlength\md@dashlen
 \newcommand*\md@borderdashed@[2]{%
-  \md@dashlen=\dimexpr\dimMax{\md@bordertopwidth}{\dimMax{\md@borderbottomwidth}{\dimMax{\md@borderrightwidth}{\dimMax{\md@borderleftwidth}{2.5pt}}}}\relax
+  \md@dashlen=\dimexpr\dimmax{\md@bordertopwidth}{\dimmax{\md@borderbottomwidth}{\dimmax{\md@borderrightwidth}{\dimmax{\md@borderleftwidth}{2.5pt}}}}\relax
   \ifx#2h%
     \hbox to \md@borderboxwidth{\xleaders \hbox{\md@hdash\hskip 0.5\md@dashlen\relax}\hfill\hbox{\md@hdash}}%
   \else 
@@ -603,8 +608,8 @@
 % ------------------------------------------------------------------------------
 %  Main css border command for blocks
 %
-% \mdbborderx{<top>}{<right>}{<bottom>}{<left>}
-% \mdbborder{<borderspec>}
+% \mdbborderx[<bgcolor>]{<top>}{<right>}{<bottom>}{<left>}
+% \mdbborder[<bgcolor>]{<borderspec>}
 
 \newlength\md@boxwidth
 \newcommand\md@bborderx[5]{%
@@ -622,9 +627,19 @@
 }
 
 
-\newcommand\mdbborderx[5][]{\md@bborderx{mdbborderx}{#2}{#3}{#4}{#5}}
+\newcommand\mdbborderx[6][]{\md@bborderx{mdbborderx}{#2}{#3}{#4}{#5}}
 \newcommand\mdbborder[2][]{\md@bborderx{mdbborder}{#2}{#2}{#2}{#2}}
 
+\newcommand*\mdborderx[6][]{%
+  \begingroup
+  \md@defineborder{top}{h}{#2}%
+  \md@defineborder{right}{v}{#3}%
+  \md@defineborder{bottom}{h}{#4}%
+  \md@defineborder{left}{v}{#5}%
+  \md@borderbox[#1]{#6}%
+  \endgroup
+}
+\newcommand*\mdborder[3][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{#3}}
 
 % ------------------------------------------------------------------------------
 % If we load tcolorbox, we can support rounded corners and breakable content

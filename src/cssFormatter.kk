@@ -111,7 +111,11 @@ val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxE
 
 
 public function braced( s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
+  if (s.isBraced) then s else "{" + s + "}"
+}
+
+public function isBraced( s : string ) : bool {
+  s.startsWith("{") && s.endsWith("}")
 }
 
 public function cssColorCmd( v : string ) : string {
@@ -181,12 +185,11 @@ function cssRgb(rgb : (int,int,int) ) : string {
   */
 }
 
-public function cssHeight( v : string ) : string {
-  cssWidth(v,"height")
+public function cssHeight( v : string, auto : string = "" ) : string {
+  cssWidth(v,auto,"height")
 }
 
-public function cssWidth( v0 : string, percOf : string = "width" ) : string {
-
+public function cssWidth( v0 : string, auto : string = "", percOf : string = "width" ) : string {
   val v = v0.cssNormalize.toLower
   match(v.find(rxPerc)) {
     Just(cap) -> {
@@ -199,7 +202,9 @@ public function cssWidth( v0 : string, percOf : string = "width" ) : string {
          then "\\dim" + cap.groups[2] + cap.groups[1].braced
          else cssValue(v)
       }
-      Nothing -> cssValue(v)
+      Nothing -> {
+        if (v=="auto") then auto else cssValue(v)
+      }
     }
   }
 }

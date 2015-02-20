@@ -3,21 +3,20 @@ Package   : clear
 Package   : madoko2.sty
 Logo      : False
 ~H1       : tex-cmd=+\section*
-Tex Header*: \parskip=2ex\parindent=0pt
+Tex Header*: \parskip=0ex %\parindent=0pt
 
 # Introduction { #sec-intro }
 
-Lorem ipsum [dolor]{margin-left=1em} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="solid red 1px"}am]{margin-top=2rem display=inline-block}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+Lorem ipsum [dolor]{margin-left=1em} sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="dotted red 1px" background-color=ivory}am]{margin-top=2rem display=inline-block}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
 
-[\the\parskip]{input=texraw}Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 {border="1px solid purple" margin="0pt 2em" padding="1ex"}
 
 [\rule{2em}{2em}]{input=texraw}Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
 
-~ { margin-left=2em margin-right=2em  \
-    border="solid 1px red" \
-  padding=1em }
+~ { margin-left=2em margin-right=2em border="solid 1px red" padding=1em }
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+{ background-color=floralwhite padding=1em}
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 {margin-left=auto width=20em margin-right=2em border="solid hsl(45,100%,50%) 1px"}
@@ -26,7 +25,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 culpa qui officia deserunt mollit anim id est laborum.[\the\parskip]{input=texraw}.
 { margin-left=auto border-style=solid border-width=1px padding=1em}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-{ border="1px solid" height=6cm vertical-align=middle }
+~ { border="2px dotted red" height=6cm background-color=gainsboro}
+Lorem [ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.]{vertical-align=1ex} Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate 
+~
 
 [\the\topsep]{input=texraw}Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
