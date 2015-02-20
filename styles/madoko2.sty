@@ -20,8 +20,8 @@
 
 \newif\ifmathmode
 \newif\ifbeamer
-\newif\ifmdusetikz\mdusetikzfalse
-\newif\ifmdusefontspec\mdusefontspecfalse
+%\newif\ifmdusetikz\mdusetikzfalse
+%\newif\ifmdusefontspec\mdusefontspecfalse
 
 \@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
 \ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
@@ -31,9 +31,12 @@
 %-------------------------------------------------------------
 \newcommand{\mdHeadingBase}{1}
 \DeclareOptionX{heading-base}[1]{\gdef\mdHeadingBase{#1}}
-\DeclareOption{tikz}{\mdusetikztrue}
-\DeclareOption{fontspec}{\mdusefontspectrue}
-\DeclareOption{math}{\mathmodetrue}
+%\DeclareOptionX{tikz}{\mdusetikztrue}
+%\DeclareOptionX{fontspec}{\mdusefontspectrue}
+\DeclareOptionX{math}{\mathmodetrue}
+
+\define@boolkey{md}[mduse]{tikz}{}
+\define@boolkey{md}[mduse]{fontspec}{}
 \ProcessOptionsX\relax
 
 
@@ -66,6 +69,8 @@
   % - font-family with arbitrary font
   \ifmdusetikz
     \RequirePackage[breakable,skins]{tcolorbox}
+  %\else
+  %  \RequirePackage[breakable]{tcolorbox}
   \fi
   \ifmdusefontspec
      % font selection
@@ -198,23 +203,26 @@
 % define these keywords as colors but need to be handled specially
 \colorlet{currentcolor}{black}
 \colorlet{transparent}{white}
-\colorlet{bgcolor}{white}
+\colorlet{backgroundcolor}{white}
 
+\newcommand*\eiftransparent[3]{%
+  \ifblank{#1}{#2}{\eifstrequal{#1}{transparent}{#2}{#3}}%
+}
 
 \newrobustcmd\mdcolor[1]{%
-  \eifstrequal{#1}{transparent}{}{%
-    \mddefinecolor{currentcolor}{#1}% allow any color spec
-    \protect\color{currentcolor}%
+  \eiftransparent{#1}{}{%
+    \mddefinecolor{currentcolor}{#1}% allow direct HTML color spec
+    \color{currentcolor}%
   }%
 }
 
 \newrobustcmd\mdcolorbox[2]{%
   \begingroup
-  \eifstrequal{#1}{transparent}{#2}{%
-    \mddefinecolor{bgcolor}{#1}% allow any color spec
+  \eiftransparent{#1}{#2}{%
+    \mddefinecolor{backgroundcolor}{#1}% allow direct HTML color spec
     \fboxsep=\z@%
     \fboxrule=\z@%
-    \protect\colorbox{bgcolor}{#2}%
+    \colorbox{backgroundcolor}{#2}%
   }%
   \endgroup
 }
@@ -374,8 +382,8 @@
   \mdmarginbottom{\dim@marginbottom}%  
 }
 
-\newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace{#1}}}
-\newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace{#1}}}
+\newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace*{#1}}}
+\newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace*{#1}}}
 
 \newlength{\dim@paddingbottom}
 \newenvironment{mdbpadding}[1]{\begin{mdbpaddingx}{#1}{#1}{#1}{#1}}{\end{mdbpaddingx}}
@@ -387,8 +395,11 @@
   \end{mdmarginlr}%
   \mdpaddingbottom{\dim@paddingbottom}%
 }
-%\AfterEndEnvironment{mdbpaddingx}{\par}
-%\AfterEndEnvironment{mdbpadding}{\par}
+
+%\AfterEndEnvironment{mdbpaddingx}{\vskip 0pt\relax}
+%\AfterEndEnvironment{mdbmarginx}{\vskip 0pt\relax}
+%\AfterEndEnvironment{mdbpadding}{\vskip 0pt\relax}
+%\AfterEndEnvironment{mdbmargin}{\vskip 0pt\relax}
 
 \newrobustcmd\mdmargintb[3]{%
    \setbox0=\hbox{\color@begingroup #3\color@endgroup}%
@@ -433,11 +444,11 @@
 \newcount{\md@listdepth}
 
 \newenvironment{mdminipage}[4]{%
+  \md@savefootnotes%
   \md@parindent=\parindent%
   \md@parskip=\parskip%
   \let\md@listdepth\@listdepth%
   \begin{minipage}[#1][#2][#3]{#4}%
-    \md@savefootnotes%
     \parindent=\md@parindent%
     \parskip=\md@parskip%
     \let\@listdepth\md@listdepth%
@@ -458,14 +469,15 @@
 % Set the background color of a block (using colorbox)
 %
 % \begin{mdbcolorbox}{<color>}
+% \mdcolorbox{<color>}{<content>}
 
 \newcommand\md@bcolorbox[2]{%
   \begingroup
   \fboxsep\z@%
   \collectboxcheckenv{#1}%
-  \collectbox@{\noindent\begin{minipage}[t]{\linewidth}}%
+  \collectbox@{\noindent\begin{mdminipage}{}{}{t}{\linewidth}}%
               {\mdcolorbox{#2}{\vbox{\hbox to \linewidth{\BOXCONTENT}}}\md@adjustmargin\endgroup}%
-              {\end{minipage}}%
+              {\end{mdminipage}}%
 }
 
 
@@ -607,11 +619,18 @@
 % ------------------------------------------------------------------------------
 %  Main css border command for blocks
 %
-% \mdbborderx{<top>}{<right>}{<bottom>}{<left>}
-% \mdbborder{<borderspec>}
+%  mdbborder{<borderspec>}
+%  mdbcborder{<borderspec>}{<bgcolor>}
+%  mdbborderx{<top>}{<right>}{<bottom>}{<left>}{<bgcolor>}
+%
+%  and commands:
+%
+%  \mdborder{<borderspec>}{<content>}
+%  \mdcborder{<borderspec>}{<bgcolor>}{<content>}
+%  \mdborderx{<top>}{<right>}{<bottom>}{<left>}{<bgcolor>}{<content>}
 
 \newlength\md@boxwidth
-\newcommand\md@bborderx[5]{%
+\newcommand\md@bborderx[6]{%
   \begingroup
   \noindent
   \md@defineborder{top}{h}{#2}%
@@ -621,105 +640,157 @@
   \md@boxwidth=\dimexpr\linewidth-\md@borderleftwidth-\md@borderrightwidth\relax
   \collectboxcheckenv{#1}%
   \collectbox@{\begin{mdminipage}{}{}{t}{\md@boxwidth}}%
-              {\noindent\strut\md@borderbox[\md@boxwidth]{\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]\endgroup}%
+              {\noindent\strut\mdcolorbox{#6}{\md@borderbox[\md@boxwidth]{\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]}\endgroup}%
               {\end{mdminipage}}%
 }
 
 
-\newcommand\mdbborderx[6][]{\md@bborderx{mdbborderx}{#2}{#3}{#4}{#5}}
-\newcommand\mdbborder[2][]{\md@bborderx{mdbborder}{#2}{#2}{#2}{#2}}
+\newcommand\mdbborderx[5]{\md@bborderx{mdbborderx}{#1}{#2}{#3}{#4}{#5}}
+\newcommand\mdbborder[1]{\md@bborderx{mdbborder}{#1}{#1}{#1}{#1}{}}
+\newcommand\mdbcborder[2]{\md@bborderx{mdbcborder}{#1}{#1}{#1}{#1}{#2}}
 
-\newcommand*\mdborderx[6][]{%
-  \begingroup
-  \md@defineborder{top}{h}{#2}%
-  \md@defineborder{right}{v}{#3}%
-  \md@defineborder{bottom}{h}{#4}%
-  \md@defineborder{left}{v}{#5}%
-  \md@borderbox[#1]{#6}%
-  \endgroup
+\newrobustcmd*\mdborderx[7][]{%
+  \mdcolorbox{#6}{%
+    \begingroup
+    \md@defineborder{top}{h}{#2}%
+    \md@defineborder{right}{v}{#3}%
+    \md@defineborder{bottom}{h}{#4}%
+    \md@defineborder{left}{v}{#5}%
+    \md@borderbox[#1]{#7}%
+    \endgroup
+  }%
 }
-\newcommand*\mdborder[3][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{#3}}
+\newrobustcmd*\mdborder[3][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{}{#3}}
+\newrobustcmd*\mdcborder[4][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{#3}{#4}}
 
 % ------------------------------------------------------------------------------
 % If we load tcolorbox, we can support rounded corners and breakable content
 % these environments have an extra x:
 %
-%   mdbxborder[<opts>]{<borderspec>}{<cornerradius>}
-%   mdbxborderx[<opts>]{<top?>}{<left>}{<bottom>}{<right>}{<cornerradius>}
-%   mdbxbgcolor[<opts>]{<color>}  (breakable background-color)
+%   mdbxborder[<opts>]{<cornerradius>}{<borderspec>}
+%   mdbxcborder[<opts>]{<cornerradius>}{<borderspec>}{<bgcolor>}
+%   mdbxborderx[<opts>]{<cornerradius>}{<top?>}{<left>}{<bottom>}{<right>}{<bgcolor>}
+%   mdbxcolorbox[<opts>]{<bgcolor>}  (breakable background-color)
+%
+% and x commands
+%
+%   \mdxborder[<opts>]{<cornerradius>}{<borderspec>}{<content>}
+%   \mdxcborder[<opts>]{<cornerradius>}{<borderspec>}{<bgcolor>}{<content>}
+%   \mdxborderx[<opts>]{<cornerradius>}{<top>}{<left>}{<bottom>}{<right>}{<bgcolor>}{<content>}
+%   \mdxcolorbox[<opts>]{<bgcolor>}{<content>}
 %
 % in the <opts> we can specify things like:
 %   [breakable]
 %   [sharp corners=north]
 %
+
 \ifdefined\tcolorbox
-  \newenvironment{md@tcolorbox}[1]{%
+  \newenvironment{mdtcolorbox}[1]{%
   \begin{tcolorbox}[%
-    enhanced,%
+    %enhanced,%
     before=\noindent,after={},%
     boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,%
-    arc=0pt,boxrule=0pt,colback=white,colframe=white,%
+    arc=0pt,boxrule=0pt,colback=backgroundcolor,colframe=white,%
     #1]\ignorespaces%
-  }{\end{tcolorbox}}
+  }{\vspace*{0pt}\end{tcolorbox}}
 
-  \newenvironment{mdbxborder}[3][]{%
-    \begin{mdbxborderx}[#1]{#2}{#2}{#2}{#2}{#3}%
-  }{\end{mdbxborderx}}
+  \newrobustcmd\mdtcbox[1]{\tcbox[%
+    %enhanced,
+    on line,%
+    boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,%
+    arc=0pt,boxrule=0pt,colback=backgroundcolor,colframe=white,#1]}
 
-  \newenvironment{mdbxborderx}[6][]{%
+  \newcommand*\md@tcsetopts[7][]{%
     % reuse defineborder from the plain boxes
-    \md@defineborder{top}{h}{#2}%
-    \md@defineborder{right}{v}{#3}%
-    \md@defineborder{bottom}{h}{#4}%
-    \md@defineborder{left}{v}{#5}%
-    \def\md@borderradius{\ifblank{#6}{0pt}{#6}}%
-    % if we have rounded corners, we can only have one line style, we pick the top style
-    \ifdim\dimexpr\md@borderradius\relax>0pt\relax
-      \begin{md@tcolorbox}{%
-         arc=\md@borderradius,rounded corners=all,
-         boxrule=\md@bordertopwidth,%
-         borderline={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
-         #1}%
-    % otherwise specify each style separately
+    \md@defineborder{top}{h}{#3}%
+    \md@defineborder{right}{v}{#4}%
+    \md@defineborder{bottom}{h}{#5}%
+    \md@defineborder{left}{v}{#6}%
+    \ifnotblank{#6}{\mddefinecolor{backgroundcolor}{#7}}%
+    \def\md@borderradius{\ifblank{#2}{0pt}{#2}}%
+    \ifmdusetikz
+      % if we have rounded corners, we can only have one line style, we pick the top style
+      \ifdim\dimexpr\md@borderradius\relax>0pt\relax
+        \edef\md@tcopts{%
+           enhanced,
+           arc=\md@borderradius,rounded corners=all,
+           boxrule=\md@bordertopwidth,%
+           borderline={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
+           #1}%
+      % otherwise specify each style separately
+      \else
+        \edef\md@tcopts{%
+          enhanced,
+          toprule=\md@bordertopwidth,rightrule=\md@borderrightwidth,bottomrule=\md@borderbottomwidth,leftrule=\md@borderleftwidth,%
+          borderline north={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
+          borderline east={\md@borderrightwidth}{0pt}{md@borderrightcolor,\md@borderrightstyle},%
+          borderline south={\md@borderbottomwidth}{0pt}{md@borderbottomcolor,\md@borderbottomstyle},%
+          borderline west={\md@borderleftwidth}{0pt}{md@borderleftcolor,\md@borderleftstyle},%
+          #1}%
+      \fi
     \else
-      \begin{md@tcolorbox}{%
-        toprule=\md@bordertopwidth,rightrule=\md@borderrightwidth,bottomrule=\md@borderbottomwidth,leftrule=\md@borderleftwidth,%
-        borderline north={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
-        borderline east={\md@borderrightwidth}{0pt}{md@borderrightcolor,\md@borderrightstyle},%
-        borderline south={\md@borderbottomwidth}{0pt}{md@borderbottomcolor,\md@borderbottomstyle},%
-        borderline west={\md@borderleftwidth}{0pt}{md@borderleftcolor,\md@borderleftstyle},%
-        #1}%
+      % no tikz means no fancy border lines etc
+      \edef\md@tcopts{%
+           boxrule=\md@bordertopwidth,%
+           colframe=md@bordertopcolor,%
+           #1}%
     \fi
-  }{\end{md@tcolorbox}}
+  }
+
+  \newcommand\@begintcolorbox{\begin{mdtcolorbox}}
+
+  \newenvironment{mdbxborderx}[7][]{%
+    \md@tcsetopts[#1]{#2}{#3}{#4}{#5}{#6}{#7}%
+    \expandafter\@begintcolorbox\expandafter{\md@tcopts}%
+  }{\end{mdtcolorbox}}
+
+  
+  \newrobustcmd\mdxborderx[8][]{%
+    \md@tcsetopts[#1]{#2}{#3}{#4}{#5}{#6}{#7}%
+    \expandafter\mdtcbox\expandafter{\md@tcopts}{#8}%
+  }
+
 
   % the mdbxbgcolor can be breakable
   \newenvironment{mdbxcolorbox}[2][]{%
-    \mddefinecolor{bgcolor}{#2}%
-    \begin{md@tcolorbox}{frame engine=empty,colback=bgcolor,#1}\strut\ignorespaces%
+    \mddefinecolor{backgroundcolor}{#2}%
+    \begin{md@tcolorbox}{frame engine=empty,#1}\strut\ignorespaces%
   }{\end{md@tcolorbox}}
 
+  
 % Put in proxies to our plain implementation if tcolorbox is not loaded.
 \else
-  \newcommand\md@warnborder[1]{%
+  \newrobustcmd\md@warnborder[1]{%
     \ifblank{#1}{}{%
       \PackageWarning{madoko}{%
       Some CSS border features need the "tcolorbox" package. %
       Set the "Tex Use Tikz: True" key for better emulation (of breakable bordered or colored blocks, and rounded corners)}%
     }%
   }
-  \newcommand\mdbxborderx[6][]{%
-    \md@warnborder{#1}%
-    \md@bborderx{mdbxborderx}{#2}{#3}{#4}{#5}%
+  \newrobustcmd\mdbxborderx[7][]{%env
+    \md@warnborder{#1#2}%
+    \md@bborderx{mdbxborderx}{#3}{#4}{#5}{#6}{#7}%
   }
-  \newcommand\mdbxborder[3][]{%
-    \md@warnborder{#1}%
-    \md@bborderx{mdbxborder}{#2}{#2}{#2}{#2}%
+  \newrobustcmd\mdxborderx[8][]{%
+    \md@warnborder{#1#2}%
+    \mdborderx{#3}{#4}{#5}{#6}{#7}{#8}%
   }
-  \newcommand\mdbxcolorbox[2][]{%
+  \newrobustcmd\mdbxcolorbox[2][]{%env
     \md@warnborder{#1}%
     \md@bcolorbox{mdbxcolorbox}{#2}%
   }
 \fi
+
+\newenvironment{mdbxborder}[3][]{%
+  \begin{mdbxborderx}[#1]{#2}{#3}{#3}{#3}{#3}{}%
+}{\end{mdbxborderx}}
+
+\newenvironment{mdbxcborder}[4][]{%
+  \begin{mdbxborderx}[#1]{#2}{#3}{#3}{#3}{#3}{#4}%
+}{\end{mdbxborderx}}
+
+\newrobustcmd\mdxborder[4][]{\mdxborderx[#1]{#2}{#3}{#3}{#3}{#3}{}{#4}}
+\newrobustcmd\mdxcborder[5][]{\mdxborderx[#1]{#2}{#3}{#3}{#3}{#3}{#4}{#5}}
 
 
 % ---------------------------------------------------
