@@ -204,7 +204,7 @@
 \newrobustcmd\mdcolor[1]{%
   \eifstrequal{#1}{transparent}{}{%
     \mddefinecolor{currentcolor}{#1}% allow any color spec
-    \color{currentcolor}%
+    \protect\color{currentcolor}%
   }%
 }
 
@@ -214,7 +214,7 @@
     \mddefinecolor{bgcolor}{#1}% allow any color spec
     \fboxsep=\z@%
     \fboxrule=\z@%
-    \colorbox{bgcolor}{#2}%
+    \protect\colorbox{bgcolor}{#2}%
   }%
   \endgroup
 }
@@ -358,10 +358,10 @@
   \item[]%
 }%
 {\endtrivlist} 
-\AfterEndEnvironment{mdmarginlr}{\par}
+\AfterEndEnvironment{mdmarginlr}{\leavehmode}
 
-\newcommand*\mdmargintop[1]{\ifnotzero{#1}{\addvspace{#1}}}
-\newcommand*\mdmarginbottom[1]{\ifnotzero{#1}{\addvspace{#1}}}
+\newcommand*\mdmargintop[1]{\ifnotzero{#1}{\addvskip{#1}}}
+\newcommand*\mdmarginbottom[1]{\ifnotzero{#1}{\addvskip{#1}}}
 
 \newlength{\dim@marginbottom}
 \newenvironment{mdbmargin}[1]{\begin{mdbmarginx}{#1}{#1}{#1}{#1}}{\end{mdbmarginx}}
@@ -391,7 +391,7 @@
 %\AfterEndEnvironment{mdbpadding}{\par}
 
 \newrobustcmd\mdmargintb[3]{%
-   \setbox0=\hbox{#3}%
+   \setbox0=\hbox{\color@begingroup #3\color@endgroup}%
    \ifnotblank{#1}{\rule{0pt}{\dimexpr \ht0 + #1\relax}}%
    \ifnotblank{#2}{\rule[\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
    \usebox0\relax%
@@ -461,11 +461,10 @@
 
 \newcommand\md@bcolorbox[2]{%
   \begingroup
-  \noindent
   \fboxsep\z@%
   \collectboxcheckenv{#1}%
-  \collectbox@{\begin{minipage}[t]{\linewidth}}%
-              {\strut\mdcolorbox{#2}{\vbox{\hbox to \linewidth{\BOXCONTENT}}}\md@adjustmargin\endgroup}%
+  \collectbox@{\noindent\begin{minipage}[t]{\linewidth}}%
+              {\mdcolorbox{#2}{\vbox{\hbox to \linewidth{\BOXCONTENT}}}\md@adjustmargin\endgroup}%
               {\end{minipage}}%
 }
 
@@ -608,8 +607,8 @@
 % ------------------------------------------------------------------------------
 %  Main css border command for blocks
 %
-% \mdbborderx[<bgcolor>]{<top>}{<right>}{<bottom>}{<left>}
-% \mdbborder[<bgcolor>]{<borderspec>}
+% \mdbborderx{<top>}{<right>}{<bottom>}{<left>}
+% \mdbborder{<borderspec>}
 
 \newlength\md@boxwidth
 \newcommand\md@bborderx[5]{%
