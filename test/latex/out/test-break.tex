@@ -38,24 +38,78 @@
 \providecolor{floralwhite}{HTML}{FFFAF0}
 \providecolor{ivory}{HTML}{FFFFF0}
 \providecolor{white}{HTML}{FFFFFF}
+\providecolor{transparent}{named}{white}
 
 \makeatletter
 
 
 % --------------------------------------------------------
-% Utilities
+% Extensions to etoolbox
 % --------------------------------------------------------
 
 % expand an argument and test for string equality
 %
 % \eifstrequal{<unexpanded s>}{<string>}{<equalcode>}{<unequalcode>}
-\newcommand\eifstrequal[1]{%
+\providecommand\eifstrequal[1]{%
   \expandafter\ifstrequal\expandafter{#1}%
 }
 
-\newcommand\eifblank[1]{%
-  \expandafter\ifblank\expandafter{#1}%
+\providecommand\eifblank{%
+  \expandafter\ifblank\expandafter%
 }
+
+\providecommand\ontoggle[2]{%
+  \iftoggle{#1}{#2}{}%
+}
+\providecommand\ontogglefalse[2]{%
+  \iftoggle{#1}{}{#2}%
+}
+
+% --------------------------------------------------------
+% Extensions to pgfkeys
+% --------------------------------------------------------
+\pgfkeys{/handlers/.is toggle/.code=%
+  \providetoggle{\pgfkeyscurrentpath}%
+  \pgfkeysalso{%
+    \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@toggle{##1}{\pgfkeyscurrentpath},%
+    \pgfkeyscurrentpath/.default=true,%
+    \pgfkeyscurrentpath=#1,%
+  }%
+  %\notblank{#1}{\pgf@handle@toggle{#1}}%
+}
+\def\pgf@handle@toggle#1#2{%
+  %\typeout{toggle: #2=#1}%
+  \ifcsdef{toggle#1}%
+    {\csuse{toggle#1}{#2}\pgfkeyssetvalue{#2}{#1}}%
+    {\pgfkeysvalueof{/errors/boolean expected/.@cmd}\pgfkeyscurrentkey{#1}\pgfeov}%
+}
+
+\pgfkeys{/handlers/.is color/.code=\pgfkeysalso{%
+    \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@color{##1}{\pgfkeyscurrentpath},%
+    \pgfkeyscurrentpath=#1,
+  }%
+}
+\def\pgf@handle@color#1#2{%
+  %\typeout{color: #2=#1}%
+  \pgfkeyssetvalue{#2}{#1}%
+  \eifblank{#1}%
+    {\colorlet{#2}{.}}%
+    {\colorlet{#2}{#1}}%
+}
+
+
+
+\newcommand\letvalueof{\pgfkeysgetvalue}%
+\newcommand\valueof{\pgfkeysvalueof}%
+\newcommand\dimexprof[1]{\dimexpr\valueof{#1}\relax}%
+\newcommand\colorof[1]{%
+  \letvalueof{#1}\reserved@a
+  \eifblank{\reserved@a}{}{\color{#1}}%
+}
+
+% --------------------------------------------------------
+% Utilities for LaTeX internals
+% --------------------------------------------------------
 
 % Suppress the indentation on the following paragraph
 \providecommand\nofirstindent{\@afterindentfalse\@afterheading}
@@ -95,6 +149,10 @@
 }%
 
 
+% --------------------------------------------------------
+% Capturing footnotes
+% --------------------------------------------------------
+
 % To catch the footnotes in a box and output them afterwards
 % we rely on the tablefootnote package. 
 % \lb@savefootnotes saves footnotes in the environment
@@ -113,8 +171,9 @@
   \fi
 } 
 
-% ---------------------------------------------------------
-% The following four macros come from the mdframed package 
+% --------------------------------------------------------
+% The following macros come from mdframed
+% --------------------------------------------------------
 
 % Determine the amount of free space left on the current page
 \newlength\lb@freevspace
@@ -183,12 +242,11 @@
 % Debugging
 % --------------------------------------------------------
 
-\newif\iflb@verbose
 \newrobustcmd\lb@debug[1]{%
-  \lb@typeout{debug: #1}%
+  %\lb@typeout{debug: #1}%
 }
 \newrobustcmd\lb@typeout[1]{%
-  \iflb@verbose\typeout{longbox: #1}\fi
+  \ontoggle{/longbox/verbose}{\typeout{longbox: #1}}%
 }
 \newrobustcmd\lb@warncannotsplit{%
   \PackageWarning{longbox}{Cannot split box; it seems you are using a non-splittable contents.}%
@@ -197,14 +255,6 @@
 % --------------------------------------------------------
 %
 % --------------------------------------------------------
-
-\newif\iflb@breakable
-\newif\iflbfirst
-\newif\iflbmiddle
-\newif\iflblast
-\newif\iflbsingle
-\newif\iflbneedtop    % single or first
-\newif\iflbneedbottom % single or last
 
 \newsavebox\lb@headbox
 \newsavebox\lb@savebox
@@ -215,8 +265,8 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\lb@defbox[1]{%
-  \lboptiondef{background/color}\bgcolor
-  \def\BOXCONTENT{\unvcolorbox{\bgcolor}{#1}}%  
+  \letvalueof{/longbox/background/color}\bgcolor
+  \pgfkeys{/longbox/part/content=\unvcolorbox{\bgcolor}{#1}}%  
   \def\width{\wd#1}%
   \def\height{\ht#1}%
   \def\depth{\dp#1}%
@@ -227,80 +277,68 @@
 
 
 \newrobustcmd*\lb@renderdefault{%
-  \BOXCONTENT
+  \valueof{/longbox/part/content}%
 }
 
 \newrobustcmd*\lb@single@[1]{%
-  \begingroup\lbsingletrue\lbneedtoptrue\lbneedbottomtrue
+  \begingroup
+    \toggletrue{/longbox/part/issingle}%
+    \toggletrue{/longbox/part/needtop}%
+    \toggletrue{/longbox/part/needbottom}%
     \lb@defbox{#1}%
-    \lboption{render/single}%
+    \valueof{/longbox/render/single}%
   \endgroup
 }
 \newrobustcmd*\lb@first@[1]{%
-  \begingroup\lbfirsttrue\lbneedtoptrue
+  \begingroup
+    \toggletrue{/longbox/part/isfirst}%
+    \toggletrue{/longbox/part/needtop}%
     \lb@defbox{#1}%
-    \lboption{render/first}%
+    \valueof{/longbox/render/first}%
     \vfill\eject
   \endgroup
 }
 \newrobustcmd*\lb@middle@[1]{%
-  \begingroup\lbmiddletrue
+  \begingroup
+    \toggletrue{/longbox/part/ismiddle}%
     \lb@defbox{#1}%
-    \lboption{render/middle}%
+    \valueof{/longbox/render/middle}%
     \vfill\eject
   \endgroup
 }
 \newrobustcmd*\lb@last@[1]{%
-  \begingroup\lblasttrue\lbneedbottomtrue
+  \begingroup
+    \toggletrue{/longbox/part/islast}%
+    \toggletrue{/longbox/part/needbottom}%
     \lb@defbox{#1}%
-    \lboption{render/last}%
+    \valueof{/longbox/render/last}%
   \endgroup
 }
 
 % --------------------------------------------------------
 %
 % --------------------------------------------------------
-\pgfkeys{/handlers/.is bool/.code=\pgfkeysalso{%
-    \pgfkeyscurrentpath/.code=\lb@handlebool{#1}{##1},
-    \pgfkeyscurrentpath/.initial=\expandafter\@firstoftwo,%    
-    \pgfkeyscurrentpath/.default=true%
-  }%
-}
-\def\lb@handlebool#1#2{%
-  \eifstrequal{#2}{true}%
-    {\pgfkeyssetvalue{\pgfkeyscurrentpath}{\expandafter\@firstoftwo}}%
-    {\eifstrequal{#2}{false}%
-      {\pgfkeyssetvalue{\pgfkeyscurrentpath}{\expandafter\@secondoftwo}}%
-      {\pgfkeysvalueof{/errors/boolean expected/.@cmd}\pgfkeyscurrentkey{#2}\pgfeov}%
-    }%
-}
-
-
-\newcommand\lboptiondef[1]{\pgfkeysgetvalue{/longbox/#1}}
-\newcommand\lboption[1]{\pgfkeysvalueof{/longbox/#1}}
-\newcommand\lblength[1]{\dimexpr\lboption{#1}\relax}
-\let\lbcolor\lboption
-\let\lboptionif\lboption
-
 \newenvironment{lb@longbox}{%
   \color@setgroup
   \lb@savefootnotes
-  \colorlet{currentcolor}{.}%
-  \lvbox{\lb@mainbox}{\lblength{width}}%
-  \lboption{insert/before}%
+  %\colorof{/longbox/color}%
+  \lvbox{\lb@mainbox}{\dimexprof{/longbox/width}}%
+  \valueof{/longbox/insert/before}%
 }{%
   %\lb@ignorelastdescenders%
-  \lboption{insert/after}%
+  \valueof{/longbox/insert/after}%
   \par\unskip\ifvmode\nointerlineskip\hrule \@height\z@ \@width\hsize\fi%
   \endlvbox%
   %\ifhmode\par\fi
-  \ifdim\lblength{height}<0pt\relax\else
+  \ifdim\dimexprof{/longbox/height}<0pt\relax\else
     \lb@restrictheight
   \fi
-  \iflb@breakable\ifinlvbox
-    \lb@debug{disable breakable due to nesting of long-boxes}%
-    \lb@breakablefalse
-  \fi\fi
+  \ifinlvbox
+    \iftoggle{/longbox/breakable}{%
+      \lb@debug{disable breakable due to nesting of long-boxes}%
+      \togglefalse{/longbox/breakable}%
+    }{}%
+  \fi
   \lb@typeset
   \lb@restorefootnotes
   \color@endgroup
@@ -311,8 +349,8 @@
 % --------------------------------------------------------
 
 \newcommand\lb@restrictheight{%
-  \lb@typeout{restrict height to \the\lblength{height}}%
-  \setlength\lb@splitheight{\dimexpr\lblength{height} - \lblength{extra/single}\relax}%
+  \lb@typeout{restrict height to \the\dimexprof{/longbox/height}}%
+  \setlength\lb@splitheight{\dimexpr\dimexprof{/longbox/height} - \dimexprof{/longbox/extra/single}\relax}%
   \lb@splitbox
   \ifdim\ht\lb@headbox=0pt\relax
     %split failed.. do nothing
@@ -322,9 +360,9 @@
     \setbox\lb@mainbox\vbox{\unvbox\lb@headbox}%
     \lb@debug{restricted height to \the\ht\lb@mainbox}%
   \fi
-  \if\lboption{height/@align}b\relax      
+  \if\valueof{/longbox/height/@align}b\relax      
     \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox}}}%
-  \else\if\lboption{height/@align}c\relax      
+  \else\if\valueof{/longbox/height/@align}c\relax      
     \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox\vfill}}}%
   \else % default is top
     \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\unvbox\lb@mainbox\vfill}}}%
@@ -337,15 +375,15 @@
 
 \newlength\lb@neededvspace
 \newcommand\lb@typeset[1][0pt]{%
-  \iflb@breakable
+  \iftoggle{/longbox/breakable}{%
     \lb@setfreevspace
-    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\lblength{extra/single}\relax}%
+    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra/single}\relax}%
     \lb@debug{needed: \the\lb@neededvspace, available: \the\lb@freevspace}%
     \ifdim\lb@neededvspace<\lb@freevspace\relax
       \lb@single@{\lb@mainbox}%
     \else
       \lb@typeout{longbox needs splitting}%
-      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\lblength{extra/first}\relax}%
+      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra/first}\relax}%
       \lb@splitbox
       \ifdim\ht\lb@headbox=0pt\relax
         % failed to split
@@ -366,21 +404,21 @@
         \lb@typesetrest
       \fi
     \fi
-  \else
+  }{%\else
     \lb@debug{unbreakable box}%
     \lb@single@{\lb@mainbox}% always directly output an unbreakable box
-  \fi
+  }%
 }
 
 \newcommand\lb@typesetrest{%
   \lb@setfreevspace%
-  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\lblength{extra/last}\relax}%
+  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra/last}\relax}%
   \ifdim\lb@neededvspace<\lb@freevspace\relax
     \lb@typeout{output last part of box}%
     \lb@last@{\lb@mainbox}%
   \else
     \lb@debug{split box further}%
-    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\lblength{extra/middle}\relax}%
+    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra/middle}\relax}%
     \lb@splitbox
     \ifdim\ht\lb@headbox=0pt\relax
       % failed to split
@@ -407,7 +445,7 @@
 \newcommand\lb@splitbox{%
   \ifdim\dimexpr\ht\lb@mainbox + \dp\lb@mainbox\relax>\lb@splitheight\relax
     % the main box is larger than our target split height..
-    \ifdim\lblength{extra/split}>\lb@splitheight\relax
+    \ifdim\dimexprof{/longbox/extra/split}>\lb@splitheight\relax
       % not enough space to bother
       \lb@typeout{not enough space on page for a split}%
       \setbox\lb@headbox=\vbox{}% empty head
@@ -428,7 +466,7 @@
           \lb@ignorevbadness
           \setbox\lb@mainbox=\vbox{\unvcopy\lb@savebox}% restore
           \lb@trysplit{\dimen@}%
-          \ifdim\lblength{extra/split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
+          \ifdim\dimexprof{/longbox/extra/split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
           \ifnum\@tempcnta<100\relax\else\lb@splitstop\fi % and not more than 100 attempts
         \repeat%
       \fi
@@ -451,7 +489,6 @@
 \newcommand\lb@trysplit[1]{% try to split at given height
   \lb@typeout{try to split at: \the\dimexpr #1\relax}%
   \lb@ignorevbadness  
-  \typeoutinfo{split}%    
   \setbox\lb@headbox=\vsplit\lb@mainbox to #1\relax%
   \setbox\lb@headbox=\vbox{\unvbox\lb@headbox}%
   \setbox\lb@mainbox=\vbox{\unvbox\lb@mainbox}%  
@@ -461,7 +498,22 @@
 %
 % --------------------------------------------------------
 
+% keys and styles that can be set once globally
+\pgfqkeys{/longbox}{%
+  part/isfirst/.is toggle=false,
+  part/ismiddle/.is toggle=false,
+  part/islast/.is toggle=false,
+  part/issingle/.is toggle=false,
+  part/needtop/.is toggle=false,
+  part/needbottom/.is toggle=false,
+  part/content/.initial=\vbox{},
+  extra/.style={extra/single=#1, extra/first=#1, extra/middle=#1, extra/last=#1, extra/sides=#1},
+  render/.style={render/single=#1, render/first=#1, render/middle=#1, render/last=#1},
+  bgcolor/.forward to={/longbox/background/color},      
+}
+
 \newenvironment{longbox}[1][]{%
+  % keys that are always defaulted at the start
   \pgfqkeys{/longbox}{%
     extra/single/.initial=0pt,
     extra/first/.initial=0pt,
@@ -469,12 +521,10 @@
     extra/last/.initial=0pt,
     extra/split/.initial={1.5\baselineskip},
     extra/sides/.initial=0pt,
-    extra/.style={extra/single=##1, extra/first=##1, extra/middle=##1, extra/last=##1, extra/sides=##1},
     render/single/.initial=\lb@renderdefault,
     render/first/.initial=\lb@renderdefault,
     render/middle/.initial=\lb@renderdefault,
     render/last/.initial=\lb@renderdefault,
-    render/.style={render/single=##1, render/first=##1, render/middle=##1, render/last=##1},
     width/.initial={-1sp},
     width/outer/.initial=\linewidth,
     height/.initial={-1sp},
@@ -485,30 +535,27 @@
     height/align/center/.style={height/@align=c},
     height/align/bottom/.style={height/@align=b},
     height/@align/.initial=t,
-    background/color/.initial={},
-    bgcolor/.forward to={/longbox/background/color},
-    breakable/.is if=lb@breakable,breakable=true,
-    verbose/.is if=lb@verbose,verbose=true,
+    background/color/.is color={.},
+    color/.is color={.},
+    breakable/.is toggle=true,
+    verbose/.is toggle=false,
     insert/before/.initial={},
     insert/after/.initial={},
   }%
   \pgfqkeys{/longbox}{#1}%
   % calculate width/height from outer width/height
-  \ifdim\lblength{width}=-1sp\relax
+  \ifdim\dimexprof{/longbox/width}=-1sp\relax
     \lb@debug{set width}%
-    \pgfqkeys{/longbox}{width=\the\lblength{width/outer}-\the\lblength{extra/sides}}%
+    \pgfqkeys{/longbox}{width=\the\dimexprof{/longbox/width/outer}-\the\dimexprof{/longbox/extra/sides}}%
   \fi
-  \ifdim\lblength{height}=-1sp\relax
-    \ifdim\lblength{height/outer}>-1sp\relax
-      \pgfqkeys{/longbox}{height=\the\lblength{height/outer}-\the\lblength{extra/single}}%
+  \ifdim\dimexprof{/longbox/height}=-1sp\relax
+    \ifdim\dimexprof{/longbox/height/outer}>-1sp\relax
+      \pgfqkeys{/longbox}{height=\the\dimexprof{/longbox/height/outer}-\the\dimexprof{/longbox/extra/single}}%
     \fi
   \fi
   \begin{lb@longbox}%
 }{\end{lb@longbox}}
 
-\newcommand\typeoutinfo[1]{%
-  \lb@debug{msg #1: \the\linewidth, \the\@totalleftmargin, \the\leftmargin, \the\textwidth, \the\hsize.}%
-}
 
 % --------------------------------------------------------
 %
@@ -517,28 +564,23 @@
 \newrobustcmd*\fboxsingle{%
   \begingroup
   \fboxsep\z@
-  %\noindent\colorbox{floralwhite}{%
-  %\fboxsep3pt%    
-  %\raise\dimexpr0.7\baselineskip+\fboxsep+\fboxrule
   \vcolorbox{floralwhite}{%
-  %\vbox{%
     \fboxsep3pt%
     \offinterlineskip
-    \iflbneedtop{\color{currentcolor}\hrule height \fboxrule}\fi%
+    \ontoggle{/longbox/part/needtop}{{\colorof{/longbox/color}\hrule height \fboxrule}}%
     \hbox{%
-      {\color{currentcolor}\vrule width \fboxrule}%
+      {\colorof{/longbox/color}\vrule width \fboxrule}%
       \hskip\fboxsep
       \vbox{\offinterlineskip
-        \iflbneedtop\vskip\fboxsep\fi
-        \BOXCONTENT%
-        \iflbneedbottom\vskip\fboxsep\fi
+        \ontoggle{/longbox/part/needtop}{\vskip\fboxsep}
+        \valueof{/longbox/part/content}%
+        \ontoggle{/longbox/part/needbottom}{\vskip\fboxsep}
       }%
       \hskip\fboxsep      
-      {\color{currentcolor}\vrule width \fboxrule}%
+      {\colorof{/longbox/color}\vrule width \fboxrule}%
     }%
-    \iflbneedbottom{\color{currentcolor}\hrule height \fboxrule}\fi%
+    \ontoggle{/longbox/part/needbottom}{{\colorof{/longbox/color}\hrule height \fboxrule}}%
   }%
-  %\noindent\unvcolorbox{floralwhite}{\z@}%
   \endgroup
 }
 
@@ -554,8 +596,8 @@
 
 Next
 
-\pgfqkeys{/longbox}{test/.is bool=,test}
-\lboptionif{test}{yes}{no}
+\pgfqkeys{/longbox}{test/.is color=black, test=red}
+{\colorof{/longbox/test} test}
 
 \newlength\fboxextra
 \setlength\fboxextra{\dimexpr\fboxsep+\fboxrule\relax}
@@ -567,7 +609,7 @@ Next
   background/color=floralwhite]
 
 test test test test
-\hbox{x\begin{longbox}[render=\fboxsingle,extra=2\fboxextra,bgcolor=gainsboro,height=4.8cm,height/align=top,width=6cm]
+\hbox{x\begin{longbox}[render=\fboxsingle,extra=2\fboxextra,background/color=gainsboro,height=4.8cm,height/align=top,width=6cm]
 \lipsum[1-2]
 \end{longbox}}and more testing here.
 
