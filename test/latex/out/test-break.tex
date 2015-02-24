@@ -81,7 +81,7 @@
   %\typeout{toggle: #2=#1}%
   \ifcsdef{toggle#1}%
     {\csuse{toggle#1}{#2}\pgfkeyssetvalue{#2}{#1}}%
-    {\pgfkeysvalueof{/errors/boolean expected/.@cmd}\pgfkeyscurrentkey{#1}\pgfeov}%
+    {\pgfkeysvalueof{/errors-boolean expected/.@cmd}\pgfkeyscurrentkey{#1}\pgfeov}%
 }
 
 \pgfkeys{/handlers/.is color/.code=\pgfkeysalso{%
@@ -90,7 +90,7 @@
   }%
 }
 \def\pgf@handle@color#1#2{%
-  %\typeout{color: #2=#1}%
+  \typeout{color: #2=#1}%
   \pgfkeyssetvalue{#2}{#1}%
   \eifblank{#1}%
     {\colorlet{#2}{.}}%
@@ -104,6 +104,7 @@
 \newcommand\dimexprof[1]{\dimexpr\valueof{#1}\relax}%
 \newcommand\colorof[1]{%
   \letvalueof{#1}\reserved@a
+  \edef\reserved@a{\reserved@a}%
   \eifblank{\reserved@a}{}{\color{#1}}%
 }
 
@@ -197,7 +198,7 @@
   \vspace*{\dimexpr\ht\strutbox-\baselineskip\relax}%
 }
 
-% Suppress overfull/underfull vbox messages
+% Suppress overfull-underfull vbox messages
 \newrobustcmd*\lb@ignorevbadness{%
    \edef\lb@currentvbadness{\the\vbadness}%
    \vbadness=\@M%
@@ -265,53 +266,52 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\lb@defbox[1]{%
-  \letvalueof{/longbox/background/color}\bgcolor
-  \pgfkeys{/longbox/part/content=\unvcolorbox{\bgcolor}{#1}}%  
-  \def\width{\wd#1}%
-  \def\height{\ht#1}%
-  \def\depth{\dp#1}%
-  \let\totalheight\@ovri
-  \totalheight\height
-  \advance\totalheight\depth  
+  \letvalueof{/longbox/background-color}\bgcolor
+  \pgfkeys{%
+    /longbox/part-width/.expanded=\the\wd#1,%
+    /longbox/part-height/.expanded=\the\dimexpr\dp#1 + \ht#1\relax,%
+    /longbox/part-depth/.expanded=\the\dp#1,%
+    /longbox/part-content=\unvcolorbox{\bgcolor}{#1},%  
+  }%
 }
 
 
 \newrobustcmd*\lb@renderdefault{%
-  \valueof{/longbox/part/content}%
+  \valueof{/longbox/part-content}%
 }
 
 \newrobustcmd*\lb@single@[1]{%
   \begingroup
-    \toggletrue{/longbox/part/issingle}%
-    \toggletrue{/longbox/part/needtop}%
-    \toggletrue{/longbox/part/needbottom}%
+    \toggletrue{/longbox/part-issingle}%
+    \toggletrue{/longbox/part-needtop}%
+    \toggletrue{/longbox/part-needbottom}%
     \lb@defbox{#1}%
-    \valueof{/longbox/render/single}%
+    \valueof{/longbox/render-single}%
   \endgroup
 }
 \newrobustcmd*\lb@first@[1]{%
   \begingroup
-    \toggletrue{/longbox/part/isfirst}%
-    \toggletrue{/longbox/part/needtop}%
+    \toggletrue{/longbox/part-isfirst}%
+    \toggletrue{/longbox/part-needtop}%
     \lb@defbox{#1}%
-    \valueof{/longbox/render/first}%
+    \valueof{/longbox/render-first}%
     \vfill\eject
   \endgroup
 }
 \newrobustcmd*\lb@middle@[1]{%
   \begingroup
-    \toggletrue{/longbox/part/ismiddle}%
+    \toggletrue{/longbox/part-ismiddle}%
     \lb@defbox{#1}%
-    \valueof{/longbox/render/middle}%
+    \valueof{/longbox/render-middle}%
     \vfill\eject
   \endgroup
 }
 \newrobustcmd*\lb@last@[1]{%
   \begingroup
-    \toggletrue{/longbox/part/islast}%
-    \toggletrue{/longbox/part/needbottom}%
+    \toggletrue{/longbox/part-islast}%
+    \toggletrue{/longbox/part-needbottom}%
     \lb@defbox{#1}%
-    \valueof{/longbox/render/last}%
+    \valueof{/longbox/render-last}%
   \endgroup
 }
 
@@ -323,10 +323,10 @@
   \lb@savefootnotes
   %\colorof{/longbox/color}%
   \lvbox{\lb@mainbox}{\dimexprof{/longbox/width}}%
-  \valueof{/longbox/insert/before}%
+  \valueof{/longbox/insert-before}%
 }{%
   %\lb@ignorelastdescenders%
-  \valueof{/longbox/insert/after}%
+  \valueof{/longbox/insert-after}%
   \par\unskip\ifvmode\nointerlineskip\hrule \@height\z@ \@width\hsize\fi%
   \endlvbox%
   %\ifhmode\par\fi
@@ -350,7 +350,7 @@
 
 \newcommand\lb@restrictheight{%
   \lb@typeout{restrict height to \the\dimexprof{/longbox/height}}%
-  \setlength\lb@splitheight{\dimexpr\dimexprof{/longbox/height} - \dimexprof{/longbox/extra/single}\relax}%
+  \setlength\lb@splitheight{\dimexpr\dimexprof{/longbox/height} - \dimexprof{/longbox/extra-single}\relax}%
   \lb@splitbox
   \ifdim\ht\lb@headbox=0pt\relax
     %split failed.. do nothing
@@ -377,13 +377,13 @@
 \newcommand\lb@typeset[1][0pt]{%
   \iftoggle{/longbox/breakable}{%
     \lb@setfreevspace
-    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra/single}\relax}%
+    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra-single}\relax}%
     \lb@debug{needed: \the\lb@neededvspace, available: \the\lb@freevspace}%
     \ifdim\lb@neededvspace<\lb@freevspace\relax
       \lb@single@{\lb@mainbox}%
     \else
       \lb@typeout{longbox needs splitting}%
-      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra/first}\relax}%
+      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra-first}\relax}%
       \lb@splitbox
       \ifdim\ht\lb@headbox=0pt\relax
         % failed to split
@@ -412,13 +412,13 @@
 
 \newcommand\lb@typesetrest{%
   \lb@setfreevspace%
-  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra/last}\relax}%
+  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra-last}\relax}%
   \ifdim\lb@neededvspace<\lb@freevspace\relax
     \lb@typeout{output last part of box}%
     \lb@last@{\lb@mainbox}%
   \else
     \lb@debug{split box further}%
-    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra/middle}\relax}%
+    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra-middle}\relax}%
     \lb@splitbox
     \ifdim\ht\lb@headbox=0pt\relax
       % failed to split
@@ -434,7 +434,8 @@
 }
 
 % --------------------------------------------------------
-%
+% Split a long vbox over multiple pages.
+% This code is based on similar code in the mdframed package
 % --------------------------------------------------------
 
 \newlength\lb@splitheight
@@ -445,7 +446,7 @@
 \newcommand\lb@splitbox{%
   \ifdim\dimexpr\ht\lb@mainbox + \dp\lb@mainbox\relax>\lb@splitheight\relax
     % the main box is larger than our target split height..
-    \ifdim\dimexprof{/longbox/extra/split}>\lb@splitheight\relax
+    \ifdim\dimexprof{/longbox/extra-split}>\lb@splitheight\relax
       % not enough space to bother
       \lb@typeout{not enough space on page for a split}%
       \setbox\lb@headbox=\vbox{}% empty head
@@ -466,7 +467,7 @@
           \lb@ignorevbadness
           \setbox\lb@mainbox=\vbox{\unvcopy\lb@savebox}% restore
           \lb@trysplit{\dimen@}%
-          \ifdim\dimexprof{/longbox/extra/split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
+          \ifdim\dimexprof{/longbox/extra-split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
           \ifnum\@tempcnta<100\relax\else\lb@splitstop\fi % and not more than 100 attempts
         \repeat%
       \fi
@@ -495,94 +496,224 @@
 }
 
 % --------------------------------------------------------
-%
+% The longbox environment uses pgfkeys to set its options
 % --------------------------------------------------------
 
 % keys and styles that can be set once globally
-\pgfqkeys{/longbox}{%
-  part/isfirst/.is toggle=false,
-  part/ismiddle/.is toggle=false,
-  part/islast/.is toggle=false,
-  part/issingle/.is toggle=false,
-  part/needtop/.is toggle=false,
-  part/needbottom/.is toggle=false,
-  part/content/.initial=\vbox{},
-  extra/.style={extra/single=#1, extra/first=#1, extra/middle=#1, extra/last=#1, extra/sides=#1},
-  render/.style={render/single=#1, render/first=#1, render/middle=#1, render/last=#1},
-  bgcolor/.forward to={/longbox/background/color},      
+\pgfkeys{/longbox/.is family}%
+
+\pgfkeys{longbox,%
+  part-isfirst/.is toggle=false,
+  part-ismiddle/.is toggle=false,
+  part-islast/.is toggle=false,
+  part-issingle/.is toggle=false,
+  part-needtop/.is toggle=false,
+  part-needbottom/.is toggle=false,
+  part-content/.initial=\vbox{},
+  part-width/.initial=0pt,
+  part-height/.initial=0pt,
+  part-depth/.initial=0pt,
+  extra/.style={extra-single=#1, extra-first=#1, extra-middle=#1, extra-last=#1, extra-sides=#1},
+  render/.style={render-single=#1, render-first=#1, render-middle=#1, render-last=#1},
+  bgcolor/.forward to={/longbox/background-color},      
+}
+
+\newcommand\longboxdefaults{%
+  \pgfkeys{longbox,%
+    extra-single/.initial=-1sp,
+    extra-first/.initial=0pt,
+    extra-middle/.initial=0pt,
+    extra-last/.initial=0pt,
+    extra-split/.initial={1.5\baselineskip},
+    extra-sides/.initial=0pt,
+    render-single/.initial=\lb@renderdefault,
+    render-first/.initial=\lb@renderdefault,
+    render-middle/.initial=\lb@renderdefault,
+    render-last/.initial=\lb@renderdefault,
+    width/.initial={-1sp},
+    width-outer/.initial=\linewidth,
+    height/.initial={-1sp},
+    height-outer/.initial={-1sp},
+    height-align/.is choice,
+    height-align/top/.style={height/@align=t},
+    height-align/middle/.style={height/@align=c},
+    height-align/center/.style={height/@align=c},
+    height-align/bottom/.style={height/@align=b},
+    height/@align/.initial=t,
+    background-color/.is color={.},
+    color/.is color={.},
+    breakable/.is toggle=true,
+    verbose/.is toggle=false,
+    insert-before/.initial={},
+    insert-after/.initial={},
+  }%
 }
 
 \newenvironment{longbox}[1][]{%
   % keys that are always defaulted at the start
-  \pgfqkeys{/longbox}{%
-    extra/single/.initial=0pt,
-    extra/first/.initial=0pt,
-    extra/middle/.initial=0pt,
-    extra/last/.initial=0pt,
-    extra/split/.initial={1.5\baselineskip},
-    extra/sides/.initial=0pt,
-    render/single/.initial=\lb@renderdefault,
-    render/first/.initial=\lb@renderdefault,
-    render/middle/.initial=\lb@renderdefault,
-    render/last/.initial=\lb@renderdefault,
-    width/.initial={-1sp},
-    width/outer/.initial=\linewidth,
-    height/.initial={-1sp},
-    height/outer/.initial={-1sp},
-    height/align/.is choice,
-    height/align/top/.style={height/@align=t},
-    height/align/middle/.style={height/@align=c},
-    height/align/center/.style={height/@align=c},
-    height/align/bottom/.style={height/@align=b},
-    height/@align/.initial=t,
-    background/color/.is color={.},
-    color/.is color={.},
-    breakable/.is toggle=true,
-    verbose/.is toggle=false,
-    insert/before/.initial={},
-    insert/after/.initial={},
-  }%
-  \pgfqkeys{/longbox}{#1}%
-  % calculate width/height from outer width/height
+  \longboxdefaults
+  \pgfkeys{longbox,#1}%
+  \begin{@longbox}%
+}{\end{@longbox}}
+
+\newenvironment{@longbox}{%  
+  % calculate width-height from outer width-height, and extra-single as extra-first+extra-last
   \ifdim\dimexprof{/longbox/width}=-1sp\relax
     \lb@debug{set width}%
-    \pgfqkeys{/longbox}{width=\the\dimexprof{/longbox/width/outer}-\the\dimexprof{/longbox/extra/sides}}%
+    \pgfkeys{/longbox/width=\the\dimexprof{/longbox/width-outer}-\the\dimexprof{/longbox/extra-sides}}%
   \fi
   \ifdim\dimexprof{/longbox/height}=-1sp\relax
-    \ifdim\dimexprof{/longbox/height/outer}>-1sp\relax
-      \pgfqkeys{/longbox}{height=\the\dimexprof{/longbox/height/outer}-\the\dimexprof{/longbox/extra/single}}%
+    \ifdim\dimexprof{/longbox/height-outer}>-1sp\relax
+      \pgfkeys{/longbox/height=\the\dimexprof{/longbox/height-outer}-\the\dimexprof{/longbox/extra-single}}%
     \fi
+  \fi
+  \ifdim\dimexprof{/longbox/extra-single}=-1sp\relax
+    \pgfkeys{/longbox/extra-single=\the\dimexprof{/longbox/extra-first}+\the\dimexprof{/longbox/extra-last}}%
   \fi
   \begin{lb@longbox}%
 }{\end{lb@longbox}}
 
 
+% ------------------------------------------------------------------------------
+% Define standard border styles
+%
+% a style has the form \md@border<style>{<side>}{<direction>}{<borderwidth>}
+% where <side> is the border side
+%       <direction> is either "h" or "v" (horizontal or vertical)
+%       <borderwidth> the width of the rule
+%
+% predefined styles: none, solid, transparent, dashed, and dotted.
+
+\newcommand*\bordernone[2]{}
+\newcommand*\bordersolid[2]{\ifx#1h\relax \hrule\@height #2\else\vrule\@width #2\fi}
+\newcommand*\bordertransparent[2]{\ifx#1h\relax \rule{0pt}{#2}\else\rule{#2}{0pt}\fi}
+
+\newlength\md@dashlen
+\setlength\md@dashlen{2.5pt}
+\newcommand*\md@borderdashed@[1]{%
+  %\md@dashlen=\dimexpr\dimmax{\md@bordertopwidth}{\dimmax{\md@borderbottomwidth}{\dimmax{\md@borderrightwidth}{\dimmax{\md@borderleftwidth}{2.5pt}}}}\relax
+  \ifx#1h%
+    \hbox to \dimexprof{/fbox/border-box-width}{\xleaders \hbox{\md@hdash\hskip 0.5\md@dashlen\relax}\hfill\hbox{\md@hdash}}%
+  \else 
+    \lower\dimexprof{/fbox/inner-depth}\vbox to \dimexprof{/fbox/inner-height}{\cleaders \vbox{\vskip0.25\md@dashlen\md@vdash\vskip0.25\md@dashlen}\vfill}%
+  \fi
+}
+
+\newcommand*\borderdashed[2]{%
+  \def\md@hdash{\vrule width \md@dashlen height #2 depth 0pt}%
+  \def\md@vdash{\hrule width #2 height \md@dashlen depth 0pt}%
+  \md@borderdashed@{#1}%
+}
+\newcommand*\borderdotted[2]{%
+  \def\md@hdash{\vrule width #2 height #2 depth 0pt\relax}%
+  \def\md@vdash{\hrule width #2 height #2 depth 0pt\relax}%
+  \md@borderdashed@{#1}%
+} 
+
 % --------------------------------------------------------
 %
 % --------------------------------------------------------
 
+\newrobustcmd*\fboxborder[2]{%
+  \begingroup
+  \colorof{/fbox/border-#1-color}% 
+  \edef\@rendername{border\valueof{/fbox/border-#1-style}}%  
+  \ifcsdef{\@rendername}%
+    {\csuse{\@rendername}{#2}{\dimexprof{/fbox/border-#1-width}}}%
+    {\bordersolid{#2}{\dimexprof{/fbox/border-#1-width}}}%
+  \endgroup
+}
+
 \newrobustcmd*\fboxsingle{%
   \begingroup
-  \fboxsep\z@
-  \vcolorbox{floralwhite}{%
-    \fboxsep3pt%
-    \offinterlineskip
-    \ontoggle{/longbox/part/needtop}{{\colorof{/longbox/color}\hrule height \fboxrule}}%
+  \pgfkeys{%
+    /fbox/inner-width/.initial=\the\dimexprof{/longbox/width}+\the\dimexprof{/fbox/padding-left} + \the\dimexprof{/fbox/padding-right},
+    /fbox/inner-height/.initial=\the\dimexprof{/longbox/part-height} %
+                                   + \ontoggle{/longbox/part-needtop}{\the\dimexprof{/fbox/padding-top}} %
+                                   + \ontoggle{/longbox/part-needbottom}{\the\dimexprof{/fbox/padding-bottom}},
+    /fbox/inner-depth/.initial=\the\dimexprof{/longbox/part-depth},                                  
+    /fbox/border-box-width/.initial=\the\dimexprof{/fbox/inner-width} + \the\dimexprof{/fbox/border-left-width} %
+                                                                      + \the\dimexprof{/fbox/border-right-width},    
+  }%
+  \vbox{\offinterlineskip
+    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-top}}%    
     \hbox{%
-      {\colorof{/longbox/color}\vrule width \fboxrule}%
-      \hskip\fboxsep
-      \vbox{\offinterlineskip
-        \ontoggle{/longbox/part/needtop}{\vskip\fboxsep}
-        \valueof{/longbox/part/content}%
-        \ontoggle{/longbox/part/needbottom}{\vskip\fboxsep}
+      \hskip\dimexprof{/fbox/margin-left}%
+      \vcolorbox{/longbox/background-color}{%
+        \offinterlineskip
+        \ontoggle{/longbox/part-needtop}{\fboxborder{top}{h}}%
+        \hbox{%
+          \fboxborder{left}{v}%
+          \hskip\dimexprof{/fbox/padding-left}%
+          \vbox{\offinterlineskip
+            \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/padding-top}}%
+            \valueof{/longbox/part-content}%
+            \ontoggle{/longbox/part-needbottom}{\vskip\dimexprof{/fbox/padding-bottom}}%
+          }%
+          \hskip\dimexprof{/fbox/padding-right}      
+          \fboxborder{right}{v}%
+        }%
+        \ontoggle{/longbox/part-needbottom}{\fboxborder{bottom}{h}}%
       }%
-      \hskip\fboxsep      
-      {\colorof{/longbox/color}\vrule width \fboxrule}%
+      \hskip\dimexprof{/fbox/margin-right}%
     }%
-    \ontoggle{/longbox/part/needbottom}{{\colorof{/longbox/color}\hrule height \fboxrule}}%
+    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-top}}%
   }%
   \endgroup
 }
+
+\pgfkeys{%
+  /fbox/.is family,
+  /fbox/.search also={/longbox},
+}
+\pgfkeys{fbox,
+  sep/.forward to={/fbox/padding},
+  rule/.forward to={/fbox/border-width},
+  padding/.style={/fbox/padding-top=#1,/fbox/padding-right=#1,/fbox/padding-bottom=#1,/fbox/padding-left=#1},
+  margin/.style={/fbox/margin-top=#1,/fbox/margin-right=#1,/fbox/margin-bottom=#1,/fbox/margin-left=#1},
+  border-width/.style={/fbox/border-top-width=#1,/fbox/border-right-width=#1,/fbox/border-bottom-width=#1,/fbox/border-left-width=#1},
+  border-color/.style={/fbox/border-top-color=#1,/fbox/border-right-color=#1,/fbox/border-bottom-color=#1,/fbox/border-left-color=#1},
+  border-style/.style={/fbox/border-top-style=#1,/fbox/border-right-style=#1,/fbox/border-bottom-style=#1,/fbox/border-left-style=#1},
+}
+\newcommand\fboxdefaults{%
+  \longboxdefaults
+  \pgfkeys{fbox,
+    padding-top/.initial=\fboxsep,
+    padding-right/.initial=\fboxsep,
+    padding-bottom/.initial=\fboxsep,
+    padding-left/.initial=\fboxsep,
+    margin-top/.initial=0pt,
+    margin-right/.initial=0pt,
+    margin-bottom/.initial=0pt,
+    margin-left/.initial=0pt,
+    border-top-width/.initial=\fboxrule,
+    border-right-width/.initial=\fboxrule,
+    border-bottom-width/.initial=\fboxrule,
+    border-left-width/.initial=\fboxrule,
+    border-top-color/.is color={.},
+    border-right-color/.is color={.},
+    border-bottom-color/.is color={.},
+    border-left-color/.is color={.},
+    border-top-style/.initial=solid,
+    border-right-style/.initial=solid,
+    border-bottom-style/.initial=solid,
+    border-left-style/.initial=solid,    
+    render=\fboxsingle
+  }%
+}
+
+\newenvironment{longfbox}[1][]{%
+  \fboxdefaults
+  \pgfkeys{fbox,#1}%
+  \pgfkeys{%
+    /longbox/extra-first=\the\dimexprof{/fbox/border-top-width} + \the\dimexprof{/fbox/padding-top} + \the\dimexprof{/fbox/margin-top},    
+    /longbox/extra-middle=0pt,
+    /longbox/extra-last=\the\dimexprof{/fbox/border-bottom-width} + \the\dimexprof{/fbox/padding-bottom} + \the\dimexprof{/fbox/margin-bottom},    
+    /longbox/extra-sides=\the\dimexprof{/fbox/border-left-width} + \the\dimexprof{/fbox/padding-left} + \the\dimexprof{/fbox/margin-left} +%
+                         \the\dimexprof{/fbox/border-right-width} + \the\dimexprof{/fbox/padding-right} + \the\dimexprof{/fbox/margin-right},
+  }%
+  \begin{@longbox}%
+}{\end{@longbox}}
 
 
 \makeatother
@@ -596,27 +727,23 @@
 
 Next
 
-\pgfqkeys{/longbox}{test/.is color=black, test=red}
-{\colorof{/longbox/test} test}
-
 \newlength\fboxextra
 \setlength\fboxextra{\dimexpr\fboxsep+\fboxrule\relax}
-\begin{longbox}[render=\fboxsingle,
-  extra=2\fboxsep+2\fboxrule,
-  extra/first=\fboxsep+\fboxrule,
-  extra/last=\fboxsep+\fboxrule,
-  extra/middle=0pt,
-  background/color=floralwhite]
+\begin{longfbox}[background-color=floralwhite,border-style=solid]
 
 test test test test
-\hbox{x\begin{longbox}[render=\fboxsingle,extra=2\fboxextra,background/color=gainsboro,height=4.8cm,height/align=top,width=6cm]
+\hbox{\begin{longfbox}[background-color=gainsboro,height=4.8cm,height-align=top,width=8cm,border-style=dotted]
 \lipsum[1-2]
-\end{longbox}}and more testing here.
+\end{longfbox}}x testing here.
 
-\begin{longbox}[render=\fboxsingle,extra=2\fboxextra,bgcolor=gainsboro,height=4.8cm,height/align=top]
+\begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=top,
+    border-top-color=red,border-left-color=green,
+    padding=1em,padding-left=2em,
+    border-width=5pt,border-style=dashed,
+    margin=1em]
 \centering
 \lipsum[1-2]
-\end{longbox}
+\end{longfbox}
 
 \lipsum[2]
 
@@ -632,7 +759,7 @@ e = mc^2
 \lipsum[5-16]}
 
 other.
-\end{longbox}
+\end{longfbox}
 
 next, mdframed:
 
