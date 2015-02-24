@@ -5,6 +5,7 @@
 %\usepackage{madoko2}
 \usepackage{xcolor}
 \usepackage{pgfkeys}
+\usepackage{pgffor}
 \usepackage{tablefootnote}
 \usepackage{mdframed}
 \usepackage{lipsum}
@@ -97,7 +98,21 @@
     {\colorlet{#2}{#1}}%
 }
 
-
+\pgfkeys{/handlers/.is dimexpr/.code=%
+  \pgfkeysalso{%
+    \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@dimexpr{##1}{\pgfkeyscurrentpath},%
+    \pgfkeyscurrentpath=#1,%
+  }%
+  %\notblank{#1}{\pgf@handle@toggle{#1}}%
+}
+\def\pgf@handle@dimexpr#1#2{%
+  \typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
+  \expandafter\pgfkeyssetvalue@\expandafter{\the\dimexpr#1\relax}{#2}%
+}
+\def\pgfkeyssetvalue@#1#2{%
+  %\typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
+  \pgfkeyssetvalue{#2}{#1}%
+}
 
 \newcommand\letvalueof{\pgfkeysgetvalue}%
 \newcommand\valueof{\pgfkeysvalueof}%
@@ -106,6 +121,9 @@
   \letvalueof{#1}\reserved@a
   \edef\reserved@a{\reserved@a}%
   \eifblank{\reserved@a}{}{\color{#1}}%
+}
+\newcommand\ifvalueofequal[1]{%
+  \eifstrequal{\valueof{#1}}%
 }
 
 % --------------------------------------------------------
@@ -244,7 +262,7 @@
 % --------------------------------------------------------
 
 \newrobustcmd\lb@debug[1]{%
-  %\lb@typeout{debug: #1}%
+  \lb@typeout{debug: #1}%
 }
 \newrobustcmd\lb@typeout[1]{%
   \ontoggle{/longbox/verbose}{\typeout{longbox: #1}}%
@@ -268,9 +286,9 @@
 \newrobustcmd*\lb@defbox[1]{%
   \letvalueof{/longbox/background-color}\bgcolor
   \pgfkeys{%
-    /longbox/part-width/.expanded=\the\wd#1,%
-    /longbox/part-height/.expanded=\the\dimexpr\dp#1 + \ht#1\relax,%
-    /longbox/part-depth/.expanded=\the\dp#1,%
+    /longbox/part-width=\wd#1,%
+    /longbox/part-height=\dp#1 + \ht#1,%
+    /longbox/part-depth=\dp#1,%
     /longbox/part-content=\unvcolorbox{\bgcolor}{#1},%  
   }%
 }
@@ -329,6 +347,7 @@
   \valueof{/longbox/insert-after}%
   \par\unskip\ifvmode\nointerlineskip\hrule \@height\z@ \@width\hsize\fi%
   \endlvbox%
+  \lb@debug{initial tdbox: \the\dp\lb@mainbox}%
   %\ifhmode\par\fi
   \ifdim\dimexprof{/longbox/height}<0pt\relax\else
     \lb@restrictheight
@@ -343,6 +362,24 @@
   \lb@restorefootnotes
   \color@endgroup
 }
+
+\newcommand\@lbox[1]{%  
+  \longboxadjustkeys
+  \color@begingroup
+  \leavevmode
+  \setbox\lb@mainbox=\hbox{#1}%
+    %\valueof{/longbox/insert-before}%
+    %#1%
+    %\valueof{/longbox/insert-before}%
+  %}%
+  %\setbox\lb@mainbox=\hbox{\unvbox\lb@mainbox}%
+  \lb@debug{initial vbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
+  \setbox\lb@mainbox=\vbox{\copy\lb@mainbox}%
+  \lb@debug{scond vbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
+  \lb@single@{\lb@mainbox}%
+  \color@endgroup  
+}
+
 
 % --------------------------------------------------------
 %
@@ -510,30 +547,30 @@
   part-needtop/.is toggle=false,
   part-needbottom/.is toggle=false,
   part-content/.initial=\vbox{},
-  part-width/.initial=0pt,
-  part-height/.initial=0pt,
-  part-depth/.initial=0pt,
+  part-width/.is dimexpr=0pt,
+  part-height/.is dimexpr=0pt,
+  part-depth/.is dimexpr=0pt,
   extra/.style={extra-single=#1, extra-first=#1, extra-middle=#1, extra-last=#1, extra-sides=#1},
   render/.style={render-single=#1, render-first=#1, render-middle=#1, render-last=#1},
   bgcolor/.forward to={/longbox/background-color},      
 }
 
-\newcommand\longboxdefaults{%
+\newcommand\longboxdefaultkeys{%
   \pgfkeys{longbox,%
-    extra-single/.initial=-1sp,
-    extra-first/.initial=0pt,
-    extra-middle/.initial=0pt,
-    extra-last/.initial=0pt,
-    extra-split/.initial={1.5\baselineskip},
-    extra-sides/.initial=0pt,
+    extra-single/.is dimexpr=-1sp,
+    extra-first/.is dimexpr=0pt,
+    extra-middle/.is dimexpr=0pt,
+    extra-last/.is dimexpr=0pt,
+    extra-split/.is dimexpr={1.5\baselineskip},
+    extra-sides/.is dimexpr=0pt,
     render-single/.initial=\lb@renderdefault,
     render-first/.initial=\lb@renderdefault,
     render-middle/.initial=\lb@renderdefault,
     render-last/.initial=\lb@renderdefault,
-    width/.initial={-1sp},
-    width-outer/.initial=\linewidth,
-    height/.initial={-1sp},
-    height-outer/.initial={-1sp},
+    width/.is dimexpr={-1sp},
+    width-outer/.is dimexpr=\linewidth,
+    height/.is dimexpr={-1sp},
+    height-outer/.is dimexpr={-1sp},
     height-align/.is choice,
     height-align/top/.style={height/@align=t},
     height-align/middle/.style={height/@align=c},
@@ -543,36 +580,45 @@
     background-color/.is color={.},
     color/.is color={.},
     breakable/.is toggle=true,
-    verbose/.is toggle=false,
+    verbose/.is toggle=true,
     insert-before/.initial={},
     insert-after/.initial={},
   }%
 }
 
+\newcommand\longboxadjustkeys{%
+  % calculate width-height from outer width-height, and extra-single as extra-first+extra-last
+  \ifdim\dimexprof{/longbox/width}=-1sp\relax
+    \lb@debug{set width}%
+    \pgfkeys{/longbox/width=\valueof{/longbox/width-outer}-\valueof{/longbox/extra-sides}}%
+  \fi
+  \ifdim\dimexprof{/longbox/height}=-1sp\relax
+    \ifdim\dimexprof{/longbox/height-outer}>-1sp\relax
+      \pgfkeys{/longbox/height=\valueof{/longbox/height-outer}-\valueof{/longbox/extra-single}}%
+    \fi
+  \fi
+  \ifdim\dimexprof{/longbox/extra-single}=-1sp\relax
+    \pgfkeys{/longbox/extra-single=\valueof{/longbox/extra-first}+\valueof{/longbox/extra-last}}%
+  \fi
+}
+
 \newenvironment{longbox}[1][]{%
   % keys that are always defaulted at the start
-  \longboxdefaults
+  \longboxdefaultkeys
   \pgfkeys{longbox,#1}%
   \begin{@longbox}%
 }{\end{@longbox}}
 
 \newenvironment{@longbox}{%  
-  % calculate width-height from outer width-height, and extra-single as extra-first+extra-last
-  \ifdim\dimexprof{/longbox/width}=-1sp\relax
-    \lb@debug{set width}%
-    \pgfkeys{/longbox/width=\the\dimexprof{/longbox/width-outer}-\the\dimexprof{/longbox/extra-sides}}%
-  \fi
-  \ifdim\dimexprof{/longbox/height}=-1sp\relax
-    \ifdim\dimexprof{/longbox/height-outer}>-1sp\relax
-      \pgfkeys{/longbox/height=\the\dimexprof{/longbox/height-outer}-\the\dimexprof{/longbox/extra-single}}%
-    \fi
-  \fi
-  \ifdim\dimexprof{/longbox/extra-single}=-1sp\relax
-    \pgfkeys{/longbox/extra-single=\the\dimexprof{/longbox/extra-first}+\the\dimexprof{/longbox/extra-last}}%
-  \fi
+  \longboxadjustkeys
   \begin{lb@longbox}%
 }{\end{lb@longbox}}
 
+\newcommand\lbox[1][]{%
+  \longboxdefaultkeys%
+  \pgfkeys{longbox,#1}%
+  \@lbox
+}
 
 % ------------------------------------------------------------------------------
 % Define standard border styles
@@ -593,26 +639,13 @@
 \newcommand*\md@borderdashed@[1]{%
   %\md@dashlen=\dimexpr\dimmax{\md@bordertopwidth}{\dimmax{\md@borderbottomwidth}{\dimmax{\md@borderrightwidth}{\dimmax{\md@borderleftwidth}{2.5pt}}}}\relax
   \ifx#1h%
-    \def\@bboxwidth{\dimexpr
-      \valueof{/longbox/part-width}+\valueof{/fbox/padding-left}+\valueof{/fbox/padding-right}%
-      +\valueof{/fbox/border-left-width}+\valueof{/fbox/border-right-width}\relax
-    }%
-    \hbox to \@bboxwidth{%
+    \hbox to \valueof{/fbox/borderbox-width}{%
       \xleaders \hbox{\md@hdash\hskip 0.5\md@dashlen\relax}\hfill\hbox{\md@hdash}%
     }%
   \else 
-    \def\@innerdepth{\dimexpr
-      \valueof{/longbox/part-depth}%
-      \ontoggle{/longbox/part-needbottom}{+\valueof{/fbox/padding-bottom}}\relax
-    }%
-    \def\@innerheight{\dimexpr
-      \valueof{/longbox/part-height}%
-      \ontoggle{/longbox/part-needtop}{+\valueof{/fbox/padding-top}}%
-      \ontoggle{/longbox/part-needbottom}{+\valueof{/fbox/padding-bottom}}\relax
-    }%
-    \lower\@innerdepth\vbox to \@innerheight{%
-      \cleaders \vbox{\vskip0.25\md@dashlen\md@vdash\vskip0.25\md@dashlen}%
-      \vfill
+    %\lower\valueof{/fbox/inner-depth}%
+    \vbox to \valueof{/fbox/inner-height}{\offinterlineskip%
+      \cleaders \vbox{\vskip0.25\md@dashlen\md@vdash\vskip0.25\md@dashlen}\vfill
     }%
   \fi
 }
@@ -631,33 +664,28 @@
 % --------------------------------------------------------
 %
 % --------------------------------------------------------
+\newcommand\fbox@setdim{%
+  \pgfkeys{%
+    /fbox/inner-height=\valueof{/longbox/part-height}%
+      +\iftoggle{/longbox/part-needtop}{\valueof{/fbox/padding-top}}{\valueof{/fbox/padding-break-top}}%
+      +\iftoggle{/longbox/part-needbottom}{\valueof{/fbox/padding-bottom}}{\valueof{/fbox/padding-break-bottom}},%
+    /fbox/inner-depth=\valueof{/longbox/part-depth}%
+      +\iftoggle{/longbox/part-needbottom}{\valueof{/fbox/padding-bottom}}{\valueof{/fbox/padding-break-bottom}},%
+    /fbox/inner-width=\valueof{/longbox/part-width}%
+      +\valueof{/fbox/padding-left}+\valueof{/fbox/padding-right},
+    /fbox/borderbox-width=\valueof{/fbox/inner-width}%
+      +\valueof{/fbox/border-left-width}+\valueof{/fbox/border-right-width},%
+    /fbox/borderbox-height=\valueof{/fbox/inner-height}%
+      +\iftoggle{/longbox/part-needtop}{\valueof{/fbox/border-top-width}}{\valueof{/fbox/border-break-top-width}}%
+      +\iftoggle{/longbox/part-needbottom}{\valueof{/fbox/border-bottom-width}}{\valueof{/fbox/border-break-bottom-width}},%
+    /fbox/borderbox-depth=\valueof{/fbox/inner-depth}%
+      +\iftoggle{/longbox/part-needbottom}{\valueof{/fbox/border-bottom-width}}{\valueof{/fbox/border-break-bottom-width}},%
+  }%
+}
 
-\newrobustcmd*\fboxborder[2]{%
+\newrobustcmd*\fbox@border[2]{%
   \begingroup
   \colorof{/fbox/border-#1-color}% set color already
-  \pgfkeys{%
-    /fbox/inner-depth=\dimexpr
-      \valueof{/longbox/part-depth}%
-      \ontoggle{/longbox/part-needbottom}{+\valueof{/fbox/padding-bottom}}\relax,%
-    /fbox/inner-width=\dimexpr%
-      \valueof{/longbox/part-width}%
-      +\valueof{/fbox/padding-left}%
-      +\valueof{/fbox/padding-right}\relax,
-    /fbox/inner-height=\dimexpr%
-      \valueof{/longbox/part-height}%
-      \ontoggle{/longbox/part-needtop}{+ \valueof{/fbox/padding-top}}%
-      \ontoggle{/longbox/part-needbottom}{+ \valueof{/fbox/padding-bottom}}\relax,%
-    /fbox/borderbox-width=\dimexpr%
-      \valueof{/fbox/inner-width}%
-      +\valueof{/fbox/border-left-width}%
-      +\valueof{/fbox/border-right-width}\relax,%
-    /fbox/borderbox-height=\dimexpr%
-      \valueof{/fbox/part-height}%
-      +\valueof{/fbox/padding-top}+\valueof{/fbox/border-top-width}%
-      +\valueof{/fbox/padding-bottom}+\valueof{/fbox/border-bottom-width}\relax,%
-    /fbox/borderbox-depth=\dimexpr%
-      \valueof{/fbox/part-depth}+\valueof{/fbox/padding-bottom}+\valueof{/fbox/border-bottom-width}\relax,
-  }%
   \edef\@rendername{border\valueof{/fbox/border-#1-style}}%  
   \ifcsdef{\@rendername}%
     {\csuse{\@rendername}{#2}{\dimexprof{/fbox/border-#1-width}}}%
@@ -665,31 +693,37 @@
   \endgroup
 }
 
-\newrobustcmd*\fboxsingle{%
+\newrobustcmd*\fbox@render{%
   \begingroup
+  \fbox@setdim
+  \hbox{%\lower \valueof{/fbox/borderbox-depth}\relax
   \vbox{\offinterlineskip
     \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-top}}%    
     \hbox{%
-      \hskip\dimexprof{/fbox/margin-left}%
+      \kern\dimexprof{/fbox/margin-left}%
       \vcolorbox{/longbox/background-color}{%
         \offinterlineskip
-        \ontoggle{/longbox/part-needtop}{\fboxborder{top}{h}}%
+        \ontoggle{/longbox/part-needtop}{\fbox@border{top}{h}}%
         \hbox{%
-          \fboxborder{left}{v}%
-          \hskip\dimexprof{/fbox/padding-left}%
+          \fbox@border{left}{v}%
+          \raise\dimexpr\valueof{/fbox/borderbox-depth}-0.4pt\relax\vbox{\hrule height 0.4pt width \valueof{/fbox/padding-left}}%
+          %\kern\valueof{/fbox/padding-left}%
           \vbox{\offinterlineskip
-            \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/padding-top}}%
+            \iftoggle{/longbox/part-needtop}{\hrule width 0.4pt height \dimexprof{/fbox/padding-top}}%
+                                            {\hrule width 0.4pt height \dimexprof{/fbox/padding-break-top}}%
             \valueof{/longbox/part-content}%
-            \ontoggle{/longbox/part-needbottom}{\vskip\dimexprof{/fbox/padding-bottom}}%
+            \iftoggle{/longbox/part-needbottom}{\hrule width 0.4pt height \dimexprof{/fbox/padding-bottom}}%
+                                               {\hrule width 0.4pt height \dimexprof{/fbox/padding-break-bottom}}%
           }%
-          \hskip\dimexprof{/fbox/padding-right}      
-          \fboxborder{right}{v}%
+          \kern\valueof{/fbox/padding-right}%
+          \fbox@border{right}{v}%
         }%
-        \ontoggle{/longbox/part-needbottom}{\fboxborder{bottom}{h}}%
+        \ontoggle{/longbox/part-needbottom}{\fbox@border{bottom}{h}}%
       }%
-      \hskip\dimexprof{/fbox/margin-right}%
+      \kern\dimexprof{/fbox/margin-right}%
     }%
-    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-top}}%
+    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-bottom}}%
+  }%
   }%
   \endgroup
 }
@@ -703,56 +737,93 @@
   rule/.forward to={/fbox/border-width},
   padding/.style={/fbox/padding-top=#1,/fbox/padding-right=#1,/fbox/padding-bottom=#1,/fbox/padding-left=#1},
   margin/.style={/fbox/margin-top=#1,/fbox/margin-right=#1,/fbox/margin-bottom=#1,/fbox/margin-left=#1},
-  border-width/.style={/fbox/border-top-width=#1,/fbox/border-right-width=#1,/fbox/border-bottom-width=#1,/fbox/border-left-width=#1},
-  border-color/.style={/fbox/border-top-color=#1,/fbox/border-right-color=#1,/fbox/border-bottom-color=#1,/fbox/border-left-color=#1},
-  border-style/.style={/fbox/border-top-style=#1,/fbox/border-right-style=#1,/fbox/border-bottom-style=#1,/fbox/border-left-style=#1},
-  inner-height/.initial=0pt,
-  inner-depth/.initial=0pt,
-  inner-width/.initial=0pt,
-  borderbox-width/.initial=0pt,
-  borderbox-height/.initial=0pt,
-  borderbox-depth/.initial=0pt,
+  border-width/.style={/fbox/border-top-width=#1,/fbox/border-right-width=#1,%
+                        /fbox/border-bottom-width=#1,/fbox/border-left-width=#1,%
+                        /fbox/border-break-top-width=#1,/fbox/border-break-bottom-width=#1},
+  border-color/.style={/fbox/border-top-color=#1,/fbox/border-right-color=#1,%
+                       /fbox/border-bottom-color=#1,/fbox/border-left-color=#1,%
+                       /fbox/border-break-top-color=#1,/fbox/border-break-bottom-color=#1},
+  border-style/.style={/fbox/border-top-style=#1,/fbox/border-right-style=#1,%
+                       /fbox/border-bottom-style=#1,/fbox/border-left-style=#1},
+  border-break-style/.style={/fbox/border-break-top-style=#1,/fbox/border-break-bottom-style=#1},
+  padding-break/.style={/fbox/padding-break-top=#1,/fbox/padding-break-bottom=#1},
+  inner-height/.is dimexpr=0pt,
+  inner-depth/.is dimexpr=0pt,
+  inner-width/.is dimexpr=0pt,
+  borderbox-width/.is dimexpr=0pt,
+  borderbox-height/.is dimexpr=0pt,
+  borderbox-depth/.is dimexpr=0pt,
 }
-\newcommand\fboxdefaults{%
-  \longboxdefaults
+\newcommand\fboxdefaultkeys{%
+  \longboxdefaultkeys
   \pgfkeys{fbox,
-    padding-top/.initial=\fboxsep,
-    padding-right/.initial=\fboxsep,
-    padding-bottom/.initial=\fboxsep,
-    padding-left/.initial=\fboxsep,
-    margin-top/.initial=0pt,
-    margin-right/.initial=0pt,
-    margin-bottom/.initial=0pt,
-    margin-left/.initial=0pt,
-    border-top-width/.initial=\fboxrule,
-    border-right-width/.initial=\fboxrule,
-    border-bottom-width/.initial=\fboxrule,
-    border-left-width/.initial=\fboxrule,
+    padding-top/.is dimexpr=\fboxsep,
+    padding-right/.is dimexpr=\fboxsep,
+    padding-bottom/.is dimexpr=\fboxsep,
+    padding-left/.is dimexpr=\fboxsep,
+    padding-break-top/.is dimexpr=0.5em,
+    padding-break-bottom/.is dimexpr=0.5em,
+    margin-top/.is dimexpr=0pt,
+    margin-right/.is dimexpr=0pt,
+    margin-bottom/.is dimexpr=0pt,
+    margin-left/.is dimexpr=0pt,
+    border-top-width/.is dimexpr=\fboxrule,
+    border-right-width/.is dimexpr=\fboxrule,
+    border-bottom-width/.is dimexpr=\fboxrule,
+    border-left-width/.is dimexpr=\fboxrule,
+    border-break-top-width/.is dimexpr=\fboxrule,
+    border-break-bottom-width/.is dimexpr=\fboxrule,    
     border-top-color/.is color={.},
     border-right-color/.is color={.},
     border-bottom-color/.is color={.},
+    border-break-top-color/.is color={.},
+    border-break-bottom-color/.is color={.},
     border-left-color/.is color={.},
     border-top-style/.initial=solid,
     border-right-style/.initial=solid,
     border-bottom-style/.initial=solid,
     border-left-style/.initial=solid,    
-    render=\fboxsingle
+    border-break-top-style/.initial=none,
+    border-break-bottom-style/.initial=none,
+    render=\fbox@render
+  }%
+}
+\newcommand\fboxadjustkeys{%
+  % set width of borders with style none to 0
+  \foreach\side in {top,left,right,bottom,break-bottom,break-top} {%
+    \ifvalueofequal{/fbox/border-\side-style}{none}{%
+      \pgfkeys{/fbox/border-\side-width=0pt}%
+    }{}%
+  }%
+  % calculate the extra space needed on each part for longbox
+  \pgfkeys{%
+    /longbox/extra-middle=\valueof{/fbox/padding-break-top} + \valueof{/fbox/border-break-top-width}%
+                          + \valueof{/fbox/padding-break-bottom} + \valueof{/fbox/border-break-bottom-width},    
+    /longbox/extra-first=\dimexprof{/fbox/border-top-width} + \valueof{/fbox/padding-top}%
+                          + \valueof{/fbox/margin-top}%
+                          + \valueof{/fbox/padding-break-bottom} + \valueof{/fbox/border-break-bottom-width},    
+    /longbox/extra-last=\valueof{/fbox/border-bottom-width} + \valueof{/fbox/padding-bottom}%
+                        + \valueof{/fbox/margin-bottom}%
+                        + \valueof{/fbox/padding-break-top} + \valueof{/fbox/border-break-top-width},        
+    /longbox/extra-sides=\valueof{/fbox/border-left-width} + \valueof{/fbox/border-right-width}%
+                         + \valueof{/fbox/padding-left} + \valueof{/fbox/padding-right}%
+                         + \valueof{/fbox/margin-left} + \valueof{/fbox/margin-right},
   }%
 }
 
 \newenvironment{longfbox}[1][]{%
-  \fboxdefaults
+  \fboxdefaultkeys
   \pgfkeys{fbox,#1}%
-  \pgfkeys{%
-    /longbox/extra-first=\valueof{/fbox/border-top-width} + \the\dimexprof{/fbox/padding-top} + \the\dimexprof{/fbox/margin-top},    
-    /longbox/extra-middle=0pt,
-    /longbox/extra-last=\the\dimexprof{/fbox/border-bottom-width} + \the\dimexprof{/fbox/padding-bottom} + \the\dimexprof{/fbox/margin-bottom},    
-    /longbox/extra-sides=\the\dimexprof{/fbox/border-left-width} + \the\dimexprof{/fbox/padding-left} + \the\dimexprof{/fbox/margin-left} +%
-                         \the\dimexprof{/fbox/border-right-width} + \the\dimexprof{/fbox/padding-right} + \the\dimexprof{/fbox/margin-right},
-  }%
+  \fboxadjustkeys
   \begin{@longbox}%
 }{\end{@longbox}}
 
+\newcommand\lfbox[2][]{%
+  \fboxdefaultkeys
+  \pgfkeys{fbox,#1}%
+  \fboxadjustkeys
+  \@lbox{#2}%
+}
 
 \makeatother
 
@@ -767,14 +838,19 @@ Next
 
 \newlength\fboxextra
 \setlength\fboxextra{\dimexpr\fboxsep+\fboxrule\relax}
-\begin{longfbox}[background-color=floralwhite,border-style=dotted]
+\begin{longfbox}[background-color=floralwhite,border-style=dotted]%
 
 test test test test
-\hbox{\begin{longfbox}[background-color=gainsboro,height=4.8cm,height-align=top,width=8cm,border-style=dotted]
-\lipsum[1-2]
-\end{longfbox}}x testing here.
+\lfbox[background-color=gainsboro,width=5cm]{testing q
+\begin{minipage}[t]{5cm}
+testing q
 
-\begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=top,
+\lipsum[1]
+\end{minipage}
+}
+x testing here.
+
+\begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=center,
     border-top-color=red,border-left-color=green,
     padding=1em,padding-left=2em,
     border-width=5pt,border-style=dashed,
