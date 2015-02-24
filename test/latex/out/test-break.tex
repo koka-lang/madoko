@@ -55,8 +55,9 @@
   \expandafter\ifstrequal\expandafter{#1}%
 }
 
-\providecommand\eifblank{%
-  \expandafter\ifblank\expandafter%
+\providecommand\eifblank[1]{%
+  \protected@edef\@ifblankarg{#1}%
+  \expandafter\ifblank\expandafter{\@ifblankarg}%
 }
 
 \providecommand\ontoggle[2]{%
@@ -66,9 +67,64 @@
   \iftoggle{#1}{}{#2}%
 }
 
+\providecommand\providelength[1]{% 
+  \ifdef{#1}{}{\newlength#1}%
+}
+
+\providecommand\csnewlength[1]{%
+  \expandafter\newlength\csname #1\endcsname%
+}
+\providecommand\csprovidelength[1]{%
+  \ifcsdef{#1}{}{\expandafter\newlength\csname #1\endcsname}%
+}
+\providecommand\cssetlength[2]{%
+  \expandafter\setlength\csname #1\endcsname{#2}%
+}
+
 % --------------------------------------------------------
 % Extensions to pgfkeys
 % --------------------------------------------------------
+\newcommand\headof[2]{%
+  \let#2\relax%
+  \foreach\x in {#1} {%
+    \xdef#2{\x}%    
+    \breakforeach
+  }%
+}
+
+\def\pgfkeyssetvalue@#1#2{%
+  \pgfkeyssetvalue{#2}{#1}%
+}
+
+\pgfkeys{/handlers/.is oneof/.code=%
+  \headof{#1}\@head%
+  \pgfkeysalso{%
+    \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@oneof{##1}{\pgfkeyscurrentpath}{#1},%
+    \pgfkeyscurrentpath=\@head,%
+  }%
+}
+\def\pgf@handle@oneof#1#2#3{%
+  \expandafter\pgf@handle@oneof@\expandafter{#1}{#2}{#3}%
+}
+\def\pgf@handle@oneof@#1#2#3{%
+  \typeout{oneof: #2=#1 in #3}%
+  \let\pgf@oneof\relax%
+  \foreach\x in {#3} {%
+    \eifstrequal{\x}{#1}{%
+      \xdef\pgf@oneof{\x}%
+      \breakforeach
+    }{}%
+  }%
+  \ifx\pgf@oneof\relax
+    \pgfkeysvalueof{/errors/unknown oneof value/.@cmd}{#2={#3}}{#1}\pgfeov%
+  \else
+    \pgfkeyssetvalue{#2}{#1}%
+  \fi
+}
+\pgfkeys{/errors/unknown oneof value/.code 2 args=\pgfkeys@error{%
+  Choice '#2' unknown in key #1. I am going to ignore this key.%
+}}
+
 \pgfkeys{/handlers/.is toggle/.code=%
   \providetoggle{\pgfkeyscurrentpath}%
   \pgfkeysalso{%
@@ -79,7 +135,7 @@
   %\notblank{#1}{\pgf@handle@toggle{#1}}%
 }
 \def\pgf@handle@toggle#1#2{%
-  %\typeout{toggle: #2=#1}%
+  \lb@debug{toggle: #2=#1}%
   \ifcsdef{toggle#1}%
     {\csuse{toggle#1}{#2}\pgfkeyssetvalue{#2}{#1}}%
     {\pgfkeysvalueof{/errors-boolean expected/.@cmd}\pgfkeyscurrentkey{#1}\pgfeov}%
@@ -91,7 +147,7 @@
   }%
 }
 \def\pgf@handle@color#1#2{%
-  %\typeout{color: #2=#1}%
+  \lb@debug{color: #2=#1}%
   \pgfkeyssetvalue{#2}{#1}%
   \eifblank{#1}%
     {\colorlet{#2}{.}}%
@@ -99,27 +155,22 @@
 }
 
 \pgfkeys{/handlers/.is dimexpr/.code=%
+  \csprovidelength{length@\pgfkeyscurrentpath}%
+  \expandafter\pgfkeyssetvalue@\csname length@\pgfkeyscurrentpath\endcsname{\pgfkeyscurrentpath}%
   \pgfkeysalso{%
     \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@dimexpr{##1}{\pgfkeyscurrentpath},%
     \pgfkeyscurrentpath=#1,%
   }%
-  %\notblank{#1}{\pgf@handle@toggle{#1}}%
 }
 \def\pgf@handle@dimexpr#1#2{%
-  %\typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
-  \expandafter\pgfkeyssetvalue@\expandafter{\the\dimexpr#1\relax}{#2}%
-}
-\def\pgfkeyssetvalue@#1#2{%
-  %\typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
-  \pgfkeyssetvalue{#2}{#1}%
+  \lb@debug{dimexpr: #2=#1 == \the\dimexpr#1\relax}%  
+  \cssetlength{length@#2}{\dimexpr#1\relax}%
 }
 
 \newcommand\letvalueof{\pgfkeysgetvalue}%
 \newcommand\valueof{\pgfkeysvalueof}%
-\newcommand\dimexprof[1]{\dimexpr\valueof{#1}\relax}%
 \newcommand\colorof[1]{%
   \letvalueof{#1}\reserved@a
-  \edef\reserved@a{\reserved@a}%
   \eifblank{\reserved@a}{}{\color{#1}}%
 }
 \newcommand\ifvalueofequal[1]{%
@@ -152,6 +203,7 @@
 % \unvcolorbox{<colorspec>}{<vboxname>}
 \newcommand\unvcolorbox[2]{%
   \eifblank{#1}{\vbox{\unvbox#2}}{%
+    \lb@debug{vcolorbox: #1}%
     \vbox{\offinterlineskip
       \hbox to \z@{\vbox to \z@{\noindent\color{#1}\vrule\@width\wd#2\@height\ht#2\@depth\dp#2\vss}\hss}%
       \unvbox#2%  
@@ -262,7 +314,7 @@
 % --------------------------------------------------------
 
 \newrobustcmd\lb@debug[1]{%
-  %\lb@typeout{debug: #1}%
+  \ontoggle{/longbox/debug}{\typeout{longbox debug: #1}}%
 }
 \newrobustcmd\lb@typeout[1]{%
   \ontoggle{/longbox/verbose}{\typeout{longbox: #1}}%
@@ -284,12 +336,12 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\lb@defbox[1]{%
-  \letvalueof{/longbox/background-color}\bgcolor
+  %\setbox#1=\vtop{\unvbox#1}%
   \pgfkeys{%
     /longbox/part-width=\wd#1,%
     /longbox/part-height=\dp#1 + \ht#1,%
     /longbox/part-depth=\dp#1,%
-    /longbox/part-content=\unvcolorbox{\bgcolor}{#1},%  
+    /longbox/part-content=\unvcolorbox{\valueof{/longbox/background-color}}{#1},%
   }%
 }
 
@@ -340,16 +392,16 @@
   \color@setgroup
   \lb@savefootnotes
   %\colorof{/longbox/color}%
-  \lvbox{\lb@mainbox}{\dimexprof{/longbox/width}}%
+  \lvbox{\lb@mainbox}{\valueof{/longbox/width}}%
   \valueof{/longbox/insert-before}%
 }{%
-  %\lb@ignorelastdescenders%
+  \lb@ignorelastdescenders%
   \valueof{/longbox/insert-after}%
   \par\unskip\ifvmode\nointerlineskip\hrule \@height\z@ \@width\hsize\fi%
   \endlvbox%
   \lb@debug{initial tdbox: \the\dp\lb@mainbox}%
   %\ifhmode\par\fi
-  \ifdim\dimexprof{/longbox/height}<0pt\relax\else
+  \ifdim\valueof{/longbox/height}<0pt\relax\else
     \lb@restrictheight
   \fi
   \ifinlvbox
@@ -365,19 +417,16 @@
 
 \newcommand\@lbox[1]{%  
   \longboxadjustkeys
-  \color@begingroup
   \leavevmode
-  \setbox\lb@mainbox=\hbox{#1}%
-    %\valueof{/longbox/insert-before}%
-    %#1%
-    %\valueof{/longbox/insert-before}%
-  %}%
-  %\setbox\lb@mainbox=\hbox{\unvbox\lb@mainbox}%
-  \lb@debug{initial vbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
-  \setbox\lb@mainbox=\vbox{\copy\lb@mainbox}%
-  \lb@debug{scond vbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
-  \lb@single@{\lb@mainbox}%
-  \color@endgroup  
+  \setbox\lb@mainbox=\vtop{\hbox{%
+    \color@begingroup
+    \valueof{/longbox/insert-before}%
+    #1%
+    \valueof{/longbox/insert-before}%
+    \color@endgroup
+  }}%
+  \lb@debug{lbox box: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
+  \lb@single@{\lb@mainbox}a%
 }
 
 
@@ -386,8 +435,8 @@
 % --------------------------------------------------------
 
 \newcommand\lb@restrictheight{%
-  \lb@typeout{restrict height to \the\dimexprof{/longbox/height}}%
-  \setlength\lb@splitheight{\dimexpr\dimexprof{/longbox/height} - \dimexprof{/longbox/extra-single}\relax}%
+  \lb@typeout{restrict height to \the\valueof{/longbox/height}}%
+  \setlength\lb@splitheight{\dimexpr\valueof{/longbox/height}-\valueof{/longbox/extra-single}\relax}%
   \lb@splitbox
   \ifdim\ht\lb@headbox=0pt\relax
     %split failed.. do nothing
@@ -397,13 +446,14 @@
     \setbox\lb@mainbox\vbox{\unvbox\lb@headbox}%
     \lb@debug{restricted height to \the\ht\lb@mainbox}%
   \fi
-  \if\valueof{/longbox/height/@align}b\relax      
-    \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox}}}%
-  \else\if\valueof{/longbox/height/@align}c\relax      
-    \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox\vfill}}}%
-  \else % default is top
-    \setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\unvbox\lb@mainbox\vfill}}}%
-  \fi\fi
+  \letvalueof{/longbox/height-align}\lb@halign
+  \eifstrequal{\lb@halign}{bottom}%
+    {\setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox}}}}%
+  {\eifstrequal{\lb@halign}{middle}%
+    {\setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox\vfill}}}}%
+    {% default is top
+     \setbox\lb@mainbox=\vbox{\hbox to \wd\lb@mainbox{\vbox to \lb@splitheight{\unvbox\lb@mainbox\vfill}}}}%
+  }%
 }
 
 % --------------------------------------------------------
@@ -414,13 +464,13 @@
 \newcommand\lb@typeset[1][0pt]{%
   \iftoggle{/longbox/breakable}{%
     \lb@setfreevspace
-    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra-single}\relax}%
+    \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\valueof{/longbox/extra-single}\relax}%
     \lb@debug{needed: \the\lb@neededvspace, available: \the\lb@freevspace}%
     \ifdim\lb@neededvspace<\lb@freevspace\relax
       \lb@single@{\lb@mainbox}%
     \else
       \lb@typeout{longbox needs splitting}%
-      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra-first}\relax}%
+      \setlength\lb@splitheight{\dimexpr\lb@freevspace-\valueof{/longbox/extra-first}\relax}%
       \lb@splitbox
       \ifdim\ht\lb@headbox=0pt\relax
         % failed to split
@@ -449,13 +499,13 @@
 
 \newcommand\lb@typesetrest{%
   \lb@setfreevspace%
-  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\dimexprof{/longbox/extra-last}\relax}%
+  \setlength\lb@neededvspace{\dimexpr\ht\lb@mainbox+\dp\lb@mainbox+\valueof{/longbox/extra-last}\relax}%
   \ifdim\lb@neededvspace<\lb@freevspace\relax
     \lb@typeout{output last part of box}%
     \lb@last@{\lb@mainbox}%
   \else
     \lb@debug{split box further}%
-    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\dimexprof{/longbox/extra-middle}\relax}%
+    \setlength\lb@splitheight{\dimexpr\lb@freevspace-\valueof{/longbox/extra-middle}\relax}%
     \lb@splitbox
     \ifdim\ht\lb@headbox=0pt\relax
       % failed to split
@@ -483,7 +533,7 @@
 \newcommand\lb@splitbox{%
   \ifdim\dimexpr\ht\lb@mainbox + \dp\lb@mainbox\relax>\lb@splitheight\relax
     % the main box is larger than our target split height..
-    \ifdim\dimexprof{/longbox/extra-split}>\lb@splitheight\relax
+    \ifdim\valueof{/longbox/extra-split}>\lb@splitheight\relax
       % not enough space to bother
       \lb@typeout{not enough space on page for a split}%
       \setbox\lb@headbox=\vbox{}% empty head
@@ -504,15 +554,15 @@
           \lb@ignorevbadness
           \setbox\lb@mainbox=\vbox{\unvcopy\lb@savebox}% restore
           \lb@trysplit{\dimen@}%
-          \ifdim\dimexprof{/longbox/extra-split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
+          \ifdim\valueof{/longbox/extra-split}<\dimen@\relax\else\b@splitstop\fi % don't try to split too small
           \ifnum\@tempcnta<100\relax\else\lb@splitstop\fi % and not more than 100 attempts
         \repeat%
       \fi
     \fi
   \else
     % mainbox fits in our target lb@splitheight
-    \lb@headbox=\vbox{\unvbox\lb@mainbox}%
-    \lb@mainbox=\vbox{}%
+    \setbox\lb@headbox=\vbox{\unvbox\lb@mainbox}%    
+    \setbox\lb@mainbox=\vbox{}%
   \fi
 }
 
@@ -540,6 +590,9 @@
 \pgfkeys{/longbox/.is family}%
 
 \pgfkeys{longbox,%
+  debug/.is toggle=false,
+  debug/.link={/longbox/verbose},
+  verbose/.is toggle=false, 
   part-isfirst/.is toggle=false,
   part-ismiddle/.is toggle=false,
   part-islast/.is toggle=false,
@@ -552,7 +605,9 @@
   part-depth/.is dimexpr=0pt,
   extra/.style={extra-single=#1, extra-first=#1, extra-middle=#1, extra-last=#1, extra-sides=#1},
   render/.style={render-single=#1, render-first=#1, render-middle=#1, render-last=#1},
-  bgcolor/.forward to={/longbox/background-color},      
+  bgcolor/.forward to={/longbox/background-color},    
+  height-align/.is oneof={top,middle,bottom},
+  valign/.is oneof={bottom,top},
 }
 
 \newcommand\longboxdefaultkeys{%
@@ -571,16 +626,10 @@
     width-outer/.is dimexpr=\linewidth,
     height/.is dimexpr={-1sp},
     height-outer/.is dimexpr={-1sp},
-    height-align/.is choice,
-    height-align/top/.style={height/@align=t},
-    height-align/middle/.style={height/@align=c},
-    height-align/center/.style={height/@align=c},
-    height-align/bottom/.style={height/@align=b},
-    height/@align/.initial=t,
-    background-color/.is color={.},
+    height-align=top,
+    background-color/.is color={},
     color/.is color={.},
     breakable/.is toggle=true,
-    verbose/.is toggle=false,
     insert-before/.initial={},
     insert-after/.initial={},
   }%
@@ -588,16 +637,16 @@
 
 \newcommand\longboxadjustkeys{%
   % calculate width-height from outer width-height, and extra-single as extra-first+extra-last
-  \ifdim\dimexprof{/longbox/width}=-1sp\relax
+  \ifdim\valueof{/longbox/width}=-1sp\relax
     \lb@debug{set width}%
     \pgfkeys{/longbox/width=\valueof{/longbox/width-outer}-\valueof{/longbox/extra-sides}}%
   \fi
-  \ifdim\dimexprof{/longbox/height}=-1sp\relax
-    \ifdim\dimexprof{/longbox/height-outer}>-1sp\relax
+  \ifdim\valueof{/longbox/height}=-1sp\relax
+    \ifdim\valueof{/longbox/height-outer}>-1sp\relax
       \pgfkeys{/longbox/height=\valueof{/longbox/height-outer}-\valueof{/longbox/extra-single}}%
     \fi
   \fi
-  \ifdim\dimexprof{/longbox/extra-single}=-1sp\relax
+  \ifdim\valueof{/longbox/extra-single}=-1sp\relax
     \pgfkeys{/longbox/extra-single=\valueof{/longbox/extra-first}+\valueof{/longbox/extra-last}}%
   \fi
 }
@@ -688,8 +737,8 @@
   \colorof{/fbox/border-#1-color}% set color already
   \edef\@rendername{border\valueof{/fbox/border-#1-style}}%  
   \ifcsdef{\@rendername}%
-    {\csuse{\@rendername}{#2}{\dimexprof{/fbox/border-#1-width}}}%
-    {\bordersolid{#2}{\dimexprof{/fbox/border-#1-width}}}%
+    {\csuse{\@rendername}{#2}{\valueof{/fbox/border-#1-width}}}%
+    {\bordersolid{#2}{\valueof{/fbox/border-#1-width}}}%
   \endgroup
 }
 
@@ -708,12 +757,13 @@
 \newrobustcmd*\fbox@render{%
   \begingroup
   \fbox@setdim
-  \hbox{%\lower \valueof{/fbox/borderbox-depth}\relax
+  \hbox{%
   \fbox@kern[/fbox/margin-bottom]{h}{/fbox/margin-left}%
+    \lower \valueof{/fbox/borderbox-depth}\relax
     \vbox{\offinterlineskip
     \ontoggle{/longbox/part-needtop}{\fbox@kern{v}{/fbox/margin-top}}%    
     \hbox{%
-      \vcolorbox{/longbox/background-color}{%
+      \vcolorbox{\valueof{/longbox/background-color}}{%
         \offinterlineskip
         \ontoggle{/longbox/part-needtop}{\fbox@border{top}{h}}%
         \hbox{%
@@ -811,7 +861,7 @@
   \pgfkeys{%
     /longbox/extra-middle=\valueof{/fbox/padding-break-top} + \valueof{/fbox/border-break-top-width}%
                           + \valueof{/fbox/padding-break-bottom} + \valueof{/fbox/border-break-bottom-width},    
-    /longbox/extra-first=\dimexprof{/fbox/border-top-width} + \valueof{/fbox/padding-top}%
+    /longbox/extra-first=\valueof{/fbox/border-top-width} + \valueof{/fbox/padding-top}%
                           + \valueof{/fbox/margin-top}%
                           + \valueof{/fbox/padding-break-bottom} + \valueof{/fbox/border-break-bottom-width},    
     /longbox/extra-last=\valueof{/fbox/border-bottom-width} + \valueof{/fbox/padding-bottom}%
@@ -845,30 +895,34 @@
 
 \parskip=0ex %\parindent=0pt
 \begin{document}
+\makeatletter
+head=\headof{a,b,c}%
+\makeatother
 
-Next
+Test\lfbox{qtest}x
 
-\newlength\fboxextra
-\setlength\fboxextra{\dimexpr\fboxsep+\fboxrule\relax}
+Test\fbox{qtest}x
+
+
 \begin{longfbox}[background-color=floralwhite,border-style=dotted]%
 
 test test test test
-\begin{longfbox}[background-color=gainsboro,width=5cm]{testing q
+\begin{longfbox}[debug,background-color=gainsboro,width=5cm,height=5cm,height-align=middle]{testing q
 testing q
 
-\begin{minipage}[t]{3cm}
+%\begin{minipage}[t]{3cm}
 testing q testing testing tessting
 
 testing q testing testing tessting
 
 testing q testing testing tessting
-\end{minipage}
+%\end{minipage}
 
 And another paragraph.
 }\end{longfbox}%
 x testing here.
 
-\begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=center,
+\begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=middle,
     border-top-color=red,border-left-color=green,
     padding=1em,padding-left=2em,
     border-width=5pt,border-style=dashed,
