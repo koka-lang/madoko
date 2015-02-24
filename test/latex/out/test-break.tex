@@ -7,7 +7,7 @@
 \usepackage{pgfkeys}
 \usepackage{pgffor}
 \usepackage{tablefootnote}
-\usepackage{mdframed}
+%\usepackage{mdframed}
 \usepackage{lipsum}
 
 \parskip=0ex %\parindent=0pt
@@ -91,7 +91,7 @@
   }%
 }
 \def\pgf@handle@color#1#2{%
-  \typeout{color: #2=#1}%
+  %\typeout{color: #2=#1}%
   \pgfkeyssetvalue{#2}{#1}%
   \eifblank{#1}%
     {\colorlet{#2}{.}}%
@@ -106,7 +106,7 @@
   %\notblank{#1}{\pgf@handle@toggle{#1}}%
 }
 \def\pgf@handle@dimexpr#1#2{%
-  \typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
+  %\typeout{dimexpr: #2=#1 == \the\dimexpr#1\relax}%
   \expandafter\pgfkeyssetvalue@\expandafter{\the\dimexpr#1\relax}{#2}%
 }
 \def\pgfkeyssetvalue@#1#2{%
@@ -262,7 +262,7 @@
 % --------------------------------------------------------
 
 \newrobustcmd\lb@debug[1]{%
-  \lb@typeout{debug: #1}%
+  %\lb@typeout{debug: #1}%
 }
 \newrobustcmd\lb@typeout[1]{%
   \ontoggle{/longbox/verbose}{\typeout{longbox: #1}}%
@@ -580,7 +580,7 @@
     background-color/.is color={.},
     color/.is color={.},
     breakable/.is toggle=true,
-    verbose/.is toggle=true,
+    verbose/.is toggle=false,
     insert-before/.initial={},
     insert-after/.initial={},
   }%
@@ -693,37 +693,47 @@
   \endgroup
 }
 
+\newrobustcmd*\fbox@kern[3][]{%
+  \iftoggle{/fbox/show-markers}{%
+    \ifx#2v\relax
+      \def\fbox@marker{\hrule width \valueof{/fbox/marker-width} height \valueof{#3}}%
+    \else
+      \def\fbox@marker{\vrule height \valueof{/fbox/marker-width} width \valueof{#3}}%
+    \fi
+    \eifblank{#1}{\fbox@marker}{\raise \dimexpr\valueof{#1}-\valueof{/fbox/marker-width}\relax\hbox{\fbox@marker}}%
+  }%
+  {\kern\valueof{#2}}%
+}
+
 \newrobustcmd*\fbox@render{%
   \begingroup
   \fbox@setdim
   \hbox{%\lower \valueof{/fbox/borderbox-depth}\relax
-  \vbox{\offinterlineskip
-    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-top}}%    
+  \fbox@kern[/fbox/margin-bottom]{h}{/fbox/margin-left}%
+    \vbox{\offinterlineskip
+    \ontoggle{/longbox/part-needtop}{\fbox@kern{v}{/fbox/margin-top}}%    
     \hbox{%
-      \kern\dimexprof{/fbox/margin-left}%
       \vcolorbox{/longbox/background-color}{%
         \offinterlineskip
         \ontoggle{/longbox/part-needtop}{\fbox@border{top}{h}}%
         \hbox{%
           \fbox@border{left}{v}%
-          \raise\dimexpr\valueof{/fbox/borderbox-depth}-0.4pt\relax\vbox{\hrule height 0.4pt width \valueof{/fbox/padding-left}}%
-          %\kern\valueof{/fbox/padding-left}%
+          %\raise\dimexpr\valueof{/fbox/borderbox-depth}-0.4pt\relax\vbox{\hrule height 0.4pt width \valueof{/fbox/padding-left}}%
+          \fbox@kern[/fbox/inner-depth]{h}{/fbox/padding-left}%
           \vbox{\offinterlineskip
-            \iftoggle{/longbox/part-needtop}{\hrule width 0.4pt height \dimexprof{/fbox/padding-top}}%
-                                            {\hrule width 0.4pt height \dimexprof{/fbox/padding-break-top}}%
+            \fbox@kern{v}{\iftoggle{/longbox/part-needtop}{/fbox/padding-top}{/fbox/padding-break-top}}%
             \valueof{/longbox/part-content}%
-            \iftoggle{/longbox/part-needbottom}{\hrule width 0.4pt height \dimexprof{/fbox/padding-bottom}}%
-                                               {\hrule width 0.4pt height \dimexprof{/fbox/padding-break-bottom}}%
+            \fbox@kern{v}{\iftoggle{/longbox/part-needbottom}{/fbox/padding-bottom}{/fbox/padding-break-bottom}}%
           }%
-          \kern\valueof{/fbox/padding-right}%
+          \fbox@kern[/fbox/inner-depth]{h}{/fbox/padding-right}%
           \fbox@border{right}{v}%
         }%
         \ontoggle{/longbox/part-needbottom}{\fbox@border{bottom}{h}}%
       }%
-      \kern\dimexprof{/fbox/margin-right}%
     }%
-    \ontoggle{/longbox/part-needtop}{\vskip\dimexprof{/fbox/margin-bottom}}%
+    \ontoggle{/longbox/part-needtop}{\fbox@kern{v}{/fbox/margin-bottom}}%
   }%
+  \fbox@kern[/fbox/margin-bottom]{h}{/fbox/margin-right}%
   }%
   \endgroup
 }
@@ -785,6 +795,8 @@
     border-left-style/.initial=solid,    
     border-break-top-style/.initial=none,
     border-break-bottom-style/.initial=none,
+    show-markers/.is toggle=true,
+    marker-width/.is dimexpr=0.4pt,
     render=\fbox@render
   }%
 }
@@ -841,13 +853,19 @@ Next
 \begin{longfbox}[background-color=floralwhite,border-style=dotted]%
 
 test test test test
-\lfbox[background-color=gainsboro,width=5cm]{testing q
-\begin{minipage}[t]{5cm}
+\begin{longfbox}[background-color=gainsboro,width=5cm]{testing q
 testing q
 
-\lipsum[1]
+\begin{minipage}[t]{3cm}
+testing q testing testing tessting
+
+testing q testing testing tessting
+
+testing q testing testing tessting
 \end{minipage}
-}
+
+And another paragraph.
+}\end{longfbox}%
 x testing here.
 
 \begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=center,
@@ -877,6 +895,7 @@ other.
 
 next, mdframed:
 
+\end{document}
 \begin{mdframed}[linewidth=0.4pt]
 
 \lipsum[1-4]
