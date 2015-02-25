@@ -174,7 +174,8 @@
   \eifblank{\reserved@a}{}{\color{#1}}%
 }
 \newcommand\ifvalueofequal[1]{%
-  \eifstrequal{\valueof{#1}}%
+  \letvalueof{#1}\reserved@a
+  \eifstrequal{\reserved@a}%
 }
 
 % --------------------------------------------------------
@@ -262,10 +263,13 @@
 }
 
 % Insert negative vspace of the length of the current descender
+\def\lb@descenders{0pt}%
 \newrobustcmd*\lb@ignorelastdescenders{%
   \par\strut\par%
   \unskip\unskip\setbox0=\lastbox
-  \vspace*{\dimexpr\ht\strutbox-\baselineskip\relax}%
+  \global\edef\lb@descenders{\the\dimexpr\baselineskip-\ht\strutbox\relax}%
+  \vspace*{\dimexpr-\lb@descenders\relax}%
+  %\vspace*{\lb@descenders}%
 }
 
 % Suppress overfull-underfull vbox messages
@@ -295,18 +299,18 @@
 \newif\ifinlvbox
 \newcommand\lvbox[2]{%
  \setbox#1\vbox\bgroup
-   \color@setgroup
-     \inlvboxtrue
-     \hsize#2\relax
-     \columnwidth\hsize
-     \textwidth\hsize
-     \linewidth\hsize
-     \@totalleftmargin\z@ \leftmargin\z@ \rightmargin\z@
-     \leftskip\z@skip \rightskip\z@skip \@rightskip\z@skip
-     \nofirstindent
-     \nofirstparskip
+   \begingroup
+   \inlvboxtrue
+   \hsize#2\relax
+   \columnwidth\hsize
+   \textwidth\hsize
+   \linewidth\hsize
+   \@totalleftmargin\z@ \leftmargin\z@ \rightmargin\z@
+   \leftskip\z@skip \rightskip\z@skip \@rightskip\z@skip
+   \nofirstindent
+   %\nofirstparskip
 }
-\def\endlvbox{\color@endgroup\egroup}
+\def\endlvbox{\endgroup\egroup}
 
 
 % --------------------------------------------------------
@@ -336,7 +340,12 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\lb@defbox[1]{%
-  %\setbox#1=\vtop{\unvbox#1}%
+  \ifvalueofequal{/longbox/valign}{top}%
+    {\setbox#1=\vtop{\unvbox#1}}%
+  {\ifvalueofequal{/longbox/valign}{middle}%
+    {\setbox#1=\vbox{\hbox{\lower \dimexpr(\dp#1 + \ht#1)/2\relax\vbox{\unvbox#1}}}}%    
+    {}}
+    %{\setbox#1=\vbox{\hbox{\lower \dimexpr\lb@descenders\relax\vbox{\unvbox#1}}}}}%    
   \pgfkeys{%
     /longbox/part-width=\wd#1,%
     /longbox/part-height=\dp#1 + \ht#1,%
@@ -389,18 +398,42 @@
 %
 % --------------------------------------------------------
 \newenvironment{lb@longbox}{%
-  \color@setgroup
+  \begingroup
   \lb@savefootnotes
   %\colorof{/longbox/color}%
   \lvbox{\lb@mainbox}{\valueof{/longbox/width}}%
-  \valueof{/longbox/insert-before}%
+  \valueof{/longbox/insert-before}% 
 }{%
   \lb@ignorelastdescenders%
   \valueof{/longbox/insert-after}%
   \par\unskip\ifvmode\nointerlineskip\hrule \@height\z@ \@width\hsize\fi%
-  \endlvbox%
-  \lb@debug{initial tdbox: \the\dp\lb@mainbox}%
-  %\ifhmode\par\fi
+  \endlvbox%  
+  \lb@debug{initial lvbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox, \lb@descenders}%
+  \lb@processbox
+  \endgroup
+}
+
+\newcommand\@lbox[1]{%  
+  \longboxadjustkeys
+  \leavevmode
+  \setbox\lb@mainbox=\hbox{%
+    \color@begingroup
+    \valueof{/longbox/insert-before}%
+    #1%
+    \valueof{/longbox/insert-before}%
+    \color@endgroup
+  }%
+  \lb@debug{initial lbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
+  \ifdim\valueof{/longbox/width}<0pt\relax
+    \setbox\lb@mainbox=\vbox{\hbox{\unhbox\lb@mainbox}}%
+  \else
+    \setbox\lb@mainbox=\vbox{\hbox to \valueof{/longbox/width}{\unhbox\lb@mainbox}}%
+  \fi
+  \lb@processbox
+  %\lb@single@{\lb@mainbox}%
+}
+
+\newcommand\lb@processbox{%
   \ifdim\valueof{/longbox/height}<0pt\relax\else
     \lb@restrictheight
   \fi
@@ -410,25 +443,11 @@
       \togglefalse{/longbox/breakable}%
     }{}%
   \fi
-  \lb@typeset
-  \lb@restorefootnotes
-  \color@endgroup
+  \ifhmode\lb@single@{\lb@mainbox}\else
+    \lb@typeset
+    \lb@restorefootnotes
+  \fi
 }
-
-\newcommand\@lbox[1]{%  
-  \longboxadjustkeys
-  \leavevmode
-  \setbox\lb@mainbox=\vtop{\hbox{%
-    \color@begingroup
-    \valueof{/longbox/insert-before}%
-    #1%
-    \valueof{/longbox/insert-before}%
-    \color@endgroup
-  }}%
-  \lb@debug{lbox box: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
-  \lb@single@{\lb@mainbox}a%
-}
-
 
 % --------------------------------------------------------
 %
@@ -452,7 +471,9 @@
   {\eifstrequal{\lb@halign}{middle}%
     {\setbox\lb@mainbox=\vbox{\hbox{\vbox to \lb@splitheight{\vfill\unvbox\lb@mainbox\vfill}}}}%
     {% default is top
-     \setbox\lb@mainbox=\vbox{\hbox to \wd\lb@mainbox{\vbox to \lb@splitheight{\unvbox\lb@mainbox\vfill}}}}%
+     \advance\lb@splitheight -\ht\lb@mainbox\relax 
+     \setbox\lb@mainbox=\vbox{\unvbox\lb@mainbox\kern\lb@splitheight}%
+    }%
   }%
 }
 
@@ -607,7 +628,8 @@
   render/.style={render-single=#1, render-first=#1, render-middle=#1, render-last=#1},
   bgcolor/.forward to={/longbox/background-color},    
   height-align/.is oneof={top,middle,bottom},
-  valign/.is oneof={bottom,top},
+  valign/.is oneof={bottom,middle,top},
+  descenders/.is dimexpr=0pt,
 }
 
 \newcommand\longboxdefaultkeys{%
@@ -638,9 +660,10 @@
 \newcommand\longboxadjustkeys{%
   % calculate width-height from outer width-height, and extra-single as extra-first+extra-last
   \ifdim\valueof{/longbox/width}=-1sp\relax
-    \lb@debug{set width}%
-    \pgfkeys{/longbox/width=\valueof{/longbox/width-outer}-\valueof{/longbox/extra-sides}}%
-  \fi
+    \ifdim\valueof{/longbox/width-outer}=-1sp\relax\else
+      \lb@debug{set width}%
+      \pgfkeys{/longbox/width=\valueof{/longbox/width-outer}-\valueof{/longbox/extra-sides}}%
+  \fi\fi
   \ifdim\valueof{/longbox/height}=-1sp\relax
     \ifdim\valueof{/longbox/height-outer}>-1sp\relax
       \pgfkeys{/longbox/height=\valueof{/longbox/height-outer}-\valueof{/longbox/extra-single}}%
@@ -730,6 +753,11 @@
     /fbox/borderbox-depth=\valueof{/fbox/inner-depth}%
       +\iftoggle{/longbox/part-needbottom}{\valueof{/fbox/border-bottom-width}}{\valueof{/fbox/border-break-bottom-width}},%
   }%
+  \ifvalueofequal{/fbox/valign}{bbottom}%
+    {\pgfkeys{/fbox/lower=-\valueof{/fbox/raise}}}%
+  {\ifvalueofequal{/fbox/valign}{btop}%
+    {\pgfkeys{/fbox/lower=\valueof{/fbox/borderbox-height}-\valueof{/fbox/raise}}}
+    {\pgfkeys{/fbox/lower=\valueof{/fbox/borderbox-depth}-\valueof{/fbox/raise}}}}%
 }
 
 \newrobustcmd*\fbox@border[2]{%
@@ -745,11 +773,12 @@
 \newrobustcmd*\fbox@kern[3][]{%
   \iftoggle{/fbox/show-markers}{%
     \ifx#2v\relax
-      \def\fbox@marker{\hrule width \valueof{/fbox/marker-width} height \valueof{#3}}%
+      \def\fbox@marker{\vrule width \valueof{/fbox/marker-width} height \valueof{#3}}%
+      \eifblank{#1}{\hbox{\fbox@marker}}{\vbox{\hbox to \valueof{#1}{\fbox@marker\hfill\hfill\fbox@marker}}}%
     \else
       \def\fbox@marker{\vrule height \valueof{/fbox/marker-width} width \valueof{#3}}%
+      \eifblank{#1}{\fbox@marker}{\raise \dimexpr\valueof{#1}-\valueof{/fbox/marker-width}\relax\hbox{\fbox@marker}}%
     \fi
-    \eifblank{#1}{\fbox@marker}{\raise \dimexpr\valueof{#1}-\valueof{/fbox/marker-width}\relax\hbox{\fbox@marker}}%
   }%
   {\kern\valueof{#2}}%
 }
@@ -759,7 +788,7 @@
   \fbox@setdim
   \hbox{%
   \fbox@kern[/fbox/margin-bottom]{h}{/fbox/margin-left}%
-    \lower \valueof{/fbox/borderbox-depth}\relax
+    \lower \valueof{/fbox/lower}\relax
     \vbox{\offinterlineskip
     \ontoggle{/longbox/part-needtop}{\fbox@kern{v}{/fbox/margin-top}}%    
     \hbox{%
@@ -771,9 +800,9 @@
           %\raise\dimexpr\valueof{/fbox/borderbox-depth}-0.4pt\relax\vbox{\hrule height 0.4pt width \valueof{/fbox/padding-left}}%
           \fbox@kern[/fbox/inner-depth]{h}{/fbox/padding-left}%
           \vbox{\offinterlineskip
-            \fbox@kern{v}{\iftoggle{/longbox/part-needtop}{/fbox/padding-top}{/fbox/padding-break-top}}%
+            \fbox@kern[/longbox/part-width]{v}{\iftoggle{/longbox/part-needtop}{/fbox/padding-top}{/fbox/padding-break-top}}%
             \valueof{/longbox/part-content}%
-            \fbox@kern{v}{\iftoggle{/longbox/part-needbottom}{/fbox/padding-bottom}{/fbox/padding-break-bottom}}%
+            \fbox@kern[/longbox/part-width]{v}{\iftoggle{/longbox/part-needbottom}{/fbox/padding-bottom}{/fbox/padding-break-bottom}}%
           }%
           \fbox@kern[/fbox/inner-depth]{h}{/fbox/padding-right}%
           \fbox@border{right}{v}%
@@ -795,6 +824,7 @@
 \pgfkeys{fbox,
   sep/.forward to={/fbox/padding},
   rule/.forward to={/fbox/border-width},
+  valign/.is oneof={bottom,middle,top,btop,bbottom},
   padding/.style={/fbox/padding-top=#1,/fbox/padding-right=#1,/fbox/padding-bottom=#1,/fbox/padding-left=#1},
   margin/.style={/fbox/margin-top=#1,/fbox/margin-right=#1,/fbox/margin-bottom=#1,/fbox/margin-left=#1},
   border-width/.style={/fbox/border-top-width=#1,/fbox/border-right-width=#1,%
@@ -813,6 +843,7 @@
   borderbox-width/.is dimexpr=0pt,
   borderbox-height/.is dimexpr=0pt,
   borderbox-depth/.is dimexpr=0pt,
+  lower/.is dimexpr=0pt,
 }
 \newcommand\fboxdefaultkeys{%
   \longboxdefaultkeys
@@ -845,6 +876,7 @@
     border-left-style/.initial=solid,    
     border-break-top-style/.initial=none,
     border-break-bottom-style/.initial=none,
+    raise/.is dimexpr=0pt,
     show-markers/.is toggle=true,
     marker-width/.is dimexpr=0.4pt,
     render=\fbox@render
@@ -857,6 +889,9 @@
       \pgfkeys{/fbox/border-\side-width=0pt}%
     }{}%
   }%
+  \ifvalueofequal{/fbox/valign}{bbottom}{}%
+    {\ifvalueofequal{/fbox/valign}{btop}{}%
+      {\pgfkeys{/longbox/valign/.expanded=\valueof{/fbox/valign}}}}%
   % calculate the extra space needed on each part for longbox
   \pgfkeys{%
     /longbox/extra-middle=\valueof{/fbox/padding-break-top} + \valueof{/fbox/border-break-top-width}%
@@ -899,28 +934,44 @@
 head=\headof{a,b,c}%
 \makeatother
 
-Test\lfbox{qtest}x
+Test\lfbox[height=4cm]{qtest}x\begin{longfbox}[debug]qtest\end{longfbox}x
+
+x\begin{longfbox}[background-color=gainsboro,width=4cm,height=3cm,valign=top]%
+testing \color{blue}testing testing testing
+
+And another paragraph.
+\end{longfbox}%
+
+x\lfbox[background-color=gainsboro,width=4cm,height=3cm,valign=top,raise=1ex]{%
+testing \color{blue}testing testing testing
+
+And another paragraph.
+}%
+
 
 Test\fbox{qtest}x
 
 
-\begin{longfbox}[background-color=floralwhite,border-style=dotted]%
+\begin{longfbox}[background-color=floralwhite,border-style=dotted,valign=top]%
 
-test test test test
-\begin{longfbox}[debug,background-color=gainsboro,width=5cm,height=5cm,height-align=middle]{testing q
-testing q
 
-%\begin{minipage}[t]{3cm}
-testing q testing testing tessting
+Start
 
-testing q testing testing tessting
-
-testing q testing testing tessting
-%\end{minipage}
+test x\begin{longfbox}[background-color=gainsboro,width=4cm,height=3cm,valign=top,raise=1ex]%
+testing \color{blue}testing testing testing
 
 And another paragraph.
-}\end{longfbox}%
+\end{longfbox}%
 x testing here.
+
+
+test x\begin{minipage}[t][4cm][t]{3cm}%
+testing testing testing testing
+
+And another paragraph.
+\end{minipage}%
+x testing here.
+
 
 \begin{longfbox}[bgcolor=gainsboro,height=4.8cm,height-align=middle,
     border-top-color=red,border-left-color=green,
