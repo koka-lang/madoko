@@ -80,6 +80,30 @@
 }
 
 % --------------------------------------------------------
+% 
+% --------------------------------------------------------
+
+% - defoptioncmd{/fam/key}[default]{code}
+%
+% - defoptionfamily: {fam}{delegates}
+% - defoptionstyle:  code on new keys
+% - defoptionvalue:  {/fam/key}[default][initial]
+% - defoptiontoggle: {/fam/key}[initial]
+% - defoptiondimen:  {/fam/key}[initial]
+% - defoptionchoice: {/fam/key}{choices}
+% - defoptioncolor:  {/fam/key}[initial]
+%
+% - optionsreset{names}         : set back to original values
+% - optionsset{options}\<name>  : process options, and set \<name> to the processed options
+% - optionssetalso{options}     : used inside optionsset
+%
+% - option{/fam/key}: return the value 
+% - letoption{/fam/key}\<name>
+% - ifoptionequals
+% - ifoptionblank
+
+
+% --------------------------------------------------------
 % Extensions to pgfkeys
 % --------------------------------------------------------
 \newcommand\pgf@gethead[2]{%
@@ -109,23 +133,20 @@
     {\pgfkeysalso{\pgfkeyscurrentpath=#1}}%
     {\pgfkeyssetvalue{\pgfkeyscurrentpath}{#1}}%  
   \pgf@setroot{\pgfkeyscurrentpath}%
-  %\typeout{init: \pgfkeyscurrentkey, \pgfkeyscurrentpath=#1, root=\pgfroot}%
-  \pgfkeysifdefined{/\pgfroot/.@init}{}{\pgfkeyssetvalue{/\pgfroot/.@init}{}}%
   \edef\pgf@init{\pgfkeyscurrentpath={#1},}%
-  \pgfkeysalso{/\pgfroot/.@init/.append/.expand once=\pgf@init}%
+  \pgfkeysifdefined{/\pgfroot/.@init}{}%
+    {\pgfkeysalso{/\pgfroot/.@init/.initial=,/\pgfroot/.@init@top/.is toggle=true}}%
+  \pgfkeysalso{/\pgfroot/.@init/.append/.expanded=\pgf@init}%
 }
 
-\newcommand\pgfkeysinit[1]{%
-%  \typeout{init all: #1}%
-%  \def\do##1{\pgf@doinit{##1}}%
-%  \docsvlist{#1}%
-%}
-%\newcommand\pgf@doinit[1]{%
-  \pgfkeysifdefined{/#1/.@init}{%
-    \letvalueof{/#1/.@init}\pgf@defaultsettings
-    %\typeout{initialize: #1 with \pgf@defaultsettings}%
-    \expandafter\pgfkeys\expandafter{\pgf@defaultsettings}%
-  }{}%
+\pgfkeys{/handlers/.initialize/.code=%
+  \iftoggle{\pgfkeyscurrentpath/.@init@top}%
+    {\pgfkeysalso{\pgfkeyscurrentpath/.@init@top=false}}%
+    {\letvalueof{\pgfkeyscurrentpath/.@init}\pgf@inits
+     %\typeout{initialize \pgfkeyscurrentpath = \pgf@inits.}\typeout{}%
+     \expandafter\pgfkeys\expandafter{\pgf@inits}%
+    }%
+  \pgfkeysalso{\pgfkeyscurrentpath/.cd}%
 }
 
 \pgfkeys{/handlers/.is oneof/.code=%
@@ -157,7 +178,7 @@
 
 
 \pgfkeys{/handlers/.is toggle/.code=%
-  %\typeout{define toggle: \pgfkeyscurrentpath}%
+  %\typeout{define toggle: \pgfkeyscurrentpath=#1}%
   \providetoggle{\pgfkeyscurrentpath}%
   \pgfkeysalso{%
     \pgfkeyscurrentpath/.ecode=\noexpand\pgf@handle@toggle{##1}{\pgfkeyscurrentpath},%
@@ -457,14 +478,15 @@
 % --------------------------------------------------------
 %
 % --------------------------------------------------------
-\newenvironment{lb@longbox}{%
+\newenvironment{lb@longbox}[1][]{%
   \begingroup
+  \pgfkeys{#1} % inside the group
   \savenotes
   \ifdim\valueof{/longbox/width}=-1sp\relax
     \pgfkeys{/longbox/width=\linewidth-\valueof{/longbox/extra-sides}}%
   \fi
   \lvbox{\lb@mainbox}{\valueof{/longbox/width}}%
-  \valueof{/longbox/insert-before}% 
+  \valueof{/longbox/insert-before}%
 }{%
   \valueof{/longbox/insert-after}%
   \par\unskip
@@ -475,14 +497,15 @@
   \endgroup
 }
 
-\newcommand\@lbox[1]{%  
-  \longboxadjustkeys
+\newcommand\lb@lbox[2][]{%  
+  \begingroup
+  \pgfkeys{#1}  % set keys here inside a group 
   \leavevmode
   \setbox\lb@mainbox=\hbox{%
     \color@begingroup
     \valueof{/longbox/insert-before}%
-    #1%
-    \valueof{/longbox/insert-before}%
+    #2%
+    \valueof{/longbox/insert-after}%
     \color@endgroup
   }%
   %\lb@debug{initial lbox: \the\dp\lb@mainbox, \the\ht\lb@mainbox, \the\wd\lb@mainbox}%
@@ -491,6 +514,7 @@
   \fi
   \setbox\lb@mainbox=\vbox{\hbox to \valueof{/longbox/width}{\unhbox\lb@mainbox}}%
   \lb@processbox
+  \endgroup
 }
 
 \newcommand\lb@processbox{%
@@ -669,7 +693,9 @@
 % --------------------------------------------------------
 
 % keys and styles that can be set once globally
-\pgfkeys{/longbox/.is family}%
+\pgfkeys{%
+  /longbox/.is family
+}%
 
 \pgfkeys{longbox,%
   % global options
@@ -690,7 +716,7 @@
   render/.style={/longbox/render-single=#1, /longbox/render-first=#1, 
                   /longbox/render-middle=#1, /longbox/render-last=#1},
   bgcolor/.forward to={/longbox/background-color},%
-  % scoped (.init) options
+  % scoped (.init) options; these are reinitialized in nested scopes
   extra-single/.set={.is dimexpr,.init=-1sp},
   extra-first/.set={.is dimexpr,.init=0pt},
   extra-middle/.set={.is dimexpr,.init=0pt},
@@ -711,7 +737,7 @@
   color/.set={.is color,.init={.}},
   breakable/.set={.is toggle,.init=true},
   insert-before/.init={},
-  insert-after/.init={},
+  insert-after/.init={},  
 }
 
 \newcommand\longboxadjustkeys{%
@@ -732,21 +758,11 @@
 }
 
 \newenvironment{longbox}[1][]{%
-  % keys that are always defaulted at the start
-  \pgfkeysinit{longbox}% set initial values
-  \pgfkeys{longbox,#1}%
-  \begin{@longbox}%
-}{\end{@longbox}}
-
-\newenvironment{@longbox}{%  
-  \longboxadjustkeys
-  \begin{lb@longbox}%
+  \begin{lb@longbox}[/longbox/.initialize,#1,/utils/exec=\longboxadjustkeys]%
 }{\end{lb@longbox}}
 
 \newcommand\lbox[1][]{%
-  \pgfkeysinit{longbox}% set initial values
-  \pgfkeys{longbox,width-outer=-1sp,#1}%
-  \@lbox
+  \lb@lbox[/longbox/.initialize,#1,/utils/exec=\longboxadjustkeys]
 }
 
 % ------------------------------------------------------------------------------
@@ -877,7 +893,7 @@
 
 \pgfkeys{%
   /fbox/.is family,
-  /fbox/.search also={/longbox},
+  /fbox/.search also={/longbox}
 }
 \pgfkeys{fbox,
   % global keys and styles
@@ -896,14 +912,14 @@
                           /fbox/border-bottom-style=#3,/fbox/border-left-style=#4},
   border-break-style/.style={/fbox/border-break-top-style=#1,/fbox/border-break-bottom-style=#1},
   padding-break/.style={/fbox/padding-break-top=#1,/fbox/padding-break-bottom=#1},
-  inner-height/.is dimexpr=0pt,,
-  inner-depth/.is dimexpr=0pt,,
-  inner-width/.is dimexpr=0pt,,
-  borderbox-width/.is dimexpr=0pt,,
-  borderbox-height/.is dimexpr=0pt,,
-  borderbox-depth/.is dimexpr=0pt,,
+  inner-height/.is dimexpr=0pt,
+  inner-depth/.is dimexpr=0pt,
+  inner-width/.is dimexpr=0pt,
+  borderbox-width/.is dimexpr=0pt,
+  borderbox-height/.is dimexpr=0pt,
+  borderbox-depth/.is dimexpr=0pt,
   lower/.is dimexpr=0pt,,%
-  % scoped (init) keys
+  % scoped (init) keys; these are reinitialized for nested scopes.
   padding-top/.set={.is dimexpr,.init=\fboxsep},
   padding-right/.set={.is dimexpr,.init=\fboxsep},
   padding-bottom/.set={.is dimexpr,.init=\fboxsep},
@@ -968,21 +984,11 @@
 }
 
 \newenvironment{longfbox}[1][]{%
-  \pgfkeysinit{longbox}%
-  \pgfkeysinit{fbox}% set to initial values
-  \pgfkeys{fbox,/longbox/render=\fbox@render,#1}% add new keys
-  \fboxadjustkeys
-  \begin{@longbox}%
-}{\end{@longbox}}
+  \begin{longbox}[/longbox/render=\fbox@render,/fbox/.initialize,#1,/utils/exec=\fboxadjustkeys]%
+}{\end{longbox}}
 
-\newcommand\lfbox[2][]{%
-  \begingroup
-  \pgfkeysinit{longbox}%
-  \pgfkeysinit{fbox}%
-  \pgfkeys{fbox,/longbox/render=\fbox@render,/longbox/width-outer=-1sp,#1}%
-  \fboxadjustkeys
-  \@lbox{#2}%
-  \endgroup
+\newcommand\lfbox[1][]{%
+  \lbox[/longbox/render=\fbox@render,/fbox/.initialize,#1,/utils/exec=\fboxadjustkeys]%
 }
 
 \makeatother
@@ -994,6 +1000,9 @@
 \parskip=0ex %\parindent=0pt
 
 \begin{document}
+
+\lfbox[border-bottom-color=teal,border-width=5pt]{one}
+\lfbox[border-style=dotted]{two} \lfbox{three}
 
 Here is a longer paragraph that I am writing.
 Here is a longer paragraph that I am writing.
