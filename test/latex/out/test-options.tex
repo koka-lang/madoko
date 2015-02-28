@@ -52,48 +52,91 @@
   \opt@split#1==\relax
   \expandafter\opt@do\fi}
 
+
 \def\opt@split#1=#2=#3\relax{%
-  \opt@@sp@def\option@name{#1}%
-  \ifx\option@name\@empty\else
+  \opt@@sp@def\option@key{#1}%
+  \ifx\option@key\@empty\else
     % try key directly
-    \opt@ifabsolute\option@name%
-      {\let\option@key\option@name}%
-      {\edef\option@key{\opt@family/\option@name}}%
+    \option@ifispath{\option@key}\else
+      \edef\option@key{\opt@family/\option@key}% use default path
+    \fi
     \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
-    \typeout{try \option@key (\opt@family,\option@name) as \meaning\opt@try@key}%      
+    \typeout{try \option@key as \meaning\opt@try@key}%      
     \ifx\opt@try@key\relax
       % not found: search the family
       \ifopt@nosearch\else
         \ifoptiondefined{\opt@family/.search}{\option{\opt@family/.search}}{}%
       \fi
       \ifx\opt@try@key\relax
-        \ifopt@ignoreunknown \typeout{ignore unknown \option@key}\else
-          \opt@err{\option@name\space is undefined in family "\opt@family" (\option{\opt@family/.delegates})}%
+        % still not found; split the key
+        \option@splitkey\optionkey% defines option@path option@name
+        % perhaps there is a handler?
+        \edef\opt@temp{/handlers/\option@name}%
+        \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+        \ifx\opt@try@key\relax
+          % perhaps the family has an unknown handler?
+          \edef\opt@temp{\option@path/.unknown}%
+          \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+          \ifx\opt@try@key\relax
+            % ok, call the general unknown handler
+            \edef\opt@temp{/handlers/.unknown}%
+            \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+          \fi
         \fi
-      \fi
+        \let\option@key\opt@temp
+      \fi       
     \fi
     % assign
-    \typeout{found \option@key}%
-    \ifx\opt@try@key\relax\else % test once more due to ignoreunknown
-      \ifx\@empty#3\@empty
-        \let\option@value\opt@default
-      \else
-        \opt@@sp@def\option@value{#2}%
-      \fi
-      % now \option@key and \option@value are defined; invoke the /.code
-      \typeout{call code \option@key/.code}%
-      \csname optk@\option@key/.code\endcsname{\option@value}%
+    \typeout{apply \option@key}%
+    \ifx\@empty#3\@empty
+      \let\option@value\opt@default
+    \else
+      \opt@@sp@def\option@value{#2}%
     \fi
+    % now \option@key and \option@value are defined; invoke the /.code
+    \typeout{call code \option@key/.code}%
+    \csname optk@\option@key/.code\endcsname{\option@value}%
   \fi}
 
 % magic option parsing ;-) Basically unchanged from original definition in the keyval package 
-\def\option@name#1{%
+\def\option@key#1{%
 \def\opt@@sp@def##1##2{\opt@@sp@b##2\@nil\@nil#1\@nil\relax##1}}
-\option@name{ }
+\option@key{ }
 \def\opt@@sp@b#1#2 \@nil{\opt@@sp@c#1#2}
 \def\opt@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
 
 \newrobustcmd*\opt@err[1]{\errmessage{options: #1}}
+
+% \option@splitkey{key}: split a key: sets \option@name & \option@path
+%
+% grammar:
+%   key  ::= (<path>/)? <name>
+%   path ::= (/<dir>)*
+%   dir  ::= <name>
+%   name ::= [\w.- ]*
+%
+\newrobustcmd*\option@splitkey[1]{%
+  \let\option@path\@empty%
+  \typeout{split: #1}%
+  \expandafter\option@splitkey@#1/\relax
+}
+\def\option@splitkey@#1/#2\relax{%
+  \typeout{ match #1,#2.}%
+  \def\opt@temp{#2}%
+  \ifx\opt@temp\@empty 
+    \def\option@name{#1}%
+    \typeout{splitted to: (\option@path)\option@name.}%
+  \else
+    \edef\option@path{\option@path#1/}%
+    \option@splitkey@#2\relax
+  \fi
+}
+
+% option@ispath{key}: check if key starts with /
+\newcommand*\option@ifispath[1]{\expandafter\option@ifispath@#1/\relax}
+\def\option@ifispath@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
+
+\newrobustcmd*\opt@default{}
 
 
 % --------------------------------------------------------
@@ -133,8 +176,6 @@
   \expandafter\setlength\csname #1\endcsname{#2}%
 }
 
-
-\newrobustcmd*\opt@default{}
 
 \newrobustcmd*\opt@ifabsolute[1]{\expandafter\opt@ifabsolute@#1/\relax}
 \def\opt@ifabsolute@#1/#2\relax{\ifblank{#1}}
@@ -441,6 +482,9 @@
 
 \makeatletter
 
+
+
+
 \defoptionfamily{fama}
 \defoptionfamily{famb}[fama]
 \defoptionfamily{famc}[fama]
@@ -482,3 +526,24 @@ fboxrule=\the\dimexpr\fboxrule\relax,
 
 
 \end{document}
+
+
+\newrobustcmd*\test[1]{%
+  \option@splitkey{#1}%
+  \typeout{split #1: (\option@path)\option@name.}%
+}
+
+\test{/fam/key}
+\test{/key}
+\test{key}
+\test{/.ignore}
+\test{/fam/sub/key}
+\test{/fam/sub/key/.ignore}
+\test{}
+\test{/}
+\test{foo/key}
+\test{//key}
+\test{//fam/key}
+\test{//}
+\test{///}
+\test{////key}
