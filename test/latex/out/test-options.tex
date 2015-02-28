@@ -35,7 +35,7 @@
 \newif\ifopt@nosearch
 
 \newrobustcmd*\optionset[1]{%
-  \def\opt@family{}%
+  \def\opt@familydefault{}%
   \opt@nosearchfalse%
   \opt@ignoreunknownfalse%
   \optionsetalso{#1}%
@@ -54,28 +54,34 @@
 
 
 \def\opt@split#1=#2=#3\relax{%
-  \opt@@sp@def\option@key{#1}%
-  \ifx\option@key\@empty\else
+  \opt@@sp@def\option@rawkey{#1}%
+  \ifx\option@rawkey\@empty\else
     % try key directly
-    \option@ifispath{\option@key}\else
-      \edef\option@key{\opt@family/\option@key}% use default path
+    \option@ifisabsolute{\option@rawkey}%
+      \let\option@key\option@rawkey%
+    \else
+      \edef\option@key{\opt@familydefault/\option@rawkey}% use default path
     \fi
     \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
     \typeout{try \option@key as \meaning\opt@try@key}%      
     \ifx\opt@try@key\relax
-      % not found: search the family
-      \ifopt@nosearch\else
-        \ifoptiondefined{\opt@family/.search}{\option{\opt@family/.search}}{}%
+      % not found: search the family if: not an absolute path & searching is enabled
+      \ifx\option@key\option@rawkey\else% if not absolute
+        \ifopt@nosearch\else
+          \ifoptiondefined{\opt@familydefault/.search}{\option{\opt@familydefault/.search}}{}%
+        \fi
       \fi
       \ifx\opt@try@key\relax
-        % still not found; split the key
-        \option@splitkey\optionkey% defines option@path option@name
-        % perhaps there is a handler?
-        \edef\opt@temp{/handlers/\option@name}%
-        \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
-        \ifx\opt@try@key\relax
-          % perhaps the family has an unknown handler?
-          \edef\opt@temp{\option@path/.unknown}%
+        % still not found; is it a handler?
+        \option@splithandler\option@key% defines option@handler
+        \ifx\option@handler\@empty\else
+          \edef\opt@temp{/handlers/\option@handler}%
+          \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+        \fi
+      \fi
+      \ifx\opt@try@key\relax
+        % still not found: perhaps the family has an unknown handler?
+        \edef\opt@temp{\option@path/.unknown}%
           \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
           \ifx\opt@try@key\relax
             % ok, call the general unknown handler
@@ -99,44 +105,82 @@
   \fi}
 
 % magic option parsing ;-) Basically unchanged from original definition in the keyval package 
-\def\option@key#1{%
+\def\option@rawkey#1{%
 \def\opt@@sp@def##1##2{\opt@@sp@b##2\@nil\@nil#1\@nil\relax##1}}
-\option@key{ }
+\option@rawkey{ }
 \def\opt@@sp@b#1#2 \@nil{\opt@@sp@c#1#2}
 \def\opt@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
 
 \newrobustcmd*\opt@err[1]{\errmessage{options: #1}}
 
-% \option@splitkey{key}: split a key: sets \option@name & \option@path
+% \option@splitkey{key}: split a key: sets \option@root, \option@path, 
 %
-% grammar:
-%   key  ::= (<path>/)? <name>
-%   path ::= (/<dir>)*
-%   dir  ::= <name>
-%   name ::= [\w.- ]*
+%   key     ::= (/?)(<fam>/)?<path>
+%   path    ::= (<handler>|<name>)
+%   handler ::= .<name>
+%   name    ::= [\w- ]* 
 %
 \newrobustcmd*\option@splitkey[1]{%
-  \let\option@path\@empty%
-  \typeout{split: #1}%
   \expandafter\option@splitkey@#1/\relax
+  \typeout{splitted #1 to: (\option@family)\option@name}%
 }
+
+\def\option@splitfam@#1/#2/#3/#4\relax{%
+  \typeout{ matchfam #1,#2,#3,#4}%
+  \def\option@family{#2}%
+  \ifx\option@family\@empty 
+    \def\option@name{#1}% just name
+  \else
+    \def\option@name{#3}%  /fam/key
+  \fi
+}
+
+% option@getroot{key}: split off the part /root, sets option@root
+\def\option@getroot[1]{\expandafter\option@getroot@#1//\relax}
+\def\option@getroot@#1/#2/#3\relax{%
+  \def\opt@temp{#1}%
+  \ifx\opt@temp\empty%
+    \def\option@root{#2}%
+  \else
+    \let\option@root\@empty%
+  \fi  
+}
+
+% option@gethandler{key}: split off the part after the "."
+\def\option@splithandler[1]{\expandafter\option@splithandler@#1./relax}
+\def\option@splithandler@#1.#2/relax{%
+  \def\option@handler{#2}%
+  \ifx\option@handler\@empty\else\def\option@handler{.#2}\fi%
+}
+
+% option@isabsolute{key}: check if key starts with /
+\newcommand*\option@ifisabsolute[1]{\expandafter\option@ifisabsolute@#1/\relax}
+\def\option@ifisabsolute@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
+
+\newrobustcmd*\opt@default{}
+
+
+% grammar:
+%   key     ::= (/?)(<fam>/)?<path>
+%   path    ::= (<name>/)*(<handler>|<name>)
+%   handler ::= .<name>
+%   name    ::= [\w- ]* 
+
 \def\option@splitkey@#1/#2\relax{%
   \typeout{ match #1,#2.}%
   \def\opt@temp{#2}%
   \ifx\opt@temp\@empty 
     \def\option@name{#1}%
-    \typeout{splitted to: (\option@path)\option@name.}%
+    \edef\option@path{\option@path\option@name}%
   \else
-    \edef\option@path{\option@path#1/}%
+    \ifx\option@family\@empty
+      \def\option@family{#1}%
+    \else
+      \edef\option@path{\option@path#1/}%
+    \fi
     \option@splitkey@#2\relax
   \fi
 }
-
-% option@ispath{key}: check if key starts with /
-\newcommand*\option@ifispath[1]{\expandafter\option@ifispath@#1/\relax}
-\def\option@ifispath@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
-
-\newrobustcmd*\opt@default{}
 
 
 % --------------------------------------------------------
@@ -283,12 +327,12 @@
 \newrobustcmd*\defoptioncode@[3]{%*[]
   \typeout{define code: #2}%  
   \option@ensurefree{#2}%
-  \option@letfamily{#2}\opt@family
+  \option@letfamily{#2}\opt@familydefault
   \option@letname{#2}\opt@name
-  \typeout{fam: \opt@family, name: \opt@name}%
+  \typeout{fam: \opt@familydefault, name: \opt@name}%
   %  \opt@err{option "#2": no family specified. Option definitions must look like "/<family>/<name>"}
-  \eifblank{\opt@family}{}{%
-    \typeout{add key: /\opt@family/.keys = \option{/\opt@family/.keys} + #2}\option@appendlist{/\opt@family/.keys}{#2}}%
+  \eifblank{\opt@familydefault}{}{%
+    \typeout{add key: /\opt@familydefault/.keys = \option{/\opt@familydefault/.keys} + #2}\option@appendlist{/\opt@familydefault/.keys}{#2}}%
   \eifblank{\opt@name}{%
     \opt@err{option "#2": no key name specified. Option definitions must start with a "/<family>/<name>"}
   }{}%
@@ -349,7 +393,7 @@
 \def\defoptionfamily@#1[#2]{%
   \typeout{define family: #1: #2}%
   \option@appendlist{/.families}{#1}%
-  \defoptioncode*{/#1}{\def\opt@family{/#1}}%
+  \defoptioncode*{/#1}{\def\opt@familydefault{/#1}}%
   \option@esetkey{/#1/.delegates}{#2}%
   % define search for a key in this family (fully expanded for efficiency)
   \option@setkey{/#1/.search}{%
@@ -483,6 +527,26 @@
 \makeatletter
 
 
+\newrobustcmd*\test[1]{%
+  \option@splitkey{#1}%
+}
+
+\test{/fam/key}
+\test{/key}
+\test{key}
+\test{/.ignore}
+\test{/fam/sub/key}
+\test{/fam/sub/key/.ignore}
+\test{}
+\test{/}
+\test{foo/key}
+\test{//key}
+\test{//fam/key}
+\test{//}
+\test{///}
+\test{////key}
+\end{document}
+
 
 
 \defoptionfamily{fama}
@@ -526,24 +590,3 @@ fboxrule=\the\dimexpr\fboxrule\relax,
 
 
 \end{document}
-
-
-\newrobustcmd*\test[1]{%
-  \option@splitkey{#1}%
-  \typeout{split #1: (\option@path)\option@name.}%
-}
-
-\test{/fam/key}
-\test{/key}
-\test{key}
-\test{/.ignore}
-\test{/fam/sub/key}
-\test{/fam/sub/key/.ignore}
-\test{}
-\test{/}
-\test{foo/key}
-\test{//key}
-\test{//fam/key}
-\test{//}
-\test{///}
-\test{////key}
