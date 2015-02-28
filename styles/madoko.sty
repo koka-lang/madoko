@@ -361,14 +361,14 @@
   \eifstrequal{\cssStarForm}{false}{\endgroup\csname #2\endcsname{#3}}{\endgroup\csname #2\endcsname*{#3}}%
 }
 
-\newcommand{\mdH}[2][]{\leavevmode\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
-\newcommand{\mdHx}[2][]{\leavevmode\mdHBookmark{1}{#1}\mdCommandUnStar[#1]{chapter}{\cssInline[elem=h1,#1]{#2}}}
-\newcommand{\mdHxx}[2][]{\leavevmode\mdHBookmark{2}{#1}\mdCommandUnStar[#1]{section}{\cssInline[elem=h2,#1]{#2}}}
-\newcommand{\mdHxxx}[2][]{\leavevmode\mdHBookmark{3}{#1}\mdCommandUnStar[#1]{subsection}{\cssInline[elem=h3,#1]{#2}}}
-\newcommand{\mdHxxxx}[2][]{\leavevmode\mdHBookmark{4}{#1}\mdCommandUnStar[#1]{subsubsection}{\cssInline[elem=h4,#1]{#2}}}
-\newcommand{\mdHxxxxx}[2][]{\leavevmode\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h5,#1]{#2}}}
-\newcommand{\mdHxxxxxx}[2][]{\leavevmode\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h6,#1]{#2}}}
-\newenvironment{mdSection}[1][]{\leavevmode\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
+\newcommand{\mdH}[2][]{\mdHBookmark{0}{#1}\mdCommandUnStar[#1]{part}{\cssInline[elem=h0,#1]{#2}}}
+\newcommand{\mdHx}[2][]{\mdHBookmark{1}{#1}\mdCommandUnStar[#1]{chapter}{\cssInline[elem=h1,#1]{#2}}}
+\newcommand{\mdHxx}[2][]{\mdHBookmark{2}{#1}\mdCommandUnStar[#1]{section}{\cssInline[elem=h2,#1]{#2}}}
+\newcommand{\mdHxxx}[2][]{\mdHBookmark{3}{#1}\mdCommandUnStar[#1]{subsection}{\cssInline[elem=h3,#1]{#2}}}
+\newcommand{\mdHxxxx}[2][]{\mdHBookmark{4}{#1}\mdCommandUnStar[#1]{subsubsection}{\cssInline[elem=h4,#1]{#2}}}
+\newcommand{\mdHxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h5,#1]{#2}}}
+\newcommand{\mdHxxxxxx}[2][]{\mdCommandUnStar[#1]{paragraph}{\cssInline[elem=h6,#1]{#2}}}
+\newenvironment{mdSection}[1][]{\mdHBookmark{2}{#1}\begin{mdDiv}[#1]}{\end{mdDiv}}
 
 %\patchcmd{\@startsection}%
 % {\@ssect{#3}{#4}{#5}{#6}}%
