@@ -42,6 +42,7 @@ public function cssExpandKeys( kvs0 : dict<string> ) : dict<string> {
     kvs.cssExpandTRBL("padding"),
     kvs.cssExpandTRBL("border-style"),
     kvs.cssExpandTRBL("border-width"),
+    kvs.cssExpandTRBL("border-color"),
   ].concat
   xs.dict + kvs 
 }
@@ -110,7 +111,11 @@ val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxE
 
 
 public function braced( s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) then s else "{" + s + "}"
+  if (s.isBraced) then s else "{" + s + "}"
+}
+
+public function isBraced( s : string ) : bool {
+  s.startsWith("{") && s.endsWith("}")
 }
 
 public function cssColorCmd( v : string ) : string {
@@ -141,7 +146,7 @@ public function cssColor( v0 : string ) : string {
           cssRgb(rgb)
         }
         Nothing -> match(cssStdNames[v]) {
-          Just    -> v.capitalize
+          Just    -> v
           Nothing -> match(cssNamedColors[v]) { 
             Just(clr) -> clr
             Nothing   -> {
@@ -156,6 +161,15 @@ public function cssColor( v0 : string ) : string {
 }
 
 function cssRgb(rgb : (int,int,int) ) : string {
+  function hex(i) {
+    i.min(255).max(0).showHex(2)
+  }
+  val (r,g,b) = rgb
+  if (r==0 && g==0 && b==0) then "black"
+  elif (r>=255 && g>=255 && b>=255) then "white"
+  else "\\#" + r.hex + g.hex + b.hex
+
+  /*
   function mix(i,clr) {
     clr + "," + (i.min(255).max(0)).show
   }
@@ -168,14 +182,14 @@ function cssRgb(rgb : (int,int,int) ) : string {
   else {
     ("rgb,255:" + [r.mix("red"), g.mix("green"), b.mix("blue")].join(";")).braced
   }
+  */
 }
 
-public function cssHeight( v : string ) : string {
-  cssWidth(v,"Height")
+public function cssHeight( v : string, auto : string = "" ) : string {
+  cssWidth(v,auto,"height")
 }
 
-public function cssWidth( v0 : string, percOf : string = "Width" ) : string {
-
+public function cssWidth( v0 : string, auto : string = "", percOf : string = "width" ) : string {
   val v = v0.cssNormalize.toLower
   match(v.find(rxPerc)) {
     Just(cap) -> {
@@ -185,10 +199,12 @@ public function cssWidth( v0 : string, percOf : string = "Width" ) : string {
     Nothing -> match(v.find(rxLen)) {
       Just(cap) -> {
         if (cssUnits.containsKey(cap.groups[2])) 
-         then "\\dim" + cap.groups[2].capitalize + cap.groups[1].braced
+         then "\\dim" + cap.groups[2] + cap.groups[1].braced
          else cssValue(v)
       }
-      Nothing -> cssValue(v)
+      Nothing -> {
+        if (v=="auto") then auto else cssValue(v)
+      }
     }
   }
 }
@@ -253,6 +269,7 @@ val cssStdNamesList : list<string> = [
   "red", "lime", "blue", "yellow", "cyan", "magenta", "navy", "maroon", "green", "teal", "purple", "olive",   
   "black", "dimgray", "gray", "darkgray", "silver", "lightgray", "gainsboro", "floralwhite", "ivory", "white", 
   "orange", "aqua", "fuchsia",
+  "transparent","currentcolor",
 ]
 
 val cssNamedColors : dict<string> = cssNamedColorsList.map( fun(kv) { (kv.fst,kv.snd.cssRgb) }).dict

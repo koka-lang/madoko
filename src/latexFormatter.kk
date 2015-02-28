@@ -39,8 +39,8 @@ public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string,
 }
 
 public function fmtLatexLineInfo( context : inlineContext, lineInfo : string ) : string {
-  "%mdk-data-line={" + lineInfo + "}\n"
-  "\\mdkline{" + lineInfo + "}"
+  //"%mdk-data-line={" + lineInfo + "}\n"
+  "\\mdline{" + lineInfo + "}"
 }
 
 public function fmtLatexEscape( context : inlineContext, txt : string, allowEntity : bool ) : string {
@@ -449,66 +449,83 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyEnv(kvs,"tex-env",elem)
       .cssOuter(kvs)
       .applyCmd(kvs,"tex-outercmd")
+      .applyBlock(kvs)
+}
+
+function applyBlock( body : string, kvs : dict<string> ) : string {
+  if (kvs.cssIsBlock) then "\n" + body.trim + "%mdk\n" else body
 }
 
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> 
-      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced + "\n"
+      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced 
   }
 }
 
 function applyEnv( body : string, kvs : dict<string>, key : string, elem : string) : string {
   match(kvs[key]) {
-    Nothing -> {
-      if (elem=="p") {
-        body + "\n" // body will already end in \n 
-      }
-      else {
-        body
-      }
-    }
-    Just(env) -> {
-      val (envName,envArgs) = match(env.find(rxEnv)) {
-                               Just(cap) -> (cap.groups[1],cap.groups[2])
-                               Nothing   -> (env,"")
-                             }
-      "%mdk\n\\begin{" + envName + "}" + envArgs + "%mdk\n" + body + "%mdk\n\\end{" + envName + "}%mdk\n"
-    }
+    Nothing -> body
+    Just(env) -> match(env.find(rxEnv)) {
+                   Just(cap) -> body.blockEnv(cap.groups[1],cap.groups[2])
+                   Nothing   -> body.blockEnv(env)
+                 }
   }
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
 
+function blockEnv( body : string, env : string, args : string = "" ) {      
+  "\\begin{" + env + "}" + args + "%mdk\n" + body + "%mdk\n\\end{" + env + "}"
+}
+
+function trimEnv( body : string, env : string, args : string = "" ) {      
+  body.trim.blockEnv(env,args)
+}
+
+function braceCmd( body : string, cmd : string, args : string ) : string {
+  "{\\md" + cmd + args + body + "}"
+}
+
+function trimEnvCmd( body : string, name : string, args : string, isBlock : bool ) {      
+  if (isBlock) 
+    then body.trimEnv( "mdb" + name, args)
+    else "\\md" + name + args + body.braced  
+}
+
+
 function cssInner( body0 : string, kvs : dict<string> ) : string {
-  val body1 = 
+  val isBlock = kvs.cssIsBlock
+  val body1 = body0
+          .onKey(kvs,"color", fun(value,body) {
+            body.braceCmd("color",value.cssColor.braced)
+          })
+          .onKey(kvs,"height", fun(height,body) {
+            body.trimEnvCmd("height", height.cssHeight.braced, isBlock) // todo: auto, minheight, maxheight
+          })
+                 
+  val body2 = 
     if (kvs.cssIsBlock) then {
-      body0.onKey(kvs,"height", fun(height,body) {
-              "\n\\begin{mdHeight}" + height.cssHeight.braced + "%mdk\n" +
-              body.trim + "\n\\end{mdHeight}%mdk\n"
-           })
-           .onKeys(kvs,["padding-left","padding-right"], fun(body) {
-             "\n\\begin{mdMarginLR}" + [kvs.find("padding-right"),kvs.find("padding-left")].texArgs +
-             "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
-           })
-           .onKey(kvs,"padding-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
-           .onKey(kvs,"padding-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+      body1.onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(body) {  
+              body.padding(kvs)
+            })
     }
     else {
-      body0.cssInlineMargin(kvs,"padding")
+      body1.cssInlineMargin(kvs,"padding")           
     } 
-  body1.onKeys(kvs,["border-style","border-top-style","border-bottom-style","border-left-style","border-right-style","background-color"], 
-                fun(body) { body.cssBorder(kvs) } )
+  body2   .onKeys(kvs,["border-top-style","border-bottom-style","border-left-style","border-right-style"], fun(body) { 
+            body.cssBorder(kvs) 
+          })
+          .onKey(kvs,"background-color", fun(value,body) {
+            body.trimEnvCmd("colorbox", value.cssColor.braced, isBlock )
+          })
 }
 
 function cssOuter( body0 : string, kvs : dict<string> ) : string {
   if (kvs.cssIsBlock) {
-   body0.onKeys(kvs,["margin-left","margin-right","width"], fun(body) {  
-         "\n\\begin{mdMarginLR}" + kvs.marginLR +
-         "%mdk\n" + body.trim + "\n\\end{mdMarginLR}%mdk\n"
-       })
-       .onKey(kvs,"margin-bottom", fun(value,body) { body.trimRight + "%mdk\n\\mdMarginBottom" + value.braced + "%mdk\n" } )
-       .onKey(kvs,"margin-top", fun(value,body) { "\\mdMarginTop" + value.braced + "%mdk\n" + body.trimLeft } )       
+   body0.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom","width"], fun(body) {  
+          body.margins(kvs)
+        })
   }
   else {
     body0.cssInlineMargin(kvs,"margin")
@@ -524,83 +541,113 @@ function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) 
               })
   if (kvs.cssIsInlineBlock) {
     body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
-            "\\mdmargintb" + cssHeight(kvs.find(margin + "-top")).braced + cssHeight(kvs.find(margin + "-bottom")).braced + body.braced
+            "\\md" + margin + "tb" + cssHeight(kvs.find(margin + "-top")).braced + cssHeight(kvs.find(margin + "-bottom")).braced + body.braced
           })
   }
   else body1
 }
 
-function marginLR( kvs : dict<string> ) : string {
-  val width  = kvs.dimBorderBoxWidth
-  val left  = kvs.find("margin-left").cssWidth
-  val mright = kvs.find("margin-right").cssWidth
+function padding( body : string, kvs : dict<string> ) : string {
+  val ptop = kvs.find("padding-top").cssWidth
+  val pbottom = kvs.find("padding-bottom").cssWidth
+  val pleft = kvs.find("padding-left").cssWidth
+  val pright = kvs.find("padding-right").cssWidth
+  if (ptop==pbottom && pbottom==pleft && pleft==pright)
+   then body.trimEnv("mdbpadding", ptop.braced )
+   else body.trimEnv("mdbpaddingx", [ptop,pright,pbottom,pleft].map(braced).join )
+}
+
+function margins( body : string, kvs : dict<string> ) : string {
+  val mtop = kvs.find("margin-top").cssWidth  // top/bottom in margins are calculated with respect to width!
+  val mbottom = kvs.find("margin-bottom").cssWidth
+  val (mleft,mright) = kvs.marginLR
+  if (mtop==mbottom && mbottom==mleft && mleft==mright)
+   then body.trimEnv("mdbmargin", mtop.braced )
+   else body.trimEnv("mdbmarginx", [mtop,mright,mbottom,mleft].map(braced).join )
+}
+
+function marginLR( kvs : dict<string>, pre = "margin") : (string,string) {
+  val width  = if (pre=="margin") then kvs.dimBorderBoxWidth else kvs.find("width","").cssWidth
+  val left  = kvs.find(pre + "-left").cssWidth("auto")
+  val mright = kvs.find(pre + "-right").cssWidth("auto")
   val right  = if (width.bool && left.isEmpty && mright.isEmpty) then "auto" else mright
 
   if (left=="auto") {
     if (right=="auto") {
       val auto = dimAuto(width)
-      auto.braced + auto.braced
+      (auto,auto)
     }
-    else dimAuto(width,right).braced + right.braced
+    else (dimAuto(width,right),right)
   }
   elif (right=="auto") {
-    left.braced + dimAuto(width,left).braced
+    (left,dimAuto(width,left))
   }
   else {
-    left.braced + right.braced
+    (left,right)
   }
 }
 
 function dimAuto( w : string, other : string = "" ) : string {
-  if (w.isEmpty) then "" else "\\dimAuto" + w.braced + other.braced
+  if (w.isEmpty) then "" else "\\dimauto" + w.braced + other.braced
 }
 
 function dimBorderBoxWidth( kvs : dict<string> ) {
+  val width = kvs.dimContentWidth
+  if (width.isEmpty) return ""
+
+  val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
+               kvs.find("border-right-width"),kvs.find("padding-right")
+              ].filter(bool).map( fun(wd) { wd.cssWidth })
+  if (extra.isNil) 
+   then width
+   else "\\dimeval" + ([width] + extra).join("+").braced
+}
+
+function dimContentWidth( kvs : dict<string> ) {
   val w = kvs.find("width")
   if (w.isEmpty) return ""
   
   val maxw = kvs.find("max-width")
   val minw = kvs.find("min-width")
   
-  val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimMin" + w.cssWidth.braced + maxw.cssWidth.braced
-  val width  = if (minw.isEmpty) then width0 else "\\dimMax" + width0.braced + minw.cssWidth.braced 
-  val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
-               kvs.find("border-right-width"),kvs.find("padding-right")
-              ].filter(bool).map( fun(wd) { wd.cssWidth })
-  ([width] + extra).join("+")
+  val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimmin" + w.cssWidth.braced + maxw.cssWidth.braced
+  val width  = if (minw.isEmpty) then width0 else "\\dimmax" + width0.braced + minw.cssWidth.braced 
+  width
 }
 
-function cssBorder( body : string, kvs : dict<string> ) : string {
-  function hasStyle(side) {
-    match(kvs["border-" + side + "-style"]) {
-      Just(value) | value != "none" -> [] 
-      _ -> [side+"line=false"]
-    }
-  }
-  val hides   = ["top","right","bottom","left"].map(hasStyle) 
-  val hideall = (kvs.find("border-width")=="0pt" || hides.all(isCons))
-  val bcolor  = kvs.find("background-color","")
+struct borderspec( width:string, color:string, style:string)
 
+
+function cssBorder( body : string, kvs : dict<string> ) : string {
+  function getSpec(side : string ) : borderspec {
+    normSpec(
+      kvs.find("border-" + side + "-width","").cssWidth,
+      kvs.find("border-" + side + "-color","").cssColor,
+      kvs.find("border-" + side + "-style","").cssValue
+    )
+  }
+  function normSpec(width,color,style) {
+    Borderspec( 
+      if (style=="none") then "" else width,
+      if (color=="transparent") then "" else color,
+      if (color=="transparent") then "transparent" else style      
+    )
+  }
+  function cssSpec(spec:borderspec) {
+    (spec.width + (if (spec.color=="" && spec.style=="") then ""
+                   else ("," + spec.color + "," + spec.style))).braced
+  }
+
+  val specs = ("top","right","bottom","left").map(getSpec)
+  val specargs = specs.map(cssSpec)
+  val (post,args) = if (specargs.fst==specargs.snd && specargs.snd==specargs.thd && specargs.thd == specargs.field4) 
+                      then ("",specargs.fst)
+                      else ("x",specargs.fst + specargs.snd + specargs.thd + specargs.field4)
   if (kvs.cssIsBlock) {
-    if (hideall && bcolor!="") then {
-      "\n\\begin{mdBgColor}" + cssColorArg(bcolor) + "%mdk\n" +
-      body.trim +
-      "\n\\end{mdBgColor}%mdk\n"
-    }
-    else {
-    "\n\\begin{mdBorder}" + 
-      ([ ["linewidth=" + cssWidth(kvs.find("border-width","1pt")).braced],
-         kvs.optionArg("border-color","linecolor",cssColor),
-         kvs.optionArg("background-color","backgroundcolor",cssColor),
-       ] + hides).concat.join(",").braced + "%mdk\n"
-      + body.trim + 
-      "\n\\end{mdBorder}%mdk\n"
-    }
+    body.trimEnv("mdbborder" + post, args )    
   }
   else {
-    (if (hideall) then "" else "\\mdborder" + cssColorArg(kvs.find("border-color")).braced  + cssWidth(kvs.find("border-width","1px")).braced) +
-    (if (bcolor=="") then "" else "\\colorbox" + cssColorArg(bcolor)) + 
-    body.braced
+    "\\mdborder" + post + args + body.braced
   }
 }
 
