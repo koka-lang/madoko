@@ -12,15 +12,15 @@
 % 
 % --------------------------------------------------------
 
-% - defoptioncmd{/fam/key}[default]{code}
+% - newoptioncmd{/fam/key}[default]{cmd}
 %
-% - defoptionfamily: {fam}{delegates}
-% - defoptionstyle:  code on new keys
-% - defoptionvalue:  {/fam/key}[default][initial]
-% - defoptiontoggle: {/fam/key}[initial]
-% - defoptiondimen:  {/fam/key}[initial]
-% - defoptionchoice: {/fam/key}{choices}
-% - defoptioncolor:  {/fam/key}[initial]
+% - newoptionfamily: {fam}{delegates}
+% - newoptionstyle:  code on new keys
+% - newoptionvalue:  {/fam/key}[default][initial]
+% - newoptiontoggle: {/fam/key}[initial]
+% - newoptiondimen:  {/fam/key}[initial]
+% - newoptionchoice: {/fam/key}{choices}
+% - newoptioncolor:  {/fam/key}[initial]
 %
 % - optionsreset{names}         : set back to original values
 % - optionsset{options}\<name>  : process options, and set \<name> to the processed options
@@ -35,7 +35,7 @@
 \newif\ifopt@nosearch
 
 \newrobustcmd*\optionset[1]{%
-  \def\opt@familydefault{}%
+  \let\opt@defaultroot\@empty%
   \opt@nosearchfalse%
   \opt@ignoreunknownfalse%
   \optionsetalso{#1}%
@@ -60,37 +60,39 @@
     \option@ifisabsolute{\option@rawkey}%
       \let\option@key\option@rawkey%
     \else
-      \edef\option@key{\opt@familydefault/\option@rawkey}% use default path
+      \edef\option@key{\opt@defaultroot/\option@rawkey}% use default path
     \fi
     \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
-    \typeout{try \option@key as \meaning\opt@try@key}%      
+    \typeout{try \option@key, as \meaning\opt@try@key}%      
     \ifx\opt@try@key\relax
-      % not found: search the family if: not an absolute path & searching is enabled
+      % not found: search the root if: not an absolute path & searching is enabled        
       \ifx\option@key\option@rawkey\else% if not absolute
         \ifopt@nosearch\else
-          \ifoptiondefined{\opt@familydefault/.search}{\option{\opt@familydefault/.search}}{}%
+          \ifoptiondefined{\opt@defaultroot/.subsearch}{%
+            \let\option@path\option@rawkey%
+            \option{\opt@defaultroot/.subsearch}%
+          }{}%
         \fi
       \fi
       \ifx\opt@try@key\relax
         % still not found; is it a handler?
-        \option@splithandler\option@key% defines option@handler
+        \option@gethandler\option@key% defines option@handlerkey & option@handler
         \ifx\option@handler\@empty\else
-          \edef\opt@temp{/handlers/\option@handler}%
-          \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+          % try the handler
+          \edef\option@key{/handlers/\option@handler}%
+          \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
         \fi
-      \fi
-      \ifx\opt@try@key\relax
-        % still not found: perhaps the family has an unknown handler?
-        \edef\opt@temp{\option@path/.unknown}%
-          \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+        \ifx\opt@try@key\relax
+          % still not found: perhaps the root has an unknown handler?
+          \option@getroot\option@key % set option@root (to option@rootdefault if empty)
+          \edef\option@key{\option@root/.unknown}%
+          \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
           \ifx\opt@try@key\relax
-            % ok, call the general unknown handler
-            \edef\opt@temp{/handlers/.unknown}%
-            \expandafter\let\expandafter\opt@try@key\csname optk@\opt@temp\endcsname
+            % still not found: now call the general unknown handler
+            \def\option@key{/handlers/.unknown}%
           \fi
         \fi
-        \let\option@key\opt@temp
-      \fi       
+      \fi
     \fi
     % assign
     \typeout{apply \option@key}%
@@ -99,10 +101,11 @@
     \else
       \opt@@sp@def\option@value{#2}%
     \fi
-    % now \option@key and \option@value are defined; invoke the /.code
-    \typeout{call code \option@key/.code}%
-    \csname optk@\option@key/.code\endcsname{\option@value}%
-  \fi}
+    % now \option@key and \option@value are defined; invoke the /.cmd
+    \typeout{call cmd \option@key/.cmd}%
+    \csname optk@\option@key/.cmd\endcsname{\option@value}%
+  \fi
+}
 
 % magic option parsing ;-) Basically unchanged from original definition in the keyval package 
 \def\option@rawkey#1{%
@@ -111,7 +114,32 @@
 \def\opt@@sp@b#1#2 \@nil{\opt@@sp@c#1#2}
 \def\opt@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
 
-\newrobustcmd*\opt@err[1]{\errmessage{options: #1}}
+
+% option@getroot{key}: split off the part /root, sets option@root (to option@rootdefault if empty)
+\def\option@getroot#1{\expandafter\option@getroot@#1//\relax}
+\def\option@getroot@#1/#2/#3\relax{%
+  \def\opt@temp{#1}%
+  \ifx\opt@temp\@empty%
+    \def\option@root{#2}%
+  \else
+    \let\option@root\option@default%
+  \fi  
+}
+
+% option@gethandler{key}: split off the part after the ".", sets option@handlerkey and option@handler
+\def\option@gethandler#1{\expandafter\option@gethandler@#1./relax}
+\def\option@gethandler@#1.#2/relax{%
+  \def\option@handlerkey{#1}%
+  \def\option@handler{#2}%
+  \ifx\option@handler\@empty\else\def\option@handler{.#2}\fi%
+}
+
+% option@isabsolute{key}: check if key starts with /
+\def\option@ifisabsolute#1{\expandafter\option@ifisabsolute@#1/\relax}
+\def\option@ifisabsolute@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
+
+\def\opt@default{}
+
 
 % \option@splitkey{key}: split a key: sets \option@root, \option@path, 
 %
@@ -121,8 +149,10 @@
 %   name    ::= [\w- ]* 
 %
 \newrobustcmd*\option@splitkey[1]{%
+  \let\option@root\@empty
+  \let\option@path\@empty
   \expandafter\option@splitkey@#1/\relax
-  \typeout{splitted #1 to: (\option@family)\option@name}%
+  %\typeout{splitted #1 to: (\option@root)\option@path, with name \option@name.}%
 }
 
 \def\option@splitfam@#1/#2/#3/#4\relax{%
@@ -135,46 +165,28 @@
   \fi
 }
 
-% option@getroot{key}: split off the part /root, sets option@root
-\def\option@getroot[1]{\expandafter\option@getroot@#1//\relax}
-\def\option@getroot@#1/#2/#3\relax{%
-  \def\opt@temp{#1}%
-  \ifx\opt@temp\empty%
-    \def\option@root{#2}%
-  \else
-    \let\option@root\@empty%
-  \fi  
-}
-
-% option@gethandler{key}: split off the part after the "."
-\def\option@splithandler[1]{\expandafter\option@splithandler@#1./relax}
-\def\option@splithandler@#1.#2/relax{%
-  \def\option@handler{#2}%
-  \ifx\option@handler\@empty\else\def\option@handler{.#2}\fi%
-}
-
-% option@isabsolute{key}: check if key starts with /
-\newcommand*\option@ifisabsolute[1]{\expandafter\option@ifisabsolute@#1/\relax}
-\def\option@ifisabsolute@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
-
-\newrobustcmd*\opt@default{}
-
-
 % grammar:
-%   key     ::= (/?)(<fam>/)?<path>
+%   key     ::= (/?)(<root>/)?<path>
 %   path    ::= (<name>/)*(<handler>|<name>)
 %   handler ::= .<name>
 %   name    ::= [\w- ]* 
-
 \def\option@splitkey@#1/#2\relax{%
   \typeout{ match #1,#2.}%
   \def\opt@temp{#2}%
   \ifx\opt@temp\@empty 
-    \def\option@name{#1}%
-    \edef\option@path{\option@path\option@name}%
+    %\ifx\option@root\@empty
+    %  \def\option@root{#1}%
+    %  \let\option@name\@empty
+    %\else
+      \def\option@name{#1}%
+      \edef\option@path{\option@path\option@name}%
+    %\fi
   \else
-    \ifx\option@family\@empty
-      \def\option@family{#1}%
+    \ifx\option@root\@empty
+      \def\opt@temp{#1}%
+      \ifx\opt@temp\@empty\else
+        \def\option@root{/#1}%
+      \fi
     \else
       \edef\option@path{\option@path#1/}%
     \fi
@@ -220,20 +232,13 @@
   \expandafter\setlength\csname #1\endcsname{#2}%
 }
 
-
-\newrobustcmd*\opt@ifabsolute[1]{\expandafter\opt@ifabsolute@#1/\relax}
-\def\opt@ifabsolute@#1/#2\relax{\ifblank{#1}}
-
-\newrobustcmd*\option@letfamily[2]{\expandnext{\def#2}{\opt@letfamily@#1///\relax}}
-\def\opt@letfamily@/#1/#2/#3\relax{\ifblank{#2}{}{#1}}
-
-\newrobustcmd*\option@letname[2]{\expandnext{\def#2}{\opt@letname@#1///\relax}}
-\def\opt@letname@/#1/#2/#3\relax{\ifblank{#2}{#1}{#2}}
-
+% --------------------------------------------------------
+% Basic option commands
+% --------------------------------------------------------
 
 \def\option#1{\csname optk@#1\endcsname}
 \newrobustcmd*\letoption[2]{\expandafter\let\expandafter#2\csname optk@#1\endcsname}
-\newrobustcmd*\eletoption[2]{\protected@edef#2{\csuse{optk@#1}}}%
+\newrobustcmd*\eletoption[2]{\protected@edef#2{\csname optk@#1\endcsname}}%
 
 \newrobustcmd*\option@setkey[2]{\csdef{optk@#1}{#2}}
 \newrobustcmd*\option@letkey[2]{\cslet{optk@#1}#2}
@@ -241,7 +246,6 @@
 \newrobustcmd*\ifoptionvoid[1]{\ifcsvoid{optk@#1}}
 
 \newrobustcmd*\option@expand[1]{\eletoption{#1}\reserved@a\option@letkey{#1}\reserved@a}
-
 \newrobustcmd*\option@esetkey[2]{\expandnext{\option@setkey{#1}}{#2}}
 
 \newrobustcmd*\option@append[2]{\ifoptiondefined{#1}{\csappto{optk@#1}}{\option@setkey{#1}}{#2}}
@@ -256,6 +260,11 @@
   \eletoption{#1}\reserved@a
   \eifblank{\reserved@a}%
 }
+
+% --------------------------------------------------------
+% lists
+% --------------------------------------------------------
+
 \newcommand*\headof[1]{\opt@headof#1,\relax}%
 \def\opt@headof#1,#2\relax{#1}%
 
@@ -273,11 +282,15 @@
   \eifanyof{\reserved@a}{#2}%
 }
 
-
-\def\newoptioncmd@i#1#2[#3]#4{%
-  \csdef{\string#1@opts}##1[##2]{#4}%
-  \def#1#2{\@testopts{\csuse{\string#1@opts}{#2}}{#3}}%
+\newrobustcmd*\optiondo[1]{%
+  \letoption{#1}\opt@list
+  \expandnext\docsvlist{\opt@list}%
 }
+
+
+% --------------------------------------------------------
+% Assign
+% --------------------------------------------------------
 
 \newrobustcmd*\optioneassign[2]{%
   \protected@edef\reserved@a{#2}%
@@ -286,26 +299,29 @@
 \newrobustcmd*\optionassign[2]{%
   \protected@edef\option@key{#1}%
   \def\option@value{#2}%
-  \option{\option@key/.code}{\option@value}%
+  \option{\option@key/.cmd}{\option@value}%
 }%
 \newrobustcmd*\optionassigndefault[1]{%
   \protected@edef\option@key{#1}%
   \let\option@value\opt@default%
-  \option{\option@key/.code}{\option@value}%
+  \option{\option@key/.cmd}{\option@value}%
 }%
 
+% --------------------------------------------------------
+% Ensure arg/noarg/free/defined
+% --------------------------------------------------------
 
 \newrobustcmd*\option@ensurearg{%
   \ifx\option@value\opt@default
     \ifoptiondefined{\option@key/.default}%
       {\letoption{\option@key/.default}\option@value%
        \typeout{found default: \option@value}}%
-      {\opt@err{option \option@key requires a value}}%
+      {\optionerror{requires a value}}%
   \fi
 }%   
 \newrobustcmd*\option@ensurenoarg{%
   \ifx\option@value\opt@default\else
-    \opt@err{option "\option@key" does not take an argument (\option@value)}%
+    \optionerror{cannot take an argument (=\option@value)}%
   \fi
 }%   
 \newrobustcmd*\option@settoarg{%
@@ -314,146 +330,199 @@
 
 \newrobustcmd*\option@ensurefree[1]{%
   \ifoptiondefined{#1}{%
-    \opt@err{option "#1" is already defined}%
+    \optionerror[#1]{already defined}%
   }{}%
 }%   
 \newrobustcmd*\option@ensuredefined[1]{%
   \ifoptiondefined{#1}{}{%
-    \opt@err{option "#1" is not yet defined}%
+    \optionerror[#1{unknown option}%
   }%
 }%
 
-\newrobustcmd*\defoptioncode{\@ifstar{\defoptioncode@{noarg}}{\defoptioncode@{arg}}}
-\newrobustcmd*\defoptioncode@[3]{%*[]
-  \typeout{define code: #2}%  
+
+
+% --------------------------------------------------------
+% Parse default arguments []
+% --------------------------------------------------------
+
+\def\opt@parsedefaultnoarg#1{\@ifnextchar[{\opt@errordefault{#1}}{}}
+\def\opt@parsedefaultarg#1{\@ifnextchar[{\opt@setdefault{#1}}{}}
+\def\opt@setdefault#1[#2]{\option@setkey{#1/.default}{#2}}
+\def\opt@errordefault#1[#2]{%
+  \optionerror[#1]{a starred option definition does not take a default argument "[#2]"}%
+}
+
+% --------------------------------------------------------
+% Initial root
+% --------------------------------------------------------
+
+\option@setkey{/.roots}{}
+
+
+% --------------------------------------------------------
+% Basic definitions of options
+% --------------------------------------------------------
+
+\newrobustcmd*\newoptioncmd{\@ifstar{\newoptioncmd@{noarg}}{\newoptioncmd@{arg}}}
+\newrobustcmd*\newoptioncmd@[3]{%*[]
+  \typeout{define cmd: #2}%  
   \option@ensurefree{#2}%
-  \option@letfamily{#2}\opt@familydefault
-  \option@letname{#2}\opt@name
-  \typeout{fam: \opt@familydefault, name: \opt@name}%
-  %  \opt@err{option "#2": no family specified. Option definitions must look like "/<family>/<name>"}
-  \eifblank{\opt@familydefault}{}{%
-    \typeout{add key: /\opt@familydefault/.keys = \option{/\opt@familydefault/.keys} + #2}\option@appendlist{/\opt@familydefault/.keys}{#2}}%
-  \eifblank{\opt@name}{%
-    \opt@err{option "#2": no key name specified. Option definitions must start with a "/<family>/<name>"}
+  \option@splitkey{#2}% sets option@root, option@path, and option@name
+  \typeout{  root: \option@root, path: \option@path}%  
+  \typeout{  add key: \option@root/.keys = \option{\option@root/.keys} + #2}%
+  \option@appendlist{\option@root/.keys}{#2}%
+  \eifblank{\option@path}{%
+    \optionerror[#2]{no key name specified. Option definitions must look like "/<root>/<name>"}
   }{}%
-  \csdef{optk@#2/.code}##1{%
-    \typeout{invoke #2}%
+  \csdef{optk@#2/.cmd}##1{%
     \typeout{invoke #2=##1 (\option@key=\option@value)}%
     \csuse{option@ensure#1}%
-    \ifoptiondefined{#2/.precode}{\option{#2/.precode}}{}%
+    \ifoptiondefined{#2/.cmdbefore}{\option{#2/.cmdbefore}}{}%
     #3%
-    \ifoptiondefined{#2/.postcode}{\option{#2/.postcode}}{}%
-    \typeout{invoked}% 
+    \ifoptiondefined{#2/.cmdafter}{\option{#2/.cmdafter}}{}%
+    %\typeout{invoked}% 
   }%
-  \csletcs{optk@#2}{optk@#2/.code}% point at first to the code
+  \csletcs{optk@#2}{optk@#2/.cmd}% point at first to the cmd
   \csuse{opt@parsedefault#1}{#2}%
 }
 
-\newrobustcmd*\defoptioncodevalue[4]{%[]
-  \defoptioncode{#1}{#2}%
+\newrobustcmd*\newoptioncmdvalue[4]{%[]
+  \newoptioncmd{#1}{#2}%
   \option@setkey{#1}{#3}%
   \option@setkey{#1/.initial}{#4}%
-  \optionassign{#1}{#4}% this invokes the code the first time  
+  \optionassign{#1}{#4}% this invokes the cmd the first time  
   \opt@parsedefaultarg{#1}%
 }
 
-\newrobustcmd*\defoptionvalue[2]{%[]
-  \defoptioncode{#1}{%
-    \typeout{assign value: #1=\option@value}%
+\newrobustcmd*\newoptionvalue[2]{%[]
+  \newoptioncmd{#1}{%
+    %\typeout{assign value: #1=\option@value}%
     \option@letkey{#1}{\option@value}%
-    \typeout{assigned}}%
+    %\typeout{assigned}
+  }%
   \option@setkey{#1/.initial}{#2}%
-  \optionassign{#1}{#2}% this invokes the code the first time  and assigns the initial value
+  \optionassign{#1}{#2}% this invokes the cmd the first time  and assigns the initial value
   \opt@parsedefaultarg{#1}% set default value?
 }
 
-\newrobustcmd*\defoptionstyle{\@ifstar{\defoptionstyle@{\defoptioncode*}}{\defoptionstyle@{\defoptioncode}}}%
-\newrobustcmd*\defoptionstyle@[3]{%
-  #1{#2}{\optionsetalso{#3}}%
-}
+
+% --------------------------------------------------------
+% Add pre/post processing to an option
+% --------------------------------------------------------
 
 \newrobustcmd*\addoptioncheck[2]{%
   \option@ensuredefined{#1}%
-  \option@append{#1/.precode}{#2}%
+  \option@append{#1/.cmdbefore}{#2}%
 }
 \newrobustcmd*\addoptionexpand[1]{%
   \addoptioncheck{#1}{\protected@edef\option@value{\option@value}}%
 }
 
 
-\def\opt@parsedefaultnoarg#1{\@ifnextchar[{\opt@errordefault{#1}}{}}
-\def\opt@parsedefaultarg#1{\@ifnextchar[{\opt@setdefault{#1}}{}}
-\def\opt@setdefault#1[#2]{\option@setkey{#1/.default}{#2}}
-\def\opt@errordefault#1[#2]{%
-  \opt@err{option "#1": a starred option definition does not take a default argument "[#2]"}%
-}
+% --------------------------------------------------------
+% Root definition
+% --------------------------------------------------------
 
 
-\newrobustcmd*\defoptionfamily[1]{\@testopt{\defoptionfamily@{#1}}{}}
-\def\defoptionfamily@#1[#2]{%
-  \typeout{define family: #1: #2}%
-  \option@appendlist{/.families}{#1}%
-  \defoptioncode*{/#1}{\def\opt@familydefault{/#1}}%
+\newrobustcmd*\newoptionroot[1]{\@testopt{\newoptionroot@{#1}}{}}
+\def\newoptionroot@#1[#2]{%
+  \typeout{define root: #1: #2}%
+  \option@appendlist{/.roots}{#1}%
+  \newoptioncmd*{/#1}{\def\opt@defaultroot{/#1}}% the cmd for a root sets itself as the default root
   \option@esetkey{/#1/.delegates}{#2}%
-  % define search for a key in this family (fully expanded for efficiency)
+  \option@setkey{/#1/.keys}{}%
+  % define search for a key in this root (fully expanded for efficiency)
   \option@setkey{/#1/.search}{%
-    \typeout{try (in fam): /#1/\option@name}%
-    \expandafter\let\expandafter\opt@try@key
-      \csname optk@/#1/\option@name\endcsname
-    \ifx\opt@try@key\relax\else%
+    \typeout{try (in root): /#1/\option@path}%
+    \expandafter\let\expandafter\opt@try@key\csname optk@/#1/\option@path\endcsname
+    \ifx\opt@try@key\relax
+      % not found, invoke subsearch
+      \option{/#1/.subsearch}%
+    \else%
       \typeout{ found!}%
-      \edef\option@key{/#1/\option@name}%
-    \fi
+      \edef\option@key{/#1/\option@path}%
+    \fi    
   }%  
   % add sub-family searches (also expanded for efficiency)
+  \option@setkey{/#1/.subsearch}{}%
   \def\do##1{%\option@search{#2}{##1}}
     \ifoptiondefined{/##1/.search}%
-      {\option@append{/#1/.search}{\ifx\opt@try@key\relax \option{/##1/.search}\fi}}%
-      {\opt@err{family definition "#2" refers to an unknown family "##1"}}%
+      {\option@append{/#1/.subsearch}{\ifx\opt@try@key\relax \option{/##1/.search}\fi}}%
+      {\optionerror[#2]{definition "#2" refers to an unknown root "##1"}}%
   }%
   \expandafter\docsvlist\expandafter{#2}%
   % set further options
-  \defoptionstyle*{/#1/.only}{/.search=false,/#1}%
-  \defoptionstyle*{/#1/.only ignore}{/.ignore,/#1/.only}%
+  %\newoptionstyle*{/#1/.only}{/.search=false,/#1}%
+  %\newoptionstyle*{/#1/.only ignore}{/.ignore,/#1/.only}%
 }
 
-\newrobustcmd*\defoptionif[2]{%
-  \ifcsdef{if#2}{}{\opt@err{option #1: no `if` with name "#2" is defined}}%
-  \defoptioncode{#1}{%
+
+% --------------------------------------------------------
+% Default handlers
+% --------------------------------------------------------
+
+\newoptionroot{handlers}
+\newoptioncmd{/handlers/.unknown}{%
+  \eifblank{\option@handlerkey}{\def\option@handlerkey{?}}{}%
+  \option@ifisabsolute{\option@handlerkey}%
+    {\optionerror[\option@handlerkey]{unknown option}}%
+    {\optionerror[\option@handlerkey]{unknown option under root "\option@defaultroot"}}%
+}[]
+
+\newrobustcmd*\optionexpecterror[2][\option@key]{%
+  \optionerror{unexpected "\option@value" (expecting #2)}%
+}
+
+\newrobustcmd*\optionerror[2][\option@key]{%
+  \PackageError{options}{option "#1": #2}{}%
+}
+
+% --------------------------------------------------------
+% Derived option definitions
+% --------------------------------------------------------
+
+\newrobustcmd*\newoptionstyle{\@ifstar{\newoptionstyle@{\newoptioncmd*}}{\newoptionstyle@{\newoptioncmd}}}%
+\newrobustcmd*\newoptionstyle@[3]{%
+  #1{#2}{\optionsetalso{#3}}%
+}
+
+\newrobustcmd*\newoptionif[2]{%
+  \ifcsdef{if#2}{}{\optionerror[#1]{no `if` with name "#2" is defined}}%
+  \newoptioncmd{#1}{%
     \ifcsdef{#2\option@value}%
       {\csuse{#2\option@value}}%
-      {\opt@err{option "\option@key": expecting boolean value instead of "\option@value"}}%
+      {\optionexpecterror{a boolean value}}%
   }[true]%
 }
 
-\newrobustcmd*\defoptiontoggle[2]{%
+\newrobustcmd*\newoptiontoggle[2]{%
   \newtoggle{#1}%
-  \defoptioncodevalue{#1}{%
+  \newoptioncmdvalue{#1}{%
     \ifcsdef{toggle\option@value}%
       {\csuse{toggle\option@value}{#1}}%
-      {\opt@err{option "\option@key": expecting boolean value instead of "\option@value"}}%
+      {\optionexpecterror{a boolean value}}%
   }%
   {\iftoggle{#1}{true}{false}}% read value
   {#2}% initial assignment
   [true]%
 }
 
-\newrobustcmd*\defoptionchoice[2]{%  
-  \defoptionvalue{#1}{\headof{#2}}%
+\newrobustcmd*\newoptionchoice[2]{%  
+  \newoptionvalue{#1}{\headof{#2}}%
   \addoptionexpand{#1}%
   \addoptioncheck{#1}{%
     \typeout{option choice: #1= \meaning##1, \meaning\option@value}%
     \eifanyof{\option@value}{#2}{}%
-      {\opt@err{option "\option@key": unexpected "\option@value" (expecting one of "#2")}}%
+      {\optionexpecterror{one of "#2"}}%
   }
 }
 
 
 \newrobustcmd*\opt@showthe[1]{\the#1}%
-\newrobustcmd*\defoptionlength[2]{%
+\newrobustcmd*\newoptionlength[2]{%
   \csnewlength{#1}%
   \option@letkey{#1/.show}\opt@showthe
-  \defoptioncodevalue{#1}{%
+  \newoptioncmdvalue{#1}{%
     \typeout{set length: #1=\meaning\option@value}%
     \cssetlength{#1}{\dimexpr\option@value\relax}%
     \typeout{the length: #1=\the\csuse{#1}}%
@@ -462,54 +531,70 @@
   {#2}% initial value
 }
 
-\newrobustcmd*\defoptiondimen[2]{%
-  \defoptionvalue{#1}{\dimexpr#2\relax}%
+\newrobustcmd*\newoptiondimen[2]{%
+  \newoptionvalue{#1}{\dimexpr#2\relax}%
   \addoptioncheck{#1}{\def\option@value{\dimexpr\option@value\relax}}%
   \option@letkey{#1/.show}\opt@showthe
 }
 
-\defoptionif{/.ignore}{opt@ignoreunknown}
-\defoptionif{/.nosearch}{opt@nosearch}
+% --------------------------------------------------------
+% Initial handlers
+% --------------------------------------------------------
+
+\newoptionif{/.ignore}{opt@ignoreunknown}
+\newoptionif{/.nosearch}{opt@nosearch}
 
 
-\newrobustcmd*\optiondo[1]{%
-  \letoption{#1}\opt@list
-  \expandnext\docsvlist{\opt@list}%
+% --------------------------------------------------------
+% Show definitions
+% --------------------------------------------------------
+
+\newrobustcmd*\optionshowroots{%
+  \def\@ruler{\noindent\rule{\linewidth}{0.4pt}}%
+  \@ruler\par
+  \noindent Option keys:\par
+  \smallskip
+  \def\do##1{\begingroup\optionshowroot{##1}\endgroup}%
+  \typeout{roots: \option{/.roots}}%
+  \optiondo{/.roots}%
+  \smallskip
+  \noindent /main root:
+  \begingroup\optionshowkeys[label=]{/.keys}\endgroup
+  \@ruler
 }
 
-\newrobustcmd*\optionshowall{%
-  \def\do##1{\begingroup\optionshowfamily{##1}\endgroup}%
-  \typeout{families: \option{/.families}}%
-  \optiondo{/.families}%
+\newrobustcmd*\option@showkeyname[1]{%
+  \option@splitkey{#1}%
+  \textsf{\option@name}%
 }
 
-\newrobustcmd*\option@showkey[1]{%
-  \option@letname{#1}\opt@name
-  \textsf{\opt@name}%
+\newrobustcmd*\option@showrootname[1]{\textsf{/#1}}
+
+\newrobustcmd*\optionshowroot[1]{%  
+  \noindent\option@showrootname{#1}%
+  \ifoptionvoid{/#1/.keys}{\par}{\optionshowkeys[label=]{/#1/.keys}}%
 }
 
-\newrobustcmd*\option@showfamily[1]{\textsf{/#1}}
-
-\newrobustcmd*\optionshowfamily[1]{%  
-  \option@showfamily{#1}%
-  \begin{itemize}[noitemsep,topsep=0pt]
+\newrobustcmd*\optionshowkeys[2][]{%
+  \begin{itemize}[noitemsep,topsep=0pt,leftmargin=1em,#1]
   \def\do##1{%
     \optionshowkey{##1}
   }%
-  \letoption{/#1/.keys}\opt@keys
+  \letoption{#2}\opt@keys
   \typeout{keys: \opt@keys}%
-  \optiondo{/#1/.keys}%
+  \optiondo{#2}%
   \end{itemize}
 }
 
+
 \newrobustcmd*\optionshowkey[1]{%
-  \item[]\option@showkey{#1}%
+  \item\option@showkeyname{#1}%
   \ifoptiondefined{#1/.show}%
     {\letoption{#1/.show}\opt@showit}%
     {\def\opt@showit##1{##1}}%
   \def\opt@show##1{\textsf{\opt@showit{##1}}}%
   \expandafter\ifdefparam\expandafter{\csname optk@#1\endcsname}%
-    {=\textit{code}}%
+    {=\textit{cmd}}%
     {=\opt@show{\option{#1}}}%  
   \ifoptiondefined{#1/.initial}{%
     , initial=\opt@show{\option{#1/.initial}}%
@@ -525,6 +610,53 @@
 
 
 \makeatletter
+
+\newoptionroot{fama}
+
+\newoptionroot{famb}[fama]
+\newoptionroot{famc}[fama]
+\newoptionroot{fam}[famb,famc]
+
+\newoptioncmd{/fama/testa}{here is a=#1.}
+\newoptioncmd{/famb/testb}{here is b=#1.}[defaultb]
+
+\newoptiontoggle{/fama/toggle}{true}
+\newoptionchoice{/famb/side}{top,left,right,bottom}
+
+\newoptionlength{/fam/width}{\fboxrule + 1pt}
+\newoptiondimen{/famb/widthb}{\fboxrule * 2 + 1pt}
+
+\typeout{root famb: \option{/famb/.keys}}
+
+
+
+\optionshowroots
+
+
+\the\option{/famb/widthb}
+
+\option{/famb/side},
+
+fboxrule=\the\dimexpr\fboxrule\relax,
+
+\the\option{/famb/widthb},
+\the\option{/fam/width}.
+
+\fboxrule=1pt  it set
+
+\the\option{/famb/widthb},
+\the\option{/fam/width}.
+
+\option{/famb/side},
+
+\optionset{/fam,side=right,/fam/width=10pt} nice.
+
+\option{/famb/side},
+
+\optionshowroots
+
+\end{document}
+
 
 
 \newrobustcmd*\test[1]{%
@@ -545,48 +677,4 @@
 \test{//}
 \test{///}
 \test{////key}
-\end{document}
-
-
-
-\defoptionfamily{fama}
-\defoptionfamily{famb}[fama]
-\defoptionfamily{famc}[fama]
-\defoptionfamily{fam}[famb,famc]
-
-\defoptioncode{/fama/testa}{here is a=#1.}
-\defoptioncode{/famb/testb}{here is b=#1.}[defaultb]
-
-\defoptiontoggle{/fama/toggle}{true}
-\defoptionchoice{/famb/side}{top,left,right,bottom}
-
-\defoptionlength{/fam/width}{\fboxrule + 1pt}
-\defoptiondimen{/famb/widthb}{\fboxrule * 2 + 1pt}
-
-\typeout{family famb: \option{/famb/.keys}}
-
-
-\optionshowall
-
-\the\option{/famb/widthb}
-
-\option{/famb/side},
-
-fboxrule=\the\dimexpr\fboxrule\relax,
-
-\the\option{/famb/widthb},
-\the\option{/fam/width}.
-
-\fboxrule=1pt  it set
-
-\the\option{/famb/widthb},
-\the\option{/fam/width}.
-
-\option{/famb/side},
-
-\optionset{/famb/side=right,/fam/width=10pt} nice.
-
-\option{/famb/side},
-
-
 \end{document}
