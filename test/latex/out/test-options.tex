@@ -35,7 +35,7 @@
 \newif\ifopt@nosearch
 
 \newrobustcmd*\optionset[1]{%
-  \let\opt@defaultroot\@empty%
+  \let\opt@defaultpath\@empty%
   \opt@nosearchfalse%
   \opt@ignoreunknownfalse%
   \optionsetalso{#1}%
@@ -60,7 +60,7 @@
     \option@ifisabsolute{\option@rawkey}%
       \let\option@key\option@rawkey%
     \else
-      \edef\option@key{\opt@defaultroot/\option@rawkey}% use default path
+      \edef\option@key{\opt@defaultpath/\option@rawkey}% use default path
     \fi
     \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
     \typeout{try \option@key, as \meaning\opt@try@key}%      
@@ -68,10 +68,7 @@
       % not found: search the root if: not an absolute path & searching is enabled        
       \ifx\option@key\option@rawkey\else% if not absolute
         \ifopt@nosearch\else
-          \ifoptiondefined{\opt@defaultroot/.subsearch}{%
-            \let\option@path\option@rawkey%
-            \option{\opt@defaultroot/.subsearch}%
-          }{}%
+          \opt@searchalso{\option@key}%
         \fi
       \fi
       \ifx\opt@try@key\relax
@@ -84,9 +81,9 @@
         \fi
         \ifx\opt@try@key\relax
           % still not found: perhaps the root has an unknown handler?
-          \option@getroot\option@key % set option@root (to option@rootdefault if empty)
-          \edef\option@key{\option@root/.unknown}%
-          \expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
+          %\option@getroot\option@key % set option@root (to option@rootdefault if empty)
+          %\edef\option@key{\option@root/.unknown}%
+          %\expandafter\let\expandafter\opt@try@key\csname optk@\option@key\endcsname
           \ifx\opt@try@key\relax
             % still not found: now call the general unknown handler
             \def\option@key{/handlers/.unknown}%
@@ -113,6 +110,25 @@
 \option@rawkey{ }
 \def\opt@@sp@b#1#2 \@nil{\opt@@sp@c#1#2}
 \def\opt@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
+
+\def\opt@searchalso#1{%
+  \def\do##1##2##3{%
+    \opt@onkeyexist{##1/.searchalso}{%
+      \option{##1/.searchalso}{##2##3}%
+      \ifx\opt@try@key\@empty\else\opt@break\fi
+    }%
+  }
+  \option@foreachparent{#1}%
+}
+\def\opt@searchalso#1{%
+  \def\do##1##2##3{%
+    \opt@onkeyexist{##1/.searchalso}{%
+      \option{##1/.searchalso}{##2##3}%
+      \ifx\opt@try@key\@empty\else\opt@break\fi
+    }%
+  }
+  \option@foreachparent{#1}%
+}
 
 
 % option@getroot{key}: split off the part /root, sets option@root (to option@rootdefault if empty)
@@ -428,7 +444,7 @@
 \def\newoptionroot@#1[#2]{%
   \typeout{define root: #1: #2}%
   \option@appendlist{/.roots}{#1}%
-  \newoptioncmd*{/#1}{\def\opt@defaultroot{/#1}}% the cmd for a root sets itself as the default root
+  \newoptioncmd*{/#1}{\def\opt@defaultpath{/#1}}% the cmd for a root sets itself as the default root
   \option@esetkey{/#1/.delegates}{#2}%
   \option@setkey{/#1/.keys}{}%
   % define search for a key in this root (fully expanded for efficiency)
@@ -436,18 +452,18 @@
     \typeout{try (in root): /#1/\option@path}%
     \expandafter\let\expandafter\opt@try@key\csname optk@/#1/\option@path\endcsname
     \ifx\opt@try@key\relax
-      % not found, invoke subsearch
-      \option{/#1/.subsearch}%
+      % not found, invoke.searchalso
+      \option{/#1/.searchalso}%
     \else%
       \typeout{ found!}%
       \edef\option@key{/#1/\option@path}%
     \fi    
   }%  
   % add sub-family searches (also expanded for efficiency)
-  \option@setkey{/#1/.subsearch}{}%
+  \option@setkey{/#1/.searchalso}{}%
   \def\do##1{%\option@search{#2}{##1}}
     \ifoptiondefined{/##1/.search}%
-      {\option@append{/#1/.subsearch}{\ifx\opt@try@key\relax \option{/##1/.search}\fi}}%
+      {\option@append{/#1/.searchalso}{\ifx\opt@try@key\relax \option{/##1/.search}\fi}}%
       {\optionerror[#2]{definition "#2" refers to an unknown root "##1"}}%
   }%
   \expandafter\docsvlist\expandafter{#2}%
@@ -610,6 +626,122 @@
 
 
 \makeatletter
+
+
+
+% option@foreachparent{<path>}
+% applies \do to each parent path. 
+%   /foo/bar/baz  -> \do{/foo/bar}{/}{baz} \do{/foo}{/bar/}{baz} \do{/}{/foo/bar/}{baz} 
+
+\newrobustcmd*\opt@break{\def\opt@donext##1##2##3{}}
+
+\newrobustcmd*\option@foreachparent[1]{%
+  \let\opt@donext\do%
+  \opt@foreachparent@#1/\relax\relax%
+  %\do{/}{\option@subpath}{\option@name}%
+}
+
+\def\opt@foreachparent@/#1/#2\relax#3\relax{% #3 is the current root
+  \def\opt@temp{#2}%
+  \ifx\opt@temp\@empty% final key
+    \def\option@name{#1}%
+    \def\option@subpath{/}%
+  \else
+    \opt@foreachparent@/#2\relax#3/#1\relax% recurse first
+    \opt@donext{#3/#1}{\option@subpath}{\option@name}%
+    \edef\option@subpath{/#1\option@subpath}%
+  \fi
+}
+
+
+
+%  \else
+%    \def\opt@temp{#1}%
+%    \ifx\opt@temp\@empty\else
+%      \edef\opt@temppath{\opt@temppath/#1}%
+%    \fi
+%    \do{\opt@temppath}{}%
+%    \option@foreachparent@#2\relax%
+%  \fi
+%}
+%\def\opt@unslash#1/\relax{#1}
+
+\def\opt@ifnokey#1{%
+  \expandafter\let\expandafter\opt@try@key\csname optk@#1\endcsname
+  \ifx\opt@try@key\relax
+}
+\def\opt@onkeyexist#1#2{%
+  \expandafter\let\expandafter\opt@try@key\csname optk@#1\endcsname
+  \ifx\opt@try@key\relax\else#2\fi
+}
+
+% option@findinpath{path}{name}
+%  checks for name in each parent path. longest path wins.
+%  i.e. {/foo/bar/baz}  checks /foo/bar/name, /foo/name, and /name
+\newrobustcmd*\option@findinkeypath[2]{%
+  \let\option@foundpath\@empty
+  \let\option@foundkey\@empty
+  \def\do##1##2##3{%
+    \opt@onkeyexist{##1/#2}{%
+      \edef\option@foundpath{##1}%
+      \edef\option@foundname{#2}%
+      \edef\option@foundkey{\option@foundpath/\option@foundname}%
+      \opt@break
+    }
+  }
+  \option@foreachparent{#1}%
+  \typeout{ find #2 in path #1: \option@foundpath,\option@foundkey}%
+}
+
+\option@setkey{/fbox/.unknown}{}
+\option@setkey{/fbox/border/.unknown}{}
+\option@setkey{/fbox/border/left/.unknown}{}
+\option@setkey{/fbox/xborder/left/.unknown}{}
+
+
+
+
+\option@findinkeypath{/fbox}{.unknown}
+\option@findinkeypath{/fbox/}{.unknown}
+\option@findinkeypath{/fbox/foo}{.unknown}
+\option@findinkeypath{/fbox/border}{.unknown}
+\option@findinkeypath{/fbox/border/left}{.unknown}
+\option@findinkeypath{/fbox/border/left/width}{.unknown}
+\option@findinkeypath{/fbox/xborder/left}{.unknown}
+\option@findinkeypath{/fbox/xborder/left/width}{.unknown}
+\option@findinkeypath{/}{.unknown}
+\option@findinkeypath{/foo}{.unknown}
+%\option@findinkeypath{}{.unknown}
+\option@findinkeypath{/fbox/border/left/}{.unknown}
+\option@findinkeypath{/fbox/border/left//}{.unknown}
+
+
+
+\end{document}
+
+
+\iftrue
+\newcount\@loop
+\def\opt@testforeach{%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \option@foreachparent{/fbox/border/left/style}%
+  \advance\@loop 1\relax
+}
+\@whilenum\@loop<80000\do\opt@testforeach
+\fi
+
+\end{document}
+
 
 \newoptionroot{fama}
 
