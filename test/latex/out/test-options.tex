@@ -68,43 +68,30 @@
     \else
       \edef\option@key{\opt@defaultpath\option@rawkey}% use default path
     \fi
-    \expandafter\let\expandafter\opt@trykey\csname optk@\option@key\endcsname
-    \typeout{try \option@key}%      
+    \letoption\option@key\opt@trykey
     \ifx\opt@trykey\relax
-      % not found: search the root if: not an absolute path & searching is enabled        
-      \ifx\option@key\option@rawkey\else% if not absolute
+      % not directly found..
+      \option@gethandler\option@key% defines option@handlerkey & option@handler
+      \ifx\option@handler\@empty
+        % search key
         \ifopt@nosearch\else
-          \opt@runhandler{.searchalso}{\option@key}%
+          \opt@searchalso{\option@key}%
+        \fi
+      \else
+        % handler
+        \letoption{/handlers/\option@handler}\opt@trykey
+        \ifx\opt@trykey\relax\else
+          \edef\option@key{/handlers/\option@handler}% will get \option@handlerkey
         \fi
       \fi
       \ifx\opt@trykey\relax
-        % still not found; is it a handler?
-        \option@gethandler\option@key% defines option@handlerkey & option@handler
-        \ifx\option@handler\@empty\else
-          % try the handler
-          \letoption{/handlers/\option@handler}\opt@trykey
-          \ifx\opt@trykey\relax\else
-            \typeout{try handler "\option@handler"}%
-            \edef\option@key{/handlers/\option@handler}%
-          \fi
-        \fi
-        \ifx\opt@trykey\relax
-          % still not found: invoke unknown handler
-          \opt@runhandler{.unknown}{\option@key}%
-        \fi
+        % still not found: invoke unknown handler
+        \opt@unknown{\option@key}%        
       \fi
-      \ifx\opt@trykey\relax%
-        % ignore..
-      \else
-        % option@key should be defined...
-        \typeout{callx \option@key/.cmd }%
-        \csname optk@\option@key/.cmd\endcsname{\option@value}%
-      \fi    
-    \else
-      % now \option@key and \option@value are defined; invoke the /.cmd
-      \typeout{call \option@key/.cmd }%
-      \csname optk@\option@key/.cmd\endcsname{\option@value}%
     \fi
+    % now \option@key and \option@value are defined; invoke the /.cmd
+    \typeout{call \option@key/.cmd }%
+    \csname optk@\option@key/.cmd\endcsname{\option@value}%
   \fi
 }
 
@@ -116,24 +103,51 @@
 \def\opt@@sp@c#1\@nil#2\relax#3{\def#3{#1}}
 
 
+% search a key
+\newrobustcmd*\opt@searchforkey[2]{%
+  \option@ifisabsolute{#2}%
+    \letoption{#2}\opt@trykey
+    \ifx\opt@trykey\relax\else
+      \edef\option@key{#2}%
+    \fi
+  \else  
+    \letoption{#1#2}\opt@trykey% use default path
+    \ifx\opt@trykey\relax
+      \ifopt@nosearch\else
+        \opt@searchalso{#1#2}%
+      \fi
+    \else    
+      \edef\option@key{#1#2}% !found
+    \fi
+  \fi
+}
 
-% \opt@runhandler{<handler>}{<key>}
-% look in each parent path for <handler> to handle <key>.
-% the handler is invoked with <key>, option@handlerkey, option@handler, option@subpath and option@name are defined.
-% call \opt@break to break the loop
-\def\opt@runhandler#1#2{%
-  \typeout{runhandler #1, on "#2"}%
+% note: we can nest searches without grouping
+% because they all use the same "\do" (option@searchalsodo) and
+% all need to break once the inner one breaks (so it is fine if \opt@break redefined \do)
+\newrobustcmd*\opt@searchalso[1]{%
+  \typeout{searchalso #1}%
+  \let\do\opt@searchalsodo
+  \option@foreachparent{#1}%
+}
+\newrobustcmd*\opt@searchalsodo[3]{%
+  \opt@onkeyexist{#1/.searchalso}{%
+    \edef\option@searchkey{#2#3}% subpath
+    \csname optk@#1/.searchalso\endcsname%
+    \ifx\opt@trykey\relax\else\opt@break\fi% on found: break
+  }%
+}
+
+\newrobustcmd*\opt@unknown[1]{%
   \def\do##1##2##3{%
-    \opt@onkeyexist{##1/#1/.cmd}{% defines opt@trykey
-      \edef\option@handlerkey{##2##3}%
-      \edef\option@handler{##3}%
-      \edef\option@key{##1/#1}%
-      \edef\option@path{##1}%
-      \typeout{invoke: \option@key/.cmd, with \option@handlerkey}%
-      \csname optk@\option@key/.cmd\endcsname{\option@handlerkey}%
+    \opt@onkeyexist{##1/.unknown/.cmd}{%
+      \edef\option@unknownkey{#1}% full key
+      \edef\option@unknownsubpath{##2##3}% subpath
+      \edef\option@key{##1/.unknown}%
+      \opt@break%
     }%
   }
-  \option@foreachparent{#2}%
+  \option@foreachparent{#1}%
 }
 
 % option@gethandler{key}: split off the part after the ".", sets option@handlerkey and option@handler
@@ -157,8 +171,8 @@
   \ifx\opt@trykey\relax
 }
 \def\opt@onkeyexist#1#2{%
-  \expandafter\let\expandafter\opt@trykey\csname optk@#1\endcsname
-  \ifx\opt@trykey\relax\else#2\fi
+  \expandafter\let\expandafter\opt@temp\csname optk@#1\endcsname
+  \ifx\opt@temp\relax\else#2\fi
 }
 
 
@@ -451,25 +465,19 @@
   \addoptioncheck{#1}{\protected@edef\option@value{\option@value}}%
 }
 
-\newrobustcmd*\opt@search[1]{%  
-  \typeout{search #1 for \option@handlerkey (with \meaning\opt@trykey)}%
-  \ifx\opt@trykey\relax
-    \edef\option@key{#1/\option@handlerkey}%
-    \typeout{try search: \option@key}%
-    \letoption\option@key\opt@trykey
-  \fi
-}
-
 \newrobustcmd*\addoptionsearch[2]{%
-  \ifoptiondefined{#1/.searchalso/.cmd}{}{%
-    \option@setkey{optk@#1/.searchalso/.cmd}{\typeout{search also: #1}}%
+  \ifoptiondefined{#1/.searchalso}{}{%
+    \option@setkey{optk@#1/.searchalso}{\typeout{search also: #1}}%
   }
   \def\do##1{%
-    \typeout{  add ##1 to search path}%
-    \expandnext{\option@append{#1/.searchalso/.cmd}}{\noexpand\opt@search{##1}}
+    \edef\opt@temp{%
+      \noexpand\ifx\noexpand\opt@trykey\noexpand\relax
+        \noexpand\opt@searchforkey{##1/}{\noexpand\option@searchkey}%
+      \noexpand\fi
+    }%
+    \expandnext{\option@append{#1/.searchalso}}{\opt@temp}%
   }
   \expandnext\docsvlist{#2}%
-  \typeout{ result: \option{#1/.searchalso/.cmd}}%
 }
 
 % --------------------------------------------------------
@@ -524,13 +532,12 @@
 
 \newoptioncmd{/.unknown}{%
   \let\opt@trykey\relax
-  \eifblank{\option@handlerkey}{\def\option@handlerkey{?}}{}%
-  \option@ifisabsolute{\option@handlerkey}%
-    \optionerror[\option@handlerkey]{unknown option}
+  \eifblank{\option@unknownkey}{\def\option@unknownkey{?}}{}%
+  \option@ifisabsolute{\option@unknownkey}%
+    \optionerror[\option@unknownkey]{unknown option}
   \else
-    \optionerror[\option@handlerkey]{unknown option under "\opt@defaultpath"}%
+    \optionerror[\option@unknownkey]{unknown option under "\opt@defaultpath"}%
   \fi
-  \opt@break
 }[]
 
 
@@ -683,7 +690,7 @@
 %\newoptionroot{fam}[famb,famc]
 
 \newoptionstyle*{/fam}{/fam/.cd}
-\addoptionsearch{/fam}{/fama,/famb}
+\addoptionsearch{/fam}{/famb,/fama}
 
 \newoptioncmd{/fama/testa}{here is a=#1.}
 \newoptioncmd{/famb/testb}{here is b=#1.}[defaultb]
