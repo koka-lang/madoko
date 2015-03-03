@@ -284,9 +284,9 @@
 \newrobustcmd*\option@expand[1]{\eletoption{#1}\reserved@a\option@letkey{#1}\reserved@a}
 \newrobustcmd*\option@esetkey[2]{\expandnext{\option@setkey{#1}}{#2}}
 
-\newrobustcmd*\option@append[2]{\ifoptiondefined{#1}{\csappto{optk@#1}{#2}}{\option@setkey{#1}{#2}}}
-\newrobustcmd*\option@prepend[2]{\ifoptiondefined{#1}{\cspreto{optk@#1}}{\option@setkey{#1}}{#2}}
-\newrobustcmd*\option@listadd[2]{\ifoptiondefined{#1}{\listcseadd{optk@#1}{#2}}{\option@esetkey{#1}{#2|}}}
+\newrobustcmd*\option@append[2]{\csappto{optk@#1}{#2}}
+\newrobustcmd*\option@prepend[2]{\cspreto{optk@#1}{#2}}
+\newrobustcmd*\option@listadd[2]{\listcseadd{optk@#1}{#2}}
 \newrobustcmd*\option@setadd[2]{\xifinlistcs{#2}{optk@#1}{}{\option@listadd{#1}{#2}}}
 
 \newrobustcmd*\ifoptiondefined[1]{\ifcsdef{optk@#1}}
@@ -465,58 +465,6 @@
   \addoptioncheck{#1}{\protected@edef\option@value{\option@value}}%
 }
 
-\newrobustcmd*\addoptionsearch[2]{%
-  \ifoptiondefined{#1/.searchalso}{}{%
-    \option@setkey{optk@#1/.searchalso}{\typeout{search also: #1}}%
-  }
-  \def\do##1{%
-    \edef\opt@temp{%
-      \noexpand\ifx\noexpand\opt@trykey\noexpand\relax
-        \noexpand\opt@searchforkey{##1/}{\noexpand\option@searchkey}%
-      \noexpand\fi
-    }%
-    \expandnext{\option@append{#1/.searchalso}}{\opt@temp}%
-  }
-  \expandnext\docsvlist{#2}%
-}
-
-% --------------------------------------------------------
-% Root definition
-% --------------------------------------------------------
-
-
-\newrobustcmd*\newoptionroot[1]{\@testopt{\newoptionroot@{#1}}{}}
-\def\newoptionroot@#1[#2]{%
-  \typeout{define root: #1: #2}%
-  \option@appendlist{/.roots}{#1}%
-  \newoptioncmd*{/#1}{\def\opt@defaultpath{/#1}}% the cmd for a root sets itself as the default root
-  \option@esetkey{/#1/.delegates}{#2}%
-  \option@setkey{/#1/.keys}{}%
-  % define search for a key in this root (fully expanded for efficiency)
-  \option@setkey{/#1/.search}{%
-    \typeout{try (in root): /#1/\option@path}%
-    \expandafter\let\expandafter\opt@trykey\csname optk@/#1/\option@path\endcsname
-    \ifx\opt@trykey\relax
-      % not found, invoke.searchalso
-      \option{/#1/.searchalso}%
-    \else%
-      \typeout{ found!}%
-      \edef\option@key{/#1/\option@path}%
-    \fi    
-  }%  
-  % add sub-family searches (also expanded for efficiency)
-  \option@setkey{/#1/.searchalso}{}%
-  \def\do##1{%\option@search{#2}{##1}}
-    \ifoptiondefined{/##1/.search}%
-      {\option@append{/#1/.searchalso}{\ifx\opt@trykey\relax \option{/##1/.search}\fi}}%
-      {\optionerror[#2]{definition "#2" refers to an unknown root "##1"}}%
-  }%
-  \expandafter\docsvlist\expandafter{#2}%
-  % set further options
-  %\newoptionstyle*{/#1/.only}{/.search=false,/#1}%
-  %\newoptionstyle*{/#1/.only ignore}{/.ignore,/#1/.only}%
-}
-
 
 % --------------------------------------------------------
 % Default handlers
@@ -530,6 +478,22 @@
   \optionerror{unexpected "\option@value" (expecting #2)}%
 }
 
+% \addoptionsearch{<path>}{<search paths>}
+% add new search paths to a path.
+% for efficiency we expand out the search code inline instead of iterating
+\newrobustcmd*\addoptionsearch[2]{%
+  \def\do##1{%
+    \edef\opt@temp{%
+      \noexpand\ifx\noexpand\opt@trykey\noexpand\relax
+        \noexpand\opt@searchforkey{##1/}{\noexpand\option@searchkey}%
+      \noexpand\fi
+    }%
+    \expandnext{\option@append{#1/.searchalso}}{\opt@temp}%
+  }
+  \expandnext\docsvlist{#2}%
+}
+
+% Default unknown key handler.
 \newoptioncmd{/.unknown}{%
   \let\opt@trykey\relax
   \eifblank{\option@unknownkey}{\def\option@unknownkey{?}}{}%
@@ -541,6 +505,7 @@
 }[]
 
 
+% Change the default path
 \newoptioncmd*{/handlers/.cd}{%
   \typeout{cd to \option@handlerkey}%
   \edef\opt@defaultpath{\option@handlerkey}%
@@ -588,18 +553,16 @@
 }
 
 
-\newrobustcmd*\opt@showthe[1]{\the#1}%
 \newrobustcmd*\newoptionlength[2]{%
   \csnewlength{#1}%
   \option@letkey{#1/.show}\opt@showthe
   \newoptioncmdvalue{#1}{%
-    \typeout{set length: #1=\meaning\option@value}%
     \cssetlength{#1}{\dimexpr\option@value\relax}%
-    \typeout{the length: #1=\the\csuse{#1}}%
   }%
   {\csuse{#1}}% read value
   {#2}% initial value
 }
+\newrobustcmd*\opt@showthe[1]{\the#1}%
 
 \newrobustcmd*\newoptiondimen[2]{%
   \newoptionvalue{#1}{\dimexpr#2\relax}%
