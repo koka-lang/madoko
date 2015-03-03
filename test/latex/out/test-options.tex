@@ -124,10 +124,11 @@
 \def\opt@runhandler#1#2{%
   \typeout{runhandler #1, on "#2"}%
   \def\do##1##2##3{%
-    \opt@onkeyexist{##1/#1}{% defines opt@trykey
-      \edef\option@handlerkey{#2}%
-      \edef\option@handler{#1}%
-      \edef\option@key{##1/#1}
+    \opt@onkeyexist{##1/#1/.cmd}{% defines opt@trykey
+      \edef\option@handlerkey{##2##3}%
+      \edef\option@handler{##3}%
+      \edef\option@key{##1/#1}%
+      \edef\option@path{##1}%
       \typeout{invoke: \option@key/.cmd, with \option@handlerkey}%
       \csname optk@\option@key/.cmd\endcsname{\option@handlerkey}%
     }%
@@ -450,25 +451,25 @@
   \addoptioncheck{#1}{\protected@edef\option@value{\option@value}}%
 }
 
+\newrobustcmd*\opt@search[1]{%  
+  \typeout{search #1 for \option@handlerkey (with \meaning\opt@trykey)}%
+  \ifx\opt@trykey\relax
+    \edef\option@key{#1/\option@handlerkey}%
+    \typeout{try search: \option@key}%
+    \letoption\option@key\opt@trykey
+  \fi
+}
 
 \newrobustcmd*\addoptionsearch[2]{%
-  \ifoptiondefined{#1/.searchalso}{}{%
-    \def\opt@temp##1{%
-      \typeout{search also: #1: for ##1}%   
-    }
-    \option@letkey{#1/.searchalso}\opt@temp
+  \ifoptiondefined{#1/.searchalso/.cmd}{}{%
+    \option@setkey{optk@#1/.searchalso/.cmd}{\typeout{search also: #1}}%
   }
   \def\do##1{%
-    \edef\opt@temp{%  
-      \ifx\opt@trykey\relax
-        \edef\option@key{##1/\option@subpath}%
-        \typeout{try search: \option@key}%
-        \letoption\option@key\opt@trykey
-      \fi
-    }
-    \expandnext{\option@append{#1/.searchalso}}{\opt@temp}
+    \typeout{  add ##1 to search path}%
+    \expandnext{\option@append{#1/.searchalso/.cmd}}{\noexpand\opt@search{##1}}
   }
-  \expandafter\docsvlist{#2}%
+  \expandnext\docsvlist{#2}%
+  \typeout{ result: \option{#1/.searchalso/.cmd}}%
 }
 
 % --------------------------------------------------------
