@@ -43,6 +43,11 @@
 \newrobustcmd*\optionsetalso[1]{\opt@do#1,\relax,}
 
 
+
+% the default value
+\def\opt@default{}
+
+
 % The main parsing of options
 % This code is quite expanded to make it as efficient as possible.
 % It is a slight modification of the original code by David Carlisle in the 
@@ -108,7 +113,7 @@
   \option@ifisabsolute{#2}%
     \letoption{#2}\opt@trykey
     \ifx\opt@trykey\relax\else
-      \edef\option@key{#2}%
+      \edef\option@key{#2}% found
     \fi
   \else  
     \letoption{#1#2}\opt@trykey% use default path
@@ -122,6 +127,18 @@
   \fi
 }
 
+% search an absolute key (and use searchalso too)
+\newrobustcmd*\opt@searchforabskey[1]{%
+  \letoption{#1}\opt@trykey
+  \ifx\opt@trykey\relax
+    \ifopt@nosearch\else
+      \opt@searchalso{#1}%
+    \fi
+  \else    
+    \edef\option@key{#1}% !found
+  \fi
+}
+
 % note: we can nest searches without grouping
 % because they all use the same "\do" (option@searchalsodo) and
 % all need to break once the inner one breaks (so it is fine if \opt@break redefined \do)
@@ -131,21 +148,23 @@
   \option@foreachparent{#1}%
 }
 \newrobustcmd*\opt@searchalsodo[3]{%
-  \opt@onkeyexist{#1/.searchalso}{%
+  \letoption{#1/.searchalso}\opt@temp
+  \ifx\opt@temp\relax\else
     \edef\option@searchkey{#2#3}% subpath
-    \csname optk@#1/.searchalso\endcsname%
-    \ifx\opt@trykey\relax\else\opt@break\fi% on found: break
-  }%
+    \opt@temp% invoke search routine
+    \ifx\opt@trykey\relax\else\opt@break\fi% on found: break loop
+  \fi
 }
 
 \newrobustcmd*\opt@unknown[1]{%
   \def\do##1##2##3{%
-    \opt@onkeyexist{##1/.unknown/.cmd}{%
+    \letoption{##1/.unknown}\opt@temp
+    \ifx\opt@temp\relax\else
       \edef\option@unknownkey{#1}% full key
       \edef\option@unknownsubpath{##2##3}% subpath
       \edef\option@key{##1/.unknown}%
       \opt@break%
-    }%
+    \fi%
   }
   \option@foreachparent{#1}%
 }
@@ -162,49 +181,26 @@
 \def\option@ifisabsolute#1{\expandafter\option@ifisabsolute@#1/\relax}
 \def\option@ifisabsolute@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
 
-% the default value
-\def\opt@default{}
 
-% check if a key exists; sets \option@key and \opt@trykey
-\def\opt@ifnokey#1{%
-  \expandafter\let\expandafter\opt@trykey\csname optk@#1\endcsname
-  \ifx\opt@trykey\relax
+% \option@splitroot{path}: split off the first directory of a path into \option@root 
+% option@splitroot{/foo/bar} -> foo 
+% option@splitroot{/foo}  -> foo
+\newrobustcmd*\option@splitroot[1]{%
+  \expandafter\option@splitroot@#1//\relax%
 }
-\def\opt@onkeyexist#1#2{%
-  \expandafter\let\expandafter\opt@temp\csname optk@#1\endcsname
-  \ifx\opt@temp\relax\else#2\fi
-}
-
-
-% option@foreachparent{<path>}
-% applies \do to each parent path. 
-%   /foo/bar/baz  -> \do{/foo/bar}{}{baz} \do{/foo}{bar/}{baz} \do{}{foo/bar/}{baz} 
-
-\newrobustcmd*\option@foreachparent[1]{%
-  \let\opt@donext\do%
-  \expandafter\opt@foreachparent@#1/\relax\relax%
-  \do{}{\option@subpath}{\option@name}%
-}
-
-\newrobustcmd*\opt@break{\def\opt@donext##1##2##3{}}
-
-
-\def\opt@foreachparent@/#1/#2\relax#3\relax{% #3 is the current root
-  \def\opt@temp{#2}%
-  \ifx\opt@temp\@empty% final key
-    \def\option@name{#1}%
-    \def\option@subpath{}%
-  \else
-    \opt@foreachparent@/#2\relax#3/#1\relax% recurse first
-    \opt@donext{#3/#1}{\option@subpath}{\option@name}%
-    \edef\option@subpath{#1/\option@subpath}%
+\def\option@splitroot@#1/#2/#3\relax{%
+  \def\option@root{#1}%
+  \ifx\option@root\@empty
+    \def\option@root{#2}%
   \fi
 }
-
-
+%  \opt@subpath@/#3\relax%
+%\def\opt@subpath@#1//\relax{%
+%  \def\option@subpath{#1}%
+%}
 
 % \option@splitkey{key}: \option@path and \option@name
-% optione@splitkey{/foo/bar} -> /foo bar
+% \option@splitkey{/foo/bar/baz} -> /foo/bar baz
 %
 \newrobustcmd*\option@splitkey[1]{%
   \let\option@path\@empty
@@ -220,18 +216,34 @@
   \fi
 }
 
-% \option@splitroot{path}: split off the first directory of a path into \option@root
-% option@splitroot{/foo/bar} -> foo
-% option@splitroot{foo/bar}  -> foo
-\newrobustcmd*\option@splitroot[1]{\expandafter\option@splitroot@#1//\relax}
-\def\option@splitroot@#1/#2/#3\relax{%
-  \def\option@root{#2}%
-  \ifx\option@root\@empty
-    \def\option@root{#1}%
+
+% option@foreachparent{<path>}
+% applies \do to each parent path. 
+%   /foo/bar/baz  -> \do{/foo/bar}{}{baz} \do{/foo}{bar/}{baz} \do{}{foo/bar/}{baz} 
+\newrobustcmd*\option@foreachparent[1]{%
+  \let\opt@donext\do%
+  \expandafter\opt@foreachparent@#1/\relax\relax%
+  \do{}{\option@subpath}{\option@name}%
+}
+
+\newrobustcmd*\opt@break{%
+  \def\opt@donext##1##2##3{}%
+}
+
+\def\opt@foreachparent@/#1/#2\relax#3\relax{% #3 is the current root
+  \def\opt@temp{#2}%
+  \ifx\opt@temp\@empty% final key
+    \def\option@name{#1}%
+    \def\option@subpath{}%
+  \else
+    \opt@foreachparent@/#2\relax#3/#1\relax% recurse first
+    \opt@donext{#3/#1}{\option@subpath}{\option@name}%
+    \edef\option@subpath{#1/\option@subpath}%
   \fi
 }
 
-  
+
+
 
 % --------------------------------------------------------
 % Extensions to etoolbox
@@ -378,7 +390,6 @@
 }%
 
 
-
 % --------------------------------------------------------
 % Parse default arguments []
 % --------------------------------------------------------
@@ -485,7 +496,7 @@
   \def\do##1{%
     \edef\opt@temp{%
       \noexpand\ifx\noexpand\opt@trykey\noexpand\relax
-        \noexpand\opt@searchforkey{##1/}{\noexpand\option@searchkey}%
+        \noexpand\opt@searchforabskey{##1/\noexpand\option@searchkey}%
       \noexpand\fi
     }%
     \expandnext{\option@append{#1/.searchalso}}{\opt@temp}%
@@ -734,9 +745,15 @@ fboxrule=\the\dimexpr\fboxrule\relax,
 
 \end{document}
 
+\option@splitroot{fooyes!}
+\typeout{ split: "\option@root","\option@subpath"}
 
-\iftrue
+\iffalse
 \newcount\@loop
+\def\do#1#2#3{\letoption{#2#3/.searchalso}\opt@trykey\ifx\opt@trykey\relax\else\def\opt@found{found}\fi}%
+\def\option@foreachparent#1{%
+  \option@splitroot{#1}\do{\option@root}{\option@subpath}{}%
+}
 \def\opt@testforeach{%
   \option@foreachparent{/fbox/border/left/style}%
   \option@foreachparent{/fbox/border/left/style}%
@@ -752,8 +769,11 @@ fboxrule=\the\dimexpr\fboxrule\relax,
   \option@foreachparent{/fbox/border/left/style}%
   \advance\@loop 1\relax
 }
-\@whilenum\@loop<80000\do\opt@testforeach
+\@whilenum\@loop<25000\do\opt@testforeach
 \fi
+
+\end{document}
+
 
 \end{document}
 
