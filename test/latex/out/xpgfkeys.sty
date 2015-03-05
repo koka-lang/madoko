@@ -58,13 +58,13 @@
 
 \newcommand*\valueof{}
 \let\valueof\pgfkeysvalueof
-\newrobustcmd*\valuelet[2]{\pgfkeysgetvalue{#2}#1}%
-\newrobustcmd*\valueletx[2]{\valuelet#1{#2}\protected@edef#1{#1}}
+\newrobustcmd*\letvalue[2]{\pgfkeysgetvalue{#2}#1}%
+\newrobustcmd*\edefvalue[2]{\valuelet#1{#2}\protected@edef#1{#1}}
 
 \newcommand*\valueset{}
 \let\valueset\pgfkeyssetvalue
 \newrobustcmd*\valuesete[2]{\expandnext{\valueset{#1}}{#2}}
-\newrobustcmd*\valuesetx[2]{\edef\xpk@temp{#2}\valuesete{#1}{\xpk@temp}}
+\newrobustcmd*\valuesetx[2]{\protected@edef\xpk@temp{#2}\valuesete{#1}{\xpk@temp}}
 \newrobustcmd*\valueappend[2]{\csappto{\pgfprefix#1}{#2}}
 \newrobustcmd*\valueappendx[2]{\ecsappto{\pgfprefix#1}{#2}}
 

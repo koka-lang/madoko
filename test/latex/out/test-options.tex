@@ -7,46 +7,25 @@
 
 \begin{document}
 
-
 \makeatletter
 
-\newoptionstyle*{/fam}{/fam/.cd}
-\addoptionsearch{/fam}{/famb,/fama}
 
-\newoptioncmd{/fama/testa}{here is a=#1.}
-\newoptioncmd{/famb/testb}{here is b=#1.}[defaultb]
-
-\newoptiontoggle{/fama/toggle}{true}
-\newoptionchoice{/famb/border/side}{top,left,right,bottom}
-
-\newoptionlength{/fama/width}{\fboxrule + 1pt}
-\newoptiondimen{/famb/widthb}{\fboxrule * 2 + 1pt}
-
-
-\optionshowall
+\optionset{%
+  /fama/testa/.code={here is a: #1},
+  /famb/testb/.code={here is b: #1},
+  /fam/test/.style={/fama/testa=#1,/famb/testb=x#1x},
+  /fam/.new family={/fama,/famb},
+  /fama/toggle/.new toggle=true,
+  /famb/border/side/.new choice={top,left,right,bottom},
+  /fama/width/.new length=\fboxrule + 1pt,
+  /famb/widthb/.new dimen={\fboxrule * 2 + 1pt}
+}
 
 
-\the\option{/famb/widthb}
-
-\option{/famb/border/side},
-
-fboxrule=\the\dimexpr\fboxrule\relax,
-
-\the\option{/famb/widthb},
-\the\option{/fama/width}.
-
-\fboxrule=1pt  it set
-
-\the\option{/famb/widthb},
-\the\option{/fama/width}.
-
-\option{/famb/border/side},
-
-\optionset{/fam,border/side=right,/fam/width=10pt} nice.
-
-\option{/famb/border/side},
+\optionset{/fam,testb=testing}
 
 \optionshowall
+
 
 \end{document}
 
