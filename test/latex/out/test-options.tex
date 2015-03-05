@@ -11,18 +11,20 @@
 
 
 \optionset{%
-  /fama/testa/.code={here is a: #1},
-  /famb/testb/.code={here is b: #1},
-  /fam/test/.style={/fama/testa=#1,/famb/testb=x#1x},
-  /fam/.new family={/fama,/famb},
-  /fama/toggle/.new toggle=true,
-  /famb/border/side/.new choice={top,left,right,bottom},
-  /fama/width/.new length=\fboxrule + 1pt,
-  /famb/widthb/.new dimen={\fboxrule * 2 + 1pt}
+  /fama/width/.new length   =5pt,
+  /fama/sep/.new dimen      =\fboxsep + \fboxrule,
+  /famb/width/.new length   =1pt,
+  /widthx/.new length       =2pt,
+  /famc/widthc/.new length  =3pt,
+  %/fam/test/.new value      =fifteen,
+  %/fama/testa/.new value      =fifteen,
+  /fam/.new family
 }
 
-
-\optionset{/fam,testb=testing}
+\optionset{%
+  /fama/width=\fboxsep + \fboxrule,
+  /fam/sep=12pt
+}
 
 \optionshowall
 

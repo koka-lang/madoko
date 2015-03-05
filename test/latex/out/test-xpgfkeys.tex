@@ -15,16 +15,23 @@
 \makeatletter
 
 \defvalues{%
-  /fama/width/.new length=5pt,
-  /fama/sep/.new dimen=\fboxsep + \fboxrule,
-  /famb/width/.new length=[4pt]1pt,
-  width/.new length=1pt,
-  /fam/test/.new value=fifteen,
+  /fama/width/.new length   =5pt,
+  /fama/sep/.new dimen      =\fboxsep + \fboxrule,
+  /famb/width/.new length   =[4pt]1pt,
+  /widthx/.new length       =2pt,
+  /famc/widthc/.new length  =3pt,
+  /fam/test/.new value      =fifteen,
+  /fama/testa/.new value      =fifteen,
+  /fam/.search also={/fama},
 }
 
-\setvalues{%
+\pgfkeys{%
   /fama/width=\fboxsep + \fboxrule,
+  /handler config=only existing,
+  /fam/sep=12pt,
 }
+\typeout{test: \valueof{/fama/sep/.@dimen}, \valueof{/fama/sep}, \valueof{/fam/sep},\valueof{/fam/sep/.@dimen}}
+
 %\typeout{test \valueof{/fama/sep/.@dimen}}
 %\valuelet\test{/fama/sep/.@dimen}\test 
 \showvalues

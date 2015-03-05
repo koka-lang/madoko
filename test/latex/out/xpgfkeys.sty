@@ -58,30 +58,29 @@
 
 \newcommand*\valueof{}
 \let\valueof\pgfkeysvalueof
-\newrobustcmd*\letvalue[2]{\pgfkeysgetvalue{#2}#1}%
-\newrobustcmd*\edefvalue[2]{\valuelet#1{#2}\protected@edef#1{#1}}
+\newrobustcmd*\letvalue[2]{\pgfkeysgetvalue{#1}#2}%
+\newrobustcmd*\edefvalue[2]{\letvalue{#1}#2\protected@edef#2{#2}}
 
-\newcommand*\valueset{}
-\let\valueset\pgfkeyssetvalue
-\newrobustcmd*\valuesete[2]{\expandnext{\valueset{#1}}{#2}}
-\newrobustcmd*\valuesetx[2]{\protected@edef\xpk@temp{#2}\valuesete{#1}{\xpk@temp}}
-\newrobustcmd*\valueappend[2]{\csappto{\pgfprefix#1}{#2}}
-\newrobustcmd*\valueappendx[2]{\ecsappto{\pgfprefix#1}{#2}}
+\newcommand*\value@set{}
+\let\value@set\pgfkeyssetvalue
+\newrobustcmd*\value@eset[2]{\expandnext{\value@set{#1}}{#2}}
+\newrobustcmd*\value@xset[2]{\protected@edef\xpk@temp{#2}\value@eset{#1}{\xpk@temp}}
+\newrobustcmd*\value@append[2]{\csappto{\pgfprefix#1}{#2}}
+\newrobustcmd*\value@eappend[2]{\ecsappto{\pgfprefix#1}{#2}}
 
 \providecommand\ifvalueblank[1]{%
-  \valueletx\xpk@temp{#1}%
+  \edefvalue{#1}\xpk@temp%
   \expandafter\ifblank\expandafter{\xpk@temp}%
 }
 \providecommand\ifvalueequal[1]{%
-  \valueletx\xpk@temp{#1}%
+  \edefvalue{#1}\xpk@temp%
   \expandafter\ifstrequal\expandafter{\xpk@temp}%
 }
 
 % short hands
-\let\valuepath\pgfkeyscurrentpath
 \let\setvalues\pgfkeys
 \let\defvalues\pgfkeys
-\let\valuesalso\pgfkeysalso
+\let\setvaluesalso\pgfkeysalso
 
 
 % test if a key is not defined, or blank
@@ -103,8 +102,8 @@
 % Comma seperated values
 % --------------------------------------------------------
 
-\newrobustcmd*\headof[1]{\xpk@headof#1,\relax}%
-\def\xpk@headof#1,#2\relax{#1}%
+\newrobustcmd*\xpk@headof[1]{\xpk@headof@#1,\relax}%
+\def\xpk@headof@#1,#2\relax{#1}%
 
 \providerobustcmd*\ifanyof[2]{%
   \let\do@next\@secondoftwo
@@ -122,24 +121,24 @@
 % List values
 % --------------------------------------------------------
 
-\newrobustcmd*\valuesetnil[1]{\valueset{#1}{}}
-\newrobustcmd*\valuepush[2]{\listcsadd{\pgfprefix#1}{#2}}
-\newrobustcmd*\valuepushx[2]{\listcseadd{\pgfprefix#1}{#2}}%
-\newrobustcmd*\valueforeachdo[2]{\def\xpk@@do##1{#2}\forlistcsloop{\xpk@@do}{\pgfprefix#1}}
+\newrobustcmd*\value@setnil[1]{\value@set{#1}{}}
+\newrobustcmd*\value@push[2]{\listcsadd{\pgfprefix#1}{#2}}
+\newrobustcmd*\value@epush[2]{\listcseadd{\pgfprefix#1}{#2}}%
+\newrobustcmd*\valuelistdo[2]{\def\xpk@@do##1{#2}\forlistcsloop{\xpk@@do}{\pgfprefix#1}}
 
-\newrobustcmd*\valuesetlist[2]{%
-  \valuesetnil{#1}\valueconcat{#1}{#2}%
+\newrobustcmd*\value@setlist[2]{%
+  \value@setnil{#1}\value@concat{#1}{#2}%
 }
-\newrobustcmd*\valueconcat[2]{%
-  \def\do##1{\valuepushx{#1}{##1}}%
+\newrobustcmd*\value@concat[2]{%
+  \def\do##1{\value@epush{#1}{##1}}%
   \expandnext\docsvlist{#2}%
 }
-\newrobustcmd*\valueletlist[2]{%
-  \def#1{}%
-  \valueforeachdo{#2}{%
-    \ifdefempty#1%
-      {\def#1{##1}}%
-      {\appto#1{,##1}}%
+\newrobustcmd*\letvaluelist[2]{%
+  \def#2{}%
+  \valuelistdo{#1}{%
+    \ifdefempty#2%
+      {\def#2{##1}}%
+      {\appto#2{,##1}}%
   }%
 }
 \newrobustcmd*\ifvaluecontains[2]{%
@@ -151,28 +150,31 @@
 
 
 % --------------------------------------------------------
-% Register keys in metadata so they can be displayed
+% Call xpk@newvaluekey when defining 'value' keys
+% This registers keys in metadata so they can be displayed
+% Also sets the more stable "xpk@currentpath" to be
+% used when defining extra values
 % --------------------------------------------------------
 
-\newrobustcmd*\xpk@registerkey[1][\pgfkeyscurrentpath]{%
-  \edef\valuepath{#1}%
+\newrobustcmd*\xpk@newvaluekey[1][\pgfkeyscurrentpath]{%
+  \edef\xpk@currentpath{#1}%
   \edef\pgfkeyscurrentkey{#1}%
-  \xpk@registerkey@{/.@names}%
+  \xpk@newvaluekey@{/.@names}%
 }
-\newrobustcmd*\xpk@registerkey@[1]{%
+\newrobustcmd*\xpk@newvaluekey@[1]{%
   \eifblank{\pgfkeyscurrentkey}{}{%
     \pgfkeys@split@path
     \edef\xpk@tempname{/@meta/keys\pgfkeyscurrentpath}%
     \ifvaluedefined{\xpk@tempname/.@names}{}{%
-      \valuesetnil{\xpk@tempname/.@names}%
-      \valuesetnil{\xpk@tempname/.@paths}%
+      \value@setnil{\xpk@tempname/.@names}%
+      \value@setnil{\xpk@tempname/.@paths}%
     }%
     \ifvaluecontains{\xpk@tempname#1}{\pgfkeyscurrentname}%
-      {}{\valuepushx{\xpk@tempname#1}{\pgfkeyscurrentname}}%
-    \valueletlist\xpk@list{\xpk@tempname#1}%
-    \typeout{new list: \xpk@list, added \pgfkeyscurrentname}%
+      {}{\value@epush{\xpk@tempname#1}{\pgfkeyscurrentname}}%
+    \letvaluelist{\xpk@tempname#1}\xpk@list%
+    %\typeout{new list: \xpk@list, added \pgfkeyscurrentname}%
     \edef\pgfkeyscurrentkey{\pgfkeyscurrentpath}%
-    \xpk@registerkey@{/.@paths}%
+    \xpk@newvaluekey@{/.@paths}%
   }%
 }
 
@@ -199,7 +201,7 @@
 \newrobustcmd*\xpk@showitems[4][]{%
   \ifvaluenil{/@meta/keys#2#3}{}{%
     \begin{itemize}[noitemsep,topsep=0pt,leftmargin=1em,label=,#1]
-    \valueforeachdo{/@meta/keys#2#3}{%
+    \valuelistdo{/@meta/keys#2#3}{%
       \item\noindent#4{#2/}{##1}%
     }%
     \end{itemize}
@@ -218,7 +220,7 @@
 }
 
 \newrobustcmd*\valueshowliteral[1]{%
-  \valuelet\xpk@temp{#1}\texttt{\expandnext\detokenize{\xpk@temp}}%
+  \letvalue{#1}\xpk@temp\texttt{\expandnext\detokenize{\xpk@temp}}%
 }
 
 \newrobustcmd*\valueshow[1]{%
@@ -241,14 +243,14 @@
 
 \newrobustcmd*\xpk@initdefault{\@ifnextchar[{\xpk@initdefault@def}{\xpk@initdefault@init}}
 \def\xpk@initdefault@def[#1]{%
-  \valuesalso{\pgfkeyscurrentpath/.default=#1}%
+  \pgfkeysalso{\pgfkeyscurrentpath/.default=#1}%
   \xpk@initdefault@init
 }
 \def\xpk@initdefault@init#1\relax{%
-  \valueset{\pgfkeyscurrentpath/.@initial}{#1}%
+  \value@set{\pgfkeyscurrentpath/.@initial}{#1}%
   \ifvaluedefined{\pgfkeyscurrentpath/.@cmd}%
-    {\valuesalso{\pgfkeyscurrentpath={#1}}}%
-    {\valueset{\pgfkeyscurrentpath}{#1}}%
+    {\pgfkeysalso{\pgfkeyscurrentpath={#1}}}%
+    {\value@set{\pgfkeyscurrentpath}{#1}}%
 }
 
 
@@ -262,37 +264,58 @@
   \pgfkeyslet{\pgfkeyscurrentpath/.@show}\xpk@show%
 }
 
+\pgfkeysdef{/handlers/.einitial}{%
+  \value@xset{\pgfkeyscurrentpath}{#1}%
+}
+
+\newrobustcmd\newvaluetype[2]{%
+  \csdef{xpk@create@#1}##1##2{\pgfqkeysalso{##2}{#2}}%
+  \pgfkeysdef{/handlers/.new #1}{%
+    \typeout{create #1: \pgfkeyscurrentpath = ##1}%
+    \edef\xpk@valuepath{\pgfkeyscurrentpath}%
+    \xpk@newvaluekey%
+    \expandnext{\csuse{xpk@create@#1}{##1}}{\xpk@valuepath}%
+  } 
+}
+\newrobustcmd\newvalue@[2]{%
+  \pgfqkeysalso{\xpk@currentpath}{%
+    #2{#1}%
+  }
+}
+
 \pgfkeysdef{/handlers/.init}{%
   \xpk@initdefault#1\relax%
 }
 
-\defvalues{/handlers/.new value/.code=%
-  \xpk@registerkey%
-  \valuesalso{%
-    \valuepath/.init=#1,%
-  }
+\pgfkeysdef{/handlers/.exec}{%
+  #1%
 }
 
-\defvalues{/handlers/.new length/.code=%
-  \xpk@registerkey%
-  \edef\xpk@length{length@\valuepath}%
-  \csnewlength{\xpk@length}%
-  \valuesetx{\valuepath}{\csuse{\xpk@length}}%
-  \valuesalso{%
-    \valuepath/.ecode=\noexpand\cssetlength{\xpk@length}{\noexpand\dimexpr##1\noexpand\relax},%
-    \valuepath/.init=#1,
-    \valuepath/.set show=\the\valueof{##1}%
-  }%
+
+
+\newvaluetype{family}{%
+  .is family,
+  .search also=#1,
 }
 
-\defvalues{/handlers/.new dimen/.code=%
-  \xpk@registerkey%
-  \edef\xpk@dimen{\valuepath/.@dimen}%
-  \valuesetx{\valuepath}{\noexpand\dimexpr\noexpand\valueof{\xpk@dimen}\noexpand\relax}%
-  \valuesalso{%
-    \valuepath/.ecode=\noexpand\valueset{\xpk@dimen}{##1}\noexpand,%
-    \valuepath/.init=#1,
-    \valuepath/.set show=\the\valueof{##1} (=\valueshowliteral{##1/.@dimen}),%
-  }%
+
+\newvaluetype{value}{%
+  .init=#1,
 }
+
+\newvaluetype{length}{%
+  .exec     =\csnewlength{length@#2},%
+  .einitial =\csuse{length@#2},%
+  .code     =\cssetlength{length@#2}{\dimexpr##1\relax},%
+  .set show =\the\valueof{##1},%
+  .init     =#1,
+}
+
+\newvaluetype{dimen}{%
+  .initial  =\dimexpr\valueof{#2/.@dimen}\relax,%
+  .code     =\value@set{#2/.@dimen}{##1},%
+  .set show ={\the\valueof{##1} (=\valueshowliteral{##1/.@dimen})},%
+  .init     =#1,
+}
+
 
