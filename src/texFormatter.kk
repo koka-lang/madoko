@@ -345,7 +345,11 @@ function nosuppressKey( kv : (string,string) ) : bool {
 
 
 function showAttr( key, value ) {
-  key.normalizeId + "={" + (if (key=="color" || key.endsWith("-color")) then value.normalizeColor else value.normalizeVal) + "}" 
+  val csskey = key.normalizeId
+  val cssval = if (csskey=="color" || csskey.endsWith("-color")) then value.normalizeColor 
+               elif (csskey=="max-width" || csskey=="max-height") then value.normalizeVal("\\naturalwidth")
+               else value.normalizeVal
+  csskey + "={" + cssval + "}" 
 }
 
 function normalizeColor( v : string ) : string {
@@ -359,12 +363,12 @@ function normalizeColor( v : string ) : string {
   }
 }
 
-function normalizeVal( v0 : string ) : string {
+function normalizeVal( v0 : string, percwidth="\\linewidth" ) : string {
   val v = v0.splitExclude(rxComma,rxQuoted).join(",")
   match(v.find(rxPerc)) {
     Just(cap) -> {
       val perc = cap.groups[1].parseInt().maybe(100,id).double / 100.0
-      perc.showFixed(2) + "\\linewidth"
+      perc.showFixed(2) + percwidth
     }
     Nothing -> match(v.find(rxPixels)) {
       Just(cap) -> cap.groups[1] + "\\cssPixel"
@@ -379,7 +383,7 @@ function normalizeVal( v0 : string ) : string {
             val (r,g,b) = hslToRgb( cap.groups[1].parseIntDefault(0), cap.groups[2].parseIntDefault(0), cap.groups[3].parseIntDefault(0) )
             "\\#" + [r,g,b].map( fun(c) { c.showHex(2) } ).join
           }
-          Nothing   -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
+          Nothing -> v.escapeEntity.texText.replaceAll(regex("\n"),"\\\\")
         }
       }
     }

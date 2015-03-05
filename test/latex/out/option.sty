@@ -61,7 +61,7 @@
 
 % The main parsing of options
 % This code is quite expanded to make it as efficient as possible.
-% It is a slight modification of the original code by David Carlisle in the 
+% It is based on the original code by David Carlisle in the 
 % standard latex "keyval" package.
 \def\opt@do#1,{%
  \ifx\relax#1\empty\else
@@ -80,11 +80,11 @@
     \fi
     % try key directly
     \edef\option@key{\option@rawkey}%
-    \option@ifisabsolute{\option@key}\else
-      \edef\option@key{\opt@defaultpath/\option@rawkey}% use default path
-    \fi
+    \ifoptionisabsolute{\option@rawkey}%
+      {\edef\option@key{\option@rawkey}}% cannot let since option@rawkey may be a command
+      {\edef\option@key{\opt@defaultpath/\option@rawkey}}% use default path for relative keys
     \letoption\option@key\opt@trykey
-    \typeout{try: \option@key (\meaning\option@rawkey, \opt@defaultpath)}%
+    %\typeout{try: \option@key (\meaning\option@rawkey, \opt@defaultpath)}%
     \ifx\opt@trykey\relax
       % not directly found..
       \option@gethandler\option@key% defines option@handlerkey & option@handler
@@ -106,7 +106,7 @@
       \fi
     \fi
     % now \option@key and \option@value are defined; invoke the /.@cmd
-    \typeout{call \option@key/.@cmd }%
+    %\typeout{call \option@key/.@cmd }%
     \expandafter\csname optk@\option@key/.@cmd\expandafter\endcsname\expandafter{\option@value}%
   \fi
 }
@@ -212,21 +212,21 @@
     \ifx\opt@temp\@empty
       \def\option@handlerkey{#1}%
       \def\option@handler{.#2}%
-      \typeout{handler: #1,#2-#3-#4}%      
+      %\typeout{handler: #1,#2-#3-#4}%      
     \else
       % nested handlers.. only happens at definition time
       \typeout{nested handler.. #3}%
       \option@gethandler@/.#3/.#4\relax
       \edef\option@handlerkey{#1/.#2\option@handlerkey}%      
-      \typeout{handler: \option@handlerkey, \option@handler}
+      %\typeout{handler: \option@handlerkey, \option@handler}
     \fi
   \fi
 }
 \def\option@handlerkey{}
 
 % \option@isabsolute{key}: check if key starts with /
-\def\option@ifisabsolute#1{\expandafter\option@ifisabsolute@#1/\relax}
-\def\option@ifisabsolute@#1/#2\relax{\def\opt@temp{#1}\ifx\opt@temp\@empty}
+\def\ifoptionisabsolute#1{\expandafter\ifoptionisabsolute@#1/\relax}
+\def\ifoptionisabsolute@#1/#2\relax{\def\opt@temp@abs{#1}\ifx\opt@temp@abs\@empty\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
 
 
 % \option@splitroot{path}: split off the first directory of a path into \option@root 
@@ -244,16 +244,14 @@
 % \option@splitkey{/foo/bar/baz} -> /foo/bar baz
 \newrobustcmd*\option@splitkey[1]{%
   \let\option@path\@empty
-  \option@ifisabsolute{#1}%
+  \ifoptionisabsolute{#1}{%
     \def\do##1##2##3{%
       \edef\option@path{##1/}%
       \edef\option@name{##3}%
       \opt@break
     }
     \option@foreachparent{#1}%
-  \else
-    \edef\option@name{#1}%
-  \fi
+  }{\edef\option@name{#1}}%
 }
 
 
@@ -266,9 +264,7 @@
   \do{}{\option@subpath}{\option@name}%
 }
 
-\newrobustcmd*\opt@break{%
-  \def\opt@donext##1##2##3{}%
-}
+\newrobustcmd*\opt@break{\def\opt@donext##1##2##3{}}
 
 \def\opt@foreachparent@/#1/#2\relax#3\relax{% #3 is the current root
   \def\opt@temp{#2}%
@@ -353,9 +349,7 @@
   \opt@do@next
 }
 
-\newrobustcmd*\ifoptionanyof[2]{%
-  \ifanyof{\valueof{#1}}{#2}%
-}
+\newrobustcmd*\ifoptionanyof[2]{\ifanyof{\valueof{#1}}{#2}}
 
 % --------------------------------------------------------
 % Lists
@@ -366,9 +360,7 @@
 \newrobustcmd*\option@epush[2]{\listcseadd{optk@#1}{#2}}%
 \newrobustcmd\optionlistdo[2]{\def\opt@@do##1{#2}\forlistcsloop{\opt@@do}{optk@#1}}
 
-\newrobustcmd*\option@setlist[2]{%
-  \option@setnil{#1}\option@concat{#1}{#2}%
-}
+\newrobustcmd*\option@setlist[2]{\option@setnil{#1}\option@concat{#1}{#2}}
 \newrobustcmd*\option@concat[2]{%
   \def\do##1{\option@push{#1}{##1}}%
   \expandnext\docsvlist{#2}%
@@ -381,15 +373,11 @@
       {\appto#1{,##1}}%
   }%
 }
-\newrobustcmd*\ifoptioncontains[2]{%
-  \xifinlistcs{#2}{optk@#1}%
-}
+\newrobustcmd*\ifoptioncontains[2]{\xifinlistcs{#2}{optk@#1}}
 
 \let\ifoptionnil\ifoptionvoid
 
-\newrobustcmd*\option@pushifnew[2]{%
-  \ifoptioncontains{#1}{#2}{}{\option@push{#1}{#2}}%
-}
+\newrobustcmd*\option@pushifnew[2]{\ifoptioncontains{#1}{#2}{}{\option@push{#1}{#2}}}
 
 
 % --------------------------------------------------------
@@ -428,9 +416,7 @@
     \optionerror{cannot take an argument (=\option@value)}%
   \fi
 }%   
-\newrobustcmd*\option@settoarg{%
-  \option@letkey{\option@key}{\option@value}%
-}%   
+\newrobustcmd*\option@settoarg{\option@letkey{\option@key}{\option@value}}%   
 
 \newrobustcmd*\option@ensurefree[1]{%
   \ifoptiondefined{#1}{%
@@ -544,11 +530,9 @@
 \newoptioncmd{/.unknown}{%
   \let\opt@trykey\relax
   \eifblank{\option@unknownkey}{\def\option@unknownkey{?}}{}%
-  \option@ifisabsolute{\option@unknownkey}%
-    \optionerror[\option@unknownkey]{unknown option}
-  \else
-    \optionerror[\option@unknownkey]{unknown option under "\opt@defaultpath"}%
-  \fi
+  \ifoptionisabsolute{\option@unknownkey}%
+    {\optionerror[\option@unknownkey]{unknown option}}%
+    {\optionerror[\option@unknownkey]{unknown option under "\opt@defaultpath"}}%
 }[]
 
 
@@ -594,7 +578,7 @@
 
 \newrobustcmd*\newoptionlength[2]{%
   \csnewlength{#1}%
-  \addoptionshow{#1}{\the\option{#1}}%
+  \addoptionshow{#1}{\option@showvalue{\the\option{#1}}}%
   \newoptioncmdvalue{#1}{%
     \cssetlength{#1}{\dimexpr\option@value\relax}%
   }%
@@ -609,9 +593,7 @@
   {#2}[]
   \addoptionshow{#1}{\opt@showdimen{#1}}%
 }
-\newrobustcmd*\opt@showdimen[1]{%
-  \the\option{#1}\ \letoption{#1/.dimen}\opt@temp(=\texttt{\expandnext\detokenize{\opt@temp}})%
-}
+\newrobustcmd*\opt@showdimen[1]{\option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/.dimen})}
 
 % --------------------------------------------------------
 % Initial handlers
@@ -625,46 +607,32 @@
   \edef\opt@defaultpath{\option@handlerkey}%
 }
 
-\newoptioncmd{/handlers/.code}{%
-  \typeout{.code: \option@handlerkey}%
-  \expandnext\newoptioncmd{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.code*}{%
-  \expandnext\newoptioncmd*{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.style}{%
-  \expandnext\newoptioncmd{\option@handlerkey}{\optionsetalso{#1}}%
-}
-
-\newoptioncmd{/handlers/.new length}{%
-  \expandnext\newoptionlength{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.new dimen}{%
-  \expandnext\newoptiondimen{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.new choice}{%
-  \expandnext\newoptionchoice{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.new toggle}{%
-  \expandnext\newoptiontoggle{\option@handlerkey}{#1}%
-}
-
-\newoptioncmd{/handlers/.is if}{%
-  \expandnext\newoptionif{\option@handlerkey}{#1}%
-}
-
+% new types
+\newoptioncmd{/handlers/.new cmd}{\expandnext\newoptioncmd{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new cmd*}{\expandnext{\newoptioncmd*}{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new style}{\expandnext\newoptioncmd{\option@handlerkey}{\optionsetalso{#1}}}
+\newoptioncmd{/handlers/.new style*}{\expandnext{\newoptioncmd*}{\option@handlerkey}{\optionsetalso{#1}}}
+\newoptioncmd{/handlers/.new value}{\expandnext\newoptionvalue{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new length}{\expandnext\newoptionlength{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new dimen}{\expandnext\newoptiondimen{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new choice}{\expandnext\newoptionchoice{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.new toggle}{\expandnext\newoptiontoggle{\option@handlerkey}{#1}}
 \newoptioncmd{/handlers/.new family}{%
-  \expandnext{\newoptioncmd*}{\option@handlerkey}{%
-    \typeout{family: \meaning\option@key, \meaning\option@handlerkey, #1}%
-    \edef\opt@defaultpath{\option@key}}%
+  \expandnext{\newoptioncmd*}{\option@handlerkey}{\edef\opt@defaultpath{\option@key}}%
   \expandnext\addoptionsearch{\option@handlerkey}{#1}%
 }[]
 
+% hook into existing definitions
+\newoptioncmd{/handlers/.is if}{\expandnext\newoptionif{\option@handlerkey}{#1}}
+\newoptioncmd{/handlers/.is def}{\expandnext\newoptioncmd{\option@handlerkey}{\let#1\option@value}}
+\newoptioncmd{/handlers/.is edef}{\expandnext\newoptioncmd{\option@handlerkey}{\edef#1{\option@value}}}
+
+
+% compatibility with pgfkeys
+\newoptionstyle{/handlers/.code}{\option@handlerkey/.cmd={#1}}%
+\newoptionstyle{/handlers/.style}{\option@handlerkey/.new style={#1}}%
+\newoptionstyle*{/handlers/.is family}{\option@handlerkey/.new family}%
+\newoptionstyle{/handlers/.search also}{\expandnext\addoptionsearch{\option@handlerkey}{#1}}
 
 
 % --------------------------------------------------------
@@ -677,6 +645,8 @@
 \newrobustcmd*\option@font@path[1]{\textsf{#1}}
 \newrobustcmd*\option@font@value[1]{\textsf{#1}}
 \newrobustcmd*\option@font@special[1]{\textit{#1}}
+
+\newrobustcmd*\option@showvalue[1]{$\langle$\option@font@value{#1}$\rangle$}
 
 \newrobustcmd*\optionshowpath[2][]{\option@showpath{#1#2}{#2}}
 \newrobustcmd*\option@showpath[2]{%
@@ -707,16 +677,14 @@
   }{}%
 }
 
-\newrobustcmd*\optionshowliteral[1]{%
-  \letoption{#1}\opt@temp\texttt{\expandnext\detokenize{\opt@temp}}%
-}
+\newrobustcmd*\optionshowliteral[1]{\letoption{#1}\opt@temp\option@showvalue{\texttt{\expandnext\detokenize{\opt@temp}}}}
 
 \newrobustcmd*\optionshow[1]{%
   \ifoptiondefined{#1/.@show}%
-    {\option@font@value{\option{#1/.@show}{#1}}}%
+    {\option{#1/.@show}{#1}}%
     {\ifoptioncmd{#1}%
       {\option@font@special{cmd}}%
-      {\option@font@value{\option{#1}}}}%
+      {\option@showvalue{\option{#1}}}}%
 }
 
 
