@@ -16,6 +16,9 @@
 \providerobustcmd*\@swaparg[2]{#2{#1}}
 \providerobustcmd*\expandnext[2]{\expandafter\@swaparg\expandafter{#2}{#1}}
 
+\providerobustcmd*\@swapopt[2]{#2[#1]}
+\providerobustcmd*\expandnextopt[2]{\expandafter\@swapopt\expandafter{#2}{#1}}
+
 \providerobustcmd*\eifstrequal[1]{\expandnext\ifstrequal{#1}}
 \providerobustcmd*\eifblank[1]{\expandnext\ifblank{#1}}
 
@@ -108,6 +111,9 @@
     % now \option@key and \option@value are defined; invoke the /.@cmd
     %\typeout{call \option@key/.@cmd }%
     \expandafter\csname optk@\option@key/.@cmd\expandafter\endcsname\expandafter{\option@value}%
+    \ifx\option@handlernext\@empty\else
+      \optionerror{handler ".\option@handlernext" cannot follow previous handlers}%
+    \fi
   \fi
 }
 
@@ -203,26 +209,49 @@
 
 }
 
-% \option@gethandler{key}: split off the part after the "/.", sets option@handlerkey and option@handler
+% \option@gethandler{key}: split off the part after the "/.", sets option@handlerkey and option@handler and option@handlernext
 \def\option@gethandler#1{\expandafter\option@gethandler@#1/././.\relax}
 \def\option@gethandler@#1/.#2/.#3/.#4\relax{%
   \def\option@handler{#2}%
   \ifx\option@handler\@empty\else
-    \def\opt@temp{#3}%
-    \ifx\opt@temp\@empty
       \def\option@handlerkey{#1}%
       \def\option@handler{.#2}%
-      %\typeout{handler: #1,#2-#3-#4}%      
-    \else
-      % nested handlers.. only happens at definition time
-      \typeout{nested handler.. #3}%
-      \option@gethandler@/.#3/.#4\relax
-      \edef\option@handlerkey{#1/.#2\option@handlerkey}%      
-      %\typeout{handler: \option@handlerkey, \option@handler}
-    \fi
+      \def\option@handlernext{#3}%
   \fi
 }
 \def\option@handlerkey{}
+\def\option@handlernext{}
+
+\newrobustcmd*\option@chainempty{%
+  \let\option@value\opt@default
+  \option@chainonlywith{\opt@default}%
+}
+\newrobustcmd*\option@chainonlywith[1]{%
+  \ifx\option@handlernext\@empty\else
+    \option@chainwith{#1}%
+  \fi
+}
+\newrobustcmd*\option@chainwith[1]{%
+  \ifx\option@value\opt@default\relax\else
+    \def\option@value{#1}%    
+  \fi
+  \ifx\option@handlernext\@empty
+    % we are done, invoke the option handler
+    \let\option@key\option@handlerkey%
+    \option{\option@key/.@cmd}{#1}%
+  \else
+    % invoke the next handler
+    %\typeout{call next handler: \option@handlerkey, \option@handlernext}%
+    \edef\opt@temp{\option@handlerkey/.\option@handlernext}%
+    \option@gethandler{\opt@temp}%
+    \edef\option@key{/handlers/\option@handler}%
+    \letoption{\option@key}\opt@trykey
+    \ifx\opt@trykey\relax
+      \opt@unknown{\option@key}% unknown handler
+    \fi
+    \option{\option@key/.@cmd}{#1}%
+  \fi
+}
 
 % \option@isabsolute{key}: check if key starts with /
 \def\ifoptionisabsolute#1{\expandafter\ifoptionisabsolute@#1/\relax}
@@ -599,6 +628,7 @@
   \optionnewcmd{#1}{\eifblank{\option@value}{\refstepcounter{#2}}{\setcounter{#2}{##1}}}[]%
   \option@setkey{#1}{#2}% read returns the plain name of the counter 
   \option@settype{#1}{counter}%
+  \optionaddshow{#1}{\option@showvalue{\option{#1}} (=\option@font@value{\arabic{#2}})}
 }
 
 \newrobustcmd*\optionnewtoggle[2]{%
@@ -659,14 +689,33 @@
 \newrobustcmd*\opt@showdim[1]{\option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/@dimexpr})}
 
 
-\newrobustcmd*\optionnewnum[2]{%
+\newrobustcmd*\optionnewnum[2]{%[]
+  \option@settype{#1}{num}%
   \optionnewcmdvalue{#1}{%
     \option@esetkey{#1}{\the\numexpr ##1\relax}%
   }%
   {0}%
-  {#2}[]%
-  \option@settype{#1}{num}%
+  {#2}%
 }
+
+\newrobustcmd*\option@withdefault[2]{%
+  \option@parsedefault{#2}%
+  \typeout{with default: \detokenize{#1}, #2, \option@default}
+  \ifx\option@default\opt@default
+    \typeout{no default}
+    #1{#2}%
+  \else
+    \typeout{default given \option@default, initial: \the\opt@temptoks}%
+    \edef\option@initial{\the\opt@temptoks}%
+    \expandnextopt{\expandnext{#1}{\option@initial}}{\option@default}%
+  \fi
+}
+
+\newrobustcmd*\option@parsedefault[1]{\expandafter\option@parsedefault@#1\relax}
+\def\option@parsedefault@{\@ifnextchar [{\option@parsedefault@opt}{\option@parsedefault@ini}}
+\def\option@parsedefault@opt[#1]#2\relax{\def\option@default{{#1}}\opt@temptoks{#2}}
+\def\option@parsedefault@ini#1\relax{\let\option@default\opt@default}
+
 
 \newrobustcmd*\optionnewlist[2]{%
   \optionnewcmdvalue{#1}{%
@@ -686,53 +735,70 @@
 \optionnewif{/.ignore}{opt@ignoreunknown}
 \optionnewif{/.nosearch}{opt@nosearch}
 
-\optionnewcmd*{/handlers/.cd}{\edef\opt@defaultpath{\option@handlerkey}}
-\optionnewcmd*{/handlers/.expands}{\expandnext\optionaddexpands{\option@handlerkey}}
+% general operations on keys
+\optionnewcmd*{/handlers/.cd}{\edef\opt@defaultpath{\option@handlerkey}\option@chainempty}
+\optionnewcmd*{/handlers/.expands}{\expandnext\optionaddexpands{\option@handlerkey}\option@chainempty}
 
-\optionnewcmd{/handlers/.expand once}{\expandnext{\option{\option@handlerkey/.@cmd}}{#1}}
-\optionnewcmd{/handlers/.expand twice}{\expandnext{\expandnext{\option{\option@handlerkey/.@cmd}}}{#1}}
-\optionnewcmd{/handlers/.expanded}{\protected@edef\opt@temp{#1}\expandnext{\option{\option@handlerkey/.@cmd}}{\opt@temp}}
+% transformations on the argument
+\optionnewcmd{/handlers/.expand once}{\expandafter\option@chainwith\expandafter{#1}}
+\optionnewcmd{/handlers/.expand twice}{\expandafter\expandafter\expandafter\option@chainwith\expandafter\expandafter\expandafter{#1}}
+\optionnewcmd{/handlers/.expanded}{\protected@edef\opt@temp{#1}\expandafter\option@chainwith\expandafter{\opt@temp}}
 
-\optionnewcmd{/handlers/.add}{%
+\optionnewcmd{/handlers/.inc}{%
+  \ifx\option@value\opt@default\def\option@value{1}\fi
+  \typeout{increment: \option@handlerkey, with \option@value}%
   \ifoptiontype{\option@handlerkey}{counter}% check if this is a counter or a number
-    {\addtocounter{\option{\option@handlerkey}}{#1}}%
-    {\option@eassign{\option@handlerkey}{\option{\option@handlerkey} + #1}}%
+    {\addtocounter{\option{\option@handlerkey}}{\option@value}}%
+    {\option@eassign{\option@handlerkey}{\option{\option@handlerkey} + \option@value}}%
+  \expandnext\option@chainonlywith{\option@value}%
+}[1]
+
+\optionnewcmd*{/handlers/.step}{%
+  \ifoptiontype{\option@handlerkey}{counter}% check if this is a counter 
+    {\stepcounter{\option{\option@handlerkey}}}%
+    {\optionerror[\option@handlerkey]{cannot "step" a non-counter}}%
+  \option@chainempty%
+}
+\optionnewcmd*{/handlers/.refstep}{%
+  \ifoptiontype{\option@handlerkey}{counter}% check if this is a counter 
+    {\refstepcounter{\option{\option@handlerkey}}}%
+    {\optionerror[\option@handlerkey]{cannot "refstep" a non-counter}}%
+  \option@chainempty%
 }
 
-\optionnewcmd{/handlers/.push}{%
-  \typeout{push #1 to \option@handlerkey}%
-  \option@push{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.concat}{\option@concat{\option@handlerkey}{#1}}
+\optionnewcmd{/handlers/.push}{\option@push{\option@handlerkey}{#1}\option@chainonlywith{#1}}
+\optionnewcmd{/handlers/.concat}{\option@concat{\option@handlerkey}{#1}\option@chainonlywith{#1}}
 
 % new types
-\optionnewcmd{/handlers/.new cmd}{\expandnext\optionnewcmd{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new cmd*}{\expandnext{\optionnewcmd*}{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new style}{\expandnext\optionnewcmd{\option@handlerkey}{\optionsetalso{#1}}}
-\optionnewcmd{/handlers/.new style*}{\expandnext{\optionnewcmd*}{\option@handlerkey}{\optionsetalso{#1}}}
-\optionnewcmd{/handlers/.new value}{\expandnext\optionnewvalue{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new length}{\expandnext\optionnewlength{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new dim}{\expandnext\optionnewdim{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new num}{\expandnext\optionnewnum{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new choice}{\expandnext\optionnewchoice{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new toggle}{\expandnext\optionnewtoggle{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.new list}{\expandnext\optionnewlist{\option@handlerkey}{#1}}
+\optionnewcmd{/handlers/.new cmd}{\option@withdefault{\expandnext\optionnewcmd{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new cmd*}{\expandnext{\optionnewcmd*}{\option@handlerkey}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new style}{\expandnext\optionnewcmd{\option@handlerkey}{\optionsetalso{#1}}\option@chainempty}
+\optionnewcmd{/handlers/.new style*}{\expandnext{\optionnewcmd*}{\option@handlerkey}{\optionsetalso{#1}}\option@chainempty}
+\optionnewcmd{/handlers/.new value}{\option@withdefault{\expandnext\optionnewvalue{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new length}{\option@withdefault{\expandnext\optionnewlength{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new dim}{\option@withdefault{\expandnext\optionnewdim{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new num}{\option@withdefault{\expandnext\optionnewnum{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new choice}{\option@withdefault{\expandnext\optionnewchoice{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new toggle}{\expandnext\optionnewtoggle{\option@handlerkey}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.new list}{\option@withdefault{\expandnext\optionnewlist{\option@handlerkey}}{#1}\option@chainempty}
 \optionnewcmd{/handlers/.new family}{%
   \expandnext{\optionnewcmd*}{\option@handlerkey}{\edef\opt@defaultpath{\option@key}}%
   \expandnext\optionaddsearch{\option@handlerkey}{#1}%
+  \option@chainempty
 }[]
 
 % hook into existing definitions
-\optionnewcmd{/handlers/.is if}{\expandnext\optionnewif{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.is counter}{\expandnext\optionnewcounter{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.is def}{\expandnext\optionnewdef{\option@handlerkey}{#1}}
-\optionnewcmd{/handlers/.is edef}{\expandnext\optionnewedef{\option@handlerkey}{#1}}
+\optionnewcmd{/handlers/.is if}{\expandnext\optionnewif{\option@handlerkey}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.is counter}{\expandnext\optionnewcounter{\option@handlerkey}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.is def}{\option@withdefault{\expandnext\optionnewdef{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewcmd{/handlers/.is edef}{\option@withdefault{\expandnext\optionnewedef{\option@handlerkey}}{#1}\option@chainempty}
 
 
 % compatibility with pgfkeys
 \optionnewstyle{/handlers/.code}{\option@handlerkey/.cmd={#1}}%
 \optionnewstyle{/handlers/.style}{\option@handlerkey/.new style={#1}}%
 \optionnewstyle*{/handlers/.is family}{\option@handlerkey/.new family}%
-\optionnewstyle{/handlers/.search also}{\expandnext\optionaddsearch{\option@handlerkey}{#1}}
+\optionnewcmd{/handlers/.search also}{\expandnext\optionaddsearch{\option@handlerkey}{#1}\option@chainempty}
 
 
 % --------------------------------------------------------
