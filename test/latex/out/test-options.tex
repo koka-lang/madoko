@@ -7,25 +7,63 @@
 
 \begin{document}
 
+\section{Introduction}
+
 \makeatletter
+
+\def\famcmd{}
 
 \optionset{%
   /fama/width/.new length   =5pt,
-  /fama/sep/.new dimen      =\fboxsep + \fboxrule,
+  /fama/sep/.new dim      =\fboxsep + \fboxrule,
   /famb/width/.new length   =1pt,
-  /widthx/.new length       =2pt,
   /famc/widthc/.new length  =3pt,
-  /fam/test/.new value      =fifteen,
   /fama/testa/.new value    =fifteen,
+  /fam/cmd/.is def          =\famcmd,
+  /fam/counter/.is counter  =section,
+  /fam/num/.new num          = 0,
+  /fam/side/.new choice      ={top,right,bottom,left},
+  /fam/test/.new cmd        =\typeout{test received #1, \detokenize{#1}},
   /fam/.new family=/fama,
+  /fam/members/.new list={a,b,c},
 }
 
 \optionset{%
   /fama/width=\fboxsep + \fboxrule,
-  /fam/sep=12pt
+  /fam/sep=12pt,
+  /fam,
+  side=right,
+  cmd/.expands,
+  cmd={hi there \the\fboxrule},
+  test=\option{/fama/testa},
+  test/.expand once=\option{/fama/testa},
+  test/.expand twice=\option{/fama/testa},
+  test/.expanded=\option{/fama/testa},
+  members/.expand once/.push=\option{/fam/cmd},
+  /fam/num/.add=2,
+  /fam/counter/.add=4,
 }
 
+\letoption{/fam/members}\opt@list
+\typeout{list: \meaning\opt@list}
+
+\ifcase\option{/fam/side/@ord}
+  the top
+\or
+  the right
+\or
+  other
+\fi
+
+\if\option{/fam/side/@tag}r\relax
+  it's right
+\else
+  or not
+\fi
+
+\typeout{section counter: \roman{\option{/fam/counter}}}
 \optionshowall
+
 
 
 \end{document}
