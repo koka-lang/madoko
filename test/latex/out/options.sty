@@ -29,6 +29,10 @@
 \providerobustcmd*\@swaparg[2]{#2{#1}}
 \providerobustcmd*\expandnext[2]{\expandafter\@swaparg\expandafter{#2}{#1}}
 
+\providerobustcmd*\@swapx[2]{#2#1}
+\providerobustcmd*\expandnextx[2]{\expandafter\@swapx\expandafter{#2}{#1}}
+
+
 % expand a parameter-less definition once
 \providerobustcmd\defexpandonce[1]{\edef#1{\expandafter\expandafter\expandafter\noexpand#1}}
 % expand a parameter-less definition twice
@@ -56,20 +60,20 @@
 
 
 % --------------------------------------------------------
-% optionset, optionsetalso
+% options, optionsalso
 % main key setting routine
 % --------------------------------------------------------
 
 \newif\ifopt@ignoreunknown
 \newif\ifopt@allowsearch
 
-\newrobustcmd*\optionset[1]{%
+\newrobustcmd*\options[1]{%
   \def\opt@defaultpath{/}%
   \opt@allowsearchtrue%
   \opt@ignoreunknownfalse%
-  \optionsetalso{#1}%
+  \optionsalso{#1}%
 }
-\newrobustcmd*\optionsetalso[1]{\opt@do#1,\relax,}
+\newrobustcmd*\optionsalso[1]{\opt@do#1,\relax,}
 
 
 % this is used if no argument is given
@@ -317,7 +321,8 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\optionerror[2][\option@key]{\PackageError{options}{option "#1": #2}{}}
-\newrobustcmd*\optionexpecterror[2][\option@key]{\optionerror{unexpected "\option@value" (expecting #2)}}
+\newrobustcmd*\optionexpecterror[2][\option@key]{\optionerror[#1]{unexpected "\option@value" (expecting #2)}}
+\newrobustcmd*\optiontoomanyerror[2][\option@key]{\optionerror[#1]{too many arguments (expecting #2)}}
 
 % \optionaddsearch{<path>}{<search paths>}
 % add new search paths to a path.
@@ -343,6 +348,8 @@
 
 \newrobustcmd*\option@setkey[2]{\csdef{optk@#1}{#2}}
 \newrobustcmd*\option@letkey[2]{\cslet{optk@#1}#2}
+
+\newrobustcmd*\option@def[1]{\csdef{optk@#1}}
 
 \newrobustcmd*\option@esetkey[2]{\expandnext{\option@setkey{#1}}{#2}}
 \newrobustcmd*\option@xsetkey[2]{\protected@edef\opt@temp{#2}\option@letkey{#1}\opt@temp}
@@ -552,10 +559,51 @@
   \optionnewcheckedvalue{#1}{}{#2}%
 }
 
-\newrobustcmd*\optionnewcmd[2]{%[]
-  \csdef{optk@#1/@cmd}##1{#2}%
-  \optionnewcode{#1}{\expandnext{\option{#1/@cmd}}{\option@value}}%
+% --------------------------------------------------------
+% command actions take arguments
+% --------------------------------------------------------
+
+% new command with just the option value as an argument
+\newrobustcmd*\optionnewcmd[2]{\optionnewcmdn{1}{#1}{#2}}
+
+% provide n arguments: 0 and 1 argument is always checked for too few/too many arguments
+% 2+ only checks for too many arguments and defaults with too few to empty arguments
+\newrobustcmd*\optionnewcmdn[3]{%
+  \ifnum#1<1\relax
+    \optionnewcode*{#2}{#3}%
+  \else\ifnum#1=1\relax
+    \option@def{#2/@cmd1}##1{#3}%
+    \optionnewcode{#2}{\expandnext{\option{#2/@cmd1}}{\option@value}}%
+  \else
+    \ifcase#1\relax\or\relax
+    \or\option@def{#2/@cmd2}##1##2##3{\ifblank{##3}{#3}{\optiontoomanyerror[#2]{#1}}}%
+    \or\option@def{#2/@cmd3}##1##2##3##4{\ifblank{##4}{#3}{\optiontoomanyerror[#2]{#1}}}%
+    \or\option@def{#2/@cmd4}##1##2##3##4##5{\ifblank{##5}{#3}{\optiontoomanyerror[#2]{#1}}}%
+    \else
+      \option@error[#2]{expecting at most 4 arguments but got "#1"}%
+    \fi
+    \optionnewcode{#2}{\expandnextx{\option{#2/@cmd#1}}{\option@value}{}{}{}{}{}}%
+  \fi
+  \fi
+  \opt@parsedefaultarg{#2}%
 }
+
+% provide any command pattern
+\newrobustcmd*\optionnewcmdx[4]{%
+  \option@def{#1/@cmdx}#2\relax{#4}%
+  \optionnewcode{#1}{\expandnextx{\option{#1/@cmdx}}{\option@value#3\relax}}%
+}
+
+
+% define cmd handler; such handler code takes the expanded option@handlerkey and option@value as arguments 
+% and do not chain with other handlers
+\newrobustcmd*\optionnewhandlercmd[2]{%
+  \option@ensurefree{/handlers/#1}%
+  \option@def{/handlers/#1/@cmd2}##1##2{#2}%
+  \optionnewcode{/handlers/#1}{\expandnext{\expandnext{\option{/handlers/#1/@cmd2}}{\option@handlerkey}}{\option@value}\option@chainempty}%
+}
+
+
 
 % --------------------------------------------------------
 % Add pre/post processing to an option
@@ -577,6 +625,13 @@
   \option@letkey{/handlers/show/#1}\opt@temp%
 }
 
+% add a default option
+\newrobustcmd*\optionadddefault[2]{%
+  \opt@setdefault{#1}[#2]%
+}
+
+
+
 % --------------------------------------------------------
 % Default unknown handler
 % --------------------------------------------------------
@@ -589,6 +644,7 @@
     {\optionerror[\option@unknownkey]{unknown option}}%
     {\optionerror[\option@unknownkey]{unknown option under "\opt@defaultpath"}}%
 }[]
+
 
 % --------------------------------------------------------
 % Helper to parse initial values that contain a default too
@@ -620,7 +676,7 @@
 \newrobustcmd*\ifoptiontype[2]{\edefoption{#1/@type}\opt@type\eifstrequal{\opt@type}{#2}}
 
 \newrobustcmd*\optionnewstyle{\@ifstar{\optionnewstyle@{\optionnewcode*}}{\optionnewstyle@{\optionnewcmd}}}
-\newrobustcmd*\optionnewstyle@[3]{#1{#2}{\optionsetalso{#3}}\option@settype{#2}{style}}
+\newrobustcmd*\optionnewstyle@[3]{#1{#2}{\optionsalso{#3}}\option@settype{#2}{style}}
 
 \newrobustcmd*\optionnewfamily[2]{%
   \optionnewcode*{#1}{\edef\opt@defaultpath{\option@key}}%
@@ -696,8 +752,8 @@
 }
 \optionaddshow{choice}{%
   \option@showvalue{\option{#1}} 
-  (\option@font@name{side/@ord}=\option{#1/@ord},%
-   \option@font@name{side/@tag}=\option@font@value{\option{#1/@tag}})%
+  (\option@font@name{@ord}=\option{#1/@ord},%
+   \option@font@name{@tag}=\option@font@value{\option{#1/@tag}})%
 }%
 
 
@@ -734,6 +790,7 @@
 \optionaddshow{list}{\letoptionlist{#1}\opt@list\typeout{gotten}\option@showvalue{\opt@list}}%
 
 
+
 % --------------------------------------------------------
 % Initial handlers
 % --------------------------------------------------------
@@ -744,6 +801,8 @@
 % general operations on keys
 \optionnewcode*{/handlers/.cd}{\edef\opt@defaultpath{\option@handlerkey}\option@chainempty}
 \optionnewcode*{/handlers/.expands}{\expandnext\optionaddexpands{\option@handlerkey}\option@chainempty}
+\optionnewcode*{/handlers/.show}{\expandnext\optionshow{\option@handlerkey}\option@chainempty}
+\optionnewcode{/options/exec}{\option@value}%
 
 % transformations on the argument
 \optionnewcode{/handlers/.expand once}{\defexpandonce\option@value\option@chain}
@@ -776,31 +835,54 @@
 }
 
 % new types
-\optionnewcmd{/handlers/.new cmd}{\option@withdefault{\expandnext\optionnewcmd{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new cmd*}{\expandnext{\optionnewcode*}{\option@handlerkey}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new style}{\expandnext\optionnewcmd{\option@handlerkey}{\optionsetalso{#1}}\option@chainempty}
-\optionnewcmd{/handlers/.new style*}{\expandnext{\optionnewcode*}{\option@handlerkey}{\optionsetalso{#1}}\option@chainempty}
-\optionnewcmd{/handlers/.new value}{\option@withdefault{\expandnext\optionnewvalue{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new length}{\option@withdefault{\expandnext\optionnewlength{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new dim}{\option@withdefault{\expandnext\optionnewdim{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new num}{\option@withdefault{\expandnext\optionnewnum{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new choice}{\option@withdefault{\expandnext\optionnewchoice{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new toggle}{\expandnext\optionnewtoggle{\option@handlerkey}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new list}{\option@withdefault{\expandnext\optionnewlist{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.new family}{\expandnext{\optionnewfamily{\option@handlerkey}}{#1}\option@chainempty}[]
+\optionnewhandlercmd{.new cmd}{\option@withdefault{\optionnewcmd{#1}}{#2}}
+\optionnewhandlercmd{.new cmd*}{\optionnewcode*{#1}{#2}}
+\optionnewhandlercmd{.new style}{\optionnewcmd{#1}{\optionsalso{#2}}}
+\optionnewhandlercmd{.new style*}{\optionnewcode*{#1}{\optionsalso{#2}}}
+\optionnewhandlercmd{.new value}{\option@withdefault{\optionnewvalue{#1}}{#2}}
+\optionnewhandlercmd{.new length}{\option@withdefault{\optionnewlength{#1}}{#2}}
+\optionnewhandlercmd{.new dim}{\option@withdefault{\optionnewdim{#1}}{#2}}
+\optionnewhandlercmd{.new num}{\option@withdefault{\optionnewnum{#1}}{#2}}
+\optionnewhandlercmd{.new choice}{\option@withdefault{\optionnewchoice{#1}}{#2}}
+\optionnewhandlercmd{.new toggle}{\optionnewtoggle{#1}{#2}}
+\optionnewhandlercmd{.new list}{\option@withdefault{\optionnewlist{#1}}{#2}}
+\optionnewhandlercmd{.new family}{\optionnewfamily{#1}{#2}}[]
 
 % hook into existing definitions
-\optionnewcmd{/handlers/.is if}{\expandnext\optionnewif{\option@handlerkey}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.is counter}{\expandnext\optionnewcounter{\option@handlerkey}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.is def}{\option@withdefault{\expandnext\optionnewdef{\option@handlerkey}}{#1}\option@chainempty}
-\optionnewcmd{/handlers/.is edef}{\option@withdefault{\expandnext\optionnewedef{\option@handlerkey}}{#1}\option@chainempty}
+\optionnewhandlercmd{.is if}{\optionnewif{#1}{#2}}
+\optionnewhandlercmd{.is counter}{\optionnewcounter{#1}{#2}}
+\optionnewhandlercmd{.is def}{\option@withdefault{\optionnewdef{#1}}{#2}}
+\optionnewhandlercmd{.is edef}{\option@withdefault{\optionnewedef{#1}}{#2}}
 
 
 % compatibility with pgfkeys
-\optionnewstyle{/handlers/.code}{\option@handlerkey/.cmd={#1}}%
-\optionnewstyle{/handlers/.style}{\option@handlerkey/.new style={#1}}%
-\optionnewstyle*{/handlers/.is family}{\option@handlerkey/.new family}%
-\optionnewcmd{/handlers/.search also}{\expandnext\optionaddsearch{\option@handlerkey}{#1}\option@chainempty}
+\optionnewstyle{/handlers/.code}{\option@handlerkey/.cmd={#1}}
+\optionnewstyle{/handlers/.style}{\option@handlerkey/.new style={#1}}
+\optionnewstyle*{/handlers/.is family}{\option@handlerkey/.new family}
+\optionnewhandlercmd{.search also}{\optionaddsearch{#1}{#2}}
+\optionnewhandlercmd{.default}{\optionadddefault{#1}{#2}}
+
+% multi argument commands
+\optionnewhandlercmd{.new cmd 0}{\optionnewcode*{#1}{#2}}
+\optionnewhandlercmd{.new cmd 1}{\option@withdefault{\optionnewcmd{#1}}{#2}}
+\optionnewhandlercmd{.new cmd 2}{\option@withdefault{\optionnewcmdn{2}{#1}}{#2}}
+\optionnewhandlercmd{.new cmd 3}{\option@withdefault{\optionnewcmdn{3}{#1}}{#2}}
+\optionnewhandlercmd{.new cmd 4}{\option@withdefault{\optionnewcmdn{4}{#1}}{#2}}
+\optionnewcmdn{3}{/handlers/.new cmdx}{\option@withdefault{\expandnext\optionnewcmdx{\option@handlerkey}{#1}{#2}}{#3}\option@chainempty}
+
+% tuples and triples take exactly 2/3 arguments
+\newrobustcmd*\optionnewtuple[2]{%
+  \optionnewcmdx{#1}{##1,##2,##3}{,,}%
+    {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\option@value"}}}%
+}
+\newrobustcmd*\optionnewtriple[2]{%
+  \optionnewcmdx{#1}{##1,##2,##3,##4}{,,,}%
+    {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\option@value"}}}%
+}
+\optionnewhandlercmd{.new cmd tuple}{\option@withdefault{\optionnewtuple{#1}}{#2}}
+\optionnewhandlercmd{.new cmd triple}{\option@withdefault{\optionnewtriple{#1}}{#2}}
+
+
 
 
 % --------------------------------------------------------
@@ -864,9 +946,11 @@
     {\ifoptiondefined{/handlers/show/\option{#1/@type}}{\@firstoftwo}{\@secondoftwo}}%
     {\@secondoftwo}%
   {\option{/handlers/show/\option{#1/@type}}{#1}}%
-  {\ifoptioniscode{#1}%
-    {\option@font@special{cmd}}%
-    {\option@showvalue{\option{#1}}}%
+  {\ifoptiondefined{#1}
+    {\ifoptioniscode{#1}%
+      {\option@font@special{cmd}}%
+      {\option@showvalue{\option{#1}}}}%
+    {\option@font@special{undefined}}%
   }%
 }
 
