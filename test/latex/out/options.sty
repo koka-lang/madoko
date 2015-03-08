@@ -66,7 +66,6 @@
 
 \newif\ifopt@ignoreunknown
 \newif\ifopt@allowsearch
-\newif\ifopt@allowspecial  % enable special syntax option; as if because adds 10% runtime penalty
 
 \newrobustcmd*\optionswithremaining{\@ifstar{\options@wrm{true}}{\options@wrm{false}}}
 \newrobustcmd*\options@wrm[2]{%
@@ -106,7 +105,7 @@
   \opt@spdef\optionrawpath{#1}%
   \ifx\optionrawpath\@empty
     \ifx\@empty#3\@empty\else
-      \optionerror[]{value with out option path: "#2"}%
+      \optionerror[]{value without option path: "#2"}%
     \fi
   \else
     % get value
@@ -116,12 +115,8 @@
       \opt@spdef\optionvalue{#2}%
     \fi
     % special handler?
-    \ifopt@allowspecial
-      \letfirstmeaningof{\optionrawpath}\opt@first
-      \letoption{/handlers/special/\opt@first}\opt@trypath    
-    \else
-      \let\opt@trypath\relax
-    \fi
+    \edef\opt@first{\expandafter\opt@firstletterof@\optionrawpath\opt@stop}%
+    \letoption{/handlers/special/\opt@first}\opt@trypath    
     \ifx\opt@trypath\relax
       % try path directly
       \ifoptionisabsolute{\optionrawpath}%
@@ -447,7 +442,7 @@
 \def\opt@firstletterof@#1#2\opt@stop{#1}
 
 \def\letfirstmeaningof#1#2{\expandafter\letfirstmeaningof@#1\opt@stop#2\opt@stop}
-\def\letfirstmeaningof@#1#2\opt@stop#3\opt@stop{\edef#3{\meaning#1}}
+\def\letfirstmeaningof@#1#2\opt@stop#3\opt@stop{\edef#3{#1}}
 
 % --------------------------------------------------------
 % Lists
@@ -655,8 +650,7 @@
 
 % define a handler for special syntax
 \newrobustcmd*\optionnewspecialcmd[2]{%
-  \opt@allowspecialtrue%
-  \edef\opt@temp{/handlers/special/\meaning#1}%
+  \edef\opt@temp{/handlers/special/#1}%
   \expandnext\optionnewcmd{\opt@temp}{#2\option@chainempty}%
 }
 
@@ -853,7 +847,6 @@
 
 \optionnewif{/options/ignoreunknown}{opt@ignoreunknown}
 \optionnewif{/options/allowsearch}{opt@allowsearch}
-\optionnewif{/options/allowspecial}{opt@allowspecial}
 \optionnewlist{/options/remaining}{}
 
 % general operations on paths

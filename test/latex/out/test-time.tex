@@ -8,6 +8,16 @@
 \begin{document}
 \makeatletter
 
+\options{%
+  /bench/.new family,
+  /bench/library/.new choice  = {baseline,options,pgfkeys,xkeyval},
+  /bench/repetitions/.new num = 10000,
+  /bench/baseline/.new num    = 800,
+}
+
+\options{/bench, library=options, repetitions=50000}
+
+
 \newcommand\preparetest[1]{
 	\eifstrequal{#1}{options}{%
 		\options{%
@@ -50,26 +60,33 @@
   \test{bar-test={a test}}%
   \test{bar-test={a test}}%
   \test{bar-test={a test}}%  
-  \advance\testcount 1\relax
+  \advance\testcount -10\relax
 }
 
-\newcommand\runtest[2][10000]{%
+\newcommand\runtest[2][\option{/bench/repetitions}]{%
 	\preparetest{#2}%
-	\typeout{test "#2": (\the\numexpr#1 * 10\relax\space repetitions)}
-	\testcount=0%	
-	\@whilenum\testcount<#1\do\testten
+	\typeout{test "#2": (#1\space repetitions)}
+	\testcount=#1\relax%	
+	\@whilenum\testcount>0\do\testten
 	\typeout{test "#2": "\valueof{baz}{bar-test}" (expected "a test")}
 }
 
-\iftrue
-\runtest{options}
-%\runtest{pgfkeys}
-%\runtest{xkeyval}
-
+\ifcase\option{/bench/library/@ord}\relax
+  % baseline = nothing
+  \typeout{baseline: do nothing}%
+\or
+  \runtest{options}
+\or
+  \runtest{pgfkeys}
+\or
+  \runtest{xkeyval}
 \else
+  \optionerror[/bench/library]{unknown library}
+\fi
+
+\iffalse
 % output benchmark results 
-\def\plaintime{820}
-\newcommand\adjust[2][1]{\the\numexpr#2 - \plaintime\relax ms (\the\numexpr (#2 - \plaintime)/#1\relax ms per 1000)}
+\newcommand\adjust[2][1]{\the\numexpr#2 - \option{/bench/baseline}\relax ms (\the\numexpr (#2 - \option{/bench/baseline}/#1\relax ms per 1000)}
 
 \begin{tabular}{lrr}
 \textbf{package} & \textbf{50.000x} & \textbf{100.000x} \\ 
