@@ -11,6 +11,13 @@
 
 \makeatletter
 
+\options{
+  /"/.new special = special1 #1.,
+  /(/.new special = special2 #1.,
+  /</.new special = special3 #1.,
+}
+\options{"red",(red),<red>}
+
 
 \def\famcmd{}
 
@@ -61,7 +68,6 @@ remaining: \optionshow{/options/remaining}
   /fama/width=\fboxsep + \fboxrule,
   /fam/sep=12pt,
   /fam,
-  testa,
   side=right,
   cmd=hi,
   test=\option{/fama/testa},
