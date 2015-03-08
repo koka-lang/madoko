@@ -10,11 +10,11 @@
 
 \newcommand\preparetest[1]{
 	\eifstrequal{#1}{options}{%
-		\optionset{%
+		\options{%
 			/baz/bar-test/.new value = hi,
 			/foo/.new family={/baz},
 		}
-		\def\test##1{\optionset{/foo,##1}}
+		\def\test##1{\options{/foo,##1}}
 		\def\valueof##1##2{\option{/##1/##2}}
 	}
 	{\eifstrequal{#1}{pgfkeys}{%
@@ -61,7 +61,7 @@
 	\typeout{test "#2": "\valueof{baz}{bar-test}" (expected "a test")}
 }
 
-\iffalse
+\iftrue
 %\runtest{options}
 %\runtest{pgfkeys}
 %\runtest{xkeyval}

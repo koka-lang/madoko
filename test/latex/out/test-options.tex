@@ -11,6 +11,7 @@
 
 \makeatletter
 
+
 \def\famcmd{}
 
 \options{/fam/.new family}
@@ -32,7 +33,7 @@
   /fama/width/.new length   =5pt,
   /fama/sep/.new dim        =\fboxsep + \fboxrule,
   /famb/width/.new length   =1pt,
-  /famc/widthc/.new length  =3pt,
+  /famc/widthc/.new dim  =3pt,
   /fama/testa/.new value    =[]fifteen,
   /fam/cmd/.is def/.expands =\famcmd,
   /fam/counter/.is counter  =section,
@@ -41,7 +42,20 @@
   /fam/test/.new cmd        =[haha]\typeout{test received #1, \detokenize{#1}},
   /fam/.search also          =/fama,
   /fam/members/.new list    ={a,b,c},
+  /famc/.new family,
+  /fama/.new family
 }
+
+\options*{/fam,/fama/width=6pt,widthc=5pt,widthc=5pt+3pt}
+
+
+\letoptionlist{/options/remaining}\remaining
+\typeout{test: \meaning\remaining}
+remaining: \expandnext\detokenize{\remaining}
+
+\optionswithremaining*{/famc,num=5}
+remaining: \optionshow{/options/remaining}
+\optionswithremaining{/fam}
 
 \options{%
   /fama/width=\fboxsep + \fboxrule,
