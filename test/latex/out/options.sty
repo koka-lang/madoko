@@ -32,12 +32,6 @@
 \providerobustcmd*\@swapx[2]{#2#1}
 \providerobustcmd*\expandnextx[2]{\expandafter\@swapx\expandafter{#2}{#1}}
 
-
-% expand a parameter-less definition once
-\providerobustcmd\defexpandonce[1]{\edef#1{\expandafter\expandafter\expandafter\noexpand#1}}
-% expand a parameter-less definition twice
-\providerobustcmd\defexpandtwice[1]{\defexpandonce{#1}\defexpandonce{#1}}
-
 \providerobustcmd*\eifstrequal[1]{\expandnext\ifstrequal{#1}}
 \providerobustcmd*\eifblank[1]{\expandnext\ifblank{#1}}
 
@@ -414,6 +408,8 @@
   \eifblank{\opt@temp}{#2}%
 }
 
+\newrobustcmd*\ifoptiontype[2]{\ifoptionequal{#1/@type}{#2}}
+\newcommand*\ifoptioniscode[1]{\ifoptionvoid{#1/@type}}
 
 % --------------------------------------------------------
 % Comma seperated values
@@ -588,54 +584,71 @@
   \csuse{opt@parsedefault#1}{#2}% parse potential default argument
 }
 
-\newrobustcmd*\optionnewcodevalue[4]{%[]
-  \optionnewcode{#1}{#2}%
-  \option@set{#1}{#3}%
-  \option@set{#1/@ini}{#4}%
-  \option@assign{#1}{#4}% this invokes the cmd the first time  
-  \opt@parsedefaultarg{#1}% parse potential default argument
-}
-
-\newrobustcmd*\optionnewcheckedvalue[3]{%[]
-  \optionnewcode{#1}{%
-    #2%
-    \option@let{#1}{\optionvalue}%
-  }%
-  \option@set{#1/@ini}{#3}%
-  \option@assign{#1}{#3}% this invokes the cmd the first time  and assigns the initial value
-  \opt@parsedefaultarg{#1}% set default value?
-}
-
-\newrobustcmd*\optionnewvalue[2]{%[]
-  \optionnewcheckedvalue{#1}{}{#2}%
-}
-
-
-% define cmd handler; such handler code takes the expanded option@handlerpath and optionvalue as arguments 
-% and do not chain with other handlers
-\newrobustcmd*\optionnewhandlercmd[3][\option@chainempty]{%
+% define handler code; such code takes the expanded option@handlerpath and optionvalue as arguments 
+\newrobustcmd*\optionnewhandler{\@ifstar{\optionnewhandler@{noarg}}{\optionnewhandler@{arg}}}
+\newrobustcmd*\optionnewhandler@[3]{%
   \option@ensurefree{#2}%
   \option@def{#2/@cmd2}##1##2{#3}%
-  \optionnewcode{#2}{\expandnext{\expandnext{\option{#2/@cmd2}}{\option@handlerpath}}{\optionvalue}#1}%
-}
-
-\newrobustcmd*\optionnewhandlercmdii[3][\option@chainempty]{%
-  \option@ensurefree{#2}%
-  \option@def{#2/@cmd3}##1##2##3{#3}%
-  \optionnewcode{#2}{\expandnext{\expandnext{\option{#2/@cmd2}}{\option@handlerpath}}{\optionvalue}#1}%
+  \optionnewcode@{#1}{#2}{\expandnext{\expandnext{\option{#2/@cmd2}}{\option@handlerpath}}{\optionvalue}}\relax%
 }
 
 
-\newrobustcmd*\optionnewhandlercmdstar[3][\option@chainempty]{%
-  \option@ensurefree{#2}%
-  \option@def{#2/@cmd1}##1{#3}%
-  \optionnewcode*{#2}{\expandnext{\option{#2/@cmd1}}{\option@handlerpath}#1}%
+% --------------------------------------------------------
+% Add pre/post processing to an option
+% --------------------------------------------------------
+
+\newrobustcmd*\optionprependcode[2]{%
+  \option@ensuredefined{#1}%
+  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@pre}{#2\option@patch@pre}{}{\optionerror[#1]{unable to prepend code}}%
+}
+\newrobustcmd*\optionappendcode[2]{%
+  \option@ensuredefined{#1}%
+  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@post}{\option@patch@post #2}{}{\optionerror[#2]{unable to append code}}%
 }
 
-% define a handler for special syntax
-\newrobustcmd*\optionnewspecialcmd[2]{%
-  \edef\opt@temp{/handlers/special/#1}%
-  \expandnext\optionnewcmd{\opt@temp}{#2\option@chainempty}%
+
+% --------------------------------------------------------
+% Defaults
+% --------------------------------------------------------
+
+\newrobustcmd*\option@parsedefault[1]{\expandafter\option@parsedefault@#1\opt@stop}
+\def\option@parsedefault@{\@ifnextchar [{\option@parsedefault@opt}{\option@parsedefault@ini}}
+\def\option@parsedefault@opt[#1]#2\opt@stop{\def\option@default{#1}\opt@temptoks{#2}}
+\def\option@parsedefault@ini#1\opt@stop{\let\option@default\optionnovalue}
+
+% --------------------------------------------------------
+% 
+% --------------------------------------------------------
+
+% start bootstrap with the 'new handler' handler
+\optionnewhandler{/handlers/new handler}{\optionnewhandler{#1}{#2}\option@chainempty}
+
+\options{
+  %
+  /handlers/new transformer/.new handler = \optionnewhandler{#1}{#2\option@chain},
+  /handlers/new operation/.new handler   = \optionnewhandler{#1}{#2\option@chainonly},
+  /handlers/new handler*/.new handler    = \optionnewhandler*{#1}{#2\option@chainempty},
+  /handlers/new operation*/.new handler  = \optionnewhandler*{#1}{#2\option@chainonly},
+  %
+  /handlers/new cmd transformer/.new handler = \optionsalso{%
+    #1/.new operation* = \expandnext\optionprependcode{##1}{#2}% prepend code to the option it is handling (##1)
+  },
+  % command transformers
+  /handlers/expands/.new cmd transformer  = {\protected@edef\optionvalue{\optionvalue}},
+  /handlers/defaults/.new cmd transformer = {%
+    \option@parsedefault{\optionvalue}%
+    \ifx\option@default\optionnovalue\else
+      \expandnext\option@eset{\option@handlerpath/@def}{\option@default}% set default
+      \edef\optionvalue{\the\opt@temptoks}% change optionvalue
+    \fi
+  },
+  % the "new handler" can be provided with defaults.
+  /handlers/new handler/.defaults,
+  % value transformers
+  /handlers/expand once/.new transformer   = \edef\optionvalue{\expandafter\expandafter\expandafter\noexpand\optionvalue},
+  /handlers/expand twice/.new transformer  = \edef\optionvalue{\expandafter\expandafter\expandafter\noexpand\optionvalue}%
+                                             \edef\optionvalue{\expandafter\expandafter\expandafter\noexpand\optionvalue},
+  /handlers/expanded/.new transformer      = \protected@edef\optionvalue{\optionvalue},
 }
 
 
@@ -662,77 +675,19 @@
     \else
       \option@error[#2]{expecting at most 4 arguments but got "#1"}%
     \fi
-    \optionnewcode{#2}{\expandnextx{\option{#2/@cmd#1}}{\optionvalue}{}{}{}{}{}}%
+    \optionnewcode{#2}{\expandnextx{\option{#2/@cmd#1}}{\optionvalue}{}{}{}{}{}\relax}%
   \fi
   \fi
   \opt@parsedefaultarg{#2}%
+  \option@chainempty%
 }
 
 % provide any command pattern
 \newrobustcmd*\optionnewcmdx[4]{%
   \option@def{#1/@cmdx}#2\opt@stop{#4}%
-  \optionnewcode{#1}{\expandnextx{\option{#1/@cmdx}}{\optionvalue#3\opt@stop}}%
+  \optionnewcode{#1}{\expandnextx{\option{#1/@cmdx}}{\optionvalue#3\opt@stop}\relax}%
+  \option@chainempty%
 }
-
-
-
-% --------------------------------------------------------
-% Add pre/post processing to an option
-% --------------------------------------------------------
-
-\newrobustcmd*\optionprependcode[2]{%
-  \option@ensuredefined{#1}%
-  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@pre}{#2\option@patch@pre}{}{\optionerror[#1]{unable to prepend code}}%
-}
-\newrobustcmd*\optionappendcode[2]{%
-  \option@ensuredefined{#1}%
-  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@post}{\option@patch@post #2}{}{\optionerror[#2]{unable to append code}}%
-}
-
-
-\newrobustcmd*\option@parsedefault[1]{\expandafter\option@parsedefault@#1\opt@stop}
-\def\option@parsedefault@{\@ifnextchar [{\option@parsedefault@opt}{\option@parsedefault@ini}}
-\def\option@parsedefault@opt[#1]#2\opt@stop{\def\option@default{#1}\opt@temptoks{#2}}
-\def\option@parsedefault@ini#1\opt@stop{\let\option@default\optionnovalue}
-
-
-% --------------------------------------------------------
-% Derived option definitions
-% --------------------------------------------------------
-
-\newrobustcmd*\ifoptiontype[2]{\edefoption{#1/@type}\opt@type\eifstrequal{\opt@type}{#2}}
-
-
-
-
-% --------------------------------------------------------
-% 
-% --------------------------------------------------------
-
-\optionnewhandlercmd{/handlers/new handler}{\optionnewhandlercmd[\option@chainempty]{#1}{#2}}
-\optionnewhandlercmd{/handlers/new handler*}{\optionnewhandlercmdstar[\option@chainempty]{#1}{#2}}
-\optionnewhandlercmd{/handlers/new handler 2}{\optionnewhandlercmdii[\option@chainempty]{#1}{#2}}
-
-\optionnewhandlercmd{/handlers/new handler transformer}{%
-  \optionnewcode*{#1}{%
-    \expandnext\optionprependcode{\option@handlerpath}{#2}%
-  }%
-}
-
-\options{
-  /handlers/defaults/.new handler transformer = {%
-      \option@parsedefault{\optionvalue}%
-      \ifx\option@default\optionnovalue\else
-        \expandnext\option@eset{\option@handlerpath/@def}{\option@default}% set default
-        \edef\optionvalue{\the\opt@temptoks}% change optionvalue
-      \fi
-  },
-  /handlers/expands/.new handler transformer = {\protected@edef\optionvalue{\optionvalue}},
-  %
-  /handlers/new handler/.defaults,
-  /handlers/new handler 2/.defaults,
-}
-
 
 
 % --------------------------------------------------------
@@ -749,17 +704,29 @@
   /handlers/new cmd 3/.new handler/.defaults  = \optionnewcmdn{3}{#1}{#2},
   /handlers/new cmd 4/.new handler/.defaults  = \optionnewcmdn{4}{#1}{#2},
   /handlers/new cmdx/.new cmd 3/.defaults     = \expandnext\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
-  %
-  /handlers/new transformer/.new handler      = \optionnewhandlercmd[\option@chain]{#1}{#2},
-  /handlers/new operation/.new handler        = \optionnewhandlercmd[\option@chainonly]{#1}{#2},
-  /handlers/new operation*/.new handler       = \optionnewhandlercmdstar{#1}{#2},
-  % 
-  /handlers/expand once/.new transformer      = \defexpandonce\optionvalue,
-  /handlers/expand twice/.new transformer     = \defexpandtwice\optionvalue,
-  /handlers/expanded/.new transformer         = \protected@edef\optionvalue{\optionvalue},
 }
 
-% default unknown handler
+% tuples and triples take exactly 2/3 arguments
+\newrobustcmd*\optionnewtuple[2]{%
+  \optionnewcmdx{#1}{##1,##2,##3}{,,}%
+    {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}}%
+}
+\newrobustcmd*\optionnewtriple[2]{%
+  \optionnewcmdx{#1}{##1,##2,##3,##4}{,,,}%
+    {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}}%
+}
+
+\options{
+  /handlers/new cmd tuple/.new handler/.defaults  = \optionnewtuple{#1}{#2},
+  /handlers/new cmd triple/.new handler/.defaults = \optionnewtriple{#1}{#2},
+  /handlers/new special/.new handler              = \expandnext\optionnewspecialcmd{\@gobble#1}{#2},
+}
+
+
+% --------------------------------------------------------
+% Provide unknown here so we get a proper error for unknown options
+% --------------------------------------------------------
+
 \options{
   /@unknown/.new cmd = []{%
     \eifblank{\option@unknownpath}{\def\option@unknownpath{?}}{}%
@@ -768,6 +735,11 @@
       {\optionerror[\option@unknownpath]{unknown option under "\opt@defaultpath"}}%
   }
 }
+
+
+% --------------------------------------------------------
+% Convenience handlers
+% --------------------------------------------------------
 
 % debugging
 \options{
@@ -792,6 +764,7 @@
   /handlers/is family/.new handler   = \optionsalso{#1/.new family}
 }
 
+% defining new option types
 \options{%
   /handlers/type/.new handler     = \option@ensuredefined{#1}\option@set{#1/@type}{#2},
   /handlers/default/.new handler  = \option@ensuredefined{#1}\option@set{#1/@def}{#2},
@@ -808,8 +781,10 @@
   },
 }
 
+% --------------------------------------------------------
+% Basic data type handlers
+% --------------------------------------------------------
 
-% various data types
 \options{
   /handlers/new value/.new handler = []\optionsalso{%
     #1/.new code  = \option@eset{#1}{\optionvalue},
@@ -877,7 +852,10 @@
 }
 
 
-% hook into existing definitions
+% --------------------------------------------------------
+% Hook into existing definitions
+% --------------------------------------------------------
+
 \options{
   /handlers/is if/.new handler = \optionsalso{%
     /options/exec = \ifcsdef{if#2}{}{\optionerror[#1]{no `if` with name "#2" is defined}},
@@ -929,25 +907,8 @@
 }
 
 
-% tuples and triples take exactly 2/3 arguments
-\newrobustcmd*\optionnewtuple[2]{%
-  \optionnewcmdx{#1}{##1,##2,##3}{,,}%
-    {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}}%
-}
-\newrobustcmd*\optionnewtriple[2]{%
-  \optionnewcmdx{#1}{##1,##2,##3,##4}{,,,}%
-    {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}}%
-}
-
-\options{
-  /handlers/new cmd tuple/.new handler/.defaults  = \optionnewtuple{#1}{#2},
-  /handlers/new cmd triple/.new handler/.defaults = \optionnewtriple{#1}{#2},
-  /handlers/new special/.new handler              = \expandnext\optionnewspecialcmd{\@gobble#1}{#2},
-}
-
-
 % --------------------------------------------------------
-% Initial handlers
+% Initial options for our library
 % --------------------------------------------------------
 \options{
   /options/ignoreunknown/.is if = opt@ignoreunknown,
@@ -955,7 +916,7 @@
   /options/showbuiltin/.new toggle,
 }
 
-\csundef{optk@/options/remaining}%
+\csundef{optk@/options/remaining}% tricksy, but we want to define it officially here :-)
 \optionsalso{  
   /options/remaining/.new list,
 }
@@ -964,7 +925,6 @@
 % --------------------------------------------------------
 % Show definitions
 % --------------------------------------------------------
-
 
 \newrobustcmd*\optionshowall[1][false]{\csuse{toggle#1}{/options/showbuiltin}\optionshowpath{}}
 
@@ -1011,10 +971,6 @@
 
 \newrobustcmd*\optionshowliteral[1]{\letoption{#1}\opt@temp\option@showvalue{\texttt{\expandnext\detokenize{\opt@temp}}}}
 
-\newcommand*\ifoptioniscode[1]{%
-  \ifoptionvoid{#1/@type}%
-}
-
 \newcommand*\optiontrace[1]{%
   \def\option@font@special##1{##1}%
   \def\option@font@name##1{##1}% 
@@ -1052,5 +1008,7 @@
 }%
 {\endtrivlist}
 
+% --------------------------------------------------------
 % restore cat codes
+% --------------------------------------------------------
 \opt@restore@catcodes

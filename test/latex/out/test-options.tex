@@ -14,9 +14,9 @@
 
 \def\unmatch$#1${\textsf{#1}}
 \options{
-  /"/.new special = special1 #1.,
-  /(/.new special = special2 #1.,
-  /</.new special = special3 #1.,
+  /handlers/special/"/.new cmd = special1 #1.,
+  /handlers/special/(/.new cmd = special2 #1.,
+  /handlers/special/</.new cmd = special3 #1.,
 %  /$/.new special = special4 \unmatch#1.,
 }
 
@@ -100,7 +100,7 @@ remaining: \optionshow{/options/remaining}
 \fi
 
 
-\optionshowall
+\optionshowall[true]
 
 
 
