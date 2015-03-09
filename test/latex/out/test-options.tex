@@ -11,13 +11,35 @@
 
 \makeatletter
 
+\def\a{a}
+\def\b{\a}
+\def\c{\b}
+
+\options{
+  /fam/.cd,
+  test-cmd/.new cmd = \typeout{got #1, \meaning#1},
+  test-cmddef/.new cmd = [default]\typeout{got #1},
+  test-cmd2/.new cmd 2 = \typeout{got2 (#1,#2)},
+  test-cmd=ok,
+  test-cmddef,
+  test-cmd2=hi,
+  test-cmd=\c,
+  test-cmd/.expand twice=\c,
+}
+
+
+\end{document}
+
+
+\def\unmatch$#1${\textsf{#1}}
 \options{
   /"/.new special = special1 #1.,
   /(/.new special = special2 #1.,
   /</.new special = special3 #1.,
-  /$/.new special = special4 #1.,
+%  /$/.new special = special4 \unmatch#1.,
 }
-\options{"red",(red),<red>,$red$}
+
+\options{"red",(red),<red>}
 
 
 \def\famcmd{}
