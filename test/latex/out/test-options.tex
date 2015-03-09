@@ -11,25 +11,6 @@
 
 \makeatletter
 
-\def\a{a}
-\def\b{\a}
-\def\c{\b}
-
-\options{
-  /fam/.cd,
-  test-cmd/.new cmd = \typeout{got #1, \meaning#1},
-  test-cmddef/.new cmd = [default]\typeout{got #1},
-  test-cmd2/.new cmd 2 = \typeout{got2 (#1,#2)},
-  test-cmd=ok,
-  test-cmddef,
-  test-cmd2=hi,
-  test-cmd=\c,
-  test-cmd/.expand twice=\c,
-}
-
-
-\end{document}
-
 
 \def\unmatch$#1${\textsf{#1}}
 \options{
@@ -65,10 +46,10 @@
   /famb/width/.new length   =1pt,
   /famc/widthc/.new dim  =3pt,
   /fama/testa/.new value    =[]fifteen,
-  /fam/cmd/.is def/.expands =\famcmd,
+  /fam/cmd/.is def =\famcmd,
   /fam/counter/.is counter  =section,
   /fam/num/.new num         =[4]0,
-  /fam/side/.new choice     =[top]{top,right,bottom,left},
+  /fam/side/.new choice     ={top,right,bottom,left},
   /fam/test/.new cmd        =[haha]\typeout{test received #1, \detokenize{#1}},
   /fam/.search also          =/fama,
   /fam/members/.new list    ={a,b,c},
@@ -102,7 +83,6 @@ remaining: \optionshow{/options/remaining}
   /fam/num,
   /fam/num/.inc=4,
   /fam/counter/.step/.step,
-  side,
 }
 
 \ifcase\option{/fam/side/@ord}
