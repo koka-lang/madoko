@@ -53,7 +53,7 @@
 % \letoption{<path>}\cmd  let's \cmd to the value of <path>
 % --------------------------------------------------------
 
-\newcommand\option[1]{\csname optk@#1\endcsname}
+\newcommand*\option[1]{\csname optk@#1\endcsname}
 \newcommand*\letoption[2]{\expandafter\let\expandafter#2\csname optk@#1\endcsname}
 
 
@@ -72,11 +72,14 @@
   \expandnext@\optionsalso{\opt@savedremaining}%
 }
 
-\newrobustcmd*\options{\@ifstar{\opt@ignoreunknowntrue\options@}{\opt@ignoreunknownfalse\options@}}
-\newrobustcmd*\options@{%
+%\newrobustcmd*\options{\@ifstar%
+%    {\opt@ignoreunknowntrue\option@let{/options/remaining}\@empty\options@}%
+%    {\opt@ignoreunknownfalse\options@}%
+%}
+\newrobustcmd*\options{%
   \def\opt@defaultpath{}%
   \opt@allowsearchtrue%
-  \option@let{/options/remaining}\@empty%
+  %\option@let{/options/remaining}\@empty%
   \let\option@handlernext\@empty%
   \optionsalso%
 }
@@ -145,13 +148,12 @@
   \else    
     %\let\option@handler\@empty    
     % try path directly
-    \expandafter\opt@setoptionpath@\optionrawpath\opt@stop%
-    \letoption{\optionpath/@code}\opt@trypath %optimize by looking for @code directly
+    \expandafter\opt@settrypath@\optionrawpath\opt@stop%
     \ifx\opt@trypath\relax
       \opt@handle{#1}{#2}%   
       \option{\optionpath/@code}% invoke
     \else
-      \opt@trypath % use optimized expansion here
+      \opt@trypath% use optimized expansion here
     \fi
     % now \optionpath and \optionvalue are defined; invoke the /@code
     \ifx\option@handlernext\@empty\else\opt@handlererror\fi 
@@ -159,6 +161,7 @@
 }
 
 \newrobustcmd*\opt@handle[2]{%
+  \opt@setoptionpath\optionrawpath%
   % not directly found..
   \option@gethandler\optionpath% defines option@handlerpath & option@handler
   \ifx\option@handler\@empty
@@ -218,7 +221,8 @@
 }
 \opt@definespdef{ }% define sp def with a space as argument
 \newtoks\opt@temptoks% use a token register to maintain # arguments in values
-\long\def\opt@sp@c#1\opt@stop#2\relax#3{\opt@temptoks{#1}\edef#3{\the\opt@temptoks}}
+%\long\def\opt@sp@c#1\opt@stop#2\relax#3{\opt@temptoks{#1}\edef#3{\the\opt@temptoks}}
+\long\def\opt@sp@c#1\opt@stop#2\relax#3{\edef#3{\unexpanded{#1}}}
 {\def\:{\global\let\opt@sptoken= } \: }
 
 
@@ -228,7 +232,7 @@
   \option@ifisabsolute{#2}%
     \letoption{#2}\opt@trypath
     \ifx\opt@trypath\relax\else
-2      \edef\optionpath{#2}% found
+      \edef\optionpath{#2}% found
     \fi
   \else  
     \letoption{#1#2}\opt@trypath% use default path
@@ -345,6 +349,9 @@
 
 \newcommand\opt@setoptionpath[1]{\expandafter\opt@setoptionpath@#1\opt@stop}
 \def\opt@setoptionpath@#1#2\opt@stop{\ifx#1/\relax\edef\optionpath{#1#2}\else\edef\optionpath{\opt@defaultpath/#1#2}\fi}
+
+\newcommand\opt@settrypath[1]{\expandafter\opt@setoptionpath@#1\opt@stop}
+\def\opt@settrypath@#1#2\opt@stop{\ifx#1/\relax\letoption{#1#2/@code}\opt@trypath\else\letoption{\opt@defaultpath/#1#2/@code}\opt@trypath\fi}
 
 % \option@splitroot{path}: split off the first directory of a path into \option@root 
 % option@splitroot{/foo/bar} -> foo 
