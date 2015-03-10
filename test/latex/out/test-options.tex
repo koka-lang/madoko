@@ -32,7 +32,8 @@
 \options{/fam/testii={x} {y}, /fam/testii=xy, /fam/testii={x}, /fam/testii= }
 
 \options{/fam/testx/.new cmdx ={#1,#2,#3}{,,}{option #1*#2*#3\\}}
-\options{/fam/testx=x,/fam/testx={x,y},/fam/testx={x,y,z}}
+\options{/fam/testx=x}
+\options{,/fam/testx={x,y},/fam/testx={x,y,z}}
 
 \options{/fam/test2/.new cmd tuple =[{1,2}]{tuple: (#1,#2)}}
 \options{/fam, test2={x,y}, test2}
@@ -99,10 +100,7 @@ remaining: \optionshow{/options/remaining}
   or not
 \fi
 
-
 \optionshowall[true]
-
-
 
 \end{document}
 

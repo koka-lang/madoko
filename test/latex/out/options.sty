@@ -74,10 +74,33 @@
   \opt@allowsearchtrue%
   \csname opt@ignoreunknown#1\endcsname%
   \option@setnil{/options/remaining}%
+  \def\option@handlernext{}%
   \optionsalso{#2}%
 }
-\newrobustcmd*\optionsalso[1]{\opt@do#1,\opt@stop,}
 
+\newcount\opt@nesting
+\newrobustcmd*\optionsalso[1]{%
+  %\ifnum\opt@nesting>0\opt@savestate{\the\opt@nesting}\fi
+  %\advance\opt@nesting 1\relax
+  %\def\option@handlernext{}%
+  %\def\option@handlerpath{}%  
+  \opt@do#1,\opt@stop,\relax
+  %\advance\opt@nesting -1\relax
+  %\ifnum\opt@nesting>0\opt@restorestate{\the\opt@nesting}\fi
+}
+
+\newrobustcmd*\opt@savestate[1]{%
+  \cslet{option@handlernext#1}\option@handlernext%
+  \cslet{option@handlerpath#1}\option@handlerpath%
+  \cslet{optionpath#1}\optionpath%
+  \cslet{optionvalue#1}\optionvalue%
+}
+\newrobustcmd*\opt@restorestate[1]{%
+  \letcs\option@handlernext{option@handlernext#1}%
+  \letcs\option@handlerpath{option@handlerpath#1}%
+  \letcs\optionpath{optionpath#1}%
+  \letcs\optionvalue{optionvalue#1}%
+}
 
 % this is used if no argument is given
 % define as relax, this makes it unique but also safe against infinite expansion
@@ -603,7 +626,7 @@
 % --------------------------------------------------------
 
 % start bootstrap with the 'new handler' handler
-\optionnewhandler{/handlers/new handler}{\optionnewhandler{#1}{#2}\option@chainempty}
+\optionnewhandler{/handlers/new handler}{\optionnewhandler{#1}{#2\option@chainempty}\option@chainempty}
 
 \options{
   %
@@ -633,7 +656,7 @@
 \def\option@default@transform@end#1\opt@stop{}
 \def\option@default@transform@opt[#1]#2\opt@stop{%
   \option@set{\option@handlerpath/@def}{#1}%
-  \opt@temptoks{#2}\edef\optionvalue{\the\opt@temptoks}%
+  \opt@temptoks{#2}\edef\optionvalue{\the\opt@temptoks}% need toks to preserve # arguments in optionvalue
 }
 
 
@@ -641,81 +664,47 @@
 % command actions take arguments
 % --------------------------------------------------------
 
-% new command with just the option value as an argument
-\newrobustcmd*\optionnewcmd[2]{\optionnewcmdn{1}{#1}{#2}}
-
-% provide n arguments: 0 and 1 argument is always checked for too few/too many arguments
-% 2+ only checks for too many arguments and defaults with too few to empty arguments
-\newrobustcmd*\optionnewcmdn[3]{%
-  \ifnum#1<1\relax
-    \optionnewcode*{#2}{#3}%
-  \else\ifnum#1=1\relax
-    \option@def{#2/@cmd1}##1{#3}%
-    \optionnewcode{#2}{\expandnext{\option{#2/@cmd1}}{\optionvalue}}%
-  \else
-    \ifcase#1\relax\or\relax
-    \or\option@def{#2/@cmd2}##1##2##3{\ifblank{##3}{#3}{\optiontoomanyerror[#2]{#1}}}%
-    \or\option@def{#2/@cmd3}##1##2##3##4{\ifblank{##4}{#3}{\optiontoomanyerror[#2]{#1}}}%
-    \or\option@def{#2/@cmd4}##1##2##3##4##5{\ifblank{##5}{#3}{\optiontoomanyerror[#2]{#1}}}%
-    \else
-      \option@error[#2]{expecting at most 4 arguments but got "#1"}%
-    \fi
-    \optionnewcode{#2}{\expandnextx{\option{#2/@cmd#1}}{\optionvalue}{}{}{}{}{}\relax}%
-  \fi
-  \fi
-}
-
-% provide any command pattern
+% provide command pattern; defined separately so we can expand the option@handler and pass as an argument
 \newrobustcmd*\optionnewcmdx[4]{%
   \option@def{#1/@cmdx}#2\opt@stop{#4}%
   \optionnewcode{#1}{\expandnextx{\option{#1/@cmdx}}{\optionvalue#3\opt@stop}\relax}%
 }
 
-
-% --------------------------------------------------------
-% 
-% --------------------------------------------------------
-
 \options{
   /handlers/new code/.new handler/.defaults   = \optionnewcode{#1}{#2}\option@chainempty,
   /handlers/new cmd*/.new handler             = \optionnewcode*{#1}{#2}\option@chainempty,
   /options/exec/.new code                     = \optionvalue,
-  %
-  /handlers/new cmd/.new handler/.defaults    = \optionsalso{
-    /options/exec = \option@def{#1/@cmd1}##1{#2},
-    #1/.new code  = \expandnext{\option{#1/@cmd1}}{\optionvalue},
+  % commands 
+  /handlers/new cmd/.new handler/.defaults    = \options{
+    /options/exec = {\option@def{#1/@cmd1}##1{#2}},
+    #1/.new code  = {\expandnext{\option{#1/@cmd1}}{\optionvalue}},
   },
-  /handlers/new cmd 2/.new handler/.defaults  = {%
-    \option@def{#1/@cmd2}##1##2##3{\ifblank{##3}{#2}{\optiontoomanyerror[#1]{2}}}%
-    \optionnewcode{#1}{\expandnextx{\option{#1/@cmd2}}{\optionvalue}{}{}{}\relax}%
+  /handlers/new cmd 2/.new handler/.defaults  = \options{
+    /options/exec = {\option@def{#1/@cmd2}##1##2##3{\ifblank{##3}{#2}{\optiontoomanyerror[#1]{2}}}},
+    #1/.new code  = {\expandnextx{\option{#1/@cmd2}}{\optionvalue}{}{}{}\relax},
   },
-  /handlers/new cmd 3/.new handler/.defaults  = {%
-    \option@def{#1/@cmd3}##1##2##3##4{\ifblank{##4}{#2}{\optiontoomanyerror[#1]{3}}}%
-    \optionnewcode{#1}{\expandnextx{\option{#1/@cmd3}}{\optionvalue}{}{}{}{}\relax}%
+  /handlers/new cmd 3/.new handler/.defaults  = \options{
+    /options/exec = {\option@def{#1/@cmd3}##1##2##3##4{\ifblank{##4}{#2}{\optiontoomanyerror[#1]{3}}}},
+    #1/.new code  = {\expandnextx{\option{#1/@cmd3}}{\optionvalue}{}{}{}{}\relax},
   },
-  %/handlers/new cmd 3/.new handler/.defaults  = \optionnewcmdn{3}{#1}{#2},
-  /handlers/new cmd 4/.new handler/.defaults  = \optionnewcmdn{4}{#1}{#2},
-  /handlers/new cmdx/.new cmd 3     = \expandnext\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
-  %  
-  /handlers/new code alias/.new handler       = \option@set{#1/@code}{\option{#2/@code}},
-  /handlers/new cmd 0/.new code alias         = /handlers/new cmd*,
-  /handlers/new cmd 1/.new code alias         = /handlers/new cmd,
-}
-
-% tuples and triples take exactly 2/3 arguments
-\newrobustcmd*\optionnewtuple[2]{%
-  \optionnewcmdx{#1}{##1,##2,##3}{,,}%
-    {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}}%
-}
-\newrobustcmd*\optionnewtriple[2]{%
-  \optionnewcmdx{#1}{##1,##2,##3,##4}{,,,}%
-    {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}}%
-}
-
-\options{
-  /handlers/new cmd tuple/.new handler/.defaults  = \optionnewtuple{#1}{#2},
-  /handlers/new cmd triple/.new handler/.defaults = \optionnewtriple{#1}{#2},
-  /handlers/new special/.new handler              = \expandnext\optionnewspecialcmd{\@gobble#1}{#2},
+  /handlers/new cmd 4/.new handler/.defaults  = \options{
+    /options/exec = \option@def{#1/@cmd4}##1##2##3##4##5{\ifblank{##5}{#2}{\optiontoomanyerror[#1]{4}}},
+    #1/.new code  = \expandnextx{\option{#1/@cmd4}}{\optionvalue}{}{}{}{}{}\relax,
+  },  
+  % tuples and triples take exactly 2 or 3 arguments
+  /handlers/new cmd tuple/.new handler/.defaults  = \options{
+    #1/.new cmdx = {##1,##2,##3}{,,}%
+      {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}},
+  },
+  /handlers/new cmd triple/.new handler/.defaults = \options{
+    #1/.new cmdx = {##1,##2,##3,##4}{,,,}%
+      {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}},
+  },
+  % aliases
+  /handlers/new cmdx/.new cmd 3/.defaults = \expandnext\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
+  /handlers/new code alias/.new handler   = \option@set{#1/@code}{\option{#2/@code}},
+  /handlers/new cmd 0/.new code alias     = /handlers/new cmd*,
+  /handlers/new cmd 1/.new code alias     = /handlers/new cmd,
 }
 
 
@@ -767,7 +756,6 @@
     \option@ensuredefined{#1}%
     \option@default@transform%
     \option@eset{#1/@ini}{\optionvalue}%
-    \typeout{assiging: \meaning\optionvalue}%
     \option@eassign{#1}{\optionvalue}%
   },
 }
