@@ -68,7 +68,8 @@
 \newrobustcmd*\optionswithremaining{\@ifstar{\options@wrm{true}}{\options@wrm{false}}}
 \newrobustcmd*\options@wrm[2]{%
   \letoptionlist{/options/remaining}\opt@savedremaining
-  \options{#1}{#2}%
+  \csuse{opt@ignoreunknown#1}%
+  \options{#2}%
   \expandnext@\optionsalso{\opt@savedremaining}%
 }
 
