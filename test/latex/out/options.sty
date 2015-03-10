@@ -144,7 +144,7 @@
     \opt@spdef\optionvalue{#2}%
   \fi
   \ifx\optionrawpath\@empty
-    \ifx\optionvalue\optionnovalue\else\optionerrornopath{#2}\fi
+    \ifx\optionvalue\optionnovalue\else\optionerror@nopath{#2}\fi
   \else    
     %\let\option@handler\@empty    
     % try path directly
@@ -155,8 +155,8 @@
     \else
       \opt@trypath% use optimized expansion here
     \fi
-    % now \optionpath and \optionvalue are defined; invoke the /@code
-    \ifx\option@handlernext\@empty\else\opt@handlererror\fi 
+    % now \optionvalue is defined; invoke the /@code
+    \ifx\option@handlernext\@empty\else\optionerror@handler\fi 
   \fi
 }
 
@@ -181,9 +181,6 @@
   \fi
 }
 
-\newrobustcmd*\optionerrornopath[1]{\optionerror[]{value without option path: "#1"}}
-\newrobustcmd*\opt@handlererror{\optionerror{handler ".\option@handlernext" is not allowed to follow the previous handlers}}%
-
 \newrobustcmd*\opt@tryspecials[2]{%
   % special handler?
   \edef\opt@first{\expandafter\opt@firstletterof@\optionrawpath\opt@stop}%
@@ -201,7 +198,7 @@
     \ifx\optionvalue\optionnovalue
       \let\optionvalue\optionrawpath%
     \else
-      \optionerror[\optionrawpath]{special options cannot take an argument ("\meaning\optionvalue")}%
+      \optionerror{\optionrawpath}{special options cannot take an argument ("\meaning\optionvalue")}%
     \fi
   \fi
 }
@@ -407,11 +404,18 @@
 % Default handlers
 % --------------------------------------------------------
 
-\newrobustcmd*\optionerror[2][\optionpath]{%
+\newrobustcmd*\optionerror[2]{%
   \eifblank{\option@handler}{\def\opt@temp{}}{\def\opt@temp{(in ".\option@handler") }}%
   \PackageError{options}{option "#1": \opt@temp #2}{}}
-\newrobustcmd*\optionexpecterror[2][\optionpath]{\optionerror[#1]{unexpected "\optionvalue" (expecting #2)}}
-\newrobustcmd*\optiontoomanyerror[2][\optionpath]{\optionerror[#1]{too many arguments (expecting #2)}}
+
+\newrobustcmd*\optionerror@expect[2]{\optionerror{#1}{unexpected "\optionvalue" (expecting #2)}}
+\newrobustcmd*\optionerror@toomany[2]{\optionerror{#1}{too many arguments (expecting #2)}}
+\newrobustcmd*\optionerror@noarg[1]{\optionerror{#1}{does not take an argument}}
+\newrobustcmd*\optionerror@needarg[1]{\optionerror{#1}{requires an argument}}
+
+\newrobustcmd*\optionerror@nopath[1]{\optionerror{?}{value without option path: "#1"}}
+\newrobustcmd*\optionerror@handler[1]{\optionerror{\optionrawpath}{handler ".\option@handlernext" is not allowed to follow the previous handlers}}%
+
 
 % \optionaddsearch{<path>}{<search paths>}
 % add new search paths to a path.
@@ -556,27 +560,15 @@
 % Ensure arg/noarg/free/defined
 % --------------------------------------------------------
 
-\newrobustcmd*\option@ensurearg{%
-  \ifx\optionvalue\optionnovalue
-    \letoption{\optionpath/@def}\optionvalue%
-    \ifx\optionvalue\relax\optionerror{requires a value}\fi
-  \fi
-}%   
-\newrobustcmd*\option@ensurenoarg{%
-  \ifx\optionvalue\optionnovalue\else
-    \optionerror{cannot take an argument (=\meaning\optionvalue)}%
-  \fi
-}%   
-\newrobustcmd*\option@settoarg{\option@let{\optionpath}{\optionvalue}}%   
 
 \newrobustcmd*\option@ensurefree[1]{%
   \ifoptiondefined{#1}{%
-    \optionerror[#1]{already defined}%
+    \optionerror{#1}{already defined}%
   }{}%
 }%   
 \newrobustcmd*\option@ensuredefined[1]{%
   \ifoptiondefined{#1}{}{%
-    \optionerror[#1]{unknown option}%
+    \optionerror{#1}{unknown option}%
   }%
 }%
 
@@ -608,27 +600,36 @@
 \def\option@patch@pre{}
 \def\option@patch@post{}
 
-\newrobustcmd*\optionnewcode{\@ifstar{\optionnewcode@{noarg}}{\optionnewcode@{arg}}}
+\newrobustcmd*\optionnewcode{\@ifstar{\optionnewcode@{true}}{\optionnewcode@{false}}}
 \newrobustcmd*\optionnewcode@[3]{%*[]
   %\typeout{define cmd: #2}%  
   \option@ensurefree{#2}%
   \option@splitpath{#2}% sets option@path, and option@name
   \eifblank{\option@path}{%
-    \optionerror[#2]{no valid option name specified. Option definitions must start with a forward slash (i.e. "/path/<name>")}%
+    \optionerror{#2}{no valid option name specified. Option definitions must start with a forward slash (i.e. "/path/<name>")}%
   }{}%
   \option@addpathinfo{#2}%
-  \csdef{optk@#2/@code}{%
-    %\typeout{invoke #2 (\optionpath)= \meaning\optionvalue}%
-    \csuse{option@ensure#1}%
-    \option@patch@pre% hook to patch in extra checking code
-    #3%
-    %\option@patch@post% hook to patch in extra code
-  }%
+  \ifbool{#1}%  noarg? expand out for efficiency
+   {\csdef{optk@#2/@code}{%
+      \ifx\optionvalue\optionnovalue\else\optionerror@noarg{#2}\fi
+      \option@patch@pre% hook to patch in extra checking code
+      #3%
+      \option@patch@post% hook for post code.. generally unsafe due to chained handlers
+    }}%
+   {\csdef{optk@#2/@code}{%
+      \ifx\optionvalue\optionnovalue
+        \letoption{#2/@def}\optionvalue%
+        \ifx\optionvalue\relax\optionerror@needarg{#2}\fi
+      \fi
+      \option@patch@pre
+      #3%
+      \option@patch@post
+    }}%
   \csletcs{optk@#2}{optk@#2/@code}% point at first to the cmd
 }
 
 % define handler code; such code takes the expanded option@handlerpath and optionvalue as arguments 
-\newrobustcmd*\optionnewhandler{\@ifstar{\optionnewhandler@{noarg}}{\optionnewhandler@{arg}}}
+\newrobustcmd*\optionnewhandler{\@ifstar{\optionnewhandler@{true}}{\optionnewhandler@{false}}}
 \newrobustcmd*\optionnewhandler@[3]{%
   \option@ensurefree{#2}%
   \option@def{#2/@cmd2}##1##2{#3}%
@@ -642,12 +643,12 @@
 
 \newrobustcmd*\optionprependcode[2]{%
   \option@ensuredefined{#1}%
-  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@pre}{#2\option@patch@pre}{}{\optionerror[#1]{unable to prepend code}}%
+  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@pre}{#2\option@patch@pre}{}{\optionerror{#1}{unable to prepend code}}%
 }
 
 \newrobustcmd*\optionappendcode[2]{%
   \option@ensuredefined{#1}%
-  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@post}{\option@patch@post #2}{}{\optionerror[#2]{unable to append code}}%
+  \expandafter\patchcmd\expandafter{\csname optk@#1/@code\endcsname}{\option@patch@post}{\option@patch@post #2}{}{\optionerror{#2}{unable to append code}}%
 }
 
 
@@ -710,25 +711,25 @@
     #1/.new code  = {\expandnext{\option{#1/@cmd1}}{\optionvalue}},
   },
   /handlers/new cmd 2/.new handler/.defaults  = \options{
-    /options/exec = {\option@def{#1/@cmd2}##1##2##3{\ifblank{##3}{#2}{\optiontoomanyerror[#1]{2}}}},
+    /options/exec = {\option@def{#1/@cmd2}##1##2##3{\ifblank{##3}{#2}{\optionerror@toomany{#1}{2}}}},
     #1/.new code  = {\expandnextcmds{\option{#1/@cmd2}}{\optionvalue}{}{}{}\relax},
   },
   /handlers/new cmd 3/.new handler/.defaults  = \options{
-    /options/exec = {\option@def{#1/@cmd3}##1##2##3##4{\ifblank{##4}{#2}{\optiontoomanyerror[#1]{3}}}},
+    /options/exec = {\option@def{#1/@cmd3}##1##2##3##4{\ifblank{##4}{#2}{\option@toomany{#1}{3}}}},
     #1/.new code  = {\expandnextcmds{\option{#1/@cmd3}}{\optionvalue}{}{}{}{}\relax},
   },
   /handlers/new cmd 4/.new handler/.defaults  = \options{
-    /options/exec = \option@def{#1/@cmd4}##1##2##3##4##5{\ifblank{##5}{#2}{\optiontoomanyerror[#1]{4}}},
+    /options/exec = \option@def{#1/@cmd4}##1##2##3##4##5{\ifblank{##5}{#2}{\optionerror@toomany{#1}{4}}},
     #1/.new code  = \expandnextcmds{\option{#1/@cmd4}}{\optionvalue}{}{}{}{}{}\relax,
   },  
   % tuples and triples take exactly 2 or 3 arguments
   /handlers/new cmd tuple/.new handler/.defaults  = \options{
     #1/.new cmdx = {##1,##2,##3}{,,}%
-      {\ifstrequal{##3}{,}{#2}{\optionerror{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}},
+      {\ifstrequal{##3}{,}{#2}{\optionerror{#1}{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}},
   },
   /handlers/new cmd triple/.new handler/.defaults = \options{
     #1/.new cmdx = {##1,##2,##3,##4}{,,,}%
-      {\ifstrequal{##4}{,,}{#2}{\optionerror{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}},
+      {\ifstrequal{##4}{,,}{#2}{\optionerror{#1}{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}},
   },
   % aliases
   /handlers/new cmdx/.new cmd 3/.defaults = \expandnext@\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
@@ -746,8 +747,8 @@
   /@unknown/.new cmd = []{%
     \eifblank{\option@unknownpath}{\def\option@unknownpath{?}}{}%
     \ifoptionisabsolute{\option@unknownpath}%
-      {\optionerror[\option@unknownpath]{unknown option}}%
-      {\optionerror[\option@unknownpath]{unknown option under "\opt@defaultpath"}}%
+      {\optionerror{\option@unknownpath}{unknown option}}%
+      {\optionerror{\option@unknownpath}{unknown option under "\opt@defaultpath"}}%
   }
 }
 
@@ -796,7 +797,7 @@
 
 \options{
   /handlers/new value/.new handler = []\optionsalso{%
-    #1/.new code  = \expandafter\let\csname optk@#1\endcsname\optionvalue,
+    #1/.new code  = \option@let{#1}\optionvalue,
     #1/.type      = value,
     #1/.initial   = {#2},
   },
@@ -824,7 +825,11 @@
   /handlers/show/dim/.new cmd = \option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/@dimexpr}),
   %
   /handlers/new toggle/.new handler = [false]\optionsalso{%
-    #1/.new code  = [true]\expandnext{\settoggle{#1}}{\optionvalue},
+    #1/.new code  = [true]{%
+      \ifcsdef{toggle\optionvalue}%
+        {\csuse{toggle\optionvalue}{#1}}%
+        {\optionerror@expect{#1}{true or false}}%
+    },
     #1/.type      = toggle,
     /options/exec = \newtoggle{#1}\option@set{#1}{\iftoggle{#1}{true}{false}},
     #1/.initial   = {#2},
@@ -843,7 +848,7 @@
     #1/.new cmd/.expands = {%
       \findidx{##1}{#2}\option@choiceidx%
       \ifnum\option@choiceidx<0
-        \optionexpecterror{one of "#2"}%
+        \optionerror@expect{#1}{one of "#2"}%
       \else
         \option@set{#1}{##1}%
         \option@eset{#1/@ord}{\option@choiceidx}%
@@ -867,15 +872,15 @@
 
 \options{
   /handlers/is if/.new handler = \optionsalso{%
-    /options/exec = \ifcsdef{if#2}{}{\optionerror[#1]{no `if` with name "#2" is defined}},
-    #1/.new code  = \ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionexpecterror{a boolean value}},
+    /options/exec = \ifcsdef{if#2}{}{\optionerror{#1}{no `if` with name "#2" is defined}},
+    #1/.new code  = \ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionerror@expect{#1}{true or false}},
     #1/.type      = if,
     /options/exec = \option@set{#1}{#2},% read name of the if
     %#1/.initial   = {#2},
   },
   %
   /handlers/is def/.new handler = \optionsalso{%
-    /options/exec = \ifdef{#2}{}{\optionerror[#1]{no definition "\detokenize{#2}" is found}},
+    /options/exec = \ifdef{#2}{}{\optionerror{#1}{no definition "\detokenize{#2}" is found}},
     #1/.new code  = \expandafter\def\expandafter#2\expandafter{\optionvalue},
     #1/.type      = def,
     /options/exec =\option@set{#1}{#2},% read returns definition 
@@ -883,7 +888,7 @@
   },
   %
   /handlers/is edef/.new handler = \optionsalso{%
-    /options/exec = \ifdef{#2}{}{\optionerror[#1]{no definition "\detokenize{#2}" is found}},
+    /options/exec = \ifdef{#2}{}{\optionerror{#1}{no definition "\detokenize{#2}" is found}},
     #1/.new code  = \protected@edef#2{\optionvalue},
     #1/.type      = edef,
     /options/exec =\option@set{#1}{#2},% read returns definition 
@@ -891,7 +896,7 @@
   },  
   %
   /handlers/is counter/.new handler = \optionsalso{%
-    /options/exec = \ifltxcounter{#2}{}{\optionerror[#1]{no definition "\detokenize{#2}" is found}},
+    /options/exec = \ifltxcounter{#2}{}{\optionerror{#1}{no definition "\detokenize{#2}" is found}},
     #1/.new code  = \setcounter{#2}{\optionvalue},
     #1/.type      = counter,
     /options/exec =\option@set{#1}{#2},% read returns definition 
@@ -906,12 +911,12 @@
   /handlers/step/.new operation* = {%
     \ifoptiontype{#1}{counter}% check if this is a counter 
       {\stepcounter{\option{#1}}}%
-      {\optionerror[#1]{cannot "step" a non-counter}}%
+      {\optionerror{#1}{cannot "step" a non-counter}}%
   },
   /handlers/refstep/.new operation* = {%
     \ifoptiontype{#1}{counter}% check if this is a counter 
       {\refstepcounter{\option{#1}}}%
-      {\optionerror[#1]{cannot "refstep" a non-counter}}%
+      {\optionerror{#1}{cannot "refstep" a non-counter}}%
   },
 }
 
