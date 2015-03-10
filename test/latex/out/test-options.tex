@@ -60,16 +60,13 @@ test
   /fama/.new family
 }
 
-%\options*{/fam,/fama/width=6pt,widthc=5pt,widthc=5pt+3pt}
+\options{/options/collectunknown,/fam,/fama/width=6pt,widthc=5pt,widthc=5pt+3pt}
+remaining: \optionshow{/options/remaining}
 
+\optionswithremaining{/options/collectunknown,/famc,num=5}
+remaining: \optionshow{/options/remaining}
 
-%\letoptionlist{/options/remaining}\remaining
-%\typeout{test: \meaning\remaining}
-%remaining: \expandnext\detokenize{\remaining}
-
-%\optionswithremaining*{/famc,num=5}
-%remaining: \optionshow{/options/remaining}
-%\optionswithremaining{/fam}
+\optionswithremaining{/fam}
 
 \options{%
   /fama/width=\fboxsep + \fboxrule,

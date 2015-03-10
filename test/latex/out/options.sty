@@ -65,22 +65,17 @@
 \newif\ifopt@ignoreunknown
 \newif\ifopt@allowsearch
 
-\newrobustcmd*\optionswithremaining{\@ifstar{\options@wrm{true}}{\options@wrm{false}}}
-\newrobustcmd*\options@wrm[2]{%
+\newrobustcmd*\optionswithremaining[1]{%
   \letoptionlist{/options/remaining}\opt@savedremaining
-  \csuse{opt@ignoreunknown#1}%
-  \options{#2}%
+  \options{#1}%
+  %\typeout{now process: \meaning\opt@savedremaining, in default: \option@defaultpath}%
   \expandnext@\optionsalso{\opt@savedremaining}%
 }
 
-%\newrobustcmd*\options{\@ifstar%
-%    {\opt@ignoreunknowntrue\option@let{/options/remaining}\@empty\options@}%
-%    {\opt@ignoreunknownfalse\options@}%
-%}
 \newrobustcmd*\options{%
-  \def\opt@defaultpath{}%
+  \def\option@defaultpath{}%
   \opt@allowsearchtrue%
-  %\option@let{/options/remaining}\@empty%
+  \opt@ignoreunknownfalse%
   \let\option@handlernext\@empty%
   \optionsalso%
 }
@@ -90,7 +85,7 @@
 
 \newrobustcmd*\optionsalso[1]{%
   \ifopt@nested
-    \optionsalso@save{#1}%
+    \optionsalso@save{#1}% save state in a nested context for chained handlers
   \else
     \opt@nestedtrue
     \opt@do#1,\opt@stop,%
@@ -111,13 +106,13 @@
 \newrobustcmd*\opt@savestate[1]{%
   \cslet{option@handlernext#1}\option@handlernext%
   \cslet{option@handlerpath#1}\option@handlerpath%
-  \cslet{optionpath#1}\optionpath%
+  \cslet{option@path#1}\option@path%
   \cslet{optionvalue#1}\optionvalue%
 }
 \newrobustcmd*\opt@restorestate[1]{%
   \letcs\option@handlernext{option@handlernext#1}%
   \letcs\option@handlerpath{option@handlerpath#1}%
-  \letcs\optionpath{optionpath#1}%
+  \letcs\option@path{option@path#1}%
   \letcs\optionvalue{optionvalue#1}%
 }
 
@@ -130,76 +125,77 @@
 
 % The main parsing of options
 % This code is quite expanded to make it as efficient as possible.
-% It is based on the original code by David Carlisle in the 
-% standard latex "keyval" package.
+% It is based on the original code by David Carlisle in the standard latex "keyval" package.
 \def\opt@do#1,{%
  \ifx\opt@stop#1\@empty\else
   \opt@split#1==\opt@stop
   \expandafter\opt@do\fi}
 
 \def\opt@split#1=#2=#3\opt@stop{%
-  \opt@spdef\optionrawpath{#1}%
+  \opt@spdef\option@rawpath{#1}%
   \ifx\@empty#3\@empty%
     \let\optionvalue\optionnovalue
   \else      
     \opt@spdef\optionvalue{#2}%
   \fi
-  \ifx\optionrawpath\@empty
+  \ifx\option@rawpath\@empty
     \ifx\optionvalue\optionnovalue\else\optionerror@nopath{#2}\fi
   \else    
-    %\let\option@handler\@empty    
     % try path directly
-    \expandafter\opt@settrypath@\optionrawpath\opt@stop%
-    \ifx\opt@trypath\relax
-      \opt@handle{#1}{#2}%   
-      \option{\optionpath/@code}% invoke
-    \else
-      \opt@trypath% use optimized expansion here
+    \expandafter\opt@setcodepath@\option@rawpath\opt@stop%
+    \ifx\opt@codepath\relax
+      \opt@handle{#1}{#2}% not directly found, try handlers, search etc.
     \fi
     % now \optionvalue is defined; invoke the /@code
+    \opt@codepath%
     \ifx\option@handlernext\@empty\else\optionerror@handler\fi 
   \fi
 }
 
 \newrobustcmd*\opt@handle[2]{%
-  \opt@setoptionpath\optionrawpath%
   % not directly found..
-  \option@gethandler\optionpath% defines option@handlerpath & option@handler
+  \opt@setoptionpath{\option@rawpath}% create full option@path applying the default path
+  \option@gethandler\option@path% defines option@handlerpath & option@handler
   \ifx\option@handler\@empty
     % search path
     \ifopt@allowsearch
-      \opt@searchalso{\optionpath}%
+      \opt@searchalso{\option@path}%
     \fi
   \else
     % handler
-    \letoption{/handlers/\option@handler}\opt@trypath
-    \ifx\opt@trypath\relax\else
-      \edef\optionpath{/handlers/\option@handler}% will get \option@handlerpath
-    \fi
+    \letoption{/handlers/\option@handler/@code}\opt@codepath
   \fi
-  \ifx\opt@trypath\relax
+  \ifx\opt@codepath\relax
     \opt@tryspecials{#1}{#2}%
   \fi
 }
 
+% Set opt@codepath from a raw path taking the default path into account
+\newcommand\opt@setcodepath[1]{\expandafter\opt@setcodepath@#1\opt@stop}
+\def\opt@setcodepath@#1#2\opt@stop{\ifx#1/\relax\letoption{#1#2/@code}\opt@codepath\else\letoption{\option@defaultpath/#1#2/@code}\opt@codepath\fi}
+
+% Set option@path from a raw path taking the default path into account
+\newcommand\opt@setoptionpath[1]{\expandafter\opt@setoptionpath@#1\opt@stop}
+\def\opt@setoptionpath@#1#2\opt@stop{\ifx#1/\relax\edef\option@path{#1#2}\else\edef\option@path{\option@defaultpath/#1#2}\fi}
+
+
 \newrobustcmd*\opt@tryspecials[2]{%
   % special handler?
-  \edef\opt@first{\expandafter\opt@firstletterof@\optionrawpath\opt@stop}%
-  \letoption{/handlers/special/\opt@first}\opt@trypath    
-  \ifx\opt@trypath\relax
+  \edef\opt@first{\expandafter\opt@firstletterof@\option@rawpath\opt@stop}%
+  \letoption{/handlers/special/\opt@first/@code}\opt@codepath    
+  \ifx\opt@codepath\relax
     % still not found: invoke unknown handler
     \ifopt@ignoreunknown
       \opt@collectunknown{#1}{#2}% expects \optionvalue to be defined
     \else
-      \opt@unknown% expects \optionpath
+      \opt@unknown{\option@path}%
     \fi
   \else 
     % it is a special handler
-    \edef\optionpath{/handlers/special/\opt@first}%
     \ifx\optionvalue\optionnovalue
-      \let\optionvalue\optionrawpath%
+      \let\optionvalue\option@rawpath%
     \else
-      \optionerror{\optionrawpath}{special options cannot take an argument ("\meaning\optionvalue")}%
+      \optionerror{\option@rawpath}{special options cannot take an argument ("\meaning\optionvalue")}%
     \fi
   \fi
 }
@@ -225,38 +221,30 @@
 
 
 
-% search a path
+% search a path <default path><search path>
 \newrobustcmd*\opt@searchforpath[2]{%
   \option@ifisabsolute{#2}%
-    \letoption{#2}\opt@trypath
-    \ifx\opt@trypath\relax\else
-      \edef\optionpath{#2}% found
-    \fi
-  \else  
-    \letoption{#1#2}\opt@trypath% use default path
-    \ifx\opt@trypath\relax
+   {\letoption{#2/@code}\opt@codepath}%
+   {\letoption{#1#2/@code}\opt@codepath% use default path
+    \ifx\opt@codepath\relax
       \ifopt@allowsearch\else
         \opt@searchalso{#1#2}%
-      \fi
-    \else    
-      \edef\optionpath{#1#2}% !found
-    \fi
-  \fi
+      \fi    
+    \fi}%
 }
 
 % search an absolute path (and use searchalso too)
+% this is called by search also handlers.
 \newrobustcmd*\opt@searchforabspath[1]{%
-  \letoption{#1}\opt@trypath
-  \ifx\opt@trypath\relax
+  \letoption{#1/@code}\opt@codepath
+  \ifx\opt@codepath\relax
     \ifopt@allowsearch\else
       \opt@searchalso{#1}%
     \fi
-  \else    
-    \edef\optionpath{#1}% !found
   \fi
 }
 
-% \opt@searchalso: invoked to search for a path: set \opt@trypath and \optionpath if a match is found
+% \opt@searchalso: invoked to search for a path: set \opt@codepath if a match is found
 %
 % note: we can nest searches without grouping
 % because they all use the same "\do" (option@searchalsodo) and
@@ -265,29 +253,27 @@
   %\typeout{searchalso #1}%
   \let\do\opt@searchalsodo
   \option@foreachparent{#1}%
-  %\opt@searchalsodo{/foo}{/}{bar-test}%
 }
 \newrobustcmd*\opt@searchalsodo[3]{% {<root>}{<subpath>}{<name>}
-  \letoption{#1/.searchalso}\opt@temp
+  \letoption{#1/@searchalso/@code}\opt@temp
   \ifx\opt@temp\relax\else
     \edef\option@searchpath{#2#3}% subpath
     \opt@temp% invoke search routine
-    \ifx\opt@trypath\relax\else\opt@break\fi% on found: break loop
+    \ifx\opt@codepath\relax\else\opt@break\fi% on found: break loop
   \fi
 }
 
-% invoked on unknown path: set \optionpath to the unknown handler (with option@unknownpath)
-\newrobustcmd*\opt@unknown{%
+% invoked on unknown path: set \opt@codepath to the unknown handler (with option@unknownpath)
+\newrobustcmd*\opt@unknown[1]{%
   \def\do##1##2##3{%
-    \letoption{##1/@unknown}\opt@temp
-    \ifx\opt@temp\relax\else
-      \edef\option@unknownpath{\optionpath}% full path
+    \letoption{##1/@unknown/@code}\opt@codepath
+    \ifx\opt@codepath\relax\else
+      \edef\option@unknownpath{#1}% full path
       \edef\option@unknownsubpath{##2##3}% subpath
-      \edef\optionpath{##1/@unknown}%
       \opt@break%
     \fi%
   }
-  \option@foreachparent{\optionpath}%
+  \option@foreachparent{#1}%
 }
 
 % invoked when unknown option needs to be saved (and ignored)
@@ -312,44 +298,38 @@
 \def\option@handlerpath{}
 \def\option@handlernext{}
 
-\newrobustcmd*\option@chainempty{%
-  \let\optionvalue\optionnovalue
-  \option@chainonly%
-}
-\newrobustcmd*\option@chainonly{%
-  \ifx\option@handlernext\@empty\else
-    \option@chain%
-  \fi
-}
+\newrobustcmd*\option@chainempty{\let\optionvalue\optionnovalue\option@chainonly}
+\newrobustcmd*\option@chainonly{\ifx\option@handlernext\@empty\else\option@chain\fi}
 \newrobustcmd*\option@chain{%
   \ifx\option@handlernext\@empty
-    % we are done, invoke the option handler
-    \let\optionpath\option@handlerpath%
-    \option{\optionpath/@code}%
+    % we are done, invoke the option itself
+    \letoption{\option@handlerpath/@code}\opt@codepath
+    \ifx\opt@codepath\relax
+      \opt@unknown{\option@handlerpath}%
+    \else
+      \opt@codepath
+    \fi
   \else
     % invoke the next handler
     %\typeout{call next handler: \option@handlerpath, \option@handlernext}%
     \edef\opt@temp{\option@handlerpath/.\option@handlernext}%
     \option@gethandler{\opt@temp}%
-    \edef\optionpath{/handlers/\option@handler}%
-    \letoption{\optionpath}\opt@trypath
-    \ifx\opt@trypath\relax
-      \opt@unknown% unknown handler; needs optionpath 
+    \letoption{/handlers/\option@handler/@code}\opt@codepath
+    \ifx\opt@codepath\relax
+      \opt@unknown{/handlers/\option@handler}%
+    \else
+      \opt@codepath
     \fi
-    \option{\optionpath/@code}%
   \fi
 }
+
+% --------------------------------------------------------
+% Path splitting
+% --------------------------------------------------------
 
 % \option@isabsolute{path}: check if path starts with /
 \def\ifoptionisabsolute#1{\expandafter\ifoptionisabsolute@#1\opt@stop}
 \def\ifoptionisabsolute@#1#2\opt@stop{\ifx#1/\relax\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}%
-%\def\ifoptionisabsolute@#1/#2\opt@stop{\def\opt@temp@abs{#1}\ifx\opt@temp@abs\@empty\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
-
-\newcommand\opt@setoptionpath[1]{\expandafter\opt@setoptionpath@#1\opt@stop}
-\def\opt@setoptionpath@#1#2\opt@stop{\ifx#1/\relax\edef\optionpath{#1#2}\else\edef\optionpath{\opt@defaultpath/#1#2}\fi}
-
-\newcommand\opt@settrypath[1]{\expandafter\opt@setoptionpath@#1\opt@stop}
-\def\opt@settrypath@#1#2\opt@stop{\ifx#1/\relax\letoption{#1#2/@code}\opt@trypath\else\letoption{\opt@defaultpath/#1#2/@code}\opt@trypath\fi}
 
 % \option@splitroot{path}: split off the first directory of a path into \option@root 
 % option@splitroot{/foo/bar} -> foo 
@@ -402,7 +382,7 @@
 
 
 % --------------------------------------------------------
-% Default handlers
+% Errors
 % --------------------------------------------------------
 
 \newrobustcmd*\optionerror[2]{%
@@ -415,23 +395,8 @@
 \newrobustcmd*\optionerror@needarg[1]{\optionerror{#1}{requires an argument}}
 
 \newrobustcmd*\optionerror@nopath[1]{\optionerror{?}{value without option path: "#1"}}
-\newrobustcmd*\optionerror@handler[1]{\optionerror{\optionrawpath}{handler ".\option@handlernext" is not allowed to follow the previous handlers}}%
+\newrobustcmd*\optionerror@handler[1]{\optionerror{\option@rawpath}{handler ".\option@handlernext" is not allowed to follow the previous handlers}}%
 
-
-% \optionaddsearch{<path>}{<search paths>}
-% add new search paths to a path.
-% for efficiency we expand out the search code inline instead of iterating
-\newrobustcmd*\optionaddsearch[2]{%
-  \def\do##1{%
-    \edef\opt@temp{%
-      \noexpand\ifx\noexpand\opt@trypath\noexpand\relax
-        \noexpand\opt@searchforabspath{##1/\noexpand\option@searchpath}%
-      \noexpand\fi
-    }%
-    \expandnext{\option@append{#1/.searchalso}}{\opt@temp}%
-  }
-  \expandnext@\docsvlist{#2}%
-}
 
 
 % --------------------------------------------------------
@@ -546,14 +511,14 @@
   \expandnext{\option@assign{#1}}{\opt@temp}%
 }%
 \newcommand*\option@assign[2]{%
-  \protected@edef\optionpath{#1}%
+  \protected@edef\option@path{#1}%
   \def\optionvalue{#2}%
-  \option{\optionpath/@code}%
+  \option{\option@path/@code}%
 }%
 \newcommand*\option@assigndefault[1]{%
-  \protected@edef\optionpath{#1}%
+  \protected@edef\option@path{#1}%
   \let\optionvalue\optionnovalue%
-  \option{\optionpath/@code}%
+  \option{\option@path/@code}%
 }%
 
 
@@ -749,7 +714,7 @@
     \eifblank{\option@unknownpath}{\def\option@unknownpath{?}}{}%
     \ifoptionisabsolute{\option@unknownpath}%
       {\optionerror{\option@unknownpath}{unknown option}}%
-      {\optionerror{\option@unknownpath}{unknown option under "\opt@defaultpath"}}%
+      {\optionerror{\option@unknownpath}{unknown option under "\option@defaultpath"}}%
   }
 }
 
@@ -769,8 +734,8 @@
   /handlers/new style/.new handler   = \optionsalso{#1/.new cmd  = \optionsalso{#2}},
   /handlers/new style*/.new handler  = \optionsalso{#1/.new cmd* = \optionsalso{#2}},
   /handlers/search also/.new handler = \optionaddsearch{#1}{#2},
-  /handlers/cd/.new handler*         = \edef\opt@defaultpath{#1},
-  /handlers/new family/.new handler  = []{\optionsalso{#1/.new cmd* = {\edef\opt@defaultpath{#1}}, #1/.search also = {#2}, #1/.cd }},
+  /handlers/cd/.new handler*         = \edef\option@defaultpath{#1},
+  /handlers/new family/.new handler  = []{\optionsalso{#1/.new cmd* = {\edef\option@defaultpath{#1}}, #1/.search also = {#2}, #1/.cd }},
 }
 
 % compatibility
@@ -791,6 +756,28 @@
     \option@eassign{#1}{\optionvalue}%
   },
 }
+
+% \optionaddsearch{<path>}{<search paths>}
+% add new search paths to a path.
+% for efficiency we expand out the search code inline instead of iterating
+\newrobustcmd*\optionaddsearch[2]{%
+  \ifoptiondefined{#1/@searchalso}%
+   {\option@concat{#1/@searchalso}{#2}}%
+   {\option@setlist{#1/@searchalso}{#2}%
+    \option@set{#1/@searchalso/@type}{searchalso}%
+    \option@def{#1/@searchalso/@code}{}}%
+  \def\opt@do@search##1{%
+    \typeout{add search code to #1, namely ##1}%
+    \edef\opt@temp{%
+      \noexpand\ifx\noexpand\opt@codepath\noexpand\relax
+        \noexpand\opt@searchforabspath{##1/\noexpand\option@searchpath}%
+      \noexpand\fi
+    }%
+    \expandnext{\option@append{#1/@searchalso/@code}}{\opt@temp}%
+  }
+  \forcsvlist\opt@do@search{#2}%
+}
+
 
 % --------------------------------------------------------
 % Basic data type handlers
@@ -874,7 +861,7 @@
 \options{
   /handlers/is if/.new handler = \optionsalso{%
     /options/exec = \ifcsdef{if#2}{}{\optionerror{#1}{no `if` with name "#2" is defined}},
-    #1/.new code  = \ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionerror@expect{#1}{true or false}},
+    #1/.new code  = [true]\ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionerror@expect{#1}{true or false}},
     #1/.type      = if,
     /options/exec = \option@set{#1}{#2},% read name of the if
     %#1/.initial   = {#2},
@@ -929,6 +916,7 @@
   /options/ignoreunknown/.is if = opt@ignoreunknown,
   /options/allowsearch/.is if   = opt@allowsearch,
   /options/showbuiltin/.new toggle,
+  /options/collectunknown/.new style* = {/options/ignoreunknown,/options/remaining={}},
 }
 
 \csundef{optk@/options/remaining}% tricksy, but we want to define it officially here :-)
