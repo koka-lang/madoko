@@ -19,11 +19,12 @@
   /bench/trace/.new toggle,
 }
 
-\options{/bench, library=xkeyval, style=show, repetitions=100000}
+\options{/bench, library=options, style=simple, repetitions=50000}
 
 
-\newcommand\preparetest[1]{
-	\eifstrequal{#1}{options}{%
+\newcommand\preparetest{
+	\ifcase\option{/bench/library/@ord}\relax %baseline
+  \or
 		\options{%
 			/bar/bar-test/.new value = hi,
       /foo/foo-test/.new value = world,
@@ -31,9 +32,8 @@
 		}    
 		\def\test##1{\options{/foo,##1}}
 		\def\valueof##1##2{\option{/##1/##2}}
-	}
-	{\eifstrequal{#1}{pgfkeys}{%
-		\pgfkeys{%
+	\or
+	  \pgfkeys{%
 			/bar/bar-test/.initial=hi,
       /foo/foo-test/.initial=world,
 			/foo/.is family,
@@ -41,16 +41,15 @@
 		}
 		\def\test##1{\pgfkeys{/foo,##1}}
 		\def\valueof##1##2{\pgfkeysvalueof{/##1/##2}}
-	}
-	{\eifstrequal{#1}{xkeyval}{%
-		\define@cmdkey{bar}{bar-test}{}%
+	\or
+    \define@cmdkey{bar}{bar-test}{}%
     \define@cmdkey{foo}{foo-test}{}%
 		\define@cmdkey{foo}{x}{}%
 		\def\test##1{\setkeys{foo,bar}{##1}}%
 		\def\valueof##1##2{\csuse{cmdKV@##1@##2}}%
-	}
-	{\@latex@error{Cannot test package "#1"}}%
-	}}%
+	\else
+	  \@latex@error{Cannot test package "\option{/bench/library}"}%
+	\fi
 }
 
 
@@ -86,16 +85,15 @@
   \advance\testcount -10\relax
 }
 
-\newcommand\runtest[2][\option{/bench/repetitions}]{%
-	\preparetest{#2}%
-  \iftoggle{/bench/trace}
-   {{\tracingmacros 1\relax\test{bar-test={a test}}}}
-   {\typeout{test \option{/bench/style} "#2": (#1\space repetitions)}
+\newcommand\runtest{%
+  \ifoptionequal{/bench/library}{baseline}{}{%
+	  \preparetest%
+    \typeout{test \option{/bench/style} "\option{/bench/library}": (\option{/bench/repetitions}\space repetitions)}
   	\expandafter\let\expandafter\testproc\csname testten\option{/bench/style}\endcsname 
-    \testcount=#1\relax%	    
+    \testcount=\option{/bench/repetitions}\relax%	    
     \@whilenum\testcount>0\do\testproc
-  	\typeout{test "#2": " \valueof{bar}{bar-test}, \valueof{foo}{foo-test}"}%
-   }
+  	\typeout{test "\option{/bench/library}": " \valueof{bar}{bar-test}, \valueof{foo}{foo-test}"}%
+  }
 }
 
 
@@ -137,22 +135,8 @@
            {Intel Core i7 @ 2.8ghz, 4Gb, XeTeX 3.14159265-2.6-0.99991 (TeX Live 2014/W32TeX)}
 }
 
-\ifoptionequal{/bench/style}{show}%
- {\showresults}%
- {\ifcase\option{/bench/library/@ord}\relax
-    % baseline = nothing
-    \typeout{baseline: do nothing}%
-  \or
-    \runtest{options}
-  \or
-    \runtest{pgfkeys}
-  \or
-    \runtest{xkeyval}
-  \or
-  \else
-    \optionerror[/bench/library]{unknown library}
-  \fi
- }%
+% run!
+\ifoptionequal{/bench/style}{show}{\showresults}{\runtest}%
 
 
 \end{document}
