@@ -36,7 +36,9 @@
 \options{,/fam/testx={x,y},/fam/testx={x,y,z}}
 
 \options{/fam/test2/.new cmd tuple =[{1,2}]{tuple: (#1,#2)}}
-\options{/fam, test2={x,y}, test2}
+test
+
+\options{/fam, test2={x,y}}
 
 \options{/fam/test3/.new cmd triple = {triple: (#1,#2,#3)}}
 \options{/fam, test3={x,y,z}}
@@ -58,16 +60,16 @@
   /fama/.new family
 }
 
-\options*{/fam,/fama/width=6pt,widthc=5pt,widthc=5pt+3pt}
+%\options*{/fam,/fama/width=6pt,widthc=5pt,widthc=5pt+3pt}
 
 
-\letoptionlist{/options/remaining}\remaining
-\typeout{test: \meaning\remaining}
-remaining: \expandnext\detokenize{\remaining}
+%\letoptionlist{/options/remaining}\remaining
+%\typeout{test: \meaning\remaining}
+%remaining: \expandnext\detokenize{\remaining}
 
-\optionswithremaining*{/famc,num=5}
-remaining: \optionshow{/options/remaining}
-\optionswithremaining{/fam}
+%\optionswithremaining*{/famc,num=5}
+%remaining: \optionshow{/options/remaining}
+%\optionswithremaining{/fam}
 
 \options{%
   /fama/width=\fboxsep + \fboxrule,

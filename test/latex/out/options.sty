@@ -68,7 +68,7 @@
 \newrobustcmd*\optionswithremaining{\@ifstar{\options@wrm{true}}{\options@wrm{false}}}
 \newrobustcmd*\options@wrm[2]{%
   \letoptionlist{/options/remaining}\opt@savedremaining
-  \options@normal{#1}{#2}%
+  \options{#1}{#2}%
   \expandnext@\optionsalso{\opt@savedremaining}%
 }
 
@@ -130,7 +130,7 @@
 % The main parsing of options
 % This code is quite expanded to make it as efficient as possible.
 % It is based on the original code by David Carlisle in the 
-% standard latex "pathval" package.
+% standard latex "keyval" package.
 \def\opt@do#1,{%
  \ifx\opt@stop#1\@empty\else
   \opt@split#1==\opt@stop
