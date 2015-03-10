@@ -62,9 +62,10 @@
 % main path setting routine
 % --------------------------------------------------------
 
-\newif\ifopt@ignoreunknown
-\newif\ifopt@allowsearch
+\newif\ifopt@ignoreunknown  % ignore unknown options?
+\newif\ifopt@allowsearch    % allow searching along search-also handlers
 
+% process options together with remaining ones from a previous run
 \newrobustcmd*\optionswithremaining[1]{%
   \letoptionlist{/options/remaining}\opt@savedremaining
   \options{#1}%
@@ -72,17 +73,19 @@
   \expandnext@\optionsalso{\opt@savedremaining}%
 }
 
+% process options
 \newrobustcmd*\options{%
   \def\option@defaultpath{}%
   \opt@allowsearchtrue%
   \opt@ignoreunknownfalse%
-  \let\option@handlernext\@empty%
   \optionsalso%
 }
 
-\newcount\opt@nesting
+% track nesting level of options (due to calls to options in an argument)
 \newif\ifopt@nested
+\newcount\opt@nesting
 
+% for efficiency, only save state if nested
 \newrobustcmd*\optionsalso[1]{%
   \ifopt@nested
     \optionsalso@save{#1}% save state in a nested context for chained handlers
@@ -93,6 +96,7 @@
   \fi
 }
 
+% this saves and restores any nested state: for now only about chained handlers
 \newrobustcmd*\optionsalso@save[1]{%
   \opt@savestate{\the\opt@nesting}
   \advance\opt@nesting 1\relax
@@ -106,15 +110,32 @@
 \newrobustcmd*\opt@savestate[1]{%
   \cslet{option@handlernext#1}\option@handlernext%
   \cslet{option@handlerpath#1}\option@handlerpath%
-  \cslet{option@path#1}\option@path%
   \cslet{optionvalue#1}\optionvalue%
 }
 \newrobustcmd*\opt@restorestate[1]{%
   \letcs\option@handlernext{option@handlernext#1}%
   \letcs\option@handlerpath{option@handlerpath#1}%
-  \letcs\option@path{option@path#1}%
   \letcs\optionvalue{optionvalue#1}%
 }
+
+
+%-----------------------------------------------------------------------
+% The main option processing
+%
+% For an option <option> we may have these values:
+% <option>    : the value read by \option{<option>}
+%   /@code    : the code invoked on assignment (use option@invoke to invoke explicitly), gets \optionvalue
+%   /@cmdN    : command handlers invoked by code with arguments from \optionvalue
+%   /@type    : the type of value (not set for pure code values)
+%   /@unknown : an unknown handler for this path
+%     /@code
+%   /@searchalso: the other paths needed to be search for this path
+%     /@code
+%
+% Handlers start with a "." in their name; the handlers are found in: /handlers/<handlername>
+% Special handlers are defined in: /handlers/special/<char>
+% If a path starts with <char> it is invoked; just like first-char-syntax in pgfkeys.
+%-----------------------------------------------------------------------
 
 % this is used if no argument is given
 % define as relax, this makes it unique but also safe against infinite expansion
@@ -152,6 +173,7 @@
   \fi
 }
 
+% Phase 2: look for a handler or search along the path
 \newrobustcmd*\opt@handle[2]{%
   % not directly found..
   \opt@setoptionpath{\option@rawpath}% create full option@path applying the default path
@@ -179,6 +201,7 @@
 \def\opt@setoptionpath@#1#2\opt@stop{\ifx#1/\relax\edef\option@path{#1#2}\else\edef\option@path{\option@defaultpath/#1#2}\fi}
 
 
+% Phase 3: look for a special syntax handler, or invoke the unknown handlers
 \newrobustcmd*\opt@tryspecials[2]{%
   % special handler?
   \edef\opt@first{\expandafter\option@firstletterof@\option@rawpath\opt@stop}%
@@ -220,6 +243,9 @@
 {\def\:{\global\let\opt@sptoken= } \: }
 
 
+% --------------------------------------------------------
+% Searching
+% --------------------------------------------------------
 
 % search a relative path: <default path><search path>
 \newrobustcmd*\opt@searchforpath[2]{%
@@ -263,6 +289,10 @@
   \fi
 }
 
+% --------------------------------------------------------
+% Unknown handler search
+% --------------------------------------------------------
+
 % invoked on unknown path: set \opt@codepath to the unknown handler (with option@unknownpath)
 \newrobustcmd*\opt@unknown[1]{%
   \def\do##1##2##3{%
@@ -284,6 +314,10 @@
     \option@push{/options/remaining}{#1={#2}}
   \fi
 }
+
+% --------------------------------------------------------
+% Handlers' splitting and chaining
+% --------------------------------------------------------
 
 % \option@gethandler{path}: split off the part after the "/.", sets option@handlerpath and option@handler and option@handlernext
 \def\option@gethandler#1{\expandafter\option@gethandler@#1/././.\opt@stop}

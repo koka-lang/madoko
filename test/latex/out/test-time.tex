@@ -12,14 +12,14 @@
 
 \options{%
   /bench/.new family,
-  /bench/style/.new choice    = {simple,complex},
+  /bench/style/.new choice    = {simple,complex,show},
   /bench/library/.new choice  = {baseline,options,pgfkeys,xkeyval},
   /bench/repetitions/.new num = 10000,
-  /bench/baseline/.new num    = 800,
+  /bench/baseline/.new num    = 730,
   /bench/trace/.new toggle,
 }
 
-\options{/bench, library=options, style=simple, repetitions=100000}
+\options{/bench, library=xkeyval, style=show, repetitions=100000}
 
 
 \newcommand\preparetest[1]{
@@ -98,34 +98,61 @@
    }
 }
 
-\ifcase\option{/bench/library/@ord}\relax
-  % baseline = nothing
-  \typeout{baseline: do nothing}%
-\or
-  \runtest{options}
-\or
-  \runtest{pgfkeys}
-\or
-  \runtest{xkeyval}
-\else
-  \optionerror[/bench/library]{unknown library}
-\fi
 
-\iffalse
-% output benchmark results 
-\newcommand\adjust[2][1]{\the\numexpr#2 - \option{/bench/baseline}\relax ms (\the\numexpr (#2 - \option{/bench/baseline}/#1\relax ms per 1000)}
+\newcommand\adjust[2][1]{%
+  %\the\numexpr#2 - \baseline\relax ms (
+  \the\numexpr (#2 - \baseline)/#1\relax ms/1000%
+  %)
+}
+\newcommand\relative[1]{%
+  \dotit{\the\numexpr(10 * #1)/\baserelative\relax}x \ifnum\baserelative=#1\relax\else slower\fi
+}
+\newcommand\dotit[1]{\expandafter\dotitx#1\relax}
+\def\dotitx#1#2#3\relax{\ifblank{#3}{#1.#2}{#1#2.#3}}
 
-\begin{tabular}{lrr}
-\textbf{package} & \textbf{50.000x} & \textbf{100.000x} \\ 
-\hline
-options & \adjust[50]{3300} & \adjust[100]{5960} \\
-pgfkeys & \adjust[50]{5520} & \adjust[100]{10840} \\
-xkeyval & \adjust[50]{14500} & \adjust[100]{27900} \\
-\hline
-\multicolumn{3}{l}{baseline = \plaintime ms} \\
-\multicolumn{3}{l}{platform = HP XW4600, Intel Core2 Quad CPU @ 3Ghz, 4Gb} \\
-\multicolumn{3}{l}{latex    = XeTeX 3.1415926-2.5-0.9999.3-2013060713 (TeX Live 2013/W32TeX)}\\
-\end{tabular}
-\fi
+\newcommand\gentable[7][100]{%
+  \def\baseline{#2}%
+  \def\baserelative{#3}%
+  \noindent\begin{tabular}{lrrl}\hline
+  \multicolumn{3}{l}{\textbf{test}: #6} \\ 
+  \textbf{package} & \textbf{relative} & \textbf{#1.000x} \\ 
+  \hline
+  options & \relative{#3} & \adjust[#1]{#3} \\
+  pgfkeys & \relative{#4} & \adjust[#1]{#4} \\
+  xkeyval & \relative{#5} & \adjust[#1]{#5} \\ \hline
+  \end{tabular}\\[1ex]
+  {baseline = \baseline ms} \\
+  {platform = #7}\\
+}
+
+\newcommand\showresults{%
+  % output benchmark results 
+  
+  \gentable{710}{2637}{3422}{22482}%
+           {simple}%
+           {Intel Core i7 @ 2.8ghz, 4Gb, XeTeX 3.14159265-2.6-0.99991 (TeX Live 2014/W32TeX)}
+
+  \gentable{710}{4061}{8642}{23237}%
+           {one level search}%complex
+           {Intel Core i7 @ 2.8ghz, 4Gb, XeTeX 3.14159265-2.6-0.99991 (TeX Live 2014/W32TeX)}
+}
+
+\ifoptionequal{/bench/style}{show}%
+ {\showresults}%
+ {\ifcase\option{/bench/library/@ord}\relax
+    % baseline = nothing
+    \typeout{baseline: do nothing}%
+  \or
+    \runtest{options}
+  \or
+    \runtest{pgfkeys}
+  \or
+    \runtest{xkeyval}
+  \or
+  \else
+    \optionerror[/bench/library]{unknown library}
+  \fi
+ }%
+
 
 \end{document}
