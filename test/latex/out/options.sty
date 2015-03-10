@@ -84,7 +84,7 @@
   %\advance\opt@nesting 1\relax
   %\def\option@handlernext{}%
   %\def\option@handlerpath{}%  
-  \opt@do#1,\opt@stop,\relax
+  \opt@do#1,\opt@stop,%
   %\advance\opt@nesting -1\relax
   %\ifnum\opt@nesting>0\opt@restorestate{\the\opt@nesting}\fi
 }
@@ -738,7 +738,7 @@
   /handlers/new style*/.new handler  = \optionsalso{#1/.new cmd* = \optionsalso{#2}},
   /handlers/search also/.new handler = \optionaddsearch{#1}{#2},
   /handlers/cd/.new handler*         = \edef\opt@defaultpath{#1},
-  /handlers/new family/.new handler  = []\optionsalso{#1/.new cmd* = \optionsalso{ #1/.cd }, #1/.search also = {#2}, #1/.cd },
+  /handlers/new family/.new handler  = []{\optionsalso{#1/.new cmd* = {\edef\opt@defaultpath{#1}}, #1/.search also = {#2}, #1/.cd }},
 }
 
 % compatibility
@@ -794,7 +794,7 @@
   /handlers/show/dim/.new cmd = \option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/@dimexpr}),
   %
   /handlers/new toggle/.new handler = [false]\optionsalso{%
-    #1/.new code  = \settoggle{#1}{\optionvalue},
+    #1/.new code  = [true]\expandnext{\settoggle{#1}}{\optionvalue},
     #1/.type      = toggle,
     /options/exec = \newtoggle{#1}\option@set{#1}{\iftoggle{#1}{true}{false}},
     #1/.initial   = {#2},

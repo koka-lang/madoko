@@ -8,14 +8,17 @@
 \begin{document}
 \makeatletter
 
+
+
 \options{%
   /bench/.new family,
   /bench/library/.new choice  = {baseline,options,pgfkeys,xkeyval},
   /bench/repetitions/.new num = 10000,
   /bench/baseline/.new num    = 800,
+  /bench/trace/.new toggle,
 }
 
-\options{/bench, library=pgfkeys, repetitions=50000}
+\options{/bench, library=options, repetitions=50000,trace}
 
 
 \newcommand\preparetest[1]{
@@ -47,6 +50,7 @@
 }
 
 
+
 \newcount\testcount
 \newcommand\testten{%
   \test{bar-test={a test}}%
@@ -65,10 +69,13 @@
 
 \newcommand\runtest[2][\option{/bench/repetitions}]{%
 	\preparetest{#2}%
-	\typeout{test "#2": (#1\space repetitions)}
-	\testcount=#1\relax%	
-	\@whilenum\testcount>0\do\testten
-	\typeout{test "#2": "\valueof{baz}{bar-test}" (expected "a test")}
+  \iftoggle{/bench/trace}
+   {{\tracingmacros 1\relax\test{bar-test={a test}}}}
+   {\typeout{test "#2": (#1\space repetitions)}
+  	\testcount=#1\relax%	
+  	\@whilenum\testcount>0\do\testten
+  	\typeout{test "#2": "\valueof{baz}{bar-test}" (expected "a test")}%
+   }
 }
 
 \ifcase\option{/bench/library/@ord}\relax
