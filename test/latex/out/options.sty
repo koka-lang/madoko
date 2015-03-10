@@ -26,20 +26,20 @@
 % Extensions to etoolbox
 % --------------------------------------------------------
 
-\providerobustcmd*\@swaparg[2]{#2{#1}}
-\providerobustcmd*\expandnext[2]{\expandafter\@swaparg\expandafter{#2}{#1}}
+\providecommand*\@swaparg[2]{#2{#1}}
+\providecommand*\expandnext[2]{\expandafter\@swaparg\expandafter{#2}{#1}}
 
-\providerobustcmd*\@swaptwo[2]{#2#1}
-\providerobustcmd*\expandnextcmds[2]{\expandafter\@swaptwo\expandafter{#2}{#1}}
+\providecommand*\@swaptwo[2]{#2#1}
+\providecommand*\expandnextcmds[2]{\expandafter\@swaptwo\expandafter{#2}{#1}}
 
 % unsafe expand next if the command is a single token..
-\providerobustcmd*\expandnext@[2]{\expandafter#1\expandafter{#2}}
+\providecommand*\expandnext@[2]{\expandafter#1\expandafter{#2}}
 
 
-\providerobustcmd*\eifstrequal[1]{\expandnext@\ifstrequal{#1}}
-\providerobustcmd*\eifblank[1]{\expandnext@\ifblank{#1}}
+\providecommand*\eifstrequal[1]{\expandnext@\ifstrequal{#1}}
+\providecommand*\eifblank[1]{\expandnext@\ifblank{#1}}
 
-\providerobustcmd*\ontoggle[2]{\iftoggle{#1}{#2}{}}
+\providecommand*\ontoggle[2]{\iftoggle{#1}{#2}{}}
 
 \providerobustcmd*\providelength[1]{\ifdef{#1}{}{\newlength#1}}
 \providerobustcmd*\csnewlength[1]{\expandafter\newlength\csname #1\endcsname}
@@ -181,7 +181,7 @@
 
 \newrobustcmd*\opt@tryspecials[2]{%
   % special handler?
-  \edef\opt@first{\expandafter\opt@firstletterof@\option@rawpath\opt@stop}%
+  \edef\opt@first{\expandafter\option@firstletterof@\option@rawpath\opt@stop}%
   \letoption{/handlers/special/\opt@first/@code}\opt@codepath    
   \ifx\opt@codepath\relax
     % still not found: invoke unknown handler
@@ -221,7 +221,7 @@
 
 
 
-% search a path <default path><search path>
+% search a relative path: <default path><search path>
 \newrobustcmd*\opt@searchforpath[2]{%
   \option@ifisabsolute{#2}%
    {\letoption{#2/@code}\opt@codepath}%
@@ -233,8 +233,8 @@
     \fi}%
 }
 
-% search an absolute path (and use searchalso too)
-% this is called by search also handlers.
+% search an absolute path
+% this is called by search-also handlers.
 \newrobustcmd*\opt@searchforabspath[1]{%
   \letoption{#1/@code}\opt@codepath
   \ifx\opt@codepath\relax
@@ -358,12 +358,12 @@
 
 
 % \option@foreachparent{<path>}  basic routine for iterating over path components
-% applies \do to each parent path. 
+% applies \do to each parent path. todo: can we optimize this routine more for the searchalso?
 %   /foo/bar/baz  -> \do{/foo/bar}{}{baz} \do{/foo}{bar/}{baz} \do{}{foo/bar/}{baz} 
 \newrobustcmd*\option@foreachparent[1]{%
   \let\opt@donext\do%
   \expandafter\opt@foreachparent@#1/\opt@stop\opt@stop%
-  \do{}{\option@subpath}{\option@name}%
+  \opt@donext{}{\option@subpath}{\option@name}%
 }
 
 \newrobustcmd*\opt@break{\def\opt@donext##1##2##3{}}
@@ -375,7 +375,7 @@
     \def\option@subpath{}%
   \else
     \opt@foreachparent@/#2\opt@stop#3/#1\opt@stop% recurse first
-    \opt@donext{#3/#1}{\option@subpath}{\option@name}\relax%
+    \opt@donext{#3/#1}{\option@subpath}{\option@name}%
     \edef\option@subpath{#1/\option@subpath}%
   \fi
 }
@@ -397,6 +397,8 @@
 \newrobustcmd*\optionerror@nopath[1]{\optionerror{?}{value without option path: "#1"}}
 \newrobustcmd*\optionerror@handler[1]{\optionerror{\option@rawpath}{handler ".\option@handlernext" is not allowed to follow the previous handlers}}%
 
+\newrobustcmd*\option@ensurefree[1]{\ifoptiondefined{#1}{\optionerror{#1}{already defined}}{}}   
+\newrobustcmd*\option@ensuredefined[1]{\ifoptiondefined{#1}{}{\optionerror{#1}{unknown option}}}
 
 
 % --------------------------------------------------------
@@ -422,27 +424,27 @@
 \newcommand*\ifoptionvoid[1]{\ifcsvoid{optk@#1}}
 \newcommand*\ifoptioncmd[1]{\ifcsparam{optk@#1}}
 
-\newcommand*\ifoptionequal[2]{%
+\newrobustcmd*\ifoptionequal[2]{%
   \letoption{#1}\opt@temp
   \eifstrequal{\opt@temp}{#2}%
 }
 
-\newcommand*\ifoptionblank[2]{%
+\newrobustcmd*\ifoptionblank[2]{%
   \letoption{#1}\opt@temp
   \eifblank{\opt@temp}{#2}%
 }
 
-\newrobustcmd*\ifoptiontype[2]{\ifoptionequal{#1/@type}{#2}}
+\newcommand*\ifoptiontype[2]{\ifoptionequal{#1/@type}{#2}}
 \newcommand*\ifoptioniscode[1]{\ifoptionvoid{#1/@type}}
 
 % --------------------------------------------------------
 % Comma seperated values
 % --------------------------------------------------------
 
-\newcommand\headof[1]{\opt@headof#1,\opt@stop}%
-\def\opt@headof#1,#2\opt@stop{#1}%
+\newcommand\option@headof[1]{\option@headof@#1,\opt@stop}%
+\def\option@headof@#1,#2\opt@stop{#1}%
 
-\providerobustcmd*\ifanyof[2]{%
+\providerobustcmd*\option@ifanyof[2]{%
   \let\opt@do@next\@secondoftwo
   \edef\opt@temp{#1}%
   \def\do##1{\eifstrequal{\opt@temp}{##1}{\let\opt@do@next\@firstoftwo\listbreak}{}}%
@@ -450,10 +452,10 @@
   \opt@do@next
 }
 
-\newrobustcmd*\ifoptionanyof[2]{\ifanyof{\valueof{#1}}{#2}}
+\newrobustcmd*\ifoptionanyof[2]{\option@ifanyof{\option{#1}}{#2}}
 
 \newcount\opt@idx
-\providerobustcmd*\findidx[3]{%
+\providerobustcmd*\option@findidx[3]{%
   \opt@idx=0\relax
   \def#3{-1}%
   \edef\opt@temp{#1}%
@@ -462,11 +464,9 @@
 }
 
 % return the first letter of the argument or ' ' (space) if the input was empty. Does not expand the argument.
-\providecommand*\firstletterof[1]{\eifblank{#1}{ }{\expandafter\opt@firstletterof@#1\opt@stop}}
-\def\opt@firstletterof@#1#2\opt@stop{#1}
+\providecommand*\option@firstletterof[1]{\eifblank{#1}{ }{\expandafter\option@firstletterof@#1\opt@stop}}
+\def\option@firstletterof@#1#2\opt@stop{#1}
 
-\def\letfirstmeaningof#1#2{\expandafter\letfirstmeaningof@#1\opt@stop#2\opt@stop}
-\def\letfirstmeaningof@#1#2\opt@stop#3\opt@stop{\edef#3{#1}}
 
 % --------------------------------------------------------
 % Lists
@@ -494,48 +494,31 @@
   \optionlistdo{#1}{,##1}%
 }
 
-
-\newrobustcmd*\ifoptioncontains[2]{\xifinlistcs{#2}{optk@#1}}
-
 \let\ifoptionnil\ifoptionvoid
-
+\newrobustcmd*\ifoptioncontains[2]{\xifinlistcs{#2}{optk@#1}}
 \newrobustcmd*\option@pushifnew[2]{\ifoptioncontains{#1}{#2}{}{\option@push{#1}{#2}}}
 
 
 % --------------------------------------------------------
-% Assign
+% Invoke
 % --------------------------------------------------------
 
-\newcommand*\option@eassign[2]{%
+\newcommand*\option@xinvoke[2]{%
   \protected@edef\opt@temp{#2}%
-  \expandnext{\option@assign{#1}}{\opt@temp}%
+  \expandnext{\option@invoke{#1}}{\opt@temp}%
 }%
-\newcommand*\option@assign[2]{%
-  \protected@edef\option@path{#1}%
+\newcommand*\option@einvoke[2]{%
+  \expandnext{\option@invoke{#1}}{#2}%
+}%
+\newcommand*\option@invoke[2]{%
+  \option@ensuredefined{#1}%
   \def\optionvalue{#2}%
-  \option{\option@path/@code}%
+  \option{#1/@code}%
 }%
-\newcommand*\option@assigndefault[1]{%
-  \protected@edef\option@path{#1}%
+\newcommand*\option@invokedefault[1]{%
+  \option@ensuredefined{#1}%
   \let\optionvalue\optionnovalue%
-  \option{\option@path/@code}%
-}%
-
-
-% --------------------------------------------------------
-% Ensure arg/noarg/free/defined
-% --------------------------------------------------------
-
-
-\newrobustcmd*\option@ensurefree[1]{%
-  \ifoptiondefined{#1}{%
-    \optionerror{#1}{already defined}%
-  }{}%
-}%   
-\newrobustcmd*\option@ensuredefined[1]{%
-  \ifoptiondefined{#1}{}{%
-    \optionerror{#1}{unknown option}%
-  }%
+  \option{#1/@code}%
 }%
 
 
@@ -753,7 +736,7 @@
     \option@ensuredefined{#1}%
     \option@default@transform%
     \option@eset{#1/@ini}{\optionvalue}%
-    \option@eassign{#1}{\optionvalue}%
+    \option@einvoke{#1}{\optionvalue}%
   },
 }
 
@@ -761,7 +744,7 @@
 % add new search paths to a path.
 % for efficiency we expand out the search code inline instead of iterating
 \newrobustcmd*\optionaddsearch[2]{%
-  \ifoptiondefined{#1/@searchalso}%
+  \ifoptiondefined{#1/@searchalso/@code}%
    {\option@concat{#1/@searchalso}{#2}}%
    {\option@setlist{#1/@searchalso}{#2}%
     \option@set{#1/@searchalso/@type}{searchalso}%
@@ -834,17 +817,17 @@
   %
   /handlers/new choice/.new handler = \optionsalso{%
     #1/.new cmd/.expands = {%
-      \findidx{##1}{#2}\option@choiceidx%
+      \option@findidx{##1}{#2}\option@choiceidx%
       \ifnum\option@choiceidx<0
         \optionerror@expect{#1}{one of "#2"}%
       \else
         \option@set{#1}{##1}%
         \option@eset{#1/@ord}{\option@choiceidx}%
-        \option@xset{#1/@tag}{\firstletterof{##1}}%
+        \option@xset{#1/@tag}{\option@firstletterof{##1}}%
       \fi
     },
     #1/.type    = choice,
-    #1/.initial = \headof{#2},
+    #1/.initial = \option@headof{#2},
   },
   /handlers/show/choice/.new cmd = {%
     \option@showvalue{\option{#1}} 
@@ -894,7 +877,7 @@
   /handlers/inc/.new operation = [1]{%
     \ifoptiontype{#1}{counter}% check if this is a counter or a number
       {\addtocounter{\option{#1}}{#2}}%
-      {\option@eassign{#1}{\option{#1} + #2}}%
+      {\option@xinvoke{#1}{\option{#1} + #2}}%
   },
   /handlers/step/.new operation* = {%
     \ifoptiontype{#1}{counter}% check if this is a counter 
@@ -913,10 +896,10 @@
 % Initial options for our library
 % --------------------------------------------------------
 \options{
-  /options/ignoreunknown/.is if = opt@ignoreunknown,
-  /options/allowsearch/.is if   = opt@allowsearch,
-  /options/showbuiltin/.new toggle,
+  /options/ignoreunknown/.is if       = opt@ignoreunknown,
+  /options/allowsearch/.is if         = opt@allowsearch,
   /options/collectunknown/.new style* = {/options/ignoreunknown,/options/remaining={}},
+  /options/showbuiltin/.new toggle,
 }
 
 \csundef{optk@/options/remaining}% tricksy, but we want to define it officially here :-)
@@ -950,8 +933,8 @@
     \begin{opt@marginlr}{1em}{0em}
      \optionlistdo{#3#1}{%
        \iftoggle{/options/showbuiltin}{}%
-         {\ifanyof{#3/##1}{/handlers,/options}{\@gobble}%
-          {\if\firstletterof{##1}.\relax\expandafter\@gobble\fi}}%
+         {\option@ifanyof{#3/##1}{/handlers,/options}{\@gobble}%
+          {\if\option@firstletterof{##1}.\relax\expandafter\@gobble\fi}}%
        {%
          \noindent\hspace*{-0.5em}#2{#3/##1}{##1}%
          \par%
@@ -974,7 +957,7 @@
 
 \newrobustcmd*\optionshowliteral[1]{\letoption{#1}\opt@temp\option@showvalue{\texttt{\expandnext@\detokenize{\opt@temp}}}}
 
-\newcommand*\optiontrace[1]{%
+\newcommand*\optiontypeout[1]{%
   \def\option@font@special##1{##1}%
   \def\option@font@name##1{##1}% 
   \def\option@font@path##1{##1}%
@@ -995,7 +978,6 @@
     {\option@font@special{undefined}}%
   }%
 }
-
 
 \newenvironment{opt@marginlr}[2]{%
   \topsep\z@
