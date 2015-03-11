@@ -237,8 +237,6 @@
   \long\def\opt@sp@b#1##1 \opt@stop{\opt@sp@c##1}%
 }
 \opt@definespdef{ }% define sp def with a space as argument
-\newtoks\opt@temptoks% use a token register to maintain # arguments in values
-%\long\def\opt@sp@c#1\opt@stop#2\relax#3{\opt@temptoks{#1}\edef#3{\the\opt@temptoks}}
 \long\def\opt@sp@c#1\opt@stop#2\relax#3{\edef#3{\unexpanded{#1}}}
 {\def\:{\global\let\opt@sptoken= } \: }
 
@@ -670,7 +668,7 @@
 \def\option@default@transform@end#1\opt@stop{}
 \def\option@default@transform@opt[#1]#2\opt@stop{%
   \option@set{\option@handlerpath/@def}{#1}%
-  \opt@temptoks{#2}\edef\optionvalue{\the\opt@temptoks}% need toks to preserve # arguments in optionvalue
+  \edef\optionvalue{\unexpanded{#2}}% preserve # arguments in optionvalue
 }
 
 
