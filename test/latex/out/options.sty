@@ -33,11 +33,10 @@
 \providecommand*\expandnextcmds[2]{\expandafter\@swaptwo\expandafter{#2}{#1}}
 
 % unsafe expand next if the command is a single token..
-\providecommand*\expandnext@[2]{\expandafter#1\expandafter{#2}}
+\providecommand*\expandnextsingle[2]{\expandafter#1\expandafter{#2}}
 
-
-\providecommand*\eifstrequal[1]{\expandnext@\ifstrequal{#1}}
-\providecommand*\eifblank[1]{\expandnext@\ifblank{#1}}
+\providecommand*\eifstrequal[1]{\expandnextsingle\ifstrequal{#1}}
+\providecommand*\eifblank[1]{\expandnextsingle\ifblank{#1}}
 
 \providecommand*\ontoggle[2]{\iftoggle{#1}{#2}{}}
 
@@ -45,7 +44,6 @@
 \providerobustcmd*\csnewlength[1]{\expandafter\newlength\csname #1\endcsname}
 \providerobustcmd*\csprovidelength[1]{\ifcsdef{#1}{}{\expandafter\newlength\csname #1\endcsname}}
 \providerobustcmd*\cssetlength[2]{\expandafter\setlength\csname #1\endcsname{#2}}
-
 
 % --------------------------------------------------------
 % Basic option commands
@@ -70,7 +68,7 @@
   \letoptionlist{/options/remaining}\opt@savedremaining
   \options{#1}%
   %\typeout{now process: \meaning\opt@savedremaining, in default: \option@defaultpath}%
-  \expandnext@\optionsalso{\opt@savedremaining}%
+  \expandnextsingle\optionsalso{\opt@savedremaining}%
 }
 
 % process options
@@ -91,7 +89,7 @@
     \optionsalso@save{#1}% save state in a nested context for chained handlers
   \else
     \opt@nestedtrue
-    \opt@do#1,\opt@stop,%
+    \opt@parse#1,\opt@stop,%
     \opt@nestedfalse
   \fi
 }
@@ -102,7 +100,7 @@
   \advance\opt@nesting 1\relax
   \def\option@handlernext{}%
   \def\option@handlerpath{}%  
-  \opt@do#1,\opt@stop,%
+  \opt@parse#1,\opt@stop,%
   \advance\opt@nesting -1\relax
   \ifnum\opt@nesting>0\opt@restorestate{\the\opt@nesting}\fi
 }
@@ -147,17 +145,17 @@
 % The main parsing of options
 % This code is quite expanded to make it as efficient as possible.
 % It is based on the original code by David Carlisle in the standard latex "keyval" package.
-\def\opt@do#1,{%
+\def\opt@parse#1,{%
  \ifx\opt@stop#1\@empty\else
-  \opt@split#1==\opt@stop
-  \expandafter\opt@do\fi}
+  \opt@parse@arg#1==\opt@stop
+  \expandafter\opt@parse\fi}
 
-\def\opt@split#1=#2=#3\opt@stop{%
-  \opt@spdef\option@rawpath{#1}%
+\def\opt@parse@arg#1=#2=#3\opt@stop{%
+  \opt@trimdef\option@rawpath{#1}%
   \ifx\@empty#3\@empty%
     \let\optionvalue\optionnovalue
   \else      
-    \opt@spdef\optionvalue{#2}%
+    \opt@trimdef\optionvalue{#2}%
   \fi
   \ifx\option@rawpath\@empty
     \ifx\optionvalue\optionnovalue\else\optionerror@nopath{#2}\fi
@@ -188,7 +186,7 @@
     \letoption{/handlers/\option@handler/@code}\opt@codepath
   \fi
   \ifx\opt@codepath\relax
-    \opt@tryspecials{#1}{#2}%
+    \opt@handle@specials{#1}{#2}%
   \fi
 }
 
@@ -202,7 +200,7 @@
 
 
 % Phase 3: look for a special syntax handler, or invoke the unknown handlers
-\newrobustcmd*\opt@tryspecials[2]{%
+\newrobustcmd*\opt@handle@specials[2]{%
   % special handler?
   \edef\opt@first{\expandafter\option@firstletterof@\option@rawpath\opt@stop}%
   \letoption{/handlers/special/\opt@first/@code}\opt@codepath    
@@ -225,19 +223,19 @@
 
 % Space gobbling; basically unchanged from the original definition in the keyval package by David Carlisle
 % note: takes off one layer of braces
-\newrobustcmd\opt@definespdef[1]{%
-  \long\def\opt@spdef##1##2{%
-    \futurelet\opt@firsttoken\opt@sp@a##2\opt@stop\opt@stop#1\opt@stop\relax##1}%
-  \def\opt@sp@a{%
+\newrobustcmd\opt@define@trimdef[1]{%
+  \long\def\opt@trimdef##1##2{%
+    \futurelet\opt@firsttoken\opt@trim@##2\opt@stop\opt@stop#1\opt@stop\relax##1}%
+  \def\opt@trim@{%
     \ifx\opt@firsttoken\opt@sptoken%
-      \expandafter\opt@sp@b%
+      \expandafter\opt@trim@left%
     \else%
-      \expandafter\opt@sp@b\expandafter#1% add space token since sp@b removes one 
+      \expandafter\opt@trim@left\expandafter#1% add space token since sp@b removes one 
     \fi}%
-  \long\def\opt@sp@b#1##1 \opt@stop{\opt@sp@c##1}%
+  \long\def\opt@trim@left#1##1 \opt@stop{\opt@trim@right##1}%
 }
-\opt@definespdef{ }% define sp def with a space as argument
-\long\def\opt@sp@c#1\opt@stop#2\relax#3{\edef#3{\unexpanded{#1}}}
+\opt@define@trimdef{ }% define trimdef with a space as argument
+\long\def\opt@trim@right#1\opt@stop#2\relax#3{\edef#3{\unexpanded{#1}}}
 {\def\:{\global\let\opt@sptoken= } \: }
 
 
@@ -271,14 +269,12 @@
 % \opt@searchalso: invoked to search for a path: set \opt@codepath if a match is found
 %
 % note: we can nest searches without grouping
-% because they all use the same "\do" (option@searchalsodo) and
-% all need to break once the inner one breaks (so it is fine if \opt@break redefined \do)
+% because they all use the same "\opt@do@search" (option@searchalsodo) and
+% all need to break once the inner one breaks 
 \newrobustcmd*\opt@searchalso[1]{%
-  %\typeout{searchalso #1}%
-  \let\do\opt@searchalsodo
-  \option@foreachparent{#1}%
+  \option@foreachparent\opt@do@search{#1}%
 }
-\newrobustcmd*\opt@searchalsodo[3]{% {<root>}{<subpath>}{<name>}
+\newrobustcmd*\opt@do@search[3]{% {<root>}{<subpath>}{<name>}
   \letoption{#1/@searchalso/@code}\opt@temp
   \ifx\opt@temp\relax\else
     \edef\option@searchpath{#2#3}% subpath
@@ -293,7 +289,7 @@
 
 % invoked on unknown path: set \opt@codepath to the unknown handler (with option@unknownpath)
 \newrobustcmd*\opt@unknown[1]{%
-  \def\do##1##2##3{%
+  \def\opt@do@unknown##1##2##3{%
     \letoption{##1/@unknown/@code}\opt@codepath
     \ifx\opt@codepath\relax\else
       \edef\option@unknownpath{#1}% full path
@@ -301,7 +297,7 @@
       \opt@break%
     \fi%
   }
-  \option@foreachparent{#1}%
+  \option@foreachparent\opt@do@unknown{#1}%
 }
 
 % invoked when unknown option needs to be saved (and ignored)
@@ -379,22 +375,22 @@
 \newrobustcmd*\option@splitpath[1]{%
   \let\option@path\@empty
   \ifoptionisabsolute{#1}{%
-    \def\do##1##2##3{%
+    \def\opt@do@split##1##2##3{%
       \edef\option@path{##1/}%
       \edef\option@name{##3}%
       \opt@break
     }
-    \option@foreachparent{#1}%
+    \option@foreachparent\opt@do@split{#1}%
   }{\edef\option@name{#1}}%
 }
 
 
-% \option@foreachparent{<path>}  basic routine for iterating over path components
-% applies \do to each parent path. todo: can we optimize this routine more for the searchalso?
-%   /foo/bar/baz  -> \do{/foo/bar}{}{baz} \do{/foo}{bar/}{baz} \do{}{foo/bar/}{baz} 
-\newrobustcmd*\option@foreachparent[1]{%
-  \let\opt@donext\do%
-  \expandafter\opt@foreachparent@#1/\opt@stop\opt@stop%
+% \option@foreachparent\<do>{<path>}  basic routine for iterating over path components
+% applies \<do> to each parent path. todo: can we optimize this routine more for the searchalso?
+%   /foo/bar/baz  -> \<do>{/foo/bar}{}{baz} \<do>{/foo}{bar/}{baz} \<do>{}{foo/bar/}{baz} 
+\newrobustcmd*\option@foreachparent[2]{%
+  \let\opt@donext#1%
+  \expandafter\opt@foreachparent@#2/\opt@stop\opt@stop%
   \opt@donext{}{\option@subpath}{\option@name}%
 }
 
@@ -446,11 +442,9 @@
 
 \newrobustcmd*\option@eset[2]{\expandnext{\option@set{#1}}{#2}}
 \newrobustcmd*\option@xset[2]{\protected@edef\opt@temp{#2}\option@let{#1}\opt@temp}
-\newrobustcmd*\option@expand[1]{\option@xset{\option{#1}}}
 
-\newrobustcmd*\option@append[2]{\csappto{optk@#1}{#2}}
-\newrobustcmd*\option@eappend[2]{\ecsappto{optk@#1}{#2}}
-\newrobustcmd*\option@prepend[2]{\cspreto{optk@#1}{#2}}
+\newrobustcmd*\option@appto[2]{\csappto{optk@#1}{#2}}
+\newrobustcmd*\option@preto[2]{\cspreto{optk@#1}{#2}}
 
 \newcommand*\ifoptiondefined[1]{\ifcsdef{optk@#1}}
 \newcommand*\ifoptionvoid[1]{\ifcsvoid{optk@#1}}
@@ -466,8 +460,46 @@
   \eifblank{\opt@temp}{#2}%
 }
 
-\newcommand*\ifoptiontype[2]{\ifoptionequal{#1/@type}{#2}}
-\newcommand*\ifoptioniscode[1]{\ifoptionvoid{#1/@type}}
+\newcommand*\ifoptiontype[2]{%
+  \letoptiontype{#1}\opt@type    
+  \eifstrequal{\opt@type}{#2}%
+}
+\newcommand*\ifoptioniscode[1]{%
+  \let\opt@next\@secondoftwo%
+  \letoption{#1/@code}\opt@code
+  \letoption{#1}\opt@value
+  \ifx\opt@code\opt@value
+    \let\opt@next\@firstoftwo
+  \else
+    \letoptiontype{#1}\opt@type
+    \eifstrequal{\opt@type}{code}%
+      {\let\opt@next\@firstoftwo}{}%
+  \fi
+  \opt@next
+}
+
+\newcommand*\letoptiontype[2]{%
+  \letoption{#1/@type}#2%
+  \ifx#2\relax\def#2{code}\fi
+}%
+
+\newcommand*\optionparamcount[1]{%
+  \ifoptiondefined{#1/@cmd1}{1}{%
+  \ifoptiondefined{#1/@cmd2}{2}{%
+  \ifoptiondefined{#1/@cmd3}{3}{%
+  \ifoptiondefined{#1/@cmd4}{4}{%
+  \ifoptiondefined{#1/@cmd5}{5}{%
+  \ifoptiondefined{#1/@cmdx}{x}{%
+  0%
+  }}}}}}%
+}
+
+\newcommand*\optionshowtype[1]{%
+  \letoptiontype{#1}\opt@type%
+  \eifstrequal{\opt@type}{code}%
+    {\option@font@special{cmd}$_\optionparamcount{#1}$}
+    {\option@font@special{\opt@type}}%
+}
 
 % --------------------------------------------------------
 % Comma seperated values
@@ -479,8 +511,8 @@
 \providerobustcmd*\option@ifanyof[2]{%
   \let\opt@do@next\@secondoftwo
   \edef\opt@temp{#1}%
-  \def\do##1{\eifstrequal{\opt@temp}{##1}{\let\opt@do@next\@firstoftwo\listbreak}{}}%
-  \expandnext@\docsvlist{#2}%
+  \def\opt@do@anyof##1{\eifstrequal{\opt@temp}{##1}{\let\opt@do@next\@firstoftwo\listbreak}{}}%
+  \expandnext{\forcsvlist\opt@do@anyof}{#2}%
   \opt@do@next
 }
 
@@ -491,8 +523,8 @@
   \opt@idx=0\relax
   \def#3{-1}%
   \edef\opt@temp{#1}%
-  \def\do##1{\eifstrequal{\opt@temp}{##1}{\edef#3{\the\opt@idx}\listbreak}{\advance\opt@idx 1\relax}}%
-  \expandnext@\docsvlist{#2}%
+  \def\opt@do@findidx##1{\eifstrequal{\opt@temp}{##1}{\edef#3{\the\opt@idx}\listbreak}{\advance\opt@idx 1\relax}}%
+  \expandnext{\forcsvlist\opt@do@findidx}{#2}%
 }
 
 % return the first letter of the argument or ' ' (space) if the input was empty. Does not expand the argument.
@@ -511,8 +543,8 @@
 
 \newrobustcmd*\option@setlist[2]{\option@setnil{#1}\option@concat{#1}{#2}}
 \newrobustcmd*\option@concat[2]{%
-  \def\do##1{\option@push{#1}{##1}}%
-  \expandnext@\docsvlist{#2}%
+  \def\opt@do@concat##1{\option@push{#1}{##1}}%
+  \expandnext{\forcsvlist\opt@do@concat}{#2}%
 }
 \newcommand*\letoptionlist[2]{%
   \def#2{}%
@@ -523,7 +555,8 @@
   }%
 }
 \newcommand*\optionlist[1]{%
-  \optionlistdo{#1}{,##1}%
+  \def\opt@comma{}%
+  \optionlistdo{#1}{\opt@comma##1\def\opt@comma{,}}%
 }
 
 \let\ifoptionnil\ifoptionvoid
@@ -559,20 +592,20 @@
 % --------------------------------------------------------
 
 \newrobustcmd*\option@addpathinfo[1]{%
-  \def\do##1##2##3{%
-    \ifoptiondefined{##1/.names}{}{%
-      \option@setnil{##1/.names}\option@setnil{##1/.paths}%
+  \def\opt@do@add##1##2##3{%
+    \ifoptiondefined{##1/@names}{}{%
+      \option@setnil{##1/@names}\option@setnil{##1/@paths}%
     }%
     \eifblank{##2}%
-      {\expandnext{\option@pushifnew{##1/.names}}{##3}%
-       %\typeout{path "##1/.names": add "##3": \option{##1/.names}}%      
+      {\expandnext{\option@pushifnew{##1/@names}}{##3}%
+       %\typeout{path "##1/@names": add "##3": \option{##1/@names}}%      
       }%
       {\option@splitroot{##2}%
-       \expandnext{\option@pushifnew{##1/.paths}}{\option@root}%
-       %\typeout{path "##1/.paths": add "\option@root"; \option{##1/.paths}}%
+       \expandnext{\option@pushifnew{##1/@paths}}{\option@root}%
+       %\typeout{path "##1/@paths": add "\option@root"; \option{##1/@paths}}%
       }%
   }
-  \option@foreachparent{#1}%
+  \option@foreachparent\opt@do@add{#1}%
 }
 
 % --------------------------------------------------------
@@ -648,7 +681,7 @@
   /handlers/new operation*/.new handler   = \optionnewhandler*{#1}{#2\option@chainonly},
   %
   /handlers/new cmd transformer/.new handler = \optionsalso{%
-    #1/.new operation* = \expandnext@\optionprependcode{##1}{#2}% prepend code to the option it is handling (##1)
+    #1/.new operation* = \expandnextsingle\optionprependcode{##1}{#2}% prepend code to the option it is handling (##1)
   },
   % command transformers
   /handlers/expands/.new cmd transformer  = \protected@edef\optionvalue{\optionvalue},
@@ -687,33 +720,35 @@
   /handlers/new cmd*/.new handler             = \optionnewcode*{#1}{#2}\option@chainempty,
   /options/exec/.new code                     = \optionvalue,
   % commands 
-  /handlers/new cmd/.new handler/.defaults    = \options{
+  /handlers/new cmd/.new handler/.defaults    = \optionsalso{
     /options/exec = {\option@def{#1/@cmd1}##1{#2}},
     #1/.new code  = {\expandnext{\option{#1/@cmd1}}{\optionvalue}},
   },
-  /handlers/new cmd 2/.new handler/.defaults  = \options{
+  /handlers/new cmd 2/.new handler/.defaults  = \optionsalso{
     /options/exec = {\option@def{#1/@cmd2}##1##2##3{\ifblank{##3}{#2}{\optionerror@toomany{#1}{2}}}},
     #1/.new code  = {\expandnextcmds{\option{#1/@cmd2}}{\optionvalue}{}{}{}\relax},
   },
-  /handlers/new cmd 3/.new handler/.defaults  = \options{
+  /handlers/new cmd 3/.new handler/.defaults  = \optionsalso{
     /options/exec = {\option@def{#1/@cmd3}##1##2##3##4{\ifblank{##4}{#2}{\option@toomany{#1}{3}}}},
     #1/.new code  = {\expandnextcmds{\option{#1/@cmd3}}{\optionvalue}{}{}{}{}\relax},
   },
-  /handlers/new cmd 4/.new handler/.defaults  = \options{
+  /handlers/new cmd 4/.new handler/.defaults  = \optionsalso{
     /options/exec = \option@def{#1/@cmd4}##1##2##3##4##5{\ifblank{##5}{#2}{\optionerror@toomany{#1}{4}}},
     #1/.new code  = \expandnextcmds{\option{#1/@cmd4}}{\optionvalue}{}{}{}{}{}\relax,
   },  
   % tuples and triples take exactly 2 or 3 arguments
-  /handlers/new cmd tuple/.new handler/.defaults  = \options{
+  /handlers/new cmd tuple/.new handler/.defaults  = \optionsalso{
     #1/.new cmdx = {##1,##2,##3}{,,}%
       {\ifstrequal{##3}{,}{#2}{\optionerror{#1}{expecting a 2 argument tuple \{_,_\}, but got "\optionvalue"}}},
+    #1/.type=cmd tuple,
   },
-  /handlers/new cmd triple/.new handler/.defaults = \options{
+  /handlers/new cmd triple/.new handler/.defaults = \optionsalso{
     #1/.new cmdx = {##1,##2,##3,##4}{,,,}%
       {\ifstrequal{##4}{,,}{#2}{\optionerror{#1}{expecting a 3 argument triple \{_,_,_\}, but got "\optionvalue"}}},
+    #1/.type=cmd triple,
   },
   % aliases
-  /handlers/new cmdx/.new cmd 3/.defaults = \expandnext@\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
+  /handlers/new cmdx/.new cmd 3/.defaults = \expandnextsingle\optionnewcmdx{\option@handlerpath}{#1}{#2}{#3},
   /handlers/new code alias/.new handler   = \option@set{#1/@code}{\option{#2/@code}},
   /handlers/new cmd 0/.new code alias     = /handlers/new cmd*,
   /handlers/new cmd 1/.new code alias     = /handlers/new cmd,
@@ -741,16 +776,24 @@
 % debugging
 \options{
   /handlers/show/.new handler*    = {\option@font@name{#1}=\optionshow{#1}},
-  /handlers/trace/.new handler*   = {\optiontrace{#1}},
+  /handlers/typeout/.new handler* = {\optiontypeout{#1}},
 }
 
 % family options
 \options{
-  /handlers/new style/.new handler   = \optionsalso{#1/.new cmd  = \optionsalso{#2}},
-  /handlers/new style*/.new handler  = \optionsalso{#1/.new cmd* = \optionsalso{#2}},
+  /handlers/new style/.new handler   = \optionsalso{#1/.new cmd ={\optionsalso{#2}}, #1/.type=style},
+  /handlers/new style*/.new handler  = \optionsalso{#1/.new cmd* ={\optionsalso{#2}},#1/.type=style},
+  /handlers/show/style/.new cmd = {\option@font@special{style}},
+  %
   /handlers/search also/.new handler = \optionaddsearch{#1}{#2},
   /handlers/cd/.new handler*         = \edef\option@defaultpath{#1},
-  /handlers/new family/.new handler  = []{\optionsalso{#1/.new cmd* = {\edef\option@defaultpath{#1}}, #1/.search also = {#2}, #1/.cd }},
+  /handlers/new family/.new handler  = []{\optionsalso{
+    #1/.new cmd* = {\edef\option@defaultpath{#1}}, 
+    #1/.search also = {#2},
+    #1/.type = family,
+    #1/.cd
+  }},
+  /handlers/show/family/.new cmd = {\option@font@special{family}, searches: \option@showvalue{\optionlist{#1/@searchalso}}},
 }
 
 % compatibility
@@ -781,16 +824,15 @@
    {\option@setlist{#1/@searchalso}{#2}%
     \option@set{#1/@searchalso/@type}{searchalso}%
     \option@def{#1/@searchalso/@code}{}}%
-  \def\opt@do@search##1{%
-    \typeout{add search code to #1, namely ##1}%
+  \def\opt@do@addsearch##1{%
     \edef\opt@temp{%
       \noexpand\ifx\noexpand\opt@codepath\noexpand\relax
         \noexpand\opt@searchforabspath{##1/\noexpand\option@searchpath}%
       \noexpand\fi
     }%
-    \expandnext{\option@append{#1/@searchalso/@code}}{\opt@temp}%
+    \expandnext{\option@appto{#1/@searchalso/@code}}{\opt@temp}%
   }
-  \forcsvlist\opt@do@search{#2}%
+  \forcsvlist\opt@do@addsearch{#2}%
 }
 
 
@@ -811,30 +853,36 @@
     #1/.initial   = {#2},
   },
   %
+  /handlers/new glue/.new handler = [0pt]\optionsalso{%
+    #1/.new code  = \option@eset{#1}{\the\glueexpr\optionvalue\relax},
+    #1/.type      = glue,
+    #1/.initial   = {#2},
+  },
+  %
   /handlers/new length/.new handler = [0pt]\optionsalso{%
     #1/.new code  = \cssetlength{#1}{\dimexpr\optionvalue\relax},
     #1/.type      = length,
     /options/exec = \csnewlength{#1}\option@eset{#1}{\csname #1\endcsname},
     #1/.initial   = {#2},
   },
-  /handlers/show/length/.new cmd = \option@showvalue{\the\option{#1}},
+  /handlers/show/length/.new cmd = {\option@showvalue{\the\option{#1}}},
   %
   /handlers/new dim/.new handler = [0pt]\optionsalso{%
-    #1/.new code  = \option@eset{#1/@dimexpr}{\optionvalue},
+    #1/.new code  = {\option@eset{#1/@dimexpr}{\optionvalue}},
     #1/.type      = dim,
-    /options/exec = \option@eset{#1}{\dimexpr\option{#1/@dimexpr}\relax},% read as dimexpr
+    /options/exec = {\option@eset{#1}{\dimexpr\option{#1/@dimexpr}\relax}},% read as dimexpr
     #1/.initial   = {#2},
   },
-  /handlers/show/dim/.new cmd = \option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/@dimexpr}),
+  /handlers/show/dim/.new cmd ={\option@showvalue{\the\option{#1}}\ (=\optionshowliteral{#1/@dimexpr})},
   %
   /handlers/new toggle/.new handler = [false]\optionsalso{%
-    #1/.new code  = [true]{%
+    #1/.new code  = {[true]{%
       \ifcsdef{toggle\optionvalue}%
         {\csuse{toggle\optionvalue}{#1}}%
         {\optionerror@expect{#1}{true or false}}%
-    },
+    }},
     #1/.type      = toggle,
-    /options/exec = \newtoggle{#1}\option@set{#1}{\iftoggle{#1}{true}{false}},
+    /options/exec = {\newtoggle{#1}\option@set{#1}{\iftoggle{#1}{true}{false}}},
     #1/.initial   = {#2},
   },
   %
@@ -875,12 +923,12 @@
 
 \options{
   /handlers/is if/.new handler = \optionsalso{%
-    /options/exec = \ifcsdef{if#2}{}{\optionerror{#1}{no `if` with name "#2" is defined}},
-    #1/.new code  = [true]\ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionerror@expect{#1}{true or false}},
+    /options/exec = {\ifcsdef{if#2}{}{\optionerror{#1}{no `if` with name "#2" is defined}}},
+    #1/.new code  = {[true]\ifcsdef{#2\optionvalue}{\csuse{#2\optionvalue}}{\optionerror@expect{#1}{true or false}}},
     #1/.type      = if,
-    /options/exec = \option@set{#1}{#2},% read name of the if
-    %#1/.initial   = {#2},
+    /options/exec = {\option@set{#1}{#2}},% read name of the if
   },
+  /handlers/show/if/.new cmd = {\option@showvalue{\option{#1}} (=\option@showvalue{\ifbool{\option{#1}}{true}{false})}},
   %
   /handlers/is def/.new handler = \optionsalso{%
     /options/exec = \ifdef{#2}{}{\optionerror{#1}{no definition "\detokenize{#2}" is found}},
@@ -905,7 +953,7 @@
     /options/exec =\option@set{#1}{#2},% read returns definition 
     %#1/.initial   = {#2},
   },
-  /handlers/show/counter/.new cmd = \option@showvalue{\option{#1}} (=\option@font@value{\arabic{\option{#1}}}),
+  /handlers/show/counter/.new cmd = {\option@showvalue{\option{#1}} (=\option@font@value{\arabic{\option{#1}}})},
   /handlers/inc/.new operation = [1]{%
     \ifoptiontype{#1}{counter}% check if this is a counter or a number
       {\addtocounter{\option{#1}}{#2}}%
@@ -944,7 +992,7 @@
 % Show definitions
 % --------------------------------------------------------
 
-\newrobustcmd*\optionshowall[1][false]{\csuse{toggle#1}{/options/showbuiltin}\optionshowpath{}}
+\newrobustcmd*\optionshowall[1][false]{\options{/options/showbuiltin=#1}\optionshowpath{}}
 
 \newcommand*\option@font@name[1]{\textsf{#1}}
 \newcommand*\option@font@path[1]{\textsf{#1}}
@@ -956,8 +1004,8 @@
 \newrobustcmd*\optionshowpath[2][]{\option@showpath{#1#2}{#2}}
 \newrobustcmd*\option@showpath[2]{%
   \noindent\option@font@path{#2/}%
-  \option@showitems{/.names}{\option@showname}{#1}%
-  \option@showitems{/.paths}{\option@showpath}{#1}%
+  \option@showitems{/@names}{\option@showname}{#1}%
+  \option@showitems{/@paths}{\option@showpath}{#1}%
 }
 
 \newrobustcmd*\option@showitems[3]{%
@@ -987,7 +1035,7 @@
   }{}%
 }
 
-\newrobustcmd*\optionshowliteral[1]{\letoption{#1}\opt@temp\option@showvalue{\texttt{\expandnext@\detokenize{\opt@temp}}}}
+\newrobustcmd*\optionshowliteral[1]{\letoption{#1}\opt@temp\option@showvalue{\texttt{\expandnextsingle\detokenize{\opt@temp}}}}
 
 \newcommand*\optiontypeout[1]{%
   \def\option@font@special##1{##1}%
@@ -1002,10 +1050,10 @@
   \ifoptiondefined{#1/@type}%
     {\ifoptiondefined{/handlers/show/\option{#1/@type}}{\@firstoftwo}{\@secondoftwo}}%
     {\@secondoftwo}%
-  {\option{/handlers/show/\option{#1/@type}/@cmd1}{#1}}%
+  {\option@invoke{/handlers/show/\option{#1/@type}}{#1}}%
   {\ifoptiondefined{#1}
     {\ifoptioniscode{#1}%
-      {\option@font@special{cmd}}%
+      {\optionshowtype{#1}}%
       {\option@showvalue{\option{#1}}}}%
     {\option@font@special{undefined}}%
   }%
