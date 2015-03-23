@@ -313,14 +313,14 @@
 \cssNewKey{css}{label}{\cssLabel}{}
 
 \newcommand{\mdFootnote}[2][]{%
-  \mdSpan[#1]{\gdef\@thefnmark{\cssLabel}\@footnotemark}\@footnotetext{#2}%  
+  \mdSpan[#1]{\gdef\@thefnmark{\cssLabel}\@footnotemark}\@footnotetext{#2\vspace{-\baselineskip}}%  
   %\footnote{#2}} % no cssInline since footnotes can contain block elements
 }
 \newcommand{\mdSub}[2][]{\ensuremath{_{\mbox{\scriptsize\cssInline[elem=sub,#1]{#2}}}}}
 \newcommand{\mdSup}[2][]{\ensuremath{^{\mbox{\scriptsize\cssInline[elem=sup,#1]{#2}}}}}
 
 \cssClassRule{footnote-backref}{display=hidden}
-\cssClassRule{footnote-before}{display=hidden}
+%\cssClassRule{footnote-before}{display=hidden}
 
 \newcommand{\mdTooltip}[2]{%
   #2%
@@ -390,15 +390,19 @@
 % Images 
 %-------------------------------------------------------------
 
-\newcommand{\@imgInclude}[4]{%
-  \begin{minipage}[#1]{#2}%
+\newcommand{\@imgInclude}[3]{%
   \eifstrequal{#1}{c}%
-    {$\vcenter{\hbox{\protect\includegraphics[#4]{#3}}}$}%
-    {\eifstrequal{#1}{t}{\vspace{-0.7\baselineskip}}{}%
-     \protect\includegraphics[#4]{#3}}%
-  \end{minipage}%
+    {$\vcenter{\hbox{\protect\includegraphics[#3]{#2}}}$}%
+    {\eifstrequal{#1}{t}%
+        {\vtop{\hbox{\protect\includegraphics[#3]{#2}}}}%
+        {\protect\includegraphics[#3]{#2}}}%
 }
+
 \newcommand{\@imgArgs}{}
+
+\cssNewKey{css}{zoom}{\cssZoom}{}
+\cssNewKey{css}{transform-rotate}{\cssTransformRotate}{}
+\cssNewKey{css}{transform-scale}{\cssTransformScale}{}
 
 \newcommand{\mdImg}[2][]{%
   \begingroup%  
@@ -409,13 +413,16 @@
     \ifdim\cssImageWidth=2sp\def\cssImageWidth{\linewidth}\fi%
     \ifdim\cssImageWidth<3sp\else\appto{\@imgArgs}{,width=\cssImageWidth}\fi%
     \ifdim\cssImageHeight<3sp\else\appto{\@imgArgs}{,height=\cssImageHeight}\fi
+    \eifstrequal{\cssZoom}{}{}{\appto{\@imgArgs}{,scale=\cssZoom}}%
+    \eifstrequal{\cssTransformScale}{}{}{\appto{\@imgArgs}{,scale=\cssTransformScale}}%
+    \eifstrequal{\cssTransformRotate}{}{}{\appto{\@imgArgs}{,angle=\cssTransformRotate}}%
     \eifstrequal{\@imgArgs}{}%
       {\includegraphics{#2}}%
     {\eifstrequal{\cssVerticalAlign}{top}%
-      {\expandnext{\@imgInclude{t}{\cssImageWidth}{#2}}{\@imgArgs}}%
+      {\expandnext{\@imgInclude{t}{#2}}{\@imgArgs}}%
     {\eifstrequal{\cssVerticalAlign}{middle}%
-      {\expandnext{\@imgInclude{c}{\cssImageWidth}{#2}}{\@imgArgs}}%
-      {\expandnext{\@imgInclude{b}{\cssImageWidth}{#2}}{\@imgArgs}}}%
+      {\expandnext{\@imgInclude{c}{#2}}{\@imgArgs}}%
+      {\expandnext{\@imgInclude{b}{#2}}{\@imgArgs}}}%
     }%
   }%
   \endgroup%
@@ -480,7 +487,7 @@
       \def\@endlist{\end{enumerate}}\expandnext{\begin{enumerate}[topsep=\xtopsep,start=\cssStart,}{\@label}]}%
    \cssIfHasClass{compact}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}{}%
   }%
-  {\strut\@endlist\end{mdDiv}}
+  {\@endlist\end{mdDiv}}
 
 \cssNewKey{css}{start}{\cssStart}{1}
 \cssNewKey{css}{list-style-type}{\cssListStyleType}{}
@@ -682,9 +689,9 @@
 \newcommand{\mdCaption}[1]{%
   \settowidth{\mdCaptionlen}{#1}%
   \ifnum\mdCaptionlen<\linewidth%
-    \parbox{\linewidth}{\noindent\centering #1}%
+    \parbox{\linewidth}{\noindent\centering\strut #1}%
   \else%
-    \parbox{\linewidth}{\noindent #1}%
+    \parbox{\linewidth}{\noindent\strut #1}%
   \fi%
 }
 
