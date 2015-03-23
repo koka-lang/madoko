@@ -1041,7 +1041,7 @@ a.file-share:hover {
 
 
 .monaco-editor.ivory .latex.token.delimiter,
-.monaco-editor.ivory .latex.token { 
+.monaco-editor.ivory .latex { 
   color: #048; 
 }
 .monaco-editor.ivory .latex.keyword {
