@@ -247,7 +247,7 @@ function defaultMeta( options : options, fmt : formatter ) : string {
 
       @"~Snippet  : input=math .block snippet-needpdf=true",
       @"~Footnote : label='[@footnote]{.footnote-label}'",
-      @"            before='[\/^&label;.^ ]{.footnote-before}'",
+      @"            before='[\/^&label;.^]{.footnote-before}'",
       @"            after='&nl;[&#8617;](#back-&id;){.footnote-backref}' line-adjust=0",
 
       @"~FlushLeft : .align-left",
