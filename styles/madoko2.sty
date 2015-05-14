@@ -9,35 +9,25 @@
 
 \RequirePackage{iftex}
 \RequirePackage{etoolbox}
-\RequirePackage{collectbox}
 \RequirePackage[table]{xcolor}
 \RequirePackage{graphicx}
-\RequirePackage{xkeyval}
-
-%-------------------------------------------------------------
-% Conditionals
-%-------------------------------------------------------------
-
-\newif\ifmathmode
-\newif\ifbeamer
-%\newif\ifmdusetikz\mdusetikzfalse
-%\newif\ifmdusefontspec\mdusefontspecfalse
-
-\@ifclassloaded{beamer}{\beamertrue}{\beamerfalse}
-\ifdef\mathmode{\mathmodetrue}{\mathmodefalse}
+\RequirePackage{options}
+\RequirePackage{longfbox}
 
 %-------------------------------------------------------------
 % Process options 
 %-------------------------------------------------------------
-\newcommand{\mdHeadingBase}{1}
-\DeclareOptionX{heading-base}[1]{\gdef\mdHeadingBase{#1}}
-%\DeclareOptionX{tikz}{\mdusetikztrue}
-%\DeclareOptionX{fontspec}{\mdusefontspectrue}
-\DeclareOptionX{math}{\mathmodetrue}
+\options{%
+  /madoko/.new family,
+  /madoko/heading-base/.new num=1,
+  /madoko/math/.new toggle,
+  /madoko/beamer/.new toggle,
+  /madoko/fontspec/.new toggle,
+}
 
-\define@boolkey{md}[mduse]{tikz}{}
-\define@boolkey{md}[mduse]{fontspec}{}
-\ProcessOptionsX\relax
+\@ifclassloaded{beamer}{\options{/madoko/beamer=true}}{}
+\ifdef\mathmode{\options{/madoko/math=true}}{}
+\options@ProcessOptions{/madoko}
 
 
 %-------------------------------------------------------------
@@ -52,35 +42,25 @@
 \RequirePackage{pifont}
 
 %\RequirePackage{pdfcomment}
-\RequirePackage[bookmarks=true]{hyperref} % loaded by pdfcomment
+\RequirePackage[bookmarks=true,pdfpagelabels=false]{hyperref} % loaded by pdfcomment
 
 % package only loaded outside snippets
-\ifmathmode\else
+\iftoggle{/madoko/math}{}{%
   \RequirePackage{booktabs}
-  \RequirePackage{tablefootnote}
   \RequirePackage{array}
   \RequirePackage{longtable}
   \RequirePackage{enumitem}
   
-  % these last two packages about half the load time... 
-  % but are only required for:
-  % - breakable divs with borders or background colors
-  % - rounded corners
-  % - font-family with arbitrary font
-  \ifmdusetikz
-    \RequirePackage[breakable,skins]{tcolorbox}
-  %\else
-  %  \RequirePackage[breakable]{tcolorbox}
-  \fi
-  \ifmdusefontspec
+  % fontspec is expensive to load...
+  \ontoggle{/madoko/fontspec}{%
      % font selection
     \ifXeTeX\RequirePackage{fontspec}\else
     \ifLuaTeX\RequirePackage{fontspec}\else
     \RequirePackage[utf8]{inputenc}
     \providecommand{\fontspec}[2][]{}
     \fi\fi
-  \fi
-\fi
+  }%
+}%
 
 
 %-------------------------------------------------------------
@@ -143,13 +123,13 @@
 %  \eifstrequal    test string equality but first expands the first argument
 %  \cseifstrequal  test string equality but first expands the first csname argument
 %  \eifblank       test if a string is empty but first expand the argument
-%  \ifnotblank     test if a string is not blank but has only a then branch
+%  \onnotblank     test if a string is not blank but has only a then branch
 
 \providecommand\eifstrequal[1]{\expandafter\ifstrequal\expandafter{#1}}
 \providecommand\cseifstrequal[1]{\protected@edef\md@strtmp{#1}\eifstrequal{\md@strtmp}}
 
 \providecommand\eifblank[1]{\expandafter\ifblank\expandafter{#1}}
-\providecommand\ifnotblank[2]{\ifblank{#1}{}{#2}}
+\providecommand\onnotblank[2]{\ifblank{#1}{}{#2}}
 
 %-------------------------------------------------------------
 % Colors
@@ -216,16 +196,130 @@
   }%
 }
 
-\newrobustcmd\mdcolorbox[2]{%
-  \begingroup
-  \eiftransparent{#1}{#2}{%
-    \mddefinecolor{backgroundcolor}{#1}% allow direct HTML color spec
-    \fboxsep=\z@%
-    \fboxrule=\z@%
-    \colorbox{backgroundcolor}{#2}%
-  }%
-  \endgroup
+% ---------------------------------------------------
+% Line info
+% ---------------------------------------------------
+\newcommand*\mdline[1]{} %ignore
+
+% ---------------------------------------------------
+% Dimensions as strings
+% ---------------------------------------------------
+
+% expressions for various css units
+\newcommand*\dimeval[1]{\dimexpr #1\relax}
+\newcommand*\dimpx[1]{#1\px}
+\newcommand*\dimrem[1]{#1\dim@rem}
+\newcommand*\dimch[1]{#1\dim@ch}
+\newcommand*\dimvh[1]{#1\textheight}
+\newcommand*\dimvw[1]{#1\textwidth}
+\newcommand*\dimvmin[1]{\dimeval{\dimmin\textwidth\textheight * #1}}
+\newcommand*\dimvmax[1]{\dimeval{\dimmax\textwidth\textheight * #1}}
+
+\newlength\dim@rem
+\newlength\dim@ch
+\newlength\md@height
+\AtBeginDocument{%
+  \setlength\dim@rem{1em}%
+  \settowidth\dim@ch{0}%
+  \setlength{\md@height}{\textheight}%
 }
+
+% expressions for widht/height percentages
+\newcommand\dimheight[1]{#1\md@height}
+\newcommand\dimwidth[1]{#1\linewidth}
+
+% dimdefault{arg}{default}  use default if arg is empty
+\newcommand\dimdefault[2]{\ifblank{#1}{#2}{#1}}
+
+% dimmin/dimmax return minimum or maximum dimension
+\newcommand\dimmin[2]{%
+  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #2\else #1\fi}}%
+}
+\newcommand\dimmax[2]{%
+  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #1\else #2\fi}}%
+}
+
+% ifzero, ifbothzero  test for a blank string or 0 dimension
+\providecommand\ifzero[1]{%
+  \ifblank{#1}{\@firstoftwo}{\ifdim #1=0pt\relax\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}%
+}
+\providecommand\ifbothzero[2]{%
+  \ifzero{#1}{\ifzero{#2}{\@firstoftwo}{\@secondoftwo}}{\@secondoftwo}%
+}
+
+% onnotzero takes only a then branch
+\providecommand\onnotzero[1]{\ifzero{#1}{}}
+
+% ---------------------------------------------------
+% Margins
+% ---------------------------------------------------
+
+% calculate the auto margin based on the (border-box) width of the block and the width of 
+% the other margin; use an empty other margin width if the other margin is also auto
+%  
+% \dimauto{<width>}{<other-margin>}
+\newcommand\dimauto[2]{%
+  \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
+}
+
+\newenvironment{mdmarginlr}[2]{%
+  \topsep\z@
+  \partopsep\z@
+  \trivlist
+  \rightmargin=\dimdefault{#2}{\z@}%
+  \leftmargin=\dimdefault{#1}{\z@}%  
+  \advance\linewidth -\rightmargin
+  \advance\linewidth -\leftmargin
+  \advance\@totalleftmargin \leftmargin
+  \parshape \@ne \@totalleftmargin \linewidth
+  \item[]%
+}%
+{\endtrivlist} 
+\AfterEndEnvironment{mdmarginlr}{\leavehmode}
+
+\newcommand*\mdmargintop[1]{\onnotzero{#1}{\addvskip{#1}}}
+\newcommand*\mdmarginbottom[1]{\onnotzero{#1}{\addvskip{#1}}}
+
+\newlength{\dim@marginbottom}
+\newenvironment{mdbmargin}[1]{\begin{mdbmarginx}{#1}{#1}{#1}{#1}}{\end{mdbmarginx}}
+\newenvironment{mdbmarginx}[4]{%
+  \dim@marginbottom=\dimdefault{#3}{0pt}%  
+  \mdmargintop{#1}%
+  \begin{mdmarginlr}{#4}{#2}%  
+}{%
+  \end{mdmarginlr}%
+  \mdmarginbottom{\dim@marginbottom}%  
+}
+
+\newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace*{#1}}}
+\newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace*{#1}}}
+
+\newlength{\dim@paddingbottom}
+\newenvironment{mdbpadding}[1]{\begin{mdbpaddingx}{#1}{#1}{#1}{#1}}{\end{mdbpaddingx}}
+\newenvironment{mdbpaddingx}[4]{%
+  \dim@paddingbottom=\dimdefault{#3}{0pt}%
+  \mdpaddingtop{#1}%
+  \begin{mdmarginlr}{#4}{#2}%
+}{%
+  \end{mdmarginlr}%
+  \mdpaddingbottom{\dim@paddingbottom}%
+}
+
+\newrobustcmd\mdmargintb[3]{%
+   \setbox0=\hbox{\color@begingroup #3\color@endgroup}%
+   \onnotblank{#1}{\rule{0pt}{\dimexpr \ht0 + #1\relax}}%
+   \onnotblank{#2}{\rule[\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
+   \usebox0\relax%
+}
+\let\mdpaddingtb\mdmargintb
+
+
+
+
+
+%-------------------------------------------------------------
+% The following commands still use capital letters due to legacy...
+%-------------------------------------------------------------
 
 %-------------------------------------------------------------
 % Character commands 
@@ -289,508 +383,6 @@
 % We need to call \mdLabeltarget for any structure that can set label
 \newcounter{@mdTargetCount}
 \newcommand{\mdLabeltarget}{\refstepcounter{@mdTargetCount}}
-
-% ---------------------------------------------------
-% Line info
-% ---------------------------------------------------
-\newcommand*\mdline[1]{} %ignore
-
-% ---------------------------------------------------
-% Dimensions as strings
-% ---------------------------------------------------
-
-% expressions for various css units
-\newcommand*\dimeval[1]{\dimexpr #1\relax}
-\newcommand\dimpx[1]{#1\px}
-\newcommand\dimrem[1]{#1\dim@rem}
-\newcommand\dimch[1]{#1\dim@ch}
-\newcommand\dimvh[1]{#1\textheight}
-\newcommand\dimvw[1]{#1\textwidth}
-\newcommand\dimvmin[1]{\dimeval{\dimmin\textwidth\textheight * #1}}
-\newcommand\dimvmax[1]{\dimeval{\dimmax\textwidth\textheight * #1}}
-
-\newlength\dim@rem
-\newlength\dim@ch
-\newlength\md@height
-\AtBeginDocument{\setlength\dim@rem{1em}\settowidth\dim@ch{0}\setlength{\md@height}{\textheight}}
-
-% expressions for widht/height percentages
-\newcommand\dimheight[1]{#1\md@height}
-\newcommand\dimwidth[1]{#1\linewidth}
-
-
-% dimdefault{arg}{default}  use default if arg is empty
-\newcommand\dimdefault[2]{\ifblank{#1}{#2}{#1}}
-
-% dimmin/dimmax return minimum or maximum dimension
-\newcommand\dimmin[2]{%
-  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #2\else #1\fi}}%
-}
-\newcommand\dimmax[2]{%
-  \ifblank{#2}{#1}{\ifblank{#1}{#2}{\ifdim #1>#2\relax #1\else #2\fi}}%
-}
-
-% ifzero, ifbothzero  test for a blank string or 0 dimension
-\providecommand\ifzero[1]{%
-  \ifblank{#1}{\@firstoftwo}{\ifdim #1=0pt\relax\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}%
-}
-\providecommand\ifbothzero[2]{%
-  \ifzero{#1}{\ifzero{#2}{\@firstoftwo}{\@secondoftwo}}{\@secondoftwo}%
-}
-
-% ifnotzero takes only a then branch
-\providecommand\ifnotzero[1]{\ifzero{#1}{}}
-
-% ---------------------------------------------------
-% Margins
-% ---------------------------------------------------
-
-% calculate the auto margin based on the (border-box) width of the block and the width of 
-% the other margin; use an empty other margin width if the other margin is also auto
-%  
-% \dimauto{<width>}{<other-margin>}
-\newcommand\dimauto[2]{%
-  \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
-}
-
-\newenvironment{mdmarginlr}[2]{%
-  \topsep\z@
-  \partopsep\z@
-  \trivlist
-  \rightmargin=\dimdefault{#2}{\z@}%
-  \leftmargin=\dimdefault{#1}{\z@}%  
-  \advance\linewidth -\rightmargin
-  \advance\linewidth -\leftmargin
-  \advance\@totalleftmargin \leftmargin
-  \parshape \@ne \@totalleftmargin \linewidth
-  \item[]%
-}%
-{\endtrivlist} 
-\AfterEndEnvironment{mdmarginlr}{\leavehmode}
-
-\newcommand*\mdmargintop[1]{\ifnotzero{#1}{\addvskip{#1}}}
-\newcommand*\mdmarginbottom[1]{\ifnotzero{#1}{\addvskip{#1}}}
-
-\newlength{\dim@marginbottom}
-\newenvironment{mdbmargin}[1]{\begin{mdbmarginx}{#1}{#1}{#1}{#1}}{\end{mdbmarginx}}
-\newenvironment{mdbmarginx}[4]{%
-  \dim@marginbottom=\dimdefault{#3}{0pt}%  
-  \mdmargintop{#1}%
-  \begin{mdmarginlr}{#4}{#2}%  
-}{%
-  \end{mdmarginlr}%
-  \mdmarginbottom{\dim@marginbottom}%  
-}
-
-\newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace*{#1}}}
-\newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace*{#1}}}
-
-\newlength{\dim@paddingbottom}
-\newenvironment{mdbpadding}[1]{\begin{mdbpaddingx}{#1}{#1}{#1}{#1}}{\end{mdbpaddingx}}
-\newenvironment{mdbpaddingx}[4]{%
-  \dim@paddingbottom=\dimdefault{#3}{0pt}%
-  \mdpaddingtop{#1}%
-  \begin{mdmarginlr}{#4}{#2}%
-}{%
-  \end{mdmarginlr}%
-  \mdpaddingbottom{\dim@paddingbottom}%
-}
-
-%\AfterEndEnvironment{mdbpaddingx}{\vskip 0pt\relax}
-%\AfterEndEnvironment{mdbmarginx}{\vskip 0pt\relax}
-%\AfterEndEnvironment{mdbpadding}{\vskip 0pt\relax}
-%\AfterEndEnvironment{mdbmargin}{\vskip 0pt\relax}
-
-\newrobustcmd\mdmargintb[3]{%
-   \setbox0=\hbox{\color@begingroup #3\color@endgroup}%
-   \ifnotblank{#1}{\rule{0pt}{\dimexpr \ht0 + #1\relax}}%
-   \ifnotblank{#2}{\rule[\dimexpr -\dp0 - #2\relax]{0pt}{0pt}}%
-   \usebox0\relax%
-}
-\let\mdpaddingtb\mdmargintb
-
-% ---------------------------------------------------
-% Height
-% ---------------------------------------------------
-
-\newenvironment{mdbheight}[1]{%
-  \md@height=#1%
-  \noindent\begin{mdminipage}{t}{\md@height}{t}{\linewidth}%
-}{\end{mdminipage}\leavehmode}
-
-
-
-
-%-------------------------------------------------------------
-% A minipage environment that 
-% - maintains the listdepth, parindent, and parskip
-% - doesn't interfere with footnotes
-% - suppresses the first indentation
-%-------------------------------------------------------------
-\newif\if@savefootnotes
-\newcommand{\md@savefootnotes}%
-  {\if@savefootnotes\else%
-    \let\footnote\tablefootnote%
-   \fi%
-   \@savefootnotestrue}%
-\newcommand{\md@restorefootnotes}%   
-  {\if@savefootnotes\else%
-    \tfn@tablefootnoteprintout% 
-    \gdef\tfn@fnt{0}%
-   \fi}% 
-
-\newlength{\md@parindent}
-\newskip{\md@parskip}
-\newcount{\md@listdepth}
-
-\newenvironment{mdminipage}[4]{%
-  \md@savefootnotes%
-  \md@parindent=\parindent%
-  \md@parskip=\parskip%
-  \let\md@listdepth\@listdepth%
-  \begin{minipage}[#1][#2][#3]{#4}%
-    \parindent=\md@parindent%
-    \parskip=\md@parskip%
-    \let\@listdepth\md@listdepth%
-    \nofirstparskip%
-    \nofirstindent%
-}{\end{minipage}\md@restorefootnotes}
-
-
-%-------------------------------------------------------------
-% Borders & Backgrounds
-%
-% This is a big part because we need to emulate lots of CSS
-% borders styles in LaTeX. For rounded corners, and breakable
-% blocks we rely on the "tcolorbox" package
-%-------------------------------------------------------------
-
-% ------------------------------------------------------------------------------
-% Set the background color of a block (using colorbox)
-%
-% \begin{mdbcolorbox}{<color>}
-% \mdcolorbox{<color>}{<content>}
-
-\newcommand\md@bcolorbox[2]{%
-  \begingroup
-  \fboxsep\z@%
-  \collectboxcheckenv{#1}%
-  \collectbox@{\noindent\begin{mdminipage}{}{}{t}{\linewidth}}%
-              {\mdcolorbox{#2}{\vbox{\hbox to \linewidth{\BOXCONTENT}}}\md@adjustmargin\endgroup}%
-              {\end{mdminipage}}%
-}
-
-
-% adjust the bottom margin after a minipage
-\newcommand\md@adjustmargin[1][0pt]{%
-  \ifhmode\par\fi
-  \ifdim\dimexpr\baselineskip-1em-#1\relax>0pt%
-    \addvspace{\dimexpr\baselineskip-1em-#1\relax}\fi
-}
-
-\newcommand\mdbcolorbox[1]{\md@bcolorbox{mdbcolorbox}{#1}}
-
-
-% ------------------------------------------------------------------------------
-% Define our own fancy fbox called md@borderbox
-%
-% It uses the command \md@border<side> to draw each border side.
-% The optional argument sets the box to a certain width
-
-% store dimension of the content and border box for rule drawing
-\newlength\md@borderboxwidth
-\newlength\md@borderboxheight
-\newlength\md@contentboxwidth
-\newlength\md@contentboxdepth
-\newlength\md@contentboxheight
-
-\newrobustcmd\md@borderbox[2][]{%
-  \leavevmode
-  \mddefinecolor{md@savecolor}{currentcolor}%
-  \ifblank{#1}%
-    {\setbox\@tempboxa\hbox{\color@begingroup\mdcolor{md@savecolor}#2\color@endgroup}}%
-    {\setbox\@tempboxa\hbox to #1 {\color@begingroup\mdcolor{md@savecolor}#2\hss\color@endgroup}}%
-  \@tempdima=\md@borderbottomwidth
-  \advance\@tempdima\dp\@tempboxa
-  % define content dimensions since \@tempboxa is not available after being used
-  \md@contentboxwidth=\wd\@tempboxa
-  \md@contentboxdepth=\dp\@tempboxa
-  \md@contentboxheight=\dimexpr\ht\@tempboxa + \dp\@tempboxa\relax
-  % border box
-  \md@borderboxwidth=\dimexpr\wd\@tempboxa + \md@borderleftwidth + \md@borderrightwidth\relax 
-  \md@borderboxheight=\dimexpr\md@contentboxheight + \md@bordertopwidth + \md@borderbottomwidth\relax
-  % create the frame
-  \hbox{%
-    \lower\@tempdima\hbox{%
-      \vbox{%
-        \offinterlineskip
-        \md@bordertop%
-        \hbox{%
-          \md@borderleft
-          \vbox{%
-            \box\@tempboxa}%
-          \md@borderright
-        }%
-        \md@borderbottom}%
-      }%
-  }%
-}
-
-
-% ------------------------------------------------------------------------------
-% Define standard border styles
-%
-% a style has the form \md@border<style>{<side>}{<direction>}{<borderwidth>}
-% where <side> is the border side
-%       <direction> is either "h" or "v" (horizontal or vertical)
-%       <borderwidth> the width of the rule
-%
-% predefined styles: none, solid, transparent, dashed, and dotted.
-
-\newcommand*\md@bordernone[3]{}
-\newcommand*\md@bordersolid[3]{\ifx#2h\relax \hrule\@height #3\else\vrule\@width #3\fi}
-\newcommand*\md@bordertransparent[3]{\ifx#2h\relax \rule{0pt}{#3}\else\rule{#3}{0pt}\fi}
-
-\newlength\md@dashlen
-\newcommand*\md@borderdashed@[2]{%
-  \md@dashlen=\dimexpr\dimmax{\md@bordertopwidth}{\dimmax{\md@borderbottomwidth}{\dimmax{\md@borderrightwidth}{\dimmax{\md@borderleftwidth}{2.5pt}}}}\relax
-  \ifx#2h%
-    \hbox to \md@borderboxwidth{\xleaders \hbox{\md@hdash\hskip 0.5\md@dashlen\relax}\hfill\hbox{\md@hdash}}%
-  \else 
-    \lower\md@contentboxdepth\vbox to \md@contentboxheight{\cleaders \vbox{\vskip0.25\md@dashlen\md@vdash\vskip0.25\md@dashlen}\vfill}%
-  \fi
-}
-
-\newcommand*\md@borderdashed[3]{%
-  \def\md@hdash{\vrule width \md@dashlen height #3 depth 0pt}%
-  \def\md@vdash{\hrule width #3 height \md@dashlen depth 0pt}%
-  \md@borderdashed@{#1}{#2}%
-}
-\newcommand*\md@borderdotted[3]{%
-  \def\md@hdash{\vrule width #3 height #3 depth 0pt\relax}%
-  \def\md@vdash{\hrule width #3 height #3 depth 0pt\relax}%
-  \md@borderdashed@{#1}{#2}%
-}  
-
-% ------------------------------------------------------------------------------
-% Define a border from a <border spec>. A border specification has the form:
-%
-% <dimension>,<color>,<style>,...
-%
-% where every component is optional. 
-% For example: "1pt,blue", ",,solid", "2em", ",\#CDCDCD,dashed".
-%
-% The command:
-%    \md@defineborder{<side>}{<direction>}{<borderspec>}
-%
-% takes border specification (\md@defineborder{top}{h}{1pt,blue,dotted}) and generates definitions:
-%  md@border<side>width    (a width as a string)
-%  md@border<side>color    (a color name)
-%  md@border<side>style    (the style as a string)
-%  md@border<side>         (the command that draws this border (in \md@borderbox))
-
-\def\md@defineborderx#1#2#3,#4,#5,#6\relax{%
-  \csedef{md@border#1width}{\ifblank{#3}{0pt}{#3}}%
-    \mddefinecolor{md@border#1color}{#4}%
-  \ifdim\dimexpr\csuse{md@border#1width}\relax=0pt%
-    \csdef{md@border#1style}{none}\else
-    \csedef{md@border#1style}{\ifblank{#5}{solid}{#5}}\fi
-  \ifstrequal{#4}{transparent}{% if the color is transparent, we use the transparent style
-    \csdef{md@border#1style}{transparent}
-    \mddefinecolor{md@border#1color}{white}}{}% redefine to an existing color
-  \cseifstrequal{md@border#1style}{none}{%
-    \csdef{md@border#1width}{0pt}}{}% ensure width = 0 for none style
-  \edef\md@drawborder{md@border\csname md@border#1style\endcsname}%
-  \ifcsdef{\md@drawborder}{}{%
-    \PackageWarning{madoko}{The border style "#5" is not supported; defaulting to "solid".}%
-    \edef\md@drawborder{md@bordersolid}%
-  }%
-  %\typeout{border: #1: \csuse{md@border#1width}, \csuse{md@border#1style}}%
-  \csletcs{md@draw#1border}\md@drawborder%  
-  \csdef{md@border#1}{%
-    \mdcolor{md@border#1color}%
-    \csuse{md@draw#1border}{#1}{#2}{\csuse{md@border#1width}}%
-  }%
-}
-\newcommand*\md@defineborder[3]{%
-  \md@defineborderx{#1}{#2}#3,,,\relax
-}
-
-% ------------------------------------------------------------------------------
-%  Main css border command for blocks
-%
-%  mdbborder{<borderspec>}
-%  mdbcborder{<borderspec>}{<bgcolor>}
-%  mdbborderx{<top>}{<right>}{<bottom>}{<left>}{<bgcolor>}
-%
-%  and commands:
-%
-%  \mdborder{<borderspec>}{<content>}
-%  \mdcborder{<borderspec>}{<bgcolor>}{<content>}
-%  \mdborderx{<top>}{<right>}{<bottom>}{<left>}{<bgcolor>}{<content>}
-
-\newlength\md@boxwidth
-\newcommand\md@bborderx[6]{%
-  \begingroup
-  \noindent
-  \md@defineborder{top}{h}{#2}%
-  \md@defineborder{right}{v}{#3}%
-  \md@defineborder{bottom}{h}{#4}%
-  \md@defineborder{left}{v}{#5}%
-  \md@boxwidth=\dimexpr\linewidth-\md@borderleftwidth-\md@borderrightwidth\relax
-  \collectboxcheckenv{#1}%
-  \collectbox@{\begin{mdminipage}{}{}{t}{\md@boxwidth}}%
-              {\noindent\strut\mdcolorbox{#6}{\md@borderbox[\md@boxwidth]{\BOXCONTENT}\md@adjustmargin[\md@borderbottomwidth]}\endgroup}%
-              {\end{mdminipage}}%
-}
-
-
-\newcommand\mdbborderx[5]{\md@bborderx{mdbborderx}{#1}{#2}{#3}{#4}{#5}}
-\newcommand\mdbborder[1]{\md@bborderx{mdbborder}{#1}{#1}{#1}{#1}{}}
-\newcommand\mdbcborder[2]{\md@bborderx{mdbcborder}{#1}{#1}{#1}{#1}{#2}}
-
-\newrobustcmd*\mdborderx[7][]{%
-  \mdcolorbox{#6}{%
-    \begingroup
-    \md@defineborder{top}{h}{#2}%
-    \md@defineborder{right}{v}{#3}%
-    \md@defineborder{bottom}{h}{#4}%
-    \md@defineborder{left}{v}{#5}%
-    \md@borderbox[#1]{#7}%
-    \endgroup
-  }%
-}
-\newrobustcmd*\mdborder[3][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{}{#3}}
-\newrobustcmd*\mdcborder[4][]{\mdborderx[#1]{#2}{#2}{#2}{#2}{#3}{#4}}
-
-% ------------------------------------------------------------------------------
-% If we load tcolorbox, we can support rounded corners and breakable content
-% these environments have an extra x:
-%
-%   mdbxborder[<opts>]{<cornerradius>}{<borderspec>}
-%   mdbxcborder[<opts>]{<cornerradius>}{<borderspec>}{<bgcolor>}
-%   mdbxborderx[<opts>]{<cornerradius>}{<top?>}{<left>}{<bottom>}{<right>}{<bgcolor>}
-%   mdbxcolorbox[<opts>]{<bgcolor>}  (breakable background-color)
-%
-% and x commands
-%
-%   \mdxborder[<opts>]{<cornerradius>}{<borderspec>}{<content>}
-%   \mdxcborder[<opts>]{<cornerradius>}{<borderspec>}{<bgcolor>}{<content>}
-%   \mdxborderx[<opts>]{<cornerradius>}{<top>}{<left>}{<bottom>}{<right>}{<bgcolor>}{<content>}
-%   \mdxcolorbox[<opts>]{<bgcolor>}{<content>}
-%
-% in the <opts> we can specify things like:
-%   [breakable]
-%   [sharp corners=north]
-%
-
-\ifdefined\tcolorbox
-  \newenvironment{mdtcolorbox}[1]{%
-  \begin{tcolorbox}[%
-    %enhanced,%
-    before=\noindent,after={},%
-    boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,%
-    arc=0pt,boxrule=0pt,colback=backgroundcolor,colframe=white,%
-    #1]\ignorespaces%
-  }{\vspace*{0pt}\end{tcolorbox}}
-
-  \newrobustcmd\mdtcbox[1]{\tcbox[%
-    %enhanced,
-    on line,%
-    boxsep=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,%
-    arc=0pt,boxrule=0pt,colback=backgroundcolor,colframe=white,#1]}
-
-  \newcommand*\md@tcsetopts[7][]{%
-    % reuse defineborder from the plain boxes
-    \md@defineborder{top}{h}{#3}%
-    \md@defineborder{right}{v}{#4}%
-    \md@defineborder{bottom}{h}{#5}%
-    \md@defineborder{left}{v}{#6}%
-    \ifnotblank{#6}{\mddefinecolor{backgroundcolor}{#7}}%
-    \def\md@borderradius{\ifblank{#2}{0pt}{#2}}%
-    \ifmdusetikz
-      % if we have rounded corners, we can only have one line style, we pick the top style
-      \ifdim\dimexpr\md@borderradius\relax>0pt\relax
-        \edef\md@tcopts{%
-           enhanced,
-           arc=\md@borderradius,rounded corners=all,
-           boxrule=\md@bordertopwidth,%
-           borderline={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
-           #1}%
-      % otherwise specify each style separately
-      \else
-        \edef\md@tcopts{%
-          enhanced,
-          toprule=\md@bordertopwidth,rightrule=\md@borderrightwidth,bottomrule=\md@borderbottomwidth,leftrule=\md@borderleftwidth,%
-          borderline north={\md@bordertopwidth}{0pt}{md@bordertopcolor,\md@bordertopstyle},%
-          borderline east={\md@borderrightwidth}{0pt}{md@borderrightcolor,\md@borderrightstyle},%
-          borderline south={\md@borderbottomwidth}{0pt}{md@borderbottomcolor,\md@borderbottomstyle},%
-          borderline west={\md@borderleftwidth}{0pt}{md@borderleftcolor,\md@borderleftstyle},%
-          #1}%
-      \fi
-    \else
-      % no tikz means no fancy border lines etc
-      \edef\md@tcopts{%
-           boxrule=\md@bordertopwidth,%
-           colframe=md@bordertopcolor,%
-           #1}%
-    \fi
-  }
-
-  \newcommand\@begintcolorbox{\begin{mdtcolorbox}}
-
-  \newenvironment{mdbxborderx}[7][]{%
-    \md@tcsetopts[#1]{#2}{#3}{#4}{#5}{#6}{#7}%
-    \expandafter\@begintcolorbox\expandafter{\md@tcopts}%
-  }{\end{mdtcolorbox}}
-
-  
-  \newrobustcmd\mdxborderx[8][]{%
-    \md@tcsetopts[#1]{#2}{#3}{#4}{#5}{#6}{#7}%
-    \expandafter\mdtcbox\expandafter{\md@tcopts}{#8}%
-  }
-
-
-  % the mdbxbgcolor can be breakable
-  \newenvironment{mdbxcolorbox}[2][]{%
-    \mddefinecolor{backgroundcolor}{#2}%
-    \begin{md@tcolorbox}{frame engine=empty,#1}\strut\ignorespaces%
-  }{\end{md@tcolorbox}}
-
-  
-% Put in proxies to our plain implementation if tcolorbox is not loaded.
-\else
-  \newrobustcmd\md@warnborder[1]{%
-    \ifblank{#1}{}{%
-      \PackageWarning{madoko}{%
-      Some CSS border features need the "tcolorbox" package. %
-      Set the "Tex Use Tikz: True" key for better emulation (of breakable bordered or colored blocks, and rounded corners)}%
-    }%
-  }
-  \newrobustcmd\mdbxborderx[7][]{%env
-    \md@warnborder{#1#2}%
-    \md@bborderx{mdbxborderx}{#3}{#4}{#5}{#6}{#7}%
-  }
-  \newrobustcmd\mdxborderx[8][]{%
-    \md@warnborder{#1#2}%
-    \mdborderx{#3}{#4}{#5}{#6}{#7}{#8}%
-  }
-  \newrobustcmd\mdbxcolorbox[2][]{%env
-    \md@warnborder{#1}%
-    \md@bcolorbox{mdbxcolorbox}{#2}%
-  }
-\fi
-
-\newenvironment{mdbxborder}[3][]{%
-  \begin{mdbxborderx}[#1]{#2}{#3}{#3}{#3}{#3}{}%
-}{\end{mdbxborderx}}
-
-\newenvironment{mdbxcborder}[4][]{%
-  \begin{mdbxborderx}[#1]{#2}{#3}{#3}{#3}{#3}{#4}%
-}{\end{mdbxborderx}}
-
-\newrobustcmd\mdxborder[4][]{\mdxborderx[#1]{#2}{#3}{#3}{#3}{#3}{}{#4}}
-\newrobustcmd\mdxcborder[5][]{\mdxborderx[#1]{#2}{#3}{#3}{#3}{#3}{#4}{#5}}
 
 
 % ---------------------------------------------------

@@ -35,6 +35,7 @@ public function cssIsInlineBlock( kvs : dict<string> ) : bool {
   }
 }
 
+// Expand keys that stand for multiple keys; i.e. `margin` is a shorthand for `margin-(top|right|bottom|left)`.
 public function cssExpandKeys( kvs0 : dict<string> ) : dict<string> {
   val kvs = kvs0.cssExpandMultiKeys
   val xs = [
@@ -69,6 +70,8 @@ function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,strin
   }
 }
 
+
+// Expand keys that define multiple values at once; ie. border may have `border-(width|color|style)` values.
 function cssExpandMultiKeys( kvs : dict<string> ) : dict<string> {
   val xss = [
     kvs.cssExpandBorder
@@ -90,7 +93,7 @@ function cssExpandBorder( kvs : dict<string> ) : list<(string,string)> {
   }
 }
 
-function cssIsLength( term : string ) : bool {
+public function cssIsLength( term : string ) : bool {
   term.contains(rxLen)
 }
 val rxNum = @"([\-\+]?(?:\d+|\d*\.\d+)(?:[eE]\d+)?)"
@@ -146,7 +149,7 @@ public function cssColor( v0 : string ) : string {
           cssRgb(rgb)
         }
         Nothing -> match(cssStdNames[v]) {
-          Just    -> v
+          Just    -> if (v=="transparent") then "" else v
           Nothing -> match(cssNamedColors[v]) { 
             Just(clr) -> clr
             Nothing   -> {
@@ -183,6 +186,11 @@ function cssRgb(rgb : (int,int,int) ) : string {
     ("rgb,255:" + [r.mix("red"), g.mix("green"), b.mix("blue")].join(";")).braced
   }
   */
+}
+
+public function cssBool( v0 : string ) : string {
+  val v = v0.cssNormalize.toLower
+  if (v=="true" || v=="1") then "true" else "false"
 }
 
 public function cssHeight( v : string, auto : string = "" ) : string {

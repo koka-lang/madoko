@@ -500,25 +500,10 @@ function cssInner( body0 : string, kvs : dict<string> ) : string {
           .onKey(kvs,"color", fun(value,body) {
             body.braceCmd("color",value.cssColor.braced)
           })
-          .onKey(kvs,"height", fun(height,body) {
-            body.trimEnvCmd("height", height.cssHeight.braced, isBlock) // todo: auto, minheight, maxheight
-          })
                  
-  val body2 = 
-    if (kvs.cssIsBlock) then {
-      body1.onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(body) {  
-              body.padding(kvs)
-            })
-    }
-    else {
-      body1.cssInlineMargin(kvs,"padding")           
-    } 
-  body2   .onKeys(kvs,["border-top-style","border-bottom-style","border-left-style","border-right-style"], fun(body) { 
-            body.cssBorder(kvs) 
-          })
-          .onKey(kvs,"background-color", fun(value,body) {
-            body.trimEnvCmd("colorbox", value.cssColor.braced, isBlock )
-          })
+  val body2 = body1.cssBox(kvs,isBlock)
+    
+  body2
 }
 
 function cssOuter( body0 : string, kvs : dict<string> ) : string {
@@ -615,46 +600,81 @@ function dimContentWidth( kvs : dict<string> ) {
   width
 }
 
-struct borderspec( width:string, color:string, style:string)
 
-
-function cssBorder( body : string, kvs : dict<string> ) : string {
-  function getSpec(side : string ) : borderspec {
-    normSpec(
-      kvs.find("border-" + side + "-width","").cssWidth,
-      kvs.find("border-" + side + "-color","").cssColor,
-      kvs.find("border-" + side + "-style","").cssValue
-    )
-  }
-  function normSpec(width,color,style) {
-    Borderspec( 
-      if (style=="none") then "" else width,
-      if (color=="transparent") then "" else color,
-      if (color=="transparent") then "transparent" else style      
-    )
-  }
-  function cssSpec(spec:borderspec) {
-    (spec.width + (if (spec.color=="" && spec.style=="") then ""
-                   else ("," + spec.color + "," + spec.style))).braced
-  }
-
-  val specs = ("top","right","bottom","left").map(getSpec)
-  val specargs = specs.map(cssSpec)
-  val (post,args) = if (specargs.fst==specargs.snd && specargs.snd==specargs.thd && specargs.thd == specargs.field4) 
-                      then ("",specargs.fst)
-                      else ("x",specargs.fst + specargs.snd + specargs.thd + specargs.field4)
-  if (kvs.cssIsBlock) {
-    body.trimEnv("mdbborder" + post, args )    
+function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
+  val breakable = kvs.find("breakable").bool
+  val fboxkeys  = ["border-top-style","border-bottom-style","border-left-style","border-right-style",
+                   "vertical-align", "height-align", "baseline"]
+  if (breakable || kvs.containsAny(fboxkeys)) {
+    // use longfbox
+    val attrs = [kvs.cssTRBL("padding","",cssWidthX),
+                 kvs.cssTRBL("border","-width",cssWidthX),
+                 kvs.cssTRBL("border","-color",cssColor),
+                 kvs.cssTRBL("border","-style",cssValue),
+                 kvs.cssTRBL("border","-radius",cssWidthX), // TODO: parse double radius
+                 kvs.cssVerticalAlign,
+                 kvs.cssAttr("height-align",cssValue,["top","middle","bottom"]),
+                 kvs.cssAttr("text-align",cssValue,["default","left","center","right","justify"]),
+                 kvs.cssAttr("baseline",cssValue,["bottom","middle","top"]),
+                 kvs.cssAttr("background-color",cssColor),
+                 kvs.cssAttr("background-clip",cssValue,["border-box","padding-box","content-box"]),
+                 kvs.cssAttr("height",cssHeightX),
+                 kvs.cssAttr("width",cssWidthX),
+                 kvs.cssAttr("breakable",cssBool),
+                ].concat
+    val args = "[" + attrs.join(",") + "]"                
+    if (isBlock)
+     then body.trimEnv("longfbox",args)
+     else "\\lfbox" + args + body.braced
   }
   else {
-    "\\mdborder" + post + args + body.braced
+    // use specific environments
+    body
   }
 }
 
-function optionArg( kvs : dict<string>, key : string, cssKey : string, show : string -> string ) : list<string> {
+function cssVerticalAlign( kvs : dict<string> ) : list<string> {
+ match(kvs["vertical-align"]) {
+    Nothing -> []
+    Just(value) -> {
+      if (value.cssIsLength)
+       then ["raise=" + value.cssWidth]
+       else ["vertical-align=" + value.cssValue]
+    }
+  }
+}
+
+function cssTRBL( kvs : dict<string>, pre : string, post : string, show : string -> string ) : list<string>
+{
+  val top = kvs.cssAttr(pre + "top" + post, show).join
+  val right = kvs.cssAttr(pre + "right" + post, show).join
+  val bottom = kvs.cssAttr(pre + "bottom" + post, show).join
+  val left = kvs.cssAttr(pre + "left" + post, show).join
+  if (top==right && right==bottom && bottom==left) 
+   then (if (top=="") then [] else [pre + post + "=" + kvs.find(pre + "top" + post).show])
+   else [[top,right,bottom,left].join(",")]
+}
+
+function cssHeightX( value : string ) : string {
+  cssHeight(value)
+}
+
+function cssWidthX( value : string ) : string {
+  cssWidth(value)
+}
+
+function cssAttr( kvs : dict<string>, key : string, show : string -> string, allowed : list<string> = [], cssKey : string = key ) : list<string> {
   match(kvs[key]) {
     Nothing -> []
-    Just(value) -> [cssKey + "=" + value.show]
+    Just(value) -> {
+      if (allowed.isCons && !allowed.any(fun(v) { v==value })) then {
+        warning("illegal CSS value: " + key + ":'" + value + "'\n  expecting one of: " + allowed.join(",")) 
+        []
+      } 
+      else {
+        [cssKey + "=" + value.show]
+      }
+    }
   }
 }
 
