@@ -443,12 +443,15 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
   val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
+  val isBlock = kvs.cssIsBlock
   body.applyCmd(kvs,"tex-innercmd")
-      .cssInner(kvs)
+      .cssInner(kvs, isBlock)
       .applyCmd(kvs,"tex-cmd")
       .applyEnv(kvs,"tex-env",elem)
-      .cssOuter(kvs)
+      .cssBox(kvs,isBlock)
+      .cssOuter(kvs, isBlock)
       .applyCmd(kvs,"tex-outercmd")
+      .applyEnv(kvs,"tex-outerenv")
       .applyBlock(kvs)
 }
 
@@ -494,28 +497,28 @@ function trimEnvCmd( body : string, name : string, args : string, isBlock : bool
 }
 
 
-function cssInner( body0 : string, kvs : dict<string> ) : string {
-  val isBlock = kvs.cssIsBlock
-  val body1 = body0
-          .onKey(kvs,"color", fun(value,body) {
-            body.braceCmd("color",value.cssColor.braced)
-          })
-                 
-  val body2 = body1.cssBox(kvs,isBlock)
-    
-  body2
+function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
+  body0
+    .onKey(kvs,"color", fun(value,body) {
+      body.braceCmd("color",value.cssColor.braced)
+    })
 }
 
-function cssOuter( body0 : string, kvs : dict<string> ) : string {
-  if (kvs.cssIsBlock) {
-   body0.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom","width"], fun(body) {  
-          body.margins(kvs)
-        })
+function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
+  if (isBlock) {
+    body0.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(body) {  
+      body.margins(kvs)
+    })
   }
   else {
     body0.cssInlineMargin(kvs,"margin")
   }
 }
+
+// -----------------------------------------------------------------------------
+// Margins
+// -----------------------------------------------------------------------------
+
 
 function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) : string {
   val body1 = body0.onKey(kvs,margin + "-left", fun(width,body) { 
@@ -526,8 +529,11 @@ function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) 
               })
   if (kvs.cssIsInlineBlock) {
     body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
-            "\\md" + margin + "tb" + cssHeight(kvs.find(margin + "-top")).braced + cssHeight(kvs.find(margin + "-bottom")).braced + body.braced
-          })
+            "\\md" + margin + "tb" + 
+              cssHeight(kvs.find(margin + "-top")).braced + 
+              cssHeight(kvs.find(margin + "-bottom")).braced + 
+              body.braced
+    })
   }
   else body1
 }
@@ -572,6 +578,10 @@ function marginLR( kvs : dict<string>, pre = "margin") : (string,string) {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Dimensions
+// -----------------------------------------------------------------------------
+
 function dimAuto( w : string, other : string = "" ) : string {
   if (w.isEmpty) then "" else "\\dimauto" + w.braced + other.braced
 }
@@ -600,11 +610,15 @@ function dimContentWidth( kvs : dict<string> ) {
   width
 }
 
+// -----------------------------------------------------------------------------
+// Border-box
+// -----------------------------------------------------------------------------
 
 function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
   val breakable = kvs.find("breakable").bool
   val fboxkeys  = ["border-top-style","border-bottom-style","border-left-style","border-right-style",
-                   "vertical-align", "height-align", "baseline"]
+                   "vertical-align", "height-align", "baseline",
+                   "background-color","height","width"]                  
   if (breakable || kvs.containsAny(fboxkeys)) {
     // use longfbox
     val attrs = [kvs.cssTRBL("padding","",cssWidthX),
@@ -622,14 +636,25 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
                  kvs.cssAttr("width",cssWidthX),
                  kvs.cssAttr("breakable",cssBool),
                 ].concat
-    val args = "[" + attrs.join(",") + "]"                
+    val args = attrs.join(",").braced
     if (isBlock)
-     then body.trimEnv("longfbox",args)
-     else "\\lfbox" + args + body.braced
+     then body.trimEnv("mdblock",args)
+     else "\\mdinline" + args + body.braced
   }
   else {
     // use specific environments
     body
+      .onKey(kvs,"text-align", fun(value,b) {
+        if (!isBlock) then b else {
+          (if (value=="left") then "\\raggedright{}"
+           elif (value=="right") then "\\raggedleft{}"
+           elif (value=="center") then "\\centering{}"
+           else "") + b
+        }
+      })
+      .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(b) {  
+        if (isBlock) then b.padding(kvs) else b.cssInlineMargin(kvs,"padding")
+      })
   }
 }
 
@@ -646,13 +671,14 @@ function cssVerticalAlign( kvs : dict<string> ) : list<string> {
 
 function cssTRBL( kvs : dict<string>, pre : string, post : string, show : string -> string ) : list<string>
 {
-  val top = kvs.cssAttr(pre + "top" + post, show).join
-  val right = kvs.cssAttr(pre + "right" + post, show).join
-  val bottom = kvs.cssAttr(pre + "bottom" + post, show).join
-  val left = kvs.cssAttr(pre + "left" + post, show).join
-  if (top==right && right==bottom && bottom==left) 
-   then (if (top=="") then [] else [pre + post + "=" + kvs.find(pre + "top" + post).show])
-   else [[top,right,bottom,left].join(",")]
+  val (top,topv) = kvs.cssAttrX(pre + "-top" + post, show)
+  val (right,rightv) = kvs.cssAttrX(pre + "-right" + post, show)
+  val (bottom,bottomv) = kvs.cssAttrX(pre + "-bottom" + post, show)
+  val (left,leftv) = kvs.cssAttrX(pre + "-left" + post, show)
+
+  if (topv==rightv && rightv==bottomv && bottomv==leftv) 
+   then (if (top.isNil) then [] else [pre + post + "=" + topv])
+   else [top,right,bottom,left].concat
 }
 
 function cssHeightX( value : string ) : string {
@@ -678,6 +704,19 @@ function cssAttr( kvs : dict<string>, key : string, show : string -> string, all
   }
 }
 
+function cssAttrX( kvs : dict<string>, key : string, show : string -> string ) : (list<string>,string) {
+  match(kvs[key]) {
+    Nothing -> ([],"")
+    Just(value) -> {
+      val svalue = value.show
+      ([key + "=" + svalue], svalue)
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
 
 function onKey( body : string, kvs : dict<string>, key : string, action ) : string {
   match(kvs[key]) {

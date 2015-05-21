@@ -196,6 +196,13 @@
   }%
 }
 
+\newrobustcmd\mdbgcolor[2]{%
+  \eiftransparent{#1}{#2}{%
+    \mddefinecolor{bgcolor}{#1}%
+    \colorbox{bgcolor}{#2}%
+  }%
+}
+
 % ---------------------------------------------------
 % Line info
 % ---------------------------------------------------
@@ -275,7 +282,7 @@
   \item[]%
 }%
 {\endtrivlist} 
-\AfterEndEnvironment{mdmarginlr}{\leavehmode}
+%\AfterEndEnvironment{mdmarginlr}{\leavehmode}
 
 \newcommand*\mdmargintop[1]{\onnotzero{#1}{\addvskip{#1}}}
 \newcommand*\mdmarginbottom[1]{\onnotzero{#1}{\addvskip{#1}}}
@@ -314,7 +321,15 @@
 \let\mdpaddingtb\mdmargintb
 
 
+% ---------------------------------------------------
+% Css box model
+% ---------------------------------------------------
 
+\newenvironment{mdblock}[1]{%
+  \begin{longfbox}[tight,border-style=none,#1]%
+}{\end{longfbox}}
+
+\newcommand\mdinline[1]{\lfbox[tight,border-style=none,#1]}
 
 
 %-------------------------------------------------------------

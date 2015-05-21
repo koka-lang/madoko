@@ -174,17 +174,24 @@
  \setbox#1\vbox\bgroup
    \begingroup
    \inlvboxtrue
+   % reset defaults
    \let\if@nobreak\iffalse
    \let\if@noskipsec\iffalse
    \let\par\@@par
    \let\-\@dischyph
    \let\'\@acci\let\`\@accii\let\=\@acciii
-   \hsize=\dimexpr#3\relax
+   % set margin and linewidth
+   \leftmargin=#2\relax\rightmargin=#4\relax
+   \@totalleftmargin=\leftmargin%
+   %\leftskip=#2\relax\rightskip=#4\relax\@rightskip=#4\relax
+   \linewidth=#3\relax
+   % set primitive tex margins
+   \leftskip=\@totalleftmargin%
+   \rightskip=\rightmargin%
+   \@rightskip=\rightmargin%
+   \hsize=\dimexpr\@totalleftmargin+\linewidth+\rightmargin\relax
    \columnwidth\hsize
    \textwidth\hsize
-   \linewidth\hsize
-   \@totalleftmargin=#2\relax \leftmargin=#2\relax \rightmargin=#4\relax
-   \leftskip=#2\relax \rightskip=#4\relax \@rightskip=#4\relax
    \nofirstindent
    %\nofirstparskip
 }
@@ -301,7 +308,7 @@
   \fi
   \advance\@tempdima by -\option{/longbox/raise}%
   \option@invoke{/longbox/@lower}{\@tempdima}%  
-  \hbox{\lower \@tempdima\vbox{\offinterlineskip
+  \noindent\hbox{\lower \@tempdima\vbox{\offinterlineskip
     \hbox to \z@{%
       \vbox to \z@{%
         \hbox{\lower \option{/longbox/@part-height}\vbox{\offinterlineskip{\option{/longbox/render}}}}%
@@ -439,7 +446,7 @@
     \lb@savefootnotes
     \dimen@=\dimexpr\linewidth-\lb@skipleft-\lb@width\relax
     \typeout{ width=\the\lb@width, linewidth=\the\linewidth, skipleft=\the\lb@skipleft, right=\the\lb@skipright, total right=\the\dimen@}%
-    \ontoggle{lb@baselineskip}{\lb@skiptobaseline}%
+    \iftoggle{lb@baselineskip}{\lb@skiptobaseline}{\lb@prevdepth=-\@m pt}%
     \lvbox{\lb@mainbox}{0pt}{\lb@width}{0pt}%{\lb@skipleft}{\lb@width}{\lb@skipright}%
     \prevdepth=\lb@prevdepth
   \fi
