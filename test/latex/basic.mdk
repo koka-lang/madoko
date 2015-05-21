@@ -5,8 +5,9 @@ Package   : lmodern
 
 Line no   : False
 Logo      : False
-~H1       : tex-cmd=\section*
+~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
+~strong   : tex-cmd=\textbf
 
 Tex Header*: \parskip=0ex %\parindent=0pt
 
@@ -15,13 +16,34 @@ Lorem     : Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eius
 # Introduction { #sec-intro }
 
 Lorem ipsum [dolor]{margin-left=1em} sit amet, 
-[consectetur]{font-family=sans-serif} 
-[adipiscing fox]{font-family=tex-lmdh} elit, 
-[sed]{font-family="'Times New Roman'"} do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="dotted red 1px" background-color=ivory}am]{margin-top=2rem display=inline-block color=blue}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-{ color=hsl(180,100%,25%) text-align=left }
+[consectetur]{font-family=sans-serif font-size=large font-weight=bold font-style=italic} 
+[adipiscing fox]{font-family=tex-lmdh font-size=20pt} elit, 
+[sed]{font-family="'Times New Roman'" font-size=x-small font-variant=small-caps} do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim [ven[i]{padding=2em display=inline-block border="dotted red 1px" background-color=ivory}am]{margin-top=2rem display=inline-block color=blue}, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+{ color=hsl(180,100%,25%) text-indent=2em}
 
 Duis aute irure [dolor [test [in]{color=blue} test]{background-color=ivory display=inline-block padding=1ex border="1px solid gray"} reprehenderit]{color=red} in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 {border="1px dashed purple" margin="0pt 2em" padding="1ex"}
+
+[**Aaaa[a]{vertical-align=-0.3ex}
+[aa]{vertical-align=-0.7ex}
+[r]{vertical-align=-1.4ex}
+[g]{vertical-align=-2.5ex}
+[h]{vertical-align=-5ex}**]{font-size=large height=0pt }
+he shouted but not even the next
+one in line noticed that something
+terrible had happened to him.
+{width=18em border-style=solid border-width=1px \
+ padding=1ex background-color=FloralWhite}
+
+Test^sup^ and test~sub~ and ~~strike out~~. Here is `code & \cmd`, and `pretty & \cmd code`{.pretty}
+
+```
+More code
+```
+
+```javascript
+function test
+```
 
 ## Overview 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
@@ -31,7 +53,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 { background-color=floralwhite padding=1em}
 
 &lorem;
-{margin-left=auto width=20em margin-right=2em border="solid hsl(45,100%,50%) 1px"}
+{margin-left=auto width=20em margin-right=2em border="solid hsl(45,100%,50%) 1px" text-indent=1em font-style=italic}
 ~
 
 culpa qui officia deserunt mollit anim id est laborum.[\the\parskip]{input=texraw}.

@@ -137,7 +137,7 @@
 
 \newcommand*\lb@setfreevspace{%
   \eifblank{\lb@breakat}{\lb@setfreevspace@page}{%
-    \def\lb@eject{}%no eject
+    \def\lb@eject{\par}%no eject
     \lb@extrasplit=\z@\relax%
     \lb@shiftdim{\lb@breakat}\lb@freevspace
     \ifdim\lb@freevspace>\z@\else\lb@setfreevspace@page\fi

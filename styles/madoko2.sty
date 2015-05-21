@@ -50,6 +50,7 @@
   \RequirePackage{array}
   \RequirePackage{longtable}
   \RequirePackage{enumitem}
+  \RequirePackage{anyfontsize}
   
   % fontspec is expensive to load...
   \ontoggle{/madoko/fontspec}{%
@@ -234,6 +235,7 @@
 % expressions for widht/height percentages
 \newcommand\dimheight[1]{#1\md@height}
 \newcommand\dimwidth[1]{#1\linewidth}
+\newcommand\dimfont[1]{#1ex}
 
 % dimdefault{arg}{default}  use default if arg is empty
 \newcommand\dimdefault[2]{\ifblank{#1}{#2}{#1}}
@@ -335,9 +337,33 @@
 % Fonts
 % ---------------------------------------------------
 
-\providecommand\fontspec[1]{%
-  \PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}%
-}
+\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
+
+\newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
+
+% ---------------------------------------------------
+% Inline elements
+% ---------------------------------------------------
+
+\newcommand\mdstrong{\textbf}
+\newcommand\mdem{\emph}
+\newcommand\mdsup[1]{\ensuremath{^\mathrm{#1}}}
+\newcommand\mdsub[1]{\ensuremath{_\mathrm{#1}}}
+\newcommand\mddel[1]{{\mdcolor{gray}#1}}
+
+\newcommand\mdcode{\texttt}
+\newcommand\mdprecode{}
+\newcommand\mdbr{\mdBr}
+
+\newlength\presp
+\settowidth\presp{\texttt{ }}
+\newcommand\prespace[1]{\hspace*{#1\presp}}
+\newcommand\preindent[1]{\hspace*{#1\presp}}
+\newcommand\prebr{\strut\\}
+
+% code
+% precode
+% br
 
 %-------------------------------------------------------------
 % The following commands still use capital letters due to legacy...

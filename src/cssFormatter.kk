@@ -96,8 +96,9 @@ function cssExpandBorder( kvs : dict<string> ) : list<(string,string)> {
 public function cssIsLength( term : string ) : bool {
   term.contains(rxLen)
 }
-val rxNum = @"([\-\+]?(?:\d+|\d*\.\d+)(?:[eE]\d+)?)"
-val rxLen = regex(rxNum + @"(em|ex|ch|rem|vh|vw|vmin|vmax|px|mm|cm|in|pt|pc)\b")
+val regNum = @"([\-\+]?(?:\d+|\d*\.\d+)(?:[eE]\d+)?)"
+val rxNum = regex(regNum)
+val rxLen = regex(regNum + @"(em|ex|ch|rem|vh|vw|vmin|vmax|px|mm|cm|in|pt|pc)\b")
 
 
 function cssIsColor( term : string ) : bool {
@@ -193,11 +194,15 @@ public function cssBool( v0 : string ) : string {
   if (v=="true" || v=="1") then "true" else "false"
 }
 
-public function cssHeight( v : string, auto : string = "" ) : string {
-  cssWidth(v,auto,"height")
+public function cssFontLength( v : string ) : string {
+  cssWidth(v,"","font", "em")
 }
 
-public function cssWidth( v0 : string, auto : string = "", percOf : string = "width" ) : string {
+public function cssHeight( v : string, auto : string = "" ) : string {
+  cssWidth(v,auto,"height", "px")
+}
+
+public function cssWidth( v0 : string, auto : string = "", percOf : string = "width", defunit = "px" ) : string {
   val v = v0.cssNormalize.toLower
   match(v.find(rxPerc)) {
     Just(cap) -> {
@@ -210,8 +215,16 @@ public function cssWidth( v0 : string, auto : string = "", percOf : string = "wi
          then "\\dim" + cap.groups[2] + cap.groups[1].braced
          else cssValue(v)
       }
-      Nothing -> {
-        if (v=="auto") then auto else cssValue(v)
+      Nothing -> match(v.find(rxNum)) {
+        Just -> {
+          if (cssUnits.containsKey(defunit))
+           then "\\dim" + defunit + cssValue(v).braced
+           else cssValue(v) + defunit
+        }
+        Nothing -> 
+          if (v=="auto") then auto 
+          elif (v=="normal") then "1" + defunit
+          else cssValue(v)
       }
     }
   }

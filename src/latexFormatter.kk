@@ -442,8 +442,12 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
-  val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
-  val isBlock = kvs.cssIsBlock
+  val kvs0 = dict(defaults + attrs.keyvals).cssExpandKeys()
+  val isBlock = kvs0.cssIsBlock
+  val kvs = if (isBlock || elem == "span" || elem == "div" ||
+                ["tex-cmd","tex-innercmd","tex-cmd","tex-env","tex-outercmd","tex-outerenv"].any(fun(k) { kvs0.containsKey(k) }))
+             then kvs0
+             else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
   body.applyCmd(kvs,"tex-innercmd")
       .cssInner(kvs, isBlock)
       .applyCmd(kvs,"tex-cmd")
@@ -486,9 +490,23 @@ function trimEnv( body : string, env : string, args : string = "" ) {
   body.trim.blockEnv(env,args)
 }
 
-function braceCmd( body : string, cmd : string, args : string ) : string {
-  "{\\md" + cmd + args + body + "}"
+function braceCmd( body : string, cmd : string ) : string {
+  "{" + cmd.cmdconnect(body.unbrace) + "}"
 }
+
+function unbrace( s : string ) : string {
+  if (s.startsWith("{") && s.endsWith("}")) then s.substr(1,s.length-2) else s
+}
+
+function cmdconnect( cmd : string, s : string ) : string {
+  if (cmd.isEmpty || s.isEmpty || cmd.endsWith("}")) then cmd + s
+  elif (s.contains(rxCmdOk)) then cmd + s 
+  elif (s.contains(rxCmdSpace)) then cmd + "{}" + s
+  else cmd + " " + s
+}
+val rxCmdOk = regex(@"^[^a-zA-Z0-9\s]")
+val rxCmdSpace = regex(@"^\s")
+
 
 function trimEnvCmd( body : string, name : string, args : string, isBlock : bool ) {      
   if (isBlock) 
@@ -500,9 +518,10 @@ function trimEnvCmd( body : string, name : string, args : string, isBlock : bool
 function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
   body0
     .onKey(kvs,"color", fun(value,body) {
-      body.braceCmd("color",value.cssColor.braced)
+      body.braceCmd("\\mdcolor" + value.cssColor.braced)
     })
     .cssFont(kvs)
+    .cssText(kvs,isBlock)
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
@@ -517,11 +536,66 @@ function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string
 }
 
 // -----------------------------------------------------------------------------
+// Text
+// -----------------------------------------------------------------------------
+
+function cssText( body : string, kvs : dict<string>, isBlock : bool ) : string {
+  if (isBlock) then {
+    body
+      .onKey( kvs, "text-indent", fun(value,b) {
+        "\\noindent\\hspace*" + value.cssWidth.braced + b
+      })
+      .onKey( kvs, "line-height", fun(value,b) {
+        braceCmd( "\\baselineskip=" + value.cssFontLength + "\\relax", b )
+      })
+  }
+  else body
+}
+
+// -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
 
 function cssFont( body : string, kvs : dict<string> ) : string {
   body
+    .onKey( kvs,"font-weight", fun(value,b) { 
+      val cmd = if (value=="bold") then "\\bfseries"
+                elif (value=="bolder") then "\\bfseries"
+                elif (value=="lighter") then "\\mdseries"
+                elif (value=="normal") then "\\mdseries"
+                else ""
+      b.braceCmd(cmd)
+    })
+    .onKey( kvs,"font-size", fun(value,b) { 
+      val cmd = if (value.cssIsLength) then "\\mdfontsize" + value.cssFontLength.braced  
+                elif (value=="larger") then "\\mdfontsize{1.2}"
+                elif (value=="smaller") then "\\mdfontsize{0.8}"
+                elif (value=="xx-small") then "\\tiny"
+                elif (value=="x-small") then "\\scriptsize"
+                elif (value=="small") then "\\small"
+                elif (value=="medium") then "\\normalsize"
+                elif (value=="large") then "\\large"
+                elif (value=="x-large") then "\\Large"
+                elif (value=="xx-large") then "\\LARGE"
+                else { warning("illegal font-size value: " + value); "" }
+      b.braceCmd(cmd)
+    })
+    .onKey( kvs,"font-style", fun(value,b) { 
+      val cmd = if (value=="italic") then "\\itshape"
+                elif (value=="oblique") then "\\slshape"
+                elif (value=="normal") then "\\upshape"
+                else { warning("illegal font-style value: " + value); "\\upshape" }
+      b.braceCmd(cmd)
+    })
+    .onKey( kvs,"font-variant", fun(value,b) { 
+      val cmd = if (value=="small-caps") then "\\scshape"
+                elif (value=="all-small-caps") then "\\scshape"
+                elif (value=="petite-caps") then "\\scshape"
+                elif (value=="all-petite-caps") then "\\scshape"
+                elif (value=="normal") then "\\upshape"
+                else ""
+      b.braceCmd(cmd)
+    })
     .onKey( kvs,"font-family", fun(value,b) { 
       val fonts = value.cssSplitValues.reverse
       match(fonts) {
@@ -535,11 +609,10 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                         then "\\fontfamily{" + fam.substr(4) + "}\\selectfont"
                         else "\\fontspec{" + fam.unquote + "}"
                     }
-          "{" + cmd + "{}" + b + "}"
+          b.braceCmd(cmd)
         }
       }
     })
-
 }
 
 function unquote( s : string ) : string {
