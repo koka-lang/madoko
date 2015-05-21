@@ -105,7 +105,7 @@ function cssIsColor( term : string ) : bool {
 }
 
 
-function cssSplitValues( s : string ) : list<string> {
+public function cssSplitValues( s : string ) : list<string> {
   s.findAll(rxCssTerm).list.map(fun(cap) { cap.matched.cssNormalize })
 }
 

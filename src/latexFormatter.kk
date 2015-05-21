@@ -451,7 +451,7 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .cssBox(kvs,isBlock)
       .cssOuter(kvs, isBlock)
       .applyCmd(kvs,"tex-outercmd")
-      .applyEnv(kvs,"tex-outerenv")
+      .applyEnv(kvs,"tex-outerenv",elem)
       .applyBlock(kvs)
 }
 
@@ -502,6 +502,7 @@ function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string
     .onKey(kvs,"color", fun(value,body) {
       body.braceCmd("color",value.cssColor.braced)
     })
+    .cssFont(kvs)
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
@@ -514,6 +515,39 @@ function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string
     body0.cssInlineMargin(kvs,"margin")
   }
 }
+
+// -----------------------------------------------------------------------------
+// Fonts
+// -----------------------------------------------------------------------------
+
+function cssFont( body : string, kvs : dict<string> ) : string {
+  body
+    .onKey( kvs,"font-family", fun(value,b) { 
+      val fonts = value.cssSplitValues.reverse
+      match(fonts) {
+        Nil -> b
+        Cons(fam,_) -> {
+          val cmd = if (fam=="serif") then "\\rmfamily"
+                    elif (fam=="sans-serif") then "\\sffamily"
+                    elif (fam=="monospace") then "\\ttfamily"
+                    else {
+                      if (fam.startsWith("tex-")) 
+                        then "\\fontfamily{" + fam.substr(4) + "}\\selectfont"
+                        else "\\fontspec{" + fam.unquote + "}"
+                    }
+          "{" + cmd + "{}" + b + "}"
+        }
+      }
+    })
+
+}
+
+function unquote( s : string ) : string {
+  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
+  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
+  else s
+}
+
 
 // -----------------------------------------------------------------------------
 // Margins

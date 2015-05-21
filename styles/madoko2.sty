@@ -331,6 +331,13 @@
 
 \newcommand\mdinline[1]{\lfbox[tight,border-style=none,#1]}
 
+% ---------------------------------------------------
+% Fonts
+% ---------------------------------------------------
+
+\providecommand\fontspec[1]{%
+  \PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}%
+}
 
 %-------------------------------------------------------------
 % The following commands still use capital letters due to legacy...
