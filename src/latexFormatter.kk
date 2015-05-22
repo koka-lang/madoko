@@ -33,7 +33,7 @@ public function fmtLatexEnv(context : inlineContext, env : string, txt : string,
 
 public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
   if (cmd=="") then texText(txt) 
-  elif (cmd=="br") then "\\mdBr\n" 
+  elif (cmd=="br") then "\\mdbr\n" 
   // elif (cmd=="code") then "\\lstinline|" + txt + "|" 
   else texCmd(cmd,txt,attrs)
 }
@@ -52,7 +52,7 @@ public function fmtLatexEscape( context : inlineContext, txt : string, allowEnti
 }
 
 public function fmtLatexFootnote(context : inlineContext, id : string, fn : footnote ) : string {
-  "\\mdFootnote[id=back-fn-" + id + ",label={" + fn.footnoteNum + "}]{" + ((fn.footnoteContent)(context)) + "}"
+  texCmdX( "\\footnote", ((fn.footnoteContent)(context)), attrsNone, [("id","back-fn-" + id)])
 }
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
@@ -61,9 +61,12 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
     texCmd("img",link.href,attrs)
   }
   else {
-    texCmd("a", texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href),attrs) +
-      "{" + (if (link.linkattrs.hasClass("tex-tooltip")) then extractText(link.title) else "") + "}" +
-      "{" + content + "}"    
+    val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
+    val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
+    val cmd   = if (attrs.hasClass("localref")) 
+                 then "\\hyperref[" + url + "]"
+                 else "\\href" + url.braced
+    texCmdX( cmd, content, attrs, [("tex-outercmd",title)] )
   }
 }
 
@@ -88,12 +91,9 @@ public function fmtLatexCodeToken(classes : list<string>, txt : string ) : strin
   val start = if (classes.any(fun(cname) { cname=="white" })) 
                 then "{"  // so preindent can match
                 else {
-                  val cclasses = classes.map(fun(cname) { 
-                                    cname.replaceAll(regex(@"(?:^|[^a-z]+)(?:([a-z])([a-z]*))?",ignoreCase=True),fun(ccap) {
-                                      ccap.groups[1].toUpper() + ccap.groups[2]
-                                    }).replaceAll(regex(@"[^a-zA-Z]+"),"")
-                                  }).filter( fun(cname) { cname != "" && cname != "Token" })
-                  @"\mdToken{" + cclasses.join(",") + "}{"
+                  val cclasses = classes.map( fun(cname) { cname.replaceAll(regex(@"[^a-zA-Z]+"),"") })
+                                  .filter( fun(cname) { cname != "" && cname != "token" })
+                  @"\mdtoken{" + cclasses.join(",") + "}{"
                 }
   val end = "}"
   start + txt + end     
@@ -182,10 +182,10 @@ function texEntity( cap : matched ) {
 
 
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
-  val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
-  "\\begin{mdCode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
+  val table = if (attrs.hasClass("long")) then "longtable" else "table"
+  "\\begin{mdcode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
     ct.rows.map( fun(row) { row.map(fmtLatexCodeCell).join("&") }).join("\\\\\n") +
-  "\n\\end{mdCodeTable}\n"
+  "\n\\end{mdcode" + table + "}\n"
 }
 
 function fmtLatexCodeCell( ccell : ccell ) : string {
@@ -197,7 +197,7 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val pre = "md"
   val rows = head + body
   val td = if (attrs.hasClass("columns")) then "column" else "td"
-  val table = if (attrs.hasClass("long")) then "LongTable" else "Table"
+  val table = if (attrs.hasClass("long")) then "longtable" else "table"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
   "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + 
@@ -328,6 +328,12 @@ function texCmd( cmd : string, body : string, attrs : attrs = attrsNone, pre : s
   attrs.cssAttrs(body,[("display","inline")],cmd)
 }
 
+function texCmdX( cmd : string, body : string, attrs : attrs = attrsNone, extra : list<(string,string)> = []) : string {
+  // val cmdName = if (attrs.texelem != "") then attrs.texelem else (pre + cmd.normalizeCmd.capitalize)
+  // "\\" + cmdName + attrs.texAttrsX + "{" + body + "}"
+  attrs.cssAttrs(body,[("display","inline"),("tex-cmd",cmd)] + extra)
+}
+
 
 function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : string {
   texEnvPlain(env,body,attrs)
@@ -340,7 +346,7 @@ function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
                // "\\end{" + envName + "}%mdk\n"
   match(attrs.hasKey("float")) {
     Nothing   -> envCmd
-    Just(flt) -> "\\mdFloatBox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
+    Just(flt) -> "\\mdfloatbox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
   }               
 }
 
@@ -525,13 +531,17 @@ function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
+  val body1 = body0
+    .onKey(kvs, "id", fun(id, b) {
+      "\\label" + id.braced + b
+    })
   if (isBlock) {
-    body0.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(body) {  
-      body.margins(kvs)
+    body1.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
+      b.margins(kvs)
     })
   }
   else {
-    body0.cssInlineMargin(kvs,"margin")
+    body1.cssInlineMargin(kvs,"margin")
   }
 }
 

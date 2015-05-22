@@ -355,15 +355,40 @@
 \newcommand\mdprecode{}
 \newcommand\mdbr{\mdBr}
 
+% code
+% precode
+% br
+
+\newcommand\mdfootnote[2]{%
+  \gdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
+}
+
+\providecommand\pdfmarkupcomment[3][]{}
+\newcommand\mdtooltip[2]{%
+  #2%
+  \hbox to 0pt{\raisebox{1ex}{\tiny\pdfmarkupcomment[color=White,author=Title]{}{#1}}}%
+}
+
+%-------------------------------------------------------------
+% Code
+%-------------------------------------------------------------
+
 \newlength\presp
 \settowidth\presp{\texttt{ }}
 \newcommand\prespace[1]{\hspace*{#1\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
 \newcommand\prebr{\strut\\}
 
-% code
-% precode
-% br
+\newcommand{\md@tokenpostfix}{}
+\newcommand{\md@tokencmd}[1]{#1}
+\newrobustcmd{\mdtoken}[2]{%
+  \renewcommand{\md@tokencmd}[1]{##1}%
+  \@for\@tname:=#1\do{%
+    \ifcsdef{mdtoken\md@tokenpostfix\@tname}{\apptox{\md@tokencmd}{\csname mdtoken\md@tokenpostfix\@tname\endcsname}}{}%
+  }%
+  \md@tokencmd{#2}%
+}
+
 
 %-------------------------------------------------------------
 % The following commands still use capital letters due to legacy...

@@ -246,9 +246,9 @@ function defaultMeta( options : options, fmt : formatter ) : string {
       @"~math-display: input=math",
 
       @"~Snippet  : input=math .block snippet-needpdf=true",
-      @"~Footnote : label='[@footnote]{.footnote-label}'",
-      @"            before='[\/^&label;.^]{.footnote-before}'",
-      @"            after='&nl;[&#8617;](#back-&id;){.footnote-backref}' line-adjust=0",
+      @"~Footnote : label='[@footnote]{.footnote-label}' line-adjust=0",
+      @"@html ~Footnote: before='[\/^&label;.^]{.footnote-before}'",
+      @"                 after='&nl;[&#8617;](#back-&id;){.footnote-backref}'",
 
       @"~FlushLeft : .align-left",
       @"~FlushRight: .align-right",
