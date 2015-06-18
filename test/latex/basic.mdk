@@ -8,10 +8,14 @@ Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
 ~strong   : tex-cmd=\textbf
+.equation-before: tex-cmd=\mdtag
 
 Tex Header*: \parskip=0ex %\parindent=0pt
 
 Lorem     : Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+[bfly]: ../../contrib/images/butterfly.png { max-width=90% width=100px }
+[arrow]: ../../contrib/images/arrow.png { max-width=90% width=1em }
 
 # Introduction { #sec-intro }
 
@@ -47,6 +51,8 @@ Test^sup^ and test~sub~ and ~~strike out~~. Here is `code & \cmd`, and `pretty &
 
 **strong** and _emphasis_.
 
+Images: ![bfly]{vertical-align=middle border="solid 1px blue"} and ![arrow]{vertical-align=top}.
+
 ```
 More code
 ```
@@ -54,6 +60,19 @@ More code
 ```javascript
 function test
 ```
+
+Equation [#euler]
+
+~ Equation { #euler }
+e = mc^2
+~
+
+And pre-formatted math:
+
+~ MathPre
+x &= @sin(y*y)
+yyy &= id + @keyword
+~
 
 ## Overview 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 

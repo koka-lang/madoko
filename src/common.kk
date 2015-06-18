@@ -407,7 +407,7 @@ public function addKeyval( attrs : attrs, key : string, value : string ) : attrs
 }
 
 public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
-  attrs(keyvals=attrs.keyvals.filter(fun(kv){ keys.all( fun(key) { kv.fst != key } )) })
+  attrs(keyvals=attrs.keyvals.filter(fun(kv){ keys.all( fun(key) { kv.fst != key } ) }))
 }
 
 public function setLineNo( attrs : attrs, line : int, dataline: string ) : attrs {

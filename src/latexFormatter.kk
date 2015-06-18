@@ -38,6 +38,14 @@ public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string,
   else texCmd(cmd,txt,attrs)
 }
 
+public function fmtLatexMathEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
+  attrs.cssAttrs(txt)
+}
+
+public function fmtLatexMathCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
+  attrs.cssAttrs(txt)
+}
+
 public function fmtLatexLineInfo( context : inlineContext, lineInfo : string ) : string {
   //"%mdk-data-line={" + lineInfo + "}\n"
   "\\mdline{" + lineInfo + "}"
@@ -59,8 +67,8 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
   val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
   val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
   if (isImage) {
-    texCmdX( "\\includegraphics[" + cssImageArgs(attrs) + "]" + url.noext.braced, 
-              attrs.removeKeys(["width","height","zoom","transform-scale","transform-rotate"]) )
+    val (attrsx, args) = cssImageArgs(attrs)
+    texCmdX( "\\includegraphics[" + args + "]" + url.noext.braced, "" /*content*/, attrsx ) 
   }
   else {
     val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
@@ -567,14 +575,14 @@ function cssText( body : string, kvs : dict<string>, isBlock : bool ) : string {
 // Images
 // -----------------------------------------------------------------------------
 
-function cssImageArgs( attrs : attrs ) : string {
+function cssImageArgs( attrs : attrs ) : (attrs,string) {
   val kvs = attrs.keyvals.dict
-  "keepaspectratio=true"
+  val args = "keepaspectratio=true"
     .onKey( kvs, "width", fun(value,b) {
-      b + ",width=" + cssWidth(value)
+      if (value=="auto") then b else b + ",width=" + cssWidth(value)
     })
     .onKey( kvs, "height", fun(value,b) {
-      b + ",height=" + cssWidth(value)
+      if (value=="auto") then b else b + ",height=" + cssHeight(value)
     })
     .onKey( kvs, "zoom", fun(value,b) {
       b + ",scale=" + cssValue(value)
@@ -585,6 +593,8 @@ function cssImageArgs( attrs : attrs ) : string {
     .onKey( kvs, "transform-rotate", fun(value,b) {
       b + ",angle=" + cssValue(value)
     })
+  val attrsx = attrs.removeKeys(["width","height","zoom","transform-rotate","transform-scale"])
+  (attrsx,args)
 }
 
 // -----------------------------------------------------------------------------
@@ -863,7 +873,7 @@ function cssAttrX( kvs : dict<string>, key : string, show : string -> string ) :
 function onKey( body : string, kvs : dict<string>, key : string, action ) : string {
   match(kvs[key]) {
     Nothing -> body
-    Just(value) -> action(value,body)
+    Just(value) -> if (value.isEmpty) then body else action(value,body)
   }
 }
 
