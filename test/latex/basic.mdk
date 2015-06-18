@@ -23,7 +23,7 @@ Lorem ipsum [dolor]{margin-left=1em} sit amet[^fn1]\/[^fn2],
 
 [^fn1]: testing a footnote.
 
-     Nice.
+     Nice. 
 
 [^fn2]: &lorem;
 
@@ -44,6 +44,8 @@ terrible had happened to him.
  padding=1ex background-color=FloralWhite}
 
 Test^sup^ and test~sub~ and ~~strike out~~. Here is `code & \cmd`, and `pretty & \cmd code`{.pretty}
+
+**strong** and _emphasis_.
 
 ```
 More code

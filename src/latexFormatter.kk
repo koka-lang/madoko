@@ -57,11 +57,12 @@ public function fmtLatexFootnote(context : inlineContext, id : string, fn : foot
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
+  val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
   if (isImage) {
-    texCmd("img",link.href,attrs)
+    texCmdX( "\\includegraphics[" + cssImageArgs(attrs) + "]" + url.noext.braced, 
+              attrs.removeKeys(["width","height","zoom","transform-scale","transform-rotate"]) )
   }
   else {
-    val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
     val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
     val cmd   = if (attrs.hasClass("localref")) 
                  then "\\hyperref[" + url + "]"
@@ -560,6 +561,30 @@ function cssText( body : string, kvs : dict<string>, isBlock : bool ) : string {
       })
   }
   else body
+}
+
+// -----------------------------------------------------------------------------
+// Images
+// -----------------------------------------------------------------------------
+
+function cssImageArgs( attrs : attrs ) : string {
+  val kvs = attrs.keyvals.dict
+  "keepaspectratio=true"
+    .onKey( kvs, "width", fun(value,b) {
+      b + ",width=" + cssWidth(value)
+    })
+    .onKey( kvs, "height", fun(value,b) {
+      b + ",height=" + cssWidth(value)
+    })
+    .onKey( kvs, "zoom", fun(value,b) {
+      b + ",scale=" + cssValue(value)
+    })
+    .onKey( kvs, "transform-scale", fun(value,b) {
+      b + ",scale=" + cssValue(value)
+    })
+    .onKey( kvs, "transform-rotate", fun(value,b) {
+      b + ",angle=" + cssValue(value)
+    })
 }
 
 // -----------------------------------------------------------------------------

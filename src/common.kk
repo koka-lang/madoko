@@ -406,6 +406,10 @@ public function addKeyval( attrs : attrs, key : string, value : string ) : attrs
         text=attrs.text+" "+key+"="+value.quote, empty=False)
 }
 
+public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
+  attrs(keyvals=attrs.keyvals.filter(fun(kv){ keys.all( fun(key) { kv.fst != key } )) })
+}
+
 public function setLineNo( attrs : attrs, line : int, dataline: string ) : attrs {
   attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show ).addKeyval("data-line",dataline)
 }
