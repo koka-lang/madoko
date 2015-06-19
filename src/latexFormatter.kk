@@ -39,11 +39,11 @@ public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string,
 }
 
 public function fmtLatexMathEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
-  attrs.cssAttrs(txt)
+  attrs.cssAttrs(txt,[("display","inline")],"span")
 }
 
 public function fmtLatexMathCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
-  attrs.cssAttrs(txt)
+  attrs.cssAttrs(txt,[("display","inline")],"span")
 }
 
 public function fmtLatexLineInfo( context : inlineContext, lineInfo : string ) : string {
@@ -60,7 +60,7 @@ public function fmtLatexEscape( context : inlineContext, txt : string, allowEnti
 }
 
 public function fmtLatexFootnote(context : inlineContext, id : string, fn : footnote ) : string {
-  texCmdX( "\\footnote", ((fn.footnoteContent)(context)), attrsNone, [("id","back-fn-" + id)])
+  texCmdX( "\\mdfootnote" + fn.footnoteNum.braced, ((fn.footnoteContent)(context)), attrsNone, [("id","back-fn-" + id)])
 }
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
@@ -464,11 +464,11 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
              then kvs0
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
   body.applyCmd(kvs,"tex-innercmd")
-      .cssInner(kvs, isBlock)
+      .cssInner(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd")
       .applyEnv(kvs,"tex-env",elem)
       .cssBox(kvs,isBlock)
-      .cssOuter(kvs, isBlock)
+      .cssOuter(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-outercmd")
       .applyEnv(kvs,"tex-outerenv",elem)
       .applyBlock(kvs)
@@ -530,7 +530,7 @@ function trimEnvCmd( body : string, name : string, args : string, isBlock : bool
 }
 
 
-function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
+function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
   body0
     .onKey(kvs,"color", fun(value,body) {
       body.braceCmd("\\mdcolor" + value.cssColor.braced)
@@ -539,18 +539,21 @@ function cssInner( body0 : string, kvs : dict<string>, isBlock : bool ) : string
     .cssText(kvs,isBlock)
 }
 
-function cssOuter( body0 : string, kvs : dict<string>, isBlock : bool ) : string {
-  val body1 = body0
-    .onKey(kvs, "id", fun(id, b) {
-      "\\label" + id.braced + b
-    })
+function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
+  val body1 = if (attrs.name.isEmpty) then body0 
+               else body0 + "\\label" + attrs.name.braced
+  val body2 = body1.onKey(kvs,"bookmark",fun(value,body) {
+    cmdconnect( "\\mdbookmark" + attrs.lookupKey("level","1").braced + 
+                    value.texText.braced + attrs.name.braced + "%mdk\n",
+                body )
+  })               
   if (isBlock) {
-    body1.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
+    body2.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
       b.margins(kvs)
     })
   }
   else {
-    body1.cssInlineMargin(kvs,"margin")
+    body2.cssInlineMargin(kvs,"margin")
   }
 }
 

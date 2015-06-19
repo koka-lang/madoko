@@ -43,6 +43,7 @@
 
 %\RequirePackage{pdfcomment}
 \RequirePackage[bookmarks=true,pdfpagelabels=false]{hyperref} % loaded by pdfcomment
+\RequirePackage{bookmark}
 
 % package only loaded outside snippets
 \iftoggle{/madoko/math}{}{%
@@ -373,6 +374,11 @@
   \hbox to 0pt{\raisebox{1ex}{\tiny\pdfmarkupcomment[color=White,author=Title]{}{#1}}}%
 }
 
+\providecommand\pdfbookmark[3][]{}
+\newcommand\mdbookmark[3]{%
+  \pdfbookmark[#1]{#2}{#3}%
+}
+
 %-------------------------------------------------------------
 % Code
 %-------------------------------------------------------------
@@ -419,9 +425,9 @@
 \let\endmdMathprearray\endmdmathprearray
 
 % customizable tags in equations
-\newcommand\md@tag{}
-\newcommand\mdtag[1]{\def\md@tag{\tag*{#1}\mdlabeltarget\gdef\md@tag{}}}
-\preto{\]}{\md@tag}
+\newcommand\md@mathtag{}
+\newcommand\mdmathtag[1]{\def\md@mathtag{\tag*{#1}\mdlabeltarget\gdef\md@mathtag{}}}
+\preto{\]}{\md@mathtag}
 
 
 %-------------------------------------------------------------

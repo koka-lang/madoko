@@ -8,7 +8,7 @@ Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
 ~strong   : tex-cmd=\textbf
-.equation-before: tex-cmd=\mdtag
+.equation-before: tex-cmd=\mdmathtag
 
 Tex Header*: \parskip=0ex %\parindent=0pt
 
@@ -18,6 +18,9 @@ Lorem     : Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eius
 [arrow]: ../../contrib/images/arrow.png { max-width=90% width=1em }
 
 # Introduction { #sec-intro }
+
+A new section with a [google](www.google.com) link.
+And to Section [#sec-intro].
 
 Lorem ipsum [dolor]{margin-left=1em} sit amet[^fn1]\/[^fn2], 
 [consectetur]{font-family=sans-serif font-size=large font-weight=bold font-style=italic} 
@@ -61,18 +64,22 @@ More code
 function test
 ```
 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
 Equation [#euler]
 
 ~ Equation { #euler }
 e = mc^2
 ~
 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
 And pre-formatted math:
 
 ~ MathPre
 x &= @sin(y*y)
 yyy &= id + @keyword
 ~
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
 
 ## Overview 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 

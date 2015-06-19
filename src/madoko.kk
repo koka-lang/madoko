@@ -179,8 +179,8 @@ function inlineContext( fmt : formatter,
                  pickx(fmtHtmlCodeToken,fmtTexCodeToken,fmtLatexCodeToken),
                  pickx(fmtHtmlLineInfo, fmtTexLineInfo, fmtLatexLineInfo),
                  pickx(fmtHtmlCodeTable, fmtTexCodeTable, fmtLatexCodeTable),
-                 pickx(fmtLatexCmd,fmtTexCmd,fmtLatexCmd), // math cmd
-                 pickx(fmtLatexEnv,fmtTexEnv,fmtLatexEnv), // math env
+                 pickx(fmtLatexMathCmd,fmtTexCmd,fmtLatexMathCmd), // math cmd
+                 pickx(fmtLatexMathEnv,fmtTexEnv,fmtLatexMathEnv), // math env
                  fmt 
                )
 }

@@ -197,7 +197,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     }
      
     Heading(d,txt,attrs) -> { 
-      context.fmtCmd("h" + (d + context.headingBase -1).show, formatInline(context.inlineContext,txt,attrs), attrs)
+      context.fmtCmd("h" + (d + context.headingBase -1).show, formatInline(context.inlineContext,txt,attrs), 
+                     attrs.addKeyval("level",d.show))
     }
 
     HLine(attrs) -> {
