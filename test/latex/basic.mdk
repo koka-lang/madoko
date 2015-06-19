@@ -7,7 +7,7 @@ Line no   : False
 Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
-~strong   : tex-cmd=\textbf
+~Pre      : tex-env=mdpre 
 .equation-before: tex-cmd=\mdmathtag
 
 Tex Header*: \parskip=0ex %\parindent=0pt
@@ -54,21 +54,31 @@ Test^sup^ and test~sub~ and ~~strike out~~. Here is `code & \cmd`, and `pretty &
 
 **strong** and _emphasis_.
 
+<!--
 Images: ![bfly]{vertical-align=middle border="solid 1px blue"} and ![arrow]{vertical-align=top}.
+-->
+
+Some code: 
 
 ```
 More code
 ```
 
+And some javascript:
+
+Weird.
+
 ```javascript
-function test
+function test() {
+  alert("hello");
+}
 ```
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
-Equation [#euler]
+Equation [#euler] with inline $x=mc^4$ math.
 
-~ Equation { #euler }
-e = mc^2
+~ Equation { #euler color=teal }
+e = mc^3
 ~
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 

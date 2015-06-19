@@ -156,12 +156,14 @@ function inlineContext( fmt : formatter,
                                starBold : bool = False,
                                prettyAlign : int = 2 ) : inlineContext
 {
+  val isTex2  = match(metadata["tex2"]) {
+                  Just(value) -> value.toLower == "true"  
+                  _ -> False
+                }
+
   function pickx(f,g,h) {
     match(fmt) {
-      FmtTex -> match(metadata["tex2"]) {
-                  Just(value) | value.toLower == "true"  -> h
-                  _ -> g
-                }
+      FmtTex  -> if (isTex2) then h else g
       FmtHtml -> f
     }                
   }
@@ -179,8 +181,8 @@ function inlineContext( fmt : formatter,
                  pickx(fmtHtmlCodeToken,fmtTexCodeToken,fmtLatexCodeToken),
                  pickx(fmtHtmlLineInfo, fmtTexLineInfo, fmtLatexLineInfo),
                  pickx(fmtHtmlCodeTable, fmtTexCodeTable, fmtLatexCodeTable),
-                 pickx(fmtLatexMathCmd,fmtTexCmd,fmtLatexMathCmd), // math cmd
-                 pickx(fmtLatexMathEnv,fmtTexEnv,fmtLatexMathEnv), // math env
+                 pickx(if (isTex2) then fmtLatexMathCmd else fmtTexCmd,fmtTexCmd,fmtLatexMathCmd), // math cmd
+                 pickx(if (isTex2) then fmtLatexMathEnv else fmtTexEnv,fmtTexEnv,fmtLatexMathEnv), // math env
                  fmt 
                )
 }

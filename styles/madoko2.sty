@@ -291,7 +291,7 @@
 {\endtrivlist} 
 %\AfterEndEnvironment{mdmarginlr}{\leavehmode}
 
-\newcommand*\mdmargintop[1]{\onnotzero{#1}{\addvskip{#1}}}
+\newcommand*\mdmargintop[1]{\onnotzero{#1}{\par\addvskip{#1}}}
 \newcommand*\mdmarginbottom[1]{\onnotzero{#1}{\addvskip{#1}}}
 
 \newlength{\dim@marginbottom}
@@ -304,7 +304,12 @@
   \end{mdmarginlr}%
   \mdmarginbottom{\dim@marginbottom}%  
 }
-
+\newenvironment{mdbmargintb}[2]{%
+  \dim@marginbottom=\dimdefault{#2}{0pt}%  
+  \mdmargintop{#1}%
+}{%
+  \mdmarginbottom{\dim@marginbottom}%  
+}
 \newcommand*\mdpaddingtop[1]{\ifzero{#1}{}{\vspace*{#1}}}
 \newcommand*\mdpaddingbottom[1]{\ifzero{#1}{}{\vspace*{#1}}}
 
@@ -356,8 +361,6 @@
 \newcommand\mdsub[1]{\ensuremath{_\mathrm{#1}}}
 \newcommand\mddel[1]{{\mdcolor{gray}#1}}
 
-\newcommand\mdcode{\texttt}
-\newcommand\mdprecode{}
 \newcommand\mdbr{\mdBr}
 
 % code
@@ -383,6 +386,12 @@
 % Code
 %-------------------------------------------------------------
 
+\newcommand\mdcode{\texttt}
+\newcommand\mdprecode{\ttfamily}
+\newlength\mdpreskip
+\setlength\mdpreskip{0.5ex}
+\newenvironment{mdpre}{\par\addvskip{\mdpreskip}\noindent}{\par\addvskip{\mdpreskip}}
+
 \newlength\presp
 \settowidth\presp{\texttt{ }}
 \newcommand\prespace[1]{\hspace*{#1\presp}}
@@ -392,13 +401,58 @@
 \newcommand{\md@tokenpostfix}{}
 \newcommand{\md@tokencmd}[1]{#1}
 \newrobustcmd{\mdtoken}[2]{%
-  \renewcommand{\md@tokencmd}[1]{##1}%
+  \def\md@tokencmd##1{##1}%
   \@for\@tname:=#1\do{%
-    \ifcsdef{mdtoken\md@tokenpostfix\@tname}{\apptox{\md@tokencmd}{\csname mdtoken\md@tokenpostfix\@tname\endcsname}}{}%
+    \ifcsdef{mdtoken\md@tokenpostfix\@tname}{\apptox\md@tokencmd{\csname mdtoken\md@tokenpostfix\@tname\endcsname}}{}%
   }%
   \md@tokencmd{#2}%
 }
 
+\newcommand{\apptox}[2]{%  apptox{\cmd1}{\cmd2} == newcommand{\cmd1'}[1]{\cmd1{\cmd2{#1}}}
+  \ifdef#1{}{\def#1##1{##1}}% define it if necessary (as identity)
+  \protected@edef#1##1{#1{\protect #2{##1}}}%
+}
+
+%-------------------------------------------------------------
+% Standard token classes for syntax highlighting 
+%-------------------------------------------------------------
+
+\newcommand{\mdtokenidentifier}[1]{#1}
+\newcommand{\mdtokenkeyword}[1]{\textcolor{navy}{#1}}
+\newcommand{\mdtokenpredefined}[1]{\textcolor{navy}{#1}}
+\newcommand{\mdtokenstring}[1]{\textcolor{maroon}{#1}}
+\newcommand{\mdtokenstringEscape}[1]{\textcolor{gray}{#1}}
+\newcommand{\mdtokencomment}[1]{\textcolor{green}{#1}}
+\newcommand{\mdtokenspecial}[1]{\textcolor{navy}{#1}}
+\newcommand{\mdtokendoc}[1]{\textcolor{gray}{#1}}
+\newcommand{\mdtokenconstant}[1]{\textcolor{purple}{#1}}
+\newcommand{\mdtokentag}[1]{\textcolor{navy}{#1}}
+\newcommand{\mdtokenerror}[1]{\textcolor{red}{#1}}
+\newcommand{\mdtokenattribute}[1]{\textcolor{purple}{#1}}
+\newcommand{\mdtokenconstructor}[1]{\textcolor{purple}{#1}}
+\newcommand{\mdtokennamespace}[1]{\textcolor{navy}{#1}}
+\newcommand{\mdtokentype}[1]{\textcolor{teal}{#1}}
+\newcommand{\mdtokenemphasis}[1]{\itshape #1}
+\newcommand{\mdtokenstrong}[1]{\bfseries #1}
+\newcommand{\mdtokentitle}[1]{\bfseries #1}
+\newcommand{\mdtokenmeta}[1]{\textcolor{Gray}{#1}}
+\newcommand{\mdtokenentity}[1]{{#1}}
+\newcommand{\mdtokendelimiter}[1]{{#1}}
+
+\newcommand{\mdtokennumber}[1]{\mdtokenconstant{#1}}
+\newcommand{\mdtokenliteral}[1]{\mdtokenconstant{#1}}
+\newcommand{\mdtokenitalic}[1]{\mdtokenemphasis{#1}}
+\newcommand{\mdtokenbold}[1]{\mdtokenstrong{#1}}
+\newcommand{\mdtokenregexp}[1]{\mdtokenstring{#1}}
+\newcommand{\mdtokeninvalid}[1]{\mdtokenerror{#1}}
+\newcommand{\mdtokenvalue}[1]{\mdtokenstring{#1}}
+
+% Pretty tokens
+
+\newcommand{\mdtokenprettyIdentifier}[1]{\textit{#1}}
+\newcommand{\mdtokenprettyConstructor}[1]{\textit{#1}}
+\newcommand{\mdtokenprettyKeyword}[1]{\textsf{#1}}
+\newcommand{\mdtokenprettyOperator}[1]{\,#1\,}
 
 %-------------------------------------------------------------
 % Math

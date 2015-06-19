@@ -471,11 +471,11 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .cssOuter(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-outercmd")
       .applyEnv(kvs,"tex-outerenv",elem)
-      .applyBlock(kvs)
+      .applyBlock(isBlock && !attrs.hasClass("para-block"))
 }
 
-function applyBlock( body : string, kvs : dict<string> ) : string {
-  if (kvs.cssIsBlock) then "\n" + body.trim + "%mdk\n" else body
+function applyBlock( body : string, isBlock : bool ) : string {
+  if (isBlock) then "\n" + body.trim + "%mdk\n" else body
 }
 
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
@@ -536,7 +536,7 @@ function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
       body.braceCmd("\\mdcolor" + value.cssColor.braced)
     })
     .cssFont(kvs)
-    .cssText(kvs,isBlock)
+    .cssText(kvs,attrs,isBlock)
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
@@ -561,9 +561,12 @@ function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
 // Text
 // -----------------------------------------------------------------------------
 
-function cssText( body : string, kvs : dict<string>, isBlock : bool ) : string {
+function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : bool ) : string {
   if (isBlock) then {
     body
+      .onClasses( attrs, ["para-continue","para-block","noindent"], fun(b) {
+        cmdconnect("\\noindent",b)
+      })
       .onKey( kvs, "text-indent", fun(value,b) {
         "\\noindent\\hspace*" + value.cssWidth.braced + b
       })
@@ -709,6 +712,8 @@ function margins( body : string, kvs : dict<string> ) : string {
   val (mleft,mright) = kvs.marginLR
   if (mtop==mbottom && mbottom==mleft && mleft==mright)
    then body.trimEnv("mdbmargin", mtop.braced )
+  elif (mleft.isEmpty && mright.isEmpty)
+   then body.trimEnv("mdbmargintb", [mtop,mbottom].map(braced).join )
    else body.trimEnv("mdbmarginx", [mtop,mright,mbottom,mleft].map(braced).join )
 }
 
@@ -878,6 +883,11 @@ function onKey( body : string, kvs : dict<string>, key : string, action ) : stri
     Nothing -> body
     Just(value) -> if (value.isEmpty) then body else action(value,body)
   }
+}
+
+
+function onClasses( body : string, attrs : attrs, classes : list<string>, action ) : string {
+  if (classes.any(fun(c) { attrs.hasClass(c)})) then action(body) else body
 }
 
 function onKeys( body : string, kvs : dict<string>, keys : list<string>, action ) : string {
