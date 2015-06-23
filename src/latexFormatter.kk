@@ -28,6 +28,8 @@ import cssFormatter
 public function fmtLatexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
    then texText(txt) 
+  elif (env=="ul" || env=="ol")
+   then texList(env,txt,attrs)
    else texEnv(env,txt,attrs)
 }
 
@@ -92,7 +94,7 @@ public function fmtLatexCodePlain( context : inlineContext, txt : string ) : str
 
 public function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
-  unTokenize(txt,startLine)
+  "\\mdpretty{}" + unTokenize(txt,startLine)
 }
 
 public function fmtLatexCodeToken(classes : list<string>, txt : string ) : string
@@ -191,10 +193,13 @@ function texEntity( cap : matched ) {
 
 
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
-  val table = if (attrs.hasClass("long")) then "longtable" else "table"
-  "\\begin{mdcode" + table + "}" + attrs.texAttrsX + "{" + ct.columns.show + "}" + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
+  val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
+  val content = 
+      "%mdk\n\\begin{mdtabular}" + ct.columns.show.braced + "\\mdpretty\n" +
+    "\\begin" + table.braced + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
     ct.rows.map( fun(row) { row.map(fmtLatexCodeCell).join("&") }).join("\\\\\n") +
-  "\n\\end{mdcode" + table + "}\n"
+    "\n\\end" + table.braced + "\n\\end{mdtabular}%mdk\n"
+  texEnv("",content,attrs)
 }
 
 function fmtLatexCodeCell( ccell : ccell ) : string {
@@ -203,18 +208,17 @@ function fmtLatexCodeCell( ccell : ccell ) : string {
 }
 
 public function fmtLatexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {
-  val pre = "md"
   val rows = head + body
   val td = if (attrs.hasClass("columns")) then "column" else "td"
-  val table = if (attrs.hasClass("long")) then "longtable" else "table"
+  val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
-  "\\begin{" + pre + table + "}" + attrs.addClass("block").texAttrsX + 
-      "{" + columns.show + "}" + 
+  "%mdk\n\\begin{mdtabular}" + columns.show.braced + "\n" + 
+      "\\begin{" + table + "}" + 
       "{" + colattrsx.map(fmtColumn).join + "}\n" +
-    head.fmtRows("th",pre) + "\n" +
-    body.fmtRows(td,pre) +
-    "\\end{" + pre + table + "}\n"
+    head.fmtRows("th") + "\n" +
+    body.fmtRows(td) +
+    "\\end{" + table + "}\n\\end{mdtabular}\n%mdk\n"
 }
 
 type line {
@@ -229,7 +233,7 @@ function fmtColumn( colattr : attrs ) : string {
   "l"
 }
 
-function fmtRows( rows : list<row>, td : string, pre : string ) : string {
+function fmtRows( rows : list<row>, td : string ) : string {
   var lastIsLine := False
   val xrows = rows.map fun(row) {
     val lineRow = row.cells.map(fun(cell) { 
@@ -243,7 +247,7 @@ function fmtRows( rows : list<row>, td : string, pre : string ) : string {
       res
     }
     else {
-      val res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row,pre)
+      val res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row)
       lastIsLine := False
       res
     }
@@ -281,20 +285,20 @@ function fmtLine( lines : list<line>, row : row ) : string
   line1 + line2
 }
 
-function fmtRow( td : string, row : row, pre : string ) : string {
+function fmtRow( td : string, row : row ) : string {
   /*
   rcolor = match (row.rowAttrs.hasKey("background-color")) {
              Nothing   -> ""
              Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
            }     
   rcolor + */
-  row.cells.map(fun(cell) { fmtCell(td,cell.text.trim,cell.cellAttrs,pre) }).join("&") 
+  row.cells.map(fun(cell) { fmtCell(td,cell.text.trim,cell.cellAttrs) }).join("&") 
     + "\\\\\n"
 } 
 
 
 
-function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : string {
+function fmtCell( elem : string, body : string, attrs : attrs ) : string {
   val colspan = attrs.lookupKey("column-span","1")
   val align   = match(attrs.hasKey("text-align")) {
                   Just(alignment) -> alignment.substr(0,1)
@@ -319,8 +323,11 @@ function fmtCell( elem : string, body : string, attrs : attrs, pre : string ) : 
 }
 
 
-
-
+function texList( tag : string, body : string, attrs : attrs ) : string {
+  val args = if (attrs.hasClass("compact")) then "noitemsep,topsep=\\mdcompacttopsep" else ""
+  val env  = attrs.lookupKey("tex-env","itemize") + "[" + args + "]"
+  attrs.addKeyval("tex-env",env).cssAttrs(body,[("display","block")],"")
+}
 
 
 function texAttrsX( attrs : attrs ) : string {
@@ -349,7 +356,7 @@ function texEnv( env : string, body : string, attrs : attrs = attrsNone ) : stri
 }
 
 function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
-  val envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
+  //val envName = (if (attrs.texelem != "") then attrs.texelem else ("md" + env.normalizeCmd.capitalize))
   val envCmd = // "\\begin{" + envName + "}" + attrs.texAttrsX + "%mdk\n" +
                attrs.cssAttrs(body,[("display","block")],env) // + "%mdk\n" +
                // "\\end{" + envName + "}%mdk\n"
@@ -463,14 +470,15 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
                 ["tex-cmd","tex-innercmd","tex-cmd","tex-env","tex-outercmd","tex-outerenv"].any(fun(k) { kvs0.containsKey(k) }))
              then kvs0
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
-  body.applyCmd(kvs,"tex-innercmd")
+  body.insertCmd(kvs,"tex-cmd-before")
+      .applyCmd(kvs,"tex-cmd-inner")
       .cssInner(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd")
-      .applyEnv(kvs,"tex-env",elem)
+      .applyEnv(kvs,"tex-env")
       .cssBox(kvs,isBlock)
       .cssOuter(kvs, attrs, isBlock)
-      .applyCmd(kvs,"tex-outercmd")
-      .applyEnv(kvs,"tex-outerenv",elem)
+      .applyCmd(kvs,"tex-cmd-outer")
+      .applyEnv(kvs,"tex-env-outer")
       .applyBlock(isBlock && !attrs.hasClass("para-block"))
 }
 
@@ -486,7 +494,17 @@ function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   }
 }
 
-function applyEnv( body : string, kvs : dict<string>, key : string, elem : string) : string {
+function insertCmd( body : string, kvs : dict<string>, key : string ) : string {
+  match(kvs[key]) {
+    Nothing -> body
+    Just(cmd) -> {
+      val cbody = cmdconnect(if (cmd.startsWith("{")) then cmd.substr(1) else cmd, body) 
+      if (cmd.startsWith("{")) then cbody.braced else cbody
+    }
+  }
+}
+
+function applyEnv( body : string, kvs : dict<string>, key : string) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(env) -> match(env.find(rxEnv)) {
@@ -806,10 +824,11 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
     body
       .onKey(kvs,"text-align", fun(value,b) {
         if (!isBlock) then b else {
-          (if (value=="left") then "\\raggedright{}"
-           elif (value=="right") then "\\raggedleft{}"
-           elif (value=="center") then "\\centering{}"
-           else "") + b
+          blockEnv( b, 
+            if (value=="left") then "flushleft"
+            elif (value=="right") then "flushright"
+            elif (value=="center") then "center"
+            else "")
         }
       })
       .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(b) {  

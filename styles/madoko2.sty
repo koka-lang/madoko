@@ -42,7 +42,7 @@
 \RequirePackage{pifont}
 
 %\RequirePackage{pdfcomment}
-\RequirePackage[bookmarks=true,pdfpagelabels=false]{hyperref} % loaded by pdfcomment
+\RequirePackage{hyperref} % loaded by pdfcomment
 \RequirePackage{bookmark}
 
 % package only loaded outside snippets
@@ -71,7 +71,7 @@
 
 % hyperref
 \hypersetup{
-  colorlinks=true,linkcolor=navy,urlcolor=blue,filecolor=Maroon,bookmarksdepth=3,bookmarksopenlevel=1
+  colorlinks=true,linkcolor=navy,urlcolor=blue,filecolor=Maroon,pdfpagelabels=false,bookmarks=true,bookmarksdepth=3,bookmarksopenlevel=1
 }
 
 % booktabs
@@ -105,8 +105,8 @@
 % Suppress the indentation on the following paragraph
 \providecommand\nofirstindent{\@afterindentfalse\@afterheading}
 
-% addvskip is not suppressed in a minipage
-\providecommand\addvskip[1]{%
+% addvskip is not suppressed in a minipage (and raises no error in hmode)
+\defcommand\addvskip[1]{%
   \ifvmode
     \ifdim \lastskip =\z@
       \vskip #1\relax
@@ -114,7 +114,7 @@
       \@tempskipb#1\relax\@xaddvskip
     \fi
   \else
-    \@noitemerr
+    %\@noitemerr
   \fi
 }
 
@@ -124,6 +124,9 @@
 % We need to call \mdlabeltarget for any structure that can set label
 \newcounter{md@targetcount}
 \newcommand{\mdlabeltarget}{\refstepcounter{md@targetcount}}
+
+\newlength\mdcompacttopsep
+\setlength\mdcompacttopsep{0.3\baselineskip}
 
 % ------------------------------------------------------------------------------
 %  \eifstrequal    test string equality but first expands the first argument
@@ -387,16 +390,48 @@
 %-------------------------------------------------------------
 
 \newcommand\mdcode{\texttt}
-\newcommand\mdprecode{\ttfamily}
+\newcommand\mdprecode{}
 \newlength\mdpreskip
-\setlength\mdpreskip{0.5ex}
-\newenvironment{mdpre}{\par\addvskip{\mdpreskip}\noindent}{\par\addvskip{\mdpreskip}}
+\setlength\mdpreskip{0.25\baselineskip}
+\newenvironment{mdpre}{\begin{mdparblock}{\mdpreskip}\ttfamily{}}{\end{mdparblock}}
+
+\newlength\md@postskip
+\newenvironment{mdparblock}[1]%
+  {\setlength\md@postskip{#1}\par\addvskip{#1}\noindent}%
+  {\par\addvskip{\md@postskip}}%
 
 \newlength\presp
 \settowidth\presp{\texttt{ }}
 \newcommand\prespace[1]{\hspace*{#1\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
 \newcommand\prebr{\strut\\}
+
+
+
+%-------------------------------------------------------------
+% Pretty code
+%-------------------------------------------------------------
+\newcommand\mdprettyfont{\rmfamily}
+\newcommand\mdpretty{%
+  \setlength{\tabcolsep}{0pt}%
+  \def\prespace{\pprespace}%
+  \def\preindent{\ppreindent}%
+  \def\prebr{\pprebr}%
+  \def\md@tokenpostfix{pretty}%
+  \mdprettyfont%
+}
+
+\newlength{\ppresp}
+\setlength{\ppresp}{0.5ex}
+\newcommand{\ppreindent}[1]{\hspace*{3\ppresp}}%{\hspace*{#1\ppresp}}
+\newcommand{\pprespace}[1]{\hspace*{\ppresp}}
+\newcommand{\pprebr}[1]{ }
+
+
+
+%-------------------------------------------------------------
+% Highlighted tokens
+%-------------------------------------------------------------
 
 \newcommand{\md@tokenpostfix}{}
 \newcommand{\md@tokencmd}[1]{#1}
@@ -412,6 +447,7 @@
   \ifdef#1{}{\def#1##1{##1}}% define it if necessary (as identity)
   \protected@edef#1##1{#1{\protect #2{##1}}}%
 }
+
 
 %-------------------------------------------------------------
 % Standard token classes for syntax highlighting 
@@ -449,10 +485,10 @@
 
 % Pretty tokens
 
-\newcommand{\mdtokenprettyIdentifier}[1]{\textit{#1}}
-\newcommand{\mdtokenprettyConstructor}[1]{\textit{#1}}
-\newcommand{\mdtokenprettyKeyword}[1]{\textsf{#1}}
-\newcommand{\mdtokenprettyOperator}[1]{\,#1\,}
+\newcommand{\mdtokenprettyidentifier}[1]{\textit{#1}}
+\newcommand{\mdtokenprettyconstructor}[1]{\textit{#1}}
+\newcommand{\mdtokenprettykeyword}[1]{\textsf{#1}}
+\newcommand{\mdtokenprettyoperator}[1]{\,#1\,}
 
 %-------------------------------------------------------------
 % Math
@@ -482,6 +518,25 @@
 \newcommand\md@mathtag{}
 \newcommand\mdmathtag[1]{\def\md@mathtag{\tag*{#1}\mdlabeltarget\gdef\md@mathtag{}}}
 \preto{\]}{\md@mathtag}
+
+
+%-------------------------------------------------------------
+% Tables 
+%-------------------------------------------------------------
+
+\newlength{\md@defaultcolwidth}
+\newcommand{\md@columncount}[1]{%
+  \setlength{\tabcolsep}{0.5ex}%
+  \setlength{\linewidth}{\dimexpr\linewidth-\tabcolsep*2*#1-\tabcolsep\relax}% the line length minus table spacing
+  \setlength{\md@defaultcolwidth}{\dimexpr\linewidth/#1\relax}%
+}
+
+\newlength\mdtableskip
+\setlength\mdtableskip{0.25\baselineskip}
+
+\newenvironment{mdtabular}[1]%
+  {\md@columncount{#1}}%
+  {}%
 
 
 %-------------------------------------------------------------
