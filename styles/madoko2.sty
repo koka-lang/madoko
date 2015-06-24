@@ -363,6 +363,7 @@
 \newcommand\mdsup[1]{\ensuremath{^\mathrm{#1}}}
 \newcommand\mdsub[1]{\ensuremath{_\mathrm{#1}}}
 \newcommand\mddel[1]{{\mdcolor{gray}#1}}
+\newcommand\mdcolumn{}
 
 \newcommand\mdbr{\mdBr}
 
@@ -393,10 +394,10 @@
 \newcommand\mdprecode{}
 \newlength\mdpreskip
 \setlength\mdpreskip{0.25\baselineskip}
-\newenvironment{mdpre}{\begin{mdparblock}{\mdpreskip}\ttfamily{}}{\end{mdparblock}}
+\newenvironment{mdpre}{\begin{mdparblock}[\mdpreskip]\ttfamily{}}{\end{mdparblock}}
 
 \newlength\md@postskip
-\newenvironment{mdparblock}[1]%
+\newenvironment{mdparblock}[1][0pt]%
   {\setlength\md@postskip{#1}\par\addvskip{#1}\noindent}%
   {\par\addvskip{\md@postskip}}%
 

@@ -255,6 +255,7 @@ function mapBlocks( blocks : list<block>,
     match(nblock) {
       Para        -> previousIsPar := True
       Div(_,xs)   | nblock.blockName == "figure" || xs.hasClass("float") -> ()  // leave as is
+      Source(input,Raw(Just(FmtHtml))) | input.startsWith("<!--") -> () // ignore comments too
       Div(_,xs)   | xs.hasClass("para-end") -> previousIsPar := True
       Code(_,_,xs)| xs.hasClass("para-end") -> previousIsPar := True
       DefLink     -> ()
