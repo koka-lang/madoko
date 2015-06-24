@@ -146,7 +146,7 @@ function parseDefinitionsFull(
 
     // paragraph indentation
     val attrsp = match(block) {
-      Para | previousIsPar -> attrsx.addClass("indent")
+      Para -> if (previousIsPar) then attrsx.addClass("indent") else attrsx.addClass("noindent")
       _ -> attrsx
     }
 
