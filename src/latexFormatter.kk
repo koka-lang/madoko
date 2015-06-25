@@ -647,8 +647,8 @@ function cssListArgs( attrs : attrs ) : string {
       val value = value0.cssValue
       val tag   = if (value=="lower-roman") then "\\roman*"
                   elif (value=="upper-roman") then "\\Roman*"
-                  elif (value=="lower-alpha") then "\\alph*"
-                  elif (value=="upper-alpha") then "\\Alph*"
+                  elif (value=="lower-alpha" || value=="lower-latin") then "\\alph*"
+                  elif (value=="upper-alpha" || value=="upper-latin") then "\\Alph*"
                   elif (value=="decimal") then "\\arabic*"
                   elif (value=="disc") then "\\textbullet"
                   elif (value=="circle") then "$\\circ$"
@@ -657,7 +657,7 @@ function cssListArgs( attrs : attrs ) : string {
                   elif (value=="none") then ""
                   else "\\arabic*"                
       val fmt = match(kvs["list-format"]) {
-                  Nothing -> if (tag.endsWith("*")) then "#1." else "#1"
+                  Nothing -> if (tag.endsWith("*")) then "#1" + (if (attrs.hasClass("list-sep-paren")) then ")" else ".") else "#1"
                   Just(f) -> f
                 }
       val label = fmt.replaceAll("#1",tag)

@@ -81,7 +81,13 @@
 \setlength{\doublerulesep}{\heavyrulewidth}
 \fi
 
-
+% enumitem
+\AtBeginDocument{%
+  \ifdef\@enhook{%
+    \PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak 
+                          use the "enumitem" package instead\MessageBreak (which is available by default)}{}%
+  }{}%
+}
 
 %-------------------------------------------------------------
 % Util
