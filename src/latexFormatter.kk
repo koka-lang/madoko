@@ -75,7 +75,9 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
   else {
     val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
     val cmd   = if (attrs.hasClass("localref")) 
-                 then "\\hyperref[" + url + "]"
+                 then (if (attrs.hasClass("bibref")) 
+                        then "\\mdcite" + url.braced
+                        else "\\mdref" + url.braced )
                  else "\\href" + url.braced
     texCmdX( cmd, content, attrs, [("tex-outercmd",title)] )
   }
@@ -94,7 +96,7 @@ public function fmtLatexCodePlain( context : inlineContext, txt : string ) : str
 
 public function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
-  "\\mdpretty{}" + unTokenize(txt,startLine)
+  unTokenize(txt,startLine)
 }
 
 public function fmtLatexCodeToken(classes : list<string>, txt : string ) : string
@@ -195,11 +197,11 @@ function texEntity( cap : matched ) {
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
   val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
   val content = 
-      "%mdk\n\\begin{mdtabular}" + ct.columns.show.braced + "\\mdpretty\n" +
+      "\\begin{mdcodetabular}" + ct.columns.show.braced + 
     "\\begin" + table.braced + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
     ct.rows.map( fun(row) { row.map(fmtLatexCodeCell).join("&") }).join("\\\\\n") +
-    "\n\\end" + table.braced + "\n\\end{mdtabular}%mdk\n"
-  texEnv("",content,attrs)
+    "\n\\end" + table.braced + "\\end{mdcodetabular}%mdk\n"
+  texEnv("",content,attrs.addClass("para-block"))
 }
 
 function fmtLatexCodeCell( ccell : ccell ) : string {
@@ -213,12 +215,12 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
-  "%mdk\n\\begin{mdtabular}" + columns.show.braced + "\n" + 
+  "\\begin{mdtabular}" + columns.show.braced + 
       "\\begin{" + table + "}" + 
-      "{" + colattrsx.map(fmtColumn).join + "}\n" +
+      "{" + colattrsx.map(fmtColumn).join + "}" +
     head.fmtRows("th") + "\n" +
     body.fmtRows(td) +
-    "\\end{" + table + "}\n\\end{mdtabular}\n%mdk\n"
+    "\\end{" + table + "}\\end{mdtabular}\n"
 }
 
 type line {
@@ -325,7 +327,7 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
 
 function texList( tag : string, body : string, attrs : attrs ) : string {
   val args = if (attrs.hasClass("compact")) then "noitemsep,topsep=\\mdcompacttopsep" else ""
-  val env  = attrs.lookupKey("tex-env","itemize") + "[" + args + "]"
+  val env  = attrs.lookupKey("tex-env","itemize") + (if (args.isEmpty) then "" else "[" + args + "]")
   attrs.addKeyval("tex-env",env).cssAttrs(body,[("display","block")],"")
 }
 
@@ -464,12 +466,14 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
-  val kvs0 = dict(defaults + attrs.keyvals).cssExpandKeys()
-  val isBlock = kvs0.cssIsBlock
+  val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
+  val isBlock = kvs.cssIsBlock
+  /*
   val kvs = if (isBlock || elem == "span" || elem == "div" ||
                 ["tex-cmd","tex-innercmd","tex-cmd","tex-env","tex-outercmd","tex-outerenv"].any(fun(k) { kvs0.containsKey(k) }))
              then kvs0
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
+  */            
   body.insertCmd(kvs,"tex-cmd-before")
       .applyCmd(kvs,"tex-cmd-inner")
       .cssInner(kvs, attrs, isBlock)
@@ -479,18 +483,24 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .cssOuter(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd-outer")
       .applyEnv(kvs,"tex-env-outer")
-      .applyBlock(isBlock && !attrs.hasClass("para-block"))
+      .applyBlock(isBlock && !attrs.hasClass("para-block"), attrs)
 }
 
-function applyBlock( body : string, isBlock : bool ) : string {
-  if (isBlock) then "\n" + body.trim + "%mdk\n" else body
+function applyBlock( body : string, isBlock : bool, attrs : attrs ) : string {
+  val lineinfo = match(attrs.hasKey("data-line")) {
+    Just(info) -> "\n%mdk-data-line={" + info + "}" 
+    Nothing    -> ""    
+  }
+  if (isBlock) then lineinfo + "\n" + body.trim + "%mdk\n" else body
 }
 
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> 
-      (if (cmd.startsWith("+")) then cmd.substr(1) else cmd) + body.braced 
+      if (cmd.startsWith("{")) 
+        then cmdconnect(cmd.substr(1), body).braced
+        else cmd + body.braced 
   }
 }
 

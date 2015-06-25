@@ -213,24 +213,28 @@ function inlineQuot( cap : matched, context ) : string {
 
 function inlineStrong( cap : matched, context ) : string {
   val tag = if (context.starBold && cap.matched.startsWith("_")) then "em" else "strong"
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]))
+  val class = tag + cap.matched.length.show
+  val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
+  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs)
 } 
 
 function inlineEmph( cap : matched, context ) : string {  
   val tag = if (context.starBold && cap.matched.startsWith("*")) then "strong" else "em"
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]))  
+  val class = tag + cap.matched.length.show
+  val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
+  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs )  
 } 
 
 function inlineSup( cap : matched, context ) : string {
-  context.fmtCmd("sup", formatInline(context,cap.groups[1]))  
+  context.fmtCmd("sup", formatInline(context,cap.groups[1]), context.defaults.matchRules("sup",attrsNone))  
 } 
 
 function inlineSub( cap : matched, context ) : string {
-  context.fmtCmd("sub", formatInline(context,cap.groups[1]))  
+  context.fmtCmd("sub", formatInline(context,cap.groups[1]), context.defaults.matchRules("sub",attrsNone))  
 } 
 
 function inlineDel( cap : matched, context ) : string {
-  context.fmtCmd("del", formatInline(context,cap.groups[1]))  
+  context.fmtCmd("del", formatInline(context,cap.groups[1]), context.defaults.matchRules("del",attrsNone))  
 } 
 
 function inlineTag( cap : matched, context : inlineContext ) : string {

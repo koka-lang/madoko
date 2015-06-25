@@ -10,6 +10,7 @@
 module entity
 
 import common  // warning
+import std/regex
 
 struct entity(
   ename : string,
@@ -70,10 +71,11 @@ function entityCmd( entity : entity ) : string {
   val cmd = entity.ecmd
   if (entity.emath) 
    then @"\ensuremath{" + cmd + "}"
-  elif (cmd.endsWith("}"))
+  elif (cmd.contains(rxSafeEnd))
    then cmd
    else cmd + "{}"
 }
+val rxSafeEnd = regex(@"[^A-Za-z@]$")
 
 // Translate a TeX command to an entity (or empty if unknown)
 public function texCmdToEntity( cmd : string ) : string {
@@ -111,7 +113,7 @@ val entities : list<entity> = [
   Entity("rcurly", 125,  @"\}", False),
   Entity("tilde", 126,  @"\textasciitilde", False),
 
-  Entity("nbsp", 160, @"\mdNbsp", False),
+  Entity("nbsp", 160, @"~", False),
   Entity("iexcl", 161, @"\textexclamdown", False),
   Entity("cent", 162, @"\textcent", False),
   Entity("pound", 163, @"\pounds", False),
