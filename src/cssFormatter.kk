@@ -44,6 +44,7 @@ public function cssExpandKeys( kvs0 : dict<string> ) : dict<string> {
     kvs.cssExpandTRBL("border-style"),
     kvs.cssExpandTRBL("border-width"),
     kvs.cssExpandTRBL("border-color"),
+    kvs.cssExpandTRBL("border-radius"),
   ].concat
   xs.dict + kvs 
 }

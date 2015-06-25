@@ -326,8 +326,8 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
 
 
 function texList( tag : string, body : string, attrs : attrs ) : string {
-  val args = if (attrs.hasClass("compact")) then "noitemsep,topsep=\\mdcompacttopsep" else ""
-  val env  = attrs.lookupKey("tex-env","itemize") + (if (args.isEmpty) then "" else "[" + args + "]")
+  val args = cssListArgs( attrs )
+  val env  = attrs.lookupKey("tex-env","itemize") + args
   attrs.addKeyval("tex-env",env).cssAttrs(body,[("display","block")],"")
 }
 
@@ -633,6 +633,40 @@ function cssImageArgs( attrs : attrs ) : (attrs,string) {
 }
 
 // -----------------------------------------------------------------------------
+// Lists
+// -----------------------------------------------------------------------------
+
+function cssListArgs( attrs : attrs ) : string {
+  val kvs = attrs.keyvals.dict
+  val args = 
+    (if (attrs.hasClass("compact")) then "noitemsep,topsep=\\mdcompacttopsep" else "")
+    .onKey( kvs, "start", fun(value,b) {
+      b + ",start=" + cssValue(value)      
+    })
+    .onKey( kvs, "list-style-type", fun(value0,b) {
+      val value = value0.cssValue
+      val tag   = if (value=="lower-roman") then "\\roman*"
+                  elif (value=="upper-roman") then "\\Roman*"
+                  elif (value=="lower-alpha") then "\\alph*"
+                  elif (value=="upper-alpha") then "\\Alph*"
+                  elif (value=="decimal") then "\\arabic*"
+                  elif (value=="disc") then "\\textbullet"
+                  elif (value=="circle") then "$\\circ$"
+                  elif (value=="square") then "$\\blacksquare$"
+                  elif (value=="dash") then "{--}"
+                  elif (value=="none") then ""
+                  else "\\arabic*"                
+      val fmt = match(kvs["list-format"]) {
+                  Nothing -> if (tag.endsWith("*")) then "#1." else "#1"
+                  Just(f) -> f
+                }
+      val label = fmt.replaceAll("#1",tag)
+      b + ",label=" + label
+    })
+  if (args.isEmpty) then "" else "[" + args + "]"
+}
+
+// -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
 
@@ -804,7 +838,7 @@ function dimContentWidth( kvs : dict<string> ) {
 // -----------------------------------------------------------------------------
 
 function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
-  val breakable = kvs.find("breakable").bool
+  val breakable = kvs.find("breakable").bool || kvs.find("long").bool
   val fboxkeys  = ["border-top-style","border-bottom-style","border-left-style","border-right-style",
                    "vertical-align", "height-align", "baseline",
                    "background-color","height","width"]                  
