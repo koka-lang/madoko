@@ -399,6 +399,14 @@
   \pdfbookmark[#1]{#2}{#3}%
 }
 
+\newlength\mddefinitionsskip
+\setlength\mddefinitionsskip{0.5\abovedisplayskip}
+\newenvironment{mddefinitions}%
+  {\begin{mdparblock}[\mddefinitionsskip]\parskip\z@\relax}{\end{mdparblock}}
+
+\newcommand\mddefterm{}
+\newenvironment{mddefdata}{}{}
+
 %-------------------------------------------------------------
 % Code
 %-------------------------------------------------------------

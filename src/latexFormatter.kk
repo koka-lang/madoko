@@ -597,7 +597,9 @@ function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : boo
         cmdconnect("\\noindent",b)
       })
       .onKey( kvs, "text-indent", fun(value,b) {
-        "\\noindent\\hspace*" + value.cssWidth.braced + b
+        cmdconnect( (if (attrs.hasClass("noindent")) then "" else "\\noindent") + 
+                    (if (value==""||value=="0"||value=="0em") then "" else "\\hspace*" + value.cssWidth.braced)
+                  , b )
       })
       .onKey( kvs, "line-height", fun(value,b) {
         braceCmd( "\\baselineskip=" + value.cssFontLength + "\\relax", b )

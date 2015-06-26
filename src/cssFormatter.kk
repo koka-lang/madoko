@@ -75,20 +75,24 @@ function cssExpandTRBL( kvs : dict<string>, key : string  ) : list<(string,strin
 // Expand keys that define multiple values at once; ie. border may have `border-(width|color|style)` values.
 function cssExpandMultiKeys( kvs : dict<string> ) : dict<string> {
   val xss = [
-    kvs.cssExpandBorder
-  ]
+    kvs.cssExpandBorder,
+    kvs.cssExpandBorder("-top"),
+    kvs.cssExpandBorder("-right"),
+    kvs.cssExpandBorder("-bottom"),
+    kvs.cssExpandBorder("-left"),
+  ] 
   xss.concat.dict + kvs
 }
 
-function cssExpandBorder( kvs : dict<string> ) : list<(string,string)> {
-  match(kvs["border"]) {
+function cssExpandBorder( kvs : dict<string>, post = "" ) : list<(string,string)> {
+  match(kvs["border" + post]) {
     Nothing -> []
     Just(value) -> {
       val terms = cssSplitValues(value)
       terms.map( fun(term) {
-        if (term.cssIsLength) then ("border-width",term)
-        elif (term.cssIsColor) then ("border-color",term)
-        else ("border-style",term)
+        if (term.cssIsLength) then ("border" + post + "-width",term)
+        elif (term.cssIsColor) then ("border" + post + "-color",term)
+        else ("border" + post + "-style",term)
       })
     }
   }

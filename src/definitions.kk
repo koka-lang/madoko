@@ -322,15 +322,15 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   match(attrs.input) {
     Tex -> {      
       Div(txt.parseTex(citestyle,fcontext.inlineContext.verbose >= 4)
-        .parseBlocks(attrs.lineNo+1,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
+        .parseBlocks(attrs.lineNo.incLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
     Markdown(monly) -> {
       match(monly) {
         Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
         _ -> {
           val adjLineNo = match (attrs.hasKey("line-adjust")) {
-            Nothing -> attrs.lineNo + 1
-            Just(d) -> attrs.lineNo + (d.parseInt().maybe(0,id))
+            Nothing -> attrs.lineNo.incLineNo
+            Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
           }
           Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
         }
@@ -338,12 +338,16 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
     }
     input -> {
       val adjLineNo = match (attrs.hasKey("line-adjust")) {
-        Nothing -> attrs.lineNo + 1
-        Just(d) -> attrs.lineNo + (d.parseInt().maybe(0,id))
+        Nothing -> attrs.lineNo.incLineNo
+        Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
       }
       Div([Source(txt,input,attrs.setLineNo(fcontext.lineMap,adjLineNo))],attrs)
     }
   }  
+}
+
+function incLineNo( lineNo : int, inc : int = 1 ) : int {
+  if (lineNo > 0) then lineNo + inc else lineNo
 }
 
 // Initialize default attributes and attributes from metadata
