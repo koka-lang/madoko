@@ -478,11 +478,11 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyCmd(kvs,"tex-cmd-inner")
       .cssInner(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd")
-      .applyEnv(kvs,"tex-env")
+      .applyEnv(kvs,"tex-env",attrs)
       .cssBox(kvs,isBlock)
       .cssOuter(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd-outer")
-      .applyEnv(kvs,"tex-env-outer")
+      .applyEnv(kvs,"tex-env-outer",attrs)
       .applyBlock(isBlock && !attrs.hasClass("para-block"), attrs)
 }
 
@@ -514,11 +514,11 @@ function insertCmd( body : string, kvs : dict<string>, key : string ) : string {
   }
 }
 
-function applyEnv( body : string, kvs : dict<string>, key : string) : string {
+function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attrs) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(env) -> match(env.find(rxEnv)) {
-                   Just(cap) -> body.blockEnv(cap.groups[1],cap.groups[2])
+                   Just(cap) -> body.blockEnv(cap.groups[1],expandKeys(cap.groups[2],"",attrs,dict(),dict()))
                    Nothing   -> body.blockEnv(env)
                  }
   }

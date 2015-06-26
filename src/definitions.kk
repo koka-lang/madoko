@@ -222,7 +222,7 @@ function parseDefinitionsFull(
   val labelsDict = labels.freeze()
   val tocBlocks  = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                     (tocs.list.map fun(entry) {
-                       (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata))
+                       (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata,defaultAttrs))
                      }).dict
   val footnoteBlock = if (isNil(footnoteItems)) then Empty 
                        else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
@@ -492,31 +492,34 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
 
 
 // Create a table of contents
-function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string> ) : div block 
+function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div block 
 {
-  Div( [headings.tocItems(0,labels,metadata).tocList], Attrs(name="toc",classes=["toc"],htmlelem="nav") )
+  Div( [headings.tocItems(0,labels,metadata,defaultAttrs).tocList(defaultAttrs)], 
+       defaultAttrs.matchRules( "toc", Attrs(name="toc",classes=["toc"],htmlelem="nav")) )
 }
 
-function tocList( items : list<block> ) : block {
-  if (items.isNil) then Empty else Div(items, Attrs(classes=["tocblock"]))
+function tocList( items : list<block>, defaultAttrs : dict<string> ) : block {
+  if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", Attrs(classes=["tocblock"])) )
 }
 
-function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string> ) : div list<block> {    
+function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div list<block> {    
   match(headings) {
     Nil -> []
     Cons(hdr,hdrs) -> {
       val (depth,attrs) = hdr
       if (depth > outerDepth+1) then {
-        [tocItems(headings,outerDepth+1,labels,metadata).tocList]
+        [tocItems(headings,outerDepth+1,labels,metadata,defaultAttrs).tocList(defaultAttrs)]
       }
       else {
         val (subs,rest) = hdrs.span( fun(h) { h.fst > depth } )
         val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         val tocline = @"[\/" + txt + "](#" + attrs.name + ")"
         //trace("tocline: " + attrs.source)
-        val item = Div([Line(tocline)], Attrs(classes=["tocitem"], keyvals=[("toctarget",attrs.name), ("toclevel",depth.show)]))
-        val subitems = tocItems(subs,depth,labels,metadata).tocList 
-        Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata)))
+        val item = Div([Line(tocline)], 
+                       defaultAttrs.matchRules("tocitem", 
+                          attrsNone.addClass("tocitem").addKeyvals([("toctarget",attrs.name), ("toclevel",depth.show)])).expand(metadata) )
+        val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(defaultAttrs) 
+        Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata,defaultAttrs)))
       }
     }
   }

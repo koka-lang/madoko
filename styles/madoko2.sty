@@ -407,6 +407,45 @@
 \newcommand\mddefterm{}
 \newenvironment{mddefdata}{}{}
 
+
+
+%-------------------------------------------------------------
+% Table of contents
+%-------------------------------------------------------------
+
+\newcount\mdtoclevel
+\newcounter{mdtoclevelbold}\setcounter{mdtoclevelbold}{1}
+\newcounter{mdtocleveldots}\setcounter{mdtocleveldots}{1}
+
+\newlength\mdtocskip
+\setlength\mdtocskip{0.5\abovedisplayskip}
+\newenvironment{mdtoc}%
+  {\begin{mdparblock}[\mdtocskip]%
+   \mdtoclevel\z@
+   \parskip\z@
+  }{\end{mdparblock}}
+
+\newenvironment{mdtocblock}%
+  {\ifnum\mdtoclevel=\z@
+      \begin{itemize}[nosep,leftmargin=0pt]%
+   \else
+      \begin{itemize}[nosep]%
+   \fi
+   \advance\mdtoclevel by 1\relax
+  }%
+  {\end{itemize}}
+
+\newenvironment{mdtocitem}[1]%
+  {\def\md@toctarget{#1}%
+   \item[]%
+   \ifnum\mdtoclevel>\value{mdtoclevelbold}\else\bfseries\fi
+  }%
+  {\hspace{1ex}%
+   \ifnum\mdtoclevel>\value{mdtocleveldots}\hfill\else\dotfill\fi
+   \hspace{1ex}%
+   \pageref{\md@toctarget}%
+  }
+
 %-------------------------------------------------------------
 % Code
 %-------------------------------------------------------------
