@@ -1,0 +1,42 @@
+Tex2      : True
+Package   : clear
+Package   : madoko2.sty
+
+Line no   : True
+Logo      : False
+~H1       : tex-cmd=\section* display=block
+~H2       : tex-cmd=\subsection* display=block
+~H3       : tex-cmd=\subsubsection* display=block
+~H4       : tex-cmd=\paragraph* display=block
+~Pre      : tex-env=mdpre 
+~Abstract : tex-env=abstract
+~Figure   : tex-env=figure
+~Li       : tex-cmd-before=\item
+~Ul       : tex-env=itemize
+~Ol       : tex-env=enumerate
+~Dl       : tex-env=mddefinitions .para-block
+~Dt       : tex-cmd=\mddefterm .noindent
+~Dd       : tex-env=mddefdata
+~Code     : tex-cmd=\mdcode
+.Pretty   : tex-cmd-before=\mdpretty
+~Strong   : tex-cmd=\textbf
+~Em       : tex-cmd=\emph
+~Sup      : tex-cmd=\mdsup
+~Sub      : tex-cmd=\mdsub
+~Del      : tex-cmd=\mddel
+~Columns  : display=block
+~Column   : display=table-cell tex-env=mdcolumn
+~Bibliography: tex-env="thebibliography{&caption;}"
+~BibItem  : tex-cmd-before="\bibitem[&label;]{&id;}" label="@bibitem" before=clear
+.Newblock : tex-cmd-before="\newblock "
+~toc      : tex-env=mdtoc
+~tocblock : tex-env=mdtocblock
+~tocitem  : tex-env="mdtocitem{&toctarget;}"
+
+.equation-before: tex-cmd=\mdmathtag
+
+~H1       : tex-cmd=\section display=block
+~H2       : tex-cmd=\subsection display=block
+~H3       : tex-cmd=\subsubsection display=block
+~H4       : tex-cmd=\paragraph display=block
+~H1,~H2,~H3,~H4: before=clear
