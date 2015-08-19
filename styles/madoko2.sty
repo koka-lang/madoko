@@ -133,8 +133,12 @@
 \newcounter{md@targetcount}
 \newcommand{\mdlabeltarget}{\refstepcounter{md@targetcount}}
 
+\newlength\mdcompactskip
+\setlength\mdcompactskip{0.5\abovedisplayskip}
+
+% for lists
 \newlength\mdcompacttopsep
-\setlength\mdcompacttopsep{0.5\abovedisplayskip}
+\setlength\mdcompacttopsep{\mdcompactskip}
 
 % ------------------------------------------------------------------------------
 %  \eifstrequal    test string equality but first expands the first argument
@@ -371,7 +375,7 @@
 \newcommand\mddel[1]{{\mdcolor{gray}#1}}
 
 \newcommand\mdbr{\mdBr}
-
+\newcommand\mdhr{\noindent\rule{\linewidth}{\dimpx{1}}}
 % code
 % precode
 % br
@@ -400,13 +404,37 @@
 }
 
 \newlength\mddefinitionsskip
-\setlength\mddefinitionsskip{0.5\abovedisplayskip}
+\setlength\mddefinitionsskip{\mdcompactskip}
 \newenvironment{mddefinitions}%
   {\begin{mdparblock}[\mddefinitionsskip]\parskip\z@\relax}{\end{mdparblock}}
 
 \newcommand\mddefterm{}
 \newenvironment{mddefdata}{}{}
 
+\newlength\md@captionlen
+\newcommand\mdcaption[1]{%
+  \settowidth\md@captionlen{#1}%
+  \ifdim\md@captionlen<\linewidth%
+    \centering
+  \fi
+  \noindent\strut #1%
+}
+
+% participate in listoffigures and listoftables
+\newcommand\mdcaptionlabel[1]{%
+  \global\gdef\md@captionlabel{#1}%
+  #1%
+}
+
+\newcommand\mdcaptiontext[1]{%
+  \addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
+    {\protect\numberline{\md@captionlabel}{\protecting{\ignorespaces #1}}{}}%
+  #1%   
+}
+
+\newcommand\mdfloatleft[1]{#1\hfill}
+\newcommand\mdfloatright[1]{\hfill #1}
+\newcommand\mdfloatcenter[1]{\hfill #1\hfill}
 
 
 %-------------------------------------------------------------
@@ -418,7 +446,7 @@
 \newcounter{mdtocleveldots}\setcounter{mdtocleveldots}{1}
 
 \newlength\mdtocskip
-\setlength\mdtocskip{0.5\abovedisplayskip}
+\setlength\mdtocskip{\mdcompactskip}
 \newenvironment{mdtoc}%
   {\begin{mdparblock}[\mdtocskip]%
    \mdtoclevel\z@
@@ -453,11 +481,11 @@
 \newcommand\mdcode{\texttt}
 \newcommand\mdprecode{}
 \newlength\mdpreskip
-\setlength\mdpreskip{0.5\abovedisplayskip}
+\setlength\mdpreskip{\mdcompactskip}
 \newenvironment{mdpre}{\begin{mdparblock}[\mdpreskip]\ttfamily{}}{\end{mdparblock}}
 
 \newlength\md@postskip
-\newenvironment{mdparblock}[1][0pt]%
+\newenvironment{mdparblock}[1][\mdcompactskip]%
   {\setlength\md@postskip{#1}\par\addvskip{#1}\noindent}%
   {\par\addvskip{\md@postskip}}%
 
@@ -593,7 +621,7 @@
 }
 
 \newlength\mdtabularskip
-\setlength\mdtabularskip{0.5\abovedisplayskip}
+\setlength\mdtabularskip{\mdcompactskip}
 
 \newenvironment{mdtabular}[1]%
   {\md@columncount{#1}\begin{mdparblock}[\mdtabularskip]}%
@@ -606,6 +634,14 @@
 \newenvironment{mdcodetabular}[1]%
   {\md@columncount{#1}}%
   {}%
+
+
+
+
+%-------------------------------------------------------------
+% Environments
+%-------------------------------------------------------------
+
 
 
 %-------------------------------------------------------------
