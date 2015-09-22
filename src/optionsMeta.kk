@@ -91,6 +91,7 @@ function update2( options : options, key : string, lvalue : string, value : stri
   elif (key=="logo") options(logo=(lvalue=="true"))
   elif (key=="refer") { log("filesRefer",value); options }
   elif (key=="mode") options(modes = if (value=="") then "" else options.modes + ";" + lvalue)
+  elif (key=="copy-styles") options(copyStyles=(value!=""))
 
   // can only set program options if not running in a sandbox
   elif (!(options.sandbox)) {
