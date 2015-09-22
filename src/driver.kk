@@ -79,10 +79,17 @@ public function processContent( inName : string, outName : string, content : str
     if (mopts.copyStyles && !(xopts.sandbox)) {
       tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
       if (xopts.tex || xopts.mathmode.isStatic) {
-        tryCopyTextFileFromTo( "css.sty", styleDir, outName.dirname)
-        tryCopyTextFileFromTo( "madoko.sty", styleDir, outName.dirname)
-        tryCopyTextFileFromTo( "madoko2.sty", styleDir, outName.dirname)
-        ()
+        val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
+                        Just(md) -> md.snd.toLower == "true"  
+                        _ -> False
+                      }
+        val files = if (isTex2)
+                     then ["ellipse.sty","options.sty","longbox.sty","longfbox.sty","madoko2.sty"]
+                     else ["css.sty","madoko.sty"]                      
+        files.foreach fun(fname) { 
+          tryCopyTextFileFromTo(fname, styleDir, outName.dirname )
+          ()
+        }
       }
     }
 
