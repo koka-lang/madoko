@@ -62,7 +62,13 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   val xfull = options.full.maybe(True,id)     
   val logo  = if (xfull && options.logo) then "\n\n~Begin LogoMadoko\n&LogoMadoko;\n~End LogoMadoko\n" else "\n"
   
-  if (options.verbose>=4) then trace("parse blocks")
+  if (options.verbose>=4) then {
+    trace("metadata:")
+    options.metadata.foreach fun(md) {
+      trace("  " + md.fst + ": " + md.snd)
+    }
+    trace("parse blocks")
+  }
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
 
   if (options.citeAll) then log("aux",@"\citation{*}");

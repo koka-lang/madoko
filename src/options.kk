@@ -43,6 +43,7 @@ public struct options(
   pdf      : bool = False,  // generate pdf file too 
   rebuild  : bool = False,  // always rebuild bibtex, math etc.
   sandbox  : bool = False,  // run in a sandbox: only allow reading/writing from a subdirectory
+  prelude  : string = "prelude", // standard prelude definitions
   
   title    : string = "",  // html title 
   css      : string = "madoko.css",  // link to css style
@@ -58,7 +59,7 @@ public struct options(
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
   
-  packages : string = "[heading-base=&heading-base;]madoko",  // link to latex packages (.sty)
+  packages : string = "",  // link to latex packages (.sty)
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "",        // latex document class (.cls)
   
@@ -181,6 +182,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["bench"],    oflag(setbench),                     "For benchmarking: turn off numbering, etc."),
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
       Option( "r", ["rebuild"],  oflag(fun(o,v) { o(rebuild=v) }),    "Force rebuild bibliography, math, etc."),
+      Option( "",  ["prelude"],  oreq(fun(o,s) { o(prelude=s) }, "FILE"), "Include <FILE> at start of the document"),
 
       Option( "m", ["meta"],     oreq(setMeta, "key:val"), "Semi-colon separated list of metadata values")
     ]

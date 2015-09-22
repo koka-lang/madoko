@@ -29,6 +29,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
 
   //trace("from meta: " + key + "=" + value)
   if   (key=="title")  options(title=value)
+  elif (key=="prelude") options(prelude=value)
   elif (key=="css")    options(css=if (value=="") then "" else options.css + ";" + value)
   elif (key=="html-meta")    options(htmlMeta=if (value=="") then "" else options.htmlMeta + ";" + value)
   elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)

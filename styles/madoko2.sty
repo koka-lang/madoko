@@ -29,7 +29,6 @@
 \ifdef\mathmode{\options{/madoko/math=true}}{}
 \options@ProcessOptions{/madoko}
 
-
 %-------------------------------------------------------------
 % Packages
 %-------------------------------------------------------------
@@ -92,6 +91,8 @@
 %-------------------------------------------------------------
 % Util
 %-------------------------------------------------------------
+\providecommand\ulp@afterend{}
+
 \providecommand\defcommand{\@ifstar\md@defcommand@S\md@defcommand@N}
 \newcommand\md@defcommand@S[1]{\let#1\outer\renewcommand*#1}
 \newcommand\md@defcommand@N[1]{\let#1\outer\renewcommand#1} 

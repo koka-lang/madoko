@@ -182,119 +182,8 @@ val rxModed = regex(@"@(no)?(\w*) (.*)")
 
 function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ fmt.showFormatter + ": True",
-      @"~Equation    : label='[(@equation)]{.equation-label}' replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block line-adjust=0",
-      @"~Math        : replace='~ Begin MathDisplay { color=""&color;"" math-needpdf=""&math-needpdf;"" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' tight .para-block",
-
-      @"~TableFigure : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table",
-      @"~Figure      : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure",
-      
-      @".Floating    : .align-center elem=floating html-elem=figure",
-      @".Floating    : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'",
-      @".Floating    : toc-line='&label;. &caption;'",
-
-      @"~SubFigureRow  : .columns .align-center",
-      @"~SubFigure     : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''",
-      @"           after='&br;[&toc-line;]{.subfig-caption}' tight text-align=center .column",
-      @"          toc-line='[&fig-label; ]{.caption-before} &caption;'",
-      @"          toc=tof toc-depth=2",
-
-      
-      @"~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'",
-      @"            before='[\[&label;\]\ \ ]{.bibitem-before}' tight tex-elem=mdBibitem",
-
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
-      
-      @"~Article  : html-elem='article'",
-      @"~Section  : html-elem='section' tex-elem='mdSection'",
-      @"~Aside    : html-elem='aside'",
-      @"~Nav      : html-elem='nav'",
-
-      @".Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'",
-      @"~Remark   : .Note caption='Remark'",
-      @".Todo     : .Note caption='Todo'",
-      @"~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}&nl;'",
-
-      @".Framed   : border-style=solid border-color=black border-width=1px",
-      @"~Center   : .align-center",
-      @"~Remote   : tight margin-bottom=0pt",
-
-      @"~Pre      : input=pre .para-block",
-      @"~Code     : input=pre",
-      @"~Hr       : .madoko",
-      @"~Table    : .madoko",
-      @"~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em",
-      @"~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold",
-
-      @".Ul-Li    : @ul-li label=""[(@ul-li)]{.ul-li-label}""",
-      @".Ol-Li    : @ol-li label=""[(@ol-li)]{.ol-li-label}""",
-      @".Dl-Li    : @dl-li label=""[(@dl-li)]{.dl-li-label}""",
-      @"~Ol       : @ol-li=decimal",
-      @"~Ul       : @ul-li=decimal",
-      @"~Dl       : @dl-li=decimal",
-      @".li-label : display=inline-block width=2.5em margin-left=-3em margin-right=0.5em text-align=right",
-      
-      @"~Tex        : input=tex notag",
-      @".TexRaw     : input=texraw",
-      @".HtmlRaw    : input=htmlraw",
-      @".MathInline : input=math",
-      @"~MathDisplay: input=math .para-block",
-      @"~MathPre    : input=mathpre .para-block",
-      @"~MathDefs   : input=mathdefs .hidden",
-      @"~HtmlOnly   : input=htmlonly notag",
-      @"~TexOnly    : input=texonly notag",
-      @"~math-inline: input=math",
-      @"~math-display: input=math",
-
-      @"~Snippet  : input=math .block snippet-needpdf=true",
-      @"~Footnote : label='[@footnote]{.footnote-label}' line-adjust=0",
-      @"@html ~Footnote: before='[\/^&label;.^]{.footnote-before}'",
-      @"                 after='&nl;[&#8617;](#back-&id;){.footnote-backref}'",
-
-      @"~FlushLeft : .align-left",
-      @"~FlushRight: .align-right",
-      @"~Comment   : .exclude",
-
       @"Madoko Version: " + version,
-      @"Defaults  : True",
-
-      @".booktable:  
-          rule-top-width=2px rule-bottom-width=2px 
-          rule-mid-width=1.35px thead-tr-font-weight=normal   
-          rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
-          thead-tr-1-padding-top=3pt thead-tr-padding-bottom=3pt",
-    
-      @"~Bibitem: replace='?if &bib-search-url; && &searchterm;\
-                          ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'",
-      @"@html Bib Search Url: www.bing.com",
-      @"lowline: &#x5F;",
-      @"@tex lowline: &#0818;",
-      @"qed         : [&box;]{float=right}",
-      @"@tex qed    : [\qed]{input=texraw}",
-      @"eg          : e.g.",
-      @"ie          : i.e.",
-      @"etal        : et al.",
-      @"vfill       : \/",
-      @"@tex vfill  : [\vfill]{input=texraw}",
-      @"LogoLatex       : $\mbox{\LaTeX}$",
-      @"LogoTex         : $\mbox{\TeX}$",
-      @"LogoLatexe      : $\mbox{\LaTeXe}$",
-      @"LogoBibtex      : $\mbox{\sc{Bib}\TeX}$",
-      @"LogoAmstex      : $\mbox{\AmSTeX}$",
-
-      @".noindent     : text-indent=0em",
-      @"smallskip     : []{display=block margin-bottom=0.5em}",
-      @"@tex smallskip: [\smallskip]{input=texraw}",
-      @"medskip     : []{display=block margin-bottom=1em}",
-      @"@tex medskip: [\medskip]{input=texraw}",
-      @"bigskip     : []{display=block margin-bottom=2em}",
-      @"@tex bigskip: [\bigskip]{input=texraw}",
-
-      @"LogoMadoko: Created with [Madoko.net](https://www.madoko.net).",
-      @".LogoMadoko: .block text-align=right font-size=xx-small margin-top=4em tight",
-
-      @".thm-caption-content: font-style=italic",
-      @"thm-caption-end     : &&;br;",
-      @".thm-caption        : replace='?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;'",
       theorem("Theorem"),
       theorem("Lemma"),
       theorem("Proposition"),
@@ -305,7 +194,7 @@ function defaultMeta( options : options, fmt : formatter ) : string {
     list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
     +
     ["\n"]
-  ).join("\n") + metadataTitle
+  ).join("\n") 
 }
 
 function theorem( prose : string ) {
@@ -330,40 +219,3 @@ function headingCounter( depth : int) : string {
   "@" + list(1,depth).map( fun(i) { "h" + i.show } ).join("-")
 }
 
-
-val metadataTitle : string = 
-@"
-@tex maketitle            : true
-
-@maketitle ~Author        : display=inline-block .AuthorMaketitle
-@maketitle ~TitleBlock    : display=inline-block .TitleBlockMaketitle
-@maketitle ~TitleHeader,~Authors,~AuthorRow: notag
-@maketitle ~Title         : replace=""[&source;]{ tex-elem=mdxTitle }"" notag
-@maketitle ~Subtitle      : replace=""[&source;]{ tex-elem=mdxSubTitle }"" notag
-@maketitle ~TitleNote     : replace=""[&source;]{ tex-elem=mdxTitleNote }"" notag
-@maketitle ~TitleFooter   : replace=""[&source;]{ tex-elem=mdxTitleFooter }"" notag
-@maketitle ~AuthorName    : replace=""[&source;]{ tex-elem=mdxAuthorName }"" notag
-@maketitle ~AuthorAddress : replace=""[&source;]{ tex-elem=mdxAuthorAddress }"" notag
-@maketitle ~AuthorNote    : replace=""[&source;]{ tex-elem=mdxAuthorNote }""  notag
-@maketitle ~AuthorEmail   : replace=""[&source;]{ tex-elem=mdxAuthorEmail }"" notag
-
-~TitleBlock,~TitleHeader  : tight
-~Title,~Subtitle          : tight
-~TitleNote,~TitleFooter   : tight  
-~Authors,~AuthorRow,~Author: tight
-~AuthorName,~AuthorAddress: tight
-~AuthorEmail,~AuthorNote  : tight 
-
-@nomaketitle ~TitleBlock,~TitleHeader,~Authors,~TitleFooter: .align-center
-@nomaketitle ~TitleBlock,~Title,~Subtitle,~TitleNote:.para-block
-
-@nomaketitle ~Authors     : width=80%
-@nomaketitle ~AuthorRow   : .columns margin-top=2ex width=100% 
-@nomaketitle ~Author      : .column text-align=center
-@nomaketitle .AuthorEmail : .email
-
-@nomaketitle ~Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
-@nomaketitle ~Subtitle    : font-size=x-large margin-bottom=0.5ex
-@nomaketitle ~AuthorName  : font-size=large
-@nomaketitle ~TitleFooter : margin-top=0.5ex
-"

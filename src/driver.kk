@@ -531,14 +531,33 @@ function include( text : string, fast : bool, inName : string, outName : string,
       }
     }
   }
-  
-  function processIncludes( txt : string, fname : string, start : int = 1 ) : io (int,lineMap,string)
+
+  function processIncludes( txt : string, fname : string ) : io (int,lineMap,string)
+  {
+    val prelude = match(txt.find(rxPrelude)) {
+      Just(cap) -> {
+        val value = cap.groups[1]
+        val lvalue = value.toLower()
+        if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else value
+      }
+      Nothing   -> options.prelude
+    }
+    processIncludesRec(txt,fname,1,prelude)
+  }
+
+  function processIncludesRec( txt : string, fname : string, start : int = 1, prelude : string = ""  ) : io (int,lineMap,string)
   {
     if (start<=0) return (0,End,"")
     var lineNo := start-1
     var lineCount := 0
     var lineMap := End
-    val ls = txt.lines.map fun(line) {
+    val mainTxt = 
+      if (prelude != "") {
+        lineNo := lineNo - 1
+        "[INCLUDE=\"" + prelude + "\"]\n" + txt
+      }
+      else txt
+    val ls = mainTxt.lines.map fun(line) {
       lineNo := lineNo + 1;
       lineCount := lineCount + 1;
       match (line.find(rxInclude)) {
@@ -548,7 +567,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
           val (fileName0,content) = readInclude(incname,fname,lineNo)
           val (fileName,istart,fragment)  = fileName0.findRange(cap.matched, cap.groups[5], content, fname, lineNo);
           if (istart<=0) then "" else {
-            val (lcount,lmap,icontent) = processIncludes( fragment, fileName, istart )
+            val (lcount,lmap,icontent) = processIncludesRec( fragment, fileName, istart )
             lineMap := Include(lineNo,istart,lcount,fileName,lmap,lineMap)
             lineCount := lineCount + lcount - 1
             //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
@@ -565,6 +584,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
   action(content,lmap)
 }
 val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?:= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s:=\]]+)) *)?(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
+val rxPrelude = regex(@"^ {0,3}[Pp]relude[ \t]*:[ \t]*([^\s])*[ \t\r]*(\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext,required)) {
