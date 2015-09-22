@@ -317,7 +317,7 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
                        keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
 
   val content = if (elem=="column") 
-                 then texEnv(elem,body,attrsx)
+                 then texEnv(elem,body,attrs)
                  else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
                  
   if (colspan=="1" && fmt=="l" && bcolor=="") then content 

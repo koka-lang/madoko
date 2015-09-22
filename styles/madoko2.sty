@@ -105,6 +105,10 @@
 }
 \newcommand\md@dummy@environ{}
 
+\def\providecsgdef#1{\ifcsdef{#1}{\providecommand\@foo}{\csgdef{#1}}}
+\newcommand\expandnextii[3]{\expandnext{\expandnext{#1}{#2}}{#3}}
+\newcommand\expandnextiii[4]{\expandnext{\expandnextii{#1}{#2}{#3}}{#4}}
+
 \newcommand\leavehmode{\ifhmode\par\fi}
 \newlength{\px}\setlength{\px}{0.4pt}% assume 180 dpi
 
@@ -648,6 +652,172 @@
 % Bibliography
 %-------------------------------------------------------------
 
+
+
+%-------------------------------------------------------------
+% Make Title
+% This is somewhat troublesome since almost all styles use
+% different commands and command orders. This code tries to 
+% adapt to the most common styles.
+% Defines the sigplan "authorinfo" command for all other styles.
+%-------------------------------------------------------------
+
+\providecommand{\@doi}{?}
+
+\ifdef\titlerunning%
+  {\newcommand{\mdtitlerunning}[1]{\titlerunning{#1}}}% llncs
+  {\newcommand{\mdtitlerunning}[1]{\global\def\titlerunning{#1}}}% eptcs
+
+\ifdef\authorrunning%
+  {\newcommand{\mdauthorrunning}[1]{\authorrunning{#1}}}% llncs
+  {\newcommand{\mdauthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
+
+% LLNCS: \author{ \and ...}, \institute{ \email \and ...}
+% EPTCS: \author{ \institute \email \and ... }
+% LATEX: \author{ ... } \date
+
+\ifdef\date{\date{}}{}
+\providecommand{\email}[1]{\normalsize\textsf{#1}}%
+\providecommand{\affaddr}[1]{\normalsize{#1}}%
+\providecommand{\alignauthor}{\\[2ex]}
+\providecommand{\aufnt}[1]{{\large #1}}
+\providecommand{\numberofauthors}[1]{}
+
+\iftoggle{/madoko/beamer}{\providecommand{\inst}[1]{$^{\mbox{#1}}$}}{}%
+\newif\ifinstemail
+
+% If there is no \authorinfo, we provide a simple one that works
+% with some other common styles
+\newcounter{md@authorcount}
+\newcommand{\md@authors}{}   % fancy list of authors
+\newcommand{\md@insts}{}
+\providerobustcmd{\@and}{\and}
+\providerobustcmd{\authorinfo}[3]{%
+  \stepcounter{md@authorcount}%
+  \ifdef{\institute}{%  
+    \protected@edef\md@more{#2#3}%
+    \expandafter\ifx\md@more\relax\relax\instemailfalse\else\instemailtrue\fi%
+    \ifnum\value{md@authorcount}>1%
+     \gappto\md@authors{\@and}%
+     \ifinstemail\gappto\md@insts{\@and}\fi%
+    \fi%
+    \ifdef{\inst}%
+    {%LLNCS, Beamer
+      \gappto\md@authors{#1}%
+      \ifinstemail%
+        \gappto\md@insts{\mdBrSep{#2}{\email{#3}}}%        
+      \fi%
+    }%
+    {% EPTCS
+      \gappto\md@authors{#1%
+      \ifinstemail%
+        \ifx\relax#2\relax\else\protect\institute{#2}\fi%
+        \ifx\relax#3\relax\else\protect\email{#3}\fi}%
+      \fi%
+    }%
+  }%
+  {% Our own simple style (similar to sigplanconf)
+   \ifnum\value{md@authorcount}>1%
+     \gappto\md@authors{\alignauthor}%
+   \fi%
+   \gappto\md@authors{\aufnt{#1}}%
+   \protected@edef\@more{#2#3}%
+   \expandafter\ifx\@more\relax\relax \else
+     \gappto\md@authors{\\[0.25ex]\mdBrSep{#2}{#3}}%
+   \fi   
+  }%
+  \ifnum\value{md@authorcount}>1%
+    \gappto\md@authorsx{, #1}%
+  \else
+    \global\def\md@authorsx{#1}%
+  \fi
+  \mdauthorrunning{\md@authorsx}%
+}
+
+% support \inst
+\newcommand{\mdinst}[1]{%
+  \ifdef{\inst}{\inst{#1}}{\ensuremath{^{\mbox{#1}}}}%
+}
+
+\newcommand{\mdtitle}[1]{\gdef\md@title{#1}\title{\md@title}\mdtitlerunning{#1}}
+\newcommand{\mdsubtitle}[1]{\gappto\md@title{\\{\Large #1}}\title{\md@title}}
+
+% legacy
+\newcommand{\mdAuthor}[4]{%
+  \authorinfo{#1}{\mdBrSep{#2}{#4}}{#3}%
+}
+
+% and finally maketitle
+\newcommand{\mdmaketitle}[1]{%  
+  \ifnum\value{md@authorcount}>0%
+    \expandnext{\numberofauthors}{\arabic{md@authorcount}}%
+    \author{\md@authors}%
+    \ifdef\inst{\ifdef\institute{\institute{\md@insts}}{}}{}%
+  \fi
+  \ifx#1\relax\else%
+    %\ifdef\titlenote% some styles disregard the date command...
+    {%\gappto\md@Title{\titlenote{#1}}\title{\md@Title}}
+     \mdsubtitle{\normalfont\normalsize #1}}%
+     % {\date{#1}}%
+  \fi%  
+  \maketitle
+}
+
+% and define it if not yet defined
+\ifdef{\abstract}{}{
+  \newenvironment{abstract}%
+    {\list{}{\small
+      \leftmargin=2.65em%
+      \labelwidth=0em%
+      \listparindent=0em%
+      \itemindent\listparindent
+      \rightmargin\leftmargin}\item[\hskip\labelsep\bfseries Abstract.]}
+    {\endlist}
+}
+
+
+%-------------------------------------------------------------
+% Hooks to use maketitle from standard title blocks
+%-------------------------------------------------------------
+
+\newcommand\mdx@titlenote{}
+\newcounter{mdx@authorcount} 
+\newcommand\mdxtitle{\mdtitle}
+\newcommand{\mdxtitlenote}[1]{\gdef\mdx@titlenote{#1}}
+\newcommand{\mdxtitlefooter}[1]{\gappto{\md@authors}{\\[1ex]#1}}
+\newcommand{\mdxsubtitle}[1]{\mdsubtitle{#1}}    
+\newcommand{\mdxauthorname}[1]{\csgdef{@mdauthorname\the\value{mdx@authorcount}}{#1}}
+\newcommand{\mdxauthoraddress}[1]{\csgdef{@mdauthoraff\the\value{mdx@authorcount}}{#1}}
+\newcommand{\mdxauthoremail}[1]{\csgdef{@mdauthoremail\the\value{mdx@authorcount}}{#1}}
+\newcommand{\mdxauthornote}[1]{%
+  \ifcsdef{@mdauthoraff\the\value{mdx@authorcount}}%
+    {\csgappto{@mdauthoraff\the\value{mdx@authorcount}}{\mdbr #1}}
+    {\csgdef{@mdauthoraff\the\value{mdx@authorcount}}{#1}}
+}
+
+\newcommand\mdxtitleblockstart{%
+  \setcounter{mdx@authorcount}{0}%
+  \gdef\mdx@titlenote{}%
+  \gdef\md@authors{}%
+}
+
+\newcommand\mdxauthorstart{%
+  \global\stepcounter{mdx@authorcount}%
+}
+
+\newcommand\mdxauthorend{%
+  \providecsgdef{@mdauthorname\the\value{mdx@authorcount}}{}%
+  \providecsgdef{@mdauthoraff\the\value{mdx@authorcount}}{}%
+  \providecsgdef{@mdauthoremail\the\value{mdx@authorcount}}{}%
+  \expandnextiii{\authorinfo}%
+      {\csname @mdauthorname\the\value{mdx@authorcount}\endcsname}%
+      {\csname @mdauthoraff\the\value{mdx@authorcount}\endcsname}%
+      {\csname @mdauthoremail\the\value{mdx@authorcount}\endcsname}%
+}
+
+\newcommand\mdxtitleblockend{%
+  \mdmaketitle{\mdx@titlenote}%
+}
 
 
 %-------------------------------------------------------------

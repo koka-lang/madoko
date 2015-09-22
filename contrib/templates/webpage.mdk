@@ -20,7 +20,7 @@ Css        : nav-example.css
 
 ~ Jumbotron
 # A Webpage in Madoko
-By using the bootstrap framwork it is easy to create great looking
+By using the bootstrap framework it is easy to create great looking
 webpages that display well both on Mobile and Desktop platforms.
 In madoko, we can directly use any standard bootstrap class names, 
 like `Jumbotron` as a custom block!

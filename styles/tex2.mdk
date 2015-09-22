@@ -30,8 +30,8 @@ Logo      : False
 ~Sup      : tex-cmd=\mdsup
 ~Sub      : tex-cmd=\mdsub
 ~Del      : tex-cmd=\mddel
-~Columns  : display=block
-~Column   : display=table-cell tex-env=mdcolumn
+.Columns  : display=block
+.Column   : display=block tex-env-outer=mdcolumn
 
 ~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par"
 @notex ~Bibliography: before="# References {-}&nl;"
@@ -54,3 +54,25 @@ star: true
 @nostar ~H3       : tex-cmd=\subsubsection display=block
 @nostar ~H4       : tex-cmd=\paragraph display=block
 @nostar ~H1,~H2,~H3,~H4: before=clear
+
+@maketitle ~Subtitle      : replace=clear notag=false
+@maketitle ~Title         : replace=clear notag=false
+@maketitle ~TitleNote     : replace=clear notag=false
+@maketitle ~TitleFooter   : replace=clear notag=false
+@maketitle ~AuthorName    : replace=clear notag=false
+@maketitle ~AuthorAddress : replace=clear notag=false
+@maketitle ~AuthorNote    : replace=clear notag=false
+@maketitle ~AuthorEmail   : replace=clear notag=false
+
+@maketitle ~Author        : tex-cmd-before=\mdxauthorstart tex-cmd-after=\mdxauthorend
+@maketitle ~TitleBlock    : tex-cmd-before=\mdxtitleblockstart tex-cmd-after=\mdxtitleblockend
+@maketitle ~Title         : tex-cmd=\mdxtitle
+@maketitle ~Subtitle      : tex-cmd=\mdxsubtitle
+@maketitle ~TitleNote     : tex-cmd=\mdxtitlenote
+@maketitle ~TitleFooter   : tex-cmd=\mdxtitlefooter
+@maketitle ~AuthorName    : tex-cmd=\mdxauthorname
+@maketitle ~AuthorAddress : tex-cmd=\mdxauthoraddress
+@maketitle ~AuthorNote    : tex-cmd=\mdxauthornote
+@maketitle ~AuthorEmail   : tex-cmd=\mdxauthoremail
+
+.inst       : tex-cmd=\mdinst
