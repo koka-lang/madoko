@@ -139,7 +139,7 @@ public function cssColor( v0 : string ) : string {
   val v = v0.cssNormalize.toLower
   match(v.find(rxRgbX)) {
     Just(cap) -> {
-      val rgbx = (1,2,3).map( fun(i) { if (cap.groups[4]=="") then cap.groups[i] + cap.groups[i] else cap.groups[2*i] + cap.groups[2*i + 1] } )
+      val rgbx = (1,2,3).map( fun(i) { if (cap.groups[4]=="") then cap.groups[i] + cap.groups[i] else cap.matched.substr(1 + 2*(i-1), 2) } )
       val rgb  = rgbx.map( fun(s) { s.parseIntDefault(0,hex=True) } )
       cssRgb(rgb)
     }

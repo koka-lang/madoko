@@ -139,7 +139,7 @@ public function preSpace( txt : string, start : bool = True ) : string {
   txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + (if (start) then @"\preindent" else @"\prespace") + "{" + cap.groups[2].length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
      .replaceAll("\n|<br>","\\prebr{}\n")
-     .replaceAll("`","{`}")
+     .replaceAll("`","\\lsquot{}")
 }
 val rxIndent = regex(@"(^|\n)( +)")
 val rxSpaces = regex(@" +")
@@ -156,18 +156,18 @@ val rxEntity  = regex(@"&((?:#[xX]?)?(\w)(\w*));")
 val rxSpecial = regex(@"&#?\w+;|[" + specials.map(fst).join + @"\]")
 val specials = [
   (@"%", @"\%"),
-  (@"~", @"{\textasciitilde}"),
+  (@"~", @"\textasciitilde{}"),
   (@"#", @"\#"),
   (@"&", @"\&"),  // defined by madoko.sty
   (@"$", @"\$"),
   (@"{", @"\{"),
   (@"}", @"\}"),
   (@"_", @"\_"),
-  (@"^", @"{\textasciicircum}"),
-  (@"|", @"{\textbar}"),
-  (@"<", @"{\textless}"),
-  (@">", @"{\textgreater}"),
-  (@"\",@"{\textbackslash}"),  // must come last, see rxSpecial that appends a "\"
+  (@"^", @"\textasciicircum{}"),
+  (@"|", @"\textbar{}"),
+  (@"<", @"\textless{}"),
+  (@">", @"\textgreater{}"),
+  (@"\",@"\textbackslash{}"),  // must come last, see rxSpecial that appends a "\"
 ]
 
 val rxNamedEntity = regex(@"&(\w+);")
@@ -475,6 +475,7 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
   */            
   body.insertCmd(kvs,"tex-cmd-before")
+      .appendCmd(kvs,"tex-cmd-after")
       .applyCmd(kvs,"tex-cmd-inner")
       .cssInner(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd")
@@ -514,13 +515,26 @@ function insertCmd( body : string, kvs : dict<string>, key : string ) : string {
   }
 }
 
+
+function appendCmd( body : string, kvs : dict<string>, key : string ) : string {
+  match(kvs[key]) {
+    Nothing -> body
+    Just(cmd) -> {
+      body + cmd
+    }
+  }
+}
+
 function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attrs) : string {
   match(kvs[key]) {
     Nothing -> body
-    Just(env) -> match(env.find(rxEnv)) {
-                   Just(cap) -> body.blockEnv(cap.groups[1],expandKeys(cap.groups[2],"",attrs,dict(),dict()))
-                   Nothing   -> body.blockEnv(env)
-                 }
+    Just(env) -> {
+      val post = kvs["tex-env-postfix"].maybe("",id)
+      match(env.find(rxEnv)) {
+       Just(cap) -> body.blockEnv(cap.groups[1] + post,expandKeys(cap.groups[2],"",attrs,dict(),dict()))
+       Nothing   -> body.blockEnv(env + post)
+      }
+    }
   }
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
@@ -534,7 +548,7 @@ function trimEnv( body : string, env : string, args : string = "" ) {
 }
 
 function braceCmd( body : string, cmd : string ) : string {
-  "{" + cmd.cmdconnect(body.unbrace) + "}"
+  "{" + cmd.cmdconnect(body.unbrace) + "}"  // TODO: unbrace is unsafe here, i.e. {\cmd}gkkgk{\test}
 }
 
 function unbrace( s : string ) : string {

@@ -10,7 +10,9 @@ Logo      : False
 ~H4       : tex-cmd=\paragraph* display=block
 ~Pre      : tex-env=mdpre 
 ~Abstract : tex-env=abstract
-~Figure   : tex-env=figure
+~Figure   : tex-env-outer=figure
+.wide     : tex-env-postfix=*
+.figure-caption: tex-cmd=\caption
 ~Li       : tex-cmd-before=\item
 ~Ul       : tex-env=itemize
 ~Ol       : tex-env=enumerate
@@ -26,17 +28,17 @@ Logo      : False
 ~Del      : tex-cmd=\mddel
 ~Columns  : display=block
 ~Column   : display=table-cell tex-env=mdcolumn
-~Bibliography: tex-env="thebibliography{&caption;}"
-~BibItem  : tex-cmd-before="\bibitem[&label;]{&id;}" label="@bibitem" before=clear
+~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par"
+~BibItem  : tex-cmd-before="\bibitem[&label;]{&id;}" label="@bibitem" before=clear display=block
 .Newblock : tex-cmd-before="\newblock "
 ~toc      : tex-env=mdtoc
 ~tocblock : tex-env=mdtocblock
 ~tocitem  : tex-env="mdtocitem{&toctarget;}"
-
+.align-center: text-align=center
 .equation-before: tex-cmd=\mdmathtag
 
-~H1       : tex-cmd=\section display=block
-~H2       : tex-cmd=\subsection display=block
-~H3       : tex-cmd=\subsubsection display=block
-~H4       : tex-cmd=\paragraph display=block
-~H1,~H2,~H3,~H4: before=clear
+~xH1       : tex-cmd=\section display=block
+~xH2       : tex-cmd=\subsection display=block
+~xH3       : tex-cmd=\subsubsection display=block
+~xH4       : tex-cmd=\paragraph display=block
+~xH1,~xH2,~xH3,~xH4: before=clear

@@ -303,7 +303,7 @@
 %\AfterEndEnvironment{mdmarginlr}{\leavehmode}
 
 \newcommand*\mdmargintop[1]{\onnotzero{#1}{\par\addvskip{#1}}}
-\newcommand*\mdmarginbottom[1]{\onnotzero{#1}{\addvskip{#1}}}
+\newcommand*\mdmarginbottom[1]{\onnotzero{#1}{\vspace{#1}}}
 
 \newlength{\dim@marginbottom}
 \newenvironment{mdbmargin}[1]{\begin{mdbmarginx}{#1}{#1}{#1}{#1}}{\end{mdbmarginx}}
@@ -622,6 +622,7 @@
 % Character commands 
 %-------------------------------------------------------------
 
+\providecommand{\lsquot}{`}
 \providecommand{\lt}{\ensuremath{<}}
 \providecommand{\gt}{\ensuremath{>}}
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
