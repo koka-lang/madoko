@@ -62,7 +62,7 @@ public function fmtLatexEscape( context : inlineContext, txt : string, allowEnti
 }
 
 public function fmtLatexFootnote(context : inlineContext, id : string, fn : footnote ) : string {
-  texCmdX( "\\mdfootnote" + fn.footnoteNum.braced, ((fn.footnoteContent)(context)), attrsNone, [("id","back-fn-" + id)])
+  texCmdX( "\\mdfootnote" + fn.footnoteNum.braced, ((fn.footnoteContent)(context)).trimLeft, attrsNone, [("id","back-fn-" + id)])
 }
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
@@ -764,15 +764,21 @@ function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) 
               .onKey(kvs,margin + "-right", fun(width,body) { 
                 body + "\\hspace*" + cssWidth(width).braced
               })
-  if (kvs.cssIsInlineBlock) {
-    body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
-            "\\md" + margin + "tb" + 
-              cssHeight(kvs.find(margin + "-top")).braced + 
-              cssHeight(kvs.find(margin + "-bottom")).braced + 
-              body.braced
-    })
-  }
-  else body1
+  val body2 = if (kvs.cssIsInlineBlock) {
+                body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
+                        "\\md" + margin + "tb" + 
+                          cssHeight(kvs.find(margin + "-top")).braced + 
+                          cssHeight(kvs.find(margin + "-bottom")).braced + 
+                          body.braced
+                })
+              }
+              else body1
+  body2.onKey(kvs, "float", fun(value,body) {
+    if (value=="left") then "\\mdfloatleft" + body.braced
+    elif (value=="right") then "\\mdfloatright" + body.braced
+    elif (value=="center") then "\\mdfloatcenter" + body.braced
+    else body
+  })              
 }
 
 function padding( body : string, kvs : dict<string> ) : string {
