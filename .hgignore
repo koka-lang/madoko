@@ -32,3 +32,4 @@ syntax:regexp
 ^web/node_modules/
 ^test/new/out
 ^test/tex
+^test/latex/out
