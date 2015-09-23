@@ -54,6 +54,7 @@ public function processContent( inName : string, outName : string, content : str
     val date   = now()                             
     val opts1  = opts0(lineMap=lmap, metadata=opts0.metadata 
                        + [("docname",inName.stemname),("filename",inName)]
+                       + [("madoko-version",version)]
                        + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5)),
                           ("year",date.year.show),("month",date.month.show2),("day",date.day.show2),
                           ("hours",date.hours.show2),("minutes",date.minutes.show2),("seconds",date.seconds.show2)] )

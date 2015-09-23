@@ -183,24 +183,11 @@ val rxModed = regex(@"@(no)?(\w*) (.*)")
 function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ fmt.showFormatter + ": True",
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
-      @"Madoko Version: " + version,
-      theorem("Theorem"),
-      theorem("Lemma"),
-      theorem("Proposition"),
-      theorem("Corollary"),
-      theorem("Example"),
-      theorem("Definition"),
-   ] +
+    ] +
     list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
     +
     ["\n"]
   ).join("\n") 
-}
-
-function theorem( prose : string ) {
-  val name = prose.toLower
-  "~" + prose + ": .block label='[@" + name + "]{." + name + "-label}' " +
-      "before='[**" + prose + "\\ &label;.** [&caption;]{.thm-caption}]{." + name + "-before}'"
 }
 
 function heading( depth : int, headingDepth : int, tocDepth : int ) {

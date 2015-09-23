@@ -32,32 +32,37 @@ Refer         : lipics-logo-bw.pdf
 Tex Header    :
     \hypersetup{colorlinks=false}
     \graphicspath{{images/}}
-    \renewcommand{\mdBibBefore}{}
-    \renewcommand{\mdMaketitle}{\maketitle}
-    \renewcommand{\mdAuthor}[4]{%
-      \stepcounter{mdAuthorCount}%
-      \author[\arabic{mdAuthorCount}]{#1}\affil[\arabic{mdAuthorCount}]{\mdAuthorAddressNote{#2}{#3}\texttt{#4}}%
-    }
+    \defcommand{\mdmaketitle}{\maketitle}
     \makeatletter
     \renewcommand{\authorinfo}[3]{%
-      \stepcounter{mdAuthorCount}%
-      \ifnum\the\value{mdAuthorCount}>1%
-        \csgdef{@sep\the\value{mdAuthorCount}}{\Authsep}% lipics does not use \global :(
+      \stepcounter{md@authorcount}%
+      \ifnum\the\value{md@authorcount}>1%
+        \csgdef{@sep\the\value{md@authorcount}}{\Authsep}% lipics does not use \global :(
       \else
-        \csgdef{@sep\the\value{mdAuthorCount}}{}
+        \csgdef{@sep\the\value{md@authorcount}}{}
       \fi
-      \author[\arabic{mdAuthorCount}]{#1}%     
+      \author[\arabic{md@authorcount}]{#1}%     
       \protected@edef\@more{#2#3}%
       \expandafter\ifx\@more\relax\relax\else
-        \affil[\arabic{mdAuthorCount}]{\mdBrSep{#2}{#3}}%
+        \affil[\arabic{md@authorcount}]{\mdBrSep{#2}{#3}}%
       \fi
     }
     \makeatother
+
+@notex2 Tex Header    :
+    \renewcommand{\mdBibBefore}{}
+    \renewcommand{\mdMaketitle}{\maketitle}
+    \renewcommand{\mdAuthor}[4]{%
+      \stepcounter{md@authorcount}%
+      \author[\arabic{md@authorcount}]{#1}\affil[\arabic{md@authorcount}]{\mdAuthorAddressNote{#2}{#3}\texttt{#4}}%
+    }
     \newcommand{\mdCaptionOf}[1]{\captionof{figure}{#1}}
+
 Tex Header*   :
     \Copyright{&Copyright;}
     \subjclass{&Classification;}
     \keywords{&Keywords;}
 
-[INCLUDE=tex-nostarsections]
+star: false
+
 [INCLUDE=tex-amsthms]

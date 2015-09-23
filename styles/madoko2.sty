@@ -613,6 +613,20 @@
 \newcommand\mdmathtag[1]{\def\md@mathtag{\tag*{#1}\mdlabeltarget\gdef\md@mathtag{}}}
 \preto{\]}{\md@mathtag}
 
+%-------------------------------------------------------------
+% Helper to allow use of standard math environments
+%-------------------------------------------------------------
+
+\newsavebox{\md@thmcaption}
+\newenvironment{mdthmcaption}
+  {\global\setbox\md@thmcaption\hbox\bgroup}
+  {\egroup}
+\newenvironment{mdthm}[1][theorem]%
+  {\def\md@thmname{#1}%
+   \begin{\md@thmname}[\usebox\md@thmcaption]%
+   \global\setbox\md@thmcaption\hbox{}}%
+  {\end{\md@thmname}}
+
 
 %-------------------------------------------------------------
 % Tables 

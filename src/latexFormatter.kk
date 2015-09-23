@@ -583,7 +583,7 @@ function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
 
 function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
   val body1 = if (attrs.name.isEmpty) then body0 
-               else body0 + "\\label" + attrs.name.braced
+               else body0 + "\\label" + attrs.name.braced + "%mdk\n"
   val body2 = body1
   /*.onKey(kvs,"bookmark",fun(value,body) {
     cmdconnect( "\\mdbookmark" + attrs.lookupKey("level","1").braced + 

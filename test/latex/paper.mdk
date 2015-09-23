@@ -32,7 +32,7 @@ include them in the document, and similarly with bibtex files, latex
 style files, etc.
 
 ~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=top}
-![butterfly]
+butterfly
 ~
 
 [butterfly]: images/butterfly.png "butterfly"  { width=4em }

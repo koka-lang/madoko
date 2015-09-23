@@ -1,6 +1,7 @@
 Documentation: 
    Use LaTeX `theorem`, `lemma`, etc. environments directly and without using
    the Madoko labeling and numbering. Useful for certain document classes.
+
 @tex ~Theorem    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=theorem}&nl;&source;&nl;~End Thm&nl;" notag
 @tex ~Lemma      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=lemma}&nl;&source;&nl;~End Thm&nl;" notag
 @tex ~Corollary  : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=corollary}&nl;&source;&nl;~End Thm&nl;" notag
@@ -10,3 +11,13 @@ Documentation:
 @tex ~Proof      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=proof}&nl;&source;&nl;~End Thm&nl;" notag
 @tex ~ThmCaption : tex-elem=mdThmCaption tight
 @tex ~Thm        : tex-elem=mdThm tight 
+
+@tex2 ~Theorem    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=theorem}&nl;&source;&nl;~End Thm&nl;"
+@tex2 ~Lemma      : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=lemma}&nl;&source;&nl;~End Thm&nl;" 
+@tex2 ~Corollary  : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=corollary}&nl;&source;&nl;~End Thm&nl;" 
+@tex2 ~Proposition: replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=proposition}&nl;&source;&nl;~End Thm&nl;"
+@tex2 ~Definition : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=definition}&nl;&source;&nl;~End Thm&nl;"
+@tex2 ~Example    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=example}&nl;&source;&nl;~End Thm&nl;" 
+@tex2 ~Proof      : replace=clear replace="~Begin Thm {tex-env=proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;" 
+@tex2 ~ThmCaption : tex-env=mdthmcaption 
+@tex2 ~Thm        : tex-env=mdthm[&thm-env;] display=block

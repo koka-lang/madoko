@@ -98,20 +98,34 @@ LogoLatexe      : $\mbox{\LaTeXe}$
 LogoBibtex      : $\mbox{\sc{Bib}\TeX}$
 LogoAmstex      : $\mbox{\AmSTeX}$
 
-.noindent     : text-indent=0em
-smallskip     : []{display=block margin-bottom=0.5em}
-@tex smallskip: [\smallskip]{input=texraw}
-medskip     : []{display=block margin-bottom=1em}
-@tex medskip: [\medskip]{input=texraw}
-bigskip     : []{display=block margin-bottom=2em}
-@tex bigskip: [\bigskip]{input=texraw}
+.noindent       : text-indent=0em
+smallskip       : []{display=block margin-bottom=0.5em}
+@tex smallskip  : [\smallskip]{input=texraw}
+medskip         : []{display=block margin-bottom=1em}
+@tex medskip    : [\medskip]{input=texraw}
+bigskip         : []{display=block margin-bottom=2em}
+@tex bigskip    : [\bigskip]{input=texraw}
 
-LogoMadoko: Created with [Madoko.net](https://www.madoko.net).
-.LogoMadoko: .block text-align=right font-size=xx-small margin-top=4em tight
+LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
+.LogoMadoko     : .block text-align=right font-size=xx-small margin-top=4em tight
 
 .thm-caption-content: font-style=italic
 thm-caption-end     : &&;br;
 .thm-caption        : replace='?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;'
+
+~Theorem        : display=block label='[@theorem]{.theorem-label}'
+                    before='[**Theorem\ &label;.** [&caption;]{.thm-caption}]{.theorem-before}'
+~Lemma          : display=block label='[@lemma]{.lemma-label}'
+                    before='[**Lemma\ &label;.** [&caption;]{.thm-caption}]{.lemma-before}'
+~Proposition    : display=block label='[@proposition]{.proposition-label}'
+                    before='[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}'
+~Corollary      : display=block label='[@corollary]{.corollary-label}'
+                    before='[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.coroallary-before}'
+~Example        : display=block label='[@example]{.example-label}'
+                    before='[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}'
+~Definition    : display=block label='[@definition]{.definition-label}'
+                    before='[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}'
+
 
 @tex maketitle            : true
 
