@@ -51,9 +51,17 @@ Section Depth : 2
 ~Vertical     : .section html-elem=section
 .smaller      : data-smaller
 .long         : data-long
+
 @tex ~Notes   : display=none
 @tex ~Vertical: notag
 @tex Maketitle: True
+
+@tex2 ~Slide,~Section  : tex-env=mdframe
+@tex2 ~H1,~H2,~H3: tex-cmd=\frametitle
+@tex2 .pause    : tex-cmd-outer-before=\pause
+@tex2 .fragment : tex-env-outer=onlyenv<+->
+@tex2 .fragmented: tex-env-inner=mdfragmented
+
 Tex Header    :
     \ifbeamer\relax\else
       \providecommand{\usetheme}[2][]{}

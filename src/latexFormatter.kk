@@ -477,6 +477,7 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
   body.insertCmd(kvs,"tex-cmd-before")
       .appendCmd(kvs,"tex-cmd-after")
       .applyCmd(kvs,"tex-cmd-inner")
+      .applyEnv(kvs,"tex-env-inner",attrs)
       .cssInner(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd")
       .applyEnv(kvs,"tex-env",attrs)
@@ -484,6 +485,7 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .cssOuter(kvs, attrs, isBlock)
       .applyCmd(kvs,"tex-cmd-outer")
       .applyEnv(kvs,"tex-env-outer",attrs)
+      .insertCmd(kvs,"tex-cmd-outer-before")
       .applyBlock(isBlock && !attrs.hasClass("para-block"), attrs)
 }
 

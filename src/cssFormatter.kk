@@ -20,7 +20,7 @@ public function cssIsBlock( kvs : dict<string> ) : bool {
     Nothing -> False
     Just(value) -> {
       val display = value.cssNormalize.toLower
-      (display=="block")
+      (display=="block" || display.startsWith("table"))
     }
   }
 }
@@ -120,8 +120,13 @@ val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxE
 
 
 public function braced( s : string ) : string {
-  if (s.isBraced) then s else "{" + s + "}"
+  if (s.isBraced) then s 
+  else {
+    val nl = if (s.contains(rxEndComment)) then "\n" else ""
+    "{" + s + nl + "}"
+  } 
 }
+val rxEndComment = regex(@"(^|[^\\])%.*$")
 
 public function isBraced( s : string ) : bool {
   s.startsWith("{") && s.endsWith("}")

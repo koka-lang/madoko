@@ -49,8 +49,8 @@
   \RequirePackage{booktabs}
   \RequirePackage{array}
   \RequirePackage{longtable}
-  \RequirePackage{enumitem}
   \RequirePackage{anyfontsize}
+  \RequirePackage{enumitem}
   
   % fontspec is expensive to load...
   \ontoggle{/madoko/fontspec}{%
@@ -70,7 +70,7 @@
 
 % hyperref
 \hypersetup{
-  colorlinks=true,linkcolor=navy,urlcolor=blue,filecolor=Maroon,pdfpagelabels=false,bookmarks=true,bookmarksdepth=3,bookmarksopenlevel=1
+  colorlinks=true,linkcolor=navy,urlcolor=blue,filecolor=maroon,pdfpagelabels=false,bookmarks=true,bookmarksdepth=3,bookmarksopenlevel=1
 }
 
 % booktabs
@@ -83,8 +83,8 @@
 % enumitem
 \AtBeginDocument{%
   \ifdef\@enhook{%
-    \PackageError{madoko}{You cannot use the package "enumerate" in madoko;\MessageBreak 
-                          use the "enumitem" package instead\MessageBreak (which is available by default)}{}%
+    \PackageWarning{madoko2}{You cannot use the package "enumerate" in madoko;\MessageBreak 
+                            use the "enumitem" package instead\MessageBreak (which is available by default)}{}%
   }{}%
 }
 
@@ -389,12 +389,16 @@
   \gdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
 }
 
-\newcommand\mdcite[2]{% {label}{text}
+\newcommand\mdhyperref[2]{% {label}{text}
   \hyperref[#1]{#2}%
 }
 
+\newcommand\mdcite[2]{% {label}{text}
+  \mdhyperref{#1}{#2}%
+}
+
 \newcommand\mdref[2]{% {label}{text}
-  \hyperref[#1]{#2}%
+  \mdhyperref{#1}{#2}%
 }
 
 \providecommand\pdfmarkupcomment[3][]{}
@@ -657,17 +661,34 @@
 
 
 
-%-------------------------------------------------------------
-% Environments
-%-------------------------------------------------------------
-
-
 
 %-------------------------------------------------------------
-% Bibliography
+% Beamer slide decks
 %-------------------------------------------------------------
+\newif\ifbeamer % legacy
+\beamerfalse
 
+\ontoggle{/madoko/beamer}{%
+  \beamertrue
+  \renewcommand\mdhyperref[2]{\hyperlink{#1}{#2}}%
+  \renewcommand\lb@savefootnotes{}%
+  \renewcommand\lb@restorefootnotes{}%
+  \setitemize{label={\textbullet}}%
+  \setenumerate{label={\arabic*.}}%
+}
 
+\newenvironment{mdframe}%
+  {\begin{frame}\stepcounter{beamerpauses}}%
+  {\end{frame}}
+
+\newcommand\mdpause[1]{\pause #1}  
+
+\let\md@item\item% save original item command
+\newenvironment{mdfragmented}%
+  {\def\md@enditem{\def\md@enditem{\end{onlyenv}}}% redefines itself at first use
+   \def\item{\md@enditem\begin{onlyenv}<+->\md@item}%   
+  }
+  {\end{onlyenv}}
 
 %-------------------------------------------------------------
 % Make Title
@@ -833,7 +854,6 @@
 \newcommand\mdxtitleblockend{%
   \mdmaketitle{\mdx@titlenote}%
 }
-
 
 %-------------------------------------------------------------
 % The following commands still use capital letters due to legacy...

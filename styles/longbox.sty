@@ -13,7 +13,16 @@
 %\RequirePackage{etoolbox}
 %\RequirePackage{xcolor}
 \RequirePackage{options}
-\RequirePackage{footnote}
+
+\@ifclassloaded{beamer}{%
+ \newcommand\lb@savefootnotes{}%
+ \newcommand\lb@restorefootnotes{}%
+}%
+{\RequirePackage{footnote}%
+ \newcommand\lb@savefootnotes{\savenotes}%
+ \newcommand\lb@restorefootnotes{\spewnotes}%
+}
+
 
 % --------------------------------------------------------
 % Debugging
@@ -31,9 +40,6 @@
 \newcommand*\lb@warnbadsplit[1]{%
   \PackageWarning{longbox}{Bad split (underful vbox by \the#1)}%
 }
-
-\newcommand\lb@savefootnotes{\savenotes}
-\newcommand\lb@restorefootnotes{\spewnotes}
 
 
 % --------------------------------------------------------
