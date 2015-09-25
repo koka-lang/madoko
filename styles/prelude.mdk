@@ -146,9 +146,9 @@ Logo      : False
 .figure-label  : tex-cmd=\mdcaptionlabel
 .table-label   : tex-cmd=\mdcaptionlabel
 ~Li       : tex-cmd-before=\item
-~Ul       : tex-env=itemize
-~Ol       : tex-env=enumerate
-~Dl       : tex-env=mddefinitions .para-block
+~Ul       : tex-env=itemize 
+~Ol       : tex-env=enumerate 
+~Dl       : tex-env=mddefinitions
 ~Dt       : tex-cmd=\mddefterm .noindent
 ~Dd       : tex-env=mddefdata
 ~Code     : tex-cmd=\mdcode
