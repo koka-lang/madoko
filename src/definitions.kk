@@ -495,11 +495,11 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
 function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div block 
 {
   Div( [headings.tocItems(0,labels,metadata,defaultAttrs).tocList(defaultAttrs)], 
-       defaultAttrs.matchRules( "toc", Attrs(name="toc",classes=["toc"],htmlelem="nav")) )
+       defaultAttrs.matchRules( "toc", attrsNone(name="toc").addClass("toc")) )
 }
 
 function tocList( items : list<block>, defaultAttrs : dict<string> ) : block {
-  if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", Attrs(classes=["tocblock"])) )
+  if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", attrsNone.addClass("tocblock")) )
 }
 
 function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div list<block> {    

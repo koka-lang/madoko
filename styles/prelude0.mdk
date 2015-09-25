@@ -25,7 +25,7 @@ Package      : [heading-base=&heading-base;]madoko
 ~Article  : html-elem='article'
 ~Section  : html-elem='section' tex-elem='mdSection'
 ~Aside    : html-elem='aside'
-~Nav      : html-elem='nav'
+~Nav,.Toc : html-elem='nav'
 
 .Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'
 ~Remark   : .Note caption='Remark'

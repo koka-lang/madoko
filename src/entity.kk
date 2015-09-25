@@ -249,8 +249,8 @@ val entities : list<entity> = [
   Entity("gcedil", 291, @"\c{g}", False),
   Entity("Hcirc", 292, @"\^{H}", False),
   Entity("hcirc", 293, @"\^{h}", False),
-  Entity("Hstroke", 294, @"\B{H}", False),
-  Entity("hstroke", 295, @"\b{h}", False),
+  Entity("Hstroke", 294, @"{H}", False),  // todo
+  Entity("hstroke", 295, @"{h}", False),  // todo
   Entity("Itilde", 296, @"\~{I}", False),
   Entity("itilde", 297, @"\~{\i}", False),
   Entity("Imacron", 298, @"\={I}", False),
@@ -405,8 +405,8 @@ val entities : list<entity> = [
   Entity("thetasym", 977, @"\vartheta", True),
   Entity("upsih", 978, @"\Upsilon", True ),
   Entity("piv", 982, @"\varpi", True ),
-  Entity("ensp", 8194, @"\enskip", False),
-  Entity("emsp", 8195, @"\quad", False),
+  Entity("ensp", 8194, @"\hspace*{0.5em}", False),
+  Entity("emsp", 8195, @"\hspace*{1em}", False),
   Entity("quad", 8195, @"\quad", False),
   Entity("thicksp", 8196, @"\;", True ),
   Entity("medsp", 8197, @"\:", True ),

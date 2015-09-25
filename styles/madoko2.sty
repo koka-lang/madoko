@@ -53,13 +53,16 @@
   \RequirePackage{enumitem}
   
   % fontspec is expensive to load...
-  \ontoggle{/madoko/fontspec}{%
+  \iftoggle{/madoko/fontspec}{%
      % font selection
     \ifXeTeX\RequirePackage{fontspec}\else
     \ifLuaTeX\RequirePackage{fontspec}\else
+    \RequirePackage[T1]{fontenc}%
     \RequirePackage[utf8]{inputenc}
     \providecommand{\fontspec}[2][]{}
     \fi\fi
+  }{%
+    \RequirePackage[T1]{fontenc}%
   }%
 }%
 
@@ -186,6 +189,7 @@
 \definecolor{navy}{HTML}{000080}
 \definecolor{maroon}{HTML}{800000}
 \definecolor{green}{HTML}{008000}
+\definecolor{darkgreen}{HTML}{008000}
 
 \definecolor{teal}{HTML}{008080}
 \definecolor{purple}{HTML}{800080}
@@ -227,6 +231,13 @@
     \mddefinecolor{bgcolor}{#1}%
     \colorbox{bgcolor}{#2}%
   }%
+}
+
+\def\md@cellcolorhtml#1\relax{\cellcolor[HTML]{#1}}
+\def\md@cellcolorname#1\relax{\cellcolor{#1}}
+\def\md@cellcolorx{\@ifnextchar \#{\@firstoftwo{\md@cellcolorhtml}}{\md@cellcolorname}}
+\newcommand\mdcellcolor[1]{%
+  \expandafter\md@cellcolorx #1\relax%
 }
 
 % ---------------------------------------------------
@@ -478,7 +489,7 @@
    \ifnum\mdtoclevel>\value{mdtoclevelbold}\else\bfseries\fi
   }%
   {\hspace{1ex}%
-   \ifnum\mdtoclevel>\value{mdtocleveldots}\hfill\else\dotfill\fi
+   \ifnum\mdtoclevel>\value{mdtocleveldots}\dotfill\else\hfill\fi
    \hspace{1ex}%
    \pageref{\md@toctarget}%
   }
@@ -556,7 +567,7 @@
 \newcommand{\mdtokenpredefined}[1]{\textcolor{navy}{#1}}
 \newcommand{\mdtokenstring}[1]{\textcolor{maroon}{#1}}
 \newcommand{\mdtokenstringEscape}[1]{\textcolor{gray}{#1}}
-\newcommand{\mdtokencomment}[1]{\textcolor{green}{#1}}
+\newcommand{\mdtokencomment}[1]{\textcolor{darkgreen}{#1}}
 \newcommand{\mdtokenspecial}[1]{\textcolor{navy}{#1}}
 \newcommand{\mdtokendoc}[1]{\textcolor{gray}{#1}}
 \newcommand{\mdtokenconstant}[1]{\textcolor{purple}{#1}}
@@ -566,9 +577,9 @@
 \newcommand{\mdtokenconstructor}[1]{\textcolor{purple}{#1}}
 \newcommand{\mdtokennamespace}[1]{\textcolor{navy}{#1}}
 \newcommand{\mdtokentype}[1]{\textcolor{teal}{#1}}
-\newcommand{\mdtokenemphasis}[1]{\itshape #1}
-\newcommand{\mdtokenstrong}[1]{\bfseries #1}
-\newcommand{\mdtokentitle}[1]{\bfseries #1}
+\newcommand{\mdtokenemphasis}[1]{\textit{#1}}
+\newcommand{\mdtokenstrong}[1]{\textbf{#1}}
+\newcommand{\mdtokentitle}[1]{\textbf{#1}}
 \newcommand{\mdtokenmeta}[1]{\textcolor{Gray}{#1}}
 \newcommand{\mdtokenentity}[1]{{#1}}
 \newcommand{\mdtokendelimiter}[1]{{#1}}
@@ -638,8 +649,8 @@
 
 \newlength{\md@defaultcolwidth}
 \newcommand{\md@columncount}[1]{%
-  \setlength{\tabcolsep}{0.5ex}%
-  \setlength{\linewidth}{\dimexpr\linewidth-\tabcolsep*2*#1-\tabcolsep\relax}% the line length minus table spacing
+  \setlength{\tabcolsep}{1ex}%
+  \setlength{\linewidth}{\dimexpr\linewidth-(\tabcolsep*2*#1)-\tabcolsep\relax}% the line length minus table spacing
   \setlength{\md@defaultcolwidth}{\dimexpr\linewidth/#1\relax}%
 }
 
@@ -651,14 +662,45 @@
   {\end{mdparblock}}%
 
 \newenvironment{mdcolumn}%
-  {\begin{minipage}{\md@defaultcolwidth}}%
-  {\end{minipage}}
+  {}%\begin{minipage}{\md@defaultcolwidth}}%
+  {}%\end{minipage}}
 
 \newenvironment{mdcodetabular}[1]%
   {\md@columncount{#1}}%
   {}%
 
 
+
+%-------------------------------------------------------------
+% Float boxes  
+%-------------------------------------------------------------
+\newlength{\md@sideheight}
+\newsavebox{\md@sidebox}
+\newcommand{\mdfloatbox}[3]{%  {<left|right>}{<lines>}{content}
+  \leavehmode%
+  \savebox{\md@sidebox}{%
+    #3%
+  }%
+  \ifdim\ht\md@sidebox>0pt\relax%
+    \savebox{\md@sidebox}{\raisebox{-\ht\md@sidebox}{\usebox{\md@sidebox}}}% top-align the box
+  \fi%
+  \ifnum 0=0#2\relax%
+    \setlength{\md@sideheight}{\dp\md@sidebox}%
+    \addtolength{\md@sideheight}{\ht\md@sidebox}%
+    \def\@hangafter{\the\numexpr(0 - \md@sideheight - \baselineskip/2)/\baselineskip\relax}%  
+  \else%
+    \def\@hangafter{-#2}%
+  \fi%
+  \eifstrequal{#1}{right}%
+      {\hangindent=-\wd\md@sidebox%
+       \hangafter=\@hangafter%
+       \smash{\hspace*{\dimexpr\textwidth - \wd\md@sidebox}\usebox{\md@sidebox}}%
+    }%
+   {\hangindent=\wd\md@sidebox%
+       \hangafter=\@hangafter%
+       \smash{\usebox{\md@sidebox}}%
+    }%      
+}
 
 
 

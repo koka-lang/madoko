@@ -113,9 +113,6 @@ Lorem [ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor 
 
 ~ { border="1px dashed purple" background-color=gainsboro padding=1ex }
 
-[\the\parindent]{input=texraw}&lorem;
-
-[\the\parindent]{input=texraw}&lorem;
 
 &lorem;
 

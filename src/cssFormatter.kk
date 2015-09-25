@@ -133,7 +133,7 @@ public function isBraced( s : string ) : bool {
 }
 
 public function cssColorCmd( v : string ) : string {
-  if (v=="") then "" else "\\color[HTML]{" + v.cssColor + "}"
+  if (v=="") then "" else "\\mdcolor{" + v.cssColor + "}"
 }
 
 public function cssColorArg( v : string ) : string {

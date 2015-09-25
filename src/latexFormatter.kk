@@ -67,7 +67,7 @@ public function fmtLatexFootnote(context : inlineContext, id : string, fn : foot
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
-  val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
+  val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)  
   if (isImage) {
     val (attrsx, args) = cssImageArgs(attrs)
     texCmdX( "\\includegraphics[" + args + "]" + url.noext.braced, "" /*content*/, attrsx ) 
@@ -145,7 +145,8 @@ val rxIndent = regex(@"(^|\n)( +)")
 val rxSpaces = regex(@" +")
 
 function texLinkText( txt : string ) : string {
-  txt.replaceAll("~","\\textasciitilde ").replaceAll("%","\\%").replaceAll("#","\\#")
+  //txt.replaceAll("~","\\textasciitilde ").replaceAll("%","\\%").replaceAll("#","\\#")
+  txt.replaceAll( regex(@"([%{}&#\\])"), fun(cap) { cap.matched.list.map( fun(c) { @"\%" + c.int.showHex(2) } ).join })
 }
 
 public function texText( txt : string ) : string {
@@ -308,17 +309,17 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
                 }
   val bcolor  = match (attrs.hasKey("background-color")) {
                   Nothing   -> ""
-                  Just(clr) -> "{\\cellcolor[HTML]" + cssColorArg(clr) + "}"
+                  Just(clr) -> "{\\mdcellcolor" + cssColorArg(clr) + "}"
                 }            
   val fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
                 (if (attrs.hasClass("cell-border-right")) then "|" else "")
 
   val attrsx  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
-                       keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" }))
+                       keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" && kv.fst != "text-align"}))
 
   val content = if (elem=="column") 
                  then texEnv(elem,body,attrs)
-                 else texCmd(elem,body,attrsx.addKeyval("display","table-cell")) 
+                 else texCmd(elem,body,attrsx.addKeyval("display","inline")) 
                  
   if (colspan=="1" && fmt=="l" && bcolor=="") then content 
    else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
@@ -362,10 +363,13 @@ function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
   val envCmd = // "\\begin{" + envName + "}" + attrs.texAttrsX + "%mdk\n" +
                attrs.cssAttrs(body,[("display","block")],env) // + "%mdk\n" +
                // "\\end{" + envName + "}%mdk\n"
+  envCmd               
+  /*
   match(attrs.hasKey("float")) {
     Nothing   -> envCmd
     Just(flt) -> "\\mdfloatbox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
-  }               
+  } 
+  */              
 }
 
 function texClassName( attrs : attrs, def : string ) : (string,attrs) {

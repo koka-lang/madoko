@@ -3,7 +3,7 @@ Package         : [heading-base=&heading-base;]madoko2.sty
 ~Article  : html-elem='article'
 ~Section  : html-elem='section' 
 ~Aside    : html-elem='aside'
-~Nav      : html-elem='nav'
+~Nav,.Toc : html-elem='nav'
 
 .Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'
 ~Remark   : .Note caption='Remark'
@@ -131,7 +131,6 @@ thm-caption-end     : &&;br;
 
 
 Tex2      : True
-Line no   : True
 Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
@@ -159,9 +158,11 @@ Logo      : False
 ~Sup      : tex-cmd=\mdsup
 ~Sub      : tex-cmd=\mdsub
 ~Del      : tex-cmd=\mddel
+~BlockQuote: tex-env=quote
 .Columns  : display=table
 .Column   : display=table-cell tex-env-outer=mdcolumn
 .inst     : tex-cmd=\mdinst
+@Tex2 ~Th : font-weight=bold
 
 ~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par"
 @notex ~Bibliography: before="# References {-}&nl;"
