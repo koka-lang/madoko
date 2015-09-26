@@ -219,4 +219,3 @@ star: true
 @nomaketitle ~Subtitle    : font-size=x-large margin-bottom=0.5ex
 @nomaketitle ~AuthorName  : font-size=large
 @nomaketitle ~TitleFooter : margin-top=0.5ex
-

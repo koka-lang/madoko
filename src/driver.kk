@@ -546,21 +546,49 @@ function include( text : string, fast : bool, inName : string, outName : string,
     processIncludesRec(txt,fname,1,prelude)
   }
 
+  function processIncludeLine( fname : string, line : string, lineMap, lineNo : int, extra : int = 0 ) : io (string,lineMap,int)
+  {
+    match (line.find(rxInclude)) {
+      Nothing -> (line,lineMap,1)
+      Just(cap) -> {
+        val incname = cap.groups.firstMatched(1,4)
+        val (fileName0,content) = readInclude(incname,fname,lineNo)
+        val (fileName,istart,fragment) = fileName0.findRange(cap.matched, cap.groups[5], content, fname, lineNo);
+        if (istart<=0) 
+         then ("",lineMap,1)
+         else {
+          val (lcount,lmap,icontent) = processIncludesRec( fragment, fileName, istart )
+          val lineMapNew = Include(lineNo,istart,lcount+extra,fileName,lmap,lineMap)
+          //lineCount := lineCount + lcount - 1
+          //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
+          (icontent, lineMapNew, lcount)
+        }
+      }
+    }
+  }
+
   function processIncludesRec( txt : string, fname : string, start : int = 1, prelude : string = ""  ) : io (int,lineMap,string)
   {
     if (start<=0) return (0,End,"")
     var lineNo := start-1
     var lineCount := 0
     var lineMap := End
-    val mainTxt = 
+    val preludeTxt = 
       if (prelude != "") {
-        lineNo := lineNo - 1
-        "[INCLUDE=\"" + prelude + "\"]\n" + txt
+        val (icontent,lmap,lcount) = processIncludeLine(fname,"[INCLUDE=\"" + prelude + "\"]",lineMap,lineNo,1)
+        lineCount := lineCount + lcount 
+        lineMap   := lmap
+        icontent + "\n"
       }
-      else txt
-    val ls = mainTxt.lines.map fun(line) {
+      else ""
+    val ls = txt.lines.map fun(line) {
       lineNo := lineNo + 1;
-      lineCount := lineCount + 1;
+      //lineCount := lineCount + 1;
+      val (icontent,lmap,lcount) = processIncludeLine(fname,line,lineMap,lineNo)
+      lineCount := lineCount + lcount
+      lineMap   := lmap
+      icontent
+      /*
       match (line.find(rxInclude)) {
         Nothing -> line
         Just(cap) -> {
@@ -576,9 +604,10 @@ function include( text : string, fast : bool, inName : string, outName : string,
           }
         }
       }
+      */
     }
 
-    (lineCount, lineMap.reverse, ls.unlines)
+    (lineCount, lineMap.reverse, preludeTxt + ls.unlines)
   }
 
   val (_lcount,lmap,content) = processIncludes(text,inName)
