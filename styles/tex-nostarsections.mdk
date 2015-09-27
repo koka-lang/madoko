@@ -1,4 +1,4 @@
 Documentation: 
    Use LaTeX `\section` commands directly (not using star-form `\section*`) and without using
    the Madoko labeling and numbering. Useful for certain document classes.
-@tex ~H1,~H2,~H3,~H4: before=clear tex-starform=false
+@notex2 ~H1,~H2,~H3,~H4: before=clear tex-starform=false
