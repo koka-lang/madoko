@@ -81,7 +81,8 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
     }
   }
 } 
-val rxMeta = regex(@"^"+ metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
+val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
+val rxMeta = regex(@"^"+ rxMetaComment + metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
 val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 // --------------------------------------------------------------

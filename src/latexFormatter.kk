@@ -328,7 +328,7 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
 
 function texList( tag : string, body : string, attrs : attrs ) : string {
   val args = cssListArgs( attrs )
-  val env  = attrs.lookupKey("tex-env","itemize") + args
+  val env  = (if (attrs.hasKey("list-style-type").bool) then "enumerate" else attrs.lookupKey("tex-env","enumerate")) + args
   attrs.addKeyval("tex-env",env).cssAttrs(body,[("display","block")],"")
 }
 
