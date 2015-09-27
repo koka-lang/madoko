@@ -1,4 +1,4 @@
-Package         : [heading-base=&heading-base;]madoko2.sty
+Package         : [heading-base=&heading-base;]madoko2
 
 ~Article  : html-elem='article'
 ~Section  : html-elem='section' 

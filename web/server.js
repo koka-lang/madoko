@@ -36,14 +36,14 @@ var limits = {
   hashLength  : 16,  
   fileSize    : 16*mb,         
   cookieAge   : 30*day,       // our session cookie expires after one month
-  timeoutPDF  : 5*minute,
-  timeoutMath : 2*minute,
+  timeoutPDF  : 3*minute,
+  timeoutMath : 1*minute,
   timeoutGET  : 30*second,
   atomicDelay : 1*minute,     // a push to cloud storage is assumed visible everywhere after this time
   editDelay   : 30*second,  
   logFlush    : 1*minute,
   logDigest   : 15*minute,
-  rmdirDelay  : 5*second,
+  rmdirDelay  : 120*second,
   tokenExpires: 7*day,        // we disable access_tokens older than this time
 };
 

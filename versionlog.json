@@ -3,6 +3,12 @@
     {
       "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
       "updates": [
+        "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before."
+      ]
+    },
+    {
+      "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
+      "updates": [
         "Updated table formatting attributes. The new prefixes are `tr-`, `thead-tr-`, `tbody-tr-`, `col-`, `cell-`, `td-` and `th-`.\n  New modifiers are `even-`, `odd-`, `last-` and `-n` where `n` is the column/row number",
         "Completely new title block formatting where every item can be individually formatted. Use `@tex Maketitle: False` to suppress the `maketitle` command in LaTeX.",
         "New metadata key `Author Columns` (=3) to determine how many author columns there are.",
