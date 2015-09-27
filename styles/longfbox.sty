@@ -1,5 +1,5 @@
 %---------------------------------------------------------------------------
-%  Copyright 2013 Microsoft Corporation.
+%  Copyright 2015 Microsoft Corporation.
 % 
 %  This is free software; you can redistribute it and/or modify it under the
 %  terms of the Apache License, Version 2.0. A copy of the License can be
@@ -862,7 +862,7 @@
   \fbox@from\fbox@anglestart
   \advance\fbox@anglestart by \fbox@dashangle
   \ifdim\fbox@angleend\fbox@cmp\fbox@anglestart\relax
-    \typeout{too much? \the\fbox@anglestart, and \the\fbox@angleend}%
+    %\typeout{too much? \the\fbox@anglestart, and \the\fbox@angleend}%
     \fbox@to\fbox@angleend
   \else
     \fbox@to\fbox@anglestart
@@ -962,7 +962,7 @@
 %
 % --------------------------------------------------------
 \newcommand\fbox@setdim{%
-  \typeout{ set dim}%
+  %\typeout{ set dim}%
   \iftoggle{/longbox/@part-needtop}{\def\fbox@top{top}}{\def\fbox@top{break-top}}%
   \iftoggle{/longbox/@part-needbottom}{\def\fbox@bottom{bottom}}{\def\fbox@bottom{break-bottom}}%
   \options{%
@@ -1091,7 +1091,7 @@
 \newrobustcmd*\fbox@render{%
   \begingroup
   \fbox@setdim
-  \typeout{render: height:\the\dimexpr\option{/fbox/@content-box-height}, lower=\the\dimexpr\option{/fbox/@lower}}%
+  %\typeout{render: height:\the\dimexpr\option{/fbox/@content-box-height}, lower=\the\dimexpr\option{/fbox/@lower}}%
   \hbox{%
     \fbox@kern{h}{/fbox/margin-left}%
     \option{/fbox/render-insert-before}%  
@@ -1291,7 +1291,7 @@
 }
 
 \newcommand\fbox@adjustoptions{%
-  \typeout{ regular fbox adjustoptions}%
+  %\typeout{ regular fbox adjustoptions}%
   % set width of borders with style none to 0
   \def\do##1{%
     \ifoptionequal{/fbox/border-##1-style}{hidden}{\option@invoke{/fbox/border-##1-style}{none}}{}%

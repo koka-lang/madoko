@@ -1,5 +1,3 @@
-Test $\xfoo$.
-
 Title       : Sample article for the IEEE transactions style
 Author      : John Q. Open^1^
 Affiliation : Research institute
@@ -46,7 +44,7 @@ Let's start with a sub section.
 
 Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch
 butterfly. Note that you can drag&drop images into the editor pane to
-include them in the document, and similarly with bibtex files, latex
+include them in the document, and similarly with bibtex files, latex 
 style files, etc.
 
 ~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=top}
@@ -165,10 +163,13 @@ like you and me come blundering along, making a noise like elephants
 which they can hear a mile off.
 ~
 
+[INCLUDE=test1.mdk]
+
+And a test: $\xfoo$.
 
 ### Acknowledgments {-}
 
-I would like to thank ...
+I would like to thank ... 
 
 [BIB]
 
