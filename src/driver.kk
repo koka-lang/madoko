@@ -614,7 +614,7 @@ function include( text : string, fast : bool, inName : string, outName : string,
   action(content,lmap)
 }
 val rxInclude = regex(@"^ {0,3}\[(?:(BIB)|INCLUDE *(?:= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s:=\]]+)) *)?(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
-val rxPrelude = regex(@"^ {0,3}[Pp]relude[ \t]*:[ \t]*([^\s])*[ \t\r]*(\n|$)",multiline=True)
+val rxPrelude = regex(@"^ {0,3}[Pp]relude[ \t]*:[ \t]*(\S*)[ \t\r]*(\n|$)",multiline=True)
 
 function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext,required)) {

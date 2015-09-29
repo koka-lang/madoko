@@ -449,8 +449,10 @@
 }
 
 \newcommand\mdcaptiontext[1]{%
-  \addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
-    {\protect\numberline{\md@captionlabel}{\protecting{\ignorespaces #1}}{}}%
+  \ifdef\@captype
+    {\addcontentsline{\csname ext@\@captype\endcsname}{\@captype}%
+      {\protect\numberline{\md@captionlabel}{\protecting{\ignorespaces #1}}{}}}%
+    {}%
   #1%   
 }
 

@@ -35,11 +35,13 @@ Package         : [heading-base=&heading-base;]madoko2
 .MathInline     : input=math
 ~MathDisplay    : input=math .para-block
 ~MathPre        : input=mathpre .para-block
-~MathDefs       : input=mathdefs .hidden
+~MathDefs       : input=mathdefs 
 ~HtmlOnly       : input=htmlonly notag
 ~TexOnly        : input=texonly notag
 ~math-inline    : input=math
 ~math-display   : input=math
+.hidden         : display=none
+
 
 ~Snippet        : input=math .block snippet-needpdf=true
 ~Footnote       : label='[@footnote]{.footnote-label}' line-adjust=0
@@ -131,6 +133,8 @@ thm-caption-end     : &&;br;
 
 
 Tex2      : True
+@tex Tex2x: True
+
 Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
@@ -139,7 +143,8 @@ Logo      : False
 ~HR       : tex-cmd=\mdhr display=block
 ~Pre      : tex-env=mdpre 
 ~Abstract : tex-env=abstract
-~Figure   : tex-env-outer=figure
+~Figure   : tex-env-outer=figure[&tex-float-placement;] tex-float-placement=""
+~TableFigure: tex-env-outer=table[&tex-float-placement;] tex-float-placement=""
 .figure-caption: tex-cmd=\mdcaption
 .caption-text  : tex-cmd=\mdcaptiontext
 .wide     : tex-env-postfix=*

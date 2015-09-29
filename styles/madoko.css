@@ -389,7 +389,8 @@
 ----------------------------------------------------*/
 body.madoko {
   font-family: Cambria,"Times New Roman","Liberation Serif","Times",serif;
-  -webkit-text-size-adjust: 100%; /* so math displays well on mobile devices */
+  -webkit-text-size-adjust: 100%;       /* so math displays well on mobile devices */
+  text-rendering: optimizeLegibility;
 }
 
 body.madoko {

@@ -27,7 +27,7 @@ Refer         : lipics-logo-bw.pdf
 @html captionbox    : [&nbsp;]{.orange width=1.2ex height=1.2ex vertical-align=-0.8ex}&nbsp;
 @tex .caption-before: .hidden
 ~Figure       : after=clear 
-                after="&nl;~{notag tight}&nl;[[&captionbox;**Figure &label;**]{.caption}&ensp;]{.caption-before}[&caption;]{tex-elem=mdCaptionOf}&nl;~&nl;"
+                after="&nl;~{notag tight}&nl;[[&captionbox;**Figure &label;**]{.caption}&ensp;]{.caption-before}[&caption;]{tex-elem=mdCaptionOf tex-cmd='\captionof{figure}'}&nl;~&nl;"
 
 Tex Header    :
     \hypersetup{colorlinks=false}

@@ -12,12 +12,12 @@ Documentation:
 @tex ~ThmCaption : tex-elem=mdThmCaption tight
 @tex ~Thm        : tex-elem=mdThm tight 
 
-@tex2 ~Theorem    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=theorem}&nl;&source;&nl;~End Thm&nl;"
-@tex2 ~Lemma      : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=lemma}&nl;&source;&nl;~End Thm&nl;" 
-@tex2 ~Corollary  : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=corollary}&nl;&source;&nl;~End Thm&nl;" 
-@tex2 ~Proposition: replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=proposition}&nl;&source;&nl;~End Thm&nl;"
-@tex2 ~Definition : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=definition}&nl;&source;&nl;~End Thm&nl;"
-@tex2 ~Example    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=example}&nl;&source;&nl;~End Thm&nl;" 
-@tex2 ~Proof      : replace=clear replace="~Begin Thm {tex-env=proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;" 
-@tex2 ~ThmCaption : tex-env=mdthmcaption 
-@tex2 ~Thm        : tex-env=mdthm[&thm-env;] display=block
+@tex2x ~Theorem    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=theorem}&nl;&source;&nl;~End Thm&nl;"
+@tex2x ~Lemma      : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=lemma}&nl;&source;&nl;~End Thm&nl;" 
+@tex2x ~Corollary  : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=corollary}&nl;&source;&nl;~End Thm&nl;" 
+@tex2x ~Proposition: replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=proposition}&nl;&source;&nl;~End Thm&nl;"
+@tex2x ~Definition : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=definition}&nl;&source;&nl;~End Thm&nl;"
+@tex2x ~Example    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=example}&nl;&source;&nl;~End Thm&nl;" 
+@tex2x ~Proof      : replace=clear replace="~Begin Thm {tex-env=proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;" 
+@tex2x ~ThmCaption : tex-env=mdthmcaption 
+@tex2x ~Thm        : tex-env=mdthm[&thm-env;] display=block

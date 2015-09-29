@@ -84,13 +84,11 @@ Use `columns` to put blocks next to each other:
 
 ~ Begin Columns
 ~ Column { width=50% }
-A monarch butterfly (as shown in Figure [#fig-bfly])
+A monarch butterfly (shown to the right)
 spends the winter in Mexico.
 ~
 ~ Column
-~~ Figure { #fig-bfly caption="A monarch" }
 ![butterfly]
-~~
 ~
 ~ End Columns
 

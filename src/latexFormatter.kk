@@ -216,12 +216,13 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
-  "\\begin{mdtabular}" + columns.show.braced + 
-      "\\begin{" + table + "}" + 
-      "{" + colattrsx.map(fmtColumn).join + "}" +
-    head.fmtRows("th") + "\n" +
-    body.fmtRows(td) +
-    "\\end{" + table + "}\\end{mdtabular}\n"
+  val tbody = "\\begin{mdtabular}" + columns.show.braced + 
+                "\\begin{" + table + "}" + 
+                "{" + colattrsx.map(fmtColumn).join + "}" +
+              head.fmtRows("th") + "\n" +
+              body.fmtRows(td) +
+              "\\end{" + table + "}\\end{mdtabular}\n"
+  attrs.cssAttrs(tbody)              
 }
 
 type line {
@@ -471,6 +472,13 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 
 function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
   val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
+  val hidden = 
+    match(kvs["display"]) {
+      Just(disp) -> (disp.cssValue.toLower == "none")
+      Nothing    -> False
+    }
+  if (hidden) return ""
+
   val isBlock = kvs.cssIsBlock
   /*
   val kvs = if (isBlock || elem == "span" || elem == "div" ||
@@ -537,7 +545,14 @@ function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attr
     Just(env) -> {
       val post = kvs["tex-env-postfix"].maybe("",id)
       match(env.find(rxEnv)) {
-       Just(cap) -> body.blockEnv(cap.groups[1] + post,expandKeys(cap.groups[2],"",attrs,dict(),dict()))
+       Just(cap) -> {
+        if (cap.groups[1]=="figure") {
+          trace(" figure: " + cap.groups[2])
+          trace(" kvs: " + kvs.list.map(fun(kv) { kv.fst + ": " + kv.snd}).join(", ") )
+          trace(" attrs: " + attrs.show)
+        }
+        body.blockEnv(cap.groups[1] + post,expandKeys(cap.groups[2],"",attrs,dict(),kvs)) /* pass 'kvs' as metadata since it contains expanded keys */
+       }
        Nothing   -> body.blockEnv(env + post)
       }
     }

@@ -164,7 +164,7 @@ I would like to thank ...
 [BIB]
 
 ~TexRaw
-\pagebreak
+\vfill\pagebreak
 ~
 
 # An appendix { @h1="A" }

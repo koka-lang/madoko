@@ -183,7 +183,8 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
                     acc.counters + [(acc.elem + "-li",value.trim)] 
                   }
                   else acc.counters
-      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name}) + [(name,value)], counters = cntrs)
+      val extra = [parsePageAlign(name,kwvalue)].concat
+      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name && extra.all( fun(kv) { kv.fst != kval.fst })}) + [(name,value)] + extra, counters = cntrs)
     }
   }
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'
@@ -192,6 +193,22 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
 val rxAttr = regex(@"^\s*([\w\.#@\-:]+)\s*(?:=\s*(?:'((?:[^\n\\']|\\.)*)'|""((?:[^\n\\""]|\\.)*)""|((?:[^\\""'\s]|\\.)*)))?$")
 val rxToken = regex(@"(?:\s*=\s*|'(?:[^\n\\']|\\.)*'|""(?:[^\n\\""]|\\.)*""|\\.|[^'""\\\s])")
 val rxSep = regex(@"\s+")
+
+
+function parsePageAlign( name :string, value: string ) : list<(string,string)> {
+  if (name!="page-align") return []
+  val placement = if (value=="top") then "t"
+                  elif (value=="bottom") then "b"
+                  elif (value=="topbottom") then "tb"
+                  elif (value=="page") then "p"
+                  elif (value=="here") then "h"
+                  elif (value=="forcehere") then "h!"
+                  elif (value=="inplace") then "H"
+                  else ""
+  trace(" page align: " + value + ", " + placement)                  
+  [("tex-float-placement",placement)]                    
+}
+
 
 // Parse an attribute string
 val parseAttributes : (string) -> list<(string,string,string)> = smemo(parseAttributesX)
