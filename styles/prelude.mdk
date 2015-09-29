@@ -118,7 +118,7 @@ thm-caption-end     : &&;br;
 ~Proposition    : display=block label='[@proposition]{.proposition-label}'
                     before='[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}'
 ~Corollary      : display=block label='[@corollary]{.corollary-label}'
-                    before='[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.coroallary-before}'
+                    before='[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.corollary-before}'
 ~Example        : display=block label='[@example]{.example-label}'
                     before='[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}'
 ~Definition    : display=block label='[@definition]{.definition-label}'
@@ -139,12 +139,12 @@ Logo      : False
 ~H1       : tex-cmd=\section* display=block
 ~H2       : tex-cmd=\subsection* display=block
 ~H3       : tex-cmd=\subsubsection* display=block
-~H4       : tex-cmd=\paragraph* display=block
+~H4,~H5,~H6: tex-cmd=\paragraph* display=block
 ~HR       : tex-cmd=\mdhr display=block
 ~Pre      : tex-env=mdpre 
 ~Abstract : tex-env=abstract
-~Figure   : tex-env-outer=figure[&tex-float-placement;] tex-float-placement=""
-~TableFigure: tex-env-outer=table[&tex-float-placement;] tex-float-placement=""
+~Figure   : tex-env-outer=figure[&tex-float-placement;] tex-float-placement="tbp"
+~TableFigure: tex-env-outer=table[&tex-float-placement;] tex-float-placement="tbp"
 .figure-caption: tex-cmd=\mdcaption
 .caption-text  : tex-cmd=\mdcaptiontext
 .wide     : tex-env-postfix=*
@@ -185,8 +185,8 @@ star: true
 @nostar ~H1       : tex-cmd=\section display=block
 @nostar ~H2       : tex-cmd=\subsection display=block
 @nostar ~H3       : tex-cmd=\subsubsection display=block
-@nostar ~H4       : tex-cmd=\paragraph display=block
-@nostar ~H1,~H2,~H3,~H4: before=clear
+@nostar ~H4,~H5,~H6: tex-cmd=\paragraph display=block
+@nostar ~H1,~H2,~H3,~H4,~H5,~H6: before=clear
 
 @tex maketitle            : true
 

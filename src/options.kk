@@ -67,7 +67,7 @@ public struct options(
   citeAll       : bool = False,
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth  : int  = 3, // default depth where headings are numbered
-  headingBase   : int  = 1, // heading level for #
+  headingBase   : int  = 2, // heading level for #
   sectionMax    : int  = 0, // maximal depth for adding sections (0 = disable)
   sectionBase   : int  = 1, // starting section level.
   starBold      : bool = False, // use * for bold?
