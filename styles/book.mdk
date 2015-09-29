@@ -1,0 +1,9 @@
+Description : Style for books
+Heading Base: 1
+Doc Class   : book
+
+~H1         : tex-cmd=\chapter* display=block
+~H2         : tex-cmd=\section* 
+~H3         : tex-cmd=\subsection*
+~H4         : tex-cmd=\subsubsection*
+~H5,~H6     : tex-cmd=\paragraph*
