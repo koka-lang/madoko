@@ -97,7 +97,7 @@ function parseDefinitionsFull(
   val defaultAttrs : dict<string> = mdefaultAttrs.freeze()
 
   // process attributes 
-  function process( attrs : attrs, previousIsPar : bool, block : block ) : <div,st<_h>> block {
+  function process( attrs : attrs, previousPar : parInfo, block : block ) : <div,st<_h>> block {
     val bname = block.blockName
     
     // merge and set default attributes
@@ -146,7 +146,9 @@ function parseDefinitionsFull(
 
     // paragraph indentation
     val attrsp = match(block) {
-      Para -> if (previousIsPar) then attrsx.addClass("indent") else attrsx.addClass("noindent")
+      Para -> if (previousPar.isParBlock) then attrsx.addClasses(["noindent","para-continued"])
+              elif (previousPar.isPar) then attrsx.addClass("indent") 
+              else attrsx.addClass("noindent")
       _ -> attrsx
     }
 
@@ -175,7 +177,7 @@ function parseDefinitionsFull(
   }
 
   // process a block
-  function parseDefBlock( previousIsPar : bool,  block : block ) : <st<_h>,div> block {
+  function parseDefBlock( previousPar : parInfo,  block : block ) : <st<_h>,div> block {
     val attrs : attrs = match(block) {
       DefLink(id,link) -> {
         links[id] := link
@@ -215,7 +217,7 @@ function parseDefinitionsFull(
       _ -> attrsNone
     }
 
-    attrs.process( previousIsPar, block )
+    attrs.process( previousPar, block )
   }
   
   val newblocks  = blocks.mapBlocks(parseDefBlock)
@@ -246,21 +248,22 @@ struct secinfo(
 val secInit = Secinfo(1,6,1,id)
 val secNone = Secinfo(1,0,1,id)
 
+struct parInfo( isPar : bool, isParBlock : bool )
+
 function mapBlocks( blocks : list<block>, 
-                    action : (bool,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
-  var previousIsPar := False
+                    action : (parInfo,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
+  var previousPar := ParInfo(False,False)
   blocks.map fun(block) {
-    val nblock = action(previousIsPar,block)
+    val nblock = action(previousPar,block)
   
     match(nblock) {
-      Para        -> previousIsPar := True
+      Para(_,xs)  -> previousPar := ParInfo(True,xs.hasClass("para-block"))
       Div(_,xs)   | nblock.blockName == "figure" || xs.hasClass("float") -> ()  // leave as is
       Source(input,Raw(Just(FmtHtml))) | input.startsWith("<!--") -> () // ignore comments too
-      Div(_,xs)   | xs.hasClass("para-end") -> previousIsPar := True
-      Code(_,_,xs)| xs.hasClass("para-end") -> previousIsPar := True
-      DefLink     -> ()
+      Div(_,xs)   -> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block"))
+      Code(_,_,xs)-> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block"))
       DefFootnote -> ()
-      _    -> previousIsPar := False
+      _    -> previousPar := ParInfo(False,False)
     }
     match(nblock) {
       Div(content,xs) -> {

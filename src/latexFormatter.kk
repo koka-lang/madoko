@@ -218,7 +218,7 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
   val tbody = "\\begin{mdtabular}" + columns.show.braced + 
                 "\\begin{" + table + "}" + 
-                "{" + colattrsx.map(fmtColumn).join + "}" +
+                "{" + colattrsx.map(fun(ca) { fmtColumn(attrs,ca) }).join + "}" +
               head.fmtRows("th") + "\n" +
               body.fmtRows(td) +
               "\\end{" + table + "}\\end{mdtabular}\n"
@@ -233,8 +233,8 @@ type line {
 
 val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 
-function fmtColumn( colattr : attrs ) : string {
-  "l"
+function fmtColumn( attrs : attrs, colattr : attrs ) : string {
+  if (attrs.hasClass("columns")) then "p" else "l"
 }
 
 function fmtRows( rows : list<row>, td : string ) : string {
@@ -319,7 +319,7 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
                        keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" && kv.fst != "text-align"}))
 
   val content = if (elem=="column") 
-                 then texEnv(elem,body,attrs)
+                 then texEnv(elem,body,attrsx)
                  else texCmd(elem,body,attrsx.addKeyval("display","inline")) 
                  
   if (colspan=="1" && fmt=="l" && bcolor=="") then content 
@@ -498,7 +498,7 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyCmd(kvs,"tex-cmd-outer")
       .applyEnv(kvs,"tex-env-outer",attrs)
       .insertCmd(kvs,"tex-cmd-outer-before")
-      .applyBlock(isBlock && !attrs.hasClass("para-block"), attrs)
+      .applyBlock(isBlock && !attrs.hasClass("para-block") && !attrs.hasClass("para-continued"), attrs)
 }
 
 function applyBlock( body : string, isBlock : bool, attrs : attrs ) : string {
@@ -573,8 +573,12 @@ function braceCmd( body : string, cmd : string ) : string {
 }
 
 function unbrace( s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) then s.substr(1,s.length-2) else s
+  if (s.startsWith("{") && s.endsWith("}")) then s.substr(1,s.length-2) 
+  elif (s.contains(rxCommentEnd)) then s + "\n"
+  else s
 }
+
+val rxCommentEnd = regex(@"(?:^|[^\\])%.*$")
 
 function cmdconnect( cmd : string, s : string ) : string {
   if (cmd.isEmpty || s.isEmpty || cmd.endsWith("}")) then cmd + s

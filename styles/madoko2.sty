@@ -650,9 +650,12 @@
 %-------------------------------------------------------------
 % Tables 
 %-------------------------------------------------------------
+\newtoggle{md@intable}
+\togglefalse{md@intable}
 
 \newlength{\md@defaultcolwidth}
 \newcommand{\md@columncount}[1]{%
+  \toggletrue{md@intable}%
   \setlength{\tabcolsep}{1ex}%
   \setlength{\linewidth}{\dimexpr\linewidth-(\tabcolsep*2*#1)-\tabcolsep\relax}% the line length minus table spacing
   \setlength{\md@defaultcolwidth}{\dimexpr\linewidth/#1\relax}%
@@ -949,7 +952,8 @@
 
 
 % break and nbsp
-\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
+\protected\edef\\{\unexpanded\expandafter{\\}}% make this a robust command (needed for the beamer package)
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\iftoggle{md@intable}{\newline}{\\}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
 \newcommand{\mdBrSep}[2]{%
