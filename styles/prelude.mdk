@@ -96,7 +96,7 @@ LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
 
 ~SubFigureRow   : .columns .align-center
 ~SubFigure      : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''
-                    after='&br;[&toc-line;]{.subfig-caption}' tight text-align=center .column
+                    after='&br;&smallskip;[&toc-line;]{.subfig-caption}' tight text-align=center .column
                     toc-line='[&fig-label; ]{.caption-before} &caption;'
                     toc=tof toc-depth=2
 
@@ -164,12 +164,12 @@ Logo      : False
 ~Sub      : tex-cmd=\mdsub
 ~Del      : tex-cmd=\mddel
 ~BlockQuote: tex-env=quote
-.Columns  : display=table
-.Column   : display=table-cell tex-env-outer=mdcolumn
+.Columns  : tex-tabcolsep=0pt
+.Column   : tex-env-outer=mdcolumn
 .inst     : tex-cmd=\mdinst
 @Tex2 ~Th : font-weight=bold
 
-~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par"
+~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par" 
 @notex ~Bibliography: before="# References {-}&nl;"
 ~BibItem  : tex-cmd-before="\bibitem[&label;]{&id;}" label="@bibitem"
 @tex ~BibItem: before=clear
@@ -177,7 +177,6 @@ Logo      : False
 ~toc      : tex-env=mdtoc
 ~tocblock : tex-env=mdtocblock
 ~tocitem  : tex-env="mdtocitem{&toctarget;}"
-.align-center: text-align=center
 
 .align-center   : text-align=center
 .equation-before: tex-cmd=\mdmathtag

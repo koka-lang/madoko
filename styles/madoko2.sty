@@ -212,6 +212,39 @@
 \definecolor{aqua}{HTML}{00FFFF}
 \definecolor{fuchsia}{HTML}{FF00FF}
 
+% Define basic CSS colors with capital letters for compatability
+\definecolor{Red}{HTML}{FF0000}
+\definecolor{Lime}{HTML}{00FF00}
+\definecolor{Blue}{HTML}{0000FF}
+
+\definecolor{Yellow}{HTML}{FFFF00}
+\definecolor{Cyan}{HTML}{00FFFF}
+\definecolor{Magenta}{HTML}{FF00FF}
+
+\definecolor{Navy}{HTML}{000080}
+\definecolor{Maroon}{HTML}{800000}
+\definecolor{Green}{HTML}{008000}
+\definecolor{DarkGreen}{HTML}{008000}
+
+\definecolor{Teal}{HTML}{008080}
+\definecolor{Purple}{HTML}{800080}
+\definecolor{Olive}{HTML}{808000}
+
+\definecolor{Black}{HTML}{000000}
+\definecolor{DimGray}{HTML}{696969}
+\definecolor{Gray}{HTML}{808080}
+\definecolor{DarkGray}{HTML}{A9A9A9}
+\definecolor{Silver}{HTML}{C0C0C0}
+\definecolor{LightGray}{HTML}{D3D3D3}
+\definecolor{Gainsboro}{HTML}{DCDCDC}
+\definecolor{Floralwhite}{HTML}{FFFAF0}
+\definecolor{Ivory}{HTML}{FFFFF0}
+\definecolor{White}{HTML}{FFFFFF}
+
+\definecolor{Orange}{HTML}{FFA500}
+\definecolor{Aqua}{HTML}{00FFFF}
+\definecolor{Fuchsia}{HTML}{FF00FF}
+
 % define these keywords as colors but need to be handled specially
 \colorlet{currentcolor}{black}
 \colorlet{transparent}{white}
@@ -274,6 +307,7 @@
 \newcommand\dimheight[1]{#1\md@height}
 \newcommand\dimwidth[1]{#1\linewidth}
 \newcommand\dimfont[1]{#1ex}
+\newcommand\dimavailable{\linewidth}
 
 % dimdefault{arg}{default}  use default if arg is empty
 \newcommand\dimdefault[2]{\ifblank{#1}{#2}{#1}}
@@ -296,6 +330,14 @@
 
 % onnotzero takes only a then branch
 \providecommand\onnotzero[1]{\ifzero{#1}{}}
+
+% provide justify command
+\providecommand\justify{%
+  \leftskip\z@
+  \@rightskip\z@
+  \rightskip\@rightskip
+  \parfillskip\@flushglue
+}
 
 % ---------------------------------------------------
 % Margins
@@ -438,6 +480,8 @@
   \settowidth\md@captionlen{#1}%
   \ifdim\md@captionlen<\linewidth%
     \centering
+  \else
+    \justify
   \fi
   \noindent\strut #1%
 }
@@ -460,6 +504,18 @@
 \newcommand\mdfloatright[1]{\hfill #1}
 \newcommand\mdfloatcenter[1]{\hfill #1\hfill}
 
+
+\newenvironment{mdcenter}%
+  {\centering}{}
+
+\newenvironment{mdflushleft}%
+  {\raggedright}{}
+
+\newenvironment{mdflushright}%
+  {\raggedleft}{}
+
+\newenvironment{mdjustify}%
+  {\justify}{}
 
 %-------------------------------------------------------------
 % Table of contents
@@ -584,7 +640,7 @@
 \newcommand{\mdtokenemphasis}[1]{\textit{#1}}
 \newcommand{\mdtokenstrong}[1]{\textbf{#1}}
 \newcommand{\mdtokentitle}[1]{\textbf{#1}}
-\newcommand{\mdtokenmeta}[1]{\textcolor{Gray}{#1}}
+\newcommand{\mdtokenmeta}[1]{\textcolor{gray}{#1}}
 \newcommand{\mdtokenentity}[1]{{#1}}
 \newcommand{\mdtokendelimiter}[1]{{#1}}
 
@@ -650,22 +706,24 @@
 %-------------------------------------------------------------
 % Tables 
 %-------------------------------------------------------------
-\newtoggle{md@intable}
-\togglefalse{md@intable}
-
 \newlength{\md@defaultcolwidth}
-\newcommand{\md@columncount}[1]{%
-  \toggletrue{md@intable}%
-  \setlength{\tabcolsep}{1ex}%
-  \setlength{\linewidth}{\dimexpr\linewidth-(\tabcolsep*2*#1)-\tabcolsep\relax}% the line length minus table spacing
-  \setlength{\md@defaultcolwidth}{\dimexpr\linewidth/#1\relax}%
+\newcommand{\md@columncount}[3][0pt]{%
+  \setlength{\tabcolsep}{#3}%
+  \def\md@columns{#2}%
+  \setlength{\linewidth}{\dimexpr\linewidth-(\tabcolsep*2*#2)-\tabcolsep\relax}% the line length minus table spacing
+  \ifdim#1=0pt\relax
+    \setlength{\md@defaultcolwidth}{\dimexpr\linewidth/#2\relax}%
+  \else
+    \setlength{\md@defaultcolwidth}{#1}%
+  \fi
+  \def\dimavailable{\md@defaultcolwidth}%
 }
 
 \newlength\mdtabularskip
 \setlength\mdtabularskip{\mdcompactskip}
 
-\newenvironment{mdtabular}[1]%
-  {\md@columncount{#1}\begin{mdparblock}[\mdtabularskip]}%
+\newenvironment{mdtabular}[3]%
+  {\md@columncount[#2]{#1}{#3}\begin{mdparblock}[\mdtabularskip]}%
   {\end{mdparblock}}%
 
 \newenvironment{mdcolumn}%
@@ -673,7 +731,7 @@
   {}%\end{minipage}}
 
 \newenvironment{mdcodetabular}[1]%
-  {\md@columncount{#1}}%
+  {\md@columncount{#1}{0pt}}%
   {}%
 
 
@@ -708,6 +766,21 @@
        \smash{\usebox{\md@sidebox}}%
     }%      
 }
+
+
+%-------------------------------------------------------------
+% Bibliography
+%-------------------------------------------------------------
+
+% some styles (sig-alternate) disables bib labels
+\newcommand\md@restorebiblabel{%
+  %\let\md@org@bibitem\bibitem
+  %\renewcommand\bibitem[2][]{\md@org@bibitem{#2}}%
+  \def\@biblabel##1{[##1]}%
+}
+\ifx\@biblabel\@gobble\relax
+  \md@restorebiblabel
+\fi
 
 
 
@@ -953,7 +1026,7 @@
 
 % break and nbsp
 \protected\edef\\{\unexpanded\expandafter{\\}}% make this a robust command (needed for the beamer package)
-\newcommand{\mdBr}{\ifvmode\leavevmode\fi\iftoggle{md@intable}{\newline}{\\}}
+\newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
 \newcommand{\mdBrSep}[2]{%

@@ -216,11 +216,14 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
-  val tbody = "\\begin{mdtabular}" + columns.show.braced + 
-                "\\begin{" + table + "}" + 
-                "{" + colattrsx.map(fun(ca) { fmtColumn(attrs,ca) }).join + "}" +
-              head.fmtRows("th") + "\n" +
-              body.fmtRows(td) +
+  val colfmts   = colattrsx.map(fun(ca) { fmtColumn(attrs,ca) })
+  val defcolwidth  = colattrsx.fmtDefaultColumnWidth
+  val tabcolsep    = attrs.lookupKey("tex-tabcolsep","1ex").cssWidth
+  val tbody = "\\begin{mdtabular}" + columns.show.braced  + defcolwidth.braced + tabcolsep.braced +
+                "%mdk\n\\begin{" + table + "}" + 
+                "{" + colfmts.join + "}" +
+              head.fmtRows("th",colfmts,defcolwidth) + "\n" +
+              body.fmtRows(td,colfmts,defcolwidth) +
               "\\end{" + table + "}\\end{mdtabular}\n"
   attrs.cssAttrs(tbody)              
 }
@@ -234,10 +237,26 @@ type line {
 val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 
 function fmtColumn( attrs : attrs, colattr : attrs ) : string {
-  if (attrs.hasClass("columns")) then "p" else "l"
+  match(colattr.hasKey("text-align")) {
+    Just(alignment) -> alignment.substr(0,1)
+    Nothing -> "l" 
+  }
 }
 
-function fmtRows( rows : list<row>, td : string ) : string {
+function fmtDefaultColumnWidth( colattrs : list<attrs> ) : string {
+  val fixed = colattrs.concat( fun(ca) { 
+    if(ca.hasKey("width").bool) then {
+      val kvs = dict(ca.keyvals).cssExpandKeys
+      ["-" + dimBorderBoxWidth(kvs)]
+    }
+    else []
+  })
+  val flexible = colattrs.length - fixed.length
+  if (flexible == 0) then "0pt"
+    else "\\dimeval{(\\linewidth" + fixed.join + ")/" + flexible.show + "}"
+}
+
+function fmtRows( rows : list<row>, td : string, colfmts : list<string>, defcolwidth : string ) : string {
   var lastIsLine := False
   val xrows = rows.map fun(row) {
     val lineRow = row.cells.map(fun(cell) { 
@@ -251,7 +270,7 @@ function fmtRows( rows : list<row>, td : string ) : string {
       res
     }
     else {
-      val res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row)
+      val res = (if (lastIsLine) then "\n" else "") + fmtRow(td,row,colfmts,defcolwidth)
       lastIsLine := False
       res
     }
@@ -289,20 +308,32 @@ function fmtLine( lines : list<line>, row : row ) : string
   line1 + line2
 }
 
-function fmtRow( td : string, row : row ) : string {
+function fmtRow( td : string, row : row, colfmts : list<string>, defcolwidth : string ) : string {
   /*
   rcolor = match (row.rowAttrs.hasKey("background-color")) {
              Nothing   -> ""
              Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
            }     
   rcolor + */
-  row.cells.map(fun(cell) { fmtCell(td,cell.text.trim,cell.cellAttrs) }).join("&") 
+  zipWith(row.cells,colfmts, fun(cell,colfmt) { fmtCell(td,cell.text.trim,cell.cellAttrs,colfmt,defcolwidth) }).join("&") 
     + "\\\\\n"
 } 
 
 
 
-function fmtCell( elem : string, body : string, attrs : attrs ) : string {
+function fmtCell( elem : string, body : string, attrs : attrs, colfmt : string, defcolwidth : string ) : string {
+  if (elem=="column" || attrs.lookupKey("display","") == "block")
+   then fmtCellBlock(elem,body,attrs,colfmt,defcolwidth)
+   else fmtCellInline(elem,body,attrs,colfmt)
+}
+
+function fmtCellBlock( elem : string, body : string, attrs : attrs, colfmt : string, defcolwidth : string ) : string {
+  if (attrs.hasKey("width").bool)
+    then texEnv(elem,body,attrs)
+    else texEnv(elem,body,attrs.addKeyval("width","available"))
+}
+
+function fmtCellInline( elem : string, body : string, attrs : attrs, colfmt : string ) : string {
   val colspan = attrs.lookupKey("column-span","1")
   val align   = match(attrs.hasKey("text-align")) {
                   Just(alignment) -> alignment.substr(0,1)
@@ -322,7 +353,7 @@ function fmtCell( elem : string, body : string, attrs : attrs ) : string {
                  then texEnv(elem,body,attrsx)
                  else texCmd(elem,body,attrsx.addKeyval("display","inline")) 
                  
-  if (colspan=="1" && fmt=="l" && bcolor=="") then content 
+  if (colspan=="1" && fmt==colfmt) then bcolor + content 
    else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
 }
 
@@ -546,11 +577,6 @@ function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attr
       val post = kvs["tex-env-postfix"].maybe("",id)
       match(env.find(rxEnv)) {
        Just(cap) -> {
-        if (cap.groups[1]=="figure") {
-          trace(" figure: " + cap.groups[2])
-          trace(" kvs: " + kvs.list.map(fun(kv) { kv.fst + ": " + kv.snd}).join(", ") )
-          trace(" attrs: " + attrs.show)
-        }
         body.blockEnv(cap.groups[1] + post,expandKeys(cap.groups[2],"",attrs,dict(),kvs)) /* pass 'kvs' as metadata since it contains expanded keys */
        }
        Nothing   -> body.blockEnv(env + post)
@@ -917,10 +943,10 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
       .onKey(kvs,"text-align", fun(value,b) {
         if (!isBlock) then b else {
           blockEnv( b, 
-            if (value=="left") then "flushleft"
-            elif (value=="right") then "flushright"
-            elif (value=="center") then "center"
-            else "")
+            if (value=="left") then "mdflushleft"
+            elif (value=="right") then "mdflushright"
+            elif (value=="center") then "mdcenter"
+            else "mdjustify")
         }
       })
       .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(b) {  

@@ -205,7 +205,6 @@ function parsePageAlign( name :string, value: string ) : list<(string,string)> {
                   elif (value=="forcehere") then "h!"
                   elif (value=="inplace") then "H"
                   else ""
-  trace(" page align: " + value + ", " + placement)                  
   [("tex-float-placement",placement)]                    
 }
 

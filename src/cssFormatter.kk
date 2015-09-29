@@ -20,7 +20,7 @@ public function cssIsBlock( kvs : dict<string> ) : bool {
     Nothing -> False
     Just(value) -> {
       val display = value.cssNormalize.toLower
-      (display=="block" || display.startsWith("table"))
+      (display=="block")
     }
   }
 }
@@ -234,6 +234,7 @@ public function cssWidth( v0 : string, auto : string = "", percOf : string = "wi
         Nothing -> 
           if (v=="auto") then auto 
           elif (v=="normal") then "1" + defunit
+          elif (v=="available") then "\\dimavailable"
           else cssValue(v)
       }
     }

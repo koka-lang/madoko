@@ -1227,6 +1227,9 @@ var Storage = (function() {
               Util.message("Nothing was selected to commit.", Util.Msg.Status );
               return;
             }
+            if (!res.message) {
+              throw new Error("A commit message cannot be empty. (commit was aborted)");
+            }
             return self.remote.commit( res.message, changes ).then( function(commit) {
               if (!commit.committed) {
                 throw new Error(msgNotAtHead);

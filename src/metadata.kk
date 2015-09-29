@@ -129,8 +129,9 @@ public function filterModed( mdata :metadata ) : <div> metadata {
 
 
 function unMode( modes : mdict<h,bool>, kv : (string,string), mdata : metadata ) : <div,st<h>> maybe<string> {
-  match(kv.fst.find(rxModed)) {
-    Nothing   -> Just(kv.fst) 
+  val key = kv.fst.toLower
+  match(key.find(rxModed)) {
+    Nothing   -> Just(key) 
     Just(cap) -> {
       val neg  = cap.groups[1] == "no"
       val mode = cap.groups[2]
@@ -149,8 +150,9 @@ function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <di
     Nothing -> {
       modes[mode] := False  // prevent infinite recursion
       val mbRes = mdata.reverse.foreachUntil( fun(kv) { 
-        match( kv.fst.find(rxModed)) {
-          Nothing   | kv.fst==mode -> Just(kv.snd) 
+        val key = kv.fst.toLower
+        match( key.find(rxModed)) {
+          Nothing   | key==mode -> Just(kv.snd) 
           Just(cap) | cap.groups[3] == mode -> {
             match(modes.unMode(kv,mdata)) { // may recurse
               Just(_) -> Just(kv.snd)
