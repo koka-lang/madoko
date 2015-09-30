@@ -46,7 +46,9 @@ public function processContent( inName : string, outName : string, content : str
 
   val styleDir = opts.installDir + "/../styles"
   val searchDirs = [inName.dirname,outName.dirname,styleDir]
-  content.include(False, inName, outName, searchDirs, opts.options) fun(icontent,lmap) {
+  content.include(False, inName, outName, searchDirs, opts.options) fun(icontent0,lmap) {
+    // remove madoko comments
+    val icontent = icontent0.removeMadokoComments
     // set up options
     val opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
                   then (opts.options)(xmp = True) else opts.options
@@ -294,6 +296,12 @@ function fixWarnings(txt : string) : string {
 }
 val rxLocation = regex(@"^\s*location:(.*)",ignoreCase=True)
 val rxWarning  = regex(@"^(\s*(?:error|warning):)(.*)",ignoreCase=True)
+
+// Remove <!--madoko comments
+function removeMadokoComments( txt : string ) : string {
+  txt.replaceAll( rxMadokoComment, "\n$1\n")
+}
+val rxMadokoComment = regex(@"^<!--madoko[ \t\r]*\n([\s\S]*?)^-->[ \t\r]*\n", ignoreCase=True, multiline=True)
 
 // Register colorizers
 function registerColorizers( opts : options, searchDirs : list<string>, content : string ) : io ()
