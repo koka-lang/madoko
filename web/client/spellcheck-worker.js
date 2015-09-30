@@ -172,7 +172,8 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMathEnv2,rxHtml,rxNoCheckEnv,rxNoCheckEnv2,rxMath,rxMathEnv3,rxMathEnv4],"gi");
 
   function checkText( text, options ) {
-    var text1 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"");
+    var text0 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"");
+    var text1 = text0.replace(/^<!--madoko *\n([\s\S]*)^--> *\n/gim, "\n$1\n");
     var text2 = sanitizeMeta(text1);
     var text3 = text2.replace(rxBlockParts,function(matched) {
       return whiten(matched);
