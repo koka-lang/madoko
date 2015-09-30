@@ -99,7 +99,10 @@ readResources().then( function(fnames) {
 	return createDigest(fnames.concat(options.digestOnly)).then( function(digest) {
 		console.log("version: " + appVersion);
 		console.log("madokoVersion: " + madokoVersion);
-		console.log("digest : " + digest);		
+		console.log("digest : " + digest);	
+		if (madokoVersion !== versionLog.log[0].version) {
+			console.log("** warning **: madoko version does not match log version (" + versionLog.log[0].version + ")");
+		}
 		var cache = createCache(fnames,digest);
 		Fs.writeFileSync(Path.join(options.rootPath,"madoko.appcache"),cache);
 		console.log("done (" + fnames.length + " files)" );
