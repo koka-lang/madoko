@@ -7,6 +7,7 @@
         "(The old style is still supported by using `Prelude: Prelude0` as metdata).",
         "Full support for CSS1 boxes in LaTeX output.",
         "Support for `<``!--madoko` comments. Such coment is ignored by Madoko but other tools will treat it as an HTML comment.",
+        "The `References` header is now part of the `[BIB]` element for better compatibility with LaTeX; remove any explicit `References` header in older documents.",
         "Support for `CSS header` and `Tex Header` metadata keys.",
         "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
         "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules."       
