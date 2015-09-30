@@ -96,6 +96,7 @@
 %-------------------------------------------------------------
 % Util
 %-------------------------------------------------------------
+\protected\edef\\{\unexpanded\expandafter{\\}}% make this a robust command (needed for the beamer package)
 \providecommand\ulp@afterend{}
 
 \providecommand\defcommand{\@ifstar\md@defcommand@S\md@defcommand@N}
@@ -506,16 +507,16 @@
 
 
 \newenvironment{mdcenter}%
-  {\centering}{}
+  {\centering}{\leavehmode}
 
 \newenvironment{mdflushleft}%
-  {\raggedright}{}
+  {\raggedright}{\leavehmode}
 
 \newenvironment{mdflushright}%
-  {\raggedleft}{}
+  {\raggedleft}{\leavehmode}
 
 \newenvironment{mdjustify}%
-  {\justify}{}
+  {\justify}{\leavehmode}
 
 %-------------------------------------------------------------
 % Table of contents
@@ -573,7 +574,7 @@
 \settowidth\presp{\texttt{ }}
 \newcommand\prespace[1]{\hspace*{#1\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
-\newcommand\prebr{\strut\\}
+\newcommand\prebr{\strut\newline}
 
 
 
@@ -1025,7 +1026,6 @@
 
 
 % break and nbsp
-\protected\edef\\{\unexpanded\expandafter{\\}}% make this a robust command (needed for the beamer package)
 \newcommand{\mdBr}{\ifvmode\leavevmode\fi\\{}}
 \newcommand{\mdNbsp}{\nobreak\rule{0pt}{0pt}~}
 
