@@ -1,12 +1,19 @@
 {
   "log" : [
     {
-      "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
+      "version": "0.9.8-beta",
       "updates": [
-        "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before."
+        "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before.",
+        "(The old style is still supported by using `Prelude: Prelude0` as metdata).",
+        "Full support for CSS1 boxes in LaTeX output.",
+        "Support for `<``!--madoko` comments. Such coment is ignored by Madoko but other tools will treat it as an HTML comment.",
+        "Support for `CSS header` and `Tex Header` metadata keys.",
+        "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
+        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules."       
       ]
     },
     {
+      "version": "0.9.5-beta",
       "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
       "updates": [
         "Updated table formatting attributes. The new prefixes are `tr-`, `thead-tr-`, `tbody-tr-`, `col-`, `cell-`, `td-` and `th-`.\n  New modifiers are `even-`, `odd-`, `last-` and `-n` where `n` is the column/row number",
