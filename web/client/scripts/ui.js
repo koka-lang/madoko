@@ -514,6 +514,9 @@ var UI = (function() {
             self.spellCheckMenu.menu.replaceWith(idx-1);
             self.spellCheckMenu.hide();
           }
+          else if (idx===3) {
+            self.insertText( "#", null, true ); // move to end
+          }
         });
       })(i);
     };
@@ -3905,11 +3908,15 @@ var symbolsMath = [
 
 
   // Insert some text in the document 
-  UI.prototype.insertText = function( txt, pos ) {
+  UI.prototype.insertText = function( txt, pos, moveToEnd ) {
     var self = this;
     if (!pos) pos = self.editor.getPosition(); 
     var rng = new Range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
-    var command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, txt );
+    var command;
+    if (moveToEnd)
+      command = new ReplaceCommand.ReplaceCommand( rng, txt );
+    else
+      command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( rng, txt );
     self.editor.executeCommand("madoko",command);
   }
 
