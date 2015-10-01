@@ -4,10 +4,9 @@ Author      : Daan Leijen
 Affiliation : Microsoft Research
 Email       : daan@microsoft.com 
 Title Note  : &date; (version &madoko-version;)
-
+Math Dpi    : 299
 Heading Base: 2
 Cite All    : True
-Script      : reference.js  
 Bib         : reference
 
 Package     : [curve]xypic
@@ -22,21 +21,24 @@ Package     : amscd
 MathJax Ext : mhchem
 Package     : [version=3]mhchem
 
-Math Embed  : 512
-
 Tex Header* : \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}               
 
 
-.SampleBlock: padding-left=1em padding-right=1em padding-top=-1ex 
+.SampleBlock: padding-left=1em padding-right=1em  
                 border-style=solid border-width=1px 
-~Sample     : margin-bottom=2ex 
-              replace="~ Begin SampleBlock {line-adjust=0} &nl;\
-                       ````` {.SampleSource replace=clear .noescape line-adjust=0}&nl;\
+.SampleSource: padding-top=1ex  
+.SampleContent: padding-bottom=1ex         
+~Sample     : margin-top=1ex margin-bottom=1ex
+              replace="~ Begin SampleBlock {line-adjust=0 } &nl;\
+                       `````madoko {.SampleSource replace=clear .noescape line-adjust=0}&nl;\
                        &source;&nl;`````&nl;-------- { width=50% text-align=left }&nl;\
-                       &source;&nl;~ End SampleBlock&nl;"
+                       ~ Begin SampleContent { line=534 data-line=534  } &nl;\
+                       &source;&nl;~ End SampleContent&nl;~ End SampleBlock&nl;"
 ~Slanted    : font-style=oblique
 ~Fib        : replace='/^x?$/y/' replace='/xx(x*)/~Fib&nl;x\1&nl;~&nl;~Fib&nl;\1&nl;~/' 
               notag tight 
+
+@tex .SampleContent : padding-top=1ex 
 
 Title2      : (&Title;,&Title;)
 llb         : &#10214;
@@ -44,13 +46,12 @@ rrb         : &#10215;
 Indigo      : #4B0082
 
 ~Pre,~Code  : replace="/==>/\(&rArr;\)/g"
-.cbox       : border-width=1px border-style=solid height=0.9em width=0.9em 
+.cbox       : border-width=1px border-style=solid height=0.9em width=0.9em before="&strut;"
 
 Colorizer   : javascript
 Colorizer   : javascript5
 Colorizer   : ruby
 Colorizer   : madoko
-Colorizer   : latex
 
 .pre-indented: language=madoko
 
@@ -63,26 +64,26 @@ License     : This is free software; you can redistribute it and/or modify it un
               terms of the Apache License, Version 2.0. A copy of the License can be
               found in the file "license.txt" at the root of this distribution.
 
-~ TexRaw
-\mdDefineUnicode{10214}{\ensuremath{\llbracket}}
-\mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
-\cssClassRule{sampleblock}{padding-bottom=1ex}
-~
 
 [TITLE]
 
-# Table of contents { - #toc-header }
+~ TexRaw
+\mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+\mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
+~
+
+# Table of contents { - #toc-header toc=none }
 
 [TOC]
 
-# Overview of Madoko
+# Overview of Madoko { @h1=1 }
 
 Madoko is a fast javascript [Markdown] processor written in [Koka]
 It started out as a demo program for the new, strongly typed, [Koka] language and
 the name comes from "_Ma_\/rk\/_do_\/wn in _Ko_\/ka".
 
 Madoko can both be run local as a command-line program, or as a full
-online experience on [Madoko.net] with storage and collaboration through [dropbox].
+online experience on [Madoko.net] with storage and collaboration through [dropbox] or [github].
 
 ## Madoko philosophy
 
@@ -99,18 +100,28 @@ and Madoko provides many essential additions for larger documents:
 * Extensive support for labeling and in-document [references][#sec-ids-labels].
 * [Tables][#sec-table] with custom borders, column alignment, multicolumn spans, colors etc.
 * Great [citation][#sec-bib] support, using standard BibTeX entries and styles.
-* Excellent support for static [syntax highlighting][#sec-pre] code fragments.
-* Automatic [numbering][#sec-numbering] of sections, figures, etc. 
+* Great LaTeX integration where one can use any LaTeX style or package.
+* Excellent support for static [syntax highlighting][#sec-pre] and transformation of code fragments.
+* Automatic [numbering][#sec-numbering] of sections, figures, examples, etc. 
 * Title page and [table-of-contents][#sec-special] generation.
-* Support for [custom blocks][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
-* Styling for both HTML and LaTeX output through [standard CSS attributes][#sec-css].
-* Powerful styling through attributes, [metadata rules][#sec-rules] and 
-    [replacement rules][#sec-replace].
+* Support for user defined [custom blocks][#sec-custom], like `Theorem`, `Abstract`, `Figure`, etc.
+* Styling for both HTML and LaTeX output through [standard CSS attributes][#sec-css]
+  and [metadata rules][#sec-rules].
+* Powerful document transformations through [replacement rules][#sec-replace].
 * Excellent support for [advanced mathematics][#sec-math] and powerful packages like
     TikZ and PSTricks with hi-resolution images in web pages.
 * Create great [presentations][#sec-presentations] for both the web and in print.
 * Compatible with most common Markdown extensions, such as [footnotes][#sec-footnotes], 
     [mathematics][#sec-math], [attributes][#sec-attr], etc. 
+
+Moreover the online editor [Madoko.net] supports:
+
+* Full online editor, previewer, and document generator.
+* Seamless sharing and collaboration with other authors through [dropbox] and [github]; 
+  it is very easy to work together on a document where changes are
+  continuously merged.
+* Full support for mathematics and bibliographies through server-side LaTeX; 
+  no need to install LaTeX yourself.
 
 Instead of a plethora of backends, Madoko concentrates on generating either
 HTML or high-quality PDF files through [LaTeX]. There has been a lot of effort
@@ -122,23 +133,37 @@ scientific article for an example:
 
 ~ Center
 | :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
-| LaTeX/PDF                      | HTML                             | Madoko source                |
-| [![doc-pdf]][koka-article-pdf] | [![doc-html]][koka-article-html] | [![doc-md]][koka-article-md] |
+| LaTeX/PDF                      | HTML                             | Edit in Madoko.net                |
+| [![doc-pdf]][effect-article-pdf] | [![doc-html]][effect-article-html] | [![doc-md]][effect-article-md] |
 |                                |                                  |                              |
 ~
 
 or this slide-show presentation:
 
 ~ Center
-| :~~~~~~~~~~~~~~~~~~~~~~~~:     | :~~~~~~~~~~~~~~~:                | :~~~~~~~~~~~~~:              |
-| LaTeX/PDF                      | HTML                             | Madoko source                |
+| :~~~:                         | :~~~:                      | :~~~:                         |
+| LaTeX/PDF                     | HTML                       | Edit in Madoko.net            |
 | [![slidedemo-pdf]][slide-pdf] | [![slidedemo-html]][slide] | [![slidedemo-mdk]][slide-mdk] |
-|                                |                                  |                              |
+|                               |                            |                               |
+|                               |                            |                               |
 ~
  
 Also, you can look at the [PDF][this-pdf] and [source][this-mdk] of this document.
 In the future, we plan to support e-books through the [ePub] format too.
 
+Here are some other (large!) examples of complicated documents, click
+on the links to edit the document directly in [Madoko.net]:
+
+* [The anatomy of programming languages][anatomy-mdk]: A large part of
+  the [AoPL] book by Prof. Dr. William Cook.
+* [Software model checking with IC3][horn-mdk]: A math-heavy presentation for the
+  VTSA summer school 2014 by Dr. Nikolaj Bj&oslash;rner and others.
+* [The Madoko reference manual][reference-mdk]: This document by yours truly.
+
+[anatomy-mdk]:   <https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/AoPL/anatomy.mdk&options={"delayedUpdate":"true"}>
+[horn-mdk]:      <https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/horn/horn.mdk&options={"delayedUpdate":"true"}>
+[reference-mdk]: <https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/reference/reference.mdk&options={"delayedUpdate":"true"}>
+[AoPL]:          https://github.com/w7cook/AoPL
 
 [^scholarly]:
     There is actually an effort to define 
@@ -155,6 +180,9 @@ In the future, we plan to support e-books through the [ePub] format too.
 [slidedemo-html]:   slidedemo-html.png  {width=250px vertical-align=top }
 [slidedemo-mdk]:    slidedemo-mdk.png   {width=250px vertical-align=top }
 
+[effect-article-pdf]:  <http://research.microsoft.com/en-us/um/people/daan/madoko/samples/esop15/out/esop15.pdf>
+[effect-article-html]: <http://research.microsoft.com/en-us/um/people/daan/madoko/samples/esop15/out/esop15.html>
+[effect-article-md]:   <https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/esop15/esop15.mdk&options={"delayedUpdate":"true"}>
 
 [koka-article-pdf]:     http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.pdf
 [koka-article-html]:    http://research.microsoft.com/en-us/um/people/daan/madoko/doc/koka-effects-2014.html
@@ -192,19 +220,19 @@ Madoko is free software available under the [Apache 2.0 license] at [madoko.code
 [Apache 2.0 license]: https://madoko.codeplex.com/license
 [madoko.codeplex.com]: http://madoko.codeplex.com
 [Dropbox]: https://www.dropbox.com/home
+[Github]:  https://github.com
 
 # Installation and usage
 
-The recommended way to use Madoko now is online on [Madoko.net] in combination
-with [Dropbox] to store your files and collaborate and share with other
-users.
+The recommended way to use Madoko now is online on [Madoko.net] in
+combination with [Dropbox] or [Github] to store your files and
+collaborate and share with other users.
 
 Nevertheless, Madoko works great as a command line tool as well, and it 
-is good to have a solid backup.
-The easiest way to use Madoko is as a command line tool is by using Node.js (which
-works on many platforms, like Windows, MacOSX, Linux etc). Madoko can also run
-inside a web browser or as a .NET executable. Installation under Node.js is very
-easy:
+is good to have a solid backup. The easiest way to use Madoko is as a
+command line tool is by using Node.js (which works on many platforms,
+like Windows, MacOSX, Linux etc). Madoko can also run inside a web
+browser or as a .NET executable. Installation under Node.js is very easy:
 
 * Ensure you have [Node.js] installed on your system (and ensure that the
     Node installation directory is in your `PATH`).
@@ -220,11 +248,11 @@ To also generate a PDF file, use:
 
 * `madoko --pdf -vv --odir=out mydoc`
 
-where `--odir` puts all output files in the `out` directory.
-To generate a PDF, you need to have LaTeX installed on your system,
-which is also required for mathematics and bibliographies.
-We recommend the full [TeXLive] LaTeX system as it is available for
-Wndows, Linux and MacOSX, and is used on the [Madoko.net] server as well.
+where `--odir` puts all output files in the `out` directory. To generate
+a PDF, you need to have LaTeX installed on your system, which is also
+required for mathematics and bibliographies. We recommend the
+full [TeXLive] LaTeX system as it is available for Windows, Linux and
+MacOSX, and is used on the [Madoko.net] server as well.
 
 For PDF output, we added an extra verbose flag in order to see any warnings
 LaTeX produces. A full description of all command line options can be found in
@@ -253,11 +281,11 @@ look off.
 
 ## Emphasis
 
-Enclose words in asteriks (`*`) or underscores (`_`) to emphasize them.
-Use double asteriks or underscores for strong emphasis:
+Enclose words in asterisks (`*`) or underscores (`_`) to emphasize them.
+Use double asterisks or underscores for strong emphasis:
 
 ~ Sample
-Here is _some emphasis_, or using *asteriks*.
+Here is _some emphasis_, or using *asterisks*.
 Or use __strong emphasis__, or like **this**.
 ~
 
@@ -295,13 +323,13 @@ There is a ~~strike out~~ here.
 ## Smart quotes, symbols, and direct links
 
 Madoko will quote smartly using proper open and closing quotes for anything
-enclosed in single quotes (`'`), double quotes (`"`), or french quotes (`<<`
+enclosed in single quotes (`'`), double quotes (`"`), or French quotes (`<<`
 and `>>`).
 
 ~ Sample
 "double quoted"  
 'single quoted'  
-<<guillemet quoted>>  
+<<guillemot quoted>>  
 <http://www.google.com>
 ~
 
@@ -330,7 +358,7 @@ When replacing quotes, Madoko just inserts the right entity, like
 an `&ldquo;` for a left double quote (&ldquo;). As described in Section [#sec-entity]
 we can redefine entities, and use that to change the quotes. For example,
 in some obscure countries, like the Netherlands, people like to start a 
-quotation at &bdquo;the bottom&rdquo; instead. You can get this behaviour
+quotation at &bdquo;the bottom&rdquo; instead. You can get this behavior
 by adding the following [metadata][#sec-metadata] rule:
 
     ldquo: &bdquo;
@@ -382,11 +410,11 @@ A butterfly: ![bfly].
 ~
 
 This example also shows the use of attributes (Section [#sec-attr]) where
-we can specifiy the `width`, `height`, or `vertical-align` of the image.
+we can specify the `width`, `height`, or `vertical-align` of the image.
 
 ~ MadokoNet
 You can use to the toolbox menu to include images or just drag&drop
-them directly into the editor. Just watch the filesize as images
+them directly into the editor. Just watch the file size as images
 larger than about 1mb are rejected by the Madoko server.
 ~
 
@@ -400,7 +428,7 @@ Here is a footnote[^fn].
 
 [^fn]: This is the content of the example footnote. 
     You can continue a footnote by indenting content.
-    And notice the backlink.
+    And notice the back link.
 ~
 
 [fnsyntax]: http://daringfireball.net/2005/07/footnotes
@@ -467,7 +495,7 @@ a line of three or more equal (`=`) or dash (`-`) characters:
     -------------------
 
 But hash-headings are generally preferred since a three or more  dashes (or
-underscores or asteriks) are also used for horizontal rules:
+underscores or asterisks) are also used for horizontal rules:
 
 ~ Sample
 Above...
@@ -484,7 +512,7 @@ Madoko has extensive support for numbering and referencing elements in a documen
 Elements are given an identity using attributes (see Section [#sec-attr]).
 For example, here we give an identifier `myheading` to a heading:
 
-~ Sample 
+~ Sample
 ### A named heading { #myheading }
 
 And we can refer to it
@@ -547,7 +575,7 @@ the `#` menu which shows all labels in the document.
 
 Figures can be included using the `Figure` custom block (see Section [#sec-custom]):
 ~~ SampleBlock
-``` 
+``` {language=madoko}
 Figure [#fig-monarch] shows how to put an image in a figure.
 
 ~ Figure { #fig-monarch caption="A Monarch butterfly." }
@@ -578,7 +606,7 @@ document class.
 
 ## Lists  { #sec-lists }
 
-Unordered lists are created simply by using an asteriks (`*`), plus (`+`),
+Unordered lists are created simply by using an asterisks (`*`), plus (`+`),
 or dash (`-`) as item markers preceded by an empty line (or otherwise
 it is considered part of a paragraph):
 
@@ -663,6 +691,35 @@ Let's start a block quote:
 ~
 
 Just like lists, block quotes can be nested and contain other block elements.
+
+## Columns: putting blocks next to each other
+
+Using the `Columns` and `Column` custom blocks we can put block elements
+next to each other on a page. Use the `width` attribute to control the
+width of each column. Any columns without `width` are evenly divided over
+the remaining space.
+
+~ Begin Sample
+~ Begin Columns
+~ Column { width=40% }
+Here is a long paragraph.
+Here is a long paragraph.
+Here is a long paragraph.
+Here is a long paragraph.
+Here is a long paragraph.
+Here is a long paragraph.
+Here is a long paragraph.
+~
+~ Column
+A butterfly ![bfly]
+~
+~ Column { width=5em}
+~~ Center
+$e = mc^2$.
+~~
+~
+~ End Columns
+~ End Sample
 
 ## Code blocks  { #sec-pre }
 
@@ -774,7 +831,9 @@ Finally, you can use the `.noescape` class to suppress escaping.
 
 When encountering a replaced piece of text, the syntax highlighter treats
 it by default as whitespace. It is possible to specify though what characters
-the syntax highlighter sees using the bar format `\(<highlight>|<escaped>\)`.
+the syntax highlighter sees using the bar format: `\(`_highlight_`|`_replacement_`\)` 
+where _highlight_ is used for the purpose of syntax highlighting (and alignment)
+and _replacement_ is the replacement text in the output.
 For example, to colorize our implication symbol as a keyword, we can do:
 
 ~ Sample
@@ -856,7 +915,7 @@ In LaTeX this sample is rendered as:
 
 ![aligned2]
 
-Note that to improve the renderning, we added replacements for underscores inside
+Note that to improve the rendering, we added replacements for underscores inside
 identifiers with `&lowline;` and subscripted digits that end an identifier. Also,
 we replaced right arrows and lambda bindings. 
 
@@ -888,23 +947,22 @@ To customize the appearance in HTML, just use a CSS style declaration:
 
 In LaTeX, just define a `\mdToken`_token_ command. For example:
 
-``` madoko
-~ TexRaw
-\defcommand{\mdTokenIdentifier}[1]{\textit{#1}}
-\defcommand{\mdTokenEscape}[1]{\textbf{#1}}
-~
-```
+    ~ TexRaw
+    \defcommand{\mdTokenIdentifier}[1]{\textit{#1}}
+    \defcommand{\mdTokenEscape}[1]{\textbf{#1}}
+    ~
+
 We use `\defcommand` which is like `\newcommand` but doesn't fail if
 the command was already defined.
 For identifiers in _pretty_ code, the token rendering is determined 
 by `mdTokenPretty`_token_ commands. By default, these tokens are not
 colorized in LaTex but this is easy to customize:
 
-```madoko
-~ TexRaw
-\defcommand{\mdTokenPrettyKeyword}[1]{\textcolor{blue}{\textsf{#1}}}
-~
-```
+
+    ~ TexRaw
+    \defcommand{\mdTokenPrettyKeyword}[1]{\textcolor{blue}{\textsf{#1}}}
+    ~
+
 
 ### Advanced: Custom syntax highlighting
 
@@ -942,10 +1000,12 @@ definition as JSON:
 ```
 
 This is generally all that is needed in most situations, but if you
-like to get fancy, there is extensive [documentation][todo] about
+like to get fancy, there is extensive [documentation][monarchdoc] about
 writing syntax extensions. (or use `Colorizer: `_standard-language_ to
 see the definitions of standard languages that come with Madoko (like
 Javascript, Java, CSharp, Ruby, and Python).
+
+[monarchdoc]: www.todo.com "Todo..." 
 
 Et voil&agrave;, with our new language definition we can properly
 highlight our previous example:
@@ -990,9 +1050,7 @@ It is possible to 'take over' code blocks and use them for
 example for mathematics. For example, here is how to make
 all code blocks use pre-formatted math (Section [#sec-mathpre]):
 
-``` madoko
-~Pre,~Code: input=mathpre
-```
+    ~Pre,~Code: input=mathpre
 
 Moreover, you can selectively only take over different kinds
 of code. Use `.code`_n_ for inline code with _n_ quotes, and 
@@ -1000,9 +1058,8 @@ of code. Use `.code`_n_ for inline code with _n_ quotes, and
 For example, here is how to use a default language only for 
 indented and double quoted (``` `` ```) code:
 
-``` madoko
-.pre-indented,.code2: language=koka
-```
+    .pre-indented,.code2: language=koka
+
 
 ## Tables { #sec-table }
 
@@ -1130,10 +1187,14 @@ Just like `width` we can specify a background color for a column
 in the column specifier row.
 
 Moreover, we can specify after the table more attributes that
-can style the table further. In particular, any attributes starting
-with `th-` or `tr-` apply to the header or body rows respectively.
-When we add `even-` or `odd-` the attribute only applies to even or 
-odd rows. The following example shows this in action:
+can style the table further. In particular, any attribute can 
+have the prefix `tr-` or `col-` to apply to rows or columns respectively.
+Futhermore, `tbody-tr-` and `thead-tr-` only apply to body or head
+rows. Moreover, you can follow the prefix with a modifier,
+`even-`, `odd-`, `last-`, or _n_`-`, to apply  only to even, odd,
+the last, or the _n_\/th row or column. Finally, the prefixes
+`th-` and `td-` can be used for cell elements in the header or
+body. The following example shows this in action:
 
 ~ Sample
 | ---- | -------------- | ------------------------ | ------ |
@@ -1144,7 +1205,7 @@ odd rows. The following example shows this in action:
 |  10  |   dojigger     |            Foo           | 102.98 |
 | 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
 |------|----------------|--------------------------|--------|
-{ tr-odd-background-color=Gainsboro \
+{ tbody-tr-odd-background-color=Gainsboro \
   tr-even-background-color=Floralwhite }
 ~
 
@@ -1200,7 +1261,7 @@ be typeset between `$`\ characters, while block equations should use the
 `Equation` block syntax.
 
 ~~ Sample
-A famous equation is $E =  mc^2$, but another famous one is:
+A famous equation is $E = mc^2$, but another famous one is:
 ~ Equation  {#eq-gaussian}
  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
 ~
@@ -1215,6 +1276,13 @@ blocks that support mathematics, like `Theorem`, `Lemma`, `Proof`, etc.
 Madoko does not support the `\(`, `\[`, and `$$` commands to enclose
 mathematics since those are escape sequences in Madoko.
 
+Sometimes inline equations between `$` signs can get quite long.
+In Madoko you can use newlines and put a long inline formula on
+multiple lines using LaTeX comments to end the line:
+``` latex
+A long $E = %continue on next line
+   mc^2$ formula.
+```
 ### Using packages
 
 By default, Madoko supports most of the AMS mathematics commands,  i.e.
@@ -1231,7 +1299,7 @@ to draw commutative diagrams:
 \begin{CD}
 S^{{\mathcal{W}}_\Lambda}\otimes T @>j>> T\\
 @VVV @VV{P}V\\
-(S\otimes T)/I @= (Z\otimes T)/J
+(S\otimes T)/I @= (Z \otimes T)/J
 \end{CD}
 ~
 ~~
@@ -1252,7 +1320,7 @@ U \ar@/_/[ddr]_y \ar@/^/[drr]^x
 \ar@{.>}[dr]|-{(x,y)} \\
 & X \times_Z Y \ar[d]^q \ar[r]_p
 & X \ar[d]_f \\
-& Y \ar[r]^g & Z }
+& Y \ar[r]^g & Z } 
 ~
 ~~
 
@@ -1314,8 +1382,8 @@ You can view and experiment with the different rendering modes in the online
 [mathematics rendering demo][mathdemo].
 
 
-[mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.html
-[mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/mathdemo.pdf
+[mathdemo]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/mathdemo/out/mathdemo.html
+[mathdemopdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/mathdemo/out/mathdemo.pdf
 
 
 ### Advanced: Generic LaTeX snippets { #sec-snippets }
@@ -1337,7 +1405,7 @@ to typeset a the graph of the natural logarithm[^ex-log]:
 ~ Begin Sample
 ~ Center  {padding=1ex} 
 ~~ Snippet
-\psset{unit=2cm}
+\psset{unit=2cm} 
 \begin{pspicture*}(-0.5,-1.5)(4,2)
   \psgrid[subgriddiv=5,gridcolor=black!20%
          ,gridlabels=0pt](1,0)(3,1.2)
@@ -1351,7 +1419,7 @@ to typeset a the graph of the natural logarithm[^ex-log]:
   \uput[-90](! Euler 0){\color{red}$e$}
   \pscircle*[linecolor=blue](1,0){3pt}
   \psplot[linewidth=1pt]{0.2}{3}{ x ln }
-  \rput(1.6,-0.5){\color{blue}\fbox{$f(x)=\ln(x)$}}
+  \rput(1.6,-0.5){\color{blue}\fbox{$f(x)=\ln(x)$}} 
 \end{pspicture*}
 ~~
 ~ 
@@ -1373,7 +1441,7 @@ Both examples come from the [TikZ example gallery].
     [TikZ example](http://www.texample.net/tikz/examples/oblique-incidence) \
     by Edgar Fuentes of reflection and refraction of electromagnetic waves."}
 ~ Snippet
-\begin{tikzpicture}[
+\begin{tikzpicture}[ 
     media/.style={font={\footnotesize\sffamily}},
     wave/.style={
         decorate,decoration={snake,post length=1.4mm,amplitude=2mm,
@@ -1634,9 +1702,9 @@ Madoko will render these snippets using `xelatex` to generate a `.pdf`
 file, and [ImageMagick's Convert][convert] program to extract images. However, this
 is not done by default since this method is much (much!) slower than extracting
 from the `.dvi` file. The `.pdf` method is done automatically for any `Snippet`.
-You can force a `Snippet` to use the `dvi` method by setting `snippet-needspdf=false`
+You can force a `Snippet` to use the `dvi` method by setting `snippet-needpdf=false`
 in its attributes, and dually, you can force the `pdf` method for any
-equation by setting `math-needspdf=true`.
+equation by setting `math-needpdf=true`.
 
 [TikZ]:         http://www.ctan.org/pkg/pgf
 [PSTricks]:     http://ctan.sharelatex.com/tex-archive/graphics/pstricks/base/doc/pstricks-doc.pdf
@@ -1679,9 +1747,9 @@ Using this convention, we can easily typeset program code using nice symbols.
 
 ~~ Sample
 ~ MathPre
-@function sqr_\pi( num :int ) \{ 
+@function sqr_\pi( num :int ) \{
    @return (num {\times} num \times{} \pi)
-\}  
+\} 
 ~
 ~~ 
 
@@ -1690,7 +1758,7 @@ Section [#sec-replace]):
 
 ~~ Sample
 ~ MathPre   { replace="/->/\rightarrow/g" }
-random &: () -> ndet double; 
+random &: () -> ndet double;
 print  &: string -> io ();
 error  &: \forall\langle\alpha\rangle\ string -> exn \alpha; 
 ~
@@ -1703,7 +1771,7 @@ replacers with `.pretty` code directly (Section [#sec-advanced--pretty-code-alig
 ``` koka   { .pretty \
              replace="//->/\(->|&rarr;\)//</\(<|&lang;\)//>/\(>|&rang;\)//g" \
              replace="//\bforall\b/\(forall|&forall;\)//\balpha\b/\(alpha|&alpha;\)//g" }
-random  : () -> ndet double;
+random  : () -> ndet double; 
 print   : string -> io ();
 error   : forall<alpha> string -> exn alpha;
 ```
@@ -1801,7 +1869,7 @@ Markdown. It can handle things like special characters and accents quite well
 and recognizes many formatting commands. Even though it is sufficient for
 bibliography entries in general, the Madoko LaTeX parser may not work for more
 fancy LaTeX commands in bibliography entries. However, we strive to make it
-work for any bibliograpy style and entries, so please [file a bug report][issues] 
+work for any bibliography style and entries, so please [file a bug report][issues] 
 if you encounter situations where it does not work correctly.
 
 Bibliography styles tested with Madoko include the following author-year
@@ -1854,7 +1922,7 @@ Moreover, if you leave out the brackets, you force a _textual_ style:
 | `-@Goo93`                     | [-@Goo93]{cite-style=natural .textual} | Short -- just year              |
 | `!@Goo93`                     | [!@Goo93]{cite-style=natural .textual} | Just authors                    |
 
-In a numeric style, most of these attibutes have no effect and all the 
+In a numeric style, most of these attributes have no effect and all the 
 bracketed cases are displayed as "[@Goo93]". 
 For the four cases in textual style, we get  "@Goo93", "+@Goo93", "-@Goo93", and "!@Goo93".
 
@@ -1871,7 +1939,7 @@ backend. However, you can enable tooltips in PDF too by setting the
 
     ~a: .tex-tooltip
 
-This will display a small yellow text baloon in the PDF file that shows a
+This will display a small yellow text balloon in the PDF file that shows a
 tooltip when hovering above it:
 
 ~ Center
@@ -1889,12 +1957,12 @@ engine that is used by setting the `Bib Search Url` metadata key:
 
 If you set the `Bib Search Url` to `false` (or empty), Madoko will disable search icons.
 Again, this functionality is disabled by default in the LaTeX backend unless you 
-set the `Bib Search Url` key explicitly.
+set the `Bib Search Url` key explicitly
 
 ## Custom blocks    { #sec-custom }
 
 Madoko custom blocks are similar to the `div` element in HTML and allow the
-use of custom block elements that can be styled and processed in a particlar
+use of custom block elements that can be styled and processed in a particular
 way. A custom block starts on new line starting with one or more tildes (`~`)
 optionally followed by the block name and attributes. It ends at _the first
 line containing the same number of tildes_ that started this block.
@@ -1986,7 +2054,9 @@ definitions can be found in Appendix [#app-custom].
 * `Section`: Starts an explicit section. In the HTML5 backend expands to a `<section>` element.
     This is mainly used inside presentations using `reveal.js`. 
 * `Article`, `Aside`, `Nav`: Expand to the corresponding HTML5 elements.
-* `HtmlRaw`: A block with raw HTML content that is pasted directly into the HTML output.
+* `HtmlRaw`: A block with raw HTML content that is pasted directly into
+  the HTML output. This is normally not needed since you can just start
+  including HTML elements directly as part of markdown input.
 * `TexOnly`: A markdown block that is only processed for LaTeX output (and not shown in HTML output).
 * `HtmlOnly`: A markdown block that is only processed for Html output (and not shown in LaTeX output).
 * `MathPre`: A block with preformatted math (Section [#sec-mathpre]).
@@ -2009,7 +2079,7 @@ definitions can be found in Appendix [#app-custom].
     Therefore $zH \subset xH$ and $xH \subset zH$, and thus
     $xH = zH$.  Similarly $yH = zH$, and thus $xH = yH$,
     as required. This concludes the proof of 
-    Lemma [#LeftCosetsDisjoint]. [&box;]{float=right}
+    Lemma [#LeftCosetsDisjoint]. &qed;
     ~
     ~~ 
 Of course, each of the predefined blocks can be customized further using attributes and rules.
@@ -2038,11 +2108,12 @@ Madoko supports some special block elements that get expanded automatically.
     processed before any other processing happens and can for example be used to
     include meta data elements.
     ```
-    [INCLUDE="presentation.mdk"]
+    [INCLUDE="presentation"]
     ```
     Include files are first searched relative to the current directory, then
     the directory of the input file, followed by the output directory, and finally
-    the `styles` directory in the installation directory of Madoko.
+    the `styles` directory in the installation directory of Madoko. The default
+    file extension is `.mdk`.
     
     The `INCLUDE` element can also be used to include parts of a file,
     see Section [#sec-includefrag] for more information.
@@ -2122,8 +2193,8 @@ _start_ includes most of the usual comment characters, namely,
 customize this using the `Fragment Start` and `Fragment End` metadata keys.
 For example, the default is set as:
 
-    Fragment Start : ^(?:\/\/|--|[#%]) *BEGIN *: *(\w+) *$
-    Fragment End   : ^(?:\/\/|--|[#%]) *END *(?:[:] *(\w+) *)?$
+    Fragment Start: ^(?:\/\/|--|[#%]) *BEGIN *: *(\w+) *$
+    Fragment End  : ^(?:\/\/|--|[#%]) *END *(?:[:] *(\w+) *)?$
 
 
 # Syntax: Metadata and Styling
@@ -2144,7 +2215,12 @@ multiple lines by indenting, and you can leave blank lines between different key
     Affiliation : Microsoft Research
     Email       : daan@microsoft.com
     Heading Base: 2
-    MathJax     : True
+    Logo        : False
+    Embed       : False
+
+In general, metadata keys are not case-sensitive. The values
+`none`, `clear`, `false`, and the empty value are all equivalent for
+boolean or numeric keys. 
 
 ### Special metadata keys
 
@@ -2172,6 +2248,9 @@ Any metadata key and value can be given (and referred to using
     belong to the last defined author. If you define multiple 
     `Address` or `Affiliation` entries for one author, they are placed
     above each other.
+
+* `Author Columns` (=3): The number of columns used for the authors.
+    Only relevant if there are more than 3 authors used. 
 
 * `Toc depth` (=3): The maximum depth of headings that are included in the
     table of contents (Section [#sec-toc]). 
@@ -2217,9 +2296,19 @@ Any metadata key and value can be given (and referred to using
 
 * `Pdf Latex` (=`xelatex`): The command used to run the LaTeX program when the `--pdf`
     command line flag is present. 
-    
+
 * `Fragment Start`, `Fragment End`: Used to specify file fragment delimiters,
     see Section [#sec-includefrag].
+
+* `Logo` (=`True`): Set to `False` to suppress the "Document generated by Madoko.net"
+    message at the end of the document.
+    
+* `Refer`: Make explicit that a certain file or image is referenced by this document.
+   ~ MadokoNet
+   This is useful in the online editor if the inclusion of the file is not apparent
+   to Madoko. This can happen for example in LaTeX class files that reference images,
+   or image references inside HTML attributes.
+   ~    
 
 The following keys are not used as this moment but have a standard meaning:
 
@@ -2263,7 +2352,12 @@ Some keys are only interpreted for HTML output:
     ```
     Script: reveal.js {.preview}
     ```
-    ~  
+    ~
+
+* `Embed` (=`512`): The file size limit in kilobytes up to which local data is directly
+    embedded into the HTML, this includes CSS style files, Javascript files, and images.
+    Set it to `0` to never embed anything, and high enough to always embed.
+
 * `HTML Meta`: Specify content included in a `<meta>` tag. There can be many
     meta tags specified. 
     ```
@@ -2274,6 +2368,12 @@ Some keys are only interpreted for HTML output:
     is emitted for proper viewing on mobile devices.
 
 * `HTML Header`: The value is included literally in the 
+    `<head>` section of the HTML document. 
+
+* `HTML Footer`: The value is included literally at the end of the HTML
+  document.
+
+* `CSS Header`: The value is included literally in a `<style>` element in the
     `<head>` section of the HTML document.
 
 * {#item-math} `Math Mode` (=`static`): The mathematics rendering mode: `static` or `dynamic`.
@@ -2361,8 +2461,31 @@ For LaTeX output, the following keys are relevant:
 
 * `Tex Header*`: The value is included as is before
     the `\begin{document}` command of the LaTeX output but excluded
-    when rendering basic mathematics.   
+    when rendering basic mathematics.
 
+* `Maketitle`: Usually we use this in the form `@tex Maketitle: True`
+    to make Madoko issue the `\maketitle` command for the title and
+    authors instead of using the Madoko styling.
+
+### Metadata modes { #sec-modes }
+
+Sometimes it is convenient to apply a certain metadata rule only for specific
+output formats or specific situations. For this you can specify a _mode_.
+For example, to only add a logo when generating HTML, you can
+say:
+
+    @html Logo: True
+    
+You can also negate modes by prefixing with "no". To make all subsections
+blue except when generating a PDF, you can say:
+
+    @notex ~h2: color=blue
+
+Currently, the following modes are defined by Madoko:
+
+* `@html`: defined when generating HTML output.
+* `@tex` : defined when generating LaTeX/PDF output.
+* `@preview`: defined when generating HTML in the [Madoko.net] preview.
 
 ## Entities     { #sec-entity }
 
@@ -2371,7 +2494,7 @@ it looks up the name in various places: if there is a block
 element with that _id_, the entity name is replaced by the _label_ value of that block
 (see Section [#sec-ids-labels]). If there is no block with that identity, 
 Madoko looks if there is a metadata value with that name, and replaces the
-entity name with its value: 
+entity name with its value:
 
 ~ Sample
 The title of this document is "&title;".\
@@ -2399,9 +2522,14 @@ Some predefined metadata keys are quite useful as entities:
 
 * `&date;`. The current (compilation) date in [ISO 8601] international format.
 * `&time;`. The current (compilation) time in [ISO 8601] international format.
+* `&year;`,`&month;`,`&day;`. The current year, month, and day.
+* `&hours;`,`&minutes;`,`&seconds;`. The current hours, minutes, and seconds.
 * `&madoko-version`. The version of the Madoko compiler.
 * `&docname;`. The file name of the document without extension and directory.
 * `&filename;`. The full file name of the document.
+* `&eg;`. Expands to "&eg;" ("_exempli gratia_", "for example").
+* `&ie;`. Expands to "&ie;" ("_id est_", "that is" or "in other words").
+* `&etal;`. Expands to "&etal;" ("_et alii_", "and others").
 
 There are also a few special entity names:
 
@@ -2495,7 +2623,7 @@ Attributes that are not special to Madoko (as described in Section [#sec-special
 are passed as CSS style attributes in the HTML backend. For the LaTeX backend,
 Madoko includes special style files (`css.sty` and `madoko.sty`) that process
 many CSS formatting commands (and ignores all others). Currently formatting
-commands that are recognized are:
+commands that are recognized across backends are:
 
 * `display=`(`block`|`inline`|`block-inline`|`hidden`)
 * `margin=`(`auto`|_length_)
@@ -2525,7 +2653,7 @@ commands that are recognized are:
     (see Section [#sec-predef-custom]).
 * `float=`(`left`|`right`). Limited support at this time in LaTeX.
 
-Note that the syntax at this point, the syntax is quite a bit more restrictive
+Note that the syntax at this point is quite a bit more restrictive
 than plain CSS. For example, we cannot just say:
 
     { border="solid 1px" }
@@ -2548,7 +2676,16 @@ This is in the Georgia font.
 ~
 ~~
 
-A _color_ must be either a named color or use the HTML `#rrggbb` format. 
+A _color_ can be standard named color or use any of the CSS color
+formats, namely:
+
+* `#rrggbb` (or `#rgb`) where `xx` is hexadecimal, &eg; `#0000FF` []{.cbox background-color=#0000FF}.
+* `rgb(r,g,b)` where each component is a number between 0 and 255, or a percentage, 
+  &eg; `rgb(50%,50%,100%)` []{.cbox background-color=rgb(50%,50%,100%)}
+* `hsl(h,s,l)` where `h` is an angle between 0 and 360, and `s` and `l` percentages. 
+  Use `50%` for the default lightness, 
+  &eg; `hsl(240,100%,80%)` []{.cbox background-color=hsl(240,100%,80%)}.
+
 The recognized named colors are the basic CSS colors shown in
 Figure [#fig-colors].
 
@@ -2621,15 +2758,16 @@ This is rendered in LaTeX as shown by the following screenshot:
 
 [aargh]: aargh.png "PDF screen capture of the Aargh example." { width=19em }
 
-### Float  { #sec-float }
+### Floating blocks  { #sec-float }
 
 There is limited support for the `float` attribute but it is generally quite hard
 to emulate this well in LaTeX. However, one can use the `float` attribute to put
 figures or general custom blocks on the left- or right-side of a page and have
 text flow around it. For example:
 
+<!--
 ~ Begin Sample
-~ Figure { caption="A formula" width=50% float=left margin-right=1em}
+~ Figure { caption="A formula" xwidth=50% float=left xmargin-right=1em }
 ~~ Math
 e = mc^2 
 ~~
@@ -2641,6 +2779,7 @@ terrible had happened to him.
 one in line noticed that something
 terrible had happened to [him.]{float=right} 
 ~ End Sample
+-->
 
 Note that it is important to give a specific width when specifying `float`.
 Also, in LaTeX, the height of the text flowing around the float is not always
@@ -2652,6 +2791,125 @@ Still the LaTeX command is fragile and generally works best when immediately
 followed by a paragraph. Also, when using `float` on inline elements, it is
 implemented in LaTeX simply using `\hfill` which is hopefully enough for most 
 common situations.
+
+### Special attribute keys  { #sec-specialattr}
+
+Normally, attributes are always passed to LaTeX as is, and in the HTML passed as 
+CSS attributes. However, you can use special prefixes to have them end up at other
+places:
+
+* `html-`_name_: use _name_ as an HTML attribute only in the HTML
+    backend. For example, you can use `html-target=_top` for links inside
+    frames.
+* `css-`_name_: use _name_ as a CSS attribute only in the HTML backend.
+    For example, you can use `css-font-family=Cambria` for setting a font
+    family only in the web page.
+* `tex-`_name_: use _name_ as an attribute only in the LaTeX backend.
+* `data-`_name_: in the HTML backend uses a HTML attribute `data-`_name_
+    instead of a CSS style attribute. Passed to LaTeX as is.
+
+Some attributes have a special meaning to Madoko. In particular:
+
+* `tight`: Suppresses enclosing the first text content in this block as a paragraph.
+    This is used for example for a `BibItem` block. 
+* `notag`: Suppresses the output of a `div` tag (or LaTeX environment) for a custom block.
+* `toc`, `toc-line`, `toc-depth`: Used for generating custom table of contents. Used
+    for example by headings. See Section [#sec-toc] for more information.
+* `before`, `replace`, and `after`: Used to transform the content of the block. See 
+    Section [#sec-replace].
+* `start=`_num_: Gives the start number for an ordered list (Section [#sec-lists]).
+* `target=`_frame_: Gives the HTML frame target for a link. 
+* `math-needpdf`: If `true`, forces the `pdf` conversion method for an equation (instead
+    of using `dvi`). This is needed when using fancy LaTeX math using TikZ for example.
+* `snippet-needpdf`: If `false`, uses the `dvi` conversion method for a snippet (instead
+    of using `pdf`). This can improve performance of image extraction. (Section [#sec-mathefficiency]).
+* `html-elem=`_elem_: Use _elem_ as the HTML element instead of `div` or
+    `span` for block and inline elements respectively.
+* `tex-elem=`_elem_: Uses _elem_ as the TeX environment or command
+   instead of `\mdDiv` or `\mdSpan` respectively.
+* `id=`_id_: Sets the _id_ of an element. Usually this is done using a
+    hash name directly as `#`_id_.
+* `class=`_classes_: Adds to the classes of this element. Usually set
+    using a dot name as in `.`_class_. If you use `class=clear`, the
+    classes are cleared. Similarly, you can use `.`_class_`=clear` to
+    remove one particular class.
+* `label=`_label_: Sets the label of an element. This is used when
+    referencing this block as explained in Section [#sec-ids-labels]
+* `caption=`_caption`: Sets the caption of figure as explained in
+   Section [#sec-figure].
+* `cite-label=`_label_: Sets the citation label of an `BibItem` block.
+    This is used when referencing a bibliography item as explained in
+    Section [#sec-bib]
+* `cite-style=`_style_: Sets the citation style for a citation (Section [#sec-cite]).
+* `lines=`_lines_: Set the height of a float figure to _lines_ height
+  (Section [#sec-float]).
+* `sticky`: The attributes for this element will stick to apply to all of
+    the same elements that follow in the document.
+* `-`: clear any attributes that have been set before (usually through metadata rules).
+* `input=`_input_. Sets the input mode of this block which determines how
+    the content of this block is processed. One of:
+    - `pre`: Preformatted code (Section [#sec-pre]).
+    - `raw`: Raw unprocessed input that is passed directly to the output.
+    - `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
+    - `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
+    - `math`: LaTeX mathematics mode input. This input is usually invoked through an `Equation` 
+        block as described in Section [#sec-math].
+    - `mathpre`: Preformatted LaTeX mathematics. This input is usually invoked through a `MathPre` block (Section [#sec-mathpre]).
+    - `mathdefs`: LaTeX math definitions. This input is usually invoked through a `MathDefs` block (Section [#sec-mathdefs]).
+    - `normal`, `markdown`: Regular Madoko markdown input (default).
+    - `texonly`: Regular Madoko markdown that is only processed when generating LaTeX output.
+        Usually used through the `TexOnly` block (Section [#sec-custom]).
+    - `htmlonly`: Regular Madoko markdown that is only processed when generating HTML output.
+        Usually used through the `HtmlOnly` block (Section [#sec-custom]).
+
+### Special attribute classes
+
+Some class attributes are treated specially by Madoko. In particular:
+
+* `.preview`. This class is set on the `<body>` element in the preview and
+   can be used to style elements differently in the preview versus the
+   full document.
+* `.para-block`. If a block element has the `.para-block` class, it will
+    considered part of the preceding paragraph (and not end that
+    paragraph). This is for example done for the `Equation` block since
+    equations are part of a paragraph. This improves typography
+    significantly, especially for the LaTeX backend. Madoko will also
+    assign the `para-continue` class to the paragraph preceding a
+    `.para-block` element.
+* `.para-end`: Normally, equations have a `.para-block` class and are
+    thus considered part of the paragraph. If you would like such block
+    to be the end of a paragraph, you should assign the `.para-end` class
+    to end it explicitly. In the LaTeX backend this will cause the next
+    paragraph to be indented.
+* `.indent`. This class is automatically added by Madoko to any paragraph
+    that follows other paragraphs or `.para-block`s (and is not inside a
+    list). This can be used to switch from _block_ mode paragraphs to
+    _indented_ paragraphs using some CSS rules: `p.indent { text-indent: 1em }`
+* `.align-center`, `.align-right`, `.align-left`. These classes align the
+    _content_ of a block (instead of the block itself) to the center,
+    right, or left.
+* `.hidden`. Hides the content of the block.
+* `.block`. Treat this as a block element instead of inline content. For
+    example, in HTML output this will add a top and bottom margin to the
+    element.
+* `.wide`. Used for `Figure` blocks: in a two-column output, this figure
+    will span both columns horizontally (see also
+    Section [#sec-predef-custom]).
+* `.free`, `.textual`. These classes are used for typesetting citations
+   (see Section [#sec-cite]).
+* `.long`. Used to signify that a table might span multiple pages so that
+    the LaTeX backend can use the `longtable` environment instead of the
+    regular `tabular` environment (which cannot break across pages).
+* `.list-star`, `.list-dash`, `.list-plus`. Used to customize appearance
+  of bullets in a list.
+* `.code`,`.code`_n_: added to inline code elements where _n_ is the
+  number of back-quotes. This way you can add special styling to double
+  quote inline code for example.
+* `.pre-fenced`, `.pre-fenced`_n_: Added to fenced code blocks where _n_ is
+  the number back-quotes.
+* `.pre-indented`: Added to indented code blocks.
+* `math-inline`: Added to inline math fragments.
+* `math-display`: Added to block math fragments.
 
 ## Metadata rules           { #sec-rules }
 
@@ -2681,24 +2939,24 @@ Most standard Madoko block elements, like lists or block quotes, can also be
 targeted by rules. Their element names are the standard HTML names, namely:
 
 ~ Center
-| Element              | Name          |
-| :----------          | :-----        |
-| Paragraph            | `p`           |
-| Code block           | `pre`         |
-| Code inline          | `code`        |
-| Code escaped text    | `code-escaped`|
-| Block quote          | `blockquote`  |
-| List                 | `ul`          |
-| Numbered list        | `ol`          |
-| List item            | `li`          |
-| Definition list      | `dl`          |
-| Definition term      | `dt`          |
-| Definition           | `dd`          |
-| Horizontal rule      | `hr`          |
-| Table                | `table`       |
-| Heading              | `h1`,...,`h6` |
-| Unnamed custom block | `div`         |
-| Named custom block   | _name_        |
+| Element                     | Name          |
+| :---------------------------| :-------------|
+| Paragraph                   | `p`           |
+| Code block                  | `pre`         |
+| Code inline                 | `code`        |
+| Code escaped text           | `code-escaped`|
+| Block quote                 | `blockquote`  |
+| List                        | `ul`          |
+| Numbered list               | `ol`          |
+| List item                   | `li`          |
+| Definition list             | `dl`          |
+| Definition term             | `dt`          |
+| Definition                  | `dd`          |
+| Horizontal rule             | `hr`          |
+| Table                       | `table`       |
+| Heading                     | `h1`,...,`h6` |
+| Unnamed custom block        | `div`         |
+| Named custom block          | _name_        |
 {.booktable}
 ~
 
@@ -2706,16 +2964,47 @@ Note that every custom block _blockname_ automatically also gets the class
 _blockname_ and is thus matched by both `~`_blockname_ and `.`_blockname_ rules.
 This can be also be useful when applying styles in CSS rules.
 
+Some standard elements also get standard class names assigned
+to make it easier to target them with specific rules:
+
+~ Center
+| Element                          | Class name       |
+| :--------------------------------| :----------------|
+| Code block that was indented     | `.pre-indented`  |
+| Code block that was fenced       | `.pre-fenced`    |
+| Code block with _n_ back-quotes  | `.pre-fenced`_n_ |
+| Code inline with _n_ back-quotes | `.code`_n_       |
+| Math inline                      | `.math-inline`   |
+| Math block                       | `.math-display`  |
+| List using `*`                   | `.list-star`     |
+| List using `+`                   | `.list-plus`     |
+| List using `-`                   | `.list-dash`     |
+{.booktable}
+~
+
+For example, you could specify that any indented code blocks
+should use the javascript syntax highlighter:
+
+    .pre-indented: language=javascript
+
+Or typeset double-quoted inline code (&ie; ``` ``code`` ```) with a gray background:
+
+    .code2: background-color=Gainsboro
+    
+
 ### Advanced: Styling in CSS 
 
 Sometimes we only want to apply certain styling to just HTML.
 For HTML, styling through classes works best: we can simply write some CSS
 (and include it through the `Css` metadata or directly within `<style>`
 tags.). For example,
-    
+
     <style>
     .slanted { font-style: oblique; font-family: Cambria }
     </style>
+
+Note that any custom block in Madoko (like `~ Slanted`) automatically gets
+assigned the class name `slanted` and can thus be matched easily in CSS.
 
 For styling in LaTeX, or when certain CSS keys are not yet processed in
 LaTeX, see Appendix [#sec-latex-style].
@@ -2729,7 +3018,7 @@ headers, figures, and equations. Numbering for headers is by default up to 3
 levels, but it can be set for the document using the `Heading depth` meta
 variable. If it is set to zero, it suppresses numbering for headings completely:    
 
-    Heading Depth: 0 
+    Heading Depth: 0
 
 
 ### Advanced: Custom numbering
@@ -2799,15 +3088,17 @@ As a final example, suppose we would like to count figures using  lower-case
 letters and per section. We can do this by defining the default attributes for
 figures as a metadata rule:
 
-    ~Figure: @h1-figure=lower-case label="@h1\/-@h1-figure" 
+    ~Figure: @h1-figure=lower-case @h1-figure label="@h1\/-@h1-figure" 
 
-The label definition here displays figure labels of the form `2-b` for example
-(where we used the empty [escape sequence][#sec-escapes] `\/` to prevent the
-counter name `@h1`  being read as `@h1-`). Note that because this is a
-metadata rule, we could not  use the assignment `@h1-figure="a"` here, or
-otherwise every figure would get numbered as `a`. In this case we just want to
-set the display mode here and not a specific value.
-
+The label definition here displays figure labels of the form `2-b` for
+example (where we used the empty [escape sequence][#sec-escapes] `\/` to
+prevent the counter name `@h1` being read as `@h1-`). Note that because
+this is a metadata rule, we could not use the assignment `@h1-figure="a"`
+here, or otherwise every figure would get numbered as `a`. In this case
+we just want to set the display mode here and not a specific value. Also
+note that we still need to explicitly increment the counter too (using a
+plain `@h1-figure`) since just setting the display format does not
+increment the counter.
 
 ## Advanced: Replacement { #sec-replace }
 
@@ -2966,28 +3257,29 @@ Generally Madoko is invoked on the command line as:
 
 where the options can consist of:
 
-|-------------------|------------------------|------------------------------------------------|
-|       Short       |          Long          |                  Description                   |
-|-------------------|------------------------|------------------------------------------------|
-|                   | `--version`            | Display version information.                   |
-| `-v`              | `--verbose`            | Be more verbose.                               |
-|                   | `--odir=`_dir_         | Write output files to the specified directory. |
-|                   | `--xmp`                | Only process markdown between `<xmp>` tags.    |
-|                   | `--tex`                | Output a LaTeX file too.                       |
-|                   | `--pdf`                | Generate a PDF file (implies `--tex`).         |
-| `-f`              | `--full`               | Generate a full html/latex document.           |
-|                   | `--sandbox`            | Run in a sandbox for secure server execution.  |
-|                   | `--sanitize`           | Always escape or suppress user defined html.   |
-|                   | `--pedantic`           | Pedantic mode.                                 |
-|                   | `--bench`              | For benchmarking: turn off numbering,  etc.    |
-|                   | `--installdir=`_dir_   | Set installation directory explicitly.         |
-| `-r`              | `--rebuild`            | Force rebuild bibliography, math, etc.         |
-| `-m`_key_`:`_val_ | `--meta=`_key_`:`_val_ | Semi-colon separated list of metadata values   |
-|-------------------|------------------------|------------------------------------------------|
+|-------------------|------------------------|-------------------------------------------------|
+| Short             | Long                   | Description                                     |
+|-------------------|------------------------|-------------------------------------------------|
+|                   | `--version`            | Display version information.                    |
+| `-v`              | `--verbose`            | Be more verbose.                                |
+|                   | `--odir=`_dir_         | Write output files to the specified directory.  |
+|                   | `--xmp`                | Only process markdown between `<xmp>` tags.     |
+|                   | `--tex`                | Output a LaTeX file too.                        |
+|                   | `--pdf`                | Generate a PDF file (implies `--tex`).          |
+| `-f`              | `--fragment`           | Generate a fragment instead of a full document. |
+|                   | `--logo`               | Add a 'Created with Madoko.net' message.        |
+|                   | `--sandbox`            | Run in a sandbox for secure server execution.   |
+|                   | `--sanitize`           | Always escape or suppress user defined html.    |
+|                   | `--pedantic`           | Pedantic mode.                                  |
+|                   | `--bench`              | For benchmarking: turn off numbering,  etc.     |
+|                   | `--installdir=`_dir_   | Set installation directory explicitly.          |
+| `-r`              | `--rebuild`            | Force rebuild bibliography, math, etc.          |
+| `-m`_key_`:`_val_ | `--meta=`_key_`:`_val_ | Semi-colon separated list of metadata values    |
+|-------------------|------------------------|-------------------------------------------------|
 {.booktable}
 
-All the boolean flags can be negated by prefixing them with `no`, for example
-to suppress a full document use `--nofull`.
+All the boolean flags can be negated by prefixing them with `no-`, for example
+to suppress the logo message at the end of a document, use `--no-logo`.
 
 The verbose flag (`-v`) can be repeated to become more verbose. For example, 
 by using `-vv` LaTeX warnings and the size of math images are displayed.
@@ -3005,13 +3297,13 @@ The `--xmp` option instructs Madoko to only process content between
 `<xmp>` and `</xmp>` tags. This can be useful if the main body of your document is
 in HTML and only some parts are written in Madoko. 
 
-The `--full` flag forces Madoko to generate a _full_ document. A full
-document is self sufficient and contains for example for HTML proper `<head>`
-and `<body>` elements instead of just the markup for the content. Similarly,
-for LaTeX, a full document contains an `\documentclass`,  `\begin{document}`
-and necessary `\usepackage` commands. The `--full` flag is usually not
-necessary since Madoko will generate a full document by default, but 
-it can be suppressed using `--nofull`.
+The `--fragment` flag forces Madoko to generate a document fragment. By
+default, a _full_ document is generated which is self sufficient and
+contains for example for HTML proper `<head>` and `<body>` elements
+instead of just the markup for the content. Similarly, for LaTeX, a full
+document contains an `\documentclass`, `\begin{document}` and necessary
+`\usepackage` commands. For a fragment, just the content is generated without
+those headers and footers.
 
 The `-m` flag can be used to set metadata values. For example, when specifying
 what command to use to invoke LaTeX, we can say `-mpdflatex:/foo/bar/xelatex`
@@ -3034,25 +3326,29 @@ Madoko can generate excellent slide shows using either the
 Start a slide show with including the `Presentation` style at
 the start of the document:
 
-    [INCLUDE=presentation.mdk]
+    [INCLUDE=presentation]
 
 Slides are now automatically started on a level 1 (`#`) or 2 (`##`) header, or
 by using a `~Slide` custom block explicitly. Use the `.fragment` class on any
 element to create overlays that appear one by one. The `.fragmented` class can
 be used on a list to have each item appear in order. For example:
 
-``` madoko 
-# my first slide
-
-And some content
-
-# and my second slide
-
-* with
-* a list
-* in it
-{.fragmented}
-```
+    # my first slide
+    
+    And some content
+    
+    And more
+    {.fragment}
+    
+    And more
+    {.fragment}
+    
+    # and my second slide
+    
+    * with
+    * a list
+    * in it
+    {.fragmented}
 
 The HTML slide shows support the `~Notes` custom block for speaker notes,
 and the `~Vertical` custom block to create a set of vertical slides.
@@ -3060,22 +3356,28 @@ and the `~Vertical` custom block to create a set of vertical slides.
 Here is a small [example slide show][slide] written in Madoko
  ([html][slide], [pdf][slide-pdf], [source][slide-mdk]).
 
-[slide]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.html
-[slide-pdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.pdf
-[slide-mdk]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/slidedemo.mdk.txt
+[slide]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/out/slidedemo.html
+[slide-mdk]: https://www.madoko.net/editor.html?#url=http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/slidedemo.mdk&options={"delayedUpdate":"true"}
+[slide-pdf]: http://research.microsoft.com/en-us/um/people/daan/madoko/samples/slidedemo/out/slidedemo.pdf
 
 ### Using Reveal.js
 
 The HTML backend works with the [reveal.js] library:
 
-* It expects the reveal.js [library][github-reveal] to be in a subdirectory "reveal.js".
-  You can use another url by setting the `Reveal Url` metadata key, for example:
+* It uses the reveal.js [library][github-reveal] from a common CDN url. You
+  can set your own using the `Reveal Url` metadata:
+  ```{language=madoko}
+  Reveal Url: https://cdn.jsdelivr.net/reveal.js/2.6.2
   ```
-  Reveal Url: http://lab.hakim.se/reveal-js
-  ```
-* Select another default theme by setting the `Reveal Theme`, like `sky` for example.
+* Select another default theme by setting the `Reveal Theme`, for example `Reveal Theme: sky`.
 * Use the `data-background` attribute on headings to set the background color or
-    background image for a slide.
+    background image for a slide. 
+* Use the `data-transition` attribute on headings to set the transition animation.
+  For example:
+  ```{language=madoko}
+  # Slide  { data-transition=zoom }
+  ## Next slide
+  ```
 * The Javascript `revealConfig` variable contains the default configuration options
     and can be extended inside `<script>` tags.
 
@@ -3133,7 +3435,7 @@ and not sprinkle this kind of formatting through your prose.
 ## Advanced: Not using BibTeX {#sec-custom-bib}
 
 If necessary, it is possible to completely circumvent using BibTeX and write
-your bibliograpy entries by hand. First, we need to ensure Madoko will not 
+your bibliography entries by hand. First, we need to ensure Madoko will not 
 run the BibTeX tool for us:
 
     BibTeX: False
@@ -3357,102 +3659,12 @@ as shown in Appendix [#app-custom]. The sample uses two extra functions from
     continues executing _arg1_ (followed by the expansion of _arg2_).
     Used in the previous example to expand the optional argument to 
     the `figure` environment to one of `b`, `h`, or `t`.
-
-
-## Special attribute keys  { #sec-specialattr}
-
-Some attributes have a special meaning to Madoko. In particular:
-
-* `tight`: Supresses enclosing the first text content in this block as a paragraph.
-    This is used for example for a `BibItem` block. 
-* `notag`: Supresses the output of a `div` tag (or LaTeX environment) for a custom block.
-* `toc`, `toc-line`, `toc-depth`: Used for generating custom table of contents. Used
-    for example by headings. See Section [#sec-toc] for more information.
-* `before`, `replace`, and `after`: Used to transform the content of the block. See 
-    Section [#sec-replace].
-* `start=`_num_: Gives the start number for an ordered list (Section [#sec-lists]).
-* `target=`_frame_: Gives the HTML frame target for a link. 
-* `math-needspdf`: If `true`, forces the `pdf` conversion method for an equation (instead
-    of using `dvi`). This is needed when using fancy LaTeX math using TikZ for example.
-* `snippet-needspdf`: If `false`, uses the `dvi` conversion method for a snippet (instead
-    of using `pdf`). This can improve performance of image extraction. (Section [#sec-mathefficiency]).
-* `texelem=`_elem_: Uses _elem_ as the TeX environment instead of the name of the custom
-    block.
-* `id=`_id_: Sets the _id_ of an element. Usually this is done using a hash name directly
-    as `#`_id_.
-* `class=`_classes_: Adds to the classes of this element. Usually set using a dot name 
-    as in `.`_class_. If you use `class=clear`, the classes are cleared. Similarly, you
-    can use `.`_class_`=clear` to remove one particular class.
-* `label=`_label_: Sets the label of an element. This is used when referencing this block
-    as explained in Section [#sec-ids-labels]
-* `cite-label=`_label_: Sets the citation label of an `BibItem` block. This is used when 
-    referencing a bibliography item as explained in Section [#sec-bib]
-* `cite-style=`_style_: Sets the citation style for a citation (Section [#sec-cite]).
-* `lines=`_lines_: Set the height of a float figure to _lines_ height (Section [#sec-float]).
-* `sticky`: The attributes for this element will stick to apply to all of the same
-    elements that follow in the document.
-* `html-`_name_: use _name_ as an HTML attribute only in the HTML backend. For example,
-    you can use `html-target=_top` for links inside frames.
-* `css-`_name_: use _name_ as a CSS attribute only in the HTML backend. For example,
-    you can use `css-font-family=Cambria` for setting a font family only in the web page.
-* `tex-`_name_: use _name_ as an attribute only in the LaTeX backend.
-* `data-`_name_: in the HTML backend uses a HTML attribute `data-`_name_ instead of a
-    CSS style attribute.
-* `-`: clear any attributes that have been set before (usually through metadata rules).
-* `input=`_input_. Sets the input mode of this block which determines how the content
-    of this block is processed. One of:
-    - `pre`: Preformatted code (Section [#sec-pre]).
-    - `raw`: Raw unprocessed input that is passed directly to the output.
-    - `texraw`: Raw TeX code that is passed directly to LaTeX (See [`TeXRaw`][#sec-custom])
-    - `htmlraw`: Raw HTML code that is passed directly to the HTML output (See [`HtmlRaw`][#sec-custom])
-    - `math`: LaTeX mathematics mode input. This input is usually invoked through an `Equation` 
-        block as described in Section [#sec-math].
-    - `mathpre`: Preformatted LaTeX mathematics. This input is usually invoked through a `MathPre` block (Section [#sec-mathpre]).
-    - `mathdefs`: LaTeX math definitions. This input is usually invoked through a `MathDefs` block (Section [#sec-mathdefs]).
-    - `normal`, `markdown`: Regular Madoko markdown input (default).
-    - `texonly`: Regular Madoko markdown that is only processed when generating LaTeX output.
-        Usually used through the `TexOnly` block (Section [#sec-custom]).
-    - `htmlonly`: Regular Madoko markdown that is only processed when generating HTML output.
-        Usually used through the `HtmlOnly` block (Section [#sec-custom]).
-
-## Special attribute classes
-
-Some class attributes are treated specially by Madoko. In particular:
-
-* `.para-block`. If a block element has the `.para-block` class, it will
-    considered part of the preceding paragraph (and not end that paragraph).
-    This is for example done for the `Equation` block since equations are part
-    of a paragraph. This improves typography significantly, especially for
-    the LaTeX backend. Madoko will also assign the `para-continue` class to the
-    paragraph preceding a `.para-block` element. 
-* `.para-end`: Normally, equations have a `.para-block` class and are thus 
-    considered part of the paragraph. If you would like such block to be the
-    end of a paragraph, you should assign the `.para-end` class to end it explicitly.
-    In the LaTeX backend this will cause the next paragraph to be indented.    
-* `.indent`. This class is automatically added by Madoko to any paragraph that
-    follows other paragraphs or `.para-block`s (and is not inside a list). 
-    This can be used to switch
-    from _block_ mode paragraphs to _indented_ paragraphs using some CSS:
-        p.indent { text-indent: 1em }
-* `.align-center`, `.align-right`, `.align-left`. These classes align the _content_
-    of a block (instead of the block itself) to the center, right, or left.
-* `.hidden`. Hides the content of the block.
-* `.block`. Treat this as a block element instead of inline content. For example,
-    in HTML output this will add a top and bottom margin to the element.
-* `.wide`. Used for `Figure` blocks: in a two-column output, this figure will span
-    both columns horizontally (see also Section [#sec-predef-custom]).
-*  `.free`, `.textual`. These classes are used for typesetting citations (see Section [#sec-cite]).
-*  `.long`. Used to signify that a table might span multiple pages so that
-    the LaTeX backend can use the `longtable` environment instead of the 
-    regular `tabular` environment (which cannot break across pages).
-* `.plain`: used for code blocks to use a plain verbatim mode in LaTeX (see Section [#sec-pre]).
-* `.list-star`, `.list-dash`, `.list-plus`. Used to customize appearance of 
-  bullets in a list.
+    the `figure` environment to one of `b`, `h`, or `t`.
 
 ## Unicode characters { #sec-unicode }
 
 Madoko already recognizes all named html entities and translates them to the
-appropiate LaTeX commands (Appendix [#app-entities]). 
+appropriate LaTeX commands (Appendix [#app-entities]). 
 If you often need a specific unnamed unicode character, it can be
 convenient to define a shorthand for it in the metadata:
 
@@ -3472,12 +3684,10 @@ You can define your own definition for it using the
 LaTeX `\mdDefineUnicode` command in a `TexRaw` block at the start of the
 document. For example:
 
-``` latex
-~ TeXRaw
-\mdDefineUnicode{10214}{\ensuremath{\llbracket}}
-\mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
-~
-```
+    ~ TeXRaw
+    \mdDefineUnicode{10214}{\ensuremath{\llbracket}}
+    \mdDefineUnicode{10215}{\ensuremath{\rrbracket}}
+    ~
 
 If no definition is given, LaTeX will work but output the entity as is,
 i.e. `&#10214;` for `#llbracket`. Under a unicode aware LaTeX, like [XeLaTeX]
@@ -3523,392 +3733,560 @@ recognizes some extra named entities, like _bar_, _bslash_,
 _pagebreak_, _strut_, etc. These are denoted in the table with a star. The
 full list of predefined entities is:
 
-|--------|-------------|----------|-----------------------|
-| number |     name    |  glyph   |         remark        |
-|--------|-------------|----------|-----------------------|
-|     34 | quot        | &#34;    |                       |
-|     35 | hash*       | &#35;    |                       |
-|     36 | dollar*     | &#36;    |                       |
-|     37 | perc*       | &#37;    |                       |
-|     38 | amp         | &#38;    |                       |
-|     39 | apos        | &#39;    |                       |
-|     40 | lpar*       | &#40;    |                       |
-|     41 | rpar*       | &#41;    |                       |
-|     42 | ast*        | &#42;    |                       |
-|     43 | plus*       | &#43;    |                       |
-|     47 | fslash*     | &#47;    |                       |
-|     60 | lt          | &#60;    |                       |
-|     62 | gt          | &#62;    |                       |
-|     92 | bslash*     | &#92;    |                       |
-|     94 | caret*      | &#94;    |                       |
-|     95 | underscore* | &#95;    |                       |
-|     96 | grave*      | &#96;    |                       |
-|    123 | lcurly*     | &#123;   |                       |
-|    124 | bar*        | &#124;   |                       |
-|    125 | rcurly*     | &#125;   |                       |
-|    126 | tilde*      | &#126;   |                       |
-|    160 | nbsp        | &#160;   | `~` in LaTeX          |
-|    161 | iexcl       | &#161;   |                       |
-|    162 | cent        | &#162;   |                       |
-|    163 | pound       | &#163;   |                       |
-|    164 | curren      | &#164;   |                       |
-|    165 | yen         | &#165;   |                       |
-|    166 | brvbar      | &#166;   |                       |
-|    167 | sect        | &#167;   |                       |
-|    168 | uml         | &#168;   |                       |
-|    169 | copy        | &#169;   |                       |
-|    170 | ordf        | &#170;   |                       |
-|    171 | laquo       | &#171;   |                       |
-|    172 | not         | &#172;   |                       |
-|    173 | shy         | &#173;   |                       |
-|    174 | reg         | &#174;   |                       |
-|    175 | macr        | &#175;   |                       |
-|    176 | deg         | &#176;   |                       |
-|    177 | plusmn      | &#177;   |                       |
-|    178 | sup2        | &#178;   |                       |
-|    179 | sup3        | &#179;   |                       |
-|    180 | acute       | &#180;   |                       |
-|    181 | micro       | &#181;   |                       |
-|    182 | para        | &#182;   |                       |
-|    183 | middot      | &#183;   |                       |
-|    184 | cedil       | &#184;   |                       |
-|    185 | sup1        | &#185;   |                       |
-|    186 | ordm        | &#186;   |                       |
-|    187 | raquo       | &#187;   |                       |
-|    188 | frac14      | &#188;   |                       |
-|    189 | frac12      | &#189;   |                       |
-|    190 | frac34      | &#190;   |                       |
-|    191 | iquest      | &#191;   |                       |
-|    192 | Agrave      | &#192;   |                       |
-|    193 | Aacute      | &#193;   |                       |
-|    194 | Acirc       | &#194;   |                       |
-|    195 | Atilde      | &#195;   |                       |
-|    196 | Auml        | &#196;   |                       |
-|    197 | Aring       | &#197;   |                       |
-|    198 | AElig       | &#198;   |                       |
-|    199 | Ccedil      | &#199;   |                       |
-|    200 | Egrave      | &#200;   |                       |
-|    201 | Eacute      | &#201;   |                       |
-|    202 | Ecirc       | &#202;   |                       |
-|    203 | Euml        | &#203;   |                       |
-|    204 | Igrave      | &#204;   |                       |
-|    205 | Iacute      | &#205;   |                       |
-|    206 | Icirc       | &#206;   |                       |
-|    207 | Iuml        | &#207;   |                       |
-|    208 | ETH         | &#208;   |                       |
-|    209 | Ntilde      | &#209;   |                       |
-|    210 | Ograve      | &#210;   |                       |
-|    211 | Oacute      | &#211;   |                       |
-|    212 | Ocirc       | &#212;   |                       |
-|    213 | Otilde      | &#213;   |                       |
-|    214 | Ouml        | &#214;   |                       |
-|    215 | times       | &#215;   |                       |
-|    216 | Oslash      | &#216;   |                       |
-|    217 | Ugrave      | &#217;   |                       |
-|    218 | Uacute      | &#218;   |                       |
-|    219 | Ucirc       | &#219;   |                       |
-|    220 | Uuml        | &#220;   |                       |
-|    221 | Yacute      | &#221;   |                       |
-|    222 | THORN       | &#222;   |                       |
-|    223 | szlig       | &#223;   |                       |
-|    224 | agrave      | &#224;   |                       |
-|    225 | aacute      | &#225;   |                       |
-|    226 | acirc       | &#226;   |                       |
-|    227 | atilde      | &#227;   |                       |
-|    228 | auml        | &#228;   |                       |
-|    229 | aring       | &#229;   |                       |
-|    230 | aelig       | &#230;   |                       |
-|    231 | ccedil      | &#231;   |                       |
-|    232 | egrave      | &#232;   |                       |
-|    233 | eacute      | &#233;   |                       |
-|    234 | ecirc       | &#234;   |                       |
-|    235 | euml        | &#235;   |                       |
-|    236 | igrave      | &#236;   |                       |
-|    237 | iacute      | &#237;   |                       |
-|    238 | icirc       | &#238;   |                       |
-|    239 | iuml        | &#239;   |                       |
-|    240 | eth         | &#240;   |                       |
-|    241 | ntilde      | &#241;   |                       |
-|    242 | ograve      | &#242;   |                       |
-|    243 | oacute      | &#243;   |                       |
-|    244 | ocirc       | &#244;   |                       |
-|    245 | otilde      | &#245;   |                       |
-|    246 | ouml        | &#246;   |                       |
-|    247 | divide      | &#247;   |                       |
-|    248 | oslash      | &#248;   |                       |
-|    249 | ugrave      | &#249;   |                       |
-|    250 | uacute      | &#250;   |                       |
-|    251 | ucirc       | &#251;   |                       |
-|    252 | uuml        | &#252;   |                       |
-|    253 | yacute      | &#253;   |                       |
-|    254 | thorn       | &#254;   |                       |
-|    255 | yuml        | &#255;   |                       |
-|    321 | lstroke     | &#321;   |                       |
-|    322 | Lstroke     | &#322;   |                       |
-|    338 | OElig       | &#338;   |                       |
-|    339 | oelig       | &#339;   |                       |
-|    352 | Scaron      | &#352;   |                       |
-|    353 | scaron      | &#353;   |                       |
-|    376 | Yuml        | &#376;   |                       |
-|    402 | fnof        | &#402;   |                       |
-|    710 | circ        | &#710;   |                       |
-|    732 | tilde       | &#732;   |                       |
-|    818 | lowline     | &lowline;   | (in LaTeX becomes a short underscore)  |
-|    913 | Alpha       | &#913;   |                       |
-|    914 | Beta        | &#914;   |                       |
-|    915 | Gamma       | &#915;   |                       |
-|    916 | Delta       | &#916;   |                       |
-|    917 | Epsilon     | &#917;   |                       |
-|    918 | Zeta        | &#918;   |                       |
-|    919 | Eta         | &#919;   |                       |
-|    920 | Theta       | &#920;   |                       |
-|    921 | Iota        | &#921;   |                       |
-|    922 | Kappa       | &#922;   |                       |
-|    923 | Lambda      | &#923;   |                       |
-|    924 | Mu          | &#924;   |                       |
-|    925 | Nu          | &#925;   |                       |
-|    926 | Xi          | &#926;   |                       |
-|    927 | Omicron     | &#927;   |                       |
-|    928 | Pi          | &#928;   |                       |
-|    929 | Rho         | &#929;   |                       |
-|    931 | Sigma       | &#931;   |                       |
-|    932 | Tau         | &#932;   |                       |
-|    933 | Upsilon     | &#933;   |                       |
-|    934 | Phi         | &#934;   |                       |
-|    935 | Chi         | &#935;   |                       |
-|    936 | Psi         | &#936;   |                       |
-|    937 | Omega       | &#937;   |                       |
-|    945 | alpha       | &#945;   |                       |
-|    946 | beta        | &#946;   |                       |
-|    947 | gamma       | &#947;   |                       |
-|    948 | delta       | &#948;   |                       |
-|    949 | epsilon     | &#949;   |                       |
-|    950 | zeta        | &#950;   |                       |
-|    951 | eta         | &#951;   |                       |
-|    952 | theta       | &#952;   |                       |
-|    953 | iota        | &#953;   |                       |
-|    954 | kappa       | &#954;   |                       |
-|    955 | lambda      | &#955;   |                       |
-|    956 | mu          | &#956;   |                       |
-|    957 | nu          | &#957;   |                       |
-|    958 | xi          | &#958;   |                       |
-|    959 | omicron     | &#959;   |                       |
-|    960 | pi          | &#960;   |                       |
-|    961 | rho         | &#961;   |                       |
-|    962 | sigmaf      | &#962;   |                       |
-|    963 | sigma       | &#963;   |                       |
-|    964 | tau         | &#964;   |                       |
-|    965 | upsilon     | &#965;   |                       |
-|    966 | phi         | &#966;   |                       |
-|    967 | chi         | &#967;   |                       |
-|    968 | psi         | &#968;   |                       |
-|    969 | omega       | &#969;   |                       |
-|    977 | thetasym    | &#977;   |                       |
-|    978 | upsih       | &#978;   |                       |
-|    982 | piv         | &#982;   |                       |
-|   8194 | ensp        | &#8194;  | 0.5em space in LaTeX  |
-|   8195 | emsp        | &#8195;  | 1em space in LaTeX    |
-|   8195 | quad*       | &#8195;  | `\quad` in LaTeX      |
-|   8196 | thicksp*    | &#8196;  | `\;` in LaTeX         |
-|   8197 | medsp*      | &#8197;  | `\:` in LaTeX         |
-|   8201 | thinsp      | &#8201;  | `\,` in LaTeX         |
-|   8203 | strut*      | &#8203;  | `\strut` in LaTeX     |
-|   8203 | pagebreak*  |          | `\pagebreak` in LaTeX |
-|   8204 | zwnj        | &#8204;  |                       |
-|   8205 | zwj         | &#8205;  |                       |
-|   8206 | lrm         | &#8206;  |                       |
-|   8207 | rlm         | &#8207;  |                       |
-|   8211 | ndash       | &#8211;  |                       |
-|   8212 | mdash       | &#8212;  |                       |
-|   8216 | lsquo       | &#8216;  |                       |
-|   8217 | rsquo       | &#8217;  |                       |
-|   8218 | sbquo       | &#8218;  |                       |
-|   8220 | ldquo       | &#8220;  |                       |
-|   8221 | rdquo       | &#8221;  |                       |
-|   8222 | bdquo       | &#8222;  |                       |
-|   8224 | dagger      | &#8224;  |                       |
-|   8225 | Dagger      | &#8225;  |                       |
-|   8226 | bull        | &#8226;  |                       |
-|   8230 | hellip      | &#8230;  |                       |
-|   8240 | permil      | &#8240;  |                       |
-|   8242 | prime       | &#8242;  |                       |
-|   8243 | Prime       | &#8243;  |                       |
-|   8249 | lsaquo      | &#8249;  |                       |
-|   8250 | rsaquo      | &#8250;  |                       |
-|   8254 | oline       | &#8254;  |                       |
-|   8260 | frasl       | &#8260;  |                       |
-|   8364 | euro        | &#8364;  |                       |
-|   8465 | image       | &#8465;  |                       |
-|   8472 | weierp      | &#8472;  |                       |
-|   8476 | real        | &#8476;  |                       |
-|   8482 | trade       | &#8482;  |                       |
-|   8501 | alefsym     | &#8501;  |                       |
-|   8592 | larr        | &#8592;  |                       |
-|   8593 | uarr        | &#8593;  |                       |
-|   8594 | rarr        | &#8594;  |                       |
-|   8595 | darr        | &#8595;  |                       |
-|   8596 | harr        | &#8596;  |                       |
-|   8629 | crarr       | &#8629;  |                       |
-|   8656 | lArr        | &#8656;  |                       |
-|   8657 | uArr        | &#8657;  |                       |
-|   8658 | rArr        | &#8658;  |                       |
-|   8659 | dArr        | &#8659;  |                       |
-|   8660 | hArr        | &#8660;  |                       |
-|   8704 | forall      | &#8704;  |                       |
-|   8706 | part        | &#8706;  |                       |
-|   8707 | exist       | &#8707;  |                       |
-|   8709 | empty       | &#8709;  |                       |
-|   8711 | nabla       | &#8711;  |                       |
-|   8712 | isin        | &#8712;  |                       |
-|   8713 | notin       | &#8713;  |                       |
-|   8715 | ni          | &#8715;  |                       |
-|   8719 | prod        | &#8719;  |                       |
-|   8721 | sum         | &#8721;  |                       |
-|   8722 | minus       | &#8722;  |                       |
-|   8727 | lowast      | &#8727;  |                       |
-|   8730 | radic       | &#8730;  |                       |
-|   8733 | prop        | &#8733;  |                       |
-|   8734 | infin       | &#8734;  |                       |
-|   8736 | ang         | &#8736;  |                       |
-|   8743 | and         | &#8743;  |                       |
-|   8744 | or          | &#8744;  |                       |
-|   8745 | cap         | &#8745;  |                       |
-|   8746 | cup         | &#8746;  |                       |
-|   8747 | int         | &#8747;  |                       |
-|   8756 | there4      | &#8756;  |                       |
-|   8764 | sim         | &#8764;  |                       |
-|   8773 | cong        | &#8773;  |                       |
-|   8776 | asymp       | &#8776;  |                       |
-|   8800 | ne          | &#8800;  |                       |
-|   8801 | equiv       | &#8801;  |                       |
-|   8804 | le          | &#8804;  |                       |
-|   8805 | ge          | &#8805;  |                       |
-|   8834 | sub         | &#8834;  |                       |
-|   8835 | sup         | &#8835;  |                       |
-|   8836 | nsub        | &#8836;  |                       |
-|   8838 | sube        | &#8838;  |                       |
-|   8839 | supe        | &#8839;  |                       |
-|   8853 | oplus       | &#8853;  |                       |
-|   8855 | otimes      | &#8855;  |                       |
-|   8869 | perp        | &#8869;  |                       |
-|   8901 | sdot        | &#8901;  |                       |
-|   8942 | vellip      | &#8942;  |                       |
-|   8968 | lceil       | &#8968;  |                       |
-|   8969 | rceil       | &#8969;  |                       |
-|   8970 | lfloor      | &#8970;  |                       |
-|   8971 | rfloor      | &#8971;  |                       |
-|   9001 | lang        | &#9001;  |                       |
-|   9002 | rang        | &#9002;  |                       |
-|   9674 | loz         | &#9674;  |                       |
-|   9824 | spades      | &#9824;  |                       |
-|   9827 | clubs       | &#9827;  |                       |
-|   9829 | hearts      | &#9829;  |                       |
-|   9830 | diams       | &#9830;  |                       |
-|   8617 | hooklarr*   | &#8617;  |                       |
-|   8718 | bbox*       | &#8718;  |                       |
-|   9633 | box*        | &#9633;  |                       |
-|   9744 | ballotbox*  | &#9744;  |                       |
-|   9745 | ballotc*    | &#9745;  |                       |
-|   9746 | ballotx*    | &#9746;  |                       |
-|  10003 | checkmark*  | &#10003; |                       |
-|  10004 | bcheckmark* | &#10004; |                       |
-|  10007 | xmark*      | &#10007; |                       |
-|  10008 | bxmark*     | &#10008; |                       |
-|  128270| mglass*     | &#128270;|                       |
-|--------|-------------|----------|-----------------------|
+|--------|-------------|-----------|----------------------------------------------|
+| number | name        | glyph     | remark                                       |
+|--------|-------------|-----------|----------------------------------------------|
+| 34     | quot        | &#34;     |                                              |
+| 35     | hash*       | &#35;     |                                              |
+| 36     | dollar*     | &#36;     |                                              |
+| 37     | perc*       | &#37;     |                                              |
+| 38     | amp         | &#38;     |                                              |
+| 39     | apos        | &#39;     |                                              |
+| 40     | lpar*       | &#40;     |                                              |
+| 41     | rpar*       | &#41;     |                                              |
+| 42     | ast*        | &#42;     |                                              |
+| 43     | plus*       | &#43;     |                                              |
+| 47     | fslash*     | &#47;     |                                              |
+| 60     | lt          | &#60;     |                                              |
+| 62     | gt          | &#62;     |                                              |
+| 92     | bslash*     | &#92;     |                                              |
+| 94     | caret*      | &#94;     |                                              |
+| 95     | underscore* | &#95;     |                                              |
+| 96     | grave*      | &#96;     |                                              |
+| 123    | lcurly*     | &#123;    |                                              |
+| 124    | bar*        | &#124;    |                                              |
+| 125    | rcurly*     | &#125;    |                                              |
+| 126    | tilde*      | &#126;    |                                              |
+| 160    | nbsp        | &#160;    | `~` in LaTeX                                 |
+| 161    | iexcl       | &#161;    |                                              |
+| 162    | cent        | &#162;    |                                              |
+| 163    | pound       | &#163;    |                                              |
+| 164    | curren      | &#164;    |                                              |
+| 165    | yen         | &#165;    |                                              |
+| 166    | brvbar      | &#166;    |                                              |
+| 167    | sect        | &#167;    |                                              |
+| 168    | uml         | &#168;    |                                              |
+| 169    | copy        | &#169;    |                                              |
+| 170    | ordf        | &#170;    |                                              |
+| 171    | laquo       | &#171;    |                                              |
+| 172    | not         | &#172;    |                                              |
+| 173    | shy         | &#173;    |                                              |
+| 174    | reg         | &#174;    |                                              |
+| 175    | macr        | &#175;    |                                              |
+| 176    | deg         | &#176;    |                                              |
+| 177    | plusmn      | &#177;    |                                              |
+| 178    | sup2        | &#178;    |                                              |
+| 179    | sup3        | &#179;    |                                              |
+| 180    | acute       | &#180;    |                                              |
+| 181    | micro       | &#181;    |                                              |
+| 182    | para        | &#182;    |                                              |
+| 183    | middot      | &#183;    |                                              |
+| 184    | cedil       | &#184;    |                                              |
+| 185    | sup1        | &#185;    |                                              |
+| 186    | ordm        | &#186;    |                                              |
+| 187    | raquo       | &#187;    |                                              |
+| 188    | frac14      | &#188;    |                                              |
+| 189    | frac12      | &#189;    |                                              |
+| 190    | frac34      | &#190;    |                                              |
+| 191    | iquest      | &#191;    |                                              |
+| 192    | Agrave      | &#192;    |                                              |
+| 193    | Aacute      | &#193;    |                                              |
+| 194    | Acirc       | &#194;    |                                              |
+| 195    | Atilde      | &#195;    |                                              |
+| 196    | Auml        | &#196;    |                                              |
+| 197    | Aring       | &#197;    |                                              |
+| 198    | AElig       | &#198;    |                                              |
+| 199    | Ccedil      | &#199;    |                                              |
+| 200    | Egrave      | &#200;    |                                              |
+| 201    | Eacute      | &#201;    |                                              |
+| 202    | Ecirc       | &#202;    |                                              |
+| 203    | Euml        | &#203;    |                                              |
+| 204    | Igrave      | &#204;    |                                              |
+| 205    | Iacute      | &#205;    |                                              |
+| 206    | Icirc       | &#206;    |                                              |
+| 207    | Iuml        | &#207;    |                                              |
+| 208    | ETH         | &#208;    |                                              |
+| 209    | Ntilde      | &#209;    |                                              |
+| 210    | Ograve      | &#210;    |                                              |
+| 211    | Oacute      | &#211;    |                                              |
+| 212    | Ocirc       | &#212;    |                                              |
+| 213    | Otilde      | &#213;    |                                              |
+| 214    | Ouml        | &#214;    |                                              |
+| 215    | times       | &#215;    |                                              |
+| 216    | Oslash      | &#216;    |                                              |
+| 217    | Ugrave      | &#217;    |                                              |
+| 218    | Uacute      | &#218;    |                                              |
+| 219    | Ucirc       | &#219;    |                                              |
+| 220    | Uuml        | &#220;    |                                              |
+| 221    | Yacute      | &#221;    |                                              |
+| 222    | THORN       | &#222;    |                                              |
+| 223    | szlig       | &#223;    |                                              |
+| 224    | agrave      | &#224;    |                                              |
+| 225    | aacute      | &#225;    |                                              |
+| 226    | acirc       | &#226;    |                                              |
+| 227    | atilde      | &#227;    |                                              |
+| 228    | auml        | &#228;    |                                              |
+| 229    | aring       | &#229;    |                                              |
+| 230    | aelig       | &#230;    |                                              |
+| 231    | ccedil      | &#231;    |                                              |
+| 232    | egrave      | &#232;    |                                              |
+| 233    | eacute      | &#233;    |                                              |
+| 234    | ecirc       | &#234;    |                                              |
+| 235    | euml        | &#235;    |                                              |
+| 236    | igrave      | &#236;    |                                              |
+| 237    | iacute      | &#237;    |                                              |
+| 238    | icirc       | &#238;    |                                              |
+| 239    | iuml        | &#239;    |                                              |
+| 240    | eth         | &#240;    |                                              |
+| 241    | ntilde      | &#241;    |                                              |
+| 242    | ograve      | &#242;    |                                              |
+| 243    | oacute      | &#243;    |                                              |
+| 244    | ocirc       | &#244;    |                                              |
+| 245    | otilde      | &#245;    |                                              |
+| 246    | ouml        | &#246;    |                                              |
+| 247    | divide      | &#247;    |                                              |
+| 248    | oslash      | &#248;    |                                              |
+| 249    | ugrave      | &#249;    |                                              |
+| 250    | uacute      | &#250;    |                                              |
+| 251    | ucirc       | &#251;    |                                              |
+| 252    | uuml        | &#252;    |                                              |
+| 253    | yacute      | &#253;    |                                              |
+| 254    | thorn       | &#254;    |                                              |
+| 255    | yuml        | &#255;    |                                              |
+| 256    | Amacron     | &#256;    |                                              |
+| 257    | amacron     | &#257;    |                                              |
+| 258    | Abreve      | &#258;    |                                              |
+| 259    | abreve      | &#259;    |                                              |
+| 260    | Aogonek     | &#260;    |                                              |
+| 261    | aogonek     | &#261;    |                                              |
+| 262    | Cacute      | &#262;    |                                              |
+| 263    | cacute      | &#263;    |                                              |
+| 264    | Ccirc       | &#264;    |                                              |
+| 265    | ccirc       | &#265;    |                                              |
+| 266    | Cdota       | &#266;    |                                              |
+| 267    | cdota       | &#267;    |                                              |
+| 268    | Ccaron      | &#268;    |                                              |
+| 269    | ccaron      | &#269;    |                                              |
+| 270    | Dcaron      | &#270;    |                                              |
+| 271    | dcaron      | &#271;    |                                              |
+| 272    | Dstroke     | &#272;    |                                              |
+| 273    | dstroke     | &#273;    |                                              |
+| 274    | Emacron     | &#274;    |                                              |
+| 275    | emacron     | &#275;    |                                              |
+| 276    | Ebreve      | &#276;    |                                              |
+| 277    | ebreve      | &#277;    |                                              |
+| 278    | Edota       | &#278;    |                                              |
+| 279    | edota       | &#279;    |                                              |
+| 280    | Eogonek     | &#280;    |                                              |
+| 281    | eogonek     | &#281;    |                                              |
+| 282    | Ecaron      | &#282;    |                                              |
+| 283    | ecaron      | &#283;    |                                              |
+| 284    | Gcirc       | &#284;    |                                              |
+| 285    | gcirc       | &#285;    |                                              |
+| 286    | Gbreve      | &#286;    |                                              |
+| 287    | gbreve      | &#287;    |                                              |
+| 288    | Gdota       | &#288;    |                                              |
+| 289    | gdota       | &#289;    |                                              |
+| 290    | Gcedil      | &#290;    |                                              |
+| 291    | gcedil      | &#291;    |                                              |
+| 292    | Hcirc       | &#292;    |                                              |
+| 293    | hcirc       | &#293;    |                                              |
+| 294    | Hstroke     | &#294;    |                                              |
+| 295    | hstroke     | &#295;    |                                              |
+| 296    | Itilde      | &#296;    |                                              |
+| 297    | itilde      | &#297;    |                                              |
+| 298    | Imacron     | &#298;    |                                              |
+| 299    | imacron     | &#299;    |                                              |
+| 300    | Ibreve      | &#300;    |                                              |
+| 301    | ibreve      | &#301;    |                                              |
+| 302    | Iogonek     | &#302;    |                                              |
+| 303    | iogonek     | &#303;    |                                              |
+| 304    | Idota       | &#304;    |                                              |
+| 305    | idotless    | &#305;    |                                              |
+| 306    | IJ          | &#306;    |                                              |
+| 307    | ij          | &#307;    |                                              |
+| 308    | Jcirc       | &#308;    |                                              |
+| 309    | jcirc       | &#309;    |                                              |
+| 310    | Kcedil      | &#310;    |                                              |
+| 311    | kcedil      | &#311;    |                                              |
+| 313    | Lacute      | &#313;    |                                              |
+| 314    | lacute      | &#314;    |                                              |
+| 315    | Lcedil      | &#315;    |                                              |
+| 316    | lcedil      | &#316;    |                                              |
+| 317    | Lcaron      | &#317;    |                                              |
+| 318    | lcaron      | &#318;    |                                              |
+| 321    | Lstroke     | &#321;    |                                              |
+| 322    | lstroke     | &#322;    |                                              |
+| 323    | Nacute      | &#323;    |                                              |
+| 324    | nacute      | &#324;    |                                              |
+| 325    | Ncedil      | &#325;    |                                              |
+| 326    | ncedil      | &#326;    |                                              |
+| 327    | Ncaron      | &#327;    |                                              |
+| 328    | ncaron      | &#328;    |                                              |
+| 329    | napos       | &#329;    |                                              |
+| 330    | Neng        | &#330;    |                                              |
+| 331    | neng        | &#331;    |                                              |
+| 332    | Omacron     | &#332;    |                                              |
+| 333    | omacron     | &#333;    |                                              |
+| 334    | Obreve      | &#334;    |                                              |
+| 335    | obreve      | &#335;    |                                              |
+| 336    | Odacute     | &#336;    |                                              |
+| 337    | odacute     | &#337;    |                                              |
+| 338    | OElig       | &#338;    |                                              |
+| 339    | oelig       | &#339;    |                                              |
+| 340    | Racute      | &#340;    |                                              |
+| 341    | racute      | &#341;    |                                              |
+| 342    | Rcedil      | &#342;    |                                              |
+| 343    | rcedil      | &#343;    |                                              |
+| 344    | Rcaron      | &#344;    |                                              |
+| 345    | rcaron      | &#345;    |                                              |
+| 346    | Sacute      | &#346;    |                                              |
+| 347    | sacute      | &#347;    |                                              |
+| 348    | Scirc       | &#348;    |                                              |
+| 349    | scirc       | &#349;    |                                              |
+| 350    | Scedil      | &#350;    |                                              |
+| 351    | scedil      | &#351;    |                                              |
+| 352    | Scaron      | &#352;    |                                              |
+| 353    | scaron      | &#353;    |                                              |
+| 354    | Tcedil      | &#354;    |                                              |
+| 355    | tcedil      | &#355;    |                                              |
+| 356    | Tcaron      | &#356;    |                                              |
+| 357    | tcaron      | &#357;    |                                              |
+| 358    | Tstroke     | &#358;    |                                              |
+| 359    | tstroke     | &#359;    |                                              |
+| 360    | Utilde      | &#360;    |                                              |
+| 361    | utilde      | &#361;    |                                              |
+| 362    | Umacron     | &#362;    |                                              |
+| 363    | umacron     | &#363;    |                                              |
+| 364    | Ubreve      | &#364;    |                                              |
+| 365    | ubreve      | &#365;    |                                              |
+| 366    | Uring       | &#366;    |                                              |
+| 367    | uring       | &#367;    |                                              |
+| 368    | Udacute     | &#368;    |                                              |
+| 369    | udacute     | &#369;    |                                              |
+| 370    | Uogonek     | &#370;    |                                              |
+| 371    | uogonek     | &#371;    |                                              |
+| 372    | Wcirc       | &#372;    |                                              |
+| 373    | wcirc       | &#373;    |                                              |
+| 374    | Ycirc       | &#374;    |                                              |
+| 375    | ycirc       | &#375;    |                                              |
+| 376    | Yuml        | &#376;    |                                              |
+| 377    | Zacute      | &#377;    |                                              |
+| 378    | zacute      | &#378;    |                                              |
+| 379    | Zdota       | &#379;    |                                              |
+| 380    | zdota       | &#380;    |                                              |
+| 381    | Zcaron      | &#381;    |                                              |
+| 382    | zcaron      | &#382;    |                                              |
+| 383    | slong       | &#383;    |                                              |
+| 402    | fnof        | &#402;    |                                              |
+| 710    | circ        | &#710;    |                                              |
+| 732    | tilde       | &#732;    |                                              |
+| 818    | lowline     | &lowline; | (in LaTeX becomes a short underscore)        |
+| 913    | Alpha       | &#913;    |                                              |
+| 914    | Beta        | &#914;    |                                              |
+| 915    | Gamma       | &#915;    |                                              |
+| 916    | Delta       | &#916;    |                                              |
+| 917    | Epsilon     | &#917;    |                                              |
+| 918    | Zeta        | &#918;    |                                              |
+| 919    | Eta         | &#919;    |                                              |
+| 920    | Theta       | &#920;    |                                              |
+| 921    | Iota        | &#921;    |                                              |
+| 922    | Kappa       | &#922;    |                                              |
+| 923    | Lambda      | &#923;    |                                              |
+| 924    | Mu          | &#924;    |                                              |
+| 925    | Nu          | &#925;    |                                              |
+| 926    | Xi          | &#926;    |                                              |
+| 927    | Omicron     | &#927;    |                                              |
+| 928    | Pi          | &#928;    |                                              |
+| 929    | Rho         | &#929;    |                                              |
+| 931    | Sigma       | &#931;    |                                              |
+| 932    | Tau         | &#932;    |                                              |
+| 933    | Upsilon     | &#933;    |                                              |
+| 934    | Phi         | &#934;    |                                              |
+| 935    | Chi         | &#935;    |                                              |
+| 936    | Psi         | &#936;    |                                              |
+| 937    | Omega       | &#937;    |                                              |
+| 945    | alpha       | &#945;    |                                              |
+| 946    | beta        | &#946;    |                                              |
+| 947    | gamma       | &#947;    |                                              |
+| 948    | delta       | &#948;    |                                              |
+| 949    | epsilon     | &#949;    |                                              |
+| 950    | zeta        | &#950;    |                                              |
+| 951    | eta         | &#951;    |                                              |
+| 952    | theta       | &#952;    |                                              |
+| 953    | iota        | &#953;    |                                              |
+| 954    | kappa       | &#954;    |                                              |
+| 955    | lambda      | &#955;    |                                              |
+| 956    | mu          | &#956;    |                                              |
+| 957    | nu          | &#957;    |                                              |
+| 958    | xi          | &#958;    |                                              |
+| 959    | omicron     | &#959;    |                                              |
+| 960    | pi          | &#960;    |                                              |
+| 961    | rho         | &#961;    |                                              |
+| 962    | sigmaf      | &#962;    |                                              |
+| 963    | sigma       | &#963;    |                                              |
+| 964    | tau         | &#964;    |                                              |
+| 965    | upsilon     | &#965;    |                                              |
+| 966    | phi         | &#966;    |                                              |
+| 967    | chi         | &#967;    |                                              |
+| 968    | psi         | &#968;    |                                              |
+| 969    | omega       | &#969;    |                                              |
+| 977    | thetasym    | &#977;    |                                              |
+| 978    | upsih       | &#978;    |                                              |
+| 982    | piv         | &#982;    |                                              |
+| 8194   | ensp        | &#8194;   | 0.5em space in LaTeX                         |
+| 8195   | emsp        | &#8195;   | 1em space in LaTeX                           |
+| 8195   | quad*       | &#8195;   | `\quad` in LaTeX                             |
+| 8196   | thicksp*    | &#8196;   | `\;` in LaTeX                                |
+| 8197   | medsp*      | &#8197;   | `\:` in LaTeX                                |
+| 8201   | thinsp      | &#8201;   | `\,` in LaTeX                                |
+| 8203   | strut*      | &#8203;   | `\strut` in LaTeX                            |
+| 8203   | pagebreak*  |           | `\newpage` in LaTeX                          |
+| 8204   | zwnj        | &#8204;   |                                              |
+| 8205   | zwj         | &#8205;   |                                              |
+| 8206   | lrm         | &#8206;   |                                              |
+| 8207   | rlm         | &#8207;   |                                              |
+| 8211   | ndash       | &#8211;   |                                              |
+| 8212   | mdash       | &#8212;   |                                              |
+| 8216   | lsquo       | &#8216;   |                                              |
+| 8217   | rsquo       | &#8217;   |                                              |
+| 8218   | sbquo       | &#8218;   |                                              |
+| 8220   | ldquo       | &#8220;   |                                              |
+| 8221   | rdquo       | &#8221;   |                                              |
+| 8222   | bdquo       | &#8222;   |                                              |
+| 8224   | dagger      | &#8224;   |                                              |
+| 8225   | Dagger      | &#8225;   |                                              |
+| 8226   | bull        | &#8226;   |                                              |
+| 8230   | hellip      | &#8230;   |                                              |
+| 8240   | permil      | &#8240;   |                                              |
+| 8242   | prime       | &#8242;   |                                              |
+| 8243   | Prime       | &#8243;   |                                              |
+| 8249   | lsaquo      | &#8249;   |                                              |
+| 8250   | rsaquo      | &#8250;   |                                              |
+| 8254   | oline       | &#8254;   |                                              |
+| 8260   | frasl       | &#8260;   |                                              |
+| 8364   | euro        | &#8364;   |                                              |
+| 8450   | CC          | &#8450;   |                                              |
+| 8469   | NN          | &#8469;   |                                              |
+| 8473   | PP          | &#8473;   |                                              |
+| 8474   | QQ          | &#8474;   |                                              |
+| 8477   | RR          | &#8477;   |                                              |
+| 8484   | ZZ          | &#8484;   |                                              |
+| 8465   | image       | &#8465;   |                                              |
+| 8472   | weierp      | &#8472;   |                                              |
+| 8476   | real        | &#8476;   |                                              |
+| 8482   | trade       | &#8482;   |                                              |
+| 8501   | alefsym     | &#8501;   |                                              |
+| 8592   | larr        | &#8592;   |                                              |
+| 8593   | uarr        | &#8593;   |                                              |
+| 8594   | rarr        | &#8594;   |                                              |
+| 8595   | darr        | &#8595;   |                                              |
+| 8596   | harr        | &#8596;   |                                              |
+| 8629   | crarr       | &#8629;   |                                              |
+| 8656   | lArr        | &#8656;   |                                              |
+| 8657   | uArr        | &#8657;   |                                              |
+| 8658   | rArr        | &#8658;   |                                              |
+| 8659   | dArr        | &#8659;   |                                              |
+| 8660   | hArr        | &#8660;   |                                              |
+| 8704   | forall      | &#8704;   |                                              |
+| 8706   | part        | &#8706;   |                                              |
+| 8707   | exist       | &#8707;   |                                              |
+| 8709   | empty       | &#8709;   |                                              |
+| 8711   | nabla       | &#8711;   |                                              |
+| 8712   | isin        | &#8712;   |                                              |
+| 8713   | notin       | &#8713;   |                                              |
+| 8715   | ni          | &#8715;   |                                              |
+| 8719   | prod        | &#8719;   |                                              |
+| 8721   | sum         | &#8721;   |                                              |
+| 8722   | minus       | &#8722;   |                                              |
+| 8727   | lowast      | &#8727;   |                                              |
+| 8730   | radic       | &#8730;   |                                              |
+| 8733   | prop        | &#8733;   |                                              |
+| 8734   | infin       | &#8734;   |                                              |
+| 8736   | ang         | &#8736;   |                                              |
+| 8743   | and         | &#8743;   |                                              |
+| 8744   | or          | &#8744;   |                                              |
+| 8745   | cap         | &#8745;   |                                              |
+| 8746   | cup         | &#8746;   |                                              |
+| 8747   | int         | &#8747;   |                                              |
+| 8756   | there4      | &#8756;   |                                              |
+| 8764   | sim         | &#8764;   |                                              |
+| 8773   | cong        | &#8773;   |                                              |
+| 8776   | asymp       | &#8776;   |                                              |
+| 8800   | ne          | &#8800;   |                                              |
+| 8801   | equiv       | &#8801;   |                                              |
+| 8804   | le          | &#8804;   |                                              |
+| 8805   | ge          | &#8805;   |                                              |
+| 8834   | sub         | &#8834;   |                                              |
+| 8835   | sup         | &#8835;   |                                              |
+| 8836   | nsub        | &#8836;   |                                              |
+| 8838   | sube        | &#8838;   |                                              |
+| 8839   | supe        | &#8839;   |                                              |
+| 8853   | oplus       | &#8853;   |                                              |
+| 8855   | otimes      | &#8855;   |                                              |
+| 8869   | perp        | &#8869;   |                                              |
+| 8901   | sdot        | &#8901;   |                                              |
+| 8942   | vellip      | &#8942;   |                                              |
+| 8968   | lceil       | &#8968;   |                                              |
+| 8969   | rceil       | &#8969;   |                                              |
+| 8970   | lfloor      | &#8970;   |                                              |
+| 8971   | rfloor      | &#8971;   |                                              |
+| 9001   | lang        | &#9001;   |                                              |
+| 9002   | rang        | &#9002;   |                                              |
+| 9312   | circled1    | &#9312;   |                                              |
+| 9313   | circled2    | &#9313;   |                                              |
+| 9314   | circled3    | &#9314;   |                                              |
+| 9315   | circled4    | &#9315;   |                                              |
+| 9316   | circled5    | &#9316;   |                                              |
+| 9317   | circled6    | &#9317;   |                                              |
+| 9318   | circled7    | &#9318;   |                                              |
+| 9319   | circled8    | &#9319;   |                                              |
+| 9320   | circled9    | &#9320;   |                                              |
+| 9321   | circled10   | &#9321;   |                                              |
+| 9674   | loz         | &#9674;   |                                              |
+| 9824   | spades      | &#9824;   |                                              |
+| 9827   | clubs       | &#9827;   |                                              |
+| 9829   | hearts      | &#9829;   |                                              |
+| 9830   | diams       | &#9830;   |                                              |
+| 8617   | hooklarr*   | &#8617;   |                                              |
+| 8718   | bbox*       | &#8718;   |                                              |
+| 9633   | box*        | &#9633;   |                                              |
+| 9744   | ballotbox*  | &#9744;   |                                              |
+| 9745   | ballotc*    | &#9745;   |                                              |
+| 9746   | ballotx*    | &#9746;   |                                              |
+| 10003  | checkmark*  | &#10003;  |                                              |
+| 10004  | bcheckmark* | &#10004;  |                                              |
+| 10007  | xmark*      | &#10007;  |                                              |
+| 10008  | bxmark*     | &#10008;  |                                              |
+| 128270 | mglass*     | &#128270; |                                              |
+| NA     | smallskip   |           | small vertical space (`\smallskip` in LaTeX) |
+| NA     | medskip     |           | medium vertical space (`\medskip` in LaTeX)  |
+| NA     | bigskip     |           | big vertical space (`\bigskip` in LaTeX)     |
+|--------|-------------|-----------|----------------------------------------------|
 { .long .booktable }
 
 
 ## Definitions of predefined custom blocks { #app-custom }
 
-These are the definitions of the predefined custom blocks, where we assume that 
-`Heading Depth` and `Toc Depth` are set to 3 (and adding some spurious line breaks for
-formatting).
+These are the definitions of the predefined custom blocks, where we
+assume that `Heading Depth` and `Toc Depth` are set to 3 (and adding some
+spurious line breaks for formatting).
 
-```
-~Equation: label='[(@equation)]{.equation-label}' 
-           replace='[&label;]{.equation-before}&nl;\
-                    ~ Begin Math&nl;&source;\
-                    &nl;~ End Math&nl;' 
-           .align-center tight .para-block
-~Figure  : label='[@figure]{.figure-label}' .align-center 
-           after='&nl;********* {.figureline}&nl;\
-                  [[**Figure\ &label;.** ]\
-                  {.caption-before}&caption;]\
-                  {.figure-caption}&nl;{notag}&nl;'
-           toc=tof toc-line='&label;. &caption;'
-      
-~Bibitem : label='[@bibitem]{.bibitem-label}' 
-           cite-label='&label;'
-           before='[\[&label;\]\ \ ]{.bibitem-before}' 
-           tight texelem=mdBibitem
-~Bibliography: bib-style=... 
-               bib-data='...' 
-               texelem=mdBibliography
-      
-~Note  : .block before='[**Note**. ]{.note-before}'
-~Remark: .block before='[**Remark**. ]{.remark-before}'
-~Proof : .block before='[**Proof**. ]{.proof-before}'
-
-~Framed: border-style=solid border-color=black border-width=1px
-~Center: .align-center
-
-~Pre      : input=pre .para-block
-~Code     : input=pre
-~Hr       : .madoko,
-~Table    : .madoko,
-
-~Article  : html-elem='article'
-~Section  : html-elem='section' tex-elem='mdSection'
-~Aside    : html-elem='aside'
-~Nav      : html-elem='nav'
-
-~Tex      : input=tex
-~TexRaw   : input=texraw
-~HtmlRaw  : input=htmlraw
-~Math     : input=math .para-block
-~MathPre  : input=mathpre .para-block
-~MathDefs : input=mathdefs .hidden
-~HtmlOnly : input=htmlonly
-~TexOnly  : input=texonly
-
-~Date     : ...,
-~Time     : ...,
-~Madoko Version: ...,
-
-.booktable:  
-    rule-top-width=2px rule-bottom-width=2px 
-    rule-mid-width=1.35px th-font-weight=normal     
-    rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt
-    th-padding-top=3pt th-padding-bottom=3pt    
-
-~Bibitem: replace='?if &bib-search-url; && &searchterm;\
-                   ?then &source; [&mglass;]\
-                         (http://&bib-search-url;/search\
-                          ?q=&searchterm;){.bibsearch}'"
-@html Bib Search Url: www.bing.com"
-
-~Theorem  : .block label='[@Theorem]{.Theorem-label}'
-    before='[**Theorem\ &label;.** ]{.Theorem-before}'
-~Lemma    : .block label='[@Lemma]{.Lemma-label}'
-    before='[**Lemma\ &label;.** ]{.Lemma-before}'
-~Proposition: .block label='[@Proposition]{.Proposition-label}'
-    before='[**Proposition\ &label;.** ]{.Proposition-before}'
-~Corollary: .block label='[@Corollary]{.Corollary-label}'
-    before='[**Corollary\ &label;.** ]{.Corollary-before}'
-~Example: .block label='[@Example]{.Example-label}'
-    before='[**Example\ &label;.** ]{.Example-before}'
-~Definition: .block label='[@Definition]{.Definition-label}'
-    before='[**Definition\ &label;.** ]{.Definition-before}'
-
-~H1: label='[@h1]{.heading-label}' toc
-     before='[&label;.&ensp;]{.heading-before}'     
-~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' toc
-     before='[&label;.&ensp;]{.heading-before}'     
-~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
-     before='[&label;.&ensp;]{.heading-before}' toc
-~H4: @h1-h2-h3-h4 
-  label='[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}'
-...
-```
+    
+    ~Equation: label='[(@equation)]{.equation-label}' 
+               replace='[&label;]{.equation-before}&nl;\
+                        ~ Begin Math&nl;&source;\
+                        &nl;~ End Math&nl;' 
+               .align-center tight .para-block
+    ~Figure  : label='[@figure]{.figure-label}' .align-center 
+               after='&nl;********* {.figureline}&nl;\
+                      [[**Figure\ &label;.** ]\
+                      {.caption-before}&caption;]\
+                      {.figure-caption html-elem=fig-caption}\
+                      &nl;{notag}&nl;'
+               toc=tof toc-line='&label;. &caption;'
+               html-elem=figure
+               html-elem=figure
+          
+    ~Bibitem : label='[@bibitem]{.bibitem-label}' 
+               cite-label='&label;'
+               before='[\[&label;\]\ \ ]{.bibitem-before}' 
+               tight texelem=mdBibitem
+    ~Bibliography: bib-style=... 
+                   bib-data='...' 
+                   texelem=mdBibliography
+          
+    ~Note  : .block before='[**Note**. ]{.note-before}&nl;'
+    ~Remark: .block before='[**Remark**. ]{.remark-before}&nl;'
+    ~Proof : .block before='[**Proof**. ]{.proof-before}&nl;'
+    
+    ~Framed: border-style=solid border-color=black border-width=1px
+    ~Center: .align-center
+                 
+    ~Snippet  : input=math .block snippet-needpdf=true
+    ~Footnote : label='[@footnote]{.footnote-label}'\
+                before='[\/^&label;.^ ]{.footnote-before}'\
+                after='&nl;[&#8617;](#back-&id;){.footnote-backref}'\
+                line-adjust=0
+    
+    ~Pre      : input=pre .para-block
+    ~Code     : input=pre
+    ~Hr       : .madoko,
+    ~Table    : .madoko,
+    ~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em,
+    ~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold,
+    ~Dd       : html-elem=dd tex-elem=mdDd margin-left=1.5em,
+    ~Dt       : html-elem=dt tex-elem=mdDt font-weight=bold,
+    
+    ~Article  : html-elem='article'
+    ~Section  : html-elem='section' tex-elem='mdSection'
+    ~Aside    : html-elem='aside'
+    ~Nav      : html-elem='nav'
+    
+    ~Tex      : input=tex
+    ~TexRaw   : input=texraw
+    ~HtmlRaw  : input=htmlraw
+    ~Math     : input=math .para-block
+    ~MathPre  : input=mathpre .para-block
+    ~MathDefs : input=mathdefs .hidden
+    ~HtmlOnly : input=htmlonly
+    ~TexOnly  : input=texonly
+    ~Math-Inline : input=math,
+    ~Math-Display: input=math,
+    ~Math-Inline : input=math,
+    ~Math-Display: input=math,
+    
+    Date      : ...
+    Year      : ...
+    Month     : ...
+    Day       : ...
+    Time      : ...
+    Hours     : ...
+    Minutes   : ...
+    Seconds   : ...
+    Madoko Version: ...
+    Defaults  : True
+    
+    lowline: &#x5F;
+    @tex lowline: &#0818;
+    
+    MadokoLogo: Document generated by [Madoko.net](https://www.madoko.net).
+    .MadokoLogo: .block text-align=right font-size=xx-small\
+                  margin-top=4em tight
+    
+    .booktable:  
+        rule-top-width=2px rule-bottom-width=2px 
+        rule-mid-width=1.35px th-font-weight=normal     
+        rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt
+        th-padding-top=3pt th-padding-bottom=3pt    
+    
+    ~Bibitem: replace='?if &bib-search-url; && &searchterm;\
+                       ?then &source; [&mglass;]\
+                             (http://&bib-search-url;/search\
+                              ?q=&searchterm;){.bibsearch}'"
+    @html Bib Search Url: www.bing.com
+    
+    
+    ~Theorem  : .block label='[@Theorem]{.Theorem-label}'
+        before='[**Theorem\ &label;.** ]{.Theorem-before}'
+    ~Lemma    : .block label='[@Lemma]{.Lemma-label}'
+        before='[**Lemma\ &label;.** ]{.Lemma-before}'
+    ~Proposition: .block label='[@Proposition]{.Proposition-label}'
+        before='[**Proposition\ &label;.** ]{.Proposition-before}'
+    ~Corollary: .block label='[@Corollary]{.Corollary-label}'
+        before='[**Corollary\ &label;.** ]{.Corollary-before}'
+    ~Example: .block label='[@Example]{.Example-label}'
+        before='[**Example\ &label;.** ]{.Example-before}'
+    ~Definition: .block label='[@Definition]{.Definition-label}'
+        before='[**Definition\ &label;.** ]{.Definition-before}'
+    
+    ~H1: label='[@h1]{.heading-label}' toc
+         before='[&label;.&ensp;]{.heading-before}'     
+    ~H2: @h1-h2 label='[@h1.@h1-h2]{.heading-label}' toc
+         before='[&label;.&ensp;]{.heading-before}'     
+    ~H3: @h1-h2-h3 label='[@h1.@h1-h2.@h1-h2-h3]{.heading-label}' 
+         before='[&label;.&ensp;]{.heading-before}' toc
+    ~H4: @h1-h2-h3-h4 
+        label='[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}'
+    ...
 
