@@ -11,7 +11,8 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
         "../scripts/remote-github",
-        ], function(Promise,Map,Util,LocalRemote,Dropbox,Onedrive,Github) {
+        "../scripts/remote-localhost",
+        ], function(Promise,Map,Util,LocalRemote,Dropbox,Onedrive,Github,Localhost) {
 
 
 
@@ -49,6 +50,7 @@ var Picker = (function() {
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
     github: { remote: new Github.Github(), folder: "" },
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
+    localhost: { remote: new Localhost.Localhost(), folder: "" },
     me: { remote: new LocalRemote.LocalRemote(), folder: "//" },
   };
   remotes.me.remote.logo = function() { return "icon-me.png"; };

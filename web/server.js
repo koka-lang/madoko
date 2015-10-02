@@ -335,7 +335,7 @@ app.use(function(req, res, next){
     else if (req.path==="/editor.html") {
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
-      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.github.com";
+      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.github.com https://localhost";
     } 
     else if (endsWith(req.path,".svg")) { 
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.

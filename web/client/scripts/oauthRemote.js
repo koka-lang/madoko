@@ -17,7 +17,8 @@ var OAuthRemote = (function() {
     self.logo           = opts.logo || ("icon-" + self.name + ".png");
     self.defaultDomain  = opts.defaultDomain;
     self.loginUrl       = opts.loginUrl;
-    self.loginParams    = opts.loginParams;
+    self.loginParams    = opts.loginParams || {};
+    self.logoutParams = opts.logoutParams || {};
     self.logoutUrl      = opts.logoutUrl;
     self.logoutTimeout  = opts.logoutTimeout || false;
     self.accountUrl     = opts.accountUrl;
@@ -29,16 +30,29 @@ var OAuthRemote = (function() {
     self.dialogHeight   = opts.dialogHeight || 600;
     self.timeout        = opts.timeout || 10000;  // should be short, real timeout can be 3 times as large, see primRequestXHR
 
-    if (!self.loginParams.redirect_uri)  {
-      self.loginParams.redirect_uri  = location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : "") + "/oauth/redirect";
+    if (!self.loginParams.origin) {
+      if (!self.loginParams.redirect_uri)  {
+        self.loginParams.redirect_uri  = location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : "") + "/oauth/redirect";
+      }
+      if (!self.loginParams.response_type) {
+        self.loginParams.response_type = "code";
+      }
+    
+      if (!self.logoutParams.client_id) self.logoutParams.client_id = self.loginParams.client_id;
+      if (!self.logoutParams.redirect_uri) self.logoutParams.redirect_uri = self.loginParams.redirect_uri;
     }
-    if (!self.loginParams.response_type) {
-      self.loginParams.response_type = "code";
+    else {
+      window.addEventListener( "message", function(ev) {
+        console.log("message post: " + ev.data + ", src: " + ev.origin);
+        if (ev.origin !== self.defaultDomain) return;
+        if (typeof ev.data !== "string" ) return;
+        // check ev.source too?
+        var info = JSON.parse(ev.data);
+        if (info.eventType  === "oauth") {
+          if (info.secret) self.access_token = info.secret;
+        }
+      });
     }
-
-    self.logoutParams = opts.logoutParams || {};
-    if (!self.logoutParams.client_id) self.logoutParams.client_id = self.loginParams.client_id;
-    if (!self.logoutParams.redirect_uri) self.logoutParams.redirect_uri = self.loginParams.redirect_uri;
 
     self.nextTry     = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
     self.lastTryErr  = null;

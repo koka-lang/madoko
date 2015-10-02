@@ -13,8 +13,9 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-onedrive",
         "../scripts/remote-http",
         "../scripts/remote-github",
+        "../scripts/remote-localhost",
         "../scripts/picker",
-        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Github,Picker) {
+        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Github,Localhost,Picker) {
 
 var remotes = {
   dropbox: Dropbox,
@@ -22,6 +23,7 @@ var remotes = {
   github: Github,
   http: HttpRemote,
   local: LocalRemote,
+  localhost: Localhost
 };
 
 var Encoding = {
