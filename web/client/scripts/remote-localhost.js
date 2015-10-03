@@ -88,7 +88,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.login = function() {
     var self = this;
-    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko'>madoko-disk</a> program." });
+    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-disk'>madoko-disk</a> program." });
     return self.postMessage( { method: "login" } ).then( function(res) {
       self.user = res;
       return;      
