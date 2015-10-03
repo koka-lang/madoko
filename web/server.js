@@ -314,6 +314,7 @@ app.use(function(req, res, next){
   var csp = { "default-src": "'self'",
               "connect-src": "'none'",
               "report-uri": "/rest/report/csp",
+              "frame-ancestors": "'self' http://localhost",
             };
 
   // preview is sandboxed
@@ -323,7 +324,8 @@ app.use(function(req, res, next){
   }
   else {
     // Don't allow content to be loaded in an iframe
-    res.setHeader("X-Frame-Options","DENY");              
+    res.setHeader("X-Frame-Options","ALLOW-FROM http://localhost");              
+
     // index uses bootstrap theme
     if (req.path==="/" || req.path==="/index.html") {
       csp["img-src"]      = "'self' data: https://maxcdn.bootstrapcdn.com";

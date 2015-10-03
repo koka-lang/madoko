@@ -6,68 +6,140 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util","../scripts/oauthRemote"], 
-        function(Promise,Util,OAuthRemote) {
+define(["../scripts/promise","../scripts/util","../scripts/date"], 
+        function(Promise,Util,Date) {
 
-var localhost = new OAuthRemote( {
-  name         : "localhost",
-  defaultDomain: "https://localhost:8081",
-  accountUrl   : "/rest/account/info",
-  loginUrl     : "/oauth/authorize",
-  logoutUrl    : "/oauth/logout",
-  logoutTimeout: 500,
-  logo         : "icon-disk.png",
-  loginParams  : {
-    origin: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : "")
+var FrameRemote = (function() {
+  function FrameRemote( params ) {
+    var self = this;
+    if (!params) params = {};
+
+    self.hostWindow = params.hostWindow || window.parent;
+    self.origin = params.origin || "http://localhost";
+    self.hosted = (self.hostWindow !== null);
+    self.user   = {};
+    self.unique = 1;
+    self.promises = {};
+
+    if (!self.hosted) return;
+    window.addEventListener( "message", function(ev) {
+      if (ev.origin !== self.origin) return;
+      if (ev.source !== self.hostWindow) return;
+      if (typeof ev.data !== "object") return;
+      var info = ev.data;
+      if (info.eventType !== "localhost") return;
+      self._onMessage( info );
+    });
   }
+
+  FrameRemote.prototype.request = function( request, params, content ) {
+    var self = this;
+    var info = { 
+      method: request,
+      params: params
+    };
+    if (content) info.content = content;
+    return self.postMessage( info, params.timeout);
+  }
+
+  FrameRemote.prototype.postMessage = function( info, timeout ) {
+    var self = this;
+    if (!self.hosted) return Promise.rejected("Madoko can only access the local file system through a local host");
+
+    var promise = new Promise();
+    var id = self.unique++;
+    info.messageId = id; 
+    info.eventType = "localhost";
+    var timeoutId = 0;
+    if (timeout && timeout > 1) {
+      timeoutId = setTimeout( function() { 
+        self._onMessage( { messageId: id, timedOut: true } );            
+      }, timeout);
+    }
+    self.promises[id] = { promise: promise, timeoutId: timeoutId };
+    self.hostWindow.postMessage( info, self.origin );
+    return promise;
+  }
+
+  FrameRemote.prototype._onMessage = function( info ) {
+    var self = this;
+    if (!info || typeof info.messageId === "undefined") return;
+    var promise = self.promises[info.messageId];
+    delete self.promises[info.messageId];
+    if (!promise) return;
+    if (promise.timeoutId) clearTimeout(promise.timeoutId);
+    if (info.error) {
+      promise.promise.reject(info.error);
+    }
+    else {
+      promise.promise.resolve(info.result);
+    }
+  }
+
+  FrameRemote.prototype.connect = function() {
+    var self = this;
+    return self.login().then( function() {
+      return 0;
+    }, function(err) {
+      return 401;
+    });
+  }
+
+  FrameRemote.prototype.login = function() {
+    var self = this;
+    return self.postMessage( { method: "login" } ).then( function(res) {
+      self.user = res;
+      return;      
+    });
+  }
+
+
+  FrameRemote.prototype.withUserId = function(action) {
+    var self = this;
+    return Promise.wrap(action, self.user.id);
+  }
+
+
+  FrameRemote.prototype.getUserName = function() {
+    var self = this;
+    return Promise.resolved(self.user.name);
+  }
+
+  FrameRemote.prototype.getUserInfo = function() {
+    var self = this;
+    return Promise.resolved(self.user);
+  }
+
+  return FrameRemote;
+})();
+
+
+var localhost = new FrameRemote({
+  origin: "http://localhost",
 });
 
 
 /* ----------------------------------------------
   Basic file API
 ---------------------------------------------- */
-var longTimeout = 30000; // 1 minute for pull or push content
-
-var resturl     = "/rest";
-var contentUrl  = resturl + "/files/";
-var pushUrl     = resturl + "/files_put/";
-var metadataUrl = resturl + "/metadata/";
-var fileopsUrl  = resturl + "/fileops/";
-
-function encodeURIPath(s) {
-  var p = escape(s);
-  return p.replace(/%2F/g,"/");
-}
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + encodeURIPath(fname), timeout: longTimeout, binary: binary };
-  return localhost.requestGET( opts ).then( function(content,req) {
-    var infoHdr = req.getResponseHeader("x-localhost-metadata");
-    var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
-    info.content = content;
-    return addPathInfo(info);
+  return localhost.request( "get/pull", { path: fname, binary: binary } ).then( function(content) {
+    return { content: content, path: fname };
   });
 }
 
 function fileInfo(fname) {
-  return localhost.requestGET( { url: metadataUrl + encodeURIPath(fname) } );
-}
-
-function sharedFolderInfo(id) {
-  var url = sharedFoldersUrl + encodeURIPath(id);
-  return localhost.requestGET( { url: url, cache: -60000, contentType: null } );  // cached, retry after 60 seconds;
+  return localhost.request( "get/metadata", { path: fname });
 }
 
 function folderInfo(fname) {
-  var url = metadataUrl + encodeURIPath(fname);
-  return localhost.requestGET( { url: url }, { list: true });
+  return localhost.request( "get/metadata", { path: fname } );
 }
 
 function pushFile(fname,content) {
-  var url = pushUrl + encodeURIPath(fname); 
-  return localhost.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
-    if (!info) throw new Error("localhost: could not push file: " + fname);
-    return addPathInfo(info);
+  return localhost.request( "put/push", { path: fname }, content ).then( function(info) {
+    return info;
   });  
 }
 
@@ -94,6 +166,8 @@ function getShareUrl( fname ) {
   });
 }
 
+
+
 /* ----------------------------------------------
    Main entry points
 ---------------------------------------------- */
@@ -109,11 +183,11 @@ function unpersist(obj) {
 }
 
 function type() {
-  return localhost.name;
+  return "localhost";
 }
 
 function logo() {
-  return localhost.logo;
+  return "icon-disk.png";
 }
 
 /* ----------------------------------------------
@@ -141,7 +215,7 @@ var Localhost = (function() {
 
   Localhost.prototype.readonly = false;
   Localhost.prototype.canSync  = true;
-  Localhost.prototype.needSignin = true;
+  Localhost.prototype.needSignin = false;
 
   Localhost.prototype.getFolder = function() {
     var self = this;
@@ -184,10 +258,7 @@ var Localhost = (function() {
     return pushFile( self.fullPath(fpath), content ).then( function(info) {
       return { 
         path: info.path,
-        createdTime: new Date(info.modified),
-        globalPath: info.globalPath,
-        sharedPath: info.sharedPath,
-        rev: info.rev,
+        createdTime: Date.dateFromISO(info.modified),        
       };
     });
   }
@@ -201,8 +272,6 @@ var Localhost = (function() {
           path: fpath,
           content: info.content,
           createdTime: date,
-          globalPath: info.globalPath,
-          sharedPath: info.sharedPath
         };
         return file;
       });
@@ -212,7 +281,7 @@ var Localhost = (function() {
   Localhost.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info && !info.is_deleted ? new Date(info.modified) : null);
+      return (info && !info.is_deleted ? Date.dateFromISO(info.modified) : null);
     }, function(err) {
       if (err && err.httpCode===404) return null;
       throw err;
