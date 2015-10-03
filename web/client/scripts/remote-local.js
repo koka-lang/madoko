@@ -40,6 +40,10 @@ var LocalRemote = (function() {
     return type();
   }
 
+  LocalRemote.prototype.displayName = function() {
+    return "Browser Local";
+  }
+
   LocalRemote.prototype.logo = function() {
     return logo();
   }

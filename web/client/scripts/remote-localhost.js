@@ -16,7 +16,7 @@ var FrameRemote = (function() {
 
     self.hostWindow = params.hostWindow || window.parent;
     self.origin = params.origin || "http://localhost";
-    self.hosted = (self.hostWindow !== null);
+    self.hosted = (window !== window.top);
     self.user   = {};
     self.unique = 1;
     self.promises = {};
@@ -78,7 +78,8 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.connect = function() {
     var self = this;
-    return self.login().then( function() {
+    return self.postMessage( { method: "login" } ).then( function(res) {
+      self.user = res;
       return 0;
     }, function(err) {
       return 401;
@@ -87,6 +88,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.login = function() {
     var self = this;
+    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko'>madoko-disk</a> program." });
     return self.postMessage( { method: "login" } ).then( function(res) {
       self.user = res;
       return;      
@@ -144,25 +146,11 @@ function pushFile(fname,content) {
 }
 
 function createFolder( dirname ) {
-  var url = fileopsUrl + "create_folder";
-  return localhost.requestPOST( url, { root: root, path: dirname }).then( function(info) {
+  return localhost.request( "post/createfolder", { path: dirname }).then( function(info) {
     return true; // freshly created
   }, function(err) {
     if (err && err.httpCode === 403) return false;
     throw err;
-  });
-}
-
-function getShareUrl( fname ) {
-  var url = sharesUrl + encodeURIPath(fname);
-  return localhost.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
-    if (!info.url) return null;
-    var share = info.url;
-    // if (Util.extname(fname) === ".html") share = share.replace(/\bdl=0\b/,"dl=1");
-    return share;
-  }, function(err) {
-    Util.message( err, Util.Msg.Trace );
-    return null;
   });
 }
 
@@ -187,7 +175,7 @@ function type() {
 }
 
 function logo() {
-  return "icon-disk.png";
+  return "icon-localhost.png";
 }
 
 /* ----------------------------------------------
@@ -207,6 +195,10 @@ var Localhost = (function() {
 
   Localhost.prototype.type = function() {
     return type();
+  }
+
+  Localhost.prototype.displayName = function() {
+    return "Local Disk";
   }
 
   Localhost.prototype.logo = function() {
@@ -272,6 +264,7 @@ var Localhost = (function() {
           path: fpath,
           content: info.content,
           createdTime: date,
+          type: "file",
         };
         return file;
       });
@@ -301,7 +294,6 @@ var Localhost = (function() {
     return folderInfo( self.fullPath(fpath) ).then( function(info) {
       return (info ? info.contents : []).map( function(item) {
         item.type = item.is_dir ? "folder" : "file";
-        item.isShared = (item.shared_folder || item.parent_shared_folder_id ? true : false);
         return item;
       });
     });
@@ -309,12 +301,12 @@ var Localhost = (function() {
 
   Localhost.prototype.getShareUrl = function(fname) {
     var self = this;
-    return getShareUrl( self.fullPath(fname) );
+     return Promise.resolved(null);
   };
 
   Localhost.prototype.getInviteUrl = function() {
     var self = this;
-    return Util.combine("https://www.localhost.com/home", self.folder + "?share=1");
+    return null;
   };
 
   return Localhost;

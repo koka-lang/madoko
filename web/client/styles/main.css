@@ -400,11 +400,12 @@ span.save-link:hover {
   visibility: visible;
 }
 
-#signin, #signout, #local-message, #http-message, #invite {
+#signin, #signout, #local-message, #localhost-message, #http-message, #invite {
   display: none;
 }
 
 .remote-local #local-message,
+.remote-localhost #localhost-message,
 .remote-http #http-message {
   display: block;
   font-size: smaller;
@@ -1567,6 +1568,7 @@ div.item.document {
 #picker.page-me #button-signin,
 #picker.page-me #button-signout,
 #picker.remote-local #button-signout,
+#picker.remote-localhost #button-signout,
 #picker.page-alert #button-new,
 #picker.page-alert #button-save,
 #picker.page-alert #button-open,
@@ -1660,6 +1662,9 @@ div.item.document {
 #message-signin, #message-connect, #message-alert, #message-message, #message-template {
   text-align: center;
   width: 100%;
+  padding-bottom: 1ex;
+  border-bottom: 1px solid;
+  margin-bottom: 1em;
 }
 
 #picker #remote-local {

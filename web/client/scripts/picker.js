@@ -493,9 +493,15 @@ var Picker = (function() {
 
   Picker.prototype.onLoginBlocked = function(err) {
     var self = this;
-    if (err==null || err.url==null) throw err;
-    self.options.page = "page-alert";
-    self.options.message = "Popup was blocked: login through this <a href='" + err.url + "'>link</a> instead.";
+    if (!err) throw new Error("Login was blocked");
+    //self.options.page = "page-alert";
+    if (err.url) {
+      self.options.message = "Popup was blocked: login through this <a href='" + err.url + "'>link</a> instead.";
+    }
+    else if (err.htmlMessage || err.message) {
+      self.options.message = err.htmlMessage || err.message;    
+    }
+    else throw err;
     self.display();
   }
 
@@ -559,6 +565,7 @@ var Picker = (function() {
       document.getElementById("message-message").innerHTML = self.options.message;
       //document.getElementById("folder-name").innerHTML = self.options.header || "";
       Util.addClassName(app,"command-message");
+      self.options.message = "";
     }
 
     if (page === "alert") {
@@ -725,7 +732,7 @@ var Picker = (function() {
       return remote.connect().then( function(status) {
         return { 
           path: remote.type(), 
-          display: Util.capitalize(remote.type()), 
+          display: Util.capitalize( remote.displayName ? remote.displayName() : remote.type()), 
           iconName: remote.logo(), 
           type: "remote", 
           isShared: false,
