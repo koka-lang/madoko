@@ -15,7 +15,17 @@ var FrameRemote = (function() {
     if (!params) params = {};
 
     self.hostWindow = params.hostWindow || window.parent;
-    self.origin = params.origin || "http://localhost";
+    
+    if (params.origin) {
+      self.origin = params.origin;
+    }
+    else if (window.location.ancestorOrigins !== undefined &&
+             window.location.ancestorOrigins.length===1) {
+      self.origin = window.location.ancestorOrigins[0];
+    }
+    else if (document.domain) {
+      self.origin = document.domain;
+    }
     self.hosted = (window !== window.top);
     self.user   = {};
     self.unique = 1;
@@ -117,7 +127,6 @@ var FrameRemote = (function() {
 
 
 var localhost = new FrameRemote({
-  origin: "http://localhost",
 });
 
 

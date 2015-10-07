@@ -314,7 +314,7 @@ app.use(function(req, res, next){
   var csp = { "default-src": "'self'",
               "connect-src": "'none'",
               "report-uri": "/rest/report/csp",
-              "frame-ancestors": "'self' http://localhost",
+              "frame-ancestors": "'self' http://localhost:*",
             };
 
   // preview is sandboxed
