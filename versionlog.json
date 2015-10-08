@@ -3,6 +3,7 @@
     {
       "version": "0.9.8-beta",
       "updates": [
+        "UI: initial support for madoko-local to enable local disk access.",
         "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before.",
         "(The old style is still supported by using `Prelude: Prelude0` as metdata).",
         "Full support for CSS1 boxes in LaTeX output.",
