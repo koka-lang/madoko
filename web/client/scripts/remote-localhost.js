@@ -134,6 +134,11 @@ var FrameRemote = (function() {
     self.request("reload", { force: force });
   }
 
+  FrameRemote.prototype.setTitle = function(title) {
+    var self = this;
+    self.request("title", { title: title });
+  }
+
   return FrameRemote;
 })();
 

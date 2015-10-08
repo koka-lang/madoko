@@ -173,6 +173,14 @@ var UI = (function() {
     }
   }
 
+  UI.prototype.setTitle = function(title) {
+    var self = this;
+    if (Localhost.localhost.hosted) {
+      Localhost.localhost.setTitle(title);
+    }
+    document.title = title;
+  }
+
   UI.prototype.onError  = function(err) {
     var self = this;
     Util.message( err, Util.Msg.Error );
@@ -1716,7 +1724,7 @@ var UI = (function() {
           self.storage = stg;
           self.docName = docName;
           self.docText = file.content;
-          document.title = "Madoko" + (window.tabStorage.tabNo > 1 ? "/" + window.tabStorage.tabNo.toString() : "") + " - " + Util.stemname(self.docName);
+          self.setTitle( "Madoko" + (window.tabStorage.tabNo > 1 ? "/" + window.tabStorage.tabNo.toString() : "") + " - " + Util.stemname(self.docName) );
 
           // initialize citations
           self.storage.forEachFile( function( file ) {
