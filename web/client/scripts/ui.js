@@ -7,15 +7,16 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/date","../scripts/util","../scripts/tabStorage",
-        "../scripts/storage","../scripts/spellcheck","../scripts/errormenu",
+        "../scripts/storage","../scripts/spellcheck","../scripts/errormenu","../scripts/remote-localhost",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
-        function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Range,Selection,ReplaceCommand,Editor,CustomHover) {
+        function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Localhost,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
 
 // Constants
 var rxTable = /^[ \t]{0,3}[\|\+]($|.*[\|\+][ \t]*$)/m;
 
 var isFirefox = /\bfirefox/i.test(navigator.userAgent);
+var isIE      = Object.hasOwnProperty.call(window, "ActiveXObject");
 
 // Key binding
 var KeyMask = { ctrlKey: 0x1000, altKey: 0x2000, shiftKey: 0x4000, metaKey: 0x8000 }
@@ -114,7 +115,7 @@ var UI = (function() {
     self.state  = State.Init;
     self.editor = null;
     self.app  = document.getElementById("main");
-        
+            
     self.refreshRate = 500;
     self.serverRefreshRate = 2500;
     self.runner = runner;
@@ -160,6 +161,16 @@ var UI = (function() {
     }).always( function() {
       self.state = State.Normal;
     });
+  }
+
+  UI.prototype.reload = function(force) {
+    var self = this; 
+    if (Localhost.localhost.hosted) {
+      Localhost.localhost.reload(force);
+    }
+    else {
+      window.location.reload( force );
+    }
   }
 
   UI.prototype.onError  = function(err) {
@@ -384,16 +395,18 @@ var UI = (function() {
     self.lastViewRenderWasSlow = false;
 
     // listen to application cache    
-    self.appUpdateReady = false;
+    self.appUpdateReady = false; 
     if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
       // reload immediately if an update is ready 
-      window.location.reload();
+      self.reload(true);
     }
     else {
       window.applicationCache.addEventListener( "updateready", function(ev) {
         if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
-          window.applicationCache.swapCache();
-          self.appUpdateReady = true;
+          if (!self.appUpdateReady) {
+            window.applicationCache.swapCache();
+            self.appUpdateReady = true;
+          } 
         }           
       });
     }
@@ -771,7 +784,7 @@ var UI = (function() {
       if (self.state === State.Normal && self.appUpdateReady) {
         self.appUpdateReady = false;        
         Util.message("Madoko has been updated. Please reload.", Util.Msg.Status);     
-        window.location.reload(true);        // force reload. TODO: ask the user? show a sticky status message?   
+        self.reload(true);
       }
 
       // check the version number on the server every minute
@@ -786,18 +799,22 @@ var UI = (function() {
           if (self.version.digest === version.digest) return;
           if (self.version.updateDigest === version.digest) { // are we updating right now to this version?
             // firefox doesn't reliably send a update ready event, check here also. 
-            if (window.applicationCache.status === window.applicationCache.UPDATEREADY || 
-                window.applicationCache.status === window.applicationCache.IDLE)  // this is for Firefox which doesn't update the status correctly
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY)
+                //|| window.applicationCache.status === window.applicationCache.IDLE)  // this is for Firefox which doesn't update the status correctly
             {
-              self.appUpdateReady = true;
               window.applicationCache.swapCache();
+              self.appUpdateReady = true;              
             }
-            return;
+            else if (isFirefox && window.applicationCache.status === window.applicationCache.IDLE) {
+              self.version.digest = version.digest; // prevent further alerts 
+              alert("Madoko has updated but Firefox has a bug preventing it to update automatically.\nClear your history -- in particular the Madoko application cache -- and reload.");              
+            }
           }
-          
-          Util.message("Downloading updates...", Util.Msg.Status);
-          self.version.updateDigest = version.digest; // remember we update to this version
-          window.applicationCache.update(); // update the cache -- will trigger a reload later on.                     
+          else {
+            self.version.updateDigest = version.digest; // remember we update to this version
+            window.applicationCache.update(); // update the cache -- will trigger a reload later on.                     
+            Util.message("Downloading updates...", Util.Msg.Status);
+          }
         });
       }
     };
@@ -4470,7 +4487,12 @@ var symbolsMath = [
     var self = this;
     // we use "*" since sandboxed iframes have a null origin
     if (self.view) {
-      self.view.contentWindow.postMessage(JSON.stringify(ev),"*");
+      if (ev.eventType==="reload" && isIE && Localhost.localhost.hosted) {
+        self.view.src = self.view.src; // IE reloads the iframe as top-window otherwise :-(
+      }
+      else {
+        self.view.contentWindow.postMessage(JSON.stringify(ev),"*");
+      }
     }
   }
 
