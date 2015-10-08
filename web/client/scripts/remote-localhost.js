@@ -15,22 +15,29 @@ var FrameRemote = (function() {
     if (!params) params = {};
 
     self.hostWindow = params.hostWindow || window.parent;
-    
-    if (params.origin) {
-      self.origin = params.origin;
-    }
-    else if (window.location.ancestorOrigins !== undefined &&
-             window.location.ancestorOrigins.length===1) {
-      self.origin = window.location.ancestorOrigins[0];
-    }
-    else if (document.domain) {
-      self.origin = document.domain;
-    }
     self.hosted = (window !== window.top);
     self.user   = {};
     self.unique = 1;
     self.promises = {};
-
+    self.origin = null;
+    if (self.hosted) {
+      if (params.origin) {
+        self.origin = params.origin;
+      }
+      else if (window.location.ancestorOrigins !== undefined &&
+               window.location.ancestorOrigins.length===1) {
+        self.origin = window.location.ancestorOrigins[0];
+      }
+      else if (document.referrer) {
+        var parser = document.createElement("a");
+        parser.href = document.referrer;
+        self.origin = parser.protocol + "//" + parser.host;
+      }
+      else {
+        self.hosted = false;
+      }
+    }
+    
     if (!self.hosted) return;
     window.addEventListener( "message", function(ev) {
       if (ev.origin !== self.origin) return;
@@ -98,7 +105,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.login = function() {
     var self = this;
-    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-disk'>madoko-disk</a> program." });
+    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-local'>madoko-local</a> program." });
     return self.postMessage( { method: "login" } ).then( function(res) {
       self.user = res;
       return;      
@@ -122,6 +129,11 @@ var FrameRemote = (function() {
     return Promise.resolved(self.user);
   }
 
+  FrameRemote.prototype.reload = function(force) {
+    var self = this;
+    self.request("reload", { force: force });
+  }
+
   return FrameRemote;
 })();
 
@@ -135,27 +147,27 @@ var localhost = new FrameRemote({
 ---------------------------------------------- */
 
 function pullFile(fname,binary) {
-  return localhost.request( "get/pull", { path: fname, binary: binary } ).then( function(content) {
+  return localhost.request( "GET:readfile", { path: fname, binary: binary } ).then( function(content) {
     return { content: content, path: fname };
   });
 }
 
 function fileInfo(fname) {
-  return localhost.request( "get/metadata", { path: fname });
+  return localhost.request( "GET:metadata", { path: fname });
 }
 
 function folderInfo(fname) {
-  return localhost.request( "get/metadata", { path: fname } );
+  return localhost.request( "GET:metadata", { path: fname } );
 }
 
-function pushFile(fname,content) {
-  return localhost.request( "put/push", { path: fname }, content ).then( function(info) {
+function pushFile(fname,content,remoteTime) {
+  return localhost.request( "PUT:writefile", { path: fname, remoteTime: (remoteTime ? remoteTime.toISOString() : null) }, content ).then( function(info) {
     return info;
   });  
 }
 
 function createFolder( dirname ) {
-  return localhost.request( "post/createfolder", { path: dirname }).then( function(info) {
+  return localhost.request( "POST:createfolder", { path: dirname }).then( function(info) {
     return true; // freshly created
   }, function(err) {
     if (err && err.httpCode === 403) return false;
@@ -217,6 +229,7 @@ var Localhost = (function() {
   Localhost.prototype.readonly = false;
   Localhost.prototype.canSync  = true;
   Localhost.prototype.needSignin = false;
+  Localhost.prototype.hasAtomicPush = true;
 
   Localhost.prototype.getFolder = function() {
     var self = this;
@@ -254,9 +267,9 @@ var Localhost = (function() {
     return localhost.getUserName();
   }
 
-  Localhost.prototype.pushFile = function( fpath, content ) {
+  Localhost.prototype.pushFile = function( fpath, content, remoteTime ) {
     var self = this;
-    return pushFile( self.fullPath(fpath), content ).then( function(info) {
+    return pushFile( self.fullPath(fpath), content, remoteTime ).then( function(info) {
       return { 
         path: info.path,
         createdTime: Date.dateFromISO(info.modified),        
@@ -329,6 +342,7 @@ return {
   type     : type,
   logo     : logo,
   Localhost  : Localhost,
+  localhost  : localhost,
 }
 
 });
