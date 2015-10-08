@@ -29,14 +29,11 @@ var FrameRemote = (function() {
         self.origin = window.location.ancestorOrigins[0];
       }
       else if (document.referrer) {
-        var parser = document.createElement("a");
-        parser.href = document.referrer;
-        self.origin = parser.protocol + "//" + parser.host;
-      }
-      else {
-        self.hosted = false;
+        var cap = /^((https?:\/\/)?[^?#\/\s]+)/.exec(document.referrer);
+        if (cap) self.origin = cap[0]; 
       }
     }
+    if (!self.origin) self.hosted = false;
     
     if (!self.hosted) return;
     window.addEventListener( "message", function(ev) {
@@ -56,7 +53,7 @@ var FrameRemote = (function() {
       params: params
     };
     if (content) info.content = content;
-    return self.postMessage( info, params.timeout);
+    return self.postMessage( info, params.timeout || 10000);
   }
 
   FrameRemote.prototype.postMessage = function( info, timeout ) {
@@ -95,7 +92,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.connect = function() {
     var self = this;
-    return self.postMessage( { method: "login" } ).then( function(res) {
+    return self.postMessage( { method: "login" }, 5000 ).then( function(res) {
       self.user = res;
       return 0;
     }, function(err) {
@@ -106,7 +103,7 @@ var FrameRemote = (function() {
   FrameRemote.prototype.login = function() {
     var self = this;
     if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-local'>madoko-local</a> program." });
-    return self.postMessage( { method: "login" } ).then( function(res) {
+    return self.postMessage( { method: "login" }, 5000 ).then( function(res) {
       self.user = res;
       return;      
     });
