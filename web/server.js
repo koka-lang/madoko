@@ -324,7 +324,7 @@ app.use(function(req, res, next){
   }
   else {
     // Don't allow content to be loaded in an iframe
-    res.setHeader("X-Frame-Options","ALLOW-FROM http://localhost");              
+    // res.setHeader("X-Frame-Options","ALLOW-FROM http://localhost");              
 
     // index uses bootstrap theme
     if (req.path==="/" || req.path==="/index.html") {
