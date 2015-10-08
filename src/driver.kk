@@ -81,7 +81,7 @@ public function processContent( inName : string, outName : string, content : str
     // copy early since async latex may start for math
     if (mopts.copyStyles && !(xopts.sandbox)) {
       tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
-      if (xopts.tex || xopts.mathmode.isStatic) {
+      if (xopts.tex || mopts.mathmode.isStatic) {
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
                         Just(md) -> md.snd.toLower == "true"  
                         _ -> False
