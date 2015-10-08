@@ -147,13 +147,11 @@ function createFromTemplate( storage, docName, template )
 }
 
 function login(storage, message, header) {
-  if (!storage) return Promise.resolved();
+  if (!storage || !storage.remote.needSignin) return Promise.resolved();
   var params = {
     command: "signin",
   }
-  if (storage.remote.needSignin) {
-    params.remote  = storage.remote.type();
-  }
+  params.remote  = storage.remote.type();
   if (message) params.message = message;
   if (header) params.header = header;
 
@@ -1076,10 +1074,10 @@ var Storage = (function() {
 
   Storage.prototype._syncWriteBack = function( file, remoteTime, message ) {
     var self = this;
-    return pushAtomic( file.globalPath, remoteTime ).then( function() {
+    return self.pushAtomic( file.globalPath, remoteTime ).then( function() {
       // note: if the remote file is deleted and the local one unmodified, we may choose to delete locally?
       var file0 = Util.copy(file);
-      return self.pushFile( file0 ).then( function(info) {
+      return self.pushFile( file0, remoteTime ).then( function(info) {
         //newFile.modified = false;
         var file1 = self.files.get(file.path);
         if (file1) { // could be deleted in the mean-time?
@@ -1100,7 +1098,7 @@ var Storage = (function() {
             var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
             return Promise.guarded( unmodified,
               function() {  // this happens if the file equal and not updated on the server; release our lock in that case
-                return pushAtomic( file0.globalPath, remoteTime, true );
+                return self.pushAtomic( file0.globalPath, remoteTime, true );
               },
               function() {
                 return self._syncMsg(file, message + (unmodified ? " (unmodified)" : ""));     
@@ -1117,9 +1115,17 @@ var Storage = (function() {
     });
   }
 
-  Storage.prototype.pushFile = function( file ) {
+  Storage.prototype.pushAtomic = function( file, remoteTime, release ) {
     var self = this;
-    return self.remote.pushFile(file.path, Encoding.decode( file.encoding, file.content ));
+    if (self.remote.hasAtomicPush) 
+      return Promise.resolved();
+    else 
+      return pushAtomic( file, remoteTime, release );
+  }
+
+  Storage.prototype.pushFile = function( file, remoteTime ) {
+    var self = this;
+    return self.remote.pushFile(file.path, Encoding.decode( file.encoding, file.content ), remoteTime );
   }
 
   Storage.prototype._syncMsg = function( file, msg, action ) {
