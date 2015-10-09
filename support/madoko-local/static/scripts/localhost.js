@@ -15,6 +15,7 @@ var config = {
   username: "(local user)",
   userid  : "(local user)",
   origin  : "",
+  mount   : "",  
   secret  : urlParamsDecode(window.location.search).secret || "",
 };
 
@@ -163,7 +164,7 @@ function jsonRequest( info, cont ) {
 		if (!info.params) info.params = {};
 		var cap = /^(GET|PUT|POST):(\w+)$/.exec(info.method);
 		if (info.method === "login" || info.method === "connect") {
-			cont(null,{ name: config.username, id : config.userid });
+			cont(null,{ name: config.username, id : config.userid, mount: config.mount });
 		}
 		else if (info.method === "reload") {
 			window.location.reload(info.params.force);
@@ -213,7 +214,7 @@ window.addEventListener( "message", function(ev) {
 });
 
 // start off by requesting configuration info
-jsonRequest("GET:config", function(err,info) {
+jsonRequest( { method: "GET:config", params: { show: true } }, function(err,info) {
 	if (err) {
 		document.body.textContent = err.toString();
 	}
@@ -221,6 +222,7 @@ jsonRequest("GET:config", function(err,info) {
 		config.origin   = info.origin;
 		config.username = info.username;
 		config.userid   = info.userid;
+		config.mount    = info.mount;
 		frame.setAttribute("src", config.origin + "/editor.html");
 	}
 });

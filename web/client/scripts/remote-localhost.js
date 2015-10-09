@@ -20,6 +20,7 @@ var FrameRemote = (function() {
     self.unique = 1;
     self.promises = {};
     self.origin = null;
+    self.mount  = null;
     if (self.hosted) {
       if (params.origin) {
         self.origin = params.origin;
@@ -59,7 +60,9 @@ var FrameRemote = (function() {
   FrameRemote.prototype.postMessage = function( info, timeout ) {
     var self = this;
     if (!self.hosted) return Promise.rejected("Madoko can only access the local file system through a local host");
-
+    //if (info.params && info.params.mount && self.mount && info.params.mount !== self.mount) {
+    //  return Promise.rejected( errorMessageMount( self.mount, info.params.mount ) );
+    // }
     var promise = new Promise();
     var id = self.unique++;
     info.messageId = id; 
@@ -90,22 +93,25 @@ var FrameRemote = (function() {
     }
   }
 
-  FrameRemote.prototype.connect = function() {
+  FrameRemote.prototype.connect = function(_mount) {
     var self = this;
-    return self.postMessage( { method: "login" }, 5000 ).then( function(res) {
-      self.user = res;
-      return 0;
-    }, function(err) {
-      return 401;
-    });
+    if (!self.hosted) return { code: 401 };
+    return self.login().then( function(realmount) {
+      return { mount: realmount, code: 0 };
+    });    
   }
 
-  FrameRemote.prototype.login = function() {
+  FrameRemote.prototype.login = function(mount) {
     var self = this;
     if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-local'>madoko-local</a> program." });
-    return self.postMessage( { method: "login" }, 5000 ).then( function(res) {
-      self.user = res;
-      return;      
+    return self.postMessage( { method: "GET:config", params: { mount: mount } }, 5000 ).then( function(res) {
+      self.user = {
+        username: res.username,
+        userid  : res.userid,
+        email   : res.email,
+      };
+      self.mount = res.mount;
+      return res.mount;
     });
   }
 
@@ -148,28 +154,28 @@ var localhost = new FrameRemote({
   Basic file API
 ---------------------------------------------- */
 
-function pullFile(fname,binary) {
-  return localhost.request( "GET:readfile", { path: fname, binary: binary } ).then( function(content) {
+function pullFile(mount,fname,binary) {
+  return localhost.request( "GET:readfile", { mount: mount, path: fname, binary: binary } ).then( function(content) {
     return { content: content, path: fname };
   });
 }
 
-function fileInfo(fname) {
-  return localhost.request( "GET:metadata", { path: fname });
+function fileInfo(mount,fname) {
+  return localhost.request( "GET:metadata", { mount: mount, path: fname });
 }
 
 function folderInfo(fname) {
   return localhost.request( "GET:metadata", { path: fname } );
 }
 
-function pushFile(fname,content,remoteTime) {
-  return localhost.request( "PUT:writefile", { path: fname, remoteTime: (remoteTime ? remoteTime.toISOString() : null) }, content ).then( function(info) {
+function pushFile(mount, fname,content,remoteTime) {
+  return localhost.request( "PUT:writefile", { mount: mount, path: fname, remoteTime: (remoteTime ? remoteTime.toISOString() : null) }, content ).then( function(info) {
     return info;
   });  
 }
 
-function createFolder( dirname ) {
-  return localhost.request( "POST:createfolder", { path: dirname }).then( function(info) {
+function createFolder( mount, dirname ) {
+  return localhost.request( "POST:createfolder", { mount: mount, path: dirname }).then( function(info) {
     return true; // freshly created
   }, function(err) {
     if (err && err.httpCode === 403) return false;
@@ -190,7 +196,7 @@ function createAt( folder ) {
 }
 
 function unpersist(obj) {
-  return new Localhost(obj.folder);
+  return new Localhost(obj.folder,obj.mount);
 }
 
 function type() {
@@ -207,9 +213,10 @@ function logo() {
 
 var Localhost = (function() {
 
-  function Localhost( folder ) {
+  function Localhost( folder, mount ) {
     var self = this;
     self.folder = folder || "";
+    self.mount  = mount;
   }
 
   Localhost.prototype.createNewAt = function(folder) {
@@ -245,7 +252,7 @@ var Localhost = (function() {
 
   Localhost.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder };
+    return { type: self.type(), folder: self.folder, mount: self.mount };
   }
 
   Localhost.prototype.fullPath = function(fname) {
@@ -254,11 +261,18 @@ var Localhost = (function() {
   }
 
   Localhost.prototype.connect = function() {
-    return localhost.connect();
+    var self = this;
+    return localhost.connect(self.mount).then( function(res) {
+      if (!self.mount && res.mount) self.mount = res.mount;
+      return res.code;
+    });
   }
 
   Localhost.prototype.login = function() {
-    return localhost.login();
+    var self = this;
+    return localhost.login(self.mount).then( function(mount) {
+      if (!self.mount && mount) self.mount = mount;
+    });
   }
 
   Localhost.prototype.logout = function(force) {
@@ -271,7 +285,7 @@ var Localhost = (function() {
 
   Localhost.prototype.pushFile = function( fpath, content, remoteTime ) {
     var self = this;
-    return pushFile( self.fullPath(fpath), content, remoteTime ).then( function(info) {
+    return pushFile( self.mount, self.fullPath(fpath), content, remoteTime ).then( function(info) {
       if (!info || !info.path) {
         throw new Error("illegal return value");
       }
@@ -286,7 +300,7 @@ var Localhost = (function() {
     var self = this;
     return self.getRemoteTime(fpath).then( function(date) { // TODO: can we make this one request?
       if (!date) return Promise.rejected("file not found: " + fpath);
-      return pullFile( self.fullPath(fpath), binary ).then( function(info) {
+      return pullFile( self.mount, self.fullPath(fpath), binary ).then( function(info) {
         var file = {
           path: fpath,
           content: info.content,
@@ -300,7 +314,7 @@ var Localhost = (function() {
 
   Localhost.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
-    return fileInfo( self.fullPath(fpath) ).then( function(info) {
+    return fileInfo( self.mount, self.fullPath(fpath) ).then( function(info) {
       return (info && !info.is_deleted ? Date.dateFromISO(info.modified) : null);
     }, function(err) {
       if (err && err.httpCode===404) return null;
@@ -311,7 +325,7 @@ var Localhost = (function() {
   Localhost.prototype.createSubFolder = function(dirname) {
     var self = this;
     var folder = self.fullPath(dirname);
-    return createFolder(folder).then( function(created) {
+    return createFolder(self.mount,folder).then( function(created) {
       return { folder: folder, created: created };
     });
   }

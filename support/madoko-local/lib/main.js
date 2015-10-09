@@ -41,10 +41,10 @@ var day         = 24*hour;
 var config = {
   username  : "",
   userid    : "",
-  rootDir   : Path.dirname(Path.dirname(Util.programDir())), // serve static content from here
-  homeDir   : Util.osHomeDir(), // user home directory
-  configDir : null,             // save log and config info here ($HOME/.madoko)
-  localDir  : null,             // the local directory to give access to.
+  installdir: Path.dirname(Path.dirname(Util.programDir())), // serve static content from here
+  homedir   : Util.osHomeDir(), // user home directory
+  configdir : null,             // save log and config info here ($HOME/.madoko)
+  mountdir  : null,             // the local directory to give access to.
   port      : 80,
   origin    : "https://www.madoko.net",
   secret    : null, 
@@ -63,13 +63,14 @@ Options
   .option("--port <n>", "Port number (=80)", parseInt )
   .option("--origin <url>", "Serve <url> (" + config.origin + ")")
   .option("--homedir <dir>", "Use <dir> as user home directory (for logging)")
+  .option("--verbose","Output tracing messages")
   .parse(process.argv);
 
 if (Options.homedir) config.homedir = Options.homedir;
-config.configDir = Util.combine(config.homeDir, ".madoko");
+config.configdir = Util.combine(config.homedir, ".madoko");
 
 // Try to read local config file
-var configFile  = Path.join(config.configDir,"config.json");
+var configFile  = Path.join(config.configdir,"config.json");
 var localConfig = Util.jsonParse(Util.readFileSync(configFile, {encoding:"utf8"}, "{}" ));
 
 if (typeof Options.secret === "string") {
@@ -82,7 +83,7 @@ else if (typeof localConfig.secret === "string" && Options.secret !== true) {
 else {
   // generate a secret
   config.secret = Util.secureHash(12);    
-  
+
   // write back secret to localConfig...
   localConfig.secret = config.secret;
   Util.writeFileSync(configFile, JSON.stringify(localConfig), {encoding:"utf8",ensuredir:true});
@@ -106,21 +107,38 @@ else config.userid = config.username;
 
 // Verify local directory
 if (Options.args && Options.args.length===1) {
-  config.localDir = Options.args[0];
+  config.mountdir = Options.args[0];
+  config.writebackDir = true;
 }
 else if (!Options.args || Options.args.length === 0) {
-  if (typeof localConfig.localdir === "string") config.localDir = localConfig.localdir;
-  else config.localDir = process.cwd();
+  if (typeof localConfig.mountdir === "string") config.mountdir = localConfig.mountdir;
+  else {
+    config.mountdir = process.cwd();
+    config.writebackDir = true;
+  }
 }
 
-if (!config.localDir || !Util.fileExistSync(config.localDir)) {
-  console.log("Error: unable to find local root directory: " + config.localDir);
+
+if (!config.mountdir || !Util.fileExistSync(config.mountdir)) {
+  console.log("Error: unable to find local root directory: " + config.mountdir);
   process.exit(1);
+}
+config.mountdir = Path.resolve(config.mountdir);
+
+// write back local root directory
+if (config.writebackDir) {
+  localConfig.mountdir = config.mountdir;
+  Util.writeFileSync(configFile, JSON.stringify(localConfig), {encoding:"utf8", ensuredir:true});
 }
 
 // Logging
-config.log = new Log.Log( config.configDir, config.limits.logFlush );
+config.log = new Log.Log( config.configdir, config.limits.logFlush );
 
+
+function trace(msg) {
+  if (!Options.verbose) return;
+  console.log( "-- " + msg);
+}
 
 // -------------------------------------------------------------
 // Error handling
@@ -207,6 +225,19 @@ app.use(function(req, res, next){
 });
 
 app.use(function(req, res, next){
+  if (config.mountdir && req.query && req.query.mount) {
+    if (req.query.mount !== config.mountdir) {
+      throw { httpCode:401, message: 
+        ["Document was previously served from a different local root directory!",
+         "  Previous root: " + req.query.mount,
+         "  Current root : " + config.mountdir].join("\n") 
+      }; 
+    }
+  }
+  next();
+});
+
+app.use(function(req, res, next){
   // extra check: only serve to local host
   if (req.ip !== req.connection.remoteAddress || req.ip !== localHostIP) {
     throw { httpCode:401, message: "only serving localhost" };
@@ -272,7 +303,7 @@ function checkValidPath(fpath) {
 
 function getLocalPath(fpath) {
   checkValidPath(fpath);
-  return Util.combine(config.localDir,fpath);
+  return Util.combine(config.mountdir,fpath);
 }
 
 // -------------------------------------------------------------
@@ -280,11 +311,12 @@ function getLocalPath(fpath) {
 // -------------------------------------------------------------
 
 function getConfig(req,res) {
-  console.log("** locally host madoko to: " + req.connection.remoteAddress );
+  if (req.query.show) console.log("** locally host madoko to: " + req.connection.remoteAddress );
   res.send( {
     origin  : config.origin,
     username: config.username,
     userid  : config.userid,
+    mount   : config.mountdir,
   });
 }
 
@@ -312,13 +344,12 @@ function getMetadata(req,res) {
       });
     }
     else {
-      if (finfo) console.log("**file meta: " + finfo.path + ", modified: " + finfo.modified);
+      if (finfo) trace("file meta: " + finfo.path + ", modified: " + finfo.modified);
       return finfo;
     }
   }, function(err) {
     throw err;
   }).then( function(finfo) {
-    //console.log("done: " + JSON.stringify(finfo));          
     res.send(finfo);
   });
 }
@@ -341,20 +372,20 @@ function putWriteFile(req,res) {
   console.log("write file   : " + fpath);
   return Util.fstat( fpath ).then( function(stat) {
     if (stat && rtime) {
-      console.log("**file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
+      //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
-        //console.log("**file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
+        trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
         throw new Error("File was modified concurrently; could not save.");
       }
     }
     return Promise.guarded( stat==null, function() {
       return Util.ensureDir(Path.dirname(fpath));
     }, function() {
-      //console.log("** body type: " + typeof req.body + " (" + (req.body instanceof Buffer.Buffer ? "is Buffer" : "not a Buffer") + ")");
+      //trace("body type: " + typeof req.body + " (" + (req.body instanceof Buffer.Buffer ? "is Buffer" : "not a Buffer") + ")");
       return Util.writeFile( fpath, req.body ).then( function() {
         return Util.fstat(fpath).then( function(stat) {
           if (!stat) throw new Error("File could not be saved");
-          console.log(" final mtime: " + stat.mtime.toISOString());
+          trace(" final mtime: " + stat.mtime.toISOString());
           res.send({ 
             path: req.query.path, 
             modified: stat.mtime.toISOString(),
@@ -384,7 +415,7 @@ function postCreateFolder(req,res) {
 // -------------------------------------------------------------
 
 function cspReport(req,res) {
-  console.log(req.body);
+  trace(req.body);
   if (config.log) config.log.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   res.send();
 }
@@ -407,9 +438,9 @@ app.post("/report/csp", promise(cspReport));
 var staticOptions = {
   maxAge: 10000,
 }
-var staticClient = Express.static( Util.combine(config.rootDir, "static"), staticOptions);
+var staticClient = Express.static( Util.combine(config.installdir, "static"), staticOptions);
 app.use('/', function(req,res,next) {
-  console.log("serve static : " + req.url);
+  trace("serve static : " + req.url);
   return staticClient(req,res,next);
 });
 
@@ -426,7 +457,7 @@ var accessPoint = localHost + (config.secret ? "?secret=" + encodeURIComponent(c
 
 console.log("listening on          : " + localHost );
 console.log("connecting securely to: " + config.origin );
-console.log("serving files under   : " + config.localDir );
+console.log("serving files under   : " + config.mountdir );
 console.log("");
 console.log("access server at      : " + accessPoint );
 console.log("");
