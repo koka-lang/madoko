@@ -815,7 +815,7 @@ var UI = (function() {
             }
             else if (isFirefox && window.applicationCache.status === window.applicationCache.IDLE) {
               self.version.digest = version.digest; // prevent further alerts 
-              alert("Madoko has updated but Firefox has a bug preventing it to update automatically.\nClear your history -- in particular the Madoko application cache -- and reload.");              
+              alert("Madoko has updated but Firefox has a bug preventing it to update automatically.\nClear your history (in particular the 'Offline website data')  -- and reload.");              
             }
           }
           else {
