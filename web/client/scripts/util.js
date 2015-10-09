@@ -198,6 +198,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   function assert( pred, msg ) {
     if (!pred) {
       console.log("assertion failed: " + msg);
+      throw( "assertion failed: " + msg);
     }
   }
 
