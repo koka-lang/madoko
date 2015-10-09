@@ -67,7 +67,7 @@ var FrameRemote = (function() {
     var timeoutId = 0;
     if (timeout && timeout > 1) {
       timeoutId = setTimeout( function() { 
-        self._onMessage( { messageId: id, timedOut: true } );            
+        self._onMessage( { messageId: id, error: "remote request timed out" } );            
       }, timeout);
     }
     self.promises[id] = { promise: promise, timeoutId: timeoutId };
@@ -272,6 +272,9 @@ var Localhost = (function() {
   Localhost.prototype.pushFile = function( fpath, content, remoteTime ) {
     var self = this;
     return pushFile( self.fullPath(fpath), content, remoteTime ).then( function(info) {
+      if (!info || !info.path) {
+        throw new Error("illegal return value");
+      }
       return { 
         path: info.path,
         createdTime: Date.dateFromISO(info.modified),        
