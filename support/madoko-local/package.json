@@ -1,0 +1,56 @@
+{
+  "name"        : "madoko-local",
+  "author"      : "Daan Leijen, Microsoft Research",
+  "version"     : "0.1.1-alpha",
+  "homepage"    : "http://madoko.codeplex.com",
+  "description" : "Madoko-Local provides local disk access to Madoko.net",
+  "licenses": [{
+    "type"      : "Apache License 2.0", 
+    "url"       : "http://www.apache.org/licenses/LICENSE-2.0.html"
+  }],
+  "keywords": [
+      "Madoko",
+      "Markdown",
+      "LaTeX",
+      "Koka", 
+      "Microsoft",
+      "Scholarly",
+      "Academic",
+      "Local"
+  ],
+  "preferGlobal": true,
+  "main": "./lib/cli.js",
+  "bin": {
+    "madoko-local": "./lib/cli.js"
+  },
+  "directories": {
+    "bin": "./lib"
+  },
+  "files": [
+    "lib",
+    "static",
+    "readme.md",
+    "license.txt"
+  ],
+  "engines" : { 
+    "node": ">=0.10.0" 
+  },
+  "dependencies": {
+    "amdefine"    : ">=0.0.4",    
+    "requirejs"   : ">=2.1",
+    "mkdirp"      : ">=0.3.5",
+    "commander"   : ">=2.8.1",
+    "express"     : ">=4.1.1",
+    "body-parser" : ">=1.0.2",
+    "cookie-session" : "=1.0.2",
+    "os-homedir"  : ">=1.0.0",
+    "open"        : ">=0.0.5"
+  },
+  "devDependencies": {
+    "jake"        : ">=0.7.6"
+  },
+  "repository": {
+    "type": "hg", 
+    "url" : "https://hg.codeplex.com/madoko"
+  }
+}

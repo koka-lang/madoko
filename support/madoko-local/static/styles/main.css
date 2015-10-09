@@ -1,0 +1,24 @@
+/*---------------------------------------------------------------------------
+  Copyright 2015 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+body {
+  background-color: Gainsboro;
+  font-family: "Segoe UI", sans-serif;
+}
+
+
+html,body,#madokoframe {
+  padding: 0pt;
+  margin : 0pt;
+  border : none;
+  width  : 100%;
+  height : 100%;
+}
+
+html { 
+  overflow: hidden;
+}
