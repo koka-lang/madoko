@@ -22,7 +22,7 @@ var mkdirp    = require("mkdirp");
 
 // local imports
 var Promise     = require("./promise.js");
-var dateFromISO = require("./date.js");
+var dateFromISO = require("./date.js").dateFromISO;
 
 
 // -------------------------------------------------------------
