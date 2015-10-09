@@ -682,6 +682,7 @@ var Storage = (function() {
   Storage.prototype._updateFile = function( finfo ) {
     var self = this;
     Util.assert(typeof finfo==="object");
+    Util.assert(typeof finfo.path === "string" && finfo.path );
     finfo.path    = finfo.path || "unknown.mdk";
     finfo.content = finfo.content || "";
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
