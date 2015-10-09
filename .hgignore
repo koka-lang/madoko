@@ -30,6 +30,7 @@ syntax:regexp
 ^web/log/
 ^web/run/
 ^web/node_modules/
+^support/madoko-local/node_modules
 ^test/new/out
 ^test/tex
 ^test/latex/out
