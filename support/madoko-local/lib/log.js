@@ -27,7 +27,7 @@ var Log = (function(){
 
   Log.prototype.message = function( msg, level ) {
     var self = this;
-    self.entry( { type: "message", level: level, message: msg, date: new Date().toISOString() });
+    self.entry( { type: "message", level: level, message: msg, /*date: new Date().toISOString()*/ });
     if (level && level > self.verbose) return;
     var pre = (typeof level !== "number" || level <= 0 ? "" : Array(level+1).join("-") + " ");
     console.log( pre + msg );
