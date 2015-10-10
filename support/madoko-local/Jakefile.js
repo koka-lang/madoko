@@ -28,7 +28,7 @@ desc(["build & run madoko-local.",
 task("server", [], function() {
   var args = Array.prototype.slice.call(arguments).join(" ");
   fixVersion();
-  var cmd = nodeExe + " " + mainCli  + " " + args + " ../../test/local";
+  var cmd = nodeExe + " " + mainCli  + " " + args;
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     complete(); 

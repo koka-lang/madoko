@@ -156,7 +156,6 @@ if (config.writebackDir) {
 
 // Logging
 config.log = new Log.Log( config.verbose, config.configdir, config.limits.logFlush );
-var log    = config.log;
 
 
 // -------------------------------------------------------------
@@ -331,8 +330,8 @@ function getLocalPath(fpath) {
 
 function getConfig(req,res) {
   if (req.query.show) {
-    config.log.message("locally host madoko to: " + req.connection.remoteAddress + " (" + req.hostname + ")\n" + 
-                       "serving files under   : " + config.mountdir + "\n");
+    config.log.message("\nlocally host madoko to: " + req.connection.remoteAddress + " (" + req.hostname + ")\n" + 
+                         "serving files under   : " + config.mountdir + "\n");
   }
   res.send( {
     origin  : config.origin,
@@ -347,10 +346,10 @@ function getConfig(req,res) {
 // -------------------------------------------------------------
 
 function getMetadata(req,res) {
-  var root  = req.query.path;
-  var fpath = getLocalPath(root);
+  var relpath = req.query.path;
+  var fpath = getLocalPath(relpath);
   return Util.fstat(fpath).then( function(stat) {
-    var finfo = finfoFromStat(stat,root);
+    var finfo = finfoFromStat(stat,relpath);
     // console.log("read metadata: " + fpath );
     if (finfo && finfo.is_dir) {
       return Util.readDir(fpath).then( function(files) {
@@ -359,7 +358,7 @@ function getMetadata(req,res) {
           finfo.contents = [];
           for(var i = 0; i < stats.length; i++) {
             checkValidPath(files[i]);
-            finfo.contents.push( finfoFromStat(stats[i], Util.combine(root,files[i])) );
+            finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
           }
           return finfo;
         });
@@ -381,22 +380,22 @@ function getMetadata(req,res) {
 // -------------------------------------------------------------
 
 function getReadFile(req,res) {
+  config.log.info("read file    : " + req.query.path);
   var fpath = getLocalPath(req.query.path);
-  config.log.info("read file    : " + fpath);
   return Util.readFile( fpath, { encoding: (req.query.binary ? null : "utf8" ) } ).then( function(data) {
     res.send(data);
   });
 }
 
 function putWriteFile(req,res) {
+  config.log.info("write file   : " + req.query.path);
   var fpath = getLocalPath(req.query.path); 
   var rtime = (typeof req.query.remoteTime === "string" ? Util.dateFromISOString(req.query.remoteTime) : null);
-  config.log.info("write file   : " + fpath);
   return Util.fstat( fpath ).then( function(stat) {
     if (stat && rtime) {
       //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
-        config.log.trace("file write: atomic fail: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
+        config.log.trace("file write: atomic fail: " + req.query.path + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
         throw new Error("File was modified concurrently; could not save.");
       }
     }
@@ -424,8 +423,8 @@ function putWriteFile(req,res) {
 // -------------------------------------------------------------
 
 function postCreateFolder(req,res) {
+  config.log.info("create directory: " + req.query.path);
   var fpath = getLocalPath(req.query.path);
-  config.log.info("create directory: " + fpath);
   return Util.ensureDir(fpath).then( function() {
     res.send({ created: true });
   });

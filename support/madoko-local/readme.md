@@ -63,11 +63,11 @@ Usage:
 
 Arguments:
 
-* [`[mount-directory`]] 
+* [`mount-directory`] 
   The server only provides access to files and
-  subdirectories in this directory but not outside of it. If blank, the
-  last specified directory is used; if this is the first run the current
-  working directory is used.
+  subdirectories under the mount directory but not outside of it. If not
+  given, the last specified directory is used; if this is the first run
+  the current working directory is used.
 
 Options:
 
