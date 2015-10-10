@@ -49,6 +49,7 @@ var config = {
   origin    : "https://www.madoko.net",
   secret    : null, 
   log       : null,             // logging object.
+  verbose   : 0,
   limits    : {
     fileSize    : 64*mb,
     logFlush    : 1*minute,
@@ -63,7 +64,7 @@ Options
   .option("--port <n>", "Port number (=80)", parseInt )
   .option("--origin <url>", "Serve <url> (" + config.origin + ")")
   .option("--homedir <dir>", "Use <dir> as user home directory (for logging)")
-  .option("--verbose","Output tracing messages")
+  .option("--verbose [n]","Output trace messages (0 none, 1 info, 2 debug)", parseInt )
   .parse(process.argv);
 
 if (Options.homedir) config.homedir = Options.homedir;
@@ -104,6 +105,13 @@ else config.username = process.env["USER"] || process.env["USERNAME"] || "(local
 if (localConfig.userid) config.userid = localConfig.userid;
 else config.userid = config.username;
 
+// Verbose
+if (Options.verbose === true) {
+  config.verbose = 1;
+}
+else if (typeof Options.verbose === "number") {
+  config.verbose = Options.verbose;
+}
 
 // Verify local directory
 if (Options.args && Options.args.length===1) {
@@ -118,7 +126,6 @@ else if (!Options.args || Options.args.length === 0) {
   }
 }
 
-
 if (!config.mountdir || !Util.fileExistSync(config.mountdir)) {
   console.log("Error: unable to find local root directory: " + config.mountdir);
   process.exit(1);
@@ -132,13 +139,9 @@ if (config.writebackDir) {
 }
 
 // Logging
-config.log = new Log.Log( config.configdir, config.limits.logFlush );
+config.log = new Log.Log( config.verbose, config.configdir, config.limits.logFlush );
+var log    = config.log;
 
-
-function trace(msg) {
-  if (!Options.verbose) return;
-  console.log( "-- " + msg);
-}
 
 // -------------------------------------------------------------
 // Error handling
@@ -311,7 +314,10 @@ function getLocalPath(fpath) {
 // -------------------------------------------------------------
 
 function getConfig(req,res) {
-  if (req.query.show) console.log("** locally host madoko to: " + req.connection.remoteAddress );
+  if (req.query.show) {
+    config.log.message("locally host madoko to: " + req.connection.remoteAddress + "(" + req.hostname + ")\n" + 
+                       "local mount directory : " + config.mountdir + "\n");
+  }
   res.send( {
     origin  : config.origin,
     username: config.username,
@@ -344,7 +350,7 @@ function getMetadata(req,res) {
       });
     }
     else {
-      if (finfo) trace("file meta: " + finfo.path + ", modified: " + finfo.modified);
+      if (finfo) config.log.trace("file meta: " + finfo.path + ", modified: " + finfo.modified);
       return finfo;
     }
   }, function(err) {
@@ -360,7 +366,7 @@ function getMetadata(req,res) {
 
 function getReadFile(req,res) {
   var fpath = getLocalPath(req.query.path);
-  console.log("read file    : " + fpath);
+  config.log.info("read file    : " + fpath);
   return Util.readFile( fpath, { encoding: (req.query.binary ? null : "utf8" ) } ).then( function(data) {
     res.send(data);
   });
@@ -369,12 +375,12 @@ function getReadFile(req,res) {
 function putWriteFile(req,res) {
   var fpath = getLocalPath(req.query.path); 
   var rtime = (typeof req.query.remoteTime === "string" ? Util.dateFromISOString(req.query.remoteTime) : null);
-  console.log("write file   : " + fpath);
+  config.log.info("write file   : " + fpath);
   return Util.fstat( fpath ).then( function(stat) {
     if (stat && rtime) {
       //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
-        trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
+        config.log.trace("file write: atomic fail: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
         throw new Error("File was modified concurrently; could not save.");
       }
     }
@@ -385,7 +391,7 @@ function putWriteFile(req,res) {
       return Util.writeFile( fpath, req.body ).then( function() {
         return Util.fstat(fpath).then( function(stat) {
           if (!stat) throw new Error("File could not be saved");
-          trace(" final mtime: " + stat.mtime.toISOString());
+          config.log.trace("file write: final mtime: " + stat.mtime.toISOString());
           res.send({ 
             path: req.query.path, 
             modified: stat.mtime.toISOString(),
@@ -403,7 +409,7 @@ function putWriteFile(req,res) {
 
 function postCreateFolder(req,res) {
   var fpath = getLocalPath(req.query.path);
-  console.log("create directory: " + fpath);
+  config.log.info("create directory: " + fpath);
   return Util.ensureDir(fpath).then( function() {
     res.send({ created: true });
   });
@@ -415,8 +421,8 @@ function postCreateFolder(req,res) {
 // -------------------------------------------------------------
 
 function cspReport(req,res) {
-  trace(req.body);
-  if (config.log) config.log.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
+  config.log.trace(req.body);
+  config.log.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   res.send();
 }
 
@@ -440,7 +446,7 @@ var staticOptions = {
 }
 var staticClient = Express.static( Util.combine(config.installdir, "static"), staticOptions);
 app.use('/', function(req,res,next) {
-  trace("serve static : " + req.url);
+  config.log.trace("serve static : " + req.url);
   return staticClient(req,res,next);
 });
 

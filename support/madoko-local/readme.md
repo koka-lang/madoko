@@ -3,9 +3,10 @@ Title 	  	: Madoko Local
 Author      : Daan Leijen
 Heading Base: 2
 -->
+
 # Madoko Local
 
-**Currently still in testing stage -- use with care.**
+**Currently still in testing stage -- use with care and update often.**
 
 This program provides local disk access to the [Madoko.net] environment.
 This can be convenient if you do not want to use

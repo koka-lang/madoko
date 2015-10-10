@@ -17,12 +17,31 @@ var Util = require("./util.js");
 
 var Log = (function(){
 
-  function Log(dir,flushIval,base) {
+  function Log(verbose,dir,flushIval,base) {
     var self = this;
+    self.verbose = verbose;
     self.dir  = dir;
     self.base = base || "log-";    
     self.start(flushIval || 60000);
   }
+
+  Log.prototype.message = function( msg, level ) {
+    var self = this;
+    self.entry( { type: "message", level: level, message: msg, date: new Date().toISOString() });
+    if (level && level > self.verbose) return;
+    var pre = (typeof level !== "number" || level <= 0 ? "" : Array(level+1).join("-") + " ");
+    console.log( pre + msg );
+  }
+
+  Log.prototype.info = function(msg) {
+    var self = this;
+    self.message(msg,1);
+  };
+
+  Log.prototype.trace = function(msg) {
+    var self = this;
+    self.message(msg,2);
+  };
 
   Log.prototype.start = function(flushIval) {
     var self = this;
