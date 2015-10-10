@@ -1,0 +1,73 @@
+Title         : My Academic Paper
+Author        : You
+Affiliation   : Research institute
+Email         : you@bar.com
+
+Author        : My co-author
+Affiliation   : Other institute
+Email         : other@bar.com
+
+Colorizer     : javascript
+Bib style     : plainnat
+Bibliography  : example
+Heading base  : 2
+
+Doc class     : style/sigplanconf.cls
+
+[TITLE]
+
+~ Abstract
+The abstract of the paper. Cum justo odio, dapibus ac facilisis in,
+egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
+mauris condimentum nibh, ut fermentum massa justo sit amet.
+~
+
+
+# Introduction     { #sec-intro }
+
+Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
+Note that you can drag&drop images into the editor pane to include them in
+the document, and similarly with bibtex files, latex style files, etc.
+
+~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
+![butterfly]
+~
+
+[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+
+Our contributions are:
+
+* A figure of a _butterfly_;
+* Some **mathematics**;
+* And some source code;
+* And references to Tex books [@Knuth:tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:tex are also possible.
+
+# Content
+
+A definition of $e$ is shown in Equation [#euler] proved by Theorem [#th-euler]:
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+~ Theorem {#th-euler}
+(_Euler's theorem_) More math here.
+~
+
+Let's program some Javascript:
+``` javascript
+function hello() {
+  return "hello world!"
+}
+```
+
+~ Note
+The syntax highlighting works in PDF too.
+~
+
+# Conclusion
+
+Really fun to write Markdown :-)
+
+[BIB]
