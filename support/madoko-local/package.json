@@ -19,15 +19,15 @@
       "Local"
   ],
   "preferGlobal": true,
-  "main": "./lib/cli.js",
+  "main": "./src/cli.js",
   "bin": {
-    "madoko-local": "./lib/cli.js"
+    "madoko-local": "./src/cli.js"
   },
   "directories": {
-    "bin": "./lib"
+    "bin": "./src"
   },
   "files": [
-    "lib",
+    "src",
     "static",
     "readme.md",
     "license.txt"

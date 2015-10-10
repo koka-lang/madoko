@@ -11,7 +11,7 @@
 // -------------------------------------------------------------
 
 var Path    = require("path");
-var Options = require("commander");
+var CmdLine = require("commander").Command;
 var Readline= require("readline");
 var Http    = require("http");
 var Buffer  = require("buffer");
@@ -22,6 +22,7 @@ var BodyParser= require("body-parser");
 var Util    = require("./util.js");
 var Promise = require("./promise.js");
 var Log     = require("./log.js");
+var Config  = require("./config.js");
 
 // -------------------------------------------------------------
 // Constants
@@ -57,16 +58,31 @@ var config = {
 }
 
 var indent = "\n                   ";
+var Options = new CmdLine(Config.main);
 Options
-  .usage("[Options] <root directory (='.')>")
-  .option("--secret [secret]", "Use secret key for increased security." + indent + "Generates random key if left blank.")
-  .option("--launch", "Launch default browser at correct localhost address")
-  .option("--port <n>", "Port number (=80)", parseInt )
-  .option("--origin <url>", "Serve <url> (" + config.origin + ")")
-  .option("--homedir <dir>", "Use <dir> as user home directory (for logging)")
-  .option("--verbose [n]","Output trace messages (0 none, 1 info, 2 debug)", parseInt )
-  .parse(process.argv);
+  .usage("[options] [mount-directory]")
+  .version(Config.version,"-v, --version")
+  .option("-l, --launch", "launch default browser at correct localhost address")
+  .option("--secret [secret]", "use specified secret key, or generated key if left blank")
+  .option("--port <n>", "serve at port number (=80)", parseInt )
+  .option("--origin <url>", "give local disk access to <url> (" + config.origin + ")")
+  .option("--homedir <dir>", "use <dir> as user home directory (for logging)")
+  .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
 
+Options.on("--help", function() {
+  console.log([
+    "  Notes:",
+    "    Access is given to any files and sub-directories under [mount-directory].",
+    "    If blank, the previous mount directory or current directory is used.",
+    "",
+    "    Previous secrets or mount directories are read from the configuration",
+    "    file in '$HOME/.madoko/config.json'. Log files are written there too."
+  ].join("\n"));
+});
+
+Options.parse(process.argv);
+
+// Home dir
 if (Options.homedir) config.homedir = Options.homedir;
 config.configdir = Util.combine(config.homedir, ".madoko");
 
@@ -315,8 +331,8 @@ function getLocalPath(fpath) {
 
 function getConfig(req,res) {
   if (req.query.show) {
-    config.log.message("locally host madoko to: " + req.connection.remoteAddress + "(" + req.hostname + ")\n" + 
-                       "local mount directory : " + config.mountdir + "\n");
+    config.log.message("locally host madoko to: " + req.connection.remoteAddress + " (" + req.hostname + ")\n" + 
+                       "serving files under   : " + config.mountdir + "\n");
   }
   res.send( {
     origin  : config.origin,

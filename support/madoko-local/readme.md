@@ -28,7 +28,7 @@ and that's it :-)
 
 Simply run the `madoko-local` program inside the directory that you would
 like to access. Everything in that directory, and all its sub-directories
-will be accessible:
+will be accessible to Madoko:
 ```
 > madoko-local
 listening on          : http://localhost
@@ -39,8 +39,8 @@ access server at      : http://localhost?secret=OsuwK3HbMoI7
 ```
 This starts a local server that only listens on the local host
 and does not accept connections from outside. It also shows 
-that it connects using secure https with the madoko website, and
-which local directory is accessible.
+that it connects using secure https with the Madoko website, and
+which local directory is accessible within Madoko.
 
 Now open the browser and go to the listed url -- or you can use the
 `--launch` option to have `madoko-local` open the browser at that url
@@ -63,66 +63,70 @@ Usage:
 
 Arguments:
 
-\/`[mount-directory`]
-  : If not given on the command line the last specified
-    directory is used; if this is the first run the current
-    working directory is used. The server only provides
-    access to files and subdirectories in this directory but
-    not outside of it.
+* [`[mount-directory`]] 
+  The server only provides access to files and
+  subdirectories in this directory but not outside of it. If blank, the
+  last specified directory is used; if this is the first run the current
+  working directory is used.
 
 Options:
 
-\/`-h` &ensp; `--help`
-  : Show help on the command line options.
-\/`--launch`
-  : After starting the server, launch the default browser
-    at the correct localhost address.
-\/`--verbose`
-  : Emit more tracing messages.
-\/`--secret [secret]`
-  : If no secret is provided, a new random secret is
-    generated. Otherwise, the provided secret is used.
-    A secret is usually stored in the configuration file
-    such that you have a stable url for Madoko. Using the
-    `--secret` flag you can regenerate the secret every
-    once in a while.
-\/`--homedir <dir>`
-  : Specify the user home directory. In this directory
-    `madoko-local` will create a `.madoko` directory
-    that contains a log file and the local configuration
-    file (`config.json`).    
-\/`--origin <url>`
-  : Instead of serving `https://www.madoko.net` use the
-    specified `url`. Only specify trusted websites here
-    since that website can obtain local disk access!    
-\/`--port <n>`
-  : Use the specified port to serve `madoko-local`. 
-    This can be useful if you have other servers running that 
-    already use port 80.
+* [`-h` &ensp; `--help`]
+  Show help on the command line options.
+* [`-v` &ensp; `--version`]
+  Show the current version of the program.
+* [`-l` &ensp; `--launch`]
+  After starting the server, launch the default browser
+  at the correct localhost address.
+* [`--verbose`]
+  Emit more tracing messages.
+* [`--secret [secret]`]
+  If no secret is provided, a new random secret is
+  generated. Otherwise, the provided secret is used.
+  A secret is usually stored in the configuration file
+  such that you have a stable url for Madoko. Using the
+  `--secret` flag you can generate a new secret every
+  once in a while.
+* [`--homedir <dir>`]
+  Specify the user home directory. In this directory
+  `madoko-local` will create a `.madoko` directory
+  that contains a log file and the local configuration
+  file (`config.json`).    
+* [`--origin <url>`]
+  Instead of serving `https://www.madoko.net` use the
+  specified `url`. Only specify trusted websites here
+  since that website can obtain local disk access!    
+* [`--port <n>`]
+  Use the specified port to serve `madoko-local`. 
+  This can be useful if you have other servers running that 
+  already use port 80.
 
 `madoko-local` stores the last generated secret and 
 last used mount-directory in the local configuration
 file at `$HOME/.madoko/config.json`. 
+
+# Future extensions
+
+In the future `madoko-local` will be extended to also allow running
+your own local LaTeX installation.
 
 # Security
 
 The server is designed with multiple security layers:
 
 * The server only listens on the localhost itself and does
-  not accept outside connections.
-* The Javascript API only accepts messages from the embedded
+  not accept outside connections. All files are only sent
+  and received inside the localhost (and even the
+  `madoko.net` server cannot connect directly to `madoko-local`).
+* The JavaScript API only accepts messages from the embedded
   frame and specified origin (`https://www.madoko.net`).
 * The above is already enough if using a secure browser that prevents
-  cross-site requests, but as an extra security feature, the server is
+  cross-site requests, but as an extra security layer, the server is
   started with a particular secret and only accepts requests that match
   the secret.
-* The server only gives access to files under the specified
+* The server only gives access to files and directories under the specified
   mount directory.
 
-# Future extensions
-
-In the future `madoko-local` will be extended to also allow running
-your own local LaTeX installation.
 
 [Madoko.net]: https://www.madoko.net  "Madoko"
 [Node.js]: http://nodejs.org "Node.JS"
