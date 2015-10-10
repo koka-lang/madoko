@@ -95,7 +95,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.connect = function(_mount) {
     var self = this;
-    if (!self.hosted) return { code: 401 };
+    if (!self.hosted) return Promise.resolved({ code: 401 });
     return self.login().then( function(realmount) {
       return { mount: realmount, code: 0 };
     });    
