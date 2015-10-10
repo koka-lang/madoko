@@ -1090,13 +1090,14 @@ var Storage = (function() {
           if (info.globalPath) file1.globalPath = info.globalPath;
           if (info.sharedPath) file1.sharedPath = info.sharedPath;
           self._updateFile(file1);
+          Util.assert(file1.createdTime.getTime() === info.createdTime.getTime());
         }
         return Promise.guarded(file1.sharedPath !== file0.sharedPath, // support aliases for systems that do not have unique shared paths
           function() {
            return createAlias(file1.sharedPath,file0.sharedPath);
           },
           function() {
-            var unmodified = (remoteTime.getTime() == info.createdTime.getTime());
+            var unmodified = (remoteTime.getTime() === info.createdTime.getTime());
             return Promise.guarded( unmodified,
               function() {  // this happens if the file equal and not updated on the server; release our lock in that case
                 return self.pushAtomic( file0.globalPath, remoteTime, true );

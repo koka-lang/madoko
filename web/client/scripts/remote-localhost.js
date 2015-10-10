@@ -299,7 +299,7 @@ var Localhost = (function() {
   Localhost.prototype.pullFile = function( fpath, binary ) {
     var self = this;
     return self.getRemoteTime(fpath).then( function(date) { // TODO: can we make this one request?
-      if (!date) return Promise.rejected("file not found: " + fpath);
+      if (!date) throw new Error("file not found: " + fpath);
       return pullFile( self.mount, self.fullPath(fpath), binary ).then( function(info) {
         var file = {
           path: fpath,
@@ -315,10 +315,7 @@ var Localhost = (function() {
   Localhost.prototype.getRemoteTime = function( fpath ) {    
     var self = this;
     return fileInfo( self.mount, self.fullPath(fpath) ).then( function(info) {
-      return (info && !info.is_deleted ? Date.dateFromISO(info.modified) : null);
-    }, function(err) {
-      if (err && err.httpCode===404) return null;
-      throw err;
+      return (info && info.modified ? Date.dateFromISO(info.modified) : null);
     });
   }
 
