@@ -72,14 +72,14 @@ val lroman      = @"(?:x?(?:i(?:v|x|i|ii)?|[vx]i{0,3}))"
 val uroman      = @"(?:X?(?:I(?:V|X|I|II)?|[VX]I{0,3}))" 
 
 val endlist     = hr + @"|\n(?! )(?!\1" + bull + @" )"
-val alist       = @"( *)(" + bull + @") [\s\S]+?(?=\n(?:" + endlist + @")|$)\n?"
+val alist       = @"( *)(" + bull + @") ([\s\S]+?)(?=\n(?:" + endlist + @")|$)\n?"
 val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + xlinkid + @"\]:|" 
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
 
 val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
 
 // deflist
-val defitem     = @"(" + notbspecial + @".*)\n\n?" 
+val defitem     = @"(?:\* )?(" + notbspecial + @".*)\n\n?" 
 val defstart    = @"(?:[:]| {1,2}[~:])"
 val defdef      = @"(?:.*(?:\n|$)(?:(?:    .*)?(?:\n|$))*)"
 val defdefs     = @"(?:" + defstart + defdef + ")+"
@@ -325,7 +325,9 @@ function blockList( cap : matched, context : blockContext ) : block {
                  elif (bull=="a") then "list-style-type=lower-alpha"
                  elif (bull=="A") then "list-style-type=upper-alpha"
                  else ""
-  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren" else attrs0
+  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren"
+               elif (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-dot"
+               else attrs0
   blockListX( cap.matched, context, tag, "." + tag + " " + attrs1, rxitem, parseItem )
 }
 val rxitem      = regex(@"^(( *)(?:" + bullrest + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bullrest + @" ).*)*\n?)",multiline=True);
