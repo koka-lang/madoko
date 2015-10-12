@@ -76,10 +76,11 @@ val alist       = @"( *)(" + bull + @") ([\s\S]+?)(?=\n(?:" + endlist + @")|$)\n
 val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + xlinkid + @"\]:|" 
                             + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
 
+val notbspecialx= @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
 val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
 
 // deflist
-val defitem     = @"(?:\* )?(" + notbspecial + @".*)\n\n?" 
+val defitem     = @"(?:(?:\* (.*))|((?:" + notbspecial + @").*))\n\n?" 
 val defstart    = @"(?:[:]| {1,2}[~:])"
 val defdef      = @"(?:.*(?:\n|$)(?:(?:    .*)?(?:\n|$))*)"
 val defdefs     = @"(?:" + defstart + defdef + ")+"
@@ -286,11 +287,12 @@ function blockDefFootnote( cap : matched, context : blockContext ) :  block {
 function blockDefList( cap : matched, context : blockContext ) : block {
   function parseItem( extraAttrs : string, icap : matched, line : int, icontext : blockContext ) :  list<block> {
     //trace("item:\n" + icap.matched)
-    val item = icap.groups[3].replaceAll(rxindent4,"") 
-    val attrs = icap.groups[2].parseAttrs("dd",source=item)
-    val dterm = if (icap.groups[1]=="") then [] else {
-                  val attrsd = parseAttrs(extraAttrs,"dt",source=icap.groups[1])
-                  [Div([Line(icap.groups[1])],attrsd)]
+    val item = icap.groups[4].replaceAll(rxindent4,"") 
+    val attrs = icap.groups[3].parseAttrs("dd",source=item)
+    val term  = if (icap.groups[1]=="") then icap.groups[2] else icap.groups[1]
+    val dterm = if (term=="") then [] else {
+                  val attrsd = parseAttrs(extraAttrs,"dt",source=term)
+                  [Div([Line(term)],attrsd)]
                 }
     val ddesc = Div(parseBlocks(icontext,item,line), 
                           if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))
