@@ -285,6 +285,36 @@ public struct embedinfo (
 
 
 /* --------------------------------------
+ Expand list style patterns
+---------------------------------------- */
+public function expandChoices( s : string ) : list<string> {
+  match (s.find(rxChoicePattern)) {
+    Just(cap) -> { 
+      val pre = s.substr(0,cap.index) 
+      val post = s.substr(cap.next)
+      cap.groups[1].split(",").list.map fun(part) { pre + part + post }
+    }
+    Nothing -> [s]
+  }
+}
+val rxChoicePattern = regex( @"\[(\w+(?:,\w+)*)\]" )
+
+// Picks path that first matches one of the given extensions, or the last one if none matched.
+public function pickExtension( exts : list<string>, paths : list<string> ) : string {
+  match(paths) {
+    Nil -> ""
+    Cons(path,Nil) -> path
+    Cons(path,rest) -> {
+      val pathext = path.extname
+      match (exts.find(fun(ext) { pathext == ext })) {
+        Just -> path
+        Nothing -> exts.pickExtension(rest)
+      }
+    }
+  }
+}
+
+/* --------------------------------------
  Attributes 
 ---------------------------------------- */
 public type formatter {

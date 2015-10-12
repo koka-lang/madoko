@@ -184,7 +184,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
                   }
                   else acc.counters
       val extra = [parsePageAlign(name,kwvalue)].concat
-      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name && extra.all( fun(kv) { kv.fst != kval.fst })}) + [(name,value)] + extra, counters = cntrs)
+      acc(keyvals = acc.keyvals.filter(fun(kval) { kval.fst != name && extra.all( fun(kvx) { kvx.fst != kval.fst })}) + [(name,value)] + extra, counters = cntrs)
     }
   }
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'

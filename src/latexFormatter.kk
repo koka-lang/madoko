@@ -69,8 +69,13 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
   val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
   val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)  
   if (isImage) {
+    // expand extensions and set file refers
+    val hrefs  = url.expandChoices
+    // pick best one for images
+    val imgref = pickExtension(latexImageExtensions, hrefs)
+
     val (attrsx, args) = cssImageArgs(attrs)
-    texCmdX( "\\includegraphics[" + args + "]" + url.noext.braced, "" /*content*/, attrsx ) 
+    texCmdX( "\\includegraphics[" + args + "]" + imgref.noext.braced, "" /*content*/, attrsx ) 
   }
   else {
     val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
@@ -82,6 +87,7 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
     texCmdX( cmd, content, attrs, [("tex-outercmd",title)] )
   }
 }
+val latexImageExtensions = [".pdf",".eps",".ps",".png",".jpg",".jpeg"]
 
 function extractText( s : string ) : string {
   s.replaceAll(regxTexCmd," ")

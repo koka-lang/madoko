@@ -107,17 +107,19 @@ function isHtmlWhite( s : string ) : bool {
 val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b[^>]*>(\s|&nbsp;)*</span>)*$")
 */
 
+val htmlImageExtensions = [".png",".jpg",".jpeg",".svg",".gif",".tif",".tiff",".bmp",".jpx",".jp2"]
+
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   if (isImage) {
     // expand extensions and set file refers
-    val hrefs0  = link.href.expandExtensions
+    val hrefs0  = link.href.expandChoices
     // legacy support for auto converting eps or pdf to png.
     val hrefs = match(hrefs0) {
       Cons(href,Nil) | href.extname == ".eps" || href.extname == ".pdf"
         -> [href,href.changeExt(".png")]
       _ -> hrefs0
     }
-    hrefs.foreach function(href) {
+    hrefs.foreach fun(href) {
       if (href.relative) log("filesRefer", href);
     }
     // pick best one for images
