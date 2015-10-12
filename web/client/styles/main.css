@@ -1459,8 +1459,6 @@ div.item {
 div.item:hover {
   background-color: Gainsboro;
   cursor: pointer;
-  overflow-x: visible;
-  width: auto;  
 }
 
 div.item.disabled {

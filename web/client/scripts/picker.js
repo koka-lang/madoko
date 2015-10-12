@@ -707,6 +707,7 @@ var Picker = (function() {
                           (Util.stemname(item.path) === folderStem && (mime==="text/madoko" || mime==="text/markdown") ? " document" : "") +
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
+                      "' title='" + encodeURIComponent(item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
