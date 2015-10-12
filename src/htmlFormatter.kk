@@ -109,9 +109,20 @@ val rxAllWhite = regex(@"^(\s|&nbsp;|<span\b[^>]*>(\s|&nbsp;)*</span>)*$")
 
 public function fmtHtmlLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   if (isImage) {
-    val isPS   = link.href.extname == ".eps" || link.href.extname == ".pdf"
-    val imgref = if (link.href.relative && isPS) then link.href.changeExt(".png") else link.href
-          
+    // expand extensions and set file refers
+    val hrefs0  = link.href.expandExtensions
+    // legacy support for auto converting eps or pdf to png.
+    val hrefs = match(hrefs0) {
+      Cons(href,Nil) | href.extname == ".eps" || href.extname == ".pdf"
+        -> [href,href.changeExt(".png")]
+      _ -> hrefs0
+    }
+    hrefs.foreach function(href) {
+      if (href.relative) log("filesRefer", href);
+    }
+    // pick best one for images
+    val imgref = pickExtension(htmlImageExtensions, hrefs)
+
     val href = match (context.embedinfos[imgref]) {
       Just(info) | info.embedData != "" -> {
         //trace("embedded: " + info.embedName)
@@ -119,8 +130,8 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
       }
       _          -> {
         if (imgref.relative) then {
-          if (isPS) then log("filesRefer",link.href) // refer to eps/pdf too
-          log("filesRefer",imgref);
+          // if (isPS) then log("filesRefer",pick) // refer to eps/pdf too
+          // log("filesRefer",imgref);
           log("embed", imgref);
         }
         imgref.escape
