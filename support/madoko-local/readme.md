@@ -71,33 +71,33 @@ Arguments:
 
 Options:
 
-* [`-h` &ensp; `--help`]
-  Show help on the command line options.
-* [`-v` &ensp; `--version`]
-  Show the current version of the program.
-* [`-l` &ensp; `--launch`]
-  After starting the server, launch the default browser
+* `-h` &ensp; `--help`
+  : Show help on the command line     options.
+* `-v` &ensp; `--version`
+  : Show the current version of the program.
+* `-l` &ensp; `--launch`
+  : After starting the server, launch the default browser
   at the correct localhost address.
-* [`--verbose`]
-  Emit more tracing messages.
-* [`--secret [secret]`]
-  If no secret is provided, a new random secret is
+* `--verbose`
+  : Emit more tracing messages.
+* `--secret [secret]`
+  : If no secret is provided, a new random secret is
   generated. Otherwise, the provided secret is used.
   A secret is usually stored in the configuration file
   such that you have a stable url for Madoko. Using the
   `--secret` flag you can generate a new secret every
   once in a while.
-* [`--homedir <dir>`]
-  Specify the user home directory. In this directory
+* `--homedir <dir>`
+  : Specify the user home directory. In this directory
   `madoko-local` will create a `.madoko` directory
   that contains a log file and the local configuration
   file (`config.json`).    
-* [`--origin <url>`]
-  Instead of serving `https://www.madoko.net` use the
+* `--origin <url>`
+  : Instead of serving `https://www.madoko.net` use the
   specified `url`. Only specify trusted websites here
   since that website can obtain local disk access!    
-* [`--port <n>`]
-  Use the specified port to serve `madoko-local`. 
+* `--port <n>`
+  : Use the specified port to serve `madoko-local`. 
   This can be useful if you have other servers running that 
   already use port 80.
 
