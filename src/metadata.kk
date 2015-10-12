@@ -22,8 +22,17 @@ import optionsMeta
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : div (options, string) 
 {
+  // read initial metadata
   val (txt1,lineCount0) = stripInitialWhite(txt)
-  val (mdata2,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
+  val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
+  // read further <!--meta sections
+  val mdatas = rest.findAll( rxMetaSection ).list.map fun(cap) {
+    val lineNo = lineCount + rest.substr(0,cap.index).count("\n")
+    val (mdatax,_,_) = parsePlainMeta(cap.groups[1] + "\n", fmt, options0.modes, [], options0.verbose >= 4, lineNo )
+    mdatax
+  }
+  val mdata2 = mdata1 + mdatas.concat
+  // set options from metadata
   val options1 = options0.fromMeta(mdata2)
   val mdataFull = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
     then options0.metadata + mdata2
@@ -41,6 +50,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
    then (options(lineNo = options.lineNo + lineCount),rest)
    else (options,rest)  
 }
+val rxMetaSection = regex(@"^<!--meta *\n([\s\S]*?)^-->", multiline=True)
 
 function stripInitialWhite( txt : string ) : (string,int) {
   match(txt.find(rxInitialWhite)) {
@@ -48,7 +58,7 @@ function stripInitialWhite( txt : string ) : (string,int) {
     Just(cap) -> (txt.substr(cap.next), txt.substr(0,cap.next).count("\n"))
   }
 }
-val rxInitialWhite = regex(@"^(\s|<!--[\s\S]*?-->)+")
+val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->)+")
 
 function makeKey(k,pre,value,rawvalue,lines) {
   val kstart = k.substr(0,1) 
