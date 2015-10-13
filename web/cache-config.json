@@ -1,8 +1,8 @@
 {
   "version"  : "0",
   "rootPath" : "client",
-  "dirs"     : [".","images","lib","preview","scripts","styles","templates"],
-  "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls","sty"],
+  "dirs"     : [".","images","lib","preview","scripts","styles","templates","dictionaries"],
+  "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls","sty","dic","aff","bst","ico","pdf"],
   "excludes" : ["version.json","madoko.appcache",
   				"lib/vs/languages/!(json|plaintext|vsxml|javascript)/**",
   				"lib/vs/workbench/**",

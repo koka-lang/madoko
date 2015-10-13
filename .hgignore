@@ -13,6 +13,7 @@ node_modules/
 out/
 out2/
 web/client/version.json
+web/client/versionlog.json
 web/client/madoko.appcache
 web/client/lib/
 web/client/private/

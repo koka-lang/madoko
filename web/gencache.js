@@ -81,9 +81,10 @@ function createCache(fnames,digest) {
 		madokoVersion: madokoVersion,
 		digest: digest,
 		date: new Date().toISOString(),
-		log: versionLog.log[0],
+		// log: versionLog.log[0],
 	});
 	Fs.writeFileSync(Path.join(options.rootPath,"version.json"),header + "\n");
+	Fs.writeFileSync(Path.join(options.rootPath,"versionlog.json"), JSON.stringify(versionLog));
 	return [
 		"CACHE MANIFEST",
 		"#" + header,

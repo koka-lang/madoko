@@ -1,7 +1,18 @@
 {
   "log" : [
+    { "version": "0.9.9-beta",
+      "date": "2015-10-12",
+      "updates": [
+        "UI: improved support for `madoko-local` to enable local disk access.",
+        "Support `&lt;!--madoko` and `&lt;!--meta` comment blocks that are processed by Madoko (but ignored by other processors).",
+        "Fixed 'flickering' on long file names in the open dialog.",
+        "Support for multiple image file formates for different backends; write the file name as `myimage.[svg,eps]` for example.",
+        "Support `* ` prefixed definition lists so these display still nicely with other processors."
+      ]
+    },
     {
       "version": "0.9.8-beta",
+      "date": "2015-10-08",
       "updates": [
         "UI: initial support for madoko-local to enable local disk access.",
         "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before.",
@@ -16,6 +27,7 @@
     },
     {
       "version": "0.9.5-beta",
+      "date": "2015-07-02",
       "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
       "updates": [
         "Updated table formatting attributes. The new prefixes are `tr-`, `thead-tr-`, `tbody-tr-`, `col-`, `cell-`, `td-` and `th-`.\n  New modifiers are `even-`, `odd-`, `last-` and `-n` where `n` is the column/row number",
