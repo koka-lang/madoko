@@ -1855,6 +1855,18 @@ doc.execCommand("SaveAs", null, filename)
     });
   }
 
+  function getAppVersionInfoFull() {
+    return getAppVersionInfo(false).then( function(info) {
+      if (!info) return null;
+      return requestGET({url:"versionlog.json", timeout:2500} ).then( function(log) {
+        if (log && log.log && log.log instanceof Array) {
+          info.log = log.log;
+        }
+        return info;        
+      }, function(err) { return info; });
+    });
+  }
+
   function miniMarkdown(s) {
     return s.replace(/`([^`]+)`/g, "<code>$1</code>")
             .replace(/\n  /g,"<br>");
@@ -1950,6 +1962,7 @@ doc.execCommand("SaveAs", null, filename)
     urlParamsDecode: urlParamsDecode,
   
     getAppVersionInfo: getAppVersionInfo,
+    getAppVersionInfoFull: getAppVersionInfoFull,
     randomHash8      : randomHash8,
 
     miniMarkdown     : miniMarkdown,

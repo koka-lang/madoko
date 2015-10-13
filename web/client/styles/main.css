@@ -1704,8 +1704,17 @@ div.item.document {
   font-size: smaller;
   margin-top: 1ex;
 }
-#picker .version-updates ul {
+#picker ul.version-updates {
   margin-top: 0ex;
+  padding-left: 1em;
+  list-style-type: none;
+}
+#picker ul.version-updates>li+li {
+  border-top: 1px solid black;
+  margin-top: 1em;
+}
+#picker ul.version-updates ul {
+  list-style-type: disc;
 }
 
 

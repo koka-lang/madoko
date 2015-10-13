@@ -7,7 +7,7 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/date","../scripts/util","../scripts/tabStorage",
-        "../scripts/storage","../scripts/spellcheck","../scripts/errormenu","../scripts/remote-localhost",
+        "../scripts/storage","../scripts/spellcheck","../scripts/errorMenu","../scripts/remote-localhost",
         "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
         function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Localhost,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
@@ -730,7 +730,7 @@ var UI = (function() {
 
     // request cached version; so it corresponds to the cache-manifest version  
     self.version = null;
-    Util.getAppVersionInfo(false).then( function(version) {
+    Util.getAppVersionInfoFull().then( function(version) {
       if (version) {
         self.version = version;
         var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
@@ -815,10 +815,13 @@ var UI = (function() {
             }
             else if (isFirefox && window.applicationCache.status === window.applicationCache.IDLE) {
               self.version.digest = version.digest; // prevent further alerts 
-              alert("Madoko has updated but Firefox has a bug preventing it to update automatically.\nClear your history (in particular the 'Offline website data')  -- and reload.");              
+              alert("Madoko has updated but Firefox has a bug (830588) preventing it to update automatically." +
+                    "\nClear your history (in particular the 'Offline website data') -- and reload." +
+                    "\n\nA quick way to clear the Madoko application cache is to press 'Shift+F2' and" +
+                    "\nissue the command 'appcache clear' (and reload after that)");
             }
           }
-          else {
+          else { 
             self.version.updateDigest = version.digest; // remember we update to this version
             window.applicationCache.update(); // update the cache -- will trigger a reload later on.                     
             Util.message("Downloading updates...", Util.Msg.Status);
@@ -4705,13 +4708,24 @@ var symbolsMath = [
 
   UI.prototype.showUpdateMessage = function() {
     var self = this;
+    function showUpdate( upd ) {
+      return "<li>" + upd.version + (upd.date ? ",  " + upd.date : "") + "<ul>" +
+                upd.updates.map( function(item) {
+                  return "<li>" + Util.miniMarkdown(item) + "</li>";
+                }).join("") + 
+              "</ul></li>"; 
+    }
     self.anonEvent( function() {        
       var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
       var shortDate   = self.version.date.substr(0,10);
+      var log = (self.version.log instanceof Array ? self.version.log : [self.version.log]);
+      var logdiv = "<ul class='version-updates'>"
+                      + log.map( showUpdate ).join("\n") + "</ul>"
+
       var htmlMessage = "<div class='version-display'>" + 
-                    (!self.version.log.alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log.alert) + "</div>") +
-                    (!self.version.log.message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log.message) + "</div>") +
-                    ("<div class='version-updates'>Updates:<ul>" + self.version.log.updates.map(function(item) { return "<li>" + Util.miniMarkdown(item) + "</li>"; }).join("") + "</ul></div>") +
+                    (!self.version.log[0].alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log[0].alert) + "</div>") +
+                    (!self.version.log[0].message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log[0].message) + "</div>") +
+                    (logdiv) +
                     "</div>";
       return Storage.message(self.storage,htmlMessage,"Madoko has been updated to " + self.version.version + ", " + shortDate + " " + shortDigest, "images/dark/icon-madoko.png");
     });
