@@ -35,7 +35,7 @@ the document, and similarly with bibtex files, latex style files, etc.
 
 [butterfly]: images/butterfly.png "butterfly"  { width=4em }
 
-Our contributions are:
+Our [contributions]{font-family='"MS Gothic"'} are:
 
 * A figure of a _butterfly_;
 * Some **mathematics**;

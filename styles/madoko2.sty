@@ -7,12 +7,8 @@
 %---------------------------------------------------------------------------
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 
-\RequirePackage{iftex}
-\RequirePackage{etoolbox}
 \RequirePackage[table]{xcolor}
-\RequirePackage{graphicx}
 \RequirePackage{options}
-\RequirePackage{longfbox}
 
 %-------------------------------------------------------------
 % Process options 
@@ -22,7 +18,7 @@
   /madoko/heading-base/.new num=1,
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
-  /madoko/fontspec/.new toggle,
+  /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
 }
 
 \@ifclassloaded{beamer}{\options{/madoko/beamer=true}}{}
@@ -33,6 +29,9 @@
 % Packages
 %-------------------------------------------------------------
 
+\RequirePackage{iftex}
+\RequirePackage{graphicx}
+\RequirePackage{longfbox}
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 \RequirePackage{amssymb}
@@ -51,10 +50,10 @@
   \RequirePackage{longtable}
   \RequirePackage{anyfontsize}
   \RequirePackage{enumitem}
-  
-  % fontspec is expensive to load...
+
+  % fontspec is expensive to load but we need it...
   \iftoggle{/madoko/fontspec}{%
-     % font selection
+    % font selection
     \ifXeTeX\RequirePackage{fontspec}\else
     \ifLuaTeX\RequirePackage{fontspec}\else
     \RequirePackage[T1]{fontenc}%
@@ -63,7 +62,7 @@
     \fi\fi
   }{%
     \RequirePackage[T1]{fontenc}%
-  }%
+  }
 }%
 
 
@@ -423,7 +422,7 @@
 % Fonts
 % ---------------------------------------------------
 
-\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
+%\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
 
 \newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
 
