@@ -1204,7 +1204,8 @@ var Storage = (function() {
       return self.remote.isAtHead().then( function(atHead) {
         var msgNotAtHead = "Commit failed: Please pull first, the document is not up-to-date with the repository";
         if (!atHead) throw new Error(msgNotAtHead);
-        return self.remote.getChanges( self.files.elems() ).then( function(changes) {
+        var fileInfos = self.files.elems().filter( function(finfo) { return (finfo.content && finfo.content.length > 0) } )
+        return self.remote.getChanges( fileInfos ).then( function(changes) {
           /*
           // filter out additions to 'out/'
           var changes = changes0.filter( function(change) {
