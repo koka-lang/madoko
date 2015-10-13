@@ -19,7 +19,7 @@ import std/path
 import common 
 
 // Do not edit the version, it is set in the Jakefile from package.json
-public val version = "0.9.8-beta" 
+public val version = "0.9.9-beta" 
 
 // Metadata is just a string to string map.
 public alias metadata = list<(string,string)>
