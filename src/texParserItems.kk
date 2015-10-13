@@ -948,7 +948,7 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
                  makeAttr("caption", caption),
                  makeAttr("searchterm", search )].joinAttrs
 
-  //trace("bibitem: lab: " + labx + " -> " + lab)
+  //trace("bibitem: labx: " + labx + ", lab: " + lab + ", label: " + label)
   "~ Begin Bibitem " + attrs + "\n" +
    md + 
    "\n~ End Bibitem\n"

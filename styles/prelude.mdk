@@ -171,7 +171,7 @@ Logo      : False
 
 ~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par" 
 @notex ~Bibliography: before="# References {-}&nl;"
-~BibItem  : tex-cmd-before="\bibitem[&label;]{&id;}" label="@bibitem"
+~BibItem  : tex-cmd-before="\bibitem[&cite-label;]{&id;}" label="@bibitem"
 @tex ~BibItem: before=clear
 .Newblock : tex-cmd-before="\newblock "
 ~toc      : tex-env=mdtoc
