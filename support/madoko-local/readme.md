@@ -1,7 +1,6 @@
-<!--madoko
+<!--meta
 Title 	  	: Madoko Local
 Author      : Daan Leijen
-Heading Base: 2
 -->
 
 # Madoko Local
@@ -22,7 +21,7 @@ the `madoko-local` program:
 ```
 > npm install -g madoko-local
 ```
-and that's it :-)
+and that's it :-) 
 
 # Usage
 
@@ -63,43 +62,43 @@ Usage:
 
 Arguments:
 
-* [`mount-directory`] 
-  The server only provides access to files and
-  subdirectories under the mount directory but not outside of it. If not
-  given, the last specified directory is used; if this is the first run
-  the current working directory is used.
+* `mount-directory` 
+  : The server only provides access to files and
+    subdirectories under the mount directory but not outside of it. If not
+    given, the last specified directory is used; if this is the first run
+    the current working directory is used.
 
 Options:
 
-* `-h` &ensp; `--help`
+* `-h`, `--help`
   : Show help on the command line     options.
-* `-v` &ensp; `--version`
+* `-v`, `--version`
   : Show the current version of the program.
-* `-l` &ensp; `--launch`
+* `-l`, `--launch`
   : After starting the server, launch the default browser
-  at the correct localhost address.
+    at the correct localhost address.
 * `--verbose`
   : Emit more tracing messages.
 * `--secret [secret]`
   : If no secret is provided, a new random secret is
-  generated. Otherwise, the provided secret is used.
-  A secret is usually stored in the configuration file
-  such that you have a stable url for Madoko. Using the
-  `--secret` flag you can generate a new secret every
-  once in a while.
+    generated. Otherwise, the provided secret is used.
+    A secret is usually stored in the configuration file
+    such that you have a stable url for Madoko. Using the
+    `--secret` flag you can generate a new secret every
+    once in a while.
 * `--homedir <dir>`
   : Specify the user home directory. In this directory
-  `madoko-local` will create a `.madoko` directory
-  that contains a log file and the local configuration
-  file (`config.json`).    
+    `madoko-local` will create a `.madoko` directory
+    that contains a log file and the local configuration
+    file (`config.json`).    
 * `--origin <url>`
   : Instead of serving `https://www.madoko.net` use the
-  specified `url`. Only specify trusted websites here
-  since that website can obtain local disk access!    
+    specified `url`. Only specify trusted websites here
+    since that website can obtain local disk access!    
 * `--port <n>`
   : Use the specified port to serve `madoko-local`. 
-  This can be useful if you have other servers running that 
-  already use port 80.
+    This can be useful if you have other servers running that 
+    already use port 80.
 
 `madoko-local` stores the last generated secret and 
 last used mount-directory in the local configuration
