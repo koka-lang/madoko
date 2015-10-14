@@ -301,7 +301,7 @@ function finfoFromStat( stat, fpath ) {
     finfo = { 
       bytes: stat.size,
       modified: stat.mtime.toISOString(),    
-      is_dir: (stat.isDirectory()),
+      is_dir: stat.isDirectory(),
       path: fpath,
       contents: [],
     };
@@ -357,8 +357,9 @@ function getMetadata(req,res) {
         return Promise.when(files.map( function(fname) { return Util.fstat(Util.combine(fpath,fname)); } )).then( function(stats) {
           finfo.contents = [];
           for(var i = 0; i < stats.length; i++) {
-            checkValidPath(files[i]);
-            finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
+            if (stats[i] != null && isValidFileName(files[i])) { // only list valid accessible files
+              finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
+            }
           }
           return finfo;
         });

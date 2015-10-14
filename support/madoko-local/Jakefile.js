@@ -17,18 +17,19 @@ var main      = "madoko-local";
 var sourceDir = "src";
 var mainCli   = Path.join(sourceDir,"cli.js");
 var nodeExe   = "node";
+var defaultArgs = "--port=81 --verbose=2"
 
 //-----------------------------------------------------
 // Tasks: compilation 
 //-----------------------------------------------------
 task("default",["server"]);
 
-desc(["build & run madoko-local.", 
-      "     server[<options>]    pass <options> to madoko-local"].join("\n"));
+desc(["build & run the server",
+      "     server [options]     pass <options> to madoko-local"].join("\n"));
 task("server", [], function() {
-  var args = Array.prototype.slice.call(arguments).join(" ");
+  var args = process.argv.slice(3).join(" "); // strip: node jake cmd
   fixVersion();
-  var cmd = nodeExe + " " + mainCli  + " " + args;
+  var cmd = [nodeExe,mainCli,defaultArgs,args].join(" ");
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     complete(); 
@@ -49,7 +50,7 @@ task("config", [], function () {
 //-----------------------------------------------------
 var usageInfo = [
   "usage: jake target[options]",
-  "  <options>        are target specific, like server[--verbose=2].",
+  "  <options> are target specific, like launch[--verbose=0].",
   ""].join("\n");
 
 function showHelp() {

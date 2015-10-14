@@ -1,7 +1,7 @@
 {
   "name"        : "madoko-local",
   "author"      : "Daan Leijen, Microsoft Research",
-  "version"     : "0.1.3-alpha",
+  "version"     : "0.1.4-alpha",
   "homepage"    : "http://madoko.codeplex.com",
   "description" : "Madoko-Local provides local disk access to Madoko.net",
   "licenses": [{

@@ -12,6 +12,7 @@ libdoc/
 node_modules/
 out/
 out2/
+support/madoko-local/test
 web/client/version.json
 web/client/versionlog.json
 web/client/madoko.appcache

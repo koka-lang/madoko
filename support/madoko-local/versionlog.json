@@ -1,0 +1,16 @@
+{
+  "log": [
+    { "version": "0.1.4-alpha",
+      "date"   : "2015-10-14",
+      "updates": [
+        "Do not list invalid or inaccessible files in a folder"
+      ]
+    },
+    { "version": "0.1.3-alpha",
+      "date"   : "2015-10-10",
+      "updates": [
+        "Initial secure version"
+      ]
+    }
+  ]
+}
