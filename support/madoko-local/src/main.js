@@ -398,7 +398,7 @@ function putWriteFile(req,res) {
       //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
         config.log.trace("file write : atomic fail: " + req.query.path + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
-        throw new Error("File was modified concurrently; could not save.");
+        throw new Error("File was modified concurrently; could not save: " + req.query.path);
       }
     }
     return Promise.guarded( stat==null, function() {
