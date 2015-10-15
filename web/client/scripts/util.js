@@ -416,7 +416,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   // no ".", "..", ":", or starting with "/"
   function isRelative(fname) {
-    return (/^(?![\.\/])([\w\-]|\.\w|\/\w)+$/.test(fname));
+    return (/^(?![\.\/])([\w\-\ ]|[\.\/][\w\-\ ])+$/.test(fname));
   }
 
   function firstdirname(path) {

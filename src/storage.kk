@@ -44,7 +44,7 @@ function under( path : string, roots : list<string> ) : bool {
   }
 }
 
-val rxRootRelative = regex( @"^(?![\/\\])(\.(?=[\/\\]))?([\w\-]|[\.\/\\]\w)+$" )
+val rxRootRelative = regex( @"^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$" )
 
 
 // Try to read a text file; return a default value in case of an error.

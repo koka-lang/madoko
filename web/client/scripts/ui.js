@@ -551,8 +551,8 @@ var UI = (function() {
 
       if (Util.hasClassName(elem,"save-link")) {
         ev.cancelBubble = true;
-        var path = elem.getAttribute("data-path"); 
-        var mime = elem.getAttribute("data-mime");
+        var path = decodeURIComponent(elem.getAttribute("data-path")); 
+        var mime = decodeURIComponent(elem.getAttribute("data-mime"));
         if (path) {
           self.saveUserContent(path,mime);
         }
@@ -587,7 +587,7 @@ var UI = (function() {
           if (ev.target.type === 6) { // on text
             var lineNo = ev.target.position.lineNumber; 
             var line   = self.editor.getModel().getLineContent(lineNo);
-            var cap = /^\s*\[\s*INCLUDE\s*=["']?([^"'\]\s:]+)["']?\s*(:\s*\w+\s*)?\]\s*$/.exec(line)
+            var cap = /^\s*\[\s*INCLUDE\s*=["']?([^"'\]\n\r\t:]+)["']?\s*(:\s*\w+\s*)?\]\s*$/.exec(line)
             if (cap) {
               var fileName = cap[1]; // TODO use file
               if (Util.extname(fileName)==="") fileName = fileName + ".mdk";
@@ -938,7 +938,7 @@ var UI = (function() {
           elem = elem.parentNode;          
         }
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
-          var path = elem.getAttribute("data-file");
+          var path = decodeURIComponent(elem.getAttribute("data-file"));
           if (path) {
             var mime = Util.mimeFromExt(path);
             return self.event( "loaded: " + path, "loading...", State.Loading, function() {
@@ -992,10 +992,10 @@ var UI = (function() {
             }
           }
           else {
-            cap = /\b(?:warning|error|line):(?:\s|&nbsp;)*([\w\\\/\.\-]*)(?:\s|&nbsp;)*:?\(?(\d+)(?:-\d+)?\)?/i.exec(line)
+            cap = /\b(?:warning|error|line):(?:\s|&nbsp;)*((?:[\w\\\/\.\- \u00A0]|&nbsp;)*)(?:\s|&nbsp;)*:?\(?(\d+)(?:-\d+)?\)?/i.exec(line)
             if (cap) {
               var lineNo = parseInt(cap[2]);
-              var path = cap[1]; // TODO use file
+              var path = cap[1].replace(/[\u00A0]|&nbsp;/g, " "); // TODO use file
               if (!isNaN(lineNo)) {
                 // self.editFile( fileName, { lineNumber: lineNo, column: 1 }, true );
                 pos = { lineNumber: lineNo, column: 1 };
@@ -1369,7 +1369,7 @@ var UI = (function() {
     var html = noCitations;
     if (cites.length > 0) {
       html = cites.map( function(cite) {
-        return "<span class='button cite' data-value='" + Util.escape(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
+        return "<span class='button cite' data-value='" + encodeURIComponent(cite.name) + "' title='" + Util.escape(cite.title) + "'>@" + Util.escape(cite.name) + "</span>";
       }).join("<br/>");
     }
 
@@ -1421,7 +1421,7 @@ var UI = (function() {
       labelHtml = labelsx.map( function(label) {
         var name = label.key;
         var text = label.value;
-        return "<span class='button label' data-value='" + Util.escape(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
+        return "<span class='button label' data-value='" + encodeURIComponent(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
       }).join("<br/>");
     }
     menuLabels.innerHTML = labelHtml;
@@ -1965,7 +1965,7 @@ var UI = (function() {
           var disable = (Storage.isEditable(file) && ext !== ".dic" ? "": " disable");
           var main    = (file.path === self.docName ? " main" : "");
           var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
-          var line = "<div data-file='" + Util.escape(file.path) + "' " +
+          var line = "<div data-file='" + encodeURIComponent(file.path) + "' " +
                         "class='button file hoverbox" + disable + main + hide + "'>" + 
                             self.displayFile(file,true) + "</div>";
           var info = { line: line, path: file.path }                            
@@ -2210,7 +2210,7 @@ var UI = (function() {
     // probably html, cannot use blob url directly (since a user can right-click and open in our origin)
     // we create fake url's that call "saveUserContent" on click
     return (function(msg) {
-      return "<span class='save-link' data-path='" + Util.escape(path) + "' data-mime='" + Util.escape(mime) + "'>" + msg + "</span>"; 
+      return "<span class='save-link' data-path='" + encodeURIComponent(path) + "' data-mime='" + encodeURIComponent(mime) + "'>" + msg + "</span>"; 
     });
   }
 
@@ -3742,7 +3742,7 @@ var symbolsMath = [
       var elem = ev.target;
       while( elem && elem !== menu && !Util.hasClassName(elem,"button")) elem = elem.parentNode;
       if (!elem || elem === menu) return;
-      var value = elem.getAttribute("data-value");
+      var value = decodeURIComponent(elem.getAttribute("data-value"));
       if (!value) return;
       return dynamic.call(self,value);
     });
@@ -3751,17 +3751,17 @@ var symbolsMath = [
   UI.prototype.initSymbols = function(menu,symbols) {
     var self = this;
     var html = symbols.map(function(symbol) {
-      var entity = (symbol.content ? symbol.content : "&amp;" + (symbol.entity ? symbol.entity : "#" + symbol.code.toString()) + ";");
+      var entity = (symbol.content ? symbol.content : "&" + (symbol.entity ? symbol.entity : "#" + symbol.code.toString()) + ";");
       var classes = "symbol button" + (symbol.invisible ? " invisible" : "");
       var title = symbol.title || entity;
-      return "<span class='" + classes + "' data-entity='" + entity + "' title='" + title + "'>"  +
+      return "<span class='" + classes + "' data-entity='" + encodeURIComponent(entity) + "' title='" + title + "'>"  +
               (symbol.display ? symbol.display : "&#" + symbol.code.toString() + ";") + "</span>";
     }).join("");
     menu.innerHTML = html;
     menu.addEventListener("click", function(ev) {
       var elem = ev.target;
       if (!elem) return;
-      var entity = elem.getAttribute("data-entity");
+      var entity = decodeURIComponent(elem.getAttribute("data-entity"));
       if (!entity) return;
       self.toolCommand( { 
         name: "symbol", 

@@ -614,9 +614,9 @@ function withUser( req, action ) {
 }
 
 // Check of a file names is root-relative (ie. relative and not able to go to a parent)
-// and that it contains only [A-Za-z0-9_\-] characters.
+// and that it contains only [A-Za-z0-9_\-\ ] characters.
 function isValidFileName(fname) {
-  return (/^(?![\/\\])(\.(?=[\/\\]))?([\w\-]|[\.\/\\]\w)+$/.test(fname));
+  return (/^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$/.test(fname));
 }
 
 

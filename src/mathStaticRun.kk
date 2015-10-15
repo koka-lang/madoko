@@ -55,7 +55,7 @@ public function runBibtex( bibFile : string, opts : options, continue : bool -> 
   system(bibtexCmd, fun(err:int,stdout:string,stderr:string) {
     if (err!=0) {
       opts.printErr("error while running: > " + bibtexCmd)
-      system(bibtexCmd + " -version") fun(errx:int,stdoutx,stderrx) {
+      system(opts.bibtex.quote + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("could not find bibtex: \"" + bibtexCmd + "\"")
           opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
@@ -102,7 +102,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
       opts.printErr("error while running: \n> " + latexCmd)
       trace("error code: " + err.show + "\n" + stdout + stderr)
       //println(stdout + stderr)
-      system(texCmd + " -version") fun(errx:int,stdoutx,stderrx) {
+      system(texCmd.quote + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("could not find program: \"" + texCmd + "\"")
           if (notfound != "") opts.printErr(notfound)
@@ -204,8 +204,8 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
     // use dvips and ps2pdf to get a pdf
     val dir = texName.dirname
     val stem = texName.stemname
-    val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + stem + ".dvi"
-    val ps2pdfCmd = xopts.ps2pdf.quote + " " + stem + ".ps"
+    val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + (stem + ".dvi").quote
+    val ps2pdfCmd = xopts.ps2pdf.quote + " " + (stem + ".ps").quote
     xopts.print("generating pdf from dvi...")
     xopts.print(">" + dvipsCmd, 3)
     system(dvipsCmd,fun(err,stdout,stderr) {
@@ -460,12 +460,12 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
   val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
                                       " -D" + xopts.mathDpi.show +
                                       " " + dvipngPages(dviPages) + 
-                                      " -o " + dviBasePng + "-%d.png" +
-                                      " " + texNameDvi.basename
+                                      " -o " + (dviBasePng + "-%d.png").quote +
+                                      " " + texNameDvi.basename.quote
   val pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
   val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
-                  texNamePdf.basename + pdfPages.convertPages + " " +
-                  pdfBasePng + pdfPages.convertSuffix + ".png"
+                  (texNamePdf.basename + pdfPages.convertPages).quote + " " +
+                  (pdfBasePng + pdfPages.convertSuffix + ".png").quote
               
 
   // make sure the output directory exists
@@ -511,9 +511,9 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
   if (xopts.mathconvert=="") then continue() else {
-    val convertCmd = xopts.mathconvert + " " + texName.stemname + "-%d.png" + 
+    val convertCmd = xopts.mathconvert.quote + " " + (texName.stemname + "-%d.png").quote + 
                           dviPages.convertPages + " " +
-                          texName.stemname + "-c" + dviPages.convertSuffix + ".png"
+                          (texName.stemname + "-c" + dviPages.convertSuffix + ".png").quote
     xopts.print( "converting math images... (dvi)" )
     xopts.print( "> " + convertCmd, 3 )
     system(convertCmd, fun(err,stdout,stderr) {

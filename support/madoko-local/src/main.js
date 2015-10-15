@@ -312,7 +312,7 @@ function finfoFromStat( stat, fpath ) {
 // Check of a file name is root-relative (ie. relative and not able to go to a parent)
 // and that it contains only [A-Za-z0-9_\-] characters.
 function isValidFileName(fname) {
-  return (/^(?![\/\\])(\.(?=[\/\\]))?([\w\-]|[\.\/\\]\w)*$/.test(fname));
+  return (fname==="" || /^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$/.test(fname));
 }
 
 function checkValidPath(fpath) {
@@ -437,7 +437,7 @@ function postCreateFolder(req,res) {
 // -------------------------------------------------------------
 
 function cspReport(req,res) {
-  config.log.trace(req.body);
+  config.log.trace(JSON.stringify(req.body));
   config.log.entry( { type:"csp", report: req.body['csp-report'], date: new Date().toISOString() } );
   res.send();
 }

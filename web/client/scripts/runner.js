@@ -195,7 +195,8 @@ var Runner = (function() {
         Util.message(round.toString() + ":storage sent: " + file.path, Util.Msg.Trace);      
         return 1;
       }, function(err) {
-          Util.message("unable to read from storage: " + fname, Util.Msg.Info);
+          var msg = (typeof err === "string" ? err : (err && err.message ? err.message : ""));
+          Util.message("unable to read from storage: " + fname + (msg ? "\n" + msg : ""), Util.Msg.Info);
           return 0;
       });
   }
@@ -275,7 +276,7 @@ var Runner = (function() {
     var self = this;
     var errors = [];
     // location latex errors
-    var rx = /(?:^|\n) *(error|warning) *: *(?:source +line *: *)?([\w\-\.;:\\\/]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
+    var rx = /(?:^|\n) *(error|warning) *: *(?:source +line *: *)?([\w\-\.;:\\\/ ]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[2];
