@@ -84,7 +84,6 @@ function createCache(fnames,digest) {
 		// log: versionLog.log[0],
 	});
 	Fs.writeFileSync(Path.join(options.rootPath,"version.json"),header + "\n");
-	Fs.writeFileSync(Path.join(options.rootPath,"versionlog.json"), JSON.stringify(versionLog));
 	return [
 		"CACHE MANIFEST",
 		"#" + header,
@@ -95,6 +94,7 @@ function createCache(fnames,digest) {
 	].join("\n");
 }
 
+Fs.writeFileSync(Path.join(options.rootPath,"versionlog.json"), JSON.stringify(versionLog));
 readResources().then( function(fnames) {
 	console.log("creating digest...");
 	return createDigest(fnames.concat(options.digestOnly)).then( function(digest) {
