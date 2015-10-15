@@ -361,12 +361,13 @@ function getMetadata(req,res) {
               finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
             }
           }
+          config.log.trace("dir listing: " + finfo.path + ": " + finfo.contents.length.toString() + " items.");      
           return finfo;
         });
       });
     }
     else {
-      if (finfo) config.log.trace("file meta: " + finfo.path + ", modified: " + finfo.modified);
+      config.log.trace("file meta  : " + relpath + (finfo ? ", modified: " + finfo.modified : ", not found."));
       return finfo;
     }
   }, function(err) {
@@ -381,7 +382,7 @@ function getMetadata(req,res) {
 // -------------------------------------------------------------
 
 function getReadFile(req,res) {
-  config.log.info("read file    : " + req.query.path);
+  config.log.info("read file   : " + req.query.path);
   var fpath = getLocalPath(req.query.path);
   return Util.readFile( fpath, { encoding: (req.query.binary ? null : "utf8" ) } ).then( function(data) {
     res.send(data);
@@ -389,14 +390,14 @@ function getReadFile(req,res) {
 }
 
 function putWriteFile(req,res) {
-  config.log.info("write file   : " + req.query.path);
+  config.log.info("write file  : " + req.query.path);
   var fpath = getLocalPath(req.query.path); 
   var rtime = (typeof req.query.remoteTime === "string" ? Util.dateFromISOString(req.query.remoteTime) : null);
   return Util.fstat( fpath ).then( function(stat) {
     if (stat && rtime) {
       //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
-        config.log.trace("file write: atomic fail: " + req.query.path + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
+        config.log.trace("file write : atomic fail: " + req.query.path + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
         throw new Error("File was modified concurrently; could not save.");
       }
     }
@@ -407,7 +408,7 @@ function putWriteFile(req,res) {
       return Util.writeFile( fpath, req.body ).then( function() {
         return Util.fstat(fpath).then( function(stat) {
           if (!stat) throw new Error("File could not be saved");
-          config.log.trace("file write: final mtime: " + stat.mtime.toISOString());
+          config.log.trace("file write : final mtime: " + stat.mtime.toISOString());
           res.send({ 
             path: req.query.path, 
             modified: stat.mtime.toISOString(),
@@ -424,7 +425,7 @@ function putWriteFile(req,res) {
 // -------------------------------------------------------------
 
 function postCreateFolder(req,res) {
-  config.log.info("create directory: " + req.query.path);
+  config.log.info("create dir  : " + req.query.path);
   var fpath = getLocalPath(req.query.path);
   return Util.ensureDir(fpath).then( function() {
     res.send({ created: true });
