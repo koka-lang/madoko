@@ -685,14 +685,19 @@ function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : boo
 
 function cssImageArgs( attrs : attrs ) : (attrs,string) {
   val kvs = attrs.keyvals.dict
-  val args = "keepaspectratio=true"
+  val w   = dimContentWidth(kvs)
+  val h   = dimContentHeight(kvs)
+  val args0 = "keepaspectratio=true" + 
+                (if (w.isEmpty) then "" else ",width=" + w) +
+                (if (h.isEmpty) then "" else ",height=" + h)
+    /*
     .onKey( kvs, "width", fun(value,b) {
-      if (value=="auto") then b else b + ",width=" + cssWidth(value)
+      if (value=="auto") then b else b + ",width=" + dimContentWidth(kvs)
     })
     .onKey( kvs, "height", fun(value,b) {
       if (value=="auto") then b else b + ",height=" + cssHeight(value)
-    })
-    .onKey( kvs, "zoom", fun(value,b) {
+    }) */
+  val args = args0.onKey( kvs, "zoom", fun(value,b) {
       b + ",scale=" + cssValue(value)
     })
     .onKey( kvs, "transform-scale", fun(value,b) {
@@ -901,17 +906,34 @@ function dimBorderBoxWidth( kvs : dict<string> ) {
 }
 
 function dimContentWidth( kvs : dict<string> ) {
-  val w = kvs.find("width")
-  if (w.isEmpty) return ""
-  
+  val w0   = kvs.find("width")
   val maxw = kvs.find("max-width")
   val minw = kvs.find("min-width")
-  
+
+  val w = if (!w0.isEmpty) then w0
+          elif (!maxw.isEmpty) maxw
+          else minw
+  if (w.isEmpty) return ""
+
   val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimmin" + w.cssWidth.braced + maxw.cssWidth.braced
   val width  = if (minw.isEmpty) then width0 else "\\dimmax" + width0.braced + minw.cssWidth.braced 
   width
 }
 
+function dimContentHeight( kvs : dict<string> ) {
+  val h0   = kvs.find("height")
+  val maxh = kvs.find("max-height")
+  val minh = kvs.find("min-height")
+
+  val h = if (!h0.isEmpty) then h0
+          elif (!maxh.isEmpty) maxh
+          else minh
+  if (h.isEmpty) return ""
+
+  val height0 = if (maxh.isEmpty) then h.cssHeight else "\\dimmin" + h.cssHeight.braced + maxh.cssHeight.braced
+  val height  = if (minh.isEmpty) then height0 else "\\dimmax" + height0.braced + minh.cssHeight.braced 
+  height
+}
 // -----------------------------------------------------------------------------
 // Border-box
 // -----------------------------------------------------------------------------
