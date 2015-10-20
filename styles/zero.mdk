@@ -9,3 +9,4 @@ Description: Leino mode: Start numbering at 0
 ~Equation: @equation=arabic0
 ~Bibitem:  @bibitem=arabic0
 ~Footnote: @footnote=arabic0
+Tex Header  : \setcounter{footnote}{-1}
