@@ -949,6 +949,7 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
   val attrs   = [makeAttr("id", key.definitionId),
                  makeAttr("cite-label", lab),
                  makeAttr("tex-cite-label", labx.unbrace ),
+                 makeAttr("tex-bibitem-args", (if (context.citestyle.isNumCite) then "" else "[" + labx.unbrace + "]") + "{" + key.definitionId + "}"  ),
                  makeAttr("label", label),
                  makeAttr("caption", caption),
                  makeAttr("searchterm", search )].joinAttrs
