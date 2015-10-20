@@ -9,6 +9,7 @@ Email       : other@bar.com
 
 Doc Class   : style/sigplanconf.cls
 Bibliography: example.bib
+bib style   : abbrvnat
 Logo        : True
 .cbox       : replace="[&strut;]{border-width=1px border-style=solid \
                         height=0.9em width=0.9em background-color=&source;}"
@@ -25,6 +26,7 @@ But sad or merry, I must leave it now.[^fn-test] [@deMouraBjorner:Z3:overview;@L
 
 [^fn-test]: Testing citation
      in a footnote [@deMouraBjorner:Z3:overview;@Lean:CADE2015]
+
 
 ~ Other
 [**Aaaa[a]{vertical-align=-0.3ex}
@@ -172,6 +174,7 @@ which they can hear a mile off.
 ### Acknowledgments {-}
 
 I would like to thank ... 
+
 
 [BIB]
 

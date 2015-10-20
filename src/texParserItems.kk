@@ -521,6 +521,10 @@ function texChar( cap : matched, _context ) : string {
   if (ent=="") then cap.matched.substr(1) else ent
 }
 
+function texDash( cap: matched, _context) : string {
+  if (cap.matched.length == 2)
+   then "&ndash;" else "&mdash;"
+}
 
 function texOther( cap : matched, _context ) : string {
   val char = cap.matched

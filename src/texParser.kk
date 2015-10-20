@@ -170,6 +170,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texsize",     regex(@"^\{\\(" + texFontSizes + @")\b\s*" + texargs + @"\}"), texFontSize ),
   Rule("texaccent",   regex(@"^\\([`'^""~]|[vrc]\b)\s*" + texarg), texAccent ),
+  Rule("texdash",     regex(@"^---?"), texDash ),
 
   // Rule("texchar",     regex(@"^\\(" + rxtexchar + @")\b"), texChar ),
   Rule("texitcmd",    regex(@"^\\/"), texIgnore ),

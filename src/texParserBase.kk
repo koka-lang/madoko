@@ -42,7 +42,7 @@ public function parse( txt : string, context : texContext ) : string
 }
 
 
-public val special = @"\\{}~*_\[\]#\$`%\n";
+public val special = @"\\{}~*_\[\]#\$`%\n\-";
 
 public val texargg = @"(?:\{" + texargs + @"\})"
 
