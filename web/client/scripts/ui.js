@@ -1625,9 +1625,15 @@ var UI = (function() {
       pos: pos,
       storage: self.storage.persist(self.tabDb.limit()),      
     };
-    window.tabStorage.setItem( "document", doc );
-    window.tabStorage.setItem( "editContent", self.editContent ); // updated by flush    
-    return doc;
+    try {
+      window.tabStorage.setItem( "document", doc );
+      window.tabStorage.setItem( "editContent", self.editContent ); // updated by flush    
+      return doc;
+    }
+    catch(exn) {
+      Util.message("Unable to save document state to local storage: " + exn.toString(), Util.Msg.Warning);
+      return doc;
+    };    
   }
 
   // Asynchonous full save
