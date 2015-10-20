@@ -109,14 +109,15 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   }
 
   function normalizeId(s) {
-    return s.replace(/[^\w\-_:\*\s]+/g,"").replace(/\s+|[:\*]/g,"-").toLowerCase();
+    return s.replace(/[^\w_:\*]+/g,"").replace(/\s+|[:\*]/g,"-").toLowerCase();
   }
 
   var metaKey = /(?:@(?:\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]/;
   var rxMeta = new RegExp("^("+ metaKey.source + " *)((?:.*(?:\n .*)*)(?:\\n+(?=\\n|" + metaKey.source + ")|$))", "g");
-  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips|author|address|affiliation|email|(reveal|beamer)-(url|theme))/;
+  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html|css)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips|author|address|affiliation|email|(reveal|beamer)-(url|theme))/;
 
   function sanitizeMeta( text ) {
+    /* remove initial whitespace */
     var res = "";
     var cap = /^(\s|<!--[\s\S]*?-->)+/.exec(text);
     if (cap) {
@@ -131,6 +132,12 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
       rxMeta.lastIndex = 0;
     }
     return res + text;
+  }
+
+  function sanitizeAllMeta( text ) {
+    return sanitizeMeta(text).replace( /<!--meta *\n([\s\S]*)^--> *\n/gim, function(matched,part) {
+      return "\n" + sanitizeMeta(part + "\n");
+    });
   }
 
   var rxIndentedCode = /(\n( *)\S.*\n)((?:\2 {0,3})?\n)((?:\2    .*\n)+)((\2 {0,3})?(?=\n))/g
@@ -172,9 +179,9 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   var rxBlockParts  = regexOr([rxFenced,rxMathEnv,rxMathEnv2,rxHtml,rxNoCheckEnv,rxNoCheckEnv2,rxMath,rxMathEnv3,rxMathEnv4],"gi");
 
   function checkText( text, options ) {
-    var text0 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"");
+    var text0 = text.replace(/\t/g,"    ").replace(/\r/g,"").replace(rxSpecial,"") + "\n";
     var text1 = text0.replace(/^<!--madoko *\n([\s\S]*)^--> *\n/gim, "\n$1\n");
-    var text2 = sanitizeMeta(text1);
+    var text2 = sanitizeAllMeta(text1);
     var text3 = text2.replace(rxBlockParts,function(matched) {
       return whiten(matched);
     });
