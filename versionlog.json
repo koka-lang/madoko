@@ -1,10 +1,20 @@
 {
   "log" : [
+    { "version": "0.9.10-beta",
+      "date": "2015-10-20",
+      "updates": [
+        "Allow '&lt;!--madoko' and '&lt;!--meta' comments that are taken into account by Madoko (but treated as regular comments by other processors).",
+        "Allow file names with spaces.",
+        "LaTeX: always align code to the left.",
+        "LaTeX: fix textual citation styles and special characters in bibliography labels.",
+        "LaTeX: process dashes correctly for bibliography items.",
+        "HTML: fix for citations that ended footnotes."
+      ]
+    },
     { "version": "0.9.9-beta",
       "date": "2015-10-12",
       "updates": [
         "UI: improved support for `madoko-local` to enable local disk access.",
-        "Support `&lt;!--madoko` and `&lt;!--meta` comment blocks that are processed by Madoko (but ignored by other processors).",
         "Fixed 'flickering' on long file names in the open dialog.",
         "Support for multiple image file formates for different backends; write the file name as `myimage.[svg,eps]` for example.",
         "Support `* ` prefixed definition lists so these display still nicely with other processors."
