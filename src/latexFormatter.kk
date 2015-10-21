@@ -664,7 +664,7 @@ function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
 function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : bool ) : string {
   if (isBlock) then {
     body
-      .onClasses( attrs, ["para-continue","para-block","noindent"], fun(b) {
+      .onClasses( attrs, ["para-continued","para-block","noindent"], fun(b) {
         cmdconnect("\\noindent",b)
       })
       .onKey( kvs, "text-indent", fun(value,b) {
