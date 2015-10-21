@@ -25,11 +25,12 @@ and that's it :-)
 
 # Usage
 
-Simply run the `madoko-local` program inside the directory that you would
-like to access. Everything in that directory, and all its sub-directories
-will be accessible to Madoko:
+Simply run the `madoko-local` program with the directory that you would
+like to access as an argument. Everything in that directory, and all its 
+sub-directories will be accessible to Madoko. Here we run it with access
+to the current directory:
 ```
-> madoko-local
+> madoko-local .
 listening on          : http://localhost
 connecting securely to: https://www.madoko.net
 serving files under   : C:\Users\dknuth\docs
@@ -65,8 +66,9 @@ Arguments:
 * `mount-directory` 
   : The server only provides access to files and
     subdirectories under the mount directory but not outside of it. If not
-    given, the last specified directory is used; if this is the first run
-    the current working directory is used.
+    given, the last specified directory is used (which is stored in the
+    local configuration file). If this is the first run the current working
+    directory is used.
 
 Options:
 
