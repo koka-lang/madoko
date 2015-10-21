@@ -8,8 +8,6 @@ Author        : My co-author
 Affiliation   : Other institute
 Email         : other@bar.com
 
-Heading Base  : 2
-Bib style     : plainnat
 Bibliography  : example.bib
 Doc class     : [reprint,nocopyrightspace]style/sigplanconf.cls
 
