@@ -443,6 +443,25 @@ var Preview = (function() {
       if (!parent) return;
       parent.removeChild(elem);
     });
+    // remove line spans around soft-hyphens
+    [].forEach.call( document.querySelectorAll("span[data-line]"), function(elem) {
+      if (!elem || (elem.childNodes != null && elem.childNodes.length !== 0)) return; // line info span
+      var shy = elem.nextSibling;
+      if (!shy || shy.nodeType !== Node.TEXT_NODE || shy.textContent == null || shy.textContent.length !== 1 || shy.textContent.charCodeAt(0) !== 0xAD) return;
+      var textElem1 = elem.previousSibling;
+      if (!textElem1 || textElem1.nodeType !== Node.TEXT_NODE) return;
+      var elem2 = shy.nextSibling;
+      if (!elem2 || elem2.nodeType !== Node.ELEMENT_NODE) return;
+      if (elem2.nodeName !== "SPAN" || elem2.getAttribute("data-line") == null || elem2.childNodes.length !== 0) return;
+      var textElem2 = elem2.nextSibling;
+      if (!textElem2 || textElem2.nodeType !== Node.TEXT_NODE) return;
+      var parent = elem.parentNode; if (!parent) return;
+      textElem1.textContent = textElem1.textContent + shy.textContent + textElem2.textContent;
+      parent.removeChild(elem);
+      parent.removeChild(shy);
+      parent.removeChild(elem2);
+      parent.removeChild(textElem2);
+    });
     // collect inline scripts and referenced scripts
     inlineScripts = [];
     var scripts = document.body.getElementsByTagName("script");   
