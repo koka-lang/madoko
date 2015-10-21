@@ -1615,7 +1615,7 @@ var UI = (function() {
   UI.prototype.localSave = function() {
     var self = this;
     self.saveSettings();
-    if (!self.storage) return {};
+    if (!self.storage || !self.editName) return {};
     
     self.flush();    
     var pos  = self.editor.getPosition();    
