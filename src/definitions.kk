@@ -260,8 +260,8 @@ function mapBlocks( blocks : list<block>,
       Para(_,xs)  -> previousPar := ParInfo(True,xs.hasClass("para-block"))
       Div(_,xs)   | nblock.blockName == "figure" || xs.hasClass("float") -> ()  // leave as is
       Source(input,Raw(Just(FmtHtml))) | input.startsWith("<!--") -> () // ignore comments too
-      Div(_,xs)   -> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block"))
-      Code(_,_,xs)-> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block"))
+      Div(_,xs)   -> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block") && !xs.hasClass("para-end"))
+      Code(_,_,xs)-> previousPar := ParInfo(xs.hasClass("para-end"),xs.hasClass("para-block") && !xs.hasClass("para-end"))
       DefFootnote -> ()
       _    -> previousPar := ParInfo(False,False)
     }
