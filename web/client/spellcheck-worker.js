@@ -109,7 +109,7 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   }
 
   function normalizeId(s) {
-    return s.replace(/[^\w_:\*]+/g,"").replace(/\s+|[:\*]/g,"-").toLowerCase();
+    return s.replace(/[^\w_:\*\s]+/g,"").replace(/\s+|[:\*]/g,"-").toLowerCase();
   }
 
   var metaKey = /(?:@(?:\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]/;
