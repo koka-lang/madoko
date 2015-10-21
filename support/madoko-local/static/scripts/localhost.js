@@ -72,6 +72,9 @@ function urlParamsDecode(hash) {
   return obj;
 }
 
+function randomHash8() {
+  return (Math.random()*99999999).toFixed(0);
+}
 
 // -------------------------------------------------------------
 // Send requests to local server   
@@ -81,6 +84,7 @@ function xhrRequest( info, method, path, cont ) {
 	var req = new XMLHttpRequest();
 	req.method = method;
 	if (config.secret) info.params.secret = config.secret; // pass on secret
+	info.params.nocache = randomHash8(); // IE tends to cache GET requests on localhost despite nocache headers..
 	var query = urlParamsEncode(info.params);
 	if (query) query = "?" + query;
 	var content = info.content || null;
