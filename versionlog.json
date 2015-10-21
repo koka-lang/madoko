@@ -1,5 +1,13 @@
 {
   "log" : [
+    { "version": "0.9.11-beta",
+      "date": "2015-10-21",
+      "updates": [
+        "Bug fixes for madoko-local.",
+        "LaTeX: fix type setting of numerical bibliography items.",
+        "Support the soft-hyphen (&amp;shy;) better in the preview."
+      ]
+    },
     { "version": "0.9.10-beta",
       "date": "2015-10-20",
       "updates": [
