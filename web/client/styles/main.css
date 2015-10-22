@@ -969,7 +969,7 @@ a.file-share:hover {
 /*----------------------------------------
   vs theme
   ---------------------------------------- */
-.monaco-editor.vs, .monaco-editor.vs .lines-decorations {
+.monaco-editor.vs, .monaco-editor.vs .lines-decorations, .monaco-editor.vs .monaco-editor-background {
   background-color: #F8F2E8;
 }
 
@@ -1030,7 +1030,7 @@ a.file-share:hover {
    ivory theme
    ----------------------------------------- */
 
-.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations, .monaco-editor.ivory .current-line {
+.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations, .monaco-editor.ivory .current-line, .monaco-editor.ivory .monaco-editor-background {
   background-color: Floralwhite;
 }
 .monaco-editor.ivory .line-numbers {
