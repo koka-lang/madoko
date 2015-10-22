@@ -33,6 +33,7 @@ var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) {
     return WinJS.Promise.timeout(1).then(function() {
       return this.menu.asyncGetContent().then( function( res ) {
         this.contentAsync = res;
+        setTimeout( function(ev) { Util.dispatchEvent(window,"resize"); }, 100 ); // somehow the initial popup causes the preview to overflow the width..
         return;
       }.bind(this));
     }.bind(this));
