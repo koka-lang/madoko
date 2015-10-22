@@ -7,13 +7,14 @@
 ---------------------------------------------------------------------------*/
 
 define(["../scripts/map","../scripts/promise","../scripts/util",
-        'vs/base/lib/winjs.base',
-        'vs/editor/core/constants',
-        'vs/editor/core/range',
-        'vs/editor/editor',
-        'vs/editor/contrib/hover/hoverOperation',
-        'vs/editor/contrib/hover/hoverWidgets'],
-        function(Map,Promise,Util,WinJS,Constants,Range,Editor,HoverOperation,HoverWidgets) {
+        'vs/base/common/winjs.base',
+        'vs/editor/common/common',
+        'vs/editor/common/core/range',
+        'vs/editor/contrib/hover/browser/hoverOperation',
+        'vs/editor/contrib/hover/browser/hoverWidgets'],
+        function(Map,Promise,Util,WinJS,Constants,Range,HoverOperation,HoverWidgets) {
+
+var Editor = Constants;
 
 var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) { 
   this.menu = customMenu;

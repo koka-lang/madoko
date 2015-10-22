@@ -6,43 +6,55 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 define(["../scripts/map","../scripts/promise","../scripts/util",
-        "../scripts/madokoMode","vs/editor/modes/monarch/monarch",
-        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","vs/base/network",
-         "vs/platform/services","vs/editor/modes/modesExtensions", "vs/platform/platform", "vs/editor/diff",
-         "vs/editor/standalone/standaloneCodeEditor"],
-        function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Services,ModesExtensions,Platform,Diff,StandaloneCodeEditor) {
+        "../scripts/madokoMode","vs/editor/common/modes/monarch/monarchDefinition",
+        "vs/editor/common/core/range", "vs/editor/common/core/selection","vs/editor/common/commands/replaceCommand",
+        "vs/base/common/network",
+        "vs/platform/instantiation/common/descriptors","vs/editor/common/modes/modesRegistry", "vs/platform/platform", "vs/editor/diff",
+        "vs/editor/browser/standalone/standaloneCodeEditor",
+        "vs/editor/browser/standalone/standaloneServices", 
+        "vs/editor/common/modes/languageExtensionPoint"],
+        function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Descriptors,ModesExtensions,Platform,Diff,
+                 StandaloneCodeEditor,StandaloneServices,LanguageExtensionPoint) {
 
 
 
 //---------------------------------------------------------------------------
 // Disable symantic validation for javascript
 //---------------------------------------------------------------------------
-var modesRegistry = Platform.Registry.as(ModesExtensions.Extensions.EditorModes);
-modesRegistry.configureMode('text/typescript', {
-              validationSettings: {
-                     "semanticValidation": false,
-                     "syntaxValidation": true,
-              }
-       });
+var services = StandaloneServices.getOrCreateStaticServices();
 
-modesRegistry.configureMode('text/javascript', {
+// var modesRegistry = Platform.Registry.as(ModesExtensions.Extensions.EditorModes);
+services.modeService.configureMode('text/typescript', {
               validationSettings: {
                      "semanticValidation": false,
                      "syntaxValidation": true,
-              }
-       });
+              }});
+
+services.modeService.configureMode('text/javascript', {
+              validationSettings: {
+                     "semanticValidation": false,
+                     "syntaxValidation": true,
+              }});
 
 //---------------------------------------------------------------------------
 // Register Madoko languages
 //---------------------------------------------------------------------------
 
 function createCustomMode(mode) {
-  ModesExtensions.registerModeAsyncDescriptor(mode.name, [mode.name].concat(mode.mimeTypes), new Services.AsyncDescriptor('vs/editor/modes/monarch/monarch', 'DynamicMonarchMode', mode));
-  return modesRegistry.getMode(mode.name);
+  //ModesExtensions.registerModeAsyncDescriptor(mode.name, [mode.name].concat(mode.mimeTypes), new Descriptors.AsncDescriptor('vs/editor/common/modes/monarch/monarchDefinition', 'DynamicMonarchMode', mode));
+  services.modeService.registerMonarchDefinition(mode.name,mode);
+  LanguageExtensionPoint.LanguageExtensions._onLanguage( { pluginId: mode.name }, {
+    id: mode.name,
+    mimetypes: mode.mimeTypes,
+    extensions: mode.fileExtensions,
+  });
+  //return modesRegistry.getMode(mode.name);
 }
 
 var languages = [
-  "bibtex","boogie","codehunt","cpp","csharp","dafny","haskell","html","java","koka","latex","python","ruby","smt","javascript",
+  "bibtex","boogie","codehunt","cpp","csharp","dafny","haskell",
+  "java","koka","latex","python","ruby","smt",
+  // "html","javascript",
 ];
 
 Util.requestGET("styles/lang/madoko.json").then(function(madokoMode,req) {
@@ -211,6 +223,7 @@ var Model = (function() {
   
   return {
     dehydrate: function(model) {
+      return null; // TODO: fix!
       return {
         _version: 1,
         associatedResource: dehydrateAssociatedResource(model),
@@ -224,6 +237,7 @@ var Model = (function() {
     },
     
     hydrate: function(v) {
+      return null; // TODO: fix!
       if (v._version !== 1) {
         throw new Error('version check!');
       }

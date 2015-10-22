@@ -8,7 +8,8 @@
 
 define(["../scripts/map","../scripts/promise","../scripts/date","../scripts/util","../scripts/tabStorage",
         "../scripts/storage","../scripts/spellcheck","../scripts/errorMenu","../scripts/remote-localhost",
-        "vs/editor/core/range", "vs/editor/core/selection","vs/editor/core/command/replaceCommand","../scripts/editor","../scripts/customHover"],
+        "vs/editor/common/core/range", "vs/editor/common/core/selection","vs/editor/common/commands/replaceCommand",
+        "../scripts/editor","../scripts/customHover"],
         function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Localhost,Range,Selection,ReplaceCommand,Editor,CustomHover) {
 
 
@@ -443,7 +444,8 @@ var UI = (function() {
         //verticalHasArrows: true,
         //horizontalHasArrows: true,
         //arrowSize: 10,
-      }
+      },
+      quickSuggestions: false,
     });    
 
 
@@ -494,18 +496,20 @@ var UI = (function() {
       if (self.stale || self.changed) self.lastEditChange = self.lastActivity; // so delayed refresh keeps being delayed even on cursor keys.
     });
     
-    self.editor.getHandlerService().bind({ key: 'Alt-Q' }, function(ev) { 
+    self.editor.addCommand({ key: 'Alt-Q' }, function(ev) { 
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
-    self.editor.getHandlerService().bind({ key: 'Enter' }, function(ev) { 
-      var line = self.editor.getModel().getLineContent(self.editor.getPosition().lineNumber);
-      if (rxTable.test(line)) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        self.addTableRow();        
+    self.editor.addListener("keydown", function (ev) { 
+      if (ev.key === "Enter" && !ev.altKey && !ev.shiftKey && !ev.metaKey && !ev.ctrlKey) {
+        var line = self.editor.getModel().getLineContent(self.editor.getPosition().lineNumber);
+        if (rxTable.test(line)) {
+          ev.stopPropagation();
+          ev.preventDefault();
+          self.addTableRow();            
+        }
       }
     });
-
+    
     
     // Key bindings
 
