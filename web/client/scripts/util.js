@@ -1286,8 +1286,8 @@ doc.execCommand("SaveAs", null, filename)
     var query = (params ? urlParamsEncode(params) : "");
     if (query) opts.url = opts.url + "?" + query;
 
-    if (opts.width==null || opts.width < 0) opts.width = 600;
-    if (opts.height==null || opts.height < 0) opts.height = 500; 
+    if (opts.width==null || opts.width < 0) opts.width = 800;
+    if (opts.height==null || opts.height < 0) opts.height = 600; 
 
     if (opts.width < 1) opts.width = window.outerWidth * opts.width;
     if (opts.height < 1) opts.height = window.outerHeight * opts.height;
@@ -1306,9 +1306,10 @@ doc.execCommand("SaveAs", null, filename)
       "menubar=no",
       "scrollbars=yes"];
 
-    // return null;
     try {
-      var popup = window.open(opts.url, opts.name || "oauth", features.join(","));
+      // we open first an empty url since IE always returns 'null' for different domains :-(
+      var popup = window.open('', opts.name || "oauth", features.join(","));
+      popup.location = opts.url;
       if (popup && (opts.focus !== false)) {
         popup.focus();
       }
