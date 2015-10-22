@@ -111,8 +111,8 @@ function diff( original, modified ) {
 
 var Model = (function() {
   function dehydrateAssociatedResource(model) {
-    var r = model.getAssociatedResource().toExternal();
-    if (r.indexOf('inMemory://') === 0) {
+    var r = model.getAssociatedResource().toString();
+    if (r.indexOf('inmemory://') === 0) {
       return null;
     }
     return r;
@@ -223,7 +223,6 @@ var Model = (function() {
   
   return {
     dehydrate: function(model) {
-      return null; // TODO: fix!
       return {
         _version: 1,
         associatedResource: dehydrateAssociatedResource(model),
@@ -237,7 +236,6 @@ var Model = (function() {
     },
     
     hydrate: function(v) {
-      return null; // TODO: fix!
       if (v._version !== 1) {
         throw new Error('version check!');
       }
