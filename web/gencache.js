@@ -32,7 +32,7 @@ function readDirRec(dir) {
 
 function readResources() {
 	return readDirRec(options.rootPath).then( function(files) {
-		return files.map(function(fname) {
+		return files.sort().map(function(fname) {
 			return (fname ? fname.substr(options.rootPath.length+1).replace(/\\/g,"/") : "");
 		}).filter( function(fname) {
 			// excludes
@@ -67,11 +67,15 @@ function readFile(fname) {
 function createDigest(fnames) {
 	var makedigests = fnames.map( function(fname) {
 		return readFile(Path.join(options.rootPath,fname)).then( function(content) {
-			return Crypto.createHash('md5').update(content).digest("hex");			
+			return { fileName: fname, digest: Crypto.createHash('md5').update(content).digest("hex") };
 		});
 	});
-	return Promise.when(makedigests).then( function(digests) {
-		return Crypto.createHash('md5').update(digests.sort().join()).digest("hex");
+	return Promise.when(makedigests).then( function(infos) {
+		var digests = infos.map( function(info) {
+			console.log(info.fileName + ": " + info.digest);
+			return info.digest;
+		});
+		return Crypto.createHash('md5').update(digests.join()).digest("hex");
 	});
 }
 
