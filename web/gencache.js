@@ -71,15 +71,11 @@ function createDigest(fnames) {
 		});
 	});
 	return Promise.when(makedigests).then( function(infos) {
-		var digests = infos.map( function(info) {
-			console.log(info.fileName + ": " + info.digest);
-			return info.digest;
-		});
 		var fdigests = infos.map( function(info) { 
 			return (info.fileName + ": " + info.digest);
-		});
-		Fs.writeFileSync("digests.txt", fdigests.join("\n"));
-		return Crypto.createHash('md5').update(digests.join()).digest("hex");
+		}).join("\n");
+		Fs.writeFileSync("digests.log", fdigests);
+		return Crypto.createHash('md5').update(fdigests).digest("hex");
 	});
 }
 
