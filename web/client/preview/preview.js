@@ -397,6 +397,38 @@ var Preview = (function() {
     }
   }
 
+
+  // remove line spans around soft-hyphens
+  function fixSoftHypens() {
+    [].forEach.call( document.querySelectorAll("span[data-line]"), function(elem) {
+      if (!elem || (elem.childNodes != null && elem.childNodes.length !== 0)) return; // line info span
+      var shy = elem.nextSibling;
+      if (!shy || shy.nodeType !== Node.TEXT_NODE || shy.textContent == null || shy.textContent.length !== 1 || shy.textContent.charCodeAt(0) !== 0xAD) return;
+      var textElem1 = elem.previousSibling;
+      if (!textElem1 || textElem1.nodeType !== Node.TEXT_NODE) return;
+      var elem2 = shy.nextSibling;
+      if (!elem2 || elem2.nodeType !== Node.ELEMENT_NODE) return;
+      if (elem2.nodeName !== "SPAN" || elem2.getAttribute("data-line") == null || elem2.childNodes.length !== 0) return;
+      var textElem2 = elem2.nextSibling;
+      if (!textElem2 || textElem2.nodeType !== Node.TEXT_NODE) return;
+      var parent = elem.parentNode; if (!parent) return;
+      textElem1.textContent = textElem1.textContent + shy.textContent + textElem2.textContent;
+      parent.removeChild(elem);
+      parent.removeChild(shy);
+      parent.removeChild(elem2);
+      parent.removeChild(textElem2);
+    });
+  }
+
+
+  // append script to document
+  function appendScript(code) {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.appendChild( document.createTextNode(code));
+    document.body.appendChild(script);    
+  }
+
   // we only load script tags once in the preview (and never remote them)
   var loadedScripts = {};
   var inlineScripts = [];
@@ -410,14 +442,19 @@ var Preview = (function() {
     }
     // if all scripts are loaded:
     // execute all inline scripts and fire the "load" event.
-    inlineScripts.forEach( function(text) { 
-      eval(text);       
+    inlineScripts.forEach( function(text,idx) { 
+      var pre = (/^\s*\/\/[@#] *sourceURL=/.test(text) ? "" : "//@ sourceURL=preview-inline-" + idx.toString() + ".js\n");
+      appendScript(pre + text);       
     });
+    appendScript("Preview.onLoadedFinal();");
+    dispatchEvent(document,"DOMContentLoaded");     
+  }
+
+  function onLoadedFinal() {
     dispatchEvent(document,"load"); 
     window.setTimeout( function() {
       dispatchEvent(window,"resize"); 
     }, 100 );
-
     if (onLoadDone) onLoadDone();
   }
 
@@ -444,24 +481,7 @@ var Preview = (function() {
       parent.removeChild(elem);
     });
     // remove line spans around soft-hyphens
-    [].forEach.call( document.querySelectorAll("span[data-line]"), function(elem) {
-      if (!elem || (elem.childNodes != null && elem.childNodes.length !== 0)) return; // line info span
-      var shy = elem.nextSibling;
-      if (!shy || shy.nodeType !== Node.TEXT_NODE || shy.textContent == null || shy.textContent.length !== 1 || shy.textContent.charCodeAt(0) !== 0xAD) return;
-      var textElem1 = elem.previousSibling;
-      if (!textElem1 || textElem1.nodeType !== Node.TEXT_NODE) return;
-      var elem2 = shy.nextSibling;
-      if (!elem2 || elem2.nodeType !== Node.ELEMENT_NODE) return;
-      if (elem2.nodeName !== "SPAN" || elem2.getAttribute("data-line") == null || elem2.childNodes.length !== 0) return;
-      var textElem2 = elem2.nextSibling;
-      if (!textElem2 || textElem2.nodeType !== Node.TEXT_NODE) return;
-      var parent = elem.parentNode; if (!parent) return;
-      textElem1.textContent = textElem1.textContent + shy.textContent + textElem2.textContent;
-      parent.removeChild(elem);
-      parent.removeChild(shy);
-      parent.removeChild(elem2);
-      parent.removeChild(textElem2);
-    });
+    fixSoftHypens();
     // collect inline scripts and referenced scripts
     inlineScripts = [];
     var scripts = document.body.getElementsByTagName("script");   
@@ -492,11 +512,7 @@ var Preview = (function() {
       }
     }  
     // append script to detect onload event
-    var loaded = document.createElement("script");
-    loaded.type = "text/javascript";
-    var code = "Preview.onLoaded();";
-    loaded.appendChild( document.createTextNode(code));
-    document.body.appendChild(loaded);    
+    appendScript("Preview.onLoaded();");  
   }
 
   document.addEventListener("load", function(ev) {
@@ -674,5 +690,6 @@ var Preview = (function() {
 
   return {
     onLoaded: onLoaded,
+    onLoadedFinal: onLoadedFinal,
   };
 })();
