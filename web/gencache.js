@@ -75,6 +75,10 @@ function createDigest(fnames) {
 			console.log(info.fileName + ": " + info.digest);
 			return info.digest;
 		});
+		var fdigests = infos.map( function(info) { 
+			return (info.fileName + ": " + info.digest);
+		});
+		Fs.writeFileSync("digests.txt", fdigests.join("\n"));
 		return Crypto.createHash('md5').update(digests.join()).digest("hex");
 	});
 }
