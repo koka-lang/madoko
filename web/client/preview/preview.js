@@ -22,7 +22,18 @@ var Preview = (function() {
     }
   }, 10000);
 
+  // external handler for certain operations
+  var handler = {
+    scrollToElem: null,    // (res:{elem:<node>, line:int, next:<node>, nextLine:int}) : bool 
+    synchronizeElem: null, // (): { elem:<node>, body:<node> };           return the current element and top element in the frame
+    synchronize: null,     // ( loc: { path:string, line:int } ) : bool;  going to sync view with the given location
+    onDblclick: null,      // ( ev:event, loc:{path:string,line:int} ) : bool; going to sync view after double-click
+    onContentLoaded: null, // (): bool;  fired on the initial load     
+  };
 
+  function setHandler(h) {
+    if (h != null && typeof(h) == "object") handler = h;
+  }
   
   /*-------------------------------------------------------
      On double click, navigate to correct line
@@ -72,6 +83,10 @@ var Preview = (function() {
       res = findLocation(document.body,elem);
     }
     if (res) {
+      // let handler participate
+      var done = (handler.onDblclick ? handler.onDblClick(ev,res) : false);
+      if (done) return;
+      // by default sync the editor
       ev.preventDefault();
       res.eventType = 'previewSyncEditor';
       window.parent.postMessage( JSON.stringify(res), origin);
@@ -81,16 +96,27 @@ var Preview = (function() {
 
   function viewSynchronize() {
     var res;
+    var bodyelem = document.body;
+    var elem = null;
     if (typeof(Reveal) !== "undefined") {
-      var slide = Reveal.getCurrentSlide();
-      res = findLocation( getSlidesElem(), slide );
+      bodyelem = getSlidesElem();
+      elem = Reveal.getCurrentSlide();
     }
-    else {
+    // let handler participate
+    var elems = (handler.synchronizeElem ? handler.synchronizeElem() : null);
+    if (elems) {
+      if (elems.body) bodyelem = elems.body;
+      if (elems.elem) elem = elems.elem;
+    }
+    if (elem==null) {
       var offset = window.pageYOffset + (window.innerHeight/2);
-      var elem = findElemAfterOffset(document.body, offset);
-      res = findLocation(document.body,elem);
+      elem = findElemAfterOffset(topelem, offset);
     }
+    res = findLocation(bodyelem,elem);
     if (res) {
+      // let handler participate again
+      var done = (handler.synchronize ? handler.synchronize(res) : false);
+      if (done) return;
       res.eventType = "previewSyncEditor";
       window.parent.postMessage( JSON.stringify(res), origin);
       console.log('posted: ' + JSON.stringify(res));
@@ -267,6 +293,10 @@ var Preview = (function() {
       var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
       if (typeof(Reveal)!=="undefined") return scrollToSlide(res);
+
+      // let handler participate
+      var done = (handler.scrollToElem ? handler.scrollToElem(res) : false);
+      if (done) return;
 
       scrollTop = getDocumentOffset(res.elem).top; 
       //console.log("find elem at line: " + info.textLine + ":" ); console.log(info); console.log(res);
@@ -532,6 +562,9 @@ var Preview = (function() {
     if (typeof MathJax !== "undefined") {
       MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     }
+    // In the future frameworks should use this?
+    dispatchEvent(document,"previewContentLoaded");
+    if (handler.onContentLoaded) handler.onContentLoaded();
   });
 
   function revealRefresh( query ) {
@@ -691,5 +724,6 @@ var Preview = (function() {
   return {
     onLoaded: onLoaded,
     onLoadedFinal: onLoadedFinal,
+    setHandler: setHandler,
   };
 })();
