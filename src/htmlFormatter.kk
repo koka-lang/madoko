@@ -298,6 +298,30 @@ function fmtField( context: inlineContext, elem :string, class : string, txt : s
 /* --------------------------------------
   Full header 
 ---------------------------------------- */
+function embedScripts( options: options, scripts : string, metadata : dict<string> ) : string {
+  (if (scripts == "") then "" else {
+    val xlinks = scripts.expandKeys(metadata).splitPaths
+    xlinks.map(fun(xlink) { 
+      val (link,attrs) = match(xlink.find(rxScript)) {
+        Nothing   -> (xlink,attrsNone)
+        Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "script"))
+      }
+      match(options.embedinfos[link]) {
+        Just(info) | info.embedData != "" -> 
+          "<script " + attrs.htmlFormat("script",False) + ">\n//@ sourceURL=" + escape(link) + "\n" + info.embedData + "\n  </script>\n"
+        _ -> {
+          if (link.relative) then {
+            log("filesRefer",link);
+            log("embed",link);
+          }
+          "<script src=\"" + escape(link) + "\" " + attrs.htmlFormat("script",False) + "></script>\n" 
+        }
+      }
+    }).join 
+  })
+}
+val rxScript = regex(@"([^\{\s]+)\s*(?:\{((?:[^\\\}]|\\.)*)\})?")
+
 public function fmtHtmlFull(html : string, options : options, metadata : dict<string> ) : string 
 {
   function expand(s) { s.expandKeys(metadata) }
@@ -339,7 +363,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
         }
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
-            "<style " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </style>\n"
+            "<style type=\"text/css\" " + attrs.htmlFormat("style",False) + ">\n/*# sourceURL=" + escape(link) + " */\n" + info.embedData + "\n  </style>\n"
           _ -> {
             if (link.relative) then {
               log("filesRefer",link);
@@ -351,26 +375,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
         }
       }).join 
      }) +
-     (if (options.scripts == "") then "" else {
-        val xlinks = options.scripts.expand.splitPaths
-        xlinks.map(fun(xlink) { 
-          val (link,attrs) = match(xlink.find(rxScript)) {
-            Nothing   -> (xlink,attrsNone)
-            Just(cap) -> (cap.groups[1],parseAttrs( cap.groups[2], "script"))
-          }
-          match(options.embedinfos[link]) {
-            Just(info) | info.embedData != "" -> 
-              "<script " + attrs.htmlFormat("script",False) + ">\n" + info.embedData + "\n  </script>\n"
-            _ -> {
-              if (link.relative) then {
-                log("filesRefer",link);
-                log("embed",link);
-              }
-              "<script src=\"" + escape(link) + "\" " + attrs.htmlFormat("script",False) + "></script>\n" 
-            }
-          }
-        }).join 
-      }) +
+     options.embedScripts(options.scripts, metadata) +
      (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
         ["<script type=\"text/x-mathjax-config\">",
          "  MathJax.Hub.Config({",
@@ -393,7 +398,8 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
         ].join("\n")
      }) +
      options.htmlHeader.expand + "\n" +
-     (if (options.cssHeader == "") then "" else "<style>\n" + options.cssHeader.expand.indent + "\n</style>\n")
+     (if (options.cssHeader == "") then "" else "<style>\n" + options.cssHeader.expand.indent + "\n</style>\n") +
+     (if (options.jsHeader == "") then "" else "<script type=\"text/javascript\">\n" + options.jsHeader.expand.indent + "\n</script>\n")
 
   val htmlDoc = 
     "<!DOCTYPE html>\n<html>\n" +
@@ -403,13 +409,13 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     "<body class=\"madoko\">\n" + 
     html +
     "\n</body>\n" +
+    options.embedScripts(options.scriptsx, metadata ) +
+    (if (options.jsFooter == "") then "" else "<script type=\"text/javascript\">\n" + options.jsFooter.expand.indent + "\n</script>\n") +
     options.htmlFooter.expand + "\n" + 
     "</html>\n"
 
   htmlDoc
 }
-
-val rxScript = regex(@"([^\{\s]+)\s*(?:\{((?:[^\\\}]|\\.)*)\})?")
 
 
 

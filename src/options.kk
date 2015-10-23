@@ -47,10 +47,13 @@ public struct options(
   
   title    : string = "",  // html title 
   css      : string = "madoko.css",  // link to css style
-  scripts  : string = "",  // link to javascript file
+  scripts  : string = "",  // link to javascript files
+  scriptsx  : string = "",  // link to javascript files loaded at the end
   htmlHeader: string= "",  // literal html header
   cssHeader: string = "",  // literal css header
+  jsHeader : string = "",  // inline javascript header
   htmlFooter: string= "",  // literal html footer
+  jsFooter : string = "",  // inline javascript footer
   htmlMeta : string = "name=\"viewport\" content=\"initial-scale=1.0\"",  // html meta tags
   texHeader: string= "",   // literal tex header
   texHeaderx: string= "",  // literal tex header in non-math mode only
