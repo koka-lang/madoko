@@ -16,6 +16,7 @@ html,body,#main {
   height: 100%;
   padding: 0pt;
   margin: 0pt;
+  overflow: hidden;
 }
 
 
@@ -1252,7 +1253,10 @@ div.pinned.boxed.menu {
   min-width: 12em;
 }
 
-#help-content,
+#help-content {
+  left: -19em;
+}
+
 #menu-settings-content {
   left: -18.5em;
 }
