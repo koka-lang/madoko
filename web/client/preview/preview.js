@@ -76,7 +76,7 @@ var Preview = (function() {
   document.body.ondblclick = function(ev) {
     if (typeof(Reveal) !== "undefined" && /\bnavigate-/.test(ev.target.className) && /\bcontrols\b/.test(ev.target.parentNode.className)) return; // don't count double clicks on controls in presentations
     // var elem = findElemFromOffset( document.body, ev.pageY );    
-    var res = findLocation(document.body,ev.srcElement);
+    var res = findLocation(document.body,ev.target);
     if (!res) {
       // try to find the element before it..
       var elem = findElemAfterOffset(document.body, ev.pageY);
@@ -110,7 +110,7 @@ var Preview = (function() {
     }
     if (elem==null) {
       var offset = window.pageYOffset + (window.innerHeight/2);
-      elem = findElemAfterOffset(topelem, offset);
+      elem = findElemAfterOffset(bodyelem, offset);
     }
     res = findLocation(bodyelem,elem);
     if (res) {
