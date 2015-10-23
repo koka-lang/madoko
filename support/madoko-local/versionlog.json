@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.2.1-beta",
+      "date"   : "2015-10-23",
+      "updates": [
+        "Fixed IE caching bug on metadata requests"
+      ]
+    },
     { "version": "0.1.4-alpha",
       "date"   : "2015-10-14",
       "updates": [

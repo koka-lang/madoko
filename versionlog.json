@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "0.9.12-beta",
+      "date": "2015-10-23",
+      "updates": [
+        "Updated the editor component to the 2015-08-10 version.",
+        "Add 'Script*' meta key for scripts at end of the document.",
+        "Improved debugging support for inline javascript and CSS.",
+        "Improved preview scripting support."
+      ]
+    },
     { "version": "0.9.11-beta",
       "date": "2015-10-21",
       "updates": [
