@@ -591,11 +591,26 @@ var UI = (function() {
           if (ev.target.type === 6) { // on text
             var lineNo = ev.target.position.lineNumber; 
             var line   = self.editor.getModel().getLineContent(lineNo);
+            // match include?
             var cap = /^\s*\[\s*INCLUDE\s*=["']?([^"'\]\n\r\t:]+)["']?\s*(:\s*\w+\s*)?\]\s*$/.exec(line)
             if (cap) {
               var fileName = cap[1]; // TODO use file
               if (Util.extname(fileName)==="") fileName = fileName + ".mdk";
               self.editFile( fileName );
+            }
+            else {
+              // match some filename that is part of the document?
+              var col = ev.target.position.column;
+              var pre = line.substr(0,col);
+              var post = line.substr(col);
+              var cap1 = /[\w\-\.\/\\]*$/.exec(pre);
+              var cap2 = /^[\w\-\.\/\\]*/.exec(post);
+              if (cap1 && cap2) {
+                var matched = cap1[0] + cap2[0];
+                if (matched && matched.length > 0 && self.storage && self.storage.existsLocal(matched)) {
+                  self.editFile(matched);  
+                }
+              }
             }
           }
         }, [State.Syncing,State.Exporting]);
