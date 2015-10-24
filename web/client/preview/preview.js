@@ -22,11 +22,12 @@ var Preview = (function() {
     }
   }, 10000);
 
-  // external handler for certain operations
+  // External handler for certain operations
+  // All functions return a boolean; if true the caller will exit and not perform any further action.
   var handler = {
     scrollToElem: null,    // (res:{elem:<node>, line:int, next:<node>, nextLine:int}) : bool 
-    synchronizeElem: null, // (): { elem:<node>, body:<node> };           return the current element and top element in the frame
-    synchronize: null,     // ( loc: { path:string, line:int } ) : bool;  going to sync view with the given location
+    synchronizeElem: null, // (target:{ elem:<node>, root:<node> } : bool; return the current element and top element in the frame
+    synchronize: null,     // ( loc: { path:string, line:int } ) : bool;   going to sync view with the given location
     onDblclick: null,      // ( ev:event, loc:{path:string,line:int} ) : bool; going to sync view after double-click
     onContentLoaded: null, // (): bool;  fired on the initial load     
   };
@@ -63,7 +64,7 @@ var Preview = (function() {
     while (elem) {
       if (elem.offsetTop != null && elem.clientHeight > 0) {
         var diff = Math.abs(getDocumentOffset(elem).top - offset);
-        if (diff < currentDiff) {
+        if (diff < currentDiff || (diff === currentDiff && current === null)) {
           current = elem;
           currentDiff = diff;
         }
@@ -96,23 +97,24 @@ var Preview = (function() {
 
   function viewSynchronize() {
     var res;
-    var bodyelem = document.body;
-    var elem = null;
+    var target = {
+      root: document.body,
+      elem: null,
+    }
     if (typeof(Reveal) !== "undefined") {
-      bodyelem = getSlidesElem();
-      elem = Reveal.getCurrentSlide();
+      target.root = getSlidesElem();
+      target.elem = Reveal.getCurrentSlide();
     }
     // let handler participate
-    var elems = (handler.synchronizeElem ? handler.synchronizeElem() : null);
-    if (elems) {
-      if (elems.body) bodyelem = elems.body;
-      if (elems.elem) elem = elems.elem;
-    }
-    if (elem==null) {
+    var done = (handler.synchronizeElem ? handler.synchronizeElem(target) : false);
+    if (done) return;
+    
+    // if necessary, find target element based on scroll offset
+    if (target.elem==null) {
       var offset = window.pageYOffset + (window.innerHeight/2);
-      elem = findElemAfterOffset(bodyelem, offset);
+      target.elem = findElemAfterOffset(target.root, offset);
     }
-    res = findLocation(bodyelem,elem);
+    res = findLocation(target.root,target.elem);
     if (res) {
       // let handler participate again
       var done = (handler.synchronize ? handler.synchronize(res) : false);
