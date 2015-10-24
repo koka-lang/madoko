@@ -25,17 +25,6 @@ else {
   require(["../scripts/tabStorage"], function(TabStorage) {
     // test for multiple instances
     if (!TabStorage.initialize()) {
-      var delay = 10000;
-      setTimeout( function() { location.reload(); }, delay );
-      // display nice reload counter
-      var secondsElem = document.getElementById("reload-delay");
-      var seconds = Math.ceil(delay/1000);
-      secondsElem.innerHTML = seconds.toString();
-      setInterval( function() {
-        seconds--;
-        secondsElem.innerHTML = seconds.toString();
-      }, 1000 );
-      // show the multi instance message..
       document.getElementById("multibrowser").style.display = "block";  
     }
     // we are good to go 
