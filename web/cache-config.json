@@ -4,8 +4,8 @@
   "dirs"     : [".","images","lib","preview","scripts","styles","templates","dictionaries"],
   "exts"     : ["html","xml","css","json","js","ts","png","gif","svg","mdk","bib","cls","sty","dic","aff","bst","ico","pdf"],
   "excludes" : ["version.json","madoko.appcache",
-  				"lib/vs/languages/!(json|plaintext|vsxml|javascript)/**",
+  				"lib/vs/languages/!(json|plaintext|vsxml|javascript|css|html)/**",
   				"lib/vs/workbench/**",
-  				"lib/vs/editor/contrib/!(find)/**"],
+  				"lib/vs/editor/contrib/!(find|parameterHints)/**"],
   "digestOnly": ["../server.js","../stats.js","../cache-template.txt","../cache-config.json","../package.json","../../package.json","../remotes.json"]
 }
