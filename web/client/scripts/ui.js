@@ -2888,6 +2888,60 @@ var symbolsMath = [
   { entity: "diams", code: 9830 },
 ];
 
+  var toolDefInclude = { 
+    name: "include",
+    title: "Include a local file",
+    options: [
+      { name    : "Image", 
+        title   : "Insert an image",
+        helpLink: "#sec-image",
+        upload  : "Please select an image.",
+        exts    : [".jpg",".png",".svg",".gif",".eps"],
+      },
+      { name    : "Markdown", 
+        title   : "Include another markdown file",
+        upload  : "Please select a markdown file.",
+        exts    : [".mdk",".md",".mkdn",".markdown"],
+      },
+      { name    : "Bibliography", 
+        helpLink: "#sec-bib",
+        title   : "Include a BibTeX bibliography file",
+        upload  : "Please select a BibTeX bibliography file",
+        exts    : [".bib"],
+      },
+      { name    : "Bibliography style (.bst)", 
+        helpLink: "#sec-bib",
+        title   : "Use a specific bibliography style",
+        upload  : "Please select a BibTeX bibliography style file",
+        exts    : [".bst"],
+      },
+      { name    : "Language colorizer", 
+        helpLink: "#syntax-highlighting",
+        title   : "Include a language syntax highlighting specification",
+        upload  : "Please select a syntax highlighting specification file",
+        exts    : [".json"],
+      },
+      { name    : "CSS style", 
+        helpLink: "#html-keys",
+        title   : "Include a CSS style file (.css)",
+        upload  : "Please select a CSS style file.",
+        exts    : [".css"],
+      },
+      { name    : "LaTeX package", 
+        helpLink: "#latex-keys",
+        title   : "Include a LaTeX package, style, or TeX file",
+        upload  : "Please select a LaTeX package file",
+        exts    : [".sty",".tex"],
+      },
+      { name    : "LaTeX document class", 
+        helpLink: "#latex-keys",
+        title   : "Include a LaTeX document class",
+        upload  : "Please select a LaTeX document class file",
+        exts    : [".cls"],
+      },
+    ]
+  };
+
   var tools = [
     toolInline("bold","**","**",{
       icon    : true,
@@ -3033,6 +3087,7 @@ var symbolsMath = [
     { name: "reference",
       icon: true,
       title: "Insert an in-document reference",
+      style: "overflow:auto",
       dynamic: function(ref) {
         var self = this;
         self.toolCommand( {
@@ -3047,6 +3102,7 @@ var symbolsMath = [
       icon: true,
       title: "Insert a citation",
       initial: "None (include a .bib file)",
+      style: "overflow:auto",
       dynamic: function(cite) {
         var self = this;
         self.toolCommand( {
@@ -3293,6 +3349,7 @@ var symbolsMath = [
     },
     { name: "math",
       title: "Insert a math block",
+      style: "overflow-y: auto",
       options: [
         customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n","","#sec-math"),
         customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$.", "#sec-math" ), 
@@ -3311,6 +3368,7 @@ var symbolsMath = [
     },
     { name: "styling",
       title: "Add CSS styling",
+      style: "overflow-y: auto",
       options: [
         toolStyle("margin","=1ex","auto|<length>"),
         toolStyle("padding","=1ex","auto|<length>"),
@@ -3336,6 +3394,7 @@ var symbolsMath = [
     },
     { name: "metadata",
       title: "Add document metadata",
+      style: "overflow-y: auto",
       options: [
         toolMetadata("Title","My document title"),
         toolMetadata("Sub Title","The sub-title"),
@@ -3368,59 +3427,10 @@ var symbolsMath = [
       ]
 
     },    
-    { name: "include",
-      title: "Include a local file",
-      options: [
-        { name    : "Image", 
-          title   : "Insert an image",
-          helpLink: "#sec-image",
-          upload  : "Please select an image.",
-          exts    : [".jpg",".png",".svg",".gif",".eps"],
-        },
-        { name    : "Markdown", 
-          title   : "Include another markdown file",
-          upload  : "Please select a markdown file.",
-          exts    : [".mdk",".md",".mkdn",".markdown"],
-        },
-        { name    : "Bibliography", 
-          helpLink: "#sec-bib",
-          title   : "Include a BibTeX bibliography file",
-          upload  : "Please select a BibTeX bibliography file",
-          exts    : [".bib"],
-        },
-        { name    : "Bibliography style (.bst)", 
-          helpLink: "#sec-bib",
-          title   : "Use a specific bibliography style",
-          upload  : "Please select a BibTeX bibliography style file",
-          exts    : [".bst"],
-        },
-        { name    : "Language colorizer", 
-          helpLink: "#syntax-highlighting",
-          title   : "Include a language syntax highlighting specification",
-          upload  : "Please select a syntax highlighting specification file",
-          exts    : [".json"],
-        },
-        { name    : "CSS style", 
-          helpLink: "#html-keys",
-          title   : "Include a CSS style file (.css)",
-          upload  : "Please select a CSS style file.",
-          exts    : [".css"],
-        },
-        { name    : "LaTeX package", 
-          helpLink: "#latex-keys",
-          title   : "Include a LaTeX package, style, or TeX file",
-          upload  : "Please select a LaTeX package file",
-          exts    : [".sty",".tex"],
-        },
-        { name    : "LaTeX document class", 
-          helpLink: "#latex-keys",
-          title   : "Include a LaTeX document class",
-          upload  : "Please select a LaTeX document class file",
-          exts    : [".cls"],
-        },
-      ]
-    },
+    toolDefInclude,
   ];
+
+  
 
 
   UI.prototype.toolInsertCitation = function(txt,rng,cite) {
@@ -3852,6 +3862,7 @@ var symbolsMath = [
       }
       Util.addClassName(menu,"menu");
       Util.addClassName(menu,"boxed");
+      if (tool.style) menu.setAttribute("style",tool.style);      
       if (tool.options) {
         tool.options.forEach(function(subtool) {
           self.initTool(subtool,menu,parentName + "-" + tool.name);
@@ -3880,6 +3891,8 @@ var symbolsMath = [
     tools.forEach(function(tool) {
       self.initTool(tool,toolbox,"tool");
     });
+    var menuInclude = document.getElementById("document-content");
+    self.initTool(toolDefInclude,menuInclude,"menu");
   }
 
   UI.prototype.toolCommand = function( tool ) {

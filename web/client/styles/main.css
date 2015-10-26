@@ -370,6 +370,7 @@ span.save-link:hover {
 /* menus */
 .menu {
   font-size: 90%;
+  overflow: visible;
 }
 
 .menu hr {
@@ -474,7 +475,7 @@ span.save-link:hover {
   width: 1em;
 }
 
-#toolbox .help {
+#toolbox .help, #menu-include .help {
   float: right;  
   padding: 0em 0.25em;
   color: Gainsboro;
@@ -1159,7 +1160,6 @@ a.file-share:hover {
   background-color: white;
   max-height: 24rem;  
   padding: 0.5ex;
-  overflow-y: auto;
 }
 
 .popup:hover > div, 
@@ -1227,6 +1227,7 @@ div.pinned.boxed.menu {
 /* Widths of popup content */
 #edit-select-content {
   width: 70%;
+  overflow-y: auto;
 }
 
 #document-content {
@@ -1275,6 +1276,16 @@ div.pinned.boxed.menu {
 #users-panel {
   width: 12em;
   font-size: 90%;
+}
+
+#menu-include.popup {
+  display: block;
+}
+
+#menu-include-content {
+  width: 12em;
+  left: 100%;
+  top: 0pt;
 }
 
 
