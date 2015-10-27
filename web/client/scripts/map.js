@@ -8,8 +8,21 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
+  function sortKey(l1,l2) {
+    var s1 = l1.key.toLowerCase();
+    var s2 = l2.key.toLowerCase();
+    return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
+  } 
+
   var Map = (function() {
-    function Map() { };
+    function Map(arr) { 
+      var self = this;
+      if (arr && arr instanceof Array) {
+        arr.forEach( function(elem) {
+          self.set(elem.key, elem.value);
+        });
+      }
+    };
 
     Map.unpersist = function(obj) {
       var map = new Map();
@@ -123,8 +136,13 @@ define([],function() {
       });
       return res;
     }
+
+    Map.prototype.sortedKeyElems = function() {
+      var self = this;
+      return self.keyElems().sort(sortKey);
+    };
  
- 	Map.prototype.keys = function() {
+ 	  Map.prototype.keys = function() {
       var self = this;
       var res = [];
       self.forEach( function(name,elem) {

@@ -39,6 +39,18 @@ public function peano(n : int ) : peano {
 public val peano10= peano(10)
 public val peanoN = peano(100)
 
+public function json(s : string) : string {
+  val cs = s.list.map fun(c) {
+    if (c=='\n') then "\\n"
+    elif (c=='\r') then "\\r"
+    elif (c=='\t') then "\\t"
+    elif (c=='"') then "\\\""
+    elif (c=='\\') then "\\\\"
+    elif (c >= ' ' && c <= '~') then c.string
+    else "\\u" + c.int.showHex(4)
+  }
+  return "\"" + cs.join + "\""
+}
 
 /* --------------------------------------
   Grammar rules 

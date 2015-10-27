@@ -9,6 +9,7 @@
 // The grammar and parsing of markdown _blocks_ (i.e. paragraphs, lists, tables, etc.)
 module block
 
+import std/log
 import std/string
 import std/regex
 import std/dict
@@ -269,6 +270,7 @@ val rxquotePrefix = regex(@"^ *> ?",multiline=True)
 
 function blockDiv( cap : matched, context : blockContext ) : block {
   val cname = cap.groups[2].definitionId
+  log("customs","{ \"name\":" + cname.json  + ", \"display\":" + cap.groups[2].json + "}");
   val attrs = cap.groups[3].parseAttrs(cname,source=cap.groups[4])
   Div( [], attrs )
 }

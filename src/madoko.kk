@@ -19,6 +19,7 @@ import formatBlock
 import inline
 import formatInline
 import definitions
+import entity           // logEntities
 import htmlFormatter    // for full
 import texFormatter     // for full
 import latexFormatter
@@ -96,7 +97,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
              formatBlocks(fcontext,fblocks)
   if (options.verbose>=4) then trace("generate output")
 
-  // log links and labels
+  // log links, labels, and entities
   if (fmt.isFmtHtml) {
     fcontext.inlineContext.labels.list().foreach fun(elem) {
       val (name,label) = elem
@@ -106,6 +107,8 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
       val (name,link) = elem
       log("links","{ \"name\": " + name.json + ", \"href\": " + link.href.json + ", \"title\": " + link.title.json + " }" );
     }
+    logEntities(); // log standard entities
+    logMetadata(options.metadata);
   }
 
   // generate full html/tex if needed
@@ -120,20 +123,6 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   res           
 }
 
-function json(s : string) : string {
-  val cs = s.list.map fun(c) {
-    if (c=='\n') then "\\n"
-    elif (c=='\r') then "\\r"
-    elif (c=='\t') then "\\t"
-    elif (c=='"') then "\\\""
-    elif (c=='\\') then "\\\\"
-    elif (c >= ' ' && c <= '~') then c.string
-    else "\\u" + c.int.showHex(4)
-  }
-  return "\"" + cs.join + "\""
-}
-
-
 // Export initial options for JavaScript usage
 public val initialOptions0 = initialOptions();
 
@@ -145,7 +134,14 @@ public function traceRuleHist() {
   common/traceRuleHist()
 }
 
-
+function logMetadata( mdata : metadata ) {
+  mdata.foreach fun(kv) {
+    val (key,value) = kv;
+    if (!key.startsWith("~") && !key.startsWith(".") && !key.startsWith("#")) {
+      log("entities", "{\"name\":" + key.json + ",\"value\":" + value.json + "}")
+    }
+  }
+}
 
 
 // Create an ":inlineContext"

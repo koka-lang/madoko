@@ -1411,58 +1411,87 @@ var UI = (function() {
 
     menu.innerHTML = html;
   }
-  
-  UI.prototype.updateLabels = function( labelsTxt, linksTxt ) {
-    var self = this;
-    var menuLabels = document.getElementById("tool-reference-content");
-    if (!menuLabels) return;
 
+  function jsonParseLineArray(txt,keyName) {
+    if (!txt) return [];
+    if (!keyName) keyName = "name";
+    var json = "["+ txt.split("\n").filter(function(line){ return (line.length>0); }).join(",\n") + "]";
+    var items = Util.jsonParse(json,[]);
+    var itemMap = new Map();
+    items.forEach( function(item) { 
+      var key = item[keyName];
+      if (!itemMap.contains(key)) itemMap.set( key, item );
+    });
+    return itemMap.sortedKeyElems().map( function(kv) { return kv.value; });
+  }
+  
+  var customSnippets = new Map([
+    { key: "equation", value: " Equation { #eq-{{name}} }\n~" },
+    { key: "figure", value: " Figure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}\n~" },
+    { key: "tablefigure", value: " TableFigure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}\n~" },
+  ]);
+
+  UI.prototype.updateLabels = function( labelsTxt, linksTxt, customsTxt, entitiesTxt ) {
+    var self = this;
     var noLabels = "None";
 
-    if (labelsTxt==null) {
-      // clear
-      if (self.editor) self.editor.setSuggestLabels([]);
-      menuLabels.innerHTML = noLabels;
-      return;
-    }
+    // parse links
+    var links = jsonParseLineArray(linksTxt).map(function(link) {
+      link.title = stripMarkup(link.title);
+      link.description = link.href + (link.title ? " \"" + link.title + "\"" : "");
+      return link;
+    });
+    if (self.editor) self.editor.setSuggestLinks(links);
+
+    // parse customs
+    var customs = jsonParseLineArray(customsTxt).map( function(custom) {
+      custom.snippet = customSnippets.get(custom.name) || (" " + custom.display + "\n{{content}}\n~");
+      custom.name = stripMarkup(custom.display);
+      return custom;
+    });
+    if (self.editor) self.editor.setSuggestCustoms(customs);
+
+    // parse entities
+    var entities = jsonParseLineArray(entitiesTxt).map( function(entity) {
+      entity.title = stripMarkup(entity.value);
+      entity.snippet = entity.name + ";"
+      return entity;
+    });
+    if (self.editor) self.editor.setSuggestEntities(entities);
 
     // parse labels
-    var labelsJson  = "["+ labelsTxt.split("\n").filter(function(txt){ return (txt.length>0); }).join(",\n") + "]";
-    var labelsArray = Util.jsonParse( labelsJson, []);
-    var labels = new Map();
     var cites = new Map();
-    labelsArray.forEach( function(label) {
-      if (Util.startsWith(label.name, "fn-")) {
-        return;
+    var labels = jsonParseLineArray(labelsTxt).filter( function(item) { 
+      if (Util.startsWith(item.name, "fn-")) {
+        return false;
       }
-      else if (Util.startsWith(label.name,"@")) {
-        cites.set(label.name,label.caption||label.text);
+      else if (Util.startsWith(item.name, "@")) {
+        cites.set(item.name, item.caption || item.text);
+        return false;
       }
-      else {
-        labels.set(label.name, stripMarkup(label.caption|| label.text));
-      }
-    });
-    labels = labels.filter( function(name,text) {
-      return  !cites.contains("@" + name);
+      else return true;
+    }).filter( function(item) {
+      return  !cites.contains("@" + item.name);
+    }).map( function(label) {
+      label.title = stripMarkup(label.caption || label.text);
+      return label;
     });
     
-    var labelsx = labels.keyElems().sort(function(l1,l2) {
-      var s1 = l1.key.toLowerCase();
-      var s2 = l2.key.toLowerCase();
-      return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
-    });
-    if (self.editor) self.editor.setSuggestLabels(labelsx);
+    // update suggestions
+    if (self.editor) self.editor.setSuggestLabels(labels);
 
     // render
-    var labelHtml = noLabels;
-    if (labelsx.length > 0) {
-      labelHtml = labelsx.map( function(label) {
-        var name = label.key;
-        var text = label.value;
-        return "<span class='button label' data-value='" + encodeURIComponent(name) + "' title='" + Util.escape(text) + "'>#" + Util.escape(name) + "</span>";
-      }).join("<br/>");
+    var menuLabels = document.getElementById("tool-reference-content");
+    if (menuLabels) {
+      var labelHtml = noLabels;
+      if (labels.length > 0) {
+        labelHtml = labels.map( function(label) {
+          var name = label.name;
+          return "<span class='button label' data-value='" + encodeURIComponent(name) + "' title='" + Util.escape(label.title) + "'>#" + Util.escape(name) + "</span>";
+        }).join("<br/>");
+      }
+      menuLabels.innerHTML = labelHtml;
     }
-    menuLabels.innerHTML = labelHtml;
   }
 
   UI.prototype.showSpinner = function(enable, elem) {
@@ -1527,7 +1556,7 @@ var UI = (function() {
               self.htmlText = res.content; 
               self.fileOrder = res.fileOrder || []; // used for gotoNextError
               var quick = self.viewHTML(res.content, res.ctx.time0);
-              self.updateLabels(res.labels,res.links);
+              self.updateLabels(res.labels,res.links,res.customs,res.entities);
               if (res.runAgain) {
                 self.stale=true;
                 self.localFullSave(); // async full save as probably files are added
@@ -1763,7 +1792,7 @@ var UI = (function() {
           if (self.storage) {
             self.storage.destroy();     // clears all event listeners
             self.updateCitations(null); // clears citations
-            self.updateLabels(null,null); // clears references
+            self.updateLabels(null,null,null,null); // clears references
             self.dispatchViewEvent({eventType: "reload"});      
             //self.viewHTML( "<p>Rendering...</p>", Date.now() );
             //self.storage.clearEventListener(self);
@@ -3161,9 +3190,9 @@ var symbolsMath = [
     { name    : "dl",
       icon    : true,
       title   : "Definition list",
-      content : "The conceptual structure is called\n    the abstract syntax of the language.\nConcrete syntax\n  ~ The particular details and rules for writing expressions as strings \n    of characters is called the concrete syntax.\n  ~ Perhaps some other meaning too?",
+      content : "The conceptual structure is called the *abstract syntax* of the language.\n* Concrete syntax\n  : The particular details and rules for writing expressions as strings \n    of characters is called the concrete syntax.\n  : Perhaps some other meaning too?",
       replacer: function(txt,rng) {
-        return blockRange(rng,paraPrefix("Definition\n  ~ ",txt,"    "));
+        return blockRange(rng,paraPrefix("* Abstract syntax\n  : ",txt,"    "));
       }
     },
     { name    : "bquote",

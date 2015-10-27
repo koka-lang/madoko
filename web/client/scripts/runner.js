@@ -137,6 +137,8 @@ var Runner = (function() {
         mathDoc: res.mathDoc,
         links: res.links,
         labels: res.labels,
+        customs: res.customs,
+        entities: res.entities,
         fileOrder: [res.name].concat(res.filesRead).concat(filesReferred),
       };      
     });

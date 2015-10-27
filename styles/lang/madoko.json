@@ -14,7 +14,7 @@
   "blockCommentStart": "<!--\n",
   "blockCommentEnd":   "\n-->",
 
-  "wordDefinition": "[\\w\\-:]+",
+  "wordDefinition": "([\\w\\-:]|~ \\w)+",
 
   "escapes":  "\\\\(?:[^a-zA-Z0-9\\r]|$)",  
 

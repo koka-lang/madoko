@@ -266,28 +266,41 @@ var Editor = {
     self.suggester = null;
   },
 
-  setSuggestLabels : function(labels) {
+  _suggesterSetCached : function(setter,arg) {
     var self = this;
-    if (!labels) labels = self._labels;
+    if (!arg) arg = self["_" + setter];
     if (self.suggester) {
-      self.suggester.setLabels(labels);
-      self._labels = undefined;
+      self.suggester[setter](arg);
+      delete self["_" + setter];
     }
     else {
-      self._labels = labels;
+      self["_" + setter] = arg;
     }
+  },
+
+  setSuggestLabels : function(labels) {
+    var self = this;
+    self._suggesterSetCached("setLabels", labels);
   },
 
   setSuggestCitations : function(cites) {
     var self = this;
-    if (!cites) cites = self._citations;
-    if (self.suggester) {
-      self.suggester.setCitations(cites);
-      self._citations = undefined;
-    }
-    else {
-      self._citations = cites;
-    }
+    self._suggesterSetCached("setCitations", cites);
+  },
+
+  setSuggestLinks : function(links) {
+    var self = this;
+    self._suggesterSetCached("setLinks", links);
+  },
+
+  setSuggestCustoms : function(customs) {
+    var self = this;
+    self._suggesterSetCached("setCustoms", customs);
+  },
+
+  setSuggestEntities : function(entities) {
+    var self = this;
+    self._suggesterSetCached("setEntities", entities);
   },
 
   clearEditState : function() {
@@ -336,6 +349,9 @@ var Editor = {
               self.suggester = new MadokoSuggester();
               self.setSuggestLabels();
               self.setSuggestCitations();
+              self.setSuggestLinks();
+              self.setSuggestEntities();
+              self.setSuggestCustoms();
               md.suggestSupport = new Supports.SuggestSupport(md, self.suggester);              
               // md.tokenTypeClassificationSupport = new Supports.TokenTypeClassificationSupport({wordDefinition: /[\w\-]+/});
             }
@@ -379,22 +395,32 @@ var MadokoSuggester = (function() {
     var self = this;
     self.labels = [];
     self.cites = [];
+    self.links = [];
   }
 
   MadokoSuggester.prototype.setLabels = function(_labels) {
     var self = this;
-    if (!_labels) _labels = [];
-    self.labels = _labels.map( function(label) { 
-      return { name: label.key, description: label.value };
-    });
+    self.labels = _labels || [];
   }
 
   MadokoSuggester.prototype.setCitations = function(_cites) {
     var self = this;
-    if (!_cites) _cites = [];
-    self.cites = _cites.map( function(cite) { 
-      return { name: cite.name, description: cite.title };
-    });
+    self.cites = _cites || [];
+  }
+
+  MadokoSuggester.prototype.setLinks = function(_links) {
+    var self = this;
+    self.links = _links || [];
+  }
+
+  MadokoSuggester.prototype.setCustoms = function(_customs) {
+    var self = this;
+    self.customs = _customs || [];
+  }
+
+  MadokoSuggester.prototype.setEntities = function(_entities) {
+    var self = this;
+    self.entities = _entities || [];
   }
 
   MadokoSuggester.prototype.suggest = function(resource, position) {
@@ -403,18 +429,23 @@ var MadokoSuggester = (function() {
     var currentWord = model.getWordUntilPosition(position).word;
     var triggerChar = model.getLineContent(position.lineNumber).substr(position.column-currentWord.length-2,1);
   
-    var type = null;
-    if (triggerChar === "@") type = "citation"
-    else if (triggerChar === "#") type = "label"
+    if (triggerChar === "@") return self._suggest(currentWord,"citation",self.cites);
+    else if (triggerChar === "#") return self._suggest(currentWord,"label",self.labels);
+    else if (triggerChar === "[")  return self._suggest(currentWord,"link",self.links);
+    else if (triggerChar === "&")  return self._suggest(currentWord,"entity",self.entities);
+    else if (triggerChar === "~")  return self._suggest(currentWord,"custom",self.customs);
     else return Promise.resolved([]);
+  }
 
-    var suggestions = (type === "citation" ? self.cites : self.labels).map( function(item) {
+  MadokoSuggester.prototype._suggest = function(currentWord, type, items ) {
+    var self = this;
+    var suggestions = items.map( function(item) {
       return {
         type: type,
         label: item.name,
-        codeSnippet: item.name,
-        typeLabel: "", // item.description,
-        documentationLabel: item.description,
+        codeSnippet: item.snippet || item.name,
+        typeLabel: item.typeLabel || "", // item.description,
+        documentationLabel: item.description || item.title || "",
       };      
     });
     return Promise.resolved( [{
@@ -424,7 +455,7 @@ var MadokoSuggester = (function() {
     );
   }
 
-  MadokoSuggester.prototype.triggerCharacters = ['#','@'];
+  MadokoSuggester.prototype.triggerCharacters = ['#','@','[','&','~'];
 
   return MadokoSuggester;
 })();

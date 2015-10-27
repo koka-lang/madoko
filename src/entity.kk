@@ -10,6 +10,7 @@
 module entity
 
 import common  // warning
+import std/log
 import std/regex
 
 struct entity(
@@ -82,6 +83,12 @@ public function texCmdToEntity( cmd : string ) : string {
   match (entities.find( fun(e) { e.ecmd == cmd } )) {
     Nothing -> ""
     Just(e) -> "&" + e.ename + ";"
+  }
+}
+
+public function logEntities() {
+  entities.foreach fun(ent) {
+    log("entities", "{\"name\":" + ent.ename.json + ",\"value\":" + ("&" + ent.ename + ";").json + "}" );
   }
 }
 

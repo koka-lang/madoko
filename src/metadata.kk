@@ -62,7 +62,9 @@ val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->)+")
 
 function makeKey(k,pre,value,rawvalue,lines) {
   val kstart = k.substr(0,1) 
-  val key = if (kstart=="#" || kstart=="." || kstart=="~") then k.trim.toLower else k.trim.normalizeId
+  val isrule = (kstart=="#" || kstart=="." || kstart=="~");
+  val key = if (isrule) then k.trim.toLower else k.trim.normalizeId
+  if (kstart=="~") log("customs","{\"name\":" + key.json + ",\"display\":" + k.substr(1).json + "}")
   if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
    then (pre + key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
    else (pre + key,value)

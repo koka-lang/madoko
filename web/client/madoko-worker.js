@@ -108,7 +108,7 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
 
         var t0 = Date.now();            
         madoko.markdown(req.name,req.content,"out",req.options, req.options.convertTex === true,
-                         function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite,labels,links) 
+                         function(md,stdout,runOnServer,options1,filesRead,filesReferred,filesWrite,labels,links,customs,entities) 
         {
           self.postMessage( {
             messageId  : req.messageId, // message id is required to call the right continuation
@@ -123,6 +123,8 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
             filesWritten: fileWriteList(filesWrite),
             labels     : labels,
             links      : links,
+            customs    : customs,
+            entities   : entities,
             mathDoc    : mathDoc(filesWrite),
             err        : null,
             stdout     : stdout,

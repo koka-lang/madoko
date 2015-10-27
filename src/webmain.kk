@@ -51,7 +51,7 @@ public function addImage( embeds : dict<embedinfo>, imageName : string, data : s
 
 public function markdown( inputName : string, input : string, outdir : string, options : options, convertTex : bool,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,
-                                      files:string,filesRefer:string,filesWrite:string,labels:string,links:string) -> io () ) : io () 
+                                      files:string,filesRefer:string,filesWrite:string,labels:string,links:string,customs:string,entities:string) -> io () ) : io () 
 { 
   printRedirect( fun(s) {
     log("stdout",s)
@@ -94,6 +94,8 @@ public function markdown( inputName : string, input : string, outdir : string, o
         withLog("filesWrite") {
           withLog("labels") {
             withLog("links") {
+            withLog("customs") {
+            withLog("entities") {
                 processContent(inputName, outName, input, copts, True, runners, fun(output,_,_,options1) {
                   val stdout = getLog("stdout")
                   val files  = getLog("files")
@@ -101,9 +103,11 @@ public function markdown( inputName : string, input : string, outdir : string, o
                   val filesWrite  = getLog("filesWrite")
                   val labels = getLog("labels")
                   val links = getLog("links")
-                  continue(output,stdout,rerun,options1,files,filesRefer,filesWrite,labels,links)
+                  val customs = getLog("customs")
+                  val entities = getLog("entities")
+                  continue(output,stdout,rerun,options1,files,filesRefer,filesWrite,labels,links,customs,entities)
                 })
-            }
+            }}}
           }
         }
       }
