@@ -445,7 +445,7 @@ var UI = (function() {
         //horizontalHasArrows: true,
         //arrowSize: 10,
       },
-      quickSuggestions: false,
+      quickSuggestions: true,
     });    
 
 
@@ -1344,6 +1344,20 @@ var UI = (function() {
     }  
   }
 
+  function stripMarkup(s) {
+    var attrs    = /\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}/;
+    var linkhref = /\s*<?([^\s>)]*)>?(?:\s+['""](.*?)['""])?\s*/;
+    var xlinkid  = /((?:[^\[\]\n]|\[[^\]\n]*\])*)/;
+    var linktxt  = /\[(?!\^)((?:\[(?:[^\[\]]|\[[^\]]*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*)\]/
+    var linkreg  = new RegExp( linktxt.source + "((?:\\(" + linkhref.source + "\\)|\\s*\\[" + xlinkid.source + "\\])?(?:" + attrs.source + ")?)", "g" );
+    var s1 = s.replace(linkreg, "$1").replace(linkreg, "$1");
+    return s1.replace(/&#(\d+);/g, function(matched,num) {
+      var n = parseInt(num);
+      if (isNaN(n)) return "";
+      return String.fromCharCode(n);
+    });
+  }
+
   UI.prototype.updateCitations = function( path, bib ) {
     var self = this;
     var menu = document.getElementById("tool-cite-content");
@@ -1355,6 +1369,7 @@ var UI = (function() {
     if (path==null || bib==null) {
       // clear
       self.citations = null;
+      if (self.editor) self.editor.setSuggestCitations([]);
       menu.innerHTML = noCitations;    
       return;  
     }
@@ -1369,7 +1384,7 @@ var UI = (function() {
       var rxTitle = /(?:^|,)\s*title\s*=\s*(?:\{((?:[^\\\}]|\}(?!\s*,)|\\.)*)\}|"((?:[^\\"]|\\.)*)")\s*,/;
       var capTitle = rxTitle.exec(entry + ",");
       var title = capTitle ? capTitle[1] || capTitle[2] : name;
-      cites.push( { name: name, title: title });
+      cites.push( { name: name, title: stripMarkup(title) });
     }
     self.citations.set(path,cites);
 
@@ -1384,6 +1399,8 @@ var UI = (function() {
       var s2 = c2.name.toLowerCase();
       return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
+
+    if (self.editor) self.editor.setSuggestCitations(cites);
 
     var html = noCitations;
     if (cites.length > 0) {
@@ -1404,6 +1421,7 @@ var UI = (function() {
 
     if (labelsTxt==null) {
       // clear
+      if (self.editor) self.editor.setSuggestLabels([]);
       menuLabels.innerHTML = noLabels;
       return;
     }
@@ -1421,7 +1439,7 @@ var UI = (function() {
         cites.set(label.name,label.caption||label.text);
       }
       else {
-        labels.set(label.name, label.caption|| label.text);
+        labels.set(label.name, stripMarkup(label.caption|| label.text));
       }
     });
     labels = labels.filter( function(name,text) {
@@ -1433,6 +1451,7 @@ var UI = (function() {
       var s2 = l2.key.toLowerCase();
       return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
     });
+    if (self.editor) self.editor.setSuggestLabels(labelsx);
 
     // render
     var labelHtml = noLabels;

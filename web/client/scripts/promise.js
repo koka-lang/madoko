@@ -306,6 +306,11 @@ define([],function() {
       self._onEvent(Event.Error,arguments);
     }
 
+    Promise.prototype.done = function (onSuccess,onError,onProgress) {
+      var self = this;
+      return self.then(onSuccess,onError,onProgress);
+    }
+
     return Promise;
   })();
 

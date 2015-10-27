@@ -10,11 +10,12 @@ define(["../scripts/map","../scripts/promise","../scripts/util",
         "vs/editor/common/core/range", "vs/editor/common/core/selection","vs/editor/common/commands/replaceCommand",
         "vs/base/common/network",
         "vs/platform/instantiation/common/descriptors","vs/editor/common/modes/modesRegistry", "vs/platform/platform", "vs/editor/diff",
+        "vs/editor/common/modes/supports",
         "vs/editor/browser/standalone/standaloneCodeEditor",
         "vs/editor/browser/standalone/standaloneServices", 
         "vs/editor/common/modes/languageExtensionPoint"],
         function(Map,Promise,Util,MadokoMode,Monarch,Range,Selection,ReplaceCommand,Url,Descriptors,ModesExtensions,Platform,Diff,
-                 StandaloneCodeEditor,StandaloneServices,LanguageExtensionPoint) {
+                 Supports,StandaloneCodeEditor,StandaloneServices,LanguageExtensionPoint) {
 
 
 
@@ -42,6 +43,7 @@ services.modeService.configureMode('text/javascript', {
 
 function createCustomMode(mode) {
   //ModesExtensions.registerModeAsyncDescriptor(mode.name, [mode.name].concat(mode.mimeTypes), new Descriptors.AsncDescriptor('vs/editor/common/modes/monarch/monarchDefinition', 'DynamicMonarchMode', mode));
+  if (typeof mode.wordDefinition === "string") mode.wordDefinition = new RegExp(mode.wordDefinition);
   services.modeService.registerMonarchDefinition(mode.name,mode);
   LanguageExtensionPoint.LanguageExtensions._onLanguage( { pluginId: mode.name }, {
     id: mode.name,
@@ -261,6 +263,31 @@ var Editor = {
     var self = this;
     self.editName = editName || "";
     self.editState = new Map();
+    self.suggester = null;
+  },
+
+  setSuggestLabels : function(labels) {
+    var self = this;
+    if (!labels) labels = self._labels;
+    if (self.suggester) {
+      self.suggester.setLabels(labels);
+      self._labels = undefined;
+    }
+    else {
+      self._labels = labels;
+    }
+  },
+
+  setSuggestCitations : function(cites) {
+    var self = this;
+    if (!cites) cites = self._citations;
+    if (self.suggester) {
+      self.suggester.setCitations(cites);
+      self._citations = undefined;
+    }
+    else {
+      self._citations = cites;
+    }
   },
 
   clearEditState : function() {
@@ -304,7 +331,16 @@ var Editor = {
         // do our best..
         if (state && state.position) self.setPosition(state.position,true,true);
         mode = Monaco.Editor.getOrCreateMode(mime).then( function(md) {
-          if (md) return md;
+          if (md) {
+            if (mime==="text/madoko" && !self.suggester) {
+              self.suggester = new MadokoSuggester();
+              self.setSuggestLabels();
+              self.setSuggestCitations();
+              md.suggestSupport = new Supports.SuggestSupport(md, self.suggester);              
+              // md.tokenTypeClassificationSupport = new Supports.TokenTypeClassificationSupport({wordDefinition: /[\w\-]+/});
+            }
+            return md;
+          }
           return Monaco.Editor.getOrCreateMode("text/plain");
         });
       }
@@ -337,6 +373,67 @@ var Editor = {
     if (options) self.updateOptions(options);            
   }
 };
+
+var MadokoSuggester = (function() {
+  function MadokoSuggester() {
+    var self = this;
+    self.labels = [];
+    self.cites = [];
+  }
+
+  MadokoSuggester.prototype.setLabels = function(_labels) {
+    var self = this;
+    if (!_labels) _labels = [];
+    self.labels = _labels.map( function(label) { 
+      return { name: label.key, description: label.value };
+    });
+  }
+
+  MadokoSuggester.prototype.setCitations = function(_cites) {
+    var self = this;
+    if (!_cites) _cites = [];
+    self.cites = _cites.map( function(cite) { 
+      return { name: cite.name, description: cite.title };
+    });
+  }
+
+  MadokoSuggester.prototype.suggest = function(resource, position) {
+    var self = this;
+    var model = services.modelService.getModel(resource);
+    var currentWord = model.getWordUntilPosition(position).word;
+    var triggerChar = model.getLineContent(position.lineNumber).substr(position.column-currentWord.length-2,1);
+  
+    var type = null;
+    if (triggerChar === "@") type = "citation"
+    else if (triggerChar === "#") type = "label"
+    else return Promise.resolved([]);
+
+    var suggestions = (type === "citation" ? self.cites : self.labels).map( function(item) {
+      return {
+        type: type,
+        label: item.name,
+        codeSnippet: item.name,
+        typeLabel: "", // item.description,
+        documentationLabel: item.description,
+      };      
+    });
+    return Promise.resolved( [{
+        currentWord: currentWord,
+        suggestions: suggestions,
+      }]
+    );
+  }
+
+  MadokoSuggester.prototype.triggerCharacters = ['#','@'];
+
+  return MadokoSuggester;
+})();
+
+function enableSuggestions(mime,suggester) {
+  var mode = services.modeService.getMode(mime);  
+  var modeId = services.modeService.getModeId(mime);
+  services.modeService.registerDeclarativeSuggestSupport(modeId,suggester);
+}
 
 function create( domElem, options ) {
   var base = Monaco.Editor.create(domElem,options);
