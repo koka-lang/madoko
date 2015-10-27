@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "0.9.13-beta",
+      "date": "2015-10-27",
+      "updates": [
+        "Add new 'Insert File' menu.",
+        "Support suggestions/intellisense for citations, references, entities, and custom blocks."
+      ]
+    },
     { "version": "0.9.12-beta",
       "date": "2015-10-23",
       "updates": [
