@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "0.9.14-beta",
+      "date": "2015-10-28",
+      "updates": [
+        "Fixed bug in group replacement with `\\` escapes.",
+        "Fixed bug in '&lt;!--meta' handling of whitespace."
+      ]
+    },
     { "version": "0.9.13-beta",
       "date": "2015-10-27",
       "updates": [
