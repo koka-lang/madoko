@@ -27,8 +27,9 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
   val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
   // read further <!--meta sections
   val mdatas = rest.findAll( rxMetaSection ).list.map fun(cap) {
-    val lineNo = lineCount + rest.substr(0,cap.index).count("\n")
-    val (mdatax,_,_) = parsePlainMeta(cap.groups[1] + "\n", fmt, options0.modes, [], options0.verbose >= 4, lineNo )
+    val (metaTxt,lineCountMeta) = stripInitialWhite(cap.groups[1] + "\n")
+    val lineNo = lineCount + rest.substr(0,cap.index).count("\n") + lineCountMeta
+    val (mdatax,_,_) = parsePlainMeta(metaTxt, fmt, options0.modes, [], options0.verbose >= 4, lineNo )
     mdatax
   }
   val mdata2 = mdata1 + mdatas.concat

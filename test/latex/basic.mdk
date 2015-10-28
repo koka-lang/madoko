@@ -1,6 +1,17 @@
 Heading base    : 2
+.xtest: replace=/\beta\b/xeta/g
 
 # Introduction
+
+<!--meta 
+
+.test: 
+    replace="/\beta\b/xeta/g"
+
+.test: color=red
+-->
+
+Here is [`x eta y`]{.test}
 
 A test paragraph.
 
