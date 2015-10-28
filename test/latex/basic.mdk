@@ -1,17 +1,18 @@
 Heading base    : 2
-.xtest: replace=/\beta\b/xeta/g
 
 # Introduction
 
 <!--meta 
 
+.math-inline: input=mathpre
+
 .test: 
-    replace="/\beta\b/xeta/g"
+    replace=//([^\\\w])eta\b/\1\\eta//g
 
 .test: color=red
 -->
 
-Here is [`x eta y`]{.test}
+Here is [$x eta y$]{.test}
 
 A test paragraph.
 

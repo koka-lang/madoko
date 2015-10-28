@@ -387,14 +387,14 @@ function regexMapping( mapping : string, flags : string, txt : string ) : string
           Just(rcap) -> {
             // assert: cap.matched == rcap.matched
             repl.replaceAll(rxCaptureGroup, fun(gcap) {
-              if (gcap.groups.matchedOn(1)) {
+              if (gcap.groups[1] != "\\") {
                 val j = gcap.groups[1].parseInt.maybe(0,id)
                 if (convCase)
                  then rcap.groups[j].replaceAll(rxCaseEsc,@"\\$2$1") // escape replacement
                  else rcap.groups[j]  
               }
               else {
-                gcap.matched
+                gcap.groups[1]
               }
             })
           }
