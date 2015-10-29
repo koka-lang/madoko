@@ -442,7 +442,7 @@ var MadokoSuggester = (function() {
     var suggestions = items.map( function(item) {
       return {
         type: type,
-        label: item.name,
+        label: item.label || item.name,
         codeSnippet: item.snippet || item.name,
         typeLabel: item.typeLabel || "", // item.description,
         documentationLabel: item.description || item.title || "",

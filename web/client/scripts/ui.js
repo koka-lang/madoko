@@ -1453,7 +1453,7 @@ var UI = (function() {
 
     // parse entities
     var entities = jsonParseLineArray(entitiesTxt).map( function(entity) {
-      entity.typeLabel = (entity.code ? "(" + String.fromCharCode(entity.code) + ")" : stripMarkup(entity.value));
+      entity.label = entity.name + " " + (entity.code ? "(" + String.fromCharCode(entity.code) + ")" : "");
       entity.snippet = entity.name + ";"
       return entity;
     });
