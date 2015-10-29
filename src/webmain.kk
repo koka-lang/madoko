@@ -19,8 +19,11 @@ import storage
 import mathStatic
 
 public function initialOptions( args : string = "" ) : io options {
-  val opts = if (args=="") then Options()
-                 else parseOptions(version,args).maybe(CommandOptions(),id).options
+  val opts = if (args=="") then Options(version=version/version)
+              else match(parseOptions(version/version,args)) {
+                Just(cmdOpts) -> cmdOpts.options
+                Nothing       -> Options(version=version/version)
+              }
   opts(lineNoWeb=True,
        mathEmbedLimit=512*1024,   // must match server setting!
        embedLimit=512*1024,
