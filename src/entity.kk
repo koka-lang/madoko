@@ -87,8 +87,12 @@ public function texCmdToEntity( cmd : string ) : string {
 }
 
 public function logEntities() {
+  log("entities", @"{""name"": ""nl"", ""value"":""&nl;"", ""code"":10}" )
+  log("entities", @"{""name"": ""br"", ""value"":""&br;""}" )
+  log("entities", @"{""name"": ""null"", ""value"":""&null;""}" )
+  log("entities", @"{""name"": ""&"", ""value"":""&&;"", ""code"":38}" )
   entities.foreach fun(ent) {
-    log("entities", "{\"name\":" + ent.ename.json + ",\"value\":" + ("&" + ent.ename + ";").json + "}" );
+    log("entities", "{\"name\":" + ent.ename.json + ",\"value\":" + ("&" + ent.ename + ";").json + ",\"code\":" + ent.ecode.show + "}" );
   }
 }
 
