@@ -427,23 +427,66 @@ var MadokoSuggester = (function() {
     var self = this;
     var model = services.modelService.getModel(resource);
     var currentWord = model.getWordUntilPosition(position).word;
-    var triggerChar = model.getLineContent(position.lineNumber).substr(position.column-currentWord.length-2,1);
-  
-    if (triggerChar === "@") return self._suggest(currentWord,"citation",self.cites);
-    else if (triggerChar === "#") return self._suggest(currentWord,"label",self.labels);
+    var line = model.getLineContent(position.lineNumber);
+    var prefix = line.substr(0,position.column-currentWord.length-1);
+    var triggerChar = prefix.substr(prefix.length-1,1);
+    var triggerCharBefore = (prefix.length > 1 ? prefix.substr(prefix.length-2,1) : null);
+    if (triggerCharBefore === "\\") return Promise.resolved([]);
+
+    if (triggerChar === "#" && triggerCharBefore != null) {
+      if (triggerCharBefore === "[") 
+        return self._suggest("#" + currentWord,"link",self.links);
+      else
+        return self._suggest(currentWord,"label",self.labels);
+    }
+    else if (triggerChar === "@") return self._suggest(currentWord,"citation",self.cites);
     else if (triggerChar === "[")  return self._suggest(currentWord,"link",self.links);
     else if (triggerChar === "&")  return self._suggest(currentWord,"entity",self.entities);
-    else if (triggerChar === "~")  return self._suggest(currentWord,"custom",self.customs);
-    else return Promise.resolved([]);
+    else {
+      var cap = /^([ \t]*)(~+)( *Begin\b)?([ \t]*)/i.exec(prefix);
+      if (cap) {
+        var isEndToken = true;
+        if (cap[3]) {
+          isEndToken = false;
+        }
+        else {
+          // find the ~ token so we can check it is not an ending token
+          var lineTokens = model.getLineTokens(position.lineNumber);
+          var triggerToken;
+          for( var tokenIdx = 0; tokenIdx < lineTokens.getTokenCount(); tokenIdx++) {
+            var startIdx = lineTokens.getTokenStartIndex(tokenIdx);
+            if (startIdx === cap[1].length) { 
+              triggerToken = {
+                startColumn: 1 + lineTokens.getTokenStartIndex(tokenIdx),
+                endColumn: 1 + lineTokens.getTokenEndIndex(tokenIdx),
+                type: lineTokens.getTokenType(tokenIdx),
+                bracket: lineTokens.getTokenBracket(tokenIdx),
+              };
+              break;
+            }
+            else if (startIdx > cap[1].length) {
+              break;
+            }
+          }
+          isEndToken = (triggerToken==null || model.findMatchingBracketUp(triggerToken.type,position) != null);
+        }
+        if (!isEndToken) {
+          var snippetPre = " ";
+          var snippetPost = function(name) { return "\n" + cap[2] + (cap[3] ? " End " + name : ""); }
+          return self._suggest(cap[4] + currentWord,"custom",self.customs, snippetPre, snippetPost);    
+        }
+      }
+    }
+    return Promise.resolved([]);
   }
 
-  MadokoSuggester.prototype._suggest = function(currentWord, type, items ) {
+  MadokoSuggester.prototype._suggest = function(currentWord, type, items, snippetPre, snippetPost ) {
     var self = this;
     var suggestions = items.map( function(item) {
       return {
         type: type,
         label: item.label || item.name,
-        codeSnippet: item.snippet || item.name,
+        codeSnippet: (snippetPre || "") + (item.snippet || item.name) + (snippetPost ? snippetPost(item.name) : ""),
         typeLabel: item.typeLabel || "", // item.description,
         documentationLabel: item.description || item.title || "",
       };      
@@ -455,7 +498,7 @@ var MadokoSuggester = (function() {
     );
   }
 
-  MadokoSuggester.prototype.triggerCharacters = ['#','@','[','&','~'];
+  MadokoSuggester.prototype.triggerCharacters = ['#','@','[','&','~',' '];
 
   return MadokoSuggester;
 })();

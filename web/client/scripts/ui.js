@@ -1426,26 +1426,19 @@ var UI = (function() {
   }
   
   var customSnippets = new Map([
-    { key: "equation", value: " Equation { #eq-{{name}} }\n~" },
-    { key: "figure", value: " Figure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}\n~" },
-    { key: "tablefigure", value: " TableFigure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}\n~" },
+    { key: "equation", value: "Equation { #eq-{{name}} }" },
+    { key: "figure", value: "Figure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}" },
+    { key: "tablefigure", value: "TableFigure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}" },
+    { key: "bibitem", value: "BibItem { #{{citelabel}} caption=\"{{caption}}\" }\n{{content}}" },
   ]);
 
   UI.prototype.updateLabels = function( labelsTxt, linksTxt, customsTxt, entitiesTxt ) {
     var self = this;
     var noLabels = "None";
 
-    // parse links
-    var links = jsonParseLineArray(linksTxt).map(function(link) {
-      link.title = stripMarkup(link.title);
-      link.description = link.href + (link.title ? " \"" + link.title + "\"" : "");
-      return link;
-    });
-    if (self.editor) self.editor.setSuggestLinks(links);
-
     // parse customs
     var customs = jsonParseLineArray(customsTxt).map( function(custom) {
-      custom.snippet = customSnippets.get(custom.name) || (" " + custom.display + "\n{{content}}\n~");
+      custom.snippet = customSnippets.get(custom.name.toLowerCase) || (custom.display + "\n{{content}}");
       custom.name = stripMarkup(custom.display);
       return custom;
     });
@@ -1480,7 +1473,25 @@ var UI = (function() {
     // update suggestions
     if (self.editor) self.editor.setSuggestLabels(labels);
 
-    // render
+
+    // parse links
+    var links = jsonParseLineArray(linksTxt).map(function(link) {
+      link.title = stripMarkup(link.title);
+      link.description = link.href + (link.title ? " \"" + link.title + "\"" : "");
+      return link;
+    });
+    // add labels too
+    labels.forEach( function(label) {
+      links.push( {
+        name: "#" + label.name,
+        title: label.title,
+      });
+    });
+    if (self.editor) self.editor.setSuggestLinks(links);
+
+    
+
+    // render labels
     var menuLabels = document.getElementById("tool-reference-content");
     if (menuLabels) {
       var labelHtml = noLabels;
