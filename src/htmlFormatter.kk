@@ -350,7 +350,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
                 
   val htmlHead =              
     "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />\n" +
-    "<meta name=\"generator\" content=\"Madoko, version " + version + "\" />\n" +
+    "<meta name=\"generator\" content=\"Madoko, version " + options.version + "\" />\n" +
     meta.map(fun(m) { "<meta " + m + " />\n" }).join +
     (if (options.title=="") then "" else
       "<title>" + escape(options.title.expand) + "</title>\n") +

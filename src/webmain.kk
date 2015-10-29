@@ -11,6 +11,7 @@ module webmain
 
 import std/dict
 import std/log
+import version
 import common
 import options
 import driver
@@ -19,7 +20,7 @@ import mathStatic
 
 public function initialOptions( args : string = "" ) : io options {
   val opts = if (args=="") then Options()
-                 else parseOptions(args).maybe(CommandOptions(),id).options
+                 else parseOptions(version,args).maybe(CommandOptions(),id).options
   opts(lineNoWeb=True,
        mathEmbedLimit=512*1024,   // must match server setting!
        embedLimit=512*1024,

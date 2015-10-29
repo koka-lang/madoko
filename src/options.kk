@@ -9,6 +9,7 @@
 // The ":options" type and parsing of the command line
 module options
 
+
 import std/log
 import std/env
 import std/dict
@@ -17,9 +18,6 @@ import std/regex
 import std/string
 import std/path
 import common 
-
-// Do not edit the version, it is set in the Jakefile from package.json
-public val version = "0.9.14-beta" 
 
 // Metadata is just a string to string map.
 public alias metadata = list<(string,string)>
@@ -33,6 +31,7 @@ public type mathmode {
   
 // The options
 public struct options(
+  version  : string = "",  // Initialized to the program version                        
   bench    : bool = False, // turn off more expensive features for benchmarking
   verbose  : int  = 0,      // be more verbose
   pedantic : bool = False, // more pedantic list style mode
@@ -207,15 +206,15 @@ function setMeta( opts0 : options, value : string ) : options {
 }
 
 // Parse the options from the command line given some extra arguments (default `""`).
-public function parseOptions( extra : string = "") : io maybe<commandOptions>
+public function parseOptions( version : string, extra : string = "") : io maybe<commandOptions>
 {
-  parseOptionList(env/arguments + extra.split(" ").list.filter(fun(s) { s != "" }))
+  parseOptionList(version, env/arguments + extra.split(" ").list.filter(fun(s) { s != "" }))
 }
 
-public function parseOptionList( cmdargs  : list<string> ) : io maybe<commandOptions>
+public function parseOptionList( version : string, cmdargs  : list<string> ) : io maybe<commandOptions>
 {
   // testOptions.usageInfo( header ).println
-  val (options,args,errs) = parse( CommandOptions(), optionsDesc, cmdargs )
+  val (options,args,errs) = parse( CommandOptions(options = Options(version=version)), optionsDesc, cmdargs )
   
   if (!(errs.isNil)) {
     println( errs.join("\n") + "\n" + fullUsageInfo() )    

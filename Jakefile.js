@@ -341,7 +341,7 @@ function getVersion() {
 
 
 function fixVersion(fname) {
-  fname = fname || path.join(sourceDir,"options.kk");
+  fname = fname || path.join(sourceDir,"version.kk");
   
   var version = getVersion();
   var content1 = fs.readFileSync(fname,{encoding: "utf8"});
