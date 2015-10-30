@@ -10,9 +10,10 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
+        "../scripts/remote-onedrive2",
         "../scripts/remote-github",
         "../scripts/remote-localhost",
-        ], function(Promise,Map,Util,LocalRemote,Dropbox,Onedrive,Github,Localhost) {
+        ], function(Promise,Map,Util,LocalRemote,Dropbox,Onedrive,Onedrive2,Github,Localhost) {
 
 
 
@@ -48,6 +49,7 @@ var Picker = (function() {
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
+    onedrive2: { remote: new Onedrive2.Onedrive2(), folder: "" },
     github: { remote: new Github.Github(), folder: "" },
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
     localhost: { remote: new Localhost.Localhost(), folder: "" },

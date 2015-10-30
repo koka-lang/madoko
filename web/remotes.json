@@ -18,5 +18,11 @@
     "token_url"     : "https://github.com/login/oauth/access_token",
     "account_url"   : "https://api.github.com/user",
     "disable_basic_url": "https://api.github.com/applications/:client_id/tokens/:access_token"
+  },
+  "onedrive2": {
+    "client_id"     : "000000004C113E9D",
+    "xclient_secret": "YlyRNQrVwKwgm9JbY9d/yot1dyU7DCwBEb9Hl17l9sEeh7hOQnnumcetzGUwiy/W",
+    "token_url"     : "https://login.live.com/oauth20_token.srf",
+    "account_url"   : "https://api.onedrive.com/v1.0/drive"
   }
 }

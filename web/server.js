@@ -337,7 +337,7 @@ app.use(function(req, res, next){
     else if (req.path==="/editor.html") {
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
-      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.github.com https://localhost";
+      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.onedrive.com https://*.livefilestore.com https://api.github.com https://localhost";
     } 
     else if (endsWith(req.path,".svg")) { 
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.
@@ -856,9 +856,10 @@ function oauthLogin(req,res) {
     }
     return makeRequest( options ).then( function(info) {
       console.log(info);
+      if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
-        name: info.display_name || info.name || "",
+        name: info.display_name || info.displayName || info.name || "",
         access_token: tokenInfo.access_token,
         created:  new Date().toISOString(),
         nonce: uniqueHash(),

@@ -168,6 +168,13 @@ var OAuthRemote = (function() {
     return self.requestXHR(options,params);
   }
 
+  OAuthRemote.prototype.requestDELETE = function( options, params ) {
+    var self = this;
+    if (typeof options === "string") options = { url: options };
+    options.method = "DELETE";
+    return self.requestXHR(options,params);
+  }
+
   OAuthRemote.prototype.logout = function(force) {
     var self  = this;
     return (force && self.logoutUrl ? Util.openOAuthLogout(self.name, { url: self.logoutUrl, width: self.dialogWidth, height: self.dialogHeight, timeout: self.logoutTimeout }, self.logoutParams ) : Promise.resolved()).always( function() {
@@ -243,9 +250,10 @@ var OAuthRemote = (function() {
   OAuthRemote.prototype._getUserInfo = function() {
     var self = this;
     return self.requestGET( { url: self.accountUrl } ).then( function(info) {
+      if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
       self.user = {
         id: info.uid || info.id || info.userId || info.user_id || null,
-        name: info.display_name || info.name || info.login || null,
+        name: info.display_name || info.displayName || info.name || info.login || null,
         email: info.email || null,
       };
       self.user.login = info.login || self.user.id;
