@@ -23,6 +23,7 @@ var OAuthRemote = (function() {
     self.logoutTimeout  = opts.logoutTimeout || false;
     self.accountUrl     = opts.accountUrl;
     self.useAuthHeader  = (opts.useAuthHeader !== false);
+    self.canRefresh     = (opts.canRefresh || false);
     self.headers        = opts.headers || {};
     self.access_token   = null;
     self.user           = {};
@@ -107,7 +108,17 @@ var OAuthRemote = (function() {
         // err.message.indexOf("request_token_expired") >= 0
         if (err) {
           if (err.httpCode === 401) { // access token expired 
+            if (!recurse && self.canRefresh) {
+              return self._refresh().then( function() {
+                console.log("refreshed token; try again. " + options.url);
+                return _primRequestXHR(options,params,body,true);
+              }, function(err2) {
+                self.logout();
+                throw err;
+              });
+            }
             self.logout();
+            throw err;
           }
           else if (!recurse && err.httpCode===500) { // internal server error, try once more
             return Promise.delayed(250).then( function() {
@@ -173,6 +184,19 @@ var OAuthRemote = (function() {
     if (typeof options === "string") options = { url: options };
     options.method = "DELETE";
     return self.requestXHR(options,params);
+  }
+
+  OAuthRemote.prototype.refresh = function() {
+    var self = this;
+    if (!self.canRefresh) throw new Error("Cannot refresh access token for '" + self.name + "'");
+    return Util.requestPOST("/oauth/refresh",{ remote: self.name } ).then( function(res) {
+      if (!res || typeof(res.access_token) !== "string") {
+        throw new Error("Unable to refresh access token for '" + self.name + "'");
+      }
+      self.access_token = res.access_token;
+      Util.message("Reconnected to " + self.name, Util.Msg.Status );
+      return;
+    });
   }
 
   OAuthRemote.prototype.logout = function(force) {

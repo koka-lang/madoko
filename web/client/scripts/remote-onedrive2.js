@@ -22,7 +22,8 @@ var onedrive2 = new OAuthRemote( {
   dialogHeight   : 650,
   dialogWidth    : 800,
   logoutUrl      : "https://login.live.com/oauth20_logout.srf",
-  useAuthHeader  : true,    
+  useAuthHeader  : true,  
+  canRefresh     : true,  
 } );
 
 /* ----------------------------------------------
