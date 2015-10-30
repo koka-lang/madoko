@@ -9,7 +9,7 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
-  var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d)(?:[\.,](\d\d\d))?)?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
+  var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d)(?:[\.,](\d+))?)?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
     
   function dateFromISO(s) {
     function parseNum(n) {
@@ -20,8 +20,9 @@ define([],function() {
     var utc = null;
     var cap = rxISO.exec( s.replace(/\s+/g, "") );    
     if (cap) {
+      var ms    = parseNum( ((cap[7] || "") + "000").substr(0,3) );
       var utcx  = new Date( Date.UTC( parseNum(cap[1]), parseNum(cap[2])-1, parseNum(cap[3]),
-                                   parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]), parseNum(cap[7]) ) );
+                                   parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]), ms ) );
       if (utcx && !isNaN(utcx)) {
         utc = utcx;
         var tz = (cap[8]=="+" ? -1 : 0) * ((parseNum(cap[9])||0) * 60 + (parseNum(cap[10])||0));
@@ -32,7 +33,7 @@ define([],function() {
       console.log("dateFromISO: cannot convert: " + s);      
       utc = new Date(0);
     }
-    else if (utc.toISOString() !== s) {
+    else if (utc.toISOString().replace(/\.?0+Z/,"Z") !== s) {
       console.log( "dateFromISO: illegal conversion:\n original: " + s + "\n parsed  : " + utc.toISOString());
     }
     return utc;
