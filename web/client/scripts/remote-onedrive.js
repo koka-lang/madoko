@@ -17,7 +17,7 @@ var onedrive = new OAuthRemote( {
   loginUrl       : "https://login.live.com/oauth20_authorize.srf",
   loginParams: {
     client_id    : "000000004C113E9D",
-    scope        : ["wl.signin","wl.skydrive","wl.skydrive_update"],
+    scope        : ["wl.signin","wl.skydrive","wl.contacts_skydrive","wl.skydrive_update"],
   },
   dialogHeight   : 650,
   dialogWidth    : 800,

@@ -17,7 +17,7 @@ var onedrive2 = new OAuthRemote( {
   loginUrl       : "https://login.live.com/oauth20_authorize.srf",
   loginParams: {
     client_id    : "000000004C113E9D",
-    scope        : ["wl.signin","onedrive.appfolder"],
+    scope        : ["wl.signin","wl.contacts_skydrive","onedrive.readwrite"],
   },
   dialogHeight   : 650,
   dialogWidth    : 800,
@@ -37,12 +37,15 @@ function encodeURIPath(s) {
 
 var _driveRoot;
 function getRootPath() {
+  return Promise.resolved("/drive/root:");
+  /*
   if (_driveRoot) return Promise.resolved(_driveRoot);
   return onedrive2.requestGET( { url: "/drive/special/appfolder" } ).then( function(root) {
     if (!root) throw new Error("Unable to determine Madoko app-folder");
     _driveRoot = Util.combine(root.parentReference.path,root.name);
     return _driveRoot;
   });
+  */
 }
 
 function makeRootPath(fname) {
@@ -248,7 +251,7 @@ var Onedrive2 = (function() {
 
   Onedrive2.prototype.listing = function( fpath ) {
     var self = this;
-    return folderInfoX( self.fullPath(fpath) ).then( function(info) {
+    return folderInfo( self.fullPath(fpath) ).then( function(info) {
       return (info ? info.children : []).map( function(item) {
         item.path = self.fullPath(Util.combine(fpath, item.name));
         item.type = item.folder ? "folder" : "file";
