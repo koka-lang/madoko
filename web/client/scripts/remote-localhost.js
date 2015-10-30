@@ -235,6 +235,7 @@ var Localhost = (function() {
     return logo();
   }
 
+  Localhost.prototype.title    = "Documents are read- and written to the local disk. Requires the 'madoko-local' program to offer secure access.";
   Localhost.prototype.readonly = false;
   Localhost.prototype.canSync  = true;
   Localhost.prototype.needSignin = false;

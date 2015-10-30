@@ -157,7 +157,12 @@ function ensurePath( path ) {
 
 function _writeFileAt( folderId, name, content ) {
   var url = folderId.toString() + "/files/" + name;                  
-  return onedrive.requestPUT( { url: url, contentType:";" }, {}, content );
+  return onedrive.requestPUT( { url: url, contentType:";" }, {}, content ).then( function(res) {
+    return res;
+  }, function (err) {
+    if (err && err.httpCode===409) throw new Error("Cannot write file -- shared files are readonly on Onedrive for third-party apps (" + name + ")" + (err.message ? "\n " + err.message : ""));
+    throw err;
+  });
 }
 
 function _writeFile( folderId, path, content ) {
@@ -217,6 +222,7 @@ var Onedrive = (function() {
     return logo();
   }  
 
+  Onedrive.prototype.title = "Onedrive cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive.prototype.readonly = false;
   Onedrive.prototype.canSync  = true;
   Onedrive.prototype.needSignin = true;

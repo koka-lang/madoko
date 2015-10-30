@@ -11,6 +11,8 @@ define([],function() {
 
   var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d)(?:[\.,](\d+))?)?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
     
+  var rxIsoZ = /\.?0+(?=Z|$)/
+
   function dateFromISO(s) {
     function parseNum(n) {
       var i = parseInt(n,10);
@@ -33,7 +35,7 @@ define([],function() {
       console.log("dateFromISO: cannot convert: " + s);      
       utc = new Date(0);
     }
-    else if (utc.toISOString().replace(/\.?0+Z/,"Z") !== s) {
+    else if (utc.toISOString().replace(rxIsoZ,"") !== s.replace(rxIsoZ,"")) {
       console.log( "dateFromISO: illegal conversion:\n original: " + s + "\n parsed  : " + utc.toISOString());
     }
     return utc;
@@ -43,3 +45,4 @@ define([],function() {
     dateFromISO: dateFromISO,
   };
 });
+

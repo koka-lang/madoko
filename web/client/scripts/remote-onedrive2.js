@@ -163,6 +163,7 @@ var Onedrive2 = (function() {
     return logo();
   }  
 
+  Onedrive2.prototype.title    = "Onedrive & Office 365 cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive2.prototype.readonly = false;
   Onedrive2.prototype.canSync  = true;
   Onedrive2.prototype.needSignin = true;
@@ -255,7 +256,7 @@ var Onedrive2 = (function() {
       return (info ? info.children : []).map( function(item) {
         item.path = self.fullPath(Util.combine(fpath, item.name));
         item.type = item.folder ? "folder" : "file";
-        item.isShared = false;
+        item.isShared = (item.shared != null);
         return item;
       });
     });

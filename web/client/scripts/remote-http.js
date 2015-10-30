@@ -60,6 +60,7 @@ var HttpRemote = (function() {
     return logo();
   }
 
+  HttpRemote.prototype.title      = "Read-only documents hosted on the web."
   HttpRemote.prototype.readonly   = true;
   HttpRemote.prototype.canSync    = false;
   HttpRemote.prototype.needSignin = false;

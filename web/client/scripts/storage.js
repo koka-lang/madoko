@@ -11,12 +11,12 @@ define(["../scripts/promise","../scripts/map","../scripts/util",
         "../scripts/remote-local",
         "../scripts/remote-dropbox",
         "../scripts/remote-onedrive",
+        "../scripts/remote-onedrive2",
         "../scripts/remote-http",
         "../scripts/remote-github",
         "../scripts/remote-localhost",
-        "../scripts/remote-onedrive2",
         "../scripts/picker",
-        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,HttpRemote,Github,Localhost,Onedrive2,Picker) {
+        ], function(Promise,Map,Util,Merge,LocalRemote,Dropbox,Onedrive,Onedrive2,HttpRemote,Github,Localhost,Picker) {
 
 var remotes = {
   dropbox: Dropbox,

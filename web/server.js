@@ -805,6 +805,8 @@ function oauthLogin(req,res) {
   // get oauth state
   var cookieName = "oauth/state";
   var cookie = req.sessionCookies.get(cookieName); res.clearCookie(cookieName);
+  //console.log("cookie '" + cookieName + "'=" + cookie);
+  //console.log("remotes: " + JSON.stringify(remotes));
   var state  = {};
   try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
   
@@ -836,11 +838,20 @@ function oauthLogin(req,res) {
     client_id: remote.client_id,
     client_secret: remote.client_secret,
   };
+  if (remote.resource) query.resource = remote.resource;
   return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
     console.log(tokenInfo);
     if (!tokenInfo || !tokenInfo.access_token) {
       return redirectError(remote, "Failed to get access token from the token server.");
     }
+    /*
+    if (remote.discovery) {
+      return makeRequest({ url: remote.discovery, secure: true, json: true, headers : { Authorization: tokenInfo.access_token } }).then( function(info) {
+        console.log(info);
+        throw "not implemented";
+      });
+    }
+    */
     //req.session[remote.name] = { access_token: info.access_token };
     var options = { 
       url: remote.account_url, 

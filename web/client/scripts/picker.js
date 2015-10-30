@@ -709,7 +709,7 @@ var Picker = (function() {
                           (Util.stemname(item.path) === folderStem && (mime==="text/madoko" || mime==="text/markdown") ? " document" : "") +
                       "' data-type='" + item.type + 
                       "' data-path='" + encodeURIComponent(item.path) + 
-                      "' title='" + encodeURIComponent(item.path) + 
+                      "' title='" + Util.escape(item.title || item.path) + 
                       "' data-connected='" + (item.connected ? "true" : "false") + 
                       "'>" + 
                   //"<input type='checkbox' class='item-select'></input>" +
@@ -735,6 +735,7 @@ var Picker = (function() {
       return remote.connect().then( function(status) {
         return { 
           path: remote.type(), 
+          title: remote.title || remote.type(),
           display: Util.capitalize( remote.displayName ? remote.displayName() : remote.type()), 
           iconName: remote.logo(), 
           type: "remote", 
