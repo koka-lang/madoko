@@ -106,44 +106,35 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype._primRequestXHR = function(options,params,body,recurse) {
     var self = this;
-    if (!recurse && self.canRefresh && Math.random() < 0.2) {
-      return self.refresh().then( function() {
-        console.log("refreshed token; try again. " + options.url);
-        return self._primRequestXHR(options,params,body,true);
-      }, function(err2) {
-        self.logout();
-        throw err2;
-      });
-    }
     return Util.requestXHR( options, params, body ).then( null, function(err) {
-        // err.message.indexOf("request_token_expired") >= 0
-        if (err) {
-          if (err.httpCode === 401) { // access denied: usually caused by an expired access token 
-            if (!recurse && self.canRefresh) {
-              return self.refresh().then( function() {
-                console.log("refreshed token; try again. " + options.url);
-                return self._primRequestXHR(options,params,body,true);
-              }, function(err2) {
-                self.logout();
-                throw err;
-              });
-            }
-            self.logout();
-            throw err;
-          }
-          else if (!recurse && err.httpCode===500) { // internal server error, try once more
-            return Promise.delayed(250).then( function() {
+      // err.message.indexOf("request_token_expired") >= 0
+      if (err) {
+        if (err.httpCode === 401) { // access denied: usually caused by an expired access token 
+          if (!recurse && self.canRefresh) {
+            return self.refresh().then( function() {
+              console.log("refreshed token; try again. " + options.url);
               return self._primRequestXHR(options,params,body,true);
+            }, function(err2) {
+              self.logout();
+              throw err;
             });
           }
-          else if (!recurse && err.httpCode===408 && options.timeout != null && options.timeout <= self.timeout) { // request timed out on short timeout
-            options.timeout = options.timeout*2; // try once more with longer timeout
-            console.log("request timed out; try again. " + options.url);
-            return self._primRequestXHR(options,params,body,true);
-          }
+          self.logout();
+          throw err;
         }
-        throw err;
-      });
+        else if (!recurse && err.httpCode===500) { // internal server error, try once more
+          return Promise.delayed(250).then( function() {
+            return self._primRequestXHR(options,params,body,true);
+          });
+        }
+        else if (!recurse && err.httpCode===408 && options.timeout != null && options.timeout <= self.timeout) { // request timed out on short timeout
+          options.timeout = options.timeout*2; // try once more with longer timeout
+          console.log("request timed out; try again. " + options.url);
+          return self._primRequestXHR(options,params,body,true);
+        }
+      }
+      throw err;
+    });
   }
 
   OAuthRemote.prototype.requestXHR = function( options, params, body ) {
