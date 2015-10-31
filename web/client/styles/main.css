@@ -1739,6 +1739,9 @@ div.item.document {
   list-style-type: disc;
 }
 
+#picker div.item[data-path=onedrive] {
+  display:none;
+}
 
 /* hover box */
 .hoverbox {
