@@ -1718,7 +1718,7 @@ var UI = (function() {
   UI.prototype.localFullSave = function() {
     var self = this;
     var doc = self.localSave();
-    if (!self.storage || !doc || !doc.storage.files) return Promise.resolved();
+    if (!self.storage || !doc || !self.storage.files) return Promise.resolved();
     return Promise.map( doc.storage.files, function(fname) {
       var key = "/" + fname;
       var info = self.storage.persistFile(fname);
