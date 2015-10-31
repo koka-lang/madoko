@@ -809,12 +809,12 @@ function oauthLogin(req,res) {
   var cookie = req.sessionCookies.get(cookieName); res.clearCookie(cookieName);
   //console.log("cookie '" + cookieName + "'=" + cookie);
   //console.log("remotes: " + JSON.stringify(remotes));
-  var state  = {};
+  var state  = { };
   try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
   
-  remote = remotes[state.remote];
+  if (state.remote) remote = remotes[state.remote];
   if (!remote) {
-    return redirectError(remote, "Unknown remote service." );
+    return redirectError(remote, "Unknown remote service. (Are cookies blocked from <code>https://www.madoko.net</code>?)" );
   }
   if (remote.flow === "token") {
     return redirectPage(remote,"","token");
@@ -879,6 +879,7 @@ function oauthLogin(req,res) {
         nonce: uniqueHash(),
       };
       // store info in our encrypted cookie
+      // console.log("store in session." + remote.name + ": " + JSON.stringify(userInfo));
       req.session.logins[remote.name] = userInfo;
       if (log) {
         log.entry( { 
@@ -1321,6 +1322,8 @@ app.get("/oauth/token", function(req,res) {
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") {
+      console.log("not logged in to '" + remoteName + "': " + JSON.stringify(login));
+      // console.log(req.session);
       return { httpCode: 401, message: "Not logged in to " + remoteName };
     }
 
