@@ -586,11 +586,11 @@ var Storage = (function() {
     var self = this;
     return self.remote.connect().then( function(status) {
       if (status===0) return;
-      if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.type() );
-      return login(self, message || "Cannot synchronize changes with " + Util.capitalize(self.remote.type()) + ". Please sign in to synchronize.").then( function() {
+      if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.displayName() );
+      return login(self, message || "Cannot synchronize changes with " + self.remote.displayName() + ". Please sign in to synchronize.").then( function() {
         return self.remote.connect().then( function(status2) {
           if (status2 === 0) return;
-          throw new Error("Synchronization failed: cannot connect to " + self.remote.type() );
+          throw new Error("Synchronization failed: cannot connect to " + self.remote.displayName() );
         })
       });
     });

@@ -158,6 +158,12 @@ var Dropbox = (function() {
     return logo();
   }
 
+  Dropbox.prototype.displayName = function() {
+    var self = this;
+    return self.type();
+  }
+
+
   Dropbox.prototype.title    = "Dropbox cloud storage. Offers full functionality including collaborative editing."
   Dropbox.prototype.readonly = false;
   Dropbox.prototype.canSync  = true;

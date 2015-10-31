@@ -320,6 +320,11 @@ var Github = (function() {
     return logo();
   }
 
+  Github.prototype.displayName = function() {
+    var self = this;
+    return self.type();
+  }
+
   Github.prototype.title      = "Github cloud repository. Synchronizes and commits documents, and supports collaborative editing."
   Github.prototype.readonly   = false;
   Github.prototype.canSync    = true;

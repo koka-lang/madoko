@@ -60,6 +60,12 @@ var HttpRemote = (function() {
     return logo();
   }
 
+  HttpRemote.prototype.displayName = function() {
+    var self = this;
+    return self.type();
+  }
+
+
   HttpRemote.prototype.title      = "Http/Web storage. Read-only documents hosted on the web."
   HttpRemote.prototype.readonly   = true;
   HttpRemote.prototype.canSync    = false;
