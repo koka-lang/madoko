@@ -12,12 +12,13 @@ define(["../scripts/promise","../scripts/date","../scripts/map","../scripts/util
 
 var onedrive2 = new OAuthRemote( {
   name           : "onedrive2",
+  displayName    : "Onedrive",
   defaultDomain  : "https://api.onedrive.com/v1.0",
   accountUrl     : "drive",
   loginUrl       : "https://login.live.com/oauth20_authorize.srf",
   loginParams: {
     client_id    : "000000004C113E9D",
-    scope        : ["wl.signin","wl.contacts_skydrive","onedrive.readwrite"],
+    scope        : ["wl.signin","wl.contacts_skydrive","onedrive.readwrite","wl.offline_access"],
   },
   dialogHeight   : 650,
   dialogWidth    : 800,
@@ -116,7 +117,7 @@ function pushFile(fname,content) {
 function getShareLink(fname) {
   return makeRootPath(fname).then( function(fileUri) {
     return onedrive2.requestPOST( { url: fileUri + ":/action.createLink" }, {}, { type: "view" } ).then( function(info) {
-      return (info ? info.webUrl : null);
+      return (info && info.link ? info.link.webUrl : null);
     });
   });  
 }
@@ -163,6 +164,10 @@ var Onedrive2 = (function() {
   Onedrive2.prototype.logo = function() {
     return logo();
   }  
+
+  Onedrive2.prototype.displayName = function() {
+    return onedrive2.displayName;
+  }
 
   Onedrive2.prototype.title    = "Onedrive & Office 365 cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive2.prototype.readonly = false;

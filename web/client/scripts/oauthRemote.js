@@ -14,11 +14,12 @@ var OAuthRemote = (function() {
     var self = this;
     
     self.name           = opts.name;
+    self.displayName    = opts.displayName || opts.name;
     self.logo           = opts.logo || ("icon-" + self.name + ".png");
     self.defaultDomain  = opts.defaultDomain;
     self.loginUrl       = opts.loginUrl;
     self.loginParams    = opts.loginParams || {};
-    self.logoutParams = opts.logoutParams || {};
+    self.logoutParams   = opts.logoutParams || {};
     self.logoutUrl      = opts.logoutUrl;
     self.logoutTimeout  = opts.logoutTimeout || false;
     self.accountUrl     = opts.accountUrl;
@@ -58,7 +59,7 @@ var OAuthRemote = (function() {
     self.nextTry     = 0;     // -1: never try (on logout), 0: try always, N: try if Date.now() < N
     self.lastTryErr  = null;
     self.tryDelay    = 30000; 
-    self.logoutErr   = { httpCode: 401, message: "Not logged in to " + self.name };
+    self.logoutErr   = { httpCode: 401, message: "Not logged in to " + self.displayName };
   }
 
   // try to set access token without full login; call action with connected or not.
@@ -79,7 +80,7 @@ var OAuthRemote = (function() {
       }
       else {
         self.access_token = res.access_token;
-        Util.message("Connected to " + self.name, Util.Msg.Status );
+        Util.message("Connected to " + self.displayName, Util.Msg.Status );
         return action(true);
       }
     }, function(err) {
@@ -109,9 +110,9 @@ var OAuthRemote = (function() {
         if (err) {
           if (err.httpCode === 401) { // access token expired 
             if (!recurse && self.canRefresh) {
-              return self._refresh().then( function() {
+              return self.refresh().then( function() {
                 console.log("refreshed token; try again. " + options.url);
-                return _primRequestXHR(options,params,body,true);
+                return self._primRequestXHR(options,params,body,true);
               }, function(err2) {
                 self.logout();
                 throw err;
@@ -188,13 +189,13 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype.refresh = function() {
     var self = this;
-    if (!self.canRefresh) throw new Error("Cannot refresh access token for '" + self.name + "'");
+    if (!self.canRefresh) throw new Error("Cannot refresh access token for '" + self.displayName + "'");
     return Util.requestPOST("/oauth/refresh",{ remote: self.name } ).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
-        throw new Error("Unable to refresh access token for '" + self.name + "'");
+        throw new Error("Unable to refresh access token for '" + self.displayName + "'");
       }
       self.access_token = res.access_token;
-      Util.message("Reconnected to " + self.name, Util.Msg.Status );
+      Util.message("Reconnected to " + self.displayName, Util.Msg.Status );
       return;
     });
   }
@@ -207,7 +208,7 @@ var OAuthRemote = (function() {
       self.nextTry    = -1; // no need to ever try to get the token
       self.lastTryErr = self.logoutErr;
       self.user = {};
-      Util.message("Logged out from " + self.name, Util.Msg.Status);
+      Util.message("Logged out from " + self.displayName, Util.Msg.Status);
 
 
       if (token) {
@@ -227,7 +228,7 @@ var OAuthRemote = (function() {
     return Util.openOAuthLogin(self.name, { url: self.loginUrl, width: self.dialogWidth, height: self.dialogHeight }, self.loginParams).then( function() {
       self.nextTry = 0; // ensure we access the server this time
       return self._withAccessToken( function() { // and get the token
-        Util.message( "Logged in to " + self.name, Util.Msg.Status );
+        Util.message( "Logged in to " + self.displayName, Util.Msg.Status );
         return; 
       } ); 
     });

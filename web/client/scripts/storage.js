@@ -47,7 +47,7 @@ var Encoding = {
       if (data instanceof ArrayBuffer) 
         return Util.encodeBase64(data);
       else
-        return window.btoa(data);
+        return window.btoa(unescape(encodeURIComponent(data))); // todo; see: https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/btoa
     }
     else if (typeof data === "object") {
       return JSON.stringify(data);

@@ -12,12 +12,13 @@ define(["../scripts/promise","../scripts/date","../scripts/map","../scripts/util
 
 var onedrive = new OAuthRemote( {
   name           : "onedrive",
+  displayName    : "Onedrive-v1",
   defaultDomain  : "https://apis.live.net/v5.0/",
   accountUrl     : "me",
   loginUrl       : "https://login.live.com/oauth20_authorize.srf",
   loginParams: {
     client_id    : "000000004C113E9D",
-    scope        : ["wl.signin","wl.skydrive","wl.contacts_skydrive","wl.skydrive_update"],
+    scope        : ["wl.signin","wl.skydrive","wl.contacts_skydrive","wl.skydrive_update","wl.offline_access"],
   },
   dialogHeight   : 650,
   dialogWidth    : 800,
@@ -222,6 +223,10 @@ var Onedrive = (function() {
   Onedrive.prototype.logo = function() {
     return logo();
   }  
+
+  Onedrive.prototype.displayName = function() {
+    return onedrive.displayName;
+  }
 
   Onedrive.prototype.title = "Onedrive cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive.prototype.readonly = false;

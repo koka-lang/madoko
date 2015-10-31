@@ -900,7 +900,7 @@ function oauthLogin(req,res) {
 }
 
 function oauthRefresh(req,res,remoteName,login) {
-  var remote = remote[remoteName];
+  var remote = remotes[remoteName];
   if (!remote || !login.access_token || !login.refresh_token) return Promise.resolved();
   if (log) log.entry( { type: "refresh", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
   
@@ -908,13 +908,13 @@ function oauthRefresh(req,res,remoteName,login) {
   var query = {
     refresh_token: login.refresh_token,
     grant_type: "refresh_token", 
-    redirect_uri:  "https://" + (req.hostname || req.host) + "/oauth/redirect";
+    redirect_uri:  "https://" + (req.hostname || req.host) + "/oauth/redirect",
     client_id: remote.client_id,
     client_secret: remote.client_secret,
   };
   if (remote.resource) query.resource = remote.resource;
   return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
-    if (!tokenInfo || !tokenInfo.access_token) throw { httpCode: 401, "Unable to refresh access token."};
+    if (!tokenInfo || !tokenInfo.access_token) throw { httpCode: 401, message: "Unable to refresh access token."};
     console.log("token was refreshed!");
     login.access_token = tokenInfo.access_token;
     if (tokenInfo.refresh_token) login.refresh_token = tokenInfo.refresh_token;
@@ -1340,6 +1340,7 @@ app.post("/oauth/refresh", function(req,res) {
     var remoteName = req.param("remote");
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
+    //console.log(JSON.stringify(login));
     if (!login || !login.refresh_token) throw { httpCode: 400, message: "'" + remoteName + "' cannot refresh tokens" }
     return oauthRefresh(req,res,remoteName,login);      
   });
