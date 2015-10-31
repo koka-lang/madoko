@@ -167,7 +167,7 @@ var Onedrive2 = (function() {
   Onedrive2.prototype.displayName = function() {
     return onedrive2.displayName;
   }
-
+  Onedrive2.prototype.displayType = "onedrive";
   Onedrive2.prototype.title    = "Onedrive & Office 365 cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive2.prototype.readonly = false;
   Onedrive2.prototype.canSync  = true;

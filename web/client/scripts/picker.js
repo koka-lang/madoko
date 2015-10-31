@@ -763,8 +763,12 @@ var Picker = (function() {
     }
     var parts = (self.options.command==="connect" ? [] : folder.split("/"));
     var html = "<span class='dir' data-path='%2F%2F'>me</span><span class='dirsep'>/</span>";
+    var displayType = self.current.remote.displayType || self.current.remote.type();
     if (folder!=="//") {
-      html = html + "<span class='dir' data-path='" + encodeURIComponent(root) + "'>" + Util.escape(root ? Util.combine(self.current.remote.type(),root) : self.current.remote.type()) + "</span><span class='dirsep'>/</span>";
+      html = html + "<span class='dir' data-path='" + encodeURIComponent(root) +
+                         "' title='" + Util.escape(self.current.remote.title || "") + "'>" + 
+                        Util.escape(root ? Util.combine(displayType,root) : displayType) + 
+                    "</span><span class='dirsep'>/</span>";
       var partial = root;
       parts.forEach( function(part) {
         if (part) {

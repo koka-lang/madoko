@@ -48,7 +48,7 @@ var LocalRemote = (function() {
     return logo();
   }
 
-  LocalRemote.prototype.title    = "Browser local storage -- document is saved in the local browser storage on this computer."
+  LocalRemote.prototype.title    = "Browser local storage. Document is saved in the local browser storage on this computer."
   LocalRemote.prototype.readonly = false;
   LocalRemote.prototype.canSync  = false;
   LocalRemote.prototype.needSignin = false;

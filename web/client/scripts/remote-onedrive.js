@@ -12,7 +12,7 @@ define(["../scripts/promise","../scripts/date","../scripts/map","../scripts/util
 
 var onedrive = new OAuthRemote( {
   name           : "onedrive",
-  displayName    : "Onedrive-v1",
+  displayName    : "Onedrive (old)",
   defaultDomain  : "https://apis.live.net/v5.0/",
   accountUrl     : "me",
   loginUrl       : "https://login.live.com/oauth20_authorize.srf",

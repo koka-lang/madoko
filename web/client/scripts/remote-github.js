@@ -320,7 +320,7 @@ var Github = (function() {
     return logo();
   }
 
-  Github.prototype.title      = "Github cloud repository; syncs and commits documents and supports collaborative editing."
+  Github.prototype.title      = "Github cloud repository. Synchronizes and commits documents, and supports collaborative editing."
   Github.prototype.readonly   = false;
   Github.prototype.canSync    = true;
   Github.prototype.needSignin = true;
