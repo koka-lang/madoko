@@ -9,15 +9,20 @@
 var _main = (function() {
 
 // -------------------------------------------------------------
-// Configuration   
+// Configuration: get the secret from the url fragment and remove it.
 // -------------------------------------------------------------
 var config = {
   username: "(local user)",
   userid  : "(local user)",
   origin  : "",
   mount   : "",  
-  secret  : urlParamsDecode(window.location.search).secret || "",
+  secret  : urlParamsDecode(window.location.hash).secret || "",
 };
+
+// remove secret from history & display
+if (window.history && window.history.replaceState) {
+  window.history.replaceState(undefined,undefined,"#"); 
+}
 
 // -------------------------------------------------------------
 // Helpers   

@@ -310,9 +310,9 @@ function finfoFromStat( stat, fpath ) {
 }
 
 // Check of a file name is root-relative (ie. relative and not able to go to a parent)
-// and that it contains only [A-Za-z0-9_\-] characters.
+// and that it contains only [A-Za-z0-9_\- \(\)] characters.
 function isValidFileName(fname) {
-  return (fname==="" || /^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$/.test(fname));
+  return (fname==="" || /^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ \(\)]|[\.\/\\][\w\-\ \(\)])+$/.test(fname));
 }
 
 function checkValidPath(fpath) {
@@ -476,7 +476,7 @@ app.use(handleError);
 Http.createServer(app).listen(config.port, "localhost"); // only listen on local host
 
 var localHost = "http://localhost" + (config.port===80 ? "" : ":" + config.port.toString());
-var accessPoint = localHost + (config.secret ? "?secret=" + encodeURIComponent(config.secret) : "");
+var accessPoint = localHost + (config.secret ? "#secret=" + encodeURIComponent(config.secret) : "");
 
 console.log("listening on          : " + localHost );
 console.log("connecting securely to: " + config.origin );
