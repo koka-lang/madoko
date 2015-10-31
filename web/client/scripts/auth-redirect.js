@@ -10,17 +10,17 @@ var script  = document.getElementById("auth");
 var remote  = (script ? script.getAttribute("data-remote") : "");
 var status  = (script ? script.getAttribute("data-status") : "unknown");
 
+function windowClose() {
+  if (!window.opener) window.open('','_parent',''); // for IE
+  window.close();  
+}
+
 document.getElementById("button-close").onclick = function() {
-  if (window.opener) {
-    window.close();
-  }
-  else {
-    window.history.back();
-  }
+  windowClose();
 };
 
 if (status === "ok") {
-  window.close();
+  windowClose();
 }
 else if (status === "flow") {
   oauthTokenFlow();
