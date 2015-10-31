@@ -35,7 +35,7 @@ listening on          : http://localhost
 connecting securely to: https://www.madoko.net
 serving files under   : C:\Users\dknuth\docs
 
-access server at      : http://localhost?secret=OsuwK3HbMoI7
+access server at      : http://localhost#secret=OsuwK3HbMoI7
 ```
 This starts a local server that only listens on the local host
 and does not accept connections from outside. It also shows 
@@ -122,7 +122,7 @@ The server is designed with multiple security layers:
 * The JavaScript API only accepts messages from the embedded
   frame and specified origin (`https://www.madoko.net`).
 * The above is already enough if using a secure browser that prevents
-  cross-site requests, but as an extra security layer, the server is
+  cross-site scripting requests, but as an extra security layer, the server is
   started with a particular secret and only accepts requests that match
   the secret.
 * The server only gives access to files and directories under the specified
