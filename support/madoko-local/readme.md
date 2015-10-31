@@ -53,6 +53,14 @@ with multiple authors through cloud storage like Dropbox.
 However, in the `Open` dialog you can now also open files
 from your local disk and edit them as usual. 
 
+** Note.** With Internet Explorer, you will be unable to log into remote
+services (like Onedrive) under the localhost. If you use another browser
+or just access the local disk this is no problem of course. Otherwise, you 
+must add `https://www.madoko.net` to both the trusted websites (under the
+_security_ tab), and to the websites that can always add cookies (under
+the _privacy_ tab).
+
+
 # Command line options
 
 Usage:
