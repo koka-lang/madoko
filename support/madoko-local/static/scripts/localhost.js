@@ -20,9 +20,12 @@ var config = {
 };
 
 // remove secret from history & display
+// note: disabled for now as it is quite inconvenient
+/*
 if (window.history && window.history.replaceState) {
   window.history.replaceState(undefined,undefined,"#"); 
 }
+*/
 
 // -------------------------------------------------------------
 // Helpers   

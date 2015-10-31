@@ -1,6 +1,6 @@
 {
   "log": [
-    { "version": "0.3.0-beta",
+    { "version": "0.3.1-beta",
       "date"   : "2015-10-31",
       "updates": [
         "Pass secret in url fragment for increased security"
