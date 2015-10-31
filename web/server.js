@@ -333,11 +333,11 @@ app.use(function(req, res, next){
       csp["style-src"]    = "'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com";
       csp["script-src"]   = "'self' https://maxcdn.bootstrapcdn.com https://ajax.googleapis.com";
     }
-    // the editor can use only server resources and connect to dropbox, onedrive.
+    // the editor can use only server resources and connect to dropbox, onedrive etc.
     else if (req.path==="/editor.html") {
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
-      csp["connect-src"]  = "'self' https://*.dropbox.com https://login.live.com https://apis.live.net https://api.onedrive.com https://*.livefilestore.com https://api.github.com https://localhost";
+      csp["connect-src"]  = "'self' " + remotes.sources.join(" ");
     } 
     else if (endsWith(req.path,".svg")) { 
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.
@@ -751,6 +751,7 @@ function decrypt(secret,value) {
 }
 
 var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
+remotes.sources = [];
 properties(remotes).forEach( function(name) {
   var remote = remotes[name];
   //if (remote.xclient_id) remote.client_id = decrypt(passphraseSSL, remote.xclient_id);
@@ -762,6 +763,7 @@ properties(remotes).forEach( function(name) {
       "https://madoko.cloudapp.net/oauth/redirect",
     ];
   }
+  if (remote.sources) Array.prototype.push.apply(remotes.sources, remote.sources);
 });
 
 function redirectPage(remote, message, status ) { 
@@ -1013,8 +1015,8 @@ function makeRequest(options,obj) {
     var timeout = setTimeout( function() { 
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
-    console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
-    console.log(options);
+    //console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
+    //console.log(options);
     req = (options.secure===false ? http : https).request(options, function(res) {
       if (options.encoding) res.setEncoding(options.encoding);
       var body = "";
@@ -1330,7 +1332,7 @@ app.get("/oauth/token", function(req,res) {
         return { httpCode: 401, message: "Not logged in to " + remoteName };
       });
     }
-    return { access_token: login.access_token };
+    return { access_token: login.access_token, can_refresh: (login.refresh_token != null) };
   });
 })
 
