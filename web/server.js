@@ -1317,7 +1317,7 @@ app.get("/oauth/redirect", function(req,res) {
 
 app.get("/oauth/token", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.param("remote");
+    var remoteName = req.query.remote;
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") {
@@ -1339,7 +1339,7 @@ app.get("/oauth/token", function(req,res) {
 
 app.post("/oauth/refresh", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.param("remote");
+    var remoteName = req.query.remote;
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     //console.log(JSON.stringify(login));
@@ -1351,7 +1351,7 @@ app.post("/oauth/refresh", function(req,res) {
 
 app.post("/oauth/logout", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.param("remote");
+    var remoteName = req.query.remote;
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
     var login = req.session.logins[remoteName];
     if (login) {
