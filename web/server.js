@@ -348,6 +348,17 @@ app.use(function(req, res, next){
   next();
 });
 
+app.use(function(req,res,next) {
+  // check if any non-GET call originated from an XHR request (to prevent most CSRF attacks)
+  if (req.method !== "GET") {
+    console.log(req.method + " " + req.url);
+    if (!req.xhr || !req.secure) {
+      throw { httpCode: 401, message: "XHR header not set, or connection is not secure" };
+    }
+  }
+  next();
+});
+
 // -------------------------------------------------------------
 // Helpers 
 // -------------------------------------------------------------
@@ -1316,7 +1327,7 @@ app.get("/oauth/redirect", function(req,res) {
   });
 });
 
-app.get("/oauth/token", function(req,res) {
+app.post("/oauth/token", function(req,res) {
   event( req, res, true, function() {
     var remoteName = req.query.remote;
     if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
@@ -1429,6 +1440,10 @@ app.use('/', function(req,res,next) {
   return staticPage(req,res,next);
 });
 
+app.use(function(err, req, res, next){
+  if (!err) return next();
+  onError(req, res,err);
+});
 
 // -------------------------------------------------------------
 // Start listening on https

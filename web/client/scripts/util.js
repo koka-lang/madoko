@@ -1227,7 +1227,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       req.setRequestHeader(hdr, headers[hdr]);
     });
 
-    if (contentType) req.setRequestHeader("Content-Type", contentType);    
+    if (contentType) req.setRequestHeader("Content-Type", contentType);   
+    req.setRequestHeader("X-Requested-With","XMLHttpRequest"); // CSRF mitigation 
     req.send(content);
     return promise;
   }

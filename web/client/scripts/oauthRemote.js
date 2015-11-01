@@ -72,7 +72,7 @@ var OAuthRemote = (function() {
       return Promise.wrap(action, false, self.lastTryErr);
     }
     self.lastTryErr = null;
-    return Util.requestGET("/oauth/token",{ remote: self.name } ).then( function(res) {
+    return Util.requestPOST("/oauth/token",{ remote: self.name } ).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
         self.nextTry = Date.now() + self.tryDelay; // remember we tried
         self.lastTryErr = self.logoutErr;
