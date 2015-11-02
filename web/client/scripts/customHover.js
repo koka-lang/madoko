@@ -50,7 +50,11 @@ var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) {
     var className = this.menu.getClassName() || "";
     className = className.replace(/\./g," ");
     return "<div class='" + className + "'>" + this.contentAsync + this.content + "</div>";
-  }
+  },
+
+  getResultWithLoadingMessage: function() {
+    return this.getResult();
+  },
 });
 
 var visibleHover = null;
