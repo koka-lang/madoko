@@ -483,11 +483,11 @@ function getEditPosition(file) {
 }
 
 function pushAtomic( fpath, time, release ) {
-  return Util.requestPOST( "rest/push-atomic", {}, { name: fpath, time: time.toISOString(), release: (release ? true : false)  } );
+  return Util.requestPOST( "/rest/push-atomic", {}, { name: fpath, time: time.toISOString(), release: (release ? true : false)  } );
 }
 
 function createAlias( alias, name ) {
-  return Util.requestPOST( "rest/edit-alias", {}, { name: name, alias: alias } );
+  return Util.requestPOST( "/rest/edit-alias", {}, { name: name, alias: alias } );
 }
 
 

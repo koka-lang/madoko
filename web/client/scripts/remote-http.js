@@ -10,11 +10,11 @@ define(["../scripts/promise","../scripts/util"], function(Promise,Util) {
 
 function pullFile(url,binary) {
   // no need for binary as our server sends binary by default
-  return Util.requestGET( "rest/remote/http", { url: url } ).then( function(_content,req) {
+  return Util.requestGET( "/rest/remote/http", { url: url } ).then( function(_content,req) {
     return req.responseText;
   }, function(err) {
     if (err.httpCode && err.httpCode===404) {
-      return Util.requestGET("rest/remote/http", { url: url + ".txt" } ).then( function(_content,req) {
+      return Util.requestGET("/rest/remote/http", { url: url + ".txt" } ).then( function(_content,req) {
         return req.responseText;
       });
     }
