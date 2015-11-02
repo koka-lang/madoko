@@ -12,7 +12,7 @@ define(["../scripts/promise","../scripts/date","../scripts/util","../scripts/oau
 var github = new OAuthRemote( {
   name         : "github",
   defaultDomain: "https://api.github.com/",
-  accountUrl   : "user",
+  revokeUrl    : null, // revoke from server
   loginUrl     : "https://github.com/login/oauth/authorize",
   loginParams  : {
     client_id: "9c24f7ac71d1ede26ba3",

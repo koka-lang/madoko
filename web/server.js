@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
-  Copyright 2013 Microsoft Corporation.
+  Copyright 2013-2015 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
@@ -44,7 +44,8 @@ var limits = {
   logFlush    : 1*minute,
   logDigest   : 8*hour,
   rmdirDelay  : 120*second,
-  tokenExpires: 15*day,        // we disable access_tokens older than this time
+  tokenMaxAge : 15*day,        // we disable access_tokens older than this time by default
+  tokenMaxMaxAge : 356 * day,  // maximum configurable max age (1 year)
 };
 
 var allowedIps = null; 
@@ -405,6 +406,15 @@ function extend(target, obj) {
   });
 }
 
+function jsonParse(s,def) {
+  try{
+    return JSON.parse(s);
+  }
+  catch(exn) {
+    return def;
+  }
+}
+
 var mimeTypes = {    
   mdk: "text/madoko",
   md: "text/markdown",
@@ -761,6 +771,14 @@ function decrypt(secret,value) {
   return decrypted;
 }
 
+function userEncrypt(req,data) {
+  return encrypt(passphraseLocal + req.session.userid, JSON.stringify(data));
+}
+function userDecrypt(req,data) {
+  if (!data || typeof data !== "string") return null;
+  return jsonParse(decrypt(passphraseLocal + req.session.userid, data), null);
+}
+
 var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
 remotes.sources = [];
 properties(remotes).forEach( function(name) {
@@ -777,7 +795,7 @@ properties(remotes).forEach( function(name) {
   if (remote.sources) Array.prototype.push.apply(remotes.sources, remote.sources);
 });
 
-function redirectPage(remote, message, status ) { 
+function redirectPage(remote, message, status, xcode ) { 
   if (!remote) remote = { name: ""};
   if (!status) status = "ok";
   if (!message) {
@@ -793,7 +811,10 @@ function redirectPage(remote, message, status ) {
     '  <div class="auth-redirect">',
     '    <p id="message">' + message + '</p>',
     '    <p><button id="button-close">Close Window</button></p>', 
-    '    <script id="auth" data-status="' + status + '" data-remote="' + remote.name + '" src="../scripts/auth-redirect.js" type="text/javascript"></script>',
+    '    <script id="auth" data-status="' + encodeURIComponent(status) + '" ' +
+            'data-remote="' + encodeURIComponent(remote.name) + '" ' +
+            (xcode ? 'data-xcode="' + encodeURIComponent(xcode) + '" ' : '') +
+            'src="../scripts/auth-redirect.js" type="text/javascript"></script>',
     '  </div>',
     '</body>',    
     '</html>'
@@ -884,14 +905,17 @@ function oauthLogin(req,res) {
       var userInfo = {
         uid: info.uid || info.id || info.user_id || info.userid || null,
         name: info.display_name || info.displayName || info.name || "",
+        email: info.email || null,
         access_token: tokenInfo.access_token,
         refresh_token: tokenInfo.refresh_token,
         created:  new Date().toISOString(),
-        nonce: uniqueHash(),
+        remote: remote.name,
+        nonce: uniqueHash(),        
       };
-      // store info in our encrypted cookie
+      
+      // return info
       // console.log("store in session." + remote.name + ": " + JSON.stringify(userInfo));
-      req.session.logins[remote.name] = userInfo;
+      delete req.session.logins[remote.name]; // delete legacy login if necessary
       if (log) {
         log.entry( { 
           type: "login", id: req.session.userid, 
@@ -902,7 +926,8 @@ function oauthLogin(req,res) {
           date: userInfo.created, ip: req.ip, url: req.url 
         });
       }
-      return redirectPage(remote);      
+      var xcode = userEncrypt(req, userInfo);
+      return redirectPage(remote, null, "xcode", xcode);
     }, function(err) {
       console.log("access_token failed: " + err.toString());
       return redirectError(remote, "Failed to retrieve account information.");
@@ -913,8 +938,8 @@ function oauthLogin(req,res) {
   });
 }
 
-function oauthRefresh(req,res,remoteName,login) {
-  var remote = remotes[remoteName];
+function oauthRefresh(req,res,login) {
+  var remote = remotes[login.remote];
   if (!remote || !login.access_token || !login.refresh_token) return Promise.resolved();
   if (log) log.entry( { type: "refresh", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
   
@@ -934,31 +959,44 @@ function oauthRefresh(req,res,remoteName,login) {
     if (tokenInfo.refresh_token) login.refresh_token = tokenInfo.refresh_token;
     // login.created =  new Date().toISOString();  // don't extend life time beyond our limit
     login.nonce = uniqueHash();
-    return { access_token: login.access_token };    
+    var xcode = userEncrypt(req,login);
+    return { access_token: login.access_token, xcode: xcode };    
   });
 }
 
-function oauthLogout(req,res,remoteName,login) {
-  delete req.session.logins[remoteName];
-  var remote = remotes[remoteName];
+
+function oauthRevoke(req,res,login) {
+  var remote = remotes[login.remote];
   if (!remote || !login.access_token) return Promise.resolved();
-  if (log) log.entry( { type: "logout", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
+  if (log) log.entry( { type: "revoke", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
   
-  if (!remote.disable_url) return Promise.resolved();
-  console.log("disabling token...");  
+  if (!remote.revoke) return Promise.resolved();
+
+  function instantiate( s ) {
+    return s.replace(/\{access_token\}/g, login.access_token )
+            .replace(/\{client_id\}/g, remote.client_id );
+  }
+
+  console.log("revoking token...");  
   var options = { 
-    url: remote.disable_url, 
+    url: instantiate( remote.revoke.url ),
+    method: remote.revoke.method, 
     secure: true, 
     json: true 
   };
-  if (remote.useAuthHeader) {
+  if (remote.revoke.authorization==="Bearer") {  //dropbox
     options.headers = { Authorization: "Bearer " + login.access_token };
+  }
+  else if (remote.revoke.authorization==="Basic") {  //github
+    var userpass   = remote.client_id + ":" + remote.client_secret;
+    var userpass64 = new Buffer(userpass).toString("base64");
+    options.headers = { Authorization: "Basic " + userpass64 };
   }
   else {
     options.query = { access_token: login.access_token };
   }
   return makeRequest(options).then( function(info) {
-    if (info) console.log("Successfully disabled the access token");
+    if (info) console.log("Successfully revoked the access token");
   });
 }
 
@@ -1329,48 +1367,72 @@ app.get("/oauth/redirect", function(req,res) {
 
 app.post("/oauth/token", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.query.remote;
-    if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
-    var login = req.session.logins[remoteName];
-    if (!login || typeof(login.access_token) !== "string" || typeof(login.created) !== "string") {
-      console.log("not logged in to '" + remoteName + "': " + JSON.stringify(login));
-      // console.log(req.session);
-      return { httpCode: 401, message: "Not logged in to " + remoteName };
-    }
+    var login = userDecrypt(req,req.body.remote);
+    var remoteName = login ? login.remote : req.query.remote;
+    if (!login)  return { httpCode: 401, message: "Not logged in to " + remoteName };
 
     // check expiration date: we expire tokens ourselves for extra security
     var created = date.dateFromISO(login.created);
-    if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + limits.tokenExpires) {
+    var maxAge = limits.tokenMaxAge;
+    if (req.query.maxAge) {
+      var secs = parseInt(req.query.maxAge);
+      if (!Math.isNaN(secs) && secs > 0 && secs*1000 < limits.tokenMaxMaxAge) {
+        maxAge = secs * 1000;
+      }
+    }
+    if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + maxAge) {
       console.log("Expired token: " + login.created);
-      return oauthLogout(req,res,remoteName,login).then( function() {
-        return { httpCode: 401, message: "Not logged in to " + remoteName };
+      return oauthRevoke(req,res,login).then( function() {
+        return { httpCode: 401, message: "Access to " + remoteName + " has expired"};
       });
     }
-    return { access_token: login.access_token, can_refresh: (login.refresh_token != null) };
+
+    return { 
+      access_token: login.access_token, 
+      can_refresh : (login.refresh_token != null),
+      name : login.name,
+      uid  : login.uid,
+      email: login.email
+    };
   });
 })
 
 
 app.post("/oauth/refresh", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.query.remote;
-    if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
-    var login = req.session.logins[remoteName];
-    //console.log(JSON.stringify(login));
-    if (!login || !login.refresh_token) throw { httpCode: 400, message: "'" + remoteName + "' cannot refresh tokens" }
-    return oauthRefresh(req,res,remoteName,login);      
+    var login = userDecrypt(req,req.body.remote);
+    if (!login || !login.refresh_token) {
+      throw { httpCode: 400, message: "cannot refresh tokens" };
+    }
+    return oauthRefresh(req,res,login);      
   });
 })
 
 
 app.post("/oauth/logout", function(req,res) {
   event( req, res, true, function() {
-    var remoteName = req.query.remote;
-    if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
-    var login = req.session.logins[remoteName];
-    if (login) {
-      return oauthLogout(req,res,remoteName,login);
+    var login = userDecrypt(req,req.body.remote);
+    if (!login && req.session.logins) {
+      // legacy: ensure proper logout of legacy logins in the session cookie
+      var remoteName = req.query.remote;
+      if (!remoteName) throw { httpCode: 400, message: "No 'remote' parameter" }
+      var login = req.session.logins[remoteName];
+      if (login) {
+        delete req.session.logins[remoteName];
+        login.remote = remoteName;
+      }
     }
+    if (login) {
+      return oauthRevoke(req,res,login);
+    }
+  });
+})
+
+app.post("/oauth/revoke", function(req,res) {
+  event( req, res, true, function() {
+    var login = userDecrypt(req,req.body.remote);
+    if (!login)  return { httpCode: 401, message: "Cannot revoke; invalid request body" };
+    return oauthRevoke(req,res,login);
   });
 })
 

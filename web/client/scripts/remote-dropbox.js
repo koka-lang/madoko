@@ -12,7 +12,7 @@ define(["../scripts/promise","../scripts/util","../scripts/oauthRemote"],
 var dropbox = new OAuthRemote( {
   name         : "dropbox",
   defaultDomain: "https://api.dropbox.com/1/",
-  accountUrl   : "account/info",
+  revokeUrl    : "https://api.dropbox.com/1/disable_access_token",
   loginUrl     : "https://www.dropbox.com/1/oauth2/authorize",
   loginParams  : {
     client_id: "3vj9witefc2z44w",

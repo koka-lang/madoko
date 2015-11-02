@@ -7,8 +7,8 @@
 ---------------------------------------------------------------------------*/
 
 var script  = document.getElementById("auth");
-var remote  = (script ? script.getAttribute("data-remote") : "");
-var status  = (script ? script.getAttribute("data-status") : "unknown");
+var remote  = (script ? decodeURIComponent(script.getAttribute("data-remote")) : "");
+var status  = (script ? decodeURIComponent(script.getAttribute("data-status")) : "unknown");
 
 function windowClose() {
   if (!window.opener) window.open('','_parent',''); // for IE
@@ -22,10 +22,45 @@ document.getElementById("button-close").onclick = function() {
 if (status === "ok") {
   windowClose();
 }
+else if (status === "xcode") {
+  oauthXCode();
+}
 else if (status === "flow") {
   oauthTokenFlow();
 }
 
+
+/* -----------------------------------------------------------------------
+   Oauth Code flow with encrypted access_token
+----------------------------------------------------------------------- */
+
+function oauthXCode() 
+{
+  var success = false;
+  try {
+    if (remote && window && window.location && 
+         window.opener && window.opener.location && window.localStorage && 
+         window.location.origin === window.opener.location.origin) {
+      var xcode = (script ? decodeURIComponent(script.getAttribute("data-xcode")) : null);
+      if (xcode) {
+        window.localStorage["remote-" + remote] = xcode;
+      }
+      else {
+        message("The access_token was not present in the response.");
+      }
+    }
+    else {
+      message("The page that tried to login to " + remote + " was not from the Madoko server; this might indicate a CSRF attack?");
+    }
+  }
+  catch(exn) {
+    message("Error, could not log in:<br>" + encodeURI(exn.toString()));
+  }
+
+  if (success) {
+    // windowClose();
+  }
+}
 
 
 /* -----------------------------------------------------------------------
@@ -65,7 +100,6 @@ function decodeParams(hash) {
   return obj;
 }
 
-
 function oauthTokenFlow() 
 {
   var success = false;
@@ -103,6 +137,6 @@ function oauthTokenFlow()
   }
 
   if (success) {
-    window.close();
+    windowClose();
   }
 }
