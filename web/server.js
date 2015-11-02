@@ -121,6 +121,14 @@ function dnsReverse( ip, callback ) {
   }  
 }
 
+function response( res, data, status ) {
+  if (typeof data === "object") {
+    res.type("application/json");
+    data = "/*" + JSON.stringify(data) + "*/"; // CSRF mitigation
+  }
+  res.status(status || 200).send(data);
+}
+
 function onError(req,res,err) {
   if (!err) err = "unknown error";
   console.log("*******");
@@ -150,7 +158,7 @@ function onError(req,res,err) {
     });
   };
 
-  res.status( result.httpCode ).send( result );
+  response( res, result, result.httpCode );
 }
 
 // -------------------------------------------------------------
@@ -253,7 +261,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
         domain.requests--;
         entry.time = Date.now() - start;
         if (logev && logit) logev.entry(entry);
-        res.status(200).send(result);
+        response(res,result);
       }, function(err) {
         domain.requests--;
         onError(req,res,err);
@@ -263,7 +271,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
       domain.requests--;
       entry.time = Date.now() - start;
       if (logev && logit) logev.entry(entry);
-      res.status(200).send(x);
+      response(res,x);
     }
   }
   catch(err) {

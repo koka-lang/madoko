@@ -1104,7 +1104,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         var msg    = (req.statusText || ("network request failed (" + domain + ")")) + (message ? ": " + message : "");
         var type = req.getResponseHeader("Content-Type") || req.responseType;
         if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && req.responseText) {
-          var res = JSON.parse(req.responseText);
+          var res = jsonParse(req.responseText,null);
           if (res.error && res.error.message) {
             msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
           }
@@ -1394,6 +1394,11 @@ doc.execCommand("SaveAs", null, filename)
 
   function jsonParse(s,def) {
     try{
+      // allow json to be wrapped in /*..*/ comments which is sometimes returned by
+      // rest calls for CSRF mitigation
+      if (typeof s === "string" && s.length > 4 && startsWith(s,"/*") && endsWith(s,"*/")) {
+        s = s.substr(2, s.length-4);
+      }
       return JSON.parse(s);
     }
     catch(exn) {
