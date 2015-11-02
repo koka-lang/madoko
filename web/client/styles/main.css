@@ -670,7 +670,7 @@ a.file-share:hover {
 
 .msg-error, .msg-exception {
   color: red;
-  font-weight: normal;
+  font-weight: bold;
 }
 .msg-warning {
   color: #cc0000;
