@@ -54,7 +54,7 @@ var ContentComputer = WinJS.Class.define(function ContentComputer(customMenu) {
 
   getResultWithLoadingMessage: function() {
     return this.getResult();
-  },
+  },  
 });
 
 var visibleHover = null;
