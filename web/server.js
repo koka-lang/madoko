@@ -771,6 +771,9 @@ function decrypt(secret,value) {
   return decrypted;
 }
 
+// Encrypt/decrypt using the local passphrase and the session id.
+// This means encrypted login information can only be decrypted if the session
+// also matches.
 function userEncrypt(req,data) {
   return encrypt(passphraseLocal + req.session.userid, JSON.stringify(data));
 }
@@ -795,7 +798,7 @@ properties(remotes).forEach( function(name) {
   if (remote.sources) Array.prototype.push.apply(remotes.sources, remote.sources);
 });
 
-function redirectPage(remote, message, status, xcode ) { 
+function redirectPage(remote, message, status, xlogin ) { 
   if (!remote) remote = { name: ""};
   if (!status) status = "ok";
   if (!message) {
@@ -813,7 +816,7 @@ function redirectPage(remote, message, status, xcode ) {
     '    <p><button id="button-close">Close Window</button></p>', 
     '    <script id="auth" data-status="' + encodeURIComponent(status) + '" ' +
             'data-remote="' + encodeURIComponent(remote.name) + '" ' +
-            (xcode ? 'data-xcode="' + encodeURIComponent(xcode) + '" ' : '') +
+            (xlogin ? 'data-xlogin="' + encodeURIComponent(xlogin) + '" ' : '') +
             'src="../scripts/auth-redirect.js" type="text/javascript"></script>',
     '  </div>',
     '</body>',    
@@ -874,19 +877,9 @@ function oauthLogin(req,res) {
   };
   if (remote.resource) query.resource = remote.resource;
   return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
-    console.log(tokenInfo);
     if (!tokenInfo || !tokenInfo.access_token) {
       return redirectError(remote, "Failed to get access token from the token server.");
     }
-    /*
-    if (remote.discovery) {
-      return makeRequest({ url: remote.discovery, secure: true, json: true, headers : { Authorization: tokenInfo.access_token } }).then( function(info) {
-        console.log(info);
-        throw "not implemented";
-      });
-    }
-    */
-    //req.session[remote.name] = { access_token: info.access_token };
     var options = { 
       url: remote.account_url, 
       secure: true, 
@@ -900,34 +893,38 @@ function oauthLogin(req,res) {
       options.query = { access_token: tokenInfo.access_token };
     }
     return makeRequest( options ).then( function(info) {
-      console.log(info);
       if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
-      var userInfo = {
-        uid: info.uid || info.id || info.user_id || info.userid || null,
-        name: info.display_name || info.displayName || info.name || "",
-        email: info.email || null,
-        access_token: tokenInfo.access_token,
+      var login = {
+        uid:    info.uid || info.id || info.user_id || info.userid || null,
+        name:   info.display_name || info.displayName || info.name || "",
+        email:  info.email || null,
+        avatar: info.avatar_url || info.avatar || null,
+        access_token:  tokenInfo.access_token,
         refresh_token: tokenInfo.refresh_token,
-        created:  new Date().toISOString(),
+        created:new Date().toISOString(),
         remote: remote.name,
-        nonce: uniqueHash(),        
+        nonce:  uniqueHash(),        
       };
-      
-      // return info
-      // console.log("store in session." + remote.name + ": " + JSON.stringify(userInfo));
-      delete req.session.logins[remote.name]; // delete legacy login if necessary
+      console.log("logged into " + remote.name + ": " + login.name);      
       if (log) {
         log.entry( { 
-          type: "login", id: req.session.userid, 
-          uid: userInfo.uid, 
+          type:   "login", 
+          id:     req.session.userid, 
+          uid:    login.uid, 
           remote: remote.name, 
-          name: userInfo.name, 
-          email: info.email || "", 
-          date: userInfo.created, ip: req.ip, url: req.url 
+          name:   login.name, 
+          email:  login.email, 
+          avatar: login.avatar,
+          date:   login.created, ip: req.ip, url: req.url 
         });
-      }
-      var xcode = userEncrypt(req, userInfo);
-      return redirectPage(remote, null, "xcode", xcode);
+      }      
+      delete req.session.logins[remote.name]; // delete legacy login if necessary
+      req.session.logins[remote.name] = { 
+        created: login.created,
+        name   : login.name, 
+      };
+      var xlogin = userEncrypt(req, login);
+      return redirectPage(remote, null, "xlogin", xlogin);      
     }, function(err) {
       console.log("access_token failed: " + err.toString());
       return redirectError(remote, "Failed to retrieve account information.");
@@ -943,7 +940,7 @@ function oauthRefresh(req,res,login) {
   if (!remote || !login.access_token || !login.refresh_token) return Promise.resolved();
   if (log) log.entry( { type: "refresh", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
   
-  console.log("refreshing token...");  
+  console.log( remote.name + ": refreshing token...");  
   var query = {
     refresh_token: login.refresh_token,
     grant_type: "refresh_token", 
@@ -954,30 +951,31 @@ function oauthRefresh(req,res,login) {
   if (remote.resource) query.resource = remote.resource;
   return makeRequest( { url: remote.token_url, method: "POST", secure: true, json: true }, query ).then( function(tokenInfo) {
     if (!tokenInfo || !tokenInfo.access_token) throw { httpCode: 401, message: "Unable to refresh access token."};
-    console.log("token was refreshed!");
+    console.log(" token was refreshed!");
     login.access_token = tokenInfo.access_token;
     if (tokenInfo.refresh_token) login.refresh_token = tokenInfo.refresh_token;
     // login.created =  new Date().toISOString();  // don't extend life time beyond our limit
     login.nonce = uniqueHash();
-    var xcode = userEncrypt(req,login);
-    return { access_token: login.access_token, xcode: xcode };    
+    var xlogin = userEncrypt(req,login);
+    return { access_token: login.access_token, xlogin: xlogin };    
   });
 }
 
 
-function oauthRevoke(req,res,login) {
-  var remote = remotes[login.remote];
-  if (!remote || !login.access_token) return Promise.resolved();
-  if (log) log.entry( { type: "revoke", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
-  
+function oauthRevoke(req,res,remoteName,access_token) {
+  var remote = remotes[remoteName];
+  if (!remote || !access_token) return Promise.resolved();
+  if (log) log.entry( { type: "revoke", id: req.session.userid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
+
+  delete req.session.logins[remote.name]; 
   if (!remote.revoke) return Promise.resolved();
 
   function instantiate( s ) {
-    return s.replace(/\{access_token\}/g, login.access_token )
+    return s.replace(/\{access_token\}/g, access_token )
             .replace(/\{client_id\}/g, remote.client_id );
   }
 
-  console.log("revoking token...");  
+  console.log(remote.name + ": revoking token...");  
   var options = { 
     url: instantiate( remote.revoke.url ),
     method: remote.revoke.method, 
@@ -985,7 +983,7 @@ function oauthRevoke(req,res,login) {
     json: true 
   };
   if (remote.revoke.authorization==="Bearer") {  //dropbox
-    options.headers = { Authorization: "Bearer " + login.access_token };
+    options.headers = { Authorization: "Bearer " + access_token };
   }
   else if (remote.revoke.authorization==="Basic") {  //github
     var userpass   = remote.client_id + ":" + remote.client_secret;
@@ -993,12 +991,28 @@ function oauthRevoke(req,res,login) {
     options.headers = { Authorization: "Basic " + userpass64 };
   }
   else {
-    options.query = { access_token: login.access_token };
+    options.query = { access_token: access_token };
   }
   return makeRequest(options).then( function(info) {
-    if (info) console.log("Successfully revoked the access token");
+    if (info) console.log(" successfully revoked the access token");
   });
 }
+
+function oauthCheckExpiration(req,login) {
+  var created = date.dateFromISO(login.created);
+  var maxAge = limits.tokenMaxAge;
+  if (req.body.maxAge) {
+    var secs = parseInt(req.body.maxAge);
+    if (!isNaN(secs) && secs > 0 && secs*1000 < limits.tokenMaxMaxAge) {
+      maxAge = secs * 1000;
+    }
+  }
+  if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + maxAge) {
+    console.log("Expired token: " + login.created);
+    throw { httpCode: 401, message: "Access to " + login.remote + " has expired"};
+  }
+}
+
 
 // -------------------------------------------------------------
 // Onedrive request redirection:
@@ -1065,6 +1079,7 @@ function makeRequest(options,obj) {
     var timeout = setTimeout( function() { 
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
+    console.log("OUT " + options.method + " " + options.url);
     //console.log("outgoing request: " + (options.secure===false?"http://" : "https://") + options.hostname + (options.port ? ":" + options.port : "") + options.path);
     //console.log(options);
     req = (options.secure===false ? http : https).request(options, function(res) {
@@ -1332,12 +1347,13 @@ app.put( "/rest/stat", function(req,res) {
       viewTime: req.body.viewTime || 0,
       activeTime: req.body.activeTime || 0,
     };
-    var login = null;
-    properties(remotes).some( function(name) {
-      login = req.session.logins[name];
-      return (login != null);
+    var name = req.session.userid;
+    properties(remotes).some( function(rname) {
+      var login = req.session.logins[rname];
+      if (!login || !login.name) return false;
+      name = login.name;
+      return true;
     });
-    var name = (login ? login.name : null) || req.session.userid;    
     console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, active: " + stat.activeTime.toString() + "ms");
     log.entry( {
       type: "stat", 
@@ -1367,51 +1383,36 @@ app.get("/oauth/redirect", function(req,res) {
 
 app.post("/oauth/token", function(req,res) {
   event( req, res, true, function() {
-    var login = userDecrypt(req,req.body.remote);
-    var remoteName = login ? login.remote : req.query.remote;
-    if (!login)  return { httpCode: 401, message: "Not logged in to " + remoteName };
-
-    // check expiration date: we expire tokens ourselves for extra security
-    var created = date.dateFromISO(login.created);
-    var maxAge = limits.tokenMaxAge;
-    if (req.query.maxAge) {
-      var secs = parseInt(req.query.maxAge);
-      if (!Math.isNaN(secs) && secs > 0 && secs*1000 < limits.tokenMaxMaxAge) {
-        maxAge = secs * 1000;
-      }
-    }
-    if (created==null || created.getTime() === 0 || Date.now() > created.getTime() + maxAge) {
-      console.log("Expired token: " + login.created);
-      return oauthRevoke(req,res,login).then( function() {
-        return { httpCode: 401, message: "Access to " + remoteName + " has expired"};
-      });
-    }
-
+    var login = userDecrypt(req,req.body.xlogin);
+    if (!login)  throw { httpCode: 401, message: "Not logged in to " + (req.query.remote || "<unknown>") };
+    oauthCheckExpiration(req,login);
+    
     return { 
       access_token: login.access_token, 
       can_refresh : (login.refresh_token != null),
       name : login.name,
       uid  : login.uid,
-      email: login.email
+      email: login.email,
+      avatar: login.avatar,
     };
   });
-})
+});
 
 
 app.post("/oauth/refresh", function(req,res) {
   event( req, res, true, function() {
-    var login = userDecrypt(req,req.body.remote);
-    if (!login || !login.refresh_token) {
-      throw { httpCode: 400, message: "cannot refresh tokens" };
-    }
+    var login = userDecrypt(req,req.body.xlogin);
+    if (!login || !login.refresh_token) throw { httpCode: 400, message: "cannot refresh tokens" };
+    oauthCheckExpiration(req,login);
+
     return oauthRefresh(req,res,login);      
   });
-})
+});
 
 
 app.post("/oauth/logout", function(req,res) {
   event( req, res, true, function() {
-    var login = userDecrypt(req,req.body.remote);
+    var login = userDecrypt(req,req.body.xlogin);
     if (!login && req.session.logins) {
       // legacy: ensure proper logout of legacy logins in the session cookie
       var remoteName = req.query.remote;
@@ -1423,23 +1424,23 @@ app.post("/oauth/logout", function(req,res) {
       }
     }
     if (login) {
-      return oauthRevoke(req,res,login);
+      return oauthRevoke(req,res,login.remote,login.access_token);
     }
   });
 })
 
 app.post("/oauth/revoke", function(req,res) {
   event( req, res, true, function() {
-    var login = userDecrypt(req,req.body.remote);
+    var login = userDecrypt(req,req.body.xlogin);
     if (!login)  return { httpCode: 401, message: "Cannot revoke; invalid request body" };
-    return oauthRevoke(req,res,login);
+    return oauthRevoke(req,res,login.remote,login.access_token);
   });
 })
 
 app.get("/rest/remote/onedrive", function(req,res) {
   event( req, res, true, function() {
     var login = req.session.logins.onedrive;
-    if (!login || !login.access_token) throw { httpCode: 401, message: "Must be logged in to request Onedrive content" };
+    if (!login) throw { httpCode: 401, message: "Must be logged in to request Onedrive content" };
     if (!/https:\/\/[\w\-\.]+?\.(livefilestore|files\.1drv)\.com\//.test(req.query.url)) {
       throw { httpCode: 403, message: "Illegal onedrive url: " + req.query.url };
     }

@@ -22,8 +22,8 @@ document.getElementById("button-close").onclick = function() {
 if (status === "ok") {
   windowClose();
 }
-else if (status === "xcode") {
-  oauthXCode();
+else if (status === "xlogin") {
+  oauthXLogin();
 }
 else if (status === "flow") {
   oauthTokenFlow();
@@ -34,16 +34,17 @@ else if (status === "flow") {
    Oauth Code flow with encrypted access_token
 ----------------------------------------------------------------------- */
 
-function oauthXCode() 
+function oauthXLogin() 
 {
   var success = false;
   try {
     if (remote && window && window.location && 
          window.opener && window.opener.location && window.localStorage && 
          window.location.origin === window.opener.location.origin) {
-      var xcode = (script ? decodeURIComponent(script.getAttribute("data-xcode")) : null);
-      if (xcode) {
-        window.localStorage["remote-" + remote] = xcode;
+      var xlogin = (script ? decodeURIComponent(script.getAttribute("data-xlogin")) : null);
+      if (xlogin) {
+        window.localStorage["remote-" + remote] = xlogin;
+        success = true;
       }
       else {
         message("The access_token was not present in the response.");
@@ -58,7 +59,7 @@ function oauthXCode()
   }
 
   if (success) {
-    // windowClose();
+    windowClose();
   }
 }
 

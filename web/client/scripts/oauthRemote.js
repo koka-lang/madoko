@@ -83,7 +83,8 @@ var OAuthRemote = (function() {
     if (info.uid) self.user.id = info.uid;
     if (info.name) self.user.name = info.name;
     if (info.email) self.user.email = info.email;
-    if (info.xcode) self._setLocalLogin(info.xcode);
+    if (info.avatar) self.user.avatar = info.avatar;
+    if (info.xlogin) self._setLocalLogin(info.xlogin);
     Util.message("Connected to " + self.displayName, Util.Msg.Status );          
   }
 
@@ -96,7 +97,7 @@ var OAuthRemote = (function() {
     var login = self._getLocalLogin();
     if (!login) return Promise.wrap(action,false,self.logoutErr);
     // get decrypted access token 
-    return Util.requestPOST("/oauth/token",{}, { remote: login }).then( function(res) {
+    return Util.requestPOST("/oauth/token",{}, { xlogin: login }).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
         // invalid response?
         return self.logout().then( function() {
@@ -213,7 +214,7 @@ var OAuthRemote = (function() {
     var self = this;
     if (!self.canRefresh) throw new Error("Cannot refresh access token for '" + self.displayName + "'");
     var login = self._getLocalLogin();
-    return Util.requestPOST("/oauth/refresh",{}, {remote: login}).then( function(res) {
+    return Util.requestPOST("/oauth/refresh",{}, { xlogin: login}).then( function(res) {
       if (!res || typeof(res.access_token) !== "string") {
         throw new Error("Unable to refresh access token for '" + self.displayName + "'");
       }
@@ -225,16 +226,20 @@ var OAuthRemote = (function() {
 
   OAuthRemote.prototype._revoke = function(token) {
     var self = this;
-    if (self.revokeUrl) {
+    if (self.revokeUrl && token) {
       var options = {
         url: self.revokeUrl,
         headers: { Authorization: "Bearer " + token },
       }
-      return Util.requestPOST( options );
+      return Util.requestPOST( options ).then( function() {}, function(err) {
+        if (err && err.httpCode === 401) return; // sometimes we revoke in parallel and some will fail
+        throw err;
+      });
     }
-    else if (self.revokeUrl === null) {
+    else if (self.revokeUrl === null || // for some remotes (ie. github) the client_secret is required
+              (self.revokeUrl && token === null)) { // never got the token back, but still expired
       var login = self._getLocalLogin();
-      return Util.requestPOST( "/oauth/revoke", {}, {remote: login} ); // sometimes the client_secret is required
+      return Util.requestPOST( "/oauth/revoke", {}, { xlogin: login } ); 
     }
     else {
       return Promise.resolved();
