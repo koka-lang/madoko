@@ -40,8 +40,8 @@ function oauthXLogin()
   var success = false;
   try {
     if (remote && window && window.localStorage 
-         // && window.location && window.opener && window.opener.location 
-         // && window.location.origin === window.opener.location.origin
+         && window.location && window.opener && window.opener.location 
+         && window.location.origin === window.opener.location.origin
        )
     {
       var xlogin = (script ? decodeURIComponent(script.getAttribute("data-xlogin")) : null);
@@ -62,7 +62,8 @@ function oauthXLogin()
   }
 
   if (success) {
-    windowClose();
+    debugger;
+    //windowClose();
   }
 }
 
