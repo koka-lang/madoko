@@ -1,8 +1,12 @@
 {
   "log" : [
     { "version": "0.9.14-beta",
-      "date": "2015-10-28",
+      "date": "2015-11-03",
       "updates": [
+        "Improved performance of math and PDF generation.",
+        "Use new Onedrive cloud storage API.",
+        "Improved security of token management; re-logins may be required.",
+        "Improved CSRF mitigation and token revokation.",        
         "Fixed bug in group replacement with `\\` escapes.",
         "Fixed bug in '&lt;!--meta' handling of whitespace."
       ]
