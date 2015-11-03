@@ -9,6 +9,8 @@
 define(["std_core","std_path","../scripts/promise","../scripts/map"],
         function(Stdcore,Stdpath,Promise,Map) {
 
+  var isIE = Object.hasOwnProperty.call(window, "ActiveXObject");
+
   var Msg = { 
     Normal: "normal", 
     Info: "info", 
@@ -1343,7 +1345,7 @@ doc.execCommand("SaveAs", null, filename)
           clearInterval(timer);  
           cont(null);
         }  
-      }, 100); 
+      }, 200); 
     });
   }
 
@@ -1812,7 +1814,9 @@ doc.execCommand("SaveAs", null, filename)
     var key   = "oauth/state";
     setCookie(key,JSON.stringify({ remote: remote, state: state}),{maxAge: 30, httpOnly: true, secure: true});
     return action(state).then( function(x) {
-      setCookie(key,"",{maxAge: 0});
+      if (!isIE) { // on IE, the closing of the window is not always detected right :-(  leave expiration up to the browser in that case.
+        setCookie(key,"",{maxAge: 0});  
+      }
       return x;
     });
   }
