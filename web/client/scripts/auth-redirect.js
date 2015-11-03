@@ -42,7 +42,7 @@ function oauthXLogin()
     if (remote && window && window.localStorage 
          && (window.opener === undefined || 
               (window.location && window.opener && window.opener.location 
-               window.location.origin === window.opener.location.origin))
+               && window.location.origin === window.opener.location.origin))
        )
     {
       var xlogin = (script ? decodeURIComponent(script.getAttribute("data-xlogin")) : null);
