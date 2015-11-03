@@ -816,6 +816,7 @@ function redirectPage(remote, message, status, xlogin ) {
     message = "Logged in to " + remote.name;
   }
   return [
+    '<!DOCTYPE html>',
     '<html>',
     '<head>',
     '  <title>Madoko ' + remote.name + ' login</title>',
