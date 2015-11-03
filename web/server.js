@@ -312,6 +312,9 @@ app.use(function(req, res, next){
     console.log("cache: no-store: " + req.path);
     res.setHeader("Cache-Control","no-store");
   }
+  else if (req.path==="/madoko.appcache") {
+    res.setHeader("Cache-Control","no-cache");
+  }
   else {
     //console.log("cache: regular: " + req.path); 
   }
