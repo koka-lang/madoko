@@ -9,9 +9,10 @@
 var script  = document.getElementById("auth");
 var remote  = (script ? decodeURIComponent(script.getAttribute("data-remote")) : "");
 var status  = (script ? decodeURIComponent(script.getAttribute("data-status")) : "unknown");
+var isIE    = Object.hasOwnProperty.call(window, "ActiveXObject");
 
 function windowClose() {
-  if (!window.opener) window.open('','_parent',''); // for IE
+  if (isIE) window.open('','_parent',''); 
   window.close();  
 }
 
@@ -38,9 +39,11 @@ function oauthXLogin()
 {
   var success = false;
   try {
-    if (remote && window && window.location && 
-         window.opener && window.opener.location && window.localStorage && 
-         window.location.origin === window.opener.location.origin) {
+    if (remote && window && window.localStorage 
+         // && window.location && window.opener && window.opener.location 
+         // && window.location.origin === window.opener.location.origin
+       )
+    {
       var xlogin = (script ? decodeURIComponent(script.getAttribute("data-xlogin")) : null);
       if (xlogin) {
         window.localStorage["remote-" + remote] = xlogin;
