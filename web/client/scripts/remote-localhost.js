@@ -103,7 +103,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.login = function(mount) {
     var self = this;
-    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-local'>madoko-local</a> program." });
+    if (!self.hosted) return Promise.rejected( { htmlMessage: "To access the Local Disk, you must run the <a href='https://www.npmjs.com/package/madoko-local' target='_blank'>madoko-local</a> program." });
     return self.postMessage( { method: "GET:config", params: { mount: mount } }, 5000 ).then( function(res) {
       self.user = {
         username: res.username,
