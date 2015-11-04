@@ -59,7 +59,7 @@ function addPathInfo(info) {
 }
 
 function pullFile(fname,binary) {
-  var opts = { url: contentUrl + encodeURIPath(fname), timeout: longTimeout, binary: binary };
+  var opts = { url: Util.combine(contentUrl,encodeURIPath(fname)), timeout: longTimeout, binary: binary };
   return dropbox.requestGET( opts ).then( function(content,req) {
     var infoHdr = req.getResponseHeader("x-dropbox-metadata");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
@@ -69,21 +69,21 @@ function pullFile(fname,binary) {
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: metadataUrl + encodeURIPath(fname) } );
+  return dropbox.requestGET( { url: Util.combine(metadataUrl,encodeURIPath(fname)) } );
 }
 
 function sharedFolderInfo(id) {
-  var url = sharedFoldersUrl + encodeURIPath(id);
+  var url = Util.combine(sharedFoldersUrl,encodeURIPath(id));
   return dropbox.requestGET( { url: url, cache: -60000, contentType: null } );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {
-  var url = metadataUrl + encodeURIPath(fname);
+  var url = Util.combine(metadataUrl,encodeURIPath(fname));
   return dropbox.requestGET( { url: url }, { list: true });
 }
 
 function pushFile(fname,content) {
-  var url = pushUrl + encodeURIPath(fname); 
+  var url = Util.combine(pushUrl,encodeURIPath(fname)); 
   return dropbox.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return addPathInfo(info);
@@ -101,7 +101,7 @@ function createFolder( dirname ) {
 }
 
 function getShareUrl( fname ) {
-  var url = sharesUrl + encodeURIPath(fname);
+  var url = Util.combine(sharesUrl,encodeURIPath(fname));
   return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
     if (!info.url) return null;
     var share = info.url;
