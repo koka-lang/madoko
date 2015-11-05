@@ -4721,10 +4721,14 @@ var symbolsMath = [
   UI.prototype.saveTo = function() {
     var self = this;    
     return Storage.saveAs(self.storage,self.docName).then( function(res) {
-      if (!res) throw new Error("cancel"); 
-      return self.setStorage(res.storage,res.docName).then( function() {
-        return res.docName;
-      }); 
+      if (!res || !res.storage) throw new Error("cancel"); 
+      return self.withSyncSpinner( function() {
+        return res.storage.syncOrCommit().then( function() { // ensure we can save the new storage object 
+          return self.setStorage(res.storage,res.docName).then( function() { // .. before setting this as our new storage
+            return res.docName;
+          });           
+        });
+      });
     }); 
   } 
 
