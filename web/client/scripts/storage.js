@@ -352,7 +352,7 @@ function saveTo(  storage, toStorage, docStem, newStem )
         }        
         toStorage.writeFile( path, file.content, opts );
       });
-      return toStorage.syncOrCommit().then( function(){ return {storage: toStorage, docName: newName }; } );
+      return {storage: toStorage, docName: newName };
     }
   );
 }  
@@ -923,7 +923,7 @@ var Storage = (function() {
           return self._syncFile(diff,cursors,merges,file,pullOnly); 
         }); 
       });
-      return Promise.whenBatched( syncs, 5 ).then( function(res) {
+      return Promise.whenBatched( syncs, 4 ).then( function(res) {
         Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
         return true;
       }, function(err) {
