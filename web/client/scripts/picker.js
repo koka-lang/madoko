@@ -48,15 +48,15 @@ var Picker = (function() {
   
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
-    onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
-    onedrive2: { remote: new Onedrive2.Onedrive2(), folder: "" },
     github: { remote: new Github.Github(), folder: "" },
     local: { remote: new LocalRemote.LocalRemote(), folder: "" },
     localhost: { remote: new Localhost.Localhost(), folder: "" },
+    onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
+    onedrive2: { remote: new Onedrive2.Onedrive2(), folder: "" },
     me: { remote: new LocalRemote.LocalRemote(), folder: "//" },
   };
-  remotes.me.remote.logo = function() { return "icon-me.png"; };
-  remotes.me.remote.type = function() { return "me"; };
+  remotes.me.remote.logo = "icon-me.png";
+  remotes.me.remote.type = "me";
   remotes.me.remote.readonly = true;
   var picker = null;
 
@@ -127,7 +127,7 @@ var Picker = (function() {
     // save persistent state
     if (self.current) {
       var data = {
-        remote: self.current.remote.type(),
+        remote: self.current.remote.type,
         onedrive: remotes.onedrive.folder,
         dropbox: remotes.dropbox.folder,
         github: remotes.github.folder,
@@ -144,7 +144,7 @@ var Picker = (function() {
         canceled: true,
       }
     }
-    if (self.current) res.remote = self.current.remote.type();
+    if (self.current) res.remote = self.current.remote.type;
 
     // call end continuation
     if (self.endCont) self.endCont(res);
@@ -162,8 +162,8 @@ var Picker = (function() {
   // Set remotes
   Picker.prototype.onRemote = function(remote) {
     var self = this;
-    if (self.current.remote.type === remote.remote.type()) return;
-    if (remote.remote.type()==="local" && self.options.command==="new") {
+    if (self.current.remote.type === remote.remote.type) return;
+    if (remote.remote.type==="local" && self.options.command==="new") {
       self.setFileName("document");
       self.current = remote;
       self.onNew();
@@ -237,12 +237,12 @@ var Picker = (function() {
       var fileName = self.getFileName();
       if (fileName) {
         if (Util.extname(fileName) == "") { // directory
-          fileName = (self.current.remote.type()==="local") ? fileName + ".mdk" : Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
+          fileName = (self.current.remote.type==="local") ? fileName + ".mdk" : Util.combine(fileName,Util.stemname(fileName) + ".mdk"); 
           self.setFileName(fileName);
         }
         self.options.path = Util.combine(self.current.folder,fileName);
         self.options.page = "template";
-        self.options.headerLogo = "images/dark/" + self.current.remote.logo();            
+        self.options.headerLogo = "images/dark/" + self.current.remote.logo;            
         //self.current.folder = Util.dirname(self.options.path);
         self.display();
         //end(self.current,path);
@@ -534,7 +534,7 @@ var Picker = (function() {
   Picker.prototype.display = function() {
     var self = this;
 
-    app.className = "modal command-" + self.options.command + " remote-" + self.current.remote.type();    
+    app.className = "modal command-" + self.options.command + " remote-" + self.current.remote.type;    
     listing.innerHTML = "";
       
     if (self.options.page==="template") {
@@ -609,7 +609,7 @@ var Picker = (function() {
 
     else {
       // set correct logo
-      headerLogo.src = "images/dark/" + self.current.remote.logo();
+      headerLogo.src = "images/dark/" + self.current.remote.logo;
       // on forced signin, don't try connection
       if (self.options.command==="signin") {
         self.setActive();
@@ -734,13 +734,13 @@ var Picker = (function() {
       var remote = remotes[remoteName].remote;
       return remote.connect().then( function(status) {
         return { 
-          path: remote.type(), 
-          title: remote.title || remote.type(),
-          display: Util.capitalize( remote.displayName ? remote.displayName() : remote.type()), 
-          iconName: remote.logo(), 
+          path: remote.type, 
+          title: remote.title || remote.type,
+          display: remote.displayName, 
+          iconName: remote.logo, 
           type: "remote", 
           isShared: false,
-          disabled: (remote.type()==="me" || (!Util.contains(["new","open"],self.options.command) && remote.type()==="local")),
+          disabled: (remote.type==="me" || (!Util.contains(["new","open"],self.options.command) && remote.type==="local")),
           connected: (status===0),
         };
       });      
@@ -763,7 +763,7 @@ var Picker = (function() {
     }
     var parts = (self.options.command==="connect" ? [] : folder.split("/"));
     var html = "<span class='dir' data-path='%2F%2F'>me</span><span class='dirsep'>/</span>";
-    var displayType = self.current.remote.displayType || self.current.remote.type();
+    var displayType = self.current.remote.displayType || self.current.remote.type;
     if (folder!=="//") {
       html = html + "<span class='dir' data-path='" + encodeURIComponent(root) +
                          "' title='" + Util.escape(self.current.remote.title || "") + "'>" + 

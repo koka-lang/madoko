@@ -124,16 +124,10 @@ function createAt( folder ) {
 }
 
 function unpersist(obj) {
+  if (!obj || obj.type !== dropbox.name) return null;
   return new Dropbox(obj.folder);
 }
 
-function type() {
-  return dropbox.name;
-}
-
-function logo() {
-  return dropbox.logo;
-}
 
 /* ----------------------------------------------
    Dropbox remote object
@@ -150,23 +144,12 @@ var Dropbox = (function() {
     return createAt(folder);
   }
 
-  Dropbox.prototype.type = function() {
-    return type();
-  }
-
-  Dropbox.prototype.logo = function() {
-    return logo();
-  }
-
-  Dropbox.prototype.displayName = function() {
-    var self = this;
-    return self.type();
-  }
-
-
-  Dropbox.prototype.title    = "Dropbox cloud storage. Offers full functionality including collaborative editing."
-  Dropbox.prototype.readonly = false;
-  Dropbox.prototype.canSync  = true;
+  Dropbox.prototype.type        = dropbox.name;
+  Dropbox.prototype.logo        = dropbox.logo;
+  Dropbox.prototype.displayName = dropbox.displayName;
+  Dropbox.prototype.title     = "Dropbox cloud storage. Offers full functionality including collaborative editing."
+  Dropbox.prototype.readonly  = false;
+  Dropbox.prototype.canSync   = true;
   Dropbox.prototype.needSignin = true;
 
   Dropbox.prototype.getFolder = function() {
@@ -181,7 +164,7 @@ var Dropbox = (function() {
 
   Dropbox.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder };
+    return { type: self.type, folder: self.folder };
   }
 
   Dropbox.prototype.fullPath = function(fname) {
@@ -282,8 +265,6 @@ var Dropbox = (function() {
 return {
   createAt : createAt,
   unpersist: unpersist,
-  type     : type,
-  logo     : logo,
   Dropbox  : Dropbox,
 }
 

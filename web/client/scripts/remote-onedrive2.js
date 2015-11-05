@@ -134,15 +134,8 @@ function createAt( folder ) {
 }
 
 function unpersist( obj ) {
+  if (!obj || obj.type !== Onedrive2.prototype.type) return null;
   return new Onedrive2(obj.folder || "");
-}
-
-function type() {
-  return onedrive2.name;
-}
-
-function logo() {
-  return onedrive2.logo;
 }
 
 var Onedrive2 = (function() {
@@ -156,17 +149,9 @@ var Onedrive2 = (function() {
     return createAt(folder);
   }
 
-  Onedrive2.prototype.type = function() {
-    return type();
-  }
-
-  Onedrive2.prototype.logo = function() {
-    return logo();
-  }  
-
-  Onedrive2.prototype.displayName = function() {
-    return onedrive2.displayName;
-  }
+  Onedrive2.prototype.type = onedrive2.name;
+  Onedrive2.prototype.logo = onedrive2.logo;
+  Onedrive2.prototype.displayName = onedrive2.displayName;
   Onedrive2.prototype.displayType = "onedrive";
   Onedrive2.prototype.title    = "Onedrive & Office 365 cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive2.prototype.readonly = false;
@@ -185,7 +170,7 @@ var Onedrive2 = (function() {
 
   Onedrive2.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder };
+    return { type: self.type, folder: self.folder };
   }
   
   Onedrive2.prototype.fullPath = function(fname) {
@@ -285,8 +270,6 @@ var Onedrive2 = (function() {
 return {
   createAt  : createAt,
   unpersist : unpersist,
-  type      : type,
-  logo      : logo,
   Onedrive2  : Onedrive2,
 }
 

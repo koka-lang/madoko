@@ -27,17 +27,9 @@ function createAt(folder) {
 }
 
 function unpersist(obj) {
+  if (!obj || obj.type !== HttpRemote.prototype.type) return null;
   return new HttpRemote( obj.url );
 }
-
-function type() {
-  return "http";
-}
-
-function logo() {
-  return "icon-http.png";
-}
-
 
 
 var HttpRemote = (function() {
@@ -52,20 +44,9 @@ var HttpRemote = (function() {
     return createAt(folder);
   }
 
-  HttpRemote.prototype.type = function() {
-    return type();
-  }
-
-  HttpRemote.prototype.logo = function() {
-    return logo();
-  }
-
-  HttpRemote.prototype.displayName = function() {
-    var self = this;
-    return self.type();
-  }
-
-
+  HttpRemote.prototype.type = "http";
+  HttpRemote.prototype.logo = "icon-http.png";
+  HttpRemote.prototype.displayName = "Http/Web storage";
   HttpRemote.prototype.title      = "Http/Web storage. Read-only documents hosted on the web."
   HttpRemote.prototype.readonly   = true;
   HttpRemote.prototype.canSync    = false;
@@ -83,7 +64,7 @@ var HttpRemote = (function() {
 
   HttpRemote.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), url: self.url };
+    return { type: self.type, url: self.url };
   }
 
   HttpRemote.prototype.fullPath = function(fname) {
@@ -154,8 +135,6 @@ var HttpRemote = (function() {
 return {
   createAt  : createAt,
   unpersist : unpersist,
-  type      : type,
-  logo      : logo,
   HttpRemote: HttpRemote,
 }
 

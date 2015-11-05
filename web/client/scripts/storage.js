@@ -95,7 +95,7 @@ function openFile(storage) {
     extensions: "remote folder .mdk .md .markdown .mkdn", 
   }
   if (storage && storage.remote.canSync) { 
-    params.remote = storage.remote.type();
+    params.remote = storage.remote.type;
     params.folder = storage.remote.getFolder();
   }
 
@@ -109,7 +109,7 @@ function createFile(storage) {
   }
   /* // always start at the root for a new file?
   if (storage && !storage.remote.readonly) {
-    params.remote = storage.remote.type();
+    params.remote = storage.remote.type;
     params.folder = storage.remote.getFolder();
   }
   */
@@ -153,7 +153,7 @@ function login(storage, message, header) {
   var params = {
     command: "signin",
   }
-  params.remote  = storage.remote.type();
+  params.remote  = storage.remote.type;
   if (message) params.message = message;
   if (header) params.header = header;
 
@@ -216,8 +216,8 @@ function discard(storage,docName) {
     alert: "true",
     header: Util.escape(Util.combine(storage.remote.getDisplayFolder(),docName || ""))
   };
-  params.remote = storage.remote.type();
-  params.headerLogo = "images/dark/" + storage.remote.logo();
+  params.remote = storage.remote.type;
+  params.headerLogo = "images/dark/" + storage.remote.logo;
   
   return picker(storage,params).then( function(res) {
     return true;
@@ -248,9 +248,8 @@ function unpersistRemote(obj,remoteType) {
     var rs = Util.properties(remotes);
     for (var i = 0; i < rs.length; i++) {
       var remote = remotes[rs[i]];
-      if (remoteType == remote.type()) {
-        return remote.unpersist(obj);
-      }
+      var res = remote.unpersist(obj);
+      if (res) return res;
     }
   }
   return LocalRemote.unpersist();
@@ -280,7 +279,7 @@ function unpersistStorage( obj ) {
         file.createdTime = new Date(1);
       }
       if (!file.globalPath) {
-        file.globalPath = makeDefaultGlobalPath(remote.type(),file.path);
+        file.globalPath = makeDefaultGlobalPath(remote.type,file.path);
       }
       delete file.generated;
     });
@@ -320,7 +319,7 @@ function saveAs( storage, docName ) {
     file: (stem === Util.basename(Util.dirname(docName)) ? stem : Util.basename(docName)),
   }
   if (storage && !storage.remote.readonly) {
-    params.remote = storage.remote.type();
+    params.remote = storage.remote.type;
     params.folder = Util.dirname(docName);
     params.file   = Util.stemname(docName);
   }
@@ -360,9 +359,9 @@ function saveTo(  storage, toStorage, docStem, newStem )
 
 function publishSite(  storage, docName, indexName )
 {
-  if (storage.remote.type() !== "dropbox") return Promise.rejected("Sorry, can only publish to Azure for documents on Dropbox.\nUse 'Save To' to save to Dropbox first.");
+  if (storage.remote.type !== "dropbox") return Promise.rejected("Sorry, can only publish to Azure for documents on Dropbox.\nUse 'Save To' to save to Dropbox first.");
 
-  var headerLogo = "images/dark/" + Dropbox.logo();
+  var headerLogo = "images/dark/" + Dropbox.logo;
   var params = { 
       command: "push", 
       remote:"dropbox", 
@@ -586,11 +585,11 @@ var Storage = (function() {
     var self = this;
     return self.remote.connect().then( function(status) {
       if (status===0) return;
-      if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.displayName() );
-      return login(self, message || "Cannot synchronize changes with " + self.remote.displayName() + ". Please sign in to synchronize.").then( function() {
+      if (status!==401 || dontForce) throw new Error("Cannot connect to " + self.remote.displayName );
+      return login(self, message || "Cannot synchronize changes with " + self.remote.displayName + ". Please sign in to synchronize.").then( function() {
         return self.remote.connect().then( function(status2) {
           if (status2 === 0) return;
-          throw new Error("Synchronization failed: cannot connect to " + self.remote.displayName() );
+          throw new Error("Synchronization failed: cannot connect to " + self.remote.displayName );
         })
       });
     });
@@ -690,7 +689,7 @@ var Storage = (function() {
     finfo.encoding    = finfo.encoding || Encoding.fromExt(finfo.path);
     finfo.mime        = finfo.mime || Util.mimeFromExt(finfo.path);
     finfo.createdTime = finfo.createdTime || new Date();
-    finfo.globalPath  = finfo.globalPath || makeDefaultGlobalPath(self.remote.type(),finfo.path);
+    finfo.globalPath  = finfo.globalPath || makeDefaultGlobalPath(self.remote.type,finfo.path);
 
     if (!finfo.shareUrl && (finfo.mime === "application/pdf" || finfo.mime === "text/html")) {
       // async set shareUrl
@@ -763,7 +762,7 @@ var Storage = (function() {
       file.content   = Encoding.encode(opts.encoding,file.content);
       file.original  = file.content;
       file.position  = file.position || opts.position;
-      file.globalPath= file.globalPath || makeDefaultGlobalPath(self.remote.type(),file.path);
+      file.globalPath= file.globalPath || makeDefaultGlobalPath(self.remote.type,file.path);
       return file;
     });
   }
@@ -924,7 +923,7 @@ var Storage = (function() {
         }); 
       });
       return Promise.whenBatched( syncs, 4 ).then( function(res) {
-        Util.message("Synchronized with " + self.remote.type() + " storage", Util.Msg.Info );
+        Util.message("Synchronized with " + self.remote.displayName + " storage", Util.Msg.Info );
         return true;
       }, function(err) {
         //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
@@ -1167,7 +1166,7 @@ var Storage = (function() {
                         });
                       });
           return Promise.whenBatched( syncs, 5 ).then( function(res) {
-            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.type() + "/" + self.remote.getDisplayFolder(), Util.Msg.Info );
+            Util.message("Pulled " + info.commits.length.toString() + " relevant update(s) from //" + self.remote.displayType + "/" + self.remote.getDisplayFolder(), Util.Msg.Info );
             return true;
           }, function(err) {
             //Util.message("Synchronization failed: " + (err.message || err.toString()), Util.Msg.Trace );
@@ -1235,7 +1234,7 @@ var Storage = (function() {
 
           // Commit
           return commitMessage(self, changes, self.remote.getDisplayFolder(), 
-                                "images/dark/icon-" + self.remote.type() + ".png").then( function(res) {
+                                "images/dark/" + self.remote.logo).then( function(res) {
             if (res.changes) changes = res.changes;
             if (changes.length===0) {
               Util.message("Nothing was selected to commit.", Util.Msg.Status );

@@ -193,15 +193,8 @@ function createAt( folder ) {
 }
 
 function unpersist( obj ) {
+  if (!obj || obj.type !== Onedrive.prototype.type) return null;
   return new Onedrive(obj.folder || "");
-}
-
-function type() {
-  return onedrive.name;
-}
-
-function logo() {
-  return onedrive.logo;
 }
 
 var Onedrive = (function() {
@@ -215,18 +208,9 @@ var Onedrive = (function() {
     return createAt(folder);
   }
 
-  Onedrive.prototype.type = function() {
-    return type();
-  }
-
-  Onedrive.prototype.logo = function() {
-    return logo();
-  }  
-
-  Onedrive.prototype.displayName = function() {
-    return onedrive.displayName;
-  }
-
+  Onedrive.prototype.type = onedrive.name;
+  Onedrive.prototype.logo = onedrive.logo;
+  Onedrive.prototype.displayName = onedrive.displayName;
   Onedrive.prototype.title = "Onedrive cloud storage. Note: does not allow access to files that are shared with you by others."
   Onedrive.prototype.readonly = false;
   Onedrive.prototype.canSync  = true;
@@ -244,7 +228,7 @@ var Onedrive = (function() {
 
   Onedrive.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder };
+    return { type: self.type, folder: self.folder };
   }
   
   Onedrive.prototype.fullPath = function(fname) {
@@ -339,9 +323,7 @@ var Onedrive = (function() {
 
 return {
   createAt  : createAt,
-  unpersist : unpersist,
-  type      : type,
-  logo      : logo,
+  unpersist : unpersist, 
   Onedrive  : Onedrive,
 }
 

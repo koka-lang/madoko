@@ -1135,7 +1135,7 @@ var UI = (function() {
     var self = this;
     if (!stg) stg = self.storage;
     if (isConnected==null) isConnected = self.isConnected;
-    self.app.className = self.app.className.replace(/(^|\s+)remote-\w+\b/g,"") + " remote-" + stg.remote.type();
+    self.app.className = self.app.className.replace(/(^|\s+)remote-\w+\b/g,"") + " remote-" + stg.remote.type;
     if (!stg.remote.needSignin) {
       Util.removeClassName(self.app,"connected");
       Util.removeClassName(self.app,"disconnected");
@@ -1148,10 +1148,15 @@ var UI = (function() {
       Util.removeClassName(self.app,"connected");      
       Util.addClassName(self.app,"disconnected");
     }
+
+    if (self.connectionMessage) {
+      self.connectionMessage.textContent = stg.remote.displayName;
+      self.connectionMessage.title       = stg.remote.title;
+    }
     
     var inviteUrl = "";
     if (stg && stg.remote) {
-      var remoteLogo = "images/dark/" + stg.remote.logo();
+      var remoteLogo = "images/dark/" + stg.remote.logo;
       if (self.connectionLogo.src !== remoteLogo) self.connectionLogo.src = remoteLogo;
       inviteUrl = stg.getInviteUrl(self.docName);
 
@@ -1791,7 +1796,7 @@ var UI = (function() {
     var self = this;
     return self.initializeStorage(stg0,docName0, function(stg,docName,fresh) {
       return self.updateConnectionStatus(stg).then( function() {
-        if (stg.remote.type()==="local") {
+        if (stg.remote.type==="local") {
           var tabNo = Number(stg.remote.getFolder());
           if (!isNaN(tabNo) && tabNo > 0) {
             return self.localLoad(tabNo);
@@ -1822,8 +1827,8 @@ var UI = (function() {
           self.runner.setStorage(self.storage);
           self.spellChecker.setStorage(self.storage);
           /*
-          var remoteLogo = self.storage.remote.logo();
-          var remoteType = self.storage.remote.type();
+          var remoteLogo = self.storage.remote.logo;
+          var remoteType = self.storage.remote.type;
           var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
           self.remoteLogo.src = "images/dark/" + remoteLogo;
           self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
@@ -2064,7 +2069,7 @@ var UI = (function() {
     /*
     var dir = document.getElementById("edit-select-directory");
     if (dir) {
-      dir.innerHTML = "<img src='images/" + self.storage.remote.logo() + "'/> " + 
+      dir.innerHTML = "<img src='images/" + self.storage.remote.logo + "'/> " + 
                         Util.escape( self.storage.folder() ) + "<hr/>";
     }
     */
@@ -2135,7 +2140,7 @@ var UI = (function() {
       var body = {
         files: files,
         name: name,
-        remote: self.storage.remote.type(),
+        remote: self.storage.remote.type,
       };
       Util.requestPOST( "/rest/edit", {}, body ).then( function(data) {
         var users = new Map();
@@ -4704,7 +4709,7 @@ var symbolsMath = [
       var fileDisplay = prefix + postfix;
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
         self.fileDisplay = fileDisplay;
-        var title = "//" + self.storage.remote.type() + "/" + fullFolder + (fullFolder ? "/" : "") + file.path;
+        var title = "//" + self.storage.remote.displayType + "/" + fullFolder + (fullFolder ? "/" : "") + file.path;
         self.editSelectHeader.innerHTML = "<span title='" + Util.escape(title) + "'>" + fileDisplay + "</span>";
       }
       if (self.editContent !== file.content) { // only update edit text if content update 

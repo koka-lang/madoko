@@ -196,16 +196,10 @@ function createAt( folder ) {
 }
 
 function unpersist(obj) {
+  if (!obj || obj.type !== Localhost.prototype.type) return null;
   return new Localhost(obj.folder,obj.mount);
 }
 
-function type() {
-  return "localhost";
-}
-
-function logo() {
-  return "icon-localhost.png";
-}
 
 /* ----------------------------------------------
    Localhost remote object
@@ -223,18 +217,9 @@ var Localhost = (function() {
     return createAt(folder);
   }
 
-  Localhost.prototype.type = function() {
-    return type();
-  }
-
-  Localhost.prototype.displayName = function() {
-    return "Local Disk";
-  }
-
-  Localhost.prototype.logo = function() {
-    return logo();
-  }
-
+  Localhost.prototype.type = "localhost";
+  Localhost.prototype.logo = "icon-localhost.png";
+  Localhost.prototype.displayName = "Local Disk";
   Localhost.prototype.title    = "Local disk storage. Documents are read and written to the local disk. Requires the 'madoko-local' program to offer secure access.";
   Localhost.prototype.readonly = false;
   Localhost.prototype.canSync  = true;
@@ -253,7 +238,7 @@ var Localhost = (function() {
 
   Localhost.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder, mount: self.mount };
+    return { type: self.type, folder: self.folder, mount: self.mount };
   }
 
   Localhost.prototype.fullPath = function(fname) {
@@ -355,9 +340,7 @@ var Localhost = (function() {
 
 return {
   createAt : createAt,
-  unpersist: unpersist,
-  type     : type,
-  logo     : logo,
+  unpersist: unpersist, 
   Localhost  : Localhost,
   localhost  : localhost,
 }

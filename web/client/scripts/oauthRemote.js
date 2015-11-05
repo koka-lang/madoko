@@ -14,7 +14,7 @@ var OAuthRemote = (function() {
     var self = this;
     
     self.name           = opts.name;
-    self.displayName    = opts.displayName || opts.name;
+    self.displayName    = opts.displayName || Util.capitalize(opts.name);
     self.logo           = opts.logo || ("icon-" + self.name + ".png");
     self.defaultDomain  = opts.defaultDomain;
     self.loginUrl       = opts.loginUrl;

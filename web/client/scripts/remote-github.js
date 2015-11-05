@@ -280,15 +280,8 @@ function createAt( path ) {
 }
 
 function unpersist(obj) {
+  if (!obj || obj.type !== github.name) return null;
   return new Github(obj.folder, obj.commit);
-}
-
-function type() {
-  return github.name;
-}
-
-function logo() {
-  return github.logo;
 }
 
 
@@ -312,19 +305,9 @@ var Github = (function() {
     return createAt(path);
   }
 
-  Github.prototype.type = function() {
-    return type();
-  }
-
-  Github.prototype.logo = function() {
-    return logo();
-  }
-
-  Github.prototype.displayName = function() {
-    var self = this;
-    return self.type();
-  }
-
+  Github.prototype.type = github.name;    
+  Github.prototype.logo = github.logo;
+  Github.prototype.displayName = github.displayName;
   Github.prototype.title      = "Github cloud repository. Synchronizes and commits documents, and supports collaborative editing."
   Github.prototype.readonly   = false;
   Github.prototype.canSync    = true;
@@ -343,7 +326,7 @@ var Github = (function() {
 
   Github.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.path, commit: self.context.commitUrl };
+    return { type: self.type, folder: self.path, commit: self.context.commitUrl };
   }
 
   Github.prototype.fullPath = function(fname) {
@@ -532,8 +515,6 @@ var Github = (function() {
 return {
   createAt : createAt,
   unpersist: unpersist,
-  type     : type,
-  logo     : logo,
   Github   : Github,
   Change   : Change,
 }

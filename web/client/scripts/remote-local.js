@@ -13,18 +13,9 @@ function createAt(folder) {
 }
 
 function unpersist(obj) {
+  if (!obj || obj.type !== LocalRemote.prototype.type) return null;
   return new LocalRemote(obj ? obj.folder : "");
 }
-
-function type() {
-  return "local";
-}
-
-
-function logo() {
-  return "icon-local.png";
-}
-
 
 var LocalRemote = (function() {
   function LocalRemote(folder) {
@@ -36,18 +27,9 @@ var LocalRemote = (function() {
     return createAt(folder);
   }
 
-  LocalRemote.prototype.type = function() {
-    return type();
-  }
-
-  LocalRemote.prototype.displayName = function() {
-    return "Browser Local";
-  }
-
-  LocalRemote.prototype.logo = function() {
-    return logo();
-  }
-
+  LocalRemote.prototype.type = "local";
+  LocalRemote.prototype.logo = "icon-local.png";
+  LocalRemote.prototype.displayName = "Browser Local";
   LocalRemote.prototype.title    = "Browser local storage. Document is saved in the local browser storage on this computer."
   LocalRemote.prototype.readonly = false;
   LocalRemote.prototype.canSync  = false;
@@ -65,7 +47,7 @@ var LocalRemote = (function() {
 
   LocalRemote.prototype.persist = function() {
     var self = this;
-    return { type: self.type(), folder: self.folder };
+    return { type: self.type, folder: self.folder };
   }
 
   LocalRemote.prototype.fullPath = function(fname) {
@@ -146,8 +128,6 @@ var LocalRemote = (function() {
 return {
   createAt  : createAt,
   unpersist : unpersist,
-  type      : type,
-  logo      : logo,
   LocalRemote: LocalRemote,
 }
 
