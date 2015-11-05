@@ -48,6 +48,7 @@ var Runner = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update") {
+      console.log("runner.update: " + ev.file.path + ": " + (ev.file.content ? "non-empty: " + ev.file.content.substr(0,20) : "empty"));
       self.sendFiles.set( ev.file.path, { 
         path: ev.file.path, 
         content: ev.file.content,

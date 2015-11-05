@@ -857,6 +857,7 @@ var Storage = (function() {
             if (!content) return noContent();
             if (Util.extname(fpath)===".json") content = req.responseText;
             opts.nosync = true;
+            console.log("initial content: " + opath + ": " + content.substr(0,20));
             self.writeFile(opath,Encoding.encode(opts.encoding, content),opts);
             return self.files.get(opath);
           },
