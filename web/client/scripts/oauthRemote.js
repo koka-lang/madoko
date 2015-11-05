@@ -145,6 +145,7 @@ var OAuthRemote = (function() {
           throw err;
         }
         else if (!recurse && err.httpCode===500) { // internal server error, try once more
+          console.log("internal server error; try again. " + options.url);
           return Promise.delayed(250).then( function() {
             return self._primRequestXHR(options,params,body,true);
           });
@@ -153,6 +154,12 @@ var OAuthRemote = (function() {
           options.timeout = options.timeout*2; // try once more with longer timeout
           console.log("request timed out; try again. " + options.url);
           return self._primRequestXHR(options,params,body,true);
+        }
+        else if (!recurse && err.message && /re-issue (the )? request/.test(err.message)) { // dropbox returns this for failed locks, try again
+          console.log("request failed to grab a lock; try again. " + options.url);
+          return Promise.delayed(250).then( function() {
+            return self._primRequestXHR(options,params,body,true);
+          });
         }
       }
       throw err;
