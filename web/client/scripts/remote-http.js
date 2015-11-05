@@ -96,7 +96,7 @@ var HttpRemote = (function() {
   HttpRemote.prototype.pullFile = function( fpath, binary ) {
     var self = this;
     return pullFile( self.url + "/" + fpath, binary ).then( function(content) {
-      var sharedPath = "//" + self.type() + "/shared/0/" + self.fullPath(fpath);
+      var sharedPath = "//" + self.type + "/shared/0/" + self.fullPath(fpath);
       var file = {
         path: fpath,
         content: content,
