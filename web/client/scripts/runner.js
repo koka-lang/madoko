@@ -63,6 +63,7 @@ var Runner = (function() {
       });
     }
     else if (ev.type === "destroy") {
+      self.sendFiles.clear();
       self.madokoWorker.postMessage( { type: "clear" } );
       self.storage = null;
     }
