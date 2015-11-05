@@ -1,8 +1,10 @@
 {
   "log" : [
     { "version": "0.9.14-beta",
-      "date": "2015-11-03",
+      "date": "2015-11-05",
       "updates": [
+        "Improved error locations for math definitions",
+        "Fixed bug where documents hosted on HTTP were not displayed correctly.",
         "Improved performance of math and PDF generation.",
         "Use new Onedrive cloud storage API.",
         "Improved security of token management; re-logins may be required.",
