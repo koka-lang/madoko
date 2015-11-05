@@ -516,12 +516,12 @@ function raw( s : string ) : block {
   Line(s)
 }
 
-public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int ) : attrs {
+public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int, overwrite : bool = False ) : attrs {
   val srcline = translateLine(lineMap,lineNo)
-  val attrs1 = if (attrs.hasKey("data-line").bool) then attrs else attrs.setLineNo(lineNo,srcline)  
-  if (attrs1.hasClass("pre-fenced")) {
-    val preline = translateLine(lineMap,lineNo+1)
-    attrs1.addKeyval("data-line-code",preline)
+  val attrs1  = if (!overwrite && attrs.hasKey("data-line").bool) then attrs else attrs.setLineNo(lineNo,srcline)  
+  if(!attrs1.input.isMarkdown || attrs1.hasClass("pre-fenced")) {
+    val firstline = translateLine(lineMap,lineNo+1)
+    attrs1.addKeyval("data-line-first",firstline)
   }
   else attrs1
 }

@@ -344,7 +344,8 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
         Nothing -> attrs.lineNo.incLineNo
         Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
       }
-      Div([Source(txt,input,attrs.setLineNo(fcontext.lineMap,adjLineNo))],attrs)
+      val attrsx = attrs.setLineNo(fcontext.lineMap,adjLineNo,overwrite=True)
+      Div([Source(txt,input,attrsx)],attrs)
     }
   }  
 }

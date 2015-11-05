@@ -275,7 +275,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   val attrs  = context.defaults.matchRules(env,attrs1)
   //trace("code: " + env + ": " + attrs.show)
 
-  val cattrs = match(attrs.hasKey("data-line-code")) {
+  val cattrs = match(attrs.hasKey("data-line-first")) {
                  Nothing -> attrsNone
                  Just(v) -> attrsNone.addKeyval("data-line",v)
                }

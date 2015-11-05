@@ -147,12 +147,15 @@ function getLineInfo( attrs : attrs ) : string {
   }
 }
 
-function deriveCodeLineInfo( attrs : attrs ) : attrs {
-  match(attrs.hasKey("data-line")) {
-    Just(info) -> {
-      attrsNone.addKeyval("data-line-code",info)
+function deriveFirstLineInfo( attrs : attrs ) : attrs {
+  match(attrs.hasKey("data-line-first")) {
+    Just(info) -> attrsNone.addKeyval("data-line-first",info)
+    Nothing -> {
+      match(attrs.hasKey("data-line")) {
+        Just(info) -> attrsNone.addKeyval("data-line-first",info)
+        Nothing -> attrsNone
+      }
     }
-    Nothing    -> attrsNone
   }
 }
 
@@ -185,7 +188,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     
     Code(txt,_,attrs) -> {  
       attrs.logDataLine 
-      context.inlineContext.fmtCode( "pre", txt, attrs)
+      context.inlineContext.fmtCode( "pre", txt, attrs )
     }
 
     List(tagname,items,attrs) -> {
@@ -212,11 +215,12 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       parentAttrs.logDataLine 
       match(input) {
         Pre       -> {
-          context.inlineContext.fmtCode("pre",txt,parentAttrs.deriveCodeLineInfo)
+          context.inlineContext.fmtCode("pre",txt,parentAttrs.deriveFirstLineInfo)
         }
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
           // context.logLineInfo(parentAttrs)
+          trace("math: data-line=" + parentAttrs.lookupKey("data-line","?"))
           context.inlineContext.fmtMath(True,txt,parentAttrs.deriveMathAttrs,getLineInfo(parentAttrs))
         }
         MathPre   -> {
