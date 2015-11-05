@@ -719,7 +719,7 @@ var UI = (function() {
         // check origin and source so no-one but our view can send messages
         if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
         if (ev.source !== self.view.contentWindow) return;      
-        console.log("preview event: " + ev.data);
+        // console.log("preview event: " + ev.data);
         var info = JSON.parse(ev.data);
         if (!info || !info.eventType) return;        
         if (info.eventType === "previewContentLoaded") {
@@ -733,7 +733,7 @@ var UI = (function() {
           self.viewTimes.push(info.time);
           if (self.viewTimes.length > 5) self.viewTimes.shift();
           var avgTime = self.viewTimes.reduce( function(prev,t) { return prev+t; }, 0 ) / (self.viewTimes.length || 1);
-          console.log("** view render: " + avgTime.toString() + "ms");
+          Util.message("preview loaded in " + info.time.toString() + "ms, avg. time " + avgTime.toString() + "ms", Util.Msg.Trace);
           self.lastViewRenderWasSlow = (avgTime > 300);
         }
       }, [State.Syncing,State.Exporting]);
@@ -1578,7 +1578,7 @@ var UI = (function() {
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
-                Util.message("ready", Util.Msg.Info);
+                // Util.message("ready", Util.Msg.Info);
                 self.removeDecorations(false,"error");
               }
               self.removeDecorations(false,"merge");
@@ -1616,7 +1616,7 @@ var UI = (function() {
                         (quick ? "  (quick view update)" : "") + 
                         (!self.settings.delayedUpdate ? " (continuous)" : "") +
                         //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
-                        "\n  avg: " + res.avgTime.toFixed(0) + "ms" +
+                        ", avg. time: " + res.avgTime.toFixed(0) + "ms" +
                         " (" + (self.lastRenderWasSlow ? "slow" : (self.lastViewRenderWasSlow ? "slow-view" : "quick")) + ")");                                                        
             },
             function(err) {

@@ -960,11 +960,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
             self.times.push( time );
             if (self.times.length > self.timesSamples) self.times.shift();
             var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / self.times.length;
-            message( (msg ? msg + "\n" : "") + 
-              "  avg full: " + avg.toFixed(0) + "ms, this: " + time.toFixed(0) + "ms" +
-              "  run rate: " + self.refreshRate.toFixed(0) + "ms", 
-              Msg.Prof);
-            
+            message( (msg?msg :"") + "\n  avg full: " + avg.toFixed(0) + "ms, last run: " + time.toFixed(0) + "ms, refresh rate: " + self.refreshRate.toFixed(0) + "ms", Msg.Prof);            
             if (self.dynamicRefreshRate) {
               if (avg > 0.66 * self.refreshRate && self.refreshRate < self.maxRefreshRate) {
                 self.resume( Math.min( self.maxRefreshRate, 1.5 * self.refreshRate ) );
@@ -1123,7 +1119,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         if (httpCode===404 && req.statusText) msg = msg + ": " + domain;
         
         //cont(msg, res, req.response);
-        console.log(msg + "\n request: " + method + ": " + reqparam.url );
+        //console.log(msg + "\n request: " + method + ": " + reqparam.url );
         promise.reject( { message: msg, httpCode: httpCode } );
       }
       catch(exn) {

@@ -48,7 +48,6 @@ var Runner = (function() {
     if (!ev || !ev.type) return;
     var self = this;
     if (ev.type === "update") {
-      console.log("runner.update: " + ev.file.path + ": " + (ev.file.content ? "non-empty: " + ev.file.content.substr(0,20) : "empty"));
       self.sendFiles.set( ev.file.path, { 
         path: ev.file.path, 
         content: ev.file.content,
@@ -74,7 +73,8 @@ var Runner = (function() {
     var self = this;
     //console.log( "  update done.");
     if (res.message) {
-      Util.message(res.message, Util.Msg.Tool );
+      txt = res.message.replace("\r","").replace(/\n\n+/g,"\n").replace(/\s+$/,"");
+      if (txt.length > 0) Util.message(txt, Util.Msg.Tool );
     }
     if (res.err) return Promise.rejected( res.err );
     if (!self.storage || ctx.storageId !== self.storage.storageId) return Promise.rejected(new Error("stale request"));
@@ -196,7 +196,7 @@ var Runner = (function() {
     }
     return self.storage.readFile( fname, !referred, { searchDirs: ["out"] } )
       .then( function(file) {
-        Util.message(round.toString() + ":storage sent: " + file.path, Util.Msg.Trace);      
+        //Util.message(round.toString() + ": storage sent: " + file.path, Util.Msg.Trace);      
         return 1;
       }, function(err) {
           var msg = (typeof err === "string" ? err : (err && err.message ? err.message : ""));
@@ -252,7 +252,7 @@ var Runner = (function() {
       }
       else {
         var time = (Date.now() - t0).toString() + "ms";
-        Util.message(data.stdout + data.stderr, Util.Msg.Tool);      
+        // Util.message(data.stdout + data.stderr, Util.Msg.Tool);      
         data.files.forEach( function(file) {
           Util.message("server sent: " + file.path, Util.Msg.Trace );
           self.storage.writeFile( file.path, file.content, {
