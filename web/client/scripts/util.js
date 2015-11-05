@@ -149,6 +149,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     txt = capitalize(strip(txt));
 
     if (!kind) kind = Msg.Normal;
+    if (txt === "Canceled") kind = Msg.Info;
     console.log("madoko: " + (kind !== Msg.Normal ? kind + ": " : "") + txt);
     if (!txt) return;
 
