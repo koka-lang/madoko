@@ -96,7 +96,7 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
 } 
 val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
 val rxMeta = regex(@"^"+ rxMetaComment + metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-val metaKey = @"(?:@(\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
+val metaKey = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
 
 // --------------------------------------------------------------
 // Complete author keys
@@ -133,7 +133,7 @@ public function filterModed( mdata :metadata ) : <div> metadata {
   val modes = mdict()
   mdata.map( fun(kv) {
     //trace("filter: " + kv.fst)
-    match(modes.unMode(kv,mdata)) {
+    match(modes.unMode(kv.fst,mdata)) {
       Just(key) -> Just((key,kv.snd))
       Nothing   -> Nothing
     }
@@ -141,8 +141,8 @@ public function filterModed( mdata :metadata ) : <div> metadata {
 }
 
 
-function unMode( modes : mdict<h,bool>, kv : (string,string), mdata : metadata ) : <div,st<h>> maybe<string> {
-  val key = kv.fst.toLower
+function unMode( modes : mdict<h,bool>, key0 : string, mdata : metadata ) : <div,st<h>> maybe<string> {
+  val key = key0.toLower
   match(key.find(rxModed)) {
     Nothing   -> Just(key) 
     Just(cap) -> {
@@ -151,7 +151,7 @@ function unMode( modes : mdict<h,bool>, kv : (string,string), mdata : metadata )
       val isTrue = (mode=="" || modes.getMode(mode,mdata))
       val keep = ((isTrue && !neg) || (!isTrue && neg))
       if (keep)
-       then Just(cap.groups[3])
+       then unMode(modes, cap.groups[3], mdata)
        else Nothing
      }
    }
@@ -164,10 +164,10 @@ function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <di
       modes[mode] := False  // prevent infinite recursion
       val mbRes = mdata.reverse.foreachUntil( fun(kv) { 
         val key = kv.fst.toLower
-        match( key.find(rxModed)) {
+        match( key.find(rxModedKey)) {
           Nothing   | key==mode -> Just(kv.snd) 
-          Just(cap) | cap.groups[3] == mode -> {
-            match(modes.unMode(kv,mdata)) { // may recurse
+          Just(cap) | cap.groups[1].trim.toLower == mode -> {
+            match(modes.unMode(kv.fst,mdata)) { // may recurse
               Just(_) -> Just(kv.snd)
               Nothing -> Nothing
             }
@@ -189,8 +189,8 @@ function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <di
 }
 
 
-val rxModed = regex(@"@(no)?(\w*) (.*)")
-
+val rxModed = regex(@"@(no)?([\w\-]*)(?: *)(.*)")
+val rxModedKey = regex(@"@[\w\-@]+ +(.*)")
 
 // --------------------------------------------------------------
 // Default metadata
