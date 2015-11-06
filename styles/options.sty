@@ -1060,7 +1060,11 @@
     #1/.new code  = {[true]{%
       \ifcsdef{toggle\optionvalue}%
         {\csuse{toggle\optionvalue}{#1}}%
-        {\optionerror@expect{#1}{true or false}}%
+        {\eifstrequal\optionvalue{True}%
+            {\toggletrue{#1}}%
+            {\eifstrequal\optionvalue{False}%
+              {\togglefalse{#1}}%
+              {\optionerror@expect{#1}{true or false}}}}%
     }},
     #1/.type      = toggle,
     /options/exec = {\newtoggle{#1}\option@set{#1}{\iftoggle{#1}{true}{false}}},
