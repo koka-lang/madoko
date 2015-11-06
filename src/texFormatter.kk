@@ -471,12 +471,10 @@ public function fmtTexMathFull( requireDvi : bool, body : string, options : opti
   fmtTexFullX(body,options,dict(), if (requireDvi) then "dvi" else "pdf" )
 }
 
-function fmtTexFullX(body : string, options : options, metadata0 : dict<string>, mathmode : string = "") : string 
+function fmtTexFullX(body : string, options : options, metadata1 : dict<string>, mathmode : string = "") : string 
 {
-  val metadata = match(metadata0["heading-base"]) {
-    Just -> metadata0
-    Nothing -> metadata0 + [("heading-base",options.headingBase.show)].dict
-  }
+  val metadata0 = [("heading-base",options.headingBase.show),("tex-section-num", options.texSectionNum.show.toLower)].dict
+  val metadata = metadata0 + metadata1
   function expand(s) { s.expandKeys(metadata) }
     
   val basicMath = (mathmode == "dvi")

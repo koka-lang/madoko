@@ -16,6 +16,7 @@
 \options{%
   /madoko/.new family,
   /madoko/heading-base/.new num=1,
+  /madoko/section-num/.new toggle,
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
   /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
@@ -419,6 +420,16 @@
 \newcommand\mdinline[1]{\lfbox[tight,border-style=none,#1]}
 
 % ---------------------------------------------------
+% Sections
+% ---------------------------------------------------
+
+\iftoggle{/madoko/section-num}{}{% else
+  \setcounter{secnumdepth}{0}%
+  \renewcommand\@seccntformat[1]{}%
+}
+
+
+% ---------------------------------------------------
 % Fonts
 % ---------------------------------------------------
 
@@ -426,10 +437,14 @@
 
 \newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
 
-\providecommand\cursive[1]{%
-  \PackageWarning{madoko}{No cursive font available. Please use meta-key "Package: frcursive" in order to \MessageBreak use cursive fonts\MessageBreak}%
-  \textit{#1}%
+\AtBeginDocument{%
+  \ifdef\cursive{}{% frcursive defines \cursive as an environment so \providecommand does not work :-(
+    \providecommand\cursive[1]{%
+      \PackageWarning{madoko}{No cursive font available. Please use meta-key "Package: frcursive" in order to \MessageBreak use cursive fonts\MessageBreak}%
+      \textit{#1}%
+    }%
 }
+}%
 
 \providecommand\fantasy[1]{%
   \ifdef\aunclfamily

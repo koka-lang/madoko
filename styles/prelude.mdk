@@ -1,4 +1,4 @@
-Package         : [heading-base=&heading-base;]madoko2
+Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
 
 ~Article  : html-elem='article'
 ~Section  : html-elem='section' 
@@ -131,15 +131,18 @@ thm-caption-end     : &&;br;
   rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
   thead-tr-1-padding-top=3pt thead-tr-padding-bottom=3pt
 
+Tex Section Num: false
+Heading Base   : 2
 
 Tex2      : True
 @tex Tex2x: True
 
 Logo      : False
-~H1       : tex-cmd=\section* display=block
-~H2       : tex-cmd=\subsection* display=block
-~H3       : tex-cmd=\subsubsection* display=block
-~H4,~H5,~H6: tex-cmd=\paragraph* display=block
+~H0       : tex-cmd=\chapter display=block
+~H1       : tex-cmd=\section display=block
+~H2       : tex-cmd=\subsection display=block
+~H3       : tex-cmd=\subsubsection display=block
+~H4,~H5,~H6: tex-cmd=\paragraph display=block
 ~HR       : tex-cmd=\mdhr display=block
 ~Pre      : tex-env=mdpre 
 ~Abstract : tex-env=abstract
@@ -169,6 +172,8 @@ Logo      : False
 .inst     : tex-cmd=\mdinst
 @Tex2 ~Th : font-weight=bold
 
+@Tex@Tex-Section-Num .heading-before: display=none
+
 ~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par" 
 @notex ~Bibliography: before="# References {-}&nl;"
 ~BibItem  : tex-cmd-before="\bibitem&tex-bibitem-args;" label="@bibitem"
@@ -181,12 +186,6 @@ Logo      : False
 .align-center   : text-align=center
 .equation-before: tex-cmd=\mdmathtag
 
-star: true
-@nostar ~H1       : tex-cmd=\section display=block
-@nostar ~H2       : tex-cmd=\subsection display=block
-@nostar ~H3       : tex-cmd=\subsubsection display=block
-@nostar ~H4,~H5,~H6: tex-cmd=\paragraph display=block
-@nostar ~H1,~H2,~H3,~H4,~H5,~H6: before=clear
 
 @tex maketitle            : true
 

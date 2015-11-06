@@ -57,6 +57,7 @@ public struct options(
   texHeader: string= "",   // literal tex header
   texHeaderx: string= "",  // literal tex header in non-math mode only
   texFooter: string= "",   // literal tex footer 
+  texSectionNum: bool = False, // use tex section numbering
   
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
