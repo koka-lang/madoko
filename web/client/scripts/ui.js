@@ -2334,6 +2334,7 @@ var UI = (function() {
   UI.prototype._trySynchronize = function() {
     var self = this;
     if (!self.storage || self.storage.remote.canCommit) return Promise.rejected("Cannot automatically synchronize with this remote storage.");
+    if (!self.settings.autoSync) return Promise.rejected("Automatic synchronization is disabled in the settings.");
     return self._synchronize();
   }
 
