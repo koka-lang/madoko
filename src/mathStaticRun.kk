@@ -91,7 +91,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
 {
   val dir = texFile.dirname.norm
   val latexCmd = texCmd.quote + " --output-directory=" + (if (dir=="") then "." else dir).quote + 
-                       " --halt-on-error --interaction=nonstopmode --quiet" + 
+                       " --halt-on-error --interaction=nonstopmode" + 
                       " " + texFile.norm.quote 
 
   opts.print("> " + latexCmd,3)
