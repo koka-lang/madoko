@@ -145,10 +145,10 @@ val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=Tr
 function nicifyLatexErr( err :string) : string {
   match(err.find(rxLatexSubErr)) {
     Nothing   -> err
-    Just(cap) -> cap.matched
+    Just(cap) -> cap.matched + "\n"
   }
 }
-val rxLatexSubErr = regex(@"The font ""[^""\n\r]*"" cannot be found\.")
+val rxLatexSubErr = regex(@"The font ""[^""\n\r]*"" cannot be found\.",multiline=True,ignoreCase=True)
 
 public function runMathStatic( content : string, inName: string, outName : string,
                         texNameDvi : string, texNamePdf : string,
