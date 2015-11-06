@@ -6,7 +6,7 @@
         "Use non-starred section commands in Latex.",
         "Added `lipsum` and `tex-chapters` templates.",
         "Allow empty custom blocks.",
-        "Allow conjuctive modes in metadata keys."
+        "Allow conjuctive modes in metadata keys.",
         "Improved 'font-family' handling in LaTeX, support 'tex-family-' and 'tex-cmd-' prefixes on fonts.",
         "Fix bug where language definitions were not found on case-sensitive file systems.",
         "Improved error messages for missing fonts in LaTeX.",
