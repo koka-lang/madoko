@@ -107,7 +107,7 @@ function fstat( fpath ) {
 
 function dnsReverse( ip, callback ) {
   try {
-    dns.reverse( ip, function(err,doms) {
+    dns.reverse( ip.replace("::ffff:",""), function(err,doms) {
       if (err) {
         doms = null;
         console.log("unable to resolve ip: " + err.toString() );
