@@ -220,7 +220,6 @@ public function formatBlock( context : formatContext, block : block ) : div stri
         Math      -> {
           //("\\[" + txt.trim.escapeMath(context.fmt) + "\\]")
           // context.logLineInfo(parentAttrs)
-          trace("math: data-line=" + parentAttrs.lookupKey("data-line","?"))
           context.inlineContext.fmtMath(True,txt,parentAttrs.deriveMathAttrs,getLineInfo(parentAttrs))
         }
         MathPre   -> {
