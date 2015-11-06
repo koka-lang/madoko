@@ -115,7 +115,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                 Just(lineNo) -> opts.printErr("error: source line: " + lineNo)
                 Nothing -> ()
               }
-              opts.printErr(cap.matched)
+              opts.printErr(nicifyLatexErr(cap.matched))
             }
             Nothing -> {
               opts.printErr(stdout + stderr)    
@@ -141,6 +141,14 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
+
+function nicifyLatexErr( err :string) : string {
+  match(err.find(rxLatexSubErr)) {
+    Nothing   -> err
+    Just(cap) -> cap.matched
+  }
+}
+val rxLatexSubErr = regex(@"The font ""[^""\n\r]*"" cannot be found\.")
 
 public function runMathStatic( content : string, inName: string, outName : string,
                         texNameDvi : string, texNamePdf : string,
