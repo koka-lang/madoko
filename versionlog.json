@@ -1,10 +1,22 @@
 {
   "log" : [
+    { "version": "0.9.15-beta",
+      "date": "2015-11-06",
+      "updates": [
+        "Use non-starred section commands in Latex.",
+        "Added `lipsum` and `tex-chapters` templates.",
+        "Allow empty custom blocks.",
+        "Allow conjuctive modes in metadata keys."
+        "Improved 'font-family' handling in LaTeX, support 'tex-family-' and 'tex-cmd-' prefixes on fonts.",
+        "Fix bug where language definitions were not found on case-sensitive file systems.",
+        "Improved error messages for missing fonts in LaTeX.",
+        "Improved error locations for math definitions",
+        "Fixed bug where documents hosted on HTTP were not displayed correctly."        
+      ]
+    },
     { "version": "0.9.14-beta",
       "date": "2015-11-05",
       "updates": [
-        "Improved error locations for math definitions",
-        "Fixed bug where documents hosted on HTTP were not displayed correctly.",
         "Improved performance of math and PDF generation.",
         "Use new Onedrive cloud storage API.",
         "Improved security of token management; re-logins may be required.",
