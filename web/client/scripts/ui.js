@@ -2050,10 +2050,10 @@ var UI = (function() {
         var linkText = "share" // <span style=\"font-family:'Segoe UI Symbol',Symbola\">&#x1F517;</span>
         extra = extra + "<a class='external file-share' target='_blank' title='Shared link to the online document' href='" + file.shareUrl + "'>" + linkText + "</a>"
       }
-      if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 128*1024) {
+      if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 256*1024) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
       }
-      if (file.nosync) {
+      if (file.nosync && Util.extname(file.path) !== ".log") {
         extra = extra + "<img class='button file-remove' src='images/icon-reload.png' title='reload file from server'></img>";
       }
     }
@@ -3092,7 +3092,7 @@ var symbolsMath = [
           replacer: function(txt,rng) { return "~~" + txt + "~~"; }
         },
         toolCss("text-decoration","underline","underline"),
-        toolCss("font-family","'\"Segoe UI\" sans-serif'",""),
+        toolCss("font-family","\"Segoe UI, sans-serif\"",""),
       ]
     },
     { name    : "fontsize", 
