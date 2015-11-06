@@ -588,9 +588,16 @@ span.save-link:hover {
 .shortcut, .file-size, .file-share {
   display: inline-block;
   float: right;
-  font-size: x-small;
   margin: 0.5ex;
   color: inherit;
+}
+
+.shortcut, .file-size, .file-share, .file-remove {  
+  font-size: x-small;
+}
+
+.file-remove {
+  margin: 0ex 0.5ex;
 }
 
 .menu.hover .shortcut {

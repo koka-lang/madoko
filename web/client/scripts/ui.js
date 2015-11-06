@@ -959,15 +959,25 @@ var UI = (function() {
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
           var path = decodeURIComponent(elem.getAttribute("data-file"));
           if (path) {
-            var mime = Util.mimeFromExt(path);
-            return self.event( "loaded: " + path, "loading...", State.Loading, function() {
-              if (mime==="application/pdf" || mime==="text/html" || Util.startsWith(mime,"image/")) {
-                return self.saveUserContent( path, mime );
+            if (/\bfile-remove\b/.test(ev.target.className)) {
+              if (!self.isConnected) {
+                Util.message("Cannot reload content when not connected to the internet", Util.Msg.Error);
+                return;
               }
-              else {
-                return self.editFile(path);            
-              }
-            }, [State.Syncing,State.Exporting]);
+              elem.parentNode.removeChild(elem);
+              return self.removeFile(path);
+            }
+            else {
+              var mime = Util.mimeFromExt(path);
+              return self.event( "loaded: " + path, "loading...", State.Loading, function() {
+                if (mime==="application/pdf" || mime==="text/html" || Util.startsWith(mime,"image/")) {
+                  return self.saveUserContent( path, mime );
+                }
+                else {
+                  return self.editFile(path);            
+                }
+              }, [State.Syncing,State.Exporting]);
+            }
           }
         }
       });
@@ -1875,6 +1885,13 @@ var UI = (function() {
     });
   }
 
+  UI.prototype.removeFile = function(fpath) {
+    var self = this;
+    if (!self.storage) return;
+    self.storage._removeFile(fpath);
+    self.setStale();
+  }
+
   UI.prototype.editFile = function(fpath,pos,reveal) {
     var self = this;
     var loadEditor;
@@ -2036,6 +2053,9 @@ var UI = (function() {
       if (Util.startsWith(file.mime,"image/") && Util.extname(file.path) !== ".eps" && len < 128*1024) {
         extra = extra + "<div class='hoverbox-content'><img src='data:" + file.mime + ";base64," + file.content + "'/></div>"
       }
+      if (file.nosync) {
+        extra = extra + "<img class='button file-remove' src='images/icon-reload.png' title='reload file from server'></img>";
+      }
     }
     return span + extra;
   }
@@ -2054,8 +2074,9 @@ var UI = (function() {
           var disable = (Storage.isEditable(file) && ext !== ".dic" ? "": " disable");
           var main    = (file.path === self.docName ? " main" : "");
           var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
+          var nosync  = (file.nosync ? " nosync" : "");
           var line = "<div data-file='" + encodeURIComponent(file.path) + "' " +
-                        "class='button file hoverbox" + disable + main + hide + "'>" + 
+                        "class='button file hoverbox" + disable + main + hide + nosync + "'>" + 
                             self.displayFile(file,true) + "</div>";
           var info = { line: line, path: file.path }                            
           if (Util.startsWith(file.mime,"image/")) images.push(info); 
