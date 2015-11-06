@@ -789,17 +789,22 @@ function cssFont( body : string, kvs : dict<string> ) : string {
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-family", fun(value,b) { 
-      val fonts = value.cssSplitValues.reverse
-      match(fonts) {
+      val fonts = value.cssSplitList
+      val tfonts = fonts.filter( fun(f) { f.startsWith("tex-") })
+      match(tfonts + fonts.reverse) {
         Nil -> b
         Cons(fam,_) -> {
           val cmd = if (fam=="serif") then "\\rmfamily"
                     elif (fam=="sans-serif") then "\\sffamily"
                     elif (fam=="monospace") then "\\ttfamily"
+                    elif (fam=="cursive") then "\\cursive"
+                    elif (fam=="fantasy") then "\\fantasy"
                     else {
-                      if (fam.startsWith("tex-")) 
-                        then "\\fontfamily{" + fam.substr(4) + "}\\selectfont"
-                        else "\\fontspec{" + fam.unquote + "}"
+                      if (fam.startsWith("tex-family-")) 
+                        then "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
+                      elif (fam.startsWith("tex-cmd-"))
+                        then "\\" + fam.substr(8)
+                        else "\\fontspec{" + (if (fam.startsWith("tex-")) then fam.substr(4) else fam) + "}"
                     }
           b.braceCmd(cmd)
         }
@@ -807,11 +812,6 @@ function cssFont( body : string, kvs : dict<string> ) : string {
     })
 }
 
-function unquote( s : string ) : string {
-  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
-  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
-  else s
-}
 
 
 // -----------------------------------------------------------------------------

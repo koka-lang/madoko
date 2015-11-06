@@ -426,6 +426,19 @@
 
 \newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
 
+\providecommand\cursive[1]{%
+  \PackageWarning{madoko}{No cursive font available. Please use meta-key "Package: frcursive" in order to \MessageBreak use cursive fonts\MessageBreak}%
+  \textit{#1}%
+}
+
+\providecommand\fantasy[1]{%
+  \ifdef\aunclfamily
+    {\aunclfamily}%
+    {\PackageWarning{madoko}{No fantasy font available. Please use meta-key "Package: auncial" in order to \MessageBreak use fantasy fonts (or define a "\fantasy" command)\MessageBreak}%
+     \textit{#1}%
+    }%
+}
+
 % ---------------------------------------------------
 % Inline elements
 % ---------------------------------------------------

@@ -111,12 +111,25 @@ function cssIsColor( term : string ) : bool {
 }
 
 
+// Split multiple CSS values that can be separated by spaces (like `margin`)
 public function cssSplitValues( s : string ) : list<string> {
   s.findAll(rxCssTerm).list.map(fun(cap) { cap.matched.cssNormalize })
 }
 
 val rxEsc   = @"\\(?:[0-9a-fA-F]{1,6}\s*|.)"
 val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|-?[a-zA-Z_]\w*\([^\)]*\)|(?:[^'""\\\s]|" + rxEsc + ")+)")
+
+// Split comma seperated CSS values (like `font-family`)
+public function cssSplitList( s : string ) : list<string> {
+  s.findAll(rxCssListTerm).list.map(fun(cap) { cap.matched.unquote })
+}
+val rxCssListTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|[\-a-zA-Z_](?:[\w\-\t ]|" + rxEsc + @")*)")
+
+function unquote( s : string ) : string {
+  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
+  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
+  else s
+}
 
 
 public function braced( s : string ) : string {
