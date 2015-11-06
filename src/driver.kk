@@ -310,7 +310,8 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   val registered = mdict()
   val langs1 = opts.hilitelang.split(";").list
   val langs2 = content.findAll(regex(@"(?:^ *```+ *|\blanguage=)([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
-  (langs1 + langs2).foreach fun(lang) {
+  val langs  = (langs1 + langs2).map(toLower)
+  langs.foreach fun(lang) {
     match (registered[lang]) {
       Just -> ()
       Nothing -> {
