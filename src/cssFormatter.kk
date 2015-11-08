@@ -125,11 +125,6 @@ public function cssSplitList( s : string ) : list<string> {
 }
 val rxCssListTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|[\-a-zA-Z_](?:[\w\-\t ]|" + rxEsc + @")*)")
 
-function unquote( s : string ) : string {
-  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
-  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
-  else s
-}
 
 
 public function braced( s : string ) : string {

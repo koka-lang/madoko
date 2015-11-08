@@ -190,10 +190,18 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'
 }
 
-val rxAttr = regex(@"^\s*([\w\.#@\-:]+)\s*(?:=\s*(?:'((?:[^\n\\']|\\.)*)'|""((?:[^\n\\""]|\\.)*)""|((?:[^\\""'\s]|\\.)*)))?$")
-val rxToken = regex(@"(?:\s*=\s*|'(?:[^\n\\']|\\.)*'|""(?:[^\n\\""]|\\.)*""|\\.|[^'""\\\s])")
-val rxSep = regex(@"\s+")
+val rxId      = @"(?:[\.#@][\w\.#@\-:]*|[\-\w][\w\.#@\-]*)" 
+val rxQuoted  = @"(?:'(?:[^\n\\']|\\.)*'|""(?:[^\n\\""]|\\.)*"")"
+val rxHtmlValue = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s]|\\.)*)"
+val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s;,]|\\.)*)"
+val rxHtmlVal = @"(?:\s*=\s*(" + rxHtmlValue + @"))"
+val rxCssVal  = @"(?:\s*:\s*(" + rxCssValue + @"(?:(?:\s+|\s*(,\s*)+)" + rxCssValue + @")*))"
+val rxAttr    = regex(@"^(" + rxId + @")(?:" + rxHtmlVal + "|" + rxCssVal + ")?")
+val rxSep     = regex(@"^(\s+(?:;*\s+)?|;\s+)")
+val rxNoSep   = regex(@"^([^\s;]|;(?!\s))+")
 
+val rxSpaces  = regex(@"\s+")
+val rxNoSpaces= regex(@"\\.|" + rxQuoted)
 
 function parsePageAlign( name :string, value: string ) : list<(string,string)> {
   if (name!="page-align") return []
@@ -212,33 +220,51 @@ function parsePageAlign( name :string, value: string ) : list<(string,string)> {
 // Parse an attribute string
 val parseAttributes : (string) -> list<(string,string,string)> = smemo(parseAttributesX)
 
-// Parse a single attribute
-val parseAttribute : (string) -> list<(string,string,string)> = smemo(parseAttributeX)
-
 function parseAttributesX( s : string ) : list<(string,string,string)> 
 {
-  s.splitAttributes.map(parseAttribute).concat
+  val res = parseAttributesAcc( s, [] )  
+  trace("attributes: " + s + "\n parsed: " + res.map(fun(kvv) {
+      val (key,_kwvalue,value) = kvv
+      "(" + key + ": " + value + ")"
+    }).join(";")
+  )
+  res
 }
 
-function parseAttributeX( s : string ) : list<(string,string,string)>
+function parseAttributesAcc( s : string, acc : list<(string,string,string)> ) : list<(string,string,string)>
 {
-  match( s.find(rxAttr) ) {
-    Nothing -> {
-      warning( "invalid attribute: " + s )
-      []
+  if (s=="") return acc.reverse
+  match(s.find(rxAttr)) {
+    Nothing -> match(s.find(rxSep)) {
+      Nothing -> match(s.find(rxNoSep)) {
+        Nothing -> {
+          warning("invalid attribute: " + s )
+          acc.reverse
+        }
+        Just(cap) -> {
+          warning("invalid attribute: " + cap.matched)
+          parseAttributesAcc( s.substr1(cap.next), acc )
+        }
+      }
+      Just(cap) -> {
+        parseAttributesAcc( s.substr1(cap.next), acc )
+      }
     }
     Just(cap) -> {
-      val value = cap.groups.firstMatched(2)
-      val kwvalue = if (cap.groups.matchedOn(4)) then cap.groups[4] else ""
-      [(cap.groups[1].toLower, kwvalue, value)]
+      val values  = cap.groups.firstMatched(2).trim.splitExclude(rxSpaces,rxNoSpaces)
+      val value   = values.filter(legalValue).map(unquote).join(" ")
+      val kwvalue = if (values.length==1 && !(value.startsWith("\"") || value.startsWith("'")))
+                     then value else ""
+      val res     = (cap.groups[1].toLower,kwvalue,value)                     
+      parseAttributesAcc( s.substr1(cap.next), Cons(res,acc))                     
     }
   }
 }
 
-// Split attributes into a list of attribute definitions
-public function splitAttributes( attrdef : string ) : list<string> {
-  attrdef.splitExclude( rxSep, rxToken ).map(trim).filter( fun(s){ s != "" } )
+function legalValue( s : string ) : bool {
+  !s.isEmpty && !s.contains(rxCommentValue)
 }
+val rxCommentValue = regex(@"^/\*(?:[^\\\*]|\\.|\*(?!/))*\*/")
 
 function unescape( s : string ) : string {
   s

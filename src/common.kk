@@ -576,3 +576,9 @@ val rxlt  = regex(@"<")
 val rxquot = regex("\"")
 val rxapos = regex("'")
 val rxhtml = regex(@"[&<>""']")
+
+public function unquote( s : string ) : string {
+  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
+  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
+  else s
+}
