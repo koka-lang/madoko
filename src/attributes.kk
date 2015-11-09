@@ -223,11 +223,13 @@ val parseAttributes : (string) -> list<(string,string,string)> = smemo(parseAttr
 function parseAttributesX( s : string ) : list<(string,string,string)> 
 {
   val res = parseAttributesAcc( s, [] )  
+  /*
   trace("attributes: " + s + "\n parsed: " + res.map(fun(kvv) {
       val (key,_kwvalue,value) = kvv
       "(" + key + ": " + value + ")"
     }).join(";")
   )
+  */
   res
 }
 
