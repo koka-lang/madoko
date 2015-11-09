@@ -18,6 +18,7 @@ import common
 import options
 import optionsMeta
 
+infixr 5 (<*), (*>), (<*>)
 
 
 
@@ -27,16 +28,16 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
 {
   // read initial metadata
   val (txt1,lineCount0) = stripInitialWhite(txt)
-  val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, verbose=options0.verbose >= 4, lines=lineCount0 )
+  val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.lineMap, verbose=options0.verbose >= 4, lines=lineCount0 )
   // read further <!--meta sections
   val mdatas = rest.findAll( rxMetaSection ).list.map fun(cap) {
     val (metaTxt,lineCountMeta) = stripInitialWhite(cap.groups[1] + "\n")
     val lineNo = lineCount + rest.substr(0,cap.index).count("\n") + lineCountMeta
-    val (mdatax,_,_) = parsePlainMeta(metaTxt, fmt, [], options0.verbose >= 4, lineNo )
+    val (mdatax,_,_) = parsePlainMeta(metaTxt, fmt, options0.lineMap, [], options0.verbose >= 4, lineNo )
     mdatax
   }
   val mdata2 = mdata1 + mdatas.concat
-  val mdataDef  = parsePlainMeta(defaultMeta(options0,fmt), fmt, verbose=options0.verbose >= 4).fst      
+  val mdataDef  = parsePlainMeta(defaultMeta(options0,fmt), fmt,options0.lineMap, verbose=options0.verbose >= 4).fst      
   // set options from metadata
   val mdataFull = mdataDef + options0.cmetadata + mdata2
   val mdataModed = mdataFull.evalConditionals
@@ -66,7 +67,7 @@ alias cmetadata = list<ckey>
 
 type ckey {
   Key( key: string, value : string )
-  Support( condition: string, body: list<ckey> )
+  Support( condition: string, body: list<ckey>, lineInfo : string )
 }
 
 function cmetadata( options : options ) : cmetadata {
@@ -77,7 +78,7 @@ function cmetadata( options : options ) : cmetadata {
 // Parse metadata keys
 // --------------------------------------------------------------
 
-function makeKey(k,pre,value,rawvalue,lines,isMatching) : ckey {
+function makeKey(k,pre,value,rawvalue,lineMap,lines,isMatching) : ckey {
   val kstart = k.substr(0,1) 
   val isrule = (kstart=="#" || kstart=="." || kstart=="~")
   val key = if (isrule) then k.trim.toLower
@@ -92,35 +93,60 @@ function makeKey(k,pre,value,rawvalue,lines,isMatching) : ckey {
                else Key(key,value)
   if (pre.isEmpty)
    then ckey
-   else Support( pre, [ckey] )
+   else Support( pre, [ckey], translateLine(lineMap,lines))
 }                 
 
-function parsePlainMeta( txt : string, fmt : formatter, metadata : cmetadata = [], verbose : bool = False, lines : int = 0 ) : (cmetadata,string,int) 
+function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metadata : cmetadata = [], verbose : bool = False, lines : int = 0 ) : div (cmetadata,string,int) 
 { 
-  match(txt.find(rxMeta)) {
-    Nothing   -> {
-      trace("metadata end: " + txt.substr(0,100))
-      (metadata.reverse,txt,lines)
-    }
+  match(txt.find(rxSupports)) {
     Just(cap) -> {
-      val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
-      val value    = rawvalue.joinLines.trim
-      trace("meta data: " + cap.groups[5] + ": " + cap.groups[2] + ": " + value )
-      val rawkeys = //if (cap.groups.matchedOn(3)) then 
-                    cap.groups[2].split(",").list.map(trim)
-                    //else [cap.groups[2]]     
-      val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
-      val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lines,(cap.groups[5]=="}")) } );                
+      val body = parsePlainMeta(cap.groups[2].trim, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
+      trace("@supports: " + cap.groups[2].trim + ": " + body.fst.length.show)
+      val support = Support(cap.groups[1].trim.unindent, body.fst, translateLine(lineMap,lines+1))
       val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose, lines+lines2 )
+      parsePlainMeta( txt.substr1(cap.next), fmt, lineMap, Cons(support,metadata), verbose, lines + lines2 )
+    }
+    Nothing -> match(txt.find(rxMeta)) {
+      Nothing   -> {
+        trace("metadata end: " + txt.substr(0,100))
+        (metadata.reverse,txt,lines)
+      }
+      Just(cap) -> {
+        val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
+        val value    = rawvalue.joinLines.trim
+        trace("meta data: " + cap.groups[5] + ": " + cap.groups[2] + ": " + value )
+        val rawkeys = //if (cap.groups.matchedOn(3)) then 
+                      cap.groups[2].split(",").list.map(trim)
+                      //else [cap.groups[2]]     
+        val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
+        val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lineMap,lines,(cap.groups[5]=="}")) } );                
+        val lines2 = txt.substr(0,cap.next).count("\n")
+        parsePlainMeta( txt.substr1(cap.next), fmt,lineMap, kvs + metadata, verbose, lines+lines2 )
+      }
     }
   }
 } 
 val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
 val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
-val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + ")|$))"
-val rxMetaAttrs   = @"(?:\{[:]?((?:[^\\'""\}]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*"")*)(\})\s*)"
+val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@supports\b)|$))"
+val rxMetaAttrContent = @"(?:[^\\'""\{\}]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*"")"
+val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
+val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\}\s*)"
+
 val rxMeta        = regex(@"^"+ rxMetaComment + rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
+val rxSupports    = regex(@"^"+ rxMetaComment + @"@supports\b([^\n\{]*)" + rxMetaGroup)
+
+
+function unindent( txt : string ) : string {
+  val lines = txt.lines.list
+  val cindent = lines.map(fun(s) { match(s.find(regex(@"^\s*"))) {
+    Nothing -> 0
+    Just(cap) -> if (cap.matched.length == s.length) then 100 else cap.matched.length
+  }}).minimum
+  if (cindent <= 0) 
+   then txt
+   else lines.map( fun(s) { s.substr(cindent) }).join("\n")
+}
 
 // --------------------------------------------------------------
 // Complete author keys
@@ -164,10 +190,9 @@ function flatten( mdata:cmetadata, modes:mdict<h,bool>) : <div,st<h>> metadata {
       Key(key,value) -> {
         [(key,value)]
       }
-      Support(condition,body) -> {
-        val b = evaluateBool(condition,modes,mdata)
-        trace("eval support: " + condition + ": " + b.show)
-        if (b)
+      Support(condition,body,lineInfo) -> {
+        logLocation(lineInfo)
+        if (evaluateBool(condition,modes,mdata))
          then flatten(body,modes)
          else []
       }
@@ -291,10 +316,40 @@ function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> constant ) :
       else error("invalid operator: " + op)
     }
     BinOp(op,arg1,arg2) -> {
-      if (op=="and") Bool( evalExpr(arg1,lookup).bool && evalExpr(arg2,lookup).bool )
-      elif (op=="or") Bool( evalExpr(arg1,lookup).bool || evalExpr(arg2,lookup).bool )
+      val x1 = evalExpr(arg1,lookup)
+      val x2 = evalExpr(arg2,lookup)
+      if (op=="and" || op=="&&")  Bool( x1.bool && x2.bool )
+      elif (op=="or" || op=="||") Bool( x1.bool || x2.bool )
+      elif (op==":" || op=="==") Bool( binop(x1,x2,"==",fun(x,y) { x==y },fun(x,y) { x==y },fun(x,y) { x==y }) )
+      elif (op=="!=") Bool( binop(x1,x2,"!=",fun(x,y) { x!=y },fun(x,y) { x!=y },fun(x,y) { x!=y }) )
+      elif (op==">") Bool( binop(x1,x2,">",fun(x,y) { x>y },serr,berr) )
+      elif (op==">=") Bool( binop(x1,x2,">=",fun(x,y) { x>=y },serr,berr) )
+      elif (op=="<") Bool( binop(x1,x2,"<",fun(x,y) { x<y },serr,berr) )
+      elif (op=="<=") Bool( binop(x1,x2,"<=",fun(x,y) { x<=y },serr,berr) )
       else error("invalid operator: " + op)
     }
+  }
+}
+
+function serr( s1 : string, s2 : string ) : exn a { error("cannot compare strings") }
+function berr( b1 : bool, b2 : bool ) : exn a { error("cannot compare booleans") }
+
+function binop( c1 : constant, c2: constant, op : string, iop : (int,int) -> exn a, sop : (string,string) -> exn a, bop : (bool,bool) -> exn a) : exn a {
+  val msg = "comparing values of different types (" + op + ")"
+  match(c1) {
+    Int(i1) -> match(c2) {
+      Int(i2) -> iop(i1,i2)      
+      _       -> error(msg)
+    }
+    String(s1) -> match(c2) {
+      String(s2) -> sop(s1,s2)
+      _          -> error(msg)
+    }
+    Bool(b1) -> match(c2) {
+      Bool(b2) -> bop(b1,b2)
+      _        -> error(msg)
+    }
+    _ -> error(msg)
   }
 }
 
@@ -312,15 +367,40 @@ function bool( c : constant ) : exn bool {
 // Parse Expressions
 // --------------------------------------------------------------
 
-val parseExpr = parseAtom
+val parseExpr = unsafeTotal(parseTerm)
 
-val parseAtom : parser<expr> =
-  parseModes || parseVar 
+function parseTerm() : div parser<expr> {
+  parseUnary() <$ 
+  ( (string(@"(and\b|or\b|(:|==|!=|>=|<=|>|<|&&|\|\|)(?=[\s\w]))") <*> (fun(s) { parseExpr(s) })).map2( fun(op,arg2) { return fun(arg1) { BinOp(op,arg1,arg2) }} )
+   || succeed( id )
+  )
+}
 
+function parseUnary() : div parser<expr> {
+  (string(@"(!|not\b)") *> parseAtom()).map( fun(e) { UnOp("not",e) } ) ||
+  parseAtom()
+}
+
+function parseAtom() : div parser<expr> {
+  parseModes || parseConst || parseVar ||
+  (string(@"\(") *> (fun(s) { parseExpr(s) }) <* string(@"\)"))
+}
+
+val parseConst : parser<expr> =
+   (parseBool || parseCInt || parseString).map(fun(c) { Const(c) })
 
 val parseVar : parser<expr> =
   string(@"[\w\-]+").map( fun(s) { Var(s.normalizeId, s) } )
 
+val parseCInt : parser<constant> = 
+  string(@"\d+").map(fun(s) { Int(parseInt(s).maybe(0,id)) } )
+
+val parseBool : parser<constant> = 
+  string(@"true\b").map(fun(s) { Bool(True) } ) 
+  ||  string(@"false\b").map(fun(s) { Bool(False) } )
+
+val parseString : parser<constant> = 
+  string(@"'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*""").map(fun(s) { String(s.unquote) } )
 
 val parseModes : parser<expr> =
   (parseMode <*> many(parseMode)).map2 fun(x,xs) {
@@ -351,6 +431,19 @@ function map( p : parser<a>, f : a -> b ) : parser<b> {
 
 function map2( p : parser<(a,b)>, f : (a,b) -> c ) : e parser<c> {
   p.map( fun(x) { f(x.fst, x.snd)}) 
+}
+
+
+function (<$)( p1 : parser<a>, p2: parser<a -> b> ) : parser<b> {
+  (p1 <*> p2).map2( fun(x,f) { f(x) } )
+}
+
+function (*>)( p1 : parser<a>, p2: parser<b> ) : parser<b> {
+  (p1 <*> p2).map( fun(x) { x.snd } )
+}
+
+function (<*)( p1 : parser<a>, p2: parser<b> ) : parser<a> {
+  (p1 <*> p2).map( fun(x) { x.fst } )
 }
 
 function (<*>)( p1 : parser<a>, p2 : parser<b> ) : parser<(a,b)> {
@@ -393,16 +486,23 @@ function manyx( p : parser<a>, s : string ) : div maybe<(list<a>,string)> {
 }
 
 function string( r: string ) : parser<string> {
-  satisfy(r).map( fun(cap) { cap.matched })
+  satisfy("(" + r + ")").map( fun(cap) { cap.groups[1] })
 }
 
 function satisfy( r: string ) : parser<matched> {
   return fun(s) {
-    match(s.find(regex(@"^\s*" + r))) {
-      Just(cap) -> Just((cap,s.substr1(cap.next)))
+    match(s.find(regex(@"^\s*" + r, ignoreCase=True))) {
+      Just(cap) -> {
+        trace("satisfy: " + cap.matched)
+        Just((cap,s.substr1(cap.next)))
+      }
       Nothing   -> Nothing
     }
   }
+}
+
+function succeed( x : a ) : parser<a> {
+  return fun(s) { Just((x,s)) }
 }
 
 // --------------------------------------------------------------
