@@ -526,18 +526,6 @@ public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int, overwri
   else attrs1
 }
 
-function translateLine( lineInfos: lineMap, lineNo : int ) : string {
-  match(lineInfos) {
-    End -> lineNo.show
-    Include(line,start,span,fileName,include,rest) -> {
-      if (lineNo < line) 
-       then lineNo.show
-      elif (lineNo >= line + span)
-       then translateLine( rest, lineNo - (span - 1))
-       else line.show + ";" + fileName + ":" + translateLine(include,(lineNo - line) + start) 
-    }
-  }
-}
 
 function adjustAttrs( b : block, adjust : (attrs : attrs) -> attrs ) : block 
 {

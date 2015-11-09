@@ -177,6 +177,20 @@ function reverseAcc( lineMap : lineMap, acc : lineMap ) : lineMap {
   }
 }
 
+public function translateLine( lineInfos: lineMap, lineNo : int ) : string {
+  match(lineInfos) {
+    End -> lineNo.show
+    Include(line,start,span,fileName,include,rest) -> {
+      if (lineNo < line) 
+       then lineNo.show
+      elif (lineNo >= line + span)
+       then translateLine( rest, lineNo - (span - 1))
+       else line.show + ";" + fileName + ":" + translateLine(include,(lineNo - line) + start) 
+    }
+  }
+}
+
+
 /* --------------------------------------
  Citations styles 
 ---------------------------------------- */
