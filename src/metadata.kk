@@ -18,32 +18,28 @@ import common
 import options
 import optionsMeta
 
+
+
+
 // Parse the meta-data at the start of a document,
 // and return updated options and the rest of the document
 public function parseMeta( options0 : options, fmt : formatter, txt : string ) : div (options, string) 
 {
   // read initial metadata
   val (txt1,lineCount0) = stripInitialWhite(txt)
-  val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, options0.modes, verbose=options0.verbose >= 4, lines=lineCount0 )
+  val (mdata1,rest,lineCount) = parsePlainMeta(txt1, fmt, verbose=options0.verbose >= 4, lines=lineCount0 )
   // read further <!--meta sections
   val mdatas = rest.findAll( rxMetaSection ).list.map fun(cap) {
     val (metaTxt,lineCountMeta) = stripInitialWhite(cap.groups[1] + "\n")
     val lineNo = lineCount + rest.substr(0,cap.index).count("\n") + lineCountMeta
-    val (mdatax,_,_) = parsePlainMeta(metaTxt, fmt, options0.modes, [], options0.verbose >= 4, lineNo )
+    val (mdatax,_,_) = parsePlainMeta(metaTxt, fmt, [], options0.verbose >= 4, lineNo )
     mdatax
   }
   val mdata2 = mdata1 + mdatas.concat
+  val mdataDef  = parsePlainMeta(defaultMeta(options0,fmt), fmt, verbose=options0.verbose >= 4).fst      
   // set options from metadata
-  val options1 = options0.fromMeta(mdata2)
-  val mdataFull = if (options1.bench || options1.metadata.find(fun(kv){ kv.fst=="defaults" }).bool) 
-    then options0.metadata + mdata2
-    else { 
-      val mdataDef  = parsePlainMeta(defaultMeta(options1,fmt), fmt, options1.modes, verbose=options1.verbose >= 4).fst      
-      mdataDef + options0.metadata + mdata2
-      //val options2  = options0.fromMeta(mdataFull)
-      //options2( metadata = mdataFull)
-    }
-  val mdataModed = mdataFull.filterModed
+  val mdataFull = mdataDef + options0.cmetadata + mdata2
+  val mdataModed = mdataFull.evalConditionals
   val options2 = options0.fromMeta(mdataModed)
   val options = options2( metadata = mdataModed )
 
@@ -61,7 +57,27 @@ function stripInitialWhite( txt : string ) : (string,int) {
 }
 val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->)+")
 
-function makeKey(k,pre,value,rawvalue,lines,isMatching) {
+
+// --------------------------------------------------------------
+// metadata with support conditionals
+// --------------------------------------------------------------
+
+alias cmetadata = list<ckey>
+
+type ckey {
+  Key( key: string, value : string )
+  Support( condition: string, body: list<ckey> )
+}
+
+function cmetadata( options : options ) : cmetadata {
+  options.metadata.map( fun(kv) { Key(kv.fst, kv.snd) } )
+}
+
+// --------------------------------------------------------------
+// Parse metadata keys
+// --------------------------------------------------------------
+
+function makeKey(k,pre,value,rawvalue,lines,isMatching) : ckey {
   val kstart = k.substr(0,1) 
   val isrule = (kstart=="#" || kstart=="." || kstart=="~")
   val key = if (isrule) then k.trim.toLower
@@ -71,12 +87,15 @@ function makeKey(k,pre,value,rawvalue,lines,isMatching) {
     log("customs","{\"name\":" + key.json + ",\"display\":" + 
         (if (isrule) then k.substr(1) else k).json + "}")
   }
-  if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
-   then (pre + key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
-   else (pre + key,value)
+  val ckey = if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
+               then Key(key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
+               else Key(key,value)
+  if (pre.isEmpty)
+   then ckey
+   else Support( pre, [ckey] )
 }                 
 
-function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata : metadata = [], verbose : bool = False, lines : int = 0 ) : (metadata,string,int) 
+function parsePlainMeta( txt : string, fmt : formatter, metadata : cmetadata = [], verbose : bool = False, lines : int = 0 ) : (cmetadata,string,int) 
 { 
   match(txt.find(rxMeta)) {
     Nothing   -> {
@@ -93,7 +112,7 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
       val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
       val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lines,(cap.groups[5]=="}")) } );                
       val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
+      parsePlainMeta( txt.substr1(cap.next), fmt, kvs + metadata, verbose, lines+lines2 )
     }
   }
 } 
@@ -131,10 +150,266 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
 }
 
 // --------------------------------------------------------------
-// Filter moded keys
+// Flatten conditional keys into non-conditional list
 // --------------------------------------------------------------
 
-public function filterModed( mdata :metadata ) : <div> metadata {
+function evalConditionals( mdata :cmetadata ) : <div> metadata {
+  val modes = mdict()
+  flatten(mdata,modes)
+}
+
+function flatten( mdata:cmetadata, modes:mdict<h,bool>) : <div,st<h>> metadata {
+  mdata.concat fun(ckey) {
+    match(ckey) {
+      Key(key,value) -> {
+        [(key,value)]
+      }
+      Support(condition,body) -> {
+        val b = evaluateBool(condition,modes,mdata)
+        trace("eval support: " + condition + ": " + b.show)
+        if (b)
+         then flatten(body,modes)
+         else []
+      }
+    }
+  }
+}
+
+
+// --------------------------------------------------------------
+// Evaluate expressions in the context of metadata
+// --------------------------------------------------------------
+
+function evaluateBool( cond : string, modes : mdict<h,bool>, mdata : cmetadata, current : list<string> = []  ) : <div,st<h>> bool {
+  var recursive := False
+  function lookup(v,display) {
+    if (current.contains(v)) {
+      recursive := True
+      Bool(False)
+    }
+    else match(lookupMode(modes,v,mdata,Cons(v,current))) {
+      Nothing -> error("undefined variable: " + display)
+      Just(b) -> Bool(b)
+    }
+  }
+  val b = evaluate( cond, fun(e) { evalExpr(e,lookup).bool }, False)
+  trace("evaluated: " + cond + " -> " + b.show + ", recursive: " + recursive.show)
+  if (recursive) then False else b  
+}
+
+
+function lookupMode( modes : mdict<h,bool>, mode : string, mdata : cmetadata, current : list<string> ) : <div,st<h>> maybe<bool> {
+  match(modes[mode]) {
+    Just(value) -> Just(value)
+    Nothing -> {
+      val mbRes = mdata.reverse.foreachUntil( fun(ckey) { 
+        match(ckey) {
+          Key(key,raw) -> {
+            if (key != mode) then Nothing
+             else {
+               trace( " lookup: found: " + key + ": " + raw)
+               val value = raw.trim.toLower
+               val res = (value=="true" || value=="1")
+               modes[mode] := res
+               Just(res)
+             }
+          }
+          Support(cond,body) -> {
+            if (body.containsKey(mode) && evaluateBool(cond,modes,mdata,current)) 
+             then lookupMode(modes,mode,body,current)
+             else Nothing
+          }
+        }
+      })
+      match(mbRes) {
+        Nothing -> {
+          modes[mode] := False
+          Nothing
+        }
+        _ -> mbRes
+      }
+    }
+  }
+}
+
+function containsKey( mdata : cmetadata, key : string ) : div bool {
+  mdata.any( fun(ckey) {
+    match(ckey) {
+      Key(k) -> k == key
+      Support(_cond,body) -> body.containsKey(key)
+    }
+  })
+}
+
+function contains( xs : list<string>, s : string ) : bool {
+  xs.find( fun(x) { x == s }).bool
+}
+
+// --------------------------------------------------------------
+// Evaluate expressions
+// --------------------------------------------------------------
+
+type expr  {
+  UnOp( op : string, expr : expr)
+  BinOp( op: string, left : expr, right : expr )
+  Const( c : constant )
+  Var( v : string, display : string )
+}
+
+type constant {  
+  Int( i :int )
+  Bool( b : bool )
+  String( s : string )
+  Regex( r : regex )
+}
+
+
+
+function evaluate( expr : string, eval : expr -> <exn,div|e> a, default : a ) : <div|e> a {
+  match(parseExpr(expr)) {
+    Just(res) | res.snd.trim.isEmpty -> {
+      catch( fun() { eval(res.fst) }, fun(exn) { 
+        warning(exn.show)
+        default
+      })
+    }
+    _ -> {
+      warning("invalid expression: " + expr)
+      default
+    }
+  }
+}
+
+function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> constant ) : <exn|e> constant {
+  match(expr) {
+    Const(c) -> c
+    Var(v,d) -> lookup(v,d)
+    UnOp(op,arg) -> {
+      if (op=="not") {
+        Bool( !(evalExpr(arg, lookup).bool) )
+      }
+      else error("invalid operator: " + op)
+    }
+    BinOp(op,arg1,arg2) -> {
+      if (op=="and") Bool( evalExpr(arg1,lookup).bool && evalExpr(arg2,lookup).bool )
+      elif (op=="or") Bool( evalExpr(arg1,lookup).bool || evalExpr(arg2,lookup).bool )
+      else error("invalid operator: " + op)
+    }
+  }
+}
+
+function bool( c : constant ) : exn bool {
+  match(c) {
+    Bool(b)   -> b
+    Int(i)    -> (i != 0)
+    String(s) -> (s != "")
+    Regex()  -> error("cannot use regular expression as a boolean condition")
+  }
+}
+
+
+// --------------------------------------------------------------
+// Parse Expressions
+// --------------------------------------------------------------
+
+val parseExpr = parseAtom
+
+val parseAtom : parser<expr> =
+  parseModes || parseVar 
+
+
+val parseVar : parser<expr> =
+  string(@"[\w\-]+").map( fun(s) { Var(s.normalizeId, s) } )
+
+
+val parseModes : parser<expr> =
+  (parseMode <*> many(parseMode)).map2 fun(x,xs) {
+    xs.foldl(x,fun(a,b) { BinOp("and",a,b) } )
+  }
+
+
+val parseMode : parser<expr> =
+  satisfy(@"@(no)?([\w\-]*)").map fun(cap) {
+    val v = Var(cap.groups[2].normalizeId, cap.groups[2])
+    if (cap.groups[1].isEmpty) then v else UnOp("not",v)
+  }
+
+// --------------------------------------------------------------
+// Parsers
+// --------------------------------------------------------------
+
+alias parser<a> = string -> div maybe<(a,string)>
+
+function map( p : parser<a>, f : a -> b ) : parser<b> {
+  return fun(s) { 
+    match(p(s)) {
+      Nothing -> Nothing
+      Just(x) -> Just((f(x.fst),x.snd))
+    }
+  }
+}
+
+function map2( p : parser<(a,b)>, f : (a,b) -> c ) : e parser<c> {
+  p.map( fun(x) { f(x.fst, x.snd)}) 
+}
+
+function (<*>)( p1 : parser<a>, p2 : parser<b> ) : parser<(a,b)> {
+  return fun(s) {
+    match(p1(s)) {
+      Nothing -> Nothing
+      Just(x) -> match(p2(x.snd)) {
+        Nothing -> Nothing
+        Just(y) -> Just(((x.fst,y.fst),y.snd))
+      }
+    }
+  }
+}
+
+function (||)( p1 : parser<a>, p2 : parser<a> ) : parser<a> {
+  return fun(s) {
+    match(p1(s)) {
+      Nothing -> p2(s)
+      res     -> res
+    }
+  }
+}
+
+function many1( p : parser<a>) : parser<list<a>> {
+  (p <*> many(p)).map2( fun(x,xs) { Cons(x,xs) } )
+}
+
+function many( p : parser<a> ) : parser<list<a>> {
+  return fun(s) { manyx(p,s) }
+}
+
+function manyx( p : parser<a>, s : string ) : div maybe<(list<a>,string)> {
+  match(p(s)) {
+    Nothing -> Just(([],s))
+    Just(x) -> match(manyx(p,x.snd)) {
+      Nothing -> Nothing
+      Just(y) -> Just((Cons(x.fst,y.fst),y.snd))
+    }
+  }
+}
+
+function string( r: string ) : parser<string> {
+  satisfy(r).map( fun(cap) { cap.matched })
+}
+
+function satisfy( r: string ) : parser<matched> {
+  return fun(s) {
+    match(s.find(regex(@"^\s*" + r))) {
+      Just(cap) -> Just((cap,s.substr1(cap.next)))
+      Nothing   -> Nothing
+    }
+  }
+}
+
+// --------------------------------------------------------------
+// Default metadata
+// --------------------------------------------------------------
+
+function filterModed( mdata :metadata ) : <div> metadata {
   val modes = mdict()
   mdata.map( fun(kv) {
     //trace("filter: " + kv.fst)
@@ -202,7 +477,8 @@ val rxModedKey = regex(@"@[\w\-@]+ +(.*)")
 // --------------------------------------------------------------
 
 function defaultMeta( options : options, fmt : formatter ) : string {
-  ( [ fmt.showFormatter + ": True",
+  ( [ "Tex: False", "Html: False", "Tex2: False","Maketitle: False",
+      fmt.showFormatter + ": True",
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
     ] +
     list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
