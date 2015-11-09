@@ -197,7 +197,7 @@ val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s;,]|\\.)*)"
 val rxHtmlVal = @"(?:\s*=\s*(" + rxHtmlValue + @"))"
 val rxCssVal  = @"(?:\s*:\s*(" + rxCssValue + @"(?:(?:\s+|\s*(,\s*)+)" + rxCssValue + @")*))"
 val rxAttr    = regex(@"^(" + rxId + @")(?:" + rxHtmlVal + "|" + rxCssVal + ")?")
-val rxSep     = regex(@"^(\s+(?:;*\s+)?|;\s+)")
+val rxSep     = regex(@"^(\s+(?:;*(?:$|\s+))?|;(?:$|\s+))")
 val rxNoSep   = regex(@"^([^\s;]|;(?!\s))+")
 
 val rxSpaces  = regex(@"\s+")
