@@ -61,8 +61,8 @@ public function markdown( inputName : string, input : string, outdir : string, o
     log("stdout",s)
   });
 
-  val extramdata = modes.split(";").map( fun(key) { (key,"True") })
-  val options    = options0( metadata = options.metadata + extramdata )
+  val extramdata = modes.split(";").list.map( fun(key) { (key,"True") })
+  val options    = options0( metadata = options0.metadata + extramdata )
 
   val copts = coptions(options = options, outputDir = outdir, convertTex = convertTex)
   val outName = outputName(inputName,copts)
