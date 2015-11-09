@@ -61,11 +61,16 @@ function stripInitialWhite( txt : string ) : (string,int) {
 }
 val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->)+")
 
-function makeKey(k,pre,value,rawvalue,lines) {
+function makeKey(k,pre,value,rawvalue,lines,isMatching) {
   val kstart = k.substr(0,1) 
-  val isrule = (kstart=="#" || kstart=="." || kstart=="~");
-  val key = if (isrule) then k.trim.toLower else k.trim.normalizeId
-  if (kstart=="~") log("customs","{\"name\":" + key.json + ",\"display\":" + k.substr(1).json + "}")
+  val isrule = (kstart=="#" || kstart=="." || kstart=="~")
+  val key = if (isrule) then k.trim.toLower
+            elif (isMatching) then "~" + k.trim.toLower 
+            else k.trim.normalizeId
+  if (key.startsWith("~")) {
+    log("customs","{\"name\":" + key.json + ",\"display\":" + 
+        (if (isrule) then k.substr(1) else k).json + "}")
+  }
   if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
    then (pre + key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
    else (pre + key,value)
@@ -75,28 +80,28 @@ function parsePlainMeta( txt : string, fmt : formatter, modes : string, metadata
 { 
   match(txt.find(rxMeta)) {
     Nothing   -> {
-      //if (metadata.isNil) trace("no metadata?: " + txt.substr(0,100))
+      trace("metadata end: " + txt.substr(0,100))
       (metadata.reverse,txt,lines)
     }
     Just(cap) -> {
-      //val matchMode = if (cap.groups[1].startsWith("no")) 
-      //                 then !fmt.matchFmt( cap.groups[1].substr(2), modes) 
-      //                 else fmt.matchFmt( cap.groups[1], modes)      
-      val value = cap.groups[4].joinLines.trim
-      //if (verbose) then trace("meta data:" + cap.groups[3] + ": " + value )
-      val rawkeys = if (cap.groups.matchedOn(3))
-                      then cap.groups[2].split(",").list.map(trim)
-                      else [cap.groups[2]]     
+      val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
+      val value    = rawvalue.joinLines.trim
+      trace("meta data: " + cap.groups[5] + ": " + cap.groups[2] + ": " + value )
+      val rawkeys = //if (cap.groups.matchedOn(3)) then 
+                    cap.groups[2].split(",").list.map(trim)
+                    //else [cap.groups[2]]     
       val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
-      val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,cap.groups[4],lines ) } );                
+      val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lines,(cap.groups[5]=="}")) } );                
       val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, modes, kvs + metadata, verbose, lines+lines2 )
     }
   }
 } 
 val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
-val rxMeta = regex(@"^"+ rxMetaComment + metaKey + @" *(.*(?:\n .*)*)(?:\n+(?=\n|" + metaKey + ")|$)")
-val metaKey = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]"
+val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
+val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + ")|$))"
+val rxMetaAttrs   = @"(?:\{[:]?((?:[^\\'""\}]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*"")*)(\})\s*)"
+val rxMeta        = regex(@"^"+ rxMetaComment + rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
 
 // --------------------------------------------------------------
 // Complete author keys
