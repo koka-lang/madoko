@@ -56,7 +56,7 @@ val soloTag     = @"" + atag + tagContent + ">"
 val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n+|\s*$)"
 
 // Attributes: allow escaped newline
-val rattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}" // allow optional colon for maraku compat
+val rattrs      = @"(?:<!--)?\{:?((?:[^\\'""\}\n]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*"")*)\}(?:-->)?" // allow optional colon for maraku compat
 val xattrs      = rattrs + " *"  
 val iattrs      = "(?:" + xattrs + ")?"           // inline: headers and fences
 val pattrs      = @"(?: {0,3}" + xattrs + ")?"    // after a paragraph
