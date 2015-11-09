@@ -53,13 +53,16 @@ public function addImage( embeds : dict<embedinfo>, imageName : string, data : s
 }
 
 
-public function markdown( inputName : string, input : string, outdir : string, options : options, convertTex : bool,
+public function markdown( inputName : string, input : string, outdir : string, options0 : options, modes: string, convertTex : bool,
                           continue: (md:string,stdout:string,needRerun:bool,options:options,
                                       files:string,filesRefer:string,filesWrite:string,labels:string,links:string,customs:string,entities:string) -> io () ) : io () 
 { 
   printRedirect( fun(s) {
     log("stdout",s)
   });
+
+  val extramdata = modes.split(";").map( fun(key) { (key,"True") })
+  val options    = options0( metadata = options.metadata + extramdata )
 
   val copts = coptions(options = options, outputDir = outdir, convertTex = convertTex)
   val outName = outputName(inputName,copts)

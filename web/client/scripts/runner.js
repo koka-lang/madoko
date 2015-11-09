@@ -155,9 +155,10 @@ var Runner = (function() {
       content: text,
       name   : ctx.docname,
       options: options || Util.copy(self.options),
+      modes  : "",
       files  : self.sendFiles.elems(),      
     };
-    if (ctx.round >= 0) msg.options.modes = "preview";
+    if (ctx.round >= 0) msg.modes = "preview";
     ctx.storageId = self.storage.storageId;
     self.sendFiles.clear();
     return self.madokoWorker.postMessage( msg, 30000 ).then( function(res) {
