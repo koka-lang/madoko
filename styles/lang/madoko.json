@@ -21,7 +21,7 @@
   
   "jsescapes":  "\\\\(?:[btnfr\\\\\"']|[0-7][0-7]?|[0-3][0-7]{2})",
   
-  "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))(?:[\\w\\-\\.#~]|, *)*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*[:]",  
+  "metakey": "^(?:@(\\w+) +)?((?:\\w|([\\.#~])(?=[\\w\\-]))(?:[\\w\\-\\.#~]|, *)*( +?[\\w\\-]+){0,2}\\*?)[ \\t]*(?:[:]|(\\{))",  
 
   "metadata": [
     "Title","Subtitle","Sub Title","Title Note", "Author","Author Note","Affiliation","Email",
@@ -70,6 +70,7 @@
       
       
       ["^@metakey", { "cases": {
+        "$4": { "token": "namespace.metadata.key", "next": "metadatax" },
         "$2@metadata": { "token": "namespace.metadata.key", "next": "metadata" },
         "$3": { "token": "namespace.metadata.key", "next": "metadata" },
         "@default": { "token": "" } 
@@ -139,6 +140,14 @@
       ["^(@metakey)", { "token": "@rematch", "next": "@pop" } ],
       ["^(?!\\s\\s\\s)", { "token": "@rematch", "next": "@pop" }],
       [".+", "attrs.string.escape" ]
+    ],
+
+    "metadatax": [
+      ["[^\\{\\}\\\\]+", { "token": "attrs.string.escape" } ],
+      ["\\\\.", { "token": "attrs.string.escape" } ],
+      ["\\{", { "token": "attrs.string.escape", "next": "@push" } ],
+      ["\\}", { "token": "attrs.string.escape", "next": "@pop" }],
+      [".", { "token":"@rematch", "next": "@pop" }]
     ],
     
     "codeblock": [      
