@@ -851,12 +851,15 @@
 \providecommand{\@doi}{?}
 
 \ifdef\titlerunning%
-  {\newcommand{\mdtitlerunning}[1]{\titlerunning{#1}}}% llncs
+  {\newcommand{\mdtitlerunning}[1]{\titlerunning{#1} % needs a space for easychair
+  }}% llncs
   {\newcommand{\mdtitlerunning}[1]{\global\def\titlerunning{#1}}}% eptcs
 
 \ifdef\authorrunning%
-  {\newcommand{\mdauthorrunning}[1]{\authorrunning{#1}}}% llncs
+  {\typeout{llncs}\newcommand\mdauthorrunning[1]{\typeout{authorrunning #1}\authorrunning{#1} %needs a space for easychair..
+  }}% llncs
   {\newcommand{\mdauthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
+
 
 % LLNCS: \author{ \and ...}, \institute{ \email \and ...}
 % EPTCS: \author{ \institute \email \and ... }
