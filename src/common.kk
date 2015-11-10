@@ -427,7 +427,7 @@ public function addClass( attrs: attrs, cname : string ) : attrs {
   if (cname=="") then return attrs
   if (attrs.classes.any( fun(nm) { nm == cname } ))
    then attrs
-   else attrs(classes=attrs.classes + [cname], text=attrs.text+" class='" + cname + "'", empty=False)
+   else attrs(classes=attrs.classes + [cname], text=attrs.text+"; class: " + cname.quote, empty=False)
 }
 
 public function addInputClass( attrs : attrs ) : attrs {
@@ -448,7 +448,7 @@ public function addKeyvals( attrs : attrs, kvs : list<(string,string)> ) : attrs
 
 public function addKeyval( attrs : attrs, key : string, value : string ) : attrs {
   attrs(keyvals=attrs.keyvals.filter(fun(kv){ kv.fst != key }) + [(key,value)], 
-        text=attrs.text+" "+key+"="+value.quote, empty=False)
+        text=attrs.text+"; "+key+": "+value.quote, empty=False)
 }
 
 public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
@@ -456,7 +456,7 @@ public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
 }
 
 public function setLineNo( attrs : attrs, line : int, dataline: string ) : attrs {
-  attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show ).addKeyval("data-line",dataline)
+  attrs(empty=False,lineNo=line, text=attrs.text + "; line:" + line.show ).addKeyval("data-line",dataline)
 }
 
 function quote( s : string ) : string {
@@ -486,7 +486,7 @@ public function generateHeaderId( attrs : attrs, heading : string, pre : string 
   val attrs1 = if (attrs.name!="") then attrs else {
     val newid = heading.normalizeId
     val newname = if (newid=="") then "section" else pre + newid
-    attrs(text=attrs.text + " id='" + newname + "'", name = newname, empty=False)
+    attrs(text=attrs.text + "; id:" + newname.quote, name = newname, empty=False)
   }
   attrs1
 }
