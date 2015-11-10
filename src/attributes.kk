@@ -49,7 +49,7 @@ function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool>
   val keys0 = extra + attrs.classes.map( fun(cname) { "." + cname.definitionId } ) 
   val keys1 = keys0.filter( fun(key) { visited[key].isNothing } )
   val visited1 = visited + keys1.map( fun(key) { (key,True) } ).dict
-  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(" ")
+  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(";")
   return (def,visited1)
 }
 
@@ -229,7 +229,7 @@ function parseAttributesX( s : string ) : list<(string,string,string)>
   /*
   trace("attributes: " + s + "\n parsed: " + res.map(fun(kvv) {
       val (key,_kwvalue,value) = kvv
-      "(" + key + ": " + value + ")"
+      key + ": \"" + value + "\""
     }).join(";")
   )
   */
