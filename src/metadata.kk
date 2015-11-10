@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
-  Copyright 2013 Microsoft Corporation.
+  Copyright 2013-2015 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
@@ -17,8 +17,7 @@ import std/path
 import common
 import options
 import optionsMeta
-
-infixr 5 (<*), (*>), (<*>)
+import expression
 
 
 
@@ -100,21 +99,21 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
 { 
   match(txt.find(rxSupports)) {
     Just(cap) -> {
-      val body = parsePlainMeta(cap.groups[2].trim, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
-      trace("@supports: " + cap.groups[2].trim + ": " + body.fst.length.show)
-      val support = Support(cap.groups[1].trim.unindent, body.fst, translateLine(lineMap,lines+1))
+      val body = parsePlainMeta(cap.groups[2].trim.unindent, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
+      if (verbose) trace("meta data: @if " +  cap.groups[1].trim + ": " + cap.groups[2].trim.unindent)
+      val support = Support(cap.groups[1].trim, body.fst, translateLine(lineMap,lines+1))
       val lines2 = txt.substr(0,cap.next).count("\n")
       parsePlainMeta( txt.substr1(cap.next), fmt, lineMap, Cons(support,metadata), verbose, lines + lines2 )
     }
     Nothing -> match(txt.find(rxMeta)) {
       Nothing   -> {
-        trace("metadata end: " + txt.substr(0,100))
+        //trace("metadata end: " + txt.substr(0,100))
         (metadata.reverse,txt,lines)
       }
       Just(cap) -> {
         val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
         val value    = rawvalue.joinLines.trim
-        trace("meta data: " + cap.groups[5] + ": " + cap.groups[2] + ": " + value )
+        if (verbose) trace("meta data: " + cap.groups[2] + ": " + value )
         val rawkeys = //if (cap.groups.matchedOn(3)) then 
                       cap.groups[2].split(",").list.map(trim)
                       //else [cap.groups[2]]     
@@ -128,25 +127,14 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
 } 
 val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
 val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
-val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@supports\b)|$))"
-val rxMetaAttrContent = @"(?:[^\\'""\{\}]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*"")"
+val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b)|$))"
+val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*""|/(?:[^\\/\n]|\\.)*/)"
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
 val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\}\s*)"
 
 val rxMeta        = regex(@"^"+ rxMetaComment + rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
-val rxSupports    = regex(@"^"+ rxMetaComment + @"@supports\b([^\n\{]*)" + rxMetaGroup)
+val rxSupports    = regex(@"^"+ rxMetaComment + @"@(?:if|supports)\b([^\n\{]*)" + rxMetaGroup)
 
-
-function unindent( txt : string ) : string {
-  val lines = txt.lines.list
-  val cindent = lines.map(fun(s) { match(s.find(regex(@"^\s*"))) {
-    Nothing -> 0
-    Just(cap) -> if (cap.matched.length == s.length) then 100 else cap.matched.length
-  }}).minimum
-  if (cindent <= 0) 
-   then txt
-   else lines.map( fun(s) { s.substr(cindent) }).join("\n")
-}
 
 // --------------------------------------------------------------
 // Complete author keys
@@ -184,7 +172,7 @@ function evalConditionals( mdata :cmetadata ) : <div> metadata {
   flatten(mdata,modes)
 }
 
-function flatten( mdata:cmetadata, modes:mdict<h,bool>) : <div,st<h>> metadata {
+function flatten( mdata:cmetadata, modes:mdict<h,constant>) : <div,st<h>> metadata {
   mdata.concat fun(ckey) {
     match(ckey) {
       Key(key,value) -> {
@@ -205,36 +193,35 @@ function flatten( mdata:cmetadata, modes:mdict<h,bool>) : <div,st<h>> metadata {
 // Evaluate expressions in the context of metadata
 // --------------------------------------------------------------
 
-function evaluateBool( cond : string, modes : mdict<h,bool>, mdata : cmetadata, current : list<string> = []  ) : <div,st<h>> bool {
+function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetadata, current : list<string> = []  ) : <div,st<h>> bool {
   var recursive := False
   function lookup(v,display) {
     if (current.contains(v)) {
       recursive := True
-      Bool(False)
+      String("False")
     }
     else match(lookupMode(modes,v,mdata,Cons(v,current))) {
       Nothing -> error("undefined variable: " + display)
-      Just(b) -> Bool(b)
+      Just(c) -> c
     }
   }
   val b = evaluate( cond, fun(e) { evalExpr(e,lookup).bool }, False)
-  trace("evaluated: " + cond + " -> " + b.show + ", recursive: " + recursive.show)
-  if (recursive) then False else b  
+  if (recursive) 
+   then False // a self-dependent support block evaluates to false
+   else b  
 }
 
 
-function lookupMode( modes : mdict<h,bool>, mode : string, mdata : cmetadata, current : list<string> ) : <div,st<h>> maybe<bool> {
+function lookupMode( modes : mdict<h,constant>, mode : string, mdata : cmetadata, current : list<string> ) : <div,st<h>> maybe<constant> {
   match(modes[mode]) {
-    Just(value) -> Just(value)
+    Just(c) -> Just(c)
     Nothing -> {
       val mbRes = mdata.reverse.foreachUntil( fun(ckey) { 
         match(ckey) {
           Key(key,raw) -> {
             if (key != mode) then Nothing
              else {
-               trace( " lookup: found: " + key + ": " + raw)
-               val value = raw.trim.toLower
-               val res = (value=="true" || value=="1")
+              val res = String(raw)
                modes[mode] := res
                Just(res)
              }
@@ -248,7 +235,7 @@ function lookupMode( modes : mdict<h,bool>, mode : string, mdata : cmetadata, cu
       })
       match(mbRes) {
         Nothing -> {
-          modes[mode] := False
+          modes[mode] := String("False")
           Nothing
         }
         _ -> mbRes
@@ -270,307 +257,6 @@ function contains( xs : list<string>, s : string ) : bool {
   xs.find( fun(x) { x == s }).bool
 }
 
-// --------------------------------------------------------------
-// Evaluate expressions
-// --------------------------------------------------------------
-
-type expr  {
-  UnOp( op : string, expr : expr)
-  BinOp( op: string, left : expr, right : expr )
-  Const( c : constant )
-  Var( v : string, display : string )
-}
-
-type constant {  
-  Int( i :int )
-  Bool( b : bool )
-  String( s : string )
-  Regex( r : regex )
-}
-
-
-
-function evaluate( expr : string, eval : expr -> <exn,div|e> a, default : a ) : <div|e> a {
-  match(parseExpr(expr)) {
-    Just(res) | res.snd.trim.isEmpty -> {
-      catch( fun() { eval(res.fst) }, fun(exn) { 
-        warning(exn.show)
-        default
-      })
-    }
-    _ -> {
-      warning("invalid expression: " + expr)
-      default
-    }
-  }
-}
-
-function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> constant ) : <exn|e> constant {
-  match(expr) {
-    Const(c) -> c
-    Var(v,d) -> lookup(v,d)
-    UnOp(op,arg) -> {
-      if (op=="not") {
-        Bool( !(evalExpr(arg, lookup).bool) )
-      }
-      else error("invalid operator: " + op)
-    }
-    BinOp(op,arg1,arg2) -> {
-      val x1 = evalExpr(arg1,lookup)
-      val x2 = evalExpr(arg2,lookup)
-      if (op=="and" || op=="&&")  Bool( x1.bool && x2.bool )
-      elif (op=="or" || op=="||") Bool( x1.bool || x2.bool )
-      elif (op==":" || op=="==") Bool( binop(x1,x2,"==",fun(x,y) { x==y },fun(x,y) { x==y },fun(x,y) { x==y }) )
-      elif (op=="!=") Bool( binop(x1,x2,"!=",fun(x,y) { x!=y },fun(x,y) { x!=y },fun(x,y) { x!=y }) )
-      elif (op==">") Bool( binop(x1,x2,">",fun(x,y) { x>y },serr,berr) )
-      elif (op==">=") Bool( binop(x1,x2,">=",fun(x,y) { x>=y },serr,berr) )
-      elif (op=="<") Bool( binop(x1,x2,"<",fun(x,y) { x<y },serr,berr) )
-      elif (op=="<=") Bool( binop(x1,x2,"<=",fun(x,y) { x<=y },serr,berr) )
-      else error("invalid operator: " + op)
-    }
-  }
-}
-
-function serr( s1 : string, s2 : string ) : exn a { error("cannot compare strings") }
-function berr( b1 : bool, b2 : bool ) : exn a { error("cannot compare booleans") }
-
-function binop( c1 : constant, c2: constant, op : string, iop : (int,int) -> exn a, sop : (string,string) -> exn a, bop : (bool,bool) -> exn a) : exn a {
-  val msg = "comparing values of different types (" + op + ")"
-  match(c1) {
-    Int(i1) -> match(c2) {
-      Int(i2) -> iop(i1,i2)      
-      _       -> error(msg)
-    }
-    String(s1) -> match(c2) {
-      String(s2) -> sop(s1,s2)
-      _          -> error(msg)
-    }
-    Bool(b1) -> match(c2) {
-      Bool(b2) -> bop(b1,b2)
-      _        -> error(msg)
-    }
-    _ -> error(msg)
-  }
-}
-
-function bool( c : constant ) : exn bool {
-  match(c) {
-    Bool(b)   -> b
-    Int(i)    -> (i != 0)
-    String(s) -> (s != "")
-    Regex()  -> error("cannot use regular expression as a boolean condition")
-  }
-}
-
-
-// --------------------------------------------------------------
-// Parse Expressions
-// --------------------------------------------------------------
-
-val parseExpr = unsafeTotal(parseTerm)
-
-function parseTerm() : div parser<expr> {
-  parseUnary() <$ 
-  ( (string(@"(and\b|or\b|(:|==|!=|>=|<=|>|<|&&|\|\|)(?=[\s\w]))") <*> (fun(s) { parseExpr(s) })).map2( fun(op,arg2) { return fun(arg1) { BinOp(op,arg1,arg2) }} )
-   || succeed( id )
-  )
-}
-
-function parseUnary() : div parser<expr> {
-  (string(@"(!|not\b)") *> parseAtom()).map( fun(e) { UnOp("not",e) } ) ||
-  parseAtom()
-}
-
-function parseAtom() : div parser<expr> {
-  parseModes || parseConst || parseVar ||
-  (string(@"\(") *> (fun(s) { parseExpr(s) }) <* string(@"\)"))
-}
-
-val parseConst : parser<expr> =
-   (parseBool || parseCInt || parseString).map(fun(c) { Const(c) })
-
-val parseVar : parser<expr> =
-  string(@"[\w\-]+").map( fun(s) { Var(s.normalizeId, s) } )
-
-val parseCInt : parser<constant> = 
-  string(@"\d+").map(fun(s) { Int(parseInt(s).maybe(0,id)) } )
-
-val parseBool : parser<constant> = 
-  string(@"true\b").map(fun(s) { Bool(True) } ) 
-  ||  string(@"false\b").map(fun(s) { Bool(False) } )
-
-val parseString : parser<constant> = 
-  string(@"'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*""").map(fun(s) { String(s.unquote) } )
-
-val parseModes : parser<expr> =
-  (parseMode <*> many(parseMode)).map2 fun(x,xs) {
-    xs.foldl(x,fun(a,b) { BinOp("and",a,b) } )
-  }
-
-
-val parseMode : parser<expr> =
-  satisfy(@"@(no)?([\w\-]*)").map fun(cap) {
-    val v = Var(cap.groups[2].normalizeId, cap.groups[2])
-    if (cap.groups[1].isEmpty) then v else UnOp("not",v)
-  }
-
-// --------------------------------------------------------------
-// Parsers
-// --------------------------------------------------------------
-
-alias parser<a> = string -> div maybe<(a,string)>
-
-function map( p : parser<a>, f : a -> b ) : parser<b> {
-  return fun(s) { 
-    match(p(s)) {
-      Nothing -> Nothing
-      Just(x) -> Just((f(x.fst),x.snd))
-    }
-  }
-}
-
-function map2( p : parser<(a,b)>, f : (a,b) -> c ) : e parser<c> {
-  p.map( fun(x) { f(x.fst, x.snd)}) 
-}
-
-
-function (<$)( p1 : parser<a>, p2: parser<a -> b> ) : parser<b> {
-  (p1 <*> p2).map2( fun(x,f) { f(x) } )
-}
-
-function (*>)( p1 : parser<a>, p2: parser<b> ) : parser<b> {
-  (p1 <*> p2).map( fun(x) { x.snd } )
-}
-
-function (<*)( p1 : parser<a>, p2: parser<b> ) : parser<a> {
-  (p1 <*> p2).map( fun(x) { x.fst } )
-}
-
-function (<*>)( p1 : parser<a>, p2 : parser<b> ) : parser<(a,b)> {
-  return fun(s) {
-    match(p1(s)) {
-      Nothing -> Nothing
-      Just(x) -> match(p2(x.snd)) {
-        Nothing -> Nothing
-        Just(y) -> Just(((x.fst,y.fst),y.snd))
-      }
-    }
-  }
-}
-
-function (||)( p1 : parser<a>, p2 : parser<a> ) : parser<a> {
-  return fun(s) {
-    match(p1(s)) {
-      Nothing -> p2(s)
-      res     -> res
-    }
-  }
-}
-
-function many1( p : parser<a>) : parser<list<a>> {
-  (p <*> many(p)).map2( fun(x,xs) { Cons(x,xs) } )
-}
-
-function many( p : parser<a> ) : parser<list<a>> {
-  return fun(s) { manyx(p,s) }
-}
-
-function manyx( p : parser<a>, s : string ) : div maybe<(list<a>,string)> {
-  match(p(s)) {
-    Nothing -> Just(([],s))
-    Just(x) -> match(manyx(p,x.snd)) {
-      Nothing -> Nothing
-      Just(y) -> Just((Cons(x.fst,y.fst),y.snd))
-    }
-  }
-}
-
-function string( r: string ) : parser<string> {
-  satisfy("(" + r + ")").map( fun(cap) { cap.groups[1] })
-}
-
-function satisfy( r: string ) : parser<matched> {
-  return fun(s) {
-    match(s.find(regex(@"^\s*" + r, ignoreCase=True))) {
-      Just(cap) -> {
-        trace("satisfy: " + cap.matched)
-        Just((cap,s.substr1(cap.next)))
-      }
-      Nothing   -> Nothing
-    }
-  }
-}
-
-function succeed( x : a ) : parser<a> {
-  return fun(s) { Just((x,s)) }
-}
-
-// --------------------------------------------------------------
-// Default metadata
-// --------------------------------------------------------------
-
-function filterModed( mdata :metadata ) : <div> metadata {
-  val modes = mdict()
-  mdata.map( fun(kv) {
-    //trace("filter: " + kv.fst)
-    match(modes.unMode(kv.fst,mdata)) {
-      Just(key) -> Just((key,kv.snd))
-      Nothing   -> Nothing
-    }
-  }).concatMaybe
-}
-
-
-function unMode( modes : mdict<h,bool>, key0 : string, mdata : metadata ) : <div,st<h>> maybe<string> {
-  val key = key0.toLower
-  match(key.find(rxModed)) {
-    Nothing   -> Just(key) 
-    Just(cap) -> {
-      val neg  = cap.groups[1] == "no"
-      val mode = cap.groups[2]
-      val isTrue = (mode=="" || modes.getMode(mode,mdata))
-      val keep = ((isTrue && !neg) || (!isTrue && neg))
-      if (keep)
-       then unMode(modes, cap.groups[3], mdata)
-       else Nothing
-     }
-   }
-}
-
-function getMode( modes : mdict<h,bool>, mode : string, mdata : metadata ) : <div,st<h>> bool {
-  match(modes[mode]) {
-    Just(value) -> value
-    Nothing -> {
-      modes[mode] := False  // prevent infinite recursion
-      val mbRes = mdata.reverse.foreachUntil( fun(kv) { 
-        val key = kv.fst.toLower
-        match( key.find(rxModedKey)) {
-          Nothing   | key==mode -> Just(kv.snd) 
-          Just(cap) | cap.groups[1].trim.toLower == mode -> {
-            match(modes.unMode(kv.fst,mdata)) { // may recurse
-              Just(_) -> Just(kv.snd)
-              Nothing -> Nothing
-            }
-          }
-          _ -> Nothing
-        }        
-      })
-      match(mbRes) {
-        Just(raw) -> {
-          val value = raw.trim.toLower
-          val res = (value=="true" || value=="1")
-          modes[mode] := res
-          res        
-        }
-        Nothing     -> False
-      }
-    }
-  }
-}
-
-
-val rxModed = regex(@"@(no)?([\w\-]*)(?: *)(.*)")
-val rxModedKey = regex(@"@[\w\-@]+ +(.*)")
 
 // --------------------------------------------------------------
 // Default metadata
@@ -578,28 +264,20 @@ val rxModedKey = regex(@"@[\w\-@]+ +(.*)")
 
 function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ "Tex: False", "Html: False", "Tex2: False","Maketitle: False",
+      // should match the values in options.kk
+      "Heading Depth: 3", 
+      "Toc Depth: 3", 
+      "Heading Base: 2", 
+      "Tex Section Num: False",
+      "Prelude: prelude",
+      "Cite Style: numeric",
+      "Math mode: static",
+      // formatter
       fmt.showFormatter + ": True",
+      // legacy for old prelude
       @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
     ] +
-    list(1,6).map fun(d) { heading(d,options.headingDepth,options.tocDepth) }
-    +
     ["\n"]
   ).join("\n") 
-}
-
-function heading( depth : int, headingDepth : int, tocDepth : int ) {
-  val label = list(1,depth).map( fun(d){ headingCounter(d) } ).join(".")
-  val num   = depth.show
-  ["~h" + num + ": ", 
-   (if (depth > 1) then headingCounter(depth) else ""),
-   " label='[" + label + "]{.heading-label}'",
-   (if (depth > headingDepth) then "" else " before='[&label;.&ensp;]{.heading-before}'"),
-   (if (depth > tocDepth) then "" else " toc")].join
-}
-
-// Generate a heading counter "headingCounter(2)" becomes "@h1-h2".
-// The prefix "h1-" ensures this counter resets on "@h1" increments.
-function headingCounter( depth : int) : string {
-  "@" + list(1,depth).map( fun(i) { "h" + i.show } ).join("-")
 }
 
