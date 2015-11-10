@@ -128,7 +128,7 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
 val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
 val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
 val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b)|$))"
-val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[.\n]|'(?:[^\\']|\\[.\n])*'|""(?:[^\\""]|\\[.\n])*""|/(?:[^\\/\n]|\\.)*/)"
+val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:[^\\""]|\\[\s\S])*""|/(?:[^\\/\n]|\\.)*/)"
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
 val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\}\s*)"
 
