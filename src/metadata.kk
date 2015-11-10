@@ -97,43 +97,51 @@ function makeKey(k,pre,value,rawvalue,lineMap,lines,isMatching) : ckey {
 
 function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metadata : cmetadata = [], verbose : bool = False, lines : int = 0 ) : div (cmetadata,string,int) 
 { 
-  match(txt.find(rxSupports)) {
+  match(txt.find(rxMetaComment)) {
     Just(cap) -> {
-      val body = parsePlainMeta(cap.groups[2].trim.unindent, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
-      if (verbose) trace("meta data: @if " +  cap.groups[1].trim + ": " + cap.groups[2].trim.unindent)
-      val support = Support(cap.groups[1].trim, body.fst, translateLine(lineMap,lines+1))
-      val lines2 = txt.substr(0,cap.next).count("\n")
-      parsePlainMeta( txt.substr1(cap.next), fmt, lineMap, Cons(support,metadata), verbose, lines + lines2 )
+      parsePlainMeta(txt.substr1(cap.next), fmt, lineMap, metadata, verbose, lines + txt.substr(0,cap.next).count("\n"))
     }
-    Nothing -> match(txt.find(rxMeta)) {
-      Nothing   -> {
-        //trace("metadata end: " + txt.substr(0,100))
-        (metadata.reverse,txt,lines)
-      }
-      Just(cap) -> {
-        val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
-        val value    = rawvalue.joinLines.trim
-        if (verbose) trace("meta data: " + cap.groups[2] + ": " + value )
-        val rawkeys = //if (cap.groups.matchedOn(3)) then 
-                      cap.groups[2].split(",").list.map(trim)
-                      //else [cap.groups[2]]     
-        val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
-        val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lineMap,lines,(cap.groups[5]=="}")) } );                
-        val lines2 = txt.substr(0,cap.next).count("\n")
-        parsePlainMeta( txt.substr1(cap.next), fmt,lineMap, kvs + metadata, verbose, lines+lines2 )
+    Nothing -> {
+      match(txt.find(rxSupports)) {
+        Just(cap) -> {
+          val body = parsePlainMeta(cap.groups[2].trim.unindent, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
+          if (verbose) trace("meta data: @if " +  cap.groups[1].trim + ": " + cap.groups[2].trim.unindent)
+          val support = Support(cap.groups[1].trim, body.fst, translateLine(lineMap,lines+1))
+          val lines2 = txt.substr(0,cap.next).count("\n")
+          parsePlainMeta( txt.substr1(cap.next), fmt, lineMap, Cons(support,metadata), verbose, lines + lines2 )
+        }
+        Nothing -> match(txt.find(rxMeta)) {
+          Nothing   -> {
+            //trace("metadata end: " + txt.substr(0,100))
+            (metadata.reverse,txt,lines)
+          }
+          Just(cap) -> {
+            val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
+            val value    = rawvalue.joinLines.trim
+            if (verbose) trace("meta data: " + cap.groups[2] + ": " + value )
+            val rawkeys = //if (cap.groups.matchedOn(3)) then 
+                          cap.groups[2].split(",").list.map(trim)
+                          //else [cap.groups[2]]     
+            val pre = if (cap.groups[1] != "") then "@" + cap.groups[1] + " " else ""
+            val kvs = rawkeys.map( fun(k) { makeKey(k,pre,value,rawvalue,lineMap,lines,(cap.groups[5]=="}")) } );                
+            val lines2 = txt.substr(0,cap.next).count("\n")
+            parsePlainMeta( txt.substr1(cap.next), fmt,lineMap, kvs + metadata, verbose, lines+lines2 )
+          }
+        }
       }
     }
   }
 } 
-val rxMetaComment = @"(?:\s*<!--[\s\S]*?-->(?: *\n)+)*"
+
 val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
-val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b)|$))"
+val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b|<!--)|$))"
 val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:[^\\""]|\\[\s\S])*""|/(?:[^\\/\n]|\\.)*/)"
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
 val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\}\s*)"
 
-val rxMeta        = regex(@"^"+ rxMetaComment + rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
-val rxSupports    = regex(@"^"+ rxMetaComment + @"@(?:if|supports)\b([^\n\{]*)" + rxMetaGroup)
+val rxMetaComment = regex(@"^(?:\s*<!--[\s\S]*?-->(?: *\n)+)+")
+val rxMeta        = regex(@"^"+ rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
+val rxSupports    = regex(@"^@(?:if|supports)\b([^\n\{]*)" + rxMetaGroup)
 
 
 // --------------------------------------------------------------
