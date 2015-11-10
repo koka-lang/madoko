@@ -585,3 +585,15 @@ public function unquote( s : string ) : string {
   elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
   else s
 }
+
+public function unindent( txt : string ) : string {
+  val lines = txt.lines.list
+  val cindent = lines.filter(fun(s) { !s.contains(regex(@"^\s*$")) })
+                     .map(fun(s) { match(s.find(regex(@"^\s*"))) {
+    Nothing   -> 0
+    Just(cap) -> cap.matched.length
+  }}).minimum
+  if (cindent <= 0) 
+   then txt
+   else lines.map( fun(s) { s.substr(cindent) }).join("\n")
+}
