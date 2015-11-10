@@ -1,5 +1,6 @@
 Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
 
+<!-- standard elements -->
 ~Article  : html-elem='article'
 ~Section  : html-elem='section' 
 ~Aside    : html-elem='aside'
@@ -29,6 +30,7 @@ Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madok
 ~Dl       : @dl-li=decimal
 .li-label : display=inline-block width=2.5em margin-left=-3em margin-right=0.5em text-align=right
 
+<!-- special input -->
 ~Tex            : input=tex notag
 .TexRaw         : input=texraw
 .HtmlRaw        : input=htmlraw
@@ -42,7 +44,41 @@ Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madok
 ~math-display   : input=math
 .hidden         : display=none
 
+<!-- heading elements -->
+h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
+h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
+h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" }
 
+.heading-num {
+  after=".&ensp;"
+}
+
+@if heading-depth>=1 {
+  h1 { before: "[&label;]{.heading-num}" }
+}
+@if heading-depth>=2 {
+  h2 { before: "[&label;]{.heading-num}" }
+}
+@if heading-depth>=3 {
+  h3 { before: "[&label;]{.heading-num}" }
+}
+@if heading-depth>=4 {
+  h4 { before: "[&label;]{.heading-num}" }
+}
+@if toc-depth>=1 {
+  h1 { toc }
+}
+@if toc-depth>=2 {
+  h2 { toc }
+}
+@if toc-depth>=3 {
+  h3 { toc }
+}
+@if toc-depth>=4 {
+  h4 { toc }
+}
+
+<!-- custom elements -->
 ~Snippet        : input=math .block snippet-needpdf=true
 ~Footnote       : label='[@footnote]{.footnote-label}' line-adjust=0
 @html ~Footnote : before='[\/^&label;.^]{.footnote-before}'
