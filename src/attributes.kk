@@ -58,7 +58,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
 {
   if (attrsStr=="" && source=="") then return attrs0
   val attrsx = attrs0(empty=False, sticky=False, source=source, 
-                      text=attrs0.text + " " + attrsStr,
+                      text=attrs0.text + " ; " + attrsStr,
                       classes=[])
 
   val kvs = attrsStr.joinLines.parseAttributes  // join lines here.
