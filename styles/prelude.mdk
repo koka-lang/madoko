@@ -1,4 +1,5 @@
 Package         : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
+Logo            : False
 Tex2            : True
 Tex2x           : False
 Maketitle       : False
@@ -68,6 +69,20 @@ math-display    { input: math }
 
 .hidden         { display: none }
 .noindent       { text-indent: 0em }
+.align-center   { text-align: center }
+
+.booktable {
+  rule-top-width          : 2px;
+  rule-bottom-width       : 2px 
+  rule-mid-width          : 1.35px;
+  thead-tr-font-weight    : normal;
+  rule-top-sep            : 4pt;
+  rule-bottom-sep         : 4pt;
+  rule-mid-sep            : 3pt; 
+  thead-tr-1-padding-top  : 3pt;
+  thead-tr-padding-bottom : 3pt;
+}
+
 
 <!-- heading elements -->
 h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
@@ -185,121 +200,148 @@ Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
 }
 
 <!-- figures -->
-~TableFigure    : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table
-~Figure         : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure
+TableFigure {
+  label: '[@tablefigure]{.table-label}';
+  toc: tot; .floating ; float-env: table; float-name: Table;
+}
+Figure {
+  label: '[@figure]{.figure-label}';
+  toc=tof; .floating ; float-env: figure; float-name: Figure;
+}
 
-.Floating       : .align-center elem=floating html-elem=figure
-.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{tag: false}&nl;'
-.Floating       : toc-line='&label;. &caption;'
+.Floating {
+  .align-center;
+  elem      : floating;
+  html-elem : figure;
+  toc-line  : '&label;. &caption;';
+  after: '&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption;html-elem:fig-caption}&nl;{tag:false}&nl;';
+}
 
-~SubFigureRow   : .columns .align-center
-~SubFigure      : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''
-                    after='&br;&smallskip;[&toc-line;]{.subfig-caption}' tight text-align=center .column
-                    toc-line='[&fig-label; ]{.caption-before} &caption;'
-                    toc=tof toc-depth=2
+SubFigureRow { .columns; .align-center }
+SubFigure {
+  @SubFigure: lower-alpha;
+  label     : '@Figure@SubFigure';
+  fig-label : '(@SubFigure)';
+  caption   : '';
+  after     : '&br;&smallskip;[&toc-line;]{.subfig-caption}';
+  tight     : true;
+  text-align: center;
+  .column;
+  toc-line  : '[&fig-label; ]{.caption-before} &caption;';
+  toc       : tof;
+  toc-depth : 2;
+}
 
 <!-- bibliographies -->
-~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'
-            before='[\[&label;\]\ \ ]{.bibitem-before}' tight
-~Bibitem  : replace='?if &bib-search-url; && &searchterm;\
-                     ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'
-@html Bib Search Url: www.bing.com
+Bibitem {
+  label     : '[@bibitem]{.bibitem-label}';
+  cite-label: '&label;';
+  tight     : true;
+  replace   : '?if &bib-search-url; && &searchterm; ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}';
+}
+
+Bib Search Url: 
+@if html { 
+  Bib Search Url: www.bing.com
+}
+@if not( tex ) {
+  Bibliography { before: "# References {-}&nl;" }
+  Bibitem      { before: '[\[&label;\]\ \ ]{.bibitem-before}' }
+}
 
 
-.booktable:  
-  rule-top-width=2px rule-bottom-width=2px 
-  rule-mid-width=1.35px thead-tr-font-weight=normal   
-  rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
-  thead-tr-1-padding-top=3pt thead-tr-padding-bottom=3pt
 
-Tex Section Num: false
-Heading Base   : 2
+<!-- tex commands -->
+@if tex {
+  Tex2x     : True
+  maketitle : true
+}
 
-Tex2      : True
-@tex Tex2x: True
+H0       { tex-cmd: "\chapter"; display: block }
+H1       { tex-cmd: "\section"; display: block }
+H2       { tex-cmd: "\subsection"; display: block }
+H3       { tex-cmd: "\subsubsection"; display: block }
+H4,H5,H6 { tex-cmd: "\paragraph"; display: block }
+HR       { tex-cmd: "\mdhr"; display: block }
+Pre      { tex-env: mdpre }
+Abstract { tex-env: abstract }
 
-Logo      : False
-~H0       : tex-cmd=\chapter display=block
-~H1       : tex-cmd=\section display=block
-~H2       : tex-cmd=\subsection display=block
-~H3       : tex-cmd=\subsubsection display=block
-~H4,~H5,~H6: tex-cmd=\paragraph display=block
-~HR       : tex-cmd=\mdhr display=block
-~Pre      : tex-env=mdpre 
-~Abstract : tex-env=abstract
-~Figure   : tex-env-outer=figure[&tex-float-placement;] tex-float-placement="tbp"
-~TableFigure: tex-env-outer=table[&tex-float-placement;] tex-float-placement="tbp"
-.figure-caption: tex-cmd=\mdcaption
-.caption-text  : tex-cmd=\mdcaptiontext
-.wide     : tex-env-postfix=*
-.figure-label  : tex-cmd=\mdcaptionlabel
-.table-label   : tex-cmd=\mdcaptionlabel
-~Li       : tex-cmd-before=\item
-~Ul       : tex-env=itemize 
-~Ol       : tex-env=enumerate 
-~Dl       : tex-env=mddefinitions
-~Dt       : tex-cmd=\mddefterm .noindent
-~Dd       : tex-env=mddefdata
-~Code     : tex-cmd=\mdcode
-.Pretty   : tex-cmd-before=\mdpretty
-~Strong   : tex-cmd=\textbf
-~Em       : tex-cmd=\emph
-~Sup      : tex-cmd=\mdsup
-~Sub      : tex-cmd=\mdsub
-~Del      : tex-cmd=\mddel
-~BlockQuote: tex-env=quote
-.Columns  : tex-tabcolsep=0pt
-.Column   : tex-env-outer=mdcolumn
-.inst     : tex-cmd=\mdinst
-@Tex2 ~Th : font-weight=bold
+Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
+TableFigure     { tex-env-outer: "table[&tex-float-placement;]"; tex-float-placement: "tbp" }
+.figure-caption { tex-cmd: "\mdcaption" }
+.caption-text   { tex-cmd: "\mdcaptiontext" }
+.wide           { tex-env-postfix: "*" }
+.figure-label   { tex-cmd: "\mdcaptionlabel" }
+.table-label    { tex-cmd: "\mdcaptionlabel" }
 
-@Tex@Tex-Section-Num .heading-before: display=none
-
-~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par" 
-@notex ~Bibliography: before="# References {-}&nl;"
-~BibItem  : tex-cmd-before="\bibitem&tex-bibitem-args;" label="@bibitem"
-@tex ~BibItem: before=clear
-.Newblock : tex-cmd-before="\newblock "
-~toc      : tex-env=mdtoc
-~tocblock : tex-env=mdtocblock
-~tocitem  : tex-env="mdtocitem{&toctarget;}"
-
-.align-center   : text-align=center
+Li       { tex-cmd-before: "\item" }
+Ul       { tex-env: "itemize"  }
+Ol       { tex-env: "enumerate"  }
+Dl       { tex-env: "mddefinitions" }
+Dt       { tex-cmd: "\mddefterm"; .noindent }
+Dd       { tex-env: "mddefdata" }
+Code     { tex-cmd: "\mdcode" }
+.Pretty  { tex-cmd-before: "\mdpretty" }
+Strong   { tex-cmd: "\textbf" }
+Em       { tex-cmd: "\emph" }
+Sup      { tex-cmd: "\mdsup" }
+Sub      { tex-cmd: "\mdsub" }
+Del      { tex-cmd: "\mddel" }
+BlockQuote{ tex-env: "quote" }
+.Columns  { tex-tabcolsep: "0pt" }
+.Column   { tex-env-outer: "mdcolumn" }
+.inst     { tex-cmd: "\mdinst" }
 .equation-before: tex-cmd=\mdmathtag
 
+Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"  }
+BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; label: "@bibitem" }
+.Newblock    { tex-cmd-before="\newblock " }
+toc          { tex-env:mdtoc }
+tocblock     { tex-env:mdtocblock }
+tocitem      { tex-env:"mdtocitem{&toctarget;}" }
 
-@tex maketitle            : true
 
-@maketitle ~Author        : display=inline-block 
-@maketitle ~TitleBlock    : display=inline-block 
-@maketitle ~TitleHeader,~Authors,~AuthorRow: tag: false
-@maketitle ~Author        : tex-cmd-before=\mdxauthorstart tex-cmd-after=\mdxauthorend display=table-cell
-@maketitle ~TitleBlock    : tex-cmd-before=\mdxtitleblockstart tex-cmd-after=\mdxtitleblockend display=block
-@maketitle ~Title         : tex-cmd=\mdxtitle
-@maketitle ~Subtitle      : tex-cmd=\mdxsubtitle
-@maketitle ~TitleNote     : tex-cmd=\mdxtitlenote
-@maketitle ~TitleFooter   : tex-cmd=\mdxtitlefooter
-@maketitle ~AuthorName    : tex-cmd=\mdxauthorname
-@maketitle ~AuthorAddress : tex-cmd=\mdxauthoraddress
-@maketitle ~AuthorNote    : tex-cmd=\mdxauthornote
-@maketitle ~AuthorEmail   : tex-cmd=\mdxauthoremail
+@if tex2 {
+  Th { font-weight: "bold" }
+}
 
-~TitleBlock,~TitleHeader  : tight
-~Title,~Subtitle          : tight
-~TitleNote,~TitleFooter   : tight  
-~Authors,~AuthorRow,~Author: tight
-~AuthorName,~AuthorAddress: tight
-~AuthorEmail,~AuthorNote  : tight 
+@if tex and tex-section-num {
+  .heading-before { display: none }
+}
 
-@nomaketitle ~TitleBlock,~TitleHeader,~Authors,~TitleFooter: .align-center
-@nomaketitle ~TitleBlock,~Title,~Subtitle,~TitleNote:.para-block
+<!-- tex author block -->
+TitleBlock,TitleHeader,Title,Subtitle           { tight: true }
+TitleNote,TitleFooter,Authors,AuthorRow,Author  { tight: true }
+AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
 
-@nomaketitle ~Authors     : width=80%
-@nomaketitle ~AuthorRow   : .columns margin-top=2ex width=100% 
-@nomaketitle ~Author      : .column text-align=center
-@nomaketitle .AuthorEmail : .email
 
-@nomaketitle ~Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
-@nomaketitle ~Subtitle    : font-size=x-large margin-bottom=0.5ex
-@nomaketitle ~AuthorName  : font-size=large
-@nomaketitle ~TitleFooter : margin-top=0.5ex
+@if maketitle {
+  Author        { display: inline-block  }
+  TitleBlock    { display: inline-block  }
+  TitleHeader,Authors,AuthorRow { tag: false }
+  Author        { tex-cmd-before:"\mdxauthorstart"; tex-cmd-after:"\mdxauthorend"; display:table-cell }
+  TitleBlock    { tex-cmd-before:"\mdxtitleblockstart"; tex-cmd-after:"\mdxtitleblockend"; display:block }
+  Title         { tex-cmd:"\mdxtitle" }
+  Subtitle      { tex-cmd:"\mdxsubtitle" }
+  TitleNote     { tex-cmd:"\mdxtitlenote" }
+  TitleFooter   { tex-cmd:"\mdxtitlefooter" }
+  AuthorName    { tex-cmd:"\mdxauthorname" }
+  AuthorAddress { tex-cmd:"\mdxauthoraddress" }
+  AuthorNote    { tex-cmd:"\mdxauthornote" }
+  AuthorEmail   { tex-cmd:"\mdxauthoremail" }
+}
+
+@if not( maketitle ) {
+  TitleBlock,TitleHeader,Authors,TitleFooter  { .align-center }
+  TitleBlock,Title,Subtitle,TitleNote         { .para-block }
+
+  Authors       { width: 80% }
+  AuthorRow     { .columns; margin-top: 2ex; width: 100% } 
+  Author        { .column; text-align: center }
+  .AuthorEmail  { .email }
+
+  Title         { font-size: xx-large; font-weight: bold; margin-bottom: 0.5ex }
+  Subtitle      { font-size: x-large; margin-bottom: 0.5ex }
+  AuthorName    { font-size: large }
+  TitleFooter   { margin-top: 0.5ex }
+}
