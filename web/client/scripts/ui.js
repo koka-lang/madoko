@@ -2572,7 +2572,7 @@ var UI = (function() {
     return breakLines(paraText, column || 72, hang0, hang);
   }
 
-  function reformatText( lineNo, text, column ) {
+  function reformatText( pos, text, column ) {
     function isBlank(line) {
       return /^\s*$/.test(line);
     }
@@ -2584,6 +2584,7 @@ var UI = (function() {
     }
 
     // split in lines
+    var lineNo = pos.lineNumber;
     var lines = text.split("\n");
     if (lineNo <= 0 || lineNo > lines.length || isBlank(lines[lineNo-1])) return null;
 
@@ -2591,6 +2592,7 @@ var UI = (function() {
     var start = lineNo;
     var end = lineNo;
     var content = "";
+    var newpos = null;
 
     // test reformat table or paragraph..
     if (rxTable.test(lines[start-1])) {
@@ -2604,6 +2606,7 @@ var UI = (function() {
       var table = lines.slice(start-1,end);
       if (table.length <= 0) return null;
       content = reformatTable(table,column); 
+      newpos = pos;
     }
     else {
       // find paragraph extent
@@ -2617,23 +2620,29 @@ var UI = (function() {
       if (para.length <= 0) return null;
 
       content = reformatPara(para,column);
+      if (end>lineNo || lines[end-1].length+1 > pos.column) newpos = pos; // try maintain current position..
     }
     if (content === null) return null;
 
     var endColumn = lines[end-1].length+1;
-    return { text: content, startLine: start, endLine: end, endColumn: endColumn };
+    return { text: content, startLine: start, endLine: end, endColumn: endColumn, newpos: newpos };
   }
 
   UI.prototype.onFormatPara = function() {
     var self = this;
     var pos = self.editor.getPosition();
     var text = self.getEditText();
-    var res = reformatText( pos.lineNumber, text );
+    var res = reformatText( pos, text );
     if (res) {
       var rng = new Range.Range( res.startLine, 1, res.endLine, res.endColumn );
       var command = new ReplaceCommand.ReplaceCommand( rng, res.text );
       self.editor.executeCommand("madoko",command);
-      self.editor.setPosition(pos);
+      if (res.newpos) {
+        self.editor.setPosition(res.newpos,true,false,true);
+      }
+      else {
+        self.editor.revealPosition({lineNumber:pos.lineNumber, column: 1},false,true);
+      }
     }
   }
 
