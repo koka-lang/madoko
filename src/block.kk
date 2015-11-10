@@ -157,7 +157,7 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
     lines.map(fun(line) { line + "\n" }).join
   }
   function mkblock( name, content : list<string>, lineno = context.lineNo ) : list<string> {
-    if (content.isNil) then [] else ["~ Begin " + name + " { line-adjust=0 line=" + lineno.show + " }"] + content + ["~ End " + name]
+    if (content.isNil) then [] else ["~ Begin " + name + " { line-adjust:0; line:" + lineno.show + " }"] + content + ["~ End " + name]
   }
   function entry(name, className = name) {
     match(context.metadata[name]) {
@@ -201,7 +201,7 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
         mkblock("Authors", list(1,authorCount).group(readInt("author-columns",3)).concat(authorRow) ),
         entry("title-footer","TitleFooter")
       ].concat.join("\n")
-    Div( [], "line-adjust=0".parseAttrs("titleblock",source=titleBlock))
+    Div( [], "line-adjust:0".parseAttrs("titleblock",source=titleBlock))
   }
   else {
     Special(cap.groups[1],cap.groups[2])
