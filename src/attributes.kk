@@ -18,7 +18,7 @@ import entity
 public function parseAttrs( attrStr : string, elemName : string = "", source : string = "" ) : attrs {
   if (attrStr == "" && elemName == "" && source=="") return attrsNone
   val attrs0 = Attrs() // source=source,classes=if (className=="") then [] else [className])
-  attrs0.extendAttrs( (if (elemName!="") then "elem='" + elemName + "' " else "") + attrStr, source )
+  attrs0.extendAttrs( (if (elemName!="") then "elem:'" + elemName + "'; " else "") + attrStr, source )
 }
 
 public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
@@ -49,7 +49,7 @@ function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool>
   val keys0 = extra + attrs.classes.map( fun(cname) { "." + cname.definitionId } ) 
   val keys1 = keys0.filter( fun(key) { visited[key].isNothing } )
   val visited1 = visited + keys1.map( fun(key) { (key,True) } ).dict
-  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(";")
+  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(" ; ")
   return (def,visited1)
 }
 
@@ -225,7 +225,7 @@ val parseAttributes : (string) -> list<(string,string,string)> = smemo(parseAttr
 
 function parseAttributesX( s : string ) : list<(string,string,string)> 
 {
-  val res = parseAttributesAcc( s, [] )  
+  val res = parseAttributesAcc( s, s, [] )  
   /*
   trace("attributes: " + s + "\n parsed: " + res.map(fun(kvv) {
       val (key,_kwvalue,value) = kvv
@@ -236,23 +236,23 @@ function parseAttributesX( s : string ) : list<(string,string,string)>
   res
 }
 
-function parseAttributesAcc( s : string, acc : list<(string,string,string)> ) : list<(string,string,string)>
+function parseAttributesAcc( original : string, s : string, acc : list<(string,string,string)> ) : list<(string,string,string)>
 {
   if (s=="") return acc.reverse
   match(s.find(rxAttr)) {
     Nothing -> match(s.find(rxSep)) {
       Nothing -> match(s.find(rxNoSep)) {
         Nothing -> {
-          warning("invalid attribute: " + s )
+          warning("invalid attribute: " + s + "\n  in: " + original )
           acc.reverse
         }
         Just(cap) -> {
-          warning("invalid attribute: " + cap.matched)
-          parseAttributesAcc( s.substr1(cap.next), acc )
+          warning("invalid attribute: " + cap.matched + "\n  in: " + original )
+          parseAttributesAcc( original, s.substr1(cap.next), acc )
         }
       }
       Just(cap) -> {
-        parseAttributesAcc( s.substr1(cap.next), acc )
+        parseAttributesAcc( original, s.substr1(cap.next), acc )
       }
     }
     Just(cap) -> {
@@ -261,7 +261,7 @@ function parseAttributesAcc( s : string, acc : list<(string,string,string)> ) : 
       val kwvalue = if (values.length==1 && !(value.startsWith("\"") || value.startsWith("'")))
                      then value else ""
       val res     = (cap.groups[1].toLower,kwvalue,value)                     
-      parseAttributesAcc( s.substr1(cap.next), Cons(res,acc))                     
+      parseAttributesAcc( original, s.substr1(cap.next), Cons(res,acc))                     
     }
   }
 }

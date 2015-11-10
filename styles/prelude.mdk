@@ -214,7 +214,7 @@ Figure {
   elem      : floating;
   html-elem : figure;
   toc-line  : '&label;. &caption;';
-  after: '&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption;html-elem:fig-caption}&nl;{tag:false}&nl;';
+  after: '&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption; html-elem:fig-caption}&nl;{tag:false}&nl;';
 }
 
 SubFigureRow { .columns; .align-center }
