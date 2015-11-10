@@ -1,48 +1,58 @@
-Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
+Package         : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
+Tex2            : True
+Tex2x           : False
+Maketitle       : False
+Heading Depth   : 3 
+Toc Depth       : 3 
+Heading Base    : 2
+Tex Section Num : False
+Cite Style      : numeric
+Math mode       : static
 
 <!-- standard elements -->
-~Article  : html-elem='article'
-~Section  : html-elem='section' 
-~Aside    : html-elem='aside'
-~Nav,.Toc : html-elem='nav'
+Article   { html-elem:article }
+Section   { html-elem:section }
+Aside     { html-elem:aside }
+Nav,.Toc  { html-elem:nav }
 
-.Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'
-~Remark   : .Note caption='Remark'
-.Todo     : .Note caption='Todo'
-~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}'
+.Note     { .block; before: "[**[&caption;]{.note-caption}**. ]{.note-before}&nl;"; caption:"Note" }
+Remark    { .Note; caption: "Remark" }
+.Todo     { .Note; caption: "Todo" }
+Proof     { .block; before: "[**Proof**. [&caption;]{.thm-caption}]{.proof-before}" }
 
-.Framed   : border-style=solid border-color=black border-width=1px
-~Center   : .align-center
-~Remote   : tight margin-bottom=0pt
+.Framed   { border: solid black 1px }
+Center    { .align-center }
+Remote    { tight margin-bottom: 0pt }
 
-~Pre      : input=pre .para-block
-~Code     : input=pre
-~Hr       : .madoko
-~Table    : .madoko
-~Dd       : html-elem=dd margin-left=1.5em
-~Dt       : html-elem=dt font-weight=bold
+Pre       { input: pre; .para-block }
+Code      { input: pre }
+Hr        { .madoko }
+Table     { .madoko }
+Dd        { html-elem: dd; margin-left: 1.5em }
+Dt        { html-elem: dt; font-weight: bold }
 
-.Ul-Li    : @ul-li label="[(@ul-li)]{.ul-li-label}"
-.Ol-Li    : @ol-li label="[(@ol-li)]{.ol-li-label}"
-.Dl-Li    : @dl-li label="[(@dl-li)]{.dl-li-label}"
-~Ol       : @ol-li=decimal
-~Ul       : @ul-li=decimal
-~Dl       : @dl-li=decimal
-.li-label : display=inline-block width=2.5em margin-left=-3em margin-right=0.5em text-align=right
+<!-- lists -->
+.Ul-Li    { @ul-li; label: "[(@ul-li)]{.ul-li-label}" }
+.Ol-Li    { @ol-li; label: "[(@ol-li)]{.ol-li-label}" }
+.Dl-Li    { @dl-li; label: "[(@dl-li)]{.dl-li-label}" }
+Ol        { @ol-li: decimal }
+Ul        { @ul-li: decimal }
+Dl        { @dl-li: decimal }
+.li-label { display: inline-block; width: 2.5em; margin-left: -3em; margin-right: 0.5em; text-align: right }
 
 <!-- special input -->
-~Tex            : input=tex notag
-.TexRaw         : input=texraw
-.HtmlRaw        : input=htmlraw
-.MathInline     : input=math
-~MathDisplay    : input=math .para-block
-~MathPre        : input=mathpre .para-block
-~MathDefs       : input=mathdefs 
-~HtmlOnly       : input=htmlonly notag
-~TexOnly        : input=texonly notag
-~math-inline    : input=math
-~math-display   : input=math
-.hidden         : display=none
+.TexRaw         { input: texraw }
+.HtmlRaw        { input: htmlraw }
+.MathInline     { input: math }
+MathDisplay     { input: math; .para-block }
+MathPre         { input: mathpre; .para-block }
+MathDefs        { input: mathdefs; }
+HtmlOnly        { input: htmlonly; tag: false }
+Tex             { input: tex; tag: false }
+TexOnly         { input: texonly; tag: false }
+math-inline     { input: math }
+math-display    { input: math }
+.hidden         { display: none }
 
 <!-- heading elements -->
 h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
@@ -54,16 +64,16 @@ h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" 
 }
 
 @if heading-depth>=1 {
-  h1 { before: "[&label;]{.heading-num}" }
+  h1 { before: "[&label;]{.heading-before}" }
 }
 @if heading-depth>=2 {
-  h2 { before: "[&label;]{.heading-num}" }
+  h2 { before: "[&label;]{.heading-before}" }
 }
 @if heading-depth>=3 {
-  h3 { before: "[&label;]{.heading-num}" }
+  h3 { before: "[&label;]{.heading-before}" }
 }
 @if heading-depth>=4 {
-  h4 { before: "[&label;]{.heading-num}" }
+  h4 { before: "[&label;]{.heading-before}" }
 }
 @if toc-depth>=1 {
   h1 { toc }
@@ -127,7 +137,7 @@ LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
 ~Figure         : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure
 
 .Floating       : .align-center elem=floating html-elem=figure
-.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'
+.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{tag: false}&nl;'
 .Floating       : toc-line='&label;. &caption;'
 
 ~SubFigureRow   : .columns .align-center
@@ -227,7 +237,7 @@ Logo      : False
 
 @maketitle ~Author        : display=inline-block 
 @maketitle ~TitleBlock    : display=inline-block 
-@maketitle ~TitleHeader,~Authors,~AuthorRow: notag
+@maketitle ~TitleHeader,~Authors,~AuthorRow: tag: false
 @maketitle ~Author        : tex-cmd-before=\mdxauthorstart tex-cmd-after=\mdxauthorend display=table-cell
 @maketitle ~TitleBlock    : tex-cmd-before=\mdxtitleblockstart tex-cmd-after=\mdxtitleblockend display=block
 @maketitle ~Title         : tex-cmd=\mdxtitle
