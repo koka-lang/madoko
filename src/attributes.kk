@@ -131,6 +131,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     elif (name=="notag") {
       acc(notag=value.toBool)
     }
+    elif (name=="tag") {
+      acc(notag= !value.toBool)
+    }
     elif (name=="line") {
       match(value.parseInt()) {
         Nothing -> {
