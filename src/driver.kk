@@ -544,13 +544,13 @@ function include( text : string, fast : bool, inName : string, outName : string,
 
   function processIncludes( txt : string, fname : string ) : io (int,lineMap,string)
   {
-    val prelude = match(txt.find(rxPrelude)) {
-      Just(cap) -> {
+    val prelude = match(txt.findAll(rxPrelude).list.reverse) { // find last prelude definition
+      Cons(cap) -> {
         val value = cap.groups[1]
         val lvalue = value.toLower()
         if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else value
       }
-      Nothing   -> options.prelude
+      Nil -> options.prelude
     }
     processIncludesRec(txt,fname,1,prelude)
   }
