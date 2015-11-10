@@ -263,15 +263,7 @@ function contains( xs : list<string>, s : string ) : bool {
 // --------------------------------------------------------------
 
 function defaultMeta( options : options, fmt : formatter ) : string {
-  ( [ "Tex: False", "Html: False", "Tex2: False","Maketitle: False",
-      // should match the values in options.kk
-      "Heading Depth: 3", 
-      "Toc Depth: 3", 
-      "Heading Base: 2", 
-      "Tex Section Num: False",
-      "Prelude: prelude",
-      "Cite Style: numeric",
-      "Math mode: static",
+  ( [ "Tex: False", "Html: False", "Prelude: prelude",
       // formatter
       fmt.showFormatter + ": True",
       // legacy for old prelude
