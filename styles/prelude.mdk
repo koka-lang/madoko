@@ -137,30 +137,52 @@ bigskip         : []{display: block; margin-bottom: 2em }
 }
 
 <!-- equations and math -->
-~Equation       : label='[(@equation)]{.equation-label}' 
-                    replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
-                    tight .para-block line-adjust=0
-~Math           : replace='~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
-                    tight .para-block
+Equation {
+  label: "[(@equation)]{.equation-label}";
+  replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-needpdf: "&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  line-adjust: 0;
+  .para-block
+}
 
+Math {
+  replace: '~ Begin MathDisplay { color:"&color;"; math-needpdf:"&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  .para-block
+}
 
-.thm-caption-content: font-style=italic
-thm-caption-end     : &&;br;
-.thm-caption        : replace='?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;'
+.thm-caption-content { font-style: italic }
+.thm-caption         { replace: '?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;' }
+thm-caption-end : &&;br;
 
-~Theorem        : display=block label='[@theorem]{.theorem-label}'
-                    before='[**Theorem\ &label;.** [&caption;]{.thm-caption}]{.theorem-before}'
-~Lemma          : display=block label='[@lemma]{.lemma-label}'
-                    before='[**Lemma\ &label;.** [&caption;]{.thm-caption}]{.lemma-before}'
-~Proposition    : display=block label='[@proposition]{.proposition-label}'
-                    before='[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}'
-~Corollary      : display=block label='[@corollary]{.corollary-label}'
-                    before='[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.corollary-before}'
-~Example        : display=block label='[@example]{.example-label}'
-                    before='[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}'
-~Definition    : display=block label='[@definition]{.definition-label}'
-                    before='[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}'
-~Theorem,~Lemma,~Proof,Corollary,~Proposition,~Example,~Definition  : margin="1ex 0pt"
+Theorem {
+  label: '[@theorem]{.theorem-label}';
+  before: '[**Theorem\ &label;.** [&caption;]{.thm-caption}]{.theorem-before}';
+}
+Lemma {
+  label: '[@lemma]{.lemma-label}';
+  before: '[**Lemma\ &label;.** [&caption;]{.thm-caption}]{.lemma-before}';
+}
+Proposition { 
+  label: '[@proposition]{.proposition-label}';
+  before: '[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}';
+}
+Corollary {
+  label: '[@corollary]{.corollary-label}';
+  before: '[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.corollary-before}';
+}
+Example {
+  label: '[@example]{.example-label}';
+  before: '[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}';
+}
+Definition {
+  label: '[@definition]{.definition-label}';
+  before: '[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}';
+}
+Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
+  display: block;
+  margin: 1ex 0pt;
+}
 
 <!-- figures -->
 ~TableFigure    : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table
