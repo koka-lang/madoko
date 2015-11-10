@@ -31,6 +31,19 @@ Table     { .madoko }
 Dd        { html-elem: dd; margin-left: 1.5em }
 Dt        { html-elem: dt; font-weight: bold }
 
+FlushLeft   { .align-left }
+FlushRight  { .align-right }
+Comment     { display: none }
+
+Snippet     { input: math; .block; snippet-needpdf: true }
+Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
+@if html {
+  Footnote { 
+    before: "[\/^&label;.^]{.footnote-before}";
+    after : "&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}";
+  }
+}
+
 <!-- lists -->
 .Ul-Li    { @ul-li; label: "[(@ul-li)]{.ul-li-label}" }
 .Ol-Li    { @ol-li; label: "[(@ol-li)]{.ol-li-label}" }
@@ -52,14 +65,16 @@ Tex             { input: tex; tag: false }
 TexOnly         { input: texonly; tag: false }
 math-inline     { input: math }
 math-display    { input: math }
+
 .hidden         { display: none }
+.noindent       { text-indent: 0em }
 
 <!-- heading elements -->
 h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
 h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
 h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" }
 
-.heading-num {
+.heading-before {
   after=".&ensp;"
 }
 
@@ -88,69 +103,45 @@ h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" 
   h4 { toc }
 }
 
-<!-- custom elements -->
-~Snippet        : input=math .block snippet-needpdf=true
-~Footnote       : label='[@footnote]{.footnote-label}' line-adjust=0
-@html ~Footnote : before='[\/^&label;.^]{.footnote-before}'
-                  after='&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}'
 
-~FlushLeft      : .align-left
-~FlushRight     : .align-right
-~Comment        : .exclude
-
+<!-- entities -->
 Defaults        : True
 
 lowline         : &#x5F;
-@tex lowline    : &#0818;
-qed             : [&box;]{float=right}
-@tex qed        : [\qed]{input=texraw}
+qed             : [&box;]{float: right}
+vfill           : \/
+@if tex {
+  vfill         : [\vfill]{input: texraw}
+  lowline       : &#0818;
+  qed           : [\qed]{input: texraw}
+}
 eg              : e.g.
 ie              : i.e.
 etal            : et al.
-vfill           : \/
-@tex vfill      : [\vfill]{input=texraw}
 
 LogoLatex       : $\mbox{\LaTeX}$
 LogoTex         : $\mbox{\TeX}$
 LogoLatexe      : $\mbox{\LaTeXe}$
 LogoBibtex      : $\mbox{\sc{Bib}\TeX}$
 LogoAmstex      : $\mbox{\AmSTeX}$
-
-.noindent       : text-indent=0em
-smallskip       : []{display=block margin-bottom=0.5em}
-@tex smallskip  : [\smallskip]{input=texraw}
-medskip         : []{display=block margin-bottom=1em}
-@tex medskip    : [\medskip]{input=texraw}
-bigskip         : []{display=block margin-bottom=2em}
-@tex bigskip    : [\bigskip]{input=texraw}
-
 LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
-.LogoMadoko     : .block text-align=right font-size=xx-small margin-top=4em tight
+.LogoMadoko     { .block; text-align: right; font-size: xx-small; margin-top: 4em; tight: true }
 
+smallskip       : []{display: block; margin-bottom: 0.5em }
+medskip         : []{display: block; margin-bottom: 1em }
+bigskip         : []{display: block; margin-bottom: 2em }
+@if tex {
+  smallskip     : [\smallskip]{input:texraw}
+  medskip       : [\medskip]{input:texraw}
+  bigskip       : [\bigskip]{input:texraw}
+}
+
+<!-- equations and math -->
 ~Equation       : label='[(@equation)]{.equation-label}' 
                     replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
                     tight .para-block line-adjust=0
 ~Math           : replace='~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
                     tight .para-block
-
-~TableFigure    : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table
-~Figure         : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure
-
-.Floating       : .align-center elem=floating html-elem=figure
-.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{tag: false}&nl;'
-.Floating       : toc-line='&label;. &caption;'
-
-~SubFigureRow   : .columns .align-center
-~SubFigure      : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''
-                    after='&br;&smallskip;[&toc-line;]{.subfig-caption}' tight text-align=center .column
-                    toc-line='[&fig-label; ]{.caption-before} &caption;'
-                    toc=tof toc-depth=2
-
-~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'
-            before='[\[&label;\]\ \ ]{.bibitem-before}' tight
-~Bibitem  : replace='?if &bib-search-url; && &searchterm;\
-                     ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'
-@html Bib Search Url: www.bing.com
 
 
 .thm-caption-content: font-style=italic
@@ -170,6 +161,28 @@ thm-caption-end     : &&;br;
 ~Definition    : display=block label='[@definition]{.definition-label}'
                     before='[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}'
 ~Theorem,~Lemma,~Proof,Corollary,~Proposition,~Example,~Definition  : margin="1ex 0pt"
+
+<!-- figures -->
+~TableFigure    : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table
+~Figure         : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure
+
+.Floating       : .align-center elem=floating html-elem=figure
+.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{tag: false}&nl;'
+.Floating       : toc-line='&label;. &caption;'
+
+~SubFigureRow   : .columns .align-center
+~SubFigure      : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''
+                    after='&br;&smallskip;[&toc-line;]{.subfig-caption}' tight text-align=center .column
+                    toc-line='[&fig-label; ]{.caption-before} &caption;'
+                    toc=tof toc-depth=2
+
+<!-- bibliographies -->
+~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'
+            before='[\[&label;\]\ \ ]{.bibitem-before}' tight
+~Bibitem  : replace='?if &bib-search-url; && &searchterm;\
+                     ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'
+@html Bib Search Url: www.bing.com
+
 
 .booktable:  
   rule-top-width=2px rule-bottom-width=2px 
