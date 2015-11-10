@@ -68,7 +68,7 @@
           "attrs.string.escape", 
           "@brackets.special","white"]],
       
-      ["^(?:@)(?:if|supports)\b.*\\{", { "token": "namespace.metadata.key", "next": "metadatax" } ],
+      ["^@(?:if|supports)\\b.*\\{", { "token": "namespace.metadata.key", "next": "metadatax" } ],
 
       ["^@metakey", { "cases": {
         "$4": { "token": "namespace.metadata.key", "next": "metadatax" },
