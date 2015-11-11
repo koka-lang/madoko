@@ -925,6 +925,14 @@ function texHarvarditem( cap : matched, context : texContext ) : string {
   context.makeBibitem(key,lab,content)
 }
 
+function texBibitemCite( cap : matched, context : texContext ) : string {
+  val authorsLong = cap.groups[1].unbrace
+  val authorsShort= cap.groups[2].unbrace
+  val year = cap.groups[3].unbrace
+  val labx  = authorsLong + "(" + year + ")" + authorsShort
+  context.makeBibitem( cap.groups[4], labx, cap.groups[5] )
+}
+
 function texBibitem( cap : matched, context : texContext ) : string {
   context.makeBibitem( cap.groups[2], cap.groups[1], cap.groups[3] )
 }

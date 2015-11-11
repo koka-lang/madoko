@@ -49,8 +49,9 @@ val texignore3 = @"multirow|resizebox"
 val texcmd1  = @"(begin|end|newlength|setlength|bibfield|BibitemShut)"
 val texcmd2  = @"(newcommand|renewcommand|providecommand|bibitemdeclare)"
 
-
 val texenvcaption = "block|alertblock|exampleblock"
+
+val bibitemBody = @"(?: *\n)*([\s\S]*?)\n(?= *\n|\\bibitem)"
 
 val eol = @"(?:[ \t]*(?:%.*)?\r?\n)?"
 
@@ -129,7 +130,8 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textikz2",     regex(@"^\\tikz\b\s*" + optarg + @"?\s*" + texarg), texTikzCmd ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
-  Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + @"(?: *\n)*([\s\S]*?)\n(?= *\n|\\bibitem)"), texBibitem ),
+  Rule("bibitemcite", regex(@"^\\bibitem\[(?:\\protect *)?\\citeauthoryear" + texarg + texarg + texarg + @"\]" + texarg + bibitemBody), texBibitemCite),
+  Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + bibitemBody), texBibitem ),
   Rule("harvarditem", regex(@"^\\harvarditem\b\s*" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
 
   Rule("newblock",    regex(@"^\\(newblock|nobreak)\b"), texCommandClass ),
