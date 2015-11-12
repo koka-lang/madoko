@@ -13,8 +13,8 @@ ldquo       : &bdquo;
 Logo        : false
 
 <!-- Latex Pakete definieren -->
-Latex       : xelatex
-pdf latex   : xelatex
+.math-inline,.math-display : math-needpdf=true
+
 Package     : amsmath
 Package    : [math-style=TeX] unicode-math
 Package*    : fontspec, xltxtra, xunicode, microtype
