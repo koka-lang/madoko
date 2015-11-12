@@ -1,7 +1,6 @@
 Package         : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
 Logo            : False
 Tex2            : True
-Tex2x           : False
 Maketitle       : False
 Heading Depth   : 3 
 Toc Depth       : 3 
@@ -237,7 +236,7 @@ Bibitem {
   label     : '[@bibitem]{.bibitem-label}';
   cite-label: '&label;';
   tight     : true;
-  replace   : '?if &bib-search-url; && &searchterm; ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}';
+  replace   : '@if (bib-search-url!="") and (searchterm!="") @then "&source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}"';
 }
 
 Bib Search Url: 
@@ -252,10 +251,6 @@ Bib Search Url:
 
 
 <!-- tex commands -->
-@if tex {
-  Tex2x     : True
-  maketitle : true
-}
 
 H0       { tex-cmd: "\chapter"; display: block }
 H1       { tex-cmd: "\section"; display: block }
@@ -315,7 +310,11 @@ TitleNote,TitleFooter,Authors,AuthorRow,Author  { tight: true }
 AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
 
 
-@if maketitle {
+@if tex {
+  Maketitle: True
+}
+
+@if Maketitle {
   Author        { display: inline-block  }
   TitleBlock    { display: inline-block  }
   TitleHeader,Authors,AuthorRow { tag: false }
@@ -331,7 +330,7 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
   AuthorEmail   { tex-cmd:"\mdxauthoremail" }
 }
 
-@if not( maketitle ) {
+@if not Maketitle {
   TitleBlock,TitleHeader,Authors,TitleFooter  { .align-center }
   TitleBlock,Title,Subtitle,TitleNote         { .para-block }
 

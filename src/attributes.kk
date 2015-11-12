@@ -14,6 +14,7 @@ import std/dict
 import std/string
 import common
 import entity
+import expression
 
 public function parseAttrs( attrStr : string, elemName : string = "", source : string = "" ) : attrs {
   if (attrStr == "" && elemName == "" && source=="") return attrsNone
@@ -310,18 +311,9 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
   }
 
   function checkCond( crepl : string ) {
-    match(crepl.find(rxcond)) { 
-      Nothing -> {
-        checkReplace(crepl)
-      }
-      Just(ccap) -> {
-        if (evalCondition(ccap.groups[1].expand))
-          then checkReplace(ccap.groups[2])
-        elif (ccap.groups.matchedOn(3))
-          then checkReplace(ccap.groups[3])
-        else txt
-      }
-    }
+    if (!crepl.startsWith("@if"))
+      then checkReplace(crepl)
+      else checkReplace(evalCondition(crepl,attrs,labels,metadata)) 
   }
 
   checkCond(repl)
@@ -333,46 +325,12 @@ val rxmapping = regex(@"^//((?:[^\\]|\\.)*)//([gimc]*)$")
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
-val rxcond  = regex(@"^\?if\s+(" + rxescapedc + @"+)\s*\?then\s+(" + rxescapedc + @"*)\s*(?:\?else\s+(" + rxescapedc + @"*)\s*)?$")
-val rxescapedc = @"(?:[^\\\s?]|\\.|\?(?!then|else|fi|if)|\s+(?!$|[\s?]))"
-
-function evalCondition( cond : string ) : bool {
-  match(cond.find(rxcompare)) {
-    Nothing -> {
-      //trace("condition: " + cond.show )
-      cond!=""
-    }
-    Just(cap) -> {
-      val s = cap.groups[1].trim
-      val t = cap.groups[3].trim
-      val op = cap.groups[2]
-      //trace("condition: " + s.show + " " + op + " " + t.show )
-      
-      val i = s.parseInt.maybe(~1,id)
-      val j = t.parseInt.maybe(~1,id)
-      if (i>0 && j>0) then {
-        if (op=="==") then (i==j)
-        elif (op=="!=") then (i!=j)
-        elif (op==">") then (i>j)
-        elif (op==">=") then (i>=j)
-        elif (op=="<") then (i<j)
-        elif (op=="<=") then (i<=j)
-        else False
-      }
-      else {
-        if (op=="==") then (s==t)
-        elif (op=="&&") then (s!="" && t!="")        
-        elif (op=="||") then (s!="" || t!="")
-        elif (op=="!=") then (s!=t)
-        else False
-      }
-    }
+function evalCondition( cond : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : string {
+  function lookup(v,display) {
+    String(expandKeys("&" + v + ";", "",attrs,labels,metadata))
   }
+  evaluate( cond, fun(e) { evalExpr(e,lookup).string }, "")
 }
-val rxcompare = regex(@"^(" + rxesc + @"*)\s*(" + rxop + @")\s*(" + rxesc + @"*)$")
-
-val rxesc = @"(?:(?!" + rxop + @")[^\\]|\\.)"
-val rxop  = @"(?:==|!=|>=|<=|<|>|&&|\|\|)"
 
 // remove all grouping from a regular expression
 function ungroup( r : string ) : string {

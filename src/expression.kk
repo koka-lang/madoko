@@ -15,8 +15,8 @@ import std/regex
 import std/string
 import common
 
-infixr 5 (<*), (*>), (<*>)
-
+infixl 5 (<*), (*>), (<*>)
+infixl 6 ($>), (<$>)
 
 // --------------------------------------------------------------
 // Evaluate expressions
@@ -25,6 +25,7 @@ infixr 5 (<*), (*>), (<*>)
 public type expr  {
   UnOp( op : string, expr : expr)
   BinOp( op: string, left : expr, right : expr )
+  If( cond : expr, ethen : expr, eelse : expr )
   Const( c : constant )
   Var( v : string, display : string )
 }
@@ -38,9 +39,10 @@ public type constant {
 
 
 
-public function evaluate( expr : string, eval : expr -> <exn,div|e> a, default : a ) : <div|e> a {
+public function evaluate( expr : string, eval : expr -> <exn|e> a, default : a ) : e a {
   //trace("evaluate: '" + expr + "'")
-  match(parseExpr(expr)) {
+  val mbres = unsafeTotal( fun() { parseExpr(expr) } )
+  match(mbres) {
     Just(res) | res.snd.trim.isEmpty -> {
       catch( fun() { eval(res.fst) }, fun(exn) { 
         warning(exn.show)
@@ -81,6 +83,11 @@ public function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> const
         }
       }
       else error("invalid operator: " + op)
+    }
+    If(cond,ethen,eelse) -> {
+      if (evalExpr(cond,lookup).bool)
+        then evalExpr(ethen,lookup)
+        else evalExpr(eelse,lookup)
     }
   }
 }
@@ -153,8 +160,15 @@ public function show( c : constant ) : string {
 // Parse Expressions
 // --------------------------------------------------------------
 
-val parseExpr = unsafeTotal(parseBinary)
+val parseExpr = unsafeTotal(parseIf)
 
+function parseIf() : div parser<expr> {
+  ( string(@"@if\b") *> parseBinary() <* string("@then") <*> parseAtom() <*> 
+      ( (string(@"@else") *> parseAtom()) || succeed(Const(String(""))) ) )
+    .map( fun(res) { If(res.fst.fst, res.fst.snd, res.snd) })
+  ||
+  parseBinary()
+}
 function parseBinary() : div parser<expr> {
   parseUnary() <$ 
   ( (string(@"(and\b|or\b|(~=|:|==|!=|>=|<=|>|<|&&|\|\|)(?=[\s\w/""']))") <*> (fun(s) { parseExpr(s) }))
@@ -237,6 +251,14 @@ function (<*)( p1 : parser<a>, p2: parser<b> ) : parser<a> {
   (p1 <*> p2).map( fun(x) { x.fst } )
 }
 
+function ($>)( f : a -> b, p : parser<a> ) : parser<b>  {
+  (succeed(f) <$> p)
+}
+
+function (<$>)( p1 : parser<a -> b>, p2 : parser<a> ) : parser<b>  {
+  (p1 <*> p2).map( fun(x) { (x.fst)(x.snd) })
+}
+
 function (<*>)( p1 : parser<a>, p2 : parser<b> ) : parser<(a,b)> {
   return fun(s) {
     match(p1(s)) {
@@ -263,15 +285,20 @@ function many1( p : parser<a>) : parser<list<a>> {
 }
 
 function many( p : parser<a> ) : parser<list<a>> {
-  return fun(s) { manyx(p,s) }
+  return fun(s) { unsafeTotal(fun() { manyx(p,s) }) }
 }
 
 function manyx( p : parser<a>, s : string ) : div maybe<(list<a>,string)> {
   match(p(s)) {
     Nothing -> Just(([],s))
-    Just(x) -> match(manyx(p,x.snd)) {
-      Nothing -> Nothing
-      Just(y) -> Just((Cons(x.fst,y.fst),y.snd))
+    Just(resx) -> {
+      val (x,restx) = resx
+      if (restx.length>=s.length) // prevent infinite recursion
+       then Nothing
+       else match(manyx(p,restx)) {
+              Nothing    -> Nothing
+              Just(resy) -> Just((Cons(x,resy.fst),resy.snd))
+            }
     }
   }
 }
