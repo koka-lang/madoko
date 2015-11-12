@@ -164,7 +164,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                 }
     if (infos.length == 0) return (opts,html0)
       
-    val newopts = opts(embedinfos = opts.embedinfos + infos.dict)
+    val newopts = opts(embedinfos = opts.embedinfos + infos.dict, verbose=min(opts.verbose,1))
     val newhtml = markdown(icontent,newopts)
     (newopts,newhtml)
   }
@@ -180,7 +180,6 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                   withLog("aux") { 
                                    markdown(icontent,xopts0) 
                                  }}}}}
-
     // write an aux file
     val bibAux = outName.appendStem("-bib").changeExt(".aux")
     val bibChanged =
@@ -226,7 +225,6 @@ function process( inName : string, outName : string, searchDirs : list<string>,
         if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
         if (texwarns != "" && mopts.verbose>=3) print(texwarns) 
-        //trace(tex)
         if (!(tryWriteTextFile(outTexName,tex))) {
           mopts.printErr("error: unable to write: " + outTexName) 
         }
