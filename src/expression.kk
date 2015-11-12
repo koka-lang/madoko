@@ -140,7 +140,7 @@ public function cint( c : constant ) : exn constant {
   }
 }
 
-function show( c : constant ) : string {
+public function show( c : constant ) : string {
   match(c) {
     Bool(b)   -> b.show
     Int(i)    -> i.show
