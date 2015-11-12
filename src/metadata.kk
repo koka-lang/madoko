@@ -39,7 +39,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
   val mdataDef  = parsePlainMeta(defaultMeta(options0,fmt), fmt,options0.lineMap, verbose=options0.verbose >= 4).fst      
   // set options from metadata
   val mdataFull = mdataDef + options0.cmetadata + mdata2
-  val mdataModed = mdataFull.evalConditionals
+  val mdataModed = mdataFull.evalConditionals(options0.verbose >= 4)
   val options2 = options0.fromMeta(mdataModed)
   val options = options2( metadata = mdataModed )
 
@@ -104,9 +104,11 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
     Nothing -> {
       match(txt.find(rxSupports)) {
         Just(cap) -> {
-          val body = parsePlainMeta(cap.groups[2].trim.unindent, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
-          if (verbose) trace("meta data: @if " +  cap.groups[1].trim + ": " + cap.groups[2].trim.unindent)
-          val support = Support(cap.groups[1].trim, body.fst, translateLine(lineMap,lines+1))
+          if (verbose) trace("meta data: @if " +  cap.groups[1].trim + "{" + cap.groups[2] + "}{" )
+          val (body,rest,_) = parsePlainMeta(cap.groups[2].unindent.trim, fmt, lineMap, [], verbose, lines + cap.groups[1].count("\n") )
+          if (rest != "") warning("invalid metadata: " + rest.cutoff(40))
+          if (verbose) trace("}" )
+          val support = Support(cap.groups[1].trim, body, translateLine(lineMap,lines+1))
           val lines2 = txt.substr(0,cap.next).count("\n")
           parsePlainMeta( txt.substr1(cap.next), fmt, lineMap, Cons(support,metadata), verbose, lines + lines2 )
         }
@@ -118,7 +120,7 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
           Just(cap) -> {
             val rawvalue = cap.groups[4] || cap.groups[6]  // 6=:value, 4={value}
             val value    = rawvalue.joinLines.trim
-            if (verbose) trace("meta data: " + cap.groups[2] + ": " + value )
+            if (verbose) trace("meta data: " + cap.groups[2] + ": " + value.cutoff(80) )
             val rawkeys = //if (cap.groups.matchedOn(3)) then 
                           cap.groups[2].split(",").list.map(trim)
                           //else [cap.groups[2]]     
@@ -143,6 +145,9 @@ val rxMetaComment = regex(@"^(?:\s*<!--[\s\S]*?-->(?: *\n)+)+")
 val rxMeta        = regex(@"^"+ rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
 val rxSupports    = regex(@"^@(?:if|supports)\b([^\n\{]*)" + rxMetaGroup)
 
+public function cutoff( s : string, n : int ) : string {
+  if (s.length > n) then s.substr(0,n) + "..." else s
+}
 
 // --------------------------------------------------------------
 // Complete author keys
@@ -175,12 +180,12 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
 // Flatten conditional keys into non-conditional list
 // --------------------------------------------------------------
 
-function evalConditionals( mdata :cmetadata ) : <div> metadata {
+function evalConditionals( mdata :cmetadata, verbose : bool = False ) : <div> metadata {
   val modes = mdict()
-  flatten(mdata,modes)
+  flatten(mdata,modes,verbose)
 }
 
-function flatten( mdata:cmetadata, modes:mdict<h,constant>) : <div,st<h>> metadata {
+function flatten( mdata:cmetadata, modes:mdict<h,constant>, verbose : bool ) : <div,st<h>> metadata {
   mdata.concat fun(ckey) {
     match(ckey) {
       Key(key,value) -> {
@@ -188,8 +193,10 @@ function flatten( mdata:cmetadata, modes:mdict<h,constant>) : <div,st<h>> metada
       }
       Support(condition,body,lineInfo) -> {
         logLocation(lineInfo)
-        if (evaluateBool(condition,modes,mdata))
-         then flatten(body,modes)
+        val b = evaluateBool(condition,modes,mdata) 
+        if (verbose) then trace("evaluate: " + condition + " -> " + b.show + ": " + lineInfo)
+        if (b)
+         then flatten(body,modes,verbose)
          else []
       }
     }
@@ -214,6 +221,7 @@ function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetada
     }
   }
   val b = evaluate( cond, fun(e) { evalExpr(e,lookup).bool }, False)
+  // trace("evaluate: " + cond + " -> " + b.show + " (recursive=" + recursive.show + ")" )
   if (recursive) 
    then False // a self-dependent support block evaluates to false
    else b  
@@ -222,22 +230,38 @@ function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetada
 
 function lookupMode( modes : mdict<h,constant>, mode : string, mdata : cmetadata, current : list<string> ) : <div,st<h>> maybe<constant> {
   match(modes[mode]) {
-    Just(c) -> Just(c)
+    Just(c) -> {
+      //trace("pre-evaluated: " + mode + ": " + c.show)
+      Just(c)
+    }
     Nothing -> {
       val mbRes = mdata.reverse.foreachUntil( fun(ckey) { 
         match(ckey) {
           Key(key,raw) -> {
             if (key != mode) then Nothing
              else {
-              val res = String(raw)
+               val res = String(raw)
+               //trace("found var: " + key + ": " + raw)
                modes[mode] := res
                Just(res)
              }
           }
-          Support(cond,body) -> {
-            if (body.containsKey(mode) && evaluateBool(cond,modes,mdata,current)) 
-             then lookupMode(modes,mode,body,current)
-             else Nothing
+          Support(cond,body,_lineInfo) -> {
+            if (body.containsKey(mode)) then {
+              if (evaluateBool(cond,modes,mdata,current)) {
+                //trace(" look inside: " + cond)
+                lookupMode(modes,mode,body,current)
+              }
+              else {
+                //trace(" support " + cond + " contains " + mode + " but is false: " + lineInfo )
+                Nothing               
+              }
+            }
+            else {
+               //trace(" support " + cond + " does not contain " + mode + ": " + lineInfo )
+               //trace(" -> " + body.map(fun(ckey) { match(ckey) { Key(k) -> k; _ -> "<support>" } }).join(","))
+               Nothing
+            }
           }
         }
       })
