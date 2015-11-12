@@ -146,10 +146,10 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     elif (isDisplay) 
      then ("Display","\\[","\n\\]")  // add newline because of comments in latex (and we do use trimLines on the content)
      else ("Inline","$","$")
-  val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   val lkind  = kind.toLower
   val class  = "math-" + lkind
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
+  val mode   = if (attrsd.hasBoolKey("snippet-needpdf") || attrsd.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
