@@ -8,13 +8,12 @@ Affiliation   : Other institute
 Email         : other@bar.com
 
 Colorizer     : javascript
+Bib style     : plainnat
 Bibliography  : example
 Heading base  : 2
+Bibitem       { tex-bibitem-label: "[@bib.@bib-bibitem]" }
 
-xBib Style     : alpha
-xCite Style     : natural
-
-Doc class     : style/sigplanconf.cls
+xDoc class     : style/sigplanconf.cls
 
 [TITLE]
 
@@ -37,7 +36,15 @@ the document, and similarly with bibtex files, latex style files, etc.
 
 [butterfly]: images/butterfly.png "butterfly"  { width=4em }
 
-#  Content
+Our [contributions]{font-family='"MS Gothic"'} are:
+
+* A figure of a _butterfly_;
+* Some **mathematics**;
+* And some source code;
+* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:Tex are also possible.
+
+# Content
 
 A definition of $e$ is shown in Equation [#euler] proved by Theorem [#th-euler]:
 
@@ -56,17 +63,6 @@ function hello() {
 }
 ```
 
-# More
-
-Our [contributions]{font-family='"MS Gothic"'} are:
-
-* A figure of a _butterfly_;
-* Some **mathematics**;
-* And some source code;
-* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
-  Textual citations, like @Knuth:Tex are also possible.
-
-
 ~ Note
 The syntax highlighting works in PDF too.
 ~
@@ -77,3 +73,14 @@ Really fun to write Markdown :-)
 
 [BIB]
 
+# And now some bibliographies.
+
+And references to Tex books [@second:Knuth:Tex;@second:Lamport:Latex;@second:Goo93].
+
+[BIB=second]
+
+# And more: 
+
+And more references to Tex books [@third:Goo93;@third:FBerg04] and others [@third:Grandstrand]. 
+
+[BIB=third]
