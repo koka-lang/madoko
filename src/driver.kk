@@ -14,6 +14,7 @@ import std/regex
 import std/path
 import std/dict
 import std/date
+import std/string
 import std/crypto
 import common
 import options
@@ -29,7 +30,7 @@ import includes
 
 public struct runners(
   runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
-  runBibtex : ( bibFile : string, opts : options, continue : bool -> io ()) -> io (),
+  runBibtex : ( bibFiles : list<string>, opts : options, continue : bool -> io ()) -> io (),
   runMathStatic : runMathStaticFun
 )
 
@@ -182,23 +183,19 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                    markdown(icontent,xopts0) 
                                  }}}}}
     // write an aux file
-    val bibAux = outName.appendStem("-bib").changeExt(".aux")
     val bibChanged =
-      if (logs == "") then False else {
+      if (logs == "") then [] else {
         if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
           // copy bst file
           tryCopyTextFileFromTo( mopts.bibStyle.basename, mopts.bibStyle.dirname, outName.dirname )
           ()          
         }
-        val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
-        // write the log to an aux file (one for latex, and one to track changes)
-        writeCitations( logs, bibData, outName.changeExt(".aux"), inName, mopts, False )
-        writeCitations( logs, bibData, bibAux, inName, mopts, True )                
+        writeCitationsData( logs, outName, searchDirs, mopts.bib.splitPaths, mopts )
       }
 
     // run bibtex?
-    if ((bibChanged || mopts.rebuild) && firstTime && mopts.bibtex!="") {
-      (runners.runBibtex)( bibAux, mopts ) fun(err) {
+    if ((!bibChanged.isNil || mopts.rebuild) && firstTime && mopts.bibtex!="") {
+      (runners.runBibtex)( bibChanged, mopts ) fun(err) {
         redo()
       }
     }
@@ -333,9 +330,44 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   }         
 }
 
+function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<string> {
+  val defaultAux = outName.noext + "-bib.aux"
+  val cites = splitCiteData( citeData )
+  trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
+  val bibData = createBibData( outName.dirname, searchDirs, bibNames )
+  /*
+    val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
+    // write the log to an aux file (one for latex, and one to track changes)
+    // note: 2015/11/13: writing for latex is not necessary since madoko handles citations (?)
+    // writeCitations( logs, bibData, outName.changeExt(".aux"), inName, mopts, False )
+    writeCitations( logs, bibData, bibAux, inName, mopts, True )              
+  */
+  cites.filterMap( fun(kv) {
+    val (auxStem,auxData) = kv
+    val auxName = outName.noext + "-bib"+ (if (auxStem=="") then "" else "-" + auxStem) + ".aux"
+    val changed = writeCitations(auxData, bibData, auxName, opts, True)
+    if (changed) then Just(auxName) else Nothing
+  })
+}
+
+function splitCiteData( citeData : string ) : io list<(string,string)> {
+  if (citeData.trim == "") return []
+  match(citeData.find(rxBibFile)) {
+    Nothing   -> return [("",citeData)]
+    Just(cap) -> {
+      val auxName = cap.groups[1]
+      val auxRaw  = citeData.substr(0,cap.index)
+      val auxData = 
+        if (auxName.isEmpty) then auxRaw 
+         else auxRaw.replaceAll("\\citation{" + auxName + ":", "\\citation{")
+      Cons( (auxName,auxData), splitCiteData( citeData.substr1(cap.next) ))
+    }
+  }
+}
+val rxBibFile = regex(@"^ *%mdk bib: *([^\s]*)\s*", multiline=True )
 
 // Get hashes of bib files
-function createBibData( auxName : string, docName : string, searchDirs : list<string>, bibNames : list<string> ) : io string {
+function createBibData( auxDir : string, searchDirs : list<string>, bibNames : list<string> ) : io string {
   val (bibStems,bibContents) = bibNames.map( fun(bibName) {
     match(trySearchReadTextFile(bibName,searchDirs,".bib")) {
       Nothing -> {
@@ -343,8 +375,9 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
         []
       }
       Just((bibFile,content)) -> {
-        if (dirname(bibFile) != dirname(auxName)) {
-          if (!(tryWriteTextFile( combine(dirname(auxName),basename(bibFile)), content))) {
+        trace("bib: found: " + bibFile)
+        if (dirname(bibFile) != auxDir) {
+          if (!(tryWriteTextFile( combine(auxDir,basename(bibFile)), content))) {
             println("warning: unable to copy bibliography file to output directory: " + bibName)
           }
         }
@@ -358,7 +391,7 @@ function createBibData( auxName : string, docName : string, searchDirs : list<st
 }
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
-function writeCitations( auxData : string, bibData : string, auxName : string, docName : string, opts : options, required : bool ) : io bool {
+function writeCitations( auxData : string, bibData : string, auxName : string, opts : options, required : bool ) : io bool {
   val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle.basename.noext else "plainnat"
       
   val oldData = readTextFileDef(auxName,"",required)

@@ -93,13 +93,13 @@ public function include( text : string, fast : bool, inName : string, outName : 
       ("","\n")  // happens for snippet only includes
     }
     elif (fname.startsWith("BIB=")) then {
-      val bblName  = if (fname=="BIB=") then outName.appendStem("-bib") else fname.substr(4)
-      val fileName = bblName.changeExt(".bbl")
+      val auxStem  = fname.substr(4)
+      val fileName  = outName.noext + "-bib" + (if (auxStem=="") then "" else "-" + auxStem) + ".bbl"      
       match (includes[fileName]) {
         Just(content) -> (fname,content)
         Nothing -> {
           val bbl = readTextFileDef( fileName, "", True)  
-          val content = ("~ Begin Bib { filename: \"" + fileName.noext + "\" }\n" + 
+          val content = ("~ Begin Bib { id: \"" + auxStem + "\"; bbl-file: \"" + fileName + "\" }\n" + 
                          (if (bbl=="") then "\\begin{thebibliography}{00}\n\\end{thebibliography}\n" 
                                        else bbl) + 
                          "\n~ End Bib\n")
