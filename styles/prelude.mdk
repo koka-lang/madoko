@@ -1,4 +1,4 @@
-Package         : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
+Package         : [heading-base={&heading-base;},section-num={&tex-section-num;},bib-label={&bib-label;}]madoko2
 Logo            : False
 Tex2            : True
 Maketitle       : False
@@ -7,6 +7,7 @@ Toc Depth       : 3
 Heading Base    : 2
 Tex Section Num : False
 Cite Style      : numeric
+Bib Label       : True
 Math mode       : static
 
 <!-- standard elements -->
@@ -234,19 +235,27 @@ SubFigure {
 
 <!-- bibliographies -->
 Bibitem {
-  label     : '[@bibitem]{.bibitem-label}';
+  @bib-bibitem;
+  label     : '@bib-bibitem';
   cite-label: '&label;';
   tight     : true;
   replace   : '@if (bib-search-url!="") and (searchterm!="") @then "&source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}"';
 }
 
 Bib Search Url: 
-@if html { 
+@if html {
   Bib Search Url: www.bing.com
 }
+
+@if not(cite-style~=/[nN]umeric/) {
+  Bib Label: False
+}
+
 @if not( tex ) {
   Bibliography { before: "# References {-}&nl;" }
-  Bibitem      { before: '[\[&label;\]\ \ ]{.bibitem-before}' }
+}
+@if not( tex ) and bib-label {
+  Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
 }
 
 
@@ -290,7 +299,7 @@ BlockQuote{ tex-env: "quote" }
 .equation-before: tex-cmd=\mdmathtag
 
 Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"  }
-BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; label: "@bibitem" }
+BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
 .Newblock    { tex-cmd-before="\newblock " }
 toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
