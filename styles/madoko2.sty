@@ -17,6 +17,7 @@
   /madoko/.new family,
   /madoko/heading-base/.new num=1,
   /madoko/section-num/.new toggle,
+  /madoko/bib-label/.new toggle=true,
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
   /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
@@ -810,6 +811,9 @@
   \md@restorebiblabel
 \fi
 
+\iftoggle{/madoko/bib-label}{}{%
+  \def\@biblabel#1{\hskip-\labelsep}% suppress bibitem labels
+}
 
 
 %-------------------------------------------------------------
