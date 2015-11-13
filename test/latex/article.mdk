@@ -40,8 +40,8 @@ Our [contributions]{font-family='"MS Gothic"'} are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And references to Tex books [@Knuth:tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
-  Textual citations, like @Knuth:tex are also possible.
+* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:Tex are also possible.
 
 # Content
 
