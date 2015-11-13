@@ -63,6 +63,7 @@ MathDefs        { input: mathdefs; }
 HtmlOnly        { input: htmlonly; tag: false }
 Tex             { input: tex; tag: false }
 TexOnly         { input: texonly; tag: false }
+Bib             { input: tex }
 math-inline     { input: math }
 math-display    { input: math }
 
@@ -166,7 +167,7 @@ Math {
 }
 
 .thm-caption-content { font-style: italic }
-.thm-caption         { replace: '?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;' }
+.thm-caption         { replace: '@if source != "" @then "([&source;]{.thm-caption-content}).&thm-caption-end;"' }
 thm-caption-end : &&;br;
 
 Theorem {
