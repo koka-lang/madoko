@@ -470,7 +470,8 @@ struct cite(
   ordinal : int  
 )
 
-function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
+function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, 
+                  citeLabel : string, citeInfo : string ) 
 {
   val numlab = match(context.labels[name]) {
                  Nothing   -> "?"
@@ -482,7 +483,7 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                 }
   //trace("citeLabel: " + name + ": " + citeLabel)
   val (number,authors,year) = 
-    match(citeLabel.find(rxAuthorYear)) {
+    match(citeInfo.find(rxAuthorYear)) {
       Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
       Just(cap) -> {
         //trace(" matched: " + cap.groups[1] + ", " + cap.groups[2] + ", " + cap.groups[3] ) 
@@ -518,7 +519,8 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                             val lab = ("@" + cap.groups[3]).definitionId 
                             match(context.labels[lab]) {
                               Just(lbl) -> {  // | lbl.element == "bibitem" 
-                                [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
+                                [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],
+                                                  lbl.labelText, lbl.labelInfo)]
                               }
                               Nothing -> {
                                 warning( "missing citation: @" + cap.groups[3] )
