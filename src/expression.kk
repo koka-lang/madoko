@@ -35,6 +35,7 @@ public type constant {
   Bool( b : bool )
   String( s : string )
   Regex( r : regex )
+  Null() // non-existent 'else'
 }
 
 
@@ -125,15 +126,17 @@ public function bool( c : constant ) : exn bool {
       else error("cannot use string a boolean condition: " + s.show)
     }
     Regex(r)  -> error("cannot use regular expression as a boolean condition: /" + r.source + "/")
+    Null      -> error("cannot use none expression as a boolean condition")
   }
 }
 
-public function string( c : constant ) : exn string {
+public function string( c : constant ) : string {
   match(c) {
     Bool(b)   -> b.show
     Int(i)    -> i.show
     String(s) -> s
     Regex(r)  -> r.source
+    Null      -> ""
   }
 }
 
@@ -153,6 +156,7 @@ public function show( c : constant ) : string {
     Int(i)    -> i.show
     String(s) -> s.show
     Regex(r)  -> "/" + r.source + "/"
+    Null      -> "none"
   }
 }
 
@@ -164,7 +168,7 @@ val parseExpr = unsafeTotal(parseIf)
 
 function parseIf() : div parser<expr> {
   ( string(@"@if\b") *> parseBinary() <* string("@then") <*> parseAtom() <*> 
-      ( (string(@"@else") *> parseAtom()) || succeed(Const(String(""))) ) )
+      ( (string(@"@else") *> parseAtom()) || succeed(Const(Null)) ) )
     .map( fun(res) { If(res.fst.fst, res.fst.snd, res.snd) })
   ||
   parseBinary()

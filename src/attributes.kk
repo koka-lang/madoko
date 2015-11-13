@@ -296,7 +296,7 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
     expandKeys(peanoN,s,txt,attrs,labels,metadata,fun(_,_) {""}) 
   }
 
-  function checkReplace( rrepl : string ) {    
+  function checkReplace( rrepl : string ) : string {    
     match(rrepl.find(rxregex)) {
       Nothing -> match(rrepl.find(rxmapping)) {
         Nothing -> rrepl.expand
@@ -310,10 +310,13 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
     }
   }
 
-  function checkCond( crepl : string ) {
+  function checkCond( crepl : string ) : string {
     if (!crepl.startsWith("@if"))
       then checkReplace(crepl)
-      else checkReplace(evalCondition(crepl,attrs,labels,metadata)) 
+      else match (evalCondition(crepl,attrs,labels,metadata)) {
+        Null -> txt // missing 'else' -> no replace
+        c    -> checkReplace(c.string)
+      } 
   }
 
   checkCond(repl)
@@ -325,11 +328,13 @@ val rxmapping = regex(@"^//((?:[^\\]|\\.)*)//([gimc]*)$")
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
-function evalCondition( cond : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : string {
+function evalCondition( cond : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : constant {
   function lookup(v,display) {
     String(expandKeys("&" + v + ";", "",attrs,labels,metadata))
   }
-  evaluate( cond, fun(e) { evalExpr(e,lookup).string }, "")
+  val res = evaluate( cond, fun(e) { evalExpr(e,lookup) }, String(""))
+  //trace("eval condition: " + res.show + ": " + cond)
+  res
 }
 
 // remove all grouping from a regular expression
