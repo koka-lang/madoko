@@ -130,7 +130,9 @@ val texGrammar : grammar<string,texContext> = [
   Rule("textikz2",     regex(@"^\\tikz\b\s*" + optarg + @"?\s*" + texarg), texTikzCmd ),
 
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
-  Rule("bibitemcite", regex(@"^\\bibitem\[(?:\\protect *)?\\citeauthoryear" + texarg + texarg + texarg + @"\]" + texarg + bibitemBody), texBibitemCite),
+  Rule("bibitemcite1", regex(@"^\\bibitem\[(?:\\protect *)?\\citename" + texarg + @"(\d+)\]" + texarg + bibitemBody), texBibitemCiteName),
+  Rule("bibitemcite2", regex(@"^\\bibitem\[(?:\\protect *)?\\astroncite" + texarg + texarg + @"\]" + texarg + bibitemBody), texBibitemCiteApa),
+  Rule("bibitemcite3", regex(@"^\\bibitem\[(?:\\protect *)?\\citeauthoryear" + texarg + texarg + texarg + @"?\]" + texarg + bibitemBody), texBibitemCiteAuthorYear),
   Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + bibitemBody), texBibitem ),
   Rule("harvarditem", regex(@"^\\harvarditem\b\s*" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
 
@@ -225,7 +227,7 @@ val texGrammar : grammar<string,texContext> = [
 
 
 // Parse TeX elements and return Markdown
-public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbose : bool = False, ignore : bool = True  ) : string
+public function parseTex( txt : string, id: string = "", citestyle : citestyle = citeAuto, verbose : bool = False, ignore : bool = True  ) : string
 {
   val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n").replaceAll(regex(@"\t"),"   ")
                  /*
@@ -239,7 +241,7 @@ public function parseTex( txt : string, citestyle : citestyle = citeAuto, verbos
                     else ""  // end-of-line comment
                   })
                   */
-  val md = contextParse(TexContext(texGrammar,citestyle,ignore,contextParse), normTxt)
+  val md = contextParse(TexContext(texGrammar,citestyle,ignore,id,contextParse), normTxt)
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }

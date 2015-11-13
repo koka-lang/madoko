@@ -925,7 +925,21 @@ function texHarvarditem( cap : matched, context : texContext ) : string {
   context.makeBibitem(key,lab,content)
 }
 
-function texBibitemCite( cap : matched, context : texContext ) : string {
+function texBibitemCiteApa( cap : matched, context : texContext ) : string {
+  val authors = cap.groups[1].unbrace
+  val year = cap.groups[2].unbrace
+  val labx  = authors + "(" + year + ")"
+  context.makeBibitem( cap.groups[3], labx, cap.groups[4] )
+}
+
+function texBibitemCiteName( cap : matched, context : texContext ) : string {
+  val authors = cap.groups[1].unbrace.replace(regex(@",\s*$"),"")
+  val year = cap.groups[2].unbrace
+  val labx  = authors + "(" + year + ")"
+  context.makeBibitem( cap.groups[3], labx, cap.groups[4] )
+}
+
+function texBibitemCiteAuthorYear( cap : matched, context : texContext ) : string {
   val authorsLong = cap.groups[1].unbrace
   val authorsShort= cap.groups[2].unbrace
   val year = cap.groups[3].unbrace
@@ -938,7 +952,7 @@ function texBibitem( cap : matched, context : texContext ) : string {
 }
 
 function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
-  val key = keyx.unbrace
+  val key = (if (context.name.isEmpty) then "" else context.name + ":") + keyx.unbrace
   val lab = labx.unbrace.parse(context)  
   val md  = content.parse(context)
   val (authors,title) = match(md.find(rxAuthorTitle)) {
@@ -952,15 +966,28 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
                 */
                 
   val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
-  val label   = if (lab!="" && !(lab.contains(rxAuthorYear))) then lab else ""
+  
+  val attrs0  = match(lab.find(rxAuthorYear)) {
+                  Nothing -> if (lab=="") then [] else [
+                    makeAttr("cite-label", lab),
+                    makeAttr("tex-bibitem-label", "[" + labx.unbrace + "]")
+                  ]
+                  Just(cap) -> [
+                    makeAttr("cite-year", cap.groups[2]),
+                    makeAttr("cite-authors", cap.groups[1]),
+                    makeAttr("cite-authors-long", cap.groups[3])
+                  ]
+                }
 
-  val attrs   = [makeAttr("id", key.definitionId),
-                 makeAttr("cite-label", lab),
+  val attrs1  = [makeAttr("id", key.definitionId),
+                 makeAttr("cite-info", lab ),
                  makeAttr("tex-cite-label", labx.unbrace ),
-                 makeAttr("tex-bibitem-args", (if (context.citestyle.isNumCite) then "" else "[" + labx.unbrace + "]") + "{" + key.definitionId + "}"  ),
-                 makeAttr("label", label),
+                 //if (lab!="") then makeAttr("tex-bibitem-label", "[" + labx.unbrace + "]") else "",
+                 //makeAttr("label", label),
                  makeAttr("caption", caption),
-                 makeAttr("searchterm", search )].joinAttrs
+                 makeAttr("searchterm", search )]
+
+  val attrs = (attrs0 + attrs1).joinAttrs
 
   //trace("bibitem: labx: " + labx + ", lab: " + lab + ", label: " + label)
   "~ Begin Bibitem " + attrs + "\n" +
