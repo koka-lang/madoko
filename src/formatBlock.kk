@@ -300,7 +300,7 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       val txt = formatBlocksX(context,content)
       val rnd = attrs.input
       if (attrs.elem=="bib") then {
-        log("aux","%mdk bib: " + attrs.lookupKey("filename",""))
+        log("aux","%mdk bib: " + attrs.name)
       }
       if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
             (context.fmt==FmtTex && rnd.isMathDefs))
