@@ -48,7 +48,18 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
   }
 }
 
-public function runBibtex( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
+public function runBibtex( bibFiles : list<string>, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
+  match(bibFiles) {
+    Nil -> continue(False)
+    Cons(bibFile,rest) -> {
+      runBibtex1( bibFile, opts, fun(err) {
+        runBibtex( rest, opts, if (err) then fun(_) { continue(True) } else continue )
+      })
+    }
+  }
+}
+
+public function runBibtex1( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
   val bibtexCmd = opts.bibtex.quote + " " + bibFile.basename.quote
   opts.print("> " + bibtexCmd,3)
