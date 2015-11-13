@@ -473,7 +473,9 @@ public function fmtTexMathFull( requireDvi : bool, body : string, options : opti
 
 function fmtTexFullX(body : string, options : options, metadata1 : dict<string>, mathmode : string = "") : string 
 {
-  val metadata0 = [("heading-base",options.headingBase.show),("tex-section-num", options.texSectionNum.show.toLower)].dict
+  val metadata0 = [("heading-base",options.headingBase.show),
+                   ("tex-section-num", options.texSectionNum.show.toLower),
+                   ("bib-label", "true")].dict
   val metadata = metadata0 + metadata1
   function expand(s) { s.expandKeys(metadata) }
     
