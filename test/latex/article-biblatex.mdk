@@ -21,8 +21,8 @@ Package*    : fontspec, xltxtra, xunicode, microtype
 Package*    : polyglossia
 Package*    : [strict=true, autostyle, german=quotes] csquotes
 Package     : [headsepline, plainheadsepline, automark, autooneside=true] scrlayer-scrpage
-Package     : natbib
-xPackage*    : [style=authoryear,natbib=true,backend=biber,doi=false,url=false,isbn=false,eprint=false] biblatex
+xPackage     : natbib
+Package*    : [style=authoryear,natbib=true,backend=biber,doi=false,url=false,isbn=false,eprint=false] biblatex
 Package     : setspace
 Package     : hyperref
 
@@ -37,7 +37,7 @@ Tex Header* :
     \ohead[\pagemark]{\pagemark}
     \chead{}
     \cfoot[]{}
-    %\addbibresource{example2.bib}
+    \addbibresource{example2.bib}
     %\addtolength{\bibitemsep}{\baselineskip}
     \setmainlanguage[variant=german, spelling=new, latesthyphen=true, babelshorthands=true]{german}
     \setotherlanguage[variant=american]{english}
@@ -105,4 +105,10 @@ The syntax highlighting works in PDF too.
 
 Really fun to write Markdown :-)
 
-[BIB]
+~ TexRaw
+Testing citations: \cite{KnuthTex,Goo93}.
+
+\printbibliography
+~
+
+no[BIB]
