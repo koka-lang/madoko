@@ -97,14 +97,18 @@ function serr( s1 : string, s2 : string ) : exn a { error("cannot compare string
 function berr( b1 : bool, b2 : bool ) : exn a { error("cannot compare booleans") }
 
 function binop( c1 : constant, c2: constant, op : string, iop : (int,int) -> exn a, sop : (string,string) -> exn a, bop : (bool,bool) -> exn a) : exn a {
-  val msg = "comparing values of different types (" + op + ") on (" + c1.show + ") and (" + c2.show ")"
+  val msg = "comparing values of different types (" + op + ") on (" + c1.show + ") and (" + c2.show + ")"
   match(c1) {
-    Int(i1) -> match(c2) {
+    Int(i1) -> match(c2.cint) {
       Int(i2) -> iop(i1,i2)      
       _       -> error(msg)
     }
     String(s1) -> match(c2) {
       String(s2) -> sop(s1,s2)
+      Int(i2)    -> match(c1.cint) {
+        Int(i1) -> iop(i1,i2)
+        _       -> error(msg)
+      }
       _          -> error(msg)
     }
     Bool(b1) -> match(c2) {
@@ -140,7 +144,7 @@ public function string( c : constant ) : string {
   }
 }
 
-public function cint( c : constant ) : exn constant {
+public function cint( c : constant ) : constant {
   match(c) {
     String(s) -> match(s.trim.parseInt) {
       Just(i) -> Int(i)
