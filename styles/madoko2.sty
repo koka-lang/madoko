@@ -801,25 +801,18 @@
 % Bibliography
 %-------------------------------------------------------------
 
-% some styles (sig-alternate) disables bib labels
-\newcommand\md@restorebiblabel{%
-  %\let\md@org@bibitem\bibitem
-  %\renewcommand\bibitem[2][]{\md@org@bibitem{#2}}%
+\newcommand\mdforcebiblabel{%
   \def\@biblabel##1{[##1]}%
 }
-\ifx\@biblabel\@gobble\relax
-  \md@restorebiblabel
-\fi
+\newcommand\mdsupressbiblabel{%
+  \def\@biblabel##1{\hskip-\labelsep}%
+}
 
-\ifoptionequal{/madoko/bib-label}{false}{%
-  \def\@biblabel#1{\hskip-\labelsep}% suppress bibitem labels
-}{\ifoptionequal{/madoko/bib-label}{False}{%
-  \def\@biblabel#1{\hskip-\labelsep}% 
-}{\ifoptionequal{/madoko/bib-label}{force}{%
-  \def\@biblabel#1{#1}% force the showing of the biblabel
-}{\ifoptionequal{/madoko/bib-label}{Force}{%
-  \def\@biblabel#1{#1}%
-}{}}}}
+\ifoptionequal{/madoko/bib-label}{false}{\mdsuppressbiblabel}{%
+\ifoptionequal{/madoko/bib-label}{False}{\mdsupressbiblabel}{%
+\ifoptionequal{/madoko/bib-label}{force}{\mdforcebiblabel}{%
+\ifoptionequal{/madoko/bib-label}{Force}{\mdforcebiblabel}{%
+}}}}
 
 
 %-------------------------------------------------------------
