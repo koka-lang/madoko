@@ -197,7 +197,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
 val rxId      = @"(?:[\.#@][\w\.#@\-:]*|[\-\w][\w\.#@\-]*)" 
 val rxQuoted  = @"(?:'(?:[^\n\\']|\\[\s\S])*'|""(?:[^\n\\""]|\\[\s\S])*"")"
 val rxHtmlValue = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s]|\\.)*)"
-val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s;,]|\\.)*)"
+val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:&(?:#[xX]?)?\w+;|[^\\""'\s;,]|\\.)*)"
 val rxHtmlVal = @"(?:\s*=\s*(" + rxHtmlValue + @"))"
 val rxCssVal  = @"(?:\s*:\s*(" + rxCssValue + @"(?:(?:\s+|\s*(,\s*)+)" + rxCssValue + @")*))"
 val rxAttr    = regex(@"^(" + rxId + @")(?:" + rxHtmlVal + "|" + rxCssVal + ")?")
