@@ -1,12 +1,11 @@
 Description: Leino mode: Start numbering at 0
-~H1: @h1=arabic0     
-~H2: @h1-h2=arabic0     
-~H3: @h1-h2-h3=arabic0
-~H4: @h1-h2-h3-h4=arabic0
-~H5: @h1-h2-h3-h4-h5=arabic0
-~H6: @h1-h2-h3-h4-h5-h6=arabic0
-~Figure:   @figure=arabic0
-~Equation: @equation=arabic0
-~Bibitem:  @bibitem=arabic0
-~Footnote: @footnote=arabic0
-Tex Header  : \setcounter{footnote}{-1}
+H1          { @h1: arabic0 }
+H2          { @h1-h2: arabic0 }
+H3          { @h1-h2-h3: arabic0 }
+H4          { @h1-h2-h3-h4: arabic0 }
+H5          { @h1-h2-h3-h4-h5: arabic0 }
+H6          { @h1-h2-h3-h4-h5-h6: arabic0 }
+Figure      { @figure: arabic0 }
+Equation    { @equation: arabic0 }
+Footnote    { @footnote: arabic0 }
+Bibitem     { @bib-bibitem: arabic0; @bibitem: arabic0; tex-bibitem-label:[&cite-label;] }
