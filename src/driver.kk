@@ -305,7 +305,7 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   val searchDirsEx = searchDirs.concat( fun(dir) { [dir,combine(dir,"lang")] } )
   val registered = mdict()
   val langs1 = opts.hilitelang.split(";").list
-  val langs2 = content.findAll(regex(@"(?:^ *```+ *|\blanguage=)([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
+  val langs2 = content.findAll(regex(@"(?:^ *```+ *|\blanguage\s*[:=])([\w\-\/]+)\b",multiline=True)).list.map(fun(cap) { cap.groups[1].basename })
   val langs  = (langs1 + langs2).map(toLower)
   langs.foreach fun(lang) {
     match (registered[lang]) {
