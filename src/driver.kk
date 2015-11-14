@@ -73,10 +73,6 @@ public function processContent( inName : string, outName : string, content : str
     val xopts  = opts1(mathdim=mdim)
     val mopts  = mmopts(mathdim=mdim)  
 
-    if (mopts.verbose>=4) {
-      println(mopts.metadata.map(fun(kv) { kv.fst + ": " + kv.snd }).join("\n"))
-    }
-
     // register languages for highlighting
     registerColorizers(mopts, searchDirs, icontent);
 
@@ -333,7 +329,8 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
 function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<string> {
   val defaultAux = outName.noext + "-bib.aux"
   val cites = splitCiteData( citeData )
-  trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
+  //trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
+  //trace("bibnames: " + bibNames.join(","))
   val bibData = createBibData( outName.dirname, searchDirs, bibNames )
   /*
     val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
@@ -371,11 +368,11 @@ function createBibData( auxDir : string, searchDirs : list<string>, bibNames : l
   val (bibStems,bibContents) = bibNames.map( fun(bibName) {
     match(trySearchReadTextFile(bibName,searchDirs,".bib")) {
       Nothing -> {
-        println( "warning: unable to find bibliography file: " + bibName )
+        warning( "unable to find bibliography file: " + bibName )
         []
       }
       Just((bibFile,content)) -> {
-        trace("bib: found: " + bibFile)
+        // trace("bib: found: " + bibFile)
         if (dirname(bibFile) != auxDir) {
           if (!(tryWriteTextFile( combine(auxDir,basename(bibFile)), content))) {
             println("warning: unable to copy bibliography file to output directory: " + bibName)
@@ -386,7 +383,7 @@ function createBibData( auxDir : string, searchDirs : list<string>, bibNames : l
       }
     }
   }).concat.unzip
-  val digest = bibContents.join.md5
+  val digest = bibContents.join.md5  
   "\\bibdata{" + bibStems.join(",") + "}\n%md5:" + digest + "\n"
 }
 
