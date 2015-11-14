@@ -262,14 +262,41 @@ Bib Search Url:
 
 <!-- tex commands -->
 
-H0       { tex-cmd: "\chapter"; display: block }
-H1       { tex-cmd: "\section"; display: block }
-H2       { tex-cmd: "\subsection"; display: block }
-H3       { tex-cmd: "\subsubsection"; display: block }
-H4,H5,H6 { tex-cmd: "\paragraph"; display: block }
 HR       { tex-cmd: "\mdhr"; display: block }
 Pre      { tex-env: mdpre }
 Abstract { tex-env: abstract }
+H0,H1,H2,H3,H4,H5,H6  { display: block }
+
+@if heading-base<=0 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\part" } 
+  H2     { tex-cmd:"\chapter" }
+  H3     { tex-cmd:"\section" }
+  H4     { tex-cmd:"\subsection" }
+  H5     { tex-cmd:"\subsubsection" } 
+  H6     { tex-cmd:"\paragraph" } 
+}
+@if heading-base==1 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\chapter" } 
+  H2     { tex-cmd:"\section" }
+  H3     { tex-cmd:"\subsection" }
+  H4     { tex-cmd:"\subsubsection" }
+  H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base==2 {
+  H0     { tex-cmd:"\chapter" }
+  H1     { tex-cmd:"\section" } 
+  H2     { tex-cmd:"\subsection" }
+  H3     { tex-cmd:"\subsubsection" }
+  H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base>=3 {
+  H0     { tex-cmd:"\section" }
+  H1     { tex-cmd:"\subsection" } 
+  H2     { tex-cmd:"\subsubsection" }
+  H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
 
 Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
 TableFigure     { tex-env-outer: "table[&tex-float-placement;]"; tex-float-placement: "tbp" }
