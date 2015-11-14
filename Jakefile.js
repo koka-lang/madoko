@@ -46,6 +46,9 @@ task("madoko", [], function(rebuild) {
   if (args.indexOf("--target=cs") >= 0) {
     args.unshift("-o" + outputDir + "net")
   }
+  if (!fileExist(outputDir)) {
+    fs.mkdirSync(outputDir);
+  }
   fixVersion();
   var cmd = kokaCmd + " -v " + args + " " + maincli;
   jake.logger.log("> " + cmd);
