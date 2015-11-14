@@ -64,7 +64,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   val logo  = if (xfull && options.logo) then "\n\n~Begin LogoMadoko\n&LogoMadoko;\n~End LogoMadoko\n" else "\n"
   
   if (options.verbose>=3) then {
-    trace("metadata:")
+    trace("metadata: " + fmt.showFormatter)
     options.metadata.foreach fun(md) {
       trace("  " + md.fst + ": " + md.snd.cutoff(80))
     }
