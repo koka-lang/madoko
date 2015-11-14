@@ -139,7 +139,7 @@ val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?)
 val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b|<!--)|$))"
 val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:[^\\""]|\\[\s\S])*""|/(?:[^\\/\n]|\\.)*/)"
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
-val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\}\s*)"
+val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\} *(?:\n|$)\s*)"
 
 val rxMetaComment = regex(@"^(?:\s*<!--[\s\S]*?-->(?: *\n)+)+")
 val rxMeta        = regex(@"^"+ rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
