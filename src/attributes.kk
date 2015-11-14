@@ -102,6 +102,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
        then acc else acc(classes = acc.classes + [cname])
     }
     elif (start=="@") {
+      //trace("counter: " + name + ": " + value)
       acc(counters = acc.counters + [(name.substr(1), value)] )
     }
     elif (name=="elem") {
@@ -194,10 +195,10 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'
 }
 
-val rxId      = @"(?:[\.#@][\w\.#@\-:]*|[\-\w][\w\.#@\-]*)" 
+val rxId      = @"(?:[\.#][\w\.#@\-:]*|[@\-\w][\w\.#@\-]*)" 
 val rxQuoted  = @"(?:'(?:[^\n\\']|\\[\s\S])*'|""(?:[^\n\\""]|\\[\s\S])*"")"
 val rxHtmlValue = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s]|\\.)*)"
-val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:&(?:#[xX]?)?\w+;|[^\\""'\s;,]|\\.)*)"
+val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:&(?:#[xX]?)?[\w\-]+;|[^\\""'\s;,]|\\.)*)"
 val rxHtmlVal = @"(?:\s*=\s*(" + rxHtmlValue + @"))"
 val rxCssVal  = @"(?:\s*:\s*(" + rxCssValue + @"(?:(?:\s+|\s*(,\s*)+)" + rxCssValue + @")*))"
 val rxAttr    = regex(@"^(" + rxId + @")(?:" + rxHtmlVal + "|" + rxCssVal + ")?")
