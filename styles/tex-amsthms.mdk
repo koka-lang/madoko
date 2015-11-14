@@ -1,23 +1,32 @@
-Documentation: 
+Documentation:
    Use LaTeX `theorem`, `lemma`, etc. environments directly and without using
    the Madoko labeling and numbering. Useful for certain document classes.
 
-@tex ~Theorem    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=theorem}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Lemma      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=lemma}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Corollary  : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=corollary}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Proposition: before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=proposition}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Definition : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=definition}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Example    : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=example}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~Proof      : before=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env=proof}&nl;&source;&nl;~End Thm&nl;" notag
-@tex ~ThmCaption : tex-elem=mdThmCaption tight
-@tex ~Thm        : tex-elem=mdThm tight 
+@if tex and not( tex2 ) {
+  Theorem    { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:theorem}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Lemma      { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:lemma}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Corollary  { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:corollary}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Proposition{ before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:proposition}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Definition { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:definition}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Example    { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:example}&nl;&source;&nl;~End Thm&nl;"; notag }
+  Proof      { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:proof}&nl;&source;&nl;~End Thm&nl;"; notag }
+  ThmCaption { tex-elem:mdThmCaption; tight: true }
+  Thm        { tex-elem:mdThm; tight: true  }
+  test3: test3
+}
 
-@tex2x ~Theorem    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=theorem}&nl;&source;&nl;~End Thm&nl;"
-@tex2x ~Lemma      : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=lemma}&nl;&source;&nl;~End Thm&nl;" 
-@tex2x ~Corollary  : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=corollary}&nl;&source;&nl;~End Thm&nl;" 
-@tex2x ~Proposition: replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=proposition}&nl;&source;&nl;~End Thm&nl;"
-@tex2x ~Definition : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=definition}&nl;&source;&nl;~End Thm&nl;"
-@tex2x ~Example    : replace=clear replace="~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env=example}&nl;&source;&nl;~End Thm&nl;" 
-@tex2x ~Proof      : replace=clear replace="~Begin Thm {tex-env=proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;" 
-@tex2x ~ThmCaption : tex-env=mdthmcaption 
-@tex2x ~Thm        : tex-env=mdthm[&thm-env;] display=block
+
+test4: test4
+
+@if tex and tex2 {
+  Theorem    { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:theorem}&nl;&source;&nl;~End Thm&nl;" }
+  Lemma      { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:lemma}&nl;&source;&nl;~End Thm&nl;"  }
+  Corollary  { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:corollary}&nl;&source;&nl;~End Thm&nl;"  }
+  Proposition{ replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:proposition}&nl;&source;&nl;~End Thm&nl;" }
+  Definition { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:definition}&nl;&source;&nl;~End Thm&nl;" }
+  Example    { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:example}&nl;&source;&nl;~End Thm&nl;"  }
+  Proof      { replace:clear; replace:"~Begin Thm {tex-env:proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;"  }
+  ThmCaption { tex-env:mdthmcaption  }
+  Thm        { tex-env:"mdthm[&thm-env;]"; display:block }
+  test5: test5
+}
