@@ -166,7 +166,7 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
       [("affiliation" + authorCount.show, value)]
     }
     elif (key=="email") {
-      [("email" + authorCount.show, value)]
+      [("email" + authorCount.show, value.escapeAt)]
     }
     elif (key=="author-note") {
       [("author-note" + authorCount.show, value)]
@@ -174,6 +174,10 @@ public function completeAuthorKeys( mdata : metadata ) : metadata {
     else []
   }
   mdata + authors + [("author-count", authorCount.show )]
+}
+
+function escapeAt( s : string ) : string {
+  s.replaceAll(regex(@"\\(.)|(@)"), @"\$1$2")
 }
 
 // --------------------------------------------------------------
