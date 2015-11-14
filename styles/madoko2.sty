@@ -17,7 +17,7 @@
   /madoko/.new family,
   /madoko/heading-base/.new num=1,
   /madoko/section-num/.new toggle,
-  /madoko/bib-label/.new toggle=true,
+  /madoko/bib-label/.new value=true,
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
   /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
@@ -470,7 +470,7 @@
 % br
 
 \newcommand\mdfootnote[2]{%
-  \gdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
+  \protected@xdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
 }
 
 \newcommand\mdhyperref[2]{% {label}{text}
@@ -811,9 +811,15 @@
   \md@restorebiblabel
 \fi
 
-\iftoggle{/madoko/bib-label}{}{%
+\ifoptionequal{/madoko/bib-label}{false}{%
   \def\@biblabel#1{\hskip-\labelsep}% suppress bibitem labels
-}
+}{\ifoptionequal{/madoko/bib-label}{False}{%
+  \def\@biblabel#1{\hskip-\labelsep}% 
+}{\ifoptionequal{/madoko/bib-label}{force}{%
+  \def\@biblabel#1{#1}% force the showing of the biblabel
+}{\ifoptionequal{/madoko/bib-label}{Force}{%
+  \def\@biblabel#1{#1}%
+}{}}}}
 
 
 %-------------------------------------------------------------
@@ -905,8 +911,8 @@
       \gappto\md@authors{#1%
       \ifinstemail%
         \ifx\relax#2\relax\else\protect\institute{#2}\fi%
-        \ifx\relax#3\relax\else\protect\email{#3}\fi}%
-      \fi%
+        \ifx\relax#3\relax\else\protect\email{#3}\fi%
+      \fi}%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)
