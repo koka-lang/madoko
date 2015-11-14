@@ -2,7 +2,7 @@
   "scopeName": "source.madoko",
   "fileTypes": ["mdk","md","madoko","markdown"],
   "author": "Daan Leijen",
-  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright))\\s*:",
+  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright|Documentation))\\s*:",
   "foldingStartMarker": "^(~+)\\w+\\b.*$",
   "foldingStopMarker": "^\\1\\s*$",
   "patterns": [
@@ -61,7 +61,7 @@
   ],
   "repository": {
     "metadata":
-      { "begin": "^(Title|Author|Description|License|Copyright|Package)\\s*:"
+      { "begin": "^(Title|Author|Description|License|Copyright|Package|Documentation)\\s*:"
       , "end": "^(?!\\s)(?!@([\\w\\-]+)|[\\w\\.#~][\\w\\-\\.#~, \\t\\*]*[:\\{]|<!--)"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
