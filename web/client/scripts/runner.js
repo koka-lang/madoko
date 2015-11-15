@@ -281,7 +281,7 @@ var Runner = (function() {
     var self = this;
     var errors = [];
     // location latex errors
-    var rx = /(?:^|\n) *(error|warning) *: *(?:source +line *: *)?([\w\-\.;:\\\/ ]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
+    var rx = /(?:^|\n) *(error|warning) *: *(?:source +)?line *: *([\w\-\.;:\\\/ ]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[2];
@@ -299,15 +299,11 @@ var Runner = (function() {
           endColumn: 1,
         };
         errors.push( { type: cap[1].toLowerCase(), range: range, path: fileName, message: message } );  
-      }
-      else {
-        // generic error just show on console
-        Util.message( cap[0], Util.Msg.Error);
-      }
+      }      
     }
 
     // madoko  errors
-    var rx = /^ *(error|warning) *: *((?:[^:]|:\d+)+):(.*)$/gim;
+    var rx = /^ *(error|warning) *: *((?:[^:]|:\d+)+|\w+): *(.*)$/gim;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[2];
@@ -315,7 +311,7 @@ var Runner = (function() {
       var i = location.lastIndexOf(";");
       if (i >= 0) location = location.substr(i+1);
       var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
-      if (capl) {
+      if (capl && !Util.startsWith(message,"unable to read include")) {
         var line = parseInt(capl[2]);
         var fileName = capl[1] || "";
         var range = {
@@ -326,7 +322,12 @@ var Runner = (function() {
         };
         errors.push( { type: cap[1].toLowerCase(), glyphType: "error", path: fileName, range: range, message: message } );  
       }
+      else {
+        // generic error; only show on console
+        Util.message( cap[0], (cap[1]==="warning" ? Util.Msg.Warning : Util.Msg.Error));
+      }
     }
+
 
     // after bug fix in latex error regex in madoko this seems no longer necessary?
     // other errors
@@ -341,7 +342,7 @@ var Runner = (function() {
     show(errors);
     if (errors.length > 0) {
       var err = errors[0]; 
-      var msg = err.message.replace(/^\s*(.*)[\s\S]*/,"$1"); // just the first line    
+      var msg = err.message; // .replace(/^\s*(.*)[\s\S]*/,"$1"); // just the first line    
       return (err.type + ": " + err.path + ":" + err.range.startLineNumber + ": " + msg);
     }
     else {
