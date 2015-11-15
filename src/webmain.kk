@@ -75,7 +75,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
     cont()
   }
 
-  function runBibtex( bibFile : string, opts : options, cont : bool -> io () ) : io () 
+  function runBibtex( bibFiles : list<string>, opts : options, cont : bool -> io () ) : io () 
   {
     rerun := True
     trace("bibtex rerun")
