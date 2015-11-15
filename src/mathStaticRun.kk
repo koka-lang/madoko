@@ -72,7 +72,15 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
           opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
         }
         else {
-          opts.printErr(stdout + stderr)
+          val allout = stdout + stderr
+          opts.printErr("error: bibtex:\n" + allout.indent(2))
+          match (allout.find(rxBibtexNoStyle)) {
+            Nothing -> ()
+            Just(cap) -> opts.printErr("error: " + cap.groups[3] + ":" + cap.groups[2] + ":" + 
+                                        "\n  Cannot find bibliography style file '" + cap.groups[1] + "'" +
+                                        "\n  Hint: Perhaps put the file in the document directory and use the" + 
+                                        "\n        'Bib style: " + cap.groups[1].noext + ".bst' metadata (with the '.bst' extension).");
+          }
         }
         continue(True)
       }
@@ -83,6 +91,8 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
     }
   },0,bibFile.dirname)
 }
+
+val rxBibtexNoStyle = regex(@"^ *I couldn't open style file *(.*)\s*---line *(\d+) *of file *(.*)", multiline=True)
 
 public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
   opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
