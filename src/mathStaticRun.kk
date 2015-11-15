@@ -327,7 +327,7 @@ function findLatexPackage( logout : string, pkgs : list<string> = [] ) : maybe<s
       val newpkgs = 
         if (cap.groups[6] != "") {
           // loaded))
-          pkgs.drop(cap.groups[6].length)
+          pkgs.drop(cap.groups[6].count(")"))
         }
         else {
           val pkg = cap.groups[1] + cap.groups[4]
@@ -347,9 +347,9 @@ function findLatexPackage( logout : string, pkgs : list<string> = [] ) : maybe<s
 
 val rxPackage   = @"\((?:\./)?([^\)\n\r\t]+) *(?:(\)+) *)?"
 val rxPackageEnd = @"(\)+) *(?:" + rxPackage + @")?"
-val rxPackageEndLoaded = @"^[^\(\n]* loaded(\)+)(?=$| loaded\))"  // xypic package suffers from this
+val rxPackageEndLoaded = @"[^\(\r\n]*?((?: loaded\)+)+)"  // xypic package suffers from this
 val rxPackageStart = rxPackage + "$"
-val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + ")$|" + rxPackageEndLoaded, multiline=True)
+val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + "|" + rxPackageEndLoaded + @")$", multiline=True)
 
 
 public function latexStrip( s : string ) : string
