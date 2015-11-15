@@ -330,8 +330,8 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
 function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<string> {
   val defaultAux = outName.noext + "-bib.aux"
   val cites = splitCiteData( citeData )
-  //trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
   //trace("bibnames: " + bibNames.join(","))
+  //trace("cite data:\n" + citeData.indent(2))
   val bibData = createBibData( outName.dirname, searchDirs, bibNames )
   /*
     val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
@@ -344,6 +344,7 @@ function writeCitationsData( citeData : string, outName : string, searchDirs : l
     val (auxStem,auxData) = kv
     val auxName = outName.noext + "-bib"+ (if (auxStem=="") then "" else "-" + auxStem) + ".aux"
     val changed = writeCitations(auxData, bibData, auxName, opts, True)
+    //trace("bib: " + auxName + ", changed: " + changed.show + "\n" + auxData.indent(2))
     if (changed || opts.rebuild) then Just(auxName) else Nothing
   })
 }
@@ -358,11 +359,23 @@ function splitCiteData( citeData : string ) : io list<(string,string)> {
       val auxData = 
         if (auxName.isEmpty) then auxRaw 
          else auxRaw.replaceAll("\\citation{" + auxName + ":", "\\citation{")
-      Cons( (auxName,auxData), splitCiteData( citeData.substr1(cap.next) ))
+      auxInsert( auxName, auxData, splitCiteData( citeData.substr1(cap.next) ))
     }
   }
 }
 val rxBibFile = regex(@"^ *%mdk bib: *([^\s]*)\s*", multiline=True )
+
+function auxInsert( auxName : string, auxData : string, xs : list<(string,string)> ) : list<(string,string)> {
+  match(xs) {
+    Nil -> [(auxName,auxData)]
+    Cons(x,xx) -> {
+      if (x.fst == auxName) 
+       then Cons( (x.fst, auxData + "\n" + x.snd), xx)
+       else Cons( x, auxInsert(auxName,auxData,xx) )
+    }
+  }
+}
+
 
 // Get hashes of bib files
 function createBibData( auxDir : string, searchDirs : list<string>, bibNames : list<string> ) : io string {
