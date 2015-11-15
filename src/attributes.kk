@@ -314,7 +314,7 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
   function checkCond( crepl : string ) : string {
     if (!crepl.startsWith("@if"))
       then checkReplace(crepl)
-      else match (evalCondition(crepl,attrs,labels,metadata)) {
+      else match (evalCondition(crepl,txt,attrs,labels,metadata)) {
         Null -> txt // missing 'else' -> no replace
         c    -> checkReplace(c.string)
       } 
@@ -329,12 +329,12 @@ val rxmapping = regex(@"^//((?:[^\\]|\\.)*)//([gimc]*)$")
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
-function evalCondition( cond : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : constant {
+function evalCondition( cond : string, source : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : constant {
   function lookup(v,display) {
-    String(expandKeys("&" + v + ";", "",attrs,labels,metadata))
+    String(expandKeys("&" + v + ";", source,attrs,labels,metadata))
   }
   val res = evaluate( cond, fun(e) { evalExpr(e,lookup) }, String(""))
-  //trace("eval condition: " + res.show + ": " + cond)
+  // trace("eval condition: " + res.show + ": " + cond)
   res
 }
 

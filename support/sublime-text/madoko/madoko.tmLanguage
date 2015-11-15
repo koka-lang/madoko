@@ -12,7 +12,7 @@
 		<string>markdown</string>
 	</array>
 	<key>firstLineMatch</key>
-	<string>\s*(?i:(Title|Author|Description|License|Copyright))\s*:</string>
+	<string>\s*(?i:(Title|Author|Description|License|Copyright|Documentation))\s*:</string>
 	<key>foldingStartMarker</key>
 	<string>^(~+)\w+\b.*$</string>
 	<key>foldingStopMarker</key>
@@ -580,7 +580,7 @@
 		<key>metadata</key>
 		<dict>
 			<key>begin</key>
-			<string>^(Title|Author|Description|License|Copyright|Package)\s*:</string>
+			<string>^(Title|Author|Description|License|Copyright|Package|Documentation)\s*:</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>0</key>
