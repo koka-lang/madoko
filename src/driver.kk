@@ -179,17 +179,15 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                    markdown(icontent,xopts0) 
                                  }}}}}
     // write an aux file
-    val bibNames = mopts.bib.splitPaths
     val bibChanged =
       if (logs == "") then []
-      elif (mopts.rebuild) then bibNames
       else {
         if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
           // copy bst file
           tryCopyTextFileFromTo( mopts.bibStyle.basename, mopts.bibStyle.dirname, outName.dirname )
           ()          
         }
-        writeCitationsData( logs, outName, searchDirs, bibNames, mopts )
+        writeCitationsData( logs, outName, searchDirs, mopts.bib.splitPaths, mopts )
       }
 
     // run bibtex?
@@ -346,7 +344,7 @@ function writeCitationsData( citeData : string, outName : string, searchDirs : l
     val (auxStem,auxData) = kv
     val auxName = outName.noext + "-bib"+ (if (auxStem=="") then "" else "-" + auxStem) + ".aux"
     val changed = writeCitations(auxData, bibData, auxName, opts, True)
-    if (changed) then Just(auxName) else Nothing
+    if (changed || opts.rebuild) then Just(auxName) else Nothing
   })
 }
 
