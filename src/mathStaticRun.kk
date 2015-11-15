@@ -138,18 +138,23 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
           if (notfound != "") opts.printErr(notfound)
         }
         else {
+          val errmsg = "error: latex:\n" + stdout + stderr
           match(logout.find(rxLatexErr)) {
-            Just(cap) -> {          
-              val texContent = readTextFileDef(texFile,"")
-              match (content.findLatexLine(cap.matched,texContent)) {
-                Just(lineNo) -> opts.printErr("error: source line: " + lineNo)
-                Nothing -> ()
+            Just(cap) -> match(cap.matched.findLatexLineNo) {
+              Just(texlineNo) -> {
+                val texContent = readTextFileDef(texFile,"")
+                match(findLatexPackage(logout.substr(0,cap.index))) {
+                  Just(pkg) -> opts.printErr("error: source line: " + pkg + ":" + texlineNo.show)
+                  Nothing   -> match (content.findLatexLine(texlineNo,texContent)) {
+                    Just(lineNo) -> opts.printErr("error: source line: " + lineNo)
+                    Nothing -> ()
+                  }
+                }                  
+                opts.printErr(nicifyLatexErr(cap.matched))
               }
-              opts.printErr(nicifyLatexErr(cap.matched))
+              Nothing -> opts.printErr(errmsg)    
             }
-            Nothing -> {
-              opts.printErr("error: latex:\n" + stdout + stderr)    
-            }
+            Nothing -> opts.printErr(errmsg)              
           } 
           opts.printErr("log written at: " + texFile.changeExt(".log"))
         }      
@@ -269,31 +274,19 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
   }  
 }
 
-
-function findLatexLine( src : string, texerr : string, texSrc : string ) : maybe<string> {
+function findLatexLineNo( texerr : string ) : maybe<int> {
   match(texerr.find(rxLatexLineNum)) {
-    Nothing -> Nothing
-    Just(cap) -> {
-      val lineNo = cap.groups[1].parseInt.maybe(0,id)
-      val searchLines = texSrc.lines.list.take(lineNo-1).reverse
-      //trace("latex lineno: " + lineNo.show + "\n" + searchLines.join("\n") + "\n\n")
-      findLatexLineData(0, searchLines )
-      /*
-      lineStart0 = cap.groups[2]
-      lineStart = if (!(lineStart0.contains(rxLatexEndSnippet))) then lineStart0
-                  else { // find line before it in the TeX source
-                    lineNo = cap.groups[1].parseInt.maybe(0,id)
-                    match(texSrc.lines.list.drop(lineNo-2)) {
-                      Cons(line) -> line
-                      _          -> lineStart0
-                    }
-                  }
-      latexFindLineByMatch(lineStart,src)
-      */
-    }
+    Nothing   -> Nothing
+    Just(cap) -> cap.groups[1].parseInt
   }
 }
 val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
+
+function findLatexLine( src : string, lineNo, texSrc : string ) : maybe<string> {
+  val searchLines = texSrc.lines.list.take(lineNo-1).reverse
+  //trace("latex lineno: " + lineNo.show + "\n" + searchLines.join("\n") + "\n\n")
+  findLatexLineData(0, searchLines )
+}
 val rxLatexEndSnippet = regex(@"\\end{md(Inline|Display)?Snippet}")
 
 function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> {
@@ -320,6 +313,34 @@ function findLatexLineData( delta : int, lines : list<string> ) : maybe<string> 
 val rxLineData    = regex( @"^(?:[^\\%]|\\.)*% *(?:mdk-)?data-line=\{([^\}]*)\} *$" )
 val rxLineNo      = regex( @"^([^:]*:)?(\d+)$" )
 val rxEndComment  = regex( @"^(?:[^\\%]|\\.)*%mdk.*$" )
+
+
+function findLatexPackage( logout : string, pkgs : list<string> = [] ) : maybe<string> {
+  match(logout.find(rxPackageLine)) {
+    Nothing -> {
+      match(pkgs) {
+        Cons -> Just(pkgs.reverse.join(";"))
+        _    -> Nothing
+      }
+    }
+    Just(cap) -> {
+      val pkg = cap.groups[1] + cap.groups[4]
+      val dropBefore = cap.groups[3].length
+      val dropAfter  = cap.groups[2].length + cap.groups[5].length 
+      //trace("flp: packages: " + pkgs.join(";"))
+      //trace("     found: " + pkg + ", " + dropBefore.show + ", " + dropAfter.show)
+      val pkgs0 = pkgs.drop(dropBefore)
+      val pkgs1 = if (pkg.isEmpty) then pkgs0 else Cons(pkg,pkgs0)
+      val pkgs2 = pkgs1.drop(dropAfter)
+      findLatexPackage( logout.substr1(cap.next), pkgs2 )
+    }
+  }
+}
+
+val rxPackage   = @"\((?:\./)?([^\)\n\r\t]+) *(?:(\)+) *)?"
+val rxPackageEnd = @"(\)+) *(?:" + rxPackage + @")?"
+val rxPackageStart = rxPackage + "$"
+val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + ")$", multiline=True)
 
 
 public function latexStrip( s : string ) : string
