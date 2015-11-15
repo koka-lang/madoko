@@ -324,23 +324,32 @@ function findLatexPackage( logout : string, pkgs : list<string> = [] ) : maybe<s
       }
     }
     Just(cap) -> {
-      val pkg = cap.groups[1] + cap.groups[4]
-      val dropBefore = cap.groups[3].length
-      val dropAfter  = cap.groups[2].length + cap.groups[5].length 
-      //trace("flp: packages: " + pkgs.join(";"))
-      //trace("     found: " + pkg + ", " + dropBefore.show + ", " + dropAfter.show)
-      val pkgs0 = pkgs.drop(dropBefore)
-      val pkgs1 = if (pkg.isEmpty) then pkgs0 else Cons(pkg,pkgs0)
-      val pkgs2 = pkgs1.drop(dropAfter)
-      findLatexPackage( logout.substr1(cap.next), pkgs2 )
+      val newpkgs = 
+        if (cap.groups[6] != "") {
+          // loaded))
+          pkgs.drop(cap.groups[6].length)
+        }
+        else {
+          val pkg = cap.groups[1] + cap.groups[4]
+          val dropBefore = cap.groups[3].length
+          val dropAfter  = cap.groups[2].length + cap.groups[5].length 
+          //trace("flp: packages: " + pkgs.join(";"))
+          //trace("     found: " + pkg + ", " + dropBefore.show + ", " + dropAfter.show)
+          val pkgs0 = pkgs.drop(dropBefore)
+          val pkgs1 = if (pkg.isEmpty) then pkgs0 else Cons(pkg,pkgs0)
+          val pkgs2 = pkgs1.drop(dropAfter)
+          pkgs2
+        }
+      findLatexPackage( logout.substr1(cap.next), newpkgs )
     }
   }
 }
 
 val rxPackage   = @"\((?:\./)?([^\)\n\r\t]+) *(?:(\)+) *)?"
 val rxPackageEnd = @"(\)+) *(?:" + rxPackage + @")?"
+val rxPackageEndLoaded = @"^[^\(\n]* loaded(\)+)(?=$| loaded\))"  // xypic package suffers from this
 val rxPackageStart = rxPackage + "$"
-val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + ")$", multiline=True)
+val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + ")$|" + rxPackageEndLoaded, multiline=True)
 
 
 public function latexStrip( s : string ) : string
