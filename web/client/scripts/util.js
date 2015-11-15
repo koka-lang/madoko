@@ -185,10 +185,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       consoleOut.innerHTML = prefix + dprefix + span() + "</span></div>" + current;
       
       if (kind===Msg.Warning || kind===Msg.Error || kind===Msg.Exn) {
-        return setStatusHTML(span(60),kind);
+        return setStatusHTML(span(70),kind);
       }
       else if (kind===Msg.Status || kind===Msg.HiStatus) {
-        return setStatusHTML(span(60),kind)
+        return setStatusHTML(span(70),kind)
       }
       else {
         return 0;
