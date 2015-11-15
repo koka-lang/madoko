@@ -26,7 +26,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
   function warning( msg, lineNo = 0, fileName = "") {
     options.printErr( "warning: " + 
              (if (fileName != "" || lineNo > 0)
-               then fileName + (if (lineNo > 0) then " (" + lineNo.show + ")" else "") + ": "
+               then fileName + (if (lineNo > 0) then ":" + lineNo.show else "") + ": "
                else "") +
              msg )
   }
