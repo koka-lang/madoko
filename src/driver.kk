@@ -333,7 +333,7 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
 function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<string> {
   val defaultAux = outName.noext + "-bib.aux"
   val cites = splitCiteData( citeData )
-  trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
+  //trace("cite data: outname: " + outName + ", dir: " + outName.dirname)
   val bibData = createBibData( outName.dirname, searchDirs, bibNames )
   /*
     val bibData = createBibData(bibAux, inName, searchDirs, mopts.bib.splitPaths)
@@ -375,7 +375,7 @@ function createBibData( auxDir : string, searchDirs : list<string>, bibNames : l
         []
       }
       Just((bibFile,content)) -> {
-        trace("bib: found: " + bibFile)
+        //trace("bib: found: " + bibFile)
         if (dirname(bibFile) != auxDir) {
           if (!(tryWriteTextFile( combine(auxDir,basename(bibFile)), content))) {
             println("warning: unable to copy bibliography file to output directory: " + bibName)
