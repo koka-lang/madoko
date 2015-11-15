@@ -69,7 +69,7 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
       system(opts.bibtex.quote + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
           opts.printErr("error: could not find bibtex: \"" + bibtexCmd + "\"\n" +
-                        "\n  hint: Set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
+                        "\n  hint: Set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.\n")
         }
         else {
           val allout = stdout + stderr
@@ -79,11 +79,11 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
             Just(cap) -> opts.printErr("error: source line: " + cap.groups[3] + ":" + cap.groups[2] + 
                                         "\n  cannot find bibliography style file '" + cap.groups[1] + "'" +
                                         "\n  hint: perhaps put the file in the document directory and use the" + 
-                                        "\n        'Bib style: " + cap.groups[1].noext + ".bst' metadata (with the '.bst' extension).");
+                                        "\n        'Bib style: " + cap.groups[1].noext + ".bst' metadata (with the '.bst' extension).\n");
           }
           allout.findAll(rxBibtexError).foreach( fun(cap) {
             opts.printErr("error: source line: " + cap.groups[3] + ":" + cap.groups[2] +
-                          "\n  " + (cap.groups[1] + cap.groups[4].unindent).indent(2) )
+                          "\n  " + (cap.groups[1] + cap.groups[4].unindent).indent(2) + "\n" )
           })
         }
         continue(True)
