@@ -115,6 +115,9 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                        " --halt-on-error --interaction=nonstopmode" + 
                       " " + texFile.norm.quote 
 
+  if (runCount==0 && opts.rebuild) {
+    unlinkSync(texFile.changeExt(".aux"))
+  }
   opts.print("> " + latexCmd,3)
   
   system(latexCmd, fun(err:int,stdout:string,stderr:string) {
