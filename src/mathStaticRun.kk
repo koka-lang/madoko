@@ -68,19 +68,23 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
       opts.printErr("error while running: > " + bibtexCmd)
       system(opts.bibtex.quote + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          opts.printErr("could not find bibtex: \"" + bibtexCmd + "\"")
-          opts.printErr("set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
+          opts.printErr("error: could not find bibtex: \"" + bibtexCmd + "\"\n" +
+                        "\n  hint: Set the 'BibTeX: ...' key or give the '--bib=<cmd>' command line option.")
         }
         else {
           val allout = stdout + stderr
           opts.printErr("error: bibtex:\n" + allout.indent(2))
           match (allout.find(rxBibtexNoStyle)) {
             Nothing -> ()
-            Just(cap) -> opts.printErr("error: " + cap.groups[3] + ":" + cap.groups[2] + ":" + 
-                                        "\n  Cannot find bibliography style file '" + cap.groups[1] + "'" +
-                                        "\n  Hint: Perhaps put the file in the document directory and use the" + 
+            Just(cap) -> opts.printErr("error: source line: " + cap.groups[3] + ":" + cap.groups[2] + 
+                                        "\n  cannot find bibliography style file '" + cap.groups[1] + "'" +
+                                        "\n  hint: perhaps put the file in the document directory and use the" + 
                                         "\n        'Bib style: " + cap.groups[1].noext + ".bst' metadata (with the '.bst' extension).");
           }
+          allout.findAll(rxBibtexError).foreach( fun(cap) {
+            opts.printErr("error: source line: " + cap.groups[3] + ":" + cap.groups[2] +
+                          "\n  " + (cap.groups[1] + cap.groups[4].unindent).indent(2) )
+          })
         }
         continue(True)
       }
@@ -92,7 +96,9 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
   },0,bibFile.dirname)
 }
 
-val rxBibtexNoStyle = regex(@"^ *I couldn't open style file *(.*)\s*---line *(\d+) *of file *(.*)", multiline=True)
+val rxBibtexLineinfo= @"---line *(\d+) *of file *(.*)"
+val rxBibtexNoStyle = regex(@"^ *I couldn't open style file *(.*)\s*" + rxBibtexLineinfo, multiline=True)
+val rxBibtexError   = regex(@"^ *(.+?)" + rxBibtexLineinfo + @"((?:\s*:.*)*)", multiline=True)
 
 public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
   opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
@@ -124,11 +130,11 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
     val logout = readTextFileDef(texFile.changeExt(".log"),"")
     if (err!=0) {
       opts.printErr("error while running: \n> " + latexCmd)
-      trace("error code: " + err.show + "\n" + stdout + stderr)
+      //trace("error code: " + err.show + "\n" + stdout + stderr)
       //println(stdout + stderr)
       system(texCmd.quote + " -version") fun(errx:int,stdoutx,stderrx) {
         if (errx!=0) {
-          opts.printErr("could not find program: \"" + texCmd + "\"")
+          opts.printErr("error: could not find program: \"" + texCmd + "\"")
           if (notfound != "") opts.printErr(notfound)
         }
         else {
@@ -142,7 +148,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
               opts.printErr(nicifyLatexErr(cap.matched))
             }
             Nothing -> {
-              opts.printErr(stdout + stderr)    
+              opts.printErr("error: latex:\n" + stdout + stderr)    
             }
           } 
           opts.printErr("log written at: " + texFile.changeExt(".log"))
