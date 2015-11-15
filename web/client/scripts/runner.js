@@ -300,6 +300,10 @@ var Runner = (function() {
         };
         errors.push( { type: cap[1].toLowerCase(), range: range, path: fileName, message: message } );  
       }
+      else {
+        // generic error just show on console
+        Util.message( cap[0], Util.Msg.Error);
+      }
     }
 
     // madoko  errors
@@ -333,8 +337,7 @@ var Runner = (function() {
         errors.unshift( { type: "error", path: docname, range: range, message: cap[2] } ); 
       }
     }
-    
-    
+
     show(errors);
     if (errors.length > 0) {
       var err = errors[0]; 
