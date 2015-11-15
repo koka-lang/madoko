@@ -67,7 +67,7 @@ public function processContent( inName : string, outName : string, content : str
                   else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
-    val dims = outName.changeExt(".dimx").readTextFileDef("",True)
+    val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
     val mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale,mmopts.mathBaseline)
 
     val xopts  = opts1(mathdim=mdim)
@@ -179,18 +179,21 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                    markdown(icontent,xopts0) 
                                  }}}}}
     // write an aux file
+    val bibNames = mopts.bib.splitPaths
     val bibChanged =
-      if (logs == "") then [] else {
+      if (logs == "") then []
+      elif (mopts.rebuild) then bibNames
+      else {
         if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
           // copy bst file
           tryCopyTextFileFromTo( mopts.bibStyle.basename, mopts.bibStyle.dirname, outName.dirname )
           ()          
         }
-        writeCitationsData( logs, outName, searchDirs, mopts.bib.splitPaths, mopts )
+        writeCitationsData( logs, outName, searchDirs, bibNames, mopts )
       }
 
     // run bibtex?
-    if ((!bibChanged.isNil || mopts.rebuild) && firstTime && mopts.bibtex!="") {
+    if (!bibChanged.isNil && firstTime && mopts.bibtex!="") {
       (runners.runBibtex)( bibChanged, mopts ) fun(err) {
         redo()
       }
