@@ -1650,7 +1650,7 @@ var UI = (function() {
           round:round,
           showErrors: function(errs) { self.showErrors(errs,false); },
         };
-        var msgid = Util.message("Rendering math...", Util.Msg.Status );
+        var msgid = Util.message("Rendering math and references...", Util.Msg.Status );
         return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
             // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
