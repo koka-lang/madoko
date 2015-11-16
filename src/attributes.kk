@@ -79,6 +79,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       elif (name=="class") {
         acc(classes = [])
       }
+      elif (name=="counters") {
+        acc(counters = [])
+      }
       elif (name=="replace" || name=="before" || name=="after") {
         acc(replacers = [])
       }
@@ -89,8 +92,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     elif (name=="clear") {
       Attrs(text=attrsx.text,defaults=False)
     }
-    elif (name=="-" || name=="clearnum") {
-      acc( counters=[], label="", replacers=[] )
+    elif (name=="-" || name=="clearnum" || name==".clearnum") {
+      acc( counters=[], label="", replacers=[], 
+           classes=["clearnum"] + acc.classes.filter(fun(nm) { nm != "clearnum" }) )
     }
     elif (start=="#") {
       //trace("attrs name: " + name + ": " + value.show)
