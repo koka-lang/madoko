@@ -107,7 +107,7 @@ function parseDefinitionsFull(
                     if (attrsy.name != "" && attrsy.label=="") then attrsy( label = "@"+bname ) else attrsy
                   } 
     //adjust counters
-    if (bname!="" && attrs.defaults) counters.adjustCounter(bname,"",nested)
+    if (bname!="" && attrs.defaults && !attrs.hasClass("clearnum")) counters.adjustCounter(bname,"",nested)
 
     attrsd.common/counters.foreach fun(cv) {
       val (counter,value) = cv
@@ -162,7 +162,7 @@ function parseDefinitionsFull(
       Just(value) -> {
         val entry = match(rblock) {
           Heading(d,txt,xs) -> {
-            (d,xs.addKeyval("toc-line",txt))  // note: txt is processed already
+            (d,if (xs.hasKey("toc-line").bool) then xs else xs.addKeyval("toc-line",txt))  // note: txt is processed already
           }
           _ -> {
             val depth = attrsp.lookupKey("toc-depth","1").parseInt.maybe(1,id)
