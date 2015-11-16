@@ -1,4 +1,3 @@
-[INCLUDE=tex-chapters]
 [INCLUDE=lipsum]
 
 Title       : Title
@@ -22,22 +21,60 @@ Package*    : polyglossia
 Package*    : [strict=true, autostyle, german=quotes] csquotes
 Package     : [headsepline, plainheadsepline, automark, autooneside=true] scrlayer-scrpage
 xPackage     : natbib
-Package*    : [style=authoryear,natbib=true,backend=biber,doi=false,url=false,isbn=false,eprint=false] biblatex
+xPackage*    : [style=authoryear,natbib=true,backend=biber,doi=false,url=false,isbn=false,eprint=false] biblatex
 Package     : setspace
 Package     : hyperref
 
+@if tex {
+  Heading Base: 1
+}
 
-Tex Section Num: True
-~code,~pre : tex-cmd-before='\shorthandoff{"}' 
+.clearnum { toc:none; }
+
+h1.clearnum { tex-cmd:"\chapter*" }
+
+solution: usetexbook
+
+heading-endperiod:
+
+@if tex and solution=="simple" {
+}
+
+@if tex and solution=="simplebook" {
+    Doc Class: book
+    h1 { before:clear }
+}
+
+@if tex and solution=="withbreak" {
+    h1 { tex-cmd:"\mychapter{&tex-label;}"; tex-label:"@h1"; before:clear;  }
+}
+
+@if tex and solution=="usetex" {    
+    Tex Section Num: True
+}
+
+@if tex and solution=="usetexbook" {    
+    Tex Section Num: True
+    Doc Class: book
+}
+
+Tex Header:
+    \makeatletter
+    \newcommand\mychapter[2]{%
+      \def\chapterformat{#1\enspace}%
+      \chapter[\chapterformat#2]{#2}%
+    }
+    \makeatother
 
 <!-- Preamble der Latexdatei -->
+~code,~pre : tex-cmd-before='\shorthandoff{"}' 
 Tex Header* :
     \pagestyle{scrheadings}
     \ihead[\headmark]{\headmark}
     \ohead[\pagemark]{\pagemark}
     \chead{}
     \cfoot[]{}
-    \addbibresource{example2.bib}
+    %\addbibresource{example2.bib}
     %\addtolength{\bibitemsep}{\baselineskip}
     \setmainlanguage[variant=german, spelling=new, latesthyphen=true, babelshorthands=true]{german}
     \setotherlanguage[variant=american]{english}
@@ -49,6 +86,8 @@ Tex Header* :
     \hypersetup{hidelinks}
 
 
+
+
 [TITLE]
 
 ~ Abstract
@@ -57,6 +96,13 @@ egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
 ~
 
+# Table of contents { - }
+
+[TOC]
+
+~ TexRaw
+\tableofcontents
+~
 
 # Introduction     { #sec-intro }
 
@@ -70,6 +116,8 @@ the document, and similarly with bibtex files, latex style files, etc.
 
 [butterfly]: images/butterfly.png "butterfly"  { width=4em }
 
+## Contributions
+
 Our [contributions]{font-family='"MS Gothic"'} are:
 
 * A figure of a _butterfly_;
@@ -78,16 +126,9 @@ Our [contributions]{font-family='"MS Gothic"'} are:
 * And references to Tex books [@KnuthTex;@LamportLatex;@Goo93;@FBerg04] and others [@Grandstrand]. 
   Textual citations, like @KnuthTex are also possible.
 
-# Content
+# Content as a really long heading title is here
 
-A definition of $e$ is shown in Equation [#euler] proved by Theorem [#th-euler]:
-
-~ Equation { #euler }
-e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
-~
-
-~ Theorem {#th-euler}
-(_Euler's theorem_) More math here.
+~ lipsum
 ~
 
 Let's program some Javascript:
@@ -103,12 +144,13 @@ The syntax highlighting works in PDF too.
 
 # Conclusion
 
-Really fun to write Markdown :-)
-
-~ TexRaw
-Testing citations: \cite{KnuthTex,Goo93}.
-
-\printbibliography
+~ lipsum
 ~
 
-no[BIB]
+~ TexRaw
+%Testing citations: \cite{KnuthTex,Goo93}.
+%
+%\printbibliography
+~
+
+[BIB]
