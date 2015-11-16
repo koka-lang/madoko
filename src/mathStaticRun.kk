@@ -143,6 +143,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
             Just(cap) -> match(cap.matched.findLatexLineNo) {
               Just(texlineNo) -> {
                 val texContent = readTextFileDef(texFile,"")
+                //trace(logout.substr(cap.index-100))
                 match(findLatexPackage(logout.substr(0,cap.index))) {
                   Just(pkg) -> opts.printErr("error: source line: " + pkg + ":" + texlineNo.show)
                   Nothing   -> match (content.findLatexLine(texlineNo,texContent)) {
@@ -349,7 +350,7 @@ val rxPackage   = @"\((?:\./)?([^\)\n\r\t]+) *(?:(\)+) *)?"
 val rxPackageEnd = @"(\)+) *(?:" + rxPackage + @")?"
 val rxPackageEndLoaded = @"[^\(\r\n]*?((?: loaded\)+)+)"  // xypic package suffers from this
 val rxPackageStart = rxPackage
-val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + "|" + rxPackageEndLoaded + @")(?=$| *\[\d+(?:$|\]))", multiline=True)
+val rxPackageLine = regex(@"^(?:\] *)?(?:" + rxPackageStart + "|" + rxPackageEnd + "|" + rxPackageEndLoaded + @")(?=$| *\[\d+(?:$|\]))", multiline=True)
 
 
 public function latexStrip( s : string ) : string
