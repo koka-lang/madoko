@@ -94,11 +94,6 @@ h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" 
 heading-endperiod: .
 heading-format   : &label;&heading-endperiod;&ensp;
 
-h1,h2,h3,h4 {
-  toc-line: "&heading-format;&source;"; 
-}
-.clearnum { toc:none; }
-
 @if heading-depth>=1 {
   h1 { before: "[&heading-format;]{.heading-before}" }
 }
@@ -123,6 +118,11 @@ h1,h2,h3,h4 {
 @if toc-depth>=4 {
   h4 { toc }
 }
+
+h1,h2,h3,h4 {
+  toc-line: "&heading-format;&source;"; 
+}
+.clearnum { toc:none; }
 
 
 <!-- entities -->
@@ -280,6 +280,14 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H4     { tex-cmd:"\subsection" }
   H5     { tex-cmd:"\subsubsection" } 
   H6     { tex-cmd:"\paragraph" } 
+
+  H0.clearnum { tex-cmd:"\part*" }
+  H1.clearnum { tex-cmd:"\part*" }
+  H2.clearnum { tex-cmd:"\chapter*" }
+  H3.clearnum { tex-cmd:"\section*" }
+  H4.clearnum { tex-cmd:"\subsection*" }
+  H5.clearnum { tex-cmd:"\subsubsection*" }
+  H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base==1 {
   H0     { tex-cmd:"\part" }

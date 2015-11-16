@@ -92,9 +92,9 @@ function parseDefinitionsFull(
   var footnotesAtEnd := True
   
   // initialize defaults from metadata
-  val mdefaultAttrs = mdict()
-  mdata.initializeDefaults(mdefaultAttrs,labels,counters,nested)
-  val defaultAttrs : rules = rulesFromDefaults(mdefaultAttrs.freeze())
+  //val mdefaultAttrs = mdict()
+  //mdata.initializeDefaults(mdefaultAttrs,counters,nested)
+  val defaultAttrs : rules = rulesFromMeta(mdata)
 
   // process attributes 
   function process( attrs : attrs, previousPar : parInfo, block : block ) : <div,st<_h>> block {
@@ -116,7 +116,7 @@ function parseDefinitionsFull(
 
     // expand counters in label
     val cmdata = fcontext.inlineContext.metadata
-    val attrsx0 = attrsd.expandCounters(counters,cmdata).expand(cmdata)
+    val attrsx0 = attrsd.expandCounters(counters,cmdata,nested).expand(cmdata)
 
     // create a nice caption for headings
     val attrsx  = match (block) {
@@ -355,40 +355,6 @@ function incLineNo( lineNo : int, inc : int = 1 ) : int {
   if (lineNo > 0) then lineNo + inc else lineNo
 }
 
-// Initialize default attributes and attributes from metadata
-function initializeDefaults( metadata : metadata, defaultAttrs : mdict<h,string>, labels : mdict<h,label>, 
-                             counters : mdict<h,counter>, nested : mdict<h,list<string>> ) : st<h> () {
-  metadata.foreach fun(kv) {
-    val (key,value) = kv
-    if (key.startsWith("~") || key.startsWith("#") || key.startsWith(".")) then {
-      // element attributes
-      // name   = key.substr(1)  // no .#~
-      val attrs  = value.parseAttrs
-      val dattrs = if (!(attrs.defaults)) then attrs
-                   else match(defaultAttrs[key]) {
-                     Nothing   -> attrs
-                     Just(def) -> {
-                       //trace("default merge " + name + ": " + attrs.classes.join(",") + "  def: " + def.classes.join(","))  
-                       attrs.mergeDefault(def.parseAttrs) 
-                     }
-                   }
-      defaultAttrs[key] := dattrs.text
-      //trace("default " + name + ": " + dattrs.show)  
-      
-      // initialize counters: necessary if one for example starts with a subsection 
-      // without an initial section.
-      dattrs.label.findAll(rxcounter).foreach fun(cap : matched) {
-        counters.setCounter(cap.groups[1].definitionId,Counter(),nested)
-      }
-    }
-    else {
-      // label key
-      // labels[key] := Label("metadata",value)
-      ()
-    }
-  }
-}
-
 function extractCaption( blocks : list<block> ) : string
 {
   match(blocks) {
@@ -535,28 +501,31 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
 //--------------------------------------------------------
 
 // expand counters in label,
-function expandCounters( attrs : attrs, counters : mdict<h,counter>, metadata : dict<string> ) : read<h> attrs {
-
-
-  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expandCounter(counters)
+function expandCounters( attrs : attrs, counters : mdict<h,counter>, metadata : dict<string>, nested : mdict<h,list<string>> ) : st<h> attrs {
+  val xlab = attrs.label.expandKeys(attrs.source,attrs,dict(),metadata).expandCounter(counters, nested)
   val attrs1 = if (xlab != attrs.label) then attrs(label=xlab) else attrs
   attrs1( keyvals = attrs1.keyvals.map(fun(kv) {
     val (key,value) = kv
     if (key=="start" || key.endsWith("-label")) {
-      (key, value.expandKeys(attrs1.source,attrs1,dict(),metadata).expandCounter(counters))
+      (key, value.expandKeys(attrs1.source,attrs1,dict(),metadata).expandCounter(counters, nested))
     }
     else kv
   }))
 }
 
 // expand the counters in a string
-function expandCounter(lab : string, counters : mdict<h,counter> ) : read<h> string
+function expandCounter(lab : string, counters : mdict<h,counter>, nested : mdict<h,list<string>> ) : st<h> string
 {
   lab.replaceAll(rxcounter) fun(cap) {
     //trace("expand: " + lab + ": found: " + cap.groups[1] + " = " + counters[cap.groups[1]].string)
-    match(counters[cap.groups[1].definitionId]) {
+    val cname = cap.groups[1].definitionId
+    match(counters[cname]) {
       Just(counter) -> counter.show
-      Nothing       -> cap.matched
+      Nothing       -> {
+        // we create counters on the fly; this is necessary for example when starting a sub-section without a previous section
+        val counter = counters.setCounter(cname,Counter(),nested)
+        counter.show
+      }
     }
   }  
 }
@@ -611,12 +580,13 @@ function resetNestedCounters(counters : mdict<h,counter>, counter : string, nest
   }
 }
  
-function setCounter( counters : mdict<h,counter>, name : string, counter : counter, nested : mdict<h,list<string>> ) : st<h> ()
+function setCounter( counters : mdict<h,counter>, name : string, counter : counter, nested : mdict<h,list<string>> ) : st<h> counter
 {   
   if (counters[name].isNothing) {
     nested.initializeCounter( name )
   }
   counters[name] := counter;
+  counter
 }
 
 function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st<h> ()

@@ -27,39 +27,49 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
 }
 
 abstract struct rules(
-  values: dict<string>,
   rules: list<(pattern,string)>
 )
 
 private struct pattern( 
   elem: string,
   name: string,
-  classes: list<string>
+  classes: list<string>,
+  weight: int
 )
 
 function show( p : pattern ) {
   "~" + p.elem + "#" + p.name + "." +  p.classes.join(".")
 }
 
-public val emptyRules = Rules(dict(),[])
+function makePattern( elem : string = "", name : string = "", classes : list<string> = [], weight : int = ~1) {
+  val clss = classes.filter( fun(s) { !s.isEmpty }) 
+  // calculate weight according to CSS rules: in order of importance: name, classes, elements
+  val w = if (weight >= 0) then weight 
+           else (100*(if (name.isEmpty) then 0 else 1) + 10*clss.length + (if (elem.isEmpty) then 0 else 1))
+  Pattern(elem.definitionId, name.definitionId, clss, w)
+}
 
-public function rulesFromDefaults( defaults : dict<string> ) : rules {
-  val rules = defaults.list.concat( fun(kv) {
+public val emptyRules = Rules([])
+
+public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
+  val rules = metadata.concat( fun(kv) {
     val (key,value) = kv
-    match(key.find(rxPattern)) {
-      Nothing -> {
-        warning("illegal pattern: " + key)
-        []
-      }
-      Just(cap) -> {
-        val pat = Pattern( cap.groups[1].definitionId, cap.groups[2].definitionId, 
-                                cap.groups[3].split(".").list.filter(fun(s) { !s.isEmpty }) )
-        // trace("pattern: " + key + " -> " + pat.show )
-        [(pat,value)]
+    if (key.startsWith("~") || key.startsWith("#") || key.startsWith(".")) {
+      match(key.find(rxPattern)) {
+        Nothing -> {
+          warning("illegal pattern: " + key)
+          []
+        }
+        Just(cap) -> {
+          val pat = makePattern( cap.groups[1], cap.groups[2], cap.groups[3].split(".").list )
+          // trace("pattern: " + key + " -> " + pat.show )
+          [(pat,value)]
+        }
       }
     }
+    else []
   })
-  Rules(defaults,rules)
+  Rules(rules)
 }
 val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?(\.(?:[\w\-:]+))*$")
 
@@ -84,17 +94,29 @@ function apply( rules : list<(pattern,string)>, attrs : attrs, name : string, el
 }
 
 function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : string, elemName : string ) : (string,list<(pattern,string)>) {
-  var def := ""
+  var def := []
   val newrules = rules.filterx( fun(rule) {
     val (pat,value) = rule
     if (pat.matches(elemName,name,attrs.classes)) {
-      // trace("matched: " + Pattern(elemName,name,attrs.classes).show + " to rule " + pat.show)
-      def := def + " ; " + value
+      // trace("matched: " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
+      def := def.insert(pat.weight, value)
       False
     }
     else True
   })
-  (def,newrules)
+  (def.map(snd).join(" ; "),newrules)
+}
+
+// insert a pattern value sorted on weight, from low to high
+function insert( xs : list<(int,string)>, weight :int, value : string ) : list<(int,string)> {
+  match(xs) {
+    Nil -> [(weight,value)]
+    Cons(wv,xx) -> {
+      if (wv.fst <= weight)
+       then Cons(wv,insert(xx, weight, value))
+       else Cons((weight,value),xs)
+    }
+  }
 }
 
 function matches( pat : pattern, xelem : string, xname : string, xclasses : list<string> ) : bool {
