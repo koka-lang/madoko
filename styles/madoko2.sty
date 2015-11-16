@@ -427,6 +427,9 @@
 \iftoggle{/madoko/section-num}{}{% else
   \setcounter{secnumdepth}{0}%
   \renewcommand\@seccntformat[1]{}%
+  \ifdef\chapterformat{\renewcommand\chapterformat{}}{}%
+  \ifdef\chaptermarkformat{\renewcommand\chaptermarkformat{}}{}%
+  \ifdef\sectionmarkformat{\renewcommand\sectionmarkformat{}}{}%
 }
 
 
