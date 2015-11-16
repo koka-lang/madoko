@@ -348,8 +348,8 @@ function findLatexPackage( logout : string, pkgs : list<string> = [] ) : maybe<s
 val rxPackage   = @"\((?:\./)?([^\)\n\r\t]+) *(?:(\)+) *)?"
 val rxPackageEnd = @"(\)+) *(?:" + rxPackage + @")?"
 val rxPackageEndLoaded = @"[^\(\r\n]*?((?: loaded\)+)+)"  // xypic package suffers from this
-val rxPackageStart = rxPackage + "$"
-val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + "|" + rxPackageEndLoaded + @")$", multiline=True)
+val rxPackageStart = rxPackage
+val rxPackageLine = regex(@"^(?:" + rxPackageStart + "|" + rxPackageEnd + "|" + rxPackageEndLoaded + @")(?=$| *\[\d+(?:$|\]))", multiline=True)
 
 
 public function latexStrip( s : string ) : string
