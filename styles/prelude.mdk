@@ -86,19 +86,23 @@ math-display    { input: math }
 
 
 <!-- heading elements -->
+h1 { label: "[@h1]{.heading-label}" }
 h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
 h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
 h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" }
 
-.heading-before {
-  after=".&ensp;"
+heading-endperiod: .
+heading-format   : &label;&heading-endperiod;&ensp;
+
+h1,h2,h3,h4 {
+  toc-line: "&heading-format;&source;"; 
 }
 
 @if heading-depth>=1 {
-  h1 { before: "[&label;]{.heading-before}" }
+  h1 { before: "[&heading-format;]{.heading-before}" }
 }
 @if heading-depth>=2 {
-  h2 { before: "[&label;]{.heading-before}" }
+  h2 { before: "[&heading-format;]{.heading-before}" }
 }
 @if heading-depth>=3 {
   h3 { before: "[&label;]{.heading-before}" }
@@ -107,7 +111,7 @@ h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" 
   h4 { before: "[&label;]{.heading-before}" }
 }
 @if toc-depth>=1 {
-  h1 { toc }
+  h1 { toc  }
 }
 @if toc-depth>=2 {
   h2 { toc }
