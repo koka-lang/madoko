@@ -47,15 +47,15 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("iquotes",   regex(@"^(?:'(?![s\s])((?:[^\\']|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
   Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
   Rule("ilink",     regex(@"^([\n ]*)" + linkreg), inlineLink ),
-  Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
+  Rule("iemph*",    regex(@"^(\*)((?:[^\\*]|\\.)+)\*"), inlineEmph),  
   
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
   Rule("ifootnote", regex(@"^\[\^" + xlinkid + @"\]"), inlineFootnote ),
   Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>"), inlineAutoLink ),  
-  Rule("istrong_",  regex(@"^__((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
-  Rule("istrong*",  regex(@"^\*\*((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
-  Rule("iemph_",    regex(@"^\b_((?:[^\\_]|\\.)+)_\b"), inlineEmph),
+  Rule("istrong_",  regex(@"^(__)((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
+  Rule("istrong*",  regex(@"^(\*\*)((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
+  Rule("iemph_",    regex(@"^\b(_)((?:[^\\_]|\\.)+)_\b"), inlineEmph),
   Rule("idel",      regex(@"^~~(?=\S)([\s\S]*?\S)~~"), inlineDel ),
   Rule("isub",      regex(@"^~((?:[^~\\\s]|\\.)+)~"), inlineSub ),
   Rule("isup",      regex(@"^\^((?:[^\^\\\s]|\\.)+)\^"), inlineSup ),
@@ -213,16 +213,16 @@ function inlineQuot( cap : matched, context ) : string {
 
 function inlineStrong( cap : matched, context ) : string {
   val tag = if (context.starBold && cap.matched.startsWith("_")) then "em" else "strong"
-  val class = tag + cap.matched.length.show
+  val class = tag + (if (cap.matched.startsWith("*")) then "-star" else "-low") + cap.groups[1].length.show
   val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs)
+  context.fmtCmd(tag, formatInline(context,cap.groups[2]), attrs)
 } 
 
 function inlineEmph( cap : matched, context ) : string {  
   val tag = if (context.starBold && cap.matched.startsWith("*")) then "strong" else "em"
-  val class = tag + cap.matched.length.show
+  val class = tag + (if (cap.matched.startsWith("*")) then "-star" else "-low") + cap.groups[1].length.show
   val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs )  
+  context.fmtCmd(tag, formatInline(context,cap.groups[2]), attrs )  
 } 
 
 function inlineSup( cap : matched, context ) : string {

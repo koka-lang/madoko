@@ -94,7 +94,7 @@ function parseDefinitionsFull(
   // initialize defaults from metadata
   val mdefaultAttrs = mdict()
   mdata.initializeDefaults(mdefaultAttrs,labels,counters,nested)
-  val defaultAttrs : dict<string> = mdefaultAttrs.freeze()
+  val defaultAttrs : rules = rulesFromDefaults(mdefaultAttrs.freeze())
 
   // process attributes 
   function process( attrs : attrs, previousPar : parInfo, block : block ) : <div,st<_h>> block {
@@ -497,17 +497,17 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
 
 
 // Create a table of contents
-function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div block 
+function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div block 
 {
   Div( [headings.tocItems(0,labels,metadata,defaultAttrs).tocList(defaultAttrs)], 
        defaultAttrs.matchRules( "toc", attrsNone(name="toc").addClass("toc")) )
 }
 
-function tocList( items : list<block>, defaultAttrs : dict<string> ) : block {
+function tocList( items : list<block>, defaultAttrs : rules ) : block {
   if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", attrsNone.addClass("tocblock")) )
 }
 
-function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : dict<string> ) : div list<block> {    
+function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div list<block> {    
   match(headings) {
     Nil -> []
     Cons(hdr,hdrs) -> {

@@ -26,12 +26,98 @@ public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
   def.extendAttrs(attrs.text, attrs.source)
 }
 
+abstract struct rules(
+  values: dict<string>,
+  rules: list<(pattern,string)>
+)
 
-public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
+private struct pattern( 
+  elem: string,
+  name: string,
+  classes: list<string>
+)
+
+function show( p : pattern ) {
+  "~" + p.elem + "#" + p.name + "." +  p.classes.join(".")
+}
+
+public val emptyRules = Rules(dict(),[])
+
+public function rulesFromDefaults( defaults : dict<string> ) : rules {
+  val rules = defaults.list.concat( fun(kv) {
+    val (key,value) = kv
+    match(key.find(rxPattern)) {
+      Nothing -> {
+        warning("illegal pattern: " + key)
+        []
+      }
+      Just(cap) -> {
+        val pat = Pattern( cap.groups[1].definitionId, cap.groups[2].definitionId, 
+                                cap.groups[3].split(".").list.filter(fun(s) { !s.isEmpty }) )
+        // trace("pattern: " + key + " -> " + pat.show )
+        [(pat,value)]
+      }
+    }
+  })
+  Rules(defaults,rules)
+}
+val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?(\.(?:[\w\-:]+))*$")
+
+public function matchRules( r : rules, elementName : string, attrs : attrs ) : attrs 
+{
+  if (!(attrs.common/defaults)) return attrs;
+  val name = attrs.name.definitionId
+  val elemName = elementName.definitionId
+  r.rules.apply( attrs, name, elemName, peano10 )
+}
+
+function apply( rules : list<(pattern,string)>, attrs : attrs, name : string, elemName : string, p : peano ) : attrs {
+  match(p) {
+    Zero -> attrs
+    Succ(p1) -> {
+      val (def,rules2) = rules.getMatches( attrs, name, elemName )
+      if (def=="") return attrs
+      val attrs2 = attrs.mergeDefault(def.parseAttrs)      
+      rules2.apply( attrs2, name, elemName, p1 )
+    }
+  }
+}
+
+function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : string, elemName : string ) : (string,list<(pattern,string)>) {
+  var def := ""
+  val newrules = rules.filterx( fun(rule) {
+    val (pat,value) = rule
+    if (pat.matches(elemName,name,attrs.classes)) {
+      // trace("matched: " + Pattern(elemName,name,attrs.classes).show + " to rule " + pat.show)
+      def := def + " ; " + value
+      False
+    }
+    else True
+  })
+  (def,newrules)
+}
+
+function matches( pat : pattern, xelem : string, xname : string, xclasses : list<string> ) : bool {
+  (pat.elem.isEmpty || pat.elem == xelem) &&
+  (pat.name.isEmpty || pat.name == xname) &&
+  (pat.classes.isNil || pat.classes.all( fun(c) { xclasses.contains(c) } ))
+}
+
+function filterx( xs : list<a>, pred : a -> e bool ) : e list<a>
+{
+  match(xs) {
+    Nil -> Nil
+    Cons(x,xx) -> if (pred(x)) then Cons(x,xx.filterx(pred)) else xx.filterx(pred)
+  }
+}
+
+
+/*
+public function matchRules( rules : rules, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
   val extra = ["#" + attrs.name.definitionId, "~" + elementName.definitionId]
-  applyRules(peano10, defaults, attrs, defaults.getMatches(attrs,dict(),extra) );
+  applyRules(peano10, rules.values, attrs, rules.values.getMatches(attrs,dict(),extra) );
 }
 
 function applyRules(p : peano, defaults : dict<string>, attrs : attrs, dv : (string,dict<bool>) ) : attrs {
@@ -53,7 +139,7 @@ function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool>
   val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(" ; ")
   return (def,visited1)
 }
-
+*/
 
 public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string ) : attrs 
 {

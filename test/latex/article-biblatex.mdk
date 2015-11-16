@@ -29,11 +29,8 @@ Package     : hyperref
   Heading Base: 1
 }
 
-.clearnum { toc:none; }
 
-h1.clearnum { tex-cmd:"\chapter*" }
-
-solution: usetexbook
+solution: usetex
 
 heading-endperiod:
 

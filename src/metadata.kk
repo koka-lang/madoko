@@ -289,10 +289,6 @@ function containsKey( mdata : cmetadata, key : string ) : div bool {
   })
 }
 
-function contains( xs : list<string>, s : string ) : bool {
-  xs.find( fun(x) { x == s }).bool
-}
-
 
 // --------------------------------------------------------------
 // Default metadata

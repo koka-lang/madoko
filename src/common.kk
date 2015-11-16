@@ -597,3 +597,8 @@ public function unindent( txt : string ) : string {
    then txt
    else lines.map( fun(s) { s.substr(cindent) }).join("\n")
 }
+
+
+public function contains( xs : list<string>, s : string ) : bool {
+  xs.find( fun(x) { x == s }).bool
+}

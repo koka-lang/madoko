@@ -97,6 +97,7 @@ heading-format   : &label;&heading-endperiod;&ensp;
 h1,h2,h3,h4 {
   toc-line: "&heading-format;&source;"; 
 }
+.clearnum { toc:none; }
 
 @if heading-depth>=1 {
   h1 { before: "[&heading-format;]{.heading-before}" }
@@ -105,10 +106,10 @@ h1,h2,h3,h4 {
   h2 { before: "[&heading-format;]{.heading-before}" }
 }
 @if heading-depth>=3 {
-  h3 { before: "[&label;]{.heading-before}" }
+  h3 { before: "[&heading-format;]{.heading-before}" }
 }
 @if heading-depth>=4 {
-  h4 { before: "[&label;]{.heading-before}" }
+  h4 { before: "[&heading-format;]{.heading-before}" }
 }
 @if toc-depth>=1 {
   h1 { toc  }
@@ -287,6 +288,13 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H3     { tex-cmd:"\subsection" }
   H4     { tex-cmd:"\subsubsection" }
   H5,H6  { tex-cmd:"\paragraph" } 
+
+  H0.clearnum { tex-cmd:"\part*" }
+  H1.clearnum { tex-cmd:"\chapter*" }
+  H2.clearnum { tex-cmd:"\section*" }
+  H3.clearnum { tex-cmd:"\subsection*" }
+  H4.clearnum { tex-cmd:"\subsubsection*" }
+  H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base==2 {
   H0     { tex-cmd:"\chapter" }
@@ -294,12 +302,23 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H2     { tex-cmd:"\subsection" }
   H3     { tex-cmd:"\subsubsection" }
   H4,H5,H6  { tex-cmd:"\paragraph" } 
+
+  H0.clearnum { tex-cmd:"\chapter*" }
+  H1.clearnum { tex-cmd:"\section*" }
+  H2.clearnum { tex-cmd:"\subsection*" }
+  H3.clearnum { tex-cmd:"\subsubsection*" }
+  H4.clearnum,H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base>=3 {
   H0     { tex-cmd:"\section" }
   H1     { tex-cmd:"\subsection" } 
   H2     { tex-cmd:"\subsubsection" }
   H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
+
+  H0.clearnum { tex-cmd:"\section*" }
+  H1.clearnum { tex-cmd:"\subsection*" }
+  H2.clearnum { tex-cmd:"\subsubsection*" }
+  H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 
 Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }

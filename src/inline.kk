@@ -14,6 +14,7 @@ import std/string
 import std/regex
 import std/log
 import common
+import attributes  // rules
 import codeAlign  // codeTable
 import hilite  // hilitemode
 
@@ -37,7 +38,7 @@ public rectype inlineContext {
                  links      : dict<link>,
                  labels     : dict<label>,
                  footnotes  : dict<footnote>,
-                 defaults   : dict<string>,
+                 defaults   : rules,
                  metadata   : dict<string>,
                  mathinfos  : dict<mathinfo>,
                  embedinfos : dict<embedinfo>,
@@ -149,7 +150,7 @@ public function copy( self : inlineContext,
                        links : dict<link> = self.links,
                        labels : dict<label> = self.labels, 
                        footnotes : dict<footnote> = self.footnotes,
-                       defaults: dict<string> = self.defaults,
+                       defaults: rules = self.defaults,
                        metadata: dict<string> = self.metadata,
                        mathinfos : dict<mathinfo> = self.mathinfos,
                        embedinfos : dict<embedinfo> = self.embedinfos,

@@ -169,7 +169,8 @@ function inlineContext( fmt : formatter,
       FmtHtml -> f
     }                
   }
-  InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), dict(),
+  InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), 
+                 emptyRules,
                  metadata, mathinfos, embedinfos,
                  citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, prettyAlign,
                  pickx(fmtHtmlCmd,fmtTexCmd,fmtLatexCmd), 
