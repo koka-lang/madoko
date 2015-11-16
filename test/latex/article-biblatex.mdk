@@ -5,7 +5,7 @@ Subtitle    : Subtitle
 Heading Base: 2
 Doc Class   : [12pt, a4paper, portrait, oneside, bindingoffset=1cm, parskip=full, numbers=noendperiod, final] scrreprt
 Bib         : example2.bib
-Bib Style   : ajs.bst
+Bib Style   : asj-new-german.bst
 Cite Style  : natural
 Cite All    : true
 ldquo       : &bdquo;
@@ -30,7 +30,7 @@ Package     : hyperref
 }
 
 
-solution: usetex
+solution: simple
 
 heading-endperiod:
 
@@ -93,7 +93,8 @@ egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
 ~
 
-# Table of contents { - }
+# Table of contents { -; toc:none }
+
 
 [TOC]
 
