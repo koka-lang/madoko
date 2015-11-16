@@ -234,12 +234,16 @@ function blockHtml( cap : matched, context : blockContext ) :  block  {
 }
 
 function blockHeading( cap : matched, context : blockContext ) : block  {
-  Heading(cap.groups[1].length, cap.groups[2], cap.groups[3].parseAttrs)
+  makeHeading(cap.groups[1].length,cap.groups[2],cap.groups[3])
 }
 
 function blockHeadingLine( cap : matched, context : blockContext ) : block {
-  Heading( (if (cap.groups[3].substr(0,1) == "=") then 1 else 2), 
-              cap.groups[1], cap.groups[2].parseAttrs )
+  makeHeading( (if (cap.groups[3].substr(0,1) == "=") then 1 else 2), cap.groups[1], cap.groups[2] )
+}
+
+function makeHeading(depth:int, source:string, attrStr : string) {
+  val elem   = "H" + depth.show
+  Heading(depth, source, attrStr.parseAttrs(elem,source))
 }
 
 function blockCode( cap : matched, context : blockContext ) : block  {
