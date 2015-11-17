@@ -79,19 +79,6 @@
   display: inline-block;
 }
 
-/* Abstract */
-.madoko .abstract>p:first-child:before {
-  content: "Abstract. ";
-  font-weight: bold;
-}
-
-.madoko .abstract {
-  margin-left: 2.7em;
-  margin-right: 2.7em;
-  font-size: small;
-}
-
-
 /* Alignment */
 .madoko .align-center, .madoko .align-center>p {
   text-align: center !important;

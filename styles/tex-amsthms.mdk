@@ -15,9 +15,6 @@ Documentation:
   test3: test3
 }
 
-
-test4: test4
-
 @if tex and tex2 {
   Theorem    { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:theorem}&nl;&source;&nl;~End Thm&nl;" }
   Lemma      { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:lemma}&nl;&source;&nl;~End Thm&nl;"  }

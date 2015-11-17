@@ -7,7 +7,7 @@ Css           : &bootstrap-url;css/bootstrap-theme.min.css
 Css           : &bootswatch-url;
 Html Meta     : http-equiv="X-UA-Compatible" content="IE=edge"
 Html Meta     : name="viewport" content="width=device-width, initial-scale=1"
-Header Depth  : 0
+Heading Depth : 0
 Toc Depth     : 2
 Html Header   :         
     <!--[if lt IE 9]>

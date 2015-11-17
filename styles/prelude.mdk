@@ -295,6 +295,7 @@ name-references   : References
 name-contents     : Contents
 name-figures      : Figures
 name-tables       : Tables
+name-abstract     : Abstract
 
 name-figure       : Figure
 name-table        : Table
@@ -368,6 +369,18 @@ name-nov  : November
 name-dec  : December
 name-ins  : in
 name-inj  : in
+
+<!-------------------------------------------------------------------
+   HTML commands 
+--------------------------------------------------------------------->
+@if html {
+  abstract  { 
+    before:"**&name-abstract.** ";
+    margin-left: 3em;
+    margin-right: 3em;
+    font-size: small;
+  }
+}
 
 <!-------------------------------------------------------------------
    Tex commands 
