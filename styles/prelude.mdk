@@ -122,8 +122,9 @@ heading-format   : &label;&heading-endperiod;&ensp;
 h1,h2,h3,h4 {
   toc-line: "&heading-format;&source;"; 
 }
-.clearnum { toc:none; }
+.clearnum { toc:clear }
 
+.tocblock,.tocitem { tight:true }
 
 <!-- entities -->
 Defaults        : True
@@ -208,11 +209,11 @@ Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
 <!-- figures -->
 TableFigure {
   label: '[@tablefigure]{.table-label}';
-  toc: tot; .floating ; float-env: table; float-name: Table;
+  toc:"tables"; .floating ; float-env: table; float-name: Table;
 }
 Figure {
   label: '[@figure]{.figure-label}';
-  toc=tof; .floating ; float-env: figure; float-name: Figure;
+  toc:"figures"; .floating ; float-env: figure; float-name: Figure;
 }
 
 .Floating {
@@ -234,7 +235,7 @@ SubFigure {
   text-align: center;
   .column;
   toc-line  : '[&fig-label; ]{.caption-before} &caption;';
-  toc       : tof;
+  toc       : "figures";
   toc-depth : 2;
 }
 
@@ -257,15 +258,25 @@ Bib Search Url:
 }
 
 @if not( tex ) {
-  Bibliography { before: "# References {-}&nl;" }
+  Bibliography { before: "# &name-references; { -; .heading-references }&nl;" }
 }
 @if not( tex ) and bib-label {
   Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
 }
 
+toc.toc-contents  { before: "# &name-contents; { -; .heading-contents }&nl;" }
+toc.toc-figures   { before: "# &name-figures;  { -; .heading-figures }&nl;" }
+toc.toc-tables    { before: "# &name-tables;   { -; .heading-tables }&nl;" }
+
+name-references   : References
+name-contents     : Contents
+name-figures      : Figures
+name-tables       : Tables
 
 
-<!-- tex commands -->
+<!-------------------------------------------------------------------
+   tex commands 
+--------------------------------------------------------------------->
 
 HR       { tex-cmd: "\mdhr"; display: block }
 Pre      { tex-env: mdpre }

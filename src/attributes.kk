@@ -62,7 +62,7 @@ public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
         }
         Just(cap) -> {
           val pat = makePattern( cap.groups[1], cap.groups[2], cap.groups[3].split(".").list )
-          // trace("pattern: " + key + " -> " + pat.show )
+          trace("pattern: " + key + " -> " + pat.show )
           [(pat,value)]
         }
       }
@@ -98,7 +98,7 @@ function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : strin
   val newrules = rules.filterx( fun(rule) {
     val (pat,value) = rule
     if (pat.matches(elemName,name,attrs.classes)) {
-      // trace("matched: " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
+      trace("matched: " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
       def := def.insert(pat.weight, value)
       False
     }

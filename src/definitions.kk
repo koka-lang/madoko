@@ -220,12 +220,18 @@ function parseDefinitionsFull(
 
     attrs.process( previousPar, block )
   }
+
+  function mapBlock( b : block, f ) {
+    [b].mapBlocks(f).take(1)
+  }
   
   val newblocks  = blocks.mapBlocks(parseDefBlock)
   val labelsDict = labels.freeze()
   val tocBlocks  = //if (tocDepth <= 0) then Empty else createToc(headings.reverse)
                     (tocs.list.map fun(entry) {
-                       (entry.fst, createToc(entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata,defaultAttrs))
+                       (entry.fst, 
+                          [createToc(entry.fst, entry.snd.reverse,labelsDict,fcontext.inlineContext.metadata,defaultAttrs)]
+                            .mapBlocks(parseDefBlock))
                      }).dict
   val footnoteBlock = if (isNil(footnoteItems)) then Empty 
                        else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
@@ -249,7 +255,7 @@ struct secinfo(
 val secInit = Secinfo(1,6,1,id)
 val secNone = Secinfo(1,0,1,id)
 
-struct parInfo( isPar : bool, isParBlock : bool )
+struct parInfo( isPar : bool = False, isParBlock : bool = False)
 
 function mapBlocks( blocks : list<block>, 
                     action : (parInfo,block) -> <st<h>,div|e> block  ) : <st<h>,div|e> list<block> {
@@ -463,12 +469,49 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
 
 
 // Create a table of contents
-function createToc( headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div block 
+function createToc( tocName : string, headings : list<(int,attrs)>, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div block 
 {
-  Div( [headings.tocItems(0,labels,metadata,defaultAttrs).tocList(defaultAttrs)], 
-       defaultAttrs.matchRules( "toc", attrsNone(name="toc").addClass("toc")) )
+  val tocClass = if (tocName.isEmpty) then ".toc-contents" else ".toc-" + tocName
+  val attrsText = ".toc; " + tocClass
+  val source = headings.tocItems(0,labels,metadata,defaultAttrs).tocList(0,defaultAttrs)
+  Div([], attrsText.parseAttrs("toc", source))
+      //[headings.tocItems(0,labels,metadata,defaultAttrs).tocList(defaultAttrs)], 
+       //defaultAttrs.matchRules( "toc", attrsNone(elem="toc").addClasses(["toc",tocClass])) )
 }
 
+function tocList( items : string, depth: int, defaultAttrs : rules ) : string {
+  if (items.isEmpty) then "" else {
+    val tildes = string(depth+1,'~') + " "
+    tildes + "Begin TocBlock { .tocblock" + (depth+1).show + " }\n" +
+      items +
+    tildes + "End TocBlock\n"
+  }
+}
+
+function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div string {    
+  match(headings) {
+    Nil -> ""
+    Cons(hdr,hdrs) -> {
+      val (depth,attrs) = hdr
+      if (depth > outerDepth+1) then {
+        tocItems(headings,outerDepth+1,labels,metadata,defaultAttrs).tocList(outerDepth,defaultAttrs)
+      }
+      else {
+        val (subs,rest) = hdrs.span( fun(h) { h.fst > depth } )
+        val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
+        val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
+        val item = "~ Begin TocItem { .tocitem" + depth.show + 
+                        "; toctarget:" + attrs.name.show +
+                        "; toclevel:" + depth.show + " }\n" +
+                    tocline + "\n~ End TocItem\n";
+        val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(depth,defaultAttrs) 
+        item + subitems + tocItems(rest,outerDepth,labels,metadata,defaultAttrs)
+      }
+    }
+  }
+}
+
+/*
 function tocList( items : list<block>, defaultAttrs : rules ) : block {
   if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", attrsNone.addClass("tocblock")) )
 }
@@ -486,15 +529,18 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         val tocline = @"[\/" + txt + "](#" + attrs.name + ")"
         //trace("tocline: " + attrs.source)
-        val item = Div([Line(tocline)], 
-                       defaultAttrs.matchRules("tocitem", 
-                          attrsNone.addClass("tocitem").addKeyvals([("toctarget",attrs.name), ("toclevel",depth.show)])).expand(metadata) )
+        val item = Div( [Line(tocline)], 
+                        defaultAttrs.matchRules("tocitem", 
+                          attrsNone.addClasses(["tocitem", "tocitem" + depth.show])
+                            .addKeyvals([("toctarget",attrs.name), ("toclevel",depth.show)]))
+                            .expand(metadata) )
         val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(defaultAttrs) 
         Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata,defaultAttrs)))
       }
     }
   }
 }
+*/
 
 //--------------------------------------------------------
 // counters
