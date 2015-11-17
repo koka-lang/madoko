@@ -167,7 +167,8 @@ Equation {
   replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-needpdf: "&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
   tight: true;
   line-adjust: 0;
-  .para-block
+  .para-block;
+  tex-label-before: "&id;";
 }
 
 Math {
@@ -235,6 +236,7 @@ Figure {
 
 .Floating {
   .align-center;
+  .float;
   elem      : floating;
   html-elem : figure;
   toc-line  : '&label;. &caption;';
@@ -374,7 +376,8 @@ name-inj  : in
 HR       { tex-cmd: "\mdhr"; display: block }
 Pre      { tex-env: mdpre }
 Abstract { tex-env: abstract }
-H0,H1,H2,H3,H4,H5,H6  { display: block }
+H0,H1,H2,H3,H4,H5,H6  { display: block; }
+H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { tex-cmd-postfix:"*" }
 
 @if heading-base<=0 {
   H0     { tex-cmd:"\part" }
@@ -384,14 +387,6 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H4     { tex-cmd:"\subsection" }
   H5     { tex-cmd:"\subsubsection" } 
   H6     { tex-cmd:"\paragraph" } 
-
-  H0.clearnum { tex-cmd:"\part*" }
-  H1.clearnum { tex-cmd:"\part*" }
-  H2.clearnum { tex-cmd:"\chapter*" }
-  H3.clearnum { tex-cmd:"\section*" }
-  H4.clearnum { tex-cmd:"\subsection*" }
-  H5.clearnum { tex-cmd:"\subsubsection*" }
-  H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base==1 {
   H0     { tex-cmd:"\part" }
@@ -400,13 +395,6 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H3     { tex-cmd:"\subsection" }
   H4     { tex-cmd:"\subsubsection" }
   H5,H6  { tex-cmd:"\paragraph" } 
-
-  H0.clearnum { tex-cmd:"\part*" }
-  H1.clearnum { tex-cmd:"\chapter*" }
-  H2.clearnum { tex-cmd:"\section*" }
-  H3.clearnum { tex-cmd:"\subsection*" }
-  H4.clearnum { tex-cmd:"\subsubsection*" }
-  H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base==2 {
   H0     { tex-cmd:"\chapter" }
@@ -414,30 +402,19 @@ H0,H1,H2,H3,H4,H5,H6  { display: block }
   H2     { tex-cmd:"\subsection" }
   H3     { tex-cmd:"\subsubsection" }
   H4,H5,H6  { tex-cmd:"\paragraph" } 
-
-  H0.clearnum { tex-cmd:"\chapter*" }
-  H1.clearnum { tex-cmd:"\section*" }
-  H2.clearnum { tex-cmd:"\subsection*" }
-  H3.clearnum { tex-cmd:"\subsubsection*" }
-  H4.clearnum,H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 @if heading-base>=3 {
   H0     { tex-cmd:"\section" }
   H1     { tex-cmd:"\subsection" } 
   H2     { tex-cmd:"\subsubsection" }
   H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
-
-  H0.clearnum { tex-cmd:"\section*" }
-  H1.clearnum { tex-cmd:"\subsection*" }
-  H2.clearnum { tex-cmd:"\subsubsection*" }
-  H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum { tex-cmd:"\paragraph*" }
 }
 
 Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
 TableFigure     { tex-env-outer: "table[&tex-float-placement;]"; tex-float-placement: "tbp" }
 .figure-caption { tex-cmd: "\mdcaption" }
 .caption-text   { tex-cmd: "\mdcaptiontext" }
-.wide           { tex-env-postfix: "*" }
+.wide           { tex-env-outer-postfix: "*" }
 .figure-label   { tex-cmd: "\mdcaptionlabel" }
 .table-label    { tex-cmd: "\mdcaptionlabel" }
 
@@ -458,7 +435,7 @@ BlockQuote{ tex-env: "quote" }
 .Columns  { tex-tabcolsep: "0pt" }
 .Column   { tex-env-outer: "mdcolumn" }
 .inst     { tex-cmd: "\mdinst" }
-.equation-before: tex-cmd=\mdmathtag
+.equation-before { tex-cmd: "\mdmathtag" } 
 
 Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\def\refname{&name-references;}%mdk&nl;"  }
 BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
