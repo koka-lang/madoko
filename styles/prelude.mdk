@@ -16,11 +16,6 @@ Section   { html-elem:section }
 Aside     { html-elem:aside }
 Nav,.Toc  { html-elem:nav }
 
-.Note     { .block; before: "[**[&caption;]{.note-caption}**. ]{.note-before}&nl;"; caption:"Note" }
-Remark    { .Note; caption: "Remark" }
-.Todo     { .Note; caption: "Todo" }
-Proof     { .block; before: "[**Proof**. [&caption;]{.thm-caption}]{.proof-before}" }
-
 .Framed   { border: solid black 1px }
 Center    { .align-center }
 Remote    { tight margin-bottom: 0pt }
@@ -36,7 +31,7 @@ FlushLeft   { .align-left }
 FlushRight  { .align-right }
 Comment     { display: none }
 
-Snippet     { input: math; .block; snippet-needpdf: true }
+Snippet     { input: math; display:block; snippet-needpdf: true }
 Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
 @if html {
   Footnote { 
@@ -147,7 +142,7 @@ LogoLatexe      : $\mbox{\LaTeXe}$
 LogoBibtex      : $\mbox{\sc{Bib}\TeX}$
 LogoAmstex      : $\mbox{\AmSTeX}$
 LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
-.LogoMadoko     { .block; text-align: right; font-size: xx-small; margin-top: 4em; tight: true }
+.LogoMadoko     { display:block; text-align: right; font-size: xx-small; margin-top: 4em; tight: true }
 
 smallskip       : []{display: block; margin-bottom: 0.5em }
 medskip         : []{display: block; margin-bottom: 1em }
@@ -157,6 +152,14 @@ bigskip         : []{display: block; margin-bottom: 2em }
   medskip       : [\medskip]{input:texraw}
   bigskip       : [\bigskip]{input:texraw}
 }
+
+<!-- notes -->
+note-endperiod : &heading-endperiod;
+note-format    : **[&caption;]{.note-caption}**&note-endperiod;&nl;
+
+.Note     { display: block; before: "[&note-format;]{.note-before}"; caption:"&name-note;" }
+.Remark   { .Note; caption: "&name-remark;" }
+.Todo     { .Note; caption: "&name-todo;" }
 
 <!-- equations and math -->
 Equation {
@@ -173,33 +176,47 @@ Math {
   .para-block
 }
 
-.thm-caption-content { font-style: italic }
-.thm-caption         { replace: '@if source != "" @then "([&source;]{.thm-caption-content}).&thm-caption-end;"' }
-thm-caption-end : &&;br;
+theorem-caption-end   : &&;br;
+theorem-caption-format: (_&source;_)
+.theorem-caption      { replace: '@if source != "" @then "&theorem-caption-format;"' }
+theorem-caption       : [&caption;]{.theorem-caption}&theorem-caption-end;
+
+theorem-endperiod     : &heading-endperiod;
+theorem-format        : **&name-theorem;\ &label;&theorem-endperiod;** &theorem-caption;
+lemma-format          : **&name-lemma;\ &label;&theorem-endperiod;** &theorem-caption;
+proposition-format    : **&name-proposition;\ &label;&theorem-endperiod;** &theorem-caption;
+corollary-format      : **&name-corollary;\ &label;&theorem-endperiod;** &theorem-caption;
+example-format        : **&name-example;\ &label;&theorem-endperiod;** &theorem-caption;
+definition-format     : **&name-definition;\ &label;&theorem-endperiod;** &theorem-caption;
+proof-format          : **&name-proof;**&theorem-endperiod; &theorem-caption;
 
 Theorem {
   label: '[@theorem]{.theorem-label}';
-  before: '[**Theorem\ &label;.** [&caption;]{.thm-caption}]{.theorem-before}';
+  before: '[&theorem-format;]{.theorem-before}';
 }
 Lemma {
   label: '[@lemma]{.lemma-label}';
-  before: '[**Lemma\ &label;.** [&caption;]{.thm-caption}]{.lemma-before}';
+  before: '[&lemma-format]{.lemma-before}'
+}
+Proof {
+  before: "[&proof-format;]{.proof-before}";
+  theorem-caption-end: " " 
 }
 Proposition { 
   label: '[@proposition]{.proposition-label}';
-  before: '[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}';
+  before: '[&proposition-format]{.proposition-before}';
 }
 Corollary {
   label: '[@corollary]{.corollary-label}';
-  before: '[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.corollary-before}';
+  before: '[&corollary-format;]{.corollary-before}';
 }
 Example {
   label: '[@example]{.example-label}';
-  before: '[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}';
+  before: '[&example-format;]{.example-before}';
 }
 Definition {
   label: '[@definition]{.definition-label}';
-  before: '[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}';
+  before: '[&definition-format;]{.definition-before}';
 }
 Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
   display: block;
@@ -209,11 +226,11 @@ Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
 <!-- figures -->
 TableFigure {
   label: '[@tablefigure]{.table-label}';
-  toc:"tables"; .floating ; float-env: table; float-name: Table;
+  toc:"tables"; .floating ; float-env: table; float-name: "&name-table;";
 }
 Figure {
   label: '[@figure]{.figure-label}';
-  toc:"figures"; .floating ; float-env: figure; float-name: Figure;
+  toc:"figures"; .floating ; float-env: figure; float-name: "&name-figure;";
 }
 
 .Floating {
@@ -268,14 +285,32 @@ toc.toc-contents  { before: "# &name-contents; { -; .heading-contents }&nl;" }
 toc.toc-figures   { before: "# &name-figures;  { -; .heading-figures }&nl;" }
 toc.toc-tables    { before: "# &name-tables;   { -; .heading-tables }&nl;" }
 
+<!-------------------------------------------------------------------
+   Internationalization
+--------------------------------------------------------------------->
+
 name-references   : References
 name-contents     : Contents
 name-figures      : Figures
 name-tables       : Tables
 
+name-figure       : Figure
+name-table        : Table
+
+name-note         : Note
+name-remark       : Remark
+name-todo         : Todo
+
+name-theorem      : Theorem
+name-lemma        : Lemma
+name-proof        : Proof
+name-proposition  : Proposition
+name-corollary    : Corollary
+name-example      : Example
+name-definition   : Definition
 
 <!-------------------------------------------------------------------
-   tex commands 
+   Tex commands 
 --------------------------------------------------------------------->
 
 HR       { tex-cmd: "\mdhr"; display: block }

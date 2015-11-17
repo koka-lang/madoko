@@ -22,7 +22,6 @@ Doc class     : style/sigplanconf.cls
 The abstract of the paper. Cum justo odio, dapibus ac facilisis in,
 egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
-$\foox$
 ~
 
 
@@ -46,8 +45,12 @@ A definition of $e$ is shown in Equation [#euler] proved by Theorem [#th-euler]:
 e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
 ~
 
-~ Theorem {#th-euler}
+~ Theorem {#th-euler; caption:"a caption"}
 (_Euler's theorem_) More math here.
+~
+
+~ Proof { caption: "Of Theorem [#th-euler]" }
+Here is a proof.
 ~
 
 Let's program some Javascript:
@@ -56,6 +59,10 @@ function hello() {
   return "hello world!"
 }
 ```
+
+~ Remark
+Great
+~
 
 # More
 
