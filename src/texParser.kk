@@ -144,6 +144,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("urlprefix",   regex(@"^\\urlprefix\b"), texUrlPrefix ),
   Rule("cite",        regex(@"^\\(short)?[Cc]ite(?:(author)|(year(?:par)?)|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
   Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
+  Rule("bblname",     regex(@"^\\bbl([a-z]+)\b\s*"), texBblName ), // for custom-bib international bst styles
 
   Rule("texsl",       regex(@"^\{\\(?:text)?sl\b" + texargs + @"\}"), texSlanted ),
   Rule("texsl2",      regex(@"^\\{\\slshape\b\s*" + texargs + @"\}"), texSlanted ),

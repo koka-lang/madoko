@@ -11,10 +11,12 @@ Colorizer     : javascript
 Bibliography  : example
 Heading base  : 2
 
-Bib Style     : alpha
-xCite Style     : natural
+Bib Style     : molecularEcology.bst
+Cite Style    : natural
 
 Doc class     : style/sigplanconf.cls
+
+Name References: Referenze
 
 [TITLE]
 

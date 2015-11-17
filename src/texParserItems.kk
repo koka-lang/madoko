@@ -43,7 +43,9 @@ val texsect  = "(" + texsects.join("|") + ")"
 ---------------------------------------- */
 function texInclude( cap : matched, _context ) {
   val fname = cap.groups[2].unbrace  
-  "\n[INCLUDE=" + cap.groups[2].unbrace + "]\n"
+  if (cap.groups[1]=="input" && fname=="babelbst.tex") 
+   then ""  // already supported in Madoko but inserted by the custom-bib babel bib styles
+   else "\n[INCLUDE=" + cap.groups[2].unbrace + "]\n"
 }
 
 function texMakeTitle( cap : matched, _context ) {
@@ -867,6 +869,10 @@ val rxUrlReserved = regex(@"[\s>)\'\""(<\[\]]")
 
 function texBibinfo( cap : matched, context : texContext ) : string {
   "[" + cap.groups[2].parse(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
+}
+
+function texBblName( cap : matched, context : texContext ) : string {
+  "&name-" + cap.groups[1] + ";"
 }
 
 function texDquot( cap : matched, context : texContext ) : string {
