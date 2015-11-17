@@ -144,7 +144,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     if (attrs.hasClass("snippet")) 
      then (if (isDisplay) then "Display" else "Inline","","")
     elif (isDisplay) 
-     then ("Display","\\[","\n\\]")  // add newline because of comments in latex (and we do use trimLines on the content)
+     then ("Display","\\[" + (if (attrs.name.isEmpty) then "" else "\\label{" + attrs.name + "}"),"\n\\]%mdk\n")  // add newline because of comments in latex (and we do use trimLines on the content)
      else ("Inline","$","$")
   val lkind  = kind.toLower
   val class  = "math-" + lkind
@@ -163,7 +163,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
       if (context.mathStatic || mode=="math-pdf") {
         val digest = md5(txt)
         log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
-                      texcmd + "\n\\end{md" + kind + "Snippet}%mdk")
+                      texcmd + "\\end{md" + kind + "Snippet}%mdk")
         //trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))
