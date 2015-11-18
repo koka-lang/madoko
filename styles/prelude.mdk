@@ -117,7 +117,6 @@ heading-format   : &label;&heading-endperiod;&ensp;
 h1,h2,h3,h4 {
   toc-line: "&heading-format;&source;"; 
 }
-.clearnum { toc:clear }
 
 .tocblock,.tocitem { tight:true }
 
@@ -283,9 +282,9 @@ Bib Search Url:
   Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
 }
 
-toc.toc-contents  { before: "# &name-contents; { -; .heading-contents }&nl;" }
-toc.toc-figures   { before: "# &name-figures;  { -; .heading-figures }&nl;" }
-toc.toc-tables    { before: "# &name-tables;   { -; .heading-tables }&nl;" }
+toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
+toc.toc-figures   { before: "# &name-figures;  { -; toc:clear; .heading-figures }&nl;" }
+toc.toc-tables    { before: "# &name-tables;   { -; toc:clear; .heading-tables }&nl;" }
 
 <!-------------------------------------------------------------------
    Internationalization
