@@ -6,7 +6,7 @@ Script        : &JQueryUrl; {.preview}
 Script        : &JsPlumbUrl; {.preview}
 Package       : tikz
 
-.arrow: replace="/(\w+)\((\w+)\)([^\w]+)(\w+)\((\w+)\)(([\^\_])(.*))?/[\8]{data-arrow-target=\5 data-arrow-source=\2 data-arrow-start=\u\1 data-arrow-end=\u\4 data-arrow-style='\3' data-arrow-label-placement='\7' .xarrow}/gc"
+.arrow { replace:"/(\w+)\((\w+)\)([^\w]+)(\w+)\((\w+)\)(([\^\_])(.*))?/[\8]{data-arrow-target=\5 data-arrow-source=\2 data-arrow-start=\u\1 data-arrow-end=\u\4 data-arrow-style='\3' data-arrow-label-placement='\7' .xarrow}/gc" }
 
 TeX Header    : 
   \usetikzlibrary{arrows,shapes}
