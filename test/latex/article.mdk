@@ -11,12 +11,14 @@ Colorizer     : javascript
 Bibliography  : example
 Heading base  : 2
 
-Bib Style     : molecularEcology.bst
+Bib Style     : plainnat
 Cite Style    : natural
 
 Doc class     : style/sigplanconf.cls
 
 Name References: Referenze
+
+[INCLUDE=lipsum]
 
 [TITLE]
 
@@ -32,6 +34,18 @@ mauris condimentum nibh, ut fermentum massa justo sit amet.
 Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
 Note that you can drag&drop images into the editor pane to include them in
 the document, and similarly with bibtex files, latex style files, etc.
+
+~ Equation {.para-end}
+x=mc^2
+~
+
+&lipsum1;
+
+~ Equation {#eq-test .para-end}
+x=mc^2
+~
+
+&lipsum2;
 
 ~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
 ![butterfly]

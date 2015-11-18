@@ -5,7 +5,7 @@ Documentation:
   ~
   ```
   to expand the first 7 paragraphs, 
-  or "&lipsum<n>;" enities to get the _n_the paragraph (up to 10)
+  or "&lipsum<n>;" entities to get the _n_the paragraph (up to 10)
 
 lipsum1: Lorem ipsum dolor sit amet, consectetuer
   adipiscing elit. Ut purus elit, vestibulum ut, placerat ac,

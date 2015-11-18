@@ -38,29 +38,36 @@ Heading Depth : 0
 Toc Depth     : 2
 Section Base  : 2
 Section Depth : 2
-.MadokoLogo   : font-size=50%
-~Notes        : html-elem=aside .notes
-~Author       : font-size=x-large
-~TitleBlock   : html-elem=section
-~Title        : font-size=3em html-elem=h1
-~AuthorName   : font-size=1.4em
-~SubTitle     : font-size=1.8em html-elem=h2
-~Body         : before="~ Begin Reveal { data-long=&reveal-long; data-details=&reveal-details; &reveal-attrs; line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
-                after="~ End Slides&nl;~ End Reveal&nl;" 
-~Slide        : .section html-elem=section tex-elem=mdSection
-~Vertical     : .section html-elem=section
-.smaller      : data-smaller
-.long         : data-long
 
-@tex ~Notes   : display=none
-@tex ~Vertical: notag
-@tex Maketitle: True
+.MadokoLogo   { font-size:50% }
+Notes         { html-elem:aside; .notes }
+Author        { font-size:x-large }
+TitleBlock    { html-elem:section }
+Title         { font-size:3em; html-elem:h1 }
+AuthorName    { font-size:1.4em }
+SubTitle      { font-size:1.8em; html-elem:h2 }
+Body          { 
+  before:'~ Begin Reveal { data-long:"&reveal-long;"; data-details:"&reveal-details;";  line-adjust:0; &reveal-attrs;}&nl;~ Begin Slides {line-adjust:0}&nl;';
+  after:'~ End Slides&nl;~ End Reveal&nl;';
+}
+Slide         { .section; html-elem:section; tex-elem:mdSection }
+Vertical      { .section; html-elem:section }
+.smaller      { data-smaller }
+.long         { data-long }
 
-@tex2 ~Slide,~Section  : tex-env=mdframe
-@tex2 ~H1,~H2,~H3: tex-cmd=\frametitle
-@tex2 .pause    : tex-cmd-outer-before=\pause
-@tex2 .fragment : tex-env-outer=onlyenv<+->
-@tex2 .fragmented: tex-env-inner=mdfragmented
+@if tex {
+  Notes       { display:none }
+  Vertical    { tag: false }
+  Maketitle: True
+}
+
+@if tex2 {
+  Slide,Section { tex-env:mdframe }
+  H1,H2,H3      { tex-cmd:"\frametitle" }
+  .pause        { tex-cmd-outer-before:"\pause" }
+  .fragment     { tex-env-outer:"onlyenv<+->" }
+  .fragmented   { tex-env-inner:mdfragmented }
+}
 
 Tex Header    :
     \ifbeamer\relax\else
