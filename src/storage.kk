@@ -62,9 +62,14 @@ public function tryReadTextFile( fileName : string, required : bool = True ) : i
 }
 
 
-// Search for a file along a list of directories.
+// Search for a file along a list of directories, including the filename by itself
 public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
-  val fnames = Cons("",dirs).map(fun(dir){ combine(dir,fname) })
+  searchFileSyncIn(dirs,fname)
+}
+
+// Search for a file along a list of directories.
+public function searchFileSyncIn( dirs : list<string>, fname : string ) : io maybe<string> {
+  val fnames = dirs.map(fun(dir){ combine(dir,fname) })
   fnames.foreachUntil fun(f) {
     if (f.fexistsSync) then Just(f) else Nothing
   }

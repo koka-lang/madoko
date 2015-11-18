@@ -87,7 +87,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
     }
   }
 
-  function readInclude( fname : string, srcname, lineNo ) : io (string,string) 
+  function readInclude( fname : string, srcname, lineNo, included : list<string> ) : io (string,string) 
   {
     if (fname=="") then {
       ("","\n")  // happens for snippet only includes
@@ -122,14 +122,20 @@ public function include( text : string, fast : bool, inName : string, outName : 
           (fileName,"")
         }
         Just((fileName,content)) -> {
-          match(includes[fileName]) {
-            Just -> ()
-            Nothing -> {
-              includes[fileName] := content
-              content.lines.list.findSnippets(fileName) // record snippets only once
-            }
+          if (included.contains(fileName)) then {
+            warning("recursive include: " + fileName.show)
+            (fileName,"")
           }
-          (fileName,content)
+          else {
+            match(includes[fileName]) {
+              Just -> ()
+              Nothing -> {
+                includes[fileName] := content
+                content.lines.list.findSnippets(fileName) // record snippets only once
+              }
+            }
+            (fileName,content)
+          }
         } 
       }
     }
@@ -182,10 +188,10 @@ public function include( text : string, fast : bool, inName : string, outName : 
       }
       Nil -> options.prelude
     }
-    processIncludesRec(txt,fname,1,prelude)
+    processIncludesRec(txt,fname,[fname],1,prelude)
   }
 
-  function processIncludeLine( fname : string, line : string, lineMap, lineNo : int, extra : int = 0 ) : io (string,lineMap,int)
+  function processIncludeLine( fname : string, line : string, included : list<string>, lineMap, lineNo : int, extra : int = 0 ) : io (string,lineMap,int)
   {
     val mbincname = match (line.find(rxInclude)) {
       Just(cap) -> Just((cap.matched,cap.groups.firstMatched(1,3),cap.groups[4]))
@@ -197,12 +203,12 @@ public function include( text : string, fast : bool, inName : string, outName : 
     match(mbincname) { 
       Nothing -> (line,lineMap,1)
       Just((matched,incname,range)) -> {
-        val (fileName0,content) = readInclude(incname,fname,lineNo)
+        val (fileName0,content) = readInclude(incname,fname,lineNo,included)
         val (fileName,istart,fragment) = fileName0.findRange(matched, range, content, fname, lineNo);
         if (istart<=0) 
          then ("",lineMap,1)
          else {
-          val (lcount,lmap,icontent) = processIncludesRec( fragment, fileName, istart )
+          val (lcount,lmap,icontent) = processIncludesRec( fragment, fileName, Cons(fileName,included), istart )
           val lineMapNew = Include(lineNo,istart,lcount+extra,fileName,lmap,lineMap)
           //lineCount := lineCount + lcount - 1
           //trace("include: " + lineNo.show + ", " + lcount.show + ", " + lineCount.show)
@@ -212,7 +218,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
     }
   }
 
-  function processIncludesRec( txt : string, fname : string, start : int = 1, prelude : string = ""  ) : io (int,lineMap,string)
+  function processIncludesRec( txt : string, fname : string, included : list<string>, start : int = 1, prelude : string = ""  ) : io (int,lineMap,string)
   {
     if (start<=0) return (0,End,"")
     var lineNo := start-1
@@ -220,7 +226,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
     var lineMap := End
     val preludeTxt = 
       if (prelude != "") {
-        val (icontent,lmap,lcount) = processIncludeLine(fname,"[INCLUDE=\"" + prelude + "\"]",lineMap,lineNo,1)
+        val (icontent,lmap,lcount) = processIncludeLine(fname,"[INCLUDE=\"" + prelude + "\"]",included,lineMap,lineNo,1)
         lineCount := lineCount + lcount 
         lineMap   := lmap
         icontent + "\n"
@@ -229,7 +235,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
     val ls = txt.lines.map fun(line) {
       lineNo := lineNo + 1;
       //lineCount := lineCount + 1;
-      val (icontent,lmap,lcount) = processIncludeLine(fname,line,lineMap,lineNo)
+      val (icontent,lmap,lcount) = processIncludeLine(fname,line,included,lineMap,lineNo)
       lineCount := lineCount + lcount
       lineMap   := lmap
       icontent
@@ -270,7 +276,7 @@ public function searchReadTextFileDef( fname : string, def : string, dirs : list
 }
 
 public function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "", required : bool = True  ) : io maybe<(string,string)> {
-  match(searchFileSync(dirs,fname)) {
+  match(searchFileSyncIn(dirs,fname)) {
     Nothing -> {
       if (ext=="" || fname.extname != "") then Nothing else {
         match (searchFileSync(dirs,fname.changeExt(ext))) {
