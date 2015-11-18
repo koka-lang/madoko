@@ -595,6 +595,16 @@ function adjustCounter(counters : mdict<h,counter>,name : string, value : string
 // increment or set a count to a value
 function increment(counter :counter, xvalue : string) : counter {
   val v = xvalue.toLower
+  if (v=="++" || v=="") then counter(value=counter.value+1)
+  elif (v=="--") then counter(value=counter.value-1)
+  else match(v.parseInt) {
+    Just(i) -> counter(value=i)
+    Nothing -> setcounterstyle(counter,xvalue,v)
+  }
+}
+
+function setcounterstyle( counter : counter, xvalue : string, v : string ) : counter 
+{
   if (v=="upper-alpha" || v=="upper-case" || v=="upper-latin") then counter(counter.value,Uppercase)
   elif (v=="lower-alpha" || v=="lower-case" || v=="lower-latin") then counter(counter.value,Lowercase)
   elif (v=="decimal" || v=="arabic") then counter(counter.value,Arabic())
@@ -604,9 +614,14 @@ function increment(counter :counter, xvalue : string) : counter {
   elif (v=="upper-roman") then counter(counter.value,UpperRoman)
   elif (v=="lower-greek") then counter(counter.value,UnicodeBase(945,969))
   elif (v=="upper-greek") then counter(counter.value,UnicodeBase(913,937))
-  elif (v=="cjk-decimal") then counter(counter.value,ItemList(cjkDecimal))
-  elif (v=="symbolic") then counter(counter.value,ItemList(symbolDecimal))
+  elif (v=="cjk-decimal") then counter(counter.value,EntityList(cjkDecimal))
+  elif (v=="symbolic") then counter(counter.value,EntityList(symbolDecimal))
   elif (v=="circled-decimal") then counter(counter.value,UnicodeBase(9312,9321))
+  elif (v=="disc") then counter(counter.value,Entity("&bull;"))
+  elif (v=="circle") then counter(counter.value,Entity("&circ;"))
+  elif (v=="square") then counter(counter.value,Entity("&bbox;"))
+  elif (v=="dash" || v=="-") then counter(counter.value,Entity("&ndash;"))
+  elif (v=="none") then counter(counter.value,Entity(""))
   elif (v.contains(rxUnicodeBase)) then {
     match(v.find(rxUnicodeBase)) {
       Nothing   -> counter(counter.value,Arabic())
@@ -617,22 +632,27 @@ function increment(counter :counter, xvalue : string) : counter {
       }
     }
   }
-  elif (v=="--") then counter(value=counter.value-1)
-  elif (v=="++" || v=="") then counter(value=counter.value+1)
+  elif (v.contains(rxEntityList)) then {
+    match(v.find(rxEntityList)) {
+      Nothing   -> counter(counter.value,Arabic())
+      Just(cap) -> {
+        val items = cap.groups[1].split(regex(@" *, *")).list
+        counter(counter.value,EntityList(items))
+      }
+    }
+  }
   else match(xvalue.list) {
     Cons(d,Nil) | d >= 'a' && d <= 'z' -> Counter((d-'a').int+1,Lowercase)
     Cons(d,Nil) | d >= 'A' && d <= 'Z' -> Counter((d-'A').int+1,Uppercase)
-    _ -> match(v.parseInt) {
-      Just(i) -> counter(value=i)
-      Nothing -> {
-        warning( "unrecognized counter value: " + xvalue)
-        counter
-      }
+    _ -> {
+      warning( "unrecognized counter value: " + xvalue)
+      counter
     }
   }
 }
 
-val rxUnicodeBase = regex(@"^unicode-base-(\d+)(?:-(\d+))?$")
+val rxUnicodeBase = regex(@"^unicode-base\((\d+)(?: *, *(\d+))?\)$")
+val rxEntityList = regex(@"^entity-list\(([^\s,\)]+(?: *, *[^\s,\)]+)*)\)")
 
 // reset lower counters (ie. for h1-h2, reset h1-h2-h3, h1-h2-h3-h4, ...)
 function resetNestedCounters(counters : mdict<h,counter>, counter : string, nested : mdict<h,list<string>> ) : st<h> ()
@@ -679,12 +699,13 @@ function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st
 type format {
   Arabic0     // start at 0
   Arabic( width : int = 0 )
-  Uppercase
   Lowercase
+  Uppercase
   LowerRoman
   UpperRoman
-  ItemList( items : list<string> )
+  EntityList( items : list<string> )
   UnicodeBase( start : int, end : int )
+  Entity( item : string )
 }
 
 struct counter( value :int = 0, format :format = Arabic()  )
@@ -692,14 +713,15 @@ struct counter( value :int = 0, format :format = Arabic()  )
 function show( counter : counter ) : string {
   match(counter.format) {
     Arabic(width)  -> counter.value.show.align(width,'0')
-    Uppercase  -> counter.value.showLetterBase('A')
-    Lowercase  -> counter.value.showLetterBase('a')
+    Lowercase  -> counter.value.showUnicodeBase('a'.int, 'z'.int, showAsChar)
+    Uppercase  -> counter.value.showUnicodeBase('A'.int, 'Z'.int, showAsChar)
     LowerRoman -> counter.value.showRoman.toLower
     UpperRoman -> counter.value.showRoman
     Arabic0    -> (counter.value-1).show
-    ItemList(l) -> counter.value.showFromList(l)
-    UnicodeBase(b,e) -> counter.value.showEntityBase(b,e)
-    _ -> counter.value.show
+    EntityList(l)    -> counter.value.showFromList(l)
+    UnicodeBase(b,e) -> counter.value.showUnicodeBase(b,e)
+    Entity(item)     -> item
+    // _ -> counter.value.show
   }
 }
 
@@ -707,32 +729,32 @@ val cjkDecimal = [0x4E00,0x4E8C,0x4E09,0x56DB,0x4E94,
                   0x516D,0x4E03,0x516B,0x4E5D,0x5341]
                  .map(fun(i) { "&#" + i.show + ";" })
 
-val symbolDecimal = ["&ast;","&dagger;","&Dagger;","&sect;","&para;","&ast;&ast;","&dagger;&dagger;","&Dagger;&Dagger;"]
+val symbolDecimal = ["&ast;","&dagger;","&Dagger;","&sect;","&para;"]
 
-function showEntityBase( value : int, start : int, end : int = start + 9 ) : string {
-  if (value <= 0 || value > (end-start)+1) return "?"
-  "&#" + (value + start - 1).show + ";"
+
+function showEntity( i : int ) : string {
+  "&#" + i.show + ";"
+}
+
+function showAsChar( i : int ) : string {
+  string(1,i.char)
+}
+
+function showUnicodeBase( value : int, start : int, end : int = start + 9, showCode : (int) -> string = showEntity ) : string {
+  if (value <= 0) return "?"
+  val base = (end - start) + 1
+  val entity = "&#" + (start + ((value-1) % base)).show + ";"
+  replicate(entity, ((value-1) / base) + 1).join()
 }
 
 function showFromList( value : int, items : list<string> ) : string {
   if (value <= 0) return "?"
-  match(items.drop(value-1)) {
+  val base = items.length
+  val item = match(items.drop( (value-1) % base )) {
     Cons(s) -> s
     Nil     -> "?"
   }
-}
-
-function showLetterBase( value : int, baseChar : char) : string {
-  unsafeNoDiv {
-    value.showRLetterBase(baseChar).reverse.string
-  }
-}
-
-function showRLetterBase( value : int, baseChar : char ) : div list<char> {
-  if (value <= 0) return []
-  val next = value/26
-  val mod  = value%26 - (if (next == 0) then 1 else 0)
-  Cons(mod.char + baseChar, next.showRLetterBase(baseChar))
+  replicate(item, ((value-1) / base) + 1).join()
 }
 
 function showRoman( value : int ) {
@@ -746,6 +768,7 @@ function showRoman( value : int ) {
        tens[(value%100)/10].mbstring +
        ones[(value%10)].mbstring
 }
+
 
 //--------------------------------------------------------
 // Unformat
