@@ -23,7 +23,7 @@ web/client/templates/
 web/client/dictionaries/
 web/users/
 web/ssl/
-web/log/
+web/log*/
 web/run/
 test/tex/
 test/local/
