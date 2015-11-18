@@ -2,6 +2,7 @@
   "log" : [
     { "version": "0.9.16-beta",
       "date": "2015-11-18",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the files dropdown by pressing the grey reload icons.",      
       "updates": [
         "Allow CSS matching rules to contain the element, the name, and a series of classes, e.g. 'h1.references { ... }'",
         "Allow CSS styling of the table of contents. The heading for the table of contents is now automatic as for the bibliography.",
