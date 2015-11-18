@@ -24,7 +24,7 @@ import texFormatter
 
 public struct formatContext( 
   inlineContext : inlineContext,
-  tocBlocks   : dict<block>,
+  tocBlocks   : dict<list<block>>,
   footnoteBlock : block,
   headingBase: int,
   langPrefix : string,
@@ -299,6 +299,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Div(content,attrs) -> {    
       val txt = formatBlocksX(context,content)
       val rnd = attrs.input
+      if (attrs.elem=="bib") then {
+        log("aux","%mdk bib: " + attrs.name)
+      }
       if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
             (context.fmt==FmtTex && rnd.isMathDefs))
         then txt 
@@ -308,8 +311,8 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Special(name,value,attrs) -> {
       val linfo = context.inlineContext.fmtLineInfo(attrs.hasKey("data-line").mbstring)
       if (name.toLower=="toc") then {
-        val blk = context.tocBlocks[value.toLower].maybe(Empty,id)
-        linfo + formatBlock(context,blk)
+        val blks = context.tocBlocks[value.toLower].maybe([],id)
+        linfo + formatBlocksX(context,blks)
       }
       elif (name.toLower=="footnotes" && context.fmt.isFmtHtml) then linfo + formatBlock(context,context.footnoteBlock)
       else "" // formatBlock(context,Para("[" + name + "]\n"))

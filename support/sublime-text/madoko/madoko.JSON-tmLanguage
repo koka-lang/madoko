@@ -2,7 +2,7 @@
   "scopeName": "source.madoko",
   "fileTypes": ["mdk","md","madoko","markdown"],
   "author": "Daan Leijen",
-  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright))\\s*:",
+  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright|Documentation))\\s*:",
   "foldingStartMarker": "^(~+)\\w+\\b.*$",
   "foldingStopMarker": "^\\1\\s*$",
   "patterns": [
@@ -61,8 +61,8 @@
   ],
   "repository": {
     "metadata":
-      { "begin": "^(Title|Author|Description|License|Copyright)\\s*:"
-      , "end": "^(?!\\s)(?!@(tex|html)|[\\w\\.#~][\\w\\-\\.#~, \\t\\*]*:)"
+      { "begin": "^(Title|Author|Description|License|Copyright|Package|Documentation)\\s*:"
+      , "end": "^(?!\\s)(?!@([\\w\\-]+)|[\\w\\.#~][\\w\\-\\.#~, \\t\\*]*[:\\{]|<!--)"
       , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
       , "name": "markup.metadata.madoko"
       , "patterns": [
@@ -96,7 +96,7 @@
                 { "include": "#embedded" }
             ]
           },
-          { "begin": "^(@(?i:tex|html)\\s+)?(([\\.~#][\\w\\-\\.#~,\\s]*):)"
+          { "begin": "^(@(?:[\\w\\-]+)\\s+)?(([\\.~#][\\w\\-\\.#~,\\s]*):)"
           , "end": "^(?![ \\t])"
           , "beginCaptures": {
               "1": { "name": "keyword" },
@@ -111,12 +111,56 @@
               }
             ]
           },
-          { "match": "^(@(?i:tex|html)\\s+)?(\\w[\\w\\-\\.#~,\\s\\*]*:)"
+          { "match": "^(@(?:[\\w\\-]+)\\s+)?(\\w[\\w\\-\\.#~,\\s\\*]*:)"
           , "captures": {
               "1": { "name": "keyword" },
               "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
             }
-          }
+          },
+          { "match": "^(@(?:[\\w\\-]+)\\s+)?([\\w\\.#~][\\w\\-\\.#~,\\s\\*]*)(\\{.*\\})\\s*"
+          , "captures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^(@(?:[\\w\\-]+)\\s+)?([\\w\\.#~][\\w\\-\\.#~,\\s\\*]*)(\\{)"
+          , "end": "^\\}[ \t]*$"
+          , "contentName": "comment meta.tag.preprocessor.xml"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          , "endCaptures": {
+              "0": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^(@(?:if|supports)\\b)(.*)(\\{)"
+          , "end": "^\\}[ \t]*$"
+          , "contentName": "comment meta.tag.preprocessor.xml"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          , "endCaptures": {
+              "0": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^ {0,3}<!--(?!.*?-->)\\s*"
+          , "end": "^.*?-->\\s*$\\n?"
+          , "contentName": "comment"
+          , "beginCaptures": {
+             "0": { "name": "comment" }
+            }
+          , "endCaptures": {
+             "0": { "name": "comment" }
+            }
+          },
+          { "match": "<!--[\\s\\S]*?-->"
+          , "name": "comment"
+          }        
         ]
       },
 

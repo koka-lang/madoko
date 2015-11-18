@@ -14,23 +14,132 @@ import std/dict
 import std/string
 import common
 import entity
+import expression
 
 public function parseAttrs( attrStr : string, elemName : string = "", source : string = "" ) : attrs {
   if (attrStr == "" && elemName == "" && source=="") return attrsNone
   val attrs0 = Attrs() // source=source,classes=if (className=="") then [] else [className])
-  attrs0.extendAttrs( (if (elemName!="") then "elem='" + elemName + "' " else "") + attrStr, source )
+  attrs0.extendAttrs( (if (elemName!="") then "elem:'" + elemName + "'; " else "") + attrStr, source )
 }
 
 public function mergeDefault( attrs : attrs, def : attrs ) : attrs {
   def.extendAttrs(attrs.text, attrs.source)
 }
 
+abstract struct rules(
+  rules: list<(pattern,string)>
+)
 
-public function matchRules( defaults : dict<string>, elementName : string, attrs : attrs ) : attrs 
+private struct pattern( 
+  elem: string,
+  name: string,
+  classes: list<string>,
+  weight: int
+)
+
+function show( p : pattern ) {
+  "~" + p.elem + "#" + p.name + "." +  p.classes.join(".")
+}
+
+function makePattern( elem : string = "", name : string = "", classes : list<string> = [], weight : int = ~1) {
+  val clss = classes.filter( fun(s) { !s.isEmpty }) 
+  // calculate weight according to CSS rules: in order of importance: name, classes, elements
+  val w = if (weight >= 0) then weight 
+           else (100*(if (name.isEmpty) then 0 else 1) + 10*clss.length + (if (elem.isEmpty) then 0 else 1))
+  Pattern(elem.definitionId, name.definitionId, clss, w)
+}
+
+public val emptyRules = Rules([])
+
+public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
+  val rules = metadata.concat( fun(kv) {
+    val (key,value) = kv
+    if (key.startsWith("~") || key.startsWith("#") || key.startsWith(".")) {
+      match(key.find(rxPattern)) {
+        Nothing -> {
+          warning("illegal pattern: " + key)
+          []
+        }
+        Just(cap) -> {
+          val pat = makePattern( cap.groups[1], cap.groups[2], cap.groups[3].split(".").list )
+          // trace("pattern: " + key + " -> " + pat.show )
+          [(pat,value)]
+        }
+      }
+    }
+    else []
+  })
+  Rules(rules)
+}
+val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?(\.(?:[\w\-:]+))*$")
+
+public function matchRules( r : rules, elementName : string, attrs : attrs ) : attrs 
+{
+  if (!(attrs.common/defaults)) return attrs;
+  val name = attrs.name.definitionId
+  val elemName = elementName.definitionId
+  r.rules.apply( attrs, name, elemName, peano10 )
+}
+
+function apply( rules : list<(pattern,string)>, attrs : attrs, name : string, elemName : string, p : peano ) : attrs {
+  match(p) {
+    Zero -> attrs
+    Succ(p1) -> {
+      val (def,rules2) = rules.getMatches( attrs, name, elemName )
+      if (def=="") return attrs
+      val attrs2 = attrs.mergeDefault(def.parseAttrs)      
+      rules2.apply( attrs2, name, elemName, p1 )
+    }
+  }
+}
+
+function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : string, elemName : string ) : (string,list<(pattern,string)>) {
+  var def := []
+  val newrules = rules.filterx( fun(rule) {
+    val (pat,value) = rule
+    if (pat.matches(elemName,name,attrs.classes)) {
+      // trace("matched: " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
+      def := def.insert(pat.weight, value)
+      False
+    }
+    else True
+  })
+  (def.map(snd).join(" ; "),newrules)
+}
+
+// insert a pattern value sorted on weight, from low to high
+function insert( xs : list<(int,string)>, weight :int, value : string ) : list<(int,string)> {
+  match(xs) {
+    Nil -> [(weight,value)]
+    Cons(wv,xx) -> {
+      if (wv.fst <= weight)
+       then Cons(wv,insert(xx, weight, value))
+       else Cons((weight,value),xs)
+    }
+  }
+}
+
+function matches( pat : pattern, xelem : string, xname : string, xclasses : list<string> ) : bool {
+  (pat.elem.isEmpty || pat.elem == xelem) &&
+  (pat.name.isEmpty || pat.name == xname) &&
+  (pat.classes.isNil || pat.classes.all( fun(c) { xclasses.contains(c) } ))
+}
+
+function filterx( xs : list<a>, pred : a -> e bool ) : e list<a>
+{
+  match(xs) {
+    Nil -> Nil
+    Cons(x,xx) -> if (pred(x)) then Cons(x,xx.filterx(pred)) else xx.filterx(pred)
+  }
+}
+
+
+/*
+public function matchRules( rules : rules, elementName : string, attrs : attrs ) : attrs 
 {
   if (!(attrs.common/defaults)) return attrs;
   val extra = ["#" + attrs.name.definitionId, "~" + elementName.definitionId]
-  applyRules(peano10, defaults, attrs, defaults.getMatches(attrs,dict(),extra) );
+  applyRules(peano10, rules.values, attrs, rules.values.getMatches(attrs,dict(),extra) );
 }
 
 function applyRules(p : peano, defaults : dict<string>, attrs : attrs, dv : (string,dict<bool>) ) : attrs {
@@ -49,16 +158,16 @@ function getMatches( defaults: dict<string>, attrs : attrs, visited : dict<bool>
   val keys0 = extra + attrs.classes.map( fun(cname) { "." + cname.definitionId } ) 
   val keys1 = keys0.filter( fun(key) { visited[key].isNothing } )
   val visited1 = visited + keys1.map( fun(key) { (key,True) } ).dict
-  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(" ")
+  val def = keys1.map( fun(key) { defaults[key] }).filter(isJust).map(mbstring).join(" ; ")
   return (def,visited1)
 }
-
+*/
 
 public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string ) : attrs 
 {
   if (attrsStr=="" && source=="") then return attrs0
   val attrsx = attrs0(empty=False, sticky=False, source=source, 
-                      text=attrs0.text + " " + attrsStr,
+                      text=attrs0.text + " ; " + attrsStr,
                       classes=[])
 
   val kvs = attrsStr.joinLines.parseAttributes  // join lines here.
@@ -78,6 +187,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
       elif (name=="class") {
         acc(classes = [])
       }
+      elif (name=="counters") {
+        acc(counters = [])
+      }
       elif (name=="replace" || name=="before" || name=="after") {
         acc(replacers = [])
       }
@@ -88,8 +200,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     elif (name=="clear") {
       Attrs(text=attrsx.text,defaults=False)
     }
-    elif (name=="-" || name=="clearnum") {
-      acc( counters=[], label="", replacers=[] )
+    elif (name=="-" || name=="clearnum" || name==".clearnum") {
+      acc( counters=[], label="", replacers=[], 
+           classes=["clearnum"] + acc.classes.filter(fun(nm) { nm != "clearnum" }) )
     }
     elif (start=="#") {
       //trace("attrs name: " + name + ": " + value.show)
@@ -101,6 +214,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
        then acc else acc(classes = acc.classes + [cname])
     }
     elif (start=="@") {
+      //trace("counter: " + name + ": " + value)
       acc(counters = acc.counters + [(name.substr(1), value)] )
     }
     elif (name=="elem") {
@@ -130,6 +244,9 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
     }
     elif (name=="notag") {
       acc(notag=value.toBool)
+    }
+    elif (name=="tag") {
+      acc(notag= !value.toBool)
     }
     elif (name=="line") {
       match(value.parseInt()) {
@@ -190,10 +307,18 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
   attrs.addClasses(attrs0.classes) // last, so the classes are order for 'elementName'
 }
 
-val rxAttr = regex(@"^\s*([\w\.#@\-:]+)\s*(?:=\s*(?:'((?:[^\n\\']|\\.)*)'|""((?:[^\n\\""]|\\.)*)""|((?:[^\\""'\s]|\\.)*)))?$")
-val rxToken = regex(@"(?:\s*=\s*|'(?:[^\n\\']|\\.)*'|""(?:[^\n\\""]|\\.)*""|\\.|[^'""\\\s])")
-val rxSep = regex(@"\s+")
+val rxId      = @"(?:[\.#][\w\.#@\-:]*|[@\-\w][\w\.#@\-]*)" 
+val rxQuoted  = @"(?:'(?:[^\n\\']|\\[\s\S])*'|""(?:[^\n\\""]|\\[\s\S])*"")"
+val rxHtmlValue = @"(?:" + rxQuoted + "|" + @"(?:[^\\""'\s]|\\.)*)"
+val rxCssValue  = @"(?:" + rxQuoted + "|" + @"(?:&(?:#[xX]?)?[\w\-]+;|[^\\""'\s;,]|\\.)*)"
+val rxHtmlVal = @"(?:\s*=\s*(" + rxHtmlValue + @"))"
+val rxCssVal  = @"(?:\s*:\s*(" + rxCssValue + @"(?:(?:\s+|\s*(,\s*)+)" + rxCssValue + @")*))"
+val rxAttr    = regex(@"^(" + rxId + @")(?:" + rxHtmlVal + "|" + rxCssVal + ")?")
+val rxSep     = regex(@"^(\s+(?:;*(?:$|\s+))?|;(?:$|\s+))")
+val rxNoSep   = regex(@"^([^\s;]|;(?!\s))+")
 
+val rxSpaces  = regex(@"\s+")
+val rxNoSpaces= regex(@"\\.|" + rxQuoted)
 
 function parsePageAlign( name :string, value: string ) : list<(string,string)> {
   if (name!="page-align") return []
@@ -212,33 +337,53 @@ function parsePageAlign( name :string, value: string ) : list<(string,string)> {
 // Parse an attribute string
 val parseAttributes : (string) -> list<(string,string,string)> = smemo(parseAttributesX)
 
-// Parse a single attribute
-val parseAttribute : (string) -> list<(string,string,string)> = smemo(parseAttributeX)
-
 function parseAttributesX( s : string ) : list<(string,string,string)> 
 {
-  s.splitAttributes.map(parseAttribute).concat
+  val res = parseAttributesAcc( s, s, [] )  
+  /*
+  trace("attributes: " + s + "\n parsed: " + res.map(fun(kvv) {
+      val (key,_kwvalue,value) = kvv
+      key + ": \"" + value + "\""
+    }).join(";")
+  )
+  */
+  res
 }
 
-function parseAttributeX( s : string ) : list<(string,string,string)>
+function parseAttributesAcc( original : string, s : string, acc : list<(string,string,string)> ) : list<(string,string,string)>
 {
-  match( s.find(rxAttr) ) {
-    Nothing -> {
-      warning( "invalid attribute: " + s )
-      []
+  if (s=="") return acc.reverse
+  match(s.find(rxAttr)) {
+    Nothing -> match(s.find(rxSep)) {
+      Nothing -> match(s.find(rxNoSep)) {
+        Nothing -> {
+          warning("invalid attribute: " + s + "\n  in: " + original )
+          acc.reverse
+        }
+        Just(cap) -> {
+          warning("invalid attribute: " + cap.matched + "\n  in: " + original )
+          parseAttributesAcc( original, s.substr1(cap.next), acc )
+        }
+      }
+      Just(cap) -> {
+        parseAttributesAcc( original, s.substr1(cap.next), acc )
+      }
     }
     Just(cap) -> {
-      val value = cap.groups.firstMatched(2)
-      val kwvalue = if (cap.groups.matchedOn(4)) then cap.groups[4] else ""
-      [(cap.groups[1].toLower, kwvalue, value)]
+      val values  = cap.groups.firstMatched(2).trim.splitExclude(rxSpaces,rxNoSpaces)
+      val value   = values.filter(legalValue).map(unquote).join(" ")
+      val kwvalue = if (values.length==1 && !(value.startsWith("\"") || value.startsWith("'")))
+                     then value else ""
+      val res     = (cap.groups[1].toLower,kwvalue,value)                     
+      parseAttributesAcc( original, s.substr1(cap.next), Cons(res,acc))                     
     }
   }
 }
 
-// Split attributes into a list of attribute definitions
-public function splitAttributes( attrdef : string ) : list<string> {
-  attrdef.splitExclude( rxSep, rxToken ).map(trim).filter( fun(s){ s != "" } )
+function legalValue( s : string ) : bool {
+  !s.isEmpty && !s.contains(rxCommentValue)
 }
+val rxCommentValue = regex(@"^/\*(?:[^\\\*]|\\.|\*(?!/))*\*/")
 
 function unescape( s : string ) : string {
   s
@@ -264,7 +409,7 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
     expandKeys(peanoN,s,txt,attrs,labels,metadata,fun(_,_) {""}) 
   }
 
-  function checkReplace( rrepl : string ) {    
+  function checkReplace( rrepl : string ) : string {    
     match(rrepl.find(rxregex)) {
       Nothing -> match(rrepl.find(rxmapping)) {
         Nothing -> rrepl.expand
@@ -278,19 +423,13 @@ function applyReplacer( repl : string, txt : string, attrs : attrs, labels : dic
     }
   }
 
-  function checkCond( crepl : string ) {
-    match(crepl.find(rxcond)) { 
-      Nothing -> {
-        checkReplace(crepl)
-      }
-      Just(ccap) -> {
-        if (evalCondition(ccap.groups[1].expand))
-          then checkReplace(ccap.groups[2])
-        elif (ccap.groups.matchedOn(3))
-          then checkReplace(ccap.groups[3])
-        else txt
-      }
-    }
+  function checkCond( crepl : string ) : string {
+    if (!crepl.startsWith("@if"))
+      then checkReplace(crepl)
+      else match (evalCondition(crepl,txt,attrs,labels,metadata)) {
+        Null -> txt // missing 'else' -> no replace
+        c    -> checkReplace(c.string)
+      } 
   }
 
   checkCond(repl)
@@ -302,46 +441,14 @@ val rxmapping = regex(@"^//((?:[^\\]|\\.)*)//([gimc]*)$")
 val rxregex = regex(@"^/(" + rxescaped + @"*)/(" + rxescaped + @"*)/([gimc]*)$")
 val rxescaped = @"(?:[^\\/]|\\.)"
 
-val rxcond  = regex(@"^\?if\s+(" + rxescapedc + @"+)\s*\?then\s+(" + rxescapedc + @"*)\s*(?:\?else\s+(" + rxescapedc + @"*)\s*)?$")
-val rxescapedc = @"(?:[^\\\s?]|\\.|\?(?!then|else|fi|if)|\s+(?!$|[\s?]))"
-
-function evalCondition( cond : string ) : bool {
-  match(cond.find(rxcompare)) {
-    Nothing -> {
-      //trace("condition: " + cond.show )
-      cond!=""
-    }
-    Just(cap) -> {
-      val s = cap.groups[1].trim
-      val t = cap.groups[3].trim
-      val op = cap.groups[2]
-      //trace("condition: " + s.show + " " + op + " " + t.show )
-      
-      val i = s.parseInt.maybe(~1,id)
-      val j = t.parseInt.maybe(~1,id)
-      if (i>0 && j>0) then {
-        if (op=="==") then (i==j)
-        elif (op=="!=") then (i!=j)
-        elif (op==">") then (i>j)
-        elif (op==">=") then (i>=j)
-        elif (op=="<") then (i<j)
-        elif (op=="<=") then (i<=j)
-        else False
-      }
-      else {
-        if (op=="==") then (s==t)
-        elif (op=="&&") then (s!="" && t!="")        
-        elif (op=="||") then (s!="" || t!="")
-        elif (op=="!=") then (s!=t)
-        else False
-      }
-    }
+function evalCondition( cond : string, source : string, attrs : attrs, labels : dict<label>, metadata : dict<string> ) : constant {
+  function lookup(v,display) {
+    String(expandKeys("&" + v + ";", source,attrs,labels,metadata))
   }
+  val res = evaluate( cond, fun(e) { evalExpr(e,lookup) }, String(""))
+  // trace("eval condition: " + res.show + ": " + cond)
+  res
 }
-val rxcompare = regex(@"^(" + rxesc + @"*)\s*(" + rxop + @")\s*(" + rxesc + @"*)$")
-
-val rxesc = @"(?:(?!" + rxop + @")[^\\]|\\.)"
-val rxop  = @"(?:==|!=|>=|<=|<|>|&&|\|\|)"
 
 // remove all grouping from a regular expression
 function ungroup( r : string ) : string {

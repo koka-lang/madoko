@@ -31,11 +31,11 @@ butterfly. Note that you can drag&drop images into the editor pane to
 include them in the document, and similarly with bibtex files, latex
 style files, etc.
 
-~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=top}
+~ Figure { #fig-butterfly; caption:"A Monarch butterfly"; page-align:top}
 ![butterfly]
 ~
 
-[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+[butterfly]: images/butterfly.png "butterfly"  { width:4em }
 
 Our contributions are:
 
@@ -78,14 +78,14 @@ windows, deep-set round windows looking over his garden, and meadows
 beyond, sloping down to the river.
 
 
-~ Lemma { #lemma-test caption="A __lemma__ caption" }
+~ Lemma { #lemma-test; caption:"A __lemma__ caption" }
 There he lay, a vast red-golden dragon, fast asleep; thrumming came from
 his jaws and nostrils, and wisps of smoke, but his fires were low in
 slumber
 ~
 
-~ Proof { caption="Of Lemma [#lemma-test]" }
-Roads go ever ever on.
+~ Proof { caption:"Of Lemma [#lemma-test]" }
+Roads go ever ever on. &qed;
 ~
 
 ~ Todo 
@@ -154,13 +154,9 @@ I would like to thank ...
 
 [BIB]
 
-~TexRaw
-\vfill
-\pagebreak
-\appendix
-~
+&pagebreak;
 
-# An appendix { @h1="A" }
+# An appendix { @h1:"A" }
 
 "All the same, I should like it all plain and clear," said he
 obstinately, putting on his business manner (usually reserved for people

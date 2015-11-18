@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>author</key>
@@ -12,7 +12,7 @@
 		<string>markdown</string>
 	</array>
 	<key>firstLineMatch</key>
-	<string>\s*(?i:(Title|Author|Description|License|Copyright))\s*:</string>
+	<string>\s*(?i:(Title|Author|Description|License|Copyright|Documentation))\s*:</string>
 	<key>foldingStartMarker</key>
 	<string>^(~+)\w+\b.*$</string>
 	<key>foldingStopMarker</key>
@@ -163,7 +163,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^(\s*)([*+\-]|\d+\.)\s</string>
+					<string>^(\s*)([\*\+\-]|\d+\.)\s</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>0</key>
@@ -184,7 +184,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>^\s*([*+\-]|\d+\.)\s</string>
+					<string>^\s*([\*\+\-]|\d+\.)\s</string>
 					<key>name</key>
 					<string>keyword markup.heading.madoko</string>
 				</dict>
@@ -362,8 +362,7 @@
 						</dict>
 					</dict>
 					<key>patterns</key>
-					<array>
-					</array>
+					<array/>
 				</dict>
 				<dict>
 					<key>begin</key>
@@ -581,7 +580,7 @@
 		<key>metadata</key>
 		<dict>
 			<key>begin</key>
-			<string>^(Title|Author|Description|License|Copyright)\s*:</string>
+			<string>^(Title|Author|Description|License|Copyright|Package|Documentation)\s*:</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>0</key>
@@ -591,7 +590,7 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>^(?!\s)(?!@(tex|html)|[\w\.#~][\w\-\.#~, \t\*]*:)</string>
+			<string>^(?!\s)(?!@([\w\-]+)|[\w\.#~][\w\-\.#~, \t\*]*[:\{]|&lt;!--)</string>
 			<key>name</key>
 			<string>markup.metadata.madoko</string>
 			<key>patterns</key>
@@ -667,7 +666,7 @@
 				</dict>
 				<dict>
 					<key>begin</key>
-					<string>^(@(?i:tex|html)\s+)?(([\.~#][\w\-\.#~,\s]*):)</string>
+					<string>^(@(?:[\w\-]+)\s+)?(([\.~#][\w\-\.#~,\s]*):)</string>
 					<key>beginCaptures</key>
 					<dict>
 						<key>1</key>
@@ -714,7 +713,127 @@
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>^(@(?i:tex|html)\s+)?(\w[\w\-\.#~,\s\*]*:)</string>
+					<string>^(@(?:[\w\-]+)\s+)?(\w[\w\-\.#~,\s\*]*:)</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>^(@(?:[\w\-]+)\s+)?([\w\.#~][\w\-\.#~,\s\*]*)(\{.*\})\s*</string>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^(@(?:[\w\-]+)\s+)?([\w\.#~][\w\-\.#~,\s\*]*)(\{)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>comment meta.tag.preprocessor.xml</string>
+					<key>end</key>
+					<string>^\}[ 	]*$</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^(@(?:if|supports)\b)(.*)(\{)</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function meta.tag.preprocessor.madoko</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>comment meta.tag.preprocessor.xml</string>
+					<key>end</key>
+					<string>^\}[ 	]*$</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment meta.tag.preprocessor.xml</string>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>begin</key>
+					<string>^ {0,3}&lt;!--(?!.*?--&gt;)\s*</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment</string>
+						</dict>
+					</dict>
+					<key>contentName</key>
+					<string>comment</string>
+					<key>end</key>
+					<string>^.*?--&gt;\s*$\n?</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>comment</string>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>&lt;!--[\s\S]*?--&gt;</string>
+					<key>name</key>
+					<string>comment</string>
 				</dict>
 			</array>
 		</dict>

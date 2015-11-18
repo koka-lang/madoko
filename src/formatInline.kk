@@ -47,15 +47,15 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("iquotes",   regex(@"^(?:'(?![s\s])((?:[^\\']|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
   Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
   Rule("ilink",     regex(@"^([\n ]*)" + linkreg), inlineLink ),
-  Rule("iemph*",    regex(@"^\*((?:[^\\*]|\\.)+)\*"), inlineEmph),  
+  Rule("iemph*",    regex(@"^(\*)((?:[^\\*]|\\.)+)\*"), inlineEmph),  
   
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
   Rule("ifootnote", regex(@"^\[\^" + xlinkid + @"\]"), inlineFootnote ),
   Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>"), inlineAutoLink ),  
-  Rule("istrong_",  regex(@"^__((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
-  Rule("istrong*",  regex(@"^\*\*((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
-  Rule("iemph_",    regex(@"^\b_((?:[^\\_]|\\.)+)_\b"), inlineEmph),
+  Rule("istrong_",  regex(@"^(__)((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
+  Rule("istrong*",  regex(@"^(\*\*)((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
+  Rule("iemph_",    regex(@"^\b(_)((?:[^\\_]|\\.)+)_\b"), inlineEmph),
   Rule("idel",      regex(@"^~~(?=\S)([\s\S]*?\S)~~"), inlineDel ),
   Rule("isub",      regex(@"^~((?:[^~\\\s]|\\.)+)~"), inlineSub ),
   Rule("isup",      regex(@"^\^((?:[^\^\\\s]|\\.)+)\^"), inlineSup ),
@@ -144,12 +144,12 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     if (attrs.hasClass("snippet")) 
      then (if (isDisplay) then "Display" else "Inline","","")
     elif (isDisplay) 
-     then ("Display","\\[","\n\\]")  // add newline because of comments in latex (and we do use trimLines on the content)
+     then ("Display","\\[" + (if (attrs.name.isEmpty) then "" else "\\label{" + attrs.name + "}"),"\n\\]%mdk\n")  // add newline because of comments in latex (and we do use trimLines on the content)
      else ("Inline","$","$")
-  val mode = if (attrs.hasBoolKey("snippet-needpdf") || attrs.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   val lkind  = kind.toLower
   val class  = "math-" + lkind
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
+  val mode   = if (attrsd.hasBoolKey("snippet-needpdf") || attrsd.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
@@ -163,7 +163,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
       if (context.mathStatic || mode=="math-pdf") {
         val digest = md5(txt)
         log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
-                      texcmd + "\n\\end{md" + kind + "Snippet}%mdk")
+                      texcmd + "\\end{md" + kind + "Snippet}%mdk")
         //trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))
@@ -213,16 +213,16 @@ function inlineQuot( cap : matched, context ) : string {
 
 function inlineStrong( cap : matched, context ) : string {
   val tag = if (context.starBold && cap.matched.startsWith("_")) then "em" else "strong"
-  val class = tag + cap.matched.length.show
+  val class = tag + (if (cap.matched.startsWith("*")) then "-star" else "-low") + cap.groups[1].length.show
   val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs)
+  context.fmtCmd(tag, formatInline(context,cap.groups[2]), attrs)
 } 
 
 function inlineEmph( cap : matched, context ) : string {  
   val tag = if (context.starBold && cap.matched.startsWith("*")) then "strong" else "em"
-  val class = tag + cap.matched.length.show
+  val class = tag + (if (cap.matched.startsWith("*")) then "-star" else "-low") + cap.groups[1].length.show
   val attrs = context.defaults.matchRules( tag, attrsNone.addClass(class) )
-  context.fmtCmd(tag, formatInline(context,cap.groups[1]), attrs )  
+  context.fmtCmd(tag, formatInline(context,cap.groups[2]), attrs )  
 } 
 
 function inlineSup( cap : matched, context ) : string {
@@ -470,7 +470,8 @@ struct cite(
   ordinal : int  
 )
 
-function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, citeLabel : string ) 
+function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, 
+                  citeLabel : string, citeInfo : string ) 
 {
   val numlab = match(context.labels[name]) {
                  Nothing   -> "?"
@@ -482,7 +483,7 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                 }
   //trace("citeLabel: " + name + ": " + citeLabel)
   val (number,authors,year) = 
-    match(citeLabel.find(rxAuthorYear)) {
+    match(citeInfo.find(rxAuthorYear)) {
       Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
       Just(cap) -> {
         //trace(" matched: " + cap.groups[1] + ", " + cap.groups[2] + ", " + cap.groups[3] ) 
@@ -518,7 +519,8 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                             val lab = ("@" + cap.groups[3]).definitionId 
                             match(context.labels[lab]) {
                               Just(lbl) -> {  // | lbl.element == "bibitem" 
-                                [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],lbl.labelText)]
+                                [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],
+                                                  lbl.labelText, lbl.labelInfo)]
                               }
                               Nothing -> {
                                 warning( "missing citation: @" + cap.groups[3] )

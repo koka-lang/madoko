@@ -103,11 +103,11 @@ public function mathStatic( mathDvi : string, mathPdf : string,
    then return continue(Nothing)
 
   xopts.print("rendering math.")
-  if (outMathDvi != oldMathDvi && !(tryWriteTextFile(texNameDvi,outMathDvi))) {
+  if ((outMathDvi != oldMathDvi || xopts.rebuild) && !(tryWriteTextFile(texNameDvi,outMathDvi))) {
     xopts.printErr("error: unable to write: " + texNameDvi)
     return continue(Nothing)
   }
-  if (outMathPdf != oldMathPdf && !(tryWriteTextFile(texNamePdf,outMathPdf))) {
+  if ((outMathPdf != oldMathPdf || xopts.rebuild) && !(tryWriteTextFile(texNamePdf,outMathPdf))) {
     xopts.printErr("error: unable to write: " + texNamePdf)
     return continue(Nothing)
   }

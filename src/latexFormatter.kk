@@ -549,10 +549,12 @@ function applyBlock( body : string, isBlock : bool, attrs : attrs ) : string {
 function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
-    Just(cmd) -> 
+    Just(cmd) -> {
+      val post = kvs[key + "-postfix"].maybe("",id)      
       if (cmd.startsWith("{")) 
-        then cmdconnect(cmd.substr(1), body).braced
-        else cmd + body.braced 
+        then cmdconnect(cmd.substr(1) + post, body).braced
+        else cmd + post + body.braced 
+    }
   }
 }
 
@@ -560,7 +562,7 @@ function insertCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> {
-      val cbody = cmdconnect(if (cmd.startsWith("{")) then cmd.substr(1) else cmd, body) 
+      val cbody = cmdconnect( (if (cmd.startsWith("{")) then cmd.substr(1) else cmd), body) 
       if (cmd.startsWith("{")) then cbody.braced else cbody
     }
   }
@@ -571,7 +573,7 @@ function appendCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> {
-      body + cmd
+      body + cmd 
     }
   }
 }
@@ -580,7 +582,7 @@ function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attr
   match(kvs[key]) {
     Nothing -> body
     Just(env) -> {
-      val post = kvs["tex-env-postfix"].maybe("",id)
+      val post = kvs[key + "-postfix"].maybe("",id)
       match(env.find(rxEnv)) {
        Just(cap) -> {
         body.blockEnv(cap.groups[1] + post,expandKeys(cap.groups[2],"",attrs,dict(),kvs)) /* pass 'kvs' as metadata since it contains expanded keys */
@@ -639,8 +641,13 @@ function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
-  val body1 = if (attrs.name.isEmpty) then body0 
-               else body0 + "\\label" + attrs.name.braced + "%mdk\n"
+  val body1 = match(kvs["tex-label-before"]) {
+    Just(lab) -> if (lab.isEmpty) then body0 else "\\label" + lab.braced + "%mdk\n" + body0 
+    _ -> match(kvs["tex-label"]) {
+      Just(lab) -> if (lab.isEmpty) then body0 else body0 + "\\label" + lab.braced + "%mdk\n"
+      _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\label" + attrs.name.braced + "%mdk\n"
+    }
+  }
   val body2 = body1
   /*.onKey(kvs,"bookmark",fun(value,body) {
     cmdconnect( "\\mdbookmark" + attrs.lookupKey("level","1").braced + 

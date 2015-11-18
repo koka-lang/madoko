@@ -1,14 +1,14 @@
 [INCLUDE=style/lncs]
 Title       : Sample article for the Springer LNCS style
-Author      : John Q. Open^1^
+Author      : John Q. Open[1]{.inst}
 Affiliation : Research institute
 Email       : {you,third}@bar.com
 
-Author      : Joan R. Access^2^
+Author      : Joan R. Access[2]{.inst}
 Affiliation : Other institute
 Email       : other@bar.com
 
-Author      : Third^1^
+Author      : Third[1]{.inst}
 
 Bibliography: example.bib
 Logo        : True
@@ -33,11 +33,11 @@ butterfly. Note that you can drag&drop images into the editor pane to
 include them in the document, and similarly with bibtex files, latex
 style files, etc.
 
-~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=top}
+~ Figure { #fig-butterfly; caption:"A Monarch butterfly"; page-align:top}
 ![butterfly]
 ~
 
-[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+[butterfly]: images/butterfly.png "butterfly"  { width:4em }
 
 Our contributions are:
 
@@ -80,13 +80,13 @@ windows, deep-set round windows looking over his garden, and meadows
 beyond, sloping down to the river.
 
 
-~ Lemma { #lemma-test caption="A __lemma__ caption" }
+~ Lemma { #lemma-test; caption:"A __lemma__ caption" }
 There he lay, a vast red-golden dragon, fast asleep; thrumming came from
 his jaws and nostrils, and wisps of smoke, but his fires were low in
 slumber
 ~
 
-~ Proof { caption="Of Lemma [#lemma-test]" }
+~ Proof { caption:"Of Lemma [#lemma-test]" }
 Roads go ever ever on.
 ~
 
@@ -142,7 +142,7 @@ making a noise like elephants which they can hear a mile off. They are
 inclined to be fat in the stomach; they dress in bright colors (chiefly
 green and yellow);
 
-~ Lemma { caption="Another lemma" }
+~ Lemma { caption:"Another lemma" }
 There is little or no magic about them, except the ordinary everyday sort
 which helps them to disappear quietly and quickly when large stupid folk
 like you and me come blundering along, making a noise like elephants

@@ -43,7 +43,9 @@ val texsect  = "(" + texsects.join("|") + ")"
 ---------------------------------------- */
 function texInclude( cap : matched, _context ) {
   val fname = cap.groups[2].unbrace  
-  "\n[INCLUDE=" + cap.groups[2].unbrace + "]\n"
+  if (cap.groups[1]=="input" && fname=="babelbst.tex") 
+   then ""  // already supported in Madoko but inserted by the custom-bib babel bib styles
+   else "\n[INCLUDE=" + cap.groups[2].unbrace + "]\n"
 }
 
 function texMakeTitle( cap : matched, _context ) {
@@ -869,6 +871,10 @@ function texBibinfo( cap : matched, context : texContext ) : string {
   "[" + cap.groups[2].parse(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
 }
 
+function texBblName( cap : matched, context : texContext ) : string {
+  "&name-" + cap.groups[1] + ";"
+}
+
 function texDquot( cap : matched, context : texContext ) : string {
   texQuot("\"",cap,context)
 }
@@ -925,12 +931,34 @@ function texHarvarditem( cap : matched, context : texContext ) : string {
   context.makeBibitem(key,lab,content)
 }
 
+function texBibitemCiteApa( cap : matched, context : texContext ) : string {
+  val authors = cap.groups[1].unbrace
+  val year = cap.groups[2].unbrace
+  val labx  = authors + "(" + year + ")"
+  context.makeBibitem( cap.groups[3], labx, cap.groups[4] )
+}
+
+function texBibitemCiteName( cap : matched, context : texContext ) : string {
+  val authors = cap.groups[1].unbrace.replace(regex(@",\s*$"),"")
+  val year = cap.groups[2].unbrace
+  val labx  = authors + "(" + year + ")"
+  context.makeBibitem( cap.groups[3], labx, cap.groups[4] )
+}
+
+function texBibitemCiteAuthorYear( cap : matched, context : texContext ) : string {
+  val authorsLong = cap.groups[1].unbrace
+  val authorsShort= cap.groups[2].unbrace
+  val year = cap.groups[3].unbrace
+  val labx  = authorsLong + "(" + year + ")" + authorsShort
+  context.makeBibitem( cap.groups[4], labx, cap.groups[5] )
+}
+
 function texBibitem( cap : matched, context : texContext ) : string {
   context.makeBibitem( cap.groups[2], cap.groups[1], cap.groups[3] )
 }
 
 function makeBibitem( context : texContext, keyx : string, labx : string, content : string ) : string {
-  val key = keyx.unbrace
+  val key = (if (context.name.isEmpty) then "" else context.name + ":") + keyx.unbrace
   val lab = labx.unbrace.parse(context)  
   val md  = content.parse(context)
   val (authors,title) = match(md.find(rxAuthorTitle)) {
@@ -944,15 +972,28 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
                 */
                 
   val search  = (title + "+" + authors).replaceAll(rxNonSearch," ").replaceAll(rxSpaces,"+")
-  val label   = if (lab!="" && !(lab.contains(rxAuthorYear))) then lab else ""
+  
+  val attrs0  = match(lab.find(rxAuthorYear)) {
+                  Nothing -> if (lab=="") then [] else [
+                    makeAttr("cite-label", lab),
+                    makeAttr("tex-bibitem-label", "[" + labx.unbrace + "]")
+                  ]
+                  Just(cap) -> [
+                    makeAttr("cite-year", cap.groups[2]),
+                    makeAttr("cite-authors", cap.groups[1]),
+                    makeAttr("cite-authors-long", cap.groups[3])
+                  ]
+                }
 
-  val attrs   = [makeAttr("id", key.definitionId),
-                 makeAttr("cite-label", lab),
+  val attrs1  = [makeAttr("id", key.definitionId),
+                 makeAttr("cite-info", lab ),
                  makeAttr("tex-cite-label", labx.unbrace ),
-                 makeAttr("tex-bibitem-args", (if (context.citestyle.isNumCite) then "" else "[" + labx.unbrace + "]") + "{" + key.definitionId + "}"  ),
-                 makeAttr("label", label),
+                 //if (lab!="") then makeAttr("tex-bibitem-label", "[" + labx.unbrace + "]") else "",
+                 //makeAttr("label", label),
                  makeAttr("caption", caption),
-                 makeAttr("searchterm", search )].joinAttrs
+                 makeAttr("searchterm", search )]
+
+  val attrs = (attrs0 + attrs1).joinAttrs
 
   //trace("bibitem: labx: " + labx + ", lab: " + lab + ", label: " + label)
   "~ Begin Bibitem " + attrs + "\n" +

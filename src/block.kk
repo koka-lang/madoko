@@ -56,7 +56,7 @@ val soloTag     = @"" + atag + tagContent + ">"
 val html        = @"<(?:" + [closedTag,soloTag,comment].join("|") + @") *(?:\n+|\s*$)"
 
 // Attributes: allow escaped newline
-val rattrs      = @"\{:?((?:[^\\'""\}\n]|\\[.\n]|'[^']*'|""[^""]*"")*)\}" // allow optional colon for maraku compat
+val rattrs      = @"(?:<!--)?\{:?((?:[^\\'""\}\n]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:[^""\\]|\\[\s\S])*"")*)\}(?:-->)?" // allow optional colon for maraku compat
 val xattrs      = rattrs + " *"  
 val iattrs      = "(?:" + xattrs + ")?"           // inline: headers and fences
 val pattrs      = @"(?: {0,3}" + xattrs + ")?"    // after a paragraph
@@ -157,7 +157,7 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
     lines.map(fun(line) { line + "\n" }).join
   }
   function mkblock( name, content : list<string>, lineno = context.lineNo ) : list<string> {
-    if (content.isNil) then [] else ["~ Begin " + name + " { line-adjust=0 line=" + lineno.show + " }"] + content + ["~ End " + name]
+    if (content.isNil) then [] else ["~ Begin " + name + " { line-adjust:0; line:" + lineno.show + " }"] + content + ["~ End " + name]
   }
   function entry(name, className = name) {
     match(context.metadata[name]) {
@@ -201,7 +201,7 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
         mkblock("Authors", list(1,authorCount).group(readInt("author-columns",3)).concat(authorRow) ),
         entry("title-footer","TitleFooter")
       ].concat.join("\n")
-    Div( [], "line-adjust=0".parseAttrs("titleblock",source=titleBlock))
+    Div( [], "line-adjust:0".parseAttrs("titleblock",source=titleBlock))
   }
   else {
     Special(cap.groups[1],cap.groups[2])
@@ -234,12 +234,16 @@ function blockHtml( cap : matched, context : blockContext ) :  block  {
 }
 
 function blockHeading( cap : matched, context : blockContext ) : block  {
-  Heading(cap.groups[1].length, cap.groups[2], cap.groups[3].parseAttrs)
+  makeHeading(cap.groups[1].length,cap.groups[2],cap.groups[3])
 }
 
 function blockHeadingLine( cap : matched, context : blockContext ) : block {
-  Heading( (if (cap.groups[3].substr(0,1) == "=") then 1 else 2), 
-              cap.groups[1], cap.groups[2].parseAttrs )
+  makeHeading( (if (cap.groups[3].substr(0,1) == "=") then 1 else 2), cap.groups[1], cap.groups[2] )
+}
+
+function makeHeading(depth:int, source:string, attrStr : string) {
+  val elem   = "H" + depth.show
+  Heading(depth, source, attrStr.parseAttrs(elem,source))
 }
 
 function blockCode( cap : matched, context : blockContext ) : block  {
@@ -526,18 +530,6 @@ public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int, overwri
   else attrs1
 }
 
-function translateLine( lineInfos: lineMap, lineNo : int ) : string {
-  match(lineInfos) {
-    End -> lineNo.show
-    Include(line,start,span,fileName,include,rest) -> {
-      if (lineNo < line) 
-       then lineNo.show
-      elif (lineNo >= line + span)
-       then translateLine( rest, lineNo - (span - 1))
-       else line.show + ";" + fileName + ":" + translateLine(include,(lineNo - line) + start) 
-    }
-  }
-}
 
 function adjustAttrs( b : block, adjust : (attrs : attrs) -> attrs ) : block 
 {

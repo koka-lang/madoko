@@ -17,6 +17,7 @@
   /madoko/.new family,
   /madoko/heading-base/.new num=1,
   /madoko/section-num/.new toggle,
+  /madoko/bib-label/.new value=true,
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
   /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
@@ -426,6 +427,9 @@
 \iftoggle{/madoko/section-num}{}{% else
   \setcounter{secnumdepth}{0}%
   \renewcommand\@seccntformat[1]{}%
+  \ifdef\chapterformat{\renewcommand\chapterformat{}}{}%
+  \ifdef\chaptermarkformat{\renewcommand\chaptermarkformat{}}{}%
+  \ifdef\sectionmarkformat{\renewcommand\sectionmarkformat{}}{}%
 }
 
 
@@ -469,7 +473,7 @@
 % br
 
 \newcommand\mdfootnote[2]{%
-  \gdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
+  \protected@xdef\@thefnmark{#1}\@footnotemark\@footnotetext{#2}%
 }
 
 \newcommand\mdhyperref[2]{% {label}{text}
@@ -800,16 +804,18 @@
 % Bibliography
 %-------------------------------------------------------------
 
-% some styles (sig-alternate) disables bib labels
-\newcommand\md@restorebiblabel{%
-  %\let\md@org@bibitem\bibitem
-  %\renewcommand\bibitem[2][]{\md@org@bibitem{#2}}%
+\newcommand\mdforcebiblabel{%
   \def\@biblabel##1{[##1]}%
 }
-\ifx\@biblabel\@gobble\relax
-  \md@restorebiblabel
-\fi
+\newcommand\mdsupressbiblabel{%
+  \def\@biblabel##1{\hskip-\labelsep}%
+}
 
+\ifoptionequal{/madoko/bib-label}{false}{\mdsuppressbiblabel}{%
+\ifoptionequal{/madoko/bib-label}{False}{\mdsupressbiblabel}{%
+\ifoptionequal{/madoko/bib-label}{force}{\mdforcebiblabel}{%
+\ifoptionequal{/madoko/bib-label}{Force}{\mdforcebiblabel}{%
+}}}}
 
 
 %-------------------------------------------------------------
@@ -851,12 +857,15 @@
 \providecommand{\@doi}{?}
 
 \ifdef\titlerunning%
-  {\newcommand{\mdtitlerunning}[1]{\titlerunning{#1}}}% llncs
+  {\newcommand{\mdtitlerunning}[1]{\titlerunning{#1} % needs a space for easychair
+  }}% llncs
   {\newcommand{\mdtitlerunning}[1]{\global\def\titlerunning{#1}}}% eptcs
 
 \ifdef\authorrunning%
-  {\newcommand{\mdauthorrunning}[1]{\authorrunning{#1}}}% llncs
+  {\typeout{llncs}\newcommand\mdauthorrunning[1]{\typeout{authorrunning #1}\authorrunning{#1} %needs a space for easychair..
+  }}% llncs
   {\newcommand{\mdauthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
+
 
 % LLNCS: \author{ \and ...}, \institute{ \email \and ...}
 % EPTCS: \author{ \institute \email \and ... }
@@ -898,8 +907,8 @@
       \gappto\md@authors{#1%
       \ifinstemail%
         \ifx\relax#2\relax\else\protect\institute{#2}\fi%
-        \ifx\relax#3\relax\else\protect\email{#3}\fi}%
-      \fi%
+        \ifx\relax#3\relax\else\protect\email{#3}\fi%
+      \fi}%
     }%
   }%
   {% Our own simple style (similar to sigplanconf)

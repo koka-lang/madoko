@@ -177,6 +177,20 @@ function reverseAcc( lineMap : lineMap, acc : lineMap ) : lineMap {
   }
 }
 
+public function translateLine( lineInfos: lineMap, lineNo : int ) : string {
+  match(lineInfos) {
+    End -> lineNo.show
+    Include(line,start,span,fileName,include,rest) -> {
+      if (lineNo < line) 
+       then lineNo.show
+      elif (lineNo >= line + span)
+       then translateLine( rest, lineNo - (span - 1))
+       else line.show + ";" + fileName + ":" + translateLine(include,(lineNo - line) + start) 
+    }
+  }
+}
+
+
 /* --------------------------------------
  Citations styles 
 ---------------------------------------- */
@@ -341,17 +355,6 @@ public function (==)( x : formatter, y : formatter ) : bool {
   }
 }
 
-// See if a string matches the format. An empty string always matches.
-public function matchFmt( fmt : formatter, fmtstr : string, modes : string = "" ) : bool {
-  if (fmtstr=="") return True
-  val s = fmtstr.toLower
-  match(fmt) {
-    FmtHtml | s == "html" -> True
-    FmtTex  | s == "tex"  -> True
-    _ -> modes.split(";").list.any( fun(mode) { mode == s } )
-  }
-}
-
 public type input {
   Pre         // preformatted
   MathPre     // TeX math, preformatted
@@ -382,7 +385,7 @@ public function showFormatter( f : formatter ) {
 }
 
 // A label is created for every element with an id.
-public struct label( element : string, labelText : string, labelCaption : string )
+public struct label( element : string, labelText : string, labelCaption : string, labelInfo : string = "" )
 
 public function show( attrs : attrs ) : string {
   "{" + attrs.text + "}"
@@ -424,7 +427,7 @@ public function addClass( attrs: attrs, cname : string ) : attrs {
   if (cname=="") then return attrs
   if (attrs.classes.any( fun(nm) { nm == cname } ))
    then attrs
-   else attrs(classes=attrs.classes + [cname], text=attrs.text+" class='" + cname + "'", empty=False)
+   else attrs(classes=attrs.classes + [cname], text=attrs.text+" ; class: " + cname.quote, empty=False)
 }
 
 public function addInputClass( attrs : attrs ) : attrs {
@@ -445,7 +448,7 @@ public function addKeyvals( attrs : attrs, kvs : list<(string,string)> ) : attrs
 
 public function addKeyval( attrs : attrs, key : string, value : string ) : attrs {
   attrs(keyvals=attrs.keyvals.filter(fun(kv){ kv.fst != key }) + [(key,value)], 
-        text=attrs.text+" "+key+"="+value.quote, empty=False)
+        text=attrs.text+" ; "+key+": "+value.quote, empty=False)
 }
 
 public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
@@ -453,7 +456,7 @@ public function removeKeys( attrs : attrs, keys : list<string> ) : attrs {
 }
 
 public function setLineNo( attrs : attrs, line : int, dataline: string ) : attrs {
-  attrs(empty=False,lineNo=line, text=attrs.text + " line=" + line.show ).addKeyval("data-line",dataline)
+  attrs(empty=False,lineNo=line, text=attrs.text + " ; line:" + line.show ).addKeyval("data-line",dataline)
 }
 
 function quote( s : string ) : string {
@@ -483,7 +486,7 @@ public function generateHeaderId( attrs : attrs, heading : string, pre : string 
   val attrs1 = if (attrs.name!="") then attrs else {
     val newid = heading.normalizeId
     val newname = if (newid=="") then "section" else pre + newid
-    attrs(text=attrs.text + " id='" + newname + "'", name = newname, empty=False)
+    attrs(text=attrs.text + " ; id:" + newname.quote, name = newname, empty=False)
   }
   attrs1
 }
@@ -576,3 +579,26 @@ val rxlt  = regex(@"<")
 val rxquot = regex("\"")
 val rxapos = regex("'")
 val rxhtml = regex(@"[&<>""']")
+
+public function unquote( s : string ) : string {
+  if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
+  elif (s.startsWith("\"") && s.endsWith("\"")) then s.substr(1,s.length-2)
+  else s
+}
+
+public function unindent( txt : string ) : string {
+  val lines = txt.lines.list
+  val cindent = lines.filter(fun(s) { !s.contains(regex(@"^\s*$")) })
+                     .map(fun(s) { match(s.find(regex(@"^\s*"))) {
+    Nothing   -> 0
+    Just(cap) -> cap.matched.length
+  }}).minimum
+  if (cindent <= 0) 
+   then txt
+   else lines.map( fun(s) { s.substr(cindent) }).join("\n")
+}
+
+
+public function contains( xs : list<string>, s : string ) : bool {
+  xs.find( fun(x) { x == s }).bool
+}

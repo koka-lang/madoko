@@ -1,224 +1,508 @@
-Package   : [heading-base={&heading-base;},section-num={&tex-section-num;}]madoko2
+Package         : [heading-base={&heading-base;},section-num={&tex-section-num;},bib-label={&bib-label;}]madoko2
+Logo            : False
+Tex2            : True
+Maketitle       : False
+Heading Depth   : 3 
+Toc Depth       : 3 
+Heading Base    : 2
+Tex Section Num : False
+Cite Style      : numeric
+Bib Label       : True
+Math mode       : static
 
-~Article  : html-elem='article'
-~Section  : html-elem='section' 
-~Aside    : html-elem='aside'
-~Nav,.Toc : html-elem='nav'
+<!-- standard elements -->
+Article   { html-elem:article }
+Section   { html-elem:section }
+Aside     { html-elem:aside }
+Nav,.Toc  { html-elem:nav }
 
-.Note     : .block before='[**[&caption;]{.note-caption}**. ]{.note-before}&nl;' caption='Note'
-~Remark   : .Note caption='Remark'
-.Todo     : .Note caption='Todo'
-~Proof    : .block before='[**Proof**. [&caption;]{.thm-caption}]{.proof-before}'
+.Framed   { border: solid black 1px }
+Center    { .align-center }
+Remote    { tight margin-bottom: 0pt }
 
-.Framed   : border-style=solid border-color=black border-width=1px
-~Center   : .align-center
-~Remote   : tight margin-bottom=0pt
+Pre       { input: pre; .para-block }
+Code      { input: pre }
+Hr        { .madoko }
+Table     { .madoko }
+Dd        { html-elem: dd; margin-left: 1.5em }
+Dt        { html-elem: dt; font-weight: bold }
 
-~Pre      : input=pre .para-block
-~Code     : input=pre
-~Hr       : .madoko
-~Table    : .madoko
-~Dd       : html-elem=dd margin-left=1.5em
-~Dt       : html-elem=dt font-weight=bold
+FlushLeft   { .align-left }
+FlushRight  { .align-right }
+Comment     { display: none }
 
-.Ul-Li    : @ul-li label="[(@ul-li)]{.ul-li-label}"
-.Ol-Li    : @ol-li label="[(@ol-li)]{.ol-li-label}"
-.Dl-Li    : @dl-li label="[(@dl-li)]{.dl-li-label}"
-~Ol       : @ol-li=decimal
-~Ul       : @ul-li=decimal
-~Dl       : @dl-li=decimal
-.li-label : display=inline-block width=2.5em margin-left=-3em margin-right=0.5em text-align=right
+Snippet     { input: math; display:block; snippet-needpdf: true }
+Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
+@if html {
+  Footnote { 
+    before: "[\/^&label;.^]{.footnote-before}";
+    after : "&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}";
+  }
+}
 
-~Tex            : input=tex notag
-.TexRaw         : input=texraw
-.HtmlRaw        : input=htmlraw
-.MathInline     : input=math
-~MathDisplay    : input=math .para-block
-~MathPre        : input=mathpre .para-block
-~MathDefs       : input=mathdefs 
-~HtmlOnly       : input=htmlonly notag
-~TexOnly        : input=texonly notag
-~math-inline    : input=math
-~math-display   : input=math
-.hidden         : display=none
+<!-- lists -->
+.Ul-Li    { @ul-li; label: "[(@ul-li)]{.ul-li-label}" }
+.Ol-Li    { @ol-li; label: "[(@ol-li)]{.ol-li-label}" }
+.Dl-Li    { @dl-li; label: "[(@dl-li)]{.dl-li-label}" }
+Ol        { @ol-li: decimal }
+Ul        { @ul-li: decimal }
+Dl        { @dl-li: decimal }
+.li-label { display: inline-block; width: 2.5em; margin-left: -3em; margin-right: 0.5em; text-align: right }
+
+<!-- special input -->
+.TexRaw         { input: texraw }
+.HtmlRaw        { input: htmlraw }
+.MathInline     { input: math }
+MathDisplay     { input: math; .para-block }
+MathPre         { input: mathpre; .para-block }
+MathDefs        { input: mathdefs; }
+HtmlOnly        { input: htmlonly; tag: false }
+Tex             { input: tex; tag: false }
+TexOnly         { input: texonly; tag: false }
+Bib             { input: tex }
+math-inline     { input: math }
+math-display    { input: math }
+
+.hidden         { display: none }
+.noindent       { text-indent: 0em }
+.align-center   { text-align: center }
+
+.booktable {
+  rule-top-width          : 2px;
+  rule-bottom-width       : 2px 
+  rule-mid-width          : 1.35px;
+  thead-tr-font-weight    : normal;
+  rule-top-sep            : 4pt;
+  rule-bottom-sep         : 4pt;
+  rule-mid-sep            : 3pt; 
+  thead-tr-1-padding-top  : 3pt;
+  thead-tr-padding-bottom : 3pt;
+}
 
 
-~Snippet        : input=math .block snippet-needpdf=true
-~Footnote       : label='[@footnote]{.footnote-label}' line-adjust=0
-@html ~Footnote : before='[\/^&label;.^]{.footnote-before}'
-                  after='&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}'
+<!-- heading elements -->
+h1 { label: "[@h1]{.heading-label}" }
+h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
+h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
+h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" }
 
-~FlushLeft      : .align-left
-~FlushRight     : .align-right
-~Comment        : .exclude
+heading-endperiod: .
+heading-format   : &label;&heading-endperiod;&ensp;
 
+@if heading-depth>=1 {
+  h1 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=2 {
+  h2 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=3 {
+  h3 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=4 {
+  h4 { before: "[&heading-format;]{.heading-before}" }
+}
+@if toc-depth>=1 {
+  h1 { toc  }
+}
+@if toc-depth>=2 {
+  h2 { toc }
+}
+@if toc-depth>=3 {
+  h3 { toc }
+}
+@if toc-depth>=4 {
+  h4 { toc }
+}
+
+h1,h2,h3,h4 {
+  toc-line: "&heading-format;&source;"; 
+}
+.clearnum { toc:clear }
+
+.tocblock,.tocitem { tight:true }
+
+<!-- entities -->
 Defaults        : True
 
 lowline         : &#x5F;
-@tex lowline    : &#0818;
-qed             : [&box;]{float=right}
-@tex qed        : [\qed]{input=texraw}
+qed             : [&box;]{float: right}
+vfill           : \/
+@if tex {
+  vfill         : [\vfill]{input: texraw}
+  lowline       : &#0818;
+  qed           : [\qed]{input: texraw}
+}
 eg              : e.g.
 ie              : i.e.
 etal            : et al.
-vfill           : \/
-@tex vfill      : [\vfill]{input=texraw}
 
 LogoLatex       : $\mbox{\LaTeX}$
 LogoTex         : $\mbox{\TeX}$
 LogoLatexe      : $\mbox{\LaTeXe}$
 LogoBibtex      : $\mbox{\sc{Bib}\TeX}$
 LogoAmstex      : $\mbox{\AmSTeX}$
-
-.noindent       : text-indent=0em
-smallskip       : []{display=block margin-bottom=0.5em}
-@tex smallskip  : [\smallskip]{input=texraw}
-medskip         : []{display=block margin-bottom=1em}
-@tex medskip    : [\medskip]{input=texraw}
-bigskip         : []{display=block margin-bottom=2em}
-@tex bigskip    : [\bigskip]{input=texraw}
-
 LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
-.LogoMadoko     : .block text-align=right font-size=xx-small margin-top=4em tight
+.LogoMadoko     { display:block; text-align: right; font-size: xx-small; margin-top: 4em; tight: true }
 
-~Equation       : label='[(@equation)]{.equation-label}' 
-                    replace='[&label;]{.equation-before}&nl;~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
-                    tight .para-block line-adjust=0
-~Math           : replace='~ Begin MathDisplay { color="&color;" math-needpdf="&math-needpdf;" line-adjust=0}&nl;&source;&nl;~ End MathDisplay&nl;' 
-                    tight .para-block
+smallskip       : []{display: block; margin-bottom: 0.5em }
+medskip         : []{display: block; margin-bottom: 1em }
+bigskip         : []{display: block; margin-bottom: 2em }
+@if tex {
+  smallskip     : [\smallskip]{input:texraw}
+  medskip       : [\medskip]{input:texraw}
+  bigskip       : [\bigskip]{input:texraw}
+}
 
-~TableFigure    : label='[@tablefigure]{.table-label}' toc=tot .Floating float-env=table float-name=Table
-~Figure         : label='[@figure]{.figure-label}' toc=tof .Floating float-env=figure float-name=Figure
+<!-- notes -->
+note-endperiod : &heading-endperiod;
+note-format    : **[&caption;]{.note-caption}**&note-endperiod;&nl;
 
-.Floating       : .align-center elem=floating html-elem=figure
-.Floating       : after='&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption html-elem=fig-caption}&nl;{notag}&nl;'
-.Floating       : toc-line='&label;. &caption;'
+.Note     { display: block; before: "[&note-format;]{.note-before}"; caption:"&name-note;" }
+.Remark   { .Note; caption: "&name-remark;" }
+.Todo     { .Note; caption: "&name-todo;" }
 
-~SubFigureRow   : .columns .align-center
-~SubFigure      : @SubFigure=lower-alpha label='@Figure@SubFigure' fig-label='(@SubFigure)' caption=''
-                    after='&br;&smallskip;[&toc-line;]{.subfig-caption}' tight text-align=center .column
-                    toc-line='[&fig-label; ]{.caption-before} &caption;'
-                    toc=tof toc-depth=2
+<!-- equations and math -->
+Equation {
+  label: "[(@equation)]{.equation-label}";
+  replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-needpdf: "&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  line-adjust: 0;
+  .para-block;
+  tex-label-before: "&id;";
+}
 
-~Bibitem  : label='[@bibitem]{.bibitem-label}' cite-label='&label;'
-            before='[\[&label;\]\ \ ]{.bibitem-before}' tight
-~Bibitem  : replace='?if &bib-search-url; && &searchterm;\
-                     ?then &source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}'
-@html Bib Search Url: www.bing.com
+Math {
+  replace: '~ Begin MathDisplay { color:"&color;"; math-needpdf:"&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  .para-block
+}
+
+theorem-caption-end   : &&;br;
+theorem-caption-format: ([&source;]{font-style:italic})
+.theorem-caption      { replace: '@if source != "" @then "&theorem-caption-format;"' }
+theorem-caption       : [&caption;]{.theorem-caption}&theorem-caption-end;
+
+theorem-endperiod     : &heading-endperiod;
+theorem-format        : **&name-theorem;\ &label;&theorem-endperiod;** &theorem-caption;
+lemma-format          : **&name-lemma;\ &label;&theorem-endperiod;** &theorem-caption;
+proposition-format    : **&name-proposition;\ &label;&theorem-endperiod;** &theorem-caption;
+corollary-format      : **&name-corollary;\ &label;&theorem-endperiod;** &theorem-caption;
+example-format        : **&name-example;\ &label;&theorem-endperiod;** &theorem-caption;
+definition-format     : **&name-definition;\ &label;&theorem-endperiod;** &theorem-caption;
+proof-format          : **&name-proof;**&theorem-endperiod; &theorem-caption;
+
+Theorem {
+  label: '[@theorem]{.theorem-label}';
+  before: '[&theorem-format;]{.theorem-before}';
+}
+Lemma {
+  label: '[@lemma]{.lemma-label}';
+  before: '[&lemma-format;]{.lemma-before}'
+}
+Proof {
+  before: "[&proof-format;]{.proof-before}";
+  theorem-caption-end: " " 
+}
+Proposition { 
+  label: '[@proposition]{.proposition-label}';
+  before: '[&proposition-format;]{.proposition-before}';
+}
+Corollary {
+  label: '[@corollary]{.corollary-label}';
+  before: '[&corollary-format;]{.corollary-before}';
+}
+Example {
+  label: '[@example]{.example-label}';
+  before: '[&example-format;]{.example-before}';
+}
+Definition {
+  label: '[@definition]{.definition-label}';
+  before: '[&definition-format;]{.definition-before}';
+}
+Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
+  display: block;
+  margin: 1ex 0pt;
+}
+
+<!-- figures -->
+TableFigure {
+  label: '[@tablefigure]{.table-label}';
+  toc:"tables"; .floating ; float-env: table; float-name: "&name-table;";
+}
+Figure {
+  label: '[@figure]{.figure-label}';
+  toc:"figures"; .floating ; float-env: figure; float-name: "&name-figure;";
+}
+
+.Floating {
+  .align-center;
+  .float;
+  elem      : floating;
+  html-elem : figure;
+  toc-line  : '&label;. &caption;';
+  after: '&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption; html-elem:fig-caption}&nl;{tag:false}&nl;';
+}
+
+SubFigureRow { .columns; .align-center }
+SubFigure {
+  @SubFigure: lower-alpha;
+  label     : '@Figure@SubFigure';
+  fig-label : '(@SubFigure)';
+  caption   : '';
+  after     : '&br;&smallskip;[&toc-line;]{.subfig-caption}';
+  tight     : true;
+  text-align: center;
+  .column;
+  toc-line  : '[&fig-label; ]{.caption-before} &caption;';
+  toc       : "figures";
+  toc-depth : 2;
+}
+
+<!-- bibliographies -->
+Bibitem {
+  @bib-bibitem;
+  label     : '@bib-bibitem';
+  cite-label: '&label;';
+  tight     : true;
+  replace   : '@if (bib-search-url!="") and (searchterm!="") @then "&source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}"';
+}
+
+Bib Search Url: 
+@if html {
+  Bib Search Url: www.bing.com
+}
+
+@if not(cite-style~=/[nN]umeric/) {
+  Bib Label: False
+}
+
+@if not( tex ) {
+  Bibliography { before: "# &name-references; { -; .heading-references }&nl;" }
+}
+@if not( tex ) and bib-label {
+  Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
+}
+
+toc.toc-contents  { before: "# &name-contents; { -; .heading-contents }&nl;" }
+toc.toc-figures   { before: "# &name-figures;  { -; .heading-figures }&nl;" }
+toc.toc-tables    { before: "# &name-tables;   { -; .heading-tables }&nl;" }
+
+<!-------------------------------------------------------------------
+   Internationalization
+--------------------------------------------------------------------->
+
+name-references   : References
+name-contents     : Contents
+name-figures      : Figures
+name-tables       : Tables
+name-abstract     : Abstract
+
+name-figure       : Figure
+name-table        : Table
+
+name-note         : Note
+name-remark       : Remark
+name-todo         : Todo
+
+name-theorem      : Theorem
+name-lemma        : Lemma
+name-proof        : Proof
+name-proposition  : Proposition
+name-corollary    : Corollary
+name-example      : Example
+name-definition   : Definition
+
+seealso       : see also
+sseealso      : See also
+
+<!-- names to support babel bibliographies generated by `custom-bib` (with the `merlin.mbs` package) -->
+name-and      : and
+name-etal     : et\ al
+name-editors  : editors
+name-eds      : eds.
+name-editor   : editor
+name-ed       : ed.
+name-edby     : edited by
+name-edition  : edition
+name-edn      : edn.
+name-volume   : volume
+name-vol      : vol.
+name-of       : of
+name-number   : number
+name-no       : no.
+name-in       : in
+name-pages    : pages
+name-pp       : pp.
+name-page     : page
+name-p        : p.
+name-chapter    : chapter
+name-chap       : chap.
+name-techreport : Technical Report
+name-techrep    : Tech. Rep.
+name-mthesis    : Master's thesis
+name-phdthesis  : Ph.D. thesis
+name-first      : first
+name-firsto     : 1st
+name-second     : second
+name-secondo    : 2nd
+name-third      : third
+name-thirdo     : 3rd
+name-fourth     : fourth
+name-fourtho    : 4th
+name-fifth      : fifth
+name-fiftho     : 5th
+name-st   : st
+name-nd   : nd
+name-rd   : rd
+name-th   : th
+name-jan  : January
+name-feb  : February
+name-mar  : March
+name-apr  : April
+name-may  : May
+name-jun  : June
+name-jul  : July
+name-aug  : August
+name-sep  : September
+name-oct  : October
+name-nov  : November
+name-dec  : December
+name-ins  : in
+name-inj  : in
+
+<!-------------------------------------------------------------------
+   HTML commands 
+--------------------------------------------------------------------->
+@if html {
+  abstract  { 
+    before:"**&name-abstract.** ";
+    margin-left: 3em;
+    margin-right: 3em;
+    font-size: small;
+  }
+}
+
+<!-------------------------------------------------------------------
+   Tex commands 
+--------------------------------------------------------------------->
+
+HR       { tex-cmd: "\mdhr"; display: block }
+Pre      { tex-env: mdpre }
+Abstract { tex-env: abstract }
+H0,H1,H2,H3,H4,H5,H6  { display: block; }
+H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { tex-cmd-postfix:"*" }
+
+@if heading-base<=0 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\part" } 
+  H2     { tex-cmd:"\chapter" }
+  H3     { tex-cmd:"\section" }
+  H4     { tex-cmd:"\subsection" }
+  H5     { tex-cmd:"\subsubsection" } 
+  H6     { tex-cmd:"\paragraph" } 
+}
+@if heading-base==1 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\chapter" } 
+  H2     { tex-cmd:"\section" }
+  H3     { tex-cmd:"\subsection" }
+  H4     { tex-cmd:"\subsubsection" }
+  H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base==2 {
+  H0     { tex-cmd:"\chapter" }
+  H1     { tex-cmd:"\section" } 
+  H2     { tex-cmd:"\subsection" }
+  H3     { tex-cmd:"\subsubsection" }
+  H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base>=3 {
+  H0     { tex-cmd:"\section" }
+  H1     { tex-cmd:"\subsection" } 
+  H2     { tex-cmd:"\subsubsection" }
+  H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
+
+Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
+TableFigure     { tex-env-outer: "table[&tex-float-placement;]"; tex-float-placement: "tbp" }
+.figure-caption { tex-cmd: "\mdcaption" }
+.caption-text   { tex-cmd: "\mdcaptiontext" }
+.wide           { tex-env-outer-postfix: "*" }
+.figure-label   { tex-cmd: "\mdcaptionlabel" }
+.table-label    { tex-cmd: "\mdcaptionlabel" }
+
+Li       { tex-cmd-before: "\item" }
+Ul       { tex-env: "itemize"  }
+Ol       { tex-env: "enumerate"  }
+Dl       { tex-env: "mddefinitions" }
+Dt       { tex-cmd: "\mddefterm"; .noindent }
+Dd       { tex-env: "mddefdata" }
+Code     { tex-cmd: "\mdcode" }
+.Pretty  { tex-cmd-before: "\mdpretty" }
+Strong   { tex-cmd: "\textbf" }
+Em       { tex-cmd: "\emph" }
+Sup      { tex-cmd: "\mdsup" }
+Sub      { tex-cmd: "\mdsub" }
+Del      { tex-cmd: "\mddel" }
+BlockQuote{ tex-env: "quote" }
+.Columns  { tex-tabcolsep: "0pt" }
+.Column   { tex-env-outer: "mdcolumn" }
+.inst     { tex-cmd: "\mdinst" }
+.equation-before { tex-cmd: "\mdmathtag" } 
+
+Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\def\refname{&name-references;}%mdk&nl;"  }
+BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
+.Newblock    { tex-cmd-before="\newblock " }
+toc          { tex-env:mdtoc }
+tocblock     { tex-env:mdtocblock }
+tocitem      { tex-env:"mdtocitem{&toctarget;}" }
 
 
-.thm-caption-content: font-style=italic
-thm-caption-end     : &&;br;
-.thm-caption        : replace='?if &source; ?then ([&source;]{.thm-caption-content}).&thm-caption-end;'
+@if tex2 {
+  Th { font-weight: "bold" }
+}
 
-~Theorem        : display=block label='[@theorem]{.theorem-label}'
-                    before='[**Theorem\ &label;.** [&caption;]{.thm-caption}]{.theorem-before}'
-~Lemma          : display=block label='[@lemma]{.lemma-label}'
-                    before='[**Lemma\ &label;.** [&caption;]{.thm-caption}]{.lemma-before}'
-~Proposition    : display=block label='[@proposition]{.proposition-label}'
-                    before='[**Proposition\ &label;.** [&caption;]{.thm-caption}]{.proposition-before}'
-~Corollary      : display=block label='[@corollary]{.corollary-label}'
-                    before='[**Corollary\ &label;.** [&caption;]{.thm-caption}]{.corollary-before}'
-~Example        : display=block label='[@example]{.example-label}'
-                    before='[**Example\ &label;.** [&caption;]{.thm-caption}]{.example-before}'
-~Definition    : display=block label='[@definition]{.definition-label}'
-                    before='[**Definition\ &label;.** [&caption;]{.thm-caption}]{.definition-before}'
-~Theorem,~Lemma,~Proof,Corollary,~Proposition,~Example,~Definition  : margin="1ex 0pt"
+@if tex and tex-section-num {
+  .heading-before { display: none }
+}
 
-.booktable:  
-  rule-top-width=2px rule-bottom-width=2px 
-  rule-mid-width=1.35px thead-tr-font-weight=normal   
-  rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
-  thead-tr-1-padding-top=3pt thead-tr-padding-bottom=3pt
-
-Tex Section Num: false
-Heading Base   : 2
-
-Tex2      : True
-@tex Tex2x: True
-
-Logo      : False
-~H0       : tex-cmd=\chapter display=block
-~H1       : tex-cmd=\section display=block
-~H2       : tex-cmd=\subsection display=block
-~H3       : tex-cmd=\subsubsection display=block
-~H4,~H5,~H6: tex-cmd=\paragraph display=block
-~HR       : tex-cmd=\mdhr display=block
-~Pre      : tex-env=mdpre 
-~Abstract : tex-env=abstract
-~Figure   : tex-env-outer=figure[&tex-float-placement;] tex-float-placement="tbp"
-~TableFigure: tex-env-outer=table[&tex-float-placement;] tex-float-placement="tbp"
-.figure-caption: tex-cmd=\mdcaption
-.caption-text  : tex-cmd=\mdcaptiontext
-.wide     : tex-env-postfix=*
-.figure-label  : tex-cmd=\mdcaptionlabel
-.table-label   : tex-cmd=\mdcaptionlabel
-~Li       : tex-cmd-before=\item
-~Ul       : tex-env=itemize 
-~Ol       : tex-env=enumerate 
-~Dl       : tex-env=mddefinitions
-~Dt       : tex-cmd=\mddefterm .noindent
-~Dd       : tex-env=mddefdata
-~Code     : tex-cmd=\mdcode
-.Pretty   : tex-cmd-before=\mdpretty
-~Strong   : tex-cmd=\textbf
-~Em       : tex-cmd=\emph
-~Sup      : tex-cmd=\mdsup
-~Sub      : tex-cmd=\mdsub
-~Del      : tex-cmd=\mddel
-~BlockQuote: tex-env=quote
-.Columns  : tex-tabcolsep=0pt
-.Column   : tex-env-outer=mdcolumn
-.inst     : tex-cmd=\mdinst
-@Tex2 ~Th : font-weight=bold
-
-@Tex@Tex-Section-Num .heading-before: display=none
-
-~Bibliography: tex-env="thebibliography{&caption;}" tex-cmd-after="\par" 
-@notex ~Bibliography: before="# References {-}&nl;"
-~BibItem  : tex-cmd-before="\bibitem&tex-bibitem-args;" label="@bibitem"
-@tex ~BibItem: before=clear
-.Newblock : tex-cmd-before="\newblock "
-~toc      : tex-env=mdtoc
-~tocblock : tex-env=mdtocblock
-~tocitem  : tex-env="mdtocitem{&toctarget;}"
-
-.align-center   : text-align=center
-.equation-before: tex-cmd=\mdmathtag
+<!-- tex author block -->
+TitleBlock,TitleHeader,Title,Subtitle           { tight: true }
+TitleNote,TitleFooter,Authors,AuthorRow,Author  { tight: true }
+AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
 
 
-@tex maketitle            : true
+@if tex {
+  Maketitle: True
+}
 
-@maketitle ~Author        : display=inline-block 
-@maketitle ~TitleBlock    : display=inline-block 
-@maketitle ~TitleHeader,~Authors,~AuthorRow: notag
-@maketitle ~Author        : tex-cmd-before=\mdxauthorstart tex-cmd-after=\mdxauthorend display=table-cell
-@maketitle ~TitleBlock    : tex-cmd-before=\mdxtitleblockstart tex-cmd-after=\mdxtitleblockend display=block
-@maketitle ~Title         : tex-cmd=\mdxtitle
-@maketitle ~Subtitle      : tex-cmd=\mdxsubtitle
-@maketitle ~TitleNote     : tex-cmd=\mdxtitlenote
-@maketitle ~TitleFooter   : tex-cmd=\mdxtitlefooter
-@maketitle ~AuthorName    : tex-cmd=\mdxauthorname
-@maketitle ~AuthorAddress : tex-cmd=\mdxauthoraddress
-@maketitle ~AuthorNote    : tex-cmd=\mdxauthornote
-@maketitle ~AuthorEmail   : tex-cmd=\mdxauthoremail
+@if Maketitle {
+  Author        { display: inline-block  }
+  TitleBlock    { display: inline-block  }
+  TitleHeader,Authors,AuthorRow { tag: false }
+  Author        { tex-cmd-before:"\mdxauthorstart"; tex-cmd-after:"\mdxauthorend"; display:table-cell }
+  TitleBlock    { tex-cmd-before:"\mdxtitleblockstart"; tex-cmd-after:"\mdxtitleblockend"; display:block }
+  Title         { tex-cmd:"\mdxtitle" }
+  Subtitle      { tex-cmd:"\mdxsubtitle" }
+  TitleNote     { tex-cmd:"\mdxtitlenote" }
+  TitleFooter   { tex-cmd:"\mdxtitlefooter" }
+  AuthorName    { tex-cmd:"\mdxauthorname" }
+  AuthorAddress { tex-cmd:"\mdxauthoraddress" }
+  AuthorNote    { tex-cmd:"\mdxauthornote" }
+  AuthorEmail   { tex-cmd:"\mdxauthoremail" }
+}
 
-~TitleBlock,~TitleHeader  : tight
-~Title,~Subtitle          : tight
-~TitleNote,~TitleFooter   : tight  
-~Authors,~AuthorRow,~Author: tight
-~AuthorName,~AuthorAddress: tight
-~AuthorEmail,~AuthorNote  : tight 
+@if not Maketitle {
+  TitleBlock,TitleHeader,Authors,TitleFooter  { .align-center }
+  TitleBlock,Title,Subtitle,TitleNote         { .para-block }
 
-@nomaketitle ~TitleBlock,~TitleHeader,~Authors,~TitleFooter: .align-center
-@nomaketitle ~TitleBlock,~Title,~Subtitle,~TitleNote:.para-block
+  Authors       { width: 80% }
+  AuthorRow     { .columns; margin-top: 2ex; width: 100% } 
+  Author        { .column; text-align: center }
+  .AuthorEmail  { .email }
 
-@nomaketitle ~Authors     : width=80%
-@nomaketitle ~AuthorRow   : .columns margin-top=2ex width=100% 
-@nomaketitle ~Author      : .column text-align=center
-@nomaketitle .AuthorEmail : .email
-
-@nomaketitle ~Title       : font-size=xx-large font-weight=bold margin-bottom=0.5ex
-@nomaketitle ~Subtitle    : font-size=x-large margin-bottom=0.5ex
-@nomaketitle ~AuthorName  : font-size=large
-@nomaketitle ~TitleFooter : margin-top=0.5ex
+  Title         { font-size: xx-large; font-weight: bold; margin-bottom: 0.5ex }
+  Subtitle      { font-size: x-large; margin-bottom: 0.5ex }
+  AuthorName    { font-size: large }
+  TitleFooter   { margin-top: 0.5ex }
+}

@@ -95,7 +95,6 @@ function update2( options : options, key : string, lvalue : string, value : stri
   elif (key=="pretty-align") options(prettyAlign=ivalue)
   elif (key=="logo") options(logo=(lvalue=="true"))
   elif (key=="refer") { log("filesRefer",value); options }
-  elif (key=="mode") options(modes = if (value=="") then "" else options.modes + ";" + lvalue)
   elif (key=="copy-styles") options(copyStyles=(value!=""))
 
   // can only set program options if not running in a sandbox
@@ -114,9 +113,25 @@ function update2( options : options, key : string, lvalue : string, value : stri
     }
   }
   else {
-    //  if (options.verbose >= 3) warning("custom metadata key: " + key)
-    options
+    // in sandbox, only set safe program options
+    if (key=="latex") options(latex=if (value=="") then "latex" else safeLatex(lvalue, options.latex) )
+    elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.pdflatex) )
+    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathpdflatex) )
+    elif (key=="bibtex") options(bibtex=safeBibtex(lvalue,options.bibtex)) 
+    else {
+      //  if (options.verbose >= 3) warning("custom metadata key: " + key)
+      options
+    }
   }
+}
+
+function safeLatex( s : string, def : string ) {
+  if (s=="latex" || s=="xelatex" || s=="pdflatex") 
+   then s else def
+}
+function safeBibtex( s : string, def : string ) {
+  if (s=="bibtex" || s=="bibtex8") 
+   then s else def
 }
 
 function appendNL(s : string, t : string ) : string {

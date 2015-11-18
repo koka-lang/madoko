@@ -76,7 +76,6 @@ public struct options(
   starBold      : bool = False, // use * for bold?
   prettyAlign   : int  = 2, // default alignment spaces for .pretty mode
   logo          : bool = True, // generate a logo at the end of the document
-  modes         : string = "", // semi-colon separated modes for matching metadata keys (i.e. "preview")
   
   mathmode      : mathmode = Static,  // mode used to render math
   mathjax       : string = "",        // mathjax scripts path (use "default" for default path)

@@ -32,6 +32,7 @@ public rectype texContext {
   TexContext( grammar   : grammar<string,texContext>, 
               citestyle : citestyle = citeAuto, 
               ignore    : bool = True,
+              name      : string = "",
               texparse  : (context:texContext, input:string) -> string )                 
 }
 
