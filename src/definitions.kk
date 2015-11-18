@@ -595,12 +595,28 @@ function adjustCounter(counters : mdict<h,counter>,name : string, value : string
 // increment or set a count to a value
 function increment(counter :counter, xvalue : string) : counter {
   val v = xvalue.toLower
-  if (v=="upper-alpha" || v=="upper-case") then counter(counter.value,Uppercase)
-  elif (v=="lower-alpha" || v=="lower-case") then counter(counter.value,Lowercase)
-  elif (v=="decimal" || v=="arabic") then counter(counter.value,Arabic)
+  if (v=="upper-alpha" || v=="upper-case" || v=="upper-latin") then counter(counter.value,Uppercase)
+  elif (v=="lower-alpha" || v=="lower-case" || v=="lower-latin") then counter(counter.value,Lowercase)
+  elif (v=="decimal" || v=="arabic") then counter(counter.value,Arabic())
   elif (v=="decimal0" || v=="arabic0") then counter(counter.value,Arabic0)
+  elif (v=="decimal-leading-zero" || v=="arabic-leading-zero") then counter(counter.value,Arabic(2))
   elif (v=="lower-roman") then counter(counter.value,LowerRoman)
   elif (v=="upper-roman") then counter(counter.value,UpperRoman)
+  elif (v=="lower-greek") then counter(counter.value,UnicodeBase(945,969))
+  elif (v=="upper-greek") then counter(counter.value,UnicodeBase(913,937))
+  elif (v=="cjk-decimal") then counter(counter.value,ItemList(cjkDecimal))
+  elif (v=="symbolic") then counter(counter.value,ItemList(symbolDecimal))
+  elif (v=="circled-decimal") then counter(counter.value,UnicodeBase(9312,9321))
+  elif (v.contains(rxUnicodeBase)) then {
+    match(v.find(rxUnicodeBase)) {
+      Nothing   -> counter(counter.value,Arabic())
+      Just(cap) -> {
+        val start = cap.groups[1].parseInt.maybe(49,id)
+        val end   = cap.groups[2].parseInt.maybe(0,id)
+        counter(counter.value,UnicodeBase(start,if (end < start) then start+9 else end))
+      }
+    }
+  }
   elif (v=="--") then counter(value=counter.value-1)
   elif (v=="++" || v=="") then counter(value=counter.value+1)
   else match(xvalue.list) {
@@ -615,6 +631,8 @@ function increment(counter :counter, xvalue : string) : counter {
     }
   }
 }
+
+val rxUnicodeBase = regex(@"^unicode-base-(\d+)(?:-(\d+))?$")
 
 // reset lower counters (ie. for h1-h2, reset h1-h2-h3, h1-h2-h3-h4, ...)
 function resetNestedCounters(counters : mdict<h,counter>, counter : string, nested : mdict<h,list<string>> ) : st<h> ()
@@ -660,23 +678,47 @@ function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st
 // The display format of a counter
 type format {
   Arabic0     // start at 0
-  Arabic
+  Arabic( width : int = 0 )
   Uppercase
   Lowercase
   LowerRoman
   UpperRoman
+  ItemList( items : list<string> )
+  UnicodeBase( start : int, end : int )
 }
 
-struct counter( value :int = 0, format :format = Arabic  )
+struct counter( value :int = 0, format :format = Arabic()  )
 
 function show( counter : counter ) : string {
   match(counter.format) {
-    Uppercase -> counter.value.showLetterBase('A')
-    Lowercase -> counter.value.showLetterBase('a')
+    Arabic(width)  -> counter.value.show.align(width,'0')
+    Uppercase  -> counter.value.showLetterBase('A')
+    Lowercase  -> counter.value.showLetterBase('a')
     LowerRoman -> counter.value.showRoman.toLower
     UpperRoman -> counter.value.showRoman
-    Arabic0   -> (counter.value-1).show
+    Arabic0    -> (counter.value-1).show
+    ItemList(l) -> counter.value.showFromList(l)
+    UnicodeBase(b,e) -> counter.value.showEntityBase(b,e)
     _ -> counter.value.show
+  }
+}
+
+val cjkDecimal = [0x4E00,0x4E8C,0x4E09,0x56DB,0x4E94,
+                  0x516D,0x4E03,0x516B,0x4E5D,0x5341]
+                 .map(fun(i) { "&#" + i.show + ";" })
+
+val symbolDecimal = ["&ast;","&dagger;","&Dagger;","&sect;","&para;","&ast;&ast;","&dagger;&dagger;","&Dagger;&Dagger;"]
+
+function showEntityBase( value : int, start : int, end : int = start + 9 ) : string {
+  if (value <= 0 || value > (end-start)+1) return "?"
+  "&#" + (value + start - 1).show + ";"
+}
+
+function showFromList( value : int, items : list<string> ) : string {
+  if (value <= 0) return "?"
+  match(items.drop(value-1)) {
+    Cons(s) -> s
+    Nil     -> "?"
   }
 }
 
