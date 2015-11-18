@@ -374,7 +374,7 @@ name-inj  : in
 --------------------------------------------------------------------->
 @if html {
   abstract  { 
-    before:"**&name-abstract.** ";
+    before:"**&name-abstract;.** ";
     margin-left: 3em;
     margin-right: 3em;
     font-size: small;
