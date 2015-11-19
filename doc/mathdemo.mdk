@@ -222,14 +222,14 @@ function insertAfter(elem, newNode) {
 [].forEach.call( document.getElementsByClassName("math-inline"), function(m) {
 	var span = document.createElement("span");
 	span.className = "mathjax-inline"
-	var content = document.createTextNode(m.alt);
+	var content = document.createTextNode(m.alt.replace(/%mdk.*/g,""));
 	span.appendChild(content);
 	insertAfter(m,span);
 });
 [].forEach.call( document.getElementsByClassName("math-display"), function(m) {
 	var div = document.createElement("div");
 	div.className = "mathjax-display"
-	var content = document.createTextNode(m.alt);
+	var content = document.createTextNode(m.alt.replace(/%mdk.*/g,""));
 	div.appendChild(content);
 	insertAfter(m,div);
 });

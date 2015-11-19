@@ -126,7 +126,7 @@ public function getMathpdflatex( opts : options ) : string {
 
 public function getMathjax( opts : options ) : string {
   if (opts.mathjax != "default") then opts.mathjax
-   else "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+   else "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 }
 
 public struct commandOptions(
