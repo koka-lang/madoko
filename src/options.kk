@@ -96,6 +96,7 @@ public struct options(
   mathconvert   : string = "",        // if non-empty, use cmd to post process math images
   latex         : string = "latex",   // used to generate dvi for math
   dvipng        : string = "dvipng",  // used to extract png images for math
+  processTimeout: int = 0,            // kill child process after <timeout>
   
   mathpdflatex  : string = "default",        // if non-empty, used when pdf is needed for snippets. Use "default" for default program
   dvips         : string = "dvips",   // used with ps2pdf when mathpdflatex is empty

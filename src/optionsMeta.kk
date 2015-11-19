@@ -108,6 +108,7 @@ function update2( options : options, key : string, lvalue : string, value : stri
     elif (key=="convert") options(convert=value)
     elif (key=="ps2pdf") options(ps2pdf=value)
     elif (key=="dvips") options(dvips=value)
+    elif (key=="process-timeout") options(processTimeout=if (value!="" && ivalue > 0) then ivalue * 1000 else 0)
     else {
       options
     }

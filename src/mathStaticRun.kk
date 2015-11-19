@@ -93,7 +93,7 @@ public function runBibtex1( bibFile : string, opts : options, continue : bool ->
       if(opts.verbose>=1 && !(stdout=="" && stderr=="")) opts.printErr(stdout + stderr)
       continue(False)
     }
-  },0,bibFile.dirname)
+  },opts.processTimeout,bibFile.dirname)
 }
 
 val rxBibtexLineinfo= @"---line *(\d+) *of file *(.*)"
@@ -172,7 +172,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
         continue(0)
       }
     }
-  },0,srcFile.dirname)
+  },opts.processTimeout,srcFile.dirname)
 } 
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
 
@@ -269,9 +269,9 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
           else {
             continue(0)
           }
-        },0,dir)
+        },xopts.processTimeout,dir)
       }
-    },0,dir)
+    },xopts.processTimeout,dir)
   }  
 }
 
@@ -573,7 +573,7 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
       }
     }
     continue(err2)
-  },0,dir)
+  },xopts.processTimeout,dir)
 }
 
 
@@ -591,7 +591,7 @@ function mathConvertPng( texName : string,xopts : options, dviPages : pages, con
         xopts.printErr("warning: conversion failed: \n" + stdout + stderr )
       }
       continue()
-    },0,combine(dirname(texName),xopts.mathImgDir))
+    },xopts.processTimeout,combine(dirname(texName),xopts.mathImgDir))
   }
 }
 
