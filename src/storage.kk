@@ -18,6 +18,7 @@ import std/log
 import std/regex
 
 external include {
+  cs file "storage-inline.cs"
   js file "storage-inline.js"
 }
 
@@ -210,7 +211,56 @@ external xwriteBase64FileSync( fileName : string, content : string ) : io ()
   js inline "$writeFileSync(#1,'base64',#2)"
 }
 
+// A binary buffer
+public type buffer
+
+public external length( b : buffer ) : int {
+  cs inline "#1.Length"
+  js inline "#1.length"
+}
+
+public external toBase64( b : buffer ) : string
+{
+  cs inline "Convert.ToBase64String(#1)"
+  js inline "#1.toString('base64')"
+}
+
+public external readInt1( b : buffer, ofs : int ) : int
+{
+  cs inline "#1[#2]"
+  js inline "#1.readUInt8(#2)"
+}
+
+public external readInt4( b : buffer, ofs : int, bigendian : bool = True ) : int
+{
+  cs inline "BitReader.readInt32( #1, #2, #3 )"
+  js inline "(#3 ? #1.readInt32BE(#2) : #1.readInt32LE(#2))"
+}
+
+// try to ead a binary file into a buffer
+public function tryReadFileSync( fileName : string ) : io maybe<buffer> {
+  checkSandbox( fileName )
+  onExn( Nothing, { val b = xreadFileSync(fileName); Just(b) } )
+}
+
+// Read a binary file into a buffer
+public function readFileSync( fileName: string ) : io buffer {
+  checkSandbox( fileName )
+  xreadFileSync( fileName )
+}
+
+external xreadFileSync( fileName : string ) : io buffer
+{
+  cs inline "System.IO.File.ReadAllBytes(#1)"
+  js inline "$readFileSync(#1,'buffer')"
+}
+
 // Delete a file
+public function tryUnlinkSync( fname : string ) : io ()
+{
+  ignore( { fname.unlinkSync } )
+}
+
 public function unlinkSync( fileName : string ) : io () {
   checkSandbox(fileName)
   xunlinkSync( fileName )

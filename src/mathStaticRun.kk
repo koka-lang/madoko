@@ -613,7 +613,7 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
       Just -> ()
       Nothing -> {
         val imageFile = combine(outDir,mi.imageName)
-        tryUnlink(imageFile)
+        tryUnlinkSync(imageFile)
       }
     }
   }
@@ -659,23 +659,23 @@ function extendDim( dviPages : pages, pdfPages : pages,
                   }
                   Just(buf) -> {
                     //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
-                    val base64 = buf.string("base64")
-                    val pxwidth = buf.readInt4(16)
-                    val pxheight = buf.readInt4(20)
+                    val base64 = buf.toBase64()
+                    val pxwidth = buf.readInt4(16,True)
+                    val pxheight = buf.readInt4(20,True)
                     //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
                     val pngprefix = "data:image/png;base64,"
 
                     val embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
                              then pngprefix + base64 else ""
                     val imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
-                    tryUnlink(imageDigestFile)                              
+                    tryUnlinkSync(imageDigestFile)                              
                     val size  = if (embed=="") then {
                               // give robust name  
                               rename(imageFile,imageDigestFile)
                               buf.length 
                             }
                             else {
-                              tryUnlink(imageFile) // delete the image
+                              tryUnlinkSync(imageFile) // delete the image
                               embed.length
                             }
                     (pxwidth,pxheight,size,embed)

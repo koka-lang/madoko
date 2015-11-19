@@ -29,8 +29,8 @@ if (onServer) {
   var path = require("path");
   var xmkdirp = require('mkdirp');
 
-  $readFileSync = function(fname,enc) { return fs.readFileSync(fname,{encoding:enc}); };
-  $writeFileSync = function(fname,enc,data) { return fs.writeFileSync(fname,data,{encoding:enc}); };
+  $readFileSync = function(fname,enc) { return fs.readFileSync(fname,(enc && enc !== "buffer") ? {encoding:enc} : null); };
+  $writeFileSync = function(fname,enc,data) { return fs.writeFileSync(fname,data,(enc && enc !== "buffer") ? {encoding:enc} : null); };
   $fexistsSync = function(fname) { return (fs.existsSync(fname) != 0);};
   $relative = function(dir,p) { return path.relative(dir,p); };
   $cwd = function() { return process.cwd(); };
