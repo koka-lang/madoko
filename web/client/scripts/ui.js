@@ -1308,7 +1308,7 @@ var UI = (function() {
 
   UI.prototype.viewLoaded = function() {
     var self = this;
-    self.syncView({ duration: 0, force: true });               
+    // self.syncView({ force: true });               
   }
 
   UI.prototype.viewHTML = function( html, time0 ) {
@@ -1928,6 +1928,7 @@ var UI = (function() {
       self.showDecorations();
       self.showConcurrentUsers(false);
       self.localFullSave();
+      self.syncView({force:true})
     }); 
     // .always( function() { 
     //   self.state = State.Normal; 
@@ -4658,7 +4659,7 @@ var symbolsMath = [
     try {
       if (self.lastLineNo===undefined) self.lastLineNo = -1;
       if (!options) options = {};
-      if (!self.view || self.state === State.Init || self.state === State.Loading) return false; // during loading of new content
+      if (!self.view || self.state === State.Init || (!options.force && self.state === State.Loading)) return false; // during loading of new content
 
       if (cursorLine==null) {
         cursorLine = self.editor.getPosition().lineNumber;
