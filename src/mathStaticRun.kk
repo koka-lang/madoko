@@ -118,8 +118,9 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
 {
   val dir = texFile.dirname.norm
   val latexCmd = texCmd.quote + " --output-directory=" + (if (dir=="") then "." else dir).quote + 
-                       " --halt-on-error --interaction=nonstopmode" + 
-                      " " + texFile.norm.quote 
+                       " --halt-on-error --interaction=batchmode" + 
+                       (if (opts.sandbox) then " --no-parse-first-line --no-shell-escape" else "") + // note: also need `openin_any:p` and `openout_any:p` in the `texmf.cnf` file!
+                       " " + texFile.norm.quote 
 
   if (runCount==0 && opts.rebuild) {
     unlinkSync(texFile.changeExt(".aux"))
