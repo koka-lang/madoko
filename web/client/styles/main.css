@@ -1742,6 +1742,7 @@ div.item.document {
 
 #picker .version-display .version-alert {
   border-bottom: 1px solid black;
+  padding: 1ex;
 }
 #picker .version-display .version-updates {
   font-size: smaller;
