@@ -122,7 +122,7 @@ external xfexistsSync( fileName : string ) : io bool {
 }
 
 public external relative( from : string, to : string ) : string {
-  cs inline @"Uri.UnescapeDataString(new Uri(#1 + ""\\"", false).MakeRelative(new Uri(#2)));"
+  cs inline @"Uri.UnescapeDataString(new Uri(#1 + ""\\"").MakeRelativeUri(new Uri(#2)).ToString());"
   js inline "$relative(#1,#2)"
 }
 
@@ -158,7 +158,7 @@ public function tryRename( fnameOld : string, fnameNew : string ) : io () {
 
 // In the browser, removes all files.
 public external clear() : io () {
-  cs inline "0"
+  cs inline ""
   js inline "$clear()"
 }
 
@@ -212,44 +212,57 @@ external xwriteBase64FileSync( fileName : string, content : string ) : io ()
 }
 
 // A binary buffer
-public type buffer
+abstract struct buffer( obj : any )
 
-public external length( b : buffer ) : int {
-  cs inline "#1.Length"
+public function length( b : buffer ) : int {
+  xlength(b.obj)
+}
+
+external xlength( obj : any ) : int {
+  cs inline "((byte[])(#1)).Length"
   js inline "#1.length"
 }
 
-public external toBase64( b : buffer ) : string
-{
-  cs inline "Convert.ToBase64String(#1)"
+public function toBase64( b : buffer ) : string {
+  xtoBase64( b.obj )
+}
+
+external xtoBase64( obj : any ) : string {
+  cs inline "Convert.ToBase64String((byte[])(#1))"
   js inline "#1.toString('base64')"
 }
 
-public external readInt1( b : buffer, ofs : int ) : int
-{
-  cs inline "#1[#2]"
+public function readInt1( b : buffer, ofs : int ) : int {
+  xreadInt1( b.obj, ofs )
+}
+
+external xreadInt1( obj : any, ofs : int ) : int {
+  cs inline "((byte[])(#1))[#2]"
   js inline "#1.readUInt8(#2)"
 }
 
-public external readInt4( b : buffer, ofs : int, bigendian : bool = True ) : int
-{
-  cs inline "BitReader.readInt32( #1, #2, #3 )"
+public function readInt4( b : buffer, ofs : int, bigendian : bool = True ) : int {
+  xreadInt4( b.obj, ofs, bigendian )
+}
+
+external xreadInt4( obj : any, ofs : int, bigendian : bool = True ) : int {
+  cs inline "BitReader.readInt32( (byte[])(#1), #2, #3 )"
   js inline "(#3 ? #1.readInt32BE(#2) : #1.readInt32LE(#2))"
 }
 
 // try to ead a binary file into a buffer
 public function tryReadFileSync( fileName : string ) : io maybe<buffer> {
   checkSandbox( fileName )
-  onExn( Nothing, { val b = xreadFileSync(fileName); Just(b) } )
+  onExn( Nothing, { Just(readFileSync(fileName)) } )
 }
 
 // Read a binary file into a buffer
 public function readFileSync( fileName: string ) : io buffer {
   checkSandbox( fileName )
-  xreadFileSync( fileName )
+  Buffer( xreadFileSync( fileName ) )
 }
 
-external xreadFileSync( fileName : string ) : io buffer
+external xreadFileSync( fileName : string ) : io any
 {
   cs inline "System.IO.File.ReadAllBytes(#1)"
   js inline "$readFileSync(#1,'buffer')"

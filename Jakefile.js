@@ -40,11 +40,11 @@ var kokaCmd = kokaExe + " " + kokaFlags + " -c -o" + outputDir + " --outname=" +
 task("default",["madoko"]);
 
 desc(["build madoko.",
-      "  madoko[--target=cs] # generate .NET binary."].join("\n"));
-task("madoko", [], function(rebuild) {
-  var args = Array.prototype.slice.call(arguments).join(" ")
-  if (args.indexOf("--target=cs") >= 0) {
-    args.unshift("-o" + outputDir + "net")
+      "  madoko[cs] # generate .NET binary."].join("\n"));
+task("madoko", [], function(cs) {
+  args = ""
+  if (cs) {
+    args = "--target=cs -o" + outputDir + "net"
   }
   if (!fileExist(outputDir)) {
     fs.mkdirSync(outputDir);
