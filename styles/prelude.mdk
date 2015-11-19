@@ -389,7 +389,10 @@ HR       { tex-cmd: "\mdhr"; display: block }
 Pre      { tex-env: mdpre }
 Abstract { tex-env: abstract }
 H0,H1,H2,H3,H4,H5,H6  { display: block; }
-H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { tex-cmd-postfix:"*" }
+H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { 
+  tex-cmd-postfix:"*";
+  toc-line: "&source;";
+}
 
 @if heading-base<=0 {
   H0     { tex-cmd:"\part" }
