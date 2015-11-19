@@ -75,7 +75,7 @@ val uroman      = @"(?:X?(?:I(?:V|X|I|II)?|[VX]I{0,3}))"
 val endlist     = hr + @"|\n(?! )(?!\1" + bull + @" )"
 val alist       = @"( *)(" + bull + @") ([\s\S]+?)(?=\n(?:" + endlist + @")|$)\n?"
 val endpara     = @" *(?:<" + atag + @"|```|~+|>.|#{1,6} |\[" + xlinkid + @"\]:|" 
-                            + hr + @"|.+?\n *(?:===|---)|" + xattrs + "(?:\n|$))"
+                            + hr + @"|.+?\n *(?:===|---)" + ")"
 
 val notbspecialx= @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
 val notbspecial = @"(?:[^ \[\*\-_\+\d><#`~\niIaA]|[iIaA](?!\.))" // not special block start sequence
@@ -96,7 +96,7 @@ val rxtableBody   = @"((?: *(?:\||\+[-=]).*(?:\n|$))+)"
 val blockGrammar : grammar<block,blockContext> = [
   Rule("lheading",   regex(@"^(?!    )([^ \n].*?)" + iattrs + @"\n *(===+|---+) *(?:\n+|$)"), blockHeadingLine ), 
   Rule("deflist",    regex(deflist), blockDefList ),
-  Rule("parax",      regex(@"^(" + notbspecial + @"[^|\n]*?(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 
+  Rule("parax",      regex(@"^(" + notbspecial + @"[^|\n]*?(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)\n*"), blockPara ), 
 
   Rule("code",       regex(@"^(    (?:.|\n+    )*)\n*"), blockCode ),  
   Rule("html",       regex(@"^ *" + html), blockHtml ),
@@ -116,7 +116,7 @@ val blockGrammar : grammar<block,blockContext> = [
   Rule("div",        regex(@"^ *(~+) *([\w\d\-]*) *" + iattrs + @"(?=\n)([\s\S]*?)\n *\1 *(?:\n+|$)"), blockDiv ),
 
   Rule("special",    regex(@"^ *\[ *(TOC|FOOTNOTES|TITLE)(?: *= *([\w-]*))? *\] *\n*"), blockSpecial ), 
-  Rule("para",       regex(@"^(.+(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)" + pattrs + @"\n*"), blockPara ), 
+  Rule("para",       regex(@"^(.+(?:\n|$)(?:(?!" + endpara + @").+(?:\n|$))*)\n*"), blockPara ), 
   Rule("blank",      regex(@"^\n+"), blockBlank ),
   ruleLine,
 ]
@@ -209,8 +209,14 @@ function blockSpecial( cap : matched, context : blockContext ) : block {
 }
 
 function blockPara( cap : matched, _context ) : block {
-  Para(cap.groups[1], cap.groups[5].parseAttrs )
+  val full = cap.groups[1]
+  val (txt,attrTxt) = match(full.find(rxPattrs)) {
+    Nothing   -> (full,"")
+    Just(pcap) -> (full.substr(0,pcap.index),pcap.groups[1])
+  }
+  Para(txt, attrTxt.parseAttrs("P",txt) )
 }
+val rxPattrs = regex(@"\n {0,3}" + xattrs + @"\s*$")
   
 function blockDefLink( cap : matched, context : blockContext ) :  block {
   val id = cap.groups[1].definitionId
