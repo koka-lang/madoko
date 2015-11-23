@@ -194,7 +194,13 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
     // run bibtex?
     if (!bibChanged.isNil && firstTime && mopts.bibtex!="") {
-      (runners.runBibtex)( bibChanged, mopts ) fun(err) {
+      if (mopts.bib.bool) {
+        (runners.runBibtex)( bibChanged, mopts ) fun(err) {
+          redo()
+        }
+      }
+      else {
+        mopts.printErr("warning: found citations but no bibliography file is specified.\n Hint: specify 'Bibliography: <myfile>.bib' in the metadata.")
         redo()
       }
     }

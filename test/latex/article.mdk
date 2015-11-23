@@ -14,7 +14,7 @@ Heading base  : 2
 Bib Style     : plainnat
 Cite Style    : natural
 
-Doc class     : style/sigplanconf.cls
+Doc class     : [10pt]style/sigplanconf.cls
 
 Name References: Referenze
 
@@ -23,13 +23,15 @@ Name References: Referenze
 [TITLE]
 
 ~ Abstract
-The [abstract]{font-size:200%} of the paper. Cum justo odio, dapibus ac facilisis in,
+The [[\mdcurrentfontsize{}]{input=texraw}pabstract]{font-size:16pt} of the [[\mdcurrentfontsize{}]{input=texraw}paper]{font-size:2}. Cum justo odio, dapibus ac facilisis in,
 egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
 mauris condimentum nibh, ut fermentum massa justo sit amet.
 ~
 
 
 # Introduction     { #sec-intro }
+
+[greek δααν. こんにちは is Japanese.]{font-family:"MS Gothic"}
 
 Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
 Note that you can drag&drop images into the editor pane to include them in
