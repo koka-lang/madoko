@@ -444,6 +444,14 @@
 \newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
 \newcommand*\mdsetfontscale[2]{\csdef{#1@Scale}{#2}}
 \providecommand\lfseries{\mdseries}
+\newcommand*\mdusefont[5][]{%
+  \onnotblank{#1}{\mdsetfontscale{#3}{#1}}%
+  \onnotblank{#2}{\fontencoding{#2}}%
+  \onnotblank{#3}{\fontfamily{#3}}%
+  \onnotblank{#4}{\fontseries{#4}}%
+  \onnotblank{#5}{\fontshape{#5}}%
+  \selectfont
+}
 
 \AtBeginDocument{%
   \ifdef\cursive{}{% frcursive defines \cursive as an environment so \providecommand does not work :-(

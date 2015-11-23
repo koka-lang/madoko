@@ -813,16 +813,11 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                     elif (fam=="fantasy") then "\\fantasy"
                     else {
                       if (fam.startsWith("tex-family-")) then {
-                        match( fam.find( regex(@"^tex-family-(?:([A-Z]\w\w?)-)?(\w+)(?:[@\-](\d+\.\d+))?(?:-(l|m|b|bx))?(?:-(n|it|sl|bf|sc))?$") )) {
+                        match( fam.find( regex(@"^tex-family-(?:([A-Z]\w\w?)-)?(\w+)(?:-(l|m|b|bx))?(?:-(n|it|sl|bf|sc))?(?:[@\-](\d+\.\d+))?$"))) {
                           Just(cap) -> 
-                            (if (cap.groups[3].bool) then "\\mdsetfontscale{" + cap.groups[2] + "}{" + cap.groups[3] + "}" else "") +
-                            (if (cap.groups[1].bool && cap.groups[4].bool && cap.groups[5].bool) 
-                              then "\\usefont" + cap.groups[1].braced + cap.groups[2].braced + cap.groups[4].braced + cap.groups[5].braced
-                              else (if (cap.groups[1].bool) then "\\fontencoding{" + cap.groups[1] + "}" else "") +
-                                   "\\fontfamily{" + cap.groups[2] + "}" +
-                                   (if (cap.groups[4].bool) then "\\fontseries{" + cap.groups[4] + "}" else "") +
-                                   (if (cap.groups[5].bool) then "\\fontshape{" + cap.groups[5] + "}" else "") +
-                                   "\\selectfont")
+                            "\\mdusefont" +
+                             (if (cap.groups[5].bool) then "[" + cap.groups[5] + "]" else "") +
+                             cap.groups[1].braced + cap.groups[2].braced + cap.groups[3].braced + cap.groups[4].braced                            
                           Nothing -> "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
                         }
                       }
