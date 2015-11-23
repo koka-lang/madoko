@@ -221,7 +221,12 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       if (mopts.tex) {
         if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
         val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-        if (texwarns != "" && mopts.verbose>=3) print(texwarns) 
+        if (texwarns != "") {
+          log("stdout",texwarns)
+          if (mopts.verbose>=1) {
+            print(texwarns) 
+          }
+        }
         if (!(tryWriteTextFile(outTexName,tex))) {
           mopts.printErr("error: unable to write: " + outTexName) 
         }

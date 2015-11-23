@@ -25,6 +25,10 @@ import codeAlign
 import texCommon      // for texAccents et al
 import cssFormatter
 
+function warning( msg : string ) {
+  common/warning( msg, "texwarning" );
+}
+
 public function fmtLatexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
   if (env=="") 
    then texText(txt) 
@@ -816,7 +820,7 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                         match( fam.find( regex(@"^tex-family-(?:([A-Z]\w\w?)-)?(\w+)(?:-(l|m|b|bx))?(?:-(n|it|sl|bf|sc))?(?:[@\-](\d+\.\d+))?$"))) {
                           Just(cap) -> 
                             "\\mdusefont" +
-                             (if (cap.groups[5].bool) then "[" + cap.groups[5] + "]" else "") +
+                            (if (cap.groups[5].bool) then "[" + cap.groups[5] + "]" else "") +
                              cap.groups[1].braced + cap.groups[2].braced + cap.groups[3].braced + cap.groups[4].braced                            
                           Nothing -> "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
                         }
