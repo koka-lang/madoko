@@ -303,7 +303,7 @@ var Runner = (function() {
     }
 
     // madoko  errors
-    var rx = /^ *(error|warning) *: *((?:[^:]|:\d+)+|\w+): *(.*)$/gim;
+    var rx = /^ *(error|warning) *: *((?:[^:]|:\d+)+|\w+): *(.+$|[\s\S]+?(?=\n[ \t\r]*\n))/gim;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[2];
