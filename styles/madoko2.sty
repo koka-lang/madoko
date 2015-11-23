@@ -308,9 +308,12 @@
 }
 
 % expressions for widht/height percentages
+\providecommand\f@size{10}
+\newcommand\mdcurrentfontsize{\f@size}
+
 \newcommand\dimheight[1]{#1\md@height}
 \newcommand\dimwidth[1]{#1\linewidth}
-\newcommand\dimfont[1]{#1ex}
+\newcommand\dimfont[1]{\mdcurrentfontsize\dimexpr #1 pt\relax}
 \newcommand\dimavailable{\linewidth}
 
 % dimdefault{arg}{default}  use default if arg is empty

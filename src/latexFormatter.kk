@@ -775,8 +775,7 @@ function cssFont( body : string, kvs : dict<string> ) : string {
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-size", fun(value,b) { 
-      val cmd = if (value.cssIsLength) then "\\mdfontsize" + value.cssFontLength.braced  
-                elif (value=="larger") then "\\mdfontsize{1.2}"
+      val cmd = if (value=="larger") then "\\mdfontsize{1.2}"
                 elif (value=="smaller") then "\\mdfontsize{0.8}"
                 elif (value=="xx-small") then "\\tiny"
                 elif (value=="x-small") then "\\scriptsize"
@@ -785,7 +784,9 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                 elif (value=="large") then "\\large"
                 elif (value=="x-large") then "\\Large"
                 elif (value=="xx-large") then "\\LARGE"
-                else { warning("illegal font-size value: " + value); "" }
+                else {
+                  "\\mdfontsize" + value.cssFontLength.braced  
+                }
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-style", fun(value,b) { 
