@@ -13,6 +13,7 @@ import std/log
 import std/path
 import common
 import options
+import optionsSandbox
 
 public function fromMeta( opts : options, mdata : metadata ) : options {
   //opts = opts0(metadata = opts0.metadata + mdata)
@@ -63,14 +64,8 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="tex-section-num") options(texSectionNum=(value!=""))
   elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)
   elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
-  else {
-    options.update2( key, lvalue, value, ivalue, mdata )
-  }
-}
-
-function update2( options : options, key : string, lvalue : string, value : string, ivalue : int, mdata : metadata ) : options 
-{
-  if (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+  
+  elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
   elif (key=="cite-all") options(citeAll=(value!="")) 
   elif (key=="math-mode") options.setMathMode(value)
   elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (lvalue=="true") then "math" else value)
@@ -96,44 +91,11 @@ function update2( options : options, key : string, lvalue : string, value : stri
   elif (key=="logo") options(logo=(lvalue=="true"))
   elif (key=="refer") { log("filesRefer",value); options }
   elif (key=="copy-styles") options(copyStyles=(value!=""))
-
-  // can only set program options if not running in a sandbox
-  elif (!(options.sandbox)) {
-    if (key=="latex") options(latex=if (value=="") then "latex" else value)
-    elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
-    elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="bibtex") options(bibtex=value)
-    elif (key=="math-convert") options(mathconvert=value)
-    elif (key=="convert") options(convert=value)
-    elif (key=="ps2pdf") options(ps2pdf=value)
-    elif (key=="dvips") options(dvips=value)
-    elif (key=="process-timeout") options(processTimeout=if (value!="" && ivalue > 0) then ivalue * 1000 else 0)
-    else {
-      options
-    }
-  }
   else {
-    // in sandbox, only set safe program options
-    if (key=="latex") options(latex=if (value=="") then "latex" else safeLatex(lvalue, options.latex) )
-    elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.pdflatex) )
-    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathpdflatex) )
-    elif (key=="bibtex") options(bibtex=safeBibtex(lvalue,options.bibtex)) 
-    else {
-      //  if (options.verbose >= 3) warning("custom metadata key: " + key)
-      options
-    }
+    options.updateSandbox( key, lvalue, value, ivalue )
   }
 }
 
-function safeLatex( s : string, def : string ) {
-  if (s=="latex" || s=="xelatex" || s=="pdflatex") 
-   then s else def
-}
-function safeBibtex( s : string, def : string ) {
-  if (s=="bibtex" || s=="bibtex8") 
-   then s else def
-}
 
 function appendNL(s : string, t : string ) : string {
   if (s == "" || s.endsWith("\n")) then s + t else s + "\n" + t

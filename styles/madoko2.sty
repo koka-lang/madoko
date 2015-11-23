@@ -47,6 +47,7 @@
 
 % package only loaded outside snippets
 \iftoggle{/madoko/math}{}{%
+  \RequirePackage{microtype}
   \RequirePackage{booktabs}
   \RequirePackage{array}
   \RequirePackage{longtable}
@@ -58,6 +59,7 @@
     % font selection
     \ifXeTeX\RequirePackage{fontspec}\else
     \ifLuaTeX\RequirePackage{fontspec}\else
+    \RequirePackage{lmodern}%
     \RequirePackage[T1]{fontenc}%
     \RequirePackage[utf8]{inputenc}
     \providecommand{\fontspec}[2][]{}
@@ -440,6 +442,8 @@
 %\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
 
 \newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
+\newcommand*\mdsetfontscale[2]{\csdef{#1@Scale}{#2}}
+\providecommand\lfseries{\mdseries}
 
 \AtBeginDocument{%
   \ifdef\cursive{}{% frcursive defines \cursive as an environment so \providecommand does not work :-(

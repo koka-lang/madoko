@@ -760,9 +760,14 @@ function cssFont( body : string, kvs : dict<string> ) : string {
     .onKey( kvs,"font-weight", fun(value,b) { 
       val cmd = if (value=="bold") then "\\bfseries"
                 elif (value=="bolder") then "\\bfseries"
-                elif (value=="lighter") then "\\mdseries"
+                elif (value=="lighter") then "\\lfseries"
                 elif (value=="normal") then "\\mdseries"
-                else ""
+                else match (value.parseInt) {
+                  Just(i) -> if (i < 400) then "\\lfseries"
+                             elif (i > 500) then "\\bfseries"
+                             else "\\mdseries"
+                  Nothing -> ""
+                }
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-size", fun(value,b) { 
@@ -807,8 +812,20 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                     elif (fam=="cursive") then "\\cursive"
                     elif (fam=="fantasy") then "\\fantasy"
                     else {
-                      if (fam.startsWith("tex-family-")) 
-                        then "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
+                      if (fam.startsWith("tex-family-")) then {
+                        match( fam.find( regex(@"^tex-family-(?:([A-Z]\w\w?)-)?(\w+)(?:[@\-](\d+\.\d+))?(?:-(l|m|b|bx))?(?:-(n|it|sl|bf|sc))?$") )) {
+                          Just(cap) -> 
+                            (if (cap.groups[3].bool) then "\\mdsetfontscale{" + cap.groups[2] + "}{" + cap.groups[3] + "}" else "") +
+                            (if (cap.groups[1].bool && cap.groups[4].bool && cap.groups[5].bool) 
+                              then "\\usefont" + cap.groups[1].braced + cap.groups[2].braced + cap.groups[4].braced + cap.groups[5].braced
+                              else (if (cap.groups[1].bool) then "\\fontencoding{" + cap.groups[1] + "}" else "") +
+                                   "\\fontfamily{" + cap.groups[2] + "}" +
+                                   (if (cap.groups[4].bool) then "\\fontseries{" + cap.groups[4] + "}" else "") +
+                                   (if (cap.groups[5].bool) then "\\fontshape{" + cap.groups[5] + "}" else "") +
+                                   "\\selectfont")
+                          Nothing -> "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
+                        }
+                      }
                       elif (fam.startsWith("tex-cmd-"))
                         then "\\" + fam.substr(8)
                         else "\\fontspec{" + (if (fam.startsWith("tex-")) then fam.substr(4) else fam) + "}"
