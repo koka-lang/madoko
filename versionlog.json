@@ -1,5 +1,17 @@
 {
   "log" : [
+    { "version": "0.9.17-beta",
+      "date": "2015-11-23",
+      "updates": [
+        "Allow precise LaTeX font-family specifications as 'tex-family[-&lt;encoding>]-&lt;family>[-&lt;series>][-&lt;shape>][-&lt;scaling>]'",
+        "Set time-outs on all sub processes and run latex more securely",
+        "Do no longer scroll preview after updates, but only when the editor window scrolls",
+        "Improve LaTeX running times",
+        "Enable microtype typography (character protrusion and font expansion) in PDF output",
+        "Fix bug where images with uppercase extensions were not correctly embedded",
+        "Fix default Mathjax link for dynamic math"        
+      ]
+    },
     { "version": "0.9.16-beta",
       "date": "2015-11-18",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
