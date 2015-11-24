@@ -125,8 +125,8 @@ function writeFileSync( fileName, content, options) {
     return Fs.writeFileSync(fileName, content, options);
   }
   catch(err) {
-    console.log(err);
-    console.log(options);
+    //console.log(err);
+    //console.log(options);
     if (err.code === "ENOENT" && options.ensuredir && !options.recurse) {
       mkdirp.sync(Path.dirname(fileName));
       return Fs.writeFileSync(fileName,content,options);

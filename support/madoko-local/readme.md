@@ -5,8 +5,6 @@ Author      : Daan Leijen
 
 # Madoko Local
 
-**Currently still in testing stage -- use with care and update often.**
-
 This program provides local disk access to the [Madoko.net] environment.
 This can be convenient if you do not want to use
 standard cloud storage (like Dropbox) or are already using

@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.3.2-beta",
+      "date"   : "2015-11-23",
+      "updates": [
+        "Remove spurious trace messages"
+      ]
+    },
     { "version": "0.3.1-beta",
       "date"   : "2015-10-31",
       "updates": [
