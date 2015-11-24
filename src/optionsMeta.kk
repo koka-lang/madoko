@@ -104,7 +104,8 @@ function appendNL(s : string, t : string ) : string {
 function setMathMode( options : options, value : string ) : options {
   val nvalue = value.normalizeId
   if (nvalue=="static") then options(mathmode=Static)
-  elif (nvalue=="dynamic" || nvalue=="mathjax") then options(mathmode=Dynamic)
+  elif (nvalue=="dynamic") then options(mathmode=Dynamic)
+  elif (nvalue=="mathjax") then options(mathmode=Dynamic, mathjax=if (options.mathjax.bool) then options.mathjax else "default")
   else {
     warning("unrecognized math mode: " + nvalue)
     options
