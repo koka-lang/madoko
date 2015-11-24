@@ -39,6 +39,7 @@ Toc Depth     : 2
 Section Base  : 2
 Section Depth : 2
 
+.heading-contents  { display:none }
 .MadokoLogo   { font-size:50% }
 Notes         { html-elem:aside; .notes }
 Author        { font-size:x-large }
