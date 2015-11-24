@@ -2029,7 +2029,9 @@ var UI = (function() {
     var sym  = // ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") + 
                 (file.modified || (self.storage.remote.canCommit && file.sha===null) ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "");
     var icon = "<span class='file-status'>" + sym + "</span>";
-    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'>" + Util.escape(file.path) + icon + "</span>";
+    var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'" +
+                  "title='Last save: " + (file.createdTime ? Util.escape(file.createdTime.toString()) : "?") + "'>" +
+                     Util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
       var len = file.content.length;        
