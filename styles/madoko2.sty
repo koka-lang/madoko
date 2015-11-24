@@ -1068,12 +1068,16 @@
 }
 
 % ballot boxes
-\mdDefineUnicode{9745}{\rlap{$\square$}\protect\raisebox{.15ex}{\kern 0.1em\ding{51}}}
-\mdDefineUnicode{9746}{\rlap{$\square$}{\kern 0.1em\ding{55}}}
+\newcommand\mdballotc{\rlap{$\square$}\protect\raisebox{.15ex}{\kern 0.1em\ding{51}}}
+\mdDefineUnicode{9745}{\mdballotc}
+\newcommand\mdballotx{\rlap{$\square$}{\kern 0.1em\ding{55}}}
+\mdDefineUnicode{9746}{\mdballotx}
 % magnifying glass
-\mdDefineUnicode{128270}{\kern -0.75ex\protect\raisebox{-0.25ex}{$\arrownot$}\kern 1.05ex\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
+\newcommand\mdmagglass{\kern -0.75ex\protect\raisebox{-0.25ex}{$\arrownot$}\kern 1.05ex\protect\raisebox{0.5ex}{$\circ$}\hspace{-0.25ex}}
+\mdDefineUnicode{128270}{\mdmagglass}
 % short underscore
-\mdDefineUnicode{818}{\leavevmode\kern 0.06em\vbox{\hrule width 0.3em}}
+\newcommand\mdlowline{leavevmode\kern 0.06em\vbox{\hrule width 0.3em}}
+\mdDefineUnicode{818}{\mdlowline}
 
 
 % break and nbsp
