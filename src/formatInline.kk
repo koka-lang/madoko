@@ -140,12 +140,12 @@ function inlineMathBlock( cap : matched, context : inlineContext ) : string {
 }
 
 public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : string, attrs : attrs = attrsNone, lineInfo : string = "" ) : string {
-  val (kind,left,right) = 
+  val (kind,left,right,rightx) = 
     if (attrs.hasClass("snippet")) 
-     then (if (isDisplay) then "Display" else "Inline","","")
+     then (if (isDisplay) then "Display" else "Inline","","","")
     elif (isDisplay) 
-     then ("Display","\\[" + (if (attrs.name.isEmpty) then "" else "\\label{" + attrs.name + "}"),"\n\\]%mdk\n")  // add newline because of comments in latex (and we do use trimLines on the content)
-     else ("Inline","$","$")
+     then ("Display","\\[" + (if (attrs.name.isEmpty) then "" else "\\label{" + attrs.name + "}"),"\n\\]","%mdk\n")  // add newline because of comments in latex (and we do use trimLines on the content)
+     else ("Inline","$","$","")
   val lkind  = kind.toLower
   val class  = "math-" + lkind
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
@@ -153,8 +153,8 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
-                then context.fmtMathCmd("span", left+lineInfo+txt+right, attrsd)
-                else context.fmtMathEnv("div",  left+lineInfo+txt+right, attrsd)
+                then context.fmtMathCmd("span", left+lineInfo+txt+right+rightx, attrsd)
+                else context.fmtMathEnv("div",  left+lineInfo+txt+right+rightx, attrsd)
   match(context.fmt) {
     FmtTex -> texcmd
     _      -> {
