@@ -31,7 +31,7 @@ public function entityToTex( entity : string ) : string
     val i = num.parseInt.maybe(~1,id)
     match (entities.find(fun(e) { e.ecode == i })) {
       Nothing -> {
-        warning( "unknown unicode point: &#" + num + ";", "texwarning")
+        if (i > 127) warning( "unknown unicode point: &#" + num + ";", "texwarning")
         @"\mdUnicode{" + i.show + "}"
       }
       Just(e) -> e.entityCmd
@@ -364,6 +364,7 @@ val entities : list<entity> = [
   Entity("fnof", 402, @"\textit{f}", False),
   Entity("circ", 710, @"\textasciicircum", False),
   Entity("tilde", 732, @"\textasciitilde", False),
+  Entity("lowline", 818, @"\mdlowline", False),
   Entity("Alpha", 913, @"A", False ),
   Entity("Beta", 914, @"B", False ),
   Entity("Gamma", 915, @"\Gamma", True ),
