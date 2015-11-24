@@ -487,7 +487,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   };
 
   function mimeFromExt( fname ) {
-    var ext = Stdpath.extname(fname);
+    var ext = Stdpath.extname(fname).toLowerCase();
     if (ext) {
       var mime = mimeTypes[ext.substr(1)];
       if (mime) return mime;
@@ -506,7 +506,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
   var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst"].join(";");  // .bbl
   function hasEmbedExt(fname) {
-    var ext = Stdpath.extname(fname);
+    var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;
     return (contains(embedExts,ext));
   }
@@ -521,7 +521,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   
   var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
   function hasGeneratedExt(fname) {
-    var ext = Stdpath.extname(fname);
+    var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;
     return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || Stdpath.dirname(fname)==="out");
   }

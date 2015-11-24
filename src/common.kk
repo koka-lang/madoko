@@ -325,13 +325,13 @@ public function expandChoices( s : string ) : list<string> {
 }
 val rxChoicePattern = regex( @"\[(\w+(?:,\w+)*)\]" )
 
-// Picks path that first matches one of the given extensions, or the last one if none matched.
+// Picks path that first matches one of the given (lower-case) extensions, or the last one if none matched.
 public function pickExtension( exts : list<string>, paths : list<string> ) : string {
   match(paths) {
     Nil -> ""
     Cons(path,Nil) -> path
     Cons(path,rest) -> {
-      val pathext = path.extname
+      val pathext = path.extname.toLower
       match (exts.find(fun(ext) { pathext == ext })) {
         Just -> path
         Nothing -> exts.pickExtension(rest)
@@ -551,7 +551,7 @@ val mimes = dict([
 ]);
 
 public function mimeFromExt( fname : string ) : string {
-  val ext = extname(fname).substr(1);
+  val ext = extname(fname).substr(1).toLower;
   match(mimes[ext]) {
     Just(mime) -> mime
     Nothing    -> ""

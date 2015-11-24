@@ -115,7 +115,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
     val hrefs0  = link.href.expandChoices
     // legacy support for auto converting eps or pdf to png.
     val hrefs = match(hrefs0) {
-      Cons(href,Nil) | href.extname == ".eps" || href.extname == ".pdf"
+      Cons(href,Nil) | href.extname.toLower == ".eps" || href.extname.toLower == ".pdf"
         -> [href,href.changeExt(".png")]
       _ -> hrefs0
     }
