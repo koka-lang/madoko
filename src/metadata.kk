@@ -99,7 +99,14 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
 { 
   match(txt.find(rxMetaComment)) {
     Just(cap) -> {
-      parsePlainMeta(txt.substr1(cap.next), fmt, lineMap, metadata, verbose, lines + txt.substr(0,cap.next).count("\n"))
+      if (cap.groups[1].bool) {
+        parsePlainMeta(cap.groups[2].unindent + txt.substr1(cap.next), fmt, lineMap, metadata, verbose, 
+                       lines + txt.substr(0,cap.index).count("\n") + 1)
+      }
+      else {
+        parsePlainMeta(txt.substr1(cap.next), fmt, lineMap, metadata, verbose, 
+                        lines + txt.substr(0,cap.next).count("\n"))
+      }
     }
     Nothing -> {
       match(txt.find(rxSupports)) {
@@ -141,7 +148,7 @@ val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
 val rxMetaGroup   = @"(?:\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + @")*)\} *(?:\n|$)\s*)"
 
-val rxMetaComment = regex(@"^(?:\s*<!--[\s\S]*?-->(?: *\n)+)+")
+val rxMetaComment = regex(@"^(?:\s*<!--(?:(meta|madoko)\b *\n)?([\s\S]*?)-->(?: *\n)+)+")
 val rxMeta        = regex(@"^"+ rxMetaKey + @"(?:" + rxMetaAttrs + "|" + rxMetaValue + @")")
 val rxSupports    = regex(@"^@(?:if|supports)\b([^\n\{]*)" + rxMetaGroup)
 
