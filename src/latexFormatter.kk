@@ -82,13 +82,13 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
     texCmdX( "\\includegraphics[" + args + "]" + imgref.noext.braced, "" /*content*/, attrsx ) 
   }
   else {
-    val title = if (link.linkattrs.hasClass("tex-tooltip")) then "\\mdtooltip" + extractText(link.title).braced else ""
+    val titleCmd = if (link.linkattrs.hasClass("tex-tooltip")) then [("tex-cmd-outer-after","\\mdtooltip" + extractText(link.title).braced)] else []
     val cmd   = if (attrs.hasClass("localref")) 
                  then (if (attrs.hasClass("bibref")) 
                         then "\\mdcite" + url.braced
                         else "\\mdref" + url.braced )
                  else "\\href" + url.braced
-    texCmdX( cmd, content, attrs, [("tex-outercmd",title)] )
+    texCmdX( cmd, content, attrs, titleCmd )
   }
 }
 val latexImageExtensions = [".pdf",".eps",".ps",".png",".jpg",".jpeg"]
@@ -511,7 +511,8 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
 // -----------------------------------------------------------------------------
 
 
-function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
+function cssAttrs( attrs0 : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
+  val attrs = attrs0.adjustFloatAttrs()
   val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
   val hidden = 
     match(kvs["display"]) {
@@ -539,7 +540,22 @@ function cssAttrs( attrs : attrs = attrsNone, body : string, defaults = [], elem
       .applyCmd(kvs,"tex-cmd-outer")
       .applyEnv(kvs,"tex-env-outer",attrs)
       .insertCmd(kvs,"tex-cmd-outer-before")
+      .appendCmd(kvs,"tex-cmd-outer-after")
       .applyBlock(isBlock && !attrs.hasClass("para-block") && !attrs.hasClass("para-continued"), attrs)
+}
+
+function adjustFloatAttrs( attrs : attrs ) : attrs {
+  if (attrs.hasClass("float") || attrs.lookupKey("display","").cssValue == "block") {
+    val flt = attrs.lookupKey("tex-float",attrs.lookupKey("float","")).cssValue
+    if (flt=="left" || flt=="right" || flt=="inside" || flt=="outside") then {
+      match (attrs.hasKey("width")) {
+        Just(w) -> attrs.removeKeys(["width","tex-env-outer"]).addKeyval("tex-wrap-width",w).addKeyvalIfNotExist("tex-wrap-placement",flt.substr(0,1))
+        Nothing -> attrs
+      }
+    }
+    else attrs
+  }
+  else attrs
 }
 
 function applyBlock( body : string, isBlock : bool, attrs : attrs ) : string {
@@ -659,9 +675,17 @@ function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
                 body )
   })*/               
   if (isBlock) {
-    body2.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
+    val body3 = body2.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
       b.margins(kvs)
     })
+    if (!kvs.containsKey("tex-wrap-width")) then body3 else {
+      val width = kvs.dimMarginBoxWidth("tex-wrap-width")
+      val wrapfig = kvs.find("tex-wrap-env","wrapfigure")
+      val wraplines = kvs.find("tex-wrap-lines","")
+      val wrapplace = kvs.find("tex-wrap-placement","o")
+      val args = (if (wraplines.bool) then "[" + wraplines + "]" else "") + wrapplace.braced + width.braced
+      body3.blockEnv(wrapfig,args)
+    }
   }
   else {
     body2.cssInlineMargin(kvs,"margin")
@@ -917,8 +941,19 @@ function dimAuto( w : string, other : string = "" ) : string {
   if (w.isEmpty) then "" else "\\dimauto" + w.braced + other.braced
 }
 
-function dimBorderBoxWidth( kvs : dict<string> ) {
-  val width = kvs.dimContentWidth
+function dimMarginBoxWidth( kvs : dict<string>, widthName = "width"  ) {
+  val width = kvs.dimBorderBoxWidth(widthName)
+  if (width.isEmpty) return ""
+
+  val extra = [kvs.find("margin-left"),kvs.find("margin-right")
+              ].filter(bool).map( fun(wd) { wd.cssWidth })
+  if (extra.isNil) 
+   then width
+   else "\\dimeval" + ([width] + extra).join("+").braced
+}
+
+function dimBorderBoxWidth( kvs : dict<string>, widthName = "width"  ) {
+  val width = kvs.dimContentWidth(widthName)
   if (width.isEmpty) return ""
 
   val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
@@ -929,8 +964,8 @@ function dimBorderBoxWidth( kvs : dict<string> ) {
    else "\\dimeval" + ([width] + extra).join("+").braced
 }
 
-function dimContentWidth( kvs : dict<string> ) {
-  val w0   = kvs.find("width")
+function dimContentWidth( kvs : dict<string>, widthName = "width" ) {
+  val w0   = kvs.find(widthName)
   val maxw = kvs.find("max-width")
   val minw = kvs.find("min-width")
 
@@ -973,7 +1008,12 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
                  kvs.cssTRBL("border","-width",cssWidthX),
                  kvs.cssTRBL("border","-color",cssColor),
                  kvs.cssTRBL("border","-style",cssValue),
-                 kvs.cssTRBL("border","-radius",cssWidthX), // TODO: parse double radius
+                 // kvs.cssTRBL("border","-radius",cssWidthX), // TODO: parse double radius
+                 kvs.cssRadius("border-radius"),
+                 kvs.cssRadius("border-top-left-radius"),
+                 kvs.cssRadius("border-top-right-radius"),
+                 kvs.cssRadius("border-bottom-left-radius"),
+                 kvs.cssRadius("border-bottom-right-radius"),
                  kvs.cssVerticalAlign,
                  kvs.cssAttr("height-align",cssValue,["top","middle","bottom"]),
                  kvs.cssAttr("text-align",cssValue,["default","left","center","right","justify"]),
@@ -1036,6 +1076,22 @@ function cssHeightX( value : string ) : string {
 
 function cssWidthX( value : string ) : string {
   cssWidth(value)
+}
+
+function cssRadius( kvs : dict<string>, key : string ) : list<string> {
+  match(kvs[key]) {
+    Nothing -> []
+    Just(value) -> {
+      match(value.cssSplitValues) {
+        [v] -> [key + "=" + v.cssWidth]
+        [h,v] -> [key + "={" + h.cssWidth + "," + v.cssWidth + "}"]
+        _ -> {
+          warning("illegal CSS radius: " + key + ":'" + value)
+          [] 
+        }
+      }
+    }
+  }
 }
 
 function cssAttr( kvs : dict<string>, key : string, show : string -> string, allowed : list<string> = [], cssKey : string = key ) : list<string> {
