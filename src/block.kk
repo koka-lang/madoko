@@ -325,7 +325,7 @@ function blockList( cap : matched, context : blockContext ) : block {
     val item = icap.groups[4].replaceAll(if (icontext.pedantic) 
                                            then rxindent4
                                            else rxindent(icap.groups[1].length) ,"") 
-    val attrs = (extraAttrs + " " + icap.groups[3]).parseAttrs("li", item)
+    val attrs = (extraAttrs + " ; " + icap.groups[3]).parseAttrs("li", item)
     [Item(parseBlocks(icontext,item,line), 
            if (line <= 0) then attrs else attrs.setLineNo(context.lineMap,line))]
   }
@@ -334,15 +334,15 @@ function blockList( cap : matched, context : blockContext ) : block {
   val attrs0  = if (bull=="*")   then ".list-star"
                  elif (bull=="+") then ".list-plus"
                  elif (bull=="-") then ".list-dash"
-                 elif (bull=="i") then "list-style-type=lower-roman"
-                 elif (bull=="I") then "list-style-type=upper-roman"
-                 elif (bull=="a") then "list-style-type=lower-alpha"
-                 elif (bull=="A") then "list-style-type=upper-alpha"
+                 elif (bull=="i") then "list-style-type:lower-roman"
+                 elif (bull=="I") then "list-style-type:upper-roman"
+                 elif (bull=="a") then "list-style-type:lower-alpha"
+                 elif (bull=="A") then "list-style-type:upper-alpha"
                  else ""
-  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-paren"
-               elif (cap.groups[2].endsWith(")")) then attrs0 + " .list-sep-dot"
+  val attrs1 = if (cap.groups[2].endsWith(")")) then attrs0 + " ; .list-sep-paren"
+               elif (cap.groups[2].endsWith(")")) then attrs0 + " ; .list-sep-dot"
                else attrs0
-  blockListX( cap.matched, context, tag, "." + tag + " " + attrs1, rxitem, parseItem )
+  blockListX( cap.matched, context, tag, "." + tag + " ; " + attrs1, rxitem, parseItem )
 }
 val rxitem      = regex(@"^(( *)(?:" + bullrest + @") +)(?:" + iattrs + @")?(.*(?:\n(?!\2" + bullrest + @" ).*)*\n?)",multiline=True);
 
@@ -458,10 +458,10 @@ function columnStyle( style : string ) : attrs {
     Nothing    -> attrsNone // should not happen?
     Just(ccap) -> {
       val align = if (ccap.groups.matchedOn(2))
-                   then (if (ccap.groups.matchedOn(6)) then " text-align=center" else " text-align=left")
-                   else (if (ccap.groups.matchedOn(6)) then " text-align=right" else "")
-      val borders = (if (ccap.groups[1]!="+") then "" else " .cell-border-left") +
-                    (if (ccap.groups[7]!="+") then "" else " .cell-border-right")
+                   then (if (ccap.groups.matchedOn(6)) then " ; text-align:center" else " ; text-align:left")
+                   else (if (ccap.groups.matchedOn(6)) then " ; text-align:right" else "")
+      val borders = (if (ccap.groups[1]!="+") then "" else " ; .cell-border-left") +
+                    (if (ccap.groups[7]!="+") then "" else " ; .cell-border-right")
       val c = (ccap.groups[3] + ccap.groups[5]).trim.substr(0,1)
       val content = if (c=="=") then "===" elif (c=="-") then "---" else ""
       (ccap.groups[4] + align + borders).parseAttrs("col",content)
