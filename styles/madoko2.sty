@@ -47,12 +47,12 @@
 
 % package only loaded outside snippets
 \iftoggle{/madoko/math}{}{%
-  \RequirePackage{microtype}
   \RequirePackage{booktabs}
   \RequirePackage{array}
   \RequirePackage{longtable}
   \RequirePackage{anyfontsize}
   \RequirePackage{enumitem}
+  \RequirePackage{wrapfig}
 
   % fontspec is expensive to load but we need it...
   \iftoggle{/madoko/fontspec}{%
@@ -504,8 +504,7 @@
 }
 
 \providecommand\pdfmarkupcomment[3][]{}
-\newcommand\mdtooltip[2]{%
-  #2%
+\newcommand\mdtooltip[1]{%
   \hbox to 0pt{\raisebox{1ex}{\tiny\pdfmarkupcomment[color=White,author=Title]{}{#1}}}%
 }
 
@@ -781,38 +780,6 @@
   {\md@columncount{#1}{0pt}}%
   {}%
 
-
-
-%-------------------------------------------------------------
-% Float boxes  
-%-------------------------------------------------------------
-\newlength{\md@sideheight}
-\newsavebox{\md@sidebox}
-\newcommand{\mdfloatbox}[3]{%  {<left|right>}{<lines>}{content}
-  \leavehmode%
-  \savebox{\md@sidebox}{%
-    #3%
-  }%
-  \ifdim\ht\md@sidebox>0pt\relax%
-    \savebox{\md@sidebox}{\raisebox{-\ht\md@sidebox}{\usebox{\md@sidebox}}}% top-align the box
-  \fi%
-  \ifnum 0=0#2\relax%
-    \setlength{\md@sideheight}{\dp\md@sidebox}%
-    \addtolength{\md@sideheight}{\ht\md@sidebox}%
-    \def\@hangafter{\the\numexpr(0 - \md@sideheight - \baselineskip/2)/\baselineskip\relax}%  
-  \else%
-    \def\@hangafter{-#2}%
-  \fi%
-  \eifstrequal{#1}{right}%
-      {\hangindent=-\wd\md@sidebox%
-       \hangafter=\@hangafter%
-       \smash{\hspace*{\dimexpr\textwidth - \wd\md@sidebox}\usebox{\md@sidebox}}%
-    }%
-   {\hangindent=\wd\md@sidebox%
-       \hangafter=\@hangafter%
-       \smash{\usebox{\md@sidebox}}%
-    }%      
-}
 
 
 %-------------------------------------------------------------

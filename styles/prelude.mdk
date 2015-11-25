@@ -233,6 +233,15 @@ Figure {
   toc:"figures"; .floating ; float-env: figure; float-name: "&name-figure;";
 }
 
+WrapFigure {
+  label: '[@wrapfigure]{.wrapfigure-label}';
+  html-elem: figure;
+  .float;
+  float: right;
+  tex-float: outside;
+  width: 40%;  
+}
+
 .Floating {
   .align-center;
   .float;
