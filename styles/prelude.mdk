@@ -18,7 +18,7 @@ Nav,.Toc  { html-elem:nav }
 
 .Framed   { border: solid black 1px }
 Center    { .align-center }
-Remote    { tight margin-bottom: 0pt }
+Remote    { tight:true; margin-bottom: 0pt }
 
 Pre       { input: pre; .para-block }
 Code      { input: pre }
