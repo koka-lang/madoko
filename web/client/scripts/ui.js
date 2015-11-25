@@ -130,6 +130,7 @@ var UI = (function() {
     self.lastRound = 0;
     self.docText = "";
     self.htmlText = "";
+    self.syncOnRender = false; // set to true on opening a file so it the preview is synced on the first load
 
     self.stat = {
       editLast: 0,
@@ -1559,7 +1560,7 @@ var UI = (function() {
 
         if (self.lastEditChange) {
           var now = Date.now();
-          var diff = (self.lastRenderWasSlow || self.lastViewRenderWasSlow || self.settings.delayedUpdate) ? 1000 : 50;
+          var diff = (self.lastRenderWasSlow || self.lastViewRenderWasSlow || self.settings.delayedUpdate) ? 1500 : 100;
           if (Date.now() - self.lastEditChange < diff) {
             return false;
           }
@@ -1596,6 +1597,10 @@ var UI = (function() {
                 // Util.message("ready", Util.Msg.Info);
                 self.removeDecorations(false,"error");
               }
+              if (!res.runAgain && self.syncOnRender) {
+                self.syncOnRender = false;
+                self.syncView({force:true});
+              }          
               self.removeDecorations(false,"merge");
               self.showConcurrentUsers( true );
 
@@ -1928,7 +1933,8 @@ var UI = (function() {
       self.showDecorations();
       self.showConcurrentUsers(false);
       self.localFullSave();
-      self.syncView({force:true})
+      // self.syncView({force:true})  // not yet rendered so cannot sync just yet
+      self.syncOnRender = true;
     }); 
     // .always( function() { 
     //   self.state = State.Normal; 
