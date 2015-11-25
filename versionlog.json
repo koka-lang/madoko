@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "0.9.18-beta",
+      "date": "2015-11-25",
+      "updates": [
+         "Improve UI responsiveness",
+         "Support 'wrap' figures where text flows around the figure",
+         "Allow 'math mode: mathjax' to enable dynamic math",
+         "Updated all documentation"
+      ]
+    },
     { "version": "0.9.17-beta",
       "date": "2015-11-23",
       "updates": [
