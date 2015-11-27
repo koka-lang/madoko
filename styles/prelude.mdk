@@ -466,7 +466,7 @@ BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&t
 .Newblock    { tex-cmd-before="\newblock " }
 toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
-tocitem      { tex-env:"mdtocitem{&toctarget;}" }
+tocitem      { tex-env:"mdtocitem{&data-toc-target;}" }
 
 
 @if tex2 {
