@@ -437,8 +437,9 @@ function sectionSpan( h : block, blocks : list<block>,  secinfo : secinfo  ) : d
       Heading(d,txt,attrs) -> {
         val (skvs,hkvs) = attrs.keyvals.partition(fun(kv) { kv.fst.startsWith("data-") })
         val (scls,hcls) = attrs.classes.partition(fun(c) { c.startsWith("section-") })
-        val secattrs = "html-elem=section .section" + d.show +
-                        (if (attrs.name=="") then "" else " id='" + attrs.name + "'")
+        val secattrs = ".section" + d.show + 
+                       "; data-section-depth: " + d.show +
+                        (if (attrs.name=="") then "" else "; id:'" + attrs.name + "'")
         val hattrs = if (attrs.name=="") then attrs else attrs(name="heading-" + attrs.name)
         val sattrs = secattrs.parseAttrs("section")
         val divattrs = (secinfo.secDefaults)(sattrs.addClasses(scls).addKeyvals(skvs))
@@ -520,6 +521,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
         val item = "~ Begin TocItem { .tocitem" + depth.show + 
                         "; data-toc-target:" + attrs.name.show +
+                        "; toctarget:" + attrs.name.show + // legacy ...
                         "; data-toc-depth:" + depth.show + 
                         "; data-toc-line:" + txt.show + " }\n" +
                     tocline + "\n~ End TocItem\n";
