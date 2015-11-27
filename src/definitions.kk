@@ -519,7 +519,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
         val item = "~ Begin TocItem { .tocitem" + depth.show + 
-                        "; toc-target:" + attrs.name.show +
+                        "; toc-item-target:" + attrs.name.show +
                         "; toc-item-depth:" + depth.show + 
                         "; toc-item-line:" + txt.show + " }\n" +
                     tocline + "\n~ End TocItem\n";
