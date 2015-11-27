@@ -33,7 +33,7 @@ public function parseBody( fcontext : formatContext,
                            secBase : int,
                            secDepth : int ) :  div (list<block>,formatContext)
 {
-  parseDefinitions(fcontext, [Div([],(".madoko line-adjust=0 line=" + lineNo.show).parseAttrs("body",src))], 
+  parseDefinitions(fcontext, [Div([],(".madoko; line-adjust:0; line:" + lineNo.show).parseAttrs("body",src))], 
                    metadata,tocDepth,secBase,secDepth)
 }
 
@@ -237,7 +237,13 @@ function parseDefinitionsFull(
                      }).dict
   val footnoteBlock = if (isNil(footnoteItems)) then Empty 
                        else Div(Cons(HLine(), footnoteItems.reverse.concat), Attrs(classes=["footnotes","madoko"]))
-  val fblocks       = if (!footnotesAtEnd) then newblocks else (newblocks + [Special("FOOTNOTES")])
+  val fblocks       = if (!footnotesAtEnd) 
+                        then newblocks 
+                        else match(newblocks) { // ensure it appears inside the 'body'
+                                Cons(Div(children,attrs),Nil) -> 
+                                  [Div(children + [Special("FOOTNOTES")], attrs)]
+                                _ -> newblocks + [Special("FOOTNOTES")]
+                             }
 
   val secblocks = fblocks.sections(secInit(secBase=secBase,secMax=secDepth,secDefaults=fun(a){ defaultAttrs.matchRules("section",a) }))
 
@@ -298,7 +304,7 @@ function mapBlocks( blocks : list<block>,
 
 // Sets new attributes for a block, and applies conversion to text
 function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block {
-  match(block) {
+  if (!xs.shouldRender(fcontext.fmt)) then Empty else match(block) {
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
@@ -316,8 +322,16 @@ function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block
   }
 } 
 
+function shouldRender( attrs : attrs, fmt : formatter ) :bool {
+  if (attrs.lookupKey("display","") == "none") then False
+  else match (attrs.input) {
+    Markdown(Just(mfmt)) -> mfmt == fmt
+    Raw(Just(mfmt))      -> mfmt == fmt
+    _ -> True
+  }
+}
+
 function transformItem( blocks : list<block>, attrs: attrs ) : block {
-  if (attrs.hasKey("display").maybe("",id) == "none") return Empty
   match(attrs.hasKey("li-label")) {
     Nothing   -> Item(blocks,attrs)
     Just(txt) -> Item([Line("[" + txt + "]{.li-label}")]+blocks,attrs)
@@ -325,8 +339,7 @@ function transformItem( blocks : list<block>, attrs: attrs ) : block {
 }
 
 function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatContext )  : block {
-  if (attrs.hasKey("display").maybe("",id) == "none") return Empty
-  if (attrs.hasKey("transform").maybe("",id) == "false") return Div(blocks,attrs)
+  if (attrs.lookupKey("transform","") == "false") return Div(blocks,attrs)
   match(blocks) {                       // needed for internal divs like definition lists
     Nil              -> ()
     Cons(Source,Nil) -> ()              // but with just one Source we should transform (look above for Code transforms)
@@ -340,17 +353,12 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
       Div(txt.parseTex(attrs.name,citestyle,fcontext.inlineContext.verbose >= 3)
         .parseBlocks(attrs.lineNo.incLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
-    Markdown(monly) -> {
-      match(monly) {
-        Just(mfmt)  | !(mfmt == fcontext.fmt) -> Empty
-        _ -> {
-          val adjLineNo = match (attrs.hasKey("line-adjust")) {
-            Nothing -> attrs.lineNo.incLineNo
-            Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
-          }
-          Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
-        }
+    Markdown -> {
+      val adjLineNo = match (attrs.hasKey("line-adjust")) {
+        Nothing -> attrs.lineNo.incLineNo
+        Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
       }
+      Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
     input -> {
       val adjLineNo = match (attrs.hasKey("line-adjust")) {
