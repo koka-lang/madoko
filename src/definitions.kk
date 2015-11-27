@@ -106,6 +106,10 @@ function parseDefinitionsFull(
                     val attrsy = defaultAttrs.matchRules(bname,attrs)
                     if (attrsy.name != "" && attrsy.label=="") then attrsy( label = "@"+bname ) else attrsy
                   } 
+
+    // stop processing if display=none or not the right backend
+    if (!attrsd.shouldRender(fcontext.fmt)) return Empty
+
     //adjust counters
     if (bname!="" && attrs.defaults && !attrs.hasClass("clearnum")) counters.adjustCounter(bname,"",nested)
 
@@ -304,7 +308,7 @@ function mapBlocks( blocks : list<block>,
 
 // Sets new attributes for a block, and applies conversion to text
 function setAttrs( block : block, xs : attrs, fcontext : formatContext ) : block {
-  if (!xs.shouldRender(fcontext.fmt)) then Empty else match(block) {
+  match(block) {
     HLine(_)            -> HLine(xs)                           
     Para( text )        -> Para(xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
     Heading(depth,text) -> Heading(depth,xs.transformText(text,dict(),fcontext.inlineContext.metadata),xs)
@@ -515,8 +519,9 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
         val item = "~ Begin TocItem { .tocitem" + depth.show + 
-                        "; toctarget:" + attrs.name.show +
-                        "; toclevel:" + depth.show + " }\n" +
+                        "; toc-target:" + attrs.name.show +
+                        "; toc-level:" + depth.show + 
+                        "; toc-item-line:" + txt.show + " }\n" +
                     tocline + "\n~ End TocItem\n";
         val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(depth,defaultAttrs) 
         item + subitems + tocItems(rest,outerDepth,labels,metadata,defaultAttrs)
@@ -546,7 +551,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val item = Div( [Line(tocline)], 
                         defaultAttrs.matchRules("tocitem", 
                           attrsNone.addClasses(["tocitem", "tocitem" + depth.show])
-                            .addKeyvals([("toctarget",attrs.name), ("toclevel",depth.show)]))
+                            .addKeyvals([("toc-target",attrs.name), ("toc-level",depth.show)]))
                             .expand(metadata) )
         val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(defaultAttrs) 
         Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata,defaultAttrs)))
