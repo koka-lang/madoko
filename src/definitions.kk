@@ -520,7 +520,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
         val item = "~ Begin TocItem { .tocitem" + depth.show + 
                         "; toc-target:" + attrs.name.show +
-                        "; toc-level:" + depth.show + 
+                        "; toc-item-depth:" + depth.show + 
                         "; toc-item-line:" + txt.show + " }\n" +
                     tocline + "\n~ End TocItem\n";
         val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(depth,defaultAttrs) 

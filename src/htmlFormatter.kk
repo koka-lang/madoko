@@ -230,7 +230,6 @@ function formatKeyval( key : string, value : string, tag : string ) {
     "display: inline-block; " + key + ":" + cssQuote(value) 
   }
   elif (value=="" || (key=="toc" || key=="toc-line" || key=="toc-depth" || 
-          key=="toc-target" || key=="toc-level" ||
           key=="language" || key=="bibdata" || key=="caption" || key=="cite-label")) {
     "" // nothing
   }
