@@ -528,11 +528,13 @@ function cssAttrs( attrs0 : attrs = attrsNone, body : string, defaults = [], ele
              then kvs0
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
   */            
-  body.insertCmd(kvs,"tex-cmd-before")
-      .appendCmd(kvs,"tex-cmd-after")
+  body.insertCmd(kvs,"tex-cmd-inner-before")
+      .appendCmd(kvs,"tex-cmd-inner-after")
       .applyCmd(kvs,"tex-cmd-inner")
       .applyEnv(kvs,"tex-env-inner",attrs)
       .cssInner(kvs, attrs, isBlock)
+      .insertCmd(kvs,"tex-cmd-before")
+      .appendCmd(kvs,"tex-cmd-after")
       .applyCmd(kvs,"tex-cmd")
       .applyEnv(kvs,"tex-env",attrs)
       .cssBox(kvs,isBlock)
