@@ -475,8 +475,8 @@ var Preview = (function() {
     // if all scripts are loaded:
     // execute all inline scripts and fire the "load" event.
     inlineScripts.forEach( function(text,idx) { 
-      var pre = (/^\s*\/\/[@#] *sourceURL=/.test(text) ? "" : "//@ sourceURL=preview-inline-" + idx.toString() + ".js\n");
-      appendScript(pre + text);       
+      var post = (/^\/\/[@#] *sourceURL=.*$/m.test(text) ? "" : "\n//@ sourceURL=preview-inline-" + idx.toString() + ".js\n");
+      appendScript(text + post);       
     });
     appendScript("Preview.onLoadedFinal();");
     dispatchEvent(document,"DOMContentLoaded");     
