@@ -374,8 +374,18 @@
 /* ---------------------------------------------------
    Styling for full documents
 ----------------------------------------------------*/
-body.madoko {
+body.madoko, .madoko .serif {
   font-family: Cambria,"Times New Roman","Liberation Serif","Times",serif;
+}
+.madoko .sans-serif {
+  font-family: "Segoe UI", "Optima", "Calibri", sans-serif;
+}
+.madoko .symbol {
+  font-family: "Segoe UI Symbol", Symbola, serif;
+}
+
+
+body.madoko {  
   -webkit-text-size-adjust: 100%;       /* so math displays well on mobile devices */
   text-rendering: optimizeLegibility;
 }
