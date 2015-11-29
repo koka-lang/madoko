@@ -88,7 +88,7 @@ function makeKey(k,pre,value,rawvalue,lineMap,lines,isMatching) : ckey {
         (if (isrule) then k.substr(1) else k).json + "}")
   }
   val ckey = if (key=="tex-header" || key=="tex-footer" || key=="tex-header-")   
-               then Key(key,"%mdk-data-line={" + (lines+1).show + "}\n" + rawvalue )
+               then Key(key,"%mdk-data-line={" + translateLine(lineMap,lines+1) + "}\n" + rawvalue )
                else Key(key,value)
   if (pre.isEmpty)
    then ckey
