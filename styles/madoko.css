@@ -10,11 +10,11 @@
 
 /* The table of  contents */
 .madoko .toc>.tocblock .tocblock .tocblock {
-  margin-left: 2.5em;
+  margin-left: 2.25em;
 }
 
 .madoko .toc>.tocblock .tocblock {
-  margin-left: 1.7em;
+  margin-left: 1.5em;
 }
 
 .madoko .toc>.tocblock>.tocitem {
@@ -123,7 +123,6 @@
   float: right;
 }
 
-
 /* Bibliography */
 .madoko .bibitem {
   font-size: smaller;
@@ -144,14 +143,11 @@
   text-align: right;
 }
 
-.madoko .bibliography {
-}
-
 .madoko .bibsearch {
   font-size: x-small;
   text-decoration:none;
   color: black;
-  font-family: "Segoe UI Symbol", Symbola;
+  font-family: "Segoe UI Symbol", Symbola, serif;
 }
 
 /* General */
@@ -195,41 +191,6 @@
 .madoko .framed>*:last-child {
   margin-bottom: 0pt;
 }
-
-
-/* Title, authors */
-/*
-.madoko .title {
-  font-size: xx-large;
-  font-weight: bold;
-  margin-bottom: 1ex;
-}
-
-.madoko .subtitle {
-  font-size: x-large;
-  margin-bottom: 1ex;
-  margin-top: -1ex;
-}
-
-.madoko .titleblock>* {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-.madoko .titleblock table {
-  width: 80%;
-}
-
-.madoko .authorblock .author {
-  font-size: large;
-}
-
-.madoko .titlenote {
-  margin-top: -0.5ex;
-  margin-bottom: 1.5ex;
-}
-*/
 
 /* Lists */
 
@@ -311,42 +272,42 @@
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
-.highlighted                  { color: black; }
-.highlighted .identifier      { }
-.highlighted .operators       { }
-.highlighted .keyword         { color: blue }
-.highlighted .string          { color: maroon } 
-.highlighted .string.escape   { color: gray }
-.highlighted .comment         { color: darkgreen }
-.highlighted .comment.doc     { font-style: normal }
-.highlighted .constant        { color: purple; }
-.highlighted .entity          {  }
-.highlighted .tag             { color: blue }
-.highlighted .info-token      { color: black }
-.highlighted .warn-token      { color: black }
-.highlighted .error-token     { color: darkred }
-.highlighted .debug-token     { color: gray }
-.highlighted .regexp          { color: maroon }
-.highlighted .attribute.name  { color: navy }
-.highlighted .attribute.value { color: maroon }
-.highlighted .constructor     { color: purple }
-.highlighted .namespace       { color: navy }
-.highlighted .header          { color: navy }
-.highlighted .type            { color: teal } 
-.highlighted .type.delimiter  { color: teal; } 
-.highlighted .predefined      { color: navy }
-.highlighted .invalid         { border-bottom: red dotted 1px }
-.highlighted .code            { color: maroon }
-.highlighted .code.keyword    { color: navy }
-.highlighted .typevar         { font-style: italic; }
+.colorized                  { color: black; }
+.colorized .identifier      { }
+.colorized .operators       { }
+.colorized .keyword         { color: blue }
+.colorized .string          { color: maroon } 
+.colorized .string.escape   { color: gray }
+.colorized .comment         { color: darkgreen }
+.colorized .comment.doc     { font-style: normal }
+.colorized .constant        { color: purple; }
+.colorized .entity          {  }
+.colorized .tag             { color: blue }
+.colorized .info-token      { color: black }
+.colorized .warn-token      { color: black }
+.colorized .error-token     { color: darkred }
+.colorized .debug-token     { color: gray }
+.colorized .regexp          { color: maroon }
+.colorized .attribute.name  { color: navy }
+.colorized .attribute.value { color: maroon }
+.colorized .constructor     { color: purple }
+.colorized .namespace       { color: navy }
+.colorized .header          { color: navy }
+.colorized .type            { color: teal } 
+.colorized .type.delimiter  { color: teal; } 
+.colorized .predefined      { color: navy }
+.colorized .invalid         { border-bottom: red dotted 1px }
+.colorized .code            { color: maroon }
+.colorized .code.keyword    { color: navy }
+.colorized .typevar         { font-style: italic; }
 
-.highlighted .delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
-.highlighted .number      {  }    /* .[hex,octal,binary,float] */
-.highlighted .variable    {  }  /* .[name,value]  */
-.highlighted .meta        { color: navy }      /* .[content] */
+.colorized .delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+.colorized .number      {  }    /* .[hex,octal,binary,float] */
+.colorized .variable    {  }  /* .[name,value]  */
+.colorized .meta        { color: navy }      /* .[content] */
 
-.highlighted .bold            { font-weight: bold; }
-.highlighted .italic          { font-style: italic; }
+.colorized .bold            { font-weight: bold; }
+.colorized .italic          { font-style: italic; }
 
 
 /* Pretty formatting of code */
@@ -432,7 +393,8 @@ body.preview.madoko {
 
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token-indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, 
+.madoko .monospace, .madoko .token-indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
   font-size: 0.85em;
 }

@@ -312,7 +312,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   }
 
 
-  val pattrs = if (plain) then attrs else attrs.addClass("highlighted")  
+  val pattrs = if (plain) then attrs else attrs.addClasses(["highlighted","colorized"]) // legacy: highlighted 
   val content 
     = if (attrs.hasClass("pretty") && env != "code" ) then {
         val ct = codeAlign(codeEscape(txt),context.prettyAlign).map( codeUnescape )
