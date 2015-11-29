@@ -208,9 +208,6 @@
     
     "linecontent": [ 
       
-      
-      
-      
       ["&#?\\w+;", "entity.string"],      
       ["@escapes", "entity.string" ],
       
@@ -236,7 +233,7 @@
       
       { "include": "html" }, 
       
-      ["\\w+",""]
+      ["\\w+|\\-+|[\\.,;]+",""]
     ],
     
     "html": [
@@ -255,7 +252,7 @@
     "whitespace": [
       ["[ \\t]{2}$", "invalid"],
       ["^[ \\t]+$", "invalid"],
-      ["[ \\t\\r\\n]+", "white"],
+      ["[ \\t\\r\\n]+", ""],
       ["<!--", "comment", "@comment"]
     ],
     

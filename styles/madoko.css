@@ -311,42 +311,42 @@
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
-.highlighted                        { color: black; }
-.highlighted .token.identifier      { }
-.highlighted .token.operators       { }
-.highlighted .token.keyword         { color: blue }
-.highlighted .token.string          { color: maroon } 
-.highlighted .token.string.escape   { color: gray }
-.highlighted .token.comment         { color: darkgreen }
-.highlighted .token.comment.doc     { font-style: normal }
-.highlighted .token.constant        { color: purple; }
-.highlighted .token.entity          {  }
-.highlighted .token.tag             { color: blue }
-.highlighted .token.info-token      { color: black }
-.highlighted .token.warn-token      { color: black }
-.highlighted .token.error-token     { color: darkred }
-.highlighted .token.debug-token     { color: gray }
-.highlighted .token.regexp          { color: maroon }
-.highlighted .token.attribute.name  { color: navy }
-.highlighted .token.attribute.value { color: maroon }
-.highlighted .token.constructor     { color: purple }
-.highlighted .token.namespace       { color: navy }
-.highlighted .token.header          { color: navy }
-.highlighted .token.type            { color: teal } 
-.highlighted .token.type.delimiter  { color: teal; } 
-.highlighted .token.predefined      { color: navy }
-.highlighted .token.invalid         { border-bottom: red dotted 1px }
-.highlighted .token.code            { color: maroon }
-.highlighted .token.code.keyword    { color: navy }
-.highlighted .token.typevar         { font-style: italic; }
+.highlighted                  { color: black; }
+.highlighted .identifier      { }
+.highlighted .operators       { }
+.highlighted .keyword         { color: blue }
+.highlighted .string          { color: maroon } 
+.highlighted .string.escape   { color: gray }
+.highlighted .comment         { color: darkgreen }
+.highlighted .comment.doc     { font-style: normal }
+.highlighted .constant        { color: purple; }
+.highlighted .entity          {  }
+.highlighted .tag             { color: blue }
+.highlighted .info-token      { color: black }
+.highlighted .warn-token      { color: black }
+.highlighted .error-token     { color: darkred }
+.highlighted .debug-token     { color: gray }
+.highlighted .regexp          { color: maroon }
+.highlighted .attribute.name  { color: navy }
+.highlighted .attribute.value { color: maroon }
+.highlighted .constructor     { color: purple }
+.highlighted .namespace       { color: navy }
+.highlighted .header          { color: navy }
+.highlighted .type            { color: teal } 
+.highlighted .type.delimiter  { color: teal; } 
+.highlighted .predefined      { color: navy }
+.highlighted .invalid         { border-bottom: red dotted 1px }
+.highlighted .code            { color: maroon }
+.highlighted .code.keyword    { color: navy }
+.highlighted .typevar         { font-style: italic; }
 
-.highlighted .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
-.highlighted .token.number      {  }    /* .[hex,octal,binary,float] */
-.highlighted .token.variable    {  }  /* .[name,value]  */
-.highlighted .token.meta        { color: navy }      /* .[content] */
+.highlighted .delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+.highlighted .number      {  }    /* .[hex,octal,binary,float] */
+.highlighted .variable    {  }  /* .[name,value]  */
+.highlighted .meta        { color: navy }      /* .[content] */
 
-.highlighted .token.bold            { font-weight: bold; }
-.highlighted .token.italic          { font-style: italic; }
+.highlighted .bold            { font-weight: bold; }
+.highlighted .italic          { font-style: italic; }
 
 
 /* Pretty formatting of code */
@@ -367,8 +367,8 @@
 .madoko .pretty td.expander {
   width: 100em;
 }
-.madoko .pretty .token.identifier         { font-style: italic }
-.madoko .pretty .token.constructor        { font-style: italic }
+.madoko .pretty .identifier         { font-style: italic }
+.madoko .pretty .constructor        { font-style: italic }
 
 
 /* ---------------------------------------------------
@@ -432,11 +432,11 @@ body.preview.madoko {
 
 
 /* Fix monospace display (see http://code.stephenmorley.org/html-and-css/fixing-browsers-broken-monospace-font-handling/) */
-.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token.indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
+.madoko pre, .madoko code, .madoko kbd, .madoko samp, .madoko tt, .madoko .monospace, .madoko .token-indent, .madoko .reveal pre, .madoko .reveal code, .madoko .email {
   font-family: Consolas,"Andale Mono WT","Andale Mono",Lucida Console,Monaco,monospace,monospace;
   font-size: 0.85em;
 }
-.madoko pre code, .madoko .token.indent {
+.madoko pre code, .madoko .token-indent {
   font-size: 0.95em;
 }
 

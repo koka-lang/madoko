@@ -169,11 +169,19 @@ public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : stri
 public function fmtHtmlCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
   txt.replaceAll(rxEndSpaces," ")
-}
+     .replaceAll(rxToken, fun(cap) {
+        val classes=cap.groups[1].toLower.trim.split(rxSpaces).list
+        fmtHtmlCodeToken( classes, cap.groups[2] )    
+     })
+} 
+val rxToken = regex(@"<span\s+.*?\bclass=['""]?(?:token *)?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
+val rxSpaces = regex(@"[ \t]+")
 val rxEndSpaces = regex(@"  +$")
 
-public function fmtHtmlCodeToken( classes : list<string> , txt : string ) : string {
-  "<span class='" + classes.join(" ").replaceAll("'","") + "'>" + txt + "</span>"
+public function fmtHtmlCodeToken( classes0 : list<string> , txt : string ) : string {
+  val classes = classes0.filter(fun(cname) { cname != "source" && cname!="madoko" })
+  if (classes.isNil) then txt 
+   else "<span class=" + classes.join(" ").htmlQuote + ">" + txt + "</span>"
 }
 
 /* --------------------------------------
