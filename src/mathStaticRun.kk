@@ -118,7 +118,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
 {
   val dir = texFile.dirname.norm
   val latexCmd = texCmd.quote + " --output-directory=" + (if (dir=="") then "." else dir).quote + 
-                       " --halt-on-error --interaction=batchmode" + 
+                       " --halt-on-error --interaction=batchmode --max-print-line=1000" + 
                        (if (opts.sandbox) then " --no-parse-first-line --no-shell-escape" else "") + // note: also need `openin_any:p` and `openout_any:p` in the `texmf.cnf` file!
                        " " + texFile.norm.quote 
 
@@ -173,7 +173,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
         continue(0)
       }
     }
-  },opts.processTimeout,srcFile.dirname)
+  },opts.processTimeout,srcFile.dirname,[("max_print_line","1000")])
 } 
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
 
