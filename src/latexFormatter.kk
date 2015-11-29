@@ -671,11 +671,6 @@ function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
     }
   }
   val body2 = body1
-  /*.onKey(kvs,"bookmark",fun(value,body) {
-    cmdconnect( "\\mdbookmark" + attrs.lookupKey("level","1").braced + 
-                    value.texText.braced + attrs.name.braced + "%mdk\n",
-                body )
-  })*/               
   if (isBlock) {
     val body3 = body2.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
       b.margins(kvs)
