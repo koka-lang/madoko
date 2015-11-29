@@ -473,7 +473,7 @@ function headingLevel( block : block, default : int, defaultSection : int = defa
   match(block) {
     Heading(d,_,attrs)  | !(attrs.hasClass("no-section")) -> d
     Div(_,attrs)        | attrs.hasClass("section") -> {
-      match(attrs.hasKey("data-level")) {
+      match(attrs.hasKey("data-depth")) {
         Just(value) -> value.parseInt.maybe(defaultSection,id)
         Nothing     -> defaultSection
       }
@@ -531,37 +531,6 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
     }
   }
 }
-
-/*
-function tocList( items : list<block>, defaultAttrs : rules ) : block {
-  if (items.isNil) then Empty else Div(items, defaultAttrs.matchRules( "tocblock", attrsNone.addClass("tocblock")) )
-}
-
-function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict<label>, metadata : dict<string>, defaultAttrs : rules ) : div list<block> {    
-  match(headings) {
-    Nil -> []
-    Cons(hdr,hdrs) -> {
-      val (depth,attrs) = hdr
-      if (depth > outerDepth+1) then {
-        [tocItems(headings,outerDepth+1,labels,metadata,defaultAttrs).tocList(defaultAttrs)]
-      }
-      else {
-        val (subs,rest) = hdrs.span( fun(h) { h.fst > depth } )
-        val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
-        val tocline = @"[\/" + txt + "](#" + attrs.name + ")"
-        //trace("tocline: " + attrs.source)
-        val item = Div( [Line(tocline)], 
-                        defaultAttrs.matchRules("tocitem", 
-                          attrsNone.addClasses(["tocitem", "tocitem" + depth.show])
-                            .addKeyvals([("toc-target",attrs.name), ("toc-level",depth.show)]))
-                            .expand(metadata) )
-        val subitems = tocItems(subs,depth,labels,metadata,defaultAttrs).tocList(defaultAttrs) 
-        Cons(item,Cons(subitems,tocItems(rest,outerDepth,labels,metadata,defaultAttrs)))
-      }
-    }
-  }
-}
-*/
 
 //--------------------------------------------------------
 // counters
