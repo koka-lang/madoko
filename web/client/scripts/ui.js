@@ -1589,8 +1589,10 @@ var UI = (function() {
                 self.localFullSave(); // async full save as probably files are added
               }
               if (res.runOnServer && !self.settings.disableServer && self.asyncServer 
-                    && self.lastMathDoc !== res.mathDoc) { // prevents infinite math rerun on latex error
-                self.lastMathDoc = res.mathDoc;
+                    && self.lastMathDviDoc !== res.mathDviDoc
+                    && self.lastMathPdfDoc !== res.mathPdfDoc) { // prevents infinite math rerun on latex error
+                self.lastMathDviDoc = res.mathDviDoc;
+                self.lastMathPdfDoc = res.mathPdfDoc;
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
@@ -1649,7 +1651,6 @@ var UI = (function() {
     self.asyncServer = new Util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) }, 
       function() { return false; },
       function(round) {
-        //self.lastMathDoc = self.getMathDoc();
         var ctx = {
           docname: self.docName, 
           round:round,

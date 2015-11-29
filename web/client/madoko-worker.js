@@ -59,18 +59,18 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
     });
   }
 
-  function mathDoc(files) {
+  function mathDoc(files, mode ) {
+    if (!mode) mode = "dvi";
     if (!files) return "";
     var mdocs = nub(files.split("\n")).filter( function(fname) {
       return (fname && (util.endsWith(fname,"-bib.aux") ||
-                        util.endsWith(fname,"-math-dvi.tex") || 
-                        util.endsWith(fname,"-math-pdf.tex")));
+                        util.endsWith(fname,"-math-" + mode + ".tex")));
     });
     if (!mdocs) return "";
     var mcontents = mdocs.map( function(fname) {
       return madoko.readTextFile(fname);
     });
-    return mcontents.join().replace(/\n[ \t]*%[ \t]*data-line=.*/mg, "" );
+    return mcontents.join().replace(/\n[ \t]*%[ \t]*mdk-data-line=.*/mg, "" );
   }
 
   var local = new Map(); // filename -> bool
@@ -125,7 +125,8 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
             links      : links,
             customs    : customs,
             entities   : entities,
-            mathDoc    : mathDoc(filesWrite),
+            mathDviDoc : mathDoc(filesWrite,"dvi"),
+            mathPdfDoc : mathDoc(filesWrite,"pdf"),
             err        : null,
             stdout     : stdout,
           });
