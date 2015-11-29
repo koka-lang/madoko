@@ -60,6 +60,8 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="js-footer") options(jsFooter=if(value=="") then "" else options.jsFooter.appendNL(value))
   elif (key=="tex-header") options(texHeader =if(value=="") then "" else options.texHeader.appendNL(value))
   elif (key=="tex-header-") options(texHeaderx =if(value=="") then "" else options.texHeaderx.appendNL(value))
+  elif (key=="tex-doc-header") options(texDocHeader =if(value=="") then "" else options.texDocHeader.appendNL(value))
+  elif (key=="tex-doc-header-") options(texDocHeaderx =if(value=="") then "" else options.texDocHeaderx.appendNL(value))
   elif (key=="tex-footer") options(texFooter =if(value=="") then "" else options.texFooter.appendNL(value))
   elif (key=="tex-section-num") options(texSectionNum=(value!=""))
   elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)

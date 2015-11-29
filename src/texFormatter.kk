@@ -501,8 +501,8 @@ function fmtTexFullX(body : string, options : options, metadata1 : dict<string>,
    options.texHeader.expand,
    if (basicMath) then "" else options.texHeaderx.expand,
    @"\begin{document}",
-   //(if (options.title=="") then "" else
-   //   "\\title{" + texText(options.title.expand) + "}\n"),
+   options.texDocHeader.expand,
+   if (basicMath) then "" else options.texDocHeaderx.expand,
    body, 
    options.texFooter.expand,
    @"\end{document}",""

@@ -56,6 +56,8 @@ public struct options(
   htmlMeta : string = "name=\"viewport\" content=\"initial-scale=1.0\"",  // html meta tags
   texHeader: string= "",   // literal tex header
   texHeaderx: string= "",  // literal tex header in non-math mode only
+  texDocHeader: string= "",   // literal tex header after begin{document}
+  texDocHeaderx: string= "",  // literal tex header after begin{document} in non-math mode only
   texFooter: string= "",   // literal tex footer 
   texSectionNum: bool = False, // use tex section numbering
   
