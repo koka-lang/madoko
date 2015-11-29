@@ -965,6 +965,10 @@ var UI = (function() {
                 Util.message("Cannot reload content when not connected to the internet", Util.Msg.Error);
                 return;
               }
+              if (self.editName===path) {
+                Util.message("Cannot reload a file that is currently being edited", Util.Msg.Error);
+                return;
+              }
               elem.parentNode.removeChild(elem);
               return self.removeFile(path);
             }
