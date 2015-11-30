@@ -57,9 +57,9 @@ public rectype inlineContext {
                  xfmtFootnote: (context : inlineContext, id : string, fn : footnote ) -> string,
                  xfmtTable: (context : inlineContext, head : list<row>, body : list<row>, colattrs: list<attrs>, attrs : attrs ) -> string,
                  xfmtEnv : (context : inlineContext, env : string, txt : string, attrs : attrs ) -> string,
-                 xfmtCodePlain : (context : inlineContext, txt : string ) -> string,
-                 xfmtCodeHilite : (context : inlineContext, txt : string, startLine: bool ) -> (string),
-                 xfmtCodeToken : (classes: list<string>, txt : string) -> string,
+                 xfmtCodePlain : (context : inlineContext, txt : string, startline : bool ) -> string,
+                 // xfmtCodeHilite : (context : inlineContext, txt : string, startLine: bool ) -> (string),
+                 xfmtCodeToken : (context : inlineContext, classes: list<string>, txt : string, lang : string, attrs : attrs) -> string,
                  xfmtLineInfo : (context : inlineContext, lineInfo : string ) -> string,
                  xfmtCodeTable : (context : inlineContext, ct : codeTable, attrs : attrs ) -> string,
                  xfmtMathCmd : (ctx:inlineContext,cmd:string,body:string,attrs:attrs) -> string,
@@ -104,16 +104,16 @@ public function fmtMathEnv( context : inlineContext, env : string, txt : string,
   (context.xfmtMathEnv)(context,env,txt,attrs)
 }
 
-public function fmtCodePlain( context : inlineContext, txt : string ) : string {
-  (context.xfmtCodePlain)(context,txt)
+public function fmtCodePlain( context : inlineContext, txt : string, startline : bool = True ) : string {
+  (context.xfmtCodePlain)(context,txt,startline)
 }
 
-public function fmtCodeHilite( context : inlineContext, txt : string, startLine : bool = True ) : (string) {
-  (context.xfmtCodeHilite)(context,txt,startLine)
-}
+//public function fmtCodeHilite( context : inlineContext, txt : string, startLine : bool = True ) : (string) {
+//  (context.xfmtCodeHilite)(context,txt,startLine)
+//}
 
-public function fmtCodeToken( context: inlineContext, classes : list<string>, txt : string ) : string {
-  (context.xfmtCodeToken)(classes,txt)
+public function fmtCodeToken( context: inlineContext, classes : list<string>, txt : string, lang : string, attrs : attrs ) : string {
+  (context.xfmtCodeToken)(context,classes,txt,lang,attrs)
 }
 
 public function fmtEscapePre( context : inlineContext, txt : string ) : string {
@@ -169,7 +169,7 @@ public function copy( self : inlineContext,
                        xfmtTable = self.xfmtTable,
                        xfmtEnv = self.xfmtEnv,
                        xfmtCodePlain = self.xfmtCodePlain,
-                       xfmtCodeHilite = self.xfmtCodeHilite,
+                       //xfmtCodeHilite = self.xfmtCodeHilite,
                        xfmtCodeToken = self.xfmtCodeToken,
                        xfmtLineInfo = self.xfmtLineInfo,
                        xfmtCodeTable = self.xfmtCodeTable,
@@ -180,7 +180,8 @@ public function copy( self : inlineContext,
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
                  citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,prettyAlign,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTable,
-                 xfmtEnv, xfmtCodePlain, xfmtCodeHilite, xfmtCodeToken, xfmtLineInfo, xfmtCodeTable, 
+                 xfmtEnv, xfmtCodePlain, /* xfmtCodeHilite, */ 
+                 xfmtCodeToken, xfmtLineInfo, xfmtCodeTable, 
                  xfmtMathCmd, xfmtMathEnv,
                  fmt )
 }

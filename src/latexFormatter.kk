@@ -99,28 +99,32 @@ function extractText( s : string ) : string {
 
 val regxTexCmd = regex(rxTexCmd)
 
-public function fmtLatexCodePlain( context : inlineContext, txt : string ) : string 
+public function fmtLatexCodePlain( context : inlineContext, txt : string, startline : bool ) : string 
 {
-  txt.htmlEscape(False).texText.preSpace
+  txt.htmlEscape(False).texText.preSpace(startline)
 }
 
-public function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
+public function fmtLatexCodeToken(context:inlineContext, classes : list<string>, txt : string, lang : string, attrs : attrs ) : string
+{
+  if (classes.any(fun(cname) { cname=="white" })) then {
+    "{" + txt + "}" // so preindent can match
+  }
+  else {
+    /*
+    val cclasses = classes.map( fun(cname) { cname.replaceAll(regex(@"[^a-zA-Z]+"),"") })
+                    .filter( fun(cname) { cname != "" && cname != "token" })
+    @"\mdtoken{" + cclasses.join(",") + "}{"
+    */
+    texCmd("span",txt,attrs)
+  }
+}
+
+/*
+function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
   unTokenize(txt,startLine)
 }
 
-public function fmtLatexCodeToken(classes : list<string>, txt : string ) : string
-{
-  val start = if (classes.any(fun(cname) { cname=="white" })) 
-                then "{"  // so preindent can match
-                else {
-                  val cclasses = classes.map( fun(cname) { cname.replaceAll(regex(@"[^a-zA-Z]+"),"") })
-                                  .filter( fun(cname) { cname != "" && cname != "token" })
-                  @"\mdtoken{" + cclasses.join(",") + "}{"
-                }
-  val end = "}"
-  start + txt + end     
-}
 
 function unTokenize( txt : string, startLine : bool ) : string {
   var nl := startLine
@@ -144,6 +148,7 @@ function unTokenize( txt : string, startLine : bool ) : string {
 val rxToken = regex(@"<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
 val rxBr = regex(@"\n|<br>")
 val rxTagged = regex(@"([^<>]+)|<([^>]*)>")
+*/
 
 public function preSpace( txt : string, start : bool = True ) : string {
   txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + (if (start) then @"\preindent" else @"\prespace") + "{" + cap.groups[2].length.show + "}" })

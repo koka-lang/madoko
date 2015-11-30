@@ -69,17 +69,12 @@ function extractText( s : string ) : string {
 
 val regxTexCmd = regex(rxTexCmd)
 
-public function fmtTexCodePlain( context : inlineContext, txt : string ) : string 
+public function fmtTexCodePlain( context : inlineContext, txt : string, startline : bool ) : string 
 {
-  txt.htmlEscape(False).texText.preSpace
+  txt.htmlEscape(False).texText.preSpace(startline)
 }
 
-public function fmtTexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
-{
-  unTokenize(txt,startLine)
-}
-
-public function fmtTexCodeToken(classes : list<string>, txt : string ) : string
+public function fmtTexCodeToken(context : inlineContext, classes : list<string>, txt : string, lang : string, attrs : attrs ) : string
 {
   val start = if (classes.any(fun(cname) { cname=="white" })) 
                 then "{"  // so preindent can match
@@ -94,6 +89,13 @@ public function fmtTexCodeToken(classes : list<string>, txt : string ) : string
   val end = "}"
   start + txt + end     
 }
+
+/*
+function fmtTexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
+{
+  unTokenize(txt,startLine)
+}
+
 
 function unTokenize( txt : string, startLine : bool ) : string {
   var nl := startLine
@@ -111,12 +113,13 @@ function unTokenize( txt : string, startLine : bool ) : string {
       })
       .replaceAll(rxToken, fun(cap) {
         val classes=cap.groups[1].toLower.trim.split(rxSpaces).list
-        fmtTexCodeToken( classes, cap.groups[2] )    
+        context.fmtTexCodeToken( classes, cap.groups[2], "", attrsNone )    
       })
 } 
 val rxToken = regex(@"<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
 val rxBr = regex(@"\n|<br>")
 val rxTagged = regex(@"([^<>]+)|<([^>]*)>")
+*/
 
 public function preSpace( txt : string, start : bool = True ) : string {
   txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + (if (start) then @"\preindent" else @"\prespace") + "{" + cap.groups[2].length.show + "}" })

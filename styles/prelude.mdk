@@ -20,7 +20,7 @@ Nav,.Toc  { html-elem:nav }
 Center    { .align-center }
 Remote    { tight:true; margin-bottom: 0pt }
 
-Pre       { input: pre; .para-block }
+Pre       { input: pre; .para-block; display:block }
 Code      { input: pre }
 Hr        { .madoko }
 Table     { .madoko }
@@ -395,7 +395,7 @@ name-inj  : in
 --------------------------------------------------------------------->
 
 HR       { tex-cmd: "\mdhr"; display: block }
-Pre      { tex-env: mdpre }
+Pre      { tex-env-outer: mdpre }
 Abstract { tex-env: abstract }
 H0,H1,H2,H3,H4,H5,H6  { display: block; }
 H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { 

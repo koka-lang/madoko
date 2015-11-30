@@ -161,27 +161,28 @@ function extractText( s : string ) : string {
 
 val rxTag = regex(@"<[^\n>]*>")
 
-public function fmtHtmlCodePlain( context : inlineContext, txt : string ) : string 
+public function fmtHtmlCodePlain( context : inlineContext, txt : string, startline : bool ) : string 
 {
   txt.escapePre  
 }
 
-public function fmtHtmlCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
+function fmtHtmlCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
 {
   txt.replaceAll(rxEndSpaces," ")
      .replaceAll(rxToken, fun(cap) {
         val classes=cap.groups[1].toLower.trim.split(rxSpaces).list
-        fmtHtmlCodeToken( classes, cap.groups[2] )    
+        context.fmtHtmlCodeToken( classes, cap.groups[2], "", attrsNone )    
      })
 } 
 val rxToken = regex(@"<span\s+.*?\bclass=['""]?(?:token *)?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
 val rxSpaces = regex(@"[ \t]+")
-val rxEndSpaces = regex(@"  +$")
+val rxEndSpaces = regex(@"  +$",multiline=True)
 
-public function fmtHtmlCodeToken( classes0 : list<string> , txt : string ) : string {
-  val classes = classes0.filter(fun(cname) { cname != "source" && cname!="madoko" })
+public function fmtHtmlCodeToken( context: inlineContext, classes0 : list<string> , txt : string, lang : string, attrs : attrs ) : string {
+  val classes = classes0.filter(fun(cname) { cname != "source" && cname!=lang })
   if (classes.isNil) then txt 
-   else "<span class=" + classes.join(" ").htmlQuote + ">" + txt + "</span>"
+   else // "<span class=" + classes.join(" ").htmlQuote + ">" + txt + "</span>"
+        context.fmtHtmlCmd("span",txt,attrs)
 }
 
 /* --------------------------------------

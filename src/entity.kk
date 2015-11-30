@@ -46,6 +46,21 @@ public function entityToTex( entity : string ) : string
   }
 }
 
+// Convert an html entity to a unicode number
+public function entityToNum( entity : string ) : maybe<int> 
+{
+  if (entity.startsWith("#")) {
+    val num = if (entity.startsWith("#x") || entity.startsWith("#X")) 
+           then "0" + entity.substr(1)
+           else entity.substr(1)
+    num.parseInt
+  }
+  else match(entities.find(fun(e) { e.ename == entity })) {
+    Nothing -> Nothing
+    Just(e) -> Just(e.ecode)
+  }
+}
+
 public function entityNameAsNum( name : string ) : maybe<string> 
 {
   if (name=="nl") then Just("\n")

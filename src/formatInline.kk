@@ -298,7 +298,26 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   }
 
   function colorToken( classes : list<string>, content : string ) : string {
-    if (plain || classes.isNil) then content else context.fmtCodeToken(classes,content)
+    if (plain || classes.isNil) then content else {
+      val tokAttrs = context.formatDefaults( attrsNone(elem="span").addClasses(classes) )
+      context.fmtCodeToken(classes,content,lang,tokAttrs)
+    }
+  }
+
+  function colorCode( content : string, startline : bool ) : string {
+    content.replaceAll("<br>","\n").replaceAll(rxEndSpaces," ").replaceAll( rxTokens, fun(cap) {
+      val nl = (cap.index==0 && startline) || (content.substr(cap.index-1,1) == "\n")
+      if (cap.groups[2].bool) {  // token span
+        val classes = cap.groups[2].split(" ").list
+        colorToken( classes, context.fmtCodePlain( cap.groups[3].htmlUnescape, nl ) )
+      }
+      elif (cap.groups[4].bool) { // unknown tag
+        ""
+      }
+      else { // literal
+        context.fmtCodePlain( cap.matched.htmlUnescape, nl )
+      }
+    });
   }
 
   function codeEscape( code : string ) : string {
@@ -307,7 +326,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
 
   function codeUnescape( ecode : string, col : int ) : string {
     fmtCodeUnescape( ecode, fun(s,startLine) { 
-      if (plain) then context.fmtCodePlain(s) else context.fmtCodeHilite(s, startLine /* col==0 */)
+      if (plain) then context.fmtCodePlain(s) else colorCode(s, startLine /* col==0 */)
     })
   }
 
@@ -325,7 +344,19 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
    else context.fmtEnv(env, context.fmtCmd( if (context.fmt==FmtTex) then "precode" else "code", content, cattrs), pattrs)
 }
 
+val rxEndSpaces = regex(@"  +$",multiline=True)
+val rxTokens = regex( @"([^<>]+)|" + rxToken + "|(<([^>]*)>)|(.)", ignoreCase=True)
+val rxToken  = @"(?:<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>)"
 
+function htmlUnescape( s : string ) : string {
+  s.replaceAll( rxEntity, fun(cap) {
+    match(entityToNum(cap.groups[1])) {
+      Nothing -> cap.matched;
+      Just(i) -> string(1,i.char)
+    }
+  })
+}
+val rxEntity = regex( @"&(#[xX]\d+|\w+);" )
 
 function fmtCodeUnescape( txt : string, fmt : (string,bool) -> string ) : string {
   function unspan(caps : list<matched>, i : int ) {
