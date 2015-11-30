@@ -201,7 +201,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
       else {
         mopts.printErr("warning: found citations but no bibliography file is specified.\n Hint: specify 'Bibliography: <myfile>.bib' in the metadata.")
-        redo()
+        redo() // TODO: restructure to not call redo
       }
     }
     else {

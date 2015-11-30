@@ -292,14 +292,14 @@ public function newLink( href : string, title : string = "", linkattrs : attrs =
 
 // Info for static math based on images
 public struct mathinfo (
-  imageName : string,
-  page      : int,
-  height    : double,
-  width     : double,
-  depth     : double,
-  pxwidth   : int,
-  pxheight  : int,
-  size      : int,
+  imageName : string, // name of the png
+  page      : int,    // dvi/pdf rendering page (used for caching)
+  height    : double, // total height in pt (72.27pt = 1inch)
+  width     : double, // width in pt
+  depth     : double, // depth in pt (relative to baseline)
+  pxheight  : int,    // the image height in pixels
+  pxwidth   : int,    // the image width in pixels
+  size      : int,    // length of the image data
   imageData : string   // base64 encoding or ""
 )
 

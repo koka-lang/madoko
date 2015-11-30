@@ -37,7 +37,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, im
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
-                                    pxwidth,pxheight,size,cap.groups[14])
+                                    pxheight,pxwidth,size,cap.groups[14])
   }
   return mi.freeze()
 } 
