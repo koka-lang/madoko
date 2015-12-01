@@ -236,9 +236,10 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
 public function mathPre( txt : string ) : string
 {  
   txt.replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
-        if (cap.groups.matchedOn(2)) then @"\mdMathindent{" + cap.matched.length.show + "}" 
-        elif (cap.groups.matchedOn(3)) then @"\mdMathspace{" + cap.matched.length.show + "}"
-        elif (cap.groups.matchedOn(4)) then "\\mdMathbr{}\n"
+        val n = cap.matched.length
+        if (cap.groups.matchedOn(2)) then @"\mathindent{" + n.show + "}" 
+        elif (cap.groups.matchedOn(3)) then string(n,'~') // @"\mdMathspace{" + cap.matched.length.show + "}"
+        elif (cap.groups.matchedOn(4)) then "\\\\\n" // \\mdMathbr{}\n"
         else cap.matched
       })     
      .replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-z@]+(?![a-z@]))|#([a-z][a-z\d]*(?![a-z\d]))|([a-z][a-z\d]*(?![a-z\d]))|@([a-z][a-z\d]*(?![a-z\d]))", ignoreCase=True), fun(cap) {
@@ -260,5 +261,5 @@ public function mathPre( txt : string ) : string
 public function mathPreBlock( txt : string) : string
 {
   val pre = mathPre(txt)
-  "\\begin{mdMathprearray}%mdk\n" + pre + "\n\\end{mdMathprearray}%mdk\n"     
+  "\\begin{mdmathpre}%mdk\n" + pre + "\n\\end{mdmathpre}%mdk\n"     
 }
