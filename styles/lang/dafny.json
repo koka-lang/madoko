@@ -9,9 +9,9 @@
 
   "keywords": [
     "class","trait","datatype","codatatype","newtype","type","iterator",
-    "function","predicate","copredicate",
+    "function","predicate","copredicate","inductive",
     "var","method","constructor","lemma","colemma",
-    "ghost","static","abstract","async",
+    "ghost","static","abstract","async","protected",
     "module","import","default","as","opened",
     "include",
     "extends","refines","returns","yields",
@@ -34,7 +34,8 @@
   "types": [
     "bool","char","int","nat","real",
     "set","multiset","seq","string","map",
-    "object","array" 
+    "imap","iset",
+    "object","array"
   ],
   
   "extraTypes": [
@@ -76,6 +77,7 @@
                 "@extraTypes" : "type.keyword",
                 "@default" : "identifier" }}],            
       [":=","keyword"],
+      [":|","keyword"],
       
       
       { "include": "@whitespace" },
