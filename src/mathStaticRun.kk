@@ -123,7 +123,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                        " " + texFile.norm.quote 
 
   if (runCount==0 && opts.rebuild) {
-    unlinkSync(texFile.changeExt(".aux"))
+    tryUnlinkSync(texFile.changeExt(".aux"))
   }
   opts.print("> " + latexCmd,3)
   
