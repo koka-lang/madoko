@@ -80,8 +80,11 @@ public function processContent( inName : string, outName : string, content : str
 
     // copy early since async latex may start for math
     if (mopts.copyStyles && !(xopts.sandbox)) {
-      tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
-      if (xopts.tex || mopts.mathmode.isStatic) {
+      if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
+        tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
+        ()
+      }
+      if (xopts.tex || mopts.mathmode.isStatic) { // only copy style files if generating tex or if math is static
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
                         Just(md) -> md.snd.toLower == "true"  
                         _ -> False
