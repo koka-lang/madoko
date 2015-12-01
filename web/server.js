@@ -744,7 +744,7 @@ function madokoExec( userpath, docname, flags, timeout ) {
 function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
     if (!isValidFileName(docname)) return Promise.rejected( new Error("unauthorized document name: " + docname) );
-    var flags = " -mmath-embed:512 -membed:512 -vv" + (pdf ? " --pdf" : "");
+    var flags = " -vv -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       var out = stdout + "\n" + stderr + "\n";
       console.log("result: \n" + out);      
