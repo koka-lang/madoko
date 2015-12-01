@@ -1592,11 +1592,11 @@ var UI = (function() {
                 self.stale=true;
                 self.localFullSave(); // async full save as probably files are added
               }
-              if (res.runOnServer && !self.settings.disableServer && self.asyncServer 
-                    && self.lastMathDviDoc !== res.mathDviDoc
-                    && self.lastMathPdfDoc !== res.mathPdfDoc) { // prevents infinite math rerun on latex error
-                self.lastMathDviDoc = res.mathDviDoc;
-                self.lastMathPdfDoc = res.mathPdfDoc;
+              if (res.runOnServer && !self.settings.disableServer && self.asyncServer &&
+                   ((!res.mathDviDoc || self.lastMathDviDoc !== res.mathDviDoc) ||
+                    (!res.mathPdfDoc || self.lastMathPdfDoc !== res.mathPdfDoc))) { // prevents infinite math rerun on latex error
+                if (res.mathDviDoc) self.lastMathDviDoc = res.mathDviDoc;
+                if (res.mathPdfDoc) self.lastMathPdfDoc = res.mathPdfDoc;
                 self.asyncServer.setStale();
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
@@ -3329,13 +3329,13 @@ var symbolsMath = [
           title   : "Insert a regular figure", 
           helpLink: "#sec-figure",
           content : "Here is a normal figure.",
-          attrs   : "#fig-myfigure caption=\"My caption.\"",
+          attrs   : "#fig-myfigure; caption:\"My caption.\"",
         }),
         toolBlock("left", { 
           block   : "Figure", 
           html    : "<img src='images/icon-tool-figure.png'/> Left",
           helpLink: "#sec-float",
-          attrs   : "#fig-myfigure caption=\"My caption.\" float=left width=50% margin-right=1em",
+          attrs   : "#fig-myfigure; caption:\"My caption.\"; float:left; width:50%; margin-right:1em",
           content : "Here is a left figure.",
           title   : "Insert a left-side figure with text wrap around", 
         }),
@@ -3344,14 +3344,14 @@ var symbolsMath = [
           html    : "<img src='images/icon-tool-figureright.png'/> Right",
           helpLink: "#sec-float",
           content : "Here is a right figure.",
-          attrs   : "#fig-myfigure caption=\"My caption.\" float=right width=50% margin-left=1em",
+          attrs   : "#fig-myfigure; caption:\"My caption.\"; float:right; width:50%; margin-left:1em",
           title   : "Insert a right-side figure with text wrap around", 
         }),
         toolBlock("wide", { 
           block   : "Figure", 
           helpLink: "#sec-figure",
           html    : "<img src='images/icon-tool-figurewide2.png'/> Wide",          
-          attrs   : "#fig-myfigure caption=\"My caption.\" .wide",
+          attrs   : "#fig-myfigure; caption:\"My caption.\"; .wide",
           content : "Here is a wide figure.",
           title   : "Insert a wide figure. In LaTeX such figure spans two columns (using the \\figure* command)", 
         }),
@@ -3425,7 +3425,7 @@ var symbolsMath = [
           display: "Horizontal rule",
           title: "Insert a horizontal rule",
           replacer: function(txt,rng) {
-            var content = "\n----------------------------- { width=50% }";
+            var content = "\n----------------------------- { width:50% }";
             return blockRange(rng, content);
           }
         },
@@ -3435,7 +3435,7 @@ var symbolsMath = [
         customBlock("abstract","", "The abstract."),
         customBlock("framed","","A block with a solid border."),
         customBlock("center","","A block with centered items."),
-        customBlock("columns","","~~ Column { width=\"30%\" }\nThe first column\n~~\n~~ Column\nThe second column.\n~~"),
+        customBlock("columns","","~~ Column { width:\"30%\" }\nThe first column\n~~\n~~ Column\nThe second column.\n~~"),
         { name: "comment",
           title: "(Shift-Alt-A) Comment out a section of your document",
           content: "  This is commented out.",
@@ -3487,7 +3487,7 @@ var symbolsMath = [
         toolStyle("color","=red","<color name>|#rrggbb"),
         toolStyle("background-color","=Gainsboro","<color name>|#rrggbb"),
         toolStyle("page-align","=here","top|bottom|here|forcehere","Used in LaTeX to place figures"),
-        toolStyle("float","float=right width=50% margin-left=1em","left|right","Limited support in LaTeX, but works for figures"),
+        toolStyle("float","float:right; width:50%; margin-left:1em","left|right","Limited support in LaTeX, but works for figures"),
         toolStyle("line-height","=1.5em","<length>"),
         toolStyle("vertical-align","=middle","top|middle|bottom|baseline|<length>"),
         toolStyle("display","=inline","block|inline|inline-block|hidden"),        
@@ -3623,7 +3623,7 @@ var symbolsMath = [
 
 
   function toolCss(attr,value,display,extra) {
-    var tool = toolStyle(attr,"="+value);
+    var tool = toolStyle(attr,":"+value);
     tool.name = value;
     tool.display = display||value;
     return Util.extend(tool,extra);
@@ -3734,7 +3734,7 @@ var symbolsMath = [
       title   : "Insert a figure",
       content : "  Figure contents.",
       replacer: function(txt,rng) {
-        return wrapBlock(rng,"~ Figure { #fig-figure caption=\"My figure\"}", txt, "~")
+        return wrapBlock(rng,"~ Figure { #fig-figure; caption:\"My figure\"}", txt, "~")
       }
     }
   }
@@ -4124,7 +4124,7 @@ var symbolsMath = [
     if (Util.isImageMime(mime)) {
       var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
       if (isNew) {
-        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width=auto max-width=90% }\n');
+        self.insertAfterPara(pos.lineNumber,"\n[" + stem + "]: " + name + ' "' + stem + '" { width:auto; max-width:90% }\n');
       }
       else {
         message = "referred to";
