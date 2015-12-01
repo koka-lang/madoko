@@ -17,22 +17,6 @@ xPre{
 
 [test2]{background-color=#E0E0E0}
 
-## Fancy
-
-``` Haskell { .pretty; \
-              replace:"//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g"; \
-              replace:"/_(?=[a-zA-Z])/\(_|&lowline;\)/g"; \
-              replace:"/([a-zA-Z])(\d)\b/\(\1~\2~\)/g"; \
-            }
-rep_alg         =  (  \_          -> \m ->  Leaf m
-                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
-                                                 rt = rfun m
-                                            in Bin lt rt "hi"
-                   )
-replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
-```
-
-<!--
 ## Koka
 
 ```koka
@@ -151,6 +135,8 @@ function hi() {
   <title>Monarch Workbench</title>
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- a comment
+  -->
   <style>
     body { font-family: Consolas; } /* nice */
   </style>
@@ -231,4 +217,18 @@ method M(N: int, a: array) returns (sum: int, max: int)
 (declare-fun y () Int)
 ```
 
--->
+
+## Fancy
+
+``` Haskell { .pretty; \
+              replace:"//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g"; \
+              replace:"/_(?=[a-zA-Z])/\(_|&lowline;\)/g"; \
+              replace:"/([a-zA-Z])(\d)\b/\(\1~\2~\)/g"; \
+            }
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in Bin lt rt "hi"
+                   )
+replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
+```
