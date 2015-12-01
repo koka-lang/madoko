@@ -270,15 +270,18 @@ function inlineCode( cap : matched, context ) : string {
 
 public function fmtCode( context : inlineContext, env0 : string, txt : string, attrs0 : attrs = attrsNone ) : string {
   val env = if (env0=="") then "code" else env0
+  //trace("code: " + env + ": " + attrs0.show)
   val lang   = attrs0.hasKey("language").maybe("",id)
   val attrs1 = if (lang=="") then attrs0 else attrs0.addClasses(["language-" + lang, "lang-"+lang, lang])
-  val attrs  = context.defaults.matchRules(env,attrs1)
+  val attrs  = context.formatDefaults(attrs1,env)
   //trace("code: " + env + ": " + attrs.show)
 
   val cattrs = match(attrs.hasKey("data-line-first")) {
                  Nothing -> attrsNone
                  Just(v) -> attrsNone.addKeyval("data-line",v)
                }
+
+  val pretty = attrs.hasClass("pretty")               
   val plain0 = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
   val plain = if (plain0) then plain0 else {
     if (canHilite(lang)) then False else {
@@ -299,14 +302,15 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
 
   function colorToken( classes : list<string>, content : string ) : string {
     if (plain || classes.isNil) then content else {
-      val tokAttrs = context.formatDefaults( attrsNone(elem="span").addClasses(classes) )
-      context.fmtCodeToken(classes,content,lang,tokAttrs)
+      val pclasses = if (!pretty) then classes else Cons("ptoken",classes.filter(fun(cname) { cname!="token" } ))
+      val tokAttrs = context.formatDefaults( attrsNone(elem="span").addClasses(pclasses) )
+      context.fmtCodeToken(pclasses,content,lang,tokAttrs)
     }
   }
 
   function colorCode( content : string, startline : bool ) : string {
     content.replaceAll("<br>","\n").replaceAll(rxEndSpaces," ").replaceAll( rxTokens, fun(cap) {
-      val nl = (cap.index==0 && startline) || (content.substr(cap.index-1,1) == "\n")
+      val nl = (pretty && ((cap.index==0 && startline) || (content.substr(cap.index-1,1) == "\n")))
       if (cap.groups[2].bool) {  // token span
         val classes = cap.groups[2].split(" ").list
         colorToken( classes, context.fmtCodePlain( cap.groups[3].htmlUnescape, nl ) )
@@ -326,18 +330,21 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
 
   function codeUnescape( ecode : string, col : int ) : string {
     fmtCodeUnescape( ecode, fun(s,startLine) { 
+      trace(" format: " + s)
       if (plain) then context.fmtCodePlain(s) else colorCode(s, startLine /* col==0 */)
     })
   }
 
 
-  val pattrs = if (plain) then attrs else attrs.addClasses(["highlighted","colorized"]) // legacy: highlighted 
+  val pattrs0 = if (plain) then attrs else attrs.addClasses(["highlighted","colorized"]) // legacy: highlighted 
+  val pattrs = context.formatDefaults(pattrs0)
   val content 
-    = if (attrs.hasClass("pretty") && env != "code" ) then {
+    = if (pretty && env != "code" ) then {
         val ct = codeAlign(codeEscape(txt),context.prettyAlign).map( codeUnescape )
         context.fmtCodeTable(ct,cattrs)
       }
       else codeUnescape(codeEscape(txt), 0) // todo: optimize the escape/unescape path?
+
 
   if (env=="code") 
    then context.fmtCmd("code", content, pattrs.mergeDefault(cattrs))
@@ -363,6 +370,7 @@ function fmtCodeUnescape( txt : string, fmt : (string,bool) -> string ) : string
     match(caps) {
       Nil -> txt.substr(i).fmt(i==0)
       Cons(cap,rest) -> {
+        trace(" escaped: no format: " + cap.groups[1])
         txt.substr(i,cap.index - i).fmt(i==0) + cap.groups[1] + unspan(rest, cap.next)
       }
     }
@@ -392,11 +400,12 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
                            Nothing    -> []
                          }  
 
-        val fmt3       = "<ESCAPED width=" + width.show + ">" +
-                            formatToken( classes2, 
-                              context.fmtCmd("span", context.formatInline(cap.groups[3]), 
-                                context.formatDefaults(attrsNone.addClass( "code-escaped" )))) +
-                         "</ESCAPED>"
+        val innerEsc   = context.fmtCmd("span", context.formatInline(cap.groups[3]), 
+                           context.formatDefaults(attrsNone.addClass( "code-escaped" )))
+        val escaped    = formatToken(classes2,innerEsc)
+        trace("inner: " + innerEsc)
+        trace("full : " + escaped)
+        val fmt3       = "<ESCAPED width=" + width.show + ">" + escaped + "</ESCAPED>"
 
         val (fmt4,st3) = codeEscape(src.substr1(cap.next),st2)
         (fmt1 + fmt3 + fmt4, st3)
@@ -650,14 +659,15 @@ function inlineLinkRef( isImage : bool, spaces : string, nbsp : string, txt : st
 val rxCanBeRef = regex(@"^#?[A-Za-z_][\w-]*$")
 
 // get and format default attributes
-function formatDefaults( context : inlineContext, attrs : attrs ) : attrs {
+function formatDefaults( context : inlineContext, attrs : attrs, elemName : string = "" ) : attrs {
   if (!(attrs.defaults)) return attrs
 
-  val sname = if (attrs.elem != "") then attrs.elem
-                else match (attrs.classes) {
-                  Cons(cname,_) -> cname
-                  _             -> "span"
-                } //attrs.elementName("span")
+  val sname = if (elemName != "") then elemName
+              elif (attrs.elem != "") then attrs.elem
+              else match (attrs.classes) {
+                Cons(cname,_) -> cname
+                _             -> "span"
+              } //attrs.elementName("span")
   val attrsx  = context.defaults.matchRules(sname,attrs)
   context.formatAttrs(attrsx)
 }

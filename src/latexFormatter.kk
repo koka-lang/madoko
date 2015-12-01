@@ -106,17 +106,19 @@ public function fmtLatexCodePlain( context : inlineContext, txt : string, startl
 
 public function fmtLatexCodeToken(context:inlineContext, classes : list<string>, txt : string, lang : string, attrs : attrs ) : string
 {
+  /*
   if (classes.any(fun(cname) { cname=="white" })) then {
     "{" + txt + "}" // so preindent can match
   }
   else {
+  */
     /*
     val cclasses = classes.map( fun(cname) { cname.replaceAll(regex(@"[^a-zA-Z]+"),"") })
                     .filter( fun(cname) { cname != "" && cname != "token" })
     @"\mdtoken{" + cclasses.join(",") + "}{"
     */
     texCmd("span",txt,attrs)
-  }
+  //}
 }
 
 /*
@@ -151,10 +153,17 @@ val rxTagged = regex(@"([^<>]+)|<([^>]*)>")
 */
 
 public function preSpace( txt : string, start : bool = True ) : string {
+  val txt1 = if (!start) then txt 
+              else txt.replaceAll(rxIndent, fun(cap) { 
+                     cap.groups[1] + @"\preindent{" + cap.groups[2].length.show + "}" 
+                   })
+  txt1.replaceAll("\n","\\\\\n").replaceAll(" ","~")
+  /*
   txt.replaceAll(rxIndent,fun(cap){ cap.groups[1] + (if (start) then @"\preindent" else @"\prespace") + "{" + cap.groups[2].length.show + "}" })
      .replaceAll(rxSpaces,fun(cap){ @"\prespace{" + cap.matched.length.show + "}"})
      .replaceAll("\n|<br>","\\prebr{}\n")
      .replaceAll("`","\\lsquot{}")
+  */
 }
 val rxIndent = regex(@"(^|\n)( +)")
 val rxSpaces = regex(@" +")

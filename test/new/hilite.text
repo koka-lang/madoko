@@ -2,7 +2,10 @@ Title       : Highlight test &egrave;&ccedil;
 Title Note  : &date;, &time;
 Author      : Dan Ros&egrave;n&cedil;
 
-~Pre: background-color=Ivory padding=1ex border-style=dotted border-color=black border-width=1px
+
+xPre{ 
+  background-color:Ivory; padding:1ex; border: dotted black 1px; 
+}
 
 [TITLE]
 
@@ -14,6 +17,22 @@ Author      : Dan Ros&egrave;n&cedil;
 
 [test2]{background-color=#E0E0E0}
 
+## Fancy
+
+``` Haskell { .pretty; \
+              replace:"//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g"; \
+              replace:"/_(?=[a-zA-Z])/\(_|&lowline;\)/g"; \
+              replace:"/([a-zA-Z])(\d)\b/\(\1~\2~\)/g"; \
+            }
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in Bin lt rt "hi"
+                   )
+replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
+```
+
+<!--
 ## Koka
 
 ```koka
@@ -37,7 +56,7 @@ fun show( t : tree<char> ) : string
 // Type source code in your Java here...
 public class HelloWorld { 
    public static void main(String[] args) { 
-      System.out.println("Hello, World");
+      System.out.println("Hello, World\n");
    }
 }
 ```
@@ -132,8 +151,6 @@ function hi() {
   <title>Monarch Workbench</title>
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <!-- a comment
-  -->
   <style>
     body { font-family: Consolas; } /* nice */
   </style>
@@ -213,3 +230,5 @@ method M(N: int, a: array) returns (sum: int, max: int)
 (declare-fun x () Int)
 (declare-fun y () Int)
 ```
+
+-->

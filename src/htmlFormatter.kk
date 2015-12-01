@@ -179,10 +179,12 @@ val rxSpaces = regex(@"[ \t]+")
 val rxEndSpaces = regex(@"  +$",multiline=True)
 
 public function fmtHtmlCodeToken( context: inlineContext, classes0 : list<string> , txt : string, lang : string, attrs : attrs ) : string {
-  val classes = classes0.filter(fun(cname) { cname != "source" && cname!=lang })
+  /*
+  val classes = classes0.filter(fun(cname) { cname!=lang && !(["source","token","ptoken","white"].contains(cname) }) })
   if (classes.isNil) then txt 
    else // "<span class=" + classes.join(" ").htmlQuote + ">" + txt + "</span>"
-        context.fmtHtmlCmd("span",txt,attrs)
+  */
+  context.fmtHtmlCmd("span",txt,attrs(classes=[]))
 }
 
 /* --------------------------------------
@@ -201,9 +203,9 @@ public function htmlFormat( attrs : attrs, tag : string, sanitize : bool = True 
 }
 
 function formatKeyvals( attrs : attrs, tag : string ) {
-  val kvs = attrs.keyvals.map fun(kv) {
+  val kvs = attrs.keyvals.map(fun(kv) {
     formatKeyval(kv.fst,kv.snd,tag)
-  }
+  }).filter( bool )
   val (hstyles,hattrs) = kvs.partition( fun(kv){ kv.contains(rxColon) } )
   (if (hattrs.isNil) then "" else " " + hattrs.join(" ")) + 
    (if (hstyles.isNil) then "" else " style=" + hstyles.join(";").htmlQuote )
@@ -274,9 +276,11 @@ function cssEscape(c) {
 // output a html tag with a given body and attributes
 public function tag( tagName : string, body : string, attrs : string = "" ) : string 
 {
-  "<" + tagName + 
-   attrs + // (if (attrs.startsWith(" ")) then attrs else (" " + attrs)) +  
-   ">" + body + "</" + tagName + ">"
+  if (attrs=="" && tagName=="span") then body else {
+    "<" + tagName + 
+     attrs + // (if (attrs.startsWith(" ")) then attrs else (" " + attrs)) +  
+     ">" + body + "</" + tagName + ">"
+  }
 }
 
 

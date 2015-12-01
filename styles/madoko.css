@@ -272,50 +272,6 @@
   Default style for syntax highlighting
 ---------------------------------------------------------------------------*/
 
-.colorized                  { color: black; }
-.colorized .identifier      { }
-.colorized .operators       { }
-.colorized .keyword         { color: blue }
-.colorized .string          { color: maroon } 
-.colorized .string.escape   { color: gray }
-.colorized .comment         { color: darkgreen }
-.colorized .comment.doc     { font-style: normal }
-.colorized .constant        { color: purple; }
-.colorized .entity          {  }
-.colorized .tag             { color: blue }
-.colorized .info-token      { color: black }
-.colorized .warn-token      { color: black }
-.colorized .error-token     { color: darkred }
-.colorized .debug-token     { color: gray }
-.colorized .regexp          { color: maroon }
-.colorized .attribute.name  { color: navy }
-.colorized .attribute.value { color: maroon }
-.colorized .constructor     { color: purple }
-.colorized .namespace       { color: navy }
-.colorized .header          { color: navy }
-.colorized .type            { color: teal } 
-.colorized .type.delimiter  { color: teal; } 
-.colorized .predefined      { color: navy }
-.colorized .invalid         { border-bottom: red dotted 1px }
-.colorized .code            { color: maroon }
-.colorized .code.keyword    { color: navy }
-.colorized .typevar         { font-style: italic; }
-
-.colorized .delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
-.colorized .number      {  }    /* .[hex,octal,binary,float] */
-.colorized .variable    {  }  /* .[name,value]  */
-.colorized .meta        { color: navy }      /* .[content] */
-
-.colorized .bold            { font-weight: bold; }
-.colorized .italic          { font-style: italic; }
-
-
-/* Pretty formatting of code */
-.madoko pre.pretty, .madoko code.pretty { 
-  font-family: Cambria,Times,Georgia,serif;
-  font-size: 100%;
-}
-
 .madoko .pretty table {
   border-collapse: collapse;
 }
@@ -328,9 +284,6 @@
 .madoko .pretty td.expander {
   width: 100em;
 }
-.madoko .pretty .identifier         { font-style: italic }
-.madoko .pretty .constructor        { font-style: italic }
-
 
 /* ---------------------------------------------------
    Styling for full documents

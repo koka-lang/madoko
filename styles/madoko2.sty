@@ -195,7 +195,7 @@
 \definecolor{navy}{HTML}{000080}
 \definecolor{maroon}{HTML}{800000}
 \definecolor{green}{HTML}{008000}
-\definecolor{darkgreen}{HTML}{008000}
+\definecolor{darkgreen}{HTML}{006400}
 
 \definecolor{teal}{HTML}{008080}
 \definecolor{purple}{HTML}{800080}
@@ -228,7 +228,7 @@
 \definecolor{Navy}{HTML}{000080}
 \definecolor{Maroon}{HTML}{800000}
 \definecolor{Green}{HTML}{008000}
-\definecolor{DarkGreen}{HTML}{008000}
+\definecolor{DarkGreen}{HTML}{006400}
 
 \definecolor{Teal}{HTML}{008080}
 \definecolor{Purple}{HTML}{800080}
@@ -608,18 +608,24 @@
 \newcommand\mdprecode{}
 \newlength\mdpreskip
 \setlength\mdpreskip{\mdcompactskip}
-\newenvironment{mdpre}{\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright}{\end{mdparblock}}
+
+\newlength\presp
+\settowidth\presp{\texttt{ }}
+\newcommand\prespace{\hspace*{\presp}}
+\newcommand\preindent[1]{\hspace*{#1\presp}}
+\newcommand\prebr{\strut\newline}
+
+\newenvironment{mdpre}%
+  {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright%
+   \let\\\prebr%
+   \let\nobreakspace\prespace%
+  }%
+  {\end{mdparblock}}
 
 \newlength\md@postskip
 \newenvironment{mdparblock}[1][\mdcompactskip]%
   {\setlength\md@postskip{#1}\par\addvskip{#1}\noindent}%
   {\par\addvskip{\md@postskip}}%
-
-\newlength\presp
-\settowidth\presp{\texttt{ }}
-\newcommand\prespace[1]{\hspace*{#1\presp}}
-\newcommand\preindent[1]{\hspace*{#1\presp}}
-\newcommand\prebr{\strut\newline}
 
 
 
@@ -636,12 +642,19 @@
   \mdprettyfont%
 }
 
+\newcommand{\ppreop}[1]{\,#1\,}
 \newlength{\ppresp}
 \setlength{\ppresp}{0.5ex}
 \newcommand{\ppreindent}[1]{\hspace*{3\ppresp}}%{\hspace*{#1\ppresp}}
-\newcommand{\pprespace}[1]{\hspace*{\ppresp}}
-\newcommand{\pprebr}[1]{ }
+\newcommand{\pprespace}{\hspace*{\ppresp}}
+\newcommand{\pprebr}{ }
 
+\newenvironment{mdprepretty}%
+  {\begin{mdparblock}[\mdpreskip]%
+   \setlength{\tabcolsep}{0pt}%
+   \let\nobreakspace\pprespace%
+  }%
+  {\end{mdparblock}}
 
 
 %-------------------------------------------------------------

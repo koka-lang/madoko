@@ -308,7 +308,7 @@ val cssStdNames : dict<bool> = cssStdNamesList.map(fun(s) { (s,True) }).dict
 val cssStdNamesList : list<string> = [
   "red", "lime", "blue", "yellow", "cyan", "magenta", "navy", "maroon", "green", "teal", "purple", "olive",   
   "black", "dimgray", "gray", "darkgray", "silver", "lightgray", "gainsboro", "floralwhite", "ivory", "white", 
-  "orange", "aqua", "fuchsia",
+  "orange", "aqua", "fuchsia", "darkgreen",
   "transparent","currentcolor",
 ]
 

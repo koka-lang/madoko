@@ -379,6 +379,50 @@ name-ins  : in
 name-inj  : in
 
 <!-------------------------------------------------------------------
+   Syntax highlighting
+--------------------------------------------------------------------->
+
+.token.keyword        { color: blue }
+.token.string.escape  { color: gray }
+.token.comment        { color: darkgreen }
+.token.constant       { color: purple }
+.token.constructor    { color: purple }
+.token.type           { color: teal }
+.token.type.delimiter { color: teal }
+.token.special        { color: navy }
+.token.doc            { color: gray }
+.token.meta           { color: gray }
+.token.tag            { color: navy }
+.token.attribute      { color: purple }
+.token.namespace      { color: navy }
+.token.title          { font-weight: bold }
+
+.token.string,.token.regexp   { color: maroon }
+.token.error,.token.invalid   { color: red }
+
+.token.number, .token.literal { .constant }
+
+.token.emphasis,.token.italic { font-style: italic }
+.token.strong,.token.bold     { font-weight: bold  }
+
+.ptoken.identifier    { font-style: italic }
+.ptoken.constructor   { font-style: italic }
+.ptoken.operator      { tex-cmd: "\ppreop" }
+.ptoken.comment       { color: darkgreen }
+
+@if not tex {
+  pre.pretty          { .sans-serif } 
+  .ptoken.keyword     { color: blue } 
+}
+
+@if tex {
+  pre.pretty          { .serif }
+  .token.keyword      { color: navy }
+  .ptoken.keyword     { font-family: sans-serif }
+}
+
+
+<!-------------------------------------------------------------------
    HTML commands 
 --------------------------------------------------------------------->
 @if html {
@@ -394,9 +438,11 @@ name-inj  : in
    Tex commands 
 --------------------------------------------------------------------->
 
-HR       { tex-cmd: "\mdhr"; display: block }
-Pre      { tex-env-outer: mdpre }
-Abstract { tex-env: abstract }
+HR         { tex-cmd: "\mdhr"; display: block }
+Pre        { tex-env-outer: mdpre }
+Pre.pretty { tex-env-outer-postfix: pretty }
+Abstract   { tex-env: abstract }
+
 H0,H1,H2,H3,H4,H5,H6  { display: block; }
 H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { 
   tex-cmd-postfix:"*";
@@ -449,7 +495,7 @@ Dl       { tex-env: "mddefinitions" }
 Dt       { tex-cmd: "\mddefterm"; .noindent }
 Dd       { tex-env: "mddefdata" }
 Code     { tex-cmd: "\mdcode" }
-.Pretty  { tex-cmd-inner-before: "\mdpretty" }
+
 Strong   { tex-cmd: "\textbf" }
 Em       { tex-cmd: "\emph" }
 Sup      { tex-cmd: "\mdsup" }
