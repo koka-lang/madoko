@@ -108,9 +108,9 @@ var HttpRemote = (function() {
     });
   }
 
-  HttpRemote.prototype.getRemoteTime = function( fpath ) {
+  HttpRemote.prototype.getMetaData = function( fpath ) {
     var self = this;
-    return Promise.resolved(self.date);
+    return Promise.resolved( { modifiedTime: self.date, deleted: false } );
   }
 
   HttpRemote.prototype.createSubFolder = function( path ) {

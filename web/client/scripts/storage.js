@@ -894,9 +894,16 @@ var Storage = (function() {
     });
   }
 
-  Storage.prototype._removeFile = function( fpath ) {
+  Storage.prototype.deleteFile = function( fpath ) {
     var self = this;
     var file = self.files.get(fpath);
+    if (!file) return;
+    self._removeFile( fpath );
+  }
+
+  Storage.prototype._removeFile = function( fpath ) {
+    var self = this; 
+    var file = self.files.get(fpath); 
     if (file == null) return;
     self.files.remove(fpath);
     self._fireEvent("delete", { file: file }); 
@@ -938,20 +945,26 @@ var Storage = (function() {
   Storage.prototype._syncFile = function(diff,cursors,merges,file,pullOnly) {  // : Promise<string>
     var self = this;
     if (file.nosync) return Promise.resolved( self._syncMsg(file,"no sync") );
-    return self.remote.getRemoteTime( file.path ).then( function(remoteTime) {
-      if (!remoteTime) {
-        remoteTime = new Date(0);
-      }
+    return self.remote.getMetaData( file.path ).then( function(info) {
+      var remoteTime = (info ? info.modifiedTime : new Date(0));
       if (file.createdTime.getTime() < remoteTime.getTime()) {
-        return self._pullFile(file.path, file).then( function(remoteFile) {
-          return self._syncPull(diff,cursors,merges,file,remoteFile,pullOnly);
-        });
+        // remote file is has been modified to a newer version
+        if (info && info.deleted) {
+          return self._syncDelete( file, remoteTime );
+        }
+        else {
+          return self._pullFile(file.path, file).then( function(remoteFile) {
+            return self._syncPull(diff,cursors,merges,file,remoteFile,pullOnly);
+          });
+        }
       }
       else if (pullOnly) {
+        // remote is older, and we are in pull-only mode
         return self._syncMsg(file,"no changes on server");
       }
       else {
-        return self._syncPush(file,remoteTime);
+        // push out our changes
+        return self._syncPush(file,remoteTime,(info && !info.deleted));
       }
     }).then( function(res) {
       if (!file.shareUrl && (file.mime === "application/pdf" || file.mime === "text/html")) {
@@ -964,14 +977,14 @@ var Storage = (function() {
     });;
   }
 
-  Storage.prototype._syncPush = function(file,remoteTime) {
+  Storage.prototype._syncPush = function(file,remoteTime,remoteExists) {
     var self = this;
     // file.createdTime >= remoteTime
     if (file.createdTime.getTime() === remoteTime.getTime() && !file.modified) {
       // nothing to do
       return self._syncMsg(file,"up-to-date");
     }
-    else if (remoteTime.getTime() === 0 && file.content === "") {  
+    else if (!remoteExists && file.content === "") {  
       // deleted on server and no content: don't sync
       return self._syncMsg(file,"up-to-date (empty and removed on server)");
     }
@@ -982,6 +995,18 @@ var Storage = (function() {
     else {
       // write back the client changes
       return self._syncWriteBack(file,remoteTime,"save to server")
+    }
+  }
+
+  Storage.prototype._syncDelete = function( file, remoteTime ) {
+    var self = this;
+    if (file.modified && file.content != "") {
+      Util.message( "warning: server file was deleted but the local file was updated: restore to server: " + file.path, Util.Msg.Warning);
+      return self._syncWriteBack( file, remoteTime, "restore to server" );
+    }
+    else {
+      self.deleteFile(file.path);
+      return self._syncMsg( file, "delete from server");
     }
   }
 

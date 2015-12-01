@@ -388,7 +388,7 @@ var Github = (function() {
     });
   }
 
-  Github.prototype.getRemoteTime = function( fpath ) {    
+  Github.prototype.getMetaData = function( fpath ) {    
     var self = this;
     throw "not implemented";
   }

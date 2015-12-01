@@ -970,7 +970,7 @@ var UI = (function() {
                 return;
               }
               elem.parentNode.removeChild(elem);
-              return self.removeFile(path);
+              return self.deleteFile(path);
             }
             else {
               var mime = Util.mimeFromExt(path);
@@ -1844,6 +1844,7 @@ var UI = (function() {
           });
           
           self.storage.addEventListener("update",self);
+          self.storage.addEventListener("delete",self);
           self.runner.setStorage(self.storage);
           self.spellChecker.setStorage(self.storage);
           /*
@@ -1895,10 +1896,10 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.removeFile = function(fpath) {
+  UI.prototype.deleteFile = function(fpath) {
     var self = this;
     if (!self.storage) return;
-    self.storage._removeFile(fpath);
+    self.storage.deleteFile(fpath);
     self.setStale();
   }
 
@@ -4737,9 +4738,16 @@ var symbolsMath = [
     if (ev.type === "update" && ev.file) {
       self.onFileUpdate(ev.file);
     }
+    else if (ev.type === "delete" && ev.file) {
+      self.onFileDelete(ev.file);
+    }
     else if (ev.type === "flush") {
       self.flush( ev.path ); 
     }
+  }
+
+  UI.prototype.onFileDelete = function(file) {
+    var self = this;    
   }
 
   UI.prototype.onFileUpdate = function(file) {

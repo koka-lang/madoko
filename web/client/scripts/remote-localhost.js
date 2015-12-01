@@ -284,13 +284,13 @@ var Localhost = (function() {
 
   Localhost.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return self.getRemoteTime(fpath).then( function(date) { // TODO: can we make this one request?
-      if (!date) throw new Error("file not found: " + fpath);
+    return self.getMetaData(fpath).then( function(meta) { // TODO: can we make this one request?
+      if (!meta || meta.deleted) throw new Error("file not found: " + fpath);
       return pullFile( self.mount, self.fullPath(fpath), binary ).then( function(info) {
         var file = {
           path: fpath,
           content: info.content,
-          createdTime: date,
+          createdTime: meta.modifiedTime,
           type: "file",
         };
         return file;
@@ -298,10 +298,10 @@ var Localhost = (function() {
     });
   }
 
-  Localhost.prototype.getRemoteTime = function( fpath ) {    
+  Localhost.prototype.getMetaData = function( fpath ) {    
     var self = this;
     return fileInfo( self.mount, self.fullPath(fpath) ).then( function(info) {
-      return (info && info.modified ? Date.dateFromISO(info.modified) : null);
+      return (info ? { modifiedTime: Date.dateFromISO(info.modified), deleted: (info.is_deleted ? true : false) } : null);
     });
   }
 

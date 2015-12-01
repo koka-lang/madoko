@@ -278,10 +278,10 @@ var Onedrive = (function() {
     });
   }
 
-  Onedrive.prototype.getRemoteTime = function( fpath ) {    
+  Onedrive.prototype.getMetaData = function( fpath ) {    
     var self = this;
     return infoFromPath( self.fullPath(fpath) ).then( function(info) {
-      return (info ? StdDate.dateFromISO(info.updated_time) : null);
+      return (info ? { modifiedTime: StdDate.dateFromISO(info.updated_time), deleted: false } : null);
     });
   }
 

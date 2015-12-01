@@ -203,13 +203,13 @@ var Dropbox = (function() {
 
   Dropbox.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return self.getRemoteTime(fpath).then( function(date) { // TODO: can we make this one request?
-      if (!date) return Promise.rejected("file not found: " + fpath);
+    return self.getMetaData(fpath).then( function(meta) { // TODO: can we make this one request?
+      if (!meta || meta.deleted) return Promise.rejected("file not found: " + fpath);
       return pullFile( self.fullPath(fpath), binary ).then( function(info) {
         var file = {
           path: fpath,
           content: info.content,
-          createdTime: date,
+          createdTime: meta.modifiedTime,
           globalPath: info.globalPath,
           sharedPath: info.sharedPath
         };
@@ -218,10 +218,10 @@ var Dropbox = (function() {
     });
   }
 
-  Dropbox.prototype.getRemoteTime = function( fpath ) {    
+  Dropbox.prototype.getMetaData = function( fpath ) {    
     var self = this;
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info && !info.is_deleted ? new Date(info.modified) : null);
+      return (info ? { modifiedTime: new Date(info.modified), deleted: info.is_deleted } : null);
     }, function(err) {
       if (err && err.httpCode===404) return null;
       throw err;

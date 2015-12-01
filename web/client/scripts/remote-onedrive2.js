@@ -222,10 +222,10 @@ var Onedrive2 = (function() {
     });
   }
 
-  Onedrive2.prototype.getRemoteTime = function( fpath ) {    
+  Onedrive2.prototype.getMetaData = function( fpath ) {    
     var self = this;
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info && !info.deleted ? StdDate.dateFromISO(info.lastModifiedDateTime) : null);
+      return (info ? { modifiedTime: StdDate.dateFromISO(info.lastModifiedDateTime), deleted : info.deleted } : null);
     }, function(err) {
       if (err && err.httpCode===404) return null;
       throw err;

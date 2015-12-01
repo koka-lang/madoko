@@ -80,7 +80,7 @@ var LocalRemote = (function() {
     return Promise.rejected( new Error("Not connected to cloud storage: unable to read: " + fpath) );
   }
 
-  LocalRemote.prototype.getRemoteTime = function( fpath ) {
+  LocalRemote.prototype.getMetaData = function( fpath ) {
     return Promise.resolved(null);
   }
 
