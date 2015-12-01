@@ -2,6 +2,7 @@ Title       : Highlight test &egrave;&ccedil;
 Title Note  : &date;, &time;
 Author      : Dan Ros&egrave;n&cedil;
 
+.ptoken.type { color: teal }
 
 xPre{ 
   background-color:Ivory; padding:1ex; border: dotted black 1px; 
@@ -13,9 +14,9 @@ xPre{
 
 # Highlighting code
 
-[test]{color=#E0E0E0}
+[test]{color:#E0E0E0}
 
-[test2]{background-color=#E0E0E0}
+[test2]{background-color:#E0E0E0}
 
 ## Koka
 
@@ -220,6 +221,9 @@ method M(N: int, a: array) returns (sum: int, max: int)
 
 ## Fancy
 
+Here is some code type set with `.pretty` like `let haskell`{.pretty; language:haskell}
+instead of `let haskell`{language:haskell}:
+
 ``` Haskell { .pretty; \
               replace:"//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g"; \
               replace:"/_(?=[a-zA-Z])/\(_|&lowline;\)/g"; \
@@ -232,3 +236,18 @@ rep_alg         =  (  \_          -> \m ->  Leaf m
                    )
 replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
 ```
+
+And one more example:
+
+``` haskell { .pretty; replace: "/->/\(->|&rarr;\)/g"; } 
+substitute1  :: (String, Int) -> Exp -> Exp
+substitute1  (var, val) exp = subst exp where
+  subst (Number i)       =  Number i
+  subst (Add a b)        =  Add (subst a) (subst b)
+  subst (Subtract a b)   =  Subtract (subst a) (subst b)
+  subst (Multiply a b)   =  Multiply (subst a) (subst b)
+  subst (Divide a b)     =  Divide (subst a) (subst b)
+  subst (Variable name)  =  if var == name
+                             then Number val
+                             else Variable name 
+```          

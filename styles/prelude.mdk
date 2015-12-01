@@ -405,20 +405,20 @@ name-inj  : in
 .token.emphasis,.token.italic { font-style: italic }
 .token.strong,.token.bold     { font-weight: bold  }
 
+pre.pretty, code.pretty       { .serif } 
+
 .ptoken.identifier    { font-style: italic }
 .ptoken.constructor   { font-style: italic }
 .ptoken.operator      { tex-cmd: "\ppreop" }
-.ptoken.comment       { color: darkgreen }
+.ptoken.comment       { color: gray }
+.ptoken.keyword       { .sans-serif } 
 
 @if not tex {
-  pre.pretty          { .sans-serif } 
-  .ptoken.keyword     { color: blue } 
+  pre.pretty, code.pretty { font-size: 100% }
 }
 
 @if tex {
-  pre.pretty          { .serif }
   .token.keyword      { color: navy }
-  .ptoken.keyword     { font-family: sans-serif }
 }
 
 

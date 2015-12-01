@@ -261,7 +261,7 @@ function inlineCode( cap : matched, context ) : string {
   val txt1 = if (txt0.startsWith(" `")) then txt0.substr(1) else txt0
   val txt  = if (txt0.endsWith("` ")) then txt1.substr(0,txt1.length-1) else txt1
   val attrs = if (cap.groups.matchedOn(3)) 
-               then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone 
+               then cap.groups[3].parseAttrs("code") else attrsNone 
   if (context.bench)
    then context.fmtCode( "",txt,attrs)
    else context.fmtSpan( txt,  // can be overridden by the user
@@ -335,7 +335,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   }
 
 
-  val pattrs0 = if (plain) then attrs else attrs.addClasses(["highlighted","colorized"]) // legacy: highlighted 
+  val pattrs0 = if (plain) then attrs else attrs.addClass("colorized")
   val pattrs = context.formatDefaults(pattrs0)
   val content 
     = if (pretty && env != "code" ) then {
