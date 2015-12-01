@@ -71,7 +71,7 @@ public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
   })
   Rules(rules)
 }
-val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?(\.(?:[\w\-:]+))*$")
+val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?((?:\.(?:[\w\-:]+))*)$")
 
 public function matchRules( r : rules, elementName : string, attrs : attrs ) : attrs 
 {
@@ -98,13 +98,14 @@ function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : strin
   val newrules = rules.filterx( fun(rule) {
     val (pat,value) = rule
     if (pat.matches(elemName,name,attrs.classes)) {
-      // trace("matched: " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
+      //trace("matched: weight:" + pat.weight.show + ": " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
       def := def.insert(pat.weight, value)
       False
     }
     else True
   })
-  (def.map(snd).join(" ; "),newrules)
+  val final = def.map(snd).join(" ; ")
+  (final,newrules)
 }
 
 // insert a pattern value sorted on weight, from low to high
