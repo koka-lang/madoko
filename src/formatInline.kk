@@ -330,7 +330,6 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
 
   function codeUnescape( ecode : string, col : int ) : string {
     fmtCodeUnescape( ecode, fun(s,startLine) { 
-      trace(" format: " + s)
       if (plain) then context.fmtCodePlain(s) else colorCode(s, startLine /* col==0 */)
     })
   }
@@ -370,7 +369,6 @@ function fmtCodeUnescape( txt : string, fmt : (string,bool) -> string ) : string
     match(caps) {
       Nil -> txt.substr(i).fmt(i==0)
       Cons(cap,rest) -> {
-        trace(" escaped: no format: " + cap.groups[1])
         txt.substr(i,cap.index - i).fmt(i==0) + cap.groups[1] + unspan(rest, cap.next)
       }
     }
@@ -403,8 +401,6 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
         val innerEsc   = context.fmtCmd("span", context.formatInline(cap.groups[3]), 
                            context.formatDefaults(attrsNone.addClass( "code-escaped" )))
         val escaped    = formatToken(classes2,innerEsc)
-        trace("inner: " + innerEsc)
-        trace("full : " + escaped)
         val fmt3       = "<ESCAPED width=" + width.show + ">" + escaped + "</ESCAPED>"
 
         val (fmt4,st3) = codeEscape(src.substr1(cap.next),st2)
