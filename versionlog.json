@@ -1,5 +1,18 @@
 {
   "log" : [
+    { "version": "0.9.19-beta",
+      "date": "2015-12-01",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
+      "updates": [
+         "Reduce mathematics and image size for HTML output by 2.",
+         "Syntax highlighted tokens can now be fully styled within Madoko: use `.token.keyword { color: blue }` for example.",
+         "Improved mathematics and preformatted code output for LaTeX.",
+         "Properly merge files that were deleted on the server.", 
+         "Add `Tex Doc Header` metadata key for including TeX commands after `\\begin{document}`.",
+         "Improve handling of `display:none` elements",
+         "Enable debugging of included Javascript fragments"
+      ]
+    },
     { "version": "0.9.18-beta",
       "date": "2015-11-25",
       "updates": [
