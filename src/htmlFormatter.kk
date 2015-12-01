@@ -142,7 +142,7 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
     "<img src=\"" + href + "\"" +
       (if (link.title != "") then " title=\"" + link.title.extractText.escape + "\"" else "") +
       (if (content != "") then " alt=\"" + content.escape + "\"" else "") +
-      " data-path=\"" + imgref.escape + "\"" +
+      (if (imgref.startsWith("data:image")) then "" else " data-path=\"" + imgref.escape + "\"") +
       (if (link.linkid != "") then " data-linkid=\"" + link.linkid.escape + "\"" else "") +
       link.linkattrs.htmlFormat("img",context.sanitize) + ">"
   }
@@ -184,7 +184,8 @@ public function fmtHtmlCodeToken( context: inlineContext, classes0 : list<string
   if (classes.isNil) then txt 
    else // "<span class=" + classes.join(" ").htmlQuote + ">" + txt + "</span>"
   */
-  context.fmtHtmlCmd("span",txt,attrs(classes=[]))
+  val xclasses = attrs.classes.filter( fun(cname) { !classes0.contains(cname) })
+  context.fmtHtmlCmd("span",txt,attrs(classes=xclasses))
 }
 
 /* --------------------------------------
