@@ -220,7 +220,7 @@ function texEntity( cap : matched ) {
 
 
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
-  val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
+  val table = if (attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */) then "longtable" else "tabular"
   val content = 
       "\\begin{mdcodetabular}" + ct.columns.show.braced + 
     "\\begin" + table.braced + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
@@ -237,7 +237,8 @@ function fmtLatexCodeCell( ccell : ccell ) : string {
 public function fmtLatexTable( context : inlineContext, head : list<row>, body : list<row>, colattrs : list<attrs>, attrs : attrs ) : string {
   val rows = head + body
   val td = if (attrs.hasClass("columns")) then "column" else "td"
-  val table = if (attrs.hasClass("long")) then "longtable" else "tabular"
+  val breakable = attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */
+  val table = if (breakable) then "longtable" else "tabular"
   val columns = max(1,rows.map(fun(r:row){ r.cells.length }).maximum)
   val colattrsx = (colattrs + list(colattrs.length,columns).map(fun(i){ attrsNone })).take(columns)
   val colfmts   = colattrsx.map(fun(ca) { fmtColumn(attrs,ca) })
@@ -249,7 +250,7 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
               head.fmtRows("th",colfmts,defcolwidth) + "\n" +
               body.fmtRows(td,colfmts,defcolwidth) +
               "\\end{" + table + "}\\end{mdtabular}\n"
-  attrs.cssAttrs(tbody)              
+  attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])              
 }
 
 type line {
