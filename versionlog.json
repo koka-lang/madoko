@@ -1,7 +1,7 @@
 {
   "log" : [
     { "version": "0.9.19-beta",
-      "date": "2015-12-01",
+      "date": "2015-12-02",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
       "updates": [
          "Reduce mathematics and image size for HTML output by 2.",
