@@ -289,7 +289,7 @@ var Runner = (function() {
       var message  = cap[3];
       var i = location.lastIndexOf(";");
       if (i >= 0) location = location.substr(i+1);
-      var capl = /^\s*(?:([^:]*):)?(\d+)\s*$/.exec(location);
+      var capl = /^\s*(?:((?:[^:]|:(?=[^\d]))*):)?(\d+)\s*$/.exec(location);
       if (capl) {
         var line = parseInt(capl[2]);
         var fileName = capl[1] || "";
