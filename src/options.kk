@@ -34,6 +34,7 @@ public struct options(
   version  : string = "",  // Initialized to the program version                        
   bench    : bool = False, // turn off more expensive features for benchmarking
   verbose  : int  = 0,      // be more verbose
+  verboseMaxLine : int = 78, // format lines to be no longer than 78 characters
   pedantic : bool = False, // more pedantic list style mode
   sanitize : bool = False, // never output user defined html and attributes
   xmp      : bool = False, // only process markdown between xmp tags
@@ -188,6 +189,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["installdir"], creq(fun(co,s) { co(installDir=s) },"DIR"), "Set installation directory explicitly"),
       Option( "r", ["rebuild"],  oflag(fun(o,v) { o(rebuild=v) }),    "Force rebuild bibliography, math, etc."),
       Option( "",  ["prelude"],  oreq(fun(o,s) { o(prelude=s) }, "FILE"), "Include <FILE> at start of the document"),
+      Option( "",  ["verbose-max"], oreq(fun(o,s) { o(verboseMaxLine=parseIntDefault(s,78)) }, "LEN"), "Maximum line length for messages" ),
 
       Option( "m", ["meta"],     oreq(setMeta, "key:val"), "Semi-colon separated list of metadata values")
     ]
@@ -262,14 +264,14 @@ function cutoff( s : string, n : int ) : string {
   }).unlines
 }
 
-public function indent( opts : options, s : string ) : string {
-  s.cutoff(78).lines.map(fun(line) { "  " + line }).unlines
+public function indent( opts : options, s : string, maxLine : int = 78 ) : string {
+  s.cutoff(maxLine).lines.map(fun(line) { "  " + line }).unlines
 }
 
 public function print( opts :options, msg : string, level : int = 1  ) {
-  if (opts.verbose >= level) println(opts.indent(opts.getDocName + msg))
+  if (opts.verbose >= level) println(opts.indent(opts.getDocName + msg,opts.verboseMaxLine))
 }
 
 public function printErr( opts :options, msg : string, level : int = 0  ) {
-  if (opts.verbose >= level) println(opts.indent(msg))
+  if (opts.verbose >= level) println(opts.indent(msg,opts.verboseMaxLine))
 }
