@@ -233,7 +233,7 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
 
 
 
-public function mathPre( txt : string ) : string
+public function mathPreX( txt : string ) : string
 {  
   txt.replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
         val n = cap.matched.length
@@ -258,8 +258,12 @@ public function mathPre( txt : string ) : string
       })
 }
 
+public function mathPre( txt : string ) : string {
+  "\\mathpre{" + txt.mathPreX + "}"
+}
+
 public function mathPreBlock( txt : string) : string
 {
-  val pre = mathPre(txt)
+  val pre = mathPreX(txt)
   "\\begin{mdmathpre}%mdk\n" + pre + "\n\\end{mdmathpre}%mdk\n"     
 }
