@@ -727,7 +727,10 @@ function showAsChar( i : int ) : string {
 function showUnicodeBase( value : int, start : int, end : int = start + 9, showCode : (int) -> string = showEntity ) : string {
   if (value <= 0) return "?"
   val base = (end - start) + 1
-  val entity = "&#" + (start + ((value-1) % base)).show + ";"
+  val code = (start + ((value-1) % base))
+  val entity = if (code >= 32 && code <= 127)
+                then string(1,code.char)
+                else "&#" + code.show + ";"
   replicate(entity, ((value-1) / base) + 1).join()
 }
 
