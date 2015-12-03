@@ -328,11 +328,11 @@ val rxDashes  = regex(@"^ *(\\/)?---+ *[|+]*$") //regex(@"^( |- |-- )*---+ *[- ]
 val rxDDashes = regex(@"^ *(\\/)?===+ *[|+]*$")
 
 function deriveMathAttrs( parentAttrs : attrs ) {
-  common/Attrs( classes  = parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ),
-         keyvals  = parentAttrs.keyvals.filter( fun(kv) {
-                      val key = kv.fst
-                      key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-")
-                    }))
+  attrsNone.addClasses( parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ) )
+           .addKeyvals( parentAttrs.keyvals.filter( fun(kv) {
+                          val key = kv.fst
+                          key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-")
+                        }))
 }
 
 function formatRows( rows : list<row>, 
