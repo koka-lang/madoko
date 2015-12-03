@@ -1,6 +1,6 @@
 {
   "log" : [
-    { "version": "0.9.19-beta",
+    { "version": "0.9.20-beta",
       "date": "2015-12-02",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
       "updates": [
@@ -10,7 +10,9 @@
          "Properly merge files that were deleted on the server.", 
          "Add `Tex Doc Header` metadata key for including TeX commands after `\\begin{document}`.",
          "Improve handling of `display:none` elements",
-         "Enable debugging of included Javascript fragments"
+         "Enable debugging of included Javascript fragments",
+         "Fix inline preformatted math",
+         "Fix math attribute propagation"
       ]
     },
     { "version": "0.9.18-beta",
