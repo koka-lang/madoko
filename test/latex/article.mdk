@@ -41,6 +41,31 @@ the document, and similarly with bibtex files, latex style files, etc.
 x=mc^2
 ~
 
+~ MathDefs
+\newcommand{\router}[1]{R_{#1}}
+~
+
+## Network Optimized Datalog
+
+~ Snippet
+\begin{picture}(100,70)(-10,0)
+ \thicklines
+ \put(0, 60){$A$}
+ \put(7, 63){\vector(1,0){20}}
+ \put(27, 60){$\router{1}$}
+ \put(37, 63){\vector(1,0){60}}
+ \put(100,60){$\router{2}$}
+ \put(110,63){\vector(1,0){20}}
+ \put(131,60){$B$}
+ \put(32, 59){\vector(2,-3){30}}
+ \put(68, 15){\vector(2, 3){30}}
+ \put(60, 5){$\router{3}$}
+ \put(70, 10){\vector(1,0){30}}
+ \put(105, 5){$D$}
+\end{picture}
+~
+
+
 &lipsum1;
 
 ~ Equation {#eq-test .para-end}
