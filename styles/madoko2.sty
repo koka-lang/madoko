@@ -782,7 +782,7 @@
   {\newcommand{\mdtitlerunning}[1]{\global\def\titlerunning{#1}}}% eptcs
 
 \ifdef\authorrunning%
-  {\typeout{llncs}\newcommand\mdauthorrunning[1]{\typeout{authorrunning #1}\authorrunning{#1} %needs a space for easychair..
+  {\typeout{llncs}\newcommand\mdauthorrunning[1]{\authorrunning{#1} %needs a space for easychair..
   }}% llncs
   {\newcommand{\mdauthorrunning}[1]{\global\def\authorrunning{#1}}}% eptcs
 
@@ -846,7 +846,6 @@
   \else
     \global\def\md@authorsx{#1}%
   \fi
-  \mdauthorrunning{\md@authorsx}%
 }
 
 % support \inst
@@ -854,7 +853,9 @@
   \ifdef{\inst}{\inst{#1}}{\ensuremath{^{\mbox{#1}}}}%
 }
 
-\newcommand{\mdtitle}[1]{\gdef\md@title{#1}\title{\md@title}\mdtitlerunning{#1}}
+\newcommand\md@title{}
+\newcommand\md@titlex{}
+\newcommand{\mdtitle}[1]{\gdef\md@title{#1}\gdef\md@titlex{#1}\title{\md@title}}
 \newcommand{\mdsubtitle}[1]{\gappto\md@title{\\{\Large #1}}\title{\md@title}}
 
 % legacy
@@ -862,11 +863,19 @@
   \authorinfo{#1}{\mdBrSep{#2}{#4}}{#3}%
 }
 
+% set these just before mdmaketitle
+\newcommand\mdtitleauthorrunning[2]{%
+  \onnotblank{#1}{\gdef\md@titlex{#1}}%
+  \onnotblank{#1}{\gdef\md@authorsx{#1}}%
+}
+
 % and finally maketitle
 \newcommand{\mdmaketitle}[1]{%  
+  \onnotblank{\md@titlex}{\mdtitlerunning{\md@titlex}}%
   \ifnum\value{md@authorcount}>0%
     \expandnext{\numberofauthors}{\arabic{md@authorcount}}%
     \author{\md@authors}%
+    \onnotblank{\mdauthorsx}{\mdauthorrunning{\md@authorsx}}%
     \ifdef\inst{\ifdef\institute{\institute{\md@insts}}{}}{}%
   \fi
   \ifx#1\relax\else%

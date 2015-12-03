@@ -9,6 +9,8 @@ Tex Section Num : False
 Cite Style      : numeric
 Bib Label       : True
 Math mode       : static
+Title Running   :
+Author Running  :
 
 <!-- standard elements -->
 Article   { html-elem:article }
@@ -538,7 +540,9 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
 
 @if Maketitle {
   Author        { display: inline-block  }
-  TitleBlock    { display: inline-block  }
+  TitleBlock    { display: inline-block;
+                  tex-cmd-inner-after: "\mdtitleauthorrunning{&title-running;}{&author-running;}";  
+                }
   TitleHeader,Authors,AuthorRow { tag: false }
   Author        { tex-cmd-before:"\mdxauthorstart"; tex-cmd-after:"\mdxauthorend"; display:table-cell }
   TitleBlock    { tex-cmd-before:"\mdxtitleblockstart"; tex-cmd-after:"\mdxtitleblockend"; display:block }
@@ -549,7 +553,7 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
   AuthorName    { tex-cmd:"\mdxauthorname" }
   AuthorAddress { tex-cmd:"\mdxauthoraddress" }
   AuthorNote    { tex-cmd:"\mdxauthornote" }
-  AuthorEmail   { tex-cmd:"\mdxauthoremail" }
+  AuthorEmail   { tex-cmd:"\mdxauthoremail" }  
 }
 
 @if not Maketitle {
