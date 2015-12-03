@@ -245,6 +245,9 @@ function formatKeyval( key : string, value : string, tag : string ) {
           key=="language" || key=="bibdata" || key=="caption" || key=="cite-label")) {
     "" // nothing
   }
+  elif (key == "font-family") {
+    key.escape + ":" + value.replaceAll("html-","").cssQuote  
+  }
   else {
     key.escape + ":" + value.cssQuote
   }

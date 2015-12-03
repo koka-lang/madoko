@@ -123,7 +123,7 @@ val rxCssTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxE
 public function cssSplitList( s : string ) : list<string> {
   s.findAll(rxCssListTerm).list.map(fun(cap) { cap.matched.unquote })
 }
-val rxCssListTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|[\-a-zA-Z_](?:[\w\-\t \.\@]|" + rxEsc + @")*)")
+val rxCssListTerm = regex(@"(?:'(?:[^\n\\']|" + rxEsc + @")*'|""(?:[^\n\\""]|" + rxEsc + @")*""|[\-a-zA-Z_/](?:[\w\-\t \.\@/]|" + rxEsc + @")*)")
 
 
 

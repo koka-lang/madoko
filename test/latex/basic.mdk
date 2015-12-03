@@ -1,16 +1,22 @@
-Heading base    : 2
 
 # Introduction
+[monospace]{font-family:monospace}
 
-<!--meta 
+[Consolas. Testing]{font-family: NotThere,"tex-Consolas[Scale=2,PunctuationSpace=3]",html-Consolas,monospace}
 
-.math-inline: input=mathpre
+[alldone, Luximono 0 l 1,Beramono % ^]{font-family: tex-family-T1/ul9/0.8}
 
-.test: 
-    replace=//([^\\\w])eta\b/\1\\eta//g
+[alldone, Luximono 0 l 1,Beramono % ^]{font-family: tex-family-T1/fvm/0.8}
 
-.test: color=red
--->
+[Inconsolata]{font-family: tex-family-OT1/fi4/0.80,monospace}
+
+[DejaVuSansMono]{font-family: tex-family-T1/DejaVuSansMono-TLF/0.8}
+
+[Tex Gyre Cursor]{ font-family: tex-family-T1/qcr}
+
+[Courier]{ font-family: tex-family-T1/pcrs}
+
+[Times New Roman]{font-family: "Times New Roman",tex-family-T1/cmr,serif}
 
 Here is [$x eta y$]{.test}
 

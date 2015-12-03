@@ -843,32 +843,33 @@ function cssFont( body : string, kvs : dict<string> ) : string {
     })
     .onKey( kvs,"font-family", fun(value,b) { 
       val fonts = value.cssSplitList
-      val tfonts = fonts.filter( fun(f) { f.startsWith("tex-") })
-      match(tfonts + fonts.reverse) {
-        Nil -> b
-        Cons(fam,_) -> {
-          val cmd = if (fam=="serif") then "\\rmfamily"
-                    elif (fam=="sans-serif") then "\\sffamily"
-                    elif (fam=="monospace") then "\\ttfamily"
-                    elif (fam=="cursive") then "\\cursive"
-                    elif (fam=="fantasy") then "\\fantasy"
-                    else {
-                      if (fam.startsWith("tex-family-")) then {
-                        match( fam.find( regex(@"^tex-family-(?:([A-Z]\w\w?)-)?(\w+)(?:-(l|m|b|bx))?(?:-(n|it|sl|bf|sc))?(?:[@\-](\d+\.\d+))?$"))) {
-                          Just(cap) -> 
-                            "\\mdusefont" +
-                            (if (cap.groups[5].bool) then "[" + cap.groups[5] + "]" else "") +
-                             cap.groups[1].braced + cap.groups[2].braced + cap.groups[3].braced + cap.groups[4].braced                            
-                          Nothing -> "\\fontfamily{" + fam.substr(11) + "}\\selectfont"
+      val (tfonts,xfonts) = fonts.filter(fun(f) { !f.startsWith("html-") }).partition( fun(f) { f.startsWith("tex-") })
+      val families = (tfonts + xfonts).map( fun(fam) {
+          val spec = if (fam=="serif") then "!rmfamily"
+                      elif (fam=="sans-serif") then "!sffamily"
+                      elif (fam=="monospace") then "!ttfamily"
+                      elif (fam=="cursive") then "!cursive"
+                      elif (fam=="fantasy") then "!fantasy"
+                      else {
+                        if (fam.startsWith("tex-family-")) then {
+                          match( fam.find( regex(@"^tex-family[-/](?:([A-Z]\w\w?)[-/])?([\w\-]+)(?:/(l|m|b|bx|sb|c))?(?:/(n|it|sl|bf|sc))?(?:[@/](\d+\.\d+))?$"))) {
+                            Just(cap) -> 
+                              "@" + [cap.groups[1],cap.groups[2],cap.groups[3],cap.groups[4],cap.groups[5]].join("/")
+                            Nothing -> 
+                              fam.substr(11)
+                          }
                         }
+                        elif (fam.startsWith("tex-cmd-"))
+                          then "!" + fam.substr(8)
+                          else (if (fam.startsWith("tex-")) then fam.substr(4) else fam) 
                       }
-                      elif (fam.startsWith("tex-cmd-"))
-                        then "\\" + fam.substr(8)
-                        else "\\fontspec{" + (if (fam.startsWith("tex-")) then fam.substr(4) else fam) + "}"
-                    }
-          b.braceCmd(cmd)
-        }
+          if (spec.contains(',')) then spec.braced else spec
+        })
+      val cmd = match (families) {
+        Cons(spec,Nil) | spec.startsWith("!") -> "\\" + spec.substr(1)
+        _ -> "\\mdfontfamily" + families.join(",").braced 
       }
+      b.braceCmd(cmd)
     })
 }
 

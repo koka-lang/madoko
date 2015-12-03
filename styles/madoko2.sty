@@ -62,7 +62,7 @@
     \RequirePackage{lmodern}%
     \RequirePackage[T1]{fontenc}%
     \RequirePackage[utf8]{inputenc}
-    \providecommand{\fontspec}[2][]{}
+    \providecommand{\fontspec}[2][]{\toggletrue{md@fontsubstituted}}
     \fi\fi
   }{%
     \RequirePackage[T1]{fontenc}%
@@ -444,9 +444,20 @@
 
 %\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
 
-\newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
-\newcommand*\mdsetfontscale[2]{\csdef{#1@Scale}{#2}\csdef{#1@scale}{#2}}% some fonts use '@scale' and others `@Scale`.
 \providecommand\lfseries{\mdseries}
+\newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
+\newcommand*\mdsetfontscale[2]{%
+  \csdef{#1@Scale}{#2}%
+  \csdef{#1@scale}{#2}% 
+  \eifstrequal{#1}{fi4}% inconsolata
+    {\def\fifour@scaled{s*[#2]}}%
+  {\eifstrequal{#1}{DejaVuSansMono-TLF}%
+    {\def\DejaVuSansMono@scale{#2}}%    
+  {\eifstrequal{#1}{pcrs}%
+    {\def\Cr@scale{#2}}%
+  {}}}%
+}% some fonts use '@scale' and others `@Scale`.
+
 \newcommand*\mdusefont[5][]{%
   \onnotblank{#1}{\mdsetfontscale{#3}{#1}}%
   \onnotblank{#2}{\fontencoding{#2}}%
@@ -471,6 +482,86 @@
     {\PackageWarning{madoko}{No fantasy font available. Please use meta-key "Package: auncial" in order to \MessageBreak use fantasy fonts (or define a "\fantasy" command)\MessageBreak}%
      \textit{#1}%
     }%
+}
+
+% Provide a generic \mdfontfamily command that picks the first font that is available
+\newtoggle{md@fontsubstituted}
+\def\md@usefamily@#1/#2/#3/#4/#5/#6\relax{%
+  \mdusefont[#5]{#1}{#2}{#3}{#4}%
+  % figure out which font was actually set -- we need to split the fontname
+  \bgroup
+    \expandafter\expandafter\expandafter\split@name\expandafter\string\font@name\@nil
+    \edef\md@doafter{\noexpand\def\noexpand\md@selectedfamily{\f@family}}%
+    \expandafter\egroup\md@doafter
+  % and test if the selected family is matching
+  \eifstrequal{\md@selectedfamily}{#2}{}{%
+    \toggletrue{md@fontsubstituted}%
+  }%
+}
+
+\def\md@fontspec@#1[#2]#3\relax{
+  \fontspec{#1}[#2]%
+}
+
+\def\md@usefontfamily@#1#2\relax{%
+  \togglefalse{md@fontsubstituted}%
+  \if#1@\relax\relax
+    \md@usefamily@#2/////\relax%
+  \else\if#1!\relax\relax
+    \ifcsdef{#2}%
+      {\csname#2\endcsname}%
+      {\toggletrue{md@fontsubstituted}\PackageWarning{madoko2}{Font command '#2' is not defined}}%
+  \else
+    \md@fontspec@#1#2[]\relax%
+  \fi\fi
+}
+
+\newcommand\md@usefontfamily[1]{%
+  \expandafter\md@usefontfamily@#1\relax
+}
+
+\newcount\md@interaction
+\newcommand\mdfontfamily[1]{%
+  \md@interaction=\interactionmode
+  \batchmode
+  \let\md@selectedfont\relax%
+  \let\md@substitutedfont\relax%
+  \def\do##1{%
+    \ifcsdef{md@fontnotfound@##1}{}{%
+      %\typeout{try: ##1}%
+      \bgroup
+      \ifdef\suppressfontnotfounderror{\suppressfontnotfounderror=1}{}%
+      \md@usefontfamily{##1}%
+      \iftoggle{md@fontsubstituted}%
+       {\egroup
+        \ifx\md@substitutedfont\relax\relax
+          \def\md@substitutedfont{##1}% use as backup in case no other font can be found..
+        \fi%
+       }%
+       {\iffontchar\font32\relax% assume all fonts defined a space character...
+          \egroup
+          \typeout{found font: ##1}%
+          \def\md@selectedfont{##1}% found it!
+          \expandafter\listbreak
+        \else
+          \egroup
+          \csgdef{md@fontnotfound@##1}{}% remember we did not find the font
+        \fi
+       }%
+    }%
+  }%
+  \docsvlist{#1}%
+  \interactionmode=\md@interaction
+  \ifx\md@selectedfont\relax\relax%
+    \ifx\md@substitutedfont\relax\relax%
+      \PackageWarning{madoko2}{Could not find any font for font-family:'#1'}%
+    \else
+      \PackageWarning{madoko2}{Using substituted font for font-family:'\md@substitutedfont'}%
+      \md@usefontfamily{\md@substitutedfont}%
+    \fi
+  \else
+    \md@usefontfamily{\md@selectedfont}%
+  \fi
 }
 
 % ---------------------------------------------------
