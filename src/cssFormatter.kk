@@ -137,7 +137,7 @@ public function braced( s : string ) : string {
 val rxEndComment = regex(@"(^|[^\\])%.*$")
 
 public function isBraced( s : string ) : bool {
-  s.startsWith("{") && s.endsWith("}")
+  s.startsWith("{") && (s.indexOf("}") == s.length-1)
 }
 
 public function cssColorCmd( v : string ) : string {
