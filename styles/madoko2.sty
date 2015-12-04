@@ -119,6 +119,13 @@
 \newcommand\expandnextii[3]{\expandnext{\expandnext{#1}{#2}}{#3}}
 \newcommand\expandnextiii[4]{\expandnext{\expandnextii{#1}{#2}{#3}}{#4}}
 
+% keep a command after ending a group
+\newcommand\@egroupkeep[2]{\expandafter\egroup\def#1{#2}}
+\newcommand\egroupkeep[1]{%
+  \expandnext{\@egroupkeep{#1}}{#1}%
+}
+
+
 \newcommand\leavehmode{\ifhmode\par\fi}
 \newlength{\px}\setlength{\px}{0.4pt}% assume 180 dpi
 
@@ -458,7 +465,7 @@
   {}}}%
 }% some fonts use '@scale' and others `@Scale`.
 
-\newcommand*\mdusefont[5][]{%
+\newrobustcmd*\mdusefont[5][]{%
   \onnotblank{#1}{\mdsetfontscale{#3}{#1}}%
   \onnotblank{#2}{\fontencoding{#2}}%
   \onnotblank{#3}{\fontfamily{#3}}%
@@ -485,14 +492,16 @@
 }
 
 % Provide a generic \mdfontfamily command that picks the first font that is available
+
 \newtoggle{md@fontsubstituted}
 \def\md@usefamily@#1/#2/#3/#4/#5/#6\relax{%
-  \mdusefont[#5]{#1}{#2}{#3}{#4}%
+  \def\md@fontselect{\mdusefont[#5]{#1}{#2}{#3}{#4}}%
+  \md@fontselect
   % figure out which font was actually set -- we need to split the fontname
   \bgroup
     \expandafter\expandafter\expandafter\split@name\expandafter\string\font@name\@nil
-    \edef\md@doafter{\noexpand\def\noexpand\md@selectedfamily{\f@family}}%
-    \expandafter\egroup\md@doafter
+    \let\md@selectedfamily\f@family
+  \egroupkeep\md@selectedfamily    
   % and test if the selected family is matching
   \eifstrequal{\md@selectedfamily}{#2}{}{%
     \toggletrue{md@fontsubstituted}%
@@ -500,48 +509,62 @@
 }
 
 \def\md@fontspec@#1[#2]#3\relax{
-  \fontspec{#1}[#2]%
+  \def\md@fontselect{\fontspec{#1}[#2]}%
+  \md@fontselect
 }
 
 \def\md@usefontfamily@#1#2\relax{%
-  \togglefalse{md@fontsubstituted}%
+  \togglefalse{md@fontsubstituted}%         
   \if#1@\relax\relax
     \md@usefamily@#2/////\relax%
   \else\if#1!\relax\relax
+    \def\md@fontselect{\csuse{#2}}%
     \ifcsdef{#2}%
-      {\csname#2\endcsname}%
+      {\md@fontselect}%
       {\toggletrue{md@fontsubstituted}\PackageWarning{madoko2}{Font command '#2' is not defined}}%
   \else
     \md@fontspec@#1#2[]\relax%
   \fi\fi
 }
-
 \newcommand\md@usefontfamily[1]{%
   \expandafter\md@usefontfamily@#1\relax
 }
 
 \newcount\md@interaction
 \newcommand\mdfontfamily[1]{%
+  \ifcsdef{md@fontselect@#1}{}{\md@fontfamily@{#1}}%
+  \csuse{md@fontselect@#1}%
+}
+
+\newcommand\md@fontfamily@[1]{%
+  \wlog{resolve font stack: #1}%
   \md@interaction=\interactionmode
   \batchmode
-  \let\md@selectedfont\relax%
-  \let\md@substitutedfont\relax%
+  \let\md@fontselect\relax
+  \let\md@fontitem\relax
+  \let\md@fontsubst\relax
+  \let\md@fontitemsubst\relax
   \def\do##1{%
     \ifcsdef{md@fontnotfound@##1}{}{%
-      %\typeout{try: ##1}%
       \bgroup
-      \ifdef\suppressfontnotfounderror{\suppressfontnotfounderror=1}{}%
-      \md@usefontfamily{##1}%
+      \ifcsdef{md@fontsubst@##1}%
+        {\toggletrue{md@fontsubstituted}\letcs\md@fontselect{md@fontsubst@##1}}%
+        {\ifdef\suppressfontnotfounderror{\suppressfontnotfounderror=1}{}%
+         \md@usefontfamily{##1}%
+        }%
       \iftoggle{md@fontsubstituted}%
-       {\egroup
-        \ifx\md@substitutedfont\relax\relax
-          \def\md@substitutedfont{##1}% use as backup in case no other font can be found..
+       {\global\cslet{md@fontsubst@##1}\md@fontselect% remember this font gets substituted
+        \ifx\md@fontsubst\relax\relax
+          \let\md@fontsubst\md@fontselect% use as backup in case no other font can be found..
+          \egroupkeep\md@fontsubst
+          \def\md@fontitemsubst{##1}%
+        \else
+          \egroup
         \fi%
        }%
-       {\iffontchar\font32\relax% assume all fonts defined a space character...
-          \egroup
-          \typeout{found font: ##1}%
-          \def\md@selectedfont{##1}% found it!
+       {\iffontchar\font32\relax% assume all fonts define a space character...
+          \egroupkeep\md@fontselect
+          \def\md@fontitem{##1}%    
           \expandafter\listbreak
         \else
           \egroup
@@ -552,16 +575,17 @@
   }%
   \docsvlist{#1}%
   \interactionmode=\md@interaction
-  \ifx\md@selectedfont\relax\relax%
-    \ifx\md@substitutedfont\relax\relax%
-      \PackageWarning{madoko2}{Could not find any font for font-family:'#1'}%
+  \ifx\md@fontselect\relax\relax%
+    \ifx\md@fontsubst\relax\relax%
+      \PackageWarning{madoko2}{Could not find any font for font-family:'#1'}%      
     \else
-      \PackageWarning{madoko2}{Using substituted font for font-family:'\md@substitutedfont'}%
-      \md@usefontfamily{\md@substitutedfont}%
+      \PackageWarning{madoko2}{Using substituted font for font-family: '\md@fontitemsubst'}%
+      \let\md@fontselect\md@fontsubst
+      \let\md@fontitem\md@fontitemsubst
     \fi
-  \else
-    \md@usefontfamily{\md@selectedfont}%
   \fi
+  \expandnext{\csgdef{md@fontselect@#1}}{\md@fontselect}%
+  \wlog{resolved font stack '#1' to: \md@fontitem}%
 }
 
 % ---------------------------------------------------

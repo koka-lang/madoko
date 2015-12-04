@@ -4,11 +4,11 @@
 
 [Consolas. Testing]{font-family: NotThere,"tex-Consolas[Scale=2,PunctuationSpace=3]",html-Consolas,monospace}
 
-[alldone, Luximono 0 l 1,Beramono % ^]{font-family: tex-family-T1/ul9/0.8}
+[alldone, Luximono 0 l 1,Beramono % ^]{font-family: tex-family-T1/ul9/0.8, tex-family-T1/fvm/0.8}
 
 [alldone, Luximono 0 l 1,Beramono % ^]{font-family: tex-family-T1/fvm/0.8}
 
-[Inconsolata]{font-family: tex-family-OT1/fi4/0.80,monospace}
+[Inconsolata]{font-family: tex-family-T1/fi4/0.80,monospace}
 
 [DejaVuSansMono]{font-family: tex-family-T1/DejaVuSansMono-TLF/0.8}
 

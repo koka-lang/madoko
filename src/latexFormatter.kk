@@ -644,7 +644,9 @@ function braceCmd( body : string, cmd : string ) : string {
 }
 
 function unbrace( s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) then s.substr(1,s.length-2) 
+  if (s.startsWith("{") && s.endsWith("}")) then {
+    if (s.indexOf("}") < s.length-1) then s else s.substr(1,s.length-2) 
+  }
   elif (s.contains(rxCommentEnd)) then s + "\n"
   else s
 }
