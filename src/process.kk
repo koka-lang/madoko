@@ -25,6 +25,6 @@ public function system( cmd : string, callback : (int,string,string) -> <io|e> (
 
 external systemx( cmd : string, callback : (int,string,string) -> <io|e> (), timeout : int = 0, cwd : string = "", env : maybe<dict<string>> = Nothing ) : <io|e> () {
   cs inline "ShellCommand.system(#1,#2,#3,#4)" // TODO: environment
-  js inline "child_process.exec(#1,{timeout:#3,cwd:(#4!=''?#4:null),env:(#5?(#5).unJust:null),windowsVerbatimArguments:true},function(err,stdout,stderr) { (#2)(err?err.code:0,stdout,stderr); });"
+  js inline "child_process.exec(#1,{timeout:#3,cwd:(#4!=''?#4:undefined),env:(#5?(#5).unJust:undefined),windowsVerbatimArguments:true},function(err,stdout,stderr) { (#2)(err?err.code:0,stdout,stderr); });"
 }
 

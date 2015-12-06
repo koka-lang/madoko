@@ -13,6 +13,7 @@ import std/string
 import std/regex
 import std/path
 import std/dict
+import std/env
 import common
 import options
 import texFormatter
@@ -173,7 +174,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
         continue(0)
       }
     }
-  },opts.processTimeout,srcFile.dirname,[("max_print_line","1000")])
+  },opts.processTimeout,srcFile.dirname,std/env/env.list + [("max_print_line","1000")])
 } 
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^\s*(?:Here is how much of \w*TeX's memory you used:))",multiline=True,ignoreCase=True)
 
