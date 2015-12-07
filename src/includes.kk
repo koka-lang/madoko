@@ -170,7 +170,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
       Just(cap) -> {
         val start = cap.groups[1].parseInt().maybe(1,id)
         if (start<=0) return (incfile,0,"")
-        val end   = max(start,cap.groups[2].parseInt().maybe(start,id))
+        val end   = max(start,cap.groups[2].parseIntDefault(start + 1000000)
         val fragment = content.lines.list.drop(start-1).take((end - start) + 1).join("\n")
         //trace("include: " + start.show + "," + end.show + ":\n" + fragment)
         (incfile,start,fragment)
