@@ -18,6 +18,40 @@
 
 [Times New Roman]{font-family: "Times New Roman",tex-family-T1/cmr,serif}
 
+[Latin Modern Dunhill]{ font-family: tex-family-T1/lmdh}
+
+[TeX Gyre Termes]{ font-family: tex-family-T1/qtm}
+
+[TeX Gyre Pagella]{ font-family: tex-family-T1/qpl}
+
+[TeX Gyre Bonum]{ font-family: tex-family-T1/qbk}
+
+[TeX Gyre Schola]{ font-family: tex-family-T1/qcs}
+
+[TeX Times]{ font-family: tex-family-T1/ptm}
+
+[TeX Gyre Adventor]{ font-family: tex-family-T1/qag/0.8}
+
+[TeX Gyre Heros]{ font-family: tex-family-T1/qhv}
+
+[TeX Latin Modern Sans]{ font-family: tex-family-T1/lmss}
+
+[TeX Latin Modern Typewriter]{ font-family: tex-family-T1/lmtt}
+
+[Bookman]{ font-family: tex-family-T1/pbk/0.8}
+
+[Palatino]{ font-family: tex-family-T1/ppl/2.0}
+
+[Charter]{ font-family: tex-family-T1/bch/0.5}
+
+[Utopia]{ font-family: tex-family-T1/put/2.0}
+
+[Helvetia]{ font-family: tex-family-T1/phv}
+
+
+
+
+
 Here is [$x eta y$]{.test}
 
 A test paragraph.
