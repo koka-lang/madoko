@@ -1,5 +1,6 @@
 module includes 
 
+import std/string
 import std/log
 import std/regex
 import std/path
@@ -21,8 +22,11 @@ public function include( text : string, fast : bool, inName : string, outName : 
   val includes : mdict<global,string> = mdict()
   val snippets : mdict<global,snippet> = mdict()
 
-  val rxSnippetStart = regex(options.extractStart, multiline=True, ignoreCase=True)
-  val rxSnippetEnd = regex(options.extractEnd, multiline=True, ignoreCase=True)
+  val snippetStart = text.find(rxFragStart).maybe(options.extractStart,fun(cap) { cap.groups[1].trim })
+  val snippetEnd   = text.find(rxFragEnd).maybe(options.extractEnd,fun(cap) { cap.groups[1].trim })
+
+  val rxSnippetStart = regex(snippetStart, multiline=True, ignoreCase=True)
+  val rxSnippetEnd = regex(snippetEnd, multiline=True, ignoreCase=True)
 
   //trace("snippet start: " + rxSnippetStart.source)
   //trace("snippet end: " + rxSnippetEnd.source)
@@ -273,6 +277,9 @@ public function include( text : string, fast : bool, inName : string, outName : 
 val rxInclude = regex(@"^ {0,3}\[(?:INCLUDE *(?:= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s:=\]]+)) *)?(?:[:] *([\w\-]+))?)\] *(?=\n|$)",multiline=True)
 val rxBib     = regex(@"^ {0,3}\[BIB *(?:= *(?:""([^""\n]+)""|'([^'\n]+)'|([^\s:=\]]+)) *)?\] *(?=\n|$)",multiline=True)
 val rxPrelude = regex(@"^ {0,3}[Pp]relude[ \t]*:[ \t]*(\S*)[ \t\r]*(\n|$)",multiline=True)
+
+val rxFragStart = regex(@"^Fragment *Start *: *(.+)$", ignoreCase=True, multiline=True)
+val rxFragEnd   = regex(@"^Fragment *End *: *(.+)$", ignoreCase=True, multiline=True)
 
 public function searchReadTextFileDef( fname : string, def : string, dirs : list<string>, ext : string = "", required : bool = True ) : io string {
   match(trySearchReadTextFile(fname,dirs,ext,required)) {
