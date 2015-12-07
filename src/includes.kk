@@ -20,8 +20,12 @@ public function include( text : string, fast : bool, inName : string, outName : 
 
   val includes : mdict<global,string> = mdict()
   val snippets : mdict<global,snippet> = mdict()
+
   val rxSnippetStart = regex(options.extractStart, multiline=True, ignoreCase=True)
   val rxSnippetEnd = regex(options.extractEnd, multiline=True, ignoreCase=True)
+
+  //trace("snippet start: " + rxSnippetStart.source)
+  //trace("snippet end: " + rxSnippetEnd.source)
 
   function warning( msg, lineNo = 0, fileName = "") {
     options.printErr( "warning: " + 
@@ -31,38 +35,40 @@ public function include( text : string, fast : bool, inName : string, outName : 
              msg )
   }
 
-  function extractSnippet( name, content, fname, lineNo, acc = [] ) : io (list<string>,int) {
+  function extractSnippet( name, content, fname, lineNo, acc = [] ) : io () {
+    function saveSnippet() {
+      if (snippets[name].isJust) {
+        warning( "snippet " + name + " is redefined", lineNo, fname )
+      }
+      snippets[name] := Snippet(fname, lineNo, acc.reverse.join("\n"))
+    }
+
     match(content) {
       Nil -> {
         warning("unclosed snippet: " + name, lineNo, fname )
-        (Nil,lineNo)
+        saveSnippet()
       }
       Cons(line,lines) -> {
         match(line.find(rxSnippetEnd)) {
           Nothing -> match(line.find(rxSnippetStart)) {
             Nothing -> {
+              // add line to snippet and continue
               extractSnippet( name, lines, fname, lineNo+1,  Cons(line,acc))
             }
-            Just(cap) -> {
-              // embedded snippet: extract separately 
-              extractSnippet( cap.groups[1].toLower(), lines, fname, lineNo+1 )
-              // and for this snippet, ignore this line
-              extractSnippet( name, lines, fname, lineNo+1, acc )
+            Just -> {
+              // other snippet start, ignore this line
+              extractSnippet( name, lines, fname, lineNo+1, Cons("",acc) )
             }
           }
           Just(cap) -> {
             val cname = cap.groups[1].toLower()
             if (name == cname) {
-              // end of snippet
-              if (snippets[name].isJust) {
-                warning( "snippet " + name + " is redefined", lineNo, fname )
-              }
-              snippets[name] := Snippet(fname, lineNo, acc.reverse.join("\n"))
-              (lines,lineNo+1)
+              // end of snippet, done.
+              saveSnippet()
             }
             else {
               // end of another snippet, ignore it
-              extractSnippet( name, lines, fname, lineNo+1, acc )
+              extractSnippet( name, lines, fname, lineNo+1, Cons("",acc) )
             }
           }
         }
@@ -79,8 +85,8 @@ public function include( text : string, fast : bool, inName : string, outName : 
           Nothing -> findSnippets( lines, fname, lineNo+1 )
           Just(cap) -> {
             val name = cap.groups[1].toLower()
-            val (rest, endLineNo) = extractSnippet( name, lines, fname, lineNo+1 )
-            findSnippets( rest, fname, endLineNo )
+            extractSnippet( name, lines, fname, lineNo+1 )
+            findSnippets( lines, fname, lineNo+1 )
           }
         }
       }
@@ -170,7 +176,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
       Just(cap) -> {
         val start = cap.groups[1].parseInt().maybe(1,id)
         if (start<=0) return (incfile,0,"")
-        val end   = max(start,cap.groups[2].parseIntDefault(start + 1000000)
+        val end   = max(start-1,cap.groups[2].parseIntDefault(start + 1000000))
         val fragment = content.lines.list.drop(start-1).take((end - start) + 1).join("\n")
         //trace("include: " + start.show + "," + end.show + ":\n" + fragment)
         (incfile,start,fragment)
