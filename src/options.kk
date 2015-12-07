@@ -114,8 +114,8 @@ public struct options(
   lineNoWeb     : bool = False,             // emit line no info in html pages. 
   copyStyles    : bool = True,              // copy standard style files
   lineMap       : lineMap = End,            // keep track of line numbers in include files      
-  extractStart  : string = @"^(?:\/\/|--|[#%]) *BEGIN *: *(\w+) *$",
-  extractEnd    : string = @"^(?:\/\/|--|[#%]) *END *(?:[:] *(\w+) *)?$"
+  extractStart  : string = @"^(?:\/\/|--|[#%]|[<]!--|\(\*) *BEGIN *: *(\w+) *(?:--[>]|\*\))?$",
+  extractEnd    : string = @"^(?:\/\/|--|[#%]|[<]!--|\(\*) *END *(?:[:] *(\w+) *)?(?:--[>]|\*\))?$"
 );
 
 public function getPdflatex( opts : options ) : string {
