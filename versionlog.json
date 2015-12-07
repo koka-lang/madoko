@@ -1,5 +1,16 @@
 {
   "log" : [
+    { "version": "0.9.21-beta",
+      "date": "2015-12-07",
+      "updates": [
+         "Improved LaTeX font family specifications as 'tex-family-[&lt;encoding>/]&lt;family>[/&lt;series>][/&lt;shape>][/&lt;scaling>]'",
+         "Improved LaTeX general font specifications as 'tex-&lt;font>[&lt;font-options>]",
+         "Allow font-family stack to work in LaTeX too",
+         "Bug fix: pass full environment on MacOSX to LaTeX subprocesses",
+         "Allow overlapping and unclosed include fragments",
+         "Add HTML and ML style comments to include fragments"
+      ]
+    },
     { "version": "0.9.20-beta",
       "date": "2015-12-02",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
