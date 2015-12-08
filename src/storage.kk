@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
-  Copyright 2013 Microsoft Corporation.
+  Copyright 2013-2015 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
@@ -21,6 +21,10 @@ external include {
   cs file "storage-inline.cs"
   js file "storage-inline.js"
 }
+
+/*---------------------------------------------------------------------------
+  Sandboxing
+---------------------------------------------------------------------------*/
 
 val sandboxed : ref<global,maybe<list<string>>> = unsafeTotal { ref(Nothing) }
 
@@ -45,8 +49,43 @@ function under( path : string, roots : list<string> ) : bool {
   }
 }
 
-val rxRootRelative = regex( @"^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$" )
+val fileChar       = @"[^\\\/\?\*\.\|<>&:\u0000-\u001F]"
+val rxRootRelative = regex( @"^(?![\\\/])(" + fileChar + @"|\.(?=[^\.])|[\/\\](?=" + fileChar + @"|\.))+$" )
 
+
+function sandboxNormalize( path : string ) : io string {
+  match(!sandboxed) {
+    Nothing -> path
+    Just(_) -> path.xnormalize
+  }
+}
+
+/*---------------------------------------------------------------------------
+  Resolve relative paths
+---------------------------------------------------------------------------*/
+
+public function xnormalize( path : string ) : string {
+  path.split(rxPathSep).list.foldl([],fun(rroots,dir) {
+    if (dir=="." || dir=="") then {
+      rroots
+    }
+    elif (dir=="..") then {
+      match(rroots) {
+        Cons(root,rest) | root != ".parent" -> rest
+        _               -> Cons(".parent",rroots)
+      }
+    }
+    else {
+      Cons(dir,rroots)
+    }
+  }).reverse.join(path/sep)
+}
+
+val rxPathSep = regex(@"[\\/]")
+
+/*---------------------------------------------------------------------------
+  File access
+---------------------------------------------------------------------------*/
 
 // Try to read a text file; return a default value in case of an error.
 public function readTextFileDef( fileName : string, def : string, required : bool = False ) : io string {
@@ -63,14 +102,9 @@ public function tryReadTextFile( fileName : string, required : bool = True ) : i
 }
 
 
-// Search for a file along a list of directories, including the filename by itself
+// Search for a file along a list of directories
 public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
-  searchFileSyncIn(dirs,fname)
-}
-
-// Search for a file along a list of directories.
-public function searchFileSyncIn( dirs : list<string>, fname : string ) : io maybe<string> {
-  val fnames = dirs.map(fun(dir){ combine(dir,fname) })
+  val fnames = dirs.map(fun(dir){ combine(dir,fname).sandboxNormalize })
   fnames.foreachUntil fun(f) {
     if (f.fexistsSync) then Just(f) else Nothing
   }

@@ -289,7 +289,7 @@ public function searchReadTextFileDef( fname : string, def : string, dirs : list
 }
 
 public function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "", required : bool = True  ) : io maybe<(string,string)> {
-  match(searchFileSyncIn(dirs,fname)) {
+  match(searchFileSync(dirs,fname)) {
     Nothing -> {
       if (ext=="" || fname.extname != "") then Nothing else {
         match (searchFileSync(dirs,fname.changeExt(ext))) {

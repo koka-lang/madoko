@@ -169,7 +169,7 @@ var Dropbox = (function() {
 
   Dropbox.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.folder,fname);
+    return Util.normalize(Util.combine(self.folder,fname));
   }
 
   Dropbox.prototype.connect = function() {

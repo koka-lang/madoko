@@ -452,6 +452,29 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return cap[1];    
   }
 
+  function normalize(path) {
+    if (!path) return "";
+    var parts = path.split(/[\\\/]/g);
+    var roots = [];
+    parts.forEach( function(part) {
+      if (!part || part===".") {
+        /* nothing */
+      }
+      else if (part==="..") {
+        if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
+          roots.pop(); 
+        }
+        else {
+          roots.push(".parent");
+        }
+      }
+      else {
+        roots.push(part);
+      }
+    });
+    return roots.join("/");
+  }
+
   var mimeTypes = {    
     mdk: "text/madoko",
     md: "text/markdown",
@@ -1910,6 +1933,8 @@ doc.execCommand("SaveAs", null, filename)
     basename: basename,
     dirname: dirname,
     stemname: Stdpath.stemname,
+    normalize: normalize,
+    
     isRelative: isRelative,
     combine: Stdpath.combine,
     firstdirname: firstdirname,
