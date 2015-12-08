@@ -49,6 +49,7 @@ public rectype inlineContext {
                  mathStatic : bool,
                  highlight  : bool,
                  starBold   : bool,
+                 sandbox    : bool,
                  prettyAlign : int,
 
                  xfmtCmd : (ctx:inlineContext,cmd:string,body:string,attrs:attrs) -> string,
@@ -161,6 +162,7 @@ public function copy( self : inlineContext,
                        mathStatic : bool = self.mathStatic,
                        highlight : bool = self.highlight,
                        starBold : bool = self.starBold,
+                       sandbox: bool = self.sandbox,
                        prettyAlign : int = self.prettyAlign,
                        xfmtCmd = self.xfmtCmd,
                        xfmtEscape = self.xfmtEscape,
@@ -178,7 +180,7 @@ public function copy( self : inlineContext,
                        fmt : formatter = self.fmt  ) : inlineContext
 {
   InlineContext( grammar,links,labels,footnotes,defaults,metadata,mathinfos,embedinfos,
-                 citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,prettyAlign,
+                 citestyle,sanitize,bench,verbose,mathStatic,highlight,starBold,sandbox,prettyAlign,
                  xfmtCmd,xfmtEscape,xfmtLink,xfmtFootnote,xfmtTable,
                  xfmtEnv, xfmtCodePlain, /* xfmtCodeHilite, */ 
                  xfmtCodeToken, xfmtLineInfo, xfmtCodeTable, 

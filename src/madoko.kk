@@ -81,7 +81,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
                                     options.citestyle,
                                     options.sanitize,options.bench,options.verbose,
                                     options.mathmode.isStatic,
-                                    options.highlight,options.starBold,options.prettyAlign) 
+                                    options.highlight,options.starBold,options.sandbox,options.prettyAlign) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 
     = parseBody(initialFormatContext(icontext,options.lineMap,
@@ -113,11 +113,11 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
 
   // generate full html/tex if needed
   val res = if (xfull) 
-             then (fmt.pick(fmtHtmlFull,fmtTexFull))(body,options,fcontext.inlineContext.metadata)
+             then (fmt.pick(fmtHtmlFull,fmtLatexFull))(body,options,fcontext.inlineContext.metadata)
              else body 
   // emit file references if necessary
   if (!xfull || !(fmt.isFmtHtml)) then fmtHtmlFull("",options,fcontext.inlineContext.metadata) else ""
-  if (!xfull || !(fmt.isFmtTex))  then fmtTexFull("",options,fcontext.inlineContext.metadata) else ""
+  if (!xfull || !(fmt.isFmtTex))  then fmtLatexFull("",options,fcontext.inlineContext.metadata) else ""
   
   if (options.verbose>=3) then trace("done")
   res           
@@ -156,6 +156,7 @@ function inlineContext( fmt : formatter,
                                mathStatic : bool = False,
                                highlight : bool = True,
                                starBold : bool = False,
+                               sandbox: bool = False,
                                prettyAlign : int = 2 ) : inlineContext
 {
   val isTex2  = match(metadata["tex2"]) {
@@ -172,7 +173,7 @@ function inlineContext( fmt : formatter,
   InlineContext( inlineGrammar(fmt,bench), dict(), dict(), dict(), 
                  emptyRules,
                  metadata, mathinfos, embedinfos,
-                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, prettyAlign,
+                 citestyle, sanitize, bench, verbose, mathStatic, highlight, starBold, sandbox, prettyAlign,
                  pickx(fmtHtmlCmd,fmtTexCmd,fmtLatexCmd), 
                  pickx(fmtHtmlEscape,fmtTexEscape,fmtLatexEscape), 
                  pickx(fmtHtmlLink,fmtTexLink,fmtLatexLink), 
