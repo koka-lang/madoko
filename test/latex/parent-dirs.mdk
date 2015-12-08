@@ -8,3 +8,9 @@ But sad or merry, I must leave it now.
 [INCLUDE=../parent-inc.mdk]
 
 Testing.
+
+[INCLUDE=../readmexx.md]
+
+Test.
+
+More tests.
