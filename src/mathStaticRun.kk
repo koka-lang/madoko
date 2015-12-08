@@ -143,7 +143,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
           val errmsg = "error: latex:\n" + stdout + stderr
           match(logout.find(rxLatexErr)) {
             Just(cap) -> match(cap.matched.findLatexLineNo) {
-              Just(texlineNo) -> {
+              Just( (texlineNo, texerr) ) -> {
                 val texContent = readTextFileDef(texFile,"")
                 //trace(logout.substr(cap.index-100))
                 match(findLatexPackage(logout.substr(0,cap.index))) {
@@ -153,11 +153,17 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                     Nothing -> ()
                   }
                 }                  
-                opts.printErr(nicifyLatexErr(cap.matched))
+                opts.printErr(nicifyLatexErr(texerr))
               }
-              Nothing -> opts.printErr(errmsg)    
+              Nothing -> {
+                trace("could not find lineo")
+                opts.printErr(errmsg)    
+              }
             }
-            Nothing -> opts.printErr(errmsg)              
+            Nothing -> {
+              trace("could not find error")
+              opts.printErr(errmsg)              
+            }
           } 
           opts.printErr("log written at: " + texFile.changeExt(".log"))
         }      
@@ -176,7 +182,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
     }
   },opts.processTimeout,srcFile.dirname,std/env/env.list + [("max_print_line","1000")])
 } 
-val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=^$|^\s*(?:Here is how much of \w*TeX's memory you used:|The control sequence))",multiline=True,ignoreCase=True)
+val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=\r?\n\r?\n\r?\n|^\s*(?:Here is how much of \w*TeX's memory you used:|The control sequence))",multiline=True,ignoreCase=True)
 
 val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
 
@@ -277,13 +283,16 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
   }  
 }
 
-function findLatexLineNo( texerr : string ) : maybe<int> {
+function findLatexLineNo( texerr : string ) : maybe<(int,string)> {
   match(texerr.find(rxLatexLineNum)) {
     Nothing   -> Nothing
-    Just(cap) -> cap.groups[1].parseInt
+    Just(cap) -> match( cap.groups[1].parseInt ) {
+                   Nothing -> Nothing
+                   Just(i) -> Just( (i, texerr.substr(0,cap.next)) )
+                 }
   }
 }
-val rxLatexLineNum = regex(@"^l\.(\d+) +(?:\\\[|\$)?(.*)",multiline=True)
+val rxLatexLineNum = regex(@"(?:^|\n)l\.(\d+) +[\s\S]*?(?=\r?\n\r?\n|$)")
 
 function findLatexLine( src : string, lineNo, texSrc : string ) : maybe<string> {
   val searchLines = texSrc.lines.list.take(lineNo-1).reverse
