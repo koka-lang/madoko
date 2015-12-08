@@ -392,6 +392,9 @@ body.preview.madoko {
 
 @media only screen and (max-device-width:1024px) {
   body.madoko {
-    padding: 0em 1em;
+    padding: 0em 0.5em;    
+  }
+  .madoko li {
+    text-align: left;
   }
 }
