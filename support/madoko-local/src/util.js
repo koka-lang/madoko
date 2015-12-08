@@ -210,6 +210,7 @@ return {
   startsWith  : startsWith,
   endsWith    : endsWith,
   jsonParse   : jsonParse,
+  normalize   : normalize,
   combine     : combine,
   properties  : properties,
   extend      : extend,

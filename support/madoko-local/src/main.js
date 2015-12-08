@@ -314,36 +314,12 @@ function finfoFromStat( stat, fpath ) {
 -------------------------------------------------------------------- */
 
 var rxFileChar = "[^\\\\/\\?\\*\\.\\|<>&:\"\\u0000-\\u001F]";
-var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))+$" );
-
-// this routine replace parent directory references (..) by a .parent directory
-// this is also done by Madoko with the --sandbox flag so these files will be found correctly.
-function xnormalize(fpath) {
-  if (!fpath) return "";
-  var parts = fpath.split(/[\\\/]/g);
-  var roots = [];
-  parts.forEach( function(part) {
-    if (!part || part===".") {
-      /* nothing */
-    }
-    else if (part==="..") {
-      if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
-        roots.pop(); 
-      }
-      else {
-        roots.push(".parent");
-      }
-    }
-    else {
-      roots.push(part);
-    }
-  });
-  return roots.join("/");
-}
+var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))*$" );
 
 function makeSafePath(root,path) {
-  var fpath = combine( root, xnormalize(path));
-  if (startsWith(fpath,root) && !rxRootRelative.test(fpath.substr(root.length+1))) {
+  var root  = Util.normalize(root);
+  var fpath = Util.combine( root, path); // normalizes
+  if (Util.startsWith(fpath,root) && rxRootRelative.test(fpath.substr(root.length+1))) {
     return fpath;
   }
   else {
@@ -358,6 +334,7 @@ function isSafePath(root,path) {
 // Create a safe path under a certain root directory and raise an exception otherwise.
 function getSafePath(root,path) {
   var fpath = makeSafePath(root,path);
+  config.log.trace("getSafePath: " + fpath + " = " + root + ", " + path);
   if (!fpath) {
     console.log("Unauthorized file name: " + path);
     throw new Error("Invalid file name due to sandbox: " + path);
