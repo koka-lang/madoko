@@ -238,7 +238,7 @@ function createNullStorage() {
 
 function serverGetInitialContent(fpath) {
   if (!Util.extname(fpath)) fpath = fpath + ".mdk";
-  if (!Util.isRelative(fpath)) throw new Error("can only get initial content for relative paths");
+  if (!Util.isRelative(fpath)) return Promise.rejected( new Error("can only get initial content for relative paths") );
   return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } );
 }
 
