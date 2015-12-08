@@ -32,13 +32,15 @@ public function enforceSandbox( roots : list<string> = [""] ) : io () {
   sandboxed := Just(roots)
 }
 
-public function checkSandbox( path : string ) : io () {
+public function checkSandbox( path : string ) : io string {
   match (!sandboxed) {
-    Nothing -> ()
+    Nothing -> path.normalize
     Just(roots) -> {
-      if (!(path.under(roots))) {
+      val xpath = path.normalize.xnormalize
+      if (!(xpath.under(roots))) {
         error("cannot access files outside the sandbox")
       }
+      return xpath
     }
   }
 }
@@ -53,15 +55,8 @@ val fileChar       = @"[^\\\/\?\*\.\|<>&:\u0000-\u001F]"
 val rxRootRelative = regex( @"^(?![\\\/])(" + fileChar + @"|\.(?=[^\.])|[\/\\](?=" + fileChar + @"|\.))+$" )
 
 
-function sandboxNormalize( path : string ) : io string {
-  match(!sandboxed) {
-    Nothing -> path
-    Just(_) -> path.xnormalize
-  }
-}
-
 /*---------------------------------------------------------------------------
-  Resolve relative paths
+  Resolve relative paths and map .. references to .parent in a sandbox
 ---------------------------------------------------------------------------*/
 
 public function xnormalize( path : string ) : string {
@@ -78,7 +73,7 @@ public function xnormalize( path : string ) : string {
     else {
       Cons(dir,rroots)
     }
-  }).reverse.join(path/sep)
+  }).reverse.join("/")
 }
 
 val rxPathSep = regex(@"[\\/]")
@@ -104,7 +99,7 @@ public function tryReadTextFile( fileName : string, required : bool = True ) : i
 
 // Search for a file along a list of directories
 public function searchFileSync( dirs : list<string>, fname : string ) : io maybe<string> {
-  val fnames = dirs.map(fun(dir){ combine(dir,fname).sandboxNormalize })
+  val fnames = dirs.map(fun(dir){ combine(dir,fname) })
   fnames.foreachUntil fun(f) {
     if (f.fexistsSync) then Just(f) else Nothing
   }
@@ -113,9 +108,9 @@ public function searchFileSync( dirs : list<string>, fname : string ) : io maybe
 // Read a text file synchronously (using UTF8 encoding)
 public function readTextFileSync( fileName : string, required : bool = True ) : io string
 {
-  checkSandbox(fileName)
+  val xfileName = checkSandbox(fileName)
   if (required) log("files",fileName);
-  xreadTextFileSync(fileName);
+  xreadTextFileSync(xfileName);
 }
 
 external xreadTextFileSync( fileName : string ) : io string
@@ -133,9 +128,9 @@ public function tryWriteTextFile( fileName : string, content : string )  : io bo
 
 // Write a text file synchronously (using UTF8 encoding)
 public function writeTextFileSync( fileName : string, content : string ) : io () {
-  checkSandbox(fileName)
+  val xfileName = checkSandbox(fileName)
   log("filesWrite", fileName);
-  xwriteTextFileSync(fileName, content);
+  xwriteTextFileSync(xfileName, content);
 }
 
 external xwriteTextFileSync( fileName : string, content : string )  : io () {
@@ -145,8 +140,8 @@ external xwriteTextFileSync( fileName : string, content : string )  : io () {
 
 public function fexistsSync( fileName : string ) : io bool {
   catch( {
-    checkSandbox(fileName)
-    xfexistsSync(fileName)
+    val xfileName = checkSandbox(fileName)
+    xfexistsSync(xfileName)
   }, fun(_) { False } )
 }
 
@@ -166,8 +161,8 @@ public external cwd() : io string {
 }
 
 public function mkdirp( dir : string, mode : int = 0x1FF ) : io () {
-  checkSandbox(dir)
-  xmkdirp(dir,mode)
+  val xdir = checkSandbox(dir)
+  xmkdirp(xdir,mode)
 }
 
 external xmkdirp( dir : string, mode : int = 0x1FF ) : io () {
@@ -176,9 +171,9 @@ external xmkdirp( dir : string, mode : int = 0x1FF ) : io () {
 }
 
 public function rename( fnameOld : string, fnameNew : string ) : io () {
-  checkSandbox(fnameOld)
-  checkSandbox(fnameNew)
-  xrename(fnameOld,fnameNew)
+  val xfnameOld = checkSandbox(fnameOld)
+  val xfnameNew = checkSandbox(fnameNew)
+  xrename(xfnameOld,xfnameNew)
 }
 
 external xrename( fnameOld : string, fnameNew : string ) : io () {
@@ -214,9 +209,9 @@ public function tryReadBase64File( fileName : string, required : bool = True ) :
 // Read a binary file synchronously (using base64 encoding)
 public function readBase64FileSync( fileName : string, required : bool = True ) : io string
 {
-  checkSandbox(fileName)
+  val xfileName = checkSandbox(fileName)
   if (required) log("files",fileName)
-  xreadBase64FileSync(fileName)
+  xreadBase64FileSync(xfileName)
 }
 
 external xreadBase64FileSync( fileName : string ) : io string
@@ -234,9 +229,9 @@ public function tryWriteBase64File( fileName : string, content : string )  : io 
 
 // Write a binary file synchronously (using base64 encoding)
 public function writeBase64FileSync( fileName : string, content : string ) : io () {
-  checkSandbox(fileName)
+  val xfileName = checkSandbox(fileName)
   log("filesWrite", fileName);
-  xwriteBase64FileSync(fileName, content);
+  xwriteBase64FileSync(xfileName, content);
 }
 
 external xwriteBase64FileSync( fileName : string, content : string ) : io ()
@@ -286,14 +281,13 @@ external xreadInt4( obj : any, ofs : int, bigendian : bool = True ) : int {
 
 // try to ead a binary file into a buffer
 public function tryReadFileSync( fileName : string ) : io maybe<buffer> {
-  checkSandbox( fileName )
   onExn( Nothing, { Just(readFileSync(fileName)) } )
 }
 
 // Read a binary file into a buffer
 public function readFileSync( fileName: string ) : io buffer {
-  checkSandbox( fileName )
-  Buffer( xreadFileSync( fileName ) )
+  val xfileName = checkSandbox( fileName )
+  Buffer( xreadFileSync( xfileName ) )
 }
 
 external xreadFileSync( fileName : string ) : io any
@@ -309,8 +303,8 @@ public function tryUnlinkSync( fname : string ) : io ()
 }
 
 public function unlinkSync( fileName : string ) : io () {
-  checkSandbox(fileName)
-  xunlinkSync( fileName )
+  val xfileName = checkSandbox(fileName)
+  xunlinkSync( xfileName )
 }
 
 external xunlinkSync( fileName : string ) : io ()
