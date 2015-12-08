@@ -645,10 +645,47 @@ function withUser( req, action ) {
   });
 }
 
-// Check of a file names is root-relative (ie. relative and not able to go to a parent)
-// and that it contains only [A-Za-z0-9_\-\ ] characters.
-function isValidFileName(fname) {
-  return (/^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ ]|[\.\/\\][\w\-\ ])+$/.test(fname));
+/* --------------------------------------------------------------------
+   Ensure files reside in the sandbox
+-------------------------------------------------------------------- */
+
+var rxFileChar = "[^\\\\/\\?\\*\\.\\|<>&:\"\\u0000-\\u001F]";
+var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))+$" );
+
+// this routine replace parent directory references (..) by a .parent directory
+// this is also done by Madoko with the --sandbox flag so these files will be found correctly.
+function xnormalize(fpath) {
+  if (!fpath) return "";
+  var parts = fpath.split(/[\\\/]/g);
+  var roots = [];
+  parts.forEach( function(part) {
+    if (!part || part===".") {
+      /* nothing */
+    }
+    else if (part==="..") {
+      if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
+        roots.pop(); 
+      }
+      else {
+        roots.push(".parent");
+      }
+    }
+    else {
+      roots.push(part);
+    }
+  });
+  return roots.join("/");
+}
+
+// Create a safe path under a certain root directory and raise an exception otherwise.
+function safePath(root,path) {
+  var fpath = combine( root, xnormalize(path));
+  if (!startsWith(fpath,root) || !rxRootRelative.test(fpath.substr(root.length+1))) {
+    console.log("unauthorized file: " + path);
+    console.log(" root : " + root + "\n fpath: " + fpath);    
+    throw new Error("unauthorized file name: " + path);
+  }
+  return fpath;
 }
 
 
@@ -663,8 +700,7 @@ var stdflags = "--odir=" + outdir + " --sandbox";
 // Save files to be processed.
 function saveFiles( userpath, files ) {
   return Promise.when( files.map( function(file) {
-    if (!isValidFileName(file.path)) return Promise.rejected( new Error("unauthorized file name: " + file.path) );
-    var fpath = combine(userpath,file.path);
+    var fpath = safePath(userpath,file.path);
     console.log("writing file: " + fpath + " (" + file.encoding + ")");
     var dir = path.dirname(fpath);
     return ensureDir(dir).then( function() {
@@ -691,16 +727,18 @@ function readFiles( userpath, docname, pdf, out ) {
   while((capx = rxLog.exec(out)) != null) {
     cap = capx;
   }
-  if (cap && isValidFileName(cap[1])) {
-    console.log("add output: " + cap[1]);
-    fnames.push(cap[1]);
-    //fnames.push(combine(outdir, stem + ".tex" ));
+  if (cap) {
+    try {
+      safePath(userpath,cap[1]); // check if sandboxed
+      console.log("add output: " + cap[1]);
+      fnames.push(cap[1]);
+    }
+    catch(exn) {}
   }
   //console.log("sending back:\n" + fnames.join("\n"));
   return Promise.when( fnames.map( function(fname) {
     // paranoia
-    if (!isValidFileName(fname)) return Promise.rejected( new Error("unauthorized file name: " + fname) );
-    var fpath = combine(userpath,fname);
+    var fpath = safePath(userpath,fname);
 
     function readError(err) {
       //console.log("Unable to read: " + fpath);
@@ -743,7 +781,7 @@ function madokoExec( userpath, docname, flags, timeout ) {
 // Run madoko program
 function madokoRun( userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
-    if (!isValidFileName(docname)) return Promise.rejected( new Error("unauthorized document name: " + docname) );
+    safePath(userpath,docname); // is docname safe?
     var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
     return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       var out = stdout + "\n" + stderr + "\n";
@@ -1484,6 +1522,7 @@ var staticMaintenance = express.static( combine(__dirname, "maintenance"), stati
 var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
 
 function staticPage(req,res,next) {
+  console.log("static: " + req.path);
   var dir = path.dirname(req.path);
   if (!staticDirs.test(dir)) {
     logRequest(req,"static-scan");
