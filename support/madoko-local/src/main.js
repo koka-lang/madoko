@@ -309,19 +309,64 @@ function finfoFromStat( stat, fpath ) {
   return finfo;    
 }
 
-// Check of a file name is root-relative (ie. relative and not able to go to a parent)
-// and that it contains only [A-Za-z0-9_\- \(\)] characters.
-function isValidFileName(fname) {
-  return (fname==="" || /^(?![\/\\])(\.(?=[\/\\]))?([\w\-\ \(\)]|[\.\/\\][\w\-\ \(\)])+$/.test(fname));
+/* --------------------------------------------------------------------
+   Ensure files reside in the sandbox
+-------------------------------------------------------------------- */
+
+var rxFileChar = "[^\\\\/\\?\\*\\.\\|<>&:\"\\u0000-\\u001F]";
+var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))+$" );
+
+// this routine replace parent directory references (..) by a .parent directory
+// this is also done by Madoko with the --sandbox flag so these files will be found correctly.
+function xnormalize(fpath) {
+  if (!fpath) return "";
+  var parts = fpath.split(/[\\\/]/g);
+  var roots = [];
+  parts.forEach( function(part) {
+    if (!part || part===".") {
+      /* nothing */
+    }
+    else if (part==="..") {
+      if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
+        roots.pop(); 
+      }
+      else {
+        roots.push(".parent");
+      }
+    }
+    else {
+      roots.push(part);
+    }
+  });
+  return roots.join("/");
 }
 
-function checkValidPath(fpath) {
-  if (typeof fpath !== "string" || !isValidFileName(fpath)) throw new Error("Invalid file name due to sandbox: " + fpath);
+function makeSafePath(root,path) {
+  var fpath = combine( root, xnormalize(path));
+  if (startsWith(fpath,root) && !rxRootRelative.test(fpath.substr(root.length+1))) {
+    return fpath;
+  }
+  else {
+    return null;
+  }
+}
+
+function isSafePath(root,path) {
+  return (makeSafePath(root,path) ? true : false);
+}
+
+// Create a safe path under a certain root directory and raise an exception otherwise.
+function getSafePath(root,path) {
+  var fpath = makeSafePath(root,path);
+  if (!fpath) {
+    console.log("Unauthorized file name: " + path);
+    throw new Error("Invalid file name due to sandbox: " + path);
+  }
+  return fpath;
 }
 
 function getLocalPath(fpath) {
-  checkValidPath(fpath);
-  return Util.combine(config.mountdir,fpath);
+  return getSafePath(config.mountdir,fpath);
 }
 
 // -------------------------------------------------------------
@@ -357,7 +402,7 @@ function getMetadata(req,res) {
         return Promise.when(files.map( function(fname) { return Util.fstat(Util.combine(fpath,fname)); } )).then( function(stats) {
           finfo.contents = [];
           for(var i = 0; i < stats.length; i++) {
-            if (stats[i] != null && isValidFileName(files[i])) { // only list valid accessible files
+            if (stats[i] != null && isSafePath(fpath,files[i])) { // only list valid accessible files
               finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
             }
           }
