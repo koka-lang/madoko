@@ -1,5 +1,12 @@
 {
   "log": [
+    { "version": "0.3.3-beta",
+      "date"   : "2015-12-09",
+      "updates": [
+        "Support relative file names",
+        "Reduce size of the log files"
+      ]
+    },
     { "version": "0.3.2-beta",
       "date"   : "2015-11-23",
       "updates": [
