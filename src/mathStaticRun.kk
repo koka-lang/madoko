@@ -62,7 +62,8 @@ public function runBibtex( bibFiles : list<string>, opts : options, continue : b
 
 public function runBibtex1( bibFile : string, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   opts.print("running bibtex to generate bibliography...")
-  val bibtexCmd = opts.bibtex.quote + " " + bibFile.basename.quote
+  val xbibFile = checkSandbox(bibFile)
+  val bibtexCmd = opts.bibtex.quote + " " + xbibFile.basename.quote
   opts.print("> " + bibtexCmd,3)
   system(bibtexCmd, fun(err:int,stdout:string,stderr:string) {
     if (err!=0) {
@@ -108,7 +109,18 @@ public function runPdfLaTeX( srcName : string, texFile : string, opts : options,
     fun(err) { continue() } )  
 }
 
+val latexEnv = [
+  ("max_print_line","1000"),
+  ("error_line","250"),
+  ("half_error_line","230"),
+]
 
+val latexSandboxEnv = [
+  ("openin_any","p"),
+  ("openout_any","p"),
+  ("shell_escape","f"),
+  ("parse_first_line","f"),
+]
 
 function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : options, 
                     content : string,
@@ -120,7 +132,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
   val dir = texFile.dirname.norm
   val latexCmd = texCmd.quote + " --output-directory=" + (if (dir=="") then "." else dir).quote + 
                        " --interaction=batchmode" + // --max-print-line=1000" + 
-                       (if (opts.sandbox) then " --no-parse-first-line --no-shell-escape" else "") + // note: also need `openin_any:p` and `openout_any:p` in the `texmf.cnf` file!
+                       (if (opts.sandbox) then " --no-parse-first-line --no-shell-escape" else "") + // note: also need `openin_any:p` and `openout_any:p`: pass through environment instead
                        " " + texFile.norm.quote 
 
   if (runCount==0 && opts.rebuild) {
@@ -156,12 +168,12 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                 opts.printErr(nicifyLatexErr(texerr))
               }
               Nothing -> {
-                trace("could not find lineo")
+                //trace("could not find lineo")
                 opts.printErr(errmsg)    
               }
             }
             Nothing -> {
-              trace("could not find error")
+              //trace("could not find error")
               opts.printErr(errmsg)              
             }
           } 
@@ -180,7 +192,11 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
         continue(0)
       }
     }
-  },opts.processTimeout,srcFile.dirname,std/env/env.list + [("max_print_line","1000")])
+   },
+   opts.processTimeout,
+   srcFile.dirname,
+   std/env/env.list + latexEnv + (if (opts.sandbox) then latexSandboxEnv else [])
+  )
 } 
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=\r?\n\r?\n\r?\n|^\s*(?:Here is how much of \w*TeX's memory you used:|The control sequence))",multiline=True,ignoreCase=True)
 
