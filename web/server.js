@@ -680,7 +680,7 @@ function xnormalize(fpath) {
 // Create a safe path under a certain root directory and raise an exception otherwise.
 function safePath(root,path) {
   var fpath = combine( root, xnormalize(path));
-  if (!startsWith(fpath,root) || !rxRootRelative.test(fpath.substr(root.length+1))) {
+  if (!root || !startsWith(fpath,root + "/") || !rxRootRelative.test(fpath.substr(root.length+1))) {
     console.log("unauthorized file: " + path);
     console.log(" root : " + root + "\n fpath: " + fpath);    
     throw new Error("unauthorized file name: " + path);
@@ -1522,7 +1522,7 @@ var staticMaintenance = express.static( combine(__dirname, "maintenance"), stati
 var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
 
 function staticPage(req,res,next) {
-  console.log("static: " + req.path);
+  //console.log("static: " + req.path);
   var dir = path.dirname(req.path);
   if (!staticDirs.test(dir)) {
     logRequest(req,"static-scan");
