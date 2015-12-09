@@ -314,12 +314,12 @@ function finfoFromStat( stat, fpath ) {
 -------------------------------------------------------------------- */
 
 var rxFileChar = "[^\\\\/\\?\\*\\.\\|<>&:\"\\u0000-\\u001F]";
-var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))*$" );
+var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))+$" );
 
 function makeSafePath(root,path) {
   var root  = Util.normalize(root);
   var fpath = Util.combine( root, path); // normalizes
-  if (Util.startsWith(fpath,root) && rxRootRelative.test(fpath.substr(root.length+1))) {
+  if (root && ((fpath===root) || (Util.startsWith(fpath,root + "/") && rxRootRelative.test(fpath.substr(root.length+1))))) {
     return fpath;
   }
   else {
@@ -334,7 +334,8 @@ function isSafePath(root,path) {
 // Create a safe path under a certain root directory and raise an exception otherwise.
 function getSafePath(root,path) {
   var fpath = makeSafePath(root,path);
-  config.log.trace("getSafePath: " + fpath + " = " + root + ", " + path);
+  config.log.trace("authorize path: '" + fpath + "'",3);
+  config.log.trace(" (root:'" + root + "', path:'" + path + "')",3);
   if (!fpath) {
     console.log("Unauthorized file name: " + path);
     throw new Error("Invalid file name due to sandbox: " + path);
@@ -389,7 +390,7 @@ function getMetadata(req,res) {
       });
     }
     else {
-      config.log.trace("file meta  : " + relpath + (finfo ? ", modified: " + finfo.modified : ", not found."));
+      config.log.trace("file meta  : " + relpath + (finfo ? ", modified: " + finfo.modified : ", not found."), 3);
       return finfo;
     }
   }, function(err) {
