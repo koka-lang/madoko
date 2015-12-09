@@ -1,5 +1,13 @@
 {
   "log" : [
+    { "version": "0.9.22-beta",
+      "date": "2015-12-07",
+      "updates": [
+         "Support relative files names so one can for example refer to a parent directory for common includes",
+         "Improved LaTeX error messages",
+         "Reduce margins of Madoko HTML documents when viewed on mobile devices"
+      ]
+    },
     { "version": "0.9.21-beta",
       "date": "2015-12-07",
       "updates": [
