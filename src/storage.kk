@@ -29,7 +29,7 @@ external include {
 val sandboxed : ref<global,maybe<list<string>>> = unsafeTotal { ref(Nothing) }
 
 public function enforceSandbox( roots : list<string> = [""] ) : io () {
-  sandboxed := Just(roots)
+  sandboxed := Just(roots.map(fun(r) { r.normalize.xnormalize }))
 }
 
 public function checkSandbox( path : string ) : io string {
@@ -47,21 +47,23 @@ public function checkSandbox( path : string ) : io string {
 
 function under( path : string, roots : list<string> ) : bool {  
   roots.any fun(root) {
-    (path.startsWith(root) && path.substr(root.length).contains(rxRootRelative))
+    if (root.isEmpty) 
+     then path.contains(rxRootRelative)
+     else path.startsWith(root + "/") && path.substr(root.length+1).contains(rxRootRelative)
   }
 }
 
 val fileChar       = @"[^\\\/\?\*\.\|<>&:\u0000-\u001F]"
-val rxRootRelative = regex( @"^(?![\\\/])(" + fileChar + @"|\.(?=[^\.])|[\/\\](?=" + fileChar + @"|\.))+$" )
+val rxRootRelative = regex( @"^(?![\\\/]|\w:)(?:" + fileChar + @"|\.(?=[^\.])|[\\\/](?=" + fileChar + @"|\.))+$" )
 
 
 /*---------------------------------------------------------------------------
-  Resolve relative paths and map .. references to .parent in a sandbox
+  Resolve relative paths and map ".."" references to ".parent" in a sandbox
 ---------------------------------------------------------------------------*/
 
 public function xnormalize( path : string ) : string {
   path.split(rxPathSep).list.foldl([],fun(rroots,dir) {
-    if (dir=="." || dir=="") then {
+    if (dir=="" || dir==".") then {
       rroots
     }
     elif (dir=="..") then {
