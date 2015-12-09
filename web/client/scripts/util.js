@@ -461,11 +461,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         /* nothing */
       }
       else if (part==="..") {
-        if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
+        if (roots.length > 0) {
           roots.pop(); 
-        }
-        else {
-          roots.push(".parent");
         }
       }
       else {

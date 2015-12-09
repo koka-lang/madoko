@@ -233,7 +233,7 @@ var Onedrive = (function() {
   
   Onedrive.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.folder,fname);
+    return Util.normalize(Util.combine(self.folder,fname));
   }
 
   Onedrive.prototype.connect = function() {

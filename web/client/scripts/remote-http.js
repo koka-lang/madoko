@@ -69,7 +69,7 @@ var HttpRemote = (function() {
 
   HttpRemote.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.url,fname);
+    return Util.normalize(Util.combine(self.url,fname));
   }
 
   HttpRemote.prototype.connect = function() {

@@ -332,7 +332,7 @@ var Github = (function() {
   Github.prototype.fullPath = function(fname) {
     var self = this;
     if (fname == null) fname = "";
-    return Util.combine(self.path,fname);
+    return Util.normalize(Util.combine(self.path,fname));
   }
 
   Github.prototype.treePath = function(fname) {

@@ -175,7 +175,7 @@ var Onedrive2 = (function() {
   
   Onedrive2.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.folder,fname);
+    return Util.normalize(Util.combine(self.folder,fname));
   }
 
   Onedrive2.prototype.connect = function() {

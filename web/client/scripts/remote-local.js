@@ -52,7 +52,7 @@ var LocalRemote = (function() {
 
   LocalRemote.prototype.fullPath = function(fname) {
     var self = this;
-    return Util.combine(self.folder,fname);
+    return Util.normalize(Util.combine(self.folder,fname));
   }
 
   LocalRemote.prototype.connect = function() {
