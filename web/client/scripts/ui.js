@@ -4763,7 +4763,7 @@ var symbolsMath = [
       var fileDisplay = prefix + postfix;
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
         self.fileDisplay = fileDisplay;
-        var title = "//" + self.storage.remote.displayType + "/" + fullFolder + (fullFolder ? "/" : "") + file.path;
+        var title = "//" + self.storage.remote.displayName + fullFolder + (fullFolder ? "/" : "") + file.path;
         self.editSelectHeader.innerHTML = "<span title='" + Util.escape(title) + "'>" + fileDisplay + "</span>";
       }
       if (self.editContent !== file.content) { // only update edit text if content update 
