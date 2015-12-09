@@ -25,22 +25,27 @@ var Log = (function(){
     self.start(flushIval || 60000);
   }
 
-  Log.prototype.message = function( msg, level ) {
+  Log.prototype.message = function( msg, level, logfileLevel ) {
     var self = this;
-    self.entry( { type: "message", level: level, message: msg, /*date: new Date().toISOString()*/ });
-    if (level && level > self.verbose) return;
-    var pre = (typeof level !== "number" || level <= 0 ? "" : Array(level+1).join("-") + " ");
-    console.log( pre + msg );
+    if (level==null) level = 0;
+    if (logfileLevel==null) logfileLevel = 0;
+    if (logfileLevel <= self.verbose) {
+      self.entry( { type: "message", level: level, message: msg, /*date: new Date().toISOString()*/ });
+    }
+    if (level <= self.verbose) {
+      var pre = (typeof level !== "number" || level <= 0 ? "" : Array(level+1).join("-") + " ");
+      console.log( pre + msg );
+    }
   }
 
-  Log.prototype.info = function(msg) {
+  Log.prototype.info = function(msg,ll) {
     var self = this;
-    self.message(msg,1);
+    self.message(msg,1,ll);
   };
 
-  Log.prototype.trace = function(msg) {
+  Log.prototype.trace = function(msg,ll) {
     var self = this;
-    self.message(msg,2);
+    self.message(msg,2,ll);
   };
 
   Log.prototype.start = function(flushIval) {
