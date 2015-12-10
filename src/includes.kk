@@ -39,18 +39,18 @@ public function include( text : string, fast : bool, inName : string, outName : 
              msg )
   }
 
-  function extractSnippet( name, content, fname, lineNo, acc = [] ) : io () {
-    function saveSnippet() {
-      if (snippets[name].isJust) {
-        warning( "snippet " + name + " is redefined", lineNo, fname )
-      }
-      snippets[name] := Snippet(fname, lineNo, acc.reverse.join("\n"))
+  function saveSnippet( name, fname, lineNo, content) : io () {
+    if (snippets[name].isJust) {
+      warning( "snippet " + name + " is redefined", lineNo, fname )
     }
+    snippets[name] := Snippet(fname, lineNo, content)
+  }
 
+  function extractSnippet( name, content, fname, lineNo, acc = [] ) : io () {
     match(content) {
       Nil -> {
         warning("unclosed snippet: " + name, lineNo, fname )
-        saveSnippet()
+        saveSnippet(name,fname,lineNo,acc.reverse.join("\n"))
       }
       Cons(line,lines) -> {
         match(line.find(rxSnippetEnd)) {
@@ -68,7 +68,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
             val cname = cap.groups[1].toLower()
             if (name == cname) {
               // end of snippet, done.
-              saveSnippet()
+              saveSnippet(name,fname,lineNo,acc.reverse.join("\n"))
             }
             else {
               // end of another snippet, ignore it
