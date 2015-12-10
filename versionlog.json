@@ -1,11 +1,12 @@
 {
   "log" : [
     { "version": "0.9.22-beta",
-      "date": "2015-12-07",
+      "date": "2015-12-10",
       "updates": [
          "Support relative files names so one can for example refer to a parent directory for common includes",
          "Improved LaTeX error messages",
-         "Reduce margins of Madoko HTML documents when viewed on mobile devices"
+         "Reduce margins of Madoko HTML documents when viewed on mobile devices",
+         "Fix compilation bug with 'strict' under FF42"
       ]
     },
     { "version": "0.9.21-beta",
