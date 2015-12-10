@@ -835,7 +835,7 @@ var UI = (function() {
             }
             else if (isFirefox && window.applicationCache.status === window.applicationCache.IDLE) {
               self.version.digest = version.digest; // prevent further alerts 
-              alert("Madoko has updated but Firefox has a bug (830588) preventing it to update automatically." +
+              alert("Madoko has updated but Firefox has a bug (780197) preventing it to update automatically." +
                     "\nClear your history (in particular the 'Offline website data') -- and reload." +
                     "\n\nA quick way to clear the Madoko application cache is to press 'Shift+F2' and" +
                     "\nissue the command 'appcache clear' (and reload after that)");
