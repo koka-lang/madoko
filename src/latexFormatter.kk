@@ -646,12 +646,14 @@ function trimEnv( body : string, env : string, args : string = "" ) {
 }
 
 function braceCmd( body : string, cmd : string ) : string {
-  "{" + cmd.cmdconnect(body.unbrace) + "}"  // TODO: unbrace is unsafe here, i.e. {\cmd}gkkgk{\test}
+  "{" + cmd.cmdconnect(body.unbrace) + "}"  
 }
 
 function unbrace( s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) then {
-    if (s.indexOf("}") < s.length-1) then s else s.substr(1,s.length-2) 
+    if (s.indexOf("}") < s.length-1) 
+      then s // prevent unbracing: {\cmd}gkkgk{\test} 
+      else s.substr(1,s.length-2) 
   }
   elif (s.contains(rxCommentEnd)) then s + "\n"
   else s
@@ -693,23 +695,49 @@ function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
       _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\label" + attrs.name.braced + "%mdk\n"
     }
   }
-  val body2 = body1
-  if (isBlock) {
-    val body3 = body2.onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
-      b.margins(kvs)
-    })
-    if (!kvs.containsKey("tex-wrap-width")) then body3 else {
-      val width = kvs.dimMarginBoxWidth("tex-wrap-width")
-      val wrapfig = kvs.find("tex-wrap-env","wrapfigure")
-      val wraplines = kvs.find("tex-wrap-lines","")
-      val wrapplace = kvs.find("tex-wrap-placement","o")
-      val args = (if (wraplines.bool) then "[" + wraplines + "]" else "") + wrapplace.braced + width.braced
-      body3.blockEnv(wrapfig,args)
+  val body2 = if (isBlock) then {
+      val body1x = body1
+        .onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
+          b.margins(kvs)
+        })
+      if (!kvs.containsKey("tex-wrap-width")) then body1x else {
+        val width = kvs.dimMarginBoxWidth("tex-wrap-width")
+        val wrapfig = kvs.find("tex-wrap-env","wrapfigure")
+        val wraplines = kvs.find("tex-wrap-lines","")
+        val wrapplace = kvs.find("tex-wrap-placement","o")
+        val args = (if (wraplines.bool) then "[" + wraplines + "]" else "") + wrapplace.braced + width.braced
+        body1x.blockEnv(wrapfig,args)
+      }
+    }
+    else {
+      body1.cssInlineMargin(kvs,"margin")
+    }
+  body2.onKey(kvs, "page-break-before", fun(value,b) {
+    cmdconnect(cssPagebreak(value),b)
+  })
+  .onKey(kvs, "page-break-after", fun(value,b) {
+    b + cssPagebreak(value)
+  })
+}
+
+function cssPagebreak( value : string ) {
+  val key = cssValue(value).toLower
+  val cmd = match(key.parseInt) {
+    Just(penalty) -> "\\penalty" + penalty.show.braced
+    Nothing -> {
+      if (key=="always") then "\\newpage"
+      elif (key=="avoid") then "\\nobreak"
+      elif (key=="left" || key=="verso") then "\\cleartoleftpage"
+      elif (key=="right" || key=="recto") then "\\cleardoublepage"
+      elif (key=="auto") then "\\goodbreak"
+      elif (key=="clear") then "\\clearpage"
+      else {
+        warning("unknown page-break value: " + value.show)
+        ""
+      }
     }
   }
-  else {
-    body2.cssInlineMargin(kvs,"margin")
-  }
+  if (cmd.isEmpty) then "" else (cmd + "%mdk\n")
 }
 
 // -----------------------------------------------------------------------------

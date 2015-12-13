@@ -353,6 +353,16 @@
   \parfillskip\@flushglue
 }
 
+% provide cleartoleftpage
+\providecommand\cleartoleftpage{%
+  \clearpage%
+  \if@twoside\ifodd\c@page
+    \hbox{}\newpage
+    \if@twocolumn\hbox{}\newpage\fi
+  \fi\fi
+}
+
+
 % ---------------------------------------------------
 % Margins
 % ---------------------------------------------------
