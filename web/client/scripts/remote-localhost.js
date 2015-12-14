@@ -96,8 +96,8 @@ var FrameRemote = (function() {
   FrameRemote.prototype.connect = function(_mount) {
     var self = this;
     if (!self.hosted) return Promise.resolved({ code: 401 });
-    return self.login().then( function(realmount) {
-      return { mount: realmount, code: 0 };
+    return self.login().then( function(res) {
+      return { mount: res.mount, code: 0, canRunLocal: res.canRunLocal };
     });    
   }
 
@@ -111,7 +111,7 @@ var FrameRemote = (function() {
         email   : res.email,
       };
       self.mount = res.mount;
-      return res.mount;
+      return res;
     });
   }
 
@@ -183,7 +183,9 @@ function createFolder( mount, dirname ) {
   });
 }
 
-
+function runLocal( params ) {
+  return localhost.request( "POST:run", { timeout: 120000 }, params );
+}
 
 /* ----------------------------------------------
    Main entry points
@@ -211,6 +213,7 @@ var Localhost = (function() {
     var self = this;
     self.folder = folder || "";
     self.mount  = mount;
+    self.canRunLocal = false;
   }
 
   Localhost.prototype.createNewAt = function(folder) {
@@ -225,7 +228,7 @@ var Localhost = (function() {
   Localhost.prototype.canSync  = true;
   Localhost.prototype.needSignin = false;
   Localhost.prototype.hasAtomicPush = true;
-
+  
   Localhost.prototype.getFolder = function() {
     var self = this;
     return self.folder;
@@ -250,14 +253,16 @@ var Localhost = (function() {
     var self = this;
     return localhost.connect(self.mount).then( function(res) {
       if (!self.mount && res.mount) self.mount = res.mount;
+      if (res.canRunLocal) self.canRunLocal = res.canRunLocal;
       return res.code;
     });
   }
 
   Localhost.prototype.login = function() {
     var self = this;
-    return localhost.login(self.mount).then( function(mount) {
-      if (!self.mount && mount) self.mount = mount;
+    return localhost.login(self.mount).then( function(res) {
+      if (!self.mount && res.mount) self.mount = res.mount;
+      if (res.canRunLocal) self.canRunLocal = res.canRunLocal;
     });
   }
 
@@ -332,6 +337,12 @@ var Localhost = (function() {
     var self = this;
     return null;
   };
+
+  Localhost.prototype.run = function(params) {
+    var self = this;
+    if (!self.canRunLocal) return Promise.rejected(new Error("madoko-local is not configured to run Madoko locally. (pass the --run flag?)"));
+    return runLocal(params);
+  }
 
   return Localhost;
 })();   
