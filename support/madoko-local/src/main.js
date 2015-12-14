@@ -23,6 +23,7 @@ var Util    = require("./util.js");
 var Promise = require("./promise.js");
 var Log     = require("./log.js");
 var Config  = require("./config.js");
+var Run     = require("./run.js");
 
 // -------------------------------------------------------------
 // Constants
@@ -54,8 +55,15 @@ var config = {
   limits    : {
     fileSize    : 64*mb,
     logFlush    : 1*minute,
+    timeoutPDF  : 2*minute,
+    timeoutMath : 1*minute,
   },
+  run       : null,     // program to run Madoko locally
+  rundir    : null,     // directory under which to run LaTeX.
+  rmdirDelay: 5*second, // after this amount the run directory gets removed
+  mime      : null,     // gets set to Express.static.mime
 }
+
 
 var indent = "\n                   ";
 var Options = new CmdLine(Config.main);
@@ -64,6 +72,7 @@ Options
   .version(Config.version,"-v, --version")
   .option("-l, --launch", "launch default browser at correct localhost address")
   .option("--secret [secret]", "use specified secret key, or generated key if left blank")
+  .option("--run [madoko]", "run Madoko & LaTeX locally for math rendering and PDF's")
   .option("--port <n>", "serve at port number (=80)", parseInt )
   .option("--origin <url>", "give local disk access to <url> (" + config.origin + ")")
   .option("--homedir <dir>", "use <dir> as user home directory (for logging)")
@@ -121,6 +130,15 @@ else config.username = process.env["USER"] || process.env["USERNAME"] || "(local
 if (localConfig.userid) config.userid = localConfig.userid;
 else config.userid = config.username;
 
+// Run
+if (Options.run) {
+  if (typeof Options.run === "string") 
+    config.run = Options.run;
+  else 
+    config.run = "madoko";
+}
+
+
 // Verbose
 if (Options.verbose === true) {
   config.verbose = 1;
@@ -154,6 +172,14 @@ if (config.writebackDir) {
   Util.writeFileSync(configFile, JSON.stringify(localConfig), {encoding:"utf8", ensuredir:true});
 }
 
+// Create rundir
+if (typeof Options.rundir==="string") {
+  config.rundir = options.rundir;
+}
+else {
+  config.rundir = config.mountdir;
+}
+
 // Logging
 config.log = new Log.Log( config.verbose, config.configdir, config.limits.logFlush );
 
@@ -164,11 +190,16 @@ config.log = new Log.Log( config.verbose, config.configdir, config.limits.logFlu
 
 function promise(action) {
   return (function(req,res) {
-    var result = action(req,res);
+    var result = Promise.wrap( action, req, res);
     if (result && result.then) {
-      result.then( null, function(err) {
-        handleError(err,req,res);
-      });
+      result.then( function(finalres) {
+          if (finalres != null) {
+            res.send(finalres);
+          }
+        }, 
+        function(err) {
+          handleError(err,req,res);
+        });
     }
     else return result;
   });
@@ -225,9 +256,9 @@ app.use(BodyParser.raw({limit: config.limits.fileSize, type:"application/octet-s
 Express.static.mime.define({    
   "text/madoko": ["mdk"],
   "text/markdown": ["md","mkdn","markdown"],
-  "text/plain": ["tex","sty","cls","bib","bbl","aux","dimx","dim"],
+  "text/plain": ["tex","sty","cls","bib","bbl","aux","dimx","dim","csl","bst"],
 });
-
+config.mime = Express.static.mime;
 
 // -------------------------------------------------------------
 // Security   
@@ -236,7 +267,7 @@ Express.static.mime.define({
 app.use(function(req, res, next){
   if (config.secret && Util.startsWith(req.url,"/rest/")) {
     if (config.secret !== req.query.secret) {
-      throw { httpCode:401, message: "unauthorized access; secret key is not correct." };
+      throw new Util.HttpError( "unauthorized access; secret key is not correct.", 401 );
     }
   }
   next();
@@ -245,11 +276,10 @@ app.use(function(req, res, next){
 app.use(function(req, res, next){
   if (config.mountdir && req.query && req.query.mount) {
     if (req.query.mount !== config.mountdir) {
-      throw { httpCode:401, message: 
+      throw new Util.HttpError(  
         ["Document was previously served from a different local root directory!",
          "  Previous root: " + req.query.mount,
-         "  Current root : " + config.mountdir].join("\n") 
-      }; 
+         "  Current root : " + config.mountdir].join("\n"), 401 );
     }
   }
   next();
@@ -258,7 +288,7 @@ app.use(function(req, res, next){
 app.use(function(req, res, next){
   // extra check: only serve to local host
   if (req.ip !== req.connection.remoteAddress || req.ip !== localHostIP) {
-    throw { httpCode:401, message: "only serving localhost" };
+    throw new Util.HttpError( "only serving localhost", 401 );
   }
 
   // console.log("referer: " + req.get("Referrer") + ", Path: " + req.Path + ", host: " + req.hostname);
@@ -309,42 +339,9 @@ function finfoFromStat( stat, fpath ) {
   return finfo;    
 }
 
-/* --------------------------------------------------------------------
-   Ensure files reside in the sandbox
--------------------------------------------------------------------- */
-
-var rxFileChar = "[^\\\\/\\?\\*\\.\\|<>&:\"\\u0000-\\u001F]";
-var rxRootRelative = new RegExp( "^(?![\\\\/]|\w:)(" + rxFileChar + "|\\.(?=[^\\.])|[\\\\/](?=" + rxFileChar + "|\\.))+$" );
-
-function makeSafePath(root,path) {
-  var root  = Util.normalize(root);
-  var fpath = Util.combine( root, path); // normalizes
-  if (root && ((fpath===root) || (Util.startsWith(fpath,root + "/") && rxRootRelative.test(fpath.substr(root.length+1))))) {
-    return fpath;
-  }
-  else {
-    return null;
-  }
-}
-
-function isSafePath(root,path) {
-  return (makeSafePath(root,path) ? true : false);
-}
-
-// Create a safe path under a certain root directory and raise an exception otherwise.
-function getSafePath(root,path) {
-  var fpath = makeSafePath(root,path);
-  config.log.trace("authorize path: '" + fpath + "'",3);
-  config.log.trace(" (root:'" + root + "', path:'" + path + "')",3);
-  if (!fpath) {
-    console.log("Unauthorized file name: " + path);
-    throw new Error("Invalid file name due to sandbox: " + path);
-  }
-  return fpath;
-}
 
 function getLocalPath(fpath) {
-  return getSafePath(config.mountdir,fpath);
+  return Sandbox.getSafePath(config.mountdir,fpath);
 }
 
 // -------------------------------------------------------------
@@ -361,6 +358,7 @@ function getConfig(req,res) {
     username: config.username,
     userid  : config.userid,
     mount   : config.mountdir,
+    canRunLocal : (config.run != null),
   });
 }
 
@@ -380,7 +378,7 @@ function getMetadata(req,res) {
         return Promise.when(files.map( function(fname) { return Util.fstat(Util.combine(fpath,fname)); } )).then( function(stats) {
           finfo.contents = [];
           for(var i = 0; i < stats.length; i++) {
-            if (stats[i] != null && isSafePath(fpath,files[i])) { // only list valid accessible files
+            if (stats[i] != null && Sandbox.isSafePath(fpath,files[i])) { // only list valid accessible files
               finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
             }
           }
@@ -421,7 +419,7 @@ function putWriteFile(req,res) {
       //trace("file write: " + fpath + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
       if (stat.mtime.getTime() > rtime.getTime()) {  // todo: is there a way to do real atomic updates? There is still a failure window here...
         config.log.trace("file write : atomic fail: " + req.query.path + "\n remoteTime: " + req.query.remoteTime + "\n rtime: " + rtime.toISOString() + "\n mtime: " + stat.mtime.toISOString());
-        throw new Error("File was modified concurrently; could not save: " + req.query.path);
+        throw new Util.HttpError( "File was modified concurrently; could not save: " + req.query.path );
       }
     }
     return Promise.guarded( stat==null, function() {
@@ -430,7 +428,7 @@ function putWriteFile(req,res) {
       //trace("body type: " + typeof req.body + " (" + (req.body instanceof Buffer.Buffer ? "is Buffer" : "not a Buffer") + ")");
       return Util.writeFile( fpath, req.body ).then( function() {
         return Util.fstat(fpath).then( function(stat) {
-          if (!stat) throw new Error("File could not be saved");
+          if (!stat) throw new Util.HttpError( "File could not be saved");
           config.log.trace("file write : final mtime: " + stat.mtime.toISOString());
           res.send({ 
             path: req.query.path, 
@@ -457,6 +455,16 @@ function postCreateFolder(req,res) {
 
 
 // -------------------------------------------------------------
+// Run Madoko
+// -------------------------------------------------------------
+function postRun(req,res) {
+  config.log.trace("postrun");
+  return Run.madokoRun(config,req.body).then( function(info) {
+    res.send(info);
+  });
+}
+
+// -------------------------------------------------------------
 // CSP violation report
 // -------------------------------------------------------------
 
@@ -475,6 +483,7 @@ app.get("/rest/metadata", promise(getMetadata));
 app.get("/rest/readfile", promise(getReadFile));
 app.put("/rest/writefile", promise(putWriteFile));
 app.post("/rest/createfolder", promise(postCreateFolder));
+app.post("/rest/run", promise(postRun));
 app.post("/report/csp", promise(cspReport));
 
 // -------------------------------------------------------------

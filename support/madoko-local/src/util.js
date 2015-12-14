@@ -19,6 +19,7 @@ var Path      = require("path");
 var osHomeDir = require("os-homedir");
 var openUrl   = require("open");
 var mkdirp    = require("mkdirp");
+var rmdirx    = require("rimraf");
 
 // local imports
 var Promise     = require("./promise.js");
@@ -140,6 +141,10 @@ function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
 }
 
+function removeDir(dir) {
+  return new Promise( function(cont) { rmdirx(dir,cont); } );
+}
+
 function writeFile( fpath, content, options ) {
   return new Promise( function(cont) {
     Fs.writeFile( fpath, content, options, function(err) {
@@ -203,6 +208,18 @@ function dnsReverse( ip ) {
   });  
 }
 
+// -------------------------------------------------------------
+// Error handling
+// -------------------------------------------------------------
+
+function HttpError(message, httpCode) {
+  this.name = 'MyError';
+  this.message = message;
+  this.httpCode = httpCode || 500;
+  this.stack = (new Error()).stack;
+}
+HttpError.prototype = new Error;
+
 
 // module interface
 return {
@@ -227,12 +244,16 @@ return {
 
   // promise based file api
   ensureDir   : ensureDir,
+  removeDir   : removeDir,
   readFile    : readFile,
   writeFile   : writeFile,
   appendFile  : appendFile,
   readDir     : readDir,
   fstat       : fstat,
   dnsReverse  : dnsReverse,  
+
+  // Errors
+  HttpError   : HttpError,
 };
 
 });
