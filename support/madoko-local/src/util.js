@@ -19,7 +19,7 @@ var Path      = require("path");
 var osHomeDir = require("os-homedir");
 var openUrl   = require("open");
 var mkdirp    = require("mkdirp");
-var rmdirx    = require("rimraf");
+var rmdirRF   = require("rimraf");
 
 // local imports
 var Promise     = require("./promise.js");
@@ -141,8 +141,14 @@ function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
 }
 
+// remove everything in dir recursively
+function removeDirAll(dir) {
+  return new Promise( function(cont) { rmdirRF(dir,cont); } );
+}
+
+// remove a directory if it is empty
 function removeDir(dir) {
-  return new Promise( function(cont) { rmdirx(dir,cont); } );
+  return new Promise( function(cont) { Fs.rmdir(dir,cont); } );
 }
 
 function writeFile( fpath, content, options ) {
@@ -244,6 +250,7 @@ return {
 
   // promise based file api
   ensureDir   : ensureDir,
+  removeDirAll: removeDirAll,
   removeDir   : removeDir,
   readFile    : readFile,
   writeFile   : writeFile,

@@ -175,12 +175,12 @@ function madokoRun( config, params ) {
   var pdf      = params.pdf     || false;
   var now = new Date();
   var sub = now.toISOString().substr(0,10) + "-" + now.getTime().toString(16).toUpperCase();
-  var userpath = Util.combine( config.rundir, ".madoko-run", sub );
+  var userpath = Util.combine( config.rundir, sub );
   config.log.info("madoko run: " + userpath);
   return Util.ensureDir( userpath ).then( function() {
     return madokoRunIn( config, userpath, docname, files, pdf ).always( function() {
       setTimeout( function() {
-        Util.removeDir( userpath ).then( null, function(err) {
+        Util.removeDirAll( userpath ).then( null, function(err) {
           config.log.message( "unable to remove: " + userpath + ": " + err.toString() );
         });
       }, config.limits.rmdirDelay);

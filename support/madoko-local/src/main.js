@@ -10,19 +10,20 @@
 // Imports
 // -------------------------------------------------------------
 
-var Path    = require("path");
-var CmdLine = require("commander").Command;
-var Readline= require("readline");
-var Http    = require("http");
-var Buffer  = require("buffer");
-var Express   = require('express');
-var BodyParser= require("body-parser");
+var Path        = require("path");
+var CmdLine     = require("commander").Command;
+var Readline    = require("readline");
+var Http        = require("http");
+var Buffer      = require("buffer");
+var Express     = require('express');
+var BodyParser  = require("body-parser");
 
 // local modules
 var Util    = require("./util.js");
 var Promise = require("./promise.js");
 var Log     = require("./log.js");
 var Config  = require("./config.js");
+var Sandbox = require("./sandbox.js");
 var Run     = require("./run.js");
 
 // -------------------------------------------------------------
@@ -65,27 +66,33 @@ var config = {
 }
 
 
-var indent = "\n                   ";
 var Options = new CmdLine(Config.main);
 Options
   .usage("[options] [mount-directory]")
   .version(Config.version,"-v, --version")
   .option("-l, --launch", "launch default browser at correct localhost address")
   .option("--secret [secret]", "use specified secret key, or generated key if left blank")
-  .option("--run [madoko]", "run Madoko & LaTeX locally for math rendering and PDF's")
+  .option("--run [madoko]", "run madoko & latex locally for math rendering and PDF's")
   .option("--port <n>", "serve at port number (=80)", parseInt )
   .option("--origin <url>", "give local disk access to <url> (" + config.origin + ")")
   .option("--homedir <dir>", "use <dir> as user home directory (for logging)")
+  .option("--rundir <dir>", "use <dir> for running madoko (<mount-directory>)")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
-
+  
 Options.on("--help", function() {
   console.log([
     "  Notes:",
-    "    Access is given to any files and sub-directories under [mount-directory].",
+    "    Access is given to any files and sub-directories under <mount-directory>.",
     "    If blank, the previous mount directory or current directory is used.",
     "",
     "    Previous secrets or mount directories are read from the configuration",
-    "    file in '$HOME/.madoko/config.json'. Log files are written there too."
+    "    file in '$HOME/.madoko/config.json'. Log files are written there too.",
+    "",
+    "    If the --run flag is given, mathematics, the bibilography, and PDF's are",
+    "    generated locally instead of on the Madoko server. By default calls the",
+    "    'madoko' program on the PATH but you can pass an explicit path too.",
+    "    The --rundir determines under which directory files are stored temporarily",
+    "    when Madoko is invoked. By default this is '<mount-directory>/.madoko-run'.",
   ].join("\n"));
 });
 
@@ -179,6 +186,7 @@ if (typeof Options.rundir==="string") {
 else {
   config.rundir = config.mountdir;
 }
+config.rundir = Util.combine(config.rundir,".madoko-run");
 
 // Logging
 config.log = new Log.Log( config.verbose, config.configdir, config.limits.logFlush );
@@ -510,11 +518,13 @@ Http.createServer(app).listen(config.port, "localhost"); // only listen on local
 var localHost = "http://localhost" + (config.port===80 ? "" : ":" + config.port.toString());
 var accessPoint = localHost + (config.secret ? "#secret=" + encodeURIComponent(config.secret) : "");
 
-console.log("listening on          : " + localHost );
-console.log("connecting securely to: " + config.origin );
-console.log("serving files under   : " + config.mountdir );
+console.log("listening on       : " + localHost );
+console.log("connect securely to: " + config.origin );
+console.log("serving files under: " + config.mountdir );
 console.log("");
-console.log("access server at      : " + accessPoint );
+console.log("---------------------------------------------------------------");
+console.log("access server at   : " + accessPoint );
+console.log("---------------------------------------------------------------");
 console.log("");
 
 // -------------------------------------------------------------
@@ -531,7 +541,10 @@ function listen() {
     if (answer==="q" || answer==="y") {
       if (config.log) config.log.flush();
       rl.close();
-      setTimeout( function() { process.exit(0); }, 100 );
+      if (Util.fileExistSync(config.rundir)) {
+        Util.removeDir(config.rundir); // try to remove in a promise.
+      }
+      setTimeout( function() { process.exit(0); }, 250 ); // give some time to flush and remove .madoko-run
       return;
     }
     else {
