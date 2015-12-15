@@ -95,7 +95,7 @@ var FrameRemote = (function() {
 
   FrameRemote.prototype.connect = function(_mount) {
     var self = this;
-    if (!self.hosted) return Promise.resolved({ code: 401 });
+    if (!self.hosted) return Promise.resolved({ code: 401, canRunLocal: false });
     return self.login().then( function(res) {
       return { mount: res.mount, code: 0, canRunLocal: res.canRunLocal };
     });    
@@ -253,7 +253,7 @@ var Localhost = (function() {
     var self = this;
     return localhost.connect(self.mount).then( function(res) {
       if (!self.mount && res.mount) self.mount = res.mount;
-      if (res.canRunLocal) self.canRunLocal = res.canRunLocal;
+      self.canRunLocal = res.canRunLocal;
       return res.code;
     });
   }
@@ -337,6 +337,13 @@ var Localhost = (function() {
     var self = this;
     return null;
   };
+
+  Localhost.prototype.connectRunLocal = function() {
+    var self = this;
+    return self.connect().then( function(code) {
+      return (code===0 ? self.canRunLocal : false);
+    });
+  }
 
   Localhost.prototype.run = function(params) {
     var self = this;

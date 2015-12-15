@@ -17,12 +17,8 @@ var Runner = (function() {
     
     self.sendFiles = new Map();
     self.storage = null;
-    self.runLocal = false;
     self.localhost = new Localhost.Localhost();
-    self.localhost.connect().then( function() {
-      if (self.localhost.canRunLocal) { self.runLocal = true; }
-    }, function(err) {});
-
+    
     self.options = Madoko.initialOptions();
     self.madokoWorker = new Util.ContWorker("madoko-worker.js"); 
 
@@ -253,10 +249,9 @@ var Runner = (function() {
     }
     var t0 = Date.now();
     var sid = self.storage.storageId;
-    var runp = (self.runLocal && !ctx.runOnServer)
-                 ? self.localhost.run( params )
-                 : Util.requestPOST( "/rest/run", {}, params );
-    return runp.then( function(data) {
+
+    return self.runRequest( ctx, params ).then( function(data) {
+      if (ctx.statusMessageId) Util.messageClear(ctx.statusMessageId);
       if (!self.storage || self.storage.storageId !== sid) {
         ctx.errorCode = 1;
         ctx.message = "stale request";
@@ -286,6 +281,35 @@ var Runner = (function() {
       return ctx.errorCode;
     });
   }  
+
+  Runner.prototype.runRequest = function( ctx, params ) {
+    var self = this;
+    if (!ctx.statusMessage) ctx.statusMessage("Rendering document");
+    
+    function runonServer() { 
+      if (ctx.disableServer) {
+        return Promise.rejected( ctx.statusMessage + ": cannot contact server because the 'disable server' menu is checked.");
+      }
+      else {
+        ctx.statusMessageId = Util.message( ctx.statusMessage + " on server...", Util.Msg.Status);
+        return Util.requestPOST( "/rest/run", {}, params ); 
+      }
+    };
+
+    if (!ctx.disableLocal && self.localhost) {
+      return self.localhost.connectRunLocal().then( function(canRunLocal) {
+        if (canRunLocal) {
+          ctx.statusMessageId = Util.message( ctx.statusMessage + " locally...", Util.Msg.Status);
+          return self.localhost.run( params );
+        }
+        else
+          return runonServer();
+      });
+    }
+    else {
+      return runonServer();
+    }
+  }
 
   Runner.prototype.showLatexMessages = function( output, show, docname) {
     var self = this;
