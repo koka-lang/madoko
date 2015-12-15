@@ -878,7 +878,7 @@ function cssFont( body : string, kvs : dict<string> ) : string {
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-family", fun(value,b) { 
-      val fonts = value.cssSplitList
+      val fonts = value.cssSplitList.filter(bool)
       val (tfonts,xfonts) = fonts.filter(fun(f) { !f.startsWith("html-") }).partition( fun(f) { f.startsWith("tex-") })
       val families = (tfonts + xfonts).map( fun(fam) {
           val spec = if (fam=="serif") then "!rmfamily"
