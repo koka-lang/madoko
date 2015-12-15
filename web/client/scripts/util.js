@@ -1897,6 +1897,8 @@ doc.execCommand("SaveAs", null, filename)
 
   function miniMarkdown(s) {
     return s.replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/_([^_\n]+)_/g, "<em>$1</em>")
+            .replace(/\[([^\]\n]+)\]\(([^\)\n"']+)\)/g, "<a target=_blank href=\"$2\">$1</a>" )
             .replace(/\n  /g,"<br>");
   }
 
