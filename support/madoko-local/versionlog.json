@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.4.0-beta",
+      "date"   : "2015-12-15",
+      "updates": [
+        "Support running Madoko/LaTeX locally",
+      ]
+    },
     { "version": "0.3.3-beta",
       "date"   : "2015-12-09",
       "updates": [

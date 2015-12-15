@@ -19,9 +19,9 @@ the `madoko-local` program:
 ```
 > npm install -g madoko-local
 ```
-and that's it :-) 
+and that's it :-)
 
-# Usage
+# Usage 
 
 Simply run the `madoko-local` program with the directory that you would
 like to access as an argument. Everything in that directory, and all its 
@@ -81,8 +81,15 @@ Options:
 * `-v`, `--version`
   : Show the current version of the program.
 * `-l`, `--launch`
-  : After starting the server, launch the default browser
+  : After starting the local server, launch the default browser
     at the correct localhost address.
+* `-r`,`--run`,
+  : Run Madoko locally to generate PDF's, render mathematics and
+    to generate bibliographies. This means you are no longer dependent
+    on the server to run LaTeX for you. This flag requires that you have
+    installed both Madoko (`npm install -g madoko`) and
+    LaTeX -- it is recommended to use  the latest [TexLive] _simple_ (or _full_) 
+    installation which is also used on the Madoko server.       
 * `--verbose[=<n>]`
   : Emit more tracing messages. 
     Set `n` to 2 to be the most verbose.
@@ -106,15 +113,40 @@ Options:
   : Use the specified port to serve `madoko-local`. 
     This can be useful if you have other servers running that 
     already use port 80.
+* `--rundir=<dir>`,
+  : The directory under which Madoko stores temporary files when
+    running Madoko (if the `--run` flag is present). Defaults to the
+    mount-directory.
+* `--runcmd=<cmd>`,
+  : The command to use when running Madoko locally. By default this
+    is `madoko`. 
+* `--runflags=<flags>`,
+  : Extra flags to pass to the Madoko program when running locally.
+    These flags are appended to the standard flags, namely:
+    `-vv -mmath-embed:512 --odir=out --sandbox`. 
 
 `madoko-local` stores the last generated secret and last used
 mount-directory in the local configuration file at
 `$HOME/.madoko/config.json`.
 
-# Future extensions
+# Running LaTeX locally
 
-In the future `madoko-local` will be extended to also allow running
-your own local LaTeX installation.
+When you pass the `--run` flag, the `madoko-local` program will not
+only serve files, but also run the local Madoko installation to generate
+PDF's, render mathematics, or generate the bibliography. It will store
+files temporarily under the `<rundir>/.madoko` directory where it runs
+Madoko with the `--sandbox` flag to restrict access to files under that
+directory only. 
+
+When running Madoko locally, you need to have installed both Madoko and LaTeX.
+Madoko can be installed through the Node package manager as:
+```
+> npm install -g madoko
+```
+For LaTeX, the latest [TexLive] full installation is recommended since it
+is also used on the Madoko server and it respects the `openin_any` and
+`openout_any` settings which are needed to run LaTeX in a sandboxed mode
+too.
 
 # Security
 
@@ -132,7 +164,10 @@ The server is designed with multiple security layers:
   that match the secret.
 * The server only gives access to files and directories under the specified
   mount directory.
+* When running Madoko locally, it runs it also in a sandbox restricting access
+  to files and directories under a specific run directory.
 
 
 [Madoko.net]: https://www.madoko.net  "Madoko"
 [Node.js]: http://nodejs.org "Node.JS"
+[TexLive]: https://www.tug.org/texlive "Tex Live"
