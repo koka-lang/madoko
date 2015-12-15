@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "0.9.23-beta",
+      "date": "2015-12-15",
+      "updates": [
+         "Support running Madoko/LaTex locally through [madoko-local](https://www.npmjs.com/package/madoko-local)",
+         "Support `page-break-before` and `page-break-after` attributes"         
+      ]
+    },
     { "version": "0.9.22-beta",
       "date": "2015-12-10",
       "updates": [
