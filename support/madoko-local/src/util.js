@@ -223,7 +223,7 @@ function dnsReverse( ip ) {
 }
 
 function pathIsEqual( p1, p2 ) {
-  if (Os.platform==="win32")
+  if (Os.platform()==="win32")
     return (Path.normalize(p1).toLowerCase() === Path.normalize(p2).toLowerCase());
   else
     return (Path.normalize(p1) === Path.normalize(p2));
