@@ -541,12 +541,24 @@
 }
 
 \newcount\md@interaction
-\newcommand\mdfontfamily[1]{%
+
+% select a font from a given family stack; the stack is saved and a search is only performed the first time.
+% the stack is comma seperated fonts:
+%  latex font family: @[enc]/<family>/[series]/[shape]/[scale]
+%  command          : !<cmd>
+%  fontspec font    : <font name>[<font options>]
+\newrobustcmd\mdfontfamily[1]{%
   \ifcsdef{md@fontselect@#1}{}{\md@fontfamily@{#1}}%
   \csuse{md@fontselect@#1}%
 }
 
-\newcommand\md@fontfamily@[1]{%
+% define a new command that selects the font from the given family stack
+\newrobustcmd\mdnewfontselect[2]{%
+  \ifcsdef{md@fontselect@#2}{}{\md@fontfamily@{#2}}%
+  \letcs#1{md@fontselect@#2}%
+}
+
+\newrobustcmd\md@fontfamily@[1]{%
   \wlog{resolve font stack: #1}%
   \md@interaction=\interactionmode
   \batchmode
