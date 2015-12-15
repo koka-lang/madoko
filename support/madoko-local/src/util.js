@@ -10,6 +10,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
 // NodeJS modules
+var Os        = require("os");
 var Fs        = require("fs");
 var Dns       = require("dns");
 var Crypto    = require("crypto");
@@ -34,6 +35,13 @@ function startsWith(s,pre) {
   if (!pre) return true;
   if (!s) return false;
   return (s.substr(0,pre.length).indexOf(pre) === 0);
+}
+
+// case-insensitive comparison
+function startsWithI(s,pre) {
+  if (!pre) return true;
+  if (!s) return false;
+  return (s.substr(0,pre.length).toLowerCase().indexOf(pre.toLowerCase()) === 0);
 }
 
 function endsWith(s,post) {
@@ -214,6 +222,13 @@ function dnsReverse( ip ) {
   });  
 }
 
+function pathIsEqual( p1, p2 ) {
+  if (Os.platform==="win32")
+    return (Path.normalize(p1).toLowerCase() === Path.normalize(p2).toLowerCase());
+  else
+    return (Path.normalize(p1) === Path.normalize(p2));
+}
+
 // -------------------------------------------------------------
 // Error handling
 // -------------------------------------------------------------
@@ -231,6 +246,7 @@ HttpError.prototype = new Error;
 return {
   // helpers
   startsWith  : startsWith,
+  startsWithI : startsWithI,
   endsWith    : endsWith,
   jsonParse   : jsonParse,
   normalize   : normalize,
@@ -258,6 +274,7 @@ return {
   readDir     : readDir,
   fstat       : fstat,
   dnsReverse  : dnsReverse,  
+  pathIsEqual : pathIsEqual,
 
   // Errors
   HttpError   : HttpError,

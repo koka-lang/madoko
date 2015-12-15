@@ -12,6 +12,7 @@ define([],function() {
 var Path        = require("path");
 var Cp          = require("child_process");
 var Util        = require("./util.js");
+var Log         = require("./log.js");
 var Promise     = require("./promise.js");
 var Sandbox     = require("./sandbox.js");
 
@@ -59,16 +60,19 @@ var stdflags = "--odir=" + outdir + " --sandbox";
 
 
 // Save files to be processed.
-function saveFiles( config, userpath, files ) {
+function saveFiles( userpath, files ) {
   return Promise.when( files.map( function(file) {
     var fpath = Sandbox.getSafePath(userpath,file.path);
-    config.log.trace("writing file: " + fpath + " (" + file.encoding + ")", 3);
+    Log.trace("writing file: " + fpath + " (" + file.encoding + ")", 3);
     return Util.writeFile( fpath, file.content, {encoding: file.encoding, ensuredir: true } );
   }));
 }
 
 
 // Read madoko generated files.
+// config: 
+//   limits.fileSize : int 
+//   mime.lookup(path)
 function readFiles( config, userpath, docname, pdf, out ) {
   var ext    = Path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
@@ -88,7 +92,7 @@ function readFiles( config, userpath, docname, pdf, out ) {
   if (cap) {
     try {
       Sandbox.getSafePath(userpath,cap[1]); // check if sandboxed
-      config.log.trace("add output: " + cap[1],3);
+      Log.trace("add output: " + cap[1],3);
       fnames.push(cap[1]);
     }
     catch(exn) {}
@@ -99,7 +103,7 @@ function readFiles( config, userpath, docname, pdf, out ) {
     var fpath = Sandbox.getSafePath(userpath,fname);
 
     function readError(err) {
-      if (err) config.log.trace("unable to read: " + fpath);
+      if (err) Log.trace("unable to read: " + fpath);
       var mime = config.mime.lookup(fname);
       return {
         path    : fname,
@@ -115,7 +119,7 @@ function readFiles( config, userpath, docname, pdf, out ) {
       return Util.readFile( fpath ).then( function(buffer) {
           var mime = config.mime.lookup(fname);
           var encoding = encodingFromMime(mime);
-          config.log.trace("reading: " + fpath + " (" + mime + ", " + encoding + ")");
+          Log.trace("reading: " + fpath + " (" + mime + ", " + encoding + ")");
           return {
             path: fname,
             encoding: encoding,
@@ -131,27 +135,33 @@ function readFiles( config, userpath, docname, pdf, out ) {
 }
 
 // execute madoko program
-function madokoExec( config, userpath, docname, flags, timeout ) {
-  var command = config.run + " " + flags + " " + stdflags + " \""  + docname + "\"";
+function madokoExec( program, userpath, docname, flags, timeout ) {
+  var command = program + " " + flags + " " + stdflags + " \""  + docname + "\"";
   return new Promise( function(cont) {
-    config.log.message("> " + command);
+    Log.message("> " + command);
     Cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
     //cont( new Error("sorry, cannot execute yet")); 
   }); 
 }
 
 // Run madoko program
+// config {
+//   limits { fileSize: int; timeoutPDF : ms, timeoutMath : ms }
+//   mime   { lookup: (path) -> mime }
+//   run    : string
+//   rundir : string
+// }
 function madokoRunIn( config, userpath, docname, files, pdf ) {
-  return saveFiles( config, userpath, files ).then( function() {
+  return saveFiles( userpath, files ).then( function() {
     Sandbox.getSafePath(userpath,docname); // is docname safe?
     var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
     var timeout = (pdf ? config.limits.timeoutPDF : config.limits.timeoutMath);    
     var startTime = Date.now();    
-    return madokoExec( config, userpath, docname, flags, timeout ).then( function(stdout,stderr) {
+    return madokoExec( config.run, userpath, docname, flags, timeout ).then( function(stdout,stderr) {
       var endTime = Date.now();
       var out = stdout + "\n" + stderr + "\n";
-      config.log.message(out);
-      config.log.info("madoko run: " + ((endTime - startTime + 999)/1000).toFixed(3) + "s");
+      Log.message(out);
+      Log.info("madoko run: " + ((endTime - startTime + 999)/1000).toFixed(3) + "s");
       return readFiles( config, userpath, docname, pdf, out ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
@@ -160,8 +170,8 @@ function madokoRunIn( config, userpath, docname, files, pdf ) {
         };
       });
     }, function(err,stdout,stderr) {
-      config.log.info("madoko failed: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
-      if (err) config.log.info(err.toString()); 
+      Log.info("madoko failed: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
+      if (err) Log.info(err.toString()); 
       err.stdout = stdout;
       err.stderr = stderr;
       throw err;
@@ -169,6 +179,13 @@ function madokoRunIn( config, userpath, docname, files, pdf ) {
   });
 }
 
+// Run madoko:
+// config {
+//   limits { fileSize: int; timeoutPDF : ms, timeoutMath : ms; rmdirDelay : ms }
+//   mime   { lookup: (path) -> mime }
+//   run    : string
+//   rundir : string
+// }
 function madokoRun( config, params ) {
   var docname  = params.docname || "document.mdk";
   var files    = params.files   || [];
@@ -176,17 +193,17 @@ function madokoRun( config, params ) {
   var now = new Date();
   var sub = now.toISOString().substr(0,10) + "-" + now.getTime().toString(16).toUpperCase();
   var userpath = Util.combine( config.rundir, sub );
-  config.log.info("madoko run: " + userpath);
+  Log.info("madoko run: " + userpath);
   return Util.ensureDir( userpath ).then( function() {
     return madokoRunIn( config, userpath, docname, files, pdf ).always( function() {
       setTimeout( function() {
         Util.removeDirAll( userpath ).then( null, function(err) {
-          config.log.message( "unable to remove: " + userpath + ": " + err.toString() );
+          Log.message( "unable to remove: " + userpath + ": " + err.toString() );
         });
       }, config.limits.rmdirDelay);
     });
   }, function(err) {
-    config.log.trace("erorr: " + err.toString());
+    // Log.trace("error: " + err.toString());
     throw err;
   });
 }
