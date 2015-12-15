@@ -1592,7 +1592,7 @@ var UI = (function() {
                 self.stale=true;
                 self.localFullSave(); // async full save as probably files are added
               }
-              if (res.runOnServer && !self.settings.disableServer && self.asyncServer && (res.mathDviDoc || res.mathPdfDoc)) {
+              if (res.runOnServer && self.asyncServer && (res.mathDviDoc || res.mathPdfDoc)) {
                 if ((res.mathDviDoc && self.lastMathDviDoc !== res.mathDviDoc) ||
                     (res.mathPdfDoc && self.lastMathPdfDoc !== res.mathPdfDoc)) { // prevents infinite math rerun on latex error
                   self.asyncServer.setStale();
@@ -1659,14 +1659,14 @@ var UI = (function() {
         var ctx = {
           docname: self.docName, 
           round:round,
+          disableServer: self.settings.disableServer,
+          statusMessage: "Rendering math and references",
           showErrors: function(errs) { self.showErrors(errs,false); },
         };
-        var msgid = Util.message("Rendering math and references...", Util.Msg.Status );
         return self.runner.runMadokoServer(self.docText, ctx ).then( 
           function(ctx) {
             // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
-            Util.messageClear(msgid);
             return self.asyncMadoko.run(true);
           },
           function(err) {
@@ -2319,6 +2319,8 @@ var UI = (function() {
   UI.prototype.getViewLink = function(path, mime) {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
+    var prefix = "";
+    
     if (mime==="application/pdf") {
       var url = self.storage.getShareUrl(path); // for PDF share is best; dropbox preview is great
       if (!url && URL.createObjectURL && !navigator.msSaveOrOpenBlob) {  // don't use for IE
@@ -2330,13 +2332,15 @@ var UI = (function() {
         }
       }
       if (url) {
-        return (function(msg) { return "<a class='external' target='_blank' href='" + Util.escape(url) + "'>" + msg + "</a>"; });
+        prefix = "&nbsp;(<a class='external' target='_blank' title='view in browser' href='" + Util.escape(url) + "'>view</a>)"; 
       }
     }
     // probably html, cannot use blob url directly (since a user can right-click and open in our origin)
     // we create fake url's that call "saveUserContent" on click
     return (function(msg) {
-      return "<span class='save-link' data-path='" + encodeURIComponent(path) + "' data-mime='" + encodeURIComponent(mime) + "'>" + msg + "</span>"; 
+      return msg + prefix + 
+        "&nbsp;(<span class='save-link' title='download and open' data-path='" + encodeURIComponent(path) + 
+            "' data-mime='" + encodeURIComponent(mime) + "'>open</span>)"; 
     });
   }
 
@@ -2376,19 +2380,21 @@ var UI = (function() {
 
   UI.prototype.generatePdf = function() {
     var self = this;
-    self.event( null, "exporting...", State.Exporting, function() { 
+    self.event( null, "Rendering PDF...", State.Exporting, function() { 
       self.localSave();
       var ctx = { 
         round: 0, 
         docname: self.docName, 
         pdf: true, 
         includeImages: true,
+        disableServer: self.settings.disableServer,
+        statusMessage: "Rendering PDF",
         showErrors: function(errs) { self.showErrors(errs,true); } 
       };
-      if (self.settings.disableServer) {
-        Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
-        return;
-      }
+      //if (self.settings.disableServer) {
+      //  Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
+      //  return;
+      //}
       return self.spinWhile( self.exportSpinner, 
         self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
           if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
@@ -2401,7 +2407,7 @@ var UI = (function() {
 
   UI.prototype.generateHtml = function() {
     var self = this;
-    self.event( null, "exporting...", State.Exporting, function() { 
+    self.event( null, "Rendering HTML...", State.Exporting, function() { 
       self.localSave();
       return self.spinWhile( self.exportSpinner, 
         self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
