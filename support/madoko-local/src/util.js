@@ -10,6 +10,7 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
 // NodeJS modules
+var Os        = require("os");
 var Fs        = require("fs");
 var Dns       = require("dns");
 var Crypto    = require("crypto");
@@ -19,6 +20,7 @@ var Path      = require("path");
 var osHomeDir = require("os-homedir");
 var openUrl   = require("open");
 var mkdirp    = require("mkdirp");
+var rmdirRF   = require("rimraf");
 
 // local imports
 var Promise     = require("./promise.js");
@@ -33,6 +35,13 @@ function startsWith(s,pre) {
   if (!pre) return true;
   if (!s) return false;
   return (s.substr(0,pre.length).indexOf(pre) === 0);
+}
+
+// case-insensitive comparison
+function startsWithI(s,pre) {
+  if (!pre) return true;
+  if (!s) return false;
+  return (s.substr(0,pre.length).toLowerCase().indexOf(pre.toLowerCase()) === 0);
 }
 
 function endsWith(s,post) {
@@ -140,6 +149,16 @@ function ensureDir(dir) {
   return new Promise( function(cont) { mkdirp(dir,cont); } );
 }
 
+// remove everything in dir recursively
+function removeDirAll(dir) {
+  return new Promise( function(cont) { rmdirRF(dir,cont); } );
+}
+
+// remove a directory if it is empty
+function removeDir(dir) {
+  return new Promise( function(cont) { Fs.rmdir(dir,cont); } );
+}
+
 function writeFile( fpath, content, options ) {
   return new Promise( function(cont) {
     Fs.writeFile( fpath, content, options, function(err) {
@@ -203,11 +222,31 @@ function dnsReverse( ip ) {
   });  
 }
 
+function pathIsEqual( p1, p2 ) {
+  if (Os.platform==="win32")
+    return (Path.normalize(p1).toLowerCase() === Path.normalize(p2).toLowerCase());
+  else
+    return (Path.normalize(p1) === Path.normalize(p2));
+}
+
+// -------------------------------------------------------------
+// Error handling
+// -------------------------------------------------------------
+
+function HttpError(message, httpCode) {
+  this.name = 'MyError';
+  this.message = message;
+  this.httpCode = httpCode || 500;
+  this.stack = (new Error()).stack;
+}
+HttpError.prototype = new Error;
+
 
 // module interface
 return {
   // helpers
   startsWith  : startsWith,
+  startsWithI : startsWithI,
   endsWith    : endsWith,
   jsonParse   : jsonParse,
   normalize   : normalize,
@@ -227,12 +266,18 @@ return {
 
   // promise based file api
   ensureDir   : ensureDir,
+  removeDirAll: removeDirAll,
+  removeDir   : removeDir,
   readFile    : readFile,
   writeFile   : writeFile,
   appendFile  : appendFile,
   readDir     : readDir,
   fstat       : fstat,
   dnsReverse  : dnsReverse,  
+  pathIsEqual : pathIsEqual,
+
+  // Errors
+  HttpError   : HttpError,
 };
 
 });

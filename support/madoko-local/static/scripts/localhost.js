@@ -98,7 +98,7 @@ function xhrRequest( info, method, path, cont ) {
 	var content = info.content || null;
 	
 	req.open(req.method,"/rest/" + path + query, true);
-	req.timeout = 10000;
+	req.timeout = info.params.timeout || 10000;
   
 	function reject(message) {
 		message = message || req.responseText;

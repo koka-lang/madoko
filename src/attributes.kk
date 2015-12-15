@@ -372,7 +372,7 @@ function parseAttributesAcc( original : string, s : string, acc : list<(string,s
     }
     Just(cap) -> {
       val values  = cap.groups.firstMatched(2).trim.splitExclude(rxSpaces,rxNoSpaces)
-      val value   = values.filter(legalValue).map(unquote).join(" ")
+      val value   = values.filter(legalValue).map(unquote).join(" ") // TODO: we should not unquote here but only as needed!
       val kwvalue = if (values.length==1 && !(value.startsWith("\"") || value.startsWith("'")))
                      then value else ""
       val res     = (cap.groups[1].toLower,kwvalue,value)                     

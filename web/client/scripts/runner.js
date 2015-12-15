@@ -6,8 +6,9 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/map","../scripts/util","../scripts/promise","../scripts/storage","webmain"],
-        function(Map,Util,Promise,Storage,Madoko) {
+define(["../scripts/map","../scripts/util","../scripts/promise",
+        "../scripts/storage","../scripts/remote-localhost","webmain"],
+        function(Map,Util,Promise,Storage,Localhost,Madoko) {
 
 var Runner = (function() {
 
@@ -16,6 +17,11 @@ var Runner = (function() {
     
     self.sendFiles = new Map();
     self.storage = null;
+    self.runLocal = false;
+    self.localhost = new Localhost.Localhost();
+    self.localhost.connect().then( function() {
+      if (self.localhost.canRunLocal) { self.runLocal = true; }
+    }, function(err) {});
 
     self.options = Madoko.initialOptions();
     self.madokoWorker = new Util.ContWorker("madoko-worker.js"); 
@@ -247,7 +253,10 @@ var Runner = (function() {
     }
     var t0 = Date.now();
     var sid = self.storage.storageId;
-    return Util.requestPOST( "/rest/run", {}, params).then( function(data) {
+    var runp = (self.runLocal && !ctx.runOnServer)
+                 ? self.localhost.run( params )
+                 : Util.requestPOST( "/rest/run", {}, params );
+    return runp.then( function(data) {
       if (!self.storage || self.storage.storageId !== sid) {
         ctx.errorCode = 1;
         ctx.message = "stale request";

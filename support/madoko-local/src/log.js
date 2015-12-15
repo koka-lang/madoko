@@ -89,10 +89,71 @@ var Log = (function(){
   return Log;
 })();
 
+var ConsoleLog = (function(){
+
+  function ConsoleLog() { }
+
+  ConsoleLog.prototype.message = function( msg, level, logfileLevel ) {
+    var pre = (typeof level !== "number" || level <= 0 ? "" : Array(level+1).join("-") + " ");
+    console.log( pre + msg );    
+  }
+
+  ConsoleLog.prototype.info = function(msg,ll) {
+    var self = this;
+    self.message(msg,1,ll);
+  };
+
+  ConsoleLog.prototype.trace = function(msg,ll) {
+    var self = this;
+    self.message(msg,2,ll);
+  };
+
+  ConsoleLog.prototype.flush = function() { }
+
+  ConsoleLog.prototype.entry = function( obj, showConsole ) {
+    var data = JSON.stringify(obj);
+    if (showConsole) console.log( data + "\n" );
+  }
+
+  return ConsoleLog;
+})();
+
+var log = new ConsoleLog();
+
+function setLog(verbose,dir,flushIval,base) {
+  if (log) log.flush();
+  log = new Log(verbose,dir,flushIval,base);
+}
+
+function message( msg, level, logfileLevel ) {
+  if (log) log.message(msg,level,logfileLevel);
+}
+
+function info(msg,ll) { 
+  if (log) log.info(msg,ll);
+}
+
+function trace(msg,ll) { 
+  if (log) log.trace(msg,ll);
+}
+
+function entry(obj,showConsole) { 
+  if (log) log.entry(obj,showConsole);
+}
+
+function flush() { 
+  if (log) log.flush();
+}
 
 // module interface
 return {
-  Log: Log,
+  setLog : setLog,
+  message: message,
+  info   : info,
+  trace  : trace,
+  entry  : entry,
+  flush  : flush,
+  Log    : Log,
 };
 
 });
