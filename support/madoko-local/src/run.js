@@ -62,7 +62,7 @@ var stdflags = "--odir=" + outdir + " --sandbox";
 // Save files to be processed.
 function saveFiles( userpath, files ) {
   return Promise.when( files.map( function(file) {
-    var fpath = Sandbox.getSafePath(userpath,file.path);
+    var fpath = Sandbox.getSafePath(userpath,xnormalize(file.path));
     Log.trace("writing file: " + fpath + " (" + file.encoding + ")", 3);
     return Util.writeFile( fpath, file.content, {encoding: file.encoding, ensuredir: true } );
   }));
@@ -100,7 +100,7 @@ function readFiles( config, userpath, docname, pdf, out ) {
   //console.log("sending back:\n" + fnames.join("\n"));
   return Promise.when( fnames.map( function(fname) {
     // paranoia
-    var fpath = Sandbox.getSafePath(userpath,fname);
+    var fpath = Sandbox.getSafePath(userpath,xnormalize(fname));
 
     function readError(err) {
       if (err) Log.trace("unable to read: " + fpath);
@@ -135,12 +135,12 @@ function readFiles( config, userpath, docname, pdf, out ) {
 }
 
 // execute madoko program
-function madokoExec( program, userpath, docname, flags, timeout ) {
-  var command = program + " " + flags + " " + stdflags + " \""  + docname + "\"";
+function madokoExec( program, userpath, docname, flags, extraflags, timeout ) {
+  var command = [program,flags,stdflags,extraflags,"\""  + docname + "\""]
+                  .filter(function(s) { return (s ? true : false); }).join(" ");
   return new Promise( function(cont) {
     Log.message("> " + command);
     Cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
-    //cont( new Error("sorry, cannot execute yet")); 
   }); 
 }
 
@@ -150,14 +150,16 @@ function madokoExec( program, userpath, docname, flags, timeout ) {
 //   mime   { lookup: (path) -> mime }
 //   run    : string
 //   rundir : string
+//   runflags: string
 // }
 function madokoRunIn( config, userpath, docname, files, pdf ) {
   return saveFiles( userpath, files ).then( function() {
     Sandbox.getSafePath(userpath,docname); // is docname safe?
-    var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
+    var flags = "-vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
+    var extraflags = config.runflags || "";
     var timeout = (pdf ? config.limits.timeoutPDF : config.limits.timeoutMath);    
     var startTime = Date.now();    
-    return madokoExec( config.run, userpath, docname, flags, timeout ).then( function(stdout,stderr) {
+    return madokoExec( config.run, userpath, docname, flags, extraflags, timeout ).then( function(stdout,stderr) {
       var endTime = Date.now();
       var out = stdout + "\n" + stderr + "\n";
       Log.message(out);
@@ -185,8 +187,10 @@ function madokoRunIn( config, userpath, docname, files, pdf ) {
 //   mime   { lookup: (path) -> mime }
 //   run    : string
 //   rundir : string
+//   runflags: string
 // }
 function madokoRun( config, params ) {
+  if (!config.run) throw new Error("madoko-local is not configured to run Madoko locally. (pass the '--run' flag?)");
   var docname  = params.docname || "document.mdk";
   var files    = params.files   || [];
   var pdf      = params.pdf     || false;
@@ -200,7 +204,7 @@ function madokoRun( config, params ) {
         Util.removeDirAll( userpath ).then( null, function(err) {
           Log.message( "unable to remove: " + userpath + ": " + err.toString() );
         });
-      }, config.limits.rmdirDelay);
+      }, config.rmdirDelay);
     });
   }, function(err) {
     // Log.trace("error: " + err.toString());
