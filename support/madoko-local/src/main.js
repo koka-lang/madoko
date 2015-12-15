@@ -226,7 +226,6 @@ function postCreateFolder(req,res) {
 // Run Madoko
 // -------------------------------------------------------------
 function postRun(req,res) {
-  Log.trace("postrun");
   return Run.madokoRun(config,req.body).then( function(info) {
     res.send(info);
   });
@@ -277,12 +276,13 @@ Http.createServer(app).listen(config.port, "localhost"); // only listen on local
 var localHost   = "http://localhost" + (config.port===80 ? "" : ":" + config.port.toString());
 var accessPoint = localHost + (config.secret ? "#secret=" + encodeURIComponent(config.secret) : "");
 
-console.log("listening on       : " + localHost );
-console.log("connect securely to: " + config.origin );
-console.log("serving files under: " + config.mountdir );
+console.log("listening on        : " + localHost );
+console.log("connect securely to : " + config.origin );
+console.log("serving files under : " + config.mountdir );
+if (config.run) console.log("running madoko using: " + config.run );
 console.log("");
 console.log("---------------------------------------------------------------");
-console.log("access server at   : " + accessPoint );
+console.log("access server at    : " + accessPoint );
 console.log("---------------------------------------------------------------");
 console.log("");
 

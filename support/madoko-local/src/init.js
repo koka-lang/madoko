@@ -54,6 +54,7 @@ var config = {
   },
   run       : null,     // program to run Madoko locally
   rundir    : null,     // directory under which to run LaTeX.
+  runflags  : "",       // extra run flags.
   rmdirDelay: 5*second, // after this amount the run directory gets removed
   mime      : null,     // gets set to Express.static.mime
   launch    : false,    // if true, launch the browser at startup
@@ -65,13 +66,16 @@ Options
   .usage("[options] [mount-directory]")
   .version(Config.version,"-v, --version")
   .option("-l, --launch", "launch default browser at correct localhost address")
+  .option("-r, --run", "run madoko & latex locally for math and PDF rendering")
   .option("--secret [secret]", "use specified secret key, or generated key if left blank")
-  .option("--run [madoko]", "run madoko & latex locally for math rendering and PDF's")
   .option("--port <n>", "serve at port number (=80)", parseInt )
   .option("--origin <url>", "give local disk access to <url> (" + config.origin + ")")
   .option("--homedir <dir>", "use <dir> as user home directory (for logging)")
   .option("--rundir <dir>", "use <dir> for running madoko (<mount-directory>)")
+  .option("--runcmd <cmd>", "use <cmd> as the madoko program")
+  .option("--runflags <opts>", "pass extra options <opts> to the madoko program")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
+  .option("--rmdelay <secs>","delay before run directory is removed", parseInt )
   
 Options.on("--help", function() {
   console.log([
@@ -84,9 +88,9 @@ Options.on("--help", function() {
     "",
     "    If the --run flag is given, mathematics, the bibilography, and PDF's are",
     "    generated locally instead of on the Madoko server. By default calls the",
-    "    'madoko' program on the PATH but you can pass an explicit path too.",
+    "    'madoko' program on the PATH but you can use --runcmd to change this.",
     "    The --rundir determines under which directory files are stored temporarily",
-    "    when Madoko is invoked. By default this is '<mount-directory>/.madoko-run'.",
+    "    when Madoko is invoked. By default this is the <mount-directory>.",
   ].join("\n"));
 });
 
@@ -134,10 +138,19 @@ function initializeConfig() {
 
   // Run
   if (Options.run) {
-    if (typeof Options.run === "string") 
-      config.run = Options.run;
+    if (typeof Options.runcmd === "string") 
+      config.run = Options.runcmd;
     else 
       config.run = "madoko";
+
+    if (typeof Options.runflags === "string") {
+      config.runflags = Options.runflags;
+    }
+
+    if (typeof Options.rmdelay === "number" && Options.rmdelay >= 1) {
+      config.rmdirDelay = Options.rmdelay * second;
+      console.log("rmdir delay: " + config.rmdirDelay.toString());
+    }
   }
 
 
