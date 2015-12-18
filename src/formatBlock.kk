@@ -300,7 +300,13 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       val txt = formatBlocksX(context,content)
       val rnd = attrs.input
       match (attrs.hasKey("bib-id")) {
-        Just(bibid) -> log("aux","%mdk bib: " + bibid)
+        Just(bibid) -> {
+          log("aux","%mdk bib: " + bibid 
+                + (attrs.hasKey("csl-style").maybe("",fun(s) { ", csl-style:" + s }))
+                + (attrs.hasKey("bib-style").maybe("",fun(s) { ", bib-style:" + s }))
+                + (attrs.hasKey("locale").maybe("",fun(s) { ", locale:" + s })) 
+             )
+        }
         Nothing     -> ()
       }
       if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 

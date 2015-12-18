@@ -64,6 +64,8 @@ public struct options(
   
   bibStyle : string = "",  // bibliography style file (.bst)
   bib      : string = "",  // bibliography definition files (.bib)
+  cslStyle : string = "",  // bibliography style file (.csl/.xml)
+  locale   : string = "en-US", // language
   
   packages : string = "",  // link to latex packages (.sty)
   packagesx: string = "",        // packages in non-math mode only

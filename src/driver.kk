@@ -265,8 +265,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }    
       else {
         genPdf(outTexName)
-      }
-    
+      }    
 
       continue(html)            
     }
@@ -275,21 +274,26 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   phaseHtml()
 }
 
-function genBibtex( runBibtex, auxfiles : list<(string,string)>, mopts : options, continue : (bool) -> io () ) : io () {
-  runBibtex(auxfiles.map(fst),mopts) fun(err) {
-    auxfiles.foreach fun(aux) {
-      val (auxname,id) = aux
-      val bblname = auxname.changeExt(".bbl");
+function genBibtex( runBibtex, auxInfos : list<auxinfo>, mopts : options, continue : (bool) -> io () ) : io () {
+  val (_csls,bsts) = auxInfos.partition( fun(info) { info.style.isCsl } );
+
+  function continueCsl(biberr) {
+    continue(biberr);
+  }
+
+  runBibtex(bsts.map(auxfile),mopts) fun(err) {
+    bsts.foreach fun(bib) {
+      val bblname = bib.auxfile.changeExt(".bbl");
       match (tryReadTextFile(bblname, True)) {
         Left -> warning("Unable to read bibliography file: " + bblname);
         Right(bbl) -> {
-          val bibl    = parseTex(bbl,id,mopts.citestyle)
+          val bibl    = parseTex(bbl,bib.auxid,mopts.citestyle)
           val mdkname = bblname + ".mdk";
           writeTextFileSync(mdkname,bibl);        
         }
       }
     }
-    continue(err);
+    continueCsl(err);
   }
 }
 
@@ -361,9 +365,20 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   }         
 }
 
-function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<(string,string)> {
+type bibstyle {
+  Bst( styleName: string, locale: string )
+  Csl( styleName: string, locale: string )
+}
+
+struct auxinfo(
+  auxfile: string,
+  auxid  : string,
+  style  : bibstyle
+)
+
+function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<auxinfo> {
   val defaultAux = outName.noext + "-bib.aux"
-  val cites = splitCiteData( citeData )
+  val cites = splitCiteData( citeData, opts )
   //trace("bibnames: " + bibNames.join(","))
   //trace("cite data:\n" + citeData.indent(2))
   val bibData = createBibData( outName.dirname, searchDirs, bibNames )
@@ -375,37 +390,43 @@ function writeCitationsData( citeData : string, outName : string, searchDirs : l
     writeCitations( logs, bibData, bibAux, inName, mopts, True )              
   */
   cites.filterMap( fun(kv) {
-    val (auxStem,auxData) = kv
+    val (auxStem,(auxData,bibStyle)) = kv
     val auxName = outName.noext + "-bib"+ (if (auxStem=="") then "" else "-" + auxStem) + ".aux"
-    val changed = writeCitations(auxData, bibData, auxName, opts, True)
+    val changed = writeCitations(auxData, bibData, bibStyle, auxName, opts, True)
     //trace("bib: " + auxName + ", changed: " + changed.show + "\n" + auxData.indent(2))
-    if (changed || opts.rebuild) then Just((auxName,auxStem)) else Nothing
+    if (changed || opts.rebuild) then Just( Auxinfo(auxName,auxStem,bibStyle) ) else Nothing
   })
 }
 
-function splitCiteData( citeData : string ) : io list<(string,string)> {
+function splitCiteData( citeData : string, opts : options ) : io list<(string,(string,bibstyle))> {
   if (citeData.trim == "") return []
+  val style = if (opts.cslStyle!="") then Csl(opts.cslStyle,opts.locale)
+              elif (opts.bibStyle != "") then Bst(opts.bibStyle.basename.noext,opts.locale) 
+              else Bst("plainnat",opts.locale)
   match(citeData.find(rxBibFile)) {
-    Nothing   -> return [("",citeData)]
+    Nothing   -> return [("",(citeData,style))]
     Just(cap) -> {
       val auxName = cap.groups[1]
-      val auxRaw  = citeData.substr(0,cap.index)
+      val auxRaw  = citeData.substr(0,cap.index) // allow backward citations too??
       val auxData = 
         if (auxName.isEmpty) then auxRaw 
          else auxRaw.replaceAll("\\citation{" + auxName + ":", "\\citation{")
-      auxInsert( auxName, auxData, splitCiteData( citeData.substr1(cap.next) ))
+      val stylex = if (cap.groups[2].bool) then Csl(cap.groups[2],cap.groups[4])
+                   elif (cap.groups[3].bool) then Csl(cap.groups[3],cap.groups[4])
+                   else style
+      auxInsert( auxName, auxData, stylex, splitCiteData( citeData.substr1(cap.next), opts ))
     }
   }
 }
-val rxBibFile = regex(@"^ *%mdk bib: *([^\s]*)\s*", multiline=True )
+val rxBibFile = regex(@"^ *%mdk bib: *([^\s,]*) *(?:, *csl-style: *([^\s,]*) *)?(?:, *bib-style: *([^\s,]*))?(?:, *locale: *([^\s,]* *))?$", multiline=True )
 
-function auxInsert( auxName : string, auxData : string, xs : list<(string,string)> ) : list<(string,string)> {
+function auxInsert( auxName : string, auxData : string, style : bibstyle, xs : list<(string,(string,bibstyle))> ) : list<(string,(string,bibstyle))> {
   match(xs) {
-    Nil -> [(auxName,auxData)]
+    Nil -> [(auxName,(auxData,style))]
     Cons(x,xx) -> {
       if (x.fst == auxName) 
-       then Cons( (x.fst, auxData + "\n" + x.snd), xx)
-       else Cons( x, auxInsert(auxName,auxData,xx) )
+       then Cons( (x.fst, (auxData + "\n" + x.snd.fst, style)), xx)
+       else Cons( x, auxInsert(auxName,auxData,style, xx) )
     }
   }
 }
@@ -436,14 +457,16 @@ function createBibData( auxDir : string, searchDirs : list<string>, bibNames : l
 }
 
 // Write citations to an aux file. Returns "True" if the bibliography data changed.
-function writeCitations( auxData : string, bibData : string, auxName : string, opts : options, required : bool ) : io bool {
-  val bibStyleName = if (opts.bibStyle != "") then opts.bibStyle.basename.noext else "plainnat"
-      
+function writeCitations( auxData : string, bibData : string, bibStyle: bibstyle, auxName : string, opts : options, required : bool ) : io (bool) {
   val oldData = readTextFileDef(auxName,"",required)
   val initial = oldData.replaceAll(rxCite,"").replace(rxEmptyTail,"")
   val newData = (if (initial!="") then initial + "\n" else "") + 
-                  "% Generated by Madoko, version " + opts.version + "\n" + auxData + 
-                  "\n\\bibstyle{" + bibStyleName + "}\n" + bibData
+                  "% Generated by Madoko, version " + opts.version + "\n" + auxData + "\n" +
+                  (match(bibStyle) {
+                    Bst(style,locale) -> "\\bibstyle{" + style + "}\n%\\biblocale{" + locale + "}\n"
+                    Csl(style,locale) -> "%\\cslstyle{" + style + "}\n%\\csllocale{" + locale + "}\n"
+                  }) 
+                  + bibData
                   
   if (newData != oldData) {
     if (!(tryWriteTextFile(auxName, newData))) then {
