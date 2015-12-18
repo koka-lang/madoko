@@ -244,12 +244,12 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
       return src;
     }
     if (deep) {
-      if (typeof _visited===undefined) {
+      if (!_visited) {
         _visited = [];
       }
       else {
-        var i,len = _visited.length;
-        for(i=0; i<len; i++) {
+        var len = _visited.length;
+        for(var i=0; i<len; i++) {
           if (_visited[i]===src) return src;
         }
       }
@@ -257,7 +257,14 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     }
 
     if (typeof src.clone === "function") {
-      return src.clone(true);
+      return src.clone(true,_visited);
+    }
+    else if (src instanceof Array){
+      var dest = src.slice(0);
+      dest.map( function(elem) { 
+        return clone(elem,deep,_visited);
+      });
+      return dest;
     }
     else if (src instanceof Date){
       return new Date(src.getTime());
