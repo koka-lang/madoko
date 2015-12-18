@@ -198,7 +198,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     // run bibtex?
     if (!bibChanged.isNil && firstTime && mopts.bibtex!="") {
       if (mopts.bib.bool) {
-        (runners.runBibtex)( bibChanged, mopts ) fun(err) {
+        genBibtex( runners.runBibtex, bibChanged, mopts ) fun(err) {
           redo()
         }
       }
@@ -275,6 +275,24 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   phaseHtml()
 }
 
+function genBibtex( runBibtex, auxfiles : list<(string,string)>, mopts : options, continue : (bool) -> io () ) : io () {
+  runBibtex(auxfiles.map(fst),mopts) fun(err) {
+    auxfiles.foreach fun(aux) {
+      val (auxname,id) = aux
+      val bblname = auxname.changeExt(".bbl");
+      match (tryReadTextFile(bblname, True)) {
+        Left -> warning("Unable to read bibliography file: " + bblname);
+        Right(bbl) -> {
+          val bibl    = parseTex(bbl,id,mopts.citestyle)
+          val mdkname = bblname + ".mdk";
+          writeTextFileSync(mdkname,bibl);        
+        }
+      }
+    }
+    continue(err);
+  }
+}
+
 // Fixup locations in warnings:
 function fixWarnings(txt : string) : string {
   var location := "";
@@ -343,7 +361,7 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   }         
 }
 
-function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<string> {
+function writeCitationsData( citeData : string, outName : string, searchDirs : list<string>, bibNames : list<string>, opts : options ) : io list<(string,string)> {
   val defaultAux = outName.noext + "-bib.aux"
   val cites = splitCiteData( citeData )
   //trace("bibnames: " + bibNames.join(","))
@@ -361,7 +379,7 @@ function writeCitationsData( citeData : string, outName : string, searchDirs : l
     val auxName = outName.noext + "-bib"+ (if (auxStem=="") then "" else "-" + auxStem) + ".aux"
     val changed = writeCitations(auxData, bibData, auxName, opts, True)
     //trace("bib: " + auxName + ", changed: " + changed.show + "\n" + auxData.indent(2))
-    if (changed || opts.rebuild) then Just(auxName) else Nothing
+    if (changed || opts.rebuild) then Just((auxName,auxStem)) else Nothing
   })
 }
 

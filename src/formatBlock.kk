@@ -299,8 +299,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
     Div(content,attrs) -> {    
       val txt = formatBlocksX(context,content)
       val rnd = attrs.input
-      if (attrs.elem=="bib") then {
-        log("aux","%mdk bib: " + attrs.name)
+      match (attrs.hasKey("bib-id")) {
+        Just(bibid) -> log("aux","%mdk bib: " + bibid)
+        Nothing     -> ()
       }
       if ((attrs.classes.isNil && attrs.keyvals.isNil && attrs.name=="") || attrs.notag || rnd.isRaw || 
             (context.fmt==FmtTex && rnd.isMathDefs))

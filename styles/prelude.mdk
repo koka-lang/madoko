@@ -269,6 +269,9 @@ SubFigure {
 }
 
 <!-- bibliographies -->
+Bibl {
+  @bib;
+}
 Bibitem {
   @bib-bibitem;
   label     : '@bib-bibitem';
