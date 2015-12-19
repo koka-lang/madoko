@@ -48,10 +48,12 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   }
   elif (key=="bib-style" || key=="biblio-style" || key=="bibliography-style") {
     if (value.extname!="" || value.dirname!="") {
-      log("files", if (value.extname=="") then value.changeExt(".bst") else value)
+      log("files", value.defaultExt(".bst"))
     }
     options(bibStyle=value)
   }
+  elif (key=="csl-style") { options(cslStyle=value) }
+  elif (key=="locale") { options(locale=value) }  
   elif (key=="mathjax-ext" || key=="mathjax-extension")  options(mjext=if (value=="") then "" else options.mjext + ";" + value)
   elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader.appendNL(value))
   elif (key=="css-header") options(cssHeader=if(value=="") then "" else options.cssHeader.appendNL(value))

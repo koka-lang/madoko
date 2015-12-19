@@ -54,7 +54,13 @@ task("madoko", [], function(cs) {
   jake.logger.log("> " + cmd);
   jake.exec(cmd, {interactive: true}, function() { 
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
-    jake.cpR("contrib/monarch/monarch.js", outputDir);
+    ["monarch/monarch.js",
+     "csl/bibtex-parse.js",
+     "csl/citeproc.js","csl/csl-json.js",
+     "csl/csl-bibtex.js","csl/csl-madoko.js",
+    ].forEach( function(contrib) {
+      jake.cpR(path.join(contribDir,contrib), outputDir);
+    });
     complete(); 
   })
 },{async:true});
@@ -79,6 +85,17 @@ task("config", [], function () {
   }
 },{async:true});
 
+desc("install local styles");
+task("copystyles", [], function() {
+  // copy locales
+  jake.mkdirP(path.join(styleDir,"locales"));
+  var js = new jake.FileList().include(path.join(contribDir,"csl/locales/*.xml"));
+  copyFiles(path.join(contribDir,"csl"),js.toArray(),styleDir);
+  // copy CSL styles
+  jake.mkdirP(path.join(styleDir,"csl"));
+  var js = new jake.FileList().include(path.join(contribDir,"csl/csl/*.csl"));
+  copyFiles(path.join(contribDir,"csl"),js.toArray(),styleDir);
+});
 
 //-----------------------------------------------------
 // Tasks: clean 

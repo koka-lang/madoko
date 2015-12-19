@@ -13,6 +13,8 @@ node_modules/
 out/
 out2/
 support/madoko-local/test
+styles/csl
+styles/locales
 web/client/version.json
 web/client/versionlog.json
 web/client/madoko.appcache
