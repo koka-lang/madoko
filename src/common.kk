@@ -214,6 +214,16 @@ public type citemode {
   Auto
 }
 
+public function show( cm : citemode) : string {
+  match(cm) {
+    Numeric -> "numeric"
+    Natural -> "natural"
+    Textual -> "textual"
+    Super   -> "super"
+    Auto    -> "auto"
+  }
+}
+
 public function isNumCite( cs : citestyle ) : bool {
   match(cs.mode) {
     Natural -> False
@@ -230,7 +240,7 @@ val citeTextual = Citestyle(Textual,"(",")","; ",", ",", ")
 val citeSuper   = Citestyle(Super,"","",",",",",",",True,True)
 
 public function parseCiteStyle( text : string ) : citestyle {
-  match(text.find(rxCiteSpec)) {
+  match(text.toLower().find(rxCiteSpec)) {
     Just(cap) -> {
       val md = if (cap.groups[1]=="natural") then Natural
                elif (cap.groups[1]=="textual") then Textual
@@ -267,7 +277,7 @@ public function parseCiteStyle( text : string ) : citestyle {
 val rxVal      = @"\s*""([^""]*)""\s*"
 val rxValOpt   = "(?:," + rxVal + ")?"
 val rxVals     = rxVal + "," + rxVal + "," + rxVal + rxValOpt + rxValOpt
-val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto|)(?:[:](sort|nosort))?(?:[:]" + rxVals + ")?" )
+val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto)(?:[:](sort|nosort))?(?:[:]" + rxVals + ")?" )
 
 /* --------------------------------------
  Links 
@@ -385,7 +395,7 @@ public function showFormatter( f : formatter ) {
 }
 
 // A label is created for every element with an id.
-public struct label( element : string, labelText : string, labelCaption : string, labelInfo : string = "" )
+public struct label( element : string, labelText : string, labelCaption : string, labelAttrs : attrs = attrsNone )
 
 public function show( attrs : attrs ) : string {
   "{" + attrs.text + "}"
@@ -602,3 +612,9 @@ public function unindent( txt : string ) : string {
 public function contains( xs : list<string>, s : string ) : bool {
   xs.find( fun(x) { x == s }).bool
 }
+
+
+public function trimLines( s : string ) : string {
+  s.replaceAll(rxTrimLines,"")
+}
+val rxTrimLines = regex(@"^([ \t\r]*\n)+|([ \t\r]*\n)+$")
