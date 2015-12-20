@@ -1,5 +1,9 @@
 This directory contains:
 
+* `csl-bibtex.js`, `csl-madoko.js`
+  Copyright 2015 Daan Leijen, Microsoft Corporation 
+  These are distributed under the Apache 2.0 license
+
 * `bibtex-parse.js`: 
   This is based on the zotero-bibtex-parse library under the MIT license.
   ```  
@@ -28,17 +32,11 @@ This directory contains:
 
 * `csl-json.js`: a support file from citeproc.js
 
-* `csl-bibtex.js`, `csl-madoko.js`
-  Copyright 2015 Daan Leijen, Microsoft Corporation 
-  These are distributed under the Apache 2.0 license
-
-
 * `csl/*.csl`
   Standard CSL definitions from <zotero.org>
 
 * `locales/*.xml`
   Standard Locale definitions from <zotero.org>
-
 
 * `sax.js`
   An XML parser library by Isaacs
