@@ -143,8 +143,8 @@ function parseDefinitionsFull(
         Nothing -> ()
         Just(clabel) -> {
           val clabelx = clabel.expandKeys(attrsx.source,attrsx,dict(),fcontext.inlineContext.metadata)
-          val info    = attrsx.lookupKey("cite-info",clabel)
-          labels["@" + attrsx.name] := Label(bname,clabelx,labelCaption,info)
+          //val info    = attrsx.lookupKey("cite-info",clabel)
+          labels["@" + attrsx.name] := Label(bname,clabelx,labelCaption,attrsx)
         }
       }
     }

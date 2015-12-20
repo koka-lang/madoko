@@ -18,7 +18,6 @@ import common
 import attributes
 import inline
 import htmlFormatter  // htmlEscape
-import texCommon   // rxAuthorYear
 import entity
 import hilite // inlineMode
 import codeAlign
@@ -507,7 +506,7 @@ struct cite(
 )
 
 function newCite( context : inlineContext, name : string, pre : string, post : string, modifier : string, 
-                  citeLabel : string, citeInfo : string ) 
+                  citeLabel : string, attrs : attrs ) 
 {
   val numlab = match(context.labels[name]) {
                  Nothing   -> "?"
@@ -518,19 +517,12 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
                   Nothing   -> 0
                 }
   //trace("citeLabel: " + name + ": " + citeLabel)
-  val (number,authors,year) = 
-    match(citeInfo.find(rxAuthorYear)) {
-      Nothing   -> if (citeLabel=="") then (numlab,"","") else (citeLabel,"","")
-      Just(cap) -> {
-        //trace(" matched: " + cap.groups[1] + ", " + cap.groups[2] + ", " + cap.groups[3] ) 
-        (numlab, 
-          if (modifier=="+" && cap.groups[3]!="") 
-            then cap.groups[3] 
-            else cap.groups[1], //.replaceAll(rxEtAl,"_et al._"),
-          cap.groups[2])
-      }
-    }     
-  
+  val authors = if (modifier=="+" && attrs.hasKey("cite-authors-long").bool)
+                 then attrs.lookupKey("cite-authors-long","")
+                 else attrs.lookupKey("cite-authors","")
+  val year    = attrs.lookupKey("cite-year", "")
+  val number  = if (citeLabel=="") then numlab else citeLabel
+
   match (post.find(rxCommaAt)) {
     Nothing -> ()
     Just(cap) -> warning( "citations need to be semi-colon separated: "  + cap.matched )
@@ -556,7 +548,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                             match(context.labels[lab]) {
                               Just(lbl) -> {  // | lbl.element == "bibitem" 
                                 [context.newCite(lab.substr(1),cap.groups[1],cap.groups[4],cap.groups[2],
-                                                  lbl.labelText, lbl.labelInfo)]
+                                                  lbl.labelText, lbl.labelAttrs)]
                               }
                               Nothing -> {
                                 warning( "missing citation: @" + cap.groups[3] )
