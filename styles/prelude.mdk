@@ -272,6 +272,9 @@ SubFigure {
 Bibl {
   @bib;
 }
+.bibitem-label {
+  display: none;
+}
 Bibitem {
   @bib-bibitem;
   label     : '@bib-bibitem';
