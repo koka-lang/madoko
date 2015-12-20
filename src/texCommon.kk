@@ -58,9 +58,3 @@ public val rxTexCmd = @"(?:\\(?:begin|end)\b\s*" + optargs + texarg + "|" + texc
 
 public val texlen  = @"\-?\d+(?:\.\d+)?(?:pt|mm|cm|in|ex|em|bp|pc|dd|cc|sp|fil{1,3})\b"
 public val texdim  = @"(" + texlen + @")\s*(?:plus\b\s*(" + texlen + @")\s*)?(?:minus\b\s*(" + texlen + @")\s*)?"
-
-
-public function trimLines( s : string ) : string {
-  s.replaceAll(rxTrimLines,"")
-}
-val rxTrimLines = regex(@"^([ \t\r]*\n)+|([ \t\r]*\n)+$")
