@@ -56,6 +56,7 @@ task("madoko", [], function(cs) {
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
     ["monarch/monarch.js",
      "csl/bibtex-parse.js",
+     "csl/sax.js",
      "csl/citeproc.js","csl/csl-json.js",
      "csl/csl-bibtex.js","csl/csl-madoko.js",
     ].forEach( function(contrib) {
