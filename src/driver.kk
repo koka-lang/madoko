@@ -300,11 +300,10 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
                       searchReadTextFile(bib, searchDirs,".bib",True,mopts) 
                     })
   val citations   = auxcontents.findAll(rxCitation).list.map(fun(cap) { cap.groups[1] })
-  if (citations.length > 0) {
+  if (citations.length > 0 && cslStyle.filename.bool && madokoStyle.filename.bool && locale.filename.bool) {
     // ready to invoke CSL processor
     trace("run csl on " + citations.join(";"))
-    val numcite = if (mopts.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"      
-    val res = runCsl( citations, bibfiles, cslStyle, madokoStyle, locale, aux.auxid, numcite )
+    val res = runCsl( citations, bibfiles, cslStyle, madokoStyle, locale, aux.auxid , "")
     if (res.warnings.bool) mopts.printErr(res.warnings);
     if (res.errors.bool) {
       mopts.printErr(res.errors)
@@ -312,6 +311,7 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
     else {    
       trace("write bib.mdk")
       writeTextFileSync( aux.auxfile.changeExt(".bbl.mdk"), res.bibliography );
+      writeTextFileSync( aux.auxfile.changeExt(".bib.json"), res.bib);
     }
   }
 }

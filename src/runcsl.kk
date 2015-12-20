@@ -27,6 +27,7 @@ public struct cslresult(
   errors      : string
 )
 
+
 public function runCsl( 
   citations : list<string>, bibs : list<fileinfo>, bibstyle : fileinfo, 
   madokoStyle : fileinfo, localeStyle : fileinfo, id : string, attrs : string ) : cslresult 
@@ -34,14 +35,14 @@ public function runCsl(
   val preid = if (id.bool) then id + ":" else ""
   makeBiblX( citations.unlist, 
               bibs.unlist, bibstyle, madokoStyle, localeStyle, 
-              fun(tex) { parseTex(tex) }, preid, attrs )
+              fun(tex) { parseTex(tex) }, preid, attrs )  
 }
 
 external makeBiblX( citations : primarray<string>, bibtexs: primarray<fileinfo>, 
                     bibstyle : fileinfo, 
                     madokoStyle : fileinfo, localeStyle : fileinfo,
                     convertTex : (string) -> string,
-                    pre: string, attrs : string ) : cslresult 
+                    pre: string, attrs : string ) : cslresult
 {
   js inline "csl.makeBibliography(#1,#2,#3,#4,#5,#6, {preid:#7,attrs:#8})"
 }
