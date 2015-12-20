@@ -497,19 +497,22 @@ function convertElectronic(item,bibitem,ctex,options) {
   // and finally set the url & doi
   var rxDoi = /^https?\:\/\/(?:dx\.doi\.org|doi(?:\.\w+)?\.org)\//;
   var doi   = bibitem.doi;
+  var doitext = bibitem.doitext || "";
   if (options.url !== false && bibitem.url) {
     if (!doi && options.doi !== false && rxDoi.test(bibitem.url)) {
       doi = bibitem.url;        
+      doitext = urltext;
     }
     else {
       url = bibitem.url; // allows user to override eprint generated url
     }
   }
-  if (url && (item.urltext || options.url !== false)) {
+  if (url && (item.URLtext || options.url !== false)) {
     item.URL = url;
   }
   if (doi && options.doi !== false) {
-    item.DOI = doi.replace(rxDoi,"");
+    item.DOI     = doi.replace(rxDoi,"");
+    item.DOItext = doitext;
   }
 
 }
@@ -637,9 +640,9 @@ function convertBibitem(bibitem, bibitems, ctex, baseOptions) {
 // 
 // ---------------------------------------------
 
-function evalBib(entries,convTex,options) {
+function evalBib(entries,convTex,fname,options) {
   function showLine(line) {
-    return (options.sourcename ? options.sourcename + ":" : "") + (typeof line === "string" ? line : line.toString());
+    return (fname ? fname + ":" : "") + (typeof line === "string" ? line : line.toString());
   }
 
   var warnings = [];
@@ -670,28 +673,29 @@ function evalBib(entries,convTex,options) {
     //console.log(item);
     if (item) {
       if (bibitem.line) item._line = showLine(bibitem.line);
+      if (options.preid) item._preid = options.preid;
       bib[item.id.toLowerCase()] = item;
     }
   });
   
-  return { bib: bib, warnings: warnings.join("/n") };
+  return { bib: bib, warnings: warnings.join("\n") };
 }
 
 
 /* ---------------------------------------------
    Convert bibtex input to CSL format.
 
-input     : bibtex bibliography as a string;
-            this is either a plain bibtex file, or pre-processed JSON of the CSL entries
+inputs    : array of { filename, contents } bibtex bibliographies;
+            the contents are a plain bibtex file, or pre-processed JSON of the CSL entries
 convertTex: function from string to string -- applied to bibtex fields
 options   : optional options; options can be extended in every bibliography entry
             by using the field 'options', like: 'options={useprefix=true}'
   bibtex     : set to 'true' to disable cross-reference transformations
                (setting for example a 'title' field in a BOOK entry to 'booktitle' when 
                  imported into a @INCHAPTER entry.)
-  sourcename : set to the original source; can improve error messages
   juniorcomma: set to 'true' to emit a comma before a 'Jr' part of a name
   useprefix  : set to 'true' to make a particle ('von' part) non-dropping in a citation.
+  preid      : sets _preid on each bibitem
 
 returns {
   bib     : object, contains an CSL bibentry object for every entry in the bibtex
@@ -699,25 +703,40 @@ returns {
 }
 --------------------------------------------- */
 
-function bibtexToCsl( input, convertTex, options ) {
+function bibtexToCsl( inputs, convertTex, options ) {
   function convTex(s) {
     return (s ? (convertTex != null ? convertTex(s) : s) : "");
   }
-  if (/^\s*\{/.test(input)) {
-    // json formatted CSL items
-    try {
-      var bib = JSON.parse(input);
-      return { bib: bib, warnings: "" };
+  if (!inputs) return { bib: {}, warnings: "" };
+
+  var bibs = inputs.map( function(finfo) {
+    if (/^\s*\{/.test(finfo.contents)) {
+      // json formatted CSL items
+      try {
+        var bib = JSON.parse(finfo.contents);
+        return { bib: bib, warnings: "" };
+      }
+      catch(exn) {
+        return { bib: {}, warnings: finfo.filename + ": " + (exn ? exn.toString() : "unable to parse bibtex input as JSON") };
+      }
     }
-    catch(exn) {
-      return { bib: {}, warnings: (exn ? exn.toString() : "unable to parse bibtex input as JSON") };
+    else {
+      // plain bibtex file
+      var entries = parseBibtex(finfo.contents);
+      return evalBib(entries,convTex,finfo.filename,options || {});
     }
-  }
-  else {
-    // plain bibtex file
-    var entries = parseBibtex(input);
-    return evalBib(entries,convTex, options || {});
-  }
+  });
+  // merge results from each file
+  var res = bibs[0];
+  bibs.slice(1).forEach( function(bib) {
+    res.warnings = [res.warnings,bib.warnings].joinx("\n");
+    var preamble = [res.bib._preamble,bib.bib._preamble].joinx("\n");
+    var comments = [res.bib._comments,bib.bib._comments].joinx("\n");
+    extend(res.bib,bib.bib); 
+    res.bib._preamble = preamble;
+    res.bib._comments = comments;
+  });
+  return res;
 }
 
 return {

@@ -50,9 +50,13 @@ function quote(s) {
   return "\"" + (s.indexOf("\"") < 0 ? s : s.replace(/"/g, "\\\"")) + "\"";
 }
 
+function fixNbsp(s) {
+  return s.replace(/([A-Z]\.) +/g, "$1&nbsp;");
+}
+
 var madokoFormat = {
   "text_escape": function (text) {
-    return (text ? text : "");
+    return (text ? text : "").replace("  ","&nbsp;");
   },
   "bibstart": "~ begin bibliography\n",
   "bibend": "~ end bibliography",
@@ -98,19 +102,19 @@ var madokoFormat = {
     //console.log(bibitem)
     var attrs = {
       "cite-year": bibitem._citeYear,
-      "cite-authors": bibitem._citeAuthors,
-      "cite-authors-long": bibitem._citeAuthorsLong,
-      "cite-info": bibitem._citeLabel,
-      "id": bibitem.id,
-      "cite-info": bibitem._citeInfo,
+      "cite-authors": fixNbsp(bibitem._citeAuthors),
+      "cite-authors-long": fixNbsp(bibitem._citeAuthorsLong),
+      // "cite-label": fixNbsp(bibitem._citeLabel),
+      "id": (bibitem._preid || "") + bibitem.id,
+      "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
-      "line": bibitem._line,
-      "searchterm": bibitem._citeCaption.replace(/\s+/g," "),
+      "data-line": bibitem._line,
+      "searchterm": encodeURIComponent(bibitem._citeCaption.replace(/\s+/g," ")).replace(/[\/\\:\-()\[\]]/g,""),
     }
     var attrsText = "{" + joinx(properties(attrs).map( function(key) { 
       return (!attrs[key] ? "" : key + ":" + quote(attrs[key]));
     }), "; ") + "}";
-    return "~ begin bibitem " + attrsText + "\n" + trim(str) + "\n~ end bibitem\n" + insert;
+    return "~ begin bibitem " + attrsText + "\n" + fixNbsp(trim(str)) + "\n~ end bibitem\n" + insert;
   },
   "@display/block": function (state, str) {
     return "\n[]{.newblock}" + str + "\n";
@@ -161,7 +165,7 @@ var madokoFormat = {
     return "[" + urltext + "](" + str + ")";
   },
   "@DOI/true": function (state, str) {
-    var urltext = getBibitem( this, state).URLtext || str;
+    var doitext = getBibitem( this, state).DOItext || str;
     return "[" + urltext + "](https://dx.doi.org/" + str + ")";
   }
 };
@@ -186,7 +190,7 @@ function getBibitem( self, state ) {
 // parse XML
 // ---------------------------------------------
 
-function parseXml( xml ) {
+function parseXml( fname, xml ) {
   var parser = Sax.parser(false,{ trim: true, lowercase: true });
   var tags = [];
   var current = { 
@@ -196,7 +200,7 @@ function parseXml( xml ) {
   };
 
   parser.onerror = function (e) {
-    throw e;
+    throw ("error: " + (fname ? fname + ": " : "") + e.toString());
   };
 
   parser.ontext = function (t) {
@@ -228,12 +232,13 @@ function parseXml( xml ) {
 //
 // citations   : an array of citation id's, 
 //               or null for all entries in the bibliography.
-// bibtex      : bibliography in bibtex format as a string
-// bibStyleX   : CSL bib style as XML
-// madokoStyleX: CSL madoko style as XML
-// locale      : CSL locale as XML
+// bibtexs     : array of bibliography fileinfo's
+// bibStyleX   : CSL bib style as XML fileinfo
+// madokoStyleX: CSL madoko style as XML fileinfo
+// locale      : CSL locale as XML fileinfo
 // convertTex  : optional: string->string to convert TeX fields
-// options     : optional options object for conversion from bibtex
+// options     : optional options object for conversion from bibtex, and
+//  attrs: extra attributes the outer bibliography
 //
 // returns {
 //   bibliography: a Madoko formatted bibliography as a string.
@@ -243,7 +248,7 @@ function parseXml( xml ) {
 // }
 // ---------------------------------------------
 
-function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, convertTex, options ) {
+function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex, convertTex, options ) {
   var bib = {};
   var bibl = "";
   var warnings = "";
@@ -257,12 +262,12 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
 
   // ----------------------
   // Set CSL engine hooks
-  function cslDebug(msg) {
-    warnings = warnings + "warning: " + msg + "\n";
+  function cslWarning(fname,msg) {
+    warnings = warnings + "warning: " + (fname ? fname + ": " : "") + msg + "\n";
   }
 
-  function cslError(msg) {
-    throw new Error("error: " + msg);
+  function cslError(fname,msg) {
+    throw new Error("error: " + (fname ? fname + ": " : "") + msg);
   }
 
   function retrieveLocale(lang) {
@@ -270,14 +275,14 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
     return locale;
   }
 
-  function retrieveItem(id) {
+  function retrieveItem(fname,id) {
     var bibitem = bib[id.toLowerCase()];
     //console.log("retrieve item: " + id + "= " + JSON.stringify(bibitem));
     if (!bibitem) {
       throw new Error("unknown citation: " + id);
     }
     if (bibitem.id !== id) {
-      console.log("case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
+      cslWarning(fname,"case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
       newitem = {}
       properties(bibitem).forEach( function(key) {
         newitem[key] = bibitem[key];
@@ -291,8 +296,6 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
     }
   }
 
-  CSL.debug = cslDebug;
-  CSL.error = cslError;
   CSL.Output.Formats.madoko = madokoFormat;
 
   // CSL engine creation  
@@ -304,7 +307,7 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
     return csl;
   }
 
-  function createCslWith(cites,style,onCite) {
+  function createCslWith(cites,style,fname,lang,onCite) {
     function wrapCitationEntry(str,id) {
       var item = bib[id.toLowerCase()];
       if (!item) {
@@ -317,12 +320,15 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
     }
 
     var sys = {
-      retrieveItem     : retrieveItem,
+      retrieveItem     : function(id) { return retrieveItem(fname,id) },
       retrieveLocale   : retrieveLocale,   
       wrapCitationEntry: wrapCitationEntry,
     };
+    CSL.debug = function(msg) { return cslWarning(fname,msg); };
+    CSL.error = function(msg) { return cslError(fname,msg); };
+
+    var csl = cslCreate(sys,style,lang);
     
-    var csl = cslCreate(sys,style);
     //csl.updateItems(cites, false, false);    
     var citeItems = {
       citationItems: cites.map(function(cite) { return {id:cite}; }),
@@ -337,7 +343,7 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
   try {
     
     // parse bibtex to a bibiliography object; bibtex can be either pre-parsed JSON or bibtex
-    var bibconv = Bibtex.convertToCsl(bibtex,convertTex,options);
+    var bibconv = Bibtex.convertToCsl(bibtexs,convertTex,options);
     var bib     = bibconv.bib;
     var warnings = bibconv.warnings;
 
@@ -349,10 +355,10 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
     
     // disable collapsing for the main style so we can get a true 'cite-label' for
     // each citation separately.
-    var bibStyle    = parseXml(bibStylex.replace(/\bcollapse\s*=\s*("[^"]*"|'[^']*')/g,"")); 
+    var bibStyle    = parseXml(bibStylex.filename, bibStylex.contents.replace(/\bcollapse\s*=\s*("[^"]*"|'[^']*')/g,"")); 
     // The madoko style is used to get reliable 'cite-year','cite-authors', and 'cite-authors-long'
-    var madokoStyle = parseXml(madokoStylex); 
-    var locale      = parseXml(localex);
+    var madokoStyle = parseXml(madokoStylex.filename, madokoStylex.contents); 
+    var locale      = parseXml(localex.filename, localex.contents);
 
     // if no citations are given, use all the entries in the bibliography.
     if (!citations) {
@@ -363,7 +369,7 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
 
     // first we render with the madoko style to get reliable
     // cite-year/author/author-long fields.
-    var csl = createCslWith(citations, madokoStyle, function(item,str) {
+    var csl = createCslWith(citations, madokoStyle, madokoStylex.filename, lang, function(item,str) {
       //console.log("**** wrap citations: " + item)
       var parts = str.split("|");
       if (parts.length<2) return str;
@@ -371,20 +377,22 @@ function makeBibliography( citations, bibtex, bibStylex, madokoStylex, localex, 
       item._citeYear        = parts[1];
       item._citeAuthorsLong = parts[2] || parts[0];
       item._citeCaption     = (item.title || item.booktitle) + "\n" + item._citeAuthorsLong + ", " + item._citeYear;
-      // item._citeInfo        = item._citeAuthors + "(" + item._citeYear + ")" + item._citeAuthorsLong;
+      item._citeInfo        = item._citeAuthors + "(" + item._citeYear + ")" + item._citeAuthorsLong;
     });
     
     // then we render with the actual style to get the actual
     // citation label 
-    var csl = createCslWith(citations, bibStyle, function(item,str) {
+    var csl = createCslWith(citations, bibStyle, bibStylex.filename, lang, function(item,str) {
       //console.log("wrap: " + item.id + " = " + str)
       item._citeLabel = str;
     });
 
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
-    var bibl = csl.makeBibliography()[1].join("\n");
-
+    var bibl = 
+      "~ begin bibliography { caption='" + citations.length.toString() + "' " + options.attrs + " }\n" +
+      csl.makeBibliography()[1].join("\n") + 
+      "\n~ end bibliography\n";
 
     // we (and citeproc) have modified 'bib' items in place, clean up now
     properties(bib).forEach( function(key) {
