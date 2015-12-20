@@ -9,6 +9,7 @@ Email         : other@bar.com
 
 Colorizer     : javascript
 Csl Style     : chicago-author-date
+xCite style    : natural
 Bib style     : plainnat
 Bibliography  : example
 Heading base  : 2
@@ -42,8 +43,8 @@ Our [contributions]{font-family='"MS Gothic"'} are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
-  Textual citations, like @Knuth:Tex are also possible.
+* And references to Tex books [@Knuth:TeX;@Lamport:LaTeX;@Goo93;@Fberg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:TeX are also possible.
 
 # Content
 
@@ -76,12 +77,12 @@ Really fun to write Markdown :-)
 
 # And now some bibliographies.
 
-And references to Tex books [@second:Knuth:Tex;@second:Lamport:Latex;@second:Goo93].
+And references to Tex books [@second:Knuth:TeX;@second:Lamport:LaTeX;@second:Goo93].
 
 [BIB=second]
 
 # And more: 
 
-And more references to Tex books [@third:Goo93;@third:FBerg04] and others [@third:Grandstrand]. 
+And more references to Tex books [@third:Goo93;@third:Fberg04] and others [@third:Grandstrand]. 
 
 [BIB=third]

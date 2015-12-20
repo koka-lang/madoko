@@ -27,6 +27,7 @@ import mathParse
 import mathStatic
 import texParser
 import includes
+import runcsl
 
 public struct runners(
   runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
@@ -276,36 +277,53 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   phaseHtml()
 }
 
-function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io string {
+function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io fileinfo {
   match(trySearchReadTextFile(fname,searchDirs,ext,required)) {
     Nothing -> {
       mopts.printErr("warning: unable to read: " + fname)
-      ""
+      Fileinfo(fname,"")
     }
-    Just((_,content)) -> content
+    Just((fullname,contents)) -> Fileinfo(fullname,contents)
   }
 }
 
-function genBibCsl( auxfile, cslStyleName, localeName, outdir, searchDirs, mopts : options ) : io () {
-  trace("gen bib csl: " + cslStyleName)
+function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io () {
+  trace("gen bib csl: " + aux.style.styleName)
   val searchDirsCsl = searchDirs.concat( fun(dir) { [dir,combine(dir,"csl")] } )
   val searchDirsLoc = searchDirs.concat( fun(dir) { [dir,combine(dir,"locales")] } )
 
   val madokoStyle = searchReadTextFile( "madoko.csl", searchDirsCsl, "", True, mopts)
-  val cslStyle    = searchReadTextFile( cslStyleName, searchDirsCsl, ".csl", True, mopts )
-  val locale      = searchReadTextFile( "locales-" + localeName + ".xml",searchDirsLoc, "", True, mopts )
-  val aux         = readTextFileDef(auxfile,"",False)
-  val bibfiles    = mopts.bib.splitPaths.map( fun(bib) { readTextFileDef(bib.defaultExt(".bib"),"",True) } )
-  // ready to invoke CSL processor
-  ()
+  val cslStyle    = searchReadTextFile( aux.style.styleName, searchDirsCsl, ".csl", True, mopts )
+  val locale      = searchReadTextFile( "locales-" + aux.style.locale + ".xml",searchDirsLoc, "", True, mopts )
+  val auxcontents = readTextFileDef(aux.auxfile,"",False)
+  val bibfiles    = mopts.bib.splitPaths.map( fun(bib) { 
+                      searchReadTextFile(bib, searchDirs,".bib",True,mopts) 
+                    })
+  val citations   = auxcontents.findAll(rxCitation).list.map(fun(cap) { cap.groups[1] })
+  if (citations.length > 0) {
+    // ready to invoke CSL processor
+    trace("run csl on " + citations.join(";"))
+    val numcite = if (mopts.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"      
+    val res = runCsl( citations, bibfiles, cslStyle, madokoStyle, locale, aux.auxid, numcite )
+    if (res.warnings.bool) mopts.printErr(res.warnings);
+    if (res.errors.bool) {
+      mopts.printErr(res.errors)
+    }
+    else {    
+      trace("write bib.mdk")
+      writeTextFileSync( aux.auxfile.changeExt(".bbl.mdk"), res.bibliography );
+    }
+  }
 }
+
+val rxCitation = regex(@"\\citation\{([^\}]+)\}")
 
 function genBibtex( runBibtex, auxInfos : list<auxinfo>, outdir, searchDirs, mopts : options, continue : (bool) -> io () ) : io () {
   val (csls,bsts) = auxInfos.partition( fun(info) { info.style.isCsl } );
 
   function continueCsl(biberr) {
     csls.foreach fun(aux) {
-      genBibCsl( aux.auxfile, aux.style.styleName, aux.style.locale, outdir, searchDirs, mopts )
+      genBibCsl( aux, outdir, searchDirs, mopts )
     }
     continue(biberr);
   }
