@@ -101,14 +101,15 @@ var madokoFormat = {
     var bibitem = getBibitem(this,state);
     //console.log(bibitem)
     var attrs = {
+      "id": (bibitem._preid || "") + bibitem.id,
       "cite-year": bibitem._citeYear,
       "cite-authors": fixNbsp(bibitem._citeAuthors),
       "cite-authors-long": fixNbsp(bibitem._citeAuthorsLong),
       // "cite-label": fixNbsp(bibitem._citeLabel),
-      "id": (bibitem._preid || "") + bibitem.id,
-      "cite-info": fixNbsp(bibitem._citeInfo),
+      // "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
       "data-line": bibitem._line,
+      "tex-bibitem-label": "[" + bibitem._citeLabel + "]",
       "searchterm": encodeURIComponent(bibitem._citeCaption.replace(/\s+/g," ")).replace(/[\/\\:\-()\[\]]/g,""),
     }
     var attrsText = "{" + joinx(properties(attrs).map( function(key) { 
@@ -387,10 +388,14 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       item._citeLabel = str;
     });
 
+    // get cite class
+    var citecap = /\bcitation-format *= *"([\w\-]+)"/.exec(bibStylex.contents);
+    var citeclass = ".bib-" + (citecap ? citecap[1] : "numeric");
+
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
     var bibl = 
-      "~ begin bibliography { caption='" + citations.length.toString() + "' " + options.attrs + " }\n" +
+      "~ begin bibliography { " + citeclass + "; caption:'" + citations.length.toString() + "'; " + options.attrs + " }\n" +
       csl.makeBibliography()[1].join("\n") + 
       "\n~ end bibliography\n";
 
@@ -405,7 +410,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
 
     return {
       bibliography: bibl,
-      bib         : bib,
+      bib         : JSON.stringify(bib,null,2),
       warnings    : warnings,
       errors      : "",
     }
@@ -413,7 +418,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
   catch(exn) {
     return {
       bibliography: bibl,
-      bib         : bib,
+      bib         : JSON.stringify(bib,null,2),
       warnings    : warnings,
       errors      : (exn ? "error: " + exn.toString() : "error while generating the bibiliography") + "\n",
     }
