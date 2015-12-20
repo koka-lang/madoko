@@ -403,7 +403,7 @@ function parseBibTex( input ) {
     var nl = /\n/g;
     while( nl.exec(prefix) ) { n++; };
     exn.message = n.toString() + ": " + exn.message;
-    console.log("line " + n.toString());
+    // console.log("line " + n.toString());
     throw exn;
   }
 }
