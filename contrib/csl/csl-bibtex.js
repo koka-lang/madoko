@@ -396,6 +396,8 @@ function convertTitles(item,bibitem,ctex) {
   item["title-short"]     = ctex(bibitem.shorttitle);
   item["event-title"]     = ctex(bibitem.eventtitle);
   item["original-title"]  = ctex(bibitem.origtitle);
+
+  if (bibitem.chapter) item["chapter-number"] = bibitem.chapter;
 }
 
 // ---------------------------------------------
@@ -442,7 +444,6 @@ var standardItems = {
   "event-place"       : ["venue"],
   "number-of-volumes" : ["volumes"],
   "number-of-pages"   : ["pagetotal"],
-  "chapter"           : null,
   "edition"           : null,
   "version"           : null,
   "isbn"              : null,
