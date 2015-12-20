@@ -422,6 +422,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
 
 return {
   makeBibliography: makeBibliography,
+  normalizeLangId : Bibtex.normalizeLangId,
 }
 
 });

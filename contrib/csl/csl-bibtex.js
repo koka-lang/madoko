@@ -15,15 +15,6 @@ var parseBibtex = require("./bibtex-parse").parse;
   Helpers
 ---------------------------------------------------------------------------*/
 
-function jsonParse(s,def) {
-  try{
-    return JSON.parse(s);
-  }
-  catch(exn) {
-    return def;
-  }
-}
-
 function properties(obj) {
   var attrs = [];
   for (var key in obj) {
@@ -64,6 +55,116 @@ function firstOf(obj,props) {
     if (x) return x;
   }
   return "";
+}
+
+/*---------------------------------------------------------------------------
+  Tex options record
+---------------------------------------------------------------------------*/
+
+function optionsParse( s ) {
+  if (!s) return {};
+  var options = {};
+  var rx = /\b(\w+) *= *(?:\{([^\}]*)\}|([^,\}]*))/g;
+  var cap;
+  while ((cap = rx.exec(s))) {
+    options[cap[1]] = cap[2] || cap[3] || "";
+  }
+  return options;
+}
+
+
+/*---------------------------------------------------------------------------
+  Languages
+---------------------------------------------------------------------------*/
+
+var languages = [
+  { id: "ar",    name: "arabic" },
+  { id: "bg-BG", name: "bulgarian" },
+  { id: "ca-AD", name: "catalan" },
+  { id: "cs-CZ", name: "czech" },
+  { id: "da-DK", name: "danish" },
+  { id: "de-AT", name: "austrian" },
+  { id: "de-AT", name: "naustrian" },
+  { id: "de-DE", name: "german" },
+  { id: "de-DE", name: "germanb" },
+  { id: "de-DE", name: "ngerman" },
+  { id: "el-GR", name: "greek" },
+  { id: "el-GR", name: "polutonikogreek" },
+  { id: "en-EN", name: "english" },
+  { id: "en-US", name: "usenglish" },
+  { id: "en-US", name: "american" },
+  { id: "en-GB", name: "british" },
+  { id: "en-GB", name: "ukenglish" },
+  { id: "en-CA", name: "canadian" },
+  { id: "en-AU", name: "australian" },
+  { id: "en-NZ", name: "newzealand" },
+  { id: "es-ES", name: "spanish" },
+  { id: "et-EE", name: "estonian" },
+  { id: "eu",    name: "basque" },
+  { id: "fa-IR", name: "farsi" },
+  { id: "fi-FI", name: "finnish" },
+  { id: "fr-CA", name: "canadien" },
+  { id: "fr-CA", name: "acadian" },
+  { id: "fr-FR", name: "french" },
+  { id: "fr-FR", name: "francais" },
+  { id: "hr-HR", name: "croatian" },
+  { id: "he-IL", name: "hebrew" },
+  { id: "hu-HU", name: "hungarian" },
+  { id: "hu-HU", name: "magyar" },
+  { id: "is-IS", name: "icelandic" },
+  { id: "it-IT", name: "italian" },
+  { id: "ja-JP", name: "japanese" },
+  { id: "lv-LV", name: "latvian" },
+  { id: "lt-LT", name: "lithuanian" },
+  { id: "mn-MN", name: "mongolian" },
+  { id: "nb-NO", name: "norsk" },
+  { id: "nl-NL", name: "dutch" },
+  { id: "nn-NO", name: "nynorsk" },
+  { id: "pl-PL", name: "polish" },
+  { id: "pt-BR", name: "brazil" },
+  { id: "pt-BR", name: "brazilian" },
+  { id: "pt-PT", name: "portugues" },
+  { id: "pt-PT", name: "portuguese" },
+  { id: "ro-RO", name: "romanian" },
+  { id: "ru-RU", name: "russian" },
+  { id: "sr-RS", name: "serbian" },
+  { id: "sr-RS", name: "serbianc" },
+  { id: "sk-SK", name: "slovak" },
+  { id: "sl-SL", name: "slovene" },
+  { id: "sv-SE", name: "swedish" },
+  { id: "th-TH", name: "thai" },
+  { id: "tr-TR", name: "turkish" },
+  { id: "uk-UA", name: "ukrainian" },
+  { id: "vi-VN", name: "vietnamese" },
+];
+
+languageCompat = {
+  // special mapping since the variants are not 
+  // directly supported by current locales in CSL
+  "en-EN": "en-US",
+  "en-CA": "en-US",
+  "en-AU": "en-GB",
+  "en-NZ": "en-GB",
+}
+
+function findLangId( langid ) {  
+  langid   = (langid||"?").replace(/[_\.]/g, "-");
+  langname = langid.toLowerCase();
+  preid    = "";
+  languages.forEach( function(lang) {
+    if (langid===lang.id) return lang.id;
+    if (langname===lang.name) return lang.id;
+    if (!preid && langid===lang.id.substr(0,langid.length)) {
+      // prefix, take first match
+      preid = lang.id;
+    }
+  });
+  return preid;
+}
+
+function normalizeLangId( langid ) {  
+  langid = findLangId(langid);
+  return (langid ? (languageCompat[langid] || langid) : "");
 }
 
 /*---------------------------------------------------------------------------
@@ -397,6 +498,21 @@ function convertMisc(item,bibitem,ctex,options) {
       item.number = number;
     }
   }
+
+  // language
+  var lang = bibitem.langid || bibitem.hyphenation;
+  if (lang) {
+    if (lang.toLowerCase() === "english") {
+      var langopts = optionsParse( bibitem.langidopts );
+      if (langopts.variant) {
+        if (langopts.variant==="uk") lang = "british";
+        else if (langopts.variant==="us" || langopts.variant==="american") lang = "american";
+        else lang = langopts.variant;
+      }
+    }
+    var langid = normalizeLangId(bibitem.langid || bibitem.hyphenation);  
+    if (langid) item.language = langid;
+  }
 }
 
 function convertElectronic(item,bibitem,ctex,options) {
@@ -521,6 +637,8 @@ function convertElectronic(item,bibitem,ctex,options) {
 // ---------------------------------------------
 // Resolve cross references
 // ---------------------------------------------
+
+// do not propagate these fields from a crossref base entry.
 var dontPropagate = {
   ids: true,
   crossref: true,
@@ -597,7 +715,7 @@ function convertBibitem(bibitem, bibitems, ctex, baseOptions) {
   resolveCrossRefs( bibitem, bibitems, baseOptions );
 
   // extend base options with local options
-  var itemOptions = jsonParse((bibitem.options||"").replace(/=/g,":"),null);
+  var itemOptions = optionsParse( bibitem.options );
   var options;
   if (!itemOptions) {
     options = baseOptions;
@@ -741,6 +859,7 @@ function bibtexToCsl( inputs, convertTex, options ) {
 
 return {
   convertToCsl: bibtexToCsl,
+  normalizeLangId: normalizeLangId,
 }
 
 });
