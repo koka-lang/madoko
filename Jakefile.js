@@ -57,6 +57,7 @@ task("madoko", [], function(cs) {
     ["monarch/monarch.js",
      "csl/bibtex-parse.js",
      "csl/sax.js",
+     "csl/locales.js",
      "csl/citeproc.js","csl/csl-json.js",
      "csl/csl-bibtex.js","csl/csl-madoko.js",
     ].forEach( function(contrib) {
