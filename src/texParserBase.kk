@@ -86,11 +86,11 @@ public val rxNl = regex(@"\r?\n")
 public function makeAttr( key : string, value : string ) {
   if (value=="")
    then ""
-   else key + "=" + value.replaceAll(rxNl,"&nl;").quote
+   else key + ":" + value.replaceAll(rxNl,"&nl;").quote
 }
 
 public function joinAttrs( keyvals : list<string> ) {
-  val kvs = keyvals.remove(isEmpty).join(" ")
+  val kvs = keyvals.remove(isEmpty).join(" ; ")
   if (kvs=="") then "" else "{ " + kvs + " }"
 }
 

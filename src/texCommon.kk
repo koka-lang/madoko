@@ -36,9 +36,6 @@ public val texAccents = [
   ("H","dacute"),
 ].dict
 
-public val rxAuthorYear = regex(@"((?:[^&\\\()]|\\.|&#?\w+;|[\\&])*)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
-
-
 function texnest(s:string)  = @"(?:" + texval + @"|(?:\{" + s + @"\}))"
 val texcmd   = @"\\[@a-zA-Z]+\b\s*"
 val texval   = @"(?:[^\\{}]|" + texcmd + @"|\\.\s*)"

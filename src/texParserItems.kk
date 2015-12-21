@@ -95,7 +95,7 @@ function texSection( cap : matched, context ) : string {
 
 function texFontSize( cap : matched, context ) : string {
   val cssSize = texFontSizeMap[cap.groups[1]].maybe("medium",id)
-  "[" + cap.groups[2].parse(context) + "]{font-size=" + cssSize + "}"
+  "[" + cap.groups[2].parse(context) + "]{font-size:" + cssSize + "}"
 }
 
 function texComment( cap : matched, _context )  : string {
@@ -191,7 +191,7 @@ function texTikzEnv( cap : matched, context ) {
   "~ Snippet\n\\begin{tikzpicture}" + cap.groups[1] + "\\end{tikzpicture}\n~\n"
 }
 function texTikzCmd( cap : matched, context ) {
-  "$\\tikz[" + cap.groups[1] + "]{" + cap.groups[2] + "}${math-needpdf=true}"
+  "$\\tikz[" + cap.groups[1] + "]{" + cap.groups[2] + "}${math-needpdf:true}"
 }
 
 
@@ -200,8 +200,8 @@ function texListing( cap : matched, context ) : string {
     " { " + cap.groups[2].findAll(rxKeyVal).map( fun(kcap) { 
               val key = kcap.groups[1]
               val value = kcap.groups[2] 
-              if (key=="language") then "language='" + value + "'"
-              elif (key=="caption") then "caption='" + parse( value.unbrace, context ) + "'"
+              if (key=="language") then "language:'" + value + "'"
+              elif (key=="caption") then "caption:'" + parse( value.unbrace, context ) + "'"
               elif (key=="label") then "#" + value.toIdentifier
               else ""
             }).join(" ") + " }"
@@ -229,8 +229,8 @@ function texWrapFigure( cap : matched, context ) : string {
   val attrs  = [makeAttr("width", cap.groups[3].texLength),
                 makeAttr("lines", cap.groups[1]),
                 if (cap.groups[2]=="r" || cap.groups[2]=="R" || cap.groups[2]=="o" || cap.groups[2]=="O")
-                 then "float=right margin-left=1em"
-                 else "float=left margin-right=1em"
+                 then "float:right; margin-left:1em"
+                 else "float:left; margin-right:1em"
                ]  
   texCaptionedXX( "figure", cap.groups[4], "", attrs, context )
 }
@@ -271,7 +271,7 @@ function texNoIndent( cap : matched, context ) : string {
 }
 
 function texVSpacePara( cap : matched, context ) : string {
-  cap.groups[2].parse(context) + "{ margin-top=" + cap.groups[1].texLength.quote + "}\n\n"
+  cap.groups[2].parse(context) + "{ margin-top:" + cap.groups[1].texLength.quote + "}\n\n"
 }
 
 /* --------------------------------------
@@ -403,8 +403,8 @@ function texTabularDo( pos :string, width: string, spec : string, content : stri
   
   // create attributes
   val attrs = [".textable", makeAttr("width",width.texLength),
-              (if (pos=="b") then "vertical-align=bottom" 
-               elif (pos=="t") then "vertical-align=top" 
+              (if (pos=="b") then "vertical-align:bottom" 
+               elif (pos=="t") then "vertical-align:top" 
                else "")].joinAttrs
 
   // render rows                
@@ -556,7 +556,7 @@ function texRule( cap : matched, _context ) : string {
   val widthHeight = [makeAttr("width",texLength(cap.groups[2])),
                      makeAttr("height",texLength(cap.groups[3]))]
   if (cap.groups[1] != "") then {
-    "[ ]" + (["background-color=black",makeAttr("vertical-align",texLength(cap.groups[1]))] + widthHeight).joinAttrs
+    "[ ]" + (["background-color:black",makeAttr("vertical-align",texLength(cap.groups[1]))] + widthHeight).joinAttrs
   }
   else {
     "\n------------ " + widthHeight.joinAttrs + "\n"
@@ -564,7 +564,7 @@ function texRule( cap : matched, _context ) : string {
 }
 
 function texLineBreak( cap : matched, _context ) : string {
-  (if (cap.groups[1] != "") then "[ ]{margin-bottom='" + texLength(cap.groups[1]) + "'}" else "") + "&br;"
+  (if (cap.groups[1] != "") then "[ ]{margin-bottom:'" + texLength(cap.groups[1]) + "'}" else "") + "&br;"
 }
 
 function texGenericCommand( cap : matched, context : texContext ) : string {
@@ -625,24 +625,24 @@ function texRaw( cap : matched, _context ) : string {
 }
 
 function texVSpace( cap : matched, _context ) : string {
-  "\n~ Empty { height='" + texLength(cap.groups[1]) + "' }\n\n~\n"
+  "\n~ Empty { height:'" + texLength(cap.groups[1]) + "' }\n\n~\n"
 }
 
 function texHSpace( cap : matched, _context ) : string {
-  "[]{width='" + texLength(cap.groups[1]) + @"'}"
+  "[]{width:'" + texLength(cap.groups[1]) + @"'}"
 }
 
 function texVSkip( cap : matched, _context ) : string {
-  "\n~ Empty { height='" + texLength(cap.groups[1]) + "' }\n\n~\n"
+  "\n~ Empty { height:'" + texLength(cap.groups[1]) + "' }\n\n~\n"
 }
 
 function texHSkip( cap : matched, _context ) : string {
-  "[]{width='" + texLength(cap.groups[1]) + @"'}"
+  "[]{width:'" + texLength(cap.groups[1]) + @"'}"
 }
 
 function texSkip( cap : matched, _context ) : string {
   val height = if (cap.groups[1]=="big") then "12pt" elif (cap.groups[1]=="med") then "6pt" else "3pt"
-  "\n~ Empty { height='" + height + "' }\n\n~\n"
+  "\n~ Empty { height:'" + height + "' }\n\n~\n"
 }
 
 function texAlign( s : string ) : string {
@@ -690,10 +690,10 @@ function texImage( cap : matched, context ) : string {
   val kvs0 = cap.groups[2].findAll(rxKeyVal).list.map( fun(kcap) {
               val key = kcap.groups[1]
               val value = kcap.groups[2].unbrace
-              if (key=="width") then "width=\"" + texLength(value) + "\""
-              elif (key=="height") then "height=\"" + texLength(value) + "\""
-              elif (key=="scale") then "transform=\"scale(" + value + ")\""
-              elif (key=="angle") then "transform=\"rotate(" + value + "deg)\""              
+              if (key=="width") then "width:\"" + texLength(value) + "\""
+              elif (key=="height") then "height:\"" + texLength(value) + "\""
+              elif (key=="scale") then "transform:\"scale(" + value + ")\""
+              elif (key=="angle") then "transform:\"rotate(" + value + "deg)\""              
               else ""
              })
   val kvs1 = if (cap.groups[1].isEmpty) then [] else [".fragment"]  
@@ -701,7 +701,7 @@ function texImage( cap : matched, context ) : string {
   val imgname = if (fname.extname=="") then fname + ".eps" else fname
   val imgkey  = imgname.stemname.replaceAll(regex(@"[^\w\-]+"),"")
   "![" + imgkey + "]" + cap.groups[4].parse(context) + "\n\n[" + imgkey + "]: " 
-    + imgname + " \"image title\" { " + (kvs0 + kvs1).join(" ") + " }\n"
+    + imgname + " \"image title\" { " + (kvs0 + kvs1).join(" ; ") + " }\n"
 }
 
 
@@ -800,27 +800,27 @@ function texEmph( cap : matched, context : texContext ) : string {
 
 function texSlanted( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-style=oblique}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-style:oblique}"
 }
 
 function texSmallcaps( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-variant=small-caps}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-variant:small-caps}"
 }
 
 function texUpright( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-style=normal}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-style:normal}"
 }
 
 function texRoman( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family=serif}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family:serif}"
 }
 
 function texSans( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family=sans-serif}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family:sans-serif}"
 }
 
 
@@ -837,7 +837,7 @@ function texCode( cap : matched, context : texContext ) : string {
 
 function texMonospace( cap : matched, context : texContext ) : string {
   val txt = cap.groups[1]
-  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family=monospace}"
+  if (txt=="") then "" else "[" + txt.parse(context) + "]{font-family:monospace}"
 }
 
 
@@ -868,7 +868,7 @@ function urlEncode(txt) : string {
 val rxUrlReserved = regex(@"[\s>)\'\""(<\[\]]")
 
 function texBibinfo( cap : matched, context : texContext ) : string {
-  "[" + cap.groups[2].parse(context) + "]{ .bibinfo field=\"" + cap.groups[1].unbrace + "\"}"
+  "[" + cap.groups[2].parse(context) + "]{ .bibinfo; field:\"" + cap.groups[1].unbrace + "\"}"
 }
 
 function texBblName( cap : matched, context : texContext ) : string {
@@ -886,9 +886,9 @@ function texQuot( quot : string, cap : matched, context : texContext ) : string 
 }
 
 function texTheBibliography( cap : matched, context : texContext ) : string {
-  val numcite = if (context.citestyle.isNumCite) then ".bib-numeric" else ".bib-authoryear"
+  val numcite = ".bib-" + context.citestyle.mode.show
   "~ Begin Bibliography { " + numcite +
-    " caption=\"" + cap.groups[1].unbrace + "\"}\n" + (cap.groups[2] + "\n\n").parse(context) + 
+    " ; caption:\"" + cap.groups[1].unbrace + "\" }\n" + (cap.groups[2] + "\n\n").parse(context) + 
     "\n~ End Bibliography\n"
 }
 
@@ -1001,6 +1001,7 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
    "\n~ End Bibitem\n"
 }
 
+val rxAuthorYear = regex(@"((?:[^&\\\()]|\\.|&#?\w+;|[\\&])*)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
 
 val rxNewblock = regex(@"\[\s*\]\{\s*\.newblock\s*\}\s*")
 val rxSpaces = regex(@"\s+")
