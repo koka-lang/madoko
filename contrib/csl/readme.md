@@ -1,6 +1,6 @@
 This directory contains:
 
-* `csl-bibtex.js`, `csl-madoko.js`
+* `csl-bibtex.js`, `csl-madoko.js`, `locales.js`
   Copyright 2015 Daan Leijen, Microsoft Corporation 
   These are distributed under the Apache 2.0 license
 
@@ -18,7 +18,7 @@ This directory contains:
   ```
 
 * `citeproc.js`
-  This is (unmodified) citeproc.js from `https://raw.githubusercontent.com/zotero/citeproc-node`
+  This is (unmodified) citeproc.js from `https://bitbucket.org/fbennett/citeproc-js`
   ```   
   * Copyright (c) 2009-2014 Frank G. Bennett
   * 
@@ -33,10 +33,18 @@ This directory contains:
 * `csl-json.js`: a support file from citeproc.js
 
 * `csl/*.csl`
-  Standard CSL definitions from <zotero.org>
+  Some common standard CSL definitions from <https://github.com/citation-style-language/styles>
+  ```
+  This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License
+  https://creativecommons.org/licenses/by-sa/3.0
+  ```
 
 * `locales/*.xml`
-  Standard Locale definitions from <zotero.org>
+  Standard Locale definitions from <https://github.com/citation-style-language/locales>
+  ```
+  This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License
+  https://creativecommons.org/licenses/by-sa/3.0
+  ```
 
 * `sax.js`
   An XML parser library by Isaacs
