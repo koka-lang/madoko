@@ -31,6 +31,7 @@ public rectype texContext {
   // The parse context for latex elements. 
   TexContext( grammar   : grammar<string,texContext>, 
               citestyle : citestyle = citeAuto, 
+              bststyle  : string,
               ignore    : bool = True,
               name      : string = "",
               texparse  : (context:texContext, input:string) -> string )                 

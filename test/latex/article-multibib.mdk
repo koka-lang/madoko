@@ -8,15 +8,15 @@ Affiliation   : Other institute
 Email         : other@bar.com
 
 Colorizer     : javascript
-Csl Style     : chicago-author-date
+Csl Style     : nature-biotechnology
 xBib Label     : False
-Cite style    : natural
+xCite style    : natural
 Bib style     : plainnat
 Bibliography  : example
 Heading base  : 2
 Bibitem       { tex-bibitem-label: "[@bib.@bib-bibitem]" }
 
-xDoc class     : style/sigplanconf.cls
+Doc class     : style/sigplanconf.cls
 
 [TITLE]
 

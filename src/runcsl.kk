@@ -30,9 +30,10 @@ public struct cslresult(
 
 public function runCsl( 
   citations : list<string>, bibs : list<fileinfo>, bibstyle : fileinfo, 
-  madokoStyle : fileinfo, localeStyle : fileinfo, id : string, attrs : string ) : cslresult 
+  madokoStyle : fileinfo, localeStyle : fileinfo, id : string, attrs0 : string ) : cslresult 
 {
   val preid = if (id.bool) then id + ":" else ""
+  val attrs = "data-style:'" + bibstyle.filename.stemname + "'; " + attrs0
   makeBiblX( citations.unlist, 
               bibs.unlist, bibstyle, madokoStyle, localeStyle, 
               fun(tex) { parseTex(tex) }, preid, attrs )  

@@ -288,33 +288,41 @@ function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io file
 }
 
 function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io () {
-  trace("gen bib csl: " + aux.style.styleName)
+  mopts.print("generating bibliography: " + aux.style.styleName)
   val searchDirsCsl = searchDirs.concat( fun(dir) { [dir,combine(dir,"csl")] } )
   val searchDirsLoc = searchDirs.concat( fun(dir) { [dir,combine(dir,"locales")] } )
 
   val madokoStyle = searchReadTextFile( "madoko.csl", searchDirsCsl, "", True, mopts)
-  val cslStyle    = searchReadTextFile( aux.style.styleName, searchDirsCsl, ".csl", True, mopts )
   val locale      = searchReadTextFile( "locales-" + aux.style.locale + ".xml",searchDirsLoc, "", True, mopts )
   val auxcontents = readTextFileDef(aux.auxfile,"",False)
   val bibfiles    = mopts.bib.splitPaths.map( fun(bib) { 
                       searchReadTextFile(bib, searchDirs,".bib",True,mopts) 
                     })
   val citations   = auxcontents.findAll(rxCitation).list.map(fun(cap) { cap.groups[1] })
+  val cslStyle0   = searchReadTextFile( aux.style.styleName, searchDirsCsl, ".csl", True, mopts )
+  val cslStyle    = match (cslStyle0.contents.find(rxIndepParent)) {
+                      Nothing   -> cslStyle0
+                      Just(cap) -> {
+                        mopts.print("           parent style: " + cap.groups[1])
+                        searchReadTextFile( cap.groups[1], searchDirsCsl, ".csl", True, mopts )
+                      }
+                    }
+
   if (citations.length > 0 && cslStyle.filename.bool && madokoStyle.filename.bool && locale.filename.bool) {
     // ready to invoke CSL processor
-    trace("run csl on " + citations.join(";"))
     val res = runCsl( citations, bibfiles, cslStyle, madokoStyle, locale, aux.auxid , "")
     if (res.warnings.bool) mopts.printErr(res.warnings);
     if (res.errors.bool) {
       mopts.printErr(res.errors)
     }
     else {    
-      trace("write bib.mdk")
       writeTextFileSync( aux.auxfile.changeExt(".bbl.mdk"), res.bibliography );
       writeTextFileSync( aux.auxfile.changeExt(".bib.json"), res.bib);
     }
   }
 }
+
+val rxIndepParent = regex(@"<link *href *= *""(?:https?://www.zotero.org/styles/)?([^""]+)"" *rel *= *""independent-parent"" */>")
 
 val rxCitation = regex(@"\\citation\{([^\}]+)\}")
 
@@ -340,13 +348,12 @@ function genBibtex( runBibtex, auxInfos : list<auxinfo>, outdir, searchDirs, mop
   
   // run Bibtex first
   runBibtex(bsts.map(auxfile),mopts) fun(err) {
-    trace("done running bibtex")
     bsts.foreach fun(bib) {
       val bblname = bib.auxfile.changeExt(".bbl");
       match (tryReadTextFile(bblname, True)) {
         Left -> warning("Unable to read bibliography file: " + bblname);
         Right(bbl) -> {
-          val bibl    = parseTex(bbl,bib.auxid,mopts.citestyle)
+          val bibl    = parseTex(bbl,bib.auxid,mopts.citestyle,bib.style.styleName.stemname)
           val mdkname = bblname + ".mdk";
           writeTextFileSync(mdkname,bibl);        
         }

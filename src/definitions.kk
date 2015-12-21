@@ -354,7 +354,7 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
   val txt = attrs.transformText(attrs.source,dict(),fcontext.inlineContext.metadata)
   match(attrs.input) {
     Tex -> {      
-      Div(txt.parseTex(attrs.name,citestyle,fcontext.inlineContext.verbose >= 3)
+      Div(txt.parseTex(attrs.name,citestyle,"",fcontext.inlineContext.verbose >= 3)
         .parseBlocks(attrs.lineNo.incLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
     Markdown -> {

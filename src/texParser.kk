@@ -228,7 +228,7 @@ val texGrammar : grammar<string,texContext> = [
 
 
 // Parse TeX elements and return Markdown
-public function parseTex( txt : string, id: string = "", citestyle : citestyle = citeAuto, verbose : bool = False, ignore : bool = True  ) : string
+public function parseTex( txt : string, id: string = "", citestyle : citestyle = citeAuto, bststyle: string = "", verbose : bool = False, ignore : bool = True  ) : string
 {
   val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n").replaceAll(regex(@"\t"),"   ")
                  /*
@@ -242,7 +242,7 @@ public function parseTex( txt : string, id: string = "", citestyle : citestyle =
                     else ""  // end-of-line comment
                   })
                   */
-  val md = contextParse(TexContext(texGrammar,citestyle,ignore,id,contextParse), normTxt)
+  val md = contextParse(TexContext(texGrammar,citestyle,bststyle,ignore,id,contextParse), normTxt)
   if (verbose) then trace( "TeX to Markdown:\n" + md )
   md
 }
