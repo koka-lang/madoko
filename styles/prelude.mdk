@@ -522,6 +522,9 @@ toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
 tocitem      { tex-env:"mdtocitem{&data-toc-target;}" }
 
+bibliography.bib-author-date, bibliography.bib-author-year, bibliography.bib-natural, bibliography.bib-textual {
+  tex-cmd-outer: "{\mdsupressbiblabel";
+}
 
 @if tex2 {
   Th { font-weight: "bold" }
