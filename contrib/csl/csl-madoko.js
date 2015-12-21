@@ -271,7 +271,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     throw new Error("error: " + (fname ? fname + ": " : "") + msg);
   }
 
-  function retrieveLocale(lang) {
+  function retrieveLocale(localelang) {
     //console.log("retrieve lang: " + lang);
     return locale;
   }
@@ -300,15 +300,15 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
   CSL.Output.Formats.madoko = madokoFormat;
 
   // CSL engine creation  
-  function cslCreate( sys,style,lang ) {
-    var csl = new CSL.Engine(sys,style,lang || "en-US");
+  function cslCreate( sys,style,langid ) {
+    var csl = new CSL.Engine(sys,style,langid || "en-US");
     csl.opt.development_extensions.wrap_url_and_doi = true;
     csl.opt.development_extensions.apply_citation_wrapper = true;
     csl.setOutputFormat("madoko");
     return csl;
   }
 
-  function createCslWith(cites,style,fname,lang,onCite) {
+  function createCslWith(cites,style,fname,langid,onCite) {
     function wrapCitationEntry(str,id) {
       var item = bib[id.toLowerCase()];
       if (!item) {
@@ -328,7 +328,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     CSL.debug = function(msg) { return cslWarning(fname,msg); };
     CSL.error = function(msg) { return cslError(fname,msg); };
 
-    var csl = cslCreate(sys,style,lang);
+    var csl = cslCreate(sys,style,langid);
     
     //csl.updateItems(cites, false, false);    
     var citeItems = {
@@ -427,7 +427,6 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
 
 return {
   makeBibliography: makeBibliography,
-  normalizeLangId : Bibtex.normalizeLangId,
 }
 
 });
