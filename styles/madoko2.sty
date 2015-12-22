@@ -640,12 +640,15 @@
   \mdhyperref{#1}{#2}%
 }
 
-\providecommand\pdfmarkupcomment[3][]{}
+\AtBeginDocument{%
+  \providecommand\pdfmarkupcomment[3][]{}%
+  \providecommand\pdfbookmark[3][]{}%
+}
+
 \newcommand\mdtooltip[1]{%
   \hbox to 0pt{\raisebox{1ex}{\tiny\pdfmarkupcomment[color=White,author=Title]{}{#1}}}%
 }
 
-\providecommand\pdfbookmark[3][]{}
 \newcommand\mdbookmark[3]{%
   \pdfbookmark[#1]{#2}{#3}%
 }
@@ -867,10 +870,10 @@
   \ifblank{#1}{}{%
     \ifdim\dimexpr#1\mdbibindentunit\relax>0pt\relax
       \let\md@old@biblabel\@biblabel
-      \renewcommand\@biblabel[1]{\md@old@biblabel{##1}\kern #1\mdbibindentunit\relax}%
+      \renewcommand\@biblabel[1]{\md@old@biblabel{##1}\hspace*{#1\mdbibindentunit}}%
       \let\md@old@bibitem\bibitem
       \renewcommand\bibitem[2][]{%
-        \ifblank{##1}{\md@old@bibitem{##2}}{\md@old@bibitem[##1]{##2}}\leavevmode\kern-#1\mdbibindentunit\relax%
+        \ifblank{##1}{\md@old@bibitem{##2}}{\md@old@bibitem[##1]{##2}}\hspace*{-#1\mdbibindentunit}%
       }%
     \fi
   }%
