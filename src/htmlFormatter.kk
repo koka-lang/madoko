@@ -223,6 +223,9 @@ function formatKeyval( key : string, value : string, tag : string ) {
   elif (key.startsWith("data-")) {
     key + "=" + value.htmlQuote
   }
+  elif (key.startsWith("cite-")) {
+    "data-" + key + "=" + value.htmlQuote
+  }
   elif (key.startsWith("css-")) {
     key.substr(4).escape + ":" + value.cssQuote
   }
