@@ -8,7 +8,7 @@ Affiliation   : Other institute
 Email         : other@bar.com
 
 Colorizer     : javascript
-Csl Style     : nature-biotechnology
+Csl Style     : siggraph
 xBib Label     : False
 xCite style    : natural
 Bib style     : plainnat
@@ -44,7 +44,7 @@ Our [contributions]{font-family='"MS Gothic"'} are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And references to Tex books [@Knuth:TeX;@Lamport:LaTeX;@Goo93;@Fberg04] and others [@Grandstrand]. 
+* And references to Tex books [@Knuth:Tex;@Lamport:LaTeX;@Goo93;@Fberg04] and others [@Grandstrand]. 
   Textual citations, like @Knuth:TeX are also possible.
 
 # Content

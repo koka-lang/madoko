@@ -280,7 +280,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io fileinfo {
   match(trySearchReadTextFile(fname,searchDirs,ext,required)) {
     Nothing -> {
-      mopts.printErr("warning: unable to read: " + fname)
+      mopts.printErr("warning: unable to read: " + fname.defaultExt(ext))
       Fileinfo(fname,"")
     }
     Just((fullname,contents)) -> Fileinfo(fullname,contents)
@@ -308,7 +308,7 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
                       }
                     }
 
-  if (citations.length > 0 && cslStyle.filename.bool && madokoStyle.filename.bool && locale.filename.bool) {
+  if (citations.length > 0 && cslStyle.contents.bool && madokoStyle.contents.bool && locale.contents.bool) {
     // ready to invoke CSL processor
     val res = runCsl( citations, bibfiles, cslStyle, madokoStyle, locale, aux.auxid , "")
     if (res.warnings.bool) mopts.printErr(res.warnings);

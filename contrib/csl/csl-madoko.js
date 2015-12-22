@@ -105,6 +105,7 @@ var madokoFormat = {
       "cite-year": bibitem._citeYear,
       "cite-authors": fixNbsp(bibitem._citeAuthors),
       "cite-authors-long": fixNbsp(bibitem._citeAuthorsLong),
+      "cite-format": bibitem._citeFormat,
       // "cite-label": fixNbsp(bibitem._citeLabel),
       // "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
@@ -276,25 +277,13 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     return locale;
   }
 
-  function retrieveItem(fname,id) {
+  function retrieveItem(id) {
     var bibitem = bib[id.toLowerCase()];
     //console.log("retrieve item: " + id + "= " + JSON.stringify(bibitem));
     if (!bibitem) {
       throw new Error("unknown citation: " + id);
     }
-    if (bibitem.id !== id) {
-      cslWarning(fname,"case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
-      newitem = {}
-      properties(bibitem).forEach( function(key) {
-        newitem[key] = bibitem[key];
-      });
-      newitem.id = id;  //prevent errors in citeproc
-      newitem.system_id = id;
-      return newitem;
-    }
-    else {
-     return bibitem;
-    }
+    return bibitem;
   }
 
   CSL.Output.Formats.madoko = madokoFormat;
@@ -308,7 +297,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     return csl;
   }
 
-  function createCslWith(cites,style,fname,langid,onCite) {
+  function createCslWith(cites,style,fname,langid,onCite,onWarn) {
     function wrapCitationEntry(str,id) {
       var item = bib[id.toLowerCase()];
       if (!item) {
@@ -321,11 +310,11 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     }
 
     var sys = {
-      retrieveItem     : function(id) { return retrieveItem(fname,id) },
+      retrieveItem     : retrieveItem,
       retrieveLocale   : retrieveLocale,   
       wrapCitationEntry: wrapCitationEntry,
     };
-    CSL.debug = function(msg) { return cslWarning(fname,msg); };
+    CSL.debug = function(msg) { return (onWarn ? onWarn(msg) : cslWarning(fname,msg)); };
     CSL.error = function(msg) { return cslError(fname,msg); };
 
     var csl = cslCreate(sys,style,langid);
@@ -367,6 +356,29 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
         return bib[id].id;
       });
     }
+    else {
+      // check citations and normalize case
+      var newcites = {};
+      citations.forEach( function(id) {
+        var bibitem = bib[id.toLowerCase()];
+        if (!bibitem) {
+          cslWarning(bibStylex.filename, "unknown citation reference: '" + id + "'");
+        }
+        else {
+          if (bibitem.id !== id) {
+            cslWarning(bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
+          }
+        }
+        if (!newcites[bibitem.id]) {
+          newcites[bibitem.id] = true;
+        }        
+      });
+      citations = properties(newcites);
+    }
+
+    // get cite class
+    var citecap = /\bcitation-format *= *"([\w\-]+)"/.exec(bibStylex.contents);
+    var citeformat = (citecap ? citecap[1] : "numeric" );
 
     // first we render with the madoko style to get reliable
     // cite-year/author/author-long fields.
@@ -379,7 +391,8 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       item._citeAuthorsLong = parts[2] || parts[0];
       item._citeCaption     = (item.title || item.booktitle) + "\n" + item._citeAuthorsLong + ", " + item._citeYear;
       item._citeInfo        = item._citeAuthors + "(" + item._citeYear + ")" + item._citeAuthorsLong;
-    });
+      item._citeFormat      = citeformat;
+    }, function(warnmsg) { /* ignore */ }  );
     
     // then we render with the actual style to get the actual
     // citation label 
@@ -388,14 +401,10 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       item._citeLabel = str;
     });
 
-    // get cite class
-    var citecap = /\bcitation-format *= *"([\w\-]+)"/.exec(bibStylex.contents);
-    var citeclass = ".bib-" + (citecap ? citecap[1] : "numeric");
-
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
     var bibl = 
-      "~ begin bibliography { " + citeclass + "; caption:'" + citations.length.toString() + "'; " + options.attrs + " }\n" +
+      "~ begin bibliography { .bib-" + citeformat + "; caption:'" + citations.length.toString() + "'; " + options.attrs + " }\n" +
       csl.makeBibliography()[1].join("\n") + 
       "\n~ end bibliography\n";
 
