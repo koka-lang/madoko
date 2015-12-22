@@ -24,7 +24,8 @@ public struct cslresult(
   bibliography: string,
   bib         : string,
   warnings    : string,
-  errors      : string
+  errors      : string,
+  citeformat  : string
 )
 
 
