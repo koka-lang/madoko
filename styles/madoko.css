@@ -128,19 +128,24 @@
   font-size: smaller;
 }
 
-.madoko .bib-numeric .bibitem {
-  margin-left: 3em;
-  text-indent: -3em;
-}
-
 .madoko .bibitem-before {
   display: none;
 }
 
-.madoko .bib-numeric .bibitem-before {
+.madoko .bibliography[data-hanging-indent="2"] {
+  padding-left: 2.5ex;
+}
+.madoko .bibliography[data-hanging-indent="2"] .bibitem {
+  text-indent: -2.5ex;
+}
+
+.madoko .bibliography.bib-numeric {
+  padding-left: 1.7rem;
+}
+.madoko .bibliography.bib-numeric .bibitem-before {
   display: inline-block;
-  width: 3em;
-  text-align: right;
+  float: left;
+  margin-left: -1.7rem;  
 }
 
 .madoko .bibsearch {
