@@ -1,3 +1,4 @@
+[INCLUDE=style/ieee]
 Title         : My Academic Paper
 Author        : You
 Affiliation   : Research institute
@@ -8,16 +9,17 @@ Affiliation   : Other institute
 Email         : other@bar.com
 
 Colorizer     : javascript
-Csl Style     : siggraph
+Csl Style     : ieee
+
 xBib Label     : False
-xCite style    : natural
-Cite Style    : natural:"\[","\]","; ",", "
+Cite style    : natural
+
 Bib style     : plainnat
 Bibliography  : example
 Heading base  : 2
-Bibitem       { tex-bibitem-label: "[@bib.@bib-bibitem]" }
 
-Doc class     : style/sigplanconf.cls
+xDoc class     : style/sigplanconf.cls
+
 
 [TITLE]
 
@@ -35,7 +37,7 @@ Note that you can drag&drop images into the editor pane to include them in
 the document, and similarly with bibtex files, latex style files, etc.
 
 ~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
-![butterfly]
+Image.
 ~
 
 [butterfly]: images/butterfly.png "butterfly"  { width=4em }
@@ -76,6 +78,7 @@ The syntax highlighting works in PDF too.
 Really fun to write Markdown :-)
 
 [BIB]
+
 
 # And now some bibliographies.
 

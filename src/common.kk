@@ -234,50 +234,56 @@ public function isNumCite( cs : citestyle ) : bool {
 }
 
 public val citeNatural = Citestyle(Natural,"(",")","; ",", ",", ")
-public val citeNumeric = Citestyle(Numeric,"[","]",", ",", ",", ",True,True)
-public val citeAuto    = Citestyle(Auto   ,"[","]",", ",", ",", ")
-val citeTextual = Citestyle(Textual,"(",")","; ",", ",", ")
-val citeSuper   = Citestyle(Super,"","",",",",",",",True,True)
+public val citeNumeric = Citestyle(Numeric,"\\[","\\]",", ",", ",", ",True,True)
+public val citeAuto    = Citestyle(Auto   ,"\\[","\\]",", ",", ",", ")
+val citeTextual        = Citestyle(Textual,"(",")","; ",", ",", ")
+val citeSuper          = Citestyle(Super,"","",",",",",",",True,True)
+val citeSqNatural      = Citestyle(Natural,"\\[","\\]","; ",", ",", ")
 
-public function parseCiteStyle( text : string ) : citestyle {
-  match(text.toLower().find(rxCiteSpec)) {
-    Just(cap) -> {
-      val md = if (cap.groups[1]=="natural") then Natural
-               elif (cap.groups[1]=="textual") then Textual
-               elif (cap.groups[1]=="numeric") then Numeric
-               elif (cap.groups[1]=="super") then Super
-               else Auto
-      val cite = match(md) {
-        Natural -> citeNatural
-        Textual -> citeTextual
-        Super   -> citeSuper
-        Numeric -> citeNumeric
-        _       -> citeAuto
-      }
-      val xsort = if (cap.groups[2]!="") then (cap.groups[2]=="sort") else cite.sort
-      val xcompress = xsort      
-      if (cap.groups.matchedOn(3)) {           
-        val aysep = if (cap.groups.matchedOn(6)) then cap.groups[6] else cap.groups[5]
-        val yysep = if (cap.groups.matchedOn(7)) then cap.groups[7] else aysep      
-        Citestyle(md,cap.groups[3],cap.groups[4],cap.groups[5],aysep,yysep,xsort,xcompress)
-      }
-      else {
-        if (cite.sort != xsort) 
-         then cite(sort=xsort,compress=xcompress) 
-         else cite
-      }
-    } 
-    Nothing -> {
+public function parseCiteStyleDef( text : string, def : citestyle = citeNumeric ) : citestyle {
+  match(parseCiteStyle(text)) {
+    Just(cs) -> cs
+    Nothing  -> {
       warning( "unrecognized citation style: " + text)
-      citeNumeric
+      def
     }
   }
 }
 
-val rxVal      = @"\s*""([^""]*)""\s*"
+public function parseCiteStyle( text : string ) : maybe<citestyle> {
+  match(text.toLower().find(rxCiteSpec)) {
+    Just(cap) -> {
+      val cite = if (cap.groups[1]=="natural") then citeNatural
+                 elif (cap.groups[1]=="sqnatural") then citeSqNatural
+                 elif (cap.groups[1]=="textual") then citeTextual
+                 elif (cap.groups[1]=="numeric") then citeNumeric
+                 elif (cap.groups[1]=="super") then citeSuper
+                 else citeAuto      
+      val xsort = if (cap.groups[2]!="") then (cap.groups[2]=="sort") else cite.sort
+      val xcompress = xsort      
+      val style =
+        if (cap.groups.matchedOn(3)) {           
+          val sep   = if (cap.groups.matchedOn(5)) then cap.groups[5].unquote else "; "
+          val aysep = if (cap.groups.matchedOn(6)) then cap.groups[6].unquote else ", "
+          val yysep = if (cap.groups.matchedOn(7)) then cap.groups[7].unquote else aysep      
+          Citestyle(cite.mode,cap.groups[3].unquote,cap.groups[4].unquote,sep,aysep,yysep,xsort,xcompress)
+        }
+        else {
+          if (cite.sort != xsort) 
+           then cite(sort=xsort,compress=xcompress) 
+           else cite
+        }
+      Just(style)
+    } 
+    Nothing -> Nothing
+  }
+}
+
+
+val rxVal      = @"\s*(""[^""]*""|'[^']*'|[^\s,;'""]*)\s*"
 val rxValOpt   = "(?:," + rxVal + ")?"
-val rxVals     = rxVal + "," + rxVal + "," + rxVal + rxValOpt + rxValOpt
-val rxCiteSpec = regex(@"^(natural|textual|numeric|super|auto)(?:[:](sort|nosort))?(?:[:]" + rxVals + ")?" )
+val rxVals     = rxVal + "," + rxVal + rxValOpt + rxValOpt + rxValOpt
+val rxCiteSpec = regex(@"^(natural|sqnatural|textual|numeric|super|auto)(?:[:](sort|nosort))?(?:[:]" + rxVals + ")?" )
 
 /* --------------------------------------
  Links 

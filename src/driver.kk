@@ -284,22 +284,17 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 function extractCitestyle( opts : options, outName : string ) : io options {
   val auxName  = outName.noext + "-bib.bbl.mdk" // the first..
   val contents = readTextFileDef( auxName, "", False )
-  match (contents.find(rxCiteFormat)) {
+  match (contents.find(rxCiteStyle)) {
     Nothing   -> opts
     Just(cap) -> {
-      val format = cap.groups[1]
-      val newcite = if (format=="natural" || format=="author-date" || format=="author-year") then Just(citeNatural)
-                    elif (format=="label" || format=="note") then Just(citeAuto)
-                    elif (format=="numeric") then Just(citeNumeric)
-                    else Nothing
-      match(newcite) {
-        Nothing -> opts
-        _       -> opts(citestyle=newcite)
+      match(parseCiteStyle(cap.groups[1])) {
+        Nothing  -> opts
+        Just(cs) -> opts(citestyle=Just(cs))
       }
     }
   }
 }
-val rxCiteFormat = regex(@"\bcite\-format *: *""([^""]+)""")
+val rxCiteStyle = regex(@"\bcite\-style *: *""([^""]+)""")
 
 function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io fileinfo {
   match(trySearchReadTextFile(fname,searchDirs,ext,required)) {

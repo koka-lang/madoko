@@ -528,9 +528,15 @@ function newCite( context : inlineContext, name : string, pre : string, post : s
     Just(cap) -> warning( "citations need to be semi-colon separated: "  + cap.matched )
   }
 
-  Cite( name, pre, post, modifier, number, 
-        if (year=="") then number else year, 
-        authors, ordinal )
+  function wrap( s, wattrs ) {
+    if (s.isEmpty) then "" else "[" + s + "]{" + wattrs + "}" 
+  }
+
+  Cite( name, pre, post, modifier, 
+        wrap(number,".cite-number"), 
+        wrap(if (year=="") then number else year,".cite-year"), 
+        wrap(authors,".cite-authors"),
+        ordinal )
 }
 val rxCommaAt = regex(@",\s*[+!-]?@([\w-:]+)")
 val rxDigits = regex(@"\d+")
@@ -698,7 +704,7 @@ val rxCont = regex(@"(\\%)|(?:%.*)?\n[ \t]*")
 function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs ) : string 
 {  
   val cs0 = match(attrs.hasKey("cite-style")) {
-              Just(cstext) -> parseCiteStyle(cstext)
+              Just(cstext) -> parseCiteStyleDef(cstext)
               Nothing      -> context.citestyle
             }
   val cs1 = match(cs0.mode) {

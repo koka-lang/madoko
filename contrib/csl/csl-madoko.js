@@ -54,6 +54,10 @@ function fixNbsp(s) {
   return s.replace(/([A-Z]\.) +/g, "$1&nbsp;");
 }
 
+function escapeMadoko(s) {
+  return s.replace(/([\[\]()#$@!`~\\^%_*&])/g,"\\$1");
+}
+
 var madokoFormat = {
   "text_escape": function (text) {
     return (text ? text : "").replace("  ","&nbsp;");
@@ -105,7 +109,7 @@ var madokoFormat = {
       "cite-year": bibitem._citeYear,
       "cite-authors": fixNbsp(bibitem._citeAuthors),
       "cite-authors-long": fixNbsp(bibitem._citeAuthorsLong),
-      // "cite-label": fixNbsp(bibitem._citeLabel),
+      "cite-label": bibitem._citeLabel,
       // "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
       "data-line": bibitem._line,
@@ -121,7 +125,7 @@ var madokoFormat = {
     return "\n[]{.newblock}" + str + "\n";
   },
   "@display/left-margin": function (state, str) {
-    return "[" + str + "]{.bibitem-label}\n";
+    return "[" + escapeMadoko(str) + "]{.bibitem-label}\n";
   },
   "@display/right-inline": function (state, str) {
     return str + "\n";
@@ -375,10 +379,6 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       citations = properties(newcites);
     }
 
-    // get cite class
-    var citecap = /\bcitation-format *= *"([\w\-]+)"/.exec(bibStylex.contents);
-    var citeformat = (citecap ? citecap[1] : "numeric" );
-
     // first we render with the madoko style to get reliable
     // cite-year/author/author-long fields.
     var csl = createCslWith(citations, madokoStyle, madokoStylex.filename, lang, function(item,str) {
@@ -396,15 +396,29 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     // citation label 
     var csl = createCslWith(citations, bibStyle, bibStylex.filename, lang, function(item,str) {
       //console.log("wrap: " + item.id + " = " + str)
-      item._citeLabel = str;
+      item._citeLabel = escapeMadoko(str);
     });
+
+    // get (approximate) cite class & style
+    var citecap = /\bcitation-format *= *"([\w\-]+)"/.exec(bibStylex.contents);
+    var citeformat = (citecap ? citecap[1] : "numeric" );
+    var citemode;
+    if (citeformat=="author" || citeformat=="author-year" || citeformat=="author-date") citemode="natural";
+    else if (citeformat=="note" || citeformat=="label" || citeformat=="numeric") citemode="numeric";
+    else citemode="numeric";
+
+    var citestyle = "";
+    citecap = /<layout *prefix="([^"\n]*)" *suffix="([^"\n]*)" *delimiter="([^"\n]*)"/.exec(bibStylex.contents);
+    var citestyle = citemode + (citecap ? ":'" + [citecap[1],citecap[2],citecap[3]].join("','") + "'" : "");
+
 
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
     var bibres = csl.makeBibliography();
     var bibl = 
-      "~ begin bibliography { .bib-" + citeformat + "; cite-format:\"" + citeformat + "\" ; " +
+      "~ begin bibliography { .bib-" + citemode + "; cite-style:\"" + citestyle + "\" ; " +
                                 "caption:\"" + citations.length.toString() + "\" ; " +
+                                "data-style:\"" + citeformat + "\" ; " +
                                 (bibres[0].hangingindent ? "data-hanging-indent:\"" + bibres[0].hangingindent  + "\"; " : "") +
                                 options.attrs + " }\n" +
       bibres[1].join("\n") + 

@@ -287,12 +287,8 @@ Bib Search Url:
   Bib Search Url: www.bing.com
 }
 
-@if not(cite-style~=/[nN]umeric/) {
-  Bib Label: False
-}
-
 @if not( tex ) {
-  Bibliography { before: "# &name-references; { -; .heading-references }&nl;" }
+  Bibl         { before: "# &name-references; { -; .heading-references }&nl;" }
 }
 @if not( tex ) and bib-label {
   Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
@@ -521,9 +517,10 @@ toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
 tocitem      { tex-env:"mdtocitem{&data-toc-target;}" }
 
+bibliography { data-hanging-indent:0 }
 bibliography { tex-cmd-outer: "{\mdbibindent{&data-hanging-indent;}%mdk&nl;" }
 
-bibliography.bib-author-date, bibliography.bib-author-year, bibliography.bib-natural, bibliography.bib-textual {
+bibliography.bib-natural, bibliography.bib-textual {
   tex-cmd-outer: "{\mdsupressbiblabel\mdbibindent{&data-hanging-indent;}";
 }
 
