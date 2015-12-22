@@ -200,7 +200,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
 } 
 val rxLatexErr = regex(@"(?:^! LaTeX Error:.*|^\*\* ERROR .*|^(?:!|Runaway argument\?))[\s\S]*?(?=\r?\n\r?\n\r?\n|^\s*(?:Here is how much of \w*TeX's memory you used:|The control sequence))",multiline=True,ignoreCase=True)
 
-val rxLatexRerun = regex(@"^(Package|Latex) .*?warning\b.*?Rerun\b",multiline=True,ignoreCase=True)
+val rxLatexRerun = regex(@"^((Package|Latex) .*?warning\b.*?|\(\w+\) +)Rerun\b",multiline=True,ignoreCase=True)
 
 function nicifyLatexErr( err :string) : string {
   match(err.find(rxLatexSubErr)) {
