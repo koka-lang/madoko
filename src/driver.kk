@@ -66,14 +66,17 @@ public function processContent( inName : string, outName : string, content : str
                           ("year",date.year.show),("month",date.month.show2),("day",date.day.show2),
                           ("hours",date.hours.show2),("minutes",date.minutes.show2),("seconds",date.seconds.show2)] )
 
-    val mmopts = if (opts1.xmp) then opts1 // todo: look at first <xmp> fragment?
-                  else opts1.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
+    // extract default cite-style if it exists
+    val opts2  = opts1.extractCitestyle(outName)
+
+    val mmopts = if (opts2.xmp) then opts2 // todo: look at first <xmp> fragment?
+                  else opts2.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
     val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
     val mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathDpi, mmopts.mathScale,mmopts.mathBaseline)
 
-    val xopts  = opts1(mathdim=mdim)
+    val xopts  = opts2(mathdim=mdim)
     val mopts  = mmopts(mathdim=mdim)  
 
     // register languages for highlighting
@@ -277,6 +280,27 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   phaseHtml()
 }
 
+
+function extractCitestyle( opts : options, outName : string ) : io options {
+  val auxName  = outName.noext + "-bib.bbl.mdk" // the first..
+  val contents = readTextFileDef( auxName, "", False )
+  match (contents.find(rxCiteFormat)) {
+    Nothing   -> opts
+    Just(cap) -> {
+      val format = cap.groups[1]
+      val newcite = if (format=="natural" || format=="author-date" || format=="author-year") then Just(citeNatural)
+                    elif (format=="label" || format=="note") then Just(citeAuto)
+                    elif (format=="numeric") then Just(citeNumeric)
+                    else Nothing
+      match(newcite) {
+        Nothing -> opts
+        _       -> opts(citestyle=newcite)
+      }
+    }
+  }
+}
+val rxCiteFormat = regex(@"\bcite\-format *: *""([^""]+)""")
+
 function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io fileinfo {
   match(trySearchReadTextFile(fname,searchDirs,ext,required)) {
     Nothing -> {
@@ -316,8 +340,8 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
       mopts.printErr(res.errors)
     }
     else {    
-      writeTextFileSync( aux.auxfile.changeExt(".bbl.mdk"), res.bibliography );
-      writeTextFileSync( aux.auxfile.changeExt(".bib.json"), res.bib);
+      writeTextFileSync( aux.auxfile.changeExt(".bbl.mdk"), res.bibliography )
+      writeTextFileSync( aux.auxfile.changeExt(".bib.json"), res.bib)    
     }
   }
 }
@@ -353,7 +377,7 @@ function genBibtex( runBibtex, auxInfos : list<auxinfo>, outdir, searchDirs, mop
       match (tryReadTextFile(bblname, True)) {
         Left -> warning("Unable to read bibliography file: " + bblname);
         Right(bbl) -> {
-          val bibl    = parseTex(bbl,bib.auxid,mopts.citestyle,bib.style.styleName.stemname)
+          val bibl    = parseTex(bbl,bib.auxid,mopts.citestyle.maybe(citeNumeric,id),bib.style.styleName.stemname)
           val mdkname = bblname + ".mdk";
           writeTextFileSync(mdkname,bibl);        
         }
