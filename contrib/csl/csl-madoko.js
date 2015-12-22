@@ -105,7 +105,6 @@ var madokoFormat = {
       "cite-year": bibitem._citeYear,
       "cite-authors": fixNbsp(bibitem._citeAuthors),
       "cite-authors-long": fixNbsp(bibitem._citeAuthorsLong),
-      "cite-format": bibitem._citeFormat,
       // "cite-label": fixNbsp(bibitem._citeLabel),
       // "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
@@ -391,7 +390,6 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       item._citeAuthorsLong = parts[2] || parts[0];
       item._citeCaption     = (item.title || item.booktitle) + "\n" + item._citeAuthorsLong + ", " + item._citeYear;
       item._citeInfo        = item._citeAuthors + "(" + item._citeYear + ")" + item._citeAuthorsLong;
-      item._citeFormat      = citeformat;
     }, function(warnmsg) { /* ignore */ }  );
     
     // then we render with the actual style to get the actual
@@ -403,9 +401,13 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
 
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
+    var bibres = csl.makeBibliography();
     var bibl = 
-      "~ begin bibliography { .bib-" + citeformat + "; caption:'" + citations.length.toString() + "'; " + options.attrs + " }\n" +
-      csl.makeBibliography()[1].join("\n") + 
+      "~ begin bibliography { .bib-" + citeformat + "; cite-format:\"" + citeformat + "\" ; " +
+                                "caption:\"" + citations.length.toString() + "\" ; " +
+                                (bibres[0].hangingindent ? "data-hanging-indent:\"" + bibres[0].hangingindent  + "\"; " : "") +
+                                options.attrs + " }\n" +
+      bibres[1].join("\n") + 
       "\n~ end bibliography\n";
 
     // we (and citeproc) have modified 'bib' items in place, clean up now
@@ -422,6 +424,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       bib         : JSON.stringify(bib,null,2),
       warnings    : warnings,
       errors      : "",
+      citeformat  : citeformat,
     }
   }
   catch(exn) {
@@ -430,6 +433,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       bib         : JSON.stringify(bib,null,2),
       warnings    : warnings,
       errors      : (exn ? "error: " + exn.toString() : "error while generating the bibiliography") + "\n",
+      citeformat  : citeformat,
     }
   }
 }
