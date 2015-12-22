@@ -71,7 +71,7 @@ public struct options(
   packagesx: string = "",        // packages in non-math mode only
   docClass : string = "",        // latex document class (.cls)
   
-  citestyle     : citestyle = citeNumeric,     
+  citestyle     : maybe<citestyle> = Nothing,
   citeAll       : bool = False,
   tocDepth      : int  = 3, // max. depth for inclusion in the table of contents
   headingDepth  : int  = 3, // default depth where headings are numbered

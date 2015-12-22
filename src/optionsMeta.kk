@@ -69,7 +69,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)
   elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
   
-  elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+  elif (key=="cite-style") options(citestyle=Just(parseCiteStyle(lvalue)))
   elif (key=="cite-all") options(citeAll=(value!="")) 
   elif (key=="math-mode") options.setMathMode(value)
   elif (key=="math-static" || key=="math-dir") options(mathImgDir = if (lvalue=="true") then "math" else value)

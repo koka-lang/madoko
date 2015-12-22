@@ -72,13 +72,13 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   }
   //val blocks = parseBlocks(src,options.citestyle,options.bench,options.pedantic )
 
-  if (options.citeAll) then log("aux",@"\citation{*}");
+  if (options.citeAll) then log("aux",@"\citation{*}")
   
   // parse definitions
   val icontext  = inlineContext(fmt,options.metadata.dict,
                                     options.mathdim,
                                     options.embedinfos, 
-                                    options.citestyle,
+                                    options.citestyle.maybe(citeNumeric,id),
                                     options.sanitize,options.bench,options.verbose,
                                     options.mathmode.isStatic,
                                     options.highlight,options.starBold,options.sandbox,options.prettyAlign) 
