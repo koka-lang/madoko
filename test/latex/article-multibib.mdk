@@ -11,6 +11,7 @@ Colorizer     : javascript
 Csl Style     : siggraph
 xBib Label     : False
 xCite style    : natural
+Cite Style    : natural:"\[","\]","; ",", "
 Bib style     : plainnat
 Bibliography  : example
 Heading base  : 2

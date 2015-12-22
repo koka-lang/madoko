@@ -860,6 +860,21 @@
 %-------------------------------------------------------------
 % Bibliography
 %-------------------------------------------------------------
+\newlength\mdbibindentunit
+\setlength{\mdbibindentunit}{1ex}
+
+\newcommand\mdbibindent[1]{%
+  \ifblank{#1}{}{%
+    \ifdim\dimexpr#1\mdbibindentunit\relax>0pt\relax
+      \let\md@old@biblabel\@biblabel
+      \renewcommand\@biblabel[1]{\md@old@biblabel{##1}\kern #1\mdbibindentunit\relax}%
+      \let\md@old@bibitem\bibitem
+      \renewcommand\bibitem[2][]{%
+        \ifblank{##1}{\md@old@bibitem{##2}}{\md@old@bibitem[##1]{##2}}\leavevmode\kern-#1\mdbibindentunit\relax%
+      }%
+    \fi
+  }%
+}
 
 \newcommand\mdforcebiblabel{%
   \def\@biblabel##1{[##1]}%

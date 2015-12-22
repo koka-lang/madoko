@@ -6,7 +6,6 @@ Heading Depth   : 3
 Toc Depth       : 3 
 Heading Base    : 2
 Tex Section Num : False
-Cite Style      : numeric
 Bib Label       : True
 Math mode       : static
 Title Running   :
@@ -522,8 +521,10 @@ toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
 tocitem      { tex-env:"mdtocitem{&data-toc-target;}" }
 
+bibliography { tex-cmd-outer: "{\mdbibindent{&data-hanging-indent;}%mdk&nl;" }
+
 bibliography.bib-author-date, bibliography.bib-author-year, bibliography.bib-natural, bibliography.bib-textual {
-  tex-cmd-outer: "{\mdsupressbiblabel";
+  tex-cmd-outer: "{\mdsupressbiblabel\mdbibindent{&data-hanging-indent;}";
 }
 
 @if tex2 {
