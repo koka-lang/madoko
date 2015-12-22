@@ -504,6 +504,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     dim: "text/plain",
     log: "text/plain",
     dic: "text/plain",
+    csl: "text/xml",
 
     png:  "image/png",
     jpg:  "image/jpg",
@@ -531,7 +532,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst"].join(";");  // .bbl
+  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst",".csl"].join(";");  // .bbl
   function hasEmbedExt(fname) {
     var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;
@@ -550,7 +551,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   function hasGeneratedExt(fname) {
     var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;
-    return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || Stdpath.dirname(fname)==="out");
+    return (contains(generatedExts,ext) || endsWith(fname,".final.tex") || endsWith(fname,".bbl.mdk") || Stdpath.dirname(fname)==="out");
   }
 
   function toggleButton( elemName, text0, text1, action ) {

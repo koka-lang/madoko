@@ -37,6 +37,9 @@ portions of the code written by Frank Bennett are Copyright (c)
 2009-2014 Frank Bennett.
 ------------------------------------------------------------------------*/
 
+if (typeof define !== 'function') { var define = require('amdefine')(module) }
+define([],function() {
+
 /*
  * CSL_JSON is copied from xmljson.js from the citeproc-js project
  * 
@@ -489,4 +492,9 @@ CSL_JSON.prototype.inspectDateMacros = function(myjson) {
     return false;
 }
 
-exports.CSL_JSON = CSL_JSON;
+// exports.CSL_JSON = CSL_JSON;
+return {
+  CSL_JSON: CSL_JSON,
+};
+
+});

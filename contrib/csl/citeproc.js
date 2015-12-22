@@ -74,7 +74,7 @@ This is (unmodified) citeproc.js from https://raw.githubusercontent.com/zotero/c
  * [ citeproc-js license :: version 1.1 :: 2012.06.30 ]
  */
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
-define([],function() {
+define(["./csl-json"],function(CslJson) {
 
 if (!Array.indexOf) {
     Array.prototype.indexOf = function (obj) {
@@ -647,9 +647,10 @@ var CSL = {
     locale_opts: {},
     locale_dates: {}
 };
+var CSL_JSON = CslJson.CSL_JSON;
 if (typeof require !== "undefined" && typeof module !== 'undefined' && "exports" in module) {
     var CSL_IS_NODEJS = true;
-    var CSL_JSON = require("./csl-json.js").CSL_JSON;
+    // var CSL_JSON = require("./csl-json.js").CSL_JSON;
     // exports.CSL = CSL;
 }
 CSL.TERMINAL_PUNCTUATION_REGEXP = new RegExp("^([" + CSL.TERMINAL_PUNCTUATION.slice(0, -1).join("") + "])(.*)");

@@ -307,7 +307,7 @@ function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io file
 }
 
 function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io () {
-  mopts.print("generating bibliography: " + aux.style.styleName)
+  mopts.print("bibliography style: " + aux.style.styleName)
   val searchDirsCsl = searchDirs.concat( fun(dir) { [dir,combine(dir,"csl")] } )
   val searchDirsLoc = searchDirs.concat( fun(dir) { [dir,combine(dir,"locales")] } )
 
@@ -322,7 +322,7 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
   val cslStyle    = match (cslStyle0.contents.find(rxIndepParent)) {
                       Nothing   -> cslStyle0
                       Just(cap) -> {
-                        mopts.print("           parent style: " + cap.groups[1])
+                        mopts.print("      parent style: " + cap.groups[1])
                         searchReadTextFile( cap.groups[1], searchDirsCsl, ".csl", True, mopts )
                       }
                     }

@@ -147,6 +147,9 @@
   float: left;
   margin-left: -1.7rem;  
 }
+.madoko div.bib-numeric>h2 {
+  margin-left: -1.7rem; /* legacy */
+}
 
 .madoko .bibsearch {
   font-size: x-small;

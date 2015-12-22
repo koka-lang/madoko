@@ -136,9 +136,13 @@ task("justcopy", [], function() {
   // copy style, language, and image files
   jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   jake.mkdirP(path.join(webclient,path.join(styleDir,"images")));
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"csl")));
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"locales")));
   var js = new jake.FileList().include(path.join(styleDir,"*.css"))
                               .include(path.join(styleDir,"*.mdk"))
-                              .include(path.join(styleDir,"lang","*.json"));
+                              .include(path.join(styleDir,"lang","*.json"))
+                              .include(path.join(styleDir,"csl","*.csl"))
+                              .include(path.join(styleDir,"locales","*.xml"));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   
   js     = new jake.FileList().include(path.join(contribDir,"styles","*.css"))

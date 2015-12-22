@@ -8,11 +8,7 @@
 
 
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
-define([],function() {
-
-var Bibtex = require("./csl-bibtex");  // bibtex parsing and conversion to CSL format
-var CSL = require("./citeproc");       // CSL processing based on style and locale
-var Sax = require("./sax");            // XML parsing
+define(["./csl-bibtex","./citeproc","./sax"],function(Bibtex,CSL,Sax) {
 
 /*---------------------------------------------------------------------------
   Helpers

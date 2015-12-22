@@ -9,7 +9,7 @@ Affiliation   : Other institute
 Email         : other@bar.com
 
 Colorizer     : javascript
-Csl Style     : ieee
+Csl Style     : acm-sig-proceedings
 
 xBib Label     : False
 Cite style    : natural

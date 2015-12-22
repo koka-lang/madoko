@@ -431,6 +431,7 @@ var mimeTypes = {
   md: "text/markdown",
   mkdn: "text/markdown",
   markdown: "text/markdown",
+  csl: "text/xml",
 
   txt: "text/plain",
   css: "text/css",
@@ -717,7 +718,9 @@ function readFiles( userpath, docname, pdf, out ) {
   var fnames = [".dimx", "-math-dvi.dim", "-math-pdf.dim", 
                 "-math-dvi.tex", "-math-pdf.tex", 
                 "-math-dvi.final.tex", "-math-pdf.final.tex",
-                "-bib.bbl", "-bib.aux"]
+                "-bib.bbl", "-bib.aux",
+                "-bib.bbl.mdk", "-bib.bib.json",
+               ]
                 .concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); });
   // find last log file
@@ -1519,7 +1522,7 @@ var staticOptions = {
 }
 var staticClient      = express.static( combine(__dirname, "client"), staticOptions);
 var staticMaintenance = express.static( combine(__dirname, "maintenance"), staticOptions);
-var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex|csl|locales))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
 
 function staticPage(req,res,next) {
   //console.log("static: " + req.path);

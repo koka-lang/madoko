@@ -7,10 +7,9 @@
 ---------------------------------------------------------------------------*/
 
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
-define([],function() {
+define(["./locales","./bibtex-parse"],function(Locales,BibtexParse) {
 
-var Locales     = require("./locales");
-var parseBibtex = require("./bibtex-parse").parse;
+var parseBibtex = BibtexParse.parse;
 
 /*---------------------------------------------------------------------------
   Helpers
