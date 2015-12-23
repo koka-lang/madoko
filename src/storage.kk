@@ -107,6 +107,11 @@ public function searchFileSync( dirs : list<string>, fname : string ) : io maybe
   }
 }
 
+// Read a text file synchronously (using UTF8 encoding) without sandbox restrictions
+public function readTextFileNoSandbox( fileName : string ) : io string {
+  xreadTextFileSync(fileName.normalize)
+}
+
 // Read a text file synchronously (using UTF8 encoding)
 public function readTextFileSync( fileName : string, required : bool = True ) : io string
 {

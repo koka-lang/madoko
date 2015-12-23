@@ -83,10 +83,9 @@ public function processContent( inName : string, outName : string, content : str
     registerColorizers(mopts, searchDirs, icontent);
 
     // copy early since async latex may start for math
-    if (mopts.copyStyles && !(xopts.sandbox)) {
+    if (mopts.copyStyles) { // && !(xopts.sandbox) // allow even in sandbox
       if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
-        tryCopyTextFileFromTo( "madoko.css", styleDir, outName.dirname )
-        ()
+        tryCopyTextFileFromNoSandboxTo( "madoko.css", styleDir, outName.dirname )
       }
       if (xopts.tex || mopts.mathmode.isStatic) { // only copy style files if generating tex or if math is static
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
@@ -97,8 +96,7 @@ public function processContent( inName : string, outName : string, content : str
                      then ["ellipse.sty","options.sty","longbox.sty","longfbox.sty","madoko2.sty"]
                      else ["css.sty","madoko.sty"]                      
         files.foreach fun(fname) { 
-          tryCopyTextFileFromTo(fname, styleDir, outName.dirname )
-          ()
+          tryCopyTextFileFromNoSandboxTo(fname, styleDir, outName.dirname )
         }
       }
     }
@@ -588,3 +586,14 @@ function tryCopyTextFile( fileName : string, outName : string, required = False 
   }
 }
 
+
+function tryCopyTextFileFromNoSandboxTo( fname, srcDir, outDir ) {
+  val inName = combine(srcDir,fname)
+  val outName = combine(outDir,fname)
+  catch { 
+    val txt = readTextFileNoSandbox( inName )
+    tryWriteTextFile(outName,txt)    
+    ()
+  }
+  fun(exn) { () }
+}
