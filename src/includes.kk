@@ -289,11 +289,15 @@ public function searchReadTextFileDef( fname : string, def : string, dirs : list
 }
 
 public function trySearchReadTextFile( fname : string, dirs : list<string>, ext : string = "", required : bool = True  ) : io maybe<(string,string)> {
+  function nothing() {
+    if (required) log("files",fname.defaultExt(ext));
+    Nothing
+  }
   match(searchFileSync(dirs,fname)) {
     Nothing -> {
-      if (ext=="" || fname.extname != "") then Nothing else {
+      if (ext=="" || fname.extname != "") then nothing() else {
         match (searchFileSync(dirs,fname.changeExt(ext))) {
-          Nothing -> Nothing
+          Nothing -> nothing()
           Just(fullname) -> tryReadTextFile(fullname,required).maybe.maybe(Nothing,fun(txt){ Just((fullname,txt)) })
         }
       }
