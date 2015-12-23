@@ -423,7 +423,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
      (if (options.jsHeader == "") then "" else "<script type=\"text/javascript\">\n" + options.jsHeader.expand.indent + "\n</script>\n")
 
   val htmlDoc = 
-    "<!DOCTYPE html>\n<html>\n" +
+    "<!DOCTYPE html>\n<html" + (if (options.locale.bool) then " lang=\"" + options.locale + "\"" else "") + ">\n" +
     "<head>\n" +
     htmlHead.indent +
     "</head>\n" +
