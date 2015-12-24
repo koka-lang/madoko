@@ -792,9 +792,11 @@
 % Math
 %-------------------------------------------------------------
 \defcommand{\smallstrut}{\mbox{\rule{0ex}{1ex}}}
-\providecommand{\mathspace}{\mskip 4mu plus 1mu minus 1mu\smallstrut}
-\providecommand{\mathbr}{\\}
-\newcommand{\mathindent}[1]{\mskip \numexpr6*#1\relax mu\relax\smallstrut}
+
+\providecommand\mathspace{\mskip 4mu plus 1mu minus 1mu\smallstrut}
+\providecommand\mathbr{\\}
+\providecommand\mathindent[1]{\mdmathindent{#1}}% legacy; clashes with fleqn
+\newcommand{\mdmathindent}[1]{\mskip \numexpr6*#1\relax mu\relax\smallstrut}
 
 \newcommand\mathpre{\def\nobreakspace{\mathspace}}
 

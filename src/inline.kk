@@ -239,7 +239,7 @@ public function mathPreX( txt : string ) : string
 {  
   txt.replaceAll(regex(@"(\\(?:text|math|mbox|begin|end)(?:[a-z][a-z])?{(?:[^\\}]|\\.)*}|\\[a-zA-Z@]+ *|\\[^a-z@])|^( +)|( +)|(\n)",multiline=True), fun(cap) {
         val n = cap.matched.length
-        if (cap.groups.matchedOn(2)) then @"\mathindent{" + n.show + "}" 
+        if (cap.groups.matchedOn(2)) then @"\mdmathindent{" + n.show + "}" 
         elif (cap.groups.matchedOn(3)) then string(n,'~') // @"\mdMathspace{" + cap.matched.length.show + "}"
         elif (cap.groups.matchedOn(4)) then "\\\\\n" // \\mdMathbr{}\n"
         else cap.matched

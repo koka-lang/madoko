@@ -402,7 +402,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
          @"     TeX: { ",
          @"       Macros: { mathid: ['\\mathit{#1\\hspace{0.1ex}}',1],",
          @"                 mathkw: ['\\mathsf{#1}',1],",
-         @"                 mathindent: ['\\hspace{#1ex}',1],",
+         @"                 mdmathindent: ['\\hspace{#1ex}',1],",
          @"                 mathpre: ['#1',1],",
          @"               },",
          if (extensions=="") then "" 
