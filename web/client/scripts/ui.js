@@ -4181,6 +4181,9 @@ var symbolsMath = [
         else if (ext===".bst") {
           text="Bib Style   : " + name;
         }
+        else if (ext===".csl") {
+          text="Csl Style   : " + name;
+        }
         else if (ext===".cls") {
           text="Doc Class   : " + name;
         }

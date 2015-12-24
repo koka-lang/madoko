@@ -489,7 +489,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     css: "text/css",
     html:"text/html",
     htm: "text/html",
-    xml: "text/html",
+    xml: "text/xml",
     js:  "text/javascript",
     pdf: "application/pdf",
     json:"application/json",
@@ -532,7 +532,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return startsWith(mimeFromExt(fname),"text/");
   }
 
-  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst",".csl"].join(";");  // .bbl
+  var embedExts = [".js",".css",".json",".mdk",".md",".mkdn",".markdown",".cls",".sty",".bib",".bst",".csl",".xml"].join(";");  // .bbl
   function hasEmbedExt(fname) {
     var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;

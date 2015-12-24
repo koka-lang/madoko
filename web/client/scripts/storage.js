@@ -850,9 +850,12 @@ var Storage = (function() {
         var spath = "styles/" + fpath;
         var opath = "out/" + fpath;
         
-        if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) spath = "styles/lang/" + fpath;
-        else if (Util.extname(fpath) === ".csl" && !Util.dirname(fpath)) spath = "styles/csl/" + fpath;
-        else if (Util.startsWith(Util.stemname(fpath),"locales-") && !Util.dirname(fpath)) spath = "styles/locales/" + fpath;
+        if (Util.extname(fpath) === ".json" && !Util.dirname(fpath)) 
+          spath = "styles/lang/" + fpath;
+        else if (Util.extname(fpath) === ".csl" && !Util.dirname(fpath)) 
+          spath = "styles/csl/" + fpath;
+        else if (Util.startsWith(Util.stemname(fpath),"locales-") && Util.extname(fpath) === ".xml" &&!Util.dirname(fpath)) 
+          spath = "styles/locales/" + fpath;
 
         if (Util.isImageMime(mime)) opath = fpath;
 
