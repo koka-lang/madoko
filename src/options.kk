@@ -92,7 +92,8 @@ public struct options(
   mathBaseline  : int    = 0,         // math baseline offset in percentage of 1pt
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
-  
+  mathRender    : mathrender = Png,   // math rendering method
+
   highlight     : bool = True,
   hilitelang    : string = "",        // semi-colon separated list
 
@@ -101,6 +102,7 @@ public struct options(
   mathconvert   : string = "",        // if non-empty, use cmd to post process math images
   latex         : string = "latex",   // used to generate dvi for math
   dvipng        : string = "dvipng",  // used to extract png images for math
+  dvisvg        : string = "dvisvgm",  // used to extract svg for math
   processTimeout: int = 0,            // kill child process after <timeout>
   
   mathpdflatex  : string = "default",        // if non-empty, used when pdf is needed for snippets. Use "default" for default program

@@ -21,6 +21,7 @@ public function updateSandbox( options : options, key : string, lvalue : string,
   if (!(options.sandbox)) {
     if (key=="latex") options(latex=if (value=="") then "latex" else value)
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
+    elif (key=="dvisvg") options(dvisvg=if (value=="") then "dvisvgm" else value)
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
     elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
     elif (key=="bibtex") options(bibtex=value)

@@ -15,43 +15,42 @@ import common
 
 
 // parse a dimension file written by latex snippets
-public function parseMathDim( txt : string, imgPrefix : string, imgDpi : int, imgScale : int, imgBaseline : int  ) : dict<mathinfo> {
+public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, imgBaseline : int  ) : dict<mathinfo> {
   val mi = mdict()
   val scale = imgScale.double / 100.0
   val baseline = imgBaseline.double / 100.0
   txt.findAll(rxDimLine).foreach fun(cap) {
-    val imageName = imgPrefix + "/math-" + cap.groups[3] + ".png"
+    val ext       = if (cap.groups[15] == "image/svg+xml") then ".svg" else ".png"
+    val imageName = imgPrefix + "/math-" + cap.groups[3] + ext
     val page      = cap.groups[2].parseInt.maybe(0,id)
     val ptwidth   = dimension(cap.groups[4],cap.groups[5])
     val ptheight  = dimension(cap.groups[6],cap.groups[7])
     val ptdepth   = dimension(cap.groups[8],cap.groups[9])
-    val pxwidth   = cap.groups[10].parseInt.maybe(~1,id)
-    val pxheight  = cap.groups[11].parseInt.maybe(~1,id)
-    val dpi       = cap.groups[12].parseInt.maybe(imgDpi,id)
-    val size      = cap.groups[13].parseInt.maybe(0,id)
-    
-    val ppt    = dpi.double/72.27
-    val height = if (pxheight >= 0) then pxheight.double / ppt else ptheight
-    val width  = if (pxwidth >= 0) then pxwidth.double / ppt else ptwidth
+    val iwidth    = dimension(cap.groups[10],cap.groups[11]) 
+    val iheight   = dimension(cap.groups[12],cap.groups[13])
+    val size      = cap.groups[14].parseInt.maybe(0,id)
+    val embed     = cap.groups[16]
+
+    val height = if (iheight > 0.0) then iheight else ptheight
+    val width  = if (iwidth > 0.0) then iwidth else ptwidth
     val depth  = ptdepth * (height / ptheight)
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
-                                    pxheight,pxwidth,size,cap.groups[14])
+                                    iheight,iwidth,size,embed)
   }
   return mi.freeze()
 } 
 
 public val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
                           rxDim + rxDim + rxDim + ")" +
-                           "(?:" + rxPix + rxPix + rxDpi + rxNum + rxEmbed + ")?$", multiLine=True)
+                           "(?:" + rxDim + rxDim + rxNum + rxMime + rxEmbed + ")?$", multiLine=True)
 val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
-val rxPix = @", *(\d+) *(?:px\b *)?"
-val rxDpi = @"(?:, *(\d+) *dpi\b *)?"
 val rxEmbed = @"(?:, *(data:.*))?"
 val rxNum   = @", *(\d+) *"
+val rxMime  = @", *(image/[\w\+]+) *"
 
-function dimension( whole : string, fraction : string ) : double {
+public function dimension( whole : string, fraction : string ) : double {
   val w = whole.parseInt.maybe(0,id).double
   val f = (fraction + "00000").substr(0,5).parseInt.maybe(0,id).double / 100000.0
   return (w+f)

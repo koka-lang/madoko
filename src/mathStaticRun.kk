@@ -222,7 +222,7 @@ public function runMathStatic( content : string, inName: string, outName : strin
     ], 
     fun(err) {
       if (err != 0) return continue(Nothing)
-      mathDviPdfToPng( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
+      mathDviPdfToImg( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
         mathConvertPng( texNameDvi, xopts, dviPages ) {
           mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
             fun(mbmath) {
@@ -534,6 +534,13 @@ function dvipngPages( pages : pages ) : string {
     }).join(" ")
 }        
 
+function dvisvgPages( pages : pages ) : string {
+  " -p " + pages.map( fun(rng) {
+    val (lo,hi) = rng
+    lo.show + (if (lo>=hi) then "" else "-" + hi.show)
+  }).join(",")
+}       
+
 function convertPages( pages : pages ) : string {
   "[" + pages.map( fun(rng) {
     val (lo,hi) = rng
@@ -548,21 +555,37 @@ function convertSuffix( pages : pages ) : string {
   }
 }        
 
-function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : options, 
+function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : options, 
                           dviPages : pages, pdfPages : pages,  
                           continue : () -> io () ) : io () 
 {  
-  val dviBasePng = combine(xopts.mathImgDir,texNameDvi.stemname) 
-  val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
-                                      " -D" + xopts.mathDpi.show +
-                                      " " + dvipngPages(dviPages) + 
-                                      " -o " + (dviBasePng + "-%d.png").quote +
-                                      " " + texNameDvi.basename.quote
-  val pdfBasePng =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
-  val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
-                  (texNamePdf.basename + pdfPages.convertPages).quote + " " +
-                  (pdfBasePng + pdfPages.convertSuffix + ".png").quote
-              
+  val dviBaseImg = combine(xopts.mathImgDir,texNameDvi.stemname) 
+  val pdfBaseImg =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
+
+  val (dviconvCmd,pdfconvCmd) =
+    match (xopts.mathRender) {
+      Svg -> {
+        val baseCmd = xopts.dvisvg.quote + " -e -j -n -d3 -v3 " 
+        val dvisvgCmd = baseCmd + dvisvgPages(dviPages) + 
+                          " -o " + (dviBaseImg + "-%p.svg").quote +
+                          " " + texNameDvi.basename.quote
+        val pdfsvgCmd = baseCmd + dvisvgPages(pdfPages) + 
+                          " -o " + (pdfBaseImg + "-%p.svg").quote +
+                          " " + texNamePdf.basename.quote
+        (dvisvgCmd,pdfsvgCmd)                          
+      }
+      Png -> {
+        val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
+                                            " -D" + xopts.mathDpi.show +
+                                            " " + dvipngPages(dviPages) + 
+                                            " -o " + (dviBaseImg + "-%d.png").quote +
+                                            " " + texNameDvi.basename.quote
+        val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
+                        (texNamePdf.basename + pdfPages.convertPages).quote + " " +
+                        (pdfBaseImg + pdfPages.convertSuffix + ".png").quote
+        (dvipngCmd,pdfpngCmd)
+      }
+    }                    
 
   // make sure the output directory exists
   val outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
@@ -572,8 +595,8 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
   }                                      
   
   concurrent([
-      fun(cont) { mathCmdToPng( dvipngCmd, texNameDvi.dirname, "dvi", dviPages, xopts, cont) },
-      fun(cont) { mathCmdToPng( pdfpngCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, cont) } 
+      fun(cont) { mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, cont) },
+      fun(cont) { mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, cont) } 
     ], 
     fun(err) {
       if (err==0) {
@@ -583,12 +606,12 @@ function mathDviPdfToPng( texNameDvi : string, texNamePdf : string, xopts : opti
   )
 }
 
-function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
+function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
                        continue : (int) -> io () ) : io () 
 {  
   if (pages.isNil) return continue(0)
 
-  xopts.print("generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
+  xopts.print("generating math images...  (" + xopts.mathRender.show + ") (" + mode + ") (" + pages.pagesShow + ")")
   xopts.print("> " + cmd,3)
   system(cmd,fun(err2,stdout2,stderr2) {
     if (err2 != 0) {
@@ -606,7 +629,7 @@ function mathCmdToPng( cmd : string, dir : string, mode : string, pages : pages,
 
 function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
-  if (xopts.mathconvert=="") then continue() else {
+  if (xopts.mathconvert=="" || !xopts.mathRender.isPng) then continue() else {
     val convertCmd = xopts.mathconvert.quote + " " + (texName.stemname + "-%d.png").quote + 
                           dviPages.convertPages + " " +
                           (texName.stemname + "-c" + dviPages.convertSuffix + ".png").quote
@@ -627,7 +650,7 @@ function mathDimAnalyse( dimxName : string, xopts : options, dviPages : pages, p
                          continue : (maybe<dict<mathinfo>>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
   val dims2 = extendDim(dviPages, pdfPages, texNameDvi, texNamePdf, dimxName, xopts )
-  val mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathDpi, xopts.mathScale, xopts.mathBaseline)
+  val mdim2 = dims2.parseMathDim(xopts.mathImgDir, xopts.mathScale, xopts.mathBaseline)
   mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
   continue( Just(mdim2) )
 }
@@ -664,54 +687,42 @@ function extendDim( dviPages : pages, pdfPages : pages,
         val pageNo = cap.groups[2].parseInt.maybe(0,id)
         val digest = cap.groups[3]
         val imageStem = (if (isPdf) then texNamePdf.stemname else texNameDvi.stemname) +
-                    (if (opts.mathconvert!="") then "-c" else "") + "-" +
-                    (if (isPdf || opts.mathconvert!="") then (pageNo-1).show else pageNo.show)
+                    (if (opts.mathconvert!="" && opts.mathRender.isPng) then "-c" else "") + "-" +
+                    (if ((isPdf || opts.mathconvert!="") && opts.mathRender.isPng) then (pageNo-1).show else pageNo.show)
 
-        val imageName = combine(opts.mathImgDir, imageStem + ".png")
+        val imageName = combine(opts.mathImgDir, imageStem.changeExt(opts.mathRender.show) )
         val imageFile = combine(dimxFile.dirname,imageName)
-        //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
+        trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
-        val (pxwidth,pxheight,size,embed) 
+        val (iwidth,iheight,size,embed) 
           = match(dim[digest]) {
               Just(mi) | !(pageNo.inside(pages)) 
                 -> {                  
                   //trace("known image: " + pageNo.show + ": " + imageFile + ": " + digest)
-                  (mi.pxwidth,mi.pxheight,mi.size,mi.imageData)
+                  (mi.iwidth,mi.iheight,mi.size,mi.imageData)
                 }
               _ -> { 
-                match( tryReadFileSync( imageFile )) {
-                  Nothing   -> {
-                    opts.printErr("error: cannot read: " + imageFile)
-                    (0,0,0,"") // should not happen?
+                match(opts.mathRender) {
+                  Png -> {
+                    analyzeImagePng( imageFile, opts )
                   }
-                  Just(buf) -> {
-                    //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
-                    val base64 = buf.toBase64()
-                    val pxwidth = buf.readInt4(16,True)
-                    val pxheight = buf.readInt4(20,True)
-                    //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
-                    val pngprefix = "data:image/png;base64,"
-
-                    val embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
-                             then pngprefix + base64 else ""
-                    val imageDigestFile = combine(imageFile.dirname,"math-" + digest + ".png")
-                    tryUnlinkSync(imageDigestFile)                              
-                    val size  = if (embed=="") then {
-                              // give robust name  
-                              rename(imageFile,imageDigestFile)
-                              buf.length 
-                            }
-                            else {
-                              tryUnlinkSync(imageFile) // delete the image
-                              embed.length
-                            }
-                    (pxwidth,pxheight,size,embed)
+                  Svg -> {
+                    analyzeImageSvg( imageFile, opts )
                   }
                 }
               }
             }
-        
-        if (pxwidth==0 || pxheight==0) then line else {
+        val imageDigestFile = combine(imageFile.dirname,"math-" + digest + imageFile.extname)
+        tryUnlinkSync(imageDigestFile)                              
+        if (embed=="") then {
+          // give robust name  
+          rename(imageFile,imageDigestFile)
+        }
+        else {
+          tryUnlinkSync(imageFile) // delete the image
+        }
+
+        if (iwidth<=0.0 || iheight<=0.0) then line else {
           if (embed == "") then {
             imageSize  := imageSize + size
             imageCount := imageCount + 1            
@@ -720,8 +731,8 @@ function extendDim( dviPages : pages, pdfPages : pages,
             embedSize  := embedSize + size
             embedCount := embedCount + 1
           }  
-          cap.groups[1] + "," + pxwidth.show + "px," + pxheight.show + "px," + 
-            opts.mathDpi.show + "dpi," + size.show + (if (embed=="") then "" else (", " + embed))
+          cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," +
+            size.show + "," + opts.mathRender.showMime + (if (embed=="") then "" else (", " + embed))
         }
       }
     }
@@ -743,6 +754,72 @@ function extendDim( dviPages : pages, pdfPages : pages,
   }
   txt
 }
+
+function analyzeImagePng( imageFile, opts : options ) : io (double, double, int, string ) {
+  match( tryReadFileSync( imageFile )) {
+    Nothing   -> {
+      opts.printErr("error: cannot read: " + imageFile)
+      (0.0,0.0,0,"") // should not happen?
+    }
+    Just(buf) -> {
+      val base64  = buf.toBase64()
+      val pxwidth = buf.readInt4(16,True)
+      val pxheight= buf.readInt4(20,True)
+      
+      val ppt     = (if (opts.mathDpi > 0) then opts.mathDpi.double else 72.27) / 72.27
+      val iheight = pxheight.double / ppt
+      val iwidth  = pxwidth.double / ppt
+
+      //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
+      val pngprefix = "data:image/png;base64,"
+
+      val embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
+                    then pngprefix + base64 else ""
+      val size = if (embed.isEmpty) then buf.length else embed.length                    
+      (iwidth,iheight,size,embed)
+    }
+  }
+}
+
+function analyzeImageSvg( imageFile, opts : options ) : io (double, double, int, string ) {
+  match( tryReadTextFile( imageFile )) {
+    Left   -> {
+      opts.printErr("error: cannot read: " + imageFile)
+      (0.0,0.0,0,"") // should not happen?
+    }
+    Right(svg0) -> {
+      val svg1     = svg0.replace(regex(@"^[\s\S]*?(?=<svg)"),"")
+      val (iheight,svg2) = svg1.svgExtractDim(rxSvgHeight)
+      val (iwidth,svg)   = svg2.svgExtractDim(rxSvgWidth)
+      val encoded        = "data:image/svg+xml;charset=utf8," + svg.svgUrlEncode
+      trace("svg: height: " + iheight.show + ", width: " + iwidth.show)
+      val embed = if (encoded.length < opts.mathEmbedLimit) then encoded else ""
+      val size  = if (embed.isEmpty) then svg.length else embed.length                    
+      (iwidth,iheight,size,embed)
+    }
+  }
+}
+
+function svgUrlEncode( svg : string ) : string {
+  svg.replaceAll( rxUrlChar, fun(cap) {
+    match(cap.groups[1].list) {
+      Nil     -> " "
+      Cons(c) -> "%" + c.int.showHex(2)
+    }
+  })
+}
+val rxUrlChar = regex(@"\s+|([^\w\-\.~])")
+
+function svgExtractDim( svg : string, rx : regex ) : (double, string) {
+  match(svg.find(rx)) {
+    Nothing -> (0.0, svg) 
+    Just(cap) -> (dimension(cap.groups[1],cap.groups[2]), svg.substr(0,cap.index) + svg.substr(cap.next))
+  }
+}
+
+// depends quite a bit on dvisvgm output...
+val rxSvgHeight = regex(@"\bheight='(\d+)(?:\.(\d+))?(pt)?'")
+val rxSvgWidth  = regex(@"\bwidth='(\d+)(?:\.(\d+))?(pt)?'")
 
 function showSize( size : int ) : string {
   val kb = 1024

@@ -44,9 +44,10 @@ function mathHeader( xopts : options, mode : string ) : string
                  "MathScale: " + xopts.mathScale.show,
                  "MathBaseline: " + xopts.mathBaseline.show,
                  "MathDocClass: " + xopts.mathDocClass,
-                 "MathImgDir: " + xopts.mathImgDir
+                 "MathImgDir: " + xopts.mathImgDir,
+                 "MathRender: " + xopts.mathRender.show
                 ]
-  val dviDeps = ["Dvipng: " + xopts.dvipng,
+  val dviDeps = [ if (xopts.mathRender.isPng) then "Dvipng: " + xopts.dvipng else "Dvisvg: " + xopts.dvisvg,
                  "Latex: " + xopts.latex, 
                  "MathConvert: " + xopts.mathconvert 
                 ]
@@ -54,9 +55,9 @@ function mathHeader( xopts : options, mode : string ) : string
                  "PdfLatex: " + xopts.pdflatex, 
                  "Convert: " + xopts.convert,
                  "Dvips: " + xopts.dvips,
-                 "Ps2pdf: " + xopts.ps2pdf 
+                 "Ps2pdf: " + xopts.ps2pdf,                 
                 ]
-  (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
+  (initial + (if (mode=="dvi" || xopts.mathRender.isSvg) then dviDeps else pdfDeps)).join(", ") + "\n"
 }
 
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {

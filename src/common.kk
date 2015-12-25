@@ -308,15 +308,15 @@ public function newLink( href : string, title : string = "", linkattrs : attrs =
 
 // Info for static math based on images
 public struct mathinfo (
-  imageName : string, // name of the png
+  imageName : string, // name of the image
   page      : int,    // dvi/pdf rendering page (used for caching)
-  height    : double, // total height in pt (72.27pt = 1inch)
+  height    : double, // total height in pt (72.27pt = 1inch) (might be scaled already)
   width     : double, // width in pt
   depth     : double, // depth in pt (relative to baseline)
-  pxheight  : int,    // the image height in pixels
-  pxwidth   : int,    // the image width in pixels
+  iheight   : double, // the image native height in pt
+  iwidth    : double, // the image native width in pt
   size      : int,    // length of the image data
-  imageData : string   // base64 encoding or ""
+  imageData : string  // data-url encoding or ""
 )
 
 // Info for files to embed. Used in a browser
@@ -325,6 +325,26 @@ public struct embedinfo (
   embedData : string  // data-url or text content
 )
 
+
+public type mathrender {
+  con Png 
+  con Svg
+}
+
+
+public function show( m : mathrender ) {
+  match(m) {
+    Svg -> "svg"
+    Png -> "png"
+  }
+}
+
+public function showMime( m : mathrender ) {
+  match(m) {
+    Svg -> "image/svg+xml"
+    Png -> "image/png"
+  }
+}
 
 /* --------------------------------------
  Expand list style patterns

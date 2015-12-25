@@ -93,7 +93,14 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-
+  elif (key=="math-render") {
+    if (lvalue=="png") then options(mathRender=Png)
+    elif (lvalue=="svg") then options(mathRender=Svg)
+    else {
+      warning("unknown Math Render value: " + value + " (must be one of 'png' or 'svg')")
+      options
+    }
+  }
   elif (key=="mathjax") then (if (value!="")
                                then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "default" else value))
                                else options(mathmode=Static, mathjax=""))

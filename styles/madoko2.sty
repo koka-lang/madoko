@@ -1193,7 +1193,7 @@
   \setlength{\@snippetHeight}{\ht\@snippetBox}%
   \setlength{\@snippetDepth}{\dp\@snippetBox}%
   \addtolength{\@snippetHeight}{\@snippetDepth}%
-  \immediate\write\foo{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
+  \immediate\write\md@dimfile{\arabic{snippets},\@snippetName,\the\@snippetWidth,\the\@snippetHeight,\the\@snippetDepth}%
   \noindent\usebox\@snippetBox%
 }
 
@@ -1213,7 +1213,7 @@
      \belowdisplayskip=0pt%
      \abovedisplayshortskip=0pt%
      \belowdisplayshortskip=0pt%
-     \newwrite\foo\immediate\openout\foo=\jobname.dim%
-     \immediate\write\foo{\%ordinal,(hash)name,width,(total) height,depth,image width,image height,dpi,size,base64 encoding}%
+     \newwrite\md@dimfile\immediate\openout\md@dimfile=\jobname.dim%
+     \immediate\write\md@dimfile{\%ordinal,(hash)name,width,(total) height,depth,image width,image height,size,mime,data-url}%
     }%
-    {\closeout\foo}
+    {\closeout\md@dimfile}
