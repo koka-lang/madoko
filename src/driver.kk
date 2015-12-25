@@ -74,10 +74,10 @@ public function processContent( inName : string, outName : string, content : str
 
     // always read dims: even in dynamic mode some pdf math may exist
     val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
-    val mdim = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathScale, mmopts.mathBaseline)
+    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathScale, mmopts.mathBaseline, mmopts.mathSvgShare)
 
-    val xopts  = opts2(mathdim=mdim)
-    val mopts  = mmopts(mathdim=mdim)  
+    val xopts  = opts2(mathdim=mdim,mathSvgDefs=svgdefs)
+    val mopts  = mmopts(mathdim=mdim,mathSvgDefs=svgdefs)  
 
     // register languages for highlighting
     registerColorizers(mopts, searchDirs, icontent);
@@ -250,13 +250,13 @@ function process( inName : string, outName : string, searchDirs : list<string>,
         if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
           mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
-        mathStatic( mathDvi, mathPdf, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmdim2) {
-          match(mbmdim2) {
-            Just(mdim2) -> {
+        mathStatic( mathDvi, mathPdf, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmres) {
+          match(mbmres) {
+            Just((mdim2,svgdefs)) -> {
               // write html again
               mopts.print("re-aligning math in HTML.")
               
-              val html2 = markdown(icontent,xopts(mathdim=mdim2))
+              val html2 = markdown(icontent,xopts(mathdim=mdim2,mathSvgDefs=svgdefs))
               if (!(tryWriteTextFile(outName,html2))) {
                 mopts.printErr("error: unable to write: " + outName) 
               }

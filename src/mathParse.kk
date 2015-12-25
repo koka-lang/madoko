@@ -9,19 +9,23 @@
 // Parse math dimension file
 module mathParse
 
+import std/string
 import std/regex
 import std/dict
 import common
 
 
 // parse a dimension file written by latex snippets
-public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, imgBaseline : int  ) : dict<mathinfo> {
+public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, imgBaseline : int, sharePaths : bool  ) : (dict<mathinfo>,string,string) {
   val mi = mdict()
+  val paths = mdict()
+  var svgsize    : int := 0
+  var svgreduced : int := 0
+
   val scale = imgScale.double / 100.0
   val baseline = imgBaseline.double / 100.0
-  txt.findAll(rxDimLine).foreach fun(cap) {
-    val ext       = if (cap.groups[15] == "image/svg+xml") then ".svg" else ".png"
-    val imageName = imgPrefix + "/math-" + cap.groups[3] + ext
+
+  txt.findAll(rxDimLine).foreach fun(cap) {    
     val page      = cap.groups[2].parseInt.maybe(0,id)
     val ptwidth   = dimension(cap.groups[4],cap.groups[5])
     val ptheight  = dimension(cap.groups[6],cap.groups[7])
@@ -29,18 +33,62 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
     val iwidth    = dimension(cap.groups[10],cap.groups[11]) 
     val iheight   = dimension(cap.groups[12],cap.groups[13])
     val size      = cap.groups[14].parseInt.maybe(0,id)
-    val embed     = cap.groups[16]
+    val mime      = cap.groups[15]
+    val imageData = cap.groups[16]
+    val ext       = match (mime.find(rxMimePre)) {
+                      Just(mcap) -> "." + mcap.groups[1]
+                      Nothing    -> ".png"
+                    }
+    val imageName = imgPrefix + "/math-" + cap.groups[3] + ext
 
     val height = if (iheight > 0.0) then iheight else ptheight
     val width  = if (iwidth > 0.0) then iwidth else ptwidth
     val depth  = ptdepth * (height / ptheight)
 
+    val embed = if (!sharePaths || mime!="image/svg+xml") then imageData else {
+      svgsize := svgsize + imageData.length
+      val svg = imageData.replaceAll(rxSvgPath, fun(pcap) {
+        val pathid = pcap.groups[1]
+        match(paths[pathid]) {
+          Just(path) -> {
+            //trace("share path: " + pathid)
+            if (path==pcap.matched) 
+              then {
+                svgreduced := svgreduced + pcap.matched.length
+                "" 
+              }
+              else {
+                //trace(" but not equal! keep locally")
+                pcap.matched // keep this path locally
+              }
+          }
+          Nothing -> {
+            paths[pathid] := pcap.matched
+            //trace("extract path: " + pathid)
+            ""
+          }
+        }
+      })
+      svg.replaceAll("<defs></defs>","")
+    }
+
+ 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
                                     iheight,iwidth,size,embed)
   }
-  return mi.freeze()
+
+  val msg = if (svgreduced <= 0) then ""
+             else " math reduced : " + (svgsize - svgreduced).showSize + " (due to path sharing)"
+  val svgpaths = paths.list.map(snd).join("\n")
+  val svgdefs  = if (svgpaths.isEmpty) then "" else 
+    "\n<svg id='math-svg-paths' style='display:none' version='1.1' viewBox='0 0 0 0' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>\n" +
+    "<defs>\n" + svgpaths + "\n</defs>\n</svg>\n"
+
+  return (mi.freeze(), svgdefs, msg)
 } 
+val rxMimePre = regex(@"^image/(\w+)")
+val rxSvgPath = regex(@"<path\b[\s\S]*?\bid='([^']+)'[\s\S]*?/>")
 
 public val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
                           rxDim + rxDim + rxDim + ")" +
@@ -74,3 +122,10 @@ public function unsnippet( txt : string, which : string ) : string {
 val rxSnippet = regex( @"\\begin{md(?:Inline|Display)Snippet}[\s\S]*?\\end{md(?:Inline|Display)Snippet}" )
 val rxComment = regex( @"\r?\n[ \t]*%[^\r\n]*" )
 val rxLines   = regex( @"(?:\r?\n)+")
+
+public function showSize( size : int ) : string {
+  val kb = 1024
+  if (size < 10*kb) 
+   then (size.double / kb.double).showFixed(1).align(4) + " kb"
+   else ((size + kb - 1)/kb).show.align(4) + " kb"
+}

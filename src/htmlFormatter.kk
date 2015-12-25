@@ -155,6 +155,11 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
   }
 }
 
+public function fmtHtmlSvg(context: inlineContext, svg : string, attrs : attrs ) : string {
+  svg.replace( rxSvg, "<svg " + attrs.htmlFormat("svg",context.sanitize) )
+}
+val rxSvg = regex(@"^\s*<svg\b")
+
 function extractText( s : string ) : string {
   s.replaceAll(rxTag,"")
 }
@@ -429,6 +434,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     "</head>\n" +
     "<body class=\"madoko\">\n" + 
     html +
+    options.mathSvgDefs +
     "\n</body>\n" +
     options.embedScripts(options.scriptsx, metadata ) +
     (if (options.jsFooter == "") then "" else "<script type=\"text/javascript\">\n" + options.jsFooter.expand.indent + "\n</script>\n") +

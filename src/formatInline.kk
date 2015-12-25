@@ -189,14 +189,26 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
   // selected a larger display font.
   val fontsize = 10.0
   val valign   = (scale * mi.depth / fontsize) - baseline
-  val xattrs = attrs.addKeyvalIfNotExist("vertical-align","-" + valign.showFixed(3) + "em")
-                    .addKeyvalIfNotExist("height",(scale * mi.height / fontsize).showFixed(3) + "em")
-                    .addClass("math")
-                // .addKeyvalIfNotExist("width",mi.width.showFixed(2) + "pt")
-                // .addKeyval("data-math", mtxt)
-  val src = if (mi.imageData!="") then mi.imageData else mi.imageName
-  context.fmtLink(True,Link(src,"",xattrs),mtxt)
+  val height   = (scale * mi.height / fontsize)
+  val width    = (scale * mi.width / fontsize)
+  val xattrs0  = if (valign== 0.0) then attrs 
+                  else attrs.addKeyvalIfNotExist("vertical-align","-" + valign.showFixed(3) + "em")
+  val xattrs  = xattrs0.addKeyvalIfNotExist("height",height.showFixed(3) + "em").addClass("math")
+
+  if (mi.imageData.startsWith(svgPrefix)) {
+    // embedded svg: format it inline with the attributes spliced in
+    val svg    = mi.imageData.substr(svgPrefix.length)
+    val sattrs = xattrs.addKeyvalIfNotExist("width", width.showFixed(3) + "em")
+    context.fmtHtmlSvg( svg, sattrs )
+  }
+  else {    
+    // png, or svg image file, emit an img element
+    val src = if (mi.imageData!="") then mi.imageData else mi.imageName
+    context.fmtLink(True,Link(src,"",xattrs),mtxt)
+  }
 }
+
+val svgPrefix = "data:image/svg+xml;charset=utf8,"
 
 function escapeMath( txt : string, fmt : formatter ) : string {
   match(fmt) {

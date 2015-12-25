@@ -33,8 +33,9 @@ public function fromMeta( opts : options, mdata : metadata ) : options {
 
 function update( options : options, key : string, xvalue : string, mdata : metadata ) : options {  
   val lvalue = xvalue.toLower
-  val value = if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else xvalue
+  val value  = if (lvalue=="none" || lvalue=="clear" || lvalue=="false") then "" else xvalue
   val ivalue = value.parseInt.maybe(~1,id)
+  val bvalue = (value!="" && value!="0") 
 
   //trace("from meta: " + key + "=" + value)
   if   (key=="title")  options(title=value)
@@ -101,6 +102,8 @@ function update( options : options, key : string, xvalue : string, mdata : metad
       options
     }
   }
+  elif (key=="math-svg-share-paths") options(mathSvgShare=bvalue)
+  elif (key=="math-svg-precision") options(mathSvgPrec= min(6,max(ivalue,0)))
   elif (key=="mathjax") then (if (value!="")
                                then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "default" else value))
                                else options(mathmode=Static, mathjax=""))

@@ -78,13 +78,13 @@ public alias runMathStaticFun
       texNameDvi : string, texNamePdf : string,
       dviPages : pages, pdfPages : pages,
       oldMathDvi : string, oldMathPdf : string,
-      xopts : options, continue : (maybe<dict<mathinfo>>) -> io () ) -> io ()
+      xopts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) -> io ()
 
 
 public function mathStatic( mathDvi : string, mathPdf : string,  
                             inName : string, outName : string, xopts : options, content : string, 
                             runMathStatic : runMathStaticFun,  
-                            continue : (maybe<dict<mathinfo>>) -> io () ) : io () 
+                            continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io () 
 {
   val (texNameDvi,texNameFinalDvi,outMathDvi) = xopts.mathFormat("dvi",mathDvi,outName)
   val (texNamePdf,texNameFinalPdf,outMathPdf) = xopts.mathFormat("pdf",mathPdf,outName)

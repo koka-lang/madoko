@@ -93,6 +93,9 @@ public struct options(
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
   mathRender    : mathrender = Png,   // math rendering method
+  mathSvgShare  : bool   = True,      // share paths in embedded svg images
+  mathSvgPrec   : int    = 3,         // decimal points used in svg rendering
+  mathSvgDefs   : string = "",        // used internally to share svg definitions
 
   highlight     : bool = True,
   hilitelang    : string = "",        // semi-colon separated list
