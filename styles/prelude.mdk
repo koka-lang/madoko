@@ -510,7 +510,7 @@ BlockQuote{ tex-env: "quote" }
 .inst     { tex-cmd: "\mdinst" }
 .equation-before { tex-cmd: "\mdmathtag" } 
 
-Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\def\refname{&name-references;}%mdk&nl;"  }
+Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\mdsetrefname{&name-references;}%mdk&nl;"  }
 BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
 .Newblock    { tex-cmd-before="\newblock " }
 toc          { tex-env:mdtoc }

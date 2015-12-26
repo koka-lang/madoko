@@ -894,6 +894,10 @@
 \ifoptionequal{/madoko/bib-label}{Force}{\mdforcebiblabel}{%
 }}}}
 
+\newcommand\mdsetrefname[1]{%
+  \ifdef\bibname{\def\bibname{#1}}{\def\refname{#1}}%
+}
+
 
 %-------------------------------------------------------------
 % Beamer slide decks
