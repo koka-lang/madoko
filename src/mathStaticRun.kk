@@ -261,11 +261,11 @@ function mathSnippetsToPdf( srcName: string, texName : string, xopts : options,
                            continue : (int) -> io () ) : io () 
 {  
   if (pages.isNil) return continue(0)
-  if (xopts.mathpdflatex != "") {
-    // re-run latex to get a pdf
+  if (xopts.mathRender.isSvg || xopts.mathpdflatex != "") {
+    // run latex to get a pdf (or dvi in the case of svg mode)
     val notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
-    val texCmd = xopts.getMathpdflatex
-    xopts.print("running " + texCmd.stemname + " on math... (pdf -> " + xopts.mathRender.show + ")")
+    val texCmd = if (xopts.mathRender.isSvg) then xopts.latex else xopts.getMathpdflatex
+    xopts.print("running " + texCmd.stemname + " on math...   (pdf -> " + xopts.mathRender.show + ")")
     runLaTeX( srcName, texName, texCmd, xopts, content, notfound, 0, False, continue )
   }
   else {
@@ -565,13 +565,13 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
   val (dviconvCmd,pdfconvCmd) =
     match (xopts.mathRender) {
       Svg -> {
-        val baseCmd = xopts.dvisvg.quote + " -e -j -n -v3 -d" + xopts.mathSvgPrec.show + " " 
+        val baseCmd = xopts.dvisvg.quote + " -e -n -j -v3 -d" + xopts.mathSvgPrec.show + " " 
         val dvisvgCmd = baseCmd + dvisvgPages(dviPages) + 
-                          " -o " + (dviBaseImg + "-%p.svg").quote +
+                          " -o " + (dviBaseImg + "-%1p.svg").quote +
                           " " + texNameDvi.basename.quote
         val pdfsvgCmd = baseCmd + dvisvgPages(pdfPages) + 
-                          " -o " + (pdfBaseImg + "-%p.svg").quote +
-                          " " + texNamePdf.basename.quote
+                          " -o " + (pdfBaseImg + "-%1p.svg").quote +
+                          " " + texNamePdf.changeExt(".dvi").basename.quote  // we generate dvi instead in svg mode..
         (dvisvgCmd,pdfsvgCmd)                          
       }
       Png -> {
@@ -592,8 +592,15 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
   if (!(fexistsSync(outDir))) {
     xopts.print("create image directory: " + outDir)
     mkdirp(outDir)
-  }                                      
-  
+  }           
+
+  mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, fun(errdvi) {
+    mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, fun(errpdf) {
+      trace("conversion done")
+      continue()
+    })
+  })                           
+  /*
   concurrent([
       fun(cont) { mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, cont) },
       fun(cont) { mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, cont) } 
@@ -604,6 +611,7 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
       }
     }
   )
+*/
 }
 
 function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
@@ -614,6 +622,7 @@ function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages,
   xopts.print("generating math images...  (" + mode + ") (" + pages.pagesShow + ")")
   xopts.print("> " + cmd,3)
   system(cmd,fun(err2,stdout2,stderr2) {
+    //trace("done system cmd")
     if (err2 != 0) {
       val output = stdout2 + stderr2
       xopts.printErr("> " + cmd)
@@ -621,6 +630,9 @@ function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages,
       if (output.contains("Invalid Parameter -")) then {
         xopts.printErr("hint: perhaps you forgot to install ImageMagick?\n      (http://www.imagemagick.org/script/binary-releases.php)")
       }
+    }
+    elif (xopts.verbose >= 4) {
+      xopts.print(stdout2 + stderr2)
     }
     continue(err2)
   },xopts.processTimeout,dir)
@@ -693,7 +705,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
 
         val imageName = combine(opts.mathImgDir, imageStem.changeExt(opts.mathRender.show) )
         val imageFile = combine(dimxFile.dirname,imageName)
-        //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
+        // trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
         val (iwidth,iheight,size,embed) 
           = match(dim[digest]) {
@@ -708,7 +720,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
                     analyzeImagePng( imageFile, opts )
                   }
                   Svg -> {
-                    analyzeImageSvg( imageFile, opts )
+                    analyzeImageSvg( imageFile, opts, isPdf )
                   }
                 }
               }
@@ -723,18 +735,17 @@ function extendDim( dviPages : pages, pdfPages : pages,
           tryUnlinkSync(imageFile) // delete the image
         }
 
-        if (iwidth<=0.0 || iheight<=0.0) then line else {
-          if (embed == "") then {
-            imageSize  := imageSize + size
-            imageCount := imageCount + 1            
-          }
-          else {
-            embedSize  := embedSize + size
-            embedCount := embedCount + 1
-          }  
-          cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," +
-            size.show + "," + opts.mathRender.showMime + (if (embed=="") then "" else (", " + embed))
+        //if (iwidth<=0.0 || iheight<=0.0) then line else 
+        if (embed == "") then {
+          imageSize  := imageSize + size
+          imageCount := imageCount + 1            
         }
+        else {
+          embedSize  := embedSize + size
+          embedCount := embedCount + 1
+        }  
+        cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," +
+          size.show + "," + opts.mathRender.showMime + (if (embed=="") then "" else (", " + embed))      
       }
     }
   }
@@ -782,7 +793,7 @@ function analyzeImagePng( imageFile, opts : options ) : io (double, double, int,
   }
 }
 
-function analyzeImageSvg( imageFile, opts : options ) : io (double, double, int, string ) {
+function analyzeImageSvg( imageFile, opts : options, isPdf : bool ) : io (double, double, int, string ) {
   match( tryReadTextFile( imageFile )) {
     Left   -> {
       opts.printErr("error: cannot read: " + imageFile)
@@ -792,7 +803,7 @@ function analyzeImageSvg( imageFile, opts : options ) : io (double, double, int,
       val (iheight,svg2) = svg1.svgExtractDim(rxSvgHeight)
       val (iwidth,svg3)  = svg2.svgExtractDim(rxSvgWidth)
       val svg            = svg3.svgCompress()
-      val encoded        = "data:image/svg+xml;charset=utf8," + svg // .svgUrlEncode
+      val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeIds(isPdf) // .svgUrlEncode
       // trace("svg: height: " + iheight.show + ", width: " + iwidth.show)
       val embed = if (encoded.length < opts.mathEmbedLimit) then encoded else ""
       val size  = if (embed.isEmpty) then svg.length else embed.length                    
@@ -801,6 +812,12 @@ function analyzeImageSvg( imageFile, opts : options ) : io (double, double, int,
   }
 }
 
+function encodeIds( svg : string, isPdf : bool ) {
+  if (!isPdf) return svg
+  svg.replaceAll( rxSvgId, fun(cap) { cap.matched + "pdf-" } )
+}
+
+val rxSvgId = regex(@"\b(id|xlink:href)='#?|='url\(#")
 
 function svgCompress( svg : string ) : string {
   svg.replaceAll(rxComment,"").replaceAll(rxNl,"").replaceAll(rxSpaces," ").trim

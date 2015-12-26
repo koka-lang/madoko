@@ -43,7 +43,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
 
     val height = if (iheight > 0.0) then iheight else ptheight
     val width  = if (iwidth > 0.0) then iwidth else ptwidth
-    val depth  = ptdepth * (height / ptheight)
+    val depth  = if (ptheight != 0.0) then ptdepth * (height / ptheight) else 0.0
 
     val embed = if (!sharePaths || mime!="image/svg+xml") then imageData else {
       svgsize := svgsize + imageData.length
@@ -58,7 +58,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
                 "" 
               }
               else {
-                //trace(" but not equal! keep locally")
+                trace(" unequal path: " + pathid + " (not sharing)")
                 pcap.matched // keep this path locally
               }
           }
@@ -79,7 +79,8 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
   }
 
   val msg = if (svgreduced <= 0) then ""
-             else " math reduced : " + (svgsize - svgreduced).showSize + " (due to path sharing)"
+             else " math reduced :  " + (100.0 * svgreduced.double / svgsize.double).int.show.fill(2,'0') + "% to " + 
+                      (svgsize - svgreduced).showSize + " (due to path sharing)"
   val svgpaths = paths.list.map(snd).join("\n")
   val svgdefs  = if (svgpaths.isEmpty) then "" else 
     "\n<svg id='math-svg-paths' style='display:none' version='1.1' viewBox='0 0 0 0' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>\n" +
@@ -88,7 +89,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
   return (mi.freeze(), svgdefs, msg)
 } 
 val rxMimePre = regex(@"^image/(\w+)")
-val rxSvgPath = regex(@"<path\b[\s\S]*?\bid='([^']+)'[\s\S]*?/>")
+val rxSvgPath = regex(@"<path\b(?:[^/>]|/(?![^>]))*?\bid='([^']+)'(?:[^/>]|/(?![^>]))*?/>")
 
 public val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
                           rxDim + rxDim + rxDim + ")" +
