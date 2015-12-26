@@ -594,25 +594,43 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
     mkdirp(outDir)
   }           
 
-  mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, fun(errdvi) {
-    mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, fun(errpdf) {
-      trace("conversion done")
-      continue()
+  checkCmdToImgVersion(xopts) {
+    mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, fun(errdvi) {
+      mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, fun(errpdf) {
+        if (errdvi==0 && errpdf==0) {
+          continue()
+        }
+      })
     })
-  })                           
-  /*
-  concurrent([
-      fun(cont) { mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, cont) },
-      fun(cont) { mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, cont) } 
-    ], 
-    fun(err) {
-      if (err==0) {
-        continue()
-      }
-    }
-  )
-*/
+  }
 }
+
+function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
+  match(xopts.mathRender) {
+    Svg -> {
+      system("dvisvgm --version", fun(err,stdout,stderr) {
+        val version = match(stdout.find(rxVersion)) {
+          Nothing -> 0
+          Just(cap) -> {
+            val ds = [1,2,3].map( fun(i) { cap.groups[i].parseIntDefault(0) })
+            ds.foldl(0,fun(x,d) { x*10 + d })
+          }
+        }
+        if (err!=0 || version < 113) {
+          xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.13 installed")
+          xopts.printErr("you can check the version using   : dvisvgm --version")
+          xopts.printErr("the latest version is available at: http://dvisvgm.bplaced.net/downloads")
+          xopts.printErr("for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
+        }
+        else {
+          cont()
+        }
+      })
+    }
+    _ -> cont()
+  }
+}
+val rxVersion = regex(@"(\d+)(?:\.(\d)(\d)?)?")
 
 function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
                        continue : (int) -> io () ) : io () 
@@ -623,21 +641,22 @@ function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages,
   xopts.print("> " + cmd,3)
   system(cmd,fun(err2,stdout2,stderr2) {
     //trace("done system cmd")
+    val output = stdout2 + stderr2      
     if (err2 != 0) {
-      val output = stdout2 + stderr2
       xopts.printErr("> " + cmd)
       xopts.printErr("error: failure while typesetting math: \n" + output)      
       if (output.contains("Invalid Parameter -")) then {
         xopts.printErr("hint: perhaps you forgot to install ImageMagick?\n      (http://www.imagemagick.org/script/binary-releases.php)")
       }
+      continue( if (output.contains(rxPSWarning)) then 0 else err2 )
     }
-    elif (xopts.verbose >= 4) {
-      xopts.print(stdout2 + stderr2)
+    else {
+      if (xopts.verbose >= 4) xopts.print(output)
+      continue(0)
     }
-    continue(err2)
   },xopts.processTimeout,dir)
 }
-
+val rxPSWarning = regex(@"^(warning: .*\r\n)+$",ignoreCase=True)
 
 function mathConvertPng( texName : string,xopts : options, dviPages : pages, continue : () -> io () ) : io () 
 {
@@ -803,7 +822,7 @@ function analyzeImageSvg( imageFile, opts : options, isPdf : bool ) : io (double
       val (iheight,svg2) = svg1.svgExtractDim(rxSvgHeight)
       val (iwidth,svg3)  = svg2.svgExtractDim(rxSvgWidth)
       val svg            = svg3.svgCompress()
-      val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeIds(isPdf) // .svgUrlEncode
+      val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeGlyphIds(isPdf) 
       // trace("svg: height: " + iheight.show + ", width: " + iwidth.show)
       val embed = if (encoded.length < opts.mathEmbedLimit) then encoded else ""
       val size  = if (embed.isEmpty) then svg.length else embed.length                    
@@ -812,19 +831,27 @@ function analyzeImageSvg( imageFile, opts : options, isPdf : bool ) : io (double
   }
 }
 
-function encodeIds( svg : string, isPdf : bool ) {
+
+// The following routines depend quite a bit on the particular dvisvgm output... :-(
+
+// In order for glyphs to not be shared across pdf/dvi runs, we need to prefix
+// identifiers so they are distinct and do not become shared paths.
+// Glyph id's are of the form "g<fontid>-<charid>"
+function encodeGlyphIds( svg : string, isPdf : bool ) {
   if (!isPdf) return svg
   svg.replaceAll( rxSvgId, fun(cap) { cap.matched + "pdf-" } )
 }
+val rxSvgId = regex(@"\b(id=['""]g|xlink:href=['""]#g)(?=\d)")
 
-val rxSvgId = regex(@"\b(id|xlink:href)='#?|='url\(#")
-
+// Remove unnecessary parts of an svg to reduce the size (important since there
+// can be thousands in math-heavy documents)
 function svgCompress( svg : string ) : string {
   svg.replaceAll(rxComment,"").replaceAll(rxNl,"").replaceAll(rxSpaces," ").trim
 }
 val rxNl      = regex(@"( *\r?\n)+(?=[ <])")
 val rxSpaces  = regex(@"\s+")
 val rxComment = regex(@"<!--[\s\S]*?-->|<\?xml[\s\S]*?\?>|\bversion='1.1'|\bxmlns='http://www.w3.org/2000/svg'|\bxmlns:xlink='http://www.w3.org/1999/xlink'")
+
 
 function svgExtractDim( svg : string, rx : regex ) : (double, string) {
   match(svg.find(rx)) {
@@ -833,10 +860,6 @@ function svgExtractDim( svg : string, rx : regex ) : (double, string) {
   }
 }
 
-// depends quite a bit on dvisvgm output...
 val rxSvgHeight = regex(@"\bheight='(\d+)(?:\.(\d+))?(pt)?'")
 val rxSvgWidth  = regex(@"\bwidth='(\d+)(?:\.(\d+))?(pt)?'")
-
-// convert to other units inside tex
-//\def\convertto#1#2{\strip@pt\dimexpr #2*65536/\number\dimexpr 1#1}
 

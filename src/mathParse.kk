@@ -46,7 +46,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
     val depth  = if (ptheight != 0.0) then ptdepth * (height / ptheight) else 0.0
 
     val embed = if (!sharePaths || mime!="image/svg+xml") then imageData else {
-      svgsize := svgsize + imageData.length
+      svgsize := svgsize + size
       val svg = imageData.replaceAll(rxSvgPath, fun(pcap) {
         val pathid = pcap.groups[1]
         match(paths[pathid]) {
@@ -79,7 +79,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
   }
 
   val msg = if (svgreduced <= 0) then ""
-             else " math reduced :  " + (100.0 * svgreduced.double / svgsize.double).int.show.fill(2,'0') + "% to " + 
+             else " math reduced :  " + (100.0 * svgreduced.double / svgsize.double).int.show.align(2) + "% to " + 
                       (svgsize - svgreduced).showSize + " (due to path sharing)"
   val svgpaths = paths.list.map(snd).join("\n")
   val svgdefs  = if (svgpaths.isEmpty) then "" else 
