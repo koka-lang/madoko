@@ -1,0 +1,219 @@
+Math Render : svg
+Math Dpi    : 200
+xMath Embed  : 0
+
+Package*    : tikz
+Package*    : pstricks
+Package*    : pst-plot
+Tex Header* : 
+  \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}
+
+# Mathematics
+
+A famous equation $\hspace{1em}$ is $\;E = mc^2$, but another famous one is:
+~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }
+ \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
+~
+
+Here is the baseline $x$ and $\sigma_{\lambda} = \frac{24 \pi^3}{\lambda^4 N^2}\left(\frac{n^2-1}{n^2+2}\right)^{\!2}$ problem.
+And as an equation:
+~ Equation
+\sigma_{\lambda} = 
+  \frac{24 \pi^3}{\lambda^4 N^2}
+  \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
+~
+it looks fine.
+
+### Advanced: Generic LaTeX snippets { #sec-snippets }
+
+Besides just mathematics, you can include arbitrary LaTeX snippets using the
+custom `Snippet` block.  In static math mode such snippets get included in the
+web page as hi-res images. This makes it possible to use powerful packages
+like [TikZ] and [PSTricks]. To extract the images, Madoko uses [ImageMagick's
+Convert][convert] program that  should be installed on your system ([download][convert]).
+
+[convert]: http://www.imagemagick.org/script/binary-releases.php
+
+For the following example, we use PSTricks:
+```
+Package: pstricks
+Package: pst-plot
+```
+to typeset a the graph of the natural logarithm[^ex-log]:
+~ Begin Sample
+~ Center  {padding:1ex} 
+~~ Snippet
+\psset{unit=2cm} 
+\begin{pspicture*}(-0.5,-1.5)(4,2)
+  \psgrid[subgriddiv=5,gridcolor=black!20%
+         ,gridlabels=0pt](1,0)(3,1.2)
+  \psaxes{->}(0,0)(0,-1)(3.2,1.5)
+  \uput[0](3.2,0){$x$}\uput[90](0,1.5){$f(x)$}
+  \pscircle*[linecolor=red](! Euler 1){3pt}
+  \psline[linecolor=red,linestyle=dashed]%
+         (! Euler 0)(! Euler 1)
+  \psline[linecolor=red,linewidth=0.2pt,arrowscale=2]%
+         {->}(! Euler 1)(0, 1)
+  \uput[-90](! Euler 0){\color{red}$e$}
+  \pscircle*[linecolor=blue](1,0){3pt}
+  \psplot[linewidth=1pt]{0.2}{3}{ x ln }
+  \rput(1.6,-0.5){\color{blue}\fbox{$f(x)=\ln(x)$}} 
+\end{pspicture*}
+~~
+~ 
+~ End Sample
+
+[^ex-log]: Example comes from the 
+    [PSTricks example gallery](http://tug.org/PSTricks/main.cgi?file=pst-plot/FunctionExamples#paraplot).
+
+The next two figures, Figure [#fig-oblique] and Figure [#fig-mergesort] use
+the modern [TikZ/Pgf][TikZ] package which we included as:
+```
+Package     : tikz
+Tex Header  : \usetikzlibrary{decorations.pathreplacing%
+                             ,decorations.pathmorphing}
+```
+Both examples come from the [TikZ example gallery].
+
+~ Begin Figure { #fig-oblique caption="\
+    [TikZ example](http://www.texample.net/tikz/examples/oblique-incidence) \
+    by Edgar Fuentes of reflection and refraction of electromagnetic waves."}
+~ Snippet
+\begin{tikzpicture}[ 
+    media/.style={font={\footnotesize\sffamily}},
+    wave/.style={
+        decorate,decoration={snake,post length=1.4mm,amplitude=2mm,
+        segment length=2mm},thick},
+    interface/.style={
+        % The border decoration is a path replacing decorator. 
+        % For the interface style we want to draw the original path.
+        % The postaction option is therefore used to ensure that the
+        % border decoration is drawn *after* the original path.
+        postaction={draw,decorate,decoration={border,angle=-45,
+                    amplitude=0.3cm,segment length=2mm}}},
+    ]
+    % Round rectangle
+    \fill[gray!10,rounded corners] (-4,-3) rectangle (4,0);
+    % Interface
+    \draw[blue,line width=.5pt,interface](-4,0)--(4,0);
+    % Vertical dashed line
+    \draw[dashed,gray](0,-3)--(0,3);
+    % Coordinates system
+    \draw(0,0.15)node[above]{$x$};
+    \draw[<->,line width=1pt] (1,0) node[above]{$y$}-|(0,-1) node[left]{$z$};
+    % Incidence
+    \draw[->,wave]
+         (135:3.2cm)--(135:2.5cm)node[right]{$f^0$};
+    \draw[gray](0:0cm)--(135:2cm);
+    \path (0,0)++(113:1cm)node{$\phi$};
+    \draw[->](0,0.75)arc(90:135:.75cm);
+    % Transmission
+    \draw[->,wave]
+         (-30:2.5cm)--(-30:3.2cm)node[right]{$f^+$};
+    \draw[gray](0:0cm)--(-30:2cm);
+    \path (0,0)++(-60:1cm)node{$\theta$};
+    \draw[->] (0,-0.75) arc (-90:-30:.75cm);
+    % Reflection
+    \draw[->,wave]
+         (45:2.5cm)--(45:3.2cm)node[right]{$f^-$};
+    \path (0,0)++(-22:1.75cm) node{$\psi$};
+    \draw[gray](0:0cm)--(45:2cm);
+    \draw[->] (0,-1.5)arc(-90:45:1.5cm);
+    % Media names
+    \path[media] (-3,.6)  node {media 1}
+                 (-3,-.6) node {media 2};
+
+    % $x$ axis
+    \filldraw[fill=white,line width=1pt](0,0)circle(.12cm);
+    \draw[line width=.6pt] (0,0)
+                          +(-135:.12cm) -- +(45:.12cm)
+                          +(-45:.12cm) -- +(135:.12cm);
+    % Interface pointer
+    \draw[-latex,thick](3.2,0.5)node[right]{$\mathsf{S_{1,2}}$}
+         to[out=180,in=90] (3,0);
+    % To-paths are really useful for drawing curved lines. The above
+    % to path is equal to:
+    %
+    % \draw[-latex,thick](3.2,0.5)node[right]{$\mathsf{S_{1,2}}$}
+    %      ..controls +(180:.2cm) and +(up:0.25cm) .. (3,0);
+    % Internally the to path is translated to a similar bezier curve,
+    % but the to path syntax hides the complexity from the user. 
+\end{tikzpicture}
+~ 
+~ End Figure
+
+~ Begin Figure {#fig-mergesort caption="\
+    [TikZ example](http://www.texample.net/tikz/examples/merge-sort-recursion-tree) \
+    by Manuel Kirsch of a merge sort recursion tree."}
+~ Snippet
+\begin{tikzpicture}[scale=0.8,level/.style={sibling distance=60mm/#1}]
+\node [circle,draw] (z){$n$}
+  child {node [circle,draw] (a) {$\frac{n}{2}$}
+    child {node [circle,draw] (b) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}
+        child {node [circle,draw] (d) {$\frac{n}{2^k}$}}
+        child {node [circle,draw] (e) {$\frac{n}{2^k}$}}
+      } 
+      child {node {$\vdots$}}
+    }
+    child {node [circle,draw] (g) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}}
+      child {node {$\vdots$}}
+    }
+  }
+  child {node [circle,draw] (j) {$\frac{n}{2}$}
+    child {node [circle,draw] (k) {$\frac{n}{2^2}$}
+      child {node {$\vdots$}}
+      child {node {$\vdots$}}
+    }
+  child {node [circle,draw] (l) {$\frac{n}{2^2}$}
+    child {node {$\vdots$}}
+    child {node (c){$\vdots$}
+      child {node [circle,draw] (o) {$\frac{n}{2^k}$}}
+      child {node [circle,draw] (p) {$\frac{n}{2^k}$}
+        child [grow=right] {node (q) {$=$} edge from parent[draw=none]
+          child [grow=right] {node (q) {$O_{k = \lg n}(n)$} edge from parent[draw=none]
+            child [grow=up] {node (r) {$\vdots$} edge from parent[draw=none]
+              child [grow=up] {node (s) {$O_2(n)$} edge from parent[draw=none]
+                child [grow=up] {node (t) {$O_1(n)$} edge from parent[draw=none]
+                  child [grow=up] {node (u) {$O_0(n)$} edge from parent[draw=none]}
+                }
+              }
+            }
+            child [grow=down] {node (v) {$O(n \cdot \lg n)$}edge from parent[draw=none]}
+          }
+        }
+      }
+    }
+  }
+};
+\path (a) -- (j) node [midway] {+};
+\path (b) -- (g) node [midway] {+};
+\path (k) -- (l) node [midway] {+};
+\path (k) -- (g) node [midway] {+};
+\path (d) -- (e) node [midway] {+};
+\path (o) -- (p) node [midway] {+};
+\path (o) -- (e) node (x) [midway] {$\cdots$}
+  child [grow=down] {
+    node (y) {$O\left(\displaystyle\sum_{i = 0}^k 2^i \cdot \frac{n}{2^i}\right)$}
+    edge from parent[draw=none]
+  };
+\path (q) -- (r) node [midway] {+};
+\path (s) -- (r) node [midway] {+};
+\path (s) -- (t) node [midway] {+};
+\path (s) -- (l) node [midway] {=};
+\path (t) -- (u) node [midway] {+};
+\path (z) -- (u) node [midway] {=};
+\path (j) -- (t) node [midway] {=};
+\path (y) -- (x) node [midway] {$\Downarrow$};
+\path (v) -- (y)
+  node (w) [midway] {$O\left(\displaystyle\sum_{i = 0}^k n\right) = O(k \cdot n)$};
+\path (q) -- (v) node [midway] {=};
+\path (e) -- (x) node [midway] {+};
+\path (o) -- (x) node [midway] {+};
+\path (y) -- (w) node [midway] {$=$};
+\path (v) -- (w) node [midway] {$\Leftrightarrow$};
+\path (r) -- (c) node [midway] {$\cdots$};
+\end{tikzpicture}
+~ 
+~ End Figure
