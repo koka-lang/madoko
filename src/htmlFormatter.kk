@@ -460,13 +460,3 @@ function escapePre( s : string ) :  string
   s.htmlEscape()  
 }
 
-
-function escapeChar( c : string ) : string 
-{
-  if (c=="&") "&amp;"
-  elif (c==">") "&gt;"
-  elif (c=="<") "&lt;"
-  elif (c=="\"") "&quot;"
-  elif (c=="'") "&#39;"
-  else c
-}

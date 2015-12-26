@@ -115,7 +115,7 @@ public function mathStatic( mathDvi : string, mathPdf : string,
   
   val rebuildDvi = oldMathDvi.unsnippet("old dvi") != outMathDvi.unsnippet("new dvi")
   val rebuildPdf = oldMathPdf.unsnippet("old pdf") != outMathPdf.unsnippet("new pdf")
-  if (rebuildDvi || rebuildPdf) trace("math rebuild")
+  // if (rebuildDvi || rebuildPdf) trace("math rebuild")
   val dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
   val pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
 
@@ -145,6 +145,12 @@ function getHeader( src : string ) : string
 val rxHdr = regex(@"^.*\n")
 
 public alias pages = list<(int,int)>
+
+public function count( ps : pages ) : int {
+  ps.foldl(0,fun(n,p) {
+    n + (p.snd - p.fst + 1)
+  })
+}
 
 function range(lo,n) { if (lo<=0) then [] else [(lo,lo+n)] }
   

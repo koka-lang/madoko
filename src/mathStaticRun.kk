@@ -562,7 +562,7 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
   val dviBaseImg = combine(xopts.mathImgDir,texNameDvi.stemname) 
   val pdfBaseImg =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
 
-  val (dviconvCmd,pdfconvCmd) =
+  val (dviconvCmd,pdfconvCmd,timeout) =
     match (xopts.mathRender) {
       Svg -> {
         val baseCmd = xopts.dvisvg.quote + " -e -n -j -v3 -d" + xopts.mathSvgPrec.show + " " 
@@ -572,7 +572,9 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
         val pdfsvgCmd = baseCmd + dvisvgPages(pdfPages) + 
                           " -o " + (pdfBaseImg + "-%1p.svg").quote +
                           " " + texNamePdf.changeExt(".dvi").basename.quote  // we generate dvi instead in svg mode..
-        (dvisvgCmd,pdfsvgCmd)                          
+        // we need a timeout since dvisvgm sometimes does not terminate well                          
+        val timeout = 10000 + ((dviPages.count + pdfPages.count) * 100) // about .1 second per page
+        (dvisvgCmd,pdfsvgCmd,if (xopts.processTimeout > 0) then max(xopts.processTimeout,timeout) else timeout)
       }
       Png -> {
         val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
@@ -583,7 +585,7 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
         val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
                         (texNamePdf.basename + pdfPages.convertPages).quote + " " +
                         (pdfBaseImg + pdfPages.convertSuffix + ".png").quote
-        (dvipngCmd,pdfpngCmd)
+        (dvipngCmd,pdfpngCmd,xopts.processTimeout)
       }
     }                    
 
@@ -595,8 +597,8 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
   }           
 
   checkCmdToImgVersion(xopts) {
-    mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, fun(errdvi) {
-      mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, fun(errpdf) {
+    mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, timeout, fun(errdvi) {
+      mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, timeout, fun(errpdf) {
         if (errdvi==0 && errpdf==0) {
           continue()
         }
@@ -632,7 +634,7 @@ function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
 }
 val rxVersion = regex(@"(\d+)(?:\.(\d)(\d)?)?")
 
-function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options,
+function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options, timeout : int, 
                        continue : (int) -> io () ) : io () 
 {  
   if (pages.isNil) return continue(0)
@@ -654,7 +656,7 @@ function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages,
       if (xopts.verbose >= 4) xopts.print(output)
       continue(0)
     }
-  },xopts.processTimeout,dir)
+  },timeout,dir)
 }
 val rxPSWarning = regex(@"^(warning: .*\r\n)+$",ignoreCase=True)
 
