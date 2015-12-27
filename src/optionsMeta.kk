@@ -94,16 +94,11 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-  elif (key=="math-render") {
-    if (lvalue=="png") then options(mathRender=Png)
-    elif (lvalue=="svg") then options(mathRender=Svg)
-    else {
-      warning("unknown Math Render value: " + value + " (must be one of 'png' or 'svg')")
-      options
-    }
-  }
+  elif (key=="math-render") options(mathRender = options.parseMathRender(lvalue,options.mathRender) )
+  elif (key=="math-render-pdf") options(mathRenderPdf = options.parseMathRender(lvalue,options.mathRenderPdf ) )
   elif (key=="math-svg-share-paths") options(mathSvgShare=bvalue)
-  elif (key=="math-svg-precision") options(mathSvgPrec= min(6,max(ivalue,0)))
+  elif (key=="math-svg-precision") options(mathSvgPrec=min(6,max(ivalue,0)))
+  elif (key=="math-svg-use-fonts") options(mathSvgUseFonts=bvalue)
   elif (key=="mathjax") then (if (value!="")
                                then options(mathmode=Dynamic, mathjax=(if (lvalue=="true") then "default" else value))
                                else options(mathmode=Static, mathjax=""))
@@ -140,6 +135,14 @@ function setMathMode( options : options, value : string ) : options {
   }
 }
 
+function parseMathRender( options : options, value : string, def : mathrender ) : mathrender {
+  if (value=="png") then Png
+  elif (value=="svg") then Svg
+  else {
+    warning("unrecognized math rendering mode: " + value + ", expecting one of 'png' or 'svg'")
+    def
+  }
+}
 
 function appendValue( xs : list<string>, x : string, sep : string = "&br;" ) : list<string> {
   match(xs.reverse) {

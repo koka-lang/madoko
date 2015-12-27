@@ -45,19 +45,29 @@ function mathHeader( xopts : options, mode : string ) : string
                  "MathBaseline: " + xopts.mathBaseline.show,
                  "MathDocClass: " + xopts.mathDocClass,
                  "MathImgDir: " + xopts.mathImgDir,
+                ]
+  val dviDeps = ["Latex: " + xopts.latex, 
+                 "MathConvert: " + xopts.mathconvert,
                  "MathRender: " + xopts.mathRender.show
-                ]
-  val dviDeps = [ if (xopts.mathRender.isPng) then "Dvipng: " + xopts.dvipng else "Dvisvg: " + xopts.dvisvg,
-                 "Latex: " + xopts.latex, 
-                 "MathConvert: " + xopts.mathconvert 
-                ]
+                ] +
+                (match(xopts.mathRender) {
+                  Svg -> [ "Dvisvg: " + xopts.dvisvg ]
+                  Png -> [ "Dvipng: " + xopts.dvipng ]
+                })                
+
   val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
                  "PdfLatex: " + xopts.pdflatex, 
-                 "Convert: " + xopts.convert,
-                 "Dvips: " + xopts.dvips,
-                 "Ps2pdf: " + xopts.ps2pdf,                 
-                ]
-  (initial + (if (mode=="dvi" || xopts.mathRender.isSvg) then dviDeps else pdfDeps)).join(", ") + "\n"
+                 "MathRenderPdf: " + xopts.mathRenderPdf.show] +
+                (match(xopts.mathRender) {
+                  Svg -> [ "Dvisvg: " + xopts.dvisvg ]
+                  Png -> [
+                   "Convert: " + xopts.convert,
+                   "Dvips: " + xopts.dvips,
+                   "Ps2pdf: " + xopts.ps2pdf,                 
+                  ]
+                })                
+
+  (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
 }
 
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {

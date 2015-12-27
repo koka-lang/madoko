@@ -93,9 +93,11 @@ public struct options(
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
   mathRender    : mathrender = Png,   // math rendering method
+  mathRenderPdf : mathrender = Png,   // math rendering method for math-needpdf snippets
   mathSvgShare  : bool   = True,      // share paths in embedded svg images
   mathSvgPrec   : int    = 3,         // decimal points used in svg rendering
   mathSvgDefs   : string = "",        // used internally to share svg definitions
+  mathSvgUseFonts: bool = False,      // use fonts directly in svg, use path's otherwise
 
   highlight     : bool = True,
   hilitelang    : string = "",        // semi-colon separated list
@@ -127,7 +129,7 @@ public struct options(
 
 public function getPdflatex( opts : options ) : string {
   if (opts.pdflatex != "" && opts.pdflatex != "default") then opts.pdflatex 
-   else combine(opts.latex.dirname,"xe" + opts.latex.basename)
+   else combine(opts.latex.dirname,"xelatex")
 }               
 
 public function getMathpdflatex( opts : options ) : string {

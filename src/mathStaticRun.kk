@@ -105,7 +105,7 @@ val rxBibtexError   = regex(@"^ *(.+?)" + rxBibtexLineinfo + @"((?:\s*:.*)*)", m
 public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
   opts.print("running " + opts.getPdflatex.stemname + " to generate pdf...")
   val notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
-  runLaTeX(srcName, texFile, opts.getPdflatex, opts, content, notfound, 0, True,
+  runLaTeX(srcName, texFile, opts.getPdflatex, "", opts, content, notfound, 0, True,
     fun(err) { continue() } )  
 }
 
@@ -122,7 +122,8 @@ val latexSandboxEnv = [
   ("parse_first_line","f"),
 ]
 
-function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : options, 
+function runLaTeX( srcFile : string, texFile : string, texCmd : string, extraArgs : string,
+                    opts : options, 
                     content : string,
                     notfound : string,
                     runCount : int = 0,
@@ -130,7 +131,9 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
                     continue : (err : int) -> io () )
 {
   val dir = texFile.dirname.norm
-  val latexCmd = texCmd.quote + " --output-directory=" + (if (dir=="") then "." else dir).quote + 
+  val latexCmd = texCmd.quote + 
+                  (if (extraArgs.bool) then " " + extraArgs else "") + 
+                  " --output-directory=" + (if (dir=="") then "." else dir).quote + 
                        " --interaction=batchmode" + // --max-print-line=1000" + 
                        (if (opts.sandbox) then " --no-parse-first-line --no-shell-escape" else "") + // note: also need `openin_any:p` and `openout_any:p`: pass through environment instead
                        " " + texFile.norm.quote 
@@ -185,7 +188,7 @@ function runLaTeX( srcFile : string, texFile : string, texCmd : string, opts : o
     else {
       if (runCount <= 2 && logout.contains(rxLatexRerun)) {
         opts.print("rerun to resolve references...")
-        runLaTeX( srcFile, texFile, texCmd, opts, content, notfound, runCount+1, showWarnings, continue)
+        runLaTeX( srcFile, texFile, texCmd, extraArgs, opts, content, notfound, runCount+1, showWarnings, continue)
       }
       else {
         if (showWarnings) then latexShowWarnings(texFile,logout,content,opts)
@@ -216,13 +219,11 @@ public function runMathStatic( content : string, inName: string, outName : strin
                         oldMathDvi : string, oldMathPdf : string,
                         xopts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io ()
 {
-  concurrent([
-      fun(cont) { mathSnippetsToDvi( inName, texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages, cont ) },
-      fun(cont) { mathSnippetsToPdf( inName, texNamePdf, xopts, content, oldMathPdf, pdfPages, cont ) }
-    ], 
-    fun(err) {
-      if (err != 0) return continue(Nothing)
-      mathDviPdfToImg( texNameDvi.changeExt(".dvi"), texNamePdf.changeExt(".pdf"), xopts, dviPages, pdfPages ) {
+  mathSnippetsToDvi( inName, texNameDvi, xopts, content, oldMathDvi, dviPages, pdfPages) fun(extdvi) {
+    if (extdvi.isEmpty) return continue(Nothing)
+    mathSnippetsToPdf( inName, texNamePdf, xopts, content, oldMathPdf, pdfPages) fun(extpdf) {
+      if (extpdf.isEmpty) return continue(Nothing)
+      mathDviPdfToImg( texNameDvi.changeExt(extdvi), texNamePdf.changeExt(extpdf), xopts, dviPages, pdfPages ) {
         mathConvertPng( texNameDvi, xopts, dviPages ) {
           mathDimAnalyse( outName.changeExt(".dimx"), xopts, dviPages, pdfPages, texNameDvi, texNamePdf) 
             fun(mbmath) {
@@ -237,65 +238,92 @@ public function runMathStatic( content : string, inName: string, outName : strin
         }
       }
     }
-  )      
+  }      
 }
 
 
 function mathSnippetsToDvi( srcName :string, texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             dviPages : pages, pdfPages : pages,
-                           continue : (int) -> io () ) : io () 
+                           continue : (string) -> io () ) : io () 
 {  
-  if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue(0)
+  val (texcmd,texargs,dviext) = xopts.latex.texDviCmdExt
+  if (dviPages.isNil && (xopts.mathpdflatex!="" || pdfPages.isNil)) return continue(dviext)
 
-  xopts.print("running " + xopts.latex.stemname + " on math...   (dvi -> " + xopts.mathRender.show + ")")
+  xopts.print("running " + texcmd.stemname + " on math...   (dvi -> " + xopts.mathRender.show + ")")
   val notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
-  runLaTeX( srcName, texName, xopts.latex, xopts, content, notfound, 0, False,
-              continue ) 
+  runLaTeX( srcName, texName, texcmd, texargs, xopts, content, notfound, 0, False, fun(err) { 
+    continue(if (err!=0) then "" else dviext) 
+  })
 }  
 
+function isXelatex( path : string ) : bool {
+  path.stemname == "xelatex"
+}
+
+function texDviCmdExt( cmd : string ) : (string,string,string) {
+  if (cmd.isXelatex) then (cmd, "--no-pdf", ".xdv") else (cmd,"",".dvi")
+}
 
 function mathSnippetsToPdf( srcName: string, texName : string, xopts : options, 
                             content : string, oldMath : string, 
                             pages : pages,
-                           continue : (int) -> io () ) : io () 
+                           continue : (string) -> io () ) : io () 
 {  
-  if (pages.isNil) return continue(0)
-  if (xopts.mathRender.isSvg || xopts.mathpdflatex != "") {
-    // run latex to get a pdf (or dvi in the case of svg mode)
+  if (xopts.mathRenderPdf.isSvg) {
+    val (texcmd,texargs,dviext) = xopts.getMathpdflatex.texDviCmdExt
+    if (pages.isNil) return continue(dviext)
+    // run latex to get a dvi or xdv with specials
+    val notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd>"
+    val pdftex = xopts.getMathpdflatex
+    xopts.print("running " + pdftex.stemname + " on math...   (pdf -> " + xopts.mathRenderPdf.show + ")")
+    runLaTeX( srcName, texName, texcmd, texargs, xopts, content, notfound, 0, False, fun(err) {
+      continue(if (err != 0) then "" else dviext) 
+    })
+  }
+  elif (xopts.mathpdflatex != "") {
+    if (pages.isNil) return continue(".pdf")
+    // run latex to get a pdf 
     val notfound = "set the 'Math Pdf Latex' key in the metadata to <cmd> (or empty to use dvips)"
-    val texCmd = if (xopts.mathRender.isSvg) then xopts.latex else xopts.getMathpdflatex
-    xopts.print("running " + texCmd.stemname + " on math...   (pdf -> " + xopts.mathRender.show + ")")
-    runLaTeX( srcName, texName, texCmd, xopts, content, notfound, 0, False, continue )
+    val texCmd = xopts.getMathpdflatex
+    xopts.print("running " + texCmd.stemname + " on math...   (pdf -> " + xopts.mathRenderPdf.show + ")")
+    runLaTeX( srcName, texName, texCmd, "", xopts, content, notfound, 0, False, fun(err) {
+      continue(if (err!=0) then "" else ".pdf") 
+    })
   }
   else {
+    if (pages.isNil) return continue(".pdf")
     // use dvips and ps2pdf to get a pdf
-    val dir = texName.dirname
-    val stem = texName.stemname
-    val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + (stem + ".dvi").quote
-    val ps2pdfCmd = xopts.ps2pdf.quote + " " + (stem + ".ps").quote
-    xopts.print("generating pdf from dvi...")
-    xopts.print(">" + dvipsCmd, 3)
-    system(dvipsCmd,fun(err,stdout,stderr) {
-      if (err != 0) {
-        xopts.printErr("> " + dvipsCmd)
-        xopts.printErr("error: failure while typesetting math: \n" + stdout + stderr)      
-        continue(err)
-      }
-      else {
-        xopts.print(">" + ps2pdfCmd, 3)
-        system(ps2pdfCmd, fun(err2,stdout2,stderr2) {
-          if (err2 != 0) {
-            xopts.printErr("> " + ps2pdfCmd)
-            xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
-            continue(err2)
-          }
-          else {
-            continue(0)
-          }
-        },xopts.processTimeout,dir)
-      }
-    },xopts.processTimeout,dir)
+    val notfound = "set either the 'Math Mode: Dynamic' or the 'Latex: <cmd>' key in the metadata"
+    runLaTeX( srcName, texName, xopts.latex, "", xopts, content, notfound, 0, False, fun(err1) {
+      if (err1!=0) continue("")
+      val dir = texName.dirname
+      val stem = texName.stemname
+      val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + (stem + ".dvi").quote
+      val ps2pdfCmd = xopts.ps2pdf.quote + " " + (stem + ".ps").quote
+      xopts.print("generating pdf from dvi...")
+      xopts.print(">" + dvipsCmd, 3)
+      system(dvipsCmd,fun(err,stdout,stderr) {
+        if (err != 0) {
+          xopts.printErr("> " + dvipsCmd)
+          xopts.printErr("error: failure while typesetting math: \n" + stdout + stderr)      
+          continue("")
+        }
+        else {
+          xopts.print(">" + ps2pdfCmd, 3)
+          system(ps2pdfCmd, fun(err2,stdout2,stderr2) {
+            if (err2 != 0) {
+              xopts.printErr("> " + ps2pdfCmd)
+              xopts.printErr("error: failure while typesetting math: \n" + stdout2 + stderr2)      
+              continue("")
+            }
+            else {
+              continue(".pdf")
+            }
+          },xopts.processTimeout,dir)
+        }
+      },xopts.processTimeout,dir)
+    })
   }  
 }
 
@@ -555,50 +583,57 @@ function convertSuffix( pages : pages ) : string {
   }
 }        
 
-function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : options, 
+function mathDviPdfToImg( nameDvi : string, namePdf : string, xopts : options, 
                           dviPages : pages, pdfPages : pages,  
                           continue : () -> io () ) : io () 
 {  
-  val dviBaseImg = combine(xopts.mathImgDir,texNameDvi.stemname) 
-  val pdfBaseImg =  combine(xopts.mathImgDir,texNamePdf.stemname)                                         
+  val dviBaseImg    = combine(xopts.mathImgDir,nameDvi.stemname) 
+  val pdfBaseImg    = combine(xopts.mathImgDir,namePdf.stemname)                                         
+  val dvisvgBaseCmd = xopts.dvisvg.quote + 
+                        (if (xopts.mathSvgUseFonts) then "" else " -n") +
+                        " -e -j -v3 -d" + xopts.mathSvgPrec.show + " " 
+  val dviconvCmd = match (xopts.mathRender) {
+    Svg -> {
+      dvisvgBaseCmd + dvisvgPages(dviPages) + 
+        " -o " + (dviBaseImg + "-%1p.svg").quote +
+        " " + nameDvi.basename.quote
+    }
+    Png -> {
+      xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
+          " -D" + xopts.mathDpi.show +
+          " " + dvipngPages(dviPages) + 
+          " -o " + (dviBaseImg + "-%d.png").quote +
+          " " + nameDvi.stemname.quote
+    }
+  }
 
-  val (dviconvCmd,pdfconvCmd,timeout) =
-    match (xopts.mathRender) {
-      Svg -> {
-        val baseCmd = xopts.dvisvg.quote + " -e -n -j -v3 -d" + xopts.mathSvgPrec.show + " " 
-        val dvisvgCmd = baseCmd + dvisvgPages(dviPages) + 
-                          " -o " + (dviBaseImg + "-%1p.svg").quote +
-                          " " + texNameDvi.basename.quote
-        val pdfsvgCmd = baseCmd + dvisvgPages(pdfPages) + 
-                          " -o " + (pdfBaseImg + "-%1p.svg").quote +
-                          " " + texNamePdf.changeExt(".dvi").basename.quote  // we generate dvi instead in svg mode..
-        // we need a timeout since dvisvgm sometimes does not terminate well                          
-        val timeout = 10000 + ((dviPages.count + pdfPages.count) * 100) // about .1 second per page
-        (dvisvgCmd,pdfsvgCmd,if (xopts.processTimeout > 0) then max(xopts.processTimeout,timeout) else timeout)
-      }
-      Png -> {
-        val dvipngCmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
-                                            " -D" + xopts.mathDpi.show +
-                                            " " + dvipngPages(dviPages) + 
-                                            " -o " + (dviBaseImg + "-%d.png").quote +
-                                            " " + texNameDvi.basename.quote
-        val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
-                        (texNamePdf.basename + pdfPages.convertPages).quote + " " +
-                        (pdfBaseImg + pdfPages.convertSuffix + ".png").quote
-        (dvipngCmd,pdfpngCmd,xopts.processTimeout)
-      }
-    }                    
+  val (pdfconvCmd,pdfTimeout) = match (xopts.mathRenderPdf) {
+    Svg -> {
+      val pdfsvgCmd = dvisvgBaseCmd + dvisvgPages(pdfPages) + 
+                        " -o " + (pdfBaseImg + "-%1p.svg").quote +
+                        " " + namePdf.basename.quote  
+      // we need a timeout since dvisvgm sometimes does not terminate well                          
+      val timeout = 10000 + (pdfPages.count * 100) // about .1 second per page
+      (pdfsvgCmd,if (xopts.processTimeout > 0) then max(xopts.processTimeout,timeout) else timeout)
+    }
+    Png -> {
+      val pdfpngCmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
+                      (namePdf.basename + pdfPages.convertPages).quote + " " +
+                      (pdfBaseImg + pdfPages.convertSuffix + ".png").quote
+      (pdfpngCmd,xopts.processTimeout)
+    }
+  }                 
 
   // make sure the output directory exists
-  val outDir = combine(texNameDvi.dirname,xopts.mathImgDir)
+  val outDir = combine(nameDvi.dirname,xopts.mathImgDir)
   if (!(fexistsSync(outDir))) {
     xopts.print("create image directory: " + outDir)
     mkdirp(outDir)
   }           
 
   checkCmdToImgVersion(xopts) {
-    mathCmdToImg( dviconvCmd, texNameDvi.dirname, "dvi", dviPages, xopts, timeout, fun(errdvi) {
-      mathCmdToImg( pdfconvCmd, texNamePdf.dirname, "pdf", pdfPages, xopts, timeout, fun(errpdf) {
+    mathCmdToImg( dviconvCmd, nameDvi.dirname, "dvi", dviPages, xopts, xopts.processTimeout, fun(errdvi) {
+      mathCmdToImg( pdfconvCmd, namePdf.dirname, "pdf", pdfPages, xopts, pdfTimeout, fun(errpdf) {
         if (errdvi==0 && errpdf==0) {
           continue()
         }
@@ -608,27 +643,27 @@ function mathDviPdfToImg( texNameDvi : string, texNamePdf : string, xopts : opti
 }
 
 function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
-  match(xopts.mathRender) {
-    Svg -> {
-      system("dvisvgm --version", fun(err,stdout,stderr) {
-        val version = match(stdout.find(rxVersion)) {
-          Nothing -> 0
-          Just(cap) -> {
-            (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
-          }
+  if (xopts.mathRender.isSvg || xopts.mathRenderPdf.isSvg) {
+    system("dvisvgm --version", fun(err,stdout,stderr) {
+      val version = match(stdout.find(rxVersion)) {
+        Nothing -> 0
+        Just(cap) -> {
+          (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
         }
-        if (err!=0 || version < 113) {
-          xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.13 installed")
-          xopts.printErr("you can check the version using   : dvisvgm --version")
-          xopts.printErr("the latest version is available at: http://dvisvgm.bplaced.net/downloads")
-          xopts.printErr("for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
-        }
-        else {
-          cont()
-        }
-      })
-    }
-    _ -> cont()
+      }
+      if (err!=0 || version < 113) {
+        xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.13 installed")
+        xopts.printErr("you can check the version using   : dvisvgm --version")
+        xopts.printErr("the latest version is available at: http://dvisvgm.bplaced.net/downloads")
+        xopts.printErr("for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
+      }
+      else {
+        cont()
+      }
+    })
+  }
+  else {
+    cont()
   }
 }
 val rxVersion = regex(@"(\d+)(?:\.(\d+)?)?")
@@ -712,7 +747,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
   var embedCount := 0  
   val dim = opts.mathdim
 
-  function dimLine( isPdf : bool, pages : pages, line : string ) 
+  function dimLine( render:mathrender, isPdf : bool, pages : pages, line : string ) 
   {
     match(line.find(rxDimLine)) {
       Nothing   -> line
@@ -720,10 +755,10 @@ function extendDim( dviPages : pages, pdfPages : pages,
         val pageNo = cap.groups[2].parseInt.maybe(0,id)
         val digest = cap.groups[3]
         val imageStem = (if (isPdf) then texNamePdf.stemname else texNameDvi.stemname) +
-                    (if (opts.mathconvert!="" && opts.mathRender.isPng) then "-c" else "") + "-" +
-                    (if ((isPdf || opts.mathconvert!="") && opts.mathRender.isPng) then (pageNo-1).show else pageNo.show)
+                    (if (opts.mathconvert!="" && render.isPng) then "-c" else "") + "-" +
+                    (if ((isPdf || opts.mathconvert!="") && render.isPng) then (pageNo-1).show else pageNo.show)
 
-        val imageName = combine(opts.mathImgDir, imageStem.changeExt(opts.mathRender.show) )
+        val imageName = combine(opts.mathImgDir, imageStem.changeExt(render.show) )
         val imageFile = combine(dimxFile.dirname,imageName)
         // trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
@@ -735,7 +770,7 @@ function extendDim( dviPages : pages, pdfPages : pages,
                   (mi.iwidth,mi.iheight,mi.size,mi.imageData)
                 }
               _ -> { 
-                match(opts.mathRender) {
+                match(render) {
                   Png -> {
                     analyzeImagePng( imageFile, opts )
                   }
@@ -765,15 +800,15 @@ function extendDim( dviPages : pages, pdfPages : pages,
           embedCount := embedCount + 1
         }  
         cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," +
-          size.show + "," + opts.mathRender.showMime + (if (embed=="") then "" else (", " + embed))      
+          size.show + "," + render.showMime + (if (embed=="") then "" else (", " + embed))      
       }
     }
   }
 
   val dviDims = readTextFileDef(texNameDvi.changeExt(".dim"),"")
   val pdfDims = readTextFileDef(texNamePdf.changeExt(".dim"),"")
-  val dimsx   = dviDims.lines.list.map( fun(line) { dimLine(False,dviPages,line) }) +
-                pdfDims.lines.list.map( fun(line) { dimLine(True,pdfPages,line) })
+  val dimsx   = dviDims.lines.list.map( fun(line) { dimLine(opts.mathRender,False,dviPages,line) }) +
+                pdfDims.lines.list.map( fun(line) { dimLine(opts.mathRenderPdf,True,pdfPages,line) })
   
   val txt = dimsx.join("\n")
   tryWriteTextFile( dimxFile, txt )

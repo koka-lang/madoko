@@ -79,7 +79,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
   }
 
   val msg = if (svgreduced <= 0) then ""
-             else " math reduced :  " + (100.0 * svgreduced.double / svgsize.double).int.show.align(2) + "% to " + 
+             else " svg reduction:  " + (100.0 * svgreduced.double / svgsize.double).int.show.align(2) + "% to " + 
                       (svgsize - svgreduced).showSize + " (due to path sharing)"
   val svgpaths = paths.list.map(snd).join("\n")
   val svgdefs  = if (svgpaths.isEmpty) then "" else 
@@ -87,7 +87,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
     "<defs>\n" + svgpaths + "\n</defs>\n</svg>\n"
 
   return (mi.freeze(), svgdefs, msg)
-} 
+}   
 val rxMimePre = regex(@"^image/(\w+)")
 val rxSvgPath = regex(@"<path\b(?:[^/>]|/(?![^>]))*?\bid='([^']+)'(?:[^/>]|/(?![^>]))*?/>")
 
