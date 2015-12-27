@@ -104,7 +104,6 @@ public struct options(
 
   pdflatex      : string = "",        // defaults to 'xe' + latex cmd
   bibtex        : string = "bibtex",
-  mathconvert   : string = "",        // if non-empty, use cmd to post process math images
   latex         : string = "latex",   // used to generate dvi for math
   dvipng        : string = "dvipng",  // used to extract png images for math
   dvisvg        : string = "dvisvgm",  // used to extract svg for math

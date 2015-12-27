@@ -25,7 +25,6 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
     elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
     elif (key=="bibtex") options(bibtex=value)
-    elif (key=="math-convert") options(mathconvert=value)
     elif (key=="convert") options(convert=value)
     elif (key=="ps2pdf") options(ps2pdf=value)
     elif (key=="dvips") options(dvips=value)

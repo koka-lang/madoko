@@ -45,27 +45,25 @@ function mathHeader( xopts : options, mode : string ) : string
                  "MathBaseline: " + xopts.mathBaseline.show,
                  "MathDocClass: " + xopts.mathDocClass,
                  "MathImgDir: " + xopts.mathImgDir,
-                ]
-  val dviDeps = ["Latex: " + xopts.latex, 
-                 "MathConvert: " + xopts.mathconvert,
-                 "MathRender: " + xopts.mathRender.show
                 ] +
                 (match(xopts.mathRender) {
                   Svg -> [ "Dvisvg: " + xopts.dvisvg ]
-                  Png -> [ "Dvipng: " + xopts.dvipng ]
-                })                
-
-  val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
-                 "PdfLatex: " + xopts.pdflatex, 
-                 "MathRenderPdf: " + xopts.mathRenderPdf.show] +
-                (match(xopts.mathRender) {
-                  Svg -> [ "Dvisvg: " + xopts.dvisvg ]
                   Png -> [
+                   "Dvipng: " + xopts.dvipng,
                    "Convert: " + xopts.convert,
                    "Dvips: " + xopts.dvips,
                    "Ps2pdf: " + xopts.ps2pdf,                 
                   ]
                 })                
+
+  val dviDeps = ["Latex: " + xopts.latex, 
+                 "MathRender: " + xopts.mathRender.show
+                ]                
+
+  val pdfDeps = ["MathPdfLatex: " + xopts.mathpdflatex, 
+                 "PdfLatex: " + xopts.pdflatex, 
+                 "MathRenderPdf: " + xopts.mathRenderPdf.show
+                ] 
 
   (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
 }
