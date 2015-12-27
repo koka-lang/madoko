@@ -614,8 +614,7 @@ function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
         val version = match(stdout.find(rxVersion)) {
           Nothing -> 0
           Just(cap) -> {
-            val ds = [1,2,3].map( fun(i) { cap.groups[i].parseIntDefault(0) })
-            ds.foldl(0,fun(x,d) { x*10 + d })
+            (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
           }
         }
         if (err!=0 || version < 113) {
@@ -632,7 +631,7 @@ function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
     _ -> cont()
   }
 }
-val rxVersion = regex(@"(\d+)(?:\.(\d)(\d)?)?")
+val rxVersion = regex(@"(\d+)(?:\.(\d+)?)?")
 
 function mathCmdToImg( cmd : string, dir : string, mode : string, pages : pages, xopts : options, timeout : int, 
                        continue : (int) -> io () ) : io () 
