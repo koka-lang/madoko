@@ -19,6 +19,11 @@ external import {
   js "child_process"
 }
 
+// quote file and command names for shell execution
+public function quote( s : string ) : string {
+  "\"" + s + "\""
+}
+
 public function system( cmd : string, callback : (int,string,string) -> <io|e> (), timeout : int = 0, cwd : string = "", env : list<(string,string)> = []) : <io|e> () {
   systemx(cmd,callback,timeout,cwd,if (env.isNil) then Nothing else Just(dict(env)))
 }

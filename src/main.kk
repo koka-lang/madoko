@@ -16,6 +16,7 @@ import options
 import storage
 import driver
 import mathStaticRun
+import runLatex
 import version
 
 public function main() : io () {
@@ -58,7 +59,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
   } 
 }
 
-val runners = Runners( mathStaticRun/runPdfLaTeX, mathStaticRun/runBibtex, mathStaticRun/runMathStatic )
+val runners = Runners( runLatex/runPdfLaTeX, runLatex/runBibtex, mathStaticRun/runMathStatic )
 
 public function markdownFiles(args : string, action : (string,string,string,options) -> io ()) : io () { 
   val mbopts = parseOptions(version,args);

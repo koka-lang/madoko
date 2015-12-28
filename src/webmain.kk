@@ -86,7 +86,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
                           texNamePlain : string, texNameFull : string,
                           plainPages : pages, fullPages : pages,
                           oldMathPlain : string, oldMathFull : string,
-                          xopts : options, cont : (maybe<dict<mathinfo>>) -> io () ) : io ()
+                          xopts : options, cont : (maybe<(dict<mathinfo>,string)>) -> io () ) : io ()
   {
     rerun := True
     trace("math rerun")
