@@ -6,16 +6,6 @@
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-/*
-
-latex:   dvi  (dvips,ps2pdf) pdf
-xetex:   xdv  pdf
-luatex:  dvi  pdf
-
-svg: dvi, xdv
-png: dvi, pdf
-*/
-
 // Process math statically as LaTeX generated snippets
 module mathStaticRun
 

@@ -94,7 +94,10 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="math-embed" || key=="math-embed-limit") options(mathEmbedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="embed" || key=="embed-limit") options(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024))
   elif (key=="math-document-class" || key=="math-doc-class") options(mathDocClass=value)
-  elif (key=="math-render") options(mathRender = options.parseMathRender(lvalue,options.mathRender) )
+  elif (key=="math-render") {
+    options(mathRender = options.parseMathRender(lvalue,options.mathRender),
+            mathRenderPdf = options.parseMathRender(lvalue,options.mathRenderPdf) )
+  }
   elif (key=="math-render-pdf") options(mathRenderPdf = options.parseMathRender(lvalue,options.mathRenderPdf ) )
   elif (key=="math-svg-share-paths") options(mathSvgShare=bvalue)
   elif (key=="math-svg-precision") options(mathSvgPrec=min(6,max(ivalue,0)))

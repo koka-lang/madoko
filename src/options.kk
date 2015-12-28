@@ -92,8 +92,8 @@ public struct options(
   mathBaseline  : int    = 0,         // math baseline offset in percentage of 1pt
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
-  mathRender    : mathrender = Png,   // math rendering method
-  mathRenderPdf : mathrender = Png,   // math rendering method for math-needpdf snippets
+  mathRender    : mathrender = Svg,   // math rendering method
+  mathRenderPdf : mathrender = Svg,   // math rendering method for math-needpdf snippets
   mathSvgShare  : bool   = True,      // share paths in embedded svg images
   mathSvgPrec   : int    = 3,         // decimal points used in svg rendering
   mathSvgDefs   : string = "",        // used internally to share svg definitions
