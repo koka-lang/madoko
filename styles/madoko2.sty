@@ -1202,6 +1202,9 @@
 
 \newcounter{snippets}
 
+% insert an invisible bounding-box marker at the front and end of inline math
+\newcommand\md@bboxmarker{\special{dvisvgm:bbox 0.01 0.01}}
+
 \newcommand{\@savedepth}{%
   \setlength{\@snippetWidth}{\wd\@snippetBox}%
   \setlength{\@snippetHeight}{\ht\@snippetBox}%
@@ -1218,8 +1221,8 @@
 
 \newenvironment{mdInlineSnippet}[1][\arabic{snippets}]%
   {\stepcounter{snippets}\def\@snippetName{#1}%
-   \begin{lrbox}{\@snippetBox}}%
-  {\end{lrbox}\@savedepth\newpage}
+   \begin{lrbox}{\@snippetBox}\md@bboxmarker}%
+  {\md@bboxmarker\end{lrbox}\@savedepth\newpage}
 
 \newenvironment{mdSnippets}%
     {\pagestyle{empty}%

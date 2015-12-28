@@ -60,7 +60,7 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
   }
 
   function mathDoc(files, mode ) {
-    if (!mode) mode = "dvi";
+    if (!mode) mode = "plain";
     if (!files) return "";
     var mdocs = nub(files.split("\n")).filter( function(fname) {
       return (fname && (util.endsWith(fname,"-bib.aux") ||
@@ -125,8 +125,8 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
             links      : links,
             customs    : customs,
             entities   : entities,
-            mathDviDoc : mathDoc(filesWrite,"dvi"),
-            mathPdfDoc : mathDoc(filesWrite,"pdf"),
+            mathPlainDoc : mathDoc(filesWrite,"plain"),
+            mathFullDoc : mathDoc(filesWrite,"full"),
             err        : null,
             stdout     : stdout,
           });
