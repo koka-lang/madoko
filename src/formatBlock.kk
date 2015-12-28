@@ -234,9 +234,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           match(context.fmt) {
             FmtTex  -> lineInfo + mtxt
             FmtHtml -> {
-              log("math-pdf","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
+              log("math-full","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
               if (context.inlineContext.mathStatic) {
-                log("math-dvi","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
+                log("math-plain","%mdk-begin-mathdefs\n" + lineInfo + txt + "\n")
                 ""
               }
               else {

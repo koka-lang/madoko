@@ -92,8 +92,8 @@ public struct options(
   mathBaseline  : int    = 0,         // math baseline offset in percentage of 1pt
   mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
   mathDocClass  : string = "[10pt]book",
-  mathRender    : mathrender = Svg,   // math rendering method
-  mathRenderPdf : mathrender = Svg,   // math rendering method for math-needpdf snippets
+  mathRender    : maybe<mathrender> = Nothing, // math rendering method
+  mathRenderFull: maybe<mathrender> = Nothing, // math rendering method for math-needfull snippets
   mathSvgShare  : bool   = True,      // share paths in embedded svg images
   mathSvgPrec   : int    = 3,         // decimal points used in svg rendering
   mathSvgDefs   : string = "",        // used internally to share svg definitions
@@ -109,8 +109,9 @@ public struct options(
   dvisvg        : string = "dvisvgm",  // used to extract svg for math
   processTimeout: int = 0,            // kill child process after <timeout>
   
-  mathpdflatex  : string = "default",        // if non-empty, used when pdf is needed for snippets. Use "default" for default program
-  dvips         : string = "dvips",   // used with ps2pdf when mathpdflatex is empty
+  mathlatex     : string = "", // if non-empty, used for math, use "" for the default program
+  mathlatexFull : string = "", // if non-empty, used for math with math-needfull. Use "" for default program
+  dvips         : string = "dvips",   // used with ps2pdf when mathlatexFull is empty
   ps2pdf        : string = "ps2pdf",
   convert       : string = "convert", // used to extract png's from pdf for math that needs it
   
@@ -126,19 +127,46 @@ public struct options(
   extractEnd    : string = @"^(?:\/\/|--|[#%]|[<]!--|\(\*) *END *(?:[:] *(\w+) *)?(?:--[>]|\*\))?$"
 );
 
-public function getPdflatex( opts : options ) : string {
-  if (opts.pdflatex != "" && opts.pdflatex != "default") then opts.pdflatex 
+public function getPdfLatex( opts : options ) : string {
+  if (opts.pdflatex.bool) then opts.pdflatex 
    else combine(opts.latex.dirname,"xelatex")
 }               
 
-public function getMathpdflatex( opts : options ) : string {
-  if (opts.mathpdflatex != "default") then opts.mathpdflatex 
-   else opts.getPdflatex
+public function getMathLatexFull( opts : options ) : string {
+  if (opts.mathlatexFull.bool) then opts.mathlatexFull
+   else opts.getPdfLatex
+}               
+
+public function getMathLatex( opts : options, mrender : mathrender ) : string {
+  if (opts.mathlatex != "") then opts.mathlatex 
+  elif (mrender.isPng) then opts.latex // dvi route is much faster for png extraction
+  else opts.getPdfLatex
 }               
 
 public function getMathjax( opts : options ) : string {
   if (opts.mathjax != "default") then opts.mathjax
    else "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+}
+
+public function getMathRender( opts : options, kind : mathkind ) : mathrender {
+  match(kind) {
+    Plain -> opts.getMathRender
+    Full  -> opts.getMathRenderFull
+  }
+}
+
+public function getMathRender( opts : options ) : mathrender {
+  match(opts.mathRender) {
+    Nothing -> Svg
+    Just(m) -> m
+  }
+}
+
+public function getMathRenderFull( opts : options ) : mathrender {
+  match(opts.mathRenderFull) {
+    Nothing -> opts.getMathRender
+    Just(m) -> m
+  }
 }
 
 public struct commandOptions(
@@ -185,8 +213,8 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["odir"],    creq(fun(co,s) { co(outputDir=s) },"DIR"), "Write output files to the specified directory" ),
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Generate a LaTeX file too"),
-      Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),      
-      Option( "",  ["png"],     oflag(fun(o,v) { val m = if (v) then Png else Svg; o(mathRender=m, mathRenderPdf=m) }),        "Use PNG instead of SVG for math in HTML"),      
+      Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),  "Generate PDF using LaTeX"),      
+      Option( "",  ["png"],     oflag(fun(o,v) { o(mathRender = Just(if (v) then Png else Svg)) }),  "Use PNG instead of SVG for math in HTML"), 
       Option( "",  ["convert-tex"], cflag(fun(co,v) { co(convertTex=v) }), "Convert input from TeX to Markdown"),
       
       Option( "f", ["fragment"], oflag(fun(o,v) { o(full=Just(!v)) }), "Generate a fragment instead of a full document"),

@@ -83,9 +83,9 @@ public function markdown( inputName : string, input : string, outdir : string, o
   } 
 
   function runMathStatic( content : string, inpName : string, outputname : string,
-                          texNameDvi : string, texNamePdf : string,
-                          dviPages : pages, pdfPages : pages,
-                          oldMathDvi : string, oldMathPdf : string,
+                          texNamePlain : string, texNameFull : string,
+                          plainPages : pages, fullPages : pages,
+                          oldMathPlain : string, oldMathFull : string,
                           xopts : options, cont : (maybe<dict<mathinfo>>) -> io () ) : io ()
   {
     rerun := True

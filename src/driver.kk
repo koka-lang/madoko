@@ -177,10 +177,10 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   function phaseHtml() 
   {
     // markdown to html          
-    val (fileEmbed,(mathDvi,(mathPdf,(warns0,(logs, html0))))) = 
+    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, html0))))) = 
                               withLog("embed") {
-                               withLog("math-dvi") {
-                                withLog("math-pdf") {
+                               withLog("math-plain") {
+                                withLog("math-full") {
                                  withLog("warning") { 
                                   withLog("aux") { 
                                    markdown(icontent,xopts0) 
@@ -246,11 +246,11 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
 
       // possibly typeset math using latex
-      if ((mathDvi.containsSnippet && mopts.mathmode.isStatic) || mathPdf.containsSnippet) {
-        if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathPdf.containsSnippet) {
+      if ((mathPlain.containsSnippet && mopts.mathmode.isStatic) || mathFull.containsSnippet) {
+        if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathFull.containsSnippet) {
           mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
-        mathStatic( mathDvi, mathPdf, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmres) {
+        mathStatic( mathPlain, mathFull, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmres) {
           match(mbmres) {
             Just((mdim2,svgdefs)) -> {
               // write html again

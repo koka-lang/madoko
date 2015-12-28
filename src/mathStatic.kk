@@ -37,9 +37,11 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
   }
 }
 
-function mathHeader( xopts : options, mode : string ) : string 
+function mathHeader( xopts : options, mode : mathkind ) : string 
 {
-  val initial = ["% MathDpi: " + xopts.mathDpi.show,
+  val deps    = ["% MathMode: " + mode.show,
+                 "MathRender: " + xopts.getMathRender(mode).show,
+                 "MathDpi: " + xopts.mathDpi.show,
                  "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
                  "MathScale: " + xopts.mathScale.show,
                  "MathBaseline: " + xopts.mathBaseline.show,
@@ -47,11 +49,12 @@ function mathHeader( xopts : options, mode : string ) : string
                  "MathImgDir: " + xopts.mathImgDir,
                  // turns out that in SVG mode, dvi/pdf are interdepenent due to 
                  // glyph sharing so we need to re-build if any one latex changes
-                 "Latex: " + xopts.latex, 
-                 "MathPdfLatex: " + xopts.mathpdflatex, 
-                 "PdfLatex: " + xopts.pdflatex,                  
+                 "MathLatex: " + xopts.mathlatex, 
+                 "MathFullLatex: " + xopts.mathlatexFull, 
+                 "Latex: " + xopts.latex,                  
+                 "FullLatex: " + xopts.pdflatex,                  
                 ] +
-                (match(xopts.mathRender) {
+                (match(xopts.getMathRender(mode)) {
                   Svg -> [ "Dvisvg: " + xopts.dvisvg ]
                   Png -> [
                    "Dvipng: " + xopts.dvipng,
@@ -61,84 +64,80 @@ function mathHeader( xopts : options, mode : string ) : string
                   ]
                 })                
 
-  val dviDeps = ["MathRender: " + xopts.mathRender.show ]                
-  val pdfDeps = ["MathRenderPdf: " + xopts.mathRenderPdf.show ] 
-
-  (initial + (if (mode=="dvi") then dviDeps else pdfDeps)).join(", ") + "\n"
+  deps.join(", ") + "\n"
 }
 
-function mathContent( xopts : options, mode : string, body : string = "" ) : string {
+function mathContent( xopts : options, mode : mathkind, body : string = "" ) : string {
   val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
   val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
-  val render = if (mode=="dvi") then opts.mathRender else opts.mathRenderPdf
-  opts.mathHeader(mode) + fmtLatexMathFull(mode,render,xbody,opts)
+  opts.mathHeader(mode) + fmtLatexMathFull(mode,xbody,opts)
 }
 
-function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)
+function mathFormat( xopts : options, mode :mathkind, math : string, outName : string ) : (string,string,string)
 {
-  val texName = outName.appendStem("-math-" + mode).changeExt(".tex")
+  val texName = outName.appendStem("-math-" + mode.show).changeExt(".tex")
   val texFinalName = texName.changeExt(".final.tex")  
   (texName,texFinalName,mathContent(xopts,mode,math))
 }
 
 public alias runMathStaticFun 
   = ( content : string, inName : string, outName : string,
-      texNameDvi : string, texNamePdf : string,
-      dviPages : pages, pdfPages : pages,
-      oldMathDvi : string, oldMathPdf : string,
+      texNamePlain : string, texNameFull : string,
+      plainPages : pages, fullPages : pages,
+      oldMathPlain : string, oldMathFull : string,
       xopts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) -> io ()
 
 
-public function mathStatic( mathDvi : string, mathPdf : string,  
+public function mathStatic( mathPlain : string, mathFull : string,  
                             inName : string, outName : string, xopts : options, content : string, 
                             runMathStatic : runMathStaticFun,  
                             continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io () 
 {
-  val (texNameDvi,texNameFinalDvi,outMathDvi) = xopts.mathFormat("dvi",mathDvi,outName)
-  val (texNamePdf,texNameFinalPdf,outMathPdf) = xopts.mathFormat("pdf",mathPdf,outName)
+  val (texNamePlain,texNameFinalPlain,outMathPlain) = xopts.mathFormat(Plain,mathPlain,outName)
+  val (texNameFull,texNameFinalFull,outMathFull) = xopts.mathFormat(Full,mathFull,outName)
 
-  val oldMathDvi = readTextFileDef(texNameFinalDvi,xopts.mathContent("dvi"),True)
-  val oldMathPdf = readTextFileDef(texNameFinalPdf,xopts.mathContent("pdf"),True)
+  val oldMathPlain = readTextFileDef(texNameFinalPlain,xopts.mathContent(Plain),True)
+  val oldMathFull = readTextFileDef(texNameFinalFull,xopts.mathContent(Full),True)
 
   /*
-  if (outMathDvi != oldMathDvi) {
+  if (outMathPlain != oldMathPlain) {
     trace("dvi differs!")
-    trace("old: " + oldMathDvi)
-    trace("new: " + outMathDvi)
+    trace("old: " + oldMathPlain)
+    trace("new: " + outMathPlain)
   }
   */
 
-  if (outMathDvi == oldMathDvi && outMathPdf == oldMathPdf && !(xopts.rebuild)) 
+  if (outMathPlain == oldMathPlain && outMathFull == oldMathFull && !(xopts.rebuild)) 
    then return continue(Nothing)
 
   xopts.print("rendering math.")
-  if ((outMathDvi != oldMathDvi || xopts.rebuild) && !(tryWriteTextFile(texNameDvi,outMathDvi))) {
-    xopts.printErr("error: unable to write: " + texNameDvi)
+  if ((outMathPlain != oldMathPlain || xopts.rebuild) && !(tryWriteTextFile(texNamePlain,outMathPlain))) {
+    xopts.printErr("error: unable to write: " + texNamePlain)
     return continue(Nothing)
   }
-  if ((outMathPdf != oldMathPdf || xopts.rebuild) && !(tryWriteTextFile(texNamePdf,outMathPdf))) {
-    xopts.printErr("error: unable to write: " + texNamePdf)
+  if ((outMathFull != oldMathFull || xopts.rebuild) && !(tryWriteTextFile(texNameFull,outMathFull))) {
+    xopts.printErr("error: unable to write: " + texNameFull)
     return continue(Nothing)
   }
   
-  val rebuildDvi = oldMathDvi.unsnippet("old dvi") != outMathDvi.unsnippet("new dvi")
-  val rebuildPdf = oldMathPdf.unsnippet("old pdf") != outMathPdf.unsnippet("new pdf")
-  // if (rebuildDvi || rebuildPdf) trace("math rebuild")
-  val dviPages = mathAnalyseChanged(outMathDvi,xopts.mathdim,xopts.rebuild || rebuildDvi) 
-  val pdfPages = mathAnalyseChanged(outMathPdf,xopts.mathdim,xopts.rebuild || rebuildPdf) 
+  val rebuildPlain = oldMathPlain.unsnippet("old plain") != outMathPlain.unsnippet("new plain")
+  val rebuildFull = oldMathFull.unsnippet("old full") != outMathFull.unsnippet("new full")
+  // if (rebuildPlain || rebuildFull) trace("math rebuild")
+  val plainPages = mathAnalyseChanged(outMathPlain,xopts.mathdim,xopts.rebuild || rebuildPlain) 
+  val fullPages = mathAnalyseChanged(outMathFull,xopts.mathdim,xopts.rebuild || rebuildFull) 
 
   if (xopts.verbose>=1) {
-    if (dviPages.isNil && mathDvi.containsSnippet) xopts.print("math unchanged (dvi)")
-    if (pdfPages.isNil && mathPdf.containsSnippet) xopts.print("math unchanged (pdf)")
+    if (plainPages.isNil && mathPlain.containsSnippet) xopts.print("math unchanged (plain)")
+    if (fullPages.isNil && mathFull.containsSnippet) xopts.print("math unchanged (full)")
   }
-  if (dviPages.isNil && pdfPages.isNil) then {
-    tryRename(texNameDvi,texNameFinalDvi); // save result to prevent rebuilds
-    tryRename(texNamePdf,texNameFinalPdf); 
+  if (plainPages.isNil && fullPages.isNil) then {
+    tryRename(texNamePlain,texNameFinalPlain); // save result to prevent rebuilds
+    tryRename(texNameFull,texNameFinalFull); 
     return continue(Nothing)
   }
   
-  runMathStatic( content, inName, outName, texNameDvi, texNamePdf, 
-                 dviPages, pdfPages, oldMathDvi, oldMathPdf,
+  runMathStatic( content, inName, outName, texNamePlain, texNameFull, 
+                 plainPages, fullPages, oldMathPlain, oldMathFull,
                  xopts, continue )
 }
 

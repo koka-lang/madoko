@@ -32,7 +32,7 @@ FlushLeft   { .align-left }
 FlushRight  { .align-right }
 Comment     { display: none }
 
-Snippet     { input: math; display:block; snippet-needpdf: true }
+Snippet     { input: math; display:block; math-full: true }
 Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
 @if html {
   Footnote { 
@@ -164,7 +164,7 @@ note-format    : **[&caption;]{.note-caption}**&note-endperiod;&nl;
 <!-- equations and math -->
 Equation {
   label: "[(@equation)]{.equation-label}";
-  replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-needpdf: "&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-full: "&math-full;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
   tight: true;
   line-adjust: 0;
   .para-block;
@@ -172,7 +172,7 @@ Equation {
 }
 
 Math {
-  replace: '~ Begin MathDisplay { color:"&color;"; math-needpdf:"&math-needpdf;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  replace: '~ Begin MathDisplay { color:"&color;"; math-full:"&math-full;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
   tight: true;
   .para-block
 }

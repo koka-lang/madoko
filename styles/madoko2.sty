@@ -9,6 +9,7 @@
 
 \RequirePackage[table]{xcolor}
 \RequirePackage{options}
+\RequirePackage{iftex}
 
 %-------------------------------------------------------------
 % Process options 
@@ -25,14 +26,16 @@
 
 \@ifclassloaded{beamer}{\options{/madoko/beamer=true}}{}
 \ifdef\mathmode{\options{/madoko/math=true}}{}
+\ifdef\mdmathmode{\options{/madoko/math=true}}{}
 \options@ProcessOptions{/madoko}
 
 
-% if we are in math mode, we define the driver for pgf/tikz to be dvips
+% if we are in XeLaTeX and math mode with svg extraction, 
+% we define the driver for pgf/tikz to be dvips
 % otherwise we cannot extract svg images correctly using dvisvgm
-\eifstrequal{\mathrender}{svg}{%
+\ifXeTeX\eifstrequal{\mdmathrender}{svg}{%
   \def\pgfsysdriver{pgfsys-dvips.def}%  
-}{}
+}{}\fi
 
 %-------------------------------------------------------------
 % Packages

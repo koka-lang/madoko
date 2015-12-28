@@ -148,7 +148,7 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
   val lkind  = kind.toLower
   val class  = "math-" + lkind
   val attrsd = context.applyDefaults("span",attrs.addClass(class))
-  val mode   = if (attrsd.hasBoolKey("snippet-needpdf") || attrsd.hasBoolKey("math-needpdf")) then "math-pdf" else "math-dvi" 
+  val mode   = if (attrsd.hasBoolKey("math-full") || attrsd.hasBoolKey("snippet-needpdf") || attrsd.hasBoolKey("math-needpdf")) then Full else Plain 
   //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
   val txt    = txt0.trimLines
   val texcmd = if (kind=="Inline")
@@ -159,10 +159,11 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     _      -> {
       val mtxt = left + txt.escapeMath(context.fmt) + right
       val mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
-      if (context.mathStatic || mode=="math-pdf") {
+      if (context.mathStatic || mode.isFull /* never use mathjax for full math */) {
         val digest = md5(txt)
-        log(mode, @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
-                      texcmd + "\\end{md" + kind + "Snippet}%mdk")
+        log("math-" + mode.show, 
+              @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
+                texcmd + "\\end{md" + kind + "Snippet}%mdk")
         //trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))

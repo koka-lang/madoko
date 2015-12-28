@@ -346,6 +346,20 @@ public function showMime( m : mathrender ) {
   }
 }
 
+
+public type mathkind {
+  Plain
+  Full
+}
+
+public function show( m : mathkind ) {
+  match(m) {
+    Plain -> "plain"
+    Full  -> "full"
+  }
+}
+
+
 /* --------------------------------------
  Expand list style patterns
 ---------------------------------------- */

@@ -76,10 +76,11 @@ function saveFiles( userpath, files ) {
 function readFiles( config, userpath, docname, pdf, out ) {
   var ext    = Path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
-  var fnames = [".dimx", "-math-dvi.dim", "-math-pdf.dim", 
-                "-math-dvi.tex", "-math-pdf.tex", 
-                "-math-dvi.final.tex", "-math-pdf.final.tex",
-                "-bib.bbl", "-bib.aux"]
+  var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
+                "-math-plain.tex", "-math-full.tex", 
+                "-math-plain.final.tex", "-math-full.final.tex",
+                "-bib.bbl", "-bib.aux",
+                "-bib.bbl.mdk", "-bib.bib.json",
                 .concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return Util.combine( outdir, stem + s ); });
   // find last log file

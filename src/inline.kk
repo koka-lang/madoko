@@ -224,8 +224,8 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
   val lineInfo  = if (lineNo <= 0) then "" else context.fmtLineInfo( location )
   if (lineNo > 0) {
     val texLineInfo = "%mdk-data-line={" + location + "}"
-    log("math-dvi", texLineInfo)
-    log("math-pdf", texLineInfo)
+    log("math-plain", texLineInfo)
+    log("math-full", texLineInfo)
     logLocation(location)  // for warnings
   }
   val (s,next,_) = matchRules(context.grammar,context,txt,id)

@@ -23,7 +23,8 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
     elif (key=="dvisvg") options(dvisvg=if (value=="") then "dvisvgm" else value)
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else value)
+    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(mathlatexFull=if (lvalue=="true") then "default" else value)
+    elif (key=="math-latex") options(mathlatex=if (lvalue=="true") then "default" else value)
     elif (key=="bibtex") options(bibtex=value)
     elif (key=="convert") options(convert=value)
     elif (key=="ps2pdf") options(ps2pdf=value)
@@ -37,7 +38,8 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     // in sandbox, only set safe program options
     if (key=="latex") options(latex=if (value=="") then "latex" else safeLatex(lvalue, options.latex) )
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.pdflatex) )
-    elif (key=="math-pdflatex" || key=="math-pdf-latex") options(mathpdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathpdflatex) )
+    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(mathlatexFull=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathlatexFull) )
+    elif (key=="math-latex") options(mathlatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathlatex) )
     elif (key=="bibtex") options(bibtex=safeBibtex(lvalue,options.bibtex)) 
     else {
       //  if (options.verbose >= 3) warning("custom metadata key: " + key)
