@@ -144,7 +144,7 @@ public function getMathjax( opts : options ) : string {
 public struct commandOptions(
   showVersion : bool = False,
   convertTex  : bool = False,
-  outputDir   : string = "",
+  outputDir   : string = "out",
   installDir  : string = "",
   inputs      : list<string> = [],
   options     : options = Options()
