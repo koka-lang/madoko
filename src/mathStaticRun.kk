@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
-  Copyright 2013 Microsoft Corporation.
+  Copyright 2013-2015 Microsoft Corporation.
  
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
@@ -22,7 +22,6 @@ import process
 import mathParse
 import mathStatic
 import runLatex
-
 
 function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (int) -> io () ) : io () {
   if (tasks.isNil) return continue(0)
