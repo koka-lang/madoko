@@ -76,11 +76,11 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   
   // parse definitions
   val icontext  = inlineContext(fmt,options.metadata.dict,
-                                    options.mathdim,
+                                    options.math.dim,
                                     options.embedinfos, 
                                     options.citestyle.maybe(citeNumeric,id),
                                     options.sanitize,options.bench,options.verbose,
-                                    options.mathmode.isStatic,
+                                    options.math.mode.isStatic,
                                     options.highlight,options.starBold,options.sandbox,options.prettyAlign) 
   //if (options.verbose > 2) then trace("process definitions")
   val (fblocks,fcontext) 

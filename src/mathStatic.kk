@@ -39,28 +39,27 @@ function concurrent( tasks : list<(cont:(int) -> io ()) -> io ()>, continue : (i
 
 function mathHeader( xopts : options, mode : mathkind ) : string 
 {
+  val mrender = xopts.math.getMathRender(mode)
   val deps    = ["% MathMode: " + mode.show,
-                 "MathRender: " + xopts.getMathRender(mode).show,
-                 "MathDpi: " + xopts.mathDpi.show,
-                 "MathEmbedLimit: " + xopts.mathEmbedLimit.show,
-                 "MathScale: " + xopts.mathScale.show,
-                 "MathBaseline: " + xopts.mathBaseline.show,
-                 "MathDocClass: " + xopts.mathDocClass,
-                 "MathImgDir: " + xopts.mathImgDir,
+                 "MathRender: " + mrender.show,
+                 "MathDpi: " + xopts.math.dpi.show,
+                 "MathEmbedLimit: " + xopts.math.embedLimit.show,
+                 "MathScale: " + xopts.math.scale.show,
+                 "MathBaseline: " + xopts.math.baseline.show,
+                 "MathDocClass: " + xopts.math.docClass,
+                 "MathImgDir: " + xopts.math.imgDir,
                  // turns out that in SVG mode, dvi/pdf are interdepenent due to 
                  // glyph sharing so we need to re-build if any one latex changes
-                 "MathLatex: " + xopts.mathlatex, 
-                 "MathFullLatex: " + xopts.mathlatexFull, 
-                 "Latex: " + xopts.latex,                  
-                 "FullLatex: " + xopts.pdflatex,                  
+                 "MathLatex: " + xopts.getMathLatex(mrender), 
+                 "MathFullLatex: " + xopts.getMathLatexFull, 
                 ] +
-                (match(xopts.getMathRender(mode)) {
-                  Svg -> [ "Dvisvg: " + xopts.dvisvg ]
+                (match(mrender) {
+                  Svg -> [ "Dvisvg: " + xopts.math.dvisvg ]
                   Png -> [
-                   "Dvipng: " + xopts.dvipng,
-                   "Convert: " + xopts.convert,
-                   "Dvips: " + xopts.dvips,
-                   "Ps2pdf: " + xopts.ps2pdf,                 
+                   "Dvipng: " + xopts.math.dvipng,
+                   "Convert: " + xopts.math.convert,
+                   "Dvips: " + xopts.math.dvips,
+                   "Ps2pdf: " + xopts.math.ps2pdf,                 
                   ]
                 })                
 
@@ -68,7 +67,7 @@ function mathHeader( xopts : options, mode : mathkind ) : string
 }
 
 function mathContent( xopts : options, mode : mathkind, body : string = "" ) : string {
-  val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
+  val opts = if (xopts.math.docClass!="") then xopts(docClass=xopts.math.docClass) else xopts
   val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
   opts.mathHeader(mode) + fmtLatexMathFull(mode,xbody,opts)
 }
@@ -85,7 +84,7 @@ public alias runMathStaticFun
       texNamePlain : string, texNameFull : string,
       plainPages : pages, fullPages : pages,
       oldMathPlain : string, oldMathFull : string,
-      xopts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) -> io ()
+      opts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) -> io ()
 
 
 public function mathStatic( mathPlain : string, mathFull : string,  
@@ -123,8 +122,8 @@ public function mathStatic( mathPlain : string, mathFull : string,
   val rebuildPlain = oldMathPlain.unsnippet("old plain") != outMathPlain.unsnippet("new plain")
   val rebuildFull = oldMathFull.unsnippet("old full") != outMathFull.unsnippet("new full")
   // if (rebuildPlain || rebuildFull) trace("math rebuild")
-  val plainPages = mathAnalyseChanged(outMathPlain,xopts.mathdim,xopts.rebuild || rebuildPlain) 
-  val fullPages = mathAnalyseChanged(outMathFull,xopts.mathdim,xopts.rebuild || rebuildFull) 
+  val plainPages = mathAnalyseChanged(outMathPlain,xopts.math.dim,xopts.rebuild || rebuildPlain) 
+  val fullPages = mathAnalyseChanged(outMathFull,xopts.math.dim,xopts.rebuild || rebuildFull) 
 
   if (xopts.verbose>=1) {
     if (plainPages.isNil && mathPlain.containsSnippet) xopts.print("math unchanged (plain)")

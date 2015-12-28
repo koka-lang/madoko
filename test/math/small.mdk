@@ -2,11 +2,11 @@ Math Render: svg
 Math Dpi   : 200
 
 xEmbed     : 0
-Math Embed: 0
+xMath Embed: 0
 
 # Mathematics
 
-A famous equation $\hspace{1em}$ is $\;E = mc^2$, but another famous one is:
+A famous equation $\hspace{1em}$ is $e = mc^2$, but another famous one is:
 ~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }
  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
 ~

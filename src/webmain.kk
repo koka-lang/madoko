@@ -25,7 +25,7 @@ public function initialOptions( args : string = "" ) : io options {
                 Nothing       -> Options(version=version/version)
               }
   opts(lineNoWeb=True,
-       mathEmbedLimit=512*1024,   // must match server setting!
+       math=(opts.math)(embedLimit=512*1024),   // must match server setting!
        embedLimit=512*1024,
        copyStyles=False)  
 }

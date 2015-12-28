@@ -35,6 +35,7 @@
 % otherwise we cannot extract svg images correctly using dvisvgm
 \ifXeTeX\eifstrequal{\mdmathrender}{svg}{%
   \def\pgfsysdriver{pgfsys-dvips.def}%  
+  \RequirePackage[dvips]{pict2e}%
 }{}\fi
 
 %-------------------------------------------------------------

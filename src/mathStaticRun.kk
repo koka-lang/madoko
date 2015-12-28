@@ -45,27 +45,67 @@ public function runMathStatic( content : string, inName: string, outName : strin
                         texNamePlain : string, texNameFull : string,
                         plainPages : pages, fullPages : pages,
                         oldMathPlain : string, oldMathFull : string,
-                        xopts : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io ()
+                        opts0 : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io ()
 {
-  mathSnippetsRender( Plain, xopts.getMathRender, xopts.getMathLatex(xopts.getMathRender), inName, texNamePlain, xopts, content, oldMathPlain, plainPages) fun(extplain) {
-    if (extplain.isEmpty) return continue(Nothing)
-    mathSnippetsRender( Full, xopts.getMathRenderFull, xopts.getMathLatexFull, inName, texNameFull, xopts, content, oldMathFull, fullPages) fun(extfull) {
-      if (extfull.isEmpty) return continue(Nothing)
-      mathToImg( texNamePlain.changeExt(extplain), texNameFull.changeExt(extfull), xopts, plainPages, fullPages ) fun(plainPageAdj,fullPageAdj){
-        mathDimAnalyse( outName.changeExt(".dimx"), xopts, plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, fullPageAdj) fun(mbmath) {
-          if (mbmath.isJust) {
-            val texNameFinalPlain = texNamePlain.changeExt(".final.tex")
-            val texNameFinalFull  = texNameFull.changeExt(".final.tex")
-            tryRename(texNamePlain,texNameFinalPlain); // save result to prevent rebuilds
-            tryRename(texNameFull,texNameFinalFull);
+  opts0.checkDviSvgVersion(texNamePlain, texNameFull) fun(xopts) {
+    mathSnippetsRender( Plain, xopts.math.getMathRender, xopts.getMathLatex(xopts.math.getMathRender), inName, texNamePlain, xopts, content, oldMathPlain, plainPages) fun(extplain) {
+      if (extplain.isEmpty) return continue(Nothing)
+      mathSnippetsRender( Full, xopts.math.getMathRenderFull, xopts.getMathLatexFull, inName, texNameFull, xopts, content, oldMathFull, fullPages) fun(extfull) {
+        if (extfull.isEmpty) return continue(Nothing)
+        mathToImg( texNamePlain.changeExt(extplain), texNameFull.changeExt(extfull), xopts, plainPages, fullPages ) fun(plainPageAdj,fullPageAdj) {
+          mathDimAnalyse( outName.changeExt(".dimx"), xopts, plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, fullPageAdj) fun(mbmath) {
+            if (mbmath.isJust) {
+              val texNameFinalPlain = texNamePlain.changeExt(".final.tex")
+              val texNameFinalFull  = texNameFull.changeExt(".final.tex")
+              tryRename(texNamePlain,texNameFinalPlain); // save result to prevent rebuilds
+              tryRename(texNameFull,texNameFinalFull);
+            }
+            continue(mbmath)
           }
-          continue(mbmath)
         }
       }
     }
   }      
 }
 
+function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (options) -> io () ) : io () {
+  if (opts.math.getMathRender.isSvg || opts.math.getMathRenderFull.isSvg) {
+    system("dvisvgm --version", fun(err,stdout,stderr) {
+      val version = match(stdout.find(rxVersion)) {
+        Nothing -> 0
+        Just(cap) -> {
+          (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
+        }
+      }
+      if (err!=0 || version < 114) {
+        opts.printErr("warning: cannot use 'dvisvgm'; ensure you have at least version 1.14")
+        opts.printErr(" the latest version is available at: http://dvisvgm.bplaced.net/downloads")
+        opts.printErr(" for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
+        opts.printErr(" switching to use png images for math (instead of svg)")
+        fileRenderPng(texNamePlain)
+        fileRenderPng(texNameFull)
+        cont(opts(math=(opts.math)(render=Just(Png),renderFull=Just(Png))))
+      }
+      else {
+        cont(opts)
+      }
+    })
+  }
+  else {
+    cont(opts)
+  }
+}
+val rxVersion = regex(@"(\d+)(?:\.(\d+)?)?")
+
+// fix up the tex file if we switch to PNG mode so PS specials are rendered correctly in TikZ/Pgf
+function fileRenderPng( fname : string ) : io () {
+  val content = readTextFileDef(fname,"",False)
+  if (content.notEmpty) {
+    val contentPng = content.replaceAll("\\mdmathrender{svg}","\\mdmathrender{png}")
+    tryWriteTextFile(fname,contentPng)
+    ()
+  }
+}
 
 
 function mathSnippetsRender( mode: mathkind, mrender : mathrender, texcmd: string,
@@ -108,8 +148,8 @@ function mathSnippetsRender( mode: mathkind, mrender : mathrender, texcmd: strin
       if (err1!=0) continue("")
       val dir = texName.dirname
       val stem = texName.stemname
-      val dvipsCmd = xopts.dvips.quote + " -Ppdf -G0 " + (stem + ".dvi").quote
-      val ps2pdfCmd = xopts.ps2pdf.quote + " " + (stem + ".ps").quote
+      val dvipsCmd = xopts.math.dvips.quote + " -Ppdf -G0 " + (stem + ".dvi").quote
+      val ps2pdfCmd = xopts.math.ps2pdf.quote + " " + (stem + ".ps").quote
       xopts.print("generating pdf from dvi...")
       xopts.print(">" + dvipsCmd, 3)
       system(dvipsCmd,fun(err,stdout,stderr) {
@@ -201,78 +241,50 @@ function mathToImg( namePlain : string, nameFull : string, xopts : options,
                       continue : (int,int) -> io () ) : io () 
 {  
   val (plainconvCmd,plainPageAdj) 
-    = mathConvImgCmd(Plain, namePlain, xopts.getMathRender, xopts, plainPages )
+    = mathConvImgCmd(Plain, namePlain, xopts.math.getMathRender, xopts.math, plainPages )
   val (fullconvCmd,fullPageAdj) 
-    = mathConvImgCmd(Full, nameFull, xopts.getMathRenderFull, xopts, fullPages )
+    = mathConvImgCmd(Full, nameFull, xopts.math.getMathRenderFull, xopts.math, fullPages )
 
   // make sure the output directory exists
-  val outDir = combine(namePlain.dirname,xopts.mathImgDir)
+  val outDir = combine(namePlain.dirname,xopts.math.imgDir)
   if (!(fexistsSync(outDir))) {
     xopts.print("create image directory: " + outDir)
     mkdirp(outDir)
   }           
 
-  checkCmdToImgVersion(xopts) {
-    mathCmdToImg( plainconvCmd, namePlain.dirname, Plain, plainPages, xopts, fun(err1) {
-      mathCmdToImg( fullconvCmd, nameFull.dirname, Full, fullPages, xopts, fun(err2) {
-        if (err1==0 && err2==0) {
-          continue(plainPageAdj,fullPageAdj)
-        }
-      })
-    })
-  }
-}
-
-function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
-  if (xopts.getMathRender.isSvg || xopts.getMathRenderFull.isSvg) {
-    system("dvisvgm --version", fun(err,stdout,stderr) {
-      val version = match(stdout.find(rxVersion)) {
-        Nothing -> 0
-        Just(cap) -> {
-          (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
-        }
-      }
-      if (err!=0 || version < 114) {
-        xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.14 installed")
-        xopts.printErr("you can check the version using   : dvisvgm --version")
-        xopts.printErr("the latest version is available at: http://dvisvgm.bplaced.net/downloads")
-        xopts.printErr("for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
-        xopts.printErr("(otherwise use png instead for math, using 'Math Render: png')")
-      }
-      else {
-        cont()
+  mathCmdToImg( plainconvCmd, namePlain.dirname, Plain, plainPages, xopts, fun(err1) {
+    mathCmdToImg( fullconvCmd, nameFull.dirname, Full, fullPages, xopts, fun(err2) {
+      if (err1==0 && err2==0) {
+        continue(plainPageAdj,fullPageAdj)
       }
     })
-  }
-  else {
-    cont()
-  }
+  })
 }
-val rxVersion = regex(@"(\d+)(?:\.(\d+)?)?")
 
-function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, xopts : options, pages : pages ) : (string,int) {
-  val baseImg = combine(xopts.mathImgDir,fname.stemname)
+
+function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, opts : mathoptions, pages : pages ) : (string,int) {
+  val baseImg = combine(opts.imgDir,fname.stemname)
   match (mrender) {
     Svg -> {
       // extension should be dvi or xdv
-      val cmd = xopts.dvisvg.quote + 
-                  (if (xopts.mathSvgUseFonts) then "" else " -n") +
-                  " -e -j -v3 -d" + xopts.mathSvgPrec.show + " " +
+      val cmd = opts.dvisvg.quote + 
+                  (if (opts.svgUseFonts) then "" else " -n") +
+                  " -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 
                   " -o " + (baseImg + "-%1p.svg").quote +
                   " " + fname.basename.quote
       (cmd,0)
     }
     Png | fname.extname==".dvi" -> {
-      val cmd = xopts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
-                  " -D" + xopts.mathDpi.show +
+      val cmd = opts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
+                  " -D" + opts.dpi.show +
                   " " + dvipngPages(pages) + 
                   " -o " + (baseImg + "-%d.png").quote +
                   " " + fname.stemname.quote
       (cmd,0)
     }
     Png -> { // extension should be pdf
-      val cmd = xopts.convert.quote + " -trim -density " + xopts.mathDpi.show + " " +
+      val cmd = opts.convert.quote + " -trim -density " + opts.dpi.show + " " +
                   (fname.basename + pages.convertPages).quote + " " +
                   (baseImg + pages.convertSuffix + ".png").quote      
       (cmd,~1) 
@@ -313,9 +325,9 @@ function mathDimAnalyse( dimxName : string, xopts : options, plainPages : pages,
                          continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
   val dims2 = extendDim(plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, fullPageAdj, dimxName, xopts )
-  val (mdim2,svgdefs,msg) = dims2.parseMathDim(xopts.mathImgDir, xopts.mathScale, xopts.mathBaseline,xopts.mathSvgShare)
+  val (mdim2,svgdefs,msg) = dims2.parseMathDim(xopts.math.imgDir, xopts.math.scale, xopts.math.baseline,xopts.math.svgShare)
   if (msg.bool) then xopts.print(msg)
-  mathImageGC(mdim2,xopts.mathdim,dimxName.dirname)
+  mathImageGC(mdim2,xopts.math.dim,dimxName.dirname)
   continue( Just((mdim2,svgdefs)) )
 }
 
@@ -342,8 +354,8 @@ function extendDim( plainPages : pages, fullPages : pages,
   var imageCount := 0
   var embedSize := 0
   var embedCount := 0  
-  val dim = opts.mathdim
-
+  val dim = opts.math.dim
+  
   function dimLine( render:mathrender, mode : mathkind, fname : string, 
                     pages : pages, pageAdj : int, line : string ) 
   {
@@ -353,9 +365,9 @@ function extendDim( plainPages : pages, fullPages : pages,
         val pageNo = cap.groups[2].parseInt.maybe(0,id)
         val digest = cap.groups[3]
         val imageStem = fname.stemname + "-" + (pageNo + pageAdj).show
-        val imageName = combine(opts.mathImgDir, imageStem.changeExt(render.show) )
+        val imageName = combine(opts.math.imgDir, imageStem.changeExt(render.show) )
         val imageFile = combine(dimxFile.dirname,imageName)
-        // trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
+        //trace("read image: " + pageNo.show + ": " + imageFile + ": " + imageFile)
                 
         val (iwidth,iheight,size,embed) 
           = match(dim[digest]) {
@@ -365,27 +377,28 @@ function extendDim( plainPages : pages, fullPages : pages,
                   (mi.iwidth,mi.iheight,mi.size,mi.imageData)
                 }
               _ -> { 
-                match(render) {
-                  Png -> {
-                    analyzeImagePng( imageFile, opts )
+                val res =
+                  match(render) {
+                    Png -> {
+                      analyzeImagePng( imageFile, opts )
+                    }
+                    Svg -> {
+                      analyzeImageSvg( imageFile, opts, mode )
+                    }
                   }
-                  Svg -> {
-                    analyzeImageSvg( imageFile, opts, mode )
-                  }
+                val imageDigestFile = combine(imageFile.dirname,"math-" + digest + imageFile.extname)
+                tryUnlinkSync(imageDigestFile)                              
+                if (res.field4=="") then {
+                  // give robust name  
+                  rename(imageFile,imageDigestFile)
                 }
+                else {
+                  tryUnlinkSync(imageFile) // delete the image
+                }
+                res
               }
             }
-        val imageDigestFile = combine(imageFile.dirname,"math-" + digest + imageFile.extname)
-        tryUnlinkSync(imageDigestFile)                              
-        if (embed=="") then {
-          // give robust name  
-          rename(imageFile,imageDigestFile)
-        }
-        else {
-          tryUnlinkSync(imageFile) // delete the image
-        }
-
-        //if (iwidth<=0.0 || iheight<=0.0) then line else 
+        
         if (embed == "") then {
           imageSize  := imageSize + size
           imageCount := imageCount + 1            
@@ -403,9 +416,9 @@ function extendDim( plainPages : pages, fullPages : pages,
   val plainDims = readTextFileDef(texNamePlain.changeExt(".dim"),"")
   val fullDims  = readTextFileDef(texNameFull.changeExt(".dim"),"")
   val dimsx   = plainDims.lines.list.map( fun(line) { 
-                  dimLine(opts.getMathRender,Plain,texNamePlain,plainPages,plainPageAdj,line) }) +
+                  dimLine(opts.math.getMathRender,Plain,texNamePlain,plainPages,plainPageAdj,line) }) +
                 fullDims.lines.list.map( fun(line) { 
-                  dimLine(opts.getMathRenderFull,Full,texNameFull,fullPages,fullPageAdj,line) })
+                  dimLine(opts.math.getMathRenderFull,Full,texNameFull,fullPages,fullPageAdj,line) })
   
   val txt = dimsx.join("\n")
   tryWriteTextFile( dimxFile, txt )
@@ -430,15 +443,16 @@ function analyzeImagePng( imageFile, opts : options ) : io (double, double, int,
       val pxwidth = buf.readInt4(16,True)
       val pxheight= buf.readInt4(20,True)
       
-      val ppt     = (if (opts.mathDpi > 0) then opts.mathDpi.double else 72.27) / 72.27
+      val ppt     = (if (opts.math.dpi > 0) then opts.math.dpi.double else 72.27) / 72.27
       val iheight = pxheight.double / ppt
       val iwidth  = pxwidth.double / ppt
 
-      //trace("image " + cap.groups[2] + ": " + pxwidth.show + "," + pxheight.show)
+      //trace("image " + imageFile + ": " + pxwidth.show + "," + pxheight.show)
       val pngprefix = "data:image/png;base64,"
 
-      val embed = if (base64!="" && base64.length + pngprefix.length < opts.mathEmbedLimit)
+      val embed = if (base64!="" && base64.length + pngprefix.length < opts.math.embedLimit)
                     then pngprefix + base64 else ""
+      //trace("embed: " + embed.length.show + ", " + opts.math.embedLimit.show)                    
       val size = if (embed.isEmpty) then buf.length else embed.length                    
       (iwidth,iheight,size,embed)
     }
@@ -456,8 +470,9 @@ function analyzeImageSvg( imageFile, opts : options, mode : mathkind ) : io (dou
       val (iwidth,svg3)  = svg2.svgExtractDim(rxSvgWidth)
       val svg            = svg3.svgCompress()
       val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeGlyphIds(mode) 
-      // trace("svg: height: " + iheight.show + ", width: " + iwidth.show)
-      val embed = if (encoded.length < opts.mathEmbedLimit) then encoded else ""
+      //trace("svg: " + imageFile + ", height: " + iheight.show + ", width: " + iwidth.show)
+      val embed = if (encoded.length < opts.math.embedLimit) then encoded else ""
+      //trace("embed: " + embed.length.show + ", " + opts.math.embedLimit.show)                    
       val size  = if (embed.isEmpty) then svg.length else embed.length                    
       (iwidth,iheight,size,embed)
     }

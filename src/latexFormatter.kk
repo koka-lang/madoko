@@ -456,7 +456,7 @@ public function fmtLatexFull(body : string, options : options, metadata : dict<s
 }
 
 public function fmtLatexMathFull( mode: mathkind, body : string, options : options ) : string {
-  fmtLatexFullX(body,options,dict(),mode.show,options.getMathRender(mode).show )
+  fmtLatexFullX(body,options,dict(),mode.show,options.math.getMathRender(mode).show )
 }
 
 function fmtLatexFullX(body : string, options : options, metadata1 : dict<string>, mathmode : string = "", mathrender : string = "") : string 

@@ -20,15 +20,15 @@ public function updateSandbox( options : options, key : string, lvalue : string,
   // can only set program options if not running in a sandbox
   if (!(options.sandbox)) {
     if (key=="latex") options(latex=if (value=="") then "latex" else value)
-    elif (key=="dvipng") options(dvipng=if (value=="") then "dvipng" else value)
-    elif (key=="dvisvg") options(dvisvg=if (value=="") then "dvisvgm" else value)
+    elif (key=="dvipng") options(math = (options.math)(dvipng=if (value=="") then "dvipng" else value))
+    elif (key=="dvisvg") options(math = (options.math)(dvisvg=if (value=="") then "dvisvgm" else value))
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
-    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(mathlatexFull=if (lvalue=="true") then "default" else value)
-    elif (key=="math-latex") options(mathlatex=if (lvalue=="true") then "default" else value)
+    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(math = (options.math)(latexFull=if (lvalue=="true") then "default" else value))
+    elif (key=="math-latex") options(math = (options.math)(latex=if (lvalue=="true") then "default" else value))
     elif (key=="bibtex") options(bibtex=value)
-    elif (key=="convert") options(convert=value)
-    elif (key=="ps2pdf") options(ps2pdf=value)
-    elif (key=="dvips") options(dvips=value)
+    elif (key=="convert") options(math = (options.math)(convert=value))
+    elif (key=="ps2pdf") options(math = (options.math)(ps2pdf=value))
+    elif (key=="dvips") options(math = (options.math)(dvips=value))
     elif (key=="process-timeout") options(processTimeout=if (value!="" && ivalue > 0) then ivalue * 1000 else 0)
     else {
       options
@@ -38,8 +38,8 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     // in sandbox, only set safe program options
     if (key=="latex") options(latex=if (value=="") then "latex" else safeLatex(lvalue, options.latex) )
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.pdflatex) )
-    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(mathlatexFull=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathlatexFull) )
-    elif (key=="math-latex") options(mathlatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.mathlatex) )
+    elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(math = (options.math)(latexFull=if (lvalue=="true") then "default" else safeLatex(lvalue, options.math.latexFull) ))
+    elif (key=="math-latex") options(math = (options.math)(latex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.math.latex) ))
     elif (key=="bibtex") options(bibtex=safeBibtex(lvalue,options.bibtex)) 
     else {
       //  if (options.verbose >= 3) warning("custom metadata key: " + key)

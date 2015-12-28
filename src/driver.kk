@@ -74,10 +74,10 @@ public function processContent( inName : string, outName : string, content : str
 
     // always read dims: even in dynamic mode some pdf math may exist
     val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
-    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.mathImgDir, mmopts.mathScale, mmopts.mathBaseline, mmopts.mathSvgShare)
+    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math.imgDir, mmopts.math.scale, mmopts.math.baseline, mmopts.math.svgShare)
 
-    val xopts  = opts2(mathdim=mdim,mathSvgDefs=svgdefs)
-    val mopts  = mmopts(mathdim=mdim,mathSvgDefs=svgdefs)  
+    val xopts  = opts2(math=(opts2.math)(dim=mdim,svgDefs=svgdefs))
+    val mopts  = mmopts(math=(mmopts.math)(dim=mdim,svgDefs=svgdefs))
 
     // register languages for highlighting
     registerColorizers(mopts, searchDirs, icontent);
@@ -87,7 +87,7 @@ public function processContent( inName : string, outName : string, content : str
       if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
         tryCopyTextFileFromNoSandboxTo( "madoko.css", styleDir, outName.dirname )
       }
-      if (xopts.tex || mopts.mathmode.isStatic) { // only copy style files if generating tex or if math is static
+      if (xopts.tex || mopts.math.mode.isStatic) { // only copy style files if generating tex or if math is static
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
                         Just(md) -> md.snd.toLower == "true"  
                         _ -> False
@@ -246,8 +246,8 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
 
       // possibly typeset math using latex
-      if ((mathPlain.containsSnippet && mopts.mathmode.isStatic) || mathFull.containsSnippet) {
-        if (mopts.verbose>=2 && mopts.mathmode.isDynamic && mathFull.containsSnippet) {
+      if ((mathPlain.containsSnippet && mopts.math.mode.isStatic) || mathFull.containsSnippet) {
+        if (mopts.verbose>=2 && mopts.math.mode.isDynamic && mathFull.containsSnippet) {
           mopts.print("warning: dynamic math mode but some math requires pdf",2)
         }
         mathStatic( mathPlain, mathFull, inName, outName, mopts, content, runners.runMathStatic ) fun(mbmres) {
@@ -256,7 +256,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
               // write html again
               mopts.print("re-aligning math in HTML.")
               
-              val html2 = markdown(icontent,xopts(mathdim=mdim2,mathSvgDefs=svgdefs))
+              val html2 = markdown(icontent,xopts(math=(xopts.math)(dim=mdim2,svgDefs=svgdefs)))
               if (!(tryWriteTextFile(outName,html2))) {
                 mopts.printErr("error: unable to write: " + outName) 
               }

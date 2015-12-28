@@ -361,7 +361,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     }
   }
 
-  val extensions = options.mjext.expand.splitPaths.map(fun(path) { 
+  val extensions = options.math.mjext.expand.splitPaths.map(fun(path) { 
       htmlQuote( (if (path.endsWith(".js")) then path else path + ".js") )
     }).join(",")
 
@@ -400,7 +400,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
       }).join 
      }) +
      options.embedScripts(options.scripts, metadata) +
-     (if (/* options.mathmode.isStatic ||*/ options.mathjax=="") then "" else {
+     (if (/* options.mathmode.isStatic ||*/ options.math.mathjax=="") then "" else {
         ["<script type=\"text/x-mathjax-config\">",
          "  MathJax.Hub.Config({",
          "    tex2jax: {inlineMath: [['$','$']]},",
@@ -419,7 +419,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
          "  });", 
          "</script>",
          "<script type=\"text/javascript\" class=\"preview\"",
-         "  src=\"" + options.getMathjax.expand.escape + "\">",
+         "  src=\"" + options.math.getMathjax.expand.escape + "\">",
          "</script>\n"
         ].join("\n")
      }) +
@@ -434,7 +434,7 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
     "</head>\n" +
     "<body class=\"madoko\">\n" + 
     html +
-    options.mathSvgDefs +
+    options.math.svgDefs +
     "\n</body>\n" +
     options.embedScripts(options.scriptsx, metadata ) +
     (if (options.jsFooter == "") then "" else "<script type=\"text/javascript\">\n" + options.jsFooter.expand.indent + "\n</script>\n") +

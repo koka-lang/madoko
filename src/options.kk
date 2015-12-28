@@ -29,6 +29,35 @@ public type mathmode {
   Dynamic // mathjax
 }
   
+public struct mathoptions (
+  mode      : mathmode = Static,  // mode used to render math
+  mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
+  mjext         : string = "",        // semicolon separated list of mathjax extensions
+  
+  imgDir    : string = "math",    // directory for static math images
+  scale     : int    = 108,       // math scaling in percentage
+  dpi       : int    = 300,       // math resolution 
+  baseline  : int    = 0,         // math baseline offset in percentage of 1pt
+  embedLimit: int    = 512*1024,  // maximal embedded math image size  
+  docClass  : string = "[10pt]book",
+  render    : maybe<mathrender> = Nothing, // math rendering method
+  renderFull: maybe<mathrender> = Nothing, // math rendering method for math-needfull snippets
+  svgShare  : bool   = True,      // share paths in embedded svg images
+  svgPrec   : int    = 3,         // decimal points used in svg rendering
+  svgDefs   : string = "",        // used internally to share svg definitions
+  svgUseFonts: bool = False,      // use fonts directly in svg, use path's otherwise
+
+  dvipng        : string = "dvipng",  // used to extract png images for math
+  dvisvg        : string = "dvisvgm",  // used to extract svg for math  
+  latex         : string = "", // if non-empty, used for math, use "" for the default program
+  latexFull     : string = "", // if non-empty, used for math with math-needfull. Use "" for default program
+  dvips         : string = "dvips",   // used with ps2pdf when mathlatexFull is empty
+  ps2pdf        : string = "ps2pdf",
+  convert       : string = "convert", // used to extract png's from pdf for math that needs it
+  dim           : dict<mathinfo> = dict()  // static math dimension information  
+)
+
+
 // The options
 public struct options(
   version  : string = "",  // Initialized to the program version                        
@@ -82,22 +111,7 @@ public struct options(
   prettyAlign   : int  = 2, // default alignment spaces for .pretty mode
   logo          : bool = True, // generate a logo at the end of the document
   
-  mathmode      : mathmode = Static,  // mode used to render math
-  mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
-  mjext         : string = "",        // semicolon separated list of mathjax extensions
-  
-  mathImgDir    : string = "math",    // directory for static math images
-  mathScale     : int    = 108,       // math scaling in percentage
-  mathDpi       : int    = 300,       // math resolution 
-  mathBaseline  : int    = 0,         // math baseline offset in percentage of 1pt
-  mathEmbedLimit: int    = 512*1024,  // maximal embedded math image size  
-  mathDocClass  : string = "[10pt]book",
-  mathRender    : maybe<mathrender> = Nothing, // math rendering method
-  mathRenderFull: maybe<mathrender> = Nothing, // math rendering method for math-needfull snippets
-  mathSvgShare  : bool   = True,      // share paths in embedded svg images
-  mathSvgPrec   : int    = 3,         // decimal points used in svg rendering
-  mathSvgDefs   : string = "",        // used internally to share svg definitions
-  mathSvgUseFonts: bool = False,      // use fonts directly in svg, use path's otherwise
+  math          : mathoptions = Mathoptions(),
 
   highlight     : bool = True,
   hilitelang    : string = "",        // semi-colon separated list
@@ -105,18 +119,10 @@ public struct options(
   pdflatex      : string = "",        // defaults to 'xe' + latex cmd
   bibtex        : string = "bibtex",
   latex         : string = "latex",   // used to generate dvi for math
-  dvipng        : string = "dvipng",  // used to extract png images for math
-  dvisvg        : string = "dvisvgm",  // used to extract svg for math
   processTimeout: int = 0,            // kill child process after <timeout>
   
-  mathlatex     : string = "", // if non-empty, used for math, use "" for the default program
-  mathlatexFull : string = "", // if non-empty, used for math with math-needfull. Use "" for default program
-  dvips         : string = "dvips",   // used with ps2pdf when mathlatexFull is empty
-  ps2pdf        : string = "ps2pdf",
-  convert       : string = "convert", // used to extract png's from pdf for math that needs it
   
   metadata      : metadata = [],
-  mathdim       : dict<mathinfo> = dict(),  // static math dimension information
   embedinfos    : dict<embedinfo> = dict(),   // embed data, used in a browser
   embedLimit    : int = 512*1024,             // limit for embedding data (javascript, css, etc.)
   lineNo        : int = 1,                  // emit line no's. Use 0 to suppress.
@@ -133,37 +139,37 @@ public function getPdfLatex( opts : options ) : string {
 }               
 
 public function getMathLatexFull( opts : options ) : string {
-  if (opts.mathlatexFull.bool) then opts.mathlatexFull
+  if (opts.math.latexFull.bool) then opts.math.latexFull
    else opts.getPdfLatex
 }               
 
 public function getMathLatex( opts : options, mrender : mathrender ) : string {
-  if (opts.mathlatex != "") then opts.mathlatex 
+  if (opts.math.latex != "") then opts.math.latex 
   elif (mrender.isPng) then opts.latex // dvi route is much faster for png extraction
   else opts.getPdfLatex
 }               
 
-public function getMathjax( opts : options ) : string {
+public function getMathjax( opts : mathoptions ) : string {
   if (opts.mathjax != "default") then opts.mathjax
    else "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 }
 
-public function getMathRender( opts : options, kind : mathkind ) : mathrender {
+public function getMathRender( opts : mathoptions, kind : mathkind ) : mathrender {
   match(kind) {
     Plain -> opts.getMathRender
     Full  -> opts.getMathRenderFull
   }
 }
 
-public function getMathRender( opts : options ) : mathrender {
-  match(opts.mathRender) {
+public function getMathRender( opts : mathoptions ) : mathrender {
+  match(opts.render) {
     Nothing -> Svg
     Just(m) -> m
   }
 }
 
-public function getMathRenderFull( opts : options ) : mathrender {
-  match(opts.mathRenderFull) {
+public function getMathRenderFull( opts : mathoptions ) : mathrender {
+  match(opts.renderFull) {
     Nothing -> opts.getMathRender
     Just(m) -> m
   }
@@ -214,7 +220,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Generate a LaTeX file too"),
       Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),  "Generate PDF using LaTeX"),      
-      Option( "",  ["png"],     oflag(fun(o,v) { o(mathRender = Just(if (v) then Png else Svg)) }),  "Use PNG instead of SVG for math in HTML"), 
+      Option( "",  ["png"],     oflag(fun(o,v) { o(math = (o.math)(render = Just(if (v) then Png else Svg))) }),  "Use PNG instead of SVG for math in HTML"), 
       Option( "",  ["convert-tex"], cflag(fun(co,v) { co(convertTex=v) }), "Convert input from TeX to Markdown"),
       
       Option( "f", ["fragment"], oflag(fun(o,v) { o(full=Just(!v)) }), "Generate a fragment instead of a full document"),
