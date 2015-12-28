@@ -247,8 +247,8 @@ function mathSnippetsRender( mode: mathkind, mrender : mathrender, texcmd: strin
                             continue : (string) -> io () ) : io () 
 {
   function rendermsg(ext) {
-    xopts.print( "running " + texcmd.stemname + " on math... (" + 
-                  mode.show + " -> " + ext.substr(1) + " -> " + mrender.show + ")"  )
+    xopts.print( "running " + (texcmd.stemname + " on math...").fill(19) + "(" + 
+                  mode.show.fill(5) + " -> " + ext.substr(1) + " -> " + mrender.show + ")"  )
   }
   if (mrender.isSvg) {
     // run for svg: we need a dvi or xdv
@@ -678,7 +678,7 @@ function mathCmdToImg( cmd : string, dir : string, mode : mathkind, pages : page
 {  
   if (pages.isNil) return continue(0)
 
-  xopts.print("generating math images...  (" + mode.show + ") (" + pages.pagesShow + ")")
+  xopts.print("generating math images...  (" + mode.show.fill(5) + ") (" + pages.pagesShow + ")")
   xopts.print("> " + cmd,3)
   system(cmd,fun(err2,stdout2,stderr2) {
     //trace("done system cmd")
