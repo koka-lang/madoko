@@ -27,6 +27,13 @@
 \ifdef\mathmode{\options{/madoko/math=true}}{}
 \options@ProcessOptions{/madoko}
 
+
+% if we are in math mode, we define the driver for pgf/tikz to be dvips
+% otherwise we cannot extract svg images correctly using dvisvgm
+\eifstrequal{\mathrender}{svg}{%
+  \def\pgfsysdriver{pgfsys-dvips.def}%  
+}{}
+
 %-------------------------------------------------------------
 % Packages
 %-------------------------------------------------------------

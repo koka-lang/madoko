@@ -15,7 +15,7 @@ import std/path
 import std/dict
 import common
 import options
-import texFormatter
+import latexFormatter
 import storage
 import mathParse
 
@@ -70,7 +70,8 @@ function mathHeader( xopts : options, mode : string ) : string
 function mathContent( xopts : options, mode : string, body : string = "" ) : string {
   val opts = if (xopts.mathDocClass!="") then xopts(docClass=xopts.mathDocClass) else xopts
   val xbody = "\\begin{mdSnippets}\n" + body + "\n\\end{mdSnippets}"
-  opts.mathHeader(mode) + fmtTexMathFull(mode=="dvi",xbody,opts)
+  val render = if (mode=="dvi") then opts.mathRender else opts.mathRenderPdf
+  opts.mathHeader(mode) + fmtLatexMathFull(mode,render,xbody,opts)
 }
 
 function mathFormat( xopts : options, mode :string, math : string, outName : string ) : (string,string,string)

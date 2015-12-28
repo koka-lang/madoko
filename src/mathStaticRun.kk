@@ -631,11 +631,12 @@ function checkCmdToImgVersion( xopts : options, cont : () -> io () ) : io () {
           (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
         }
       }
-      if (err!=0 || version < 113) {
-        xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.13 installed")
+      if (err!=0 || version < 114) {
+        xopts.printErr("error: cannot use 'dvisvgm'; ensure you have at least version 1.14 installed")
         xopts.printErr("you can check the version using   : dvisvgm --version")
         xopts.printErr("the latest version is available at: http://dvisvgm.bplaced.net/downloads")
         xopts.printErr("for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
+        xopts.printErr("(otherwise use png instead for math, using 'Math Render: png')")
       }
       else {
         cont()
