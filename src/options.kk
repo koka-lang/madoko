@@ -186,6 +186,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Generate a LaTeX file too"),
       Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),        "Generate PDF using LaTeX"),      
+      Option( "",  ["png"],     oflag(fun(o,v) { val m = if (v) then Png else Svg; o(mathRender=m, mathRenderPdf=m) }),        "Use PNG instead of SVG for math in HTML"),      
       Option( "",  ["convert-tex"], cflag(fun(co,v) { co(convertTex=v) }), "Convert input from TeX to Markdown"),
       
       Option( "f", ["fragment"], oflag(fun(o,v) { o(full=Just(!v)) }), "Generate a fragment instead of a full document"),
