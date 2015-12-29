@@ -367,9 +367,9 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
           if (bibitem.id !== id) {
             cslWarning(bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
           }
-        }
-        if (!newcites[bibitem.id]) {
-          newcites[bibitem.id] = true;
+          if (!newcites[bibitem.id]) {
+            newcites[bibitem.id] = true;
+          }
         }        
       });
       citations = properties(newcites);
