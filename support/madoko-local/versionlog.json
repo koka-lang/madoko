@@ -1,5 +1,12 @@
 {
   "log": [
+    { "version": "0.5.0-beta",
+      "date"   : "2015-12-29",
+      "updates": [
+        "Support new math modes",
+        "Support CSL style sheets"
+      ]
+    },
     { "version": "0.4.0-beta",
       "date"   : "2015-12-15",
       "updates": [
