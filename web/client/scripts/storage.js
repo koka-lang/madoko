@@ -239,7 +239,19 @@ function createNullStorage() {
 function serverGetInitialContent(fpath) {
   if (!Util.extname(fpath)) fpath = fpath + ".mdk";
   if (!Util.isRelative(fpath)) return Promise.rejected( new Error("can only get initial content for relative paths") );
-  return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } );
+  return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } ).then( null, function(err) {
+    if (err.httpCode === 404) {
+      if (Util.extname(fpath) === ".csl") {
+        var url = "https://raw.githubusercontent.com/citation-style-language/styles/master/" + Util.basename(fpath).replace(/[ ]/g,"-");
+        return Util.requestGET( url )
+      }
+      else if (Util.extname(fpath) === ".xml" && Util.startsWith(Util.basename(fpath), "locales-")) {
+        var url = "https://raw.githubusercontent.com/citation-style-language/locales/master/" + Util.basename(fpath).replace(/[ ]/g,"-");
+        return Util.requestGET( url )
+      }
+    }
+    throw err;
+  })
 }
 
 function unpersistRemote(obj,remoteType) {
