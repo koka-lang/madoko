@@ -81,7 +81,7 @@ function readFiles( config, userpath, docname, pdf, out ) {
                 "-math-plain.final.tex", "-math-full.final.tex",
                 "-bib.bbl", "-bib.aux",
                 "-bib.bbl.mdk", "-bib.bib.json",
-                .concat( pdf ? [".pdf",".tex"] : [] )
+               ].concat( pdf ? [".pdf",".tex"] : [] )
                 .map( function(s) { return Util.combine( outdir, stem + s ); });
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
