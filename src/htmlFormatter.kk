@@ -155,10 +155,13 @@ public function fmtHtmlLink( context : inlineContext, isImage : bool, link : lin
   }
 }
 
-public function fmtHtmlSvg(context: inlineContext, svg : string, attrs : attrs ) : string {
-  svg.replace( rxSvg, "<svg " + attrs.htmlFormat("svg",context.sanitize) )
+public function fmtHtmlSvg(context: inlineContext, svg : string, attrs : attrs, alt : string ) : string {
+  svg.replace( rxSvg, fun(cap) {
+    "<svg " + attrs.htmlFormat("svg",context.sanitize) + cap.groups[2] + cap.groups[3] +
+    (if (alt.bool) then "<desc>" + alt.escape + "</desc>" else "")
+  })
 }
-val rxSvg = regex(@"^\s*<svg\b")
+val rxSvg = regex(@"^(\s*<svg\b)((?:[^'"">]|""[^""]*""|'[^']*')*)(>)")
 
 function extractText( s : string ) : string {
   s.replaceAll(rxTag,"")

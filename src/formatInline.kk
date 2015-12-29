@@ -198,15 +198,15 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
                   else attrs.addKeyvalIfNotExist("vertical-align",valign.showFixed(4) + "em")
   val xattrs  = xattrs0.addKeyvalIfNotExist("height",height.showFixed(4) + "em").addClass("math")
   val wattrs  = xattrs.addKeyvalIfNotExist("width", width.showFixed(4) + "em")
-                      .addKeyval("html-alt",mtxt)                       
-
+  
   if (height<=0.0 || width<=0.0) {
-    context.fmtCmd("span","",wattrs)
+    // empty image
+    context.fmtCmd("span","",wattrs.addKeyval("html-alt",mtxt))
   }
   elif (mi.imageData.startsWith(svgPrefix)) {
     // embedded svg: format it inline with the attributes spliced in
-    val svg    = mi.imageData.substr(svgPrefix.length)
-    context.fmtHtmlSvg( svg, wattrs )
+    val svg = mi.imageData.substr(svgPrefix.length)
+    context.fmtHtmlSvg( svg, wattrs, mtxt )
   }
   else {    
     // png, or svg image file, emit an img element
