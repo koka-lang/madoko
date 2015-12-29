@@ -622,7 +622,6 @@ public function htmlEscape( s : string, allowEntity : bool = False ) {
    then s.replaceAll( if (allowEntity) then rxnoEntityAmp else rxamp,"&amp;")
          .replaceAll(rxlt,"&lt;").replaceAll(rxgt,"&gt;")
          .replaceAll(rxquot,"&quot;").replaceAll(rxapos,"&#39;")
-         .replaceAll(rxNl,"&#10;").replaceAll(rxCr,"&#13;")
    else s        
 }
 val rxnoEntityAmp = regex(@"&(?!#?\w+;)")
@@ -631,9 +630,7 @@ val rxgt  = regex(@">")
 val rxlt  = regex(@"<")
 val rxquot = regex("\"")
 val rxapos = regex("'")
-val rxNl   = regex("\n")
-val rxCr   = regex("\r")
-val rxhtml = regex(@"[&<>""'\n\r]")
+val rxhtml = regex(@"[&<>""']")
 
 public function unquote( s : string ) : string {
   if (s.startsWith("'") && s.endsWith("'")) then s.substr(1,s.length-2)
