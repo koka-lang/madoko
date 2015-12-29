@@ -27,7 +27,8 @@ public function initialOptions( args : string = "" ) : io options {
   opts(lineNoWeb=True,
        math=(opts.math)(embedLimit=512*1024),   // must match server setting!
        embedLimit=512*1024,
-       copyStyles=False)  
+       copyStyles=False,
+       verboseMaxLine=0)  
 }
 
 val coptions = CommandOptions()
