@@ -33,10 +33,10 @@
 % if we are in XeLaTeX and math mode with svg extraction, 
 % we define the driver for pgf/tikz to be dvips
 % otherwise we cannot extract svg images correctly using dvisvgm
-\ifXeTeX\eifstrequal{\mdmathrender}{svg}{%
+\ifXeTeX\ifdef\mdmathrender{\eifstrequal{\mdmathrender}{svg}{%
   \def\pgfsysdriver{pgfsys-dvips.def}%  
   \RequirePackage[dvips]{pict2e}%
-}{}\fi
+}{}}{}\fi
 
 %-------------------------------------------------------------
 % Packages
