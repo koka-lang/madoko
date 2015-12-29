@@ -47,32 +47,30 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
 
     val embed = if (!sharePaths || mime!="image/svg+xml") then imageData else {
       svgsize := svgsize + size
+      var renames := []
       val svg = imageData.replaceAll(rxSvgPath, fun(pcap) {
         val pathid = pcap.groups[1]
-        match(paths[pathid]) {
-          Just(path) -> {
-            //trace("share path: " + pathid)
-            if (path==pcap.matched) 
-              then {
-                svgreduced := svgreduced + pcap.matched.length
-                "" 
-              }
-              else {
-                //trace(" unequal path: " + pathid + " (not sharing)")
-                pcap.matched // keep this path locally
-              }
-          }
-          Nothing -> {
-            paths[pathid] := pcap.matched
-            //trace("extract path: " + pathid)
-            ""
-          }
-        }
+        val ps     = paths[pathid].maybe([],id)
+        val path   = pcap.matched
+        val idx    = match(ps.findIdx(path)) {
+                        Nothing -> {
+                          //if (ps.isNil)  then trace("new path: " + pathid)
+                          // else trace("new path with same id: " + pathid + " -" + ps.length.show)
+                          paths[pathid] := ps + [path]
+                          ps.length
+                        }
+                        Just(i) -> {
+                          //trace("share path: " + pathid)
+                          svgreduced := svgreduced + path.length
+                          i
+                        }
+                      }
+        if (idx > 0) renames := Cons( (pathid, pathid + "-" + idx.show), renames )
+        ""        
       })
-      svg.replaceAll("<defs></defs>","")
+      svg.renameIds(renames).replaceAll("<defs></defs>","")
     }
 
- 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
                                     iheight,iwidth,size,embed,imageData)
@@ -81,7 +79,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
   val msg = if (svgreduced <= 0) then ""
              else " svg reduction:  " + (100.0 * svgreduced.double / svgsize.double).int.show.align(2) + "% to " + 
                       (svgsize - svgreduced).showSize + " (due to path sharing)"
-  val svgpaths = paths.list.map(snd).join("\n")
+  val svgpaths = paths.list.concat(renamePaths).join("\n")
   val svgdefs  = if (svgpaths.isEmpty) then "" else 
     "\n<svg id='math-svg-paths' style='display:none' version='1.1' viewBox='0 0 0 0' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>\n" +
     "<defs>\n" + svgpaths + "\n</defs>\n</svg>\n"
@@ -130,3 +128,40 @@ public function showSize( size : int ) : string {
    then (size.double / kb.double).showFixed(1).align(4) + " kb"
    else ((size + kb - 1)/kb).show.align(4) + " kb"
 }
+
+function findIdx( xs : list<string>, id : string, acc : int = 0 ) : maybe<int> {
+  match(xs) {
+    Nil -> Nothing
+    Cons(x,xx) -> {
+      if (x==id) then Just(acc) else findIdx(xx,id,acc+1)
+    }
+  }
+}
+
+function renamePaths( pid: (string,list<string>) ) : list<string> {
+  val pathid = pid.fst
+  pid.snd.mapIndexed fun(idx,path) {
+    if (idx==0) then path else {
+      val newid = pathid + "-" + idx.show
+      // trace("do path rename: " + pathid + " -> " + newid)
+      path.renameIds( [(pathid,newid)])
+    }
+  }
+}
+
+function renameIds( svg : string, renames : list<(string,string)> ) {
+  // rename path id's
+  val d = renames.dict
+  svg.replaceAll(rxSvgId, fun(cap) {
+    val id = cap.groups[2]
+    match(d[id]) {
+      Nothing     -> cap.matched
+      Just(newid) -> {
+        // trace("do local rename: " + id + " -> " + newid)      
+        cap.groups[1] + newid
+      }
+    }
+  })
+}
+
+val rxSvgId = regex(@"\b(id=['""]|xlink:href=['""]#|url\()([\w\-]+)(?=['""\)])") // specific to dvisvgm

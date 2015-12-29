@@ -6,7 +6,7 @@ xMath Embed: 0
 
 # Mathematics
 
-A famous equation $\hspace{1em}$ is $e = mc^2$, but another famous one is:
+A famous equation $\hspace{1em}$ is $e = mc^3$, but another famous one is:
 ~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }
  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
 ~
@@ -19,4 +19,4 @@ And as an equation:
   \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
 ~
 
-it looks fine.
+it looks fine. $x=2$.
