@@ -77,7 +77,7 @@ function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (
           (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
         }
       }
-      if (err!=0 || version < 113) {
+      if (err!=0 || version < 114) {
         opts.printErr("warning: cannot use 'dvisvgm'; ensure you have at least version 1.14")
         opts.printErr(" the latest version is available at: http://dvisvgm.bplaced.net/downloads")
         opts.printErr(" for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
