@@ -43,7 +43,7 @@ function mathHeader( xopts : options, mode : mathkind ) : string
   val deps    = ["% MathMode: " + mode.show,
                  "MathRender: " + mrender.show,
                  "MathEmbedLimit: " + xopts.math.embedLimit.show,
-                 "MathScale: " + xopts.math.scale.show,
+                 "MathScale: " + xopts.math.getMathScale(mrender).show,
                  "MathBaseline: " + xopts.math.baseline.show,
                  "MathDocClass: " + xopts.math.docClass,
                  "MathImgDir: " + xopts.math.imgDir,

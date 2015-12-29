@@ -1,9 +1,9 @@
-Math Dpi   : 200
-
 Embed      : 0
 xMath Embed: 0
 
-# Mathematics
+# Mathematics $xy^2$
+
+basex $x e z$ basex $x y^2 z$ basex $x \mid e$ test.
 
 A famous equation $\hspace{1em}$ is $e = mc^3$, but another famous one is:
 ~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }

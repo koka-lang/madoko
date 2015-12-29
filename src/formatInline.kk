@@ -191,13 +191,13 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
   // We substract bboxFuzz from the depth to adjust for extra bbox spaces
   // when extracting images.
   val fontsize = 10.0
-  val valign   = ( (0.0 - scale) * (mi.depth + mi.bboxFuzz) / fontsize) + baseline
+  val valign   = baseline - ( (scale * (mi.depth + mi.bboxFuzz))  / fontsize)
   val height   = (scale * mi.height / fontsize)
   val width    = (scale * mi.width / fontsize)
   val xattrs0  = if (valign== 0.0) then attrs 
-                  else attrs.addKeyvalIfNotExist("vertical-align",valign.showFixed(3) + "em")
-  val xattrs  = xattrs0.addKeyvalIfNotExist("height",height.showFixed(3) + "em").addClass("math")
-  val wattrs  = xattrs.addKeyvalIfNotExist("width", width.showFixed(3) + "em")
+                  else attrs.addKeyvalIfNotExist("vertical-align",valign.showFixed(4) + "em")
+  val xattrs  = xattrs0.addKeyvalIfNotExist("height",height.showFixed(4) + "em").addClass("math")
+  val wattrs  = xattrs.addKeyvalIfNotExist("width", width.showFixed(4) + "em")
                       .addKeyval("html-alt",mtxt)                       
 
   if (height<=0.0 || width<=0.0) {

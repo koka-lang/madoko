@@ -74,7 +74,7 @@ public function processContent( inName : string, outName : string, content : str
 
     // always read dims: even in dynamic mode some pdf math may exist
     val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
-    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math.imgDir, mmopts.math.scale, mmopts.math.baseline, mmopts.math.svgShare)
+    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math)
 
     val xopts  = opts2(math=(opts2.math)(dim=mdim,svgDefs=svgdefs))
     val mopts  = mmopts(math=(mmopts.math)(dim=mdim,svgDefs=svgdefs))

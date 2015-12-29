@@ -13,17 +13,15 @@ import std/string
 import std/regex
 import std/dict
 import common
-
+import options
 
 // parse a dimension file written by latex snippets
-public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, imgBaseline : int, sharePaths : bool  ) : (dict<mathinfo>,string,string) {
+public function parseMathDim( txt : string, opts : mathoptions  ) : (dict<mathinfo>,string,string) {
   val mi = mdict()
   val paths = mdict()
   var svgsize    : int := 0
   var svgreduced : int := 0
-
-  val scale = imgScale.double / 100.0
-  val baseline = imgBaseline.double / 100.0
+  val baseline  = opts.baseline.double / 100.0
 
   txt.findAll(rxDimLine).foreach fun(cap) {    
     val page      = cap.groups[2].parseInt.maybe(0,id)
@@ -40,13 +38,13 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
                       Just(mcap) -> "." + mcap.groups[1]
                       Nothing    -> ".png"
                     }
-    val imageName = imgPrefix + "/math-" + cap.groups[3] + ext
+    val imageName = opts.imgDir + "/math-" + cap.groups[3] + ext
 
     val height = if (iheight > 0.0) then iheight else ptheight
     val width  = if (iwidth > 0.0) then iwidth else ptwidth
     val depth  = if (ptheight != 0.0) then ptdepth * (height / ptheight) else 0.0
 
-    val embed = if (!sharePaths || mime!="image/svg+xml") then imageData else {
+    val embed = if (!opts.svgShare || mime!="image/svg+xml") then imageData else {
       svgsize := svgsize + size
       var renames := []
       val svg = imageData.replaceAll(rxSvgPath, fun(pcap) {
@@ -72,9 +70,11 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
       svg.renameIds(renames).replaceAll("<defs></defs>","")
     }
 
+    val scale = opts.getMathScale(if (mime=="image/svg+xml") then Svg else Png).double / 100.0
+
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
-                                    iheight,iwidth,bboxadj,size,embed,imageData)
+                                    iheight,iwidth,scale*bboxadj,size,embed,imageData)
   }
 
   val msg = if (svgreduced <= 0) then ""

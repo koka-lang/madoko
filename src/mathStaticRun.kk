@@ -267,11 +267,12 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
   match (mrender) {
     Svg -> {
       // extension should be dvi or xdv
-      // use 0.3pt (~0.1mm) margin around the boundingbox for better display
-      val fuzz = 0.3
+      // add 0.2pt (~0.07mm of extra bounding box for better rendering of svg's)
+      val fuzz = 0.2
       val cmd = opts.dvisvg.quote + 
                   (if (opts.svgUseFonts) then "" else " -n") +
-                  " -b" + fuzz.showFixed(1) + "pt -e -j -v3 -d" + opts.svgPrec.show + " " +
+                  (if (fuzz > 0.0) then " -b" + fuzz.showFixed(1) + "pt" else "") +
+                  " -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 
                   " -o " + (baseImg + "-%1p.svg").quote +
                   " " + fname.basename.quote
@@ -328,7 +329,7 @@ function mathDimAnalyse( dimxName : string, xopts : options, plainPages : pages,
                          continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
   val dims2 = extendDim(plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, plainBboxAdj, fullPageAdj, fullBboxAdj, dimxName, xopts )
-  val (mdim2,svgdefs,msg) = dims2.parseMathDim(xopts.math.imgDir, xopts.math.scale, xopts.math.baseline,xopts.math.svgShare)
+  val (mdim2,svgdefs,msg) = dims2.parseMathDim(xopts.math)
   if (msg.bool) then xopts.print(msg)
   mathImageGC(mdim2,xopts.math.dim,dimxName.dirname)
   continue( Just((mdim2,svgdefs)) )

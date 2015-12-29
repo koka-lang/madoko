@@ -35,7 +35,7 @@ public struct mathoptions (
   mjext         : string = "",        // semicolon separated list of mathjax extensions
   
   imgDir    : string = "math",    // directory for static math images
-  scale     : int    = 108,       // math scaling in percentage
+  scale     : int    = 0,         // math scaling in percentage
   dpi       : int    = 300,       // math resolution 
   baseline  : int    = 0,         // math baseline offset in percentage of 1pt
   embedLimit: int    = 512*1024,  // maximal embedded math image size  
@@ -173,6 +173,14 @@ public function getMathRenderFull( opts : mathoptions ) : mathrender {
     Nothing -> opts.getMathRender
     Just(m) -> m
   }
+}
+
+public function getMathScale( opts : mathoptions, mrender : mathrender ) : int {
+  if (opts.scale==0) then match(mrender) {
+    Png -> 108
+    _   -> 105
+  }
+  else opts.scale
 }
 
 public struct commandOptions(
