@@ -65,7 +65,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
     // we need to log here since we don't always 'read' the cls if the bibs are unchanged
     log("files", value.defaultExt(".csl"))
     log("files", "madoko.csl")
-    log("files", "locales-en-US.xml")
+    //log("files", "locales-en-US.xml")
     options(cslStyle=value) 
   }
   elif (key=="locale") { options(locale=normalizeLocale(value)) }  
