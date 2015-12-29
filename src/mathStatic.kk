@@ -42,20 +42,22 @@ function mathHeader( xopts : options, mode : mathkind ) : string
   val mrender = xopts.math.getMathRender(mode)
   val deps    = ["% MathMode: " + mode.show,
                  "MathRender: " + mrender.show,
-                 "MathDpi: " + xopts.math.dpi.show,
                  "MathEmbedLimit: " + xopts.math.embedLimit.show,
                  "MathScale: " + xopts.math.scale.show,
                  "MathBaseline: " + xopts.math.baseline.show,
                  "MathDocClass: " + xopts.math.docClass,
                  "MathImgDir: " + xopts.math.imgDir,
-                 // turns out that in SVG mode, dvi/pdf are interdepenent due to 
-                 // glyph sharing so we need to re-build if any one latex changes
-                 "MathLatex: " + xopts.getMathLatex(mrender), 
-                 "MathFullLatex: " + xopts.getMathLatexFull, 
+                 "MathLatex: " + (if (mode.isPlain) then xopts.getMathLatex(mrender) else xopts.getMathLatexFull), 
                 ] +
                 (match(mrender) {
-                  Svg -> [ "Dvisvg: " + xopts.math.dvisvg ]
+                  Svg -> [ 
+                    "MathSvgUseFonts: " + xopts.math.svgUseFonts.show,
+                    "MathSvgSharePaths: " + xopts.math.svgShare.show,
+                    "MathSvgPrecision: " + xopts.math.svgPrec.show,
+                    "Dvisvg: " + xopts.math.dvisvg 
+                  ]
                   Png -> [
+                   "MathDpi: " + xopts.math.dpi.show,
                    "Dvipng: " + xopts.math.dvipng,
                    "Convert: " + xopts.math.convert,
                    "Dvips: " + xopts.math.dvips,

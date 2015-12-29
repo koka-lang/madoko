@@ -52,8 +52,8 @@ public function runMathStatic( content : string, inName: string, outName : strin
       if (extplain.isEmpty) return continue(Nothing)
       mathSnippetsRender( Full, xopts.math.getMathRenderFull, xopts.getMathLatexFull, inName, texNameFull, xopts, content, oldMathFull, fullPages) fun(extfull) {
         if (extfull.isEmpty) return continue(Nothing)
-        mathToImg( texNamePlain.changeExt(extplain), texNameFull.changeExt(extfull), xopts, plainPages, fullPages ) fun(plainPageAdj,fullPageAdj) {
-          mathDimAnalyse( outName.changeExt(".dimx"), xopts, plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, fullPageAdj) fun(mbmath) {
+        mathToImg( texNamePlain.changeExt(extplain), texNameFull.changeExt(extfull), xopts, plainPages, fullPages ) fun(plainPageAdj,plainBboxAdj,fullPageAdj,fullBboxAdj) {
+          mathDimAnalyse( outName.changeExt(".dimx"), xopts, plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, plainBboxAdj, fullPageAdj, fullBboxAdj) fun(mbmath) {
             if (mbmath.isJust) {
               val texNameFinalPlain = texNamePlain.changeExt(".final.tex")
               val texNameFinalFull  = texNameFull.changeExt(".final.tex")
@@ -215,7 +215,7 @@ function dvipngPages( pages : pages ) : string {
 }        
 
 function dvisvgPages( pages : pages ) : string {
-  "-p " + pages.map( fun(rng) {
+  "-p" + pages.map( fun(rng) {
     val (lo,hi) = rng
     lo.show + (if (lo>=hi) then "" else "-" + hi.show)
   }).join(",")
@@ -238,11 +238,11 @@ function convertSuffix( pages : pages ) : string {
 
 function mathToImg( namePlain : string, nameFull : string, xopts : options, 
                       plainPages : pages, fullPages : pages,  
-                      continue : (int,int) -> io () ) : io () 
+                      continue : (int,double,int,double) -> io () ) : io () 
 {  
-  val (plainconvCmd,plainPageAdj) 
+  val (plainconvCmd,plainPageAdj,plainBboxAdj) 
     = mathConvImgCmd(Plain, namePlain, xopts.math.getMathRender, xopts.math, plainPages )
-  val (fullconvCmd,fullPageAdj) 
+  val (fullconvCmd,fullPageAdj,fullBboxAdj) 
     = mathConvImgCmd(Full, nameFull, xopts.math.getMathRenderFull, xopts.math, fullPages )
 
   // make sure the output directory exists
@@ -255,25 +255,27 @@ function mathToImg( namePlain : string, nameFull : string, xopts : options,
   mathCmdToImg( plainconvCmd, namePlain.dirname, Plain, plainPages, xopts, fun(err1) {
     mathCmdToImg( fullconvCmd, nameFull.dirname, Full, fullPages, xopts, fun(err2) {
       if (err1==0 && err2==0) {
-        continue(plainPageAdj,fullPageAdj)
+        continue(plainPageAdj,plainBboxAdj,fullPageAdj,fullBboxAdj)
       }
     })
   })
 }
 
 
-function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, opts : mathoptions, pages : pages ) : (string,int) {
+function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, opts : mathoptions, pages : pages ) : (string,int,double) {
   val baseImg = combine(opts.imgDir,fname.stemname)
   match (mrender) {
     Svg -> {
       // extension should be dvi or xdv
+      // use 0.3pt (~0.1mm) margin around the boundingbox for better display
+      val fuzz = 0.3
       val cmd = opts.dvisvg.quote + 
                   (if (opts.svgUseFonts) then "" else " -n") +
-                  " -e -j -v3 -d" + opts.svgPrec.show + " " +
+                  " -b" + fuzz.showFixed(1) + "pt -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 
                   " -o " + (baseImg + "-%1p.svg").quote +
                   " " + fname.basename.quote
-      (cmd,0)
+      (cmd,0,fuzz)
     }
     Png | fname.extname==".dvi" -> {
       val cmd = opts.dvipng.quote + " -T tight -z9 -bg Transparent" + 
@@ -281,13 +283,13 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
                   " " + dvipngPages(pages) + 
                   " -o " + (baseImg + "-%d.png").quote +
                   " " + fname.stemname.quote
-      (cmd,0)
+      (cmd,0,0.0)
     }
     Png -> { // extension should be pdf
       val cmd = opts.convert.quote + " -trim -density " + opts.dpi.show + " " +
                   (fname.basename + pages.convertPages).quote + " " +
                   (baseImg + pages.convertSuffix + ".png").quote      
-      (cmd,~1) 
+      (cmd,~1,0.0) 
     }
   }
 }
@@ -321,10 +323,11 @@ val rxPSWarning = regex(@"^(warning: .*\r\n)+$",ignoreCase=True)
 
 function mathDimAnalyse( dimxName : string, xopts : options, plainPages : pages, fullPages : pages,
                          texNamePlain : string, texNameFull : string,
-                         plainPageAdj : int, fullPageAdj : int,
+                         plainPageAdj : int, plainBboxAdj : double,
+                         fullPageAdj : int, fullBboxAdj : double, 
                          continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io () {
   xopts.print("analyse and embed math images.")
-  val dims2 = extendDim(plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, fullPageAdj, dimxName, xopts )
+  val dims2 = extendDim(plainPages, fullPages, texNamePlain, texNameFull, plainPageAdj, plainBboxAdj, fullPageAdj, fullBboxAdj, dimxName, xopts )
   val (mdim2,svgdefs,msg) = dims2.parseMathDim(xopts.math.imgDir, xopts.math.scale, xopts.math.baseline,xopts.math.svgShare)
   if (msg.bool) then xopts.print(msg)
   mathImageGC(mdim2,xopts.math.dim,dimxName.dirname)
@@ -347,8 +350,9 @@ function mathImageGC( newDim : dict<mathinfo>, oldDim : dict<mathinfo>, outDir :
 
 function extendDim( plainPages : pages, fullPages : pages, 
                     texNamePlain : string, texNameFull : string,
-                    plainPageAdj : int, fullPageAdj : int,
-                    dimxFile : string, opts : options  ) : io string
+                     plainPageAdj : int, plainBboxAdj : double,
+                     fullPageAdj : int, fullBboxAdj : double, 
+                     dimxFile : string, opts : options  ) : io string
 {
   var imageSize := 0  
   var imageCount := 0
@@ -357,7 +361,7 @@ function extendDim( plainPages : pages, fullPages : pages,
   val dim = opts.math.dim
   
   function dimLine( render:mathrender, mode : mathkind, fname : string, 
-                    pages : pages, pageAdj : int, line : string ) 
+                    pages : pages, pageAdj : int, bboxAdj : double, line : string ) 
   {
     match(line.find(rxDimLine)) {
       Nothing   -> line
@@ -407,7 +411,7 @@ function extendDim( plainPages : pages, fullPages : pages,
           embedSize  := embedSize + size
           embedCount := embedCount + 1
         }  
-        cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," +
+        cap.groups[1] + "," + iwidth.show + "pt," + iheight.show + "pt," + bboxAdj.show + "pt," +
           size.show + "," + render.showMime + (if (embed=="") then "" else (", " + embed))      
       }
     }
@@ -416,9 +420,9 @@ function extendDim( plainPages : pages, fullPages : pages,
   val plainDims = readTextFileDef(texNamePlain.changeExt(".dim"),"")
   val fullDims  = readTextFileDef(texNameFull.changeExt(".dim"),"")
   val dimsx   = plainDims.lines.list.map( fun(line) { 
-                  dimLine(opts.math.getMathRender,Plain,texNamePlain,plainPages,plainPageAdj,line) }) +
+                  dimLine(opts.math.getMathRender,Plain,texNamePlain,plainPages,plainPageAdj,plainBboxAdj,line) }) +
                 fullDims.lines.list.map( fun(line) { 
-                  dimLine(opts.math.getMathRenderFull,Full,texNameFull,fullPages,fullPageAdj,line) })
+                  dimLine(opts.math.getMathRenderFull,Full,texNameFull,fullPages,fullPageAdj,fullBboxAdj, line) })
   
   val txt = dimsx.join("\n")
   tryWriteTextFile( dimxFile, txt )

@@ -32,9 +32,10 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
     val ptdepth   = dimension(cap.groups[8],cap.groups[9])
     val iwidth    = dimension(cap.groups[10],cap.groups[11]) 
     val iheight   = dimension(cap.groups[12],cap.groups[13])
-    val size      = cap.groups[14].parseInt.maybe(0,id)
-    val mime      = cap.groups[15]
-    val imageData = cap.groups[16]
+    val bboxadj   = dimension(cap.groups[14],cap.groups[15])
+    val size      = cap.groups[16].parseInt.maybe(0,id)
+    val mime      = cap.groups[17]
+    val imageData = cap.groups[18]
     val ext       = match (mime.find(rxMimePre)) {
                       Just(mcap) -> "." + mcap.groups[1]
                       Nothing    -> ".png"
@@ -73,7 +74,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
 
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
-                                    iheight,iwidth,size,embed,imageData)
+                                    iheight,iwidth,bboxadj,size,embed,imageData)
   }
 
   val msg = if (svgreduced <= 0) then ""
@@ -91,7 +92,7 @@ val rxSvgPath = regex(@"<path\b(?:[^/>]|/(?![^>]))*?\bid='([^']+)'(?:[^/>]|/(?![
 
 public val rxDimLine = regex(@"^((\d+) *, *([a-zA-Z0-9]+) *" + 
                           rxDim + rxDim + rxDim + ")" +
-                           "(?:" + rxDim + rxDim + rxNum + rxMime + rxEmbed + ")?$", multiLine=True)
+                           "(?:" + rxDim + rxDim + rxDim + rxNum + rxMime + rxEmbed + ")?$", multiLine=True)
 val rxDim = @", *(\d+)(?:\.(\d+))? *pt\b *"
 val rxEmbed = @"(?:, *(data:.*))?"
 val rxNum   = @", *(\d+) *"

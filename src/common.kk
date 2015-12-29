@@ -315,6 +315,7 @@ public struct mathinfo (
   depth     : double, // depth in pt (relative to baseline)
   iheight   : double, // the image native height in pt
   iwidth    : double, // the image native width in pt
+  bboxFuzz  : double, // bbox margin in pt
   size      : int,    // length of the image data
   imageData : string, // data-url encoding or ""
   originalData: string // the `imageData` may be compressed due to svg-path sharing; this was the original full image
