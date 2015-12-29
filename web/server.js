@@ -1517,6 +1517,10 @@ app.get("/rest/remote/http", function(req,res) {
   }, 100 );
 });
 
+app.get("/doc", function(req,res) {
+  res.redirect( combine("https://research.microsoft.com/en-us/um/people/daan/madoko",req.path) );
+});
+
 var staticOptions = {
   maxAge: 10000  
 }
