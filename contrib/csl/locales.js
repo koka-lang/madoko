@@ -17,7 +17,7 @@ function getLocaleInfo( name ) {
   var langname = (name||"?").replace(/[_\.]/g, "-");
   var langid   = langname.toLowerCase(); 
   var langnames = null;
-  var cap = /^([a-z][a-z])(?:-([A-Z][A-Z]))?.*$/.exec(langname);
+  var cap = /^([a-z][a-z])(?:-([A-Z][A-Z])(-.*)?)?$/.exec(langname);
   if (cap) {
     // language code
     if (cap[2]) {
@@ -141,6 +141,10 @@ var locales =
             "Dansk",
             "Danish"
         ],
+        "de-DE": [
+            "Deutsch (Deutschland)",
+            "German (Germany)"
+        ],
         "de-AT": [
             "Deutsch (Österreich)",
             "German (Austria)"
@@ -148,10 +152,6 @@ var locales =
         "de-CH": [
             "Deutsch (Schweiz)",
             "German (Switzerland)"
-        ],
-        "de-DE": [
-            "Deutsch (Deutschland)",
-            "German (Germany)"
         ],
         "el-GR": [
             "Ελληνικά",
@@ -193,13 +193,13 @@ var locales =
             "Suomi",
             "Finnish"
         ],
-        "fr-CA": [
-            "Français (Canada)",
-            "French (Canada)"
-        ],
         "fr-FR": [
             "Français (France)",
             "French (France)"
+        ],
+        "fr-CA": [
+            "Français (Canada)",
+            "French (Canada)"
         ],
         "he-IL": [
             "עברית",
@@ -265,13 +265,13 @@ var locales =
             "Polski",
             "Polish"
         ],
-        "pt-BR": [
-            "Português (Brasil)",
-            "Portuguese (Brazil)"
-        ],
         "pt-PT": [
             "Português (Portugal)",
             "Portuguese (Portugal)"
+        ],
+        "pt-BR": [
+            "Português (Brasil)",
+            "Portuguese (Brazil)"
         ],
         "ro-RO": [
             "Română",
