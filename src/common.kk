@@ -316,7 +316,8 @@ public struct mathinfo (
   iheight   : double, // the image native height in pt
   iwidth    : double, // the image native width in pt
   size      : int,    // length of the image data
-  imageData : string  // data-url encoding or ""
+  imageData : string, // data-url encoding or ""
+  originalData: string // the `imageData` may be compressed due to svg-path sharing; this was the original full image
 )
 
 // Info for files to embed. Used in a browser

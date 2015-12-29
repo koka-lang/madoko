@@ -374,7 +374,7 @@ function extendDim( plainPages : pages, fullPages : pages,
               Just(mi) | !(pageNo.inside(pages)) 
                 -> {                  
                   //trace("known image: " + pageNo.show + ": " + imageFile + ": " + digest)
-                  (mi.iwidth,mi.iheight,mi.size,mi.imageData)
+                  (mi.iwidth,mi.iheight,mi.size,mi.originalData)
                 }
               _ -> { 
                 val res =

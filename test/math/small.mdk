@@ -1,7 +1,7 @@
 Math Render: svg
 Math Dpi   : 200
 
-xEmbed     : 0
+Embed      : 0
 xMath Embed: 0
 
 # Mathematics
@@ -18,4 +18,5 @@ And as an equation:
   \frac{24 \pi^3}{\lambda^4 N^2}
   \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
 ~
+
 it looks fine.

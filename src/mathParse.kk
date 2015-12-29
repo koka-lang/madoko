@@ -58,7 +58,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
                 "" 
               }
               else {
-                trace(" unequal path: " + pathid + " (not sharing)")
+                //trace(" unequal path: " + pathid + " (not sharing)")
                 pcap.matched // keep this path locally
               }
           }
@@ -75,7 +75,7 @@ public function parseMathDim( txt : string, imgPrefix : string, imgScale : int, 
  
     //trace("found: " + cap.groups[2] + ": " + cap.groups[3])
     mi[cap.groups[3]] := Mathinfo(imageName,page,scale*height,scale*width,(scale*depth) + baseline,
-                                    iheight,iwidth,size,embed)
+                                    iheight,iwidth,size,embed,imageData)
   }
 
   val msg = if (svgreduced <= 0) then ""
