@@ -1,5 +1,18 @@
 {
   "log" : [
+    { "version": "1.0.0-rc",
+      "date": "2015-12-29",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
+      "updates": [
+         "Support for SVG mathematics in HTML; to use old PNG images use `Math Render: png`",
+         "Support for CSL (Citation Style Language) style sheets, `Csl Style: ieee`",
+         "Support for `Locale` metadata key",
+         "Add `fstar` language definition",
+         "Support hanging bibliograpy indentation",
+         "Support for multiple bibliographies in one document",
+         "Small bug fixes"
+      ]
+    },
     { "version": "0.9.23-beta",
       "date": "2015-12-15",
       "updates": [
