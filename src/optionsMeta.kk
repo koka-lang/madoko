@@ -89,6 +89,8 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="math-mode") options.setMathMode(value)
   elif (key=="math-static" || key=="math-dir") options(math = (options.math)(imgDir = if (lvalue=="true") then "math" else value))
   elif (key=="math-scale") options(math = (options.math)(scale=ivalue))
+  elif (key=="math-scale-svg") options(math = (options.math)(scaleSvg=ivalue))
+  elif (key=="math-scale-png") options(math = (options.math)(scalePng=ivalue))
   elif (key=="math-baseline") options(math = (options.math)(baseline=ivalue))
   elif (key=="math-dpi") options(math = (options.math)(dpi=ivalue))
   elif (key=="math-embed" || key=="math-embed-limit") options(math = (options.math)(embedLimit=if (value=="") then 0 elif (value=="true") then 1024 else (ivalue*1024)))

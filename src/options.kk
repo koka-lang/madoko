@@ -31,17 +31,21 @@ public type mathmode {
   
 public struct mathoptions (
   mode      : mathmode = Static,  // mode used to render math
-  mathjax       : string = "",        // mathjax scripts path (use "default" for default path)
-  mjext         : string = "",        // semicolon separated list of mathjax extensions
+  render    : maybe<mathrender> = Nothing, // math rendering method
+  renderFull: maybe<mathrender> = Nothing, // math rendering method for math-needfull snippets
+  
+  mathjax   : string = "",        // mathjax scripts path (use "default" for default path)
+  mjext     : string = "",        // semicolon separated list of mathjax extensions
   
   imgDir    : string = "math",    // directory for static math images
   scale     : int    = 0,         // math scaling in percentage
+  scalePng  : int    = 108,       // default scaling for png 
+  scaleSvg  : int    = 105,       // default scaling for svg
   dpi       : int    = 300,       // math resolution 
   baseline  : int    = 0,         // math baseline offset in percentage of 1pt
   embedLimit: int    = 512*1024,  // maximal embedded math image size  
   docClass  : string = "[10pt]book",
-  render    : maybe<mathrender> = Nothing, // math rendering method
-  renderFull: maybe<mathrender> = Nothing, // math rendering method for math-needfull snippets
+  
   svgShare  : bool   = True,      // share paths in embedded svg images
   svgPrec   : int    = 3,         // decimal points used in svg rendering
   svgDefs   : string = "",        // used internally to share svg definitions
@@ -177,8 +181,8 @@ public function getMathRenderFull( opts : mathoptions ) : mathrender {
 
 public function getMathScale( opts : mathoptions, mrender : mathrender ) : int {
   if (opts.scale==0) then match(mrender) {
-    Png -> 108
-    _   -> 105
+    Png -> opts.scalePng
+    Svg -> opts.scaleSvg
   }
   else opts.scale
 }
