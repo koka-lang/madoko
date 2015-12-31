@@ -202,22 +202,14 @@
 
 /* Lists */
 
-.madoko ul.list-star {
-  list-style-type: disc;
-}
-
-.madoko ul.list-dash {
+.madoko ul.list-style-type-dash {
     list-style-type: none !important;
 }
 
-.madoko ul.list-dash > li:before {
+.madoko ul.list-style-type-dash > li:before {
     content: "\2013"; 
     position: absolute;
     margin-left: -1em; 
-}
-
-.madoko ul.list-plus {
-  list-style-type: square;
 }
 
 /* Tables */
