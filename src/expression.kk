@@ -57,6 +57,17 @@ public function evaluate( expr : string, eval : expr -> <exn|e> a, default : a )
   }
 }
 
+public function parseAttrSelectors( pat : string ) : list<expr> {
+  val mbres = unsafeTotal( fun() { many(parseAttrSelector())(pat) } )
+  match(mbres) {
+    Just(res) | res.snd.trim.isEmpty -> res.fst
+    _ -> {
+      warning("invalid attribute selector: '" + pat + "'")
+      []
+    }
+  }
+}
+
 public function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> constant ) : <exn|e> constant {
   match(expr) {
     Const(c) -> c
@@ -64,6 +75,8 @@ public function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> const
     UnOp(op,arg) -> {
       if (op=="not" || op=="!") Bool( !(evalExpr(arg, lookup).bool) )
       elif (op=="regexp" || op=="regexpi") Regex( regex(evalExpr(arg,lookup).string, ignoreCase=(op=="regexpi")) )
+      elif (op=="lower") String( evalExpr(arg,lookup).string.toLower )
+      elif (op=="upper") String( evalExpr(arg,lookup).string.toUpper )
       else error("invalid operator: " + op)
     }
     BinOp(op,arg1,arg2) -> {
@@ -71,16 +84,21 @@ public function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> const
       val x2 = evalExpr(arg2,lookup)
       if (op=="and"  || op=="&&") Bool( x1.bool && x2.bool )
       elif (op=="or" || op=="||") Bool( x1.bool || x2.bool )
-      elif (op==":"  || op=="==") Bool( binop(x1,x2,"==",fun(x,y) { x==y },fun(x,y) { x==y },fun(x,y) { x==y }) )
-      elif (op=="!=") Bool( binop(x1,x2,"!=",fun(x,y) { x!=y },fun(x,y) { x!=y },fun(x,y) { x!=y }) )
-      elif (op==">")  Bool( binop(x1.cint,x2.cint,">", fun(x,y) { x>y }, serr,berr) )
-      elif (op==">=") Bool( binop(x1.cint,x2.cint,">=",fun(x,y) { x>=y },serr,berr) )
-      elif (op=="<")  Bool( binop(x1.cint,x2.cint,"<", fun(x,y) { x<y }, serr,berr) )
-      elif (op=="<=") Bool( binop(x1.cint,x2.cint,"<=",fun(x,y) { x<=y },serr,berr) )
-      elif (op=="~=") {
+      elif (op==":"  || op=="==" || op=="=") Bool( binop(x1,x2,op,fun(x,y) { x==y },fun(x,y) { x==y },fun(x,y) { x==y }) )
+      elif (op=="!=") Bool( binop(x1,x2,op,fun(x,y) { x!=y },fun(x,y) { x!=y },fun(x,y) { x!=y }) )
+      elif (op==">")  Bool( binop(x1.cint,x2.cint,op, fun(x,y) { x>y }, serr,berr) )
+      elif (op==">=") Bool( binop(x1.cint,x2.cint,op,fun(x,y) { x>=y },serr,berr) )
+      elif (op=="<")  Bool( binop(x1.cint,x2.cint,op, fun(x,y) { x<y }, serr,berr) )
+      elif (op=="<=") Bool( binop(x1.cint,x2.cint,op,fun(x,y) { x<=y },serr,berr) )
+      elif (op=="~=") Bool( binop(x1,x2,op,ierr,matchWord,berr) )
+      elif (op=="|=") Bool( binop(x1,x2,op,ierr,matchSubcode,berr) )
+      elif (op=="^=") Bool( binop(x1,x2,op,ierr,startsWith,berr) )
+      elif (op=="$=") Bool( binop(x1,x2,op,ierr,endsWith,berr) )
+      elif (op=="*=") Bool( binop(x1,x2,op,ierr,contains,berr) )
+      elif (op=="~~") {
         match(x2) {
           Regex(r) -> Bool( x1.string.contains(r) )
-          _        -> error("first argument of '~' must be a regular expression")
+          _        -> error("first argument of '~~' must be a regular expression")
         }
       }
       else error("invalid operator: " + op)
@@ -93,6 +111,16 @@ public function evalExpr( expr : expr, lookup : (string,string) -> <exn|e> const
   }
 }
 
+function matchWord( s1 : string, s2 : string ) {
+  s2.split(rxSpaces).list.any( fun(w) { s1 == w } )
+}
+val rxSpaces = regex(@"\s+")
+
+function matchSubcode( s1 : string, s2 : string ) {
+  (s1 == s2) || (s1 == (s2 + "-"))
+}
+
+function ierr( i1 : int, i2 : int ) : exn a { error("cannot compare integers") }
 function serr( s1 : string, s2 : string ) : exn a { error("cannot compare strings") }
 function berr( b1 : bool, b2 : bool ) : exn a { error("cannot compare booleans") }
 
@@ -118,6 +146,7 @@ function binop( c1 : constant, c2: constant, op : string, iop : (int,int) -> exn
     _ -> error(msg)
   }
 }
+
 
 public function bool( c : constant ) : exn bool {
   match(c) {
@@ -154,6 +183,19 @@ public function cint( c : constant ) : constant {
   }
 }
 
+public function show( expr : expr, outer : bool = True ) : string {
+  function parens(s) {
+    if (outer) then s else "(" + s + ")"
+  }
+  match(expr) {
+    Const(c)  -> c.show
+    Var(_,d)  -> d
+    If(c,t,e) -> parens("@if " + c.show + " @then " + t.show + " @else " + e.show)
+    UnOp(op,e)-> op + "(" + e.show + ")"
+    BinOp(op,e1,e2) -> parens(e1.show(False) + " " + op + " " + e2.show(False))
+  }
+}
+
 public function show( c : constant ) : string {
   match(c) {
     Bool(b)   -> b.show
@@ -162,6 +204,22 @@ public function show( c : constant ) : string {
     Regex(r)  -> "/" + r.source + "/"
     Null      -> "none"
   }
+}
+
+// --------------------------------------------------------------
+// Parse pattern for attribute selectors
+// --------------------------------------------------------------
+
+function parseAttrSelector() : parser<expr> {
+  (string(@"\[") *> (fun(s) { parseExpr(s) }) <*> optional(string(@"i\b"),"") <* string(@"\]"))
+  .map2( fun(expr,i) {
+    if (i!="i") then expr else {
+      match(expr) {
+        BinOp(op,arg1,arg2) -> BinOp(op, UnOp("lower",arg1), UnOp("lower",arg2)  )
+        _ -> expr
+      }
+    }
+  })
 }
 
 // --------------------------------------------------------------
@@ -179,14 +237,14 @@ function parseIf() : div parser<expr> {
 }
 function parseBinary() : div parser<expr> {
   parseUnary() <$ 
-  ( (string(@"(and\b|or\b|(~=|:|==|!=|>=|<=|>|<|&&|\|\|)(?=[\s\w/""']))") <*> (fun(s) { parseExpr(s) }))
+  ( (string(@"(and\b|or\b|(~~|:|==|!=|>=|<=|>|<|&&|\|\||[~\^\|\$\*]?=)(?=[\s\w/""']))") <*> (fun(s) { parseExpr(s) }))
       .map2( fun(op,arg2) { return fun(arg1) { BinOp(op,arg1,arg2) }} )
    || succeed( id )
   )
 }
 
 function parseUnary() : div parser<expr> {
-  (string(@"(!|not\b|regexp\b)") <*> parseAtom()).map2( fun(f,e) { UnOp(f,e) } ) ||
+  (string(@"(!|not\b|regexp\b|lower\b|upper\b)") <*> parseAtom()).map2( fun(f,e) { UnOp(f,e) } ) ||
   parseAtom()
 }
 
@@ -265,6 +323,10 @@ function ($>)( f : a -> b, p : parser<a> ) : parser<b>  {
 
 function (<$>)( p1 : parser<a -> b>, p2 : parser<a> ) : parser<b>  {
   (p1 <*> p2).map( fun(x) { (x.fst)(x.snd) })
+}
+
+function optional( p : parser<a>, def : a ) : parser<a> {
+  p || succeed(def)
 }
 
 function (<*>)( p1 : parser<a>, p2 : parser<b> ) : parser<(a,b)> {

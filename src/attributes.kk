@@ -34,19 +34,24 @@ private struct pattern(
   elem: string,
   name: string,
   classes: list<string>,
+  attrselectors: list<expr>,
   weight: int
 )
 
 function show( p : pattern ) {
-  "~" + p.elem + "#" + p.name + "." +  p.classes.join(".")
+  "~" + p.elem + "#" + p.name + "." +  p.classes.join(".") + 
+   p.attrselectors.map(fun(e) { "[" + e.expression/show + "]" }).join
 }
 
-function makePattern( elem : string = "", name : string = "", classes : list<string> = [], weight : int = ~1) {
+function makePattern( elem : string = "", name : string = "", 
+                      classes : list<string> = [], 
+                      attrselectors : list<expr> = [],
+                      weight : int = ~1) {
   val clss = classes.filter( fun(s) { !s.isEmpty }) 
   // calculate weight according to CSS rules: in order of importance: name, classes, elements
   val w = if (weight >= 0) then weight 
            else (100*(if (name.isEmpty) then 0 else 1) + 10*clss.length + (if (elem.isEmpty) then 0 else 1))
-  Pattern(elem.definitionId, name.definitionId, clss, w)
+  Pattern(elem.definitionId, name.definitionId, clss, attrselectors, w)
 }
 
 public val emptyRules = Rules([])
@@ -61,7 +66,9 @@ public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
           []
         }
         Just(cap) -> {
-          val pat = makePattern( cap.groups[1], cap.groups[2], cap.groups[3].split(".").list )
+          val attrsels = parseAttrSelectors(cap.groups[4])
+          val classes  = cap.groups[3].split(".").list
+          val pat = makePattern( cap.groups[1], cap.groups[2], classes, attrsels )
           // trace("pattern: " + key + " -> " + pat.show )
           [(pat,value)]
         }
@@ -71,7 +78,7 @@ public function rulesFromMeta( metadata : list<(string,string)> ) : rules {
   })
   Rules(rules)
 }
-val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?((?:\.(?:[\w\-:]+))*)$")
+val rxPattern = regex(@"^(?:~([\w\-:]+))?(?:#([\w\-:]+))?((?:\.(?:[\w\-:]+))*)(?:(\[[^\]]*\])*)$")
 
 public function matchRules( r : rules, elementName : string, attrs : attrs ) : attrs 
 {
@@ -97,7 +104,7 @@ function getMatches( rules : list<(pattern,string)>, attrs : attrs, name : strin
   var def := []
   val newrules = rules.filterx( fun(rule) {
     val (pat,value) = rule
-    if (pat.matches(elemName,name,attrs.classes)) {
+    if (pat.matches(elemName,name,attrs)) {
       //trace("matched: weight:" + pat.weight.show + ": " + makePattern(elemName,name,attrs.classes).show + " to rule " + pat.show + ": " + value.substr(0,80))
       def := def.insert(pat.weight, value)
       False
@@ -120,10 +127,24 @@ function insert( xs : list<(int,string)>, weight :int, value : string ) : list<(
   }
 }
 
-function matches( pat : pattern, xelem : string, xname : string, xclasses : list<string> ) : bool {
+function matches( pat : pattern, xelem : string, xname : string, attrs : attrs ) : bool {
   (pat.elem.isEmpty || pat.elem == xelem) &&
   (pat.name.isEmpty || pat.name == xname) &&
-  (pat.classes.isNil || pat.classes.all( fun(c) { xclasses.contains(c) } ))
+  (pat.classes.isNil || pat.classes.all( fun(c) { attrs.hasClass(c) } )) &&
+  (pat.attrselectors.isNil || pat.attrselectors.all(fun(e) { matchSelector(e,attrs) }))
+}
+
+function matchSelector( e : expr, attrs : attrs ) : bool {
+  function lookup(v,display) {
+    String(expandKeyPattern(v,attrs))
+  }
+  catch { 
+    evalExpr(e,lookup).bool 
+  } 
+  fun(exn) { 
+    warning(exn.show)
+    False 
+  }
 }
 
 function filterx( xs : list<a>, pred : a -> e bool ) : e list<a>
@@ -593,6 +614,10 @@ public function expandKeys( txt : string, source : string,
   expandKeys(peanoN,txt,source,attrs,labels,metadata)
 }
 
+function expandKeyPattern( name : string, attrs : attrs ) : string {
+  expandKeys(peanoN,"&" + name + ";",attrs.source,attrs,dict(), dict(), ignoreNotFound)
+} 
+
 // expand keys in a string
 private function expandKeys( p0 : peano, txt : string, source : string, 
                             attrs : attrs, 
@@ -644,6 +669,11 @@ function keyNotFound( key: string, matched : string ) : string {
   warning( "undefined key: " + key)
   matched
 }
+
+function ignoreNotFound( key: string, matched : string ) : string {
+  matched
+}
+
 
 external smemo( f : (string) -> e a ) : (string -> e a) {
   js inline "((function(){ var dict={}; return (function(s) { if (dict[s]===undefined) dict[s] = (#1)(s); return dict[s]; }); })())"

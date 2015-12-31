@@ -203,9 +203,13 @@ public function fmtHtmlCodeToken( context: inlineContext, classes0 : list<string
 // Format attributes. If none, return the empty string, otherwise start with a space
 public function htmlFormat( attrs : attrs, tag : string, sanitize : bool = True ) : string {
   if (attrs.empty || sanitize) then return ""
+  val classes = attrs.classes + (match (attrs.hasKey("list-style-type")) {
+    Just(value) | value == "dash" -> ["list-style-type-dash"]
+    _ -> []
+  })
   (if (attrs.name=="") then "" else " id=\"" + escape(attrs.name) + "\"") +
-   (if (attrs.classes.isNil) then "" 
-     else " class=\"" + escape(attrs.classes.join(" ")) + "\"") 
+   (if (classes.isNil) then "" 
+     else " class=\"" + escape(classes.join(" ")) + "\"") 
    + attrs.formatKeyvals(tag)
    // (" input=" + attrs.input.maybe("?",showInput)) +
    //(attrs.htmlAttributes)
@@ -231,7 +235,7 @@ function formatKeyval( key : string, value : string, tag : string ) {
   elif (key.startsWith("data-")) {
     key + "=" + value.htmlQuote
   }
-  elif (key.startsWith("cite-")) {
+  elif (key.startsWith("cite-") || key.startsWith("math-")) {
     "data-" + key + "=" + value.htmlQuote
   }
   elif (key.startsWith("css-")) {

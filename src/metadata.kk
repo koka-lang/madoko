@@ -142,7 +142,8 @@ function parsePlainMeta( txt : string, fmt : formatter, lineMap: lineMap, metada
   }
 } 
 
-val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *(?=[\{:])"
+val rxMetaKeyEnd  = @"(?:(?:\[[^\]\n\r]*\])+|\*)?"
+val rxMetaKey     = @"(?:@([\w\-@]+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?" + rxMetaKeyEnd + @") *(?=[\{:])"
 val rxMetaValue   = @"(?:[:] *(.*(?:\n .*)*)(?:\n+(?=\n|" + rxMetaKey + @"|@(?:if|supports)\b|<!--)|$))"
 val rxMetaAttrContent = @"(?:[^\\'""\{\}/]|\\[\s\S]|'(?:[^\\']|\\[\s\S])*'|""(?:[^\\""]|\\[\s\S])*""|/(?:[^\\/\n]|\\.)*/)"
 val rxMetaAttrs   = @"(?:\{[:]?(" + rxMetaAttrContent + @"*)(\})\s*)"
