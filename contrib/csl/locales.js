@@ -157,21 +157,21 @@ var locales =
             "Ελληνικά",
             "Greek"
         ],
-        "en-GB": [
-            "English (UK)",
-            "English (UK)"
-        ],
         "en-US": [
             "English (US)",
             "English (US)"
         ],
-        "es-CL": [
-            "Español (Chile)",
-            "Spanish (Chile)"
+        "en-GB": [
+            "English (UK)",
+            "English (UK)"
         ],
         "es-ES": [
             "Español (España)",
             "Spanish (Spain)"
+        ],
+        "es-CL": [
+            "Español (Chile)",
+            "Spanish (Chile)"
         ],
         "es-MX": [
             "Español (México)",
