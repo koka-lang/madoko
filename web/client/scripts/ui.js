@@ -469,7 +469,7 @@ var UI = (function() {
     self.editor.addListener("scroll", function (ev) {    
       function scroll() { 
         self.anonEvent( function() {
-          var scrolled = self.syncView(); 
+          var scrolled = self.syncView({editorScroll:true}); 
           if (!scrolled) {
             clearInterval(self.syncInterval);
             self.syncInterval = 0;

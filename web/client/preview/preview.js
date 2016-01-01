@@ -184,6 +184,7 @@ var Preview = (function() {
 
   function setScrollTop( elem, top ) {
     if (!elem) return;
+    userScrolled = false;
     if (elem.contentWindow) {
       elem = elem.contentWindow;
     }
@@ -287,10 +288,15 @@ var Preview = (function() {
   }
 
   var lastScrollTop = -1;
+  var userScrolled = false;
+  window.addEventListener("scroll", function() { userScrolled = true; } )
 
   function scrollToLine( info )
   {
     var scrollTop = 0;
+    scrollTop = getScrollTop(window);
+    if (userScrolled && !info.editorScroll) return; // don't scroll on initial load scroll if the user scrolled already
+     
     if (info.sourceName || info.textLine > 1) {
       var res = bodyFindElemAtLine(info.lineCount, info.textLine, info.sourceName); // findElemAtLine( document.body, info.textLine, info.sourceName );
       if (!res) return false;
