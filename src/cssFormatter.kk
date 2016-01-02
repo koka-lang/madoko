@@ -224,7 +224,7 @@ public function cssPercentage( v0 : string ) : string {
         warning("illegal percentage: " + v)
         v
       }
-      Just(i) {
+      Just(i) -> {
         (i/100).show + "." + (i%100).show.fill(2,'0')
       }
     }
