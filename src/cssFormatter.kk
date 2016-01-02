@@ -229,6 +229,7 @@ public function cssPercentage( v0 : string ) : string {
       }
     }
   }
+  else v  // keep as is..
 }
 
 public function cssHeight( v : string, auto : string = "" ) : string {
