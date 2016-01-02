@@ -1,11 +1,11 @@
 Embed      : 0
-xMath Embed: 0
+Math Svg use fonts: true
+Math Svg Share Paths: false
+Math Embed: 0
 
 # Mathematics $xy^2$
 
-basex $x e z$ basex $x y^2 z$ basex $x \mid e$ test.
-
-A famous equation $\hspace{1em}$ is $e = mc^3$, but another famous one is:
+A famous equation $\hspace{1em}$ is $e = mc^2$, but another $\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}$ famous one is:
 ~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }
  \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
 ~
