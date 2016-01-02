@@ -349,26 +349,36 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     var madokoStyle = parseXml(madokoStylex.filename, madokoStylex.contents); 
     var locale      = parseXml(localex.filename, localex.contents);
 
-    // if no citations are given, use all the entries in the bibliography.
-    if (!citations) {
-      var citations = properties(bib).filter(function(id) { return (bib[id].id ? true : false) } ).map(function(id) {
+    function getAllReferences() {
+      return properties(bib).filter(function(id) { return (bib[id].id ? true : false) } ).map(function(id) {
         return bib[id].id;
       });
+    }
+
+    // if citations is null, use all the entries in the bibliography.
+    if (!citations) {
+      citations = getAllReferences();
     }
     else {
       // check citations and normalize case
       var newcites = {};
       citations.forEach( function(id) {
-        var bibitem = bib[id.toLowerCase()];
-        if (!bibitem) {
-          cslWarning(bibStylex.filename, "unknown citation reference: '" + id + "'");
-        }
+        if (id==="*") {
+          // star is used for all references in the biliography
+          getAllReferences().forEach( function(ref) { newcites[ref] = true; } );
+        }      
         else {
-          if (bibitem.id !== id) {
-            cslWarning(bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
+          var bibitem = bib[id.toLowerCase()];
+          if (!bibitem) {
+            cslWarning(bibStylex.filename, "unknown citation reference: '" + id + "'");
           }
-          if (!newcites[bibitem.id]) {
-            newcites[bibitem.id] = true;
+          else {
+            if (bibitem.id !== id) {
+              cslWarning(bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
+            }
+            if (!newcites[bibitem.id]) {
+              newcites[bibitem.id] = true;
+            }
           }
         }        
       });
