@@ -183,7 +183,7 @@ public function cssColor( v0 : string ) : string {
 }
 
 function cssRgb(rgb : (int,int,int) ) : string {
-  function hex(i) {
+    function hex(i) {
     i.min(255).max(0).showHex(2)
   }
   val (r,g,b) = rgb
@@ -214,6 +214,21 @@ public function cssBool( v0 : string ) : string {
 
 public function cssFontLength( v : string ) : string {
   cssWidth(v,"","font", "em")
+}
+
+public function cssPercentage( v0 : string ) : string {
+  val v = v0.cssValue
+  if (v.endsWith("%")) then {
+    match(v.substr(0,v.length-1).parseInt) {
+      Nothing -> {
+        warning("illegal percentage: " + v)
+        v
+      }
+      Just(i) {
+        (i/100).show + "." + (i%100).show.fill(2,'0')
+      }
+    }
+  }
 }
 
 public function cssHeight( v : string, auto : string = "" ) : string {

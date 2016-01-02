@@ -782,10 +782,10 @@ function cssImageArgs( attrs : attrs ) : (attrs,string) {
       if (value=="auto") then b else b + ",height=" + cssHeight(value)
     }) */
   val args = args0.onKey( kvs, "zoom", fun(value,b) {
-      b + ",scale=" + cssValue(value)
+      b + ",scale=" + cssPercentage(value)
     })
     .onKey( kvs, "transform-scale", fun(value,b) {
-      b + ",scale=" + cssValue(value)
+      b + ",scale=" + cssPercentage(value)
     })
     .onKey( kvs, "transform-rotate", fun(value,b) {
       b + ",angle=" + cssValue(value)
