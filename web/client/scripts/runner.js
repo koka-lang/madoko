@@ -315,7 +315,7 @@ var Runner = (function() {
     var self = this;
     var errors = [];
     // location latex errors
-    var rx = /(?:^|\n) *(error|warning) *: *(?:source +)?line *: *([\w\-\.;:\\\/ ]*)\s*([\s\S]*?)(?=\r?\n[ \t\r]*\n)/gi;
+    var rx = /(?:^|\n) *(error|warning) *: *(?:source +)?line *: *([\w\-\.;:\\\/ ]*)\s*([\s\S]*?)(?=\r?\n(?:[ \t\r]*\n| *log written at\b))/gi;
     var cap;
     while ((cap = rx.exec(output)) != null) {
       var location = cap[2];
