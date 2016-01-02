@@ -179,10 +179,10 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     // markdown to html          
     val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, html0))))) = 
                               withLog("embed") {
-                               withLog("math-plain") {
-                                withLog("math-full") {
-                                 withLog("warning") { 
-                                  withLog("aux") { 
+                               withLogCompress("math-plain") {
+                                withLogCompress("math-full") {
+                                 withLogCompress("warning") { 
+                                  withLogCompress("aux") { 
                                    markdown(icontent,xopts0) 
                                  }}}}}
     // write an aux file
@@ -597,3 +597,11 @@ function tryCopyTextFileFromNoSandboxTo( fname, srcDir, outDir ) {
   }
   fun(exn) { () }
 }
+
+
+public function withLogCompress( name: string, action : () -> <ndet|e> a ) : <ndet|e> (string,a) {
+  val (log,x) = withLog(name,action)
+  (log.replaceAll(rxDataLinesPre,""), x)
+}
+
+val rxDataLinesPre = regex("(?:\r?\n%mdk-data-line=.*(?=\r?\n%mdk-data-line))+")
