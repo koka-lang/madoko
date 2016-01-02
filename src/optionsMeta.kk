@@ -11,6 +11,7 @@ module optionsMeta
 
 import std/log
 import std/path
+import std/string
 import common
 import options
 import optionsSandbox
@@ -62,11 +63,14 @@ function update( options : options, key : string, xvalue : string, mdata : metad
     options(bibStyle=value)
   }
   elif (key=="csl-style") { 
+    val cslname = if (value.extname.isEmpty && value.dirname.isEmpty) 
+                   then lvalue.replaceAll(" ","-") // normalize CSL style name
+                   else value
     // we need to log here since we don't always 'read' the cls if the bibs are unchanged
-    log("files", value.defaultExt(".csl"))
+    log("files", cslname.defaultExt(".csl"))
     log("files", "madoko.csl")
     //log("files", "locales-en-US.xml")
-    options(cslStyle=value) 
+    options(cslStyle=cslname) 
   }
   elif (key=="locale") { options(locale=normalizeLocale(value)) }  
   elif (key=="mathjax-ext" || key=="mathjax-extension")  options(math = (options.math)(mjext=if (value=="") then "" else options.math.mjext + ";" + value))
