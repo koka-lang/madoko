@@ -20,6 +20,11 @@ public struct fileinfo(
   contents: string
 )
 
+public struct citeinfo(
+  id: string,
+  lineinfo: string
+)
+
 public struct cslresult(
   bibliography: string,
   bib         : string,
@@ -30,7 +35,7 @@ public struct cslresult(
 
 
 public function runCsl( 
-  citations : list<string>, bibs : list<fileinfo>, bibstyle : fileinfo, 
+  citations : list<citeinfo>, bibs : list<fileinfo>, bibstyle : fileinfo, 
   madokoStyle : fileinfo, localeStyle : fileinfo, id : string, attrs0 : string ) : cslresult 
 {
   val preid = if (id.bool) then id + ":" else ""
@@ -40,7 +45,7 @@ public function runCsl(
               fun(tex) { parseTex(tex) }, preid, attrs )  
 }
 
-external makeBiblX( citations : primarray<string>, bibtexs: primarray<fileinfo>, 
+external makeBiblX( citations : primarray<citeinfo>, bibtexs: primarray<fileinfo>, 
                     bibstyle : fileinfo, 
                     madokoStyle : fileinfo, localeStyle : fileinfo,
                     convertTex : (string) -> string,

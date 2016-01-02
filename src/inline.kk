@@ -226,6 +226,7 @@ function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : strin
     val texLineInfo = "%mdk-data-line={" + location + "}"
     log("math-plain", texLineInfo)
     log("math-full", texLineInfo)
+    log("aux", texLineInfo)
     logLocation(location)  // for warnings
   }
   val (s,next,_) = matchRules(context.grammar,context,txt,id)

@@ -315,7 +315,7 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
   val bibfiles    = mopts.bib.splitPaths.map( fun(bib) { 
                       searchReadTextFile(bib, searchDirs,".bib",True,mopts) 
                     })
-  val citations   = auxcontents.findAll(rxCitation).list.map(fun(cap) { cap.groups[1] })
+  val citations   = auxcontents.findCitations
   val cslStyle0   = searchReadTextFile( aux.style.styleName, searchDirsCsl, ".csl", True, mopts )
   val cslStyle    = match (cslStyle0.contents.find(rxIndepParent)) {
                       Nothing   -> cslStyle0
@@ -341,7 +341,23 @@ function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io ()
 
 val rxIndepParent = regex(@"<link *href *= *""(?:https?://www.zotero.org/styles/)?([^""]+)"" *rel *= *""independent-parent"" */>")
 
-val rxCitation = regex(@"\\citation\{([^\}]+)\}")
+function findCitations( aux : string ) : list<citeinfo> {
+  var lineinfo := ""
+  aux.lines.list.map( fun(line) {
+    match (line.find(rxDataLine)) {
+      Just(cap) -> {
+        lineinfo := cap.groups[1]
+        Nothing
+      }
+      Nothing -> match(line.find(rxCitation)) {
+        Just(cap) -> Just(Citeinfo(cap.groups[1], lineinfo ))
+        Nothing   -> Nothing
+      }
+    }   
+  }).concatMaybe
+}
+val rxCitation = regex(@"^\\citation\{([^\}]+)\}")
+val rxDataLine = regex(@"^%mdk-data-line=\{([^\}]+)\}")
 
 function genBibtex( runBibtex, auxInfos : list<auxinfo>, outdir, searchDirs, mopts : options, continue : (bool) -> io () ) : io () {
   val (csls,bsts) = auxInfos.partition( fun(info) { info.style.isCsl } );

@@ -231,7 +231,7 @@ function parseXml( fname, xml ) {
 // ---------------------------------------------
 // Make a Madoko bibliography
 //
-// citations   : an array of citation id's, 
+// citations   : an array of { id: string; lineinfo: string }
 //               or null for all entries in the bibliography.
 // bibtexs     : array of bibliography fileinfo's
 // bibStyleX   : CSL bib style as XML fileinfo
@@ -249,7 +249,7 @@ function parseXml( fname, xml ) {
 // }
 // ---------------------------------------------
 
-function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex, convertTex, options ) {
+function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex, convertTex, options ) {
   var bib = {};
   var bibl = "";
   var warnings = "";
@@ -264,11 +264,11 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
   // ----------------------
   // Set CSL engine hooks
   function cslWarning(fname,msg) {
-    warnings = warnings + "warning: " + (fname ? fname + ": " : "") + msg + "\n";
+    warnings = warnings + "warning: " + (fname ? "source line: " + fname + "\n  " : "") + msg + "\n";
   }
 
   function cslError(fname,msg) {
-    throw new Error("error: " + (fname ? fname + ": " : "") + msg);
+    throw new Error("error: " + (fname ? "source line: " + fname + "\n  " : "") + msg);
   }
 
   function retrieveLocale(localelang) {
@@ -320,7 +320,7 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
     
     //csl.updateItems(cites, false, false);    
     var citeItems = {
-      citationItems: cites.map(function(cite) { return {id:cite}; }),
+      citationItems: cites.map( function(itemid) { return { id: itemid }; }), 
       properties: { },
     };
     var citation = csl.appendCitationCluster(citeItems,true); 
@@ -355,26 +355,27 @@ function makeBibliography( citations, bibtexs, bibStylex, madokoStylex, localex,
       });
     }
 
-    // if citations is null, use all the entries in the bibliography.
-    if (!citations) {
+    // if citeinfos is null, use all the entries in the bibliography.
+    var citations = [];
+    if (!citeinfos) {
       citations = getAllReferences();
     }
     else {
       // check citations and normalize case
       var newcites = {};
-      citations.forEach( function(id) {
-        if (id==="*") {
+      citeinfos.forEach( function(cite) {
+        if (cite.id==="*") {
           // star is used for all references in the biliography
-          getAllReferences().forEach( function(ref) { newcites[ref] = true; } );
+          getAllReferences().forEach( function(id) { newcites[id] = true; } );
         }      
         else {
-          var bibitem = bib[id.toLowerCase()];
+          var bibitem = bib[cite.id.toLowerCase()];
           if (!bibitem) {
-            cslWarning(bibStylex.filename, "unknown citation reference: '" + id + "'");
+            cslWarning( cite.lineinfo || bibStylex.filename, "unknown citation reference: '" + cite.id + "'");
           }
           else {
-            if (bibitem.id !== id) {
-              cslWarning(bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + id + "'");
+            if (bibitem.id !== cite.id) {
+              cslWarning( cite.lineinfo || bibStylex.filename, "case mismatch: '" + bibitem.id + "'' is cited as '" + cite.id + "'");
             }
             if (!newcites[bibitem.id]) {
               newcites[bibitem.id] = true;
