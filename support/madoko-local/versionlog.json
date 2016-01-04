@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.5.1-beta",
+      "date"   : "2016-01-04",
+      "updates": [
+        "Support new bibliography output"
+      ]
+    },
     { "version": "0.5.0-beta",
       "date"   : "2015-12-29",
       "updates": [
