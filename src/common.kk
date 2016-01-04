@@ -224,6 +224,11 @@ public function show( cm : citemode) : string {
   }
 }
 
+public function show( cs : citestyle ) : string {
+  cs.mode.show + ":" + (if (cs.sort) then "sort" else "nosort") + ":" +
+   [cs.open,cs.close,cs.citesep,cs.aysep,cs.yysep].map(show).join(",")
+}
+
 public function isNumCite( cs : citestyle ) : bool {
   match(cs.mode) {
     Natural -> False
@@ -334,7 +339,7 @@ public type mathrender {
 }
 
 
-public function show( m : mathrender ) {
+public function show( m : mathrender ) : string {
   match(m) {
     Svg -> "svg"
     Png -> "png"
@@ -354,7 +359,7 @@ public type mathkind {
   Full
 }
 
-public function show( m : mathkind ) {
+public function show( m : mathkind ) : string {
   match(m) {
     Plain -> "plain"
     Full  -> "full"
