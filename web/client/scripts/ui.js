@@ -1592,13 +1592,18 @@ var UI = (function() {
                 self.stale=true;
                 self.localFullSave(); // async full save as probably files are added
               }
-              if (res.runOnServer && self.asyncServer && (res.mathPlainDoc || res.mathFullDoc)) {
-                if ((res.mathPlainDoc && self.lastMathPlainDoc !== res.mathPlainDoc) ||
-                    (res.mathFullDoc && self.lastMathFullDoc !== res.mathFullDoc)) { // prevents infinite math rerun on latex error
-                  self.asyncServer.setStale();
-                } 
-                if (res.mathPlainDoc) self.lastMathPlainDoc = res.mathPlainDoc;
-                if (res.mathFullDoc) self.lastMathFullDoc = res.mathFullDoc;                
+              if (res.runOnServer && self.asyncServer) {
+                if (res.mathPlainDoc || res.mathFullDoc) {
+                  if ((res.mathPlainDoc && self.lastMathPlainDoc !== res.mathPlainDoc) ||
+                      (res.mathFullDoc && self.lastMathFullDoc !== res.mathFullDoc)) { // prevents infinite math rerun on latex error
+                    self.asyncServer.setStale();
+                  } 
+                  if (res.mathPlainDoc) self.lastMathPlainDoc = res.mathPlainDoc;
+                  if (res.mathFullDoc) self.lastMathFullDoc = res.mathFullDoc;                
+                }
+                else {
+                  res.asyncServer.setState();
+                }
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
                 // Util.message("ready", Util.Msg.Info);
