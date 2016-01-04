@@ -718,7 +718,7 @@ function readFiles( userpath, docname, pdf, out ) {
   var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
                 "-math-plain.tex", "-math-full.tex", 
                 "-math-plain.final.tex", "-math-full.final.tex",
-                "-bib.bbl", "-bib.aux",
+                "-bib.bbl", "-bib.final.aux", // todo: handle multiple bibliographies
                 "-bib.bbl.mdk", "-bib.bib.json",
                ]
                 .concat( pdf ? [".pdf",".tex"] : [] )
