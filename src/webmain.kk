@@ -80,7 +80,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
   {
     rerun := bibFiles.isCons
     //trace("bibtex rerun")
-    cont(False)
+    cont(bibFiles.isCons)
   } 
 
   function runMathStatic( content : string, inpName : string, outputname : string,
