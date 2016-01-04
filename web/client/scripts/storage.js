@@ -236,11 +236,13 @@ function createNullStorage() {
   return new Storage( new LocalRemote.LocalRemote("") );
 }
 
-function serverGetInitialContent(fpath) {
+function serverGetInitialContent(fpath,opts) {
   if (!Util.extname(fpath)) fpath = fpath + ".mdk";
   if (!Util.isRelative(fpath)) return Promise.rejected( new Error("can only get initial content for relative paths") );
-  return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } ).then( null, function(err) {
-    if (err.httpCode === 404) {
+  opts.nosync = true;
+  return Util.requestGET( { url: fpath,  binary: Util.hasBinaryExt(fpath) } ).then(null, function(err) {
+    opts.nosync = false;
+    if (err.httpCode === 404 || err.httpCode === 400) {
       if (Util.extname(fpath) === ".csl") {
         var url = "https://raw.githubusercontent.com/citation-style-language/styles/master/" + Util.basename(fpath).replace(/[ ]/g,"-");
         return Util.requestGET( url )
@@ -871,10 +873,9 @@ var Storage = (function() {
 
         if (Util.isImageMime(mime)) opath = fpath;
 
-        return serverGetInitialContent(spath).then( function(content,req) {
+        return serverGetInitialContent(spath,opts).then( function(content,req) {
             if (!content) return noContent();
             if (Util.extname(fpath)===".json") content = req.responseText;
-            opts.nosync = true;
             Util.message("server provided content: " + spath, Util.Msg.Trace);
             self.writeFile(opath,Encoding.encode(opts.encoding, content),opts);
             return self.files.get(opath);
@@ -887,7 +888,7 @@ var Storage = (function() {
     });    
   }
 
-  var rootExts = [".pdf",".dim",".dimx",".html",".tex",".dic"];
+  var rootExts = [".pdf",".dim",".dimx",".html",".tex",".dic",".json",".xml",".csl"];
   function isRoot( fpath, roots ) {
     if (Util.contains(roots,fpath)) return true;
     if (Util.firstdirname(fpath) === "out") {  // so "out/madoko.css" is not collected
@@ -897,8 +898,9 @@ var Storage = (function() {
     return false;
   }
 
+  var weakRootExts = [".dic"];
   function isWeakRoot(fpath) {
-    return Util.extname(fpath)===".dic";
+    return Util.contains(weakRootExts,Util.extname(fpath));
   }
 
   Storage.prototype.collect = function( roots ) {
