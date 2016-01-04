@@ -118,26 +118,21 @@ var Runner = (function() {
       if (filesRead) filesRead.forEach( function(n) { readCount += n; });
 
       var runAgain    = readCount > 0;
-      var runOnServer = res.runOnServer && !runAgain 
-
-      if (!runAgain) {
-        res.filesWritten.forEach( function(file) {
-          if (Util.extname(file.path) !== ".aux") { // never write aux or otherwise we may suppress needed server runs for bibtex
-            Util.message(ctx.round.toString() + ": worker generated: " + file.path, Util.Msg.Trace );
-            if (self.storage) self.storage.writeFile(file.path, file.content );
-            runAgain = true;
-            runOnServer = false;
-          }
-        });
-      }
-
+      res.filesWritten.forEach( function(file) {
+        Util.message(ctx.round.toString() + ": worker generated: " + file.path, Util.Msg.Trace );
+        if (self.storage) self.storage.writeFile(file.path, file.content );
+        if (!runAgain && Util.extname(file.path) !== ".aux" || Util.endsWith(file.path,".final.aux")) {
+          runAgain = true;
+        }
+      });
+    
       var avg = self.times.reduce( function(prev,t) { return prev+t; }, 0 ) / (self.times.length || 1);
       return { 
         content: res.content, 
         ctx: ctx, 
         avgTime: avg, 
         runAgain: runAgain, 
-        runOnServer: runOnServer, 
+        runOnServer: res.runOnServer && !runAgain, 
         mathPlainDoc: res.mathPlainDoc,
         mathFullDoc: res.mathFullDoc,
         links: res.links,

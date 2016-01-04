@@ -44,7 +44,7 @@ require(["../scripts/map","../scripts/util","webmain"], function(Map,util,madoko
   }
 
   function fileWriteKeep(fname) {
-    return (util.endsWith(fname,"-bib.aux"));
+    return (util.endsWith(fname,"-bib.final.aux") || util.endsWith(fname,".bbl.mdk") || util.endsWith(fname,".bib.json"));
   }
 
   function fileWriteList(files) {
