@@ -54,6 +54,10 @@ function escapeMadoko(s) {
   return s.replace(/([\[\]()#$@!`~\\^%_*&])/g,"\\$1");
 }
 
+function escapeURL(s) {
+  return s.replace(/([()\s])/g, function(m) { return escape(m); } );
+}
+
 var madokoFormat = {
   "text_escape": function (text) {
     return (text ? text : "").replace("  ","&nbsp;");
@@ -163,11 +167,11 @@ var madokoFormat = {
   },
   "@URL/true": function (state, str) {
     var urltext = getBibitem(this,state).URLtext || str;
-    return "[" + urltext + "](" + str + ")";
+    return "[" + urltext + "](" + escapeURL(str) + ")";
   },
   "@DOI/true": function (state, str) {
     var doitext = getBibitem( this, state).DOItext || str;
-    return "[" + urltext + "](https://dx.doi.org/" + str + ")";
+    return "[" + doitext + "](https://dx.doi.org/" + escapeURL(str) + ")";
   }
 };
 
@@ -414,11 +418,12 @@ function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex,
     else if (citeformat=="note" || citeformat=="label" || citeformat=="numeric") citemode="numeric";
     else citemode="numeric";
 
-    var citestyle = "";
-    citecap = /<layout *prefix="([^"\n]*)" *suffix="([^"\n]*)" *delimiter="([^"\n]*)"/.exec(bibStylex.contents);
-    var citestyle = citemode + (citecap ? ":'" + [citecap[1],citecap[2],citecap[3]].join("','") + "'" : "");
-
-
+    var citestyle = citemode;
+    citecap = /<layout *(?:vertical-align="([^"\n]*)" *)?(?:prefix="([^"\n]*)" *)?(?:suffix="([^"\n]*)" *)?delimiter="([^"\n]*)"/.exec(bibStylex.contents);
+    if (citecap) {
+      citestyle = (citecap[1]==="sup" ? "super" : citemode) + ":'" + [citecap[2],citecap[3],citecap[4]].join("','") + "'";
+    }
+    
     // and finally we generate the bibliography with the actual style
     // console.log("Creating bibliography..");
     var bibres = csl.makeBibliography();
