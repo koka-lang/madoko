@@ -589,7 +589,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
     // Citations link: set defaults as "citations" block
     val attrsc = attrs.addKeyval("target-element","bibitem")
     val attrsd = context.defaults.matchRules("citations",attrsc)
-    nbsp + context.fmtCite(citationss.concat,attrsd)
+    context.fmtCite(nbsp,citationss.concat,attrsd)
   } 
   else {
     inlineLinkRef( isImage, spaces, nbsp, txt, after, "", attrs, context )
@@ -720,7 +720,7 @@ function mathUnline( txt : string ) {
 val rxCont = regex(@"(\\%)|(?:%.*)?\n[ \t]*")  
 
 // Format a citation link
-function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs ) : string 
+function fmtCite(context : inlineContext, nbsp: string, citations : list<cite>, attrs : attrs ) : string 
 {  
   val cs0 = match(attrs.hasKey("cite-style")) {
               Just(cstext) -> parseCiteStyleDef(cstext)
@@ -866,7 +866,8 @@ function fmtCite(context : inlineContext, citations : list<cite>, attrs : attrs 
     Super -> @"\/^" + pciteText + @"^\/"
     _     -> pciteText
   }  
-  context.fmtCmd("span", context.formatInline(sciteText), attrs.addClass("citations"))
+
+  (if (cs.mode.isSuper) then "" else nbsp) + context.fmtCmd("span", context.formatInline(sciteText), attrs.addClass("citations"))
 }
 
 
