@@ -357,6 +357,8 @@ function BibtexParser() {
     this.entries = [];
     this.warnings = [];
     this.pos = 0;
+    this._lastLine = null;
+    this._lastPos = null;
     while (this.matchAt()) {
       try {
         var d = this.directive();
