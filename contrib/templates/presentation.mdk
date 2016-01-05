@@ -36,7 +36,7 @@ its full glory.
 
 And any Madoko features just work. Here is some math:
 
-~ Begin Framed { padding=1ex margin-top=1ex }
+~ Begin Framed { padding:1ex; margin-top:1ex }
 A famous equation is $e = mc^2$, but this one is 
 famous too:
 
@@ -63,7 +63,7 @@ function sqr( x ) {
 We used `\(` and `\)` to escape into markdown to write &pi;.
 
 <!-- Example of nested vertical slides -->
-~ Begin Vertical { data-background=Gainsboro }
+~ Begin Vertical { data-background:Gainsboro }
 
 ## Vertical Slides {#vertical}
 Slides can be nested inside of other slides,
@@ -73,7 +73,7 @@ try pressing [down].
 
 
 [down]: # { .navigate-down }
-[arrowdown]: images/arrow.png "Down arrow" { width=178px height=238px }
+[arrowdown]: images/arrow.png "Down arrow" { width:178px; height:238px }
 
 ## Basement Level 1
 Press down or up to navigate.
@@ -83,7 +83,7 @@ Press down or up to navigate.
 Use `columns` to put blocks next to each other:
 
 ~ Begin Columns
-~ Column { width=50% }
+~ Column { width:50% }
 A monarch butterfly (shown to the right)
 spends the winter in Mexico.
 ~
@@ -92,7 +92,7 @@ spends the winter in Mexico.
 ~
 ~ End Columns
 
-[butterfly]: images/butterfly.png "A Monarch butterfly" { width=280px vertical-align=middle }
+[butterfly]: images/butterfly.png "A Monarch butterfly" { width:280px; vertical-align:middle }
 
 
 <!-- 
@@ -103,14 +103,14 @@ We can then refer to the image in "data-background-image".
 -->
 
 ![bfly]
-[bfly]: images/butterfly.png "Butterfly" { display=none }
+[bfly]: images/butterfly.png "Butterfly" { display:none }
 
-## Basement Level 3 { data-background-image=images/butterfly.png }
+## Basement Level 3 { data-background-image:images/butterfly.png }
 That's it, time to go back up.
 
 [![arrowup]][back2]
 
-[arrowup]:  images/arrow.png "Up arrow" { width="178px" height="238px" transform="rotate(180deg)" }
+[arrowup]:  images/arrow.png "Up arrow" { width:178px; height:238px; transform:rotate(180deg) }
 [back2]:    #vertical { .image }
 
 ~ End Vertical
