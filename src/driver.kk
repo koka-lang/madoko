@@ -287,7 +287,7 @@ function extractCitestyle( opts : options, outName : string ) : io options {
     Just(cap) -> {
       match(parseCiteStyle(cap.groups[1])) {
         Nothing  -> opts
-        Just(cs) -> opts(citestyle=Just(cs))
+        Just(cs) -> opts(citestyle=Just(cs),metadata=Cons(("cite-style",cap.groups[1]),opts.metadata))
       }
     }
   }

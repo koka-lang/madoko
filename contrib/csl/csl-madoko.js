@@ -113,9 +113,9 @@ var madokoFormat = {
       // "cite-info": fixNbsp(bibitem._citeInfo),
       "caption": bibitem._citeCaption,
       "data-line": bibitem._line,
-      "tex-bibitem-label": "[" + bibitem._citeLabel + "]",
       "searchterm": encodeURIComponent(bibitem._citeCaption.replace(/\s+/g," ")).replace(/[\/\\:\-()\[\]]/g,""),
     }
+    if (bibitem._bibitemLabel) attrs["bibitem-label"] = bibitem._bibitemLabel;
     var attrsText = "{" + joinx(properties(attrs).map( function(key) { 
       return (!attrs[key] ? "" : key + ":" + quote(attrs[key]));
     }), "; ") + "}";
@@ -125,7 +125,10 @@ var madokoFormat = {
     return "\n[]{.newblock}" + str + "\n";
   },
   "@display/left-margin": function (state, str) {
-    return "[" + escapeMadoko(str) + "]{.bibitem-label}\n";
+    var bibitem = getBibitem(this,state);
+    bibitem._bibitemLabel = escapeMadoko(str);
+    return "\\/";
+    // return "[" + escapeMadoko(str) + "]{.bibitem-label}\n";
   },
   "@display/right-inline": function (state, str) {
     return str + "\n";
@@ -421,7 +424,8 @@ function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex,
     var citestyle = citemode;
     citecap = /<layout *(?:vertical-align="([^"\n]*)" *)?(?:prefix="([^"\n]*)" *)?(?:suffix="([^"\n]*)" *)?delimiter="([^"\n]*)"/.exec(bibStylex.contents);
     if (citecap) {
-      citestyle = (citecap[1]==="sup" ? "super" : citemode) + ":'" + [citecap[2],citecap[3],citecap[4]].join("','") + "'";
+      if (citecap[1]==="sup") citemode = "super";
+      citestyle = citemode + ":'" + [citecap[2],citecap[3],citecap[4]].join("','") + "'";
     }
     
     // and finally we generate the bibliography with the actual style

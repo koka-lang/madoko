@@ -10,6 +10,8 @@ Bib Label       : True
 Math Mode       : static
 Title Running   :
 Author Running  :
+Csl Style       :
+Bib Search Url  :
 
 <!-- standard elements -->
 Article   { html-elem:article }
@@ -278,20 +280,25 @@ Bibitem {
   @bib-bibitem;
   label     : '@bib-bibitem';
   cite-label: '&label;';
+  bibitem-label: '';
   tight     : true;
   replace   : '@if (bib-search-url!="") and (searchterm!="") @then "&source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}"';
 }
 
-Bib Search Url: 
-@if html {
+@if not (tex) {
   Bib Search Url: www.bing.com
+  Bibl { before: "# &name-references; { -; .heading-references }&nl;" }
 }
 
-@if not( tex ) {
-  Bibl         { before: "# &name-references; { -; .heading-references }&nl;" }
+@if not(tex) or (csl-style!="") {
+  Bibitem { before: '[&bibitem-label;]{.bibitem-before}' }
 }
-@if not( tex ) and bib-label {
-  Bibitem      { before: '[\[&cite-label;\]\ \ ]{.bibitem-before}' }
+@if not(tex) and (csl-style=="") {
+  Bibitem { bibitem-label:"[&cite-label;]" }
+}
+@if tex and (csl-style!="") {
+  Bib Label: hide
+  .bibitem-before { tex-cmd:\mdbibitemlabel }
 }
 
 toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
