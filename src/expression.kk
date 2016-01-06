@@ -117,7 +117,7 @@ function matchWord( s1 : string, s2 : string ) {
 val rxSpaces = regex(@"\s+")
 
 function matchSubcode( s1 : string, s2 : string ) {
-  (s1 == s2) || (s1 == (s2 + "-"))
+  (s1 == s2) || (s1.startsWith(s2 + "-"))
 }
 
 function ierr( i1 : int, i2 : int ) : exn a { error("cannot compare integers") }
@@ -165,7 +165,7 @@ public function bool( c : constant ) : exn bool {
 
 public function string( c : constant ) : string {
   match(c) {
-    Bool(b)   -> b.show
+    Bool(b)   -> if (b) then "True" else ""
     Int(i)    -> i.show
     String(s) -> s
     Regex(r)  -> r.source
