@@ -291,8 +291,7 @@ body.preview.madoko {
   padding: 0em 1em;
 }
 
-.madoko p,
-.madoko li {
+.madoko p {
   text-align: justify;
 }
 
