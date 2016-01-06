@@ -112,24 +112,51 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
     return s.replace(/[^\w_:\*\s]+/g,"").replace(/\s+|[:\*]/g,"-").toLowerCase();
   }
 
-  var metaKey = /(?:@(?:\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]/;
-  var rxMeta = new RegExp("^("+ metaKey.source + " *)((?:.*(?:\n .*)*)(?:\\n+(?=\\n|" + metaKey.source + ")|$))", "g");
-  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html|css)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips|author|address|affiliation|email|(reveal|beamer)-(url|theme))/;
+  //var metaKey = /(?:@(?:\w+) +)?((?:\w|([\.#~])(?=\S))[\w\-\.#~, ]*?\*?) *[:]/;
+
+  var rxMetaKeyEnd  = /(?:(?:\[[^\]\n\r]*\])+|\*)?/.source
+  var rxMetaKey     = "(?:@([\\w\\-@]+) +)?((?:\\w|([\\.#~])(?=\\S))[\\w\\-\\.#~, ]*?" + rxMetaKeyEnd + ") *(?=[\\{:])";
+  var rxMetaValue   = "(?:[:] *(.*(?:\\n .*)*)(?:\\n+(?=\\n|" + rxMetaKey + "|@(?:if|supports)\\b|<!--)|$))";
+  var rxMetaAttrContent = "(?:[^\\\\'\"\\{\\}\\/]|\\\\[\\s\\S]|'(?:[^\\\\']|\\\\[\\s\\S])*'|\"(?:[^\\\\\"]|\\\\[\\s\\S])*\"|\\/(?:[^\\\\\\/\\n]|\\\\.)*\\/)";
+  var rxMetaAttrs   = "(?:(\\{)[:]?(" + rxMetaAttrContent + "*)(\\})\\s*)";
+  var rxMetaGroup   = "(?:\\{((?:" + rxMetaAttrContent + "|" + rxMetaAttrs + ")*)\\} *(?:\\n|$)\\s*)";
+
+  var rxMetaComment = /^(?:\s*<!--(?:(meta|madoko)\b *\n)?([\s\S]*?)-->((?: *\n)+))/;
+  var rxMeta        = new RegExp("^("+ rxMetaKey + ")(" + rxMetaAttrs + "|" + rxMetaValue + ")");
+  var rxSupports    = new RegExp("^@(?:if|supports)\\b([^\\n\\{]*)" + rxMetaGroup);
+
+
+  // var rxMeta = new RegExp("^("+ metaKey.source + " *)((?:.*(?:\n .*)*)(?:\\n+(?=\\n|" + metaKey.source + ")|$))", "g");
+  var rxMetaIgnore = /(html-meta|css|script|package|doc(ument)?-class|bib(liography)?(-style)?|bib-data|biblio-style|mathjax-ext(ension)?|(tex|html|css|js)-(header|footer)|fragment-(start|end)|cite-style|math-doc(ument)?-class|mathjax|highlight-language|colorizer|refer|latex|pdflatex|math-pdflatex|bibtex|math-convert|convert|ps2pdf|dvips|author|address|affiliation|email|(reveal|beamer)-(url|theme))/;
 
   function sanitizeMeta( text ) {
     /* remove initial whitespace */
     var res = "";
-    var cap = /^(\s|<!--[\s\S]*?-->)+/.exec(text);
+    var cap = /^\s+/.exec(text);
     if (cap) {
       res = cap[0];
       text = text.substr(cap[0].length);
     }
-    rxMeta.lastIndex = 0;
-    while((cap = rxMeta.exec(text)) != null) {
-      var key = normalizeId(cap[2]);
-      res = res + (cap[3] || rxMetaIgnore.test(key) ? whiten(cap[0]) : whiten(cap[1]) + cap[4]);
-      text = text.substr(rxMeta.lastIndex);
-      rxMeta.lastIndex = 0;
+    cap = [];
+    while (cap != null) {
+      cap = rxMetaComment.exec(text);
+      if (cap) {
+        res = res + whiten(cap[0]);
+      }
+      else {
+        cap = rxSupports.exec(text);
+        if (cap) {
+          res = res + whiten(cap[0]); // todo: spell check inside the group
+        }
+        else {
+          cap = rxMeta.exec(text);
+          if (cap) {
+            var key = normalizeId(cap[3]);
+            res = res + (cap[4] /* [~\.#] */ || cap[6] /* { */|| rxMetaIgnore.test(key) ? whiten(cap[0]) : whiten(cap[1]) + cap[5]);
+          }          
+        }
+      }
+      if (cap) text = text.substr(cap[0].length);
     }
     return res + text;
   }
@@ -171,8 +198,8 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   var rxMathEnv  = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\2 *(?=\n|$)/;
   var rxMathEnv2 = /\n *(~+) *Begin +(Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\3 *End +\4(?=\n|$)/;
   var rxHtml     = /\n *<(\w+)[^\n>]*>[\s\S]*?\n *<\/\5 *> *(?=\n|$)/;
-  var rxNoCheckEnv  = /\n *(~+) *(?:[\w\-]+) *\{.*?\bspellcheck=false\b.*?\}.*\n[\s\S]*?\n *\6 *(?=\n|$)/;
-  var rxNoCheckEnv2 = /\n *(~+) *Begin +([\w\-]+) *\{.*?\bspellcheck=false\b.*?\}.*\n[\s\S]*?\n *\7 *End +\8(?=\n|$)/;
+  var rxNoCheckEnv  = /\n *(~+) *(?:[\w\-]*) *\{.*?\bspellcheck *[:=] *[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\6 *(?=\n|$)/;
+  var rxNoCheckEnv2 = /\n *(~+) *Begin +([\w\-]*) *\{.*?\bspellcheck *[:=] *[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\7 *End +\8(?=\n|$)/;
   var rxMath     = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
   var rxMathEnv3 = /\n *\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$ *(?=\n|$)/;
   var rxMathEnv4 = /\n *\\\[( *\n(?:[^\\]|\\[^\]])*)\\\] *(?=\n|$)/;
