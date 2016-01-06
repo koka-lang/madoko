@@ -269,7 +269,13 @@ SubFigure {
   toc-depth : 2;
 }
 
-<!-- bibliographies -->
+toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
+toc.toc-figures   { before: "# &name-figures;  { -; toc:clear; .heading-figures }&nl;" }
+toc.toc-tables    { before: "# &name-tables;   { -; toc:clear; .heading-tables }&nl;" }
+
+<!-------------------------------------------------------------------
+   Bibliography
+--------------------------------------------------------------------->
 Bibl {
   @bib;
 }
@@ -301,9 +307,35 @@ Bibitem {
   .bibitem-before { tex-cmd:\mdbibitemlabel }
 }
 
-toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
-toc.toc-figures   { before: "# &name-figures;  { -; toc:clear; .heading-figures }&nl;" }
-toc.toc-tables    { before: "# &name-tables;   { -; toc:clear; .heading-tables }&nl;" }
+<!-------------------------------------------------------------------
+   Bibliography styling in HTML
+--------------------------------------------------------------------->
+
+Html Bib Label Width: 2rem
+
+@if html and not(cite-style~~/^(numeric|super|False)\b/i) {
+  .bibitem-before {
+    display: none;
+  }
+  bibitem { 
+    text-indent: -1em;
+    margin-left: 1em;
+  }
+}
+
+@if html and (cite-style~~/^(numeric|super|False)\b/i) {
+  .bibitem-before {
+    padding-right: 0.5em;
+    width        : calc(&html-bib-label-width; - 0.5em);
+    text-align   : right;
+    font-size    : 90%;
+  }
+  bibitem { 
+    text-indent: -&html-bib-label-width;;
+    margin-left: &html-bib-label-width;;
+  }
+}
+
 
 <!-------------------------------------------------------------------
    Internationalization
