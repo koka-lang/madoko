@@ -305,7 +305,7 @@ function searchReadTextFile( fname, searchDirs, ext, required, mopts ) : io file
 }
 
 function genBibCsl( aux : auxinfo, outdir, searchDirs, mopts : options ) : io () {
-  mopts.print("bibliography " + (if (aux.auxid.bool) then "(" + aux.auxid + ") " else "") + "style: " + aux.style.styleName)
+  mopts.print("bibliography " + (if (aux.auxid.bool) then "(" + aux.auxid + ") " else "") + "style: " + aux.style.styleName.stemname)
   val searchDirsCsl = searchDirs.concat( fun(dir) { [dir,combine(dir,"csl")] } )
   val searchDirsLoc = searchDirs.concat( fun(dir) { [dir,combine(dir,"locales")] } )
 
@@ -501,7 +501,7 @@ function writeCitationsData( citeData : string, outName : string, searchDirs : l
 function splitCiteData( citeData : string, opts : options ) : io list<(string,(string,bibstyle))> {
   if (citeData.trim == "") return []
   val style = if (opts.cslStyle!="") then Csl(opts.cslStyle,opts.locale)
-              elif (opts.bibStyle != "") then Bst(opts.bibStyle.basename.noext,opts.locale) 
+              elif (opts.bibStyle != "") then Bst(opts.bibStyle,opts.locale) 
               else Bst("plainnat",opts.locale)
   match(citeData.find(rxBibFile)) {
     Nothing   -> return [("",(citeData,style))]
