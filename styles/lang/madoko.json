@@ -38,7 +38,12 @@
     "Reveal Theme","Reveal Url","Reveal Details","Reveal Long","Reveal SlideNumber",
     "Description","Documentation",
     "Embed", "Embed Limit", "Math Embed Limit",
-    "Logo","Refer","Classification","Title Running","Author Running","Author Columns", "Maketitle"
+    "Logo","Refer","Classification","Title Running","Author Running","Author Columns", "Maketitle",
+    "Html Bib Label Width",
+    "Csl Style", "Locale",
+    "Tex2", "Tex Section Num", "Bib Label",
+    "lowline","qed","vfill","eg","ie","etal","smallskip","medskip","bigskip",
+    "LogoLatex","LogoTex","LogoBibtex", "LogoAmsTex", "LogoMadoko"
   ],
   
   
