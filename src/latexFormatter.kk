@@ -686,16 +686,20 @@ function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
     })
     .cssFont(kvs)
     .cssText(kvs,attrs,isBlock)
+    .onKey(kvs,"tex-label-inner-before", fun(value,body) {
+      "\\label" + value.braced + "%mdk\n" + body
+    })
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
-  val body1 = match(kvs["tex-label-before"]) {
-    Just(lab) -> if (lab.isEmpty) then body0 else "\\label" + lab.braced + "%mdk\n" + body0 
-    _ -> match(kvs["tex-label"]) {
-      Just(lab) -> if (lab.isEmpty) then body0 else body0 + "\\label" + lab.braced + "%mdk\n"
-      _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\label" + attrs.name.braced + "%mdk\n"
+  val body1 = if (kvs["tex-label-inner-before"].isJust) then body0 else
+    match(kvs["tex-label-before"]) {
+      Just(lab) -> "\\label" + lab.braced + "%mdk\n" + body0 
+      _ -> match(kvs["tex-label"]) {
+        Just(lab) | lab.bool -> body0 + "\\label" + lab.braced + "%mdk\n"
+        _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\label" + attrs.name.braced + "%mdk\n"
+      }
     }
-  }
   val body2 = if (isBlock) then {
       val body1x = body1
         .onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
