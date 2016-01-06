@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "1.0.0-rc2",
+      "date": "2016-01-06",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
+      "updates": [
+        "Improved bibliography rendering for CSL/BibTeX and HTML/PDF",
+        "Improved spell checking",
+        "Fix table-of-content bug with references in LaTeX"
+      ]
+    }, 
     { "version": "1.0.0-rc1",
       "date": "2016-01-04",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
