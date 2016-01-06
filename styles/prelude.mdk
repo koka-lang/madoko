@@ -307,6 +307,11 @@ Bibitem {
   .bibitem-before { tex-cmd:\mdbibitemlabel }
 }
 
+@if tex {
+  bibliography { #sec-bibliography; toc; toc-line: "&name-references;"; tex-label-inner-before:"&id;" }
+}
+
+
 <!-------------------------------------------------------------------
    Bibliography styling in HTML
 --------------------------------------------------------------------->
