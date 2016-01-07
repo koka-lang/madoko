@@ -394,7 +394,8 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
         }
         match(options.embedinfos[link]) {
           Just(info) | info.embedData != "" -> 
-            "<style type=\"text/css\" " + attrs.htmlFormat("style",False) + ">\n/*# sourceURL=" + escape(link) + " */\n" + info.embedData + "\n  </style>\n"
+            "<style type=\"text/css\" " + attrs.htmlFormat("style",False) + ">\n/*# sourceURL=" + escape(link) + " */\n" + 
+              info.embedData.compressCss + "\n  </style>\n"
           _ -> {
             if (link.relative) then {
               log("filesRefer",link);
@@ -451,7 +452,12 @@ public function fmtHtmlFull(html : string, options : options, metadata : dict<st
   htmlDoc
 }
 
+function compressCss( css :string ) : string {
+  css.replaceAll(rxComment,"").replaceAll(rxEmptyLines,"\n")
+}
 
+val rxComment = regex(@"/\*[\s\S]*?\*/")
+val rxEmptyLines = regex(@"\r?\n([ \t]*\r?\n)+")
 
 /* --------------------------------------
   Escape HTML Elements 

@@ -67,9 +67,11 @@ function update( options : options, key : string, xvalue : string, mdata : metad
                    then lvalue.replaceAll(" ","-") // normalize CSL style name
                    else value
     // we need to log here since we don't always 'read' the cls if the bibs are unchanged
-    log("files", cslname.defaultExt(".csl"))
-    log("files", "madoko.csl")
-    log("files", "locales-en-US.xml")
+    if (cslname.bool) {
+      log("files", cslname.defaultExt(".csl"))
+      log("files", "madoko.csl")
+      log("files", "locales-en-US.xml")
+    }
     options(cslStyle=cslname) 
   }
   elif (key=="locale") { options(locale=normalizeLocale(value)) }  
@@ -88,7 +90,17 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="fragment-start" || key=="extract-start") options(extractStart=xvalue)
   elif (key=="fragment-end" || key=="extract-end") options(extractEnd=xvalue)
   
-  elif (key=="cite-style") options(citestyle=parseCiteStyle(lvalue))
+  elif (key=="cite-style") {
+    if (lvalue=="clear" || lvalue=="none") then options(citestyle = Nothing)
+    elif (lvalue=="") then options
+    else match(parseCiteStyle(lvalue)) {
+      Nothing -> {
+        warning("unrecognized citation style: " + lvalue)
+        options
+      }
+      Just(cs) -> options(citestyle=Just(cs))
+    }      
+  }
   elif (key=="cite-all") options(citeAll=(value!="")) 
   elif (key=="math-mode") options.setMathMode(value)
   elif (key=="math-static" || key=="math-dir") options(math = (options.math)(imgDir = if (lvalue=="true") then "math" else value))

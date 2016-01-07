@@ -170,7 +170,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texcolor2",   regex(@"^\{\s*\\color\b\s*" + optarg + "?" + texargg + texargs + @"\}"), texTextColor ),
   Rule("texcolor3",   regex(@"^\\(f)?colorbox\b\s*" + optarg + "?" + texargg + texargg), texColorBox ),
 
-  Rule("texinst",     regex(@"^\\(?:inst|IEEEauthorrefmark)\b\s*" + texarg), texInst ),
+  Rule("texinst",     regex(@"^\\(?:inst|IEEEauthorrefmark|etalchar)\b\s*" + texarg), texInst ),
 
 
   Rule("texsize",     regex(@"^\{\\(" + texFontSizes + @")\b\s*" + texargs + @"\}"), texFontSize ),

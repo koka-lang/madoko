@@ -39,7 +39,7 @@ public function parseMeta( options0 : options, fmt : formatter, txt : string ) :
   val mdataDef  = parsePlainMeta(defaultMeta(options0,fmt), fmt,options0.lineMap, verbose=options0.verbose >= 4).fst      
   // set options from metadata
   val mdataFull = mdataDef + options0.cmetadata + mdata2
-  val mdataModed = mdataFull.evalConditionals(options0.verbose >= 4)
+  val mdataModed = mdataFull.evalConditionals(options0.verbose)
   val options2 = options0.fromMeta(mdataModed)
   val options = options2( metadata = mdataModed )
 
@@ -192,12 +192,12 @@ function escapeAt( s : string ) : string {
 // Flatten conditional keys into non-conditional list
 // --------------------------------------------------------------
 
-function evalConditionals( mdata :cmetadata, verbose : bool = False ) : <div> metadata {
+function evalConditionals( mdata :cmetadata, verbose : int = 0 ) : <div> metadata {
   val modes = mdict()
   flatten(mdata,modes,verbose)
 }
 
-function flatten( mdata:cmetadata, modes:mdict<h,constant>, verbose : bool ) : <div,st<h>> metadata {
+function flatten( mdata:cmetadata, modes:mdict<h,constant>, verbose : int ) : <div,st<h>> metadata {
   mdata.concat fun(ckey) {
     match(ckey) {
       Key(key,value) -> {
@@ -205,8 +205,8 @@ function flatten( mdata:cmetadata, modes:mdict<h,constant>, verbose : bool ) : <
       }
       Support(condition,body,lineInfo) -> {
         logLocation(lineInfo)
-        val b = evaluateBool(condition,modes,mdata) 
-        if (verbose) then trace("evaluate: " + condition + " -> " + b.show + ": " + lineInfo)
+        val b = evaluateBool(condition,modes,mdata,verbose) 
+        if (verbose >= 4) then trace("evaluate: " + condition + " -> " + b.show + ": " + lineInfo)
         if (b)
          then flatten(body,modes,verbose)
          else []
@@ -220,15 +220,18 @@ function flatten( mdata:cmetadata, modes:mdict<h,constant>, verbose : bool ) : <
 // Evaluate expressions in the context of metadata
 // --------------------------------------------------------------
 
-function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetadata, current : list<string> = []  ) : <div,st<h>> bool {
+function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetadata, verbose : int  , current : list<string> = []) : <div,st<h>> bool {
   var recursive := False
   function lookup(v,display) {
     if (current.contains(v)) {
       recursive := True
       String("False")
     }
-    else match(lookupMode(modes,v,mdata,Cons(v,current))) {
-      Nothing -> error("undefined variable: " + display)
+    else match(lookupMode(modes,v,mdata,Cons(v,current),verbose)) {
+      Nothing -> {
+        if (verbose >= 2) warning("undefined variable: " + display)
+        String("False")
+      }
       Just(c) -> c
     }
   }
@@ -240,7 +243,7 @@ function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetada
 }
 
 
-function lookupMode( modes : mdict<h,constant>, mode : string, mdata : cmetadata, current : list<string> ) : <div,st<h>> maybe<constant> {
+function lookupMode( modes : mdict<h,constant>, mode : string, mdata : cmetadata, current : list<string>, verbose : int ) : <div,st<h>> maybe<constant> {
   match(modes[mode]) {
     Just(c) -> {
       //trace("pre-evaluated: " + mode + ": " + c.show)
@@ -260,9 +263,9 @@ function lookupMode( modes : mdict<h,constant>, mode : string, mdata : cmetadata
           }
           Support(cond,body,_lineInfo) -> {
             if (body.containsKey(mode)) then {
-              if (evaluateBool(cond,modes,mdata,current)) {
+              if (evaluateBool(cond,modes,mdata,verbose,current)) {
                 //trace(" look inside: " + cond)
-                lookupMode(modes,mode,body,current)
+                lookupMode(modes,mode,body,current,verbose)
               }
               else {
                 //trace(" support " + cond + " contains " + mode + " but is false: " + lineInfo )
