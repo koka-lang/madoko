@@ -80,6 +80,20 @@ public function xnormalize( path : string ) : string {
 
 val rxPathSep = regex(@"[\\/]")
 
+
+public function tryCopyTextFileFromTo( fname, srcDir, outDir, required = False ) {
+  tryCopyTextFile( combine(srcDir,fname), combine(outDir,fname), required)
+}
+
+public function tryCopyTextFile( fileName : string, outName : string, required = False ) : io bool {
+  match(tryReadTextFile( fileName, required )) {
+    Left -> False
+    Right(txt) -> tryWriteTextFile(outName,txt)
+  }
+}
+
+
+
 /*---------------------------------------------------------------------------
   File access
 ---------------------------------------------------------------------------*/
