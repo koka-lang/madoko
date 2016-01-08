@@ -14,6 +14,7 @@ import std/dict
 import std/string
 import std/regex
 import std/crypto
+import std/path   // extname
 import common
 import attributes
 import inline
@@ -195,8 +196,11 @@ public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string
   val height   = (scale * mi.height / fontsize)
   val width    = (scale * mi.width / fontsize)
   val xattrs0  = if (valign== 0.0) then attrs 
-                  else attrs.addKeyvalIfNotExist("vertical-align",valign.showFixed(4) + "em")
-  val xattrs  = xattrs0.addKeyvalIfNotExist("height",height.showFixed(4) + "em").addClass("math")
+                  else attrs.addKeyvalIfNotExist("vertical-align",valign.showFixed(4) + "em")     
+  val xattrs1  = xattrs0.addClass( 
+                  if (mi.imageData.startsWith(svgPrefix) || mi.imageName.extname.toLower == ".svg")
+                    then "math-render-svg" else "math-render-png")
+  val xattrs  = xattrs1.addKeyvalIfNotExist("height",height.showFixed(4) + "em").addClass("math")
   val wattrs  = xattrs.addKeyvalIfNotExist("width", width.showFixed(4) + "em")
   
   if (height<=0.0 || width<=0.0) {
