@@ -142,7 +142,10 @@ function lineText( b :  block ) {
 
 function getLineInfo( attrs : attrs ) : string {
   match(attrs.hasKey("data-line")) {
-    Just(info) -> "%mdk-data-line={" + info + "}\n" 
+    Just(info) -> {
+      val lineno = parseLineInfo(info).snd
+      if (lineno <= 0 || info.startsWith("0;")) then "" else "%mdk-data-line={" + info + "}\n" 
+    }
     Nothing    -> ""    
   }
 }

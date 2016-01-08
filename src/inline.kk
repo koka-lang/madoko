@@ -207,11 +207,15 @@ public function logDataLine( attrs ) : () {
 // Parse _inline_ markdown elements and return formatted html
 public function formatInline( context : inlineContext, txt : string, attrs : attrs = attrsNone ) : string
 {
-  val (linePrefix,lineNo) = match(attrs.lookupKey("data-line","").find(rxDataLine)) {
-    Nothing   -> ("",0)
-    Just(cap) -> (cap.groups[1],cap.groups[2].parseInt().maybe(0,id))
-  } 
+  val (linePrefix,lineNo) = parseLineInfo(attrs.lookupKey("data-line",""))
   formatInlineAcc(context,builder(), txt, lineNo, linePrefix )
+}
+
+public function parseLineInfo( lineInfo : string ) : (string,int) {
+  match (lineInfo.find(rxDataLine)) {
+    Nothing   -> ("",0)
+    Just(cap) -> (cap.groups[1],cap.groups[2].parseIntDefault(0))
+  } 
 }
 val rxDataLine = regex( @"^(.*:)?(\d+)$")
 
