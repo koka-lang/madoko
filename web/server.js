@@ -71,7 +71,7 @@ var Url     = require("url");
 var express       = require('express');
 var bodyParser    = require("body-parser");
 var cookieSession = require("cookie-session");
-
+var compress      = require('compression');
 
 // -------------------------------------------------------------
 // Wrap promises
@@ -286,6 +286,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
 // -------------------------------------------------------------
 var app = express();
 
+app.use(compress());
 app.use(function(req, res, next) {
   if (req.headers['content-type']==="application/csp-report") {
     req.headers['content-type'] = "application/json";

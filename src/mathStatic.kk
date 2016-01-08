@@ -112,11 +112,12 @@ public function mathStatic( mathPlain : string, mathFull : string,
    then return continue(Nothing)
 
   xopts.print("rendering math.")
-  if ((outMathPlain != oldMathPlain || xopts.rebuild) && !(tryWriteTextFile(texNamePlain,outMathPlain))) {
+  if ((outMathPlain != oldMathPlain || xopts.rebuild || !fexistsSync(texNamePlain)) && 
+      !(tryWriteTextFile(texNamePlain,outMathPlain))) {
     xopts.printErr("error: unable to write: " + texNamePlain)
     return continue(Nothing)
   }
-  if ((outMathFull != oldMathFull || xopts.rebuild) && !(tryWriteTextFile(texNameFull,outMathFull))) {
+  if ((outMathFull != oldMathFull || xopts.rebuild || !fexistsSync(texNameFull)) && !(tryWriteTextFile(texNameFull,outMathFull))) {
     xopts.printErr("error: unable to write: " + texNameFull)
     return continue(Nothing)
   }
