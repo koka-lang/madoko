@@ -708,6 +708,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
         _       -> ""
        }
     }
+    Markdown(Just(f)) | !(f == context.fmt) -> ""
     Markdown | attrsd.notag -> context.formatInline(txt)
     // MathDefs, Tex, Markdown 
     _  -> context.fmtCmd("span", context.formatInline(txt), attrsd )
