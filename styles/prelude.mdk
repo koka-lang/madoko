@@ -10,7 +10,6 @@ Bib Label       : True
 Math Mode       : static
 Title Running   :
 Author Running  :
-Csl Style       :
 Bib Search Url  :
 
 <!-- standard elements -->
@@ -296,13 +295,13 @@ Bibitem {
   Bibl { before: "# &name-references; { -; .heading-references }&nl;" }
 }
 
-@if not(tex) or (csl-style!="") {
+@if not(tex) or (csl-style!="False") {
   Bibitem { before: '[&bibitem-label;]{.bibitem-before}' }
 }
-@if not(tex) and (csl-style=="") {
+@if not(tex) and (csl-style=="False") {
   Bibitem { bibitem-label:"[&cite-label;]" }
 }
-@if tex and (csl-style!="") {
+@if tex and (csl-style!="False") {
   Bib Label: hide
   .bibitem-before { tex-cmd:\mdbibitemlabel }
 }
