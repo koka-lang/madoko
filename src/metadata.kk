@@ -229,7 +229,7 @@ function evaluateBool( cond : string, modes : mdict<h,constant>, mdata : cmetada
     }
     else match(lookupMode(modes,v,mdata,Cons(v,current),verbose)) {
       Nothing -> {
-        if (verbose >= 2) warning("undefined variable: " + display)
+        if (verbose >= 3) warning("undefined variable: " + display)
         String("False")
       }
       Just(c) -> c
