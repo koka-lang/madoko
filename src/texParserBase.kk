@@ -61,7 +61,7 @@ public val stdPackages = ["iftex","etoolbox","xkeyval","xcolor","mdframed","grap
                   ].join(";")
 
 public function unbrace(s : string ) : string {
-  if (s.startsWith("{") && s.endsWith("}")) 
+  if (s.startsWith("{") &&  (s.indexOf("}") == s.length-1)) 
    then s.substr(1,s.length-2) else s
 }
 
