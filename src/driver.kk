@@ -72,7 +72,7 @@ public function processContent( inName : string, outName : string, content : str
                   else opts2.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
-    val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",True)
+    val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",False)
     val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math)
 
     val xopts  = opts2(math=(opts2.math)(dim=mdim,svgDefs=svgdefs))
