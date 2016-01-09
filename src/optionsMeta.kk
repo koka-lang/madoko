@@ -61,7 +61,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
     if (value.extname!="" || value.dirname!="") { // we need to log here since we don't always 'read' the bst if the bibs are unchanged
       log("files", value.defaultExt(".bst"))
     }
-    options(bibStyle=Bst(value,""))
+    if (value.bool) then options(bibStyle=Bst(value,"")) else options
   }
   elif (key=="csl-style") { 
     val cslname = if (value.extname.isEmpty && value.dirname.isEmpty) 
@@ -69,11 +69,12 @@ function update( options : options, key : string, xvalue : string, mdata : metad
                    else value
     // we need to log here since we don't always 'read' the cls if the bibs are unchanged
     if (cslname.bool) {
-      log("files", cslname.defaultExt(".csl"))
-      log("files", "madoko.csl")
-      log("files", "locales-en-US.xml")
+      //log("files", cslname.defaultExt(".csl"))
+      //log("files", "madoko.csl")
+      //log("files", "locales-en-US.xml")
+      options(bibStyle=Csl(cslname,"")) 
     }
-    options(bibStyle=Csl(cslname,"")) 
+    else options
   }
   elif (key=="locale") { options(locale=normalizeLocale(value)) }  
   elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader.appendNL(value))
