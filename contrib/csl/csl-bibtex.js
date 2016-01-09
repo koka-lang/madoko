@@ -294,7 +294,7 @@ function convertTitles(item,bibitem,ctex) {
     item[ikey] = full;
   }
 
-  convertTitle("title",[(bibitem.bibtype==="periodical" ? "issuetitle" : ""), (main && !chapters ? "maintitle" : ""), "title"]);
+  convertTitle("title",[(bibitem.bibtype==="periodical" ? "issuetitle" : ""), (main ? (chapters ? "chapter" : "maintitle") : ""), "title"]);
   convertTitle("volume-title",[main ? (chapters ?  "booktitle" : "title") : ""]);
   convertTitle("container-title", (bibitem.bibtype==="periodical" ? ["title"] : (chapters ? ["maintitle","booktitle"] :[]).concat(["journaltitle","journal"])) );
   item["container-title-short"] = ctex(bibitem.shorttitle || bibitem.shortjournal);
@@ -303,7 +303,7 @@ function convertTitles(item,bibitem,ctex) {
   item["event-title"]     = ctex(bibitem.eventtitle);
   item["original-title"]  = ctex(bibitem.origtitle);
 
-  if (bibitem.chapter) item["chapter-number"] = bibitem.chapter;
+  if (bibitem.chapternumber || bibitem.chapter) item["chapter-number"] = bibitem.chapternumber || bibitem.chapter;
 }
 
 // ---------------------------------------------
@@ -326,13 +326,20 @@ function convertDate(item,bibitem,ikey,bikey) {
   
   dates = dates.map( function(date) {
     return (date ? date.filter( function(x) { return (x ? true : false); } ).map( function(n) {
-      return n.replace(/^\-\-+/,"-").replace(/^0+(?=\d)/,"");
+      return convertMonth(n.replace(/^\-\-+/,"-").replace(/^0+(?=\d)/,""));
     }) : null);
   }).filter( function(xs) { return (xs && xs.length>0 ? true : false); } );
 
   if (dates && dates.length>0) item[ikey] = { "date-parts": dates };
   if (bibitem[prefix+"season"]) item[ikey].season = bibitem[prefix+"season"];
   if (bibitem[prefix+"circa"]) item[ikey].season = bibitem[prefix+"circa"];  
+}
+
+var months = { "jan":1,"feb":2,"mar":3,"apr":4,"may":5,"jun":6,
+               "jul":7,"aug":8,"sep":9,"oct":10,"nov":11,"dec":12 };
+function convertMonth( m ) {
+  var i = months[m.toLowerCase()];
+  return (i != null ? i.toString() : m);
 }
 
 function convertDates(item,bibitem) {
@@ -359,6 +366,7 @@ var standardItems = {
   "abstract"          : null,
   "keywords"          : null,
   "status"            : ["pubstate"],
+  "crossref"          : null,
 }
 
 function convertStandard(item,bibitem,ctex) {
@@ -385,7 +393,7 @@ function convertMisc(item,bibitem,ctex,options) {
   
   // volume
   item.volume = joinx([bibitem.volume,bibitem.part], ".");
-  item.note   = joinx([bibitem.type!=="periodical" ? bibitem.note : "", bibitem.addendum],".");
+  item.note   = ctex(joinx([bibitem.type!=="periodical" ? bibitem.note : "", bibitem.addendum],"."));
   
   // number
   var number = bibitem.number;
