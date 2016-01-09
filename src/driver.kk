@@ -345,6 +345,14 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
   }         
 }
 
+public function outputName( inputName : string, options : commandOptions ) : string {
+  val noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 
+  val outName = if (options.convertTex) then inputName + ".mdk" else noextName + ".html"
+  if (options.outputDir=="") 
+   then outName 
+   else options.outputDir + "/" + outName.basename                  
+}
+
 function tryCopyTextFileFromNoSandboxTo( fname, srcDir, outDir ) {
   val inName = combine(srcDir,fname)
   val outName = combine(outDir,fname)

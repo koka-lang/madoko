@@ -11,7 +11,7 @@
     "article", "book", "booklet", "conference", "inbook", "incollection", 
     "inproceedings", "manual", "mastersthesis", "misc", "phdthesis", "proceedings", 
     "techreport", "unpublished",
-    "preamble", "string", "comment"
+    "preamble", "string", "comment"    
   ],
 
   "fields": [
@@ -20,7 +20,11 @@
     "month", "note", "number", "organization", "pages", "publisher", "school", 
     "series", "title", "type", "volume", "year", "url", "isbn", "issn", "lccn", 
     "abstract", "keywords", "price", "copyright", "language", "contents", 
-    "numpages", "doi", "http", "eds", "editors", "location"
+    "numpages", "doi", "http", "eds", "editors", "location",
+    "eprinttype", "etype", "eprint", "eprintpath", "eprimaryclass", "eprintclass","archiveprefix",
+    "origpublisher", "origlocation","venue","volumes","pagetotal", 
+    "annotation","annote","pubstate",
+    "date","urldate","eventdate","origdate", "urltext"
   ],
 
   

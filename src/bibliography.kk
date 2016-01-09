@@ -152,11 +152,6 @@ function writeFinalAux( auxfile : string ) : io () {
   ()
 }
 
-type bibstyle {
-  Bst( styleName: string, locale: string )
-  Csl( styleName: string, locale: string )
-}
-
 struct auxinfo(
   auxfile: string,
   auxid  : string,
@@ -179,9 +174,11 @@ public function writeCitationsData( citeData : string, outName : string, searchD
 // split citations in different parts: one for each bibliography ([BIB=<id>] element)
 function splitCiteData( citeData : string, opts : options ) : io list<(string,(string,bibstyle))> {
   if (citeData.trim == "") return []
-  val style = if (opts.cslStyle!="") then Csl(opts.cslStyle,opts.locale)
-              elif (opts.bibStyle != "") then Bst(opts.bibStyle,opts.locale) 
-              else Bst("plainnat",opts.locale)
+  val style = match (opts.bibStyle) {
+                Csl(name,loc) | loc.isEmpty -> Csl(name,opts.locale)
+                Bst(name,loc) | loc.isEmpty -> Bst(name,opts.locale)
+                bs -> bs 
+              }
   match(citeData.find(rxBibFile)) {
     Nothing   -> return [("",(citeData,style))]
     Just(cap) -> {

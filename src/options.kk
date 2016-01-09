@@ -28,6 +28,12 @@ public type mathmode {
   Static  // latex generated images
   Dynamic // mathjax
 }
+
+// Bibliography styles
+public type bibstyle {
+  Bst( styleName: string, locale: string )
+  Csl( styleName: string, locale: string )
+}
   
 public struct mathoptions (
   mode      : mathmode = Static,  // mode used to render math
@@ -95,9 +101,8 @@ public struct options(
   texFooter: string= "",   // literal tex footer 
   texSectionNum: bool = False, // use tex section numbering
   
-  bibStyle : string = "",  // bibliography style file (.bst)
+  bibStyle : bibstyle = Csl("madoko-numeric",""),  // bibliography style file (.bst or .csl)
   bib      : string = "",  // bibliography definition files (.bib)
-  cslStyle : string = "",  // bibliography style file (.csl/.xml)
   locale   : string = "en-US", // language
   
   packages : string = "",  // link to latex packages (.sty)

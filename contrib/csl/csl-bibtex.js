@@ -468,47 +468,57 @@ function convertElectronic(item,bibitem,ctex,options) {
     }
   }
   var epath = joinx([eprefix,eprint],"/");
-  function etypeid(s) { return "[" + s + "]{.etype}"; }
+  function etypeid(s) { return "[" + s + ":]{.etype}"; }
 
   // set initial url and text based on the eprint/etype
   var url = "";
   var urltext = "";
+  var urlpre  = "";
   if (eprint) {
     if (etype==="arxiv") {
-      urltext = etypeid("arXiv") + joinx([eclass,eprint],"/");
+      urlpre  = etypeid("arXiv");
+      urltext = joinx([eclass,eprint],"/");
       url     = "http://arxiv.org/" + epath; // 2015: no https support yet
     }
     else if (etype==="googlebooks") {
-      urltext = etypeid("Google Books") + eprint;
+      urlpre  = etypeid("Google Books");
+      urltext = eprint;
       url     = "https://books.google.com?id=" + epath;
     }
     else if (etype==="jstor") {
-      urltext = etypeid("JSTOR") + eprint;
+      urlpre  = etypeid("JSTOR");
+      urltext = eprint;
       url     = "https://www.jstor.org/stable/" + epath;
     }
     else if (etype==="pmcid") {
-      urltext = etypeid("PMCID") + eprint;
+      urlpre  = etypeid("PMCID");
+      urltext = eprint;
       url     = "https://www.ncbi.nlm.nih.gov/pmc/articles/" + epath;
     }
     else if (etype==="pubmed") {
-      urltext = etypeid("PMID") + eprint;
+      urlpre  = etypeid("PMID");
+      urltext = eprint;
       url     = "https://www.ncbi.nlm.nih.gov/pubmed/" + epath;
     }
     else if (etype==="zbl") {
-      urltext = etypeid("Zbl") + eprint;
+      urlpre  = etypeid("Zbl");
+      urltext = eprint;
       url     = "https://zbmath.org/?q=an:" + epath;
     }
     else if (etype==="hdl") {
-      urltext = etypeid("HDL") + eprint;
+      urlpre  = etypeid("HDL");
+      urltext = eprint;
       url     = "https://hdl.handle.net/" + epath;
     }  
     else if (etype==="mr") {
-      urltext = etypeid("MR") + eprint;
+      urlpre  = etypeid("MR");
+      urltext = eprint;
       url     = "https://www.ams.org/mathscinet-getitem?mr=MR" + epath;
     }  
   }
   // this is the text displayed for a url
   item.URLtext = ctex(bibitem.urltext) || urltext;
+  item.URLpretext = ctex(bibitem.urlpretext) || urlpre;
 
   // for future compat, emit the eprint/eprinttype fields
   if (etype && eprint) {

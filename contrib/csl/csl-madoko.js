@@ -169,8 +169,10 @@ var madokoFormat = {
     }
   },
   "@URL/true": function (state, str) {
-    var urltext = getBibitem(this,state).URLtext || str;
-    return "[" + urltext + "](" + escapeURL(str) + ")";
+    var bibitem = getBibitem(this,state);
+    var urltext = bibitem.URLtext || str;
+    var urlpre  = bibitem.URLpretext || "";
+    return (urlpre ? "[" + urlpre + "]{.urlpre}" : "") + "[" + urltext + "](" + escapeURL(str) + ")";
   },
   "@DOI/true": function (state, str) {
     var doitext = getBibitem( this, state).DOItext || str;

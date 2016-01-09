@@ -310,7 +310,7 @@ function defaultMeta( options : options, fmt : formatter ) : string {
       // formatter
       fmt.showFormatter + ": True",
       // legacy for old prelude
-      @"~Bibliography : bibstyle='" + options.bibStyle + @"' bibdata='" + options.bib.splitPaths.join(",") + "' tex-elem=mdBibliography",
+      @"bibliography { bibstyle:'" + options.bibStyle.styleName + @"'; bibdata:'" + options.bib.splitPaths.join(",") + "'; tex-elem:mdBibliography }",
     ] +
     ["\n"]
   ).join("\n") 

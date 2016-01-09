@@ -103,20 +103,21 @@ public function include( text : string, fast : bool, inName : string, outName : 
       ("","\n")  // happens for snippet only includes
     }
     elif (fname.startsWith("BIB=")) then {
-      val auxStem  = fname.substr(4)
-      val fileName  = outName.noext + "-bib" + (if (auxStem=="") then "" else "-" + auxStem) + ".bbl.mdk"      
-      match (includes[fileName]) {
-        Just(content) -> (fname,content)
-        Nothing -> {
-          val bbl = readTextFileDef( fileName, "", True)  
-          val content = ("~ Begin Bibl { id: \"" + auxStem + "\"; bib-id: \"" + auxStem + "\"; bbl-file: \"" + fileName + "\" }\n" + 
-                         (if (bbl=="") then "~ Begin Bibliography { .bib-numeric caption=\"0\"}\n~ End Bibliography\n" 
-                                       else bbl) + 
-                         "\n~ End Bibl\n")
-          includes[fileName] := content
-          (fileName,content)
-        }
-      }
+      val auxStem = fname.substr(4)
+      val fileName= outName.noext + "-bib" + (if (auxStem=="") then "" else "-" + auxStem) + ".bbl.mdk"      
+      val bbl     = match (includes[fileName]) {
+                      Just(s) -> s
+                      Nothing -> {
+                        val s = readTextFileDef( fileName, "", True)  
+                        includes[fileName] := s
+                        s
+                      }
+                    }
+      val content = ("~ Begin Bibl { id: \"" + auxStem + "\"; bib-id: \"" + auxStem + "\"; bbl-file: \"" + fileName + "\" }\n" + 
+                     (if (bbl=="") then "~ Begin Bibliography { .bib-numeric; caption:\"0\"}\n~ End Bibliography\n" 
+                                   else bbl) + 
+                     "\n~ End Bibl\n")
+      (fileName,content)
     }
     else {
       // avoid including recursively

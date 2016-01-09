@@ -61,7 +61,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
     if (value.extname!="" || value.dirname!="") { // we need to log here since we don't always 'read' the bst if the bibs are unchanged
       log("files", value.defaultExt(".bst"))
     }
-    options(bibStyle=value)
+    options(bibStyle=Bst(value,""))
   }
   elif (key=="csl-style") { 
     val cslname = if (value.extname.isEmpty && value.dirname.isEmpty) 
@@ -73,7 +73,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
       log("files", "madoko.csl")
       log("files", "locales-en-US.xml")
     }
-    options(cslStyle=cslname) 
+    options(bibStyle=Csl(cslname,"")) 
   }
   elif (key=="locale") { options(locale=normalizeLocale(value)) }  
   elif (key=="html-header") options(htmlHeader=if(value=="") then "" else options.htmlHeader.appendNL(value))
