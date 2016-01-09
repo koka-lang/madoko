@@ -305,9 +305,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       match (attrs.hasKey("bib-id")) {
         Just(bibid) -> {
           log("aux","%mdk bib: " + bibid 
-                + (attrs.hasKey("csl-style").maybe("",fun(s) { ", csl-style:" + s }))
-                + (attrs.hasKey("bib-style").maybe("",fun(s) { ", bib-style:" + s }))
-                + (attrs.hasKey("locale").maybe("",fun(s) { ", locale:" + s })) 
+                + (attrs.hasKey("csl-style").maybe("",fun(s) { ", csl-style:" + s.show }))
+                + (attrs.hasKey("bib-style").maybe("",fun(s) { ", bib-style:" + s.show }))
+                + (attrs.hasKey("locale").maybe("",fun(s) { ", locale:" + s.show })) 
              )
         }
         Nothing     -> ()
