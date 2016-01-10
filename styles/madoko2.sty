@@ -915,7 +915,12 @@
   \let\md@hide@biblabel\@biblabel
   \def\@biblabel##1{\setbox\@tempboxa\hbox{\md@hide@biblabel{##1}}\hspace*{\wd\@tempboxa}}%
 }
+\newcommand\mdjustbiblabel{%
+  \def\mdbibitemlabel##1{}% suppress CSL generated label
+}
 
+\ifoptionequal{/madoko/bib-label}{true}{\mdjustbiblabel}{%
+\ifoptionequal{/madoko/bib-label}{True}{\mdjustbiblabel}{%
 \ifoptionequal{/madoko/bib-label}{false}{\mdsupressbiblabel}{%
 \ifoptionequal{/madoko/bib-label}{False}{\mdsupressbiblabel}{%
 \ifoptionequal{/madoko/bib-label}{force}{\mdforcebiblabel}{%
@@ -924,7 +929,7 @@
 \ifoptionequal{/madoko/bib-label}{Keep}{\mdkeepbiblabel}{%
 \ifoptionequal{/madoko/bib-label}{hide}{\mdhidebiblabel}{%
 \ifoptionequal{/madoko/bib-label}{Hide}{\mdhidebiblabel}{%
-}}}}}}}}
+}}}}}}}}}}
 
 \newcommand\mdsetrefname[1]{%
   \ifdef\bibname{\def\bibname{#1}}{\def\refname{#1}}%
