@@ -289,7 +289,7 @@ var Preview = (function() {
 
   var lastScrollTop = -1;
   var userScrolled = false;
-  window.addEventListener("scroll", function() { userScrolled = true; } )
+  window.addEventListener("scroll", function() { lastScrollTop = -1; userScrolled = true; } )
 
   function scrollToLine( info )
   {

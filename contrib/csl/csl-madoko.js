@@ -343,6 +343,7 @@ function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex,
     // parse bibtex to a bibiliography object; bibtex can be either pre-parsed JSON or bibtex
     var bibconv = Bibtex.convertToCsl(bibtexs,convertTex,options);
     var bib     = bibconv.bib;
+    var jsonBib = JSON.stringify(bib,null,2) // do early since citeproc mutates bib for dates
     var warnings = bibconv.warnings;
 
     // fix-up with 'system_id' entries, needed for citeproc.js
@@ -453,7 +454,7 @@ function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex,
 
     return {
       bibliography: bibl,
-      bib         : JSON.stringify(bib,null,2),
+      bib         : jsonBib,
       warnings    : warnings,
       errors      : "",
       citeformat  : citeformat,
