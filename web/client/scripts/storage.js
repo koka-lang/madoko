@@ -244,10 +244,12 @@ function serverGetInitialContent(fpath,opts) {
     opts.nosync = false;
     if (err.httpCode === 404 || err.httpCode === 400) {
       if (Util.extname(fpath) === ".csl") {
+        Util.message("downloading csl style '" + Util.stemname(fpath) + "' from the citation style repository", Util.Msg.Info );
         var url = "https://raw.githubusercontent.com/citation-style-language/styles/master/" + Util.basename(fpath).replace(/[ ]/g,"-");
         return Util.requestGET( url )
       }
       else if (Util.extname(fpath) === ".xml" && Util.startsWith(Util.basename(fpath), "locales-")) {
+        Util.message("downloading locale '" + Util.stemname(fpath) + "' from the citation style repository", Util.Msg.Info );
         var url = "https://raw.githubusercontent.com/citation-style-language/locales/master/" + Util.basename(fpath).replace(/[ ]/g,"-");
         return Util.requestGET( url )
       }
