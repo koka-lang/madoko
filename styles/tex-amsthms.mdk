@@ -12,7 +12,6 @@ Documentation:
   Proof      { before:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {tex-env:proof}&nl;&source;&nl;~End Thm&nl;"; notag }
   ThmCaption { tex-elem:mdThmCaption; tight: true }
   Thm        { tex-elem:mdThm; tight: true  }
-  test3: test3
 }
 
 @if tex and tex2 {
@@ -22,8 +21,7 @@ Documentation:
   Proposition{ replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:proposition}&nl;&source;&nl;~End Thm&nl;" }
   Definition { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:definition}&nl;&source;&nl;~End Thm&nl;" }
   Example    { replace:clear; replace:"~Begin ThmCaption&nl;&caption;&nl;~End ThmCaption&nl;~Begin Thm {thm-env:example}&nl;&source;&nl;~End Thm&nl;"  }
-  Proof      { replace:clear; replace:"~Begin Thm {tex-env:proof}&nl;[&caption;]{.thm-caption}&source;&nl;~End Thm&nl;"  }
+  Proof      { replace:clear; replace:"~Begin Thm {tex-env:proof}&nl;[(&caption;) ]{.thm-caption}&source;&nl;~End Thm&nl;"  }
   ThmCaption { tex-env:mdthmcaption  }
   Thm        { tex-env:"mdthm[&thm-env;]"; display:block }
-  test5: test5
 }
