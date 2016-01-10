@@ -764,7 +764,7 @@
 \settowidth\presp{\texttt{ }}
 \newcommand\prespace{\hspace*{\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
-\newcommand\prebr{\strut\newline}
+\newcommand\prebr{\strut\newline\strut\ignorespaces}
 
 \newenvironment{mdpre}%
   {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright%
