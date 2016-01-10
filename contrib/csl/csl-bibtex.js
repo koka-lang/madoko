@@ -294,7 +294,7 @@ function convertTitles(item,bibitem,ctex) {
     item[ikey] = full;
   }
 
-  convertTitle("title",[(bibitem.bibtype==="periodical" ? "issuetitle" : ""), (main ? (chapters ? "chapter" : "maintitle") : ""), "title"]);
+  convertTitle("title",[(bibitem.bibtype==="periodical" ? "issuetitle" : ""), (main && !chapters ? "maintitle" : ""), "title"]);
   convertTitle("volume-title",[main ? (chapters ?  "booktitle" : "title") : ""]);
   convertTitle("container-title", (bibitem.bibtype==="periodical" ? ["title"] : (chapters ? ["maintitle","booktitle"] :[]).concat(["journaltitle","journal"])) );
   item["container-title-short"] = ctex(bibitem.shorttitle || bibitem.shortjournal);
