@@ -7,7 +7,7 @@ Description:
 Keywords      : Set the `Keywords` metadata key 
 Classification: Set the ACM `Classification` metadata key
 Copyright     : Set the `Copyright` metadata key
-Bib style     : plainnat
+Bib label     : True
 Doc Class     : [UKenglish]style/lipics.cls
 Heading base  : 2
 Refer         : cc-by.pdf
