@@ -195,7 +195,7 @@
       </if>
       <else-if type="bill book graphic legislation motion_picture report song" match="any">
         <text variable="title" text-case="title" font-style="italic"/>
-        <group prefix=" (" suffix=")" delimiter=" ">
+        <group prefix=" (" suffix=")" delimiter="&nbsp;">
           <text term="version"/>
           <text variable="version"/>
         </group>
@@ -290,7 +290,7 @@
       <else-if type="bill book graphic legal_case legislation motion_picture report song" match="any">
         <group prefix=". " delimiter=". ">
           <group>
-            <text term="volume" form="long" text-case="capitalize-first" suffix=" "/>
+            <text term="volume" form="long" text-case="capitalize-first" suffix="&nbsp;"/>
             <number variable="volume" form="numeric"/>
           </group>
           <group>
@@ -303,10 +303,10 @@
         <choose>
           <if variable="page" match="none">
             <group prefix=", ">
-              <text term="volume" form="long" suffix=" "/>
+              <text term="volume" form="long" suffix="&nbsp;"/>
               <number variable="volume" form="numeric"/>
             </group>
-            <group prefix=", " delimiter=" ">
+            <group prefix=", " delimiter="&nbsp;">
               <text term="chapter" form="long" />
               <text variable="chapter-number"/>
             </group>
@@ -324,7 +324,7 @@
               <text variable="volume" suffix=":"/>
               <text variable="page"/>              
             </group>
-            <group prefix=", " delimiter=" ">
+            <group prefix=", " delimiter="&nbsp;">
               <text term="chapter" form="long" />
               <text variable="chapter-number"/>
             </group>
@@ -369,7 +369,7 @@
                 <choose>
                   <if variable="volume">
                     <group>
-                      <text term="volume" form="long" suffix=" "/>
+                      <text term="volume" form="long" suffix="&nbsp;"/>
                       <number variable="volume" form="numeric"/>
                       <label variable="locator" form="long" prefix=", " suffix=" "/>
                     </group>
@@ -446,7 +446,7 @@
             </group>
           </if>
           <else>
-            <group delimiter=" ">
+            <group delimiter="&nbsp;">
               <text variable="collection-title" text-case="title"/>
               <text variable="collection-number"/>
             </group>
