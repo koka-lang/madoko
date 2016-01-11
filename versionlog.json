@@ -1,12 +1,18 @@
 {
   "log" : [
     { "version": "1.0.0-rc2",
-      "date": "2016-01-06",
+      "date": "2016-01-11",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
       "updates": [
         "Improved bibliography rendering for CSL/BibTeX and HTML/PDF",
+        "Added three new standard CSL styles: _Madoko Numeric_, _Madoko Numeric Short_, and _Madoko Natural_.",
+        "CSL styles are automatically downloaded for the CSL style repository",
         "Improved spell checking",
-        "Fix table-of-content bug with references in LaTeX"
+        "Updated display of files in the UI",
+        "Fix table-of-content bug with references in LaTeX",
+        "Fix mathematics update logic and vertical alignment",
+        "Fix auto-scroll error in the preview",
+        "Fix file path encoding in Onedrive for Chinese characters"
       ]
     }, 
     { "version": "1.0.0-rc1",
