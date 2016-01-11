@@ -723,7 +723,8 @@ function readFiles( userpath, docname, pdf, out ) {
                 "-bib.bbl.mdk", "-bib.bib.json",
                ]
                 .concat( pdf ? [".pdf",".tex"] : [] )
-                .map( function(s) { return combine( outdir, stem + s ); });
+                .map( function(s) { return combine( outdir, stem + s ); })
+                .concat( pdf ? [combine(outdir,"madoko2.sty")] : [] );
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
