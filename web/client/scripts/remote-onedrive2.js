@@ -32,7 +32,7 @@ var onedrive2 = new OAuthRemote( {
 var longTimeout = 60000; // 1 minute for pull or push content
 
 function encodeURIPath(s) {
-  var p = escape(s);
+  var p = encodeURI(s);
   return p.replace(/%2F/g,"/");
 }
 
