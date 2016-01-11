@@ -10,7 +10,7 @@
   "entries": [
     "article", "book", "booklet", "conference", "inbook", "incollection", 
     "inproceedings", "manual", "mastersthesis", "misc", "phdthesis", "proceedings", 
-    "techreport", "unpublished",
+    "techreport", "unpublished","xdata",
     "preamble", "string", "comment"    
   ],
 

@@ -338,7 +338,7 @@ function convertDate(item,bibitem,ikey,bikey) {
 var months = { "jan":1,"feb":2,"mar":3,"apr":4,"may":5,"jun":6,
                "jul":7,"aug":8,"sep":9,"oct":10,"nov":11,"dec":12 };
 function convertMonth( m ) {
-  var i = months[m.toLowerCase()];
+  var i = months[m.toLowerCase().substr(0,3)];
   return (i != null ? i.toString() : m);
 }
 
@@ -366,7 +366,6 @@ var standardItems = {
   "abstract"          : null,
   "keywords"          : null,
   "status"            : ["pubstate"],
-  "crossref"          : null,
 }
 
 function convertStandard(item,bibitem,ctex) {
@@ -427,6 +426,11 @@ function convertMisc(item,bibitem,ctex,options) {
     }
     var langinfo = Locales.getLocaleInfo(lang);  
     if (langinfo) item.language = langinfo.langid;
+  }
+
+  // crossref
+  if (bibitem.crossref && bibitem.crossreftype && bibitem.crossreftype !== "xdata") {
+    item.crossref = bibitem.crossref;
   }
 }
 
@@ -624,7 +628,10 @@ function resolveCrossRefs( bibitem, bibitems, options ) {
   [bibitem.crossref,bibitem.xdata].forEach( function(cref) {
     if (cref) {
       var base = getCrossRef(cref, bibitems, options );
-      if (base) extendWithNew(bibitem,base);
+      if (base) {
+        extendWithNew(bibitem,base);
+        bibitem.crossreftype = base.bibtype;
+      }
     }
   });
 }
