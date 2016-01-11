@@ -29,11 +29,13 @@ sub-directories will be accessible to Madoko. Here we run it with access
 to the current directory:
 ```
 > madoko-local -l .
-listening on          : http://localhost
-connecting securely to: https://www.madoko.net
-serving files under   : C:\Users\dknuth\docs
+listening on           : http://localhost
+connecting securely to : https://www.madoko.net
+serving files under    : C:\Users\dknuth\docs
 
-access server at      : http://localhost#secret=OsuwK3HbMoI7
+---------------------------------------------------------------
+access server at       : http://localhost#secret=OsuwK3HbMoI7
+---------------------------------------------------------------
 ```
 This starts a local server that only listens on the local host and does
 not accept connections from outside. It also shows that it connects using
@@ -133,20 +135,28 @@ mount-directory in the local configuration file at
 
 When you pass the `--run` flag, the `madoko-local` program will not
 only serve files, but also run the local Madoko installation to generate
-PDF's, render mathematics, or generate the bibliography. It will store
+PDF's, render mathematics, or generate the bibliography. This means that
+the Madoko web server is only used for the editing environment and updates
+-- all document processing will be done locally. 
+
+When running locally, `madoko-local` will store
 files temporarily under the `<rundir>/.madoko` directory where it runs
 Madoko with the `--sandbox` flag to restrict access to files under that
 directory only. 
 
-When running Madoko locally, you need to have installed both Madoko and LaTeX.
+When running Madoko locally, you need to have both Madoko and LaTeX installed.
 Madoko can be installed through the Node package manager as:
 ```
 > npm install -g madoko
 ```
 For LaTeX, the latest [TexLive] full installation is recommended since it
 is also used on the Madoko server and it respects the `openin_any` and
-`openout_any` settings which are needed to run LaTeX in a sandboxed mode
-too.
+`openout_any` settings which are needed to run LaTeX safely in a sandboxed mode. 
+Also, for rendering of mathematics, you need to ensure you have
+`dvisvgm` version 1.14 or higher installed. Instructions on how to
+upgrade `dvisvgm` can be found in the [reference manual][dvisvgm].
+
+[dvisvgm]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#dvisvgm 
 
 # Security
 

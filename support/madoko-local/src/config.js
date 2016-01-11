@@ -9,7 +9,7 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define([],function() {
 
-var version = "0.5.1-beta"; 
+var version = "0.5.2-beta"; 
 var main    = "madoko-local";
 
 return {

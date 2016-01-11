@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.5.2-beta",
+      "date"   : "2016-01-11",
+      "updates": [
+        "Return `madoko2.sty` style file when generating PDF"
+      ]
+    },
     { "version": "0.5.1-beta",
       "date"   : "2016-01-04",
       "updates": [
