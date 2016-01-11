@@ -533,6 +533,10 @@ span.save-link:hover {
   color: #AAA;
 }
 
+.rendered .disable {
+  color: black;
+}
+
 #connection {
   padding-right: 0em;
 }
@@ -568,6 +572,23 @@ span.save-link:hover {
   background-color: #F8F8F8;
 }
 */
+#edit-select-files .binaries {
+  margin-top: 1ex;
+}
+
+#edit-select-files .binaries>div {
+  border-top: 1px solid #AAA;
+  margin-top: 1.25ex;
+}
+#edit-select-files .rendered {
+  border-bottom: 1px solid #AAA;
+  padding-bottom: 1ex;
+}
+
+#edit-select-files div.heading {
+  font-size: xx-small;
+  color: #AAA;
+}
 
 .theme-dark #edit-select-header .disable {
   color: #BBB;

@@ -2064,7 +2064,7 @@ var UI = (function() {
         if (file.encoding === Storage.Encoding.Base64) len = (len/4)*3;
         var kb = (len + 1023)/1024; // round up..
         if (kb >= 0) {
-          extra = "<span class='file-size'>" + kb.toFixed(0) + " kb</span>";
+          extra = "<span class='file-size'>" + (kb===0 ? "0" : kb.toFixed(0)) + " kb</span>";
         }
       }
       if (file.shareUrl) {
@@ -2086,6 +2086,7 @@ var UI = (function() {
     var files = [];
     var images = [];
     var generated = [];
+    var nosyncs = [];
     var finals = [];
     var div = document.getElementById("edit-select-files");
     if (self.storage) {
@@ -2102,7 +2103,8 @@ var UI = (function() {
           var info = { line: line, path: file.path }                            
           if (Util.startsWith(file.mime,"image/")) images.push(info); 
           else if (!disable) files.push(info);
-          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(info)
+          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(info);
+          else if (file.nosync) nosyncs.push(info);
           else generated.push(info)
         }
       });
@@ -2127,15 +2129,22 @@ var UI = (function() {
       return 0;
     }
 
-    function joinLines(infos) {
-      return infos.sort(fcmp).map(function(info) { return info.line; }).join("\n");
+    function joinLines(infos,divname,heading) {
+      if (infos.length === 0) return "";
+      return (divname ? "<div class='" + divname + "'>\n" : "") +
+              (heading ? "<div class='heading'>" + heading + "</div>\n" : "") +
+               infos.sort(fcmp).map(function(info) { return info.line; }).join("\n") +
+                (divname ? "\n</div>" : "");
     }
 
     div.innerHTML = 
-      (finals.length > 0 ? "<div class='exported'>" + joinLines(finals) + "</div><hr/>" : "") +
-      joinLines(files) + 
-      (images.length > 0 || generated.length > 0 ? 
-          "<hr/><div class='binaries'>" + joinLines(images) + joinLines(generated) + "</div>" : "");
+      joinLines(finals,"rendered","rendered") +
+      joinLines(files, "files", "files") + 
+      "<div class='binaries'>" + 
+        joinLines(images,"images","images") + 
+        joinLines(generated, "generated","generated") + 
+        joinLines(nosyncs, "nosyncs","server provided") + 
+      "</div>";
   }
 
 
