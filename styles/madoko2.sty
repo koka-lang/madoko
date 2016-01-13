@@ -730,26 +730,37 @@
    \parskip\z@
   }{\end{mdparblock}}
 
-\newenvironment{mdtocblock}%
-  {\ifnum\mdtoclevel=\z@
-      \begin{itemize}[nosep,leftmargin=0pt]%
-   \else
-      \begin{itemize}[nosep]%
-   \fi
-   \advance\mdtoclevel by 1\relax
-  }%
-  {\end{itemize}}
 
-\newenvironment{mdtocitem}[1]%
-  {\def\md@toctarget{#1}%
-   \item[]%
-   \ifnum\mdtoclevel>\value{mdtoclevelbold}\else\bfseries\fi
-  }%
-  {\hspace{1ex}%
-   \ifnum\mdtoclevel>\value{mdtocleveldots}\dotfill\else\hfill\fi
-   \hspace{1ex}%
-   \pageref{\md@toctarget}%
-  }
+\newcommand\md@boldtocline[5]{%
+  \ifnum #1>\c@tocdepth \else
+  \vskip \z@ \@plus.2\p@
+    {\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
+    \parindent #2\relax\@afterindenttrue
+    \interlinepenalty\@M
+    \leavevmode
+    \@tempdima #3\relax
+    \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+    {\bfseries #4}\nobreak\hfill\nobreak
+    \hb@xt@\@pnumwidth{\hss\normalfont\normalcolor #5}%
+    \par}%
+  \fi
+}
+\newenvironment{mdtocblock}{%
+  \ifnum\mdtoclevel=0\c@tocdepth=10\relax\fi% madoko determines toc depth
+  \advance\mdtoclevel by 1\relax
+}{}
+
+\newcommand\mdtocitem[2]{%
+ \def\md@toctarget{#1}%
+ \ifnum\mdtoclevel>\value{mdtoclevelbold}%
+    \expandafter\@dottedtocline
+ \else
+    \expandafter\md@boldtocline
+ \fi
+ {\mdtoclevel}{\dimexpr 1.5em * (\mdtoclevel-1)\relax}%
+ {\dimexpr 1em + (1em * (\mdtoclevel-1))\relax}%
+ {#2}{\pageref{\md@toctarget}}%
+}
 
 %-------------------------------------------------------------
 % Code
