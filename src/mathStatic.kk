@@ -42,6 +42,7 @@ function mathHeader( xopts : options, mode : mathkind ) : string
   val mrender = xopts.math.getMathRender(mode)
   val deps    = ["% MathMode: " + mode.show,
                  "MathRender: " + mrender.show,
+                 "MathDpi: " + xopts.math.dpi.show, // for convience to easily rebuild math we include it always                  
                  "MathEmbedLimit: " + xopts.math.embedLimit.show,
                  "MathScale: " + xopts.math.getMathScale(mrender).show,
                  "MathBaseline: " + xopts.math.baseline.show,
@@ -57,7 +58,6 @@ function mathHeader( xopts : options, mode : mathkind ) : string
                     "Dvisvg: " + xopts.math.dvisvg 
                   ]
                   Png -> [
-                   "MathDpi: " + xopts.math.dpi.show,
                    "Dvipng: " + xopts.math.dvipng,
                    "Convert: " + xopts.math.convert,
                    "Dvips: " + xopts.math.dvips,
@@ -97,8 +97,8 @@ public function mathStatic( mathPlain : string, mathFull : string,
   val (texNamePlain,texNameFinalPlain,outMathPlain) = xopts.mathFormat(Plain,mathPlain,outName)
   val (texNameFull,texNameFinalFull,outMathFull) = xopts.mathFormat(Full,mathFull,outName)
 
-  val oldMathPlain = readTextFileDef(texNameFinalPlain,xopts.mathContent(Plain),True)
-  val oldMathFull = readTextFileDef(texNameFinalFull,xopts.mathContent(Full),True)
+  val oldMathPlain = readTextFileDef(texNameFinalPlain,xopts.mathContent(Plain,""),True)
+  val oldMathFull = readTextFileDef(texNameFinalFull,xopts.mathContent(Full,""),True)
 
   /*
   if (outMathPlain != oldMathPlain) {
@@ -107,8 +107,8 @@ public function mathStatic( mathPlain : string, mathFull : string,
     trace("new: " + outMathPlain)
   }
   */
-
-  if (outMathPlain == oldMathPlain && outMathFull == oldMathFull && !(xopts.rebuild)) 
+  val dimxName = inName.changeExt(".dimx")
+  if (fexistsSync(dimxName) && outMathPlain == oldMathPlain && outMathFull == oldMathFull && !(xopts.rebuild)) 
    then return continue(Nothing)
 
   xopts.print("rendering math.")
