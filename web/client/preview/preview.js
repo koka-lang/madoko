@@ -35,6 +35,56 @@ var Preview = (function() {
   function setHandler(h) {
     if (h != null && typeof(h) == "object") handler = h;
   }
+
+  /*-------------------------------------------------------
+     Local file handling
+  -------------------------------------------------------*/  
+  var files = {};
+
+  function fileClear() {
+    files = {};
+  }
+
+  function fileDelete( file ) {
+    if (!file || !file.path) return;
+    if (files["/" + file.path]) delete files["/" + file.path];
+  }
+
+  function fileUpdate(file) {
+    if (!file || !file.path) return;
+    var key = (startsWith(file.path,"out/") ? file.path.substr(4) : file.path);
+    files["/" + key] = file;
+  }
+
+  function startsWith(s,pre) {
+    if (!pre) return true;
+    if (!s) return false;
+    return (s.substr(0,pre.length).indexOf(pre) === 0);
+  }
+
+  function loadLocalResources() {
+    [].forEach.call( document.querySelectorAll("body.preview img"), function(elem) {
+      var src = elem.getAttribute("src");
+      if (!src) return;
+      var file = files["/" + src];
+      if (!file) return;
+      if (!startsWith(file.mime,"image/") || file.encoding!=="base64") return;
+      elem.setAttribute("src","data:" + file.mime + ";base64," + file.content);
+    });
+    [].forEach.call( document.querySelectorAll("body.preview link"), function(elem) {
+      if (elem.getAttribute("rel") !== "stylesheet") return;
+      var src = elem.getAttribute("href");
+      if (!src) return;
+      var file = files["/" + src];
+      if (!file || file.mime !== "text/css") return;
+      var parent = elem.parentNode;
+      var style  = document.createElement("style");
+      style.setAttribute("type","text/css");
+      style.textContent = file.content;
+      parent.insertBefore(style,elem);
+      parent.removeChild(elem);
+    });
+  }
   
   /*-------------------------------------------------------
      On double click, navigate to correct line
@@ -479,6 +529,7 @@ var Preview = (function() {
       if (loadedScripts[script] !== true) return;
     }
     // if all scripts are loaded:
+
     // execute all inline scripts and fire the "load" event.
     inlineScripts.forEach( function(text,idx) { 
       var post = (/^\/\/[@#] *sourceURL=.*$/m.test(text) ? "" : "\n//@ sourceURL=preview-inline-" + idx.toString() + ".js\n");
@@ -520,6 +571,8 @@ var Preview = (function() {
     });
     // remove line spans around soft-hyphens
     fixSoftHypens();
+    // load local images & styles
+    loadLocalResources();    
     // collect inline scripts and referenced scripts
     inlineScripts = [];
     var scripts = document.body.getElementsByTagName("script");   
@@ -530,6 +583,11 @@ var Preview = (function() {
         var src = script.getAttribute("src");
         if (!src) {
           inlineScripts.push( scripts[i].text );  
+        }
+        else if (files["/" + src]) {
+          // make local javascript files inline content
+          var file = files["/" + src];
+          inlineScripts.push( "//@ sourceURL=" + escape(src) + "\n" + file.content );
         }
         else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
           loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser
@@ -688,6 +746,15 @@ var Preview = (function() {
     }
     else if (info.eventType==="reload") {
       window.location.reload();
+    }
+    else if (info.eventType==="file-update") {
+      fileUpdate(info.file);
+    }
+    else if (info.eventTypte==="file-delete") {
+      fileDelete(info.file);
+    }
+    else if (info.eventType==="file-clear") {
+      fileClear();
     }
   });
 

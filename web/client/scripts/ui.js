@@ -1847,10 +1847,13 @@ var UI = (function() {
           // initialize citations
           self.storage.forEachFile( function( file ) {
             if (Util.extname(file.path) === ".bib") self.updateCitations( file.path, file.content );
+            if (Util.isReferMime(file.mime)) {
+              self.previewFileUpdate(file);
+            }
           });
           
           self.storage.addEventListener("update",self);
-          self.storage.addEventListener("delete",self);
+          //self.storage.addEventListener("delete",self);
           self.runner.setStorage(self.storage);
           self.spellChecker.setStorage(self.storage);
           /*
@@ -2424,7 +2427,7 @@ var UI = (function() {
     self.event( null, "Rendering HTML...", State.Exporting, function() { 
       self.localSave();
       return self.spinWhile( self.exportSpinner, 
-        self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
+        self.runner.runMadokoLocal( self.docName, self.docText, { embedLimit: 512*1024 } ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
           self.storage.writeFile( name, content );
           return self.viewGenerated(name,"text/html");
@@ -4768,10 +4771,36 @@ var symbolsMath = [
     else if (ev.type === "flush") {
       self.flush( ev.path ); 
     }
+    else if (ev.type === "destroy") {
+      self.dispatchViewEvent( {
+        eventType: "file-clear",
+      });
+    }
   }
 
   UI.prototype.onFileDelete = function(file) {
     var self = this;    
+    if (Util.isReferMime(file.mime)) {
+      self.dispatchViewEvent( {
+        eventType: "file-delete",
+        file: {
+          path: file.path,
+        },
+      });
+    }
+  }
+
+  UI.prototype.previewFileUpdate = function( file ) {
+    var self = this;
+    self.dispatchViewEvent( {
+      eventType: "file-update",
+      file: {
+        path: file.path,
+        encoding: file.encoding,
+        content: file.content,
+        mime: file.mime,
+      },
+    });
   }
 
   UI.prototype.onFileUpdate = function(file) {
@@ -4798,6 +4827,9 @@ var symbolsMath = [
       self.updateCitations(file.path,file.content);
     }
     self.lastSpellCheck = 0;
+    if (Util.isReferMime(file.mime)) {
+      self.previewFileUpdate(file);
+    }
   }
 
   UI.prototype.saveTo = function() {

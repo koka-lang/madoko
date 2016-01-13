@@ -546,6 +546,10 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   function isImageMime(mime) {
     return (startsWith(mime,"image/") || mime=="application/pdf" || mime=="application/postscript");
   }
+
+  function isReferMime(mime) {
+    return (startsWith(mime,"image/") || mime==="text/css" || mime==="text/javascript");
+  }
   
   var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
   function hasGeneratedExt(fname) {
@@ -1957,6 +1961,7 @@ doc.execCommand("SaveAs", null, filename)
     mimeFromExt: mimeFromExt,
     isTextMime: isTextMime,
     isImageMime: isImageMime,
+    isReferMime: isReferMime,
 
     startsWith: startsWith,
     endsWith: endsWith,
