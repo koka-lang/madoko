@@ -35,7 +35,7 @@ var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
 var sharedFoldersUrl = "https://api.dropbox.com/1/shared_folders/";
 
 function encodeURIPath(s) {
-  var p = escape(s);
+  var p = encodeURI(s);
   return p.replace(/%2F/g,"/");
 }
 
