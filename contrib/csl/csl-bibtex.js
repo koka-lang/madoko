@@ -434,15 +434,20 @@ function convertMisc(item,bibitem,ctex,options) {
   }
 }
 
-function convertElectronic(item,bibitem,ctex,options) {
+function convertElectronic(item,bibitem,ctex,options) {  // do before convertMisc since we may void the 'note' field
   // eprinttype, eprint,
   var etype = firstOf(bibitem,["eprinttype","etype","archiveprefix"]).toLowerCase();
   var eprint = bibitem.eprint;
-  var rxArxiv = /^https?:\/\/arxiv.org\/((abs|pdf|ps|format)\/)?/;
+  var rxArxiv = /^(https?:\/\/arxiv.org\/((abs|pdf|ps|format)\/)?|ar[xX]iv:)/;
   if (!etype && !eprint) {
     if (bibitem.arxiv && rxArxiv.test(bibitem.arxiv)) {
       etype = "arxiv";
       eprint = bibitem.arxiv.replace(rxArxiv,"");
+    }
+    if (bibitem.note && rxArxiv.test(bibitem.note)) {
+      etype = "arxiv";
+      eprint = bibitem.note.replace(rxArxiv,"");
+      bibitem.note = "";    
     }
     else if (bibitem.pmcid || bibitem.pmc) {
       etype = "pmcid";
@@ -527,6 +532,11 @@ function convertElectronic(item,bibitem,ctex,options) {
       urltext = eprint;
       url     = "https://www.ams.org/mathscinet-getitem?mr=MR" + epath;
     }  
+  }
+  else if (bibitem.note && /^https?:\/\/.*/.test(bibitem.note)) {
+    url = bibitem.note;
+    urltext = bibitem.note;
+    bibitem.note = "";
   }
   // this is the text displayed for a url
   item.URLtext = ctex(bibitem.urltext) || urltext;

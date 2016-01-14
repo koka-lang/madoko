@@ -1,5 +1,16 @@
 {
   "log" : [
+    { "version": "1.0.0-rc3",
+      "date": "2016-01-14",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' at the bottom of the file selection menu by pressing the grey reload icon.",
+      "updates": [
+        "Fix bug with bibliography entries without an author field",
+        "Fix bug in math generation when `.dimx` file was missing",
+        "Improve preview performance by caching images",
+        "Fix rendering of table-of-contents in LaTeX to do nicer line breaking",
+        "Fix file path encoding in Dropbox for Chinese characters"
+      ]
+    }, 
     { "version": "1.0.0-rc2",
       "date": "2016-01-11",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",

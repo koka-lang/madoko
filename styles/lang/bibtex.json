@@ -21,7 +21,7 @@
     "series", "title", "type", "volume", "year", "url", "isbn", "issn", "lccn", 
     "abstract", "keywords", "price", "copyright", "language", "contents", 
     "numpages", "doi", "http", "eds", "editors", "location",
-    "eprinttype", "etype", "eprint", "eprintpath", "eprimaryclass", "eprintclass","archiveprefix",
+    "eprinttype", "etype", "eprint", "eprintpath", "primaryclass", "eprintclass","archiveprefix",
     "origpublisher", "origlocation","venue","volumes","pagetotal", 
     "annotation","annote","pubstate",
     "date","urldate","eventdate","origdate", "urltext"

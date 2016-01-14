@@ -42,19 +42,24 @@ function trim(s) {
 // ---------------------------------------------
 
 function quote(s) {
+  s = s || "";
   s = s.replace(/\r?\n/g,"&nl;");
   return "\"" + (s.indexOf("\"") < 0 ? s : s.replace(/"/g, "\\\"")) + "\"";
 }
 
-function fixNbsp(s) {
+function fixNbsp(s) 
+{
+  s = s || "";
   return s.replace(/([A-Z]\.) +/g, "$1&nbsp;");
 }
 
 function escapeMadoko(s) {
+  s = s || "";
   return s.replace(/([\[\]()#$@!`~\\^%_*&])/g,"\\$1");
 }
 
 function escapeURL(s) {
+  s = s || "";
   return s.replace(/([()\s])/g, function(m) { return escape(m); } );
 }
 
@@ -401,9 +406,8 @@ function makeBibliography( citeinfos, bibtexs, bibStylex, madokoStylex, localex,
     var csl = createCslWith(citations, madokoStyle, madokoStylex.filename, lang, function(item,str) {
       //console.log("**** wrap citations: " + item)
       var parts = str.split("|");
-      if (parts.length<2) return str;
-      item._citeAuthors     = parts[0];
-      item._citeYear        = parts[1];
+      item._citeAuthors     = parts[0] || "";
+      item._citeYear        = parts[1] || "";
       item._citeAuthorsLong = parts[2] || parts[0];
       item._citeCaption     = (item.title || item.booktitle) + "\n" + item._citeAuthorsLong + ", " + item._citeYear;
       item._citeInfo        = item._citeAuthors + "(" + item._citeYear + ")" + item._citeAuthorsLong;
