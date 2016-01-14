@@ -750,8 +750,8 @@
   \advance\mdtoclevel by 1\relax
 }{}
 
-\newcommand\mdtocitem[2]{%
- \def\md@toctarget{#1}%
+\newcommand\mdtocitemx[2]{%
+ \edef\md@toctarget{#1}%
  \ifnum\mdtoclevel>\value{mdtoclevelbold}%
     \expandafter\@dottedtocline
  \else
@@ -760,6 +760,16 @@
  {\mdtoclevel}{\dimexpr 1.5em * (\mdtoclevel-1)\relax}%
  {\dimexpr 1em + (1em * (\mdtoclevel-1))\relax}%
  {#2}{\pageref{\md@toctarget}}%
+}
+
+% legacy: tocitem as environment
+\newenvironment{mdtocitem}[1]{%
+ \def\md@toctarget@{#1}%
+ \setbox\@tempboxa\hbox\bgroup
+ \ifnum\mdtoclevel>\value{mdtoclevelbold}\relax\else\bfseries\fi
+}{%
+  \egroup%
+  \mdtocitemx{\md@toctarget@}{\unhbox\@tempboxa}%
 }
 
 %-------------------------------------------------------------

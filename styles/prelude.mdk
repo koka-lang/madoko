@@ -558,7 +558,7 @@ BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&t
 .Newblock    { tex-cmd-before="\newblock " }
 toc          { tex-env:mdtoc }
 tocblock     { tex-env:mdtocblock }
-tocitem      { tex-cmd:"\mdtocitem{&data-toc-target;}" }
+tocitem      { tex-cmd:"\mdtocitemx{&data-toc-target;}" }
 
 bibliography { data-hanging-indent:0 }
 bibliography { tex-cmd-outer: "{\mdbibindent{&data-hanging-indent;}%mdk&nl;" }
