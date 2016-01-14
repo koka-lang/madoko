@@ -535,7 +535,6 @@ function convertElectronic(item,bibitem,ctex,options) {  // do before convertMis
   }
   else if (bibitem.note && /^https?:\/\/.*/.test(bibitem.note)) {
     url = bibitem.note;
-    urltext = bibitem.note;
     bibitem.note = "";
   }
   // this is the text displayed for a url
