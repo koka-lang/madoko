@@ -259,13 +259,19 @@ SubFigure {
   label     : '@Figure@SubFigure';
   fig-label : '(@SubFigure)';
   caption   : '';
-  after     : '&br;&smallskip;[&toc-line;]{.subfig-caption}';
+  after     : "&nl;~ Begin SubFigureCaption&nl;&toc-line;&nl;~End SubFigureCaption&nl;"; 
+  vertical-align: bottom;
+  padding   : 0.5ex;
   tight     : true;
   text-align: center;
   .column;
   toc-line  : '[&fig-label; ]{.caption-before} &caption;';
   toc       : "figures";
   toc-depth : 2;
+}
+SubFigureCaption {
+  tight: true;
+  margin-top: 1ex;
 }
 
 toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
