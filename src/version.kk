@@ -10,4 +10,4 @@
 module version
 
 // Do not edit the version, it is set in the Jakefile from package.json
-public val version = "1.0.0-rc3" 
+public val version = "1.0.0-rc4" 
