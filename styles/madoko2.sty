@@ -621,6 +621,19 @@
   \wlog{resolved font stack '#1' to: \md@fontitem}%
 }
 
+% definition from `setspace` package
+\AtBeginDocument{%
+  \providecommand\setstretch[1]{%
+    \def\baselinestretch{#1}%
+    \@currsize
+  }%
+}
+
+\newcommand\mdlineheight[1]{% argument is a length, but setstretch needs a factor
+  \expandafter\setstretch\expandafter{\strip@pt\dimexpr#1/\mdcurrentfontsize\relax}%
+}%
+
+
 % ---------------------------------------------------
 % Inline elements
 % ---------------------------------------------------

@@ -761,7 +761,7 @@ function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : boo
                   , b )
       })
       .onKey( kvs, "line-height", fun(value,b) {
-        braceCmd( "\\baselineskip=" + value.cssFontLength + "\\relax", b )
+        b.braceCmd( "\\mdlineheight" + value.cssFontLength.braced )
       })
   }
   else body
