@@ -68,6 +68,7 @@ math-display    { input: math }
 .hidden         { display: none }
 .noindent       { text-indent: 0em }
 .align-center   { text-align: center }
+.texturl        { .monospace }
 
 .booktable {
   rule-top-width          : 2px;
@@ -129,9 +130,9 @@ lowline         : &#x5F;
 qed             : [&box;]{float: right}
 vfill           : \/
 @if tex {
-  vfill         : [\vfill]{input: texraw}
+  vfill         : [\vfill{}]{input: texraw}
   lowline       : &#0818;
-  qed           : [\qed]{input: texraw}
+  qed           : [\qed{}]{input: texraw}
 }
 eg              : e.g.
 ie              : i.e.

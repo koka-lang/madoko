@@ -52,7 +52,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
   Rule("ifootnote", regex(@"^\[\^" + xlinkid + @"\]"), inlineFootnote ),
   Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
-  Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>"), inlineAutoLink ),  
+  Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>(?:" + attrs + ")?"), inlineAutoLink ),  
   Rule("istrong_",  regex(@"^(__)((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
   Rule("istrong*",  regex(@"^(\*\*)((?:[^\\]|\\.)+?)\*\*(?!\*)"), inlineStrong),
   Rule("iemph_",    regex(@"^\b(_)((?:[^\\_]|\\.)+)_\b"), inlineEmph),
@@ -474,14 +474,22 @@ function inlineEscape( cap : matched, context : inlineContext ) : string {
   else context.fmtText(txt)  
 }
 
+function hypenateUrl( url : string ) : string {
+  url.replaceAll(rxPostHyphen,"$1&#8203;").replaceAll("%","&#8203;%")
+}
+val rxPostHyphen = regex(@"([\-\._/\?#\[\]@!$&'\(\)\*\+,;=]+)")
+
+
 function inlineAutoLink( cap : matched, context : inlineContext ) : string {
+  val attrs  = if (cap.groups.matchedOn(3)) then context.formatAttrs(cap.groups[3].parseAttrs) else attrsNone
+  val attrsd = context.defaults.matchRules( "a", attrs.addClass("texturl"))  
   if (cap.groups[2] == "@") {
     val text = cap.groups[1].replace(regex(@"^mailto:"),"")
     val url  = "mailto:" + text
-    context.fmtLink(False,newLink(url,bench=context.bench),context.fmtEscape(text))
+    context.fmtLink(False,newLink(url,linkattrs=attrsd,bench=context.bench),context.fmtEscape(text.hypenateUrl))
   }
   else {
-    context.fmtLink(False,newLink(cap.groups[1],bench=context.bench),context.fmtEscape(cap.groups[1]))
+    context.fmtLink(False,newLink(cap.groups[1],linkattrs=attrsd,bench=context.bench),context.fmtEscape(cap.groups[1].hypenateUrl))
   }
 }
 
