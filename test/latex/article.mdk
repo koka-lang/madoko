@@ -18,6 +18,12 @@ Doc class     : [10pt]style/sigplanconf.cls
 
 Name References: Referenze
 
+floating-endperiod: :
+
+.newline {
+  tex-cmd: "\protect\newline\hspace{\textwidth}";
+}
+
 [INCLUDE=lipsum]
 
 [TITLE]
@@ -74,7 +80,7 @@ x=mc^3
 
 &lipsum2;
 
-~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
+~ Figure { #fig-butterfly caption="A Monarch butterfly[]{.newline}^1^ test" page-align=here }
 ![butterfly]
 ~
 

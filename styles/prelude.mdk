@@ -244,13 +244,16 @@ WrapFigure {
   width: 40%;  
 }
 
+floating-endperiod: .
+floating-format   : **&float-name;\ &label;&floating-endperiod;**&nbsp;
+
 .Floating {
   .align-center;
   .float;
   elem      : floating;
   html-elem : figure;
   toc-line  : '&label;. &caption;';
-  after: '&nl;********* {.figureline}&nl;[[**&float-name;\ &label;.** ]{.caption-before}[&caption;]{.caption-text}]{.figure-caption; html-elem:fig-caption}&nl;{tag:false}&nl;';
+  after: '&nl;********* {.figureline}&nl;[[&floating-format;]{.caption-before}[&caption;]{.caption-text}]{.figure-caption; html-elem:fig-caption}&nl;{tag:false}&nl;';
 }
 
 SubFigureRow { .columns; .align-center }
