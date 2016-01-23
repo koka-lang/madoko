@@ -2908,6 +2908,7 @@ var symbolsSpacing = [
   { entity: "strut", code: 8203, invisible:true, title:"strut (zero-width entity of line-height)", display: "strut" },
   { entity: "br", invisible:true, title:"entity hard line-break", display:"br" },
   { entity: "shy", code: 173, invisible:true, title:"soft hyphen", display:"shy" },
+  { entity: "zwsp", code: 8203, invisible:true, title:"zero-width space", display:"zwsp" },
   { entity: "zwnj", code: 8204, invisible:true, title:"zero-width non-joiner", display:"zwnj" },
   { entity: "zwj", code: 8205, invisible:true, title:"zero-width joiner", display:"zwj" },
   { content: "\\\n", invisible:true, title:"hard line-break", display:"line-break" },
