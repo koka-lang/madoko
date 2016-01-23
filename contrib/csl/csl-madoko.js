@@ -60,7 +60,7 @@ function escapeMadoko(s) {
 
 function escapeURL(s) {
   s = s || "";
-  return s.replace(/([()\s])/g, function(m) { return escape(m); } );
+  return s.replace(/([()<>\s])/g, function(m) { return escape(m); } );
 }
 
 var madokoFormat = {
@@ -176,12 +176,15 @@ var madokoFormat = {
   "@URL/true": function (state, str) {
     var bibitem = getBibitem(this,state);
     var urltext = bibitem.URLtext || str;
-    var urlpre  = bibitem.URLpretext || "";
-    return (urlpre ? "[" + urlpre + "]{.urlpre}" : "") + "[" + urltext + "](" + escapeURL(str) + ")";
+    var urlpre  = bibitem.URLpretext || "";    
+    var urlitem = (urltext===str ? 
+                      "<" + escapeURL(str) + ">" : 
+                      "[" + urltext + "](" + escapeURL(str) + ")" );
+    return (urlpre ? "[" + urlpre + "]{.bib-urlpre}" : "") + urlitem + "{.bib-url}";
   },
   "@DOI/true": function (state, str) {
     var doitext = getBibitem( this, state).DOItext || str;
-    return "[" + doitext + "](https://dx.doi.org/" + escapeURL(str) + ")";
+    return "[" + doitext + "](https://dx.doi.org/" + escapeURL(str) + "){.bib-doi}";
   }
 };
 
