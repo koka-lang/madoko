@@ -833,7 +833,13 @@ function userEncrypt(req,data) {
 }
 function userDecrypt(req,data) {
   if (!data || typeof data !== "string") return null;
-  return jsonParse(decrypt(passphraseLocal + req.session.userid, data), null);
+  try {
+    return jsonParse(decrypt(passphraseLocal + req.session.userid, data), null);
+  }
+  catch(exn) {
+    console.log( "decryption failed: " + exn.toString());
+    return null;
+  }
 }
 
 var remotes = JSON.parse(fs.readFileSync("./remotes.json",{encoding:"utf8"}));
