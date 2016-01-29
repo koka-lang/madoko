@@ -44,10 +44,7 @@ var Encoding = {
   encode: function( enc, data ) {
     if (!data) return "";
     if (enc===Encoding.Base64) {
-      if (data instanceof ArrayBuffer) 
-        return Util.encodeBase64(data);
-      else
-        return window.btoa(unescape(encodeURIComponent(data))); // todo; see: https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/btoa
+      return Util.encodeBase64(data);
     }
     else if (typeof data === "object") {
       return JSON.stringify(data);

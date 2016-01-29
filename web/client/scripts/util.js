@@ -610,13 +610,19 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
   // convert arraybuffer to base64 string
   function encodeBase64( buffer ) {
     var binary = ""
-    var bytes = new Uint8Array( buffer );
-    var len = bytes.byteLength;
-    for (var i = 0; i < len; i++) {
+    if (buffer instanceof ArrayBuffer) {
+      var bytes = new Uint8Array( buffer );
+      var len = bytes.byteLength;
+      for (var i = 0; i < len; i++) {
         binary += String.fromCharCode( bytes[ i ] )
+      }
+    }
+    else {
+      // todo: optimize this?
+      binary = unescape(encodeURIComponent(buffer)); // see: https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/btoa
     }
     return window.btoa( binary );
-  }  
+  }
 
   function px(s) {
     if (typeof s === "number") return s;

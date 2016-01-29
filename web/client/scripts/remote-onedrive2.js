@@ -211,7 +211,7 @@ var Onedrive2 = (function() {
       var date = (info && !info.deleted ? StdDate.dateFromISO(info.lastModifiedDateTime) : null);
       var url = info["@content.downloadUrl"];
       if (!date || !url) return Promise.rejected("file not found: " + fpath);
-      return Util.requestGET(url, { binary: binary}).then( function(content) {
+      return Util.requestGET( { url: url,  binary: binary }).then( function(content) {
         var file = {
           path: fpath,
           content: content,
