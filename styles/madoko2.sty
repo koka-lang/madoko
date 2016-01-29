@@ -789,7 +789,9 @@
 % Code
 %-------------------------------------------------------------
 
-\newcommand\mdcode{\texttt}
+\newcommand\mdnohyphens{\hyphenchar\font=-1\relax}
+
+\newcommand\mdcode{\texttt\mdnohypens}
 \newcommand\mdprecode{}
 \newlength\mdpreskip
 \setlength\mdpreskip{\mdcompactskip}
@@ -801,9 +803,9 @@
 \newcommand\prebr{\strut\newline\strut\ignorespaces}
 
 \newenvironment{mdpre}%
-  {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright%
-   \let\\\prebr%
-   \let\nobreakspace\prespace%
+  {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright\mdnohyphens
+   \let\\\prebr
+   \let\nobreakspace\prespace
   }%
   {\end{mdparblock}}
 
