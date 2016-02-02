@@ -16,6 +16,7 @@ var onServer = ($std_core.getHost() === "nodejs");
 var $readFileSync;
 var $writeFileSync;
 var $renameSync;
+var $copySync;
 var $fexistsSync;
 var $relative;
 var $mkdirp;
@@ -36,6 +37,10 @@ if (onServer) {
   $cwd = function() { return process.cwd(); };
   $mkdirp = function(dir,mode) { return xmkdirp.sync(dir,mode); };
   $renameSync = function(oldname,newname) { return fs.renameSync(oldname,newname); };
+  $copySync = function(srcname,destname) { 
+    var buf = fs.readFileSync(srcname);
+    fs.writeFileSync(destname,buf);
+  };
   $clear = function() { };
   $unlinkSync = function(fname) { return fs.unlinkSync(fname); }; 
 }
@@ -67,7 +72,12 @@ else {
   }
 
   $renameSync = function(oldname,newname) {
-    $writeFileSync( newname, "binary", $readFileSync(oldname) );
+    $copySync(oldname,newname);
+    $unlinkSync(oldname);
+  }
+
+  $copySync = function(srcname,destname) {
+    $writeFileSync( destname, "binary", $readFileSync(oldname) );
   }
 
   $clear = function() {

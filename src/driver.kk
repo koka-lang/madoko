@@ -29,10 +29,13 @@ import includes
 import bibliography
 
 public struct runners(
-  runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : () -> io () ) -> io (),
+  runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : (int) -> io () ) -> io (),
   runBibtex : ( bibFiles : list<string>, opts : options, continue : bool -> io ()) -> io (),
-  runMathStatic : runMathStaticFun
+  runMathStatic : runMathStaticFun,
+  runZip : ( files : list<string>, zipFile : string, opts : options, continue : bool -> io () ) -> io ()
 )
+
+val standardTexStyles = ["ellipse.sty","options.sty","longbox.sty","longfbox.sty","madoko2.sty"]
 
 public function processContent( inName : string, outName : string, content : string, 
                           opts : commandOptions, firstTime : bool = False,
@@ -92,7 +95,7 @@ public function processContent( inName : string, outName : string, content : str
                         _ -> False
                       }
         val files = if (isTex2)
-                     then ["ellipse.sty","options.sty","longbox.sty","longfbox.sty","madoko2.sty"]
+                     then standardTexStyles
                      else ["css.sty","madoko.sty"]                      
         files.foreach fun(fname) { 
           tryCopyTextFileFromNoSandboxTo(fname, styleDir, outName.dirname )
@@ -118,10 +121,19 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                   redo : () -> io (),
                   continue : (string) -> io () ) : io () 
 {
-  function genPdf(outTexName:string) {
+  function genTexZip(outTexName:string, refers:list<string>) {
+    if (mopts.texzip) {
+      createTexZip( inName, outTexName, refers, mopts, runners, fun(err) { () } )                  
+    }
+  }
+
+  function genPdf(outTexName:string, refers:list<string>) {
     if (mopts.pdf) {
-      (runners.runPdfLatex)( inName, outTexName, mopts, content, fun() { () } )                  
+      (runners.runPdfLatex)( inName, outTexName, mopts, content, fun(err) { 
+        if (err==0) then genTexZip(outTexName, refers) else ()
+      }) 
     }        
+    else () // cannot zip without pdf
   }
 
   function embedFiles( opts: options, files : list<string>, html0 : string ) : io (options,string) {
@@ -230,19 +242,28 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
       // generate tex
       val outTexName = outName.changeExt(".tex")
-      if (mopts.tex) {
-        if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
-        val (texwarns, tex) = withLog("texwarning",{ markdown(icontent,xopts,FmtTex) } )
-        if (texwarns != "") {
-          log("stdout",texwarns)
-          if (mopts.verbose>=1) {
-            print(texwarns) 
+      val texRefers = 
+        if (!mopts.tex) then [] else {
+          if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
+          val (texwarns, (texFiles, (texRefer, tex))) 
+                = withLog("texwarning", {
+                    withLog("files", {
+                      withLog("filesRefer", { 
+                       markdown(icontent,xopts,FmtTex) 
+                      })
+                    })
+                  })
+          if (texwarns != "") {
+            log("stdout",texwarns)
+            if (mopts.verbose>=1) {
+              print(texwarns) 
+            }
           }
+          if (!(tryWriteTextFile(outTexName,tex))) {
+            mopts.printErr("error: unable to write: " + outTexName) 
+          }
+          texFiles.split("\n").list + texRefer.split("\n").list
         }
-        if (!(tryWriteTextFile(outTexName,tex))) {
-          mopts.printErr("error: unable to write: " + outTexName) 
-        }
-      }
 
       // possibly typeset math using latex
       if ((mathPlain.containsSnippet && mopts.math.mode.isStatic) || mathFull.containsSnippet) {
@@ -263,11 +284,11 @@ function process( inName : string, outName : string, searchDirs : list<string>,
             Nothing -> ()
           }
           //if (mopts.verbose>=1) println("  done typesetting math.")
-          genPdf(outTexName)
+          genPdf(outTexName,texRefers)
         }
       }    
       else {
-        genPdf(outTexName)
+        genPdf(outTexName,texRefers)
       }    
 
       continue(html)            
@@ -275,6 +296,25 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   }
 
   phaseHtml()
+}
+
+// Create a Tex zip
+function createTexZip( inName : string, outTexName : string, refers : list<string>, mopts : options, runners : runners, cont ) : io () {
+  val namesRefer = refers.map fun(fname) {
+    if (fname != "" && fname.relative && fname.extname != ".bib") {
+      val outName = combine(outTexName.dirname,fname).normalize
+      if (outName != fname) {
+        trace("refer: " + fname + " to " + outName)
+        mkdirp(outName.dirname)
+        copyFile(fname,outName)
+        Just(outName)
+      }
+      else Nothing
+    }
+    else Nothing
+  }
+  val names = [outTexName,outTexName.changeExt(".pdf")] + standardTexStyles + namesRefer.concatMaybe + [outTexName.stemname + "*.bbl"]
+  (runners.runZip)( names, outTexName.changeExt(".zip"), mopts, cont )
 }
 
 // Fixup locations in warnings:

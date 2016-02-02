@@ -206,6 +206,18 @@ public function tryRename( fnameOld : string, fnameNew : string ) : io () {
   ignore( { rename(fnameOld,fnameNew) });
 }
 
+
+public function copyFile( fnameOld : string, fnameNew : string ) : io () {
+  val xfnameOld = checkSandbox(fnameOld)
+  val xfnameNew = checkSandbox(fnameNew)
+  xcopyFile(xfnameOld,xfnameNew)
+}
+
+external xcopyFile( fnameOld : string, fnameNew : string ) : io () {
+  cs inline "System.IO.File.Copy(#1,#2,true)"
+  js inline "$copySync(#1,#2)"
+}
+
 // In the browser, removes all files.
 public external clear() : io () {
   cs inline ""

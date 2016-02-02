@@ -59,7 +59,7 @@ public function test( s : string = "code_blocks", moreargs = "" ) {
   } 
 }
 
-val runners = Runners( runLatex/runPdfLaTeX, runLatex/runBibtex, mathStaticRun/runMathStatic )
+val runners = Runners( runLatex/runPdfLaTeX, runLatex/runBibtex, mathStaticRun/runMathStatic, runLatex/runZip )
 
 public function markdownFiles(args : string, action : (string,string,string,options) -> io ()) : io () { 
   val mbopts = parseOptions(version,args);

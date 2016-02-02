@@ -29,6 +29,7 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     elif (key=="convert") options(math = (options.math)(convert=value))
     elif (key=="ps2pdf") options(math = (options.math)(ps2pdf=value))
     elif (key=="dvips") options(math = (options.math)(dvips=value))
+    elif (key=="zip") options(zip = value)
     elif (key=="process-timeout") options(processTimeout=if (value!="" && ivalue > 0) then ivalue * 1000 else 0)
     else {
       options

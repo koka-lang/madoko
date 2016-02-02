@@ -81,9 +81,11 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
     val hrefs  = url.expandChoices
     // pick best one for images
     val imgref = pickExtension(latexImageExtensions, hrefs)
+    val imgname = normalize(context.sandbox,imgref)
+    log("files",imgname)
 
-    val (attrsx, args) = cssImageArgs(attrs)
-    texCmdX( "\\includegraphics[" + args + "]" + normalize(context.sandbox,imgref).noext.braced, "" /*content*/, attrsx ) 
+    val (attrsx, args) = cssImageArgs(attrs)   
+    texCmdX( "\\includegraphics[" + args + "]" + imgname.noext.braced, "" /*content*/, attrsx ) 
   }
   else {
     val titleCmd = if (link.linkattrs.hasClass("tex-tooltip")) then [("tex-cmd-outer-after","\\mdtooltip" + extractText(link.title).braced)] else []

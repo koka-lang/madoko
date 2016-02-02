@@ -70,10 +70,15 @@ public function markdown( inputName : string, input : string, outdir : string, o
   
   var rerun := False;
 
-  function runPdfLatex( srcFile : string, texFile : string, opts : options, content : string, cont : () -> io () ) : io () 
+  function runPdfLatex( srcFile : string, texFile : string, opts : options, content : string, cont : (int) -> io () ) : io () 
   {
     options.printErr("cannot generate pdf in the browser")
-    cont()
+    cont(1)
+  }
+
+  function runZip( files : list<string>, zipFile : string, opts : options, cont : (bool) -> io () ) : io () {
+    options.printErr("cannot zip files in the browser")
+    cont(False)
   }
 
   function runBibtex( bibFiles : list<string>, opts : options, cont : bool -> io () ) : io () 
@@ -94,7 +99,7 @@ public function markdown( inputName : string, input : string, outdir : string, o
     cont(Nothing)
   }
 
-  val runners = Runners(runPdfLatex, runBibtex, runMathStatic )
+  val runners = Runners(runPdfLatex, runBibtex, runMathStatic, runZip )
 
   withLog("stdout") {
     withLog("files") {

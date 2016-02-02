@@ -25,6 +25,28 @@ function norm( fname : string ) : string {
   fname.replaceAll("\\", "/");
 }
 
+public function runZip( files : list<string>, zipFile : string, opts : options, continue : (bool) -> <io|e> () ) : <io|e> () {
+  opts.print("running zip to generate tex zip...")
+  val outdir    = zipFile.dirname
+  function adjust( fname ) {
+    val name = if (fname.startsWith(outdir)) then fname.substr(outdir.length + 1) else fname
+    name.checkSandbox.quote
+  }
+  val zipCmd = opts.zip.quote + " -9 " + zipFile.adjust + " " + files.map(adjust).join(" ")
+  tryUnlinkSync(zipFile.checkSandbox)
+  opts.print("> " + zipCmd)
+  system(zipCmd, fun(err:int,stdout:string,stderr:string) {
+    if (err!=0) {
+      opts.printErr("error while running: > " + zipCmd)
+      val allout = stdout + stderr
+      opts.printErr("error: zip:\n" + allout.indent(2))
+    }
+    else {
+      if(opts.verbose>=1 && !(stdout=="" && stderr=="")) opts.printErr(stdout + stderr)
+    }
+    continue(err!=0)
+  },opts.processTimeout,outdir)
+}
 
 public function runBibtex( bibFiles : list<string>, opts : options, continue : bool -> <io|e> ()) : <io|e> () {
   match(bibFiles) {
@@ -79,11 +101,10 @@ val rxBibtexLineinfo= @"---line *(\d+) *of file *(.*)"
 val rxBibtexNoStyle = regex(@"^ *I couldn't open style file *(.*)\s*" + rxBibtexLineinfo, multiline=True)
 val rxBibtexError   = regex(@"^ *(.+?)" + rxBibtexLineinfo + @"((?:\s*:.*)*)", multiline=True)
 
-public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : () -> io () ) {
+public function runPdfLaTeX( srcName : string, texFile : string, opts : options, content : string, continue : (int) -> io () ) {
   opts.print("running " + opts.getPdfLatex.stemname + " to generate pdf...")
   val notfound = "set the 'Pdf Latex: <cmd>' key in the metadata?"
-  runLaTeX(srcName, texFile, opts.getPdfLatex, "", opts, content, notfound, 0, True,
-    fun(err) { continue() } )  
+  runLaTeX(srcName, texFile, opts.getPdfLatex, "", opts, content, notfound, 0, True, continue )  
 }
 
 val latexEnv = [

@@ -80,6 +80,7 @@ public struct options(
   full     : maybe<bool> = Nothing, // generate a full html/latex file instead of a snippet
   tex      : bool = False,  // generate latex file too
   pdf      : bool = False,  // generate pdf file too 
+  texzip   : bool = False,  // generate tex zip for a submission
   rebuild  : bool = False,  // always rebuild bibtex, math etc.
   sandbox  : bool = False,  // run in a sandbox: only allow reading/writing from a subdirectory
   prelude  : string = "prelude", // standard prelude definitions
@@ -130,6 +131,7 @@ public struct options(
   latex         : string = "latex",   // used to generate dvi for math
   processTimeout: int = 0,            // kill child process after <timeout>
   
+  zip           : string = "zip",     // zip program
   
   metadata      : metadata = [],
   embedinfos    : dict<embedinfo> = dict(),   // embed data, used in a browser
@@ -237,6 +239,7 @@ val optionsDesc : list<option<commandOptions>>
       Option( "",  ["xmp"],     oflag(fun(o,v) { o(xmp = v) }),       "Only process markdown between <xmp> tags"),
       Option( "",  ["tex"],     oflag(fun(o,v) { o(tex = v) }),       "Generate a LaTeX file too"),
       Option( "",  ["pdf"],     oflag(fun(o,v) { o(pdf = v, tex = if (v) then True else o.tex) }),  "Generate PDF using LaTeX"),      
+      Option( "",  ["texzip"],  oflag(fun(o,v) { o(texzip = v, tex = if (v) then True else o.tex, pdf = if (v) then True else o.pdf) }), "Generate TeX zip for submission"),
       Option( "",  ["png"],     oflag(fun(o,v) { o(math = (o.math)(render = Just(if (v) then Png else Svg))) }),  "Use PNG instead of SVG for math in HTML"), 
       Option( "",  ["convert-tex"], cflag(fun(co,v) { co(convertTex=v) }), "Convert input from TeX to Markdown"),
       
