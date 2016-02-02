@@ -140,8 +140,8 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                               else ""
 
                   // write the file to the out directory
-                  if (data != "" && (opts.pdf || data.length > mopts.embedLimit)) { 
-                    val newName = combine(outName.dirname,fname) 
+                  if (data != "" && (data.length > mopts.embedLimit)) { 
+                    val newName = combine(outName.dirname,fname) // assumes just relative embed names!
                     if (newName.normalize != fname.normalize) {
                       //trace("copying: " + fname + " to " + newName)
                       mkdirp(newName.dirname)
