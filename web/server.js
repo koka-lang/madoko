@@ -442,6 +442,7 @@ var mimeTypes = {
   js:  "text/javascript",
   pdf: "application/pdf",
   json: "application/json",
+  zip: "application/zip",
   
   tex: "text/tex",
   sty: "text/latex",
@@ -607,7 +608,8 @@ function withUser( req, action ) {
   var start = Date.now();
   var entry = { type: "none", user: user, url: req.url, ip: req.ip, date: new Date(start).toISOString() };
   if (req.body.docname) entry.docname = req.body.docname;
-  if (req.body.pdf) entry.pdf = req.body.pdf;
+  if (req.body.pdf) entry.pdf = req.body.pdf; // legacy
+  if (req.body.target) entry.target = req.body.target;
   log.entry( entry );
   user.requests++;
 
@@ -713,7 +715,7 @@ function saveFiles( userpath, files ) {
 
 
 // Read madoko generated files.
-function readFiles( userpath, docname, pdf, out ) {
+function readFiles( userpath, docname, target, out ) {
   var ext    = path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
   var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
@@ -722,9 +724,10 @@ function readFiles( userpath, docname, pdf, out ) {
                 "-bib.bbl", "-bib.final.aux", // todo: handle multiple bibliographies
                 "-bib.bbl.mdk", "-bib.bib.json",
                ]
-                .concat( pdf ? [".pdf",".tex"] : [] )
+                .concat( target>Target.Math ? [".pdf",".tex"] : [] )
+                .concat( target===Target.TexZip ? [".zip"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); })
-                .concat( pdf ? [combine(outdir,"madoko2.sty")] : [] );
+                .concat(  target>Target.Math ? [combine(outdir,"madoko2.sty")] : [] );                
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
@@ -783,15 +786,22 @@ function madokoExec( userpath, docname, flags, timeout ) {
   }); 
 }
 
+var Target = {
+  Math: 0,
+  Pdf : 1,
+  TexZip : 2,
+};
+
 // Run madoko program
-function madokoRun( userpath, docname, files, pdf ) {
+function madokoRun( userpath, docname, files, target ) {
   return saveFiles( userpath, files ).then( function() {
-    safePath(userpath,docname); // is docname safe?
-    var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
-    return madokoExec( userpath, docname, flags, (pdf ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
+    safePath(userpath,docname); // is docname safe?    
+    var tgtflag = (target===Target.Pdf ? " --pdf" : (target===Target.TexZip ? " --texzip" : ""));
+    var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
+    return madokoExec( userpath, docname, flags, (target > Target.Math ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       var out = stdout + "\n" + stderr + "\n";
       console.log("result: \n" + out);      
-      return readFiles( userpath, docname, pdf, out ).then( function(filesOut) {
+      return readFiles( userpath, docname, target, out ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
           stdout: stdout,
@@ -1373,8 +1383,8 @@ app.post('/rest/run', function(req,res) {
     runs++;
     var docname  = req.body.docname || "document.mdk";
     var files    = req.body.files || [];
-    var pdf      = req.body.pdf || false;
-    return madokoRun( user.path, docname, files, pdf ).always( function() { runs--; } );  
+    var target   = (req.body.pdf || req.body.target==="pdf" ? Target.Pdf : (req.body.target==="texzip" ? Target.TexZip : Target.Math ));
+    return madokoRun( user.path, docname, files, target ).always( function() { runs--; } );  
   }); 
 });
 

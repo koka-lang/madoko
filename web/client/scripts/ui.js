@@ -525,6 +525,7 @@ var UI = (function() {
     bindKey( "Alt-N",  function()   { self.gotoNextError(); } );
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
+    bindKey( "Alt-Z",  function()   { self.generateTexZip(); } );
     bindKey( { key: "Alt-I", stop: true },  function(ev)   { 
       if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
         self.spellCheckMenu.menu.ignore(ev);
@@ -936,6 +937,10 @@ var UI = (function() {
       return self.generatePdf(); 
     }
 
+    document.getElementById("export-texzip").onclick = function(ev) {
+      return self.generateTexZip(); 
+    }
+
     document.getElementById("snapshot").onclick = function(ev) {
       self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() { 
         return self.withSyncSpinner( function() {
@@ -975,7 +980,7 @@ var UI = (function() {
             else {
               var mime = Util.mimeFromExt(path);
               return self.event( "loaded: " + path, "loading...", State.Loading, function() {
-                if (mime==="application/pdf" || mime==="text/html" || Util.startsWith(mime,"image/")) {
+                if (mime==="application/pdf" || mime==="text/html" || mime==="application/zip" || Util.startsWith(mime,"image/")) {
                   return self.saveUserContent( path, mime );
                 }
                 else {
@@ -2106,7 +2111,7 @@ var UI = (function() {
           var info = { line: line, path: file.path }                            
           if (Util.startsWith(file.mime,"image/")) images.push(info); 
           else if (!disable) files.push(info);
-          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html")) finals.push(info);
+          else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html" || ext===".zip")) finals.push(info);
           else if (file.nosync) nosyncs.push(info);
           else generated.push(info)
         }
@@ -2395,17 +2400,17 @@ var UI = (function() {
     });
   }
 
-  UI.prototype.generatePdf = function() {
+  UI.prototype.generateOnServer = function(target,ext,msg) {
     var self = this;
-    self.event( null, "Rendering PDF...", State.Exporting, function() { 
+    self.event( null, msg + "...", State.Exporting, function() { 
       self.localSave();
       var ctx = { 
         round: 0, 
         docname: self.docName, 
-        pdf: true, 
+        target: target, 
         includeImages: true,
         disableServer: self.settings.disableServer,
-        statusMessage: "Rendering PDF",
+        statusMessage: msg,
         showErrors: function(errs) { self.showErrors(errs,true); } 
       };
       //if (self.settings.disableServer) {
@@ -2414,14 +2419,24 @@ var UI = (function() {
       //}
       return self.spinWhile( self.exportSpinner, 
         self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
-          if (errorCode !== 0) throw ("PDF generation failed: " + ctx.message);
-          var name = "out/" + Util.changeExt(self.docName,".pdf");
-          return self.viewGenerated(name,"application/pdf");
+          if (errorCode !== 0) throw ( msg + " failed: " + ctx.message);
+          var name = "out/" + Util.changeExt(self.docName,"." + ext);
+          return self.viewGenerated(name,"application/" + ext);
         })
       );
     });
   }
 
+  UI.prototype.generatePdf = function() {
+    var self = this;
+    return self.generateOnServer("pdf","pdf","Rendering PDF");
+  }
+
+  UI.prototype.generateTexZip = function() {
+    var self = this;
+    return self.generateOnServer("texzip","zip","Creating LaTeX bundle");
+  }
+  
   UI.prototype.generateHtml = function() {
     var self = this;
     self.event( null, "Rendering HTML...", State.Exporting, function() { 

@@ -493,6 +493,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     js:  "text/javascript",
     pdf: "application/pdf",
     json:"application/json",
+    zip: "application/zip",
     
     tex: "text/tex",
     sty: "text/tex",
@@ -525,7 +526,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
 
   function hasBinaryExt(fname) {
-    return isImageMime(mimeFromExt(fname));
+    var mime = mimeFromExt(fname);
+    return isImageMime(mime) || mime==="application/zip";
   }
 
   function hasTextExt(fname) {
@@ -551,7 +553,7 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
     return (startsWith(mime,"image/") || mime==="text/css" || mime==="text/javascript");
   }
   
-  var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log"].join(";");
+  var generatedExts = [".bbl",".dimx",".dim",".aux",".dvi",".pdf",".html",".log",".zip"].join(";");
   function hasGeneratedExt(fname) {
     var ext = Stdpath.extname(fname).toLowerCase();
     if (!ext) return false;

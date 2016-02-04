@@ -313,7 +313,7 @@ function createTexZip( inName : string, outTexName : string, refers : list<strin
     }
     else Nothing
   }
-  val names = [outTexName,outTexName.changeExt(".pdf")] + standardTexStyles + namesRefer.concatMaybe + [outTexName.stemname + "*.bbl"]
+  val names = [outTexName,outTexName.changeExt(".pdf")] + standardTexStyles + namesRefer.concatMaybe + [outTexName.changeExt(".bbl")]
   (runners.runZip)( names, outTexName.changeExt(".zip"), mopts, cont )
 }
 

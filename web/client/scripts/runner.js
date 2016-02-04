@@ -99,7 +99,8 @@ var Runner = (function() {
     // todo: should we wait for image url resolving?
     var filesReferred = res.filesReferred.concat( [
                           Util.combine("out", Util.changeExt(res.name, ".html")),
-                          Util.combine("out", Util.changeExt(res.name, ".pdf")) 
+                          Util.combine("out", Util.changeExt(res.name, ".pdf")),
+                          Util.combine("out", Util.changeExt(res.name, ".zip")) 
                         ]);
     var referred = filesReferred.map( function(file) {
       return self.loadFile(ctx.round, file, !Util.hasEmbedExt(file));      
@@ -219,7 +220,7 @@ var Runner = (function() {
     // receive back: document.dimx file (math content) and document.bbl (bibliography)
     var params = {};    
     params.docname = ctx.docname;
-    if (ctx.pdf) params.pdf = ctx.pdf;
+    if (ctx.target) params.target = ctx.target;
     if (ctx.round) params.round = ctx.round;
     params.files = [];
     params.files.push( { 
@@ -232,7 +233,7 @@ var Runner = (function() {
     if (self.storage) {
       self.storage.forEachFile(function(file) {
         if (file.path === params.docname) return; // use the latest version
-        if (Util.isTextMime(file.mime) || (ctx.includeImages && Util.isImageMime(file.mime) && ((Util.extname(file.path) != ".pdf") || (file.path != "out/" + Util.stemname(ctx.docname) + ".pdf")))) {
+        if (Util.isTextMime(file.mime) || (ctx.includeImages && Util.isImageMime(file.mime) && ((Util.extname(file.path) !== ".pdf") || (file.path != "out/" + Util.stemname(ctx.docname) + ".pdf")))) {
           params.files.push( { 
             path: file.path,
             mime: file.mime, 

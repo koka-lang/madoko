@@ -38,7 +38,7 @@ public function checkSandbox( path : string ) : io string {
     Just(roots) -> {
       val xpath = path.normalize.xnormalize
       if (!(xpath.under(roots))) {
-        error("cannot access files outside the sandbox")
+        error("cannot access files outside the sandbox: " + path)
       }
       return xpath
     }
