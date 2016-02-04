@@ -92,9 +92,9 @@ function entryPost( app, entry, action ) {
 function entries( app, entries ) {
   Util.properties(entries).forEach(function(key) {
     var action = entries[key];
-    if (key.startsWith("GET/"))       entryGet( app, key.substr(3), action );
-    else if (key.startsWith("PUT/"))  entryPut( app, key.substr(3), action );
-    else if (key.startsWith("POST/")) entryPost( app, key.substr(4), action );
+    if (Util.startsWith(key,"GET/"))       entryGet( app, key.substr(3), action );
+    else if (Util.startsWith(key,"PUT/"))  entryPut( app, key.substr(3), action );
+    else if (Util.startsWith(key,"POST/")) entryPost( app, key.substr(4), action );
     else throw new Error( "unrecognized METHOD: " + key );
   });
 }
