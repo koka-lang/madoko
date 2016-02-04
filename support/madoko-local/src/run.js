@@ -68,12 +68,17 @@ function saveFiles( userpath, files ) {
   }));
 }
 
+var Target = {
+  Math: 0,
+  Pdf : 1,
+  TexZip : 2,
+};
 
 // Read madoko generated files.
 // config: 
 //   limits.fileSize : int 
 //   mime.lookup(path)
-function readFiles( config, userpath, docname, pdf, out ) {
+function readFiles( config, userpath, docname, target, out ) {
   var ext    = Path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
   var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
@@ -81,9 +86,11 @@ function readFiles( config, userpath, docname, pdf, out ) {
                 "-math-plain.final.tex", "-math-full.final.tex",
                 "-bib.bbl", "-bib.final.aux", // todo: handle multiple bibliographies
                 "-bib.bbl.mdk", "-bib.bib.json",
-               ].concat( pdf ? [".pdf",".tex"] : [] )
+               ]
+                .concat( target>Target.Math ? [".pdf",".tex"] : [] )
+                .concat( target===Target.TexZip ? [".zip"] : [] )
                 .map( function(s) { return Util.combine( outdir, stem + s ); })
-                .concat( pdf ? [combine(outdir,"madoko2.sty")] : [] );
+                .concat(  target>Target.Math ? [Util.combine(outdir,"madoko2.sty")] : [] );                
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
@@ -154,19 +161,20 @@ function madokoExec( program, userpath, docname, flags, extraflags, timeout ) {
 //   rundir : string
 //   runflags: string
 // }
-function madokoRunIn( config, userpath, docname, files, pdf ) {
+function madokoRunIn( config, userpath, docname, files, target ) {
   return saveFiles( userpath, files ).then( function() {
     Sandbox.getSafePath(userpath,docname); // is docname safe?
-    var flags = "-vv --verbose-max=0 -mmath-embed:512 -membed:" + (pdf ? "512" : "0") + (pdf ? " --pdf" : "");    
+    var tgtflag = (target===Target.Pdf ? " --pdf" : (target===Target.TexZip ? " --texzip" : ""));
+    var flags = "-vv --verbose-max=0 -mmath-embed:512 -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
     var extraflags = config.runflags || "";
-    var timeout = (pdf ? config.limits.timeoutPDF : config.limits.timeoutMath);    
+    var timeout = (target>Target.Math ? config.limits.timeoutPDF : config.limits.timeoutMath);    
     var startTime = Date.now();    
     return madokoExec( config.run, userpath, docname, flags, extraflags, timeout ).then( function(stdout,stderr) {
       var endTime = Date.now();
       var out = stdout + "\n" + stderr + "\n";
       Log.message(out);
       Log.info("madoko run: " + ((endTime - startTime + 999)/1000).toFixed(3) + "s");
-      return readFiles( config, userpath, docname, pdf, out ).then( function(filesOut) {
+      return readFiles( config, userpath, docname, target, out ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
           stdout: stdout,
@@ -195,13 +203,13 @@ function madokoRun( config, params ) {
   if (!config.run) throw new Error("madoko-local is not configured to run Madoko locally. (pass the '--run' flag?)");
   var docname  = params.docname || "document.mdk";
   var files    = params.files   || [];
-  var pdf      = params.pdf     || false;
+  var target   = (params.pdf || params.target==="pdf" ? Target.Pdf : (params.target==="texzip" ? Target.TexZip : Target.Math ));
   var now = new Date();
   var sub = now.toISOString().substr(0,10) + "-" + now.getTime().toString(16).toUpperCase();
   var userpath = Util.combine( config.rundir, sub );
   Log.info("madoko run: " + userpath);
   return Util.ensureDir( userpath ).then( function() {
-    return madokoRunIn( config, userpath, docname, files, pdf ).always( function() {
+    return madokoRunIn( config, userpath, docname, files, target ).always( function() {
       setTimeout( function() {
         Util.removeDirAll( userpath ).then( null, function(err) {
           Log.message( "unable to remove: " + userpath + ": " + err.toString() );
