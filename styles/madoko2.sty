@@ -791,7 +791,7 @@
 
 \newcommand\mdnohyphens{\hyphenchar\font=-1\relax}
 
-\newcommand\mdcode{\texttt\mdnohyphens}
+\newcommand\mdcode[1]{\texttt{\mdnohyphens #1}}
 \newcommand\mdprecode{}
 \newlength\mdpreskip
 \setlength\mdpreskip{\mdcompactskip}
