@@ -4,7 +4,7 @@
       "date": "2016-02-04",
       "updates": [
         "Support generation of LaTeX zip file bundles for LaTeX submissions",
-        "Fix style file bug for inline code (issue <https://madoko.codeplex.com/workitem/118>)"
+        "Fix style file bug for inline code (issue [118](https://madoko.codeplex.com/workitem/118))"
       ]
     },
     { "version": "1.0.0-rc4",
