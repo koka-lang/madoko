@@ -1607,7 +1607,7 @@ var UI = (function() {
                   if (res.mathFullDoc) self.lastMathFullDoc = res.mathFullDoc;                
                 }
                 else {
-                  res.asyncServer.setState();
+                  self.asyncServer.setStale();
                 }
               }
               if (!res.runAgain && !res.runOnServer && !self.stale) {
