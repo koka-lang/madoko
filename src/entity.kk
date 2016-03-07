@@ -431,7 +431,7 @@ val entities : list<entity> = [
   Entity("omega", 969, @"\omega", True),
   Entity("thetasym", 977, @"\vartheta", True),
   Entity("upsih", 978, @"\Upsilon", True ),
-  Entity("phisym", 966, @"\phi", True),
+  Entity("phisym", 981, @"\phi", True),
   Entity("piv", 982, @"\varpi", True ),
   Entity("ensp", 8194, @"\hspace*{0.5em}", False),
   Entity("emsp", 8195, @"\hspace*{1em}", False),
