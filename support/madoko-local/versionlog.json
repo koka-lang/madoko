@@ -4,7 +4,7 @@
       "date"   : "2016-02-04",
       "updates": [
         "Support LaTeX bundles",
-        "Fix `startsWith` bug (issue <https://madoko.codeplex.com/workitem/119>)"
+        "Fix `startsWith` bug (issue [119](https://madoko.codeplex.com/workitem/119))"
       ]
     },
     { "version": "0.5.2-beta",
