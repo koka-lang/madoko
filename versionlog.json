@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "1.0.0-rc6",
+      "date": "2016-03-08",
+      "updates": [
+        "Fix subfigure numbering (issue [124](https://madoko.codeplex.com/workitem/124))",
+        "Add `phisym` entity",
+        "Fix spurious bibliography warning even when no citations were present",
+        "Bugfixes to server"
+      ]
+    },
     { "version": "1.0.0-rc5",
       "date": "2016-02-04",
       "updates": [
