@@ -198,7 +198,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                                  }}}}}
     // write an aux file
     val bibChanged =
-      if (logs == "") then []
+      if (logs == "" || !logs.contains("\\citation{")) then []
       else {
         /*
         if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
@@ -219,6 +219,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
       }
       else {
         mopts.printErr("warning: found citations but no bibliography file is specified.\n Hint: specify 'Bibliography: <myfile>.bib' in the metadata.")
+        // mopts.printErr("citations:\n" + logs.indent(2), 2)
         redo() // TODO: restructure to not call redo
       }
     }
