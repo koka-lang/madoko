@@ -1380,11 +1380,16 @@ app.post('/rest/run', function(req,res) {
   userEvent( req, res, function(user) {
     console.log("run request: " + (req.body.round ? req.body.round.toString() + ": " : "") + user.path);
     if (runs >= limits.maxProcesses) throw { httpCode: 503, message: "too many processes" };
-    runs++;
-    var docname  = req.body.docname || "document.mdk";
-    var files    = req.body.files || [];
-    var target   = (req.body.pdf || req.body.target==="pdf" ? Target.Pdf : (req.body.target==="texzip" ? Target.TexZip : Target.Math ));
-    return madokoRun( user.path, docname, files, target ).always( function() { runs--; } );  
+    try {
+      runs++;
+      var docname  = req.body.docname || "document.mdk";
+      var files    = req.body.files || [];
+      var target   = (req.body.pdf || req.body.target==="pdf" ? Target.Pdf : (req.body.target==="texzip" ? Target.TexZip : Target.Math ));
+      return madokoRun( user.path, docname, files, target ).always( function() { runs--; } );  
+    }
+    finally {
+      runs--;
+    }
   }); 
 });
 
