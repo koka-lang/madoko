@@ -2909,6 +2909,7 @@ var symbolsGreek = [
   { entity: "omega", code: 969 },
   { entity: "thetasym", code: 977 },
   { entity: "upsih", code: 978 },
+  { entity: "phisym", code: 981 },
   { entity: "piv", code: 982 },
 ];
 
