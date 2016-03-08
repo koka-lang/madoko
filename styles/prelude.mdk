@@ -259,9 +259,10 @@ floating-format   : **&float-name;\ &label;&floating-endperiod;**&nbsp;
 
 SubFigureRow { .columns; .align-center }
 SubFigure {
-  @SubFigure: lower-alpha;
-  label     : '@Figure@SubFigure';
-  fig-label : '(@SubFigure)';
+  @Figure-SubFigure;
+  @Figure-SubFigure: lower-alpha;
+  label     : '@Figure@Figure-SubFigure';
+  fig-label : '(@Figure-SubFigure)';
   caption   : '';
   after     : "&nl;~ Begin SubFigureCaption&nl;&toc-line;&nl;~End SubFigureCaption&nl;"; 
   vertical-align: bottom;
