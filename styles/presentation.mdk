@@ -26,9 +26,10 @@ Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2
 Reveal Theme  : default
 Beamer Theme  : default
 Beamer Theme Options: 
-Reveal Long   : false
-Reveal Details: false
+Reveal Long       : false
+Reveal Details    : false
 Reveal SlideNumber: true
+Reveal History    : true
 Document Class: [xcolor=table]beamer
 Css           : &reveal-url;/css/reveal.min.css
 Css           : &reveal-url;/css/theme/&reveal-theme;.css
@@ -112,13 +113,17 @@ Html Header   :
     .reveal .authorblock .author {
         font-size: 120%;
         margin-bottom: 1ex;
-    }
-    .reveal p { 
-        text-align: center; 
-    }    
+    }        
     .reveal table {
         margin-left: auto;
         margin-right: auto;
+    }
+    .reveal pre table {
+      margin-left: 0pt;
+    }
+    .madoko .reveal pre.pretty {
+      padding-top: 0pt;
+      padding-bottom: 0pt;
     }
     .reveal li p {
         text-align: left;
@@ -261,8 +266,8 @@ Html Header   :
     window.revealConfig = {
         controls: true,
         progress: true,
-        history: false,
-        center: true,
+        history: &reveal-history;,
+        center: /^\s*(true|1)\s*$/i.test("&reveal-history;"),
         slideNumber: /^\s*(true|1)\s*$/i.test("&reveal-slidenumber;"),
         dependencies: [
           { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
