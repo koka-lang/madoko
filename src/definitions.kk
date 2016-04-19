@@ -598,7 +598,8 @@ function setcounterstyle( counter : counter, xvalue : string, v : string ) : cou
   elif (v=="upper-roman") then counter(counter.value,UpperRoman)
   elif (v=="lower-greek") then counter(counter.value,UnicodeBase(945,969))
   elif (v=="upper-greek") then counter(counter.value,UnicodeBase(913,937))
-  elif (v=="cjk-decimal") then counter(counter.value,EntityList(cjkDecimal))
+  elif (v=="cjk-decimal") then counter(counter.value,Decimal(cjkDecimals))
+  elif (v=="cjk-decimal0") then counter(counter.value,Decimal0(cjkDecimals))
   elif (v=="symbolic") then counter(counter.value,EntityList(symbolDecimal))
   elif (v=="circled-decimal") then counter(counter.value,UnicodeBase(9312,9321))
   elif (v=="disc") then counter(counter.value,Entity("&bull;"))
@@ -683,6 +684,8 @@ function initializeCounter( nested : mdict<h,list<string>>, name : string ) : st
 type format {
   Arabic0     // start at 0
   Arabic( width : int = 0 )
+  Decimal0( digits : list<int> )
+  Decimal( digits : list<int> )
   Lowercase
   Uppercase
   LowerRoman
@@ -702,6 +705,8 @@ function show( counter : counter ) : string {
     LowerRoman -> counter.value.showRoman.toLower
     UpperRoman -> counter.value.showRoman
     Arabic0    -> (counter.value-1).show
+    Decimal(digits)  -> counter.value.showDigits(digits)
+    Decimal0(digits) -> (counter.value-1).showDigits(digits)
     EntityList(l)    -> counter.value.showFromList(l)
     UnicodeBase(b,e) -> counter.value.showUnicodeBase(b,e)
     Entity(item)     -> item
@@ -709,28 +714,37 @@ function show( counter : counter ) : string {
   }
 }
 
-val cjkDecimal = [0x4E00,0x4E8C,0x4E09,0x56DB,0x4E94,
-                  0x516D,0x4E03,0x516B,0x4E5D,0x5341]
-                 .map(fun(i) { "&#" + i.show + ";" })
+val cjkDecimals = [0x3007,0x4E00,0x4E8C,0x4E09,0x56DB,0x4E94,0x516D,0x4E03,0x516B,0x4E5D,0x5341]
 
 val symbolDecimal = ["&ast;","&dagger;","&Dagger;","&sect;","&para;"]
 
 
 function showEntity( i : int ) : string {
-  "&#" + i.show + ";"
+  if (i >= 32 && i <= 127)
+   then string(1,i.char)
+   else "&#" + i.show + ";"
 }
 
 function showAsChar( i : int ) : string {
   string(1,i.char)
 }
 
+function showDigits( i : int, digits : list<int> ) : string {
+  val s = i.show
+  s.list.map( fun(c) {
+    val d = (c - '0').int
+    match( digits.drop(d) ) {
+      Cons(code) -> showEntity(code)
+      _          -> string(1,c)
+    }
+  }).join
+}
+
 function showUnicodeBase( value : int, start : int, end : int = start + 9, showCode : (int) -> string = showEntity ) : string {
   if (value <= 0) return "?"
   val base = (end - start) + 1
   val code = (start + ((value-1) % base))
-  val entity = if (code >= 32 && code <= 127)
-                then string(1,code.char)
-                else "&#" + code.show + ";"
+  val entity = showEntity(code)
   replicate(entity, ((value-1) / base) + 1).join()
 }
 
