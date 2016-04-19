@@ -34,7 +34,7 @@ function getLocaleInfo( name ) {
       return languages[id].some( function(fullname) {
         var names = fullname.replace(/[\(\),;\.]/g,"").toLowerCase().split(/\s+/); // TODO: cache this?
         return names.some( function(lname) {
-          if (lname===langname) {
+          if (lname===langid) {
             langid    = id;
             langnames = languages[id];
             return true;
