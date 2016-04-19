@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "1.0.0-rc7",
+      "date": "2016-04-19",
+      "updates": [
+        "Fix cjk-decimal counting (issue [132](https://madoko.codeplex.com/workitem/132))",
+        "Fix Chinese characters issue in bibliographies (issue [129](https://madoko.codeplex.com/workitem/129))",
+        "Update presentation style to maintain history links (and add boolean `history` metadata key)",
+        "Fix upper/lower case comparison bug for the `locale` metadata key"
+      ]
+    },
     { "version": "1.0.0-rc6",
       "date": "2016-03-08",
       "updates": [
