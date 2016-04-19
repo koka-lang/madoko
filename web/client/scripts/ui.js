@@ -1569,7 +1569,7 @@ var UI = (function() {
 
         if (self.lastEditChange) {
           var now = Date.now();
-          var diff = (self.lastRenderWasSlow || self.lastViewRenderWasSlow || self.settings.delayedUpdate) ? 1500 : 100;
+          var diff = (self.lastRenderWasSlow || self.lastViewRenderWasSlow || self.settings.delayedUpdate) ? 2000 : 100;
           if (Date.now() - self.lastEditChange < diff) {
             return false;
           }
