@@ -95,11 +95,14 @@ function convertAuthorList(item, bibitem, ctex, options, ikey, bikey ) {
   var texarg  = new RegExp("^(?:" + texcmd + "|\\{" + texvals + "\\})" );
   var texword = new RegExp("(?:[^\\s\\{]|\\{" + texvals + "\\})+", "g");
     
+  // is the first letter lower-case? This is used to determine the 'von' part
+  // of a name so we need to be conservative in the case of, say, chinese names
+  // where there is no lowercase vs. uppercase. 
   function firstIsLower(w) {
     if (!w) return false;
     var cap = texarg.exec(w);
     if (cap) return firstIsLower(w.substr(cap.index + cap[0].length));
-        else return (w.substr(0,1).toLowerCase() === w.substr(0,1));
+        else return (w.substr(0,1).toUpperCase() !== w.substr(0,1));
   }
 
   function words(s) {
