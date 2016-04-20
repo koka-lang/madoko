@@ -9,8 +9,12 @@
 define(["../scripts/map","../scripts/promise","../scripts/date","../scripts/util","../scripts/tabStorage",
         "../scripts/storage","../scripts/spellcheck","../scripts/errorMenu","../scripts/remote-localhost",
         "vs/editor/common/core/range", "vs/editor/common/core/selection","vs/editor/common/commands/replaceCommand",
-        "../scripts/editor","../scripts/customHover"],
-        function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,Localhost,Range,Selection,ReplaceCommand,Editor,CustomHover) {
+        "../scripts/editor","../scripts/customHover",
+        "../lib/wcwidth/wcwidth"],
+        function(Map,Promise,StdDate,Util,TabStorage,Storage,SpellCheck,ErrorMenu,
+                  Localhost,Range,Selection,ReplaceCommand,
+                  Editor,CustomHover,
+                  Wcwidth) {
 
 
 // Constants
@@ -2489,8 +2493,8 @@ var UI = (function() {
       var r = 0;
       row.forEach( function(cell,i) {
         if (i%2 === 0) return; // skip columns
-        var len = cell.length;
-        var span = row[i+1].length || 1;
+        var len = Wcwidth.wcwidth(cell); //cell.length;
+        var span = row[i+1].length || 1; // column span
         if (span === 1) {
           if (mwidths.length <= r) {
             mwidths.push( len );
@@ -2522,7 +2526,7 @@ var UI = (function() {
       var r = 0;
       var line = row.map( function(cell,i) {
         if (i%2===0) return cell; // return separator
-        var len = cell.length;
+        var len = Wcwidth.wcwidth(cell); //cell.length;
         var newlen = mwidths[r];
         r++;
         var span = row[i+1].length || 1;
@@ -2544,7 +2548,8 @@ var UI = (function() {
           return Util.rpad( cap[1] + cap[2], newlen - (cap[3] ? cap[3].length : 0), cap[2][0] ) + (cap[3] || "");
         }
         else {
-          return Util.rpad(cell,newlen," ");
+          var padlen = newlen - (len - cell.length);
+          return Util.rpad(cell,padlen," ");
         }
       }).join("");
       while( r < mwidths.length) {

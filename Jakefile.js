@@ -166,9 +166,12 @@ task("justcopy", [], function() {
   js = new jake.FileList().include(path.join(contribDir,"dictionaries","en_US","*"));
   copyFiles(contribDir,js.toArray(),webclient);
 
+  // wcwidth
+  js = new jake.FileList().include(path.join(contribDir,"wcwidth","*"));
+  copyFiles(path.join(contribDir,"wcwidth"),js.toArray(),path.join(webclient,"lib","wcwidth"));
+
   js = new jake.FileList().include(path.join(contribDir,"typo","*"));
   copyFiles(path.join(contribDir,"typo"),js.toArray(),path.join(webclient,"lib","typo"));
-
 
   // copy sty files to local texmf tree
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
