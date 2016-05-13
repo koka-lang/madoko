@@ -1594,7 +1594,7 @@ app.use(function(err, req, res, next){
 // -------------------------------------------------------------
 
 var sslOptions = {
-  pfx: fs.readFileSync('./ssl/madoko-cloudapp-net.pfx'),
+  pfx: fs.readFileSync('./ssl/madoko.cloudapp.net.pfx'),
   passphrase: passphraseSSL, // fs.readFileSync('./ssl/madoko-cloudapp-net.txt'),
   //key: fs.readFileSync('./ssl/madoko-server.key'),
   //cert: fs.readFileSync('./ssl/madoko-server.crt'),
