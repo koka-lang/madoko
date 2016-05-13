@@ -4151,7 +4151,7 @@ var symbolsMath = [
 
     if (Util.isImageMime(mime)) name = "images/" + name;    
     if (encoding===Storage.Encoding.Base64) {
-      var cap = /^data:([\w\/\-]+);(base64),([\s\S]*)$/.exec(content);
+      var cap = /^data:([\w\/\+\-]+);(base64),([\s\S]*)$/.exec(content);
       if (!cap) {
         Util.message("invalid base64 encoding", Util.Msg.Error );
         return;
