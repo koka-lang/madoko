@@ -132,7 +132,8 @@ public function include( text : string, fast : bool, inName : string, outName : 
           warning("unable to read include: " + fname, lineNo, srcname )
           (fileName,"")
         }
-        Just((fileName,content)) -> {
+        Just((fileName,content0)) -> {
+          val content = if (options.xmp) then "<xmp>" + content0 + "</xmp>" else content0
           if (included.contains(fileName)) then {
             warning("recursive include: " + fileName.show)
             (fileName,"")
