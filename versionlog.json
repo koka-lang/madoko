@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "1.0.1",
+      "date": "2016-05-20",
+      "updates": [
+        "Assume not '--full' mode when running with '--xmp'",
+        "Fix xmp wrapping of the prelude when using '--xmp'"
+      ]
+    },
     { "version": "1.0.0-rc7",
       "date": "2016-04-19",
       "updates": [

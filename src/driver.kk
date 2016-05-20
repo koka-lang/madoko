@@ -52,7 +52,7 @@ public function processContent( inName : string, outName : string, content : str
   val styleDir = opts.installDir + "/../styles"
   val searchDirs = [inName.dirname,outName.dirname,styleDir]
   val opts0  = if (inName.endsWith(".xmp.html") || inName.endsWith(".xmp"))
-                then (opts.options)(xmp = True,full = Just(False)) else opts.options
+                then (opts.options)(xmp = True,full = opts.options.full.maybe(Just(False),Just)) else opts.options
   content.include(False, inName, outName, searchDirs, opts0) fun(icontent0,lmap) {
     // remove madoko comments
     val icontent = icontent0.removeMadokoComments

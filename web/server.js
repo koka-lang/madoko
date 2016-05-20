@@ -1549,7 +1549,7 @@ var staticOptions = {
 }
 var staticClient      = express.static( combine(__dirname, "client"), staticOptions);
 var staticMaintenance = express.static( combine(__dirname, "maintenance"), staticOptions);
-var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex|csl|locales))?|lib(\/(vs|typo)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
+var staticDirs = /\/(images(\/dark)?|scripts|dictionaries(\/en_US)?|styles(\/(lang|out|math|latex|csl|locales))?|lib(\/(vs|typo|wcwidth)(\/.*)?)?|preview(\/(lang|out|math|styles))?|templates(\/style)?|private)?$/;
 
 function staticPage(req,res,next) {
   //console.log("static: " + req.path);
