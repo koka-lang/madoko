@@ -26,6 +26,7 @@ web/client/dictionaries/
 web/users/
 web/ssl/
 web/log*/
+web/xlog*/
 web/run/
 test/tex/
 test/local/
