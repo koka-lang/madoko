@@ -132,8 +132,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
           warning("unable to read include: " + fname, lineNo, srcname )
           (fileName,"")
         }
-        Just((fileName,content0)) -> {
-          val content = if (options.xmp) then "<xmp>" + content0 + "</xmp>" else content0
+        Just((fileName,content)) -> {          
           if (included.contains(fileName)) then {
             warning("recursive include: " + fileName.show)
             (fileName,"")
@@ -241,7 +240,7 @@ public function include( text : string, fast : bool, inName : string, outName : 
         val (icontent,lmap,lcount) = processIncludeLine(fname,"[INCLUDE=\"" + prelude + "\"]",included,lineMap,lineNo,1)
         lineCount := lineCount + lcount 
         lineMap   := lmap
-        icontent + "\n"
+        ((if (options.xmp) then "<xmp>" + icontent + "</xmp>" else icontent) + "\n")
       }
       else ""
     val ls = txt.lines.map fun(line) {
