@@ -15,6 +15,22 @@ var Promise = require("./client/scripts/promise.js");
 var Map     = require("./client/scripts/map.js");
 var date    = require("./client/scripts/date.js");
 
+if (!module.parent) {
+	var CmdLine = require("commander").Command;
+	var Options = new CmdLine("stats");
+	Options
+	  .usage("[options] [directories]")
+	  .option("--async", "run asynchronous");
+
+	Options.parse(process.argv);  
+}
+else {
+	var Options = {
+		args: [],
+		async: true,
+	};
+}
+
 function jsonParse(s,def) {
   try {
     return JSON.parse(s);
@@ -24,10 +40,28 @@ function jsonParse(s,def) {
   }
 }
 
-function readDir(dir) {
+function fileExist(fileName) {
+  var stats = null;
+  try {
+    stats = Fs.statSync(fileName);    
+  }
+  catch(e) {};
+  return (stats != null);
+}
+
+
+function _readDir(dir) {
   return new Promise( function(cont) { 
   	Fs.readdir(dir,cont); 
   });
+}
+
+function readDir(dir) {
+	return _readDir(dir).then( function(fnames) {
+		return fnames.map( function(fname) {
+			return Path.join(dir,fname);
+		});
+	});
 }
 
 function readFile( path, options ) {
@@ -43,39 +77,67 @@ function writeFile( path, content, options ) {
   });
 }
 
-function parseLogs(dir) {
-	dir = dir || "log";
-	return readDir( dir ).then( function(fnames) {
-		fnames = fnames.filter( function(fname) { return /log-[\w\-]+\.txt/.test(Path.basename(fname)); } );
-		return Promise.when( fnames.map( function(fname) { 
-			//console.log("read: " + fname);
-			return readFile(Path.join(dir,fname),{encoding:"utf8"}); 
-		})).then( function(fcontents) {
-			var datas = fcontents.map( function(content) { 
-				if (!content || content.length<=0) return [];
-				if (content[0] === "[") return JSON.parse(content); // older log
-			  var lines = content.split("\n");
-			  return lines.map(function(line){ 
-			  	return (line ? jsonParse(line,{type:"none"}) : {type:"none"});   // new logs are line separated JSON objects
-			  });
-			});
-			var entries = [].concat.apply([],datas);
-			entries.forEach( function(entry) {
-				// normalize
-				if (!entry.date && entry.start) {
-					entry.date = new Date(entry.start).toISOString();
-				}
-				if (!entry.type) {
-					if (entry.error) entry.type = "error";
-					else if (entry.url==="/rest/run" && entry.user && entry.time) entry.type = "user"; 
-					else entry.type = "request";
-				}
-				//else if (entry.date && typeof entry.date === "string") {
-				//	entry.date = date.dateFromISO(entry.date);
-				//}
-			});
-			return entries; 
-		})
+function digestFile(fname) {
+  var fullName = fname;
+  var digestName = fullName + ".json";	
+  if (fileExist(digestName)) {
+  	console.log("reused digest: " + fname);
+  	var content = Fs.readFileSync(digestName,{encoding:"utf8"});
+  	return JSON.parse(content);
+  }  	
+  else {
+		console.log("read fresh   : " + fname);
+		var content = Fs.readFileSync(fullName,{encoding:"utf8"});
+		// parse entries
+		var entries = {}
+		if (content && content.length>0)  {
+			if (content[0] === "[") {
+				entries = JSON.parse(content); // older log
+			}
+			else {
+	  		var lines = content.split("\n");
+	  		entries = lines.map(function(line){ 
+	  			return (line ? jsonParse(line,{type:"none"}) : {type:"none"});   // new logs are line separated JSON objects
+	  		});			  		
+	  	}
+	  }
+	  // normalize entries					
+	  entries.forEach( function(entry) {
+			if (!entry.date && entry.start) {
+				entry.date = new Date(entry.start).toISOString();
+			}
+			if (!entry.type) {
+				if (entry.error) entry.type = "error";
+				else if (entry.url==="/rest/run" && entry.user && entry.time) entry.type = "user"; 
+				else entry.type = "request";
+			}
+			//else if (entry.date && typeof entry.date === "string") {
+			//	entry.date = date.dateFromISO(entry.date);
+			//}
+		});
+	  return writeDigest(digestName, entries );
+	}
+}
+
+
+function digestLogs(dirs) {
+	dirs = dirs || ["log"];
+	console.log("reading dirs: " + dirs.join(";"));
+	return Promise.when( dirs.map(readDir) ).then( function(fnamess) {
+		var fnames = [].concat.apply([], fnamess);
+		fnames = fnames.filter( function(fname) { return /^log-[\w\-]+\.txt$/.test(Path.basename(fname)); } );
+		console.log("found " + fnames.length + " files")
+		return fnames;
+	}).then( function(fnames) {
+		var statss = fnames.map( digestFile );
+		var stat = combineDigests(statss);
+		console.log("combined")
+		return writeStats(null,stat);
+	}).then( function(res) {
+		return res;
+	}, function(err) {
+		console.log("error: " + err.stack);
+		throw err;
 	});
 }
 
@@ -115,6 +177,7 @@ function max(xs) {
 function userVal(user) {
 	return user.reqCount + (user.uid ? 10000 : 0);
 }
+
 
 function digestUsers(entries, all) {
 	//console.log("digest users")
@@ -226,11 +289,16 @@ function digestUsers(entries, all) {
 }
 
 function writeStats( fname, obj ) {
+	console.log("writing: " + fname);
+  if (!fname) fname = "client/private/stats.html";
+	console.log("writing: " + fname);
   return readFile("stats-template.html",{encoding:"utf-8"}).then( function(content) {
   	var json = JSON.stringify(obj);
   	JSON.parse(json);
     content = content.replace(/\bSTATSHERE\b/i,encodeURIComponent(json));
-    return writeFile(fname,content);
+    return writeFile("stats-munge.json", JSON.stringify(obj,null,2)).then( function() {
+    	return writeFile(fname,content);
+    });
   });
 }
 
@@ -282,7 +350,7 @@ function digestDaily(entries) {
 				knownCount++;
 			}
 		});
-		delete entry.users;
+		// delete entry.users;
 		entry.cumUserCnt = knownCount;
 	});
 
@@ -401,7 +469,141 @@ function resolveDomains(entries) {
 	}));
 }
 
-function writeStatsPage( fname ) {
+function writeDigest( fname, entries ) {
+	var start = Date.now();	
+	console.log("stats: total entries: " + entries.length );
+	var xentries = entries.filter(function(entry){ return (entry.date && entry.type !== "error"); });
+	var errors = digestErrors(entries);
+	console.log("stats: total errors: " + errors.errors.length );
+	console.log("stats: total scans: " + errors.scans.length );
+	var domains  = digestDomains(entries);
+	console.log("stats: digest users...");
+	var users   = digestUsers(xentries,true);
+	errors.errors = errors.errors.slice(0,25);	
+	console.log("stats: digest daily...");
+	var stats = {
+		daily: digestDaily(xentries).keyElems(),
+		errors: errors,
+		users: users,//.slice(0,100),
+		domains: domains,
+		userCount: users.length,
+		date: new Date(),
+	};
+	console.log("stats: total time: " + (Date.now() - start).toString() + " ms");
+	Fs.writeFileSync( fname, JSON.stringify(stats,null,2), {encoding:"utf8"} );
+	return stats;
+};
+
+function combineDigests( statss ) {
+	console.log("combining digests...");
+	var stat = {
+		daily: new Map(),
+		errors: {
+			errors: [],
+			pushfails: 0,
+			rejects: 0,
+			scans: [],
+		},
+		users: new Map(),
+		domains: new Map(),
+		userCount: 0,
+		date: new Date(),
+	};
+	statss.forEach( function(stat1) {
+		combineStat( stat, stat1 );
+	});
+	console.log(" normalizing...");
+	// normalize
+	stat.users = stat.users.elems().sort( function(x,y) { return userVal(y) - userVal(x); }); 
+	stat.domains = stat.domains.elems();
+	stat.daily = stat.daily.keyElems().sort( function(x,y) { return (x.key < y.key ? -1 : (x.key==y.key ? 0 : 1)); });
+	stat.userCount = stat.users.length;
+
+	// calculate cumulative user count
+	var knownUsers = new Map();
+	var knownCount = 0;
+	stat.daily.forEach( function(entry) {
+		entry.value.users.forEach( function(id) {
+			if (!knownUsers.get(id)) {
+				knownUsers.set(id,true);
+				knownCount++;
+			}
+		});
+		entry.value.cumUserCnt = knownCount;
+	});
+
+	console.log(" done.");
+	return stat;
+}
+
+function combineStat( stat, _stat ) {
+	if (_stat.daily) {
+		_stat.daily.forEach( function(entry) {
+			if (!stat.daily.contains(entry.key)) {
+				stat.daily.set(entry.key,entry.value);
+			}
+			else {
+				combineDaily( stat.daily.get(entry.key), entry.value );
+			}
+		});
+	}
+	if (_stat.domains) {
+		_stat.domains.forEach( function(entry) {
+			if (!stat.domains.contains(entry.ip)) {
+				stat.domains.set(entry.ip, entry);
+			}
+			else {
+				var dom = stat.domains.get(entry.ip);
+				dom.count += entry.count;
+			}
+		});
+	}
+	if (_stat.users) {
+		_stat.users.forEach( function(user) {
+			if (!stat.users.contains(user.id)) {
+				stat.users.set(user.id,user);
+			}
+			else {
+				combineUser( stat.users.get(user.id), user);
+			}
+		});
+	}
+	if (_stat.errors) {
+		stat.errors.errors = stat.errors.errors.concat(_stat.errors.errors);
+		stat.errors.pushfails += _stat.errors.pushfails;
+		stat.errors.rejects += _stat.errors.rejects;
+		stat.errors.scans = stat.errors.scans.concat(_stat.errors.scans);
+	}
+}
+
+function combineDaily( daily, _daily ) {
+	daily.userCnt += _daily.userCnt;
+	daily.users    = daily.users.concat(_daily.users);
+	daily.pagesCnt += _daily.pagesCnt;
+	daily.pageIdxCnt += _daily.pageIdxCnt;
+	daily.reqCount += _daily.reqCount;
+	daily.runCount += _daily.runCount;
+	daily.avgWTm   = (daily.avgWTm + _daily.avgWTm) / 2;
+	if (daily.maxWTm < _daily.maxWTm) daily.maxWTm = _daily.maxWTm;
+  daily.avgSTm   = (daily.avgSTm + _daily.avgSTm) / 2;
+	if (daily.maxSTm < _daily.maxSTm) daily.maxSTm = _daily.maxSTm;
+	if (daily.maxSSz < _daily.maxSSz) daily.maxSSz = _daily.maxSSz;
+	daily.cumUserCnt += _daily.cumUserCnt;	
+}
+
+function combineUser( user, _user ) {
+	user.reqCount += _user.reqCount;
+	if (user.name===user.id && _user.name !==user.id) user.name = _user.name;
+	if (_user.remote && _user.remote.indexOf(user.remote) < 0) user.remote = user.remote + "," + _user.remote;
+	user.workTime += _user.workTime;
+	user.editTime += _user.editTime;
+	user.viewTime += _user.viewTime;
+	user.uid      = user.uid || _user.uid;
+}
+
+
+
+function oldwriteStatsPage( fname ) {
 	if (!fname) fname = "client/private/stats.html";
 	console.log("stats: reading files...");
 	var start = Date.now();	
@@ -437,9 +639,28 @@ function writeStatsPage( fname ) {
 };
 
 
+
+function writeStatsPage() {
+	var pdirs;
+	if (Options.args && Options.args.length>0) {
+		pdirs = Promise.resolved(Options.args);
+	}
+	else {
+	  pdirs = readDir( "." ).then( function(dnames) {
+			return dnames.filter( function(dname) { return /^log[\w\-]*$/.test(Path.basename(dname)); } );
+		});
+	}
+	return pdirs.then( function(dirs) {
+		console.log("dirs")
+		return digestLogs(dirs);
+	}, function(err) {
+		console.log("error writing stats: " + err.stack);
+	});
+}
+
 // run in a separate process so the website stays reactive
 function asyncWriteStatsPage() {
-	var command = /* "madoko */ "node ./stats.js --sync";
+	var command = /* "madoko */ "node ./stats.js";
 	return new Promise( function(cont) {
   	console.log("> " + command);
   	Cp.exec( command, {timeout: 90000, maxBuffer: 512*1024 }, function(err,stdout,stderr) {
@@ -456,10 +677,12 @@ function asyncWriteStatsPage() {
 module.exports.writeStatsPage = asyncWriteStatsPage;
 
 if (!module.parent) {
-	if (process.argv[2] === "--async") 
+	if (Options.async) {
 		asyncWriteStatsPage();
-	else 
+	}
+	else {
 		writeStatsPage();
+	}
 }
 
 
