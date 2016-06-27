@@ -49,6 +49,19 @@ function fileExist(fileName) {
   return (stats != null);
 }
 
+function fileTime(fileName) {
+  try {
+    var stats = Fs.statSync(fileName);    
+    if (stats != null && stats.mtime != null) {
+    	return stats.mtime.getTime();    
+    } 
+    else return 0;
+  }
+  catch(e) {
+  	return 0;
+  };  
+}
+
 
 function _readDir(dir) {
   return new Promise( function(cont) { 
@@ -80,7 +93,8 @@ function writeFile( path, content, options ) {
 function digestFile(fname) {
   var fullName = fname;
   var digestName = fullName + ".json";	
-  if (fileExist(digestName)) {
+
+  if (fileTime(digestName) > fileTime(fullName)) {
   	console.log("reused digest: " + fname);
   	var content = Fs.readFileSync(digestName,{encoding:"utf8"});
   	return JSON.parse(content);
@@ -453,8 +467,8 @@ function digestDomains(entries) {
 }
 
 function dnsReverse( ip ) {
-	return new Promise( function(cont) {
-		dns.reverse( ip, cont );		
+	return new Promise( function(cont) {		
+		dns.reverse( ip.replace("::ffff:",""), cont );		
 	});
 }
 
@@ -514,8 +528,8 @@ function combineDigests( statss ) {
 	});
 	console.log(" normalizing...");
 	// normalize
-	stat.users = stat.users.elems().sort( function(x,y) { return userVal(y) - userVal(x); }); 
-	stat.domains = stat.domains.elems();
+	stat.users = stat.users.elems().sort( function(x,y) { return userVal(y) - userVal(x); });
+	stat.domains = stat.domains.elems().sort( function(x,y) { return (x.count < y.count ? 1 : (x.count==y.count ? 0 : -1)); }).slice(0,100);
 	stat.daily = stat.daily.keyElems().sort( function(x,y) { return (x.key < y.key ? -1 : (x.key==y.key ? 0 : 1)); });
 	stat.userCount = stat.users.length;
 
@@ -532,8 +546,17 @@ function combineDigests( statss ) {
 		entry.value.cumUserCnt = knownCount;
 	});
 
+	stat.users = stat.users.filter(function(x) { return x.editTime > 10; }); 
+
 	console.log(" done.");
 	return stat;
+}
+
+var oneMonthAgo = new Date();
+oneMonthAgo.setMonth( oneMonthAgo.getMonth() - 1 );
+
+function isNewish(x) {
+	return (x!=null && x.date != null && date.dateFromISO(x.date).getTime() > oneMonthAgo);
 }
 
 function combineStat( stat, _stat ) {
@@ -569,10 +592,10 @@ function combineStat( stat, _stat ) {
 		});
 	}
 	if (_stat.errors) {
-		stat.errors.errors = stat.errors.errors.concat(_stat.errors.errors);
+		stat.errors.errors = stat.errors.errors.concat(_stat.errors.errors.filter(isNewish));
 		stat.errors.pushfails += _stat.errors.pushfails;
 		stat.errors.rejects += _stat.errors.rejects;
-		stat.errors.scans = stat.errors.scans.concat(_stat.errors.scans);
+		stat.errors.scans = stat.errors.scans.concat(_stat.errors.scans.filter(isNewish));
 	}
 }
 
