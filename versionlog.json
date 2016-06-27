@@ -1,8 +1,9 @@
 {
   "log" : [
     { "version": "1.0.1",
-      "date": "2016-05-20",
+      "date": "2016-06-27",
       "updates": [
+        "Upgrade to dropbox v2 api for sharing",
         "Assume not '--full' mode when running with '--xmp'",
         "Fix xmp wrapping of the prelude when using '--xmp'"
       ]
