@@ -363,10 +363,10 @@ app.use(function(req, res, next){
 
 app.use(function(req,res,next) {
   // check if any non-GET call originated from an XHR request (to prevent most CSRF attacks)
-  if (req.method !== "GET") {
+  if (req.method !== "GET" && req.path !== "/rest/report/csp") {
     console.log(req.method + " " + req.url);
     if (!req.xhr || !req.secure) {
-      throw { httpCode: 401, message: "XHR header not set, or connection is not secure" };
+      throw { httpCode: 401, message: "XHR header not set, or connection is not secure\n  " + req.path };
     }
   }
   next();
