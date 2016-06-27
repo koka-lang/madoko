@@ -32,7 +32,7 @@ var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
 var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
 var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
 var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
-var sharedFoldersUrl = "https://api.dropbox.com/1/shared_folders/";
+var sharedFoldersUrl = "https://api.dropboxapi.com/2/sharing/get_folder_metadata";
 
 function encodeURIPath(s) {
   var p = encodeURI(s);
@@ -46,8 +46,10 @@ function addPathInfo(info) {
     if (!info.parent_shared_folder_id) return info;
     // shared
     return sharedFolderInfo(info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
-      if (sinfo || Util.startsWith(info.path,sinfo.path + "/")) {
-        info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + sinfo.shared_folder_name + "/" + info.path.substr(sinfo.path.length + 1);
+      if (sinfo) {
+        var subpath = (Util.startsWith(info.path,sinfo.path_lower + "/") ? info.path.substr(sinfo.path_lower.length+1) : info.path);
+        var shared = (Util.startsWith(sinfo.path_lower, "/") ? sinfo.path_lower.substr(1) : sinfo.path_lower);        
+        info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + shared + "/" + subpath;
         info.globalPath = info.sharedPath; // use the shared path
       }      
       return info;
@@ -73,8 +75,9 @@ function fileInfo(fname) {
 }
 
 function sharedFolderInfo(id) {
-  var url = Util.combine(sharedFoldersUrl,encodeURIPath(id));
-  return dropbox.requestGET( { url: url, cache: -60000, contentType: null } );  // cached, retry after 60 seconds;
+  var url = sharedFoldersUrl;
+  var body = { shared_folder_id: id, actions: [] };
+  return dropbox.requestPOST( { url: url, cache: -60000 }, null, body );  // cached, retry after 60 seconds;
 }
 
 function folderInfo(fname) {

@@ -9,7 +9,7 @@
       "url"   : "https://api.dropbox.com/1/disable_access_token",
       "authorization": "Bearer"
     },
-    "sources"       : ["https://*.dropbox.com"]
+    "sources"       : ["https://*.dropbox.com","https://*.dropboxapi.com"]
   },
   "github": {
     "client_id"     : "9c24f7ac71d1ede26ba3",
