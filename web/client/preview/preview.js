@@ -532,7 +532,7 @@ var Preview = (function() {
 
     // execute all inline scripts and fire the "load" event.
     inlineScripts.forEach( function(text,idx) { 
-      var post = (/^\/\/[@#] *sourceURL=.*$/m.test(text) ? "" : "\n//@ sourceURL=preview-inline-" + idx.toString() + ".js\n");
+      var post = (/^\/\/[@#] *sourceURL=.*$/m.test(text) ? "" : "\n//# sourceURL=preview-inline-" + idx.toString() + ".js\n");
       appendScript(text + post);       
     });
     appendScript("Preview.onLoadedFinal();");
@@ -587,7 +587,7 @@ var Preview = (function() {
         else if (files["/" + src]) {
           // make local javascript files inline content
           var file = files["/" + src];
-          inlineScripts.push( "//@ sourceURL=" + escape(src) + "\n" + file.content );
+          inlineScripts.push( "//# sourceURL=" + escape(src) + "\n" + file.content );
         }
         else if (loadedScripts["/" + src]==null && /\bpreview\b/.test(script.className)) {
           loadedScripts["/" + src] = false;  // inserted, but not yet loaded by the browser

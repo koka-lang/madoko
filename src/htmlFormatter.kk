@@ -339,7 +339,7 @@ function embedScripts( options: options, scripts : string, metadata : dict<strin
       }
       match(options.embedinfos[link]) {
         Just(info) | info.embedData != "" -> 
-          "<script " + attrs.htmlFormat("script",False) + ">" + info.embedData + "\n//@ sourceURL=" + escape(link) + "\n</script>\n"
+          "<script " + attrs.htmlFormat("script",False) + ">" + info.embedData + "\n//# sourceURL=" + escape(link) + "\n</script>\n"
         _ -> {
           if (link.relative) then {
             log("filesRefer",link);
