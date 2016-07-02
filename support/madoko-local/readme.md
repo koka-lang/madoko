@@ -105,7 +105,7 @@ Options:
 * `--homedir=<dir>`
   : Specify the user home directory. In this directory
     `madoko-local` will create a `.madoko` directory
-    that contains a log file and the local configuration
+    that contains log files and the local configuration
     file (`config.json`).    
 * `--origin=<url>`
   : Instead of serving `https://www.madoko.net` use the
@@ -117,8 +117,8 @@ Options:
     already use port 80.
 * `--rundir=<dir>`,
   : The directory under which Madoko stores temporary files when
-    running Madoko (if the `--run` flag is present). Defaults to the
-    mount-directory.
+    running Madoko (if the `--run` flag is present). Defaults to 
+    `<homedir>/.madoko/run`.
 * `--runcmd=<cmd>`,
   : The command to use when running Madoko locally. By default this
     is `madoko`. 
@@ -140,7 +140,7 @@ the Madoko web server is only used for the editing environment and updates
 -- all document processing will be done locally. 
 
 When running locally, `madoko-local` will store
-files temporarily under the `<rundir>/.madoko` directory where it runs
+files temporarily under the `<rundir>/<temp-name>` directory where it runs
 Madoko with the `--sandbox` flag to restrict access to files under that
 directory only. 
 

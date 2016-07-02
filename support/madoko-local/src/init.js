@@ -40,7 +40,8 @@ var config = {
   userid    : "",
   installdir: Path.dirname(Path.dirname(Util.programDir())), // serve static content from here
   homedir   : Util.osHomeDir(), // user home directory
-  configdir : null,             // save log and config info here ($HOME/.madoko)
+  configdir : null,             // save config info here ($HOME/.madoko)
+  logdir    : null,             // save log files here (<configdir>/log)
   mountdir  : null,             // the local directory to give access to.
   port      : 80,
   origin    : "https://www.madoko.net",
@@ -53,7 +54,7 @@ var config = {
     timeoutMath : 1*minute,
   },
   run       : null,     // program to run Madoko locally
-  rundir    : null,     // directory under which to run LaTeX.
+  rundir    : null,     // directory under which to run LaTeX. (<configdir>/run)
   runflags  : "",       // extra run flags.
   rmdirDelay: 5*second, // after this amount the run directory gets removed
   mime      : null,     // gets set to Express.static.mime
@@ -71,7 +72,7 @@ Options
   .option("--port <n>", "serve at port number (=80)", parseInt )
   .option("--origin <url>", "give local disk access to <url> (" + config.origin + ")")
   .option("--homedir <dir>", "use <dir> as user home directory (for logging)")
-  .option("--rundir <dir>", "use <dir> for running madoko (<mount-directory>)")
+  .option("--rundir <dir>", "use <dir> for running madoko (<homedir>/.madoko)")
   .option("--runcmd <cmd>", "use <cmd> as the madoko program")
   .option("--runflags <opts>", "pass extra options <opts> to the madoko program")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
@@ -90,7 +91,7 @@ Options.on("--help", function() {
     "    generated locally instead of on the Madoko server. By default calls the",
     "    'madoko' program on the PATH but you can use --runcmd to change this.",
     "    The --rundir determines under which directory files are stored temporarily",
-    "    when Madoko is invoked. By default this is the <mount-directory>.",
+    "    when Madoko is invoked. By default this is '<homedir>/.madoko'",
   ].join("\n"));
 });
 
@@ -100,7 +101,8 @@ function initializeConfig() {
   // Home dir
   if (Options.homedir) config.homedir = Options.homedir;
   config.configdir = Util.combine(config.homedir, ".madoko");
-
+  config.logdir = Util.combine(config.configdir,"log");
+  
   // Try to read local config file
   var configFile  = Path.join(config.configdir,"config.json");
   var localConfig = Util.jsonParse(Util.readFileSync(configFile, {encoding:"utf8"}, "{}" ));
@@ -189,15 +191,16 @@ function initializeConfig() {
 
   // Create rundir
   if (typeof Options.rundir==="string") {
-    config.rundir = options.rundir;
+    config.rundir = Options.rundir;
   }
   else {
-    config.rundir = config.mountdir;
+    config.rundir = config.configdir;
   }
   config.rundir = Util.combine(config.rundir,".madoko-run");
 
+
   // Logging
-  Log.setLog( config.verbose, config.configdir, config.limits.logFlush );
+  Log.setLog( config.verbose, config.logdir, config.limits.logFlush );
 
   // Launch
   config.launch = Options.launch;
