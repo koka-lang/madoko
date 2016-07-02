@@ -253,6 +253,7 @@ task("publish", [], function () {
 desc("line count.")  
 task("linecount", [], function() {
   var sources = new jake.FileList().include(path.join(sourceDir,"*.kk"));
+  // var sources = new jake.FileList().include(path.join("lib","*.js"));
   var src = sources.toArray().map( function(file) { return fs.readFileSync(file,{encoding:"utf8"}); }).join()
   //xsrc     = src.replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t\r]*\n|^[ \t]*\/\/.*\n/gm, "")
   comments = lineCount(src.match(/^[ \t]*\/\*[\s\S]*?\*\/[ \t\r]*\n|^[ \t]*\/\/.*\n/gm).join())
