@@ -1,5 +1,12 @@
 {
   "log": [
+    { "version": "0.5.5-beta",
+      "date"   : "2016-07-02",
+      "updates": [
+        "Fix error in parsing `--rundir` flag",
+        "Change default paths: use `<configdir>/log` for logs, and `<configdir>/run` for running LaTeX"
+      ]
+    },
     { "version": "0.5.3-beta",
       "date"   : "2016-02-04",
       "updates": [
