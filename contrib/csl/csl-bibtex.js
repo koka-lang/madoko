@@ -791,9 +791,9 @@ function bibtexToCsl( inputs, convertTex, options ) {
   // merge results from each file
   var res = bibs[0];
   bibs.slice(1).forEach( function(bib) {
-    res.warnings = [res.warnings,bib.warnings].joinx("\n");
-    var preamble = [res.bib._preamble,bib.bib._preamble].joinx("\n");
-    var comments = [res.bib._comments,bib.bib._comments].joinx("\n");
+    res.warnings = joinx([res.warnings,bib.warnings],"\n");
+    var preamble = joinx([res.bib._preamble,bib.bib._preamble],"\n");
+    var comments = joinx([res.bib._comments,bib.bib._comments],"\n");
     extend(res.bib,bib.bib); 
     res.bib._preamble = preamble;
     res.bib._comments = comments;
