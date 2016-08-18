@@ -184,7 +184,7 @@ public function texText( txt : string ) : string {
 }
 
 val rxEntity  = regex(@"&((?:#[xX]?)?(\w)(\w*));")
-val rxSpecial = regex(@"&#?\w+;|[" + specials.map(fst).join + @"\]")
+val rxSpecial = regex(@"&#?\w+;|[" + specials.map(fun(kv) { val c = kv.fst; if (c=="[" || c == "^") then "\\" + c else c }).join + @"\]")
 val specials = [
   (@"%", @"\%"),
   (@"~", @"\textasciitilde{}"),
@@ -193,8 +193,7 @@ val specials = [
   (@"$", @"\$"),
   (@"{", @"\{"),
   (@"}", @"\}"),
-  (@"[", @"\["),
-  (@"]", @"\]"),
+  (@"[", @"{}["),
   (@"_", @"\_"),
   (@"^", @"\textasciicircum{}"),
   (@"|", @"\textbar{}"),
