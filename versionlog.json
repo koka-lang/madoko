@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "1.0.2",
+      "date": "2016-08-18",
+      "updates": [
+        "Fix issue with multiple bibliographies (issue [143](https://madoko.codeplex.com/workitem/143))",
+        "Fix square bracket generation in LaTeX"
+      ]
+    },
     { "version": "1.0.1",
       "date": "2016-06-27",
       "updates": [
