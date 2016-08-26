@@ -1,5 +1,11 @@
 {
   "log" : [
+    { "version": "1.0.3",
+      "date": "2016-08-26",
+      "updates": [
+        "Add Book/Manual template with auto-expanding table-of-contents and popup anchors"
+      ]
+    },
     { "version": "1.0.2",
       "date": "2016-08-18",
       "updates": [
