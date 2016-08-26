@@ -3,7 +3,8 @@
     { "version": "1.0.3",
       "date": "2016-08-26",
       "updates": [
-        "Add Book/Manual template with auto-expanding table-of-contents and popup anchors"
+        "Add Book/Manual template with auto-expanding table-of-contents and popup anchors",
+        "Update presentation style to better display table-of-contents and bibliographies"
       ]
     },
     { "version": "1.0.2",

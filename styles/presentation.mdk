@@ -71,6 +71,11 @@ Vertical      { .section; html-elem:section }
   .fragmented   { tex-env-inner:mdfragmented }
 }
 
+@if html {
+  .toc         { height: 20em; }
+  bibl         { before:clear; }
+}
+
 Tex Header    :
     \ifbeamer\relax\else
       \providecommand{\usetheme}[2][]{}
@@ -179,9 +184,10 @@ Html Header   :
         margin-left: 1em;
     }
     .reveal .bibliography {
-      height: 15em;
+      height: 18em;
       overflow-y: auto;
       font-size: 0.8em;
+      line-height: 1.25;
     }
     .reveal section[data-smaller=""],
     .reveal section[data-smaller="true"] {
