@@ -6,22 +6,24 @@
   
   "editorOptions": { "tabSize": 2, "insertSpaces": true },
   
-
   "lineComment":      "//",   
   "blockCommentStart": "/*",
   "blockCommentEnd":   "*/",
 
   "keywords": [
     "infix", "infixr", "infixl", 
-    "type", "cotype", "rectype", "alias", "struct", "enum", "con",
-    "fun", "function", "val", "var", "external",
+    "type", "cotype", "rectype", "alias", 
+    "struct", "enum", "con",
+    "fun", "function", "val", "var", "extern", "external",
     "if", "then", "else", "elif", "return", "match",
     "forall", "exists", "some", "with",
     "private", "public", "private",
     "module", "import", "as",
     "=", ".", ":", ":=", "->",
-    "include", "inline","rec","try", "yield",
-    "interface", "instance", "effect"
+    "rec",
+    "try", "yield",
+    "effect", "handle", "handler",
+    "interface", "instance"
   ],
 
   "extraKeywords": [
@@ -31,7 +33,13 @@
     "for", "while", "repeat",
     "foreach", "foreach-indexed", 
     "error", "catch", "finally",
-    "cs", "js", "file", "ref", "assigned", "bind", "unit"
+    "cs", "js", "file", "ref", 
+    "assigned", "bind", "unit",
+    "resume", "include", "inline", 
+    "open", "linear"
+  ],
+
+  "extraBuiltins": [
   ],
 
   "typeKeywords": [
@@ -50,39 +58,41 @@
   ],
 
   "kindConstants": [
-    "E","P","H","V","X"
+    "E","P","H","V","X","HX"
   ],
 
   "escapes" :  "\\\\(?:[nrt\\\\\"'\\?]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{6})",
   "symbols0": "[\\$%&\\*\\+@!\\/\\\\\\^~=\\.:\\-\\?]",
   "symbols" : "(?:@symbols0|[\\|<>])+",
-  "idchars" : "(?:\\w)*", 
-
+  "idchars" : "(?:[\\w\\-])*", 
+  "idfinal" : "(?:[\\?\\'])*",
+  
   "tokenizer": {
     "root": [
       
-      ["((?:[a-z]@idchars\\/)+)([a-z]@idchars)", ["identifier.namespace","identifier"]],
+      ["((?:[a-z]@idchars@idfinal\\/)+)([a-z]@idchars@idfinal)", ["identifier.namespace","identifier"]],
       
-      ["[a-z]@idchars(?!\\/)", 
+      ["[a-z]@idchars@idfinal(?!\\/)", 
         { "cases":{ "@keywords": { 
-                    "cases": { "alias|effect"  : { "token": "keyword", "next": "@alias_type" },
-                             "struct" : { "token": "keyword", "next": "@struct_type" },
-                             "type|cotype|rectype": { "token": "keyword", "next": "@type" }, 
-                             "module|as|import": { "token": "keyword", "next": "@module" },
-                             "@default": "keyword" } 
+                    "cases": { "alias"  : { "token": "keyword", "next": "@alias_type" },
+                               "struct" : { "token": "keyword", "next": "@struct_type" },
+                               "type|cotype|rectype|effect": { "token": "keyword", "next": "@type" }, 
+                               "module|as|import": { "token": "keyword", "next": "@module" },
+                               "@default": "keyword" } 
                   },
                   "@extraKeywords": "keyword",
                   "@builtins": "identifier.predefined",
+                  "@extraBuiltins": "identifier.predefined",
                   "@default" : "identifier" }
         }
       ],
 
-      ["[A-Z]@idchars", "identifier.constructor" ],
+      ["[A-Z]@idchars@idfinal", "identifier.constructor" ],
 
-      ["_@idchars", "identifier.wildcard"],
+      ["_@idchars@idfinal", "identifier.wildcard"],
 
       
-      ["([a-z]@idchars\\/)+", "identifier.namespace" ],
+      ["([a-z]@idchars@idfinal\\/)+", "identifier.namespace" ],
       
       
       { "include": "@whitespace" },
