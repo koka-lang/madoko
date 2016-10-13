@@ -393,7 +393,7 @@ function extendDim( plainPages : pages, fullPages : pages,
                   }
                 val imageDigestFile = combine(imageFile.dirname,"math-" + digest + imageFile.extname)
                 tryUnlinkSync(imageDigestFile)                              
-                if (res.field4=="") then {
+                if (res.field4=="" && res.thd>0) then {
                   // give robust name  
                   rename(imageFile,imageDigestFile)
                 }
