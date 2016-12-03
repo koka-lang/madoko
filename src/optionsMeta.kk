@@ -46,7 +46,7 @@ function update( options : options, key : string, xvalue : string, mdata : metad
   elif (key=="html-meta")    options(htmlMeta=if (value=="") then "" else options.htmlMeta + ";" + value)
   elif (key=="script") options(scripts=if (value=="") then "" else options.scripts + ";" + value)
   elif (key=="script-") options(scriptsx=if (value=="") then "" else options.scriptsx + ";" + value)
-  elif (key=="package")  options(packages=if (value=="") then "" else options.packages + ";" + value)
+  elif (key=="package") options(packages=if (value=="") then "" else options.packages + ";" + value)
   elif (key=="package-")  options(packagesx=if (value=="") then "" else options.packagesx + ";" + value)
   elif (key=="toc-depth" && ivalue >= 0) options(tocDepth = ivalue)
   elif ((key=="heading-depth" || key=="header-depth") && ivalue >= 0) options(headingDepth = ivalue)

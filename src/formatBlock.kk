@@ -19,7 +19,7 @@ import block
 import inline
 import formatInline
 import htmlFormatter
-import texFormatter
+//import texFormatter
 
 
 public struct formatContext( 

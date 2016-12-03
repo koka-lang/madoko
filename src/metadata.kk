@@ -55,7 +55,7 @@ function stripInitialWhite( txt : string ) : (string,int) {
     Just(cap) -> (txt.substr(cap.next), txt.substr(0,cap.next).count("\n"))
   }
 }
-val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->)+")
+val rxInitialWhite = regex(@"^(\s|<!--(?!meta\b|madoko\b)[\s\S]*?-->|~+ *begin htmlraw\s+~+end htmlraw\b)+")
 
 
 // --------------------------------------------------------------
@@ -309,6 +309,8 @@ function defaultMeta( options : options, fmt : formatter ) : string {
   ( [ "Tex: False", "Html: False", "Prelude: prelude",
       // formatter
       fmt.showFormatter + ": True",
+      // full?
+      "Full: " + options.full.maybe(True,id).show,
       // legacy for old prelude
       @"bibliography { bibstyle:'" + options.bibStyle.styleName + @"'; bibdata:'" + options.bib.splitPaths.join(",") + "'; tex-elem:mdBibliography }",
     ] +

@@ -42,6 +42,11 @@ Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
   }
 }
 
+@if html && (not full) {
+  math svg share paths: false
+  .body.madoko { tag: false; }
+}
+
 <!-- lists -->
 .Ul-Li    { @ul-li; label: "[(@ul-li)]{.ul-li-label}" }
 .Ol-Li    { @ol-li; label: "[(@ol-li)]{.ol-li-label}" }

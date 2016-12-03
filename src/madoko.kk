@@ -21,7 +21,7 @@ import formatInline
 import definitions
 import entity           // logEntities
 import htmlFormatter    // for full
-import texFormatter     // for full
+import texFormatter     // support legacy
 import latexFormatter
 import attributes       // expandKeys
 import std/log
@@ -34,20 +34,18 @@ import std/log
 public function markdown( src : string, 
                           options : options = initialOptions0, 
                           fmt : formatter = FmtHtml 
-                        ) : pure string
+                        ) : pure (string,options)
 {
   if (options.xmp) then markdownXmp(src,options,fmt) else markdownNormal(src,options,fmt)
 }
 
 // Process only markdown between <xmp> tags 
-function markdownXmp( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
+function markdownXmp( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options)
 {
-  src.replaceAll( rxxmp ) fun(cap) {
-    // trace("xmp: " + cap.groups[1])
-    markdownNormal(cap.groups[1],options,fmt)
-  }
+  val commented = "~begin htmlraw\n" + src.replaceAll(rxxmp,"\n~end htmlraw\n$2\n~begin htmlraw\n") + "\n~end htmlraw"
+  markdownNormal(commented, options, fmt)
 }
-val rxxmp = regex(@"<xmp\b" + tagContent + @">([\s\S]*?)</xmp>")
+val rxxmp = regex(@"(<xmp\b" + tagContent + @">)([\s\S]*?)</xmp>")
 
 public function normalizeSource( src : string ) : string {
   val srcnl = if (src.contains('\r')) then src.replaceAll(regex(@"\r\n?"),"\n") else src
@@ -55,7 +53,7 @@ public function normalizeSource( src : string ) : string {
 }
 
 // Takes source markdown input and returns formatted html
-function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure string
+function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options)
 {  
   // first normalize the input: all tabs to 4 spaces.
   val (options1,src) = parseMeta(options0,fmt,src0.normalizeSource)
@@ -120,7 +118,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   if (!xfull || !(fmt.isFmtTex))  then fmtLatexFull("",options,fcontext.inlineContext.metadata) else ""
   
   if (options.verbose>=3) then trace("done")
-  res           
+  (res,options)           
 }
 
 // Export initial options for JavaScript usage

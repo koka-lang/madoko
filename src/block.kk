@@ -280,6 +280,7 @@ val rxquotePrefix = regex(@"^ *> ?",multiline=True)
 
 function blockDiv( cap : matched, context : blockContext ) : block {
   val cname = cap.groups[2].definitionId
+  // if (cname=="htmlraw") then return Source(cap.groups[4],Raw(Just(FmtHtml)),attrsNone)
   log("customs","{ \"name\":" + cname.json  + ", \"display\":" + cap.groups[2].json + "}");
   val attrs = cap.groups[3].parseAttrs(cname,source=cap.groups[4].substr(1))  
   Div( [], attrs )

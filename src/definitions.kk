@@ -31,7 +31,7 @@ public function parseBody( fcontext : formatContext,
                            metadata : metadata, 
                            tocDepth : int,
                            secBase : int,
-                           secDepth : int ) :  div (list<block>,formatContext)
+                           secDepth : int) :  div (list<block>,formatContext)
 {
   parseDefinitions(fcontext, [Div([],(".madoko; line-adjust:0; line:" + lineNo.show).parseAttrs("body",src))], 
                    metadata,tocDepth,secBase,secDepth)

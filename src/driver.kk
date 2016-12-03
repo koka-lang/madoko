@@ -71,7 +71,8 @@ public function processContent( inName : string, outName : string, content : str
     // extract default cite-style if it exists
     val opts2  = opts1.extractCitestyle(outName)
 
-    val mmopts = if (opts2.xmp) then opts2 // todo: look at first <xmp> fragment?
+    val mmopts = if (opts2.xmp) 
+                  then opts2.parseMeta( FmtHtml, icontent.normalizeSource.extractFirstXmp ).fst
                   else opts2.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
     // always read dims: even in dynamic mode some pdf math may exist
@@ -86,9 +87,9 @@ public function processContent( inName : string, outName : string, content : str
 
     // copy early since async latex may start for math
     if (mopts.copyStyles) { // && !(xopts.sandbox) // allow even in sandbox
-      if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
-        tryCopyTextFileFromNoSandboxTo( "madoko.css", styleDir, outName.dirname )
-      }
+      // if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
+      tryCopyTextFileFromNoSandboxTo( "madoko.css", styleDir, outName.dirname )
+      // }
       if (xopts.tex || mopts.math.mode.isStatic) { // only copy style files if generating tex or if math is static
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
                         Just(md) -> md.snd.toLower == "true"  
@@ -112,6 +113,14 @@ public function processContent( inName : string, outName : string, content : str
       }
   }
 }
+
+function extractFirstXmp( s : string ) : string {
+  match (s.find(rxXmp)) {
+    Nothing -> ""
+    Just(cap) -> cap.groups[1]
+  }
+}
+val rxXmp = regex(@"<xmp\b.*?>([\s\S]*?)</xmp>")
 
 val rxCurDir = regex(@"^(\.)(?=[\\/])")
 
@@ -181,14 +190,14 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     if (infos.length == 0) return (opts,html0)
       
     val newopts = opts(embedinfos = opts.embedinfos + infos.dict, verbose=min(opts.verbose,1))
-    val newhtml = markdown(icontent,newopts)
+    val newhtml = markdown(icontent,newopts).fst
     (newopts,newhtml)
   }
 
   function phaseHtml() 
   {
     // markdown to html          
-    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, html0))))) = 
+    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions)))))) = 
                               withLog("embed") {
                                withLogCompress("math-plain") {
                                 withLogCompress("math-full") {
@@ -250,7 +259,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                 = withLog("texwarning", {
                     withLog("files", {
                       withLog("filesRefer", { 
-                       markdown(icontent,xopts,FmtTex) 
+                       markdown(icontent,xopts,FmtTex).fst
                       })
                     })
                   })
@@ -277,7 +286,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
               // write html again
               mopts.print("re-aligning math in HTML.")
               
-              val html2 = markdown(icontent,xopts(math=(xopts.math)(dim=mdim2,svgDefs=svgdefs)))
+              val html2 = markdown(icontent,xopts(math=(xopts.math)(dim=mdim2,svgDefs=svgdefs))).fst
               if (!(tryWriteTextFile(outName,html2))) {
                 mopts.printErr("error: unable to write: " + outName) 
               }

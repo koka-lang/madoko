@@ -16,7 +16,6 @@ import std/dict
 import std/env
 import common
 import options
-import texFormatter
 import storage
 import process
 import mathParse
