@@ -27,7 +27,7 @@ define([],function() {
                                    parseNum(cap[4]), parseNum(cap[5]), parseNum(cap[6]), ms ) );
       if (utcx && !isNaN(utcx)) {
         utc = utcx;
-        var tz = (cap[8]=="+" ? -1 : 0) * ((parseNum(cap[9])||0) * 60 + (parseNum(cap[10])||0));
+        var tz = (cap[8]=="+" ? -1 : 1) * ((parseNum(cap[9])||0) * 60 + (parseNum(cap[10])||0));
         if (tz !== 0) utc.setUTCMinutes( utc.getUTCMinutes + tz );
       }
     }
