@@ -1,4 +1,4 @@
-Package         : [heading-base={&heading-base;},section-num={&tex-section-num;},bib-label={&bib-label;}]madoko2
+Package         : [heading-base={&heading-base;},section-num={&tex-section-num;},bib-label={&bib-label;},fontspec={&font-spec;}]madoko2
 Logo            : False
 Tex2            : True
 Maketitle       : False
@@ -8,6 +8,7 @@ Heading Base    : 2
 Tex Section Num : False
 Bib Label       : True
 Math Mode       : static
+Font Spec       : True
 Title Running   :
 Author Running  :
 Bib Search Url  :
