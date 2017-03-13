@@ -25,7 +25,23 @@ var contribDir = "contrib";
 var web       = "web";
 var webclient = path.join(web,"client");
 
-var kokaDir   = "../koka"
+// we compile madoko at this time with an older version of Koka.
+// Check out Koka in a peer directory of Madoko; i.e. `.../dev/madoko` and `.../dev/koka-0.6`:
+//
+// > cd ..
+// > git clone https://github.com/koka-lang/koka.git  koka-0.6
+//
+// Then set it to the older version:
+//
+// > cd koka-0.6
+// > git checkout v0.6.0-dev
+// > npm install
+//
+// and build the release version:
+//
+// > jake compiler VARIANT=release
+
+var kokaDir   = "../koka-0.6"
 var libraryDir= path.join(kokaDir,"lib")
 var kokaExe   = path.join(kokaDir,"out/release/koka-0.6.0-dev")
 var testDir   = "test";
