@@ -70,7 +70,7 @@
     % font selection
     \ifXeTeX\RequirePackage{fontspec}\else
     \ifLuaTeX\RequirePackage{fontspec}\else
-    \RequirePackage{lmodern}%
+    %\RequirePackage{lmodern}% don't load lmodern since it overrides any earlier default font...
     \RequirePackage[T1]{fontenc}%
     \RequirePackage[utf8]{inputenc}
     \providecommand{\fontspec}[2][]{\toggletrue{md@fontsubstituted}}
