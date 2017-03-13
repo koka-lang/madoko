@@ -132,7 +132,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("biblio",      regex(@"^\\begin\{thebibliography\}\s*(?:\{([^}]+)\})?(?: *\n)*([\s\S]*?)\\end{thebibliography}"), texTheBibliography ),
   Rule("bibitemcite1", regex(@"^\\bibitem\[(?:\\protect *)?\\citename" + texarg + @"(\d+)\]" + texarg + bibitemBody), texBibitemCiteName),
   Rule("bibitemcite2", regex(@"^\\bibitem\[(?:\\protect *)?\\astroncite" + texarg + texarg + @"\]" + texarg + bibitemBody), texBibitemCiteApa),
-  Rule("bibitemcite3", regex(@"^\\bibitem\[(?:\\protect *)?\\citeauthoryear" + texarg + texarg + texarg + @"?\]" + texarg + bibitemBody), texBibitemCiteAuthorYear),
+  Rule("bibitemcite3", regex(@"^\\bibitem\[(?:\\protect *)?\\citeauthoryear" + texarg + texarg + texarg + @"?\](?:%.*\s*)?" + texarg + bibitemBody), texBibitemCiteAuthorYear),
   Rule("bibitem",     regex(@"^\\bibitem\b\s*" + optarg + "?" + texarg + bibitemBody), texBibitem ),
   Rule("harvarditem", regex(@"^\\harvarditem\b\s*" + optarg + "?" + texarg + texarg + texarg + @"(?: *\n)*([\s\S]*?)\n *\n"), texHarvarditem ),
 
@@ -203,6 +203,7 @@ val texGrammar : grammar<string,texContext> = [
 
 
   /* Catch all's */
+  Rule("texifx",      regex(@"^\\ifx\b[\s\S]*?\\fi\b"), texIgnore ), // some bib styles generate this (acm-reference-format.bst)
   Rule("texcsname",   regex(@"^\\csname\b[\s\S]*?\\endcsname\b"), texIgnore),
 
   Rule("texentity",   regex(@"^\\" + texEntityCmd0 + @"\b\s*"), texEntityCmd ),

@@ -948,8 +948,8 @@ function texBibitemCiteName( cap : matched, context : texContext ) : string {
 }
 
 function texBibitemCiteAuthorYear( cap : matched, context : texContext ) : string {
-  val authorsLong = cap.groups[1].unbrace
-  val authorsShort= cap.groups[2].unbrace
+  val authorsLong = cap.groups[1].unbrace.replaceAll(rxSpaces," ")
+  val authorsShort= cap.groups[2].unbrace.replaceAll(rxSpaces," ")
   val year = cap.groups[3].unbrace
   val labx  = authorsLong + "(" + year + ")" + authorsShort
   context.makeBibitem( cap.groups[4], labx, cap.groups[5] )
@@ -997,13 +997,12 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
 
   val attrs = (attrs0 + attrs1).joinAttrs
 
-  //trace("bibitem: labx: " + labx + ", lab: " + lab + ", label: " + label)
   "~ Begin Bibitem " + attrs + "\n" +
    md + 
    "\n~ End Bibitem\n"
 }
 
-val rxAuthorYear = regex(@"((?:[^&\\\()]|\\.|&#?\w+;|[\\&])*)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
+val rxAuthorYear = regex(@"((?:[^&\\\()]|\\.|\\mbox\{\.\}|&#?\w+;|[\\&])*)(?:[,;](?: |&nbsp;|\\ )*\(?|(?: |&nbsp;|\\ )*\()(\d\d\d\d[\w\-]*)?\)?(?: *[,;] *)?([\s\S]*)$")
 
 val rxNewblock = regex(@"\[\s*\]\{\s*\.newblock\s*\}\s*")
 val rxSpaces = regex(@"\s+")
