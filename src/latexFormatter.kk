@@ -466,7 +466,8 @@ function fmtLatexFullX(body : string, options : options, metadata1 : dict<string
 {
   val metadata0 = [("heading-base",options.headingBase.show),
                    ("tex-section-num", options.texSectionNum.show.toLower),
-                   ("bib-label", "true")].dict
+                   ("bib-label", "true"),
+                   ("font-spec", "true")].dict
   val metadata = metadata0 + metadata1
 
   function expand(s) { s.expandKeys(metadata) }
