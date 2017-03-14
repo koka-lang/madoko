@@ -1,6 +1,14 @@
 {
   "log" : [
     { "version": "1.0.4",
+      "date": "2017-03-14",
+      "updates": [
+        "Small bug fixes",
+        "Extend bibliography parsing for new ACM reference format",
+        "Disable loading 'lmodern' package by default for pdflatex"
+      ]
+    },
+    { "version": "1.0.4",
       "date": "2017-02-22",
       "updates": [
         "Small bug fixes",
