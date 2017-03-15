@@ -1,11 +1,12 @@
 {
   "log" : [
     { "version": "1.0.4",
-      "date": "2017-03-14",
+      "date": "2017-03-15",
       "updates": [
         "Small bug fixes",
         "Extend bibliography parsing for new ACM reference format",
-        "Disable loading 'lmodern' package by default for pdflatex"
+        "Disable loading 'lmodern' package by default for pdflatex",
+        "Enable centering of mathpre environments"
       ]
     },
     { "version": "1.0.4",
