@@ -185,6 +185,11 @@ Math {
   .para-block
 }
 
+MathPreCenter { 
+  tex-env:mdmathprecenter; 
+  text-align:center; 
+}
+
 theorem-caption-end   : &&;br;
 theorem-caption-format: ([&source;]{font-style:italic})
 .theorem-caption      { replace: '@if source != "" @then "&theorem-caption-format;"' }
