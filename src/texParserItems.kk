@@ -666,7 +666,8 @@ function texMBox( cap : matched, context ) : string {
   val attrs = [makeAttr("width", texLength(cap.groups[2])),
                makeAttr("text-align", texAlign(cap.groups[2])),
                if (cap.groups[1].startsWith("f")) then ".framed" else ""].joinAttrs
-  "[" + cap.groups[4].parse(context) + "]" + attrs
+  val content = cap.groups[4].parse(context)
+  if (attrs=="") then content else ("[" + content + "]" + attrs)
 }
 
 function texParBox( cap : matched, context ) : string {
