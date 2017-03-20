@@ -83,7 +83,7 @@
       }}],
       
       
-      ["^(\\s{0,3})(#+)((?:[^\\\\\\{]|@escapes)+)", ["white","keyword.heading.level$2.delimiter","keyword.heading.level$2"]],
+      ["^(\\s{0,3})(#+)0?((?:[^\\\\\\{]|@escapes)+)", ["white","keyword.heading.level$2.delimiter","keyword.heading.level$2"]],
       ["^\\s{0,3}(=+|\\-+)\\s*$", "keyword.heading.level0.delimiter"],      
       ["^\\s{0,3}(([\\*_\\-]\\s*){3})\\s*(?=$|\\{)", "keyword.header.hr"],
       ["^(\\s{0,3})(~+)(\\s*(?:begin\\s+)?(?:@latexblock)\\s*)(\\{)([^\\}]+)(\\})(\\s*)$",
