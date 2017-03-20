@@ -105,7 +105,7 @@ val blockGrammar : grammar<block,blockContext> = [
   Rule("hline",      regex(@"^ *" + hr), blockHLine ),
     
   Rule("list",       regex(@"^" + alist), blockList ),  // before heading due to #.
-  Rule("heading",    regex(@"^ *(#{1,6}) *(.+?) *#* *" + iattrs + @"(?:\n+|$)"), blockHeading ),
+  Rule("heading",    regex(@"^ *(#{1,6})(0?) *(.+?) *#* *" + iattrs + @"(?:\n+|$)"), blockHeading ),
   Rule("blockquote", regex(@"^((?: *>.+(?:\n[^{\n]+)*\n*)+)" + battrs + "(?:\n+|$)"), blockQuote ),
   Rule("fenced",     regex(@"^ *(```+) *(?:([^{}\s]+) *)?" + iattrs + @"\n([\s\S]+?)\n *\1 *(?:\n+|$)"), blockFencedCode ),
 
@@ -240,7 +240,7 @@ function blockHtml( cap : matched, context : blockContext ) :  block  {
 }
 
 function blockHeading( cap : matched, context : blockContext ) : block  {
-  makeHeading(cap.groups[1].length,cap.groups[2],cap.groups[3])
+  makeHeading(if (cap.groups[2]=="0") then 0 else cap.groups[1].length,cap.groups[3],cap.groups[4])
 }
 
 function blockHeadingLine( cap : matched, context : blockContext ) : block {
