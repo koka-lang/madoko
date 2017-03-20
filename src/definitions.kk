@@ -168,7 +168,11 @@ function parseDefinitionsFull(
       Just(value) -> {
         val entry = match(rblock) {
           Heading(d,txt,xs) -> {
-            (d,if (xs.hasKey("toc-line").bool) then xs else xs.addKeyval("toc-line",txt))  // note: txt is processed already
+            val dp = match(attrsp.hasKey("toc-depth")) {
+              Nothing -> d
+              Just(s) -> s.parseInt.maybe(d,id)
+            }
+            (dp,if (xs.hasKey("toc-line").bool) then xs else xs.addKeyval("toc-line",txt))  // note: txt is processed already
           }
           _ -> {
             val depth = attrsp.lookupKey("toc-depth","1").parseInt.maybe(1,id)
@@ -520,6 +524,7 @@ function tocItems( headings : list<(int,attrs)>, outerDepth : int, labels : dict
         val txt = attrs.lookupKey("toc-line","[??]").expandKeys(attrs.source,attrs,labels,metadata)
         val tocline = @"[\/" + txt + @"\/](#" + attrs.name + ")"
         val item = "~ Begin TocItem { .tocitem" + depth.show + 
+                        "; data-toc-target-elem:" + attrs.elem +
                         "; data-toc-target:" + attrs.name.show +
                         "; toctarget:" + attrs.name.show + // legacy ...
                         "; data-toc-depth:" + depth.show + 
