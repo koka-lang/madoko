@@ -90,6 +90,7 @@ math-display    { input: math }
 
 
 <!-- heading elements -->
+h0 { label: "[@h0]{.heading-label}"; @h0:upper-roman }
 h1 { label: "[@h1]{.heading-label}" }
 h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
 h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
@@ -109,6 +110,9 @@ heading-format   : &label;&heading-endperiod;&ensp;
 }
 @if heading-depth>=4 {
   h4 { before: "[&heading-format;]{.heading-before}" }
+}
+@if toc-depth>=0 {
+  h0 { toc; toc-depth:1 }
 }
 @if toc-depth>=1 {
   h1 { toc  }
