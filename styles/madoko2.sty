@@ -30,14 +30,6 @@
 \options@ProcessOptions{/madoko}
 
 
-% if we are in XeLaTeX and math mode with svg extraction, 
-% we define the driver for pgf/tikz to be dvips
-% otherwise we cannot extract svg images correctly using dvisvgm
-\ifXeTeX\ifdef\mdmathrender{\eifstrequal{\mdmathrender}{svg}{%
-  \def\pgfsysdriver{pgfsys-dvips.def}%  
-  \RequirePackage[dvips]{pict2e}%
-}{}}{}\fi
-
 %-------------------------------------------------------------
 % Packages
 %-------------------------------------------------------------
@@ -1210,7 +1202,7 @@
 \newcommand{\mdUnicodeUnknown}[1]{%
   \ifXeTeX\mdUnicodeChar{#1}\else%
   \ifLuaTeX\mdUnicodeChar{#1}\else%
-  \&\##1;\fi\fi
+  \textsf{\&\##1;}\fi\fi
 }
 \newcommand{\mdUnicodeChar}[1]{\char#1} % directly insert the unicode glyph
 \newcommand{\mdUnicode}[1]{\protect\mdUnicodeUnknown{#1}}
