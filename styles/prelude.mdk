@@ -12,6 +12,7 @@ Font Spec       : True
 Title Running   :
 Author Running  :
 Bib Search Url  :
+Csl Style       :
 
 <!-- standard elements -->
 Article   { html-elem:article }
