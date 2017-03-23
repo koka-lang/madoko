@@ -48,7 +48,7 @@ function mathHeader( xopts : options, mode : mathkind ) : string
                  "MathBaseline: " + xopts.math.baseline.show,
                  "MathDocClass: " + xopts.math.docClass,
                  "MathImgDir: " + xopts.math.imgDir,
-                 "MathLatex: " + (if (mode.isPlain) then xopts.getMathLatex(mrender) else xopts.getMathLatexFull), 
+                 "MathLatex: " + (if (mode.isPlain) then xopts.getMathLatex else xopts.getMathLatexFull), 
                 ] +
                 (match(mrender) {
                   Svg -> [ 

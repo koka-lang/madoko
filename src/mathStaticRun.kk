@@ -47,7 +47,7 @@ public function runMathStatic( content : string, inName: string, outName : strin
                         opts0 : options, continue : (maybe<(dict<mathinfo>,string)>) -> io () ) : io ()
 {
   opts0.checkDviSvgVersion(texNamePlain, texNameFull) fun(xopts) {
-    mathSnippetsRender( Plain, xopts.math.getMathRender, xopts.getMathLatex(xopts.math.getMathRender), inName, texNamePlain, xopts, content, oldMathPlain, plainPages) fun(extplain) {
+    mathSnippetsRender( Plain, xopts.math.getMathRender, xopts.getMathLatex, inName, texNamePlain, xopts, content, oldMathPlain, plainPages) fun(extplain) {
       if (extplain.isEmpty) return continue(Nothing)
       mathSnippetsRender( Full, xopts.math.getMathRenderFull, xopts.getMathLatexFull, inName, texNameFull, xopts, content, oldMathFull, fullPages) fun(extfull) {
         if (extfull.isEmpty) return continue(Nothing)
@@ -76,10 +76,10 @@ function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (
           (100*cap.groups[1].parseIntDefault(0)) + cap.groups[2].parseIntDefault(0)
         }
       }
-      if (err!=0 || version < 114) {
-        opts.printErr("warning: cannot use 'dvisvgm'; ensure you have at least version 1.14")
+      if (err!=0 || version < 116) {
+        opts.printErr("warning: cannot use 'dvisvgm'; ensure you have at least version 1.16")
         opts.printErr(" the latest version is available at: http://dvisvgm.bplaced.net/downloads")
-        opts.printErr(" for Windows with TexLive 2015, see: madoko.net/doc/reference.html#dvisvgm")
+        opts.printErr(" for Windows with TexLive 2016, see: madoko.net/doc/reference.html#dvisvgm")
         opts.printErr(" switching to use png images for math (instead of svg)")
         fileRenderPng(texNamePlain)
         fileRenderPng(texNameFull)
@@ -94,7 +94,7 @@ function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (
     cont(opts)
   }
 }
-val rxVersion = regex(@"(\d+)(?:\.(\d+)?)?")
+val rxVersion = regex(@"(\d+)(?:\.(\d+)?(?:\.\d*)?)?")
 
 // fix up the tex file if we switch to PNG mode so PS specials are rendered correctly in TikZ/Pgf
 function fileRenderPng( fname : string ) : io () {

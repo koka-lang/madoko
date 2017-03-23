@@ -151,13 +151,13 @@ public function getPdfLatex( opts : options ) : string {
 
 public function getMathLatexFull( opts : options ) : string {
   if (opts.math.latexFull.bool) then opts.math.latexFull
-   else opts.getPdfLatex
+   else opts.getMathLatex
 }               
 
-public function getMathLatex( opts : options, mrender : mathrender ) : string {
+public function getMathLatex( opts : options ) : string {
   if (opts.math.latex != "") then opts.math.latex 
-  elif (mrender.isPng) then opts.latex // dvi route is much faster for png extraction
-  else opts.getPdfLatex
+  // elif (mrender.isPng) then opts.latex // dvi route is much faster for png extraction
+  else opts.latex // was: opts.getPdfLatex, but pdflatex/latex proves more reliable for svg extraction
 }               
 
 public function getMathjax( opts : mathoptions ) : string {
