@@ -1,5 +1,14 @@
 {
   "log" : [
+    { "version": "1.1.0",
+      "date": "2017-03-24",
+      "updates": [
+        "Small bug fixes",
+        "Use plain latex by default for mathematics to avoid XDV version clashes",
+        "Update to work with TeXlive 2016 and the latest MikTeX",
+        "Fix [table] option class on the `xcolor` package"
+      ]
+    },
     { "version": "1.0.5",
       "date": "2017-03-16",
       "updates": [
