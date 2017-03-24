@@ -20,7 +20,7 @@ Acm Copyright   : none
 Acm Copyright Year: &conference-year; 
 Acm Format      : acmlarge
 
-Doc class       : [&acm-format;,table]acmart.cls
+Doc class       : [&acm-format;]acmart.cls
 Bib Style       : style/acm-reference-format.bst
 Cite Style      : natural
 Pdf Latex       : pdflatex
