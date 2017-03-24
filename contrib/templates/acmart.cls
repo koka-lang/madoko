@@ -108,8 +108,6 @@ Computing Machinery]
 \DeclareOptionX{12pt}{\edef\ACM@fontsize{\CurrentOption}}
 \DeclareOptionX{draft}{\PassOptionsToClass{\CurrentOption}{amsart}}
 \DeclareOptionX{*}{\PassOptionsToClass{\CurrentOption}{amsart}}
-\DeclareOptionX{table}{\PassOptionsToPackage{\CurrentOption}{xcolor}}
-\DeclareOptionX{nott}{\PassOptionsToPackage{\CurrentOption}{zi4}}    
 \ProcessOptionsX
 \ClassInfo{\@classname}{Using format \ACM@format, number \ACM@format@nr}
 \newif\if@ACM@manuscript
@@ -402,7 +400,7 @@ Computing Machinery]
     {\if@filesw
        \immediate\write\@auxout{\string\bibstyle{#1}}%
      \fi}}
-\RequirePackage{graphicx,xcolor}
+\RequirePackage{graphicx, xcolor}
 \definecolor[named]{ACMBlue}{cmyk}{1,0.1,0,0.1}
 \definecolor[named]{ACMYellow}{cmyk}{0,0.16,1,0}
 \definecolor[named]{ACMOrange}{cmyk}{0,0.42,1,0.01}

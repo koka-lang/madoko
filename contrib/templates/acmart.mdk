@@ -10,7 +10,7 @@ Email       : other@bar.com
 
 Logo          : True
 Bibliography  : example.bib
-Doc class     : [acmlarge,table]acmart.cls
+Doc class     : [acmlarge]acmart.cls
 Bib Style     : style/acm-reference-format.bst
 
 Conference      : ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications
