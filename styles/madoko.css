@@ -236,6 +236,7 @@
 }
 
 .madoko .math-rendering {
+  white-space: pre;
   color: gray;
 }
 
