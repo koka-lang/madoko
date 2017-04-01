@@ -52,7 +52,7 @@ function mathHeader( xopts : options, mode : mathkind ) : string
                 ] +
                 (match(mrender) {
                   Svg -> [ 
-                    "MathSvgUseFonts: " + xopts.math.svgUseFonts.show,
+                    "MathSvgFontFormat: " + xopts.math.svgFontFormat.show,
                     "MathSvgSharePaths: " + xopts.math.svgShare.show,
                     "MathSvgPrecision: " + xopts.math.svgPrec.show,
                     "Dvisvg: " + xopts.math.dvisvg 

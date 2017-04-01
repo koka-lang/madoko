@@ -269,7 +269,11 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
       // add 0.2pt (~0.07mm of extra bounding box for better rendering of svg's)
       val fuzz = 0.2
       val cmd = opts.dvisvg.quote + 
-                  (if (opts.svgUseFonts) then "" else " -n") +
+                  (if (opts.svgFontFormat=="" || opts.svgFontFormat=="none") 
+                    then " -n"
+                   elif (opts.svgFontFormat=="svg")
+                    then ""
+                    else " --font-format=" + opts.svgFontFormat.quote) +
                   (if (fuzz > 0.0) then " -b" + fuzz.showFixed(1) + "pt" else "") +
                   " -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 

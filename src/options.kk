@@ -55,7 +55,7 @@ public struct mathoptions (
   svgShare  : bool   = True,      // share paths in embedded svg images
   svgPrec   : int    = 3,         // decimal points used in svg rendering
   svgDefs   : string = "",        // used internally to share svg definitions
-  svgUseFonts: bool = False,      // use fonts directly in svg, use path's otherwise
+  svgFontFormat: string = "",     // embed fonts directly in svg, use 'none' or '' to use SVG paths
 
   dvipng        : string = "dvipng",  // used to extract png images for math
   dvisvg        : string = "dvisvgm",  // used to extract svg for math  
