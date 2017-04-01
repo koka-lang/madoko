@@ -69,7 +69,8 @@ public function runMathStatic( content : string, inName: string, outName : strin
 
 function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (options) -> io () ) : io () {
   if (opts.math.getMathRender.isSvg || opts.math.getMathRenderFull.isSvg) {
-    system("dvisvgm --version", fun(err,stdout,stderr) {
+    val dvisvgm = opts.math.dvisvg.quote
+    system(dvisvgm + " --version", fun(err,stdout,stderr) {
       val version = match(stdout.find(rxVersion)) {
         Nothing -> 0
         Just(cap) -> {
@@ -77,7 +78,7 @@ function checkDviSvgVersion( opts : options, texNamePlain, texNameFull, cont : (
         }
       }
       if (err!=0 || version < 116) {
-        opts.printErr("warning: cannot use 'dvisvgm'; ensure you have at least version 1.16")
+        opts.printErr("warning: cannot use " + dvisvgm + "; ensure you have at least version 1.16")
         opts.printErr(" the latest version is available at: http://dvisvgm.bplaced.net/downloads")
         opts.printErr(" for Windows with TexLive 2016, see: madoko.net/doc/reference.html#dvisvgm")
         opts.printErr(" switching to use png images for math (instead of svg)")
