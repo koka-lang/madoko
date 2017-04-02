@@ -1,8 +1,6 @@
-xMath Render : svg
-Math Dpi    : 200
 xMath Embed  : 0
-
-Math Svg Use Fonts: true
+xMath Render : svg
+Math Svg Font Format: woff,ah
 
 Package*    : tikz
 Package*    : pstricks

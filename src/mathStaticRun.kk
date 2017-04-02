@@ -274,7 +274,7 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
                     then " -n"
                    elif (opts.svgFontFormat=="svg")
                     then ""
-                    else " --font-format=" + opts.svgFontFormat.quote) +
+                    else " --font-format=" + opts.svgFontFormat.quote + " --no-styles") +
                   (if (fuzz > 0.0) then " -b" + fuzz.showFixed(1) + "pt" else "") +
                   " -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 
