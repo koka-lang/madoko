@@ -1,12 +1,21 @@
 xMath Embed  : 0
 xMath Render : svg
-Math Svg Font Format: woff,ah
+xMath Svg Font Format: woff,ah
 
 Package*    : tikz
 Package*    : pstricks
 Package*    : pst-plot
 Tex Header* : 
-  \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing}
+  \usetikzlibrary{decorations.pathreplacing,decorations.pathmorphing,fit}
+  \tikzset{%
+    highlight/.style={rectangle,rounded corners,fill=red!15,draw,fill opacity=0.5,thick,inner sep=0pt}
+  }
+  \newcommand{\tikzmark}[2]{\tikz[overlay,remember picture,baseline=(#1.base)] \node (#1) {#2};}
+  %
+  \newcommand{\Highlight}[1][submatrix]{%
+      \tikz[overlay,remember picture]{
+      \node[highlight,fit=(left.north west) (right.south east)] (#1) {};}
+  }
 
 # Mathematics
 
@@ -22,7 +31,7 @@ And as an equation:
   \frac{24 \pi^3}{\lambda^4 N^2}
   \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
 ~
-it looks fine.
+it looks fine $test$ .
 
 ### Advanced: Generic LaTeX snippets { #sec-snippets }
 
@@ -260,3 +269,35 @@ wide as the current line width.
 \put(-3,-2){\circle*{0.2}}
 \end{picture}
 ~
+
+# And a fancy TikZ overlay
+
+~ Snippet
+\[
+  M = \left(\begin{array}{*5{c}}
+    \tikzmark{left}{1} & 2 & 3 & 4 & 5\\
+    6 & 7 & 8 & 9 & 10 \\
+    11 & 12 & \tikzmark{right}{13} & 14 & 15 \\
+    16 & 17 & 18 & 19 & 20
+  \end{array}\right)
+  \Highlight[first]
+  \qquad
+  M^T = \left(\begin{array}{*5{c}}
+    \tikzmark{left}{1} & 6 & 11 & 16 \\
+    2 & 7 & 12 & 17 \\
+    3 & 8 & \tikzmark{right}{13} & 18 \\
+    4 & 9 & 14 & 19 \\
+    5 & 10 & 15 & 20
+  \end{array}\right)
+\]
+\Highlight[second]
+
+\tikz[overlay,remember picture] {
+  \draw[->,thick,red,dashed] (first) -- (second) node [pos=0.66,above] {Transpose};
+  \node[above of=first] {$N$};
+  \node[above of=second] {$N^T$}; 
+}
+~
+
+Test
+

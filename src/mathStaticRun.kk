@@ -274,7 +274,7 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
                     then " -n"
                    elif (opts.svgFontFormat=="svg")
                     then ""
-                    else " --font-format=" + opts.svgFontFormat.quote + " --no-styles") +
+                    else " --font-format=" + opts.svgFontFormat.quote) +
                   (if (fuzz > 0.0) then " -b" + fuzz.showFixed(1) + "pt" else "") +
                   " -e -j -v3 -d" + opts.svgPrec.show + " " +
                   dvisvgPages(pages) + 
@@ -392,7 +392,7 @@ function extendDim( plainPages : pages, fullPages : pages,
                       analyzeImagePng( imageFile, opts )
                     }
                     Svg -> {
-                      analyzeImageSvg( imageFile, opts, mode )
+                      analyzeImageSvg( imageFile, opts, mode, digest )
                     }
                   }
                 val imageDigestFile = combine(imageFile.dirname,"math-" + digest + imageFile.extname)
@@ -468,7 +468,7 @@ function analyzeImagePng( imageFile, opts : options ) : io (double, double, int,
   }
 }
 
-function analyzeImageSvg( imageFile, opts : options, mode : mathkind ) : io (double, double, int, string ) {
+function analyzeImageSvg( imageFile, opts : options, mode : mathkind, digest : string ) : io (double, double, int, string ) {
   match( tryReadTextFile( imageFile )) {
     Left   -> {
       opts.printErr("error: cannot read: " + imageFile)
@@ -478,7 +478,7 @@ function analyzeImageSvg( imageFile, opts : options, mode : mathkind ) : io (dou
       val (iheight,svg2) = svg1.svgExtractDim(rxSvgHeight)
       val (iwidth,svg3)  = svg2.svgExtractDim(rxSvgWidth)
       val svg            = svg3.svgCompress()
-      val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeGlyphIds(mode) 
+      val encoded        = "data:image/svg+xml;charset=utf8," + svg.encodeGlyphIds(mode).scopeStyles(digest) 
       //trace("svg: " + imageFile + ", height: " + iheight.show + ", width: " + iwidth.show)
       val embed = if (encoded.length < opts.math.embedLimit) then encoded else ""
       //trace("embed: " + embed.length.show + ", " + opts.math.embedLimit.show)                    
@@ -494,11 +494,22 @@ function analyzeImageSvg( imageFile, opts : options, mode : mathkind ) : io (dou
 // In order for glyphs to not be shared across pdf/dvi runs, we need to prefix
 // identifiers so they are distinct and do not become shared paths.
 // Glyph id's are of the form "g<fontid>-<charid>"
-function encodeGlyphIds( svg : string, mode : mathkind ) {
+function encodeGlyphIds( svg : string, mode : mathkind ) : string {
   if (mode.isPlain) return svg
-  svg.replaceAll( rxSvgId, fun(cap) { cap.matched + mode.show + "-" } )
+  svg.replaceAll( rxSvgId, fun(cap) { cap.matched + mode.show } )
 }
-val rxSvgId = regex(@"\b(id=['""]g|xlink:href=['""]#g)(?=\d)")
+val rxSvgId = regex(@"\b(id=['""](?:g)|xlink:href=['""]#g)(?=\d)")
+
+// Scope CSS styles inside an SVG generated image such that we
+// can embed multiple inside one HTML file. We use first 6 letters of
+// the digest to uniquely name the SVG group from `page<no>` to `g-<digest>`.
+function scopeStyles( svg : string, digest : string ) :string {
+  val groupId = "g-" + digest.substr(0,6)
+  val pre     = "#" + groupId
+  svg.replaceAll( rxSvgTextStyle, pre + " $&" ).replace( rxSvgGroupId, "$1" + groupId )
+}
+val rxSvgTextStyle = regex(@"\btext\.f\d+\s*\{\s*font")
+val rxSvgGroupId   = regex(@"(<g\s+id=['""])page\d+")
 
 // Remove unnecessary parts of an svg to reduce the size (important since there
 // can be thousands in math-heavy documents)
