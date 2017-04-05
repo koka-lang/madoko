@@ -504,7 +504,7 @@ val rxSvgId = regex(@"\b(id=['""](?:g)|xlink:href=['""]#g)(?=\d)")
 // can embed multiple inside one HTML file. We use first 6 letters of
 // the digest to uniquely name the SVG group from `page<no>` to `g-<digest>`.
 function scopeStyles( svg : string, digest : string ) :string {
-  val groupId = "g-" + digest.substr(0,6)
+  val groupId = "math-" + digest.substr(0,6)
   val pre     = "#" + groupId
   svg.replaceAll( rxSvgTextStyle, pre + " $&" ).replace( rxSvgGroupId, "$1" + groupId )
 }

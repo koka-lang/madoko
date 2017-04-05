@@ -1,6 +1,6 @@
 xMath Embed  : 0
 xMath Render : svg
-xMath Svg Font Format: woff,ah
+Math Svg Font Format: woff,ah
 
 Package*    : tikz
 Package*    : pstricks
