@@ -160,6 +160,13 @@ public function fmtHtmlSvg(context: inlineContext, svg : string, attrs : attrs, 
     "<svg " + attrs.htmlFormat("svg",context.sanitize) + cap.groups[2] + cap.groups[3] +
     (if (alt.bool) then "<desc>" + alt.escape + "</desc>" else "")
   })
+  /*
+  if (alt=="") then svgx else {
+    "<span class=\"math-svg\">" + svgx +
+    "<span class=\"hidden math-svg-alt\">" + alt.escape + 
+    "</span></span>"
+  }
+  */
 }
 val rxSvg = regex(@"^(\s*<svg\b)((?:[^'"">]|""[^""]*""|'[^']*')*)(>)")
 
