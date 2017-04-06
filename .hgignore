@@ -31,4 +31,7 @@ web/run/
 test/tex/
 test/local/
 test/scripts/
+test/math/svg/
+test/latex/
+test/.madoko*/
 
