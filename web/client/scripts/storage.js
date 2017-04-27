@@ -869,6 +869,8 @@ var Storage = (function() {
           spath = "styles/csl/" + fpath;
         else if (Util.startsWith(Util.stemname(fpath),"locales-") && Util.extname(fpath) === ".xml" &&!Util.dirname(fpath)) 
           spath = "styles/locales/" + fpath;
+        else if (Util.extname(fpath) === ".js" && !Util.dirname(fpath)) 
+          spath = "styles/scripts/" + fpath;
 
         if (Util.isImageMime(mime)) opath = fpath;
 
