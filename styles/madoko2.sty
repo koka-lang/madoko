@@ -23,6 +23,7 @@
   /madoko/math/.new toggle,
   /madoko/beamer/.new toggle,
   /madoko/fontspec/.new toggle=true,% is expensive.. but default true is more user friendly
+  /madoko/version/.new value=2.0,
 }
 
 \@ifclassloaded{beamer}{\options{/madoko/beamer=true}}{}
@@ -464,9 +465,10 @@
 % ---------------------------------------------------
 
 %\providecommand\fontspec[1]{\PackageWarning{madoko}{Please use meta-key "package: fontspec" in order to \MessageBreak use font-family: #1\MessageBreak}}
+\newcommand*\mdselectfont{\selectfont\mdsetprespace}
 
 \providecommand\lfseries{\mdseries}
-\newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\selectfont}
+\newcommand*\mdfontsize[1]{\fontsize{#1}{1.2\dimexpr#1\relax}\mdselectfont}
 \newcommand*\mdsetfontscale[2]{%
   \csdef{#1@Scale}{#2}%
   \csdef{#1@scale}{#2}% 
@@ -485,7 +487,7 @@
   \onnotblank{#3}{\fontfamily{#3}}%
   \onnotblank{#4}{\fontseries{#4}}%
   \onnotblank{#5}{\fontshape{#5}}%
-  \selectfont
+  \mdselectfont
 }
 
 \AtBeginDocument{%
@@ -723,6 +725,12 @@
 %-------------------------------------------------------------
 % Table of contents
 %-------------------------------------------------------------
+\ifdef\@tocrmarg{}{% 
+  % these are not always defined (for example in beamer)
+  \def\@tocrmarg{2.55em}%
+  \def\@pnumwidth{1.55em}%
+  \def\@dotsep{4.5}%
+}%
 
 \newcount\mdtoclevel
 \newcounter{mdtoclevelbold}\setcounter{mdtoclevelbold}{1}
@@ -739,7 +747,7 @@
 
 \newcommand\md@boldtocline[5]{%
   \ifnum #1>\c@tocdepth \else
-  \vskip \z@ \@plus.2\p@
+  \vskip \z@ \@plus 0.2\p@
     {\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
     \parindent #2\relax\@afterindenttrue
     \interlinepenalty\@M
@@ -791,12 +799,15 @@
 
 \newlength\presp
 \settowidth\presp{\texttt{ }}
+\newcommand*\mdsetprespace{\settowidth\presp{ }}
+
 \newcommand\prespace{\hspace*{\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
 \newcommand\prebr{\strut\newline\strut\ignorespaces}
 
 \newenvironment{mdpre}%
   {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright\mdnohyphens
+   \mdsetprespace
    \let\\\prebr
    \let\nobreakspace\prespace
   }%
@@ -1189,6 +1200,9 @@
 \providecommand{\abs}[1]{\ensuremath{\left\vert #1\right\vert}}
 \providecommand{\qedsymbol}{\ensuremath{\Box}}
 \providecommand{\qed}{\hfill\qedsymbol}
+\providecommand{\nbdash}{\nobreakdash-\hspace{0pt}}
+\providecommand{\nbendash}{\nobreakdash--\hspace{0pt}}
+\providecommand{\nbemdash}{\nobreakdash---\hspace{0pt}}
 
 % inserted for unknown html entities
 \newcommand{\mdUnknownEntity}[1]{\&#1;}
