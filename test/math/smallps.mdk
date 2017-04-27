@@ -1,4 +1,5 @@
-xMath Embed  : 0
+Math Dpi    : 300
+Math Embed  : 0
 xMath Render : svg
 xMath Svg Font Format: woff,ah
 

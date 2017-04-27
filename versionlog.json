@@ -10,6 +10,14 @@
         "Fix table-of-contents generation in beamer presentation"
       ]
     },
+    { "version": "1.1.1",
+      "date": "2017-04-13",
+      "updates": [
+        "Small bug fixes",
+        "Allow font embedding with recent dvisvgm",
+        "Add `previewRefresh` events for more responsive scripts in the preview"
+      ]
+    },
     { "version": "1.1.0",
       "date": "2017-03-31",
       "updates": [
