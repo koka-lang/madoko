@@ -856,8 +856,8 @@ function cssFont( body : string, kvs : dict<string> ) : string {
       b.braceCmd(cmd)
     })
     .onKey( kvs,"font-size", fun(value,b) { 
-      val cmd = if (value=="larger") then "\\mdfontsize{1.2}"
-                elif (value=="smaller") then "\\mdfontsize{0.8}"
+      val cmd = if (value=="larger") then "\\mdfontsize{\\dimfont{1.2}}"
+                elif (value=="smaller") then "\\mdfontsize{\\dimfont{0.8}}"
                 elif (value=="xx-small") then "\\tiny"
                 elif (value=="x-small") then "\\scriptsize"
                 elif (value=="small") then "\\small"
