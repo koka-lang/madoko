@@ -1,5 +1,15 @@
 {
   "log" : [
+    { "version": "1.1.2",
+      "date": "2017-04-27",
+      "updates": [
+        "Small bug fixes",
+        "Initial support for arrows using the `arrows` template",
+        "Add non-breaking hyphen as `&nbdash;`",
+        "Fix `font-size` attributes `smaller` and `larger`",
+        "Fix table-of-contents generation in beamer presentation"
+      ]
+    },
     { "version": "1.1.0",
       "date": "2017-03-31",
       "updates": [

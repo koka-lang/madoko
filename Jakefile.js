@@ -158,7 +158,8 @@ task("justcopy", [], function() {
                               .include(path.join(styleDir,"*.mdk"))
                               .include(path.join(styleDir,"lang","*.json"))
                               .include(path.join(styleDir,"csl","*.csl"))
-                              .include(path.join(styleDir,"locales","*.xml"));
+                              .include(path.join(styleDir,"locales","*.xml"))
+                              .include(path.join(styleDir,"scripts","*.js"));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
   
   js     = new jake.FileList().include(path.join(contribDir,"styles","*.css"))
