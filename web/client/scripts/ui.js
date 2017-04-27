@@ -2786,6 +2786,7 @@ var UI = (function() {
     { code: 732 },
     { entity: "ndash", code: 8211, title:"en-dash" },
     { entity: "mdash", code: 8212, title:"em-dash" },
+    { entity: "nbdash", code: 8209, title:"non-breaking hyphen" },
   ];
 
 var symbolsAccents = [
