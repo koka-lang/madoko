@@ -9,7 +9,7 @@ H6          { @h1-h2-h3-h4-h5-h6: arabic0 }
 Figure      { @figure: arabic0 }
 Equation    { @equation: arabic0 }
 Footnote    { @footnote: arabic0 }
-Bibitem     { @bib-bibitem: arabic0; @bibitem: arabic0; tex-bibitem-label:[&cite-label;] }
+Bibitem     { @bib-bibitem: arabic0; @bibitem: arabic0; bibitem-label:[&cite-label;] }
 
 Tex Doc Header*:
     \makeatletter
