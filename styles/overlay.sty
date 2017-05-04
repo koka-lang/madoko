@@ -1,0 +1,221 @@
+%%
+%% This is file `overlay.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% overlay.dtx  (with options: `package')
+%% 
+%% Copyright (C) 2017
+%% Daan Leijen, Microsoft Research
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%   http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 2003/12/01 or later.
+%% 
+%% This work has the LPPL maintenance status "author-maintained".
+%% 
+\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+\ProvidesPackage{overlay}
+    [2004/11/05 v1.0 .dtx overlay file]
+\RequirePackage{etoolbox}
+\newcounter{ov@overlayid}
+\newcommand*\ov@name{ov@0}
+\newcommand*\ov@newname{%
+  \stepcounter{ov@overlayid}%
+  \xdef\ov@name{ov@\arabic{ov@overlayid}}%
+}
+\newcommand*\ovunit[1]{\strip@pt\dimexpr#1\relax}
+\ifx\pdfsavepos\@undefined
+  \let\pdfsavepos\savepos
+  \let\pdflastxpos\lastxpos
+  \let\pdflastypos\lastypos
+\fi
+\ifx\pdfsavepos\@undefined
+  \PackageError{overlay}{%
+    \string\pdfsavepos\space is not supported.\MessageBreak
+    It is provided by pdfTeX (1.40) or XeTeX%
+  }%
+\fi
+\AtBeginDocument{%
+  \immediate\write\@auxout{%
+    \string\providecommand\string\ov@newlabel[6]{}}%
+  \ov@newlabel{ovpage}{-1}%
+    {0sp}{0sp}{\paperwidth}{\paperheight}%
+  \ov@newlabel{ovpage-right}{-1}%
+    {\paperwidth}{0.5\paperheight}{0sp}{0sp}%
+  \ov@newlabel{ovpage-top-right}{-1}%
+    {\paperwidth}{\paperheight}{0sp}{0sp}%
+  \ov@newlabel{ovpage-top}{-1}%
+    {0.5\paperwidth}{\paperheight}{0sp}{0sp}%
+  \ov@newlabel{ovpage-top-left}{-1}%
+    {0sp}{\paperheight}{0sp}{0sp}%
+  \ov@newlabel{ovpage-left}{-1}%
+    {0sp}{0.5\paperheight}{0sp}{0sp}%
+  \ov@newlabel{ovpage-bottom-left}{-1}%
+    {0sp}{0sp}{0sp}{0sp}%
+  \ov@newlabel{ovpage-bottom}{-1}%
+    {0.5\paperwidth}{0sp}{0sp}{0sp}%
+  \ov@newlabel{ovpage-bottom-right}{-1}%
+    {\paperwidth}{0sp}{0sp}{0sp}%
+  \ov@newlabel{ovpage-center}{-1}%
+    {0.5\paperwidth}{0.5\paperheight}{0sp}{0sp}%
+}%
+\newcommand*\ov@newlabel[6]{%
+  \@newl@bel{ov}{#1}{#2,#3,#4,#5,#6}%
+  \csgdef{ov@label@#1@page}{\numexpr#2\relax}%
+  \csgdef{ov@label@#1@x}{#3}%
+  \csgdef{ov@label@#1@y}{#4}%
+  \csgdef{ov@label@#1@wd}{#5}%
+  \csgdef{ov@label@#1@ht}{#6}%
+}
+\newcommand*\ov@label[1]{%
+  \protected@edef\ov@labelname{#1}%
+  \expandafter\ov@label@\expandafter{\ov@labelname}%
+}
+\newcommand*\ov@label@[3]{%
+  \ov@label@propset{#1}{wd}{#2}%
+  \ov@label@propset{#1}{ht}{#3}%
+  \if@filesw
+    \@bsphack
+    %\typeout{ov@label: #1 (width=#2,height=#3)}%
+    \pdfsavepos
+    \protected@write\@auxout{}{%
+      \string\ov@newlabel{#1}{\thepage}%
+        {\noexpand\the\pdflastxpos sp}{\noexpand\the\pdflastypos sp}%
+        {#2}{#3}%
+    }%
+    \@esphack
+  \fi
+}
+\newcommand*\ov@label@prop@[2]{%
+  %\csuse{ov@label@#1@#2}%
+  \ifcsname ov@label@#1@#2\endcsname
+    \csname ov@label@#1@#2\expandafter\endcsname
+  \else
+    0pt%
+  \fi
+}
+\newcommand*\ov@label@prop[2]{%
+  \ifcsdef{ov@label@#1@#2}{\ov@label@prop@{#1}{#2}}{\z@}%
+}
+\newcommand*\ov@label@propset[3]{%
+  \csedef{ov@label@#1@#2}{#3}%
+}
+\newcommand*\ov@getdim[3]{%
+  \ifcsdef{ov@label@#1@#2}%
+    {#3=\ov@label@prop@{#1}{#2}}%
+    {#3=\z@\relax}%
+}
+\newcommand*\ov@getpage[2]{%
+  \ifcsdef{ov@label@#1@page}%
+    {#2=\ov@label@prop@{#1}{page}}%
+    {#2=\z@\relax}%
+}
+
+\newcommand*\ov@getsize[3]{%
+  \ov@getdim{#1}{wd}#2%
+  \ov@getdim{#1}{ht}#3%
+}
+\newlength\ov@relativex
+\newlength\ov@relativey
+\newcommand*\ov@getpos[3]{%
+  \ov@getdim{#1}{x}#2%
+  \advance #2 by \ov@relativex
+  \ov@getdim{#1}{y}#3%
+  \advance #3 by \ov@relativey
+}
+\newcommand*\ov@checksamepage[2]{%
+  \ov@getpage{#1}\@tempcnta
+  \ov@getpage{#2}\@tempcntb
+  \ifnum\@tempcnta=-1\relax\@tempcnta\@tempcntb\fi
+  \ifnum\@tempcntb=-1\relax\@tempcntb\@tempcnta\fi
+  \ifnum\@tempcnta=\@tempcntb\relax
+    \@tempswatrue
+  \else
+    \PackageWarning{overlay}%
+      {Cannot overlay between #1 %
+       and #2 since they are on different pages!}%
+    \@tempswafalse
+  \fi
+}
+\newcommand\ovwidth[1]{\strip@pt\dimexpr\ov@label@prop@{#1}{wd}\relax}
+\newcommand\ovheight[1]{\strip@pt\dimexpr\ov@label@prop@{#1}{ht}\relax}
+\newcommand\ovx[1]{\strip@pt\dimexpr\ov@label@prop@{#1}{x} + \ov@relativex\relax}
+\newcommand\ovy[1]{\strip@pt\dimexpr\ov@label@prop@{#1}{y} + \ov@relativey\relax}
+\newcommand\ovpage[1]{\ov@label@prop@{#1}{page}}
+\newlength\ov@dx
+\newlength\ov@dy
+\newlength\ov@dz
+\def\ov@unpair#1#2,#3,#4\relax{%
+  \ov@dx=\dimexpr#2\relax
+  \ifblank{#3}{\ov@dy=\ov@dx}{\ov@dy=\dimexpr#3\relax}%
+}
+
+\newcommand*\ovlabel[2][0pt]{%
+  \ov@unpair{#2}#1,,\relax
+  \begin{picture}(0,0)%
+    \ov@label{#2}{\the\ov@dx}{\the\ov@dy}%
+    \label{#2}%
+  \end{picture}%
+}
+\newsavebox{\ov@labelbox}
+\newcommand\ovlabelbox[3][0pt]{%
+  \savebox{\ov@labelbox}{#3}%
+  \ov@unpair{#2}#1,,\relax
+  \begingroup
+  \setlength{\unitlength}{1\p@}%
+  \begin{picture}(0,0)(\strip@pt\ov@dx,\strip@pt\ov@dy)%
+    \ov@dx=\dimexpr2\ov@dx + \wd\ov@labelbox\relax
+    \ov@dz=\dp\ov@labelbox
+    \ov@dy=\dimexpr2\ov@dy + \ht\ov@labelbox + \ov@dz\relax
+    \ov@dz=-\ov@dz
+    \put(0,\strip@pt\ov@dz){\ov@label{#2}{\the\ov@dx}{\the\ov@dy}}%
+  \end{picture}%
+  \endgroup
+  \usebox{\ov@labelbox}%
+}
+\newenvironment{overlayat}[1]{%
+  \ov@newname
+  \ovlabel{\ov@name}%
+  \ov@checksamepage{\ov@name}{#1}%
+  \if@tempswa
+    \ov@getpos{\ov@name}\@ovxx\@ovyy
+    \ov@getpos{#1}\@ovdx\@ovdy
+    \advance\@ovxx by -\@ovdx
+    \advance\@ovyy by -\@ovdy
+    \ov@relativex=-\@ovdx\relax
+    \ov@relativey=-\@ovdy\relax
+    \ov@getsize{#1}\@ovdx\@ovdy
+  \else
+    \@ovxx\z@\@ovyy\z@
+    \@ovdx\z@\@ovdy\z@
+  \fi
+  %\edef\ovx{0}\edef\ovy{0}%
+  \edef\ovdx{\strip@pt\@ovdx}%
+  \edef\ovdy{\strip@pt\@ovdy}%
+  \setlength{\unitlength}{1\p@}%
+  \begin{picture}(0,0)(\strip@pt\@ovxx,\strip@pt\@ovyy)%
+  \ignorespaces
+}%
+{\end{picture}}
+\newenvironment{overlaybetween}[2]{%
+  \ov@checksamepage{#1}{#2}%
+  \begin{overlayat}{#1}%
+  \ov@getpos{#2}\@ovdx\@ovdy
+  \edef\ovdx{\strip@pt\@ovdx}%
+  \edef\ovdy{\strip@pt\@ovdy}%
+  \ignorespaces
+}%
+{\end{overlayat}}
+\newenvironment{overlaypage}{%
+  \begin{overlayat}{ovpage}%
+}%
+{\end{overlayat}}
+\endinput
+%%
+%% End of file `overlay.sty'.

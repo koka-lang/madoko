@@ -1,0 +1,154 @@
+[INCLUDE=lipsum]
+
+Title       : Title
+Subtitle    : Subtitle
+Heading Base: 2
+Doc Class   : [12pt, a4paper, portrait, oneside, bindingoffset=1cm, parskip=full, numbers=noendperiod, final] scrreprt
+Bib         : example2.bib
+Bib Style   : ajs-new-german.bst
+Cite Style  : natural
+Cite All    : true
+ldquo       : &bdquo;
+Logo        : false
+
+<!-- Latex Pakete definieren -->
+.math-inline,.math-display : math-needpdf=true
+
+Package     : amsmath
+Package    : [math-style=TeX] unicode-math
+Package*    : fontspec, xltxtra, xunicode, microtype
+Package*    : polyglossia
+Package*    : [strict=true, autostyle, german=quotes] csquotes
+Package     : [headsepline, plainheadsepline, automark, autooneside=true] scrlayer-scrpage
+xPackage     : natbib
+xPackage*    : [style=authoryear,natbib=true,backend=biber,doi=false,url=false,isbn=false,eprint=false] biblatex
+Package     : setspace
+Package     : hyperref
+
+@if tex {
+  Heading Base: 1
+}
+
+
+solution: simple
+
+heading-endperiod:
+
+@if tex and solution=="simple" {
+}
+
+@if tex and solution=="simplebook" {
+    Doc Class: book
+    h1 { before:clear }
+}
+
+@if tex and solution=="withbreak" {
+    h1 { tex-cmd:"\mychapter{&tex-label;}"; tex-label:"@h1"; before:clear;  }
+}
+
+@if tex and solution=="usetex" {    
+    Tex Section Num: True
+}
+
+@if tex and solution=="usetexbook" {    
+    Tex Section Num: True
+    Doc Class: book
+}
+
+Tex Header:
+    \makeatletter
+    \newcommand\mychapter[2]{%
+      \def\chapterformat{#1\enspace}%
+      \chapter[\chapterformat#2]{#2}%
+    }
+    \makeatother
+
+<!-- Preamble der Latexdatei -->
+~code,~pre : tex-cmd-before='\shorthandoff{"}' 
+Tex Header* :
+    \pagestyle{scrheadings}
+    \ihead[\headmark]{\headmark}
+    \ohead[\pagemark]{\pagemark}
+    \chead{}
+    \cfoot[]{}
+    %\addbibresource{example2.bib}
+    %\addtolength{\bibitemsep}{\baselineskip}
+    \setmainlanguage[variant=german, spelling=new, latesthyphen=true, babelshorthands=true]{german}
+    \setotherlanguage[variant=american]{english}
+    \defaultfontfeatures{Ligatures=TeX, Mapping=tex-text, Language=German}
+    %\setmainfont[Ligatures=TeX]{Linux Libertine O}
+    %\setsansfont[Scale=MatchLowercase]{Helvetica Neue}
+    %\setmonofont[Scale=MatchLowercase]{Inconsolata}
+    %\setmathfont{STIX Math}
+    \hypersetup{hidelinks}
+
+
+
+
+[TITLE]
+
+~ Abstract
+The abstract of the paper. Cum justo odio, dapibus ac facilisis in,
+egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
+mauris condimentum nibh, ut fermentum massa justo sit amet.
+~
+
+# Table of contents { - }
+
+
+[TOC]
+
+~ TexRaw
+\tableofcontents
+~
+
+# Introduction     { #sec-intro }
+
+Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
+Note that you can drag&drop images into the editor pane to include them in
+the document, and similarly with bibtex files, latex style files, etc.
+
+~ Figure { #fig-butterfly caption="A Monarch butterfly" page-align=here }
+![butterfly]
+~
+
+[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+
+## Contributions
+
+Our [contributions]{font-family='"MS Gothic"'} are:
+
+* A figure of a _butterfly_;
+* Some **mathematics**;
+* And some source code;
+* And references to Tex books [@KnuthTex;@LamportLatex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @KnuthTex are also possible.
+
+# Content as a really long heading title is here
+
+~ lipsum
+~
+
+Let's program some Javascript:
+``` javascript
+function hello() {
+  return "hello world!"
+}
+```
+
+~ Note
+The syntax highlighting works in PDF too.
+~
+
+# Conclusion
+
+~ lipsum
+~
+
+~ TexRaw
+%Testing citations: \cite{KnuthTex,Goo93}.
+%
+%\printbibliography
+~
+
+[BIB]

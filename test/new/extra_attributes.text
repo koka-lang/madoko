@@ -1,0 +1,57 @@
+# header test  { .heading }
+
+This tests attributes of 'Markdown Extra'. 
+We can mark most block elements using braced attributes.
+
+Like in a line header { .myheading }
+-----------------------------
+
+## header with {braces} { .myheading .other }
+
+## header with {braces} ## { .myheading #header3 }
+
+```javascript { #jscode-example }
+var x = 1
+```
+
+Here is a [top link][toplink] for use in frames.
+And a [link][mylink] by reference.
+
+[mylink]: http://foo.com { #mylink2 } 
+[toplink]: http://foo.com { target=_top #mylink }
+
+--------- { width=50% }
+
+We can also attribute tables:
+
+A   | B   | C 
+--- | --- | ---
+a   | b   | c
+{ #table-id1 }
+
+Or like this
+
+| A   | B   | C   | 
+| --- | --- | --- |
+| a   | b   | c   |
+{ #table-id2 }
+
+
+* we can attribute
+* a list too
+{#listid}
+
+> an attributed
+> block quote
+{#blockquote}
+
+We can mark any paragraph
+now with attributes.
+{#id}
+
+{We can start paragraphs with braces}
+{and it will be fine} to use braces 
+as part of a paragraph
+
+Or we can 
+\{escape to end with braces if we want}

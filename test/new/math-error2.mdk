@@ -1,0 +1,24 @@
+Tex Header:
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{amsthm}
+    \usepackage{stmaryrd}
+    \usepackage{listings}
+    \usepackage{color}
+    \usepackage{semantic}
+    \usepackage{framed}
+    \usepackage[curve]{{xypic}}
+    \usepackage{url}
+    \usepackage{graphicx}
+
+
+Testing: 
+
+~ Math
+\begin{array}{llcll}
+\textrm{types} & \tau^k & ::= & \alpha^k & \textrm{(type variable)} \\
+\begin{comment}
+%              &       & |  & c^\kk     & \textrm{(type constant)} \\
+\end{comment}
+\end{array}
+~

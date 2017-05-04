@@ -1,0 +1,40 @@
+
+<p>This file tests support for footnotes in&nbsp;<a href="http://michelf.ca/projects/php-markdown/extra#footnotes">Markdown Extra</a>. The output
+adheres to what John Gruber describes at&nbsp;<a href="http://daringfireball.net/2005/07/footnotes">Daring Fireball</a>.
+</p>
+<p class="indent">That&#39;s some text with a footnote.<sup id="fnref-1"><a href="#fn-1" class="footnote-ref localref">3</a></sup> and 
+another footnote <sup id="fnref-test"><a href="#fn-test" class="footnote-ref localref">2</a></sup>, and a duplicate<sup id="fnref-1"><a href="#fn-1" class="footnote-ref localref">3</a></sup>.
+</p>
+<div class="footnotes">
+<hr >
+
+<ol>
+<li id="fn-1">
+<p>And that&#39;s the footnote.
+</p>
+<p>That&#39;s the second paragraph.
+<a href="#fnref-1" class="footnote-backref localref">&#8617;</a></p></li>
+<li id="fn-test">
+<p class="para-continue">More testing
+</p>
+<ul>
+<li>with a
+</li>
+<li>list in it <sup id="fnref-3"><a href="#fn-3" class="footnote-ref localref">4</a></sup>
+</li></ul>
+
+<p>And more text.
+<a href="#fnref-test" class="footnote-backref localref">&#8617;</a></p></li>
+<li id="fn-1">
+<p>Second definition overrides
+</p>
+<pre>
+<code>with code
+in  it</code></pre>
+<p>And another paragraph
+<a href="#fnref-1" class="footnote-backref localref">&#8617;</a></p></li>
+<li id="fn-3">
+<p>And the last footnote
+</p>
+<p>With another paragraph
+<a href="#fnref-3" class="footnote-backref localref">&#8617;</a></p></li></ol></div>

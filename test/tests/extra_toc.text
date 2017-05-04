@@ -1,0 +1,28 @@
+Title: Table of contents example
+Heading Base: 2
+
+[TOC]
+
+# Main Section
+
+Here is a reference to Section [#header12] which
+is the same as this reference [#header12][].
+
+## A subsection     
+
+## And another      { #header12 }
+
+#### A level 4 subsection?
+
+# Another main section
+
+## A third subsection
+### And one on level 3
+## A fourth subsection
+### And one more on level 3
+
+# Appendix {-}
+
+# Appendix Section { @h1="A" }
+## With a subsection
+# And another

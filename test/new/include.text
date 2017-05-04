@@ -1,0 +1,22 @@
+title: test includes
+
+Let's see a definition:
+
+[INCLUDE="deflist.text":25-29]
+
+Nice :-)
+
+[INCLUDE="deflist.text":25]
+
+```
+[INCLUDE="../../../AoPL/src/Declare.hs":Summ3]
+```
+Eval 38
+```
+[INCLUDE:Eval38]
+```
+
+Or just the part:
+```
+[INCLUDE:Impl3]
+```

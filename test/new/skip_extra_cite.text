@@ -1,0 +1,216 @@
+Title 		: Koka: Programming with Row-Polymorphic Effects
+Subtitle    : A &Ccedil;ubtitle
+Heading Base: 2
+
+Doc Class	: [preprint]sigplanconf
+Bib       	: ../../test.bib
+Pdf Latex   : pdflatex
+
+Author      : Daan Leijen
+Affiliation : Microsoft Research
+Email       : daan@microsoft.com
+
+Author		  : Someone else
+Affiliation : Foo bar
+Email       : http://foobar.com/~someone    
+
+Bib Search Url: www.google.com
+~a: .tex-tooltip
+
+.mono: input=pre language="" 
+
+[TITLE]
+
+## Contents			{-}
+
+[TOC]
+
+## Abstract 		{-}
+
+Test: [@Abel:termination.12345].
+
+We propose a [programming]{.mono} model where effects are treated in a disciplined way, 
+and where the potential side-effects of a function are apparent in its type
+signature. The type and effect of expressions can also be inferred
+automatically, and we describe a polymorphic type inference system based on
+Hindley-Milner style inference. A novel feature is that we support polymorphic
+effects through row-polymorphism using duplicate labels. Moreover, we show
+that our effects are not just syntactic labels but have a deep semantic
+connection to the program. For example, if an expression can be typed without
+an _exn_ effect, then it will never throw an unhandled exception. Similar to
+Haskell's `runST` we show how we can safely encapsulate stateful operations.
+Through the state effect, we can also safely combine state with let-
+polymorphism without needing either imperative type variables or a syntactic
+value restriction. Finally,our system is implemented fully in a new language
+called Koka[^koka] and has been used successfully on various small to medium-
+sized sample programs ranging from a Markdown processor to a tier-splitted
+chat application.
+
+[^koka]: Koka means 'effect' or 'effective' in Japanese.
+
+
+# Introduction 	{ #sec-intro }
+
+We propose a programming model where effects are a part of the type signature
+of a function. Currently, types only tell us something about the input and
+output value of a function but say nothing about all _other_ behaviors; for
+example, if the function writes to the console or can throw an exception. In
+our system, the squaring function:
+
+	function sqr(x : int) { x | $ * x }
+
+will get the type: 
+``` 
+sqr : int -> total | $ int 
+``` 
+signifying that `sqr` has no
+side effect at all and behaves as a total function from integers to integers.
+If we add a `print` statement though:
+
+	function sqr(x : int) { print(x); x*x }
+
+the (inferred) type indicates that `sqr` has an input-output (`io`) effect:
+
+	sqr : int -> io int
+
+Note that there was no need to change the original function nor to promote the
+expression `x*x` into the `io` effect. One of our goals is to make effects
+convenient for the programmer, so we automatically combine effects. In
+particular, this makes it convenient for the programmer to use precise effects
+without having to insert coercions. For example, we can split Haskell's state
+monad into three separate effects (read, allocate, and write), while
+automatically combining these effects when required.
+
+There have been many proposals for effects systems in the past [@Gifford:imperative, Chap. 5; @Lucassen:polyeffect, page 29; @Talpin:effects; @Wadler:marriage; @Nielson:polyeffect; @Benton:exceptioneffects; @Marino:genericeffects; @Leijen:effects-tr; @Scala:effects].
+However, many such systems suffer from being syntactical in nature (i.e.
+effects are just labels), or by being quite restricted, for example being
+monomorphic or applied to a very specific set of effects. Some of the more
+general systems suffer from having complicated effect types, especially in a
+polymorphic setting that generally requires sub-effect constraints.
+
+This paper has been long in the works and brings together many pieces of the
+effect puzzle: ranging from effect types as rows with duplicate labels, the
+semantics of effect types, and practical experience with effect inference. In
+particular, we make the following contributions:
+
+* 	We describe a novel effect system based on row polymorphism which allows
+	_duplicated_ effects. It turns out that this is essential to provide natural types to effect elimination forms, like catching exceptions.
+
+* The effect types are not just syntactic labels
+	but they have a deep semantic connection to the program (Section [#sec-semeffect]). For example, we can prove that if an expression that can be typed without an _exn_ effect, then it will never throws an unhandled exception; or if an expressions can be typed without a _div_ effect, then it will always terminate.
+
+* The interaction between polymorphism and mutable state is fraught with 
+	danger. We show that by modeling state as an effect we can safely combine mutability with let-polymorphism without needing either _imperative type variables_, nor a syntactic value restriction.
+
+	Moreover, we can safely encapsulate local state operations and we prove that such encapsulation is sound where no references or stateful behavior can escape the encapsulation scope.
+
+	The interaction between divergence and higher-order mutable state is also tricky. Again, we show how explicit heap effects allow us to safely infer whether stateful operations may diverge.
+
+* Having to keep track of effects manually would be a large burden: we
+	describe a sound and complete type inference system that automatically infers the principal effect and type of any expression, and automatically promotes effects when necessary. (Section [#sec-inference]).
+
+* We have an extensive experience with the type system within the 
+	Koka language. The Koka language fully implements the effect types as described in this paper and we have used it successfully in various small to medium sized code examples ranging from a fully compliant
+	Markdown text processor to a tier-splitted chat application.
+
+## Type inference 				{#sec-inference}
+
+To address. Some greek &delta;&alpha;&alpha;&nu;...&times;&aelig;&strange;&#3333; .
+
+## Semantics of effects 		{#sec-semeffect}
+
+# Related work
+
+
+A main contribution of this paper is showing that our notion of mutable state
+is sound, in particular the combination of mutable state and polymorphic let-
+bindings is tricky as shown by Tofte [-@Tofte:refs] for the ML
+language. Later, variants of the ML value restriction are studied by Leroy [-@Leroy:valuerestriction].
+
+Safe state encapsulation using a lazy state monad was first proven formally by
+[@Launchbury:monadstate]{.textual}. Their formalization is
+quite different though from ours and applies to a lazy store in a monadic
+setting. In particular, in their formalization there is no separate heap
+binding, but heaps are always bound at the outer `run`. We tried this, but it
+proved difficult in our setting; for example, it is hard to state the stateful
+lemma since answers would never contain an explicit heap. Very similar to our
+state encapsulation is region inference [@Tofte:regioninf]. Our `run`
+operation essentially delimits a heap region. Regions live at the value level
+though, and we can for example not access references in several regions at
+once.
+
+Independently of our work, [@Lindley:effects]{.textual} also
+used row polymorphism for effect types. Their approach is based on
+presence/absence flags [@Remy:records] to give effect types to database
+operations in the context of the Links web programming language. The main
+effects of the database operations are _wild_, _tame_, and _hear_, for
+arbitrary effects including divergence, pure queries, and asynchronous
+messages respectively.They report on practical experience exposing effect
+types to the programmer and discuss various syntax forms to easily denote
+effect types.
+
+The problems with arbitrary effects have been widely recognized, and there is
+a large body of work studying how to delimit the scope of effects. There have
+been many effect typing disciplines proposed. Early work is by Gifford and
+Lucassen [-@Gifford:imperative;-@Lucassen:polyeffect] which was later
+extended by Talpin [-@Talpin:thesis] and others [@Talpin:effects;@Nielson:polyeffect]. 
+These systems are closely related
+since they describe polymorphic effect systems and use type constraints to
+give principal types. The system described by Nielson _et al._ [-@Nielson:polyeffect] 
+also requires the effects to form a complete
+lattice with meets and joins.
+
+Java contains a simple effect system where each method is labeled with the
+exceptions it might raise [@Gosling:java] . A system for finding uncaught
+exceptions was developed for ML by [+@Pessaux:exceptions]{.textual}. 
+A more powerful system for tracking effects was
+developed by Benton [-@Benton:exceptioneffects] who also studies the
+semantics of such effect systems [@Benton:relsemantics]. Recent work on
+effects in Scala [@Scala:effects] shows how even a restricted form of
+polymorphic effect types can be used to track effects for many programs in
+practice.
+
+Tolmach [-@Tolmach:monadhierarchy] describes an effect analysis for ML
+in terms of effect monads, namely `Total`, `Partial`, `Divergent` and `ST`.
+This is system is not polymorphic though and meant more for internal compiler
+analysis. In the context proof systems there has been work to show absence of
+observable side effects for object-oriented programming languages, for example
+by Naumann [-@Naumann:purity].
+
+Marino _et al._ recently produced a generic type-and-effect system [@Marino:genericeffects]. 
+This system uses privilege checking to describe
+analytical effect systems, and they provide a soundness proof for their type
+system. For example, an effect system could use try-catch statements to grant
+the `canThrow` privilege inside try blocks. `throw` statements are then only
+permitted when this privilege is present. Their system is very general and can
+express many properties but has no semantics on its own. For example, it would
+be sound for the effect system to have "+" grant the `canThrow` privilege to
+its arguments, and one has to do an additional proof to show that the effects
+in these systems actually correspond to an intended meaning.
+
+Wadler and Thiemann showed the close relation between effect systems and
+monads [@Wadler:marriage] and showed how any effect system can be translated
+to a monadic version. For our particular system though a monadic translation
+is quite involved due to polymorphic effects; essentially we need dependently
+typed operations and we leave a proper monadic semantics for future work.
+
+<!-- here is how to create a hidden citation -->
+[@Leijen:hmf]{.hidden}
+
+More tests: 
+
+* \/#Leijen:hmf 
+* [@Leijen:hmf;@Naumann:purity]{cite-style=natural} 
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=numeric}
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=super}
+* [@Leijen:hmf;@Wadler:marriage]{cite-style=natural .textual}
+* By [!@Leijen:hmf]{.free} in year [-@Leijen:hmf]{.free}
+* [@Leijen:hml; @Leijen:hmltech]
+* [see @Leijen:hml, chap 2]
+* Range [@Benton:exceptioneffects;@Benton:relsemantics;@Gifford:imperative;
+  @Lucassen:polyeffect;@Marino:genericeffects]{cite-style=numeric}
+* Formatting [see @Leijen:hml, chap 2]{cite-style='numeric:"**\{","\}**","; ",", ",", "'}
+
+## References {-}
+
+[BIB]

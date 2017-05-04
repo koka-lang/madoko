@@ -1,0 +1,25 @@
+Title       : Highlight test &egrave;&ccedil;
+Title Note  : &date;, &time;
+Author      : Dan Ros&egrave;n&cedil;
+
+~Pre        : background-color=Ivory padding=1ex border-style=dotted border-color=black border-width=1px
+~Pre,~Code  : language=javascript
+
+[TITLE]
+
+[TOC]
+
+# Highlighting code
+
+Here is `function foo` javascript code.
+And some `do "hi"`{language=haskell} haskell code too.
+
+```
+function foo
+```
+
+and explicit:
+
+```Javascript
+function foo
+```

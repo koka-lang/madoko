@@ -1,0 +1,338 @@
+{
+  "log" : [
+    { "version": "1.1.2",
+      "date": "2017-04-27",
+      "updates": [
+        "Small bug fixes",
+        "Initial support for arrows using the `arrows` template",
+        "Add non-breaking hyphen as `&nbdash;`",
+        "Fix `font-size` attributes `smaller` and `larger`",
+        "Fix table-of-contents generation in beamer presentation"
+      ]
+    },
+    { "version": "1.1.1",
+      "date": "2017-04-13",
+      "updates": [
+        "Small bug fixes",
+        "Allow font embedding with recent dvisvgm",
+        "Add `previewRefresh` events for more responsive scripts in the preview"
+      ]
+    },
+    { "version": "1.1.0",
+      "date": "2017-03-31",
+      "updates": [
+        "Small bug fixes",
+        "Use plain latex by default for mathematics to avoid XDV version clashes",
+        "Update to work with TeXlive 2016 and the latest MikTeX",
+        "Fix [table] option class on the `xcolor` package"
+      ]
+    },
+    { "version": "1.0.5",
+      "date": "2017-03-16",
+      "updates": [
+        "Small bug fixes",
+        "Extend bibliography parsing for new ACM reference format",
+        "Disable loading 'lmodern' package by default for pdflatex",
+        "Enable centering of mathpre environments",
+        "Add ACM new style article template"
+      ]
+    },
+    { "version": "1.0.4",
+      "date": "2017-02-22",
+      "updates": [
+        "Small bug fixes",
+        "Update reference manual to use Github"
+      ]
+    },
+    { "version": "1.0.3",
+      "date": "2016-08-26",
+      "updates": [
+        "Add Book/Manual template with auto-expanding table-of-contents and popup anchors",
+        "Update presentation style to better display table-of-contents and bibliographies"
+      ]
+    },
+    { "version": "1.0.2",
+      "date": "2016-08-18",
+      "updates": [
+        "Fix issue with multiple bibliographies (issue [143](https://madoko.codeplex.com/workitem/143))",
+        "Fix square bracket generation in LaTeX"
+      ]
+    },
+    { "version": "1.0.1",
+      "date": "2016-06-27",
+      "updates": [
+        "Upgrade to dropbox v2 api for sharing",
+        "Assume not '--full' mode when running with '--xmp'",
+        "Fix xmp wrapping of the prelude when using '--xmp'"
+      ]
+    },
+    { "version": "1.0.0-rc7",
+      "date": "2016-04-19",
+      "updates": [
+        "Fix cjk-decimal counting (issue [132](https://madoko.codeplex.com/workitem/132))",
+        "Fix Chinese characters issue in bibliographies (issue [129](https://madoko.codeplex.com/workitem/129))",
+        "Update presentation style to maintain history links (and add boolean `history` metadata key)",
+        "Fix upper/lower case comparison bug for the `locale` metadata key"
+      ]
+    },
+    { "version": "1.0.0-rc6",
+      "date": "2016-03-08",
+      "updates": [
+        "Fix subfigure numbering (issue [124](https://madoko.codeplex.com/workitem/124))",
+        "Add `phisym` entity",
+        "Fix spurious bibliography warning even when no citations were present",
+        "Bugfixes to server"
+      ]
+    },
+    { "version": "1.0.0-rc5",
+      "date": "2016-02-04",
+      "updates": [
+        "Support generation of LaTeX zip file bundles for LaTeX submissions",
+        "Fix style file bug for inline code (issue [118](https://madoko.codeplex.com/workitem/118))"
+      ]
+    },
+    { "version": "1.0.0-rc4",
+      "date": "2016-01-29",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' at the bottom of the file selection menu by pressing the grey reload icon.",
+      "updates": [
+        "Better URL line breaking in LaTeX and HTML",
+        "Support `Floating End Period` meta key",
+        "Support zero-width space",
+        "Fix `Authors Running` meta key",
+        "Fix `line-height` to be compatible with LaTeX double spacing package",
+        "Fix encoding error in binary files on Onedrive"
+      ]
+    },
+    { "version": "1.0.0-rc3",
+      "date": "2016-01-14",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' at the bottom of the file selection menu by pressing the grey reload icon.",
+      "updates": [
+        "Fix bug with bibliography entries without an author field",
+        "Fix bug in math generation when `.dimx` file was missing",
+        "Improve preview performance by caching images",
+        "Fix rendering of table-of-contents in LaTeX to do nicer line breaking",
+        "Fix file path encoding in Dropbox for Chinese characters"
+      ]
+    }, 
+    { "version": "1.0.0-rc2",
+      "date": "2016-01-11",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
+      "updates": [
+        "Improved bibliography rendering for CSL/BibTeX and HTML/PDF",
+        "Added three new standard CSL styles: _Madoko Numeric_, _Madoko Numeric Short_, and _Madoko Natural_.",
+        "CSL styles are automatically downloaded for the CSL style repository",
+        "Improved spell checking",
+        "Updated display of files in the UI",
+        "Fix table-of-content bug with references in LaTeX",
+        "Fix mathematics update logic and vertical alignment",
+        "Fix auto-scroll error in the preview",
+        "Fix file path encoding in Onedrive for Chinese characters"
+      ]
+    }, 
+    { "version": "1.0.0-rc1",
+      "date": "2016-01-04",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
+      "updates": [
+        "Support `Cite All` for CSL styles too",
+        "Support for CSS attribute selectors",
+        "Improved re-run logic for bibliographies",
+        "Improved error locations for citations",
+        "Various small bug fixes for CSL styles"
+      ]
+    }, 
+    { "version": "1.0.0-rc",
+      "date": "2015-12-29",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
+      "updates": [
+         "Support for SVG mathematics in HTML; to use old PNG images use `Math Render: png`",
+         "Support for CSL (Citation Style Language) style sheets, `Csl Style: ieee`",
+         "Support for `Locale` metadata key",
+         "Add `fstar` language definition",
+         "Support hanging bibliograpy indentation",
+         "Support for multiple bibliographies in one document",
+         "Small bug fixes"
+      ]
+    },
+    { "version": "0.9.23-beta",
+      "date": "2015-12-15",
+      "updates": [
+         "Support running Madoko/LaTex locally through [madoko-local](https://www.npmjs.com/package/madoko-local)",
+         "Support `page-break-before` and `page-break-after` attributes"         
+      ]
+    },
+    { "version": "0.9.22-beta",
+      "date": "2015-12-10",
+      "updates": [
+         "Support relative files names so one can for example refer to a parent directory for common includes",
+         "Improved LaTeX error messages",
+         "Reduce margins of Madoko HTML documents when viewed on mobile devices",
+         "Fix compilation bug with 'strict' under FF42"
+      ]
+    },
+    { "version": "0.9.21-beta",
+      "date": "2015-12-07",
+      "updates": [
+         "Improved LaTeX font family specifications as 'tex-family-[&lt;encoding>/]&lt;family>[/&lt;series>][/&lt;shape>][/&lt;scaling>]'",
+         "Improved LaTeX general font specifications as 'tex-&lt;font>[&lt;font-options>]",
+         "Allow font-family stack to work in LaTeX too",
+         "Bug fix: pass full environment on MacOSX to LaTeX subprocesses",
+         "Allow overlapping and unclosed include fragments",
+         "Add HTML and ML style comments to include fragments"
+      ]
+    },
+    { "version": "0.9.20-beta",
+      "date": "2015-12-02",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
+      "updates": [
+         "Reduce mathematics and image size for HTML output by 2.",
+         "Syntax highlighted tokens can now be fully styled within Madoko: use `.token.keyword { color: blue }` for example.",
+         "Improved mathematics and preformatted code output for LaTeX.",
+         "Properly merge files that were deleted on the server.", 
+         "Add `Tex Doc Header` metadata key for including TeX commands after `\\begin{document}`.",
+         "Improve handling of `display:none` elements",
+         "Enable debugging of included Javascript fragments",
+         "Fix inline preformatted math",
+         "Fix math attribute propagation"
+      ]
+    },
+    { "version": "0.9.18-beta",
+      "date": "2015-11-25",
+      "updates": [
+         "Improve UI responsiveness",
+         "Support 'wrap' figures where text flows around the figure",
+         "Allow 'math mode: mathjax' to enable dynamic math",
+         "Updated all documentation"
+      ]
+    },
+    { "version": "0.9.17-beta",
+      "date": "2015-11-23",
+      "updates": [
+        "Allow precise LaTeX font-family specifications as 'tex-family[-&lt;encoding>]-&lt;family>[-&lt;series>][-&lt;shape>][-&lt;scaling>]'",
+        "Set time-outs on all sub processes and run latex more securely",
+        "Do no longer scroll preview after updates, but only when the editor window scrolls",
+        "Improve LaTeX running times",
+        "Enable microtype typography (character protrusion and font expansion) in PDF output",
+        "Fix bug where images with uppercase extensions were not correctly embedded",
+        "Fix default Mathjax link for dynamic math"        
+      ]
+    },
+    { "version": "0.9.16-beta",
+      "date": "2015-11-18",
+      "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' and 'madoko.css' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
+      "updates": [
+        "Fix bug in abstract and figure caption rendering",
+        "Allow CSS matching rules to contain the element, the name, and a series of classes, e.g. 'h1.references { ... }'",
+        "Allow CSS styling of the table of contents. The heading for the table of contents is now automatic as for the bibliography.",
+        "More counter styles, including 'circled-decimal', 'upper/lower-greek', 'cjk-decimal', 'decimal-leading-zero', 'symbolic', and generic entity lists.",
+        "Support more bibliography formats, and support Babeltex international bibliography styles.",
+        "Support CSS conditional blocks in metadata, i.e. '@if tex and (not draft) { ... }'.",
+        "Updated all styles to new CSS syntax for attributes (semi-colon seperated, use colon instead of equal sign)."
+      ]
+    },
+    { "version": "0.9.15-beta",
+      "date": "2015-11-06",
+      "updates": [
+        "Use non-starred section commands in Latex.",
+        "Added `lipsum` and `tex-chapters` templates.",
+        "Allow empty custom blocks.",
+        "Allow conjuctive modes in metadata keys.",
+        "Improved 'font-family' handling in LaTeX, support 'tex-family-' and 'tex-cmd-' prefixes on fonts.",
+        "Fix bug where language definitions were not found on case-sensitive file systems.",
+        "Improved error messages for missing fonts in LaTeX.",
+        "Improved error locations for math definitions",
+        "Fixed bug where documents hosted on HTTP were not displayed correctly."        
+      ]
+    },
+    { "version": "0.9.14-beta",
+      "date": "2015-11-05",
+      "updates": [
+        "Improved performance of math and PDF generation.",
+        "Use new Onedrive cloud storage API.",
+        "Improved security of token management; re-logins may be required.",
+        "Improved CSRF mitigation and token revokation.",        
+        "Fixed bug in group replacement with `\\` escapes.",
+        "Fixed bug in '&lt;!--meta' handling of whitespace."
+      ]
+    },
+    { "version": "0.9.13-beta",
+      "date": "2015-10-27",
+      "updates": [
+        "Add new 'Insert File' menu.",
+        "Support suggestions/intellisense for citations, references, entities, and custom blocks."
+      ]
+    },
+    { "version": "0.9.12-beta",
+      "date": "2015-10-23",
+      "updates": [
+        "Updated the editor component to the 2015-08-10 version.",
+        "Add 'Script*' meta key for scripts at end of the document.",
+        "Improved debugging support for inline javascript and CSS.",
+        "Improved preview scripting support."
+      ]
+    },
+    { "version": "0.9.11-beta",
+      "date": "2015-10-21",
+      "updates": [
+        "Bug fixes for madoko-local.",
+        "LaTeX: fix type setting of numerical bibliography items.",
+        "Support the soft-hyphen (&amp;shy;) better in the preview."
+      ]
+    },
+    { "version": "0.9.10-beta",
+      "date": "2015-10-20",
+      "updates": [
+        "Allow '&lt;!--madoko' and '&lt;!--meta' comments that are taken into account by Madoko (but treated as regular comments by other processors).",
+        "Allow file names with spaces.",
+        "LaTeX: always align code to the left.",
+        "LaTeX: fix textual citation styles and special characters in bibliography labels.",
+        "LaTeX: process dashes correctly for bibliography items.",
+        "HTML: fix for citations that ended footnotes."
+      ]
+    },
+    { "version": "0.9.9-beta",
+      "date": "2015-10-12",
+      "updates": [
+        "UI: improved support for `madoko-local` to enable local disk access.",
+        "Fixed 'flickering' on long file names in the open dialog.",
+        "Support for multiple image file formates for different backends; write the file name as `myimage.[svg,eps]` for example.",
+        "Support `* ` prefixed definition lists so these display still nicely with other processors."
+      ]
+    },
+    {
+      "version": "0.9.8-beta",
+      "date": "2015-10-08",
+      "updates": [
+        "UI: initial support for madoko-local to enable local disk access.",
+        "Completely new LaTeX backend -- clean TeX output that renders up to 30x faster than before.",
+        "(The old style is still supported by using `Prelude: Prelude0` as metdata).",
+        "Full support for CSS1 boxes in LaTeX output.",
+        "Support for `<``!--madoko` comments. Such coment is ignored by Madoko but other tools will treat it as an HTML comment.",
+        "The `References` header is now part of the `[BIB]` element for better compatibility with LaTeX; remove any explicit `References` header in older documents.",
+        "Support for `CSS header` and `Tex Header` metadata keys.",
+        "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
+        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules."       
+      ]
+    },
+    {
+      "version": "0.9.5-beta",
+      "date": "2015-07-02",
+      "alert": "The standard madoko style has changed: please re-open currently open documents to refresh the madoko style file.",
+      "updates": [
+        "Updated table formatting attributes. The new prefixes are `tr-`, `thead-tr-`, `tbody-tr-`, `col-`, `cell-`, `td-` and `th-`.\n  New modifiers are `even-`, `odd-`, `last-` and `-n` where `n` is the column/row number",
+        "Completely new title block formatting where every item can be individually formatted. Use `@tex Maketitle: False` to suppress the `maketitle` command in LaTeX.",
+        "New metadata key `Author Columns` (=3) to determine how many author columns there are.",
+        "New metedata key `Css Header` for directly specifying CSS that goes into the header",
+        "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
+        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules.",
+        "Modes in metadata now apply to any metadata key (instead of just rules) and can be arbitrary boolean metadata keys.",
+        "Support full CSS colors, including `rgb(r,g,b)`, `hsl(0-360,s%,l%)`, `#xxx` and `#xxxxxx`.",
+        "Improved spell checking for capitalization mistakes.",
+        "Fix bug where class rules were not applied in tables.",
+        "Fix infinite reloading bug.",
+        "Fixed syntax highlighting of `.md` files.",
+        "Fix spell checking on IE.",
+        "Various fixes in LaTeX madoko style files."        
+      ]
+    }
+  ]
+}

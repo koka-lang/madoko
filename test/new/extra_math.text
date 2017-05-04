@@ -1,0 +1,234 @@
+Title		: Math Example
+Heading Base: 2
+MathJax		: True
+Math Mode	: static
+
+<style>
+.mathjax-inline, .mathjax-display { display: none; }
+.math-inline,    .math-display 	  { display: none; }
+
+.show-dynamic .mathjax-inline 	{ display: inline; } 
+.show-dynamic .mathjax-display 	{ display: block; }
+.show-static  .math-inline 		{ display: inline; }
+.show-static  .math-display 	{ display: inline; }
+.show-static  .mathjax-inline:before { content: " | "; }
+</style>
+
+
+<div>
+<input type="checkbox" id="check-static" checked> Show static math (using LaTeX) <br/>
+<input type="checkbox" id="check-dynamic" checked> Show dynamic math (using MathJax)
+</div>
+
+# Math and equation examples. 
+
+Here is a classic formula:
+~ Equation {#eq-gaussian}
+   {\int_{-\infty}^\infty e^{-a x^2} d x} = \sqrt{\frac{\pi}{a}}
+~
+
+And we can refer back[^nb] to this equation [#eq-gaussian].
+
+Here is the baseline $\sigma_{\lambda} = \frac{24 \pi^3}{\lambda^4 N^2}\left(\frac{n^2-1}{n^2+2}\right)^{\!2}$ problem.
+And as an equation:
+~ Equation
+\sigma_{\lambda} = 
+  \frac{24 \pi^3}{\lambda^4 N^2}
+  \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
+~
+it looks fine.
+
+[^nb]: You can also refer to it as [this](#eq-gaussian). _Chacun à son goût!_.
+
+    With an extra paragraph.
+
+Or how about these type rules in Figure\ [#fig-typerules]:
+
+~ Figure 		{ #fig-typerules caption="Syntax of types where $\epsilon$ is an effect type."}
+| :~~~~~~~~~~~~~~ | :~~~~~~~ | :~~~~~~~~: | :~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | :~~~~~~~~~~~~~~~~~~ |
+| types&nbsp;     | $\tau$   | ::=        | $\alpha$                                | (type variable)     |
+|                 |          | &#124;     | $c(\tau_1,...,\tau_n)$&nbsp;&nbsp;      | (type constructor)  |
+|                 |          | &#124;     | $\tau_1 \rightarrow \epsilon\,\tau_2$   | (function type)     |
+~
+
+The table of Clifford[^moreInfo] algebras over $\mathbb{R}$ is defined in Figure\ [#fig-clifford],
+where the generators of $\mathcal{C}\ell_{j}^\pm$ satisfy
+~~ Equation
+\gamma_i\gamma_j +\gamma_j \gamma_i =\pm 2\delta_{i j}
+~~
+and $\mathcal{C}\ell_{n+8}^\pm = \mathcal{C}\ell_n^\pm \otimes \mathbb{R}(16)$.
+
+[^moreInfo]: For more information, see [Wikipedia](http://en.wikipedia.org/wiki/Clifford_algebra).
+
+
+~ Figure  { #fig-clifford caption="The Clifford algebras" }
+|$j$|$0$|$1$|$2$|$3$|$4$|$5$|$6$|$7$|$8$|
+|:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+
+|$\mathcal{C}\ell_{j}^-$|$\mathbb{R}$|$\mathbb{C}$|$\mathbb{H}$|$\mathbb{H}\oplus\mathbb{H}$|$\mathbb{H}(2)$|$\mathbb{C}(4)$|$\mathbb{R}(8)$|$\mathbb{R}(8)\oplus\mathbb{R}(8)$|$\mathbb{R}(16)$|
+|$\mathcal{C}\ell_{j}^+$|$\mathbb{R}$|$\mathbb{R}\oplus\mathbb{R}$|$\mathbb{R}(2)$|$\mathbb{C}(2)$|$\mathbb{H}(2)$|$\mathbb{H}(2)\oplus\mathbb{H}(2)$|$\mathbb{H}(4)$|$\mathbb{C}(8)$|$\mathbb{R}(16)$|
+|    |-----|-----|-----|-----|-----|-----|-----|-----|----|
+~
+
+~ Definition
+Let $H$ be a subgroup of a group $G$.  A _left coset_
+of $H$ in $G$ is a subset of $G$ that is of the form $xH$,
+where $x \in G$ and $xH = \{ xh : h \in H \}$.
+Similarly a _right coset_ of $H$ in $G$ is a subset
+of $G$ that is of the form $Hx$, where
+$Hx = \{ hx : h \in H \}$
+~
+
+Note that a subgroup $H$ of a group $G$ is itself a
+left coset of $H$ in $G$.
+
+~~ Lemma 	{#LeftCosetsDisjoint}
+Let $H$ be a subgroup of a group $G$, and let $x$ and $y$ be
+elements of $G$.  Suppose that $xH \cap yH$ is non-empty.
+Then $xH = yH$.
+~~
+
+~~ Proof
+Let $z$ be some element of $xH \cap yH$.  Then $z = xa$
+for some $a \in H$, and $z = yb$ for some $b \in H$.
+If $h$ is any element of $H$ then $ah \in H$ and
+$a^{-1}h \in H$, since $H$ is a subgroup of $G$.
+But $zh = x(ah)$ and $xh = z(a^{-1}h)$ for all $h \in H$.
+Therefore $zH \subset xH$ and $xH \subset zH$, and thus
+$xH = zH$.  Similarly $yH = zH$, and thus $xH = yH$,
+as required. [&#9633;]{float:right}
+~~
+
+~~ Lemma {#SizeOfLeftCoset}
+Let $H$ be a finite subgroup of a group $G$.  Then each left
+coset of $H$ in $G$ has the same number of elements as $H$.
+~~
+
+~~ Proof
+Let $H = \{ h_1, h_2,\ldots, h_m\}$, where
+$h_1, h_2,\ldots, h_m$ are distinct, and let $x$ be an
+element of $G$.  Then the left coset $xH$ consists of
+the elements $x h_j$ for $j = 1,2,\ldots,m$.
+Suppose that $j$ and $k$ are integers between
+$1$ and $m$ for which $x h_j = x h_k$.  Then
+$h_j = x^{-1} (x h_j) = x^{-1} (x h_k) = h_k$,
+and thus $j = k$, since $h_1, h_2,\ldots, h_m$
+are distinct.  It follows that the elements
+$x h_1, x h_2,\ldots, x h_m$ are distinct.
+We conclude that the subgroup $H$ and the left
+coset $xH$ both have $m$ elements,
+as required.
+~~
+
+~~ Theorem {#Lagrange}
+(_Lagrange's Theorem_)
+Let $G$ be a finite group, and let $H$ be a subgroup
+of $G$.  Then the order of $H$ divides the order of $G$.
+~~
+
+~~ Proof
+Each element $x$ of $G$ belongs to at least one left coset
+of $H$ in $G$ (namely the coset $xH$), and no element
+can belong to two distinct left cosets of $H$ in $G$
+(see Lemma [#LeftCosetsDisjoint]).  Therefore every
+element of $G$ belongs to exactly one left coset of $H$.
+Moreover each left coset of $H$ contains $|H|$ elements
+(Lemma\ [#SizeOfLeftCoset]).  Therefore $|G| = n |H|$,
+where $n$ is the number of left cosets of $H$ in $G$.
+The result follows.
+~~
+
+~~ Corollary
+Let $x$ be an element of a finite group $G$. Then the order of $x$ divides the order of $G$.
+~~
+
+~~ Theorem
+Let $f : \Delta \longrightarrow \Delta,$ where $\Delta=\{z\in\mathbb{C}: \vert z \vert \lt 1\}$, be analytic with $a \in \Delta$. Then 
+
+~~~ Equation
+\left\vert\frac{f(z)-f(a)}{1-\overline{f(a)}f(z)}\right\vert\le \left\vert\frac{z-a}{1-\overline{a}z}\right\vert 
+~~~
+
+for all $\vert z \vert \le 1$ and 
+
+~~~ Equation 
+\frac{\vert f'(a)\vert}{1-\vert f(a)\vert^2}\le \frac{1}{1-\vert a \vert^2}.
+~~~
+
+Furthermore, equality holds iff $f$ realizes a conformal mapping of $\Delta$ onto itself.
+~~
+
+~~ Proof
+Let $w=\frac{z-a}{1-\overline{a}z}$ and put $\phi(w)=\frac{f(z)-f(a)}{1-\overline{f(a)}f(z)}$. Define for $\abs{b}\lt 1$ $C_b(z)=\frac{z-b}{1-\overline{b}z}.$  All conformal maps from $\Delta$ to itself, sending $b$ to $0$, are of the form $C_b(z)e^{i\gamma}$ for $\gamma\in[0,2\pi].$ In this notation, $\phi(w)=C_{f(a)}\circ f \circ C_a^{-1}(w),$ where $C_a^{-1}$ is the inverse of $C_a$ as a function. Note that $C_a(z)$ is conformal, so it has an inverse. It is clear that $\phi(0)=C_{f(a)}\circ f \circ C_a^{-1}(0)=C_{f(a)}(f(a))=0$. Since $C_a^{-1}: \Delta \longrightarrow \Delta$ and $f : \Delta \longrightarrow \Delta$ and $C_{f(a)}: \Delta \longrightarrow \Delta,$ then $\vert\phi(w)\vert\lt 1$ for $\vert w\vert \lt 1 .$
+Applying Schwarz\'s lemma, we obtain $\vert\phi(w)\vert\le \vert w \vert$ for $\vert w \vert \le 1$.
+Furthermore, if equality holds, then $f(z)=e^{i\gamma'} z$ for $\gamma'\in [0,2\pi]$. Therefore, 
+
+~~~ Equation {#eq-eqn1}
+
+	\left\vert\frac{f(z)-f(a)}{1-\overline{f(a)}f(z)}\right\vert\le 
+	\left\vert\frac{z-a}{1-\overline{a}z}\right\vert
+~~~
+
+for all $\vert z \vert\le 1.$  Rearranging, we obtain
+
+~~~ Equation {#eq-eqn2}
+	\left\vert\frac{f(z)-f(a)}{z-a}\right\vert\le\left\vert\frac{1-\overline{f(a)}f(z)}{1-\overline{a}z}\right\vert.
+~~~
+
+If we take the limit as $z$ tends to $a$, we obtain 
+
+~~~ Equation 
+\left\vert f'(a)\right\vert \le \left\vert\frac{1-\vert f(a)\vert ^2}{1-\vert a \vert^2}\right\vert=\frac{1-\vert f(a)\vert^2}{1-\vert a \vert^2},
+~~~ 
+
+or 
+
+~~~ Equation
+\frac{\vert f'(a)\vert}{1-\vert f(a)\vert^2}\le \frac{1}{1-\vert a \vert^2}.
+~~~
+
+As said above, if equality holds in [#eq-eqn1], then Schwarzs lemma tells us that 
+$\phi(w)=e^{i\gamma'}w$.  Thus, $\phi(w)=C_{f(a)}\circ f \circ C_a^{-1}(w)=e^{i\gamma'}w,$ so $f(z)=C_{f(a)}^{-1}(e^{i\gamma'}C_a(z))$. 
+Since $e^{i\gamma'}C_a(z)$ is conformal, $C_{f(a)}^{-1},$ the inverse function of $C_{f(a)}$, is conformal, and a composition of conformal maps is conformal, then $f$ is a conformal map of $\Delta$ onto itself.  Conversely, if $f$ is a conformal map of $\Delta$ onto itself, then $\phi(w)=C_{f(a)}\circ f \circ C_a^{-1}(w)=e^{i\gamma}C_b(w),$ since a composition of conformal maps is conformal and because all conformal maps from $\Delta$ onto itself are of the form $e^{i\gamma}C_b(w).$  We also know that $\phi(0)=0,$ so $b=0$. Therefore, 
+
+~~~ Equation
+\phi(w)=e^{i\gamma}C_0(w)=e^{i\gamma}w \Leftrightarrow \vert\phi(w)\vert=\vert w \vert \Leftrightarrow \left\vert\frac{f(z)-f(a)}{1-\overline{f(a)}f(z)}\right\vert=\left\vert\frac{z-a}{1-\overline{a}z}\right\vert
+~~~
+
+for all $\vert z \vert\le 1$. In sum, equality holds in [#eq-eqn1] iff $f$ is a conformal map from $\Delta$ to itself.
+~~
+
+
+
+<script>
+function showMath( showStatic, showDynamic ) {
+	document.body.className=[(showStatic ? "show-static" : ""),(showDynamic?"show-dynamic":"")].join(" ");
+}
+
+function checkOnChanged() {
+	showMath(checkStatic.checked,checkDynamic.checked);
+}
+
+var checkStatic = document.getElementById("check-static");
+var checkDynamic = document.getElementById("check-dynamic");
+checkStatic.onchange=checkOnChanged;
+checkDynamic.onchange=checkOnChanged;
+checkOnChanged();
+
+function insertAfter(elem, newNode) {
+    elem.parentNode.insertBefore(newNode, elem.nextSibling);
+}
+[].forEach.call( document.getElementsByClassName("math-inline"), function(m) {
+	var span = document.createElement("span");
+	span.className = "mathjax-inline"
+	var content = document.createTextNode(m.alt);
+	span.appendChild(content);
+	insertAfter(m,span);
+});
+[].forEach.call( document.getElementsByClassName("math-display"), function(m) {
+	var div = document.createElement("div");
+	div.className = "mathjax-display"
+	var content = document.createTextNode(m.alt);
+	div.appendChild(content);
+	insertAfter(m,div);
+});
+</script>

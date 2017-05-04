@@ -1,0 +1,381 @@
+{ "name": "Madoko",
+  "scopeName": "source.madoko",
+  "fileTypes": ["mdk","md","madoko","markdown"],
+  "author": "Daan Leijen",
+  "firstLineMatch": "\\s*(?i:(Title|Author|Description|License|Copyright|Documentation))\\s*:",
+  "foldingStartMarker": "^(~+)\\w+\\b.*$",
+  "foldingStopMarker": "^\\1\\s*$",
+  "patterns": [
+    { "include": "#metadata" },
+
+    { "begin": "\\n\\n(    |\\t)"
+    , "end": "^(?!(    |\\t))"
+    , "contentName": "string source.embedded"
+    },
+
+    { "begin": "\\n\\n(    |\\t)"
+    , "end": "^(?!(    |\\t))"
+    , "contentName": "string source.embedded" 
+    },
+
+    { "match": "^\\s*#+\\s[^{]+"
+    , "name": "keyword markup.heading.madoko"
+    },
+
+    { "match": "^\\s*(===+|---+)\\s*$"
+    , "name": "keyword markup.heading.madoko"
+    },
+
+    { "begin": "^\\s*\\[(\\^[^\\]]+)\\]\\s*:"
+    , "end": "^(?!(    |\\t))"
+    , "beginCaptures": {
+        "1": { "name": "constant.numeric.madoko" }
+      }
+    , "patterns": [
+        { "include": "#embedded" } 
+      ]
+    },
+
+    { "match": "^\\s*\\[([^\\]]+)\\]\\s*:(.*$)"
+    , "captures": {
+       "1": { "name": "constant.numeric.madoko"},
+       "2": { "name": "comment meta.tag.preprocessor.xml" }
+      }
+    },
+
+    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\\b)(?!.*?</\\1>)"
+    , "end": ""
+    , "patterns": [
+        { "include": "text.html.basic" }
+      ]
+    },
+    { "begin": "^(?=<(p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del|style)\\b)"
+    , "end": "$\\n?"
+    , "patterns": [
+        { "include": "text.html.basic" }
+      ]
+    },
+
+    { "include": "#embedded" }    
+
+  ],
+  "repository": {
+    "metadata":
+      { "begin": "^(Title|Author|Description|License|Copyright|Package|Documentation)\\s*:"
+      , "end": "^(?!\\s)(?!@([\\w\\-]+)|[\\w\\.#~][\\w\\-\\.#~, \\t\\*]*[:\\{]|<!--)"
+      , "beginCaptures": { "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" } }
+      , "name": "markup.metadata.madoko"
+      , "patterns": [
+          { "begin": "^(?i:HTML Header)\\s*:"
+          , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.html"        
+          , "beginCaptures": {
+              "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "text.html.basic" }
+            ]
+          },
+          { "begin": "^(?i:Tex Header\\*?)\\s*:"
+          , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.latex"        
+          , "beginCaptures": {
+              "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "text.tex.latex" }
+            ]
+          },
+          { "begin": "^(?i:Description|Comment)\\s*:"
+          , "end": "^(?![ \\t])"
+          , "contentName": "source.embedded.madoko"
+          , "beginCaptures": {
+              "0": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+                { "include": "#embedded" }
+            ]
+          },
+          { "begin": "^(@(?:[\\w\\-]+)\\s+)?(([\\.~#][\\w\\-\\.#~,\\s]*):)"
+          , "end": "^(?![ \\t])"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          , "patterns": [
+              { "match": "([^\\\\]|\\\\.)*"
+              , "name": "comment meta.tag.preprocessor.xml" 
+              },
+              { "match": "\\\\\\n"
+              , "name": "string.escape.madoko" 
+              }
+            ]
+          },
+          { "match": "^(@(?:[\\w\\-]+)\\s+)?(\\w[\\w\\-\\.#~,\\s\\*]*:)"
+          , "captures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" }
+            }
+          },
+          { "match": "^(@(?:[\\w\\-]+)\\s+)?([\\w\\.#~][\\w\\-\\.#~,\\s\\*]*)(\\{.*\\})\\s*"
+          , "captures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^(@(?:[\\w\\-]+)\\s+)?([\\w\\.#~][\\w\\-\\.#~,\\s\\*]*)(\\{)"
+          , "end": "^\\}[ \t]*$"
+          , "contentName": "comment meta.tag.preprocessor.xml"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          , "endCaptures": {
+              "0": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^(@(?:if|supports)\\b)(.*)(\\{)"
+          , "end": "^\\}[ \t]*$"
+          , "contentName": "comment meta.tag.preprocessor.xml"
+          , "beginCaptures": {
+              "1": { "name": "keyword" },
+              "2": { "name": "entity.name.function meta.tag.preprocessor.madoko" },
+              "3": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          , "endCaptures": {
+              "0": { "name": "comment meta.tag.preprocessor.xml" }
+            }
+          },
+          { "begin": "^ {0,3}<!--(?!.*?-->)\\s*"
+          , "end": "^.*?-->\\s*$\\n?"
+          , "contentName": "comment"
+          , "beginCaptures": {
+             "0": { "name": "comment" }
+            }
+          , "endCaptures": {
+             "0": { "name": "comment" }
+            }
+          },
+          { "match": "<!--[\\s\\S]*?-->"
+          , "name": "comment"
+          }        
+        ]
+      },
+
+    "embedded": {
+      "patterns": [
+        { "begin": "^\\s*(?:\\|\\s*|\\+)[\\-=~:]*" 
+        , "beginCaptures": { "0": { "name": "keyword" }}
+        , "end":   "^(?!\\s*(\\|\\s*|\\+))"
+        , "patterns": [
+            { "match": "[-=~:]*(\\| *|\\+)[-=~:]*"
+            , "name": "keyword" 
+            },
+
+            { "include": "#inline" }
+          ]
+        },
+
+        { "match": "^\\s*[\\*_\\-](?:\\s*[\\*_\\-]){2,}"
+        , "name": "keyword markup.heading.madoko"
+        },
+
+        { "begin": "^(\\s*)([\\*\\+\\-]|\\d+\\.)\\s"
+        , "end": "^[ ]{0,3}(?!([ \\t]|$))"
+        , "beginCaptures": {
+            "0": { "name": "keyword markup.heading.madoko" }
+          }
+        , "patterns": [
+            { "include": "#embedded" }
+          ]
+        },
+
+        { "match": "^\\s*([\\*\\+\\-]|\\d+\\.)\\s"
+        , "name": "keyword markup.heading.madoko"
+        },
+
+        { "match": "^\\s*\\[\\s*(BIB|INCLUDE|TOC|FOOTNOTES|TITLE)\\s*(=\\s*)?[^\\]]*\\]\\s*$"
+        , "name": "keyword markup.heading.madoko"
+        },
+
+        { "begin": "^[ \\t]*>[ \\t]"
+        , "end": "^[ \\t]*$"
+        , "contentName": "markup.quote.madoko"
+        , "patterns": [
+            { "include": "#embedded" } 
+          ]
+        },
+
+
+        { "begin": "^\\s*(~+)\\s*(?i:(Begin)\\s+)?(?i:(Snippet|Equation|TexRaw|TeX|MathDefs|Graph))\\b(.*)(\\n|$)" 
+        , "end": "^[ \\t]*\\1\\s*(?i:End[ \\t]+\\3)?\\s*$" 
+        , "beginCaptures": { 
+            "1": { "name": "entity.name.class markup.block.madoko" },
+            "2": { "name": "entity.name.class markup.block.madoko" },
+            "3": { "name": "entity.name.class markup.block.madoko" },
+            "4": { "name": "comment meta.tag.preprocessor.xml" }
+          }
+        , "endCaptures": { 
+            "0": { "name": "entity.name.class markup.block.madoko" }
+          }
+        , "contentName": "source.embedded.latex"
+        , "patterns": [
+            {"include": "text.tex.latex" }
+          ]
+        },
+
+        { "match": "^\\s*~+[^{]+"
+        , "name": "entity.name.class markup.block.madoko"
+        },
+
+        { "begin": "^\\s*(`{3,}\\s*javascript)\\b\\s*(.*)(\\n|$)"
+        , "end": "^\\s*(`{3,})\\s*"
+        , "contentName": "source.embedded.javascript"
+        , "beginCaptures": { "1": { "name": "entity.name.class markup.block.madoko" },
+                             "2": { "name": "comment meta.tag.preprocessor.xml"} }
+        , "endCaptures": { "0": { "name": "entity.name.class markup.block.madoko" } }
+        , "patterns": [
+            { "include": "source.js" }
+          ]
+        },
+
+
+        { "begin": "^\\s*(`{3,}\\s*koka)\\b\\s*(.*)(\\n|$)"
+        , "end": "^\\s*(`{3,})\\s*"
+        , "contentName": "source.embedded.koka"
+        , "beginCaptures": { "1": { "name": "entity.name.class markup.block.madoko" },
+                             "2": { "name": "comment meta.tag.preprocessor.xml"} }
+        , "endCaptures": { "0": { "name": "entity.name.class markup.block.madoko" } }
+        , "patterns": [
+            { "include": "source.koka" }
+          ]
+        },
+
+        { "begin": "^\\s*((`{3,})\\s*(\\w+)?)(\\s*.*)(\\n|$)"
+        , "end": "^\\s*(`{3,})\\s*"
+        , "contentName": "string source.embedded"
+        , "beginCaptures": { "1": { "name": "entity.name.class markup.block.madoko" },
+                             "4": { "name": "comment meta.tag.preprocessor.xml"} }
+        , "endCaptures": { "0": { "name": "entity.name.class markup.block.madoko" } }
+        , "patterns": [
+          ]
+        },
+
+        { "begin": "^ {0,3}<!--(?!.*?-->)"
+        , "end": "^.*?-->\\s*$\\n?"
+        , "contentName": "comment"
+        , "beginCaptures": {
+           "0": { "name": "comment" }
+          }
+        , "endCaptures": {
+           "0": { "name": "comment" }
+          }
+        },
+
+
+        { "include": "#inline" }
+      ]
+    },
+
+    "inline": {
+      "patterns": [
+        { "match": "\\[(\\^?[\\w\\-\\.:]+)\\](?!\\s*[\\[(])(\\{(?:[^\\\\}]|\\\\.)+\\})?"
+        , "captures": {
+            "1": { "name": "constant.numeric.madoko" },
+            "2": { "name": "comment meta.tag.preprocessor.xml" }
+          }
+        },
+
+        { "match": "#[\\w\\-\\.:]+"
+        , "name": "constant.numeric.madoko"           
+        },
+
+        { "match": "\\]\\(\\s*<?([^\\s>)]*)>?(?:\\s+['\"](.*?)['\"])?\\s*\\)(\\{(?:[^\\\\}]|\\\\.)+\\})?"
+        , "captures": {
+            "1": { "name": "constant.numeric.madoko" },
+            "2": { "name": "string.madoko"},
+            "3": { "name": "comment meta.tag.preprocessor.xml" }
+          }
+        },
+
+        { "match": "\\*((?:[^\\\\*]|\\\\.)+)\\*|\\b_((?:[^\\\\_]|\\\\.)+)_\\b"
+        , "name": "variable.parameter markup.italic"
+        },
+
+        { "match": "__((?:[^\\\\]|\\\\.)+?)__(?!_)|\\*\\*((?:[^\\\\]|\\\\.)+?)\\*\\*(?!\\*)"
+        , "name": "variable.parameter markup.bold" 
+        },
+
+        { "match": "(`+)((?:[^`]|(?!\\1)`)*)\\1"
+        , "captures": {
+            "2": { "name": "string source.embedded" }
+          }        
+        },
+
+        { "match": "~([^\\s\\\\]|\\\\.)+~|\\^([^\\s\\\\]|\\\\.)+\\^" 
+        , "name": "string.escape.madoko"
+        },
+
+        { "match": "(<code\\b(?:\"[^\"]*\"|'[^']*'|[^'\">])*?>)([\\s\\S]*?)(</code>)"
+        , "captures": {
+            "1": { "name": "entity.name.tag" },
+            "2": { "name": "source.embedded" },
+            "3": { "name": "entity.name.tag" }
+          }
+        },
+
+
+
+        { "match": "<!--[\\s\\S]*?-->"
+        , "name": "comment"
+        },        
+        { "match": "<(?:/?\\w+\\b(?:\"[^\"]*\"|'[^']*'|[^'\">])*?>)"
+        , "name": "entity.name.tag"
+        },
+
+        { "match": "\\{(?:[^\\\\}]|(\\\\[.\\n]))+\\}(?=\\s*$)"
+        , "name": "comment meta.tag.preprocessor.xml"
+        , "captures": {
+            "1": { "name": "string.escape.madoko" }
+          }
+        },
+
+        { "match": "\\\\([^a-zA-Z0-9])"
+        , "name": "string.escape.madoko"
+        },
+
+        { "match": "&(#(\\d+|x[\\da-fA-F]+)|\\w+);"
+        , "name": "string.escape.madoko"
+        },
+
+        { "match": "(---?|\\.\\.\\.|<<|>>)"
+        , "name": "string.escape.madoko"
+        },
+
+        { "begin": "\\$\\$" 
+        , "end": "\\$\\$" 
+        , "contentName": "source.embedded.latex"
+        , "patterns": [
+            {"include": "text.tex.latex" }
+          ]
+        },
+
+        { "begin": "\\$(?=.*\\$)" 
+        , "end": "\\$|$" 
+        , "contentName": "source.embedded.latex"
+        , "patterns": [
+            {"include": "text.tex.latex" }
+          ]
+        },
+
+        { "match": "  $" 
+        , "name": "source.embedded" 
+        }
+
+      ]
+    }
+  },
+  "uuid": "c987c5f1-a938-47e3-a371-13d6c7542ed3"
+}

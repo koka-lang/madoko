@@ -1,0 +1,158 @@
+Title	  : Table example
+Heading Base: 2
+.booktable:  rule-top-width=2px rule-bottom-width=2px rule-mid-width=1.35px 
+			 rule-top-sep=4pt rule-bottom-sep=4pt rule-mid-sep=3pt 
+			 th-font-weight=normal th-padding-top=3pt th-padding-bottom=3pt  
+
+
+# Some examples of tables
+
+A plain table from "[Just a Theory](http://www.justatheory.com/computers/markup/markdown-table-rfc.html)".
+By using tildes `~` (instead of dashes `-`) in the table separator 
+we do not get any lines inside the table:
+
+|   id   |      name     |          description           |  price   |
+| :~~~~~ | :~~~~~~~~~~~: | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ | ~~~~~~~~ |
+|   1    |     gizmo     |  Takes care of the doohickies  |   1.99   |
+|   2    |     doodad    |       Collects *gizmos*        |  23.80   |
+|   10   |    dojigger   |              Foo               |  102.98  |
+|   1024 | Self-explanatory, no?                         ||     0.99 |
+
+Here is one with some horizontal lines:
+
+|------|-------------|------------------------------|--------|
+| id   | name        | description                  | price  |
+|------|------------:|------------------------------|--------|
+|    1 | gizmo       | Takes care of the doohickies |   1.99 |
+|    2 | doodad      | Collects *gizmos*            |  23.80 |
+|   10 | dojigger    | Foo                          | 102.98 |
+| 1024 | Self-explanatory, no?                     ||   0.99 |
+|------|-------------|------------------------------|--------|
+
+A table with pretty bizarre internal lines is shown in Figure\ [#fancy].
+We can get double lines simply by adding more rows with dashes.
+
+~ Figure  { #fancy caption="A fancy table with bizarre internal lines."}
+| ------ | ----------------- | ------------------------------ | ----------------- |
+|   id   |        name       |          description           |       price       |
++--------+-------------------+:------------------------------:+                  :+
+| 1      | gizmo                                                                |||
+|        | ---------------------------------------------------                  |||
+| 2      | doodad            | Collects *gizmos*              | 23.80             |
+| ------ | ----------------- | ------------------------------ |                   |
+| ------ |                   | ------------------------------ | ----------------- |
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== | ----------------- | ============================== |                   |
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== |                   |                                |===================|
+| 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
+| ------ | ----------------- |                                | ----------------- |
+~
+
+A table with no mider and an outer border:
+
++:--------------: | ----------- +:----------------------------:| -----: +
+| centered gizmos              || Takes care of the doohickies |  1.99  |
+|        2        |    doodad   |      Collects *gizmos*       | 23.80  |
+|        10       |   dojigger  |             Foo              | 102.98 |
+|       1024      | thingamabob |    Self-explanatory, no?     |  0.99  |
+|-----------------|-------------|------------------------------|--------|
+
+And a math table with just an inner block of lines:
+
+|$j$|$0$|$1$|$2$|$3$|$4$|$5$|$6$|$7$|$8$|
+|:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:+:---:|
+|$\mathcal{C}\ell_{j}^-$|$\mathbb{R}$|$\mathbb{C}$|$\mathbb{H}$|$\mathbb{H}\oplus\mathbb{H}$|$\mathbb{H}(2)$|$\mathbb{C}(4)$|$\mathbb{R}(8)$|$\mathbb{R}(8)\oplus\mathbb{R}(8)$|$\mathbb{R}(16)$|
+|$\mathcal{C}\ell_{j}^+$|$\mathbb{R}$|$\mathbb{R}\oplus\mathbb{R}$|$\mathbb{R}(2)$|$\mathbb{C}(2)$|$\mathbb{H}(2)$|$\mathbb{H}(2)\oplus\mathbb{H}(2)$|$\mathbb{H}(4)$|$\mathbb{C}(8)$|$\mathbb{R}(16)$|
+
+Another example from [multi markdown](https://github.com/fletcher/MultiMarkdown/wiki/MultiMarkdown-Syntax-Guide#tables)
+
+|              |           Grouping          ||
+| First column | Second column | Third column |
+| ------------ | :-----------: | -----------: |
+| Content      |         *Long Cell*         ||
+| Content      |    **Cell**   |         Cell |
+| New section  |      More     |         Data |
+| And more     |    And more   |              |
+| ----------------------------------------- |||
+
+An example from [TeX stackexchange](http://tex.stackexchange.com/questions/8549/how-can-i-draw-a-horizontal-line-spanning-only-some-of-the-table-cells)
+
++:---+---+---+
+|Foo | 1 | 2 |
+|    | 1 | 2 |
+|    +---+---+
+|    | 1 | 2 |
+|    | 1 | 2 |
++----+---+---+
++----+---+---+
+|Bar | 1 | 2 |
+|    | 1 | 2 |
+|    +---+---+
+|    | 1 | 2 |
+|    | 1 | 2 |
++----+---+---+
+
+Note that we used an alignment colon in the first line so the first block does not become one
+big mider.
+
+And finally a table with fixed width columns:
+
++:----------------: +   ---{width=2cm}--   + :------{width=30%}---------: + -----: +
+|             centered gizmos             ||  Takes care of the doohickies  |  1.99  |
+|         2         |       dood ad        |       Collects *gizmos*        | 23.80  |
+|         10        |      do jigger       |              Foo               | 102.98 |
+|        1024       | thing a mabob&#8203; |     Self-explanatory, no?      |  0.99  |
+| ----------------- | -------------------- | ------------------------------ | ------ |
+
+
+Row and column attributes:
+
+| ------ | ----------------- | ------------------- | ------ |
+|   id   |        name       |    description      |  price |
++:----:+---{background-color=Gainsboro}--+:------------:|---{background-color=Gainsboro}--:+
+| centered gizmos      || Take care of doo hickies |  1.99  |
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |{background-color=Gainsboro}
+|  10  |   dojigger     |            Foo           | 102.98 |
+| 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |{background-color=#00D0D0}
+|------|----------------|--------------------------|--------|{font-weight=bold}
+
+| ------ | ----------------- | ------------------- | ------ |
+|   id   |        name       |    description      |  price |
++:----:+---{background-color=Gainsboro}--+:------------:|-----:+
+| centered gizmos      || Take care of doo hickies |  1.99  |
+|   2  |    doodad      |     Collects *gizmos*    | 23.80  |
+|  10  |   dojigger     |            Foo           | 102.98 |
+| 1024 | thingabob      |  Self-explanatory, no?   |  0.99  |
+|------|----------------|--------------------------|--------|
+{ tr-odd-background-color=Gainsboro tr-even-background-color=FloralWhite th-background-color=#00E0E0}
+
+| ------ | ----------------- | ------------------------------ | ----------------- |
+|   id   |        name       |          description           |       price       |
++--------+-------------------+:------------------------------:+                  :+
+| 1      | gizmo                                                                |||
+|        | ---------------------------------------------------                  |||
+| 2      | doodad            | Collects *gizmos*              | 23.80             |
+| ====== | ----------------- | ===============================|-------------------|
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== | ----------------- | ============================== |                   |
+| 10     | dojigger          | Foo                            | 102.98            |
+| ====== |                   |                                |===================|
+| 1024   | thingamabob       | Self-explanatory, no?          | 0.99              |
+| ------ | ----------------- |                                | ----------------- |
+{ tr-odd-background-color=Gainsboro tr-even-background-color=FloralWhite th-background-color=#00E0E0 \
+  rule-top-width=2px rule-bottom-width=2px \
+  rule-top-sep=2px rule-bottom-sep=2px rule-mid-sep=2px}
+
+| --------------- | ----------- | --------------- |
+|             Item             ||                 |
+| \/------------- | ----------- |                 |
+|      Animal     | Description | &ensp;Price ($) |{text-align=left}
+| --------------- | ----------- | --------------: |
+| Gnat            | per gram    |           13.65 |
+|                 | each        |            0.01 |
+| Gnu             | stuffed     |           92.50 |
+| Emu             | stuffed     |           33.33 |
+| Armadillo&ensp; | frozen      |            8.99 |
+| --------------- | ----------- | --------------- |
+{ .booktable }

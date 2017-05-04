@@ -1,0 +1,84 @@
+title		: definition lists
+author		: Daan
+author note : &time;
+~Pre,~Code       : font-family=serif
+
+<style>
+.indent { border-bottom: dotted 1px black }
+</style>
+
+[TITLE]
+[TOC]
+
+# Chapter 1
+Here is some definition list:
+
+Term 1
+
+:   Definition 1
+
+Term 2 with *inline markup*
+
+:   Definition 2
+
+        { some code, part of Definition 2 }
+
+    Third paragraph of definition 2.
+
+Really?
+
+# Chapter 2
+
+* and 
+* a 
+* list
+
+~ TexRaw
+\mdDefineToken{identifier}{\mdTokenIdentifier}
+
+\newlength{\idw}
+\newcommand{\fixwidth}[2]{%
+	\settowidth{\idw}{\texttt{#1}}%
+	\setlength{\fboxsep}{0pt}%
+	\makebox[\idw][l]{#2}%
+}
+\renewcommand{\prespace}[1]{ }
+\newcommand{\mdTokenIdentifier}[1]{\textit{#1}}
+
+\makeatletter
+%\protected@edef\mdToken#1#2{\protect\fixwidth{#2}{\mdToken{#1}{#2}}}
+\makeatother
+~
+
+Here is some `haskell code do`{language=haskell}, and here some more:
+
+``` Haskell
+data Exp  = Number    Int
+          | Add       Exp Exp
+          | Subtract  Exp Exp
+          | Multiply  Exp Exp
+          | Divide    Exp Exp
+          | Variable  String        -- added
+          deriving (Eq)
+
+substitute1:: (String, Int) -> Exp -> Exp
+substitute1 (var, val) exp = subst exp where
+  subst (Number i)      = Number i
+  subst (Add a b)       = Add (subst a) (subst b)
+  subst (Subtract a b)  = Subtract (subst a) (subst b)
+  subst (Multiply a b)  = Multiply (subst a) (subst b)
+  subst (Divide a b)    = Divide (subst a) (subst b)
+  subst (Variable name) = if var == name
+                          then Number val
+                          else Variable name          
+```          
+
+And another tight one:
+
+Term 1
+  ~ Definition 1
+Term 2
+  ~ Definition 2a
+  ~ Definition 2b
+
+And a paragraph.

@@ -1,0 +1,31 @@
+Title         : My Academic Paper
+Author        : You
+Affiliation   : Research institute
+Email         : you@bar.com
+
+Author        : My co-author
+Affiliation   : Other institute
+Email         : other@bar.com
+Package       : wrapfig
+
+[INCLUDE=lipsum]
+
+
+&lipsum1;
+
+~ Begin Sample
+~ Figure { caption:"A formula"; width:60%; float:left; margin-right:1em }
+~~ Math
+e = mc^2 
+~~
+~
+"Aarghhh", he shouted but not even the next
+one in line noticed that something
+terrible had happened to him. 
+"Aarghhh", he shouted but not even the next
+one in line noticed that something
+terrible had happened to [him.]{float:right} 
+~ End Sample
+
+
+&lipsum2;

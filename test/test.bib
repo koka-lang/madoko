@@ -1,0 +1,3703 @@
+@PREAMBLE{
+"\newcommand{\popl}[2]{{#1 ACM symp. on Principles of Programming Languages (POPL'#2)}}
+\newcommand{\icfp}[1]{{The International Conference on Functional Programming (ICFP'#1)}}
+\newcommand{\icfpx}[2]{{#1 ACM symp. of the International Conference on Functional Programming (ICFP'#2)}}
+\newcommand{\dept}{Dept.}"
+}
+
+@STRING{ LNCS        = {{LNCS}}}
+@STRING{ JFP         = {{J}ournal of {F}unctional {P}rogramming}}
+@STRING{ AW          = {{A}ddison-{W}esley}}
+@STRING{ SV          = {{S}pringer-{V}erlag}}
+@STRING{ ACM         = {{ACM} press}}
+@STRING{ ICFP        = {the International Conference on Functional Programming ({ICFP})}}
+
+
+@unpublished{Abel:termination.12345,
+  author = {Andreas Abel},
+  title = {foetus – Termination Checker for Simple Functional Programs },
+  year = {1998},
+  note = {unpublished note}
+}
+
+@article{Tofte:refs,
+ author = {Tofte, Mads},
+ title = {Type inference for polymorphic references},
+ journal = {Inf. Comput.},
+ volume = {89},
+ number = {1},
+ month = sep,
+ year = {1990},
+ pages = {1--34}
+} 
+
+@inproceedings{Lindley:effects,
+ author = {Lindley, Sam and Cheney, James},
+ title = {Row-based effect types for database integration},
+ booktitle = {TLDI'12},
+ year = {2012},
+ pages = {91--102}
+} 
+
+@book{Girard:prot,
+ author = {Girard, Jean-Yves and Taylor, Paul and Lafont, Yves},
+ title = {Proofs and types},
+ year = {1989},
+ publisher = {Cambridge University Press}
+} 
+
+@article{WrightFelleisen,
+ author = {Wright, Andrew K. and Felleisen, Matthias},
+ title = {A syntactic approach to type soundness},
+ journal = {Inf. Comput.},
+ volume = {115},
+ number = {1},
+ month = nov,
+ year = {1994},
+ pages = {38--94}
+} 
+
+
+@INPROCEEDINGS{Vytiniotis:let,
+ author = {Vytiniotis, Dimitrios and Peyton Jones, Simon and Schrijvers, Tom},
+ title = {Let should not be generalized},
+ booktitle = {{Proceedings of the 5th ACM SIGPLAN workshop on Types in language design and implementation}},
+ series = {TLDI '10},
+ year = {2010},
+ location = {Madrid, Spain},
+ pages = {39--50},
+ publisher = {ACM},
+ address = {New York, NY, USA}
+} 
+
+
+
+@INPROCEEDINGS{Harris:stm,
+ author = {Harris, Tim and Marlow, Simon and Peyton-Jones, Simon and Herlihy, Maurice},
+ title = {{Composable memory transactions}},
+ booktitle = {{Principles and Practice of Parallel Programming}},
+ series = {PPoPP '05},
+ year = {2005},
+ pages = {48--60}
+} 
+
+
+@MISC{beautifulconcurrency,
+    author = {Peyton Jones, Simon},
+    title = {Beautiful concurrency},
+    note={{Appears as a chapter in ``Beautiful Code: Leading programmers explain how they think'' (O'Reilly)}},
+    year = {2007}
+}
+
+
+@INPROCEEDINGS{gum,
+  author = 	 {Philip W. Trinder and Kevin Hammond and James
+S. {Mattson Jr.} and Andrew S. Partridge and Simon L. {Peyton Jones}},
+  title = 	 {{GUM}: a portable implementation of {H}askell},
+  booktitle = 	 {Programming Language Design and Implementation},
+  month = 	 may,
+  year = 	 {1996},
+}
+
+
+
+@INPROCEEDINGS{Marlow:gph,
+  author = {Marlow, Simon and Peyton-Jones, Simon L. and Singh, Satnam},
+  title = {Runtime Support for Multicore {Haskell}},
+  booktitle = {ICFP 2009 --- Intl. Conf. on Functional Programming},
+  address = {Edinburgh, Scotland},
+  month = aug,
+  year = {2009},
+  pages = {65--78}
+}
+
+@INPROCEEDINGS{Marlow:strategies,
+  author    = {Marlow, Simon and
+               Maier, Patrick and
+               Loidl, Hans-Wolfgang and
+               Aswad, Mustafa K. and
+               Trinder, Phil},
+  title     = {Seq no more: Better Strategies for Parallel Haskell},
+  booktitle = {3rd Haskell Symposium},
+  year      = {2010},
+  month     = sep,
+  pages     = {91--102}
+}
+
+
+@ARTICLE{Trinder:strategies,
+  author = 	 {Philip W. Trinder and Kevin Hammond and Hans-Wolfgang Loidl and Simon L. {Peyton Jones}},
+  title = 	 {Algorithm + {S}trategy = {P}arallelism},
+  journal = 	 {Journal of Functional Programming},
+  year = 	 {1998},
+  volume = 	 {8},
+  number = 	 {1},
+  month = 	 jan,
+  pages = 	 {23--60}
+}
+
+@INPROCEEDINGS{concurrenthaskell,
+  title={{Concurrent Haskell}}, 
+  author={Peyton Jones, Simon and Gordon, Andrew and Finne, Sigbjorn}, 
+  booktitle={{23rd ACM Symposium on Principles of Programming Languages}},
+  month=Jan,
+  year=1996, 
+  pages={295-308}
+}
+
+
+
+@INPROCEEDINGS{PeytonJones:nestedpar,
+  title = {{Harnessing the Multicores: Nested Data Parallelism in Haskell}},
+  author = {Peyton Jones, Simon and Leshchinskiy, Roman and Keller, Gabrielle and Chakravarty, Manuel M. T.},
+  booktitle={{IARCS Annual Conference on Foundations of Software Technology and Theoretical Computer Science (FSTTCS 2008)}},
+  year = 2008
+}
+
+@INPROCEEDINGS{Nepal,
+  title={{Nepal -- Nested Data-Parallelism in Haskell}},
+  author={Chakravarty, Manuel M. T. and Keller, Gabriele and Lechtchinsky, Roman and Pfannenstiel, Wolf},
+  booktitle={{Euro-Par 2001: Parallel Processing, LNCS 2150}}, 
+  pages ={524--534}, 
+  year=2001
+}
+
+@inproceedings{bocchino-et-al-OOPSLA09,
+ author = {R. Bocchino and V. Adve and D. Dig. and S. Adve et al.},
+ title = {A Type and Effect System for Deterministic Parallel Java},
+ booktitle = {OOPSLA},
+ year = {2009},
+}
+
+@inproceedings{berger-yang-liu-novark-OOPSLA09,
+ author = {E. Berger and T. Yang and T. Liu and G. Novark},
+ title = {Grace: Safe Multithreaded Programming for {C/C++}},
+ booktitle = {(OOPSLA)},
+ year = {2009},
+}
+
+@INPROCEEDINGS{Jagannathan:safefutures,
+ author = {A. Welc and S. Jagannathan and A. Hosking},
+ title = {Safe futures for Java},
+ booktitle = {(OOPSLA)},
+ year = {2005},
+ pages = {439--453},
+}
+
+@ARTICLE{Hicks:safefutures,
+ author = {P. Pratikakis and J. Spacco and M. Hicks},
+ title = {Transparent proxies for java futures},
+ journal = {SIGPLAN Not.},
+ volume = {39},
+ number = {10},
+ year = {2004},
+ issn = {0362-1340},
+ pages = {206--223}
+}
+
+@INPROCEEDINGS{Steele:parfortress,
+  author = {G. Steele},
+  title  = {Parallel Programming and Parallel Abstractions in Fortress},
+  booktitle = {Invited talk at the 8th Int. Symp. on Functional and Logic Prog. ({FLOPS})},
+  month   = apr,
+  year    = 2006,
+}
+
+@UNPUBLISHED{koka,
+  author = {Daan Leijen},
+  title  = {Try {Koka} online},
+  year   = 2012,
+  note   = {\url{http://rise4fun.com/koka/tutorial} and \url{http://koka.codeplex.com} }
+}
+
+@UNPUBLISHED{ms:pex,
+  author = {Microsoft},
+  title = {Parallel extensions to {.NET}},
+  year  = 2009,
+  month = jun,
+  note = {\url{http://msdn.microsoft.com/en-us/concurrency}}
+}
+
+@TECHREPORT{Leijen:effects-tr,
+  author   = {Ross Tate and Daan Leijen},
+  title    = {Convenient Explicit Effects using Type Inference with Subeffects},
+  institution = {Microsoft Research},
+  year = 2010,
+  month = Jun,
+  number = {{MSR-TR-2010-80}}
+}
+
+@INPROCEEDINGS{Leijen:tpl,
+  author = {D. Leijen and W. Schulte and S. Burckhardt},
+  title = {The Design of a Task Parallel Library},
+  booktitle = {Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA)},
+  year = 2009
+}
+
+@ARTICLE{devietti-lucia-ceze-oskin-IEEE10, 
+author={J. Devietti and B. Lucia and L. Ceze and M. Oskin}, 
+journal={Micro, IEEE}, title={DMP: Deterministic Shared-Memory Multiprocessing}, 
+year={2010}, 
+month={jan.-feb. }, 
+volume={30}, 
+number={1}, 
+pages={40 -49}, 
+keywords={}, 
+doi={10.1109/MM.2010.14}, 
+ISSN={0272-1732},}
+
+
+@InProceedings{bergan-anderson-devietti-ceze-grossman-ASPLOS10,
+  author = 	 {T. Bergan and O. Anderson and J. Devietti and L. Ceze and D. Grossman},
+  title = 	 {CoreDet: A Compiler and Runtime System for Deterministic Multithreaded Execution},
+  booktitle = {Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+  year = 	 {2010},
+}
+
+@InProceedings{Frigo:Cilk,
+author = {M. Frigo and C. Leiserson and K. Randall},
+title = {The Implementation of the {C}ilk-5 Multithreaded Language},
+booktitle = {Programming Language Design and Impl. {(PLDI)}},
+year = {1998},
+pages = {212--223}
+} 
+
+@PhDThesis{Randall:Cilk,
+author = {K. Randall},
+title = {Cilk: Efficient Multithreaded Computing},
+school = {Dept. of Electrical Engineering and Computer Science, MIT},
+month = may,
+year = {1998}
+} 
+
+@inproceedings{kulkarni-et-al-PLDI07,
+ author = {M. Kulkarni and K. Pingali and B. Walter and G. Ramanarayanan and K. Bala and L. Chew},
+ title = {Optimistic parallelism requires abstractions},
+ booktitle = {(PLDI)},
+ year = {2007},
+ }
+
+@InProceedings{blundell-lewis-martin-WDDD05,
+  author = 	 {C. Blundell and E. Lewis and M. Martin},
+  title = 	 {Deconstructing transactions: The subtleties of atomicity},
+  year = 	 {2005},
+  booktitle =    {Workshop on Duplicating, Deconstructing, and Debunking (WDDD)}
+}
+
+@InProceedings{Berenson:snapshot,
+  author = 	 {H. Berenson and P. Bernstein and J. Gray and J. Melton and E. O'Neil and P. O'Neil},
+  title = 	 {A critique of {ANSI SQL} isolation levels},
+  booktitle = {Proceedings of SIGMOD},
+  pages = 	 {1--10},
+  year = 	 {1995},
+}
+
+@article{bernstein-goodman-83,
+ author = {P.A.Bernstein and N.Goodman},
+ title = {Multiversion concurrency control---theory and algorithms},
+ journal = {ACM Trans. Database Syst.},
+ volume = {8},
+ number = {4},
+ year = {1983},
+ pages = {465--483}
+ }
+
+
+
+@Book{bernstein-hadzilacos-goodman-87,
+  author = 	 {P.A.Bernstein and V.Hadzilacos and N.Goodman},
+  title = 	 {Concurrency Control and Recovery in Database Systems},
+  publisher = 	 {Addison-Wesley},
+  year = 	 {1987}
+}
+
+@INPROCEEDINGS{Moreau:futuresemantics,
+    author = {L. Moreau},
+    title = {The semantics of Scheme with future},
+    booktitle = {ACM SIGPLAN International Conference on Functional Programming (ICFP'96},
+    year = {1996},
+    pages = {146--156}
+}
+
+@INPROCEEDINGS{Flanagan:futuresemantics,
+    author = {C. Flanagan and M. Felleisen},
+    title = {The Semantics of Future and Its Use in Program Optimization},
+    booktitle = {Rice University},
+    year = {1995},
+    pages = {209--220}
+}
+
+@inproceedings{pH,
+    author = "S. Aditya and Arvind and L. Augustsson and J.-W. Maessen and R. Nikhil",
+    title = "{S}emantics of p{H}: {A} {P}arallel {D}ialect of {H}askell",
+    booktitle = "Proc. Haskell Workshop, La Jolla, {CA} {USA}",
+    month = "June",
+    editor = "Hudak, Paul",
+    pages = "35-49",
+    year = "1995"
+}
+
+@inproceedings{fortress,
+ author={E. Allen and D. Chase and C. Flood and V. Luchangco and J.-W. Maessen and S. Ryu and G. Steele Jr.},
+ title ={Project Fortress: A Multicore Language for Multicore Processors},
+ booktitle={Linux Mag.}, 
+ month=sep,
+ year=2007}
+
+
+
+@article{Blelloch:nesl,
+        author = "G. Blelloch and S. Chatterjee and J. Hardwick and J. Sipelstein and M. Zagha",
+        title = "Impl. of a Portable Nested Data-Parallel Language",
+       	journal = "Journal of Par. and Dist. Comp.",
+	volume = 21,
+	number = 1,
+        pages = "4--14",
+	month = apr,
+	year = 1994}
+
+@article{denning-dennis-CACM10,
+ author = {P. Denning and J. Dennis},
+ title = {The Resurgence of Parallelism},
+ journal = {Commun. ACM},
+ volume = {53},
+ number = {6},
+ year = {2010},
+ }
+
+@article{herlihy-wing-TOPLAS90,
+ author = {M. Herlihy and J. Wing},
+ title = {Linearizability: a correctness condition for concurrent objects},
+ journal = {ACM Trans. Program. Lang. Syst.},
+ volume = {12},
+ number = {3},
+ year = {1990},
+ dont_issn = {0164-0925},
+ pages = {463--492},
+ dont_doi = {http://doi.acm.org/10.1145/78969.78972},
+ dont_publisher = {ACM Press},
+ dont_address = {New York, NY, USA},
+ }
+
+  
+@UNPUBLISHED{Leijen:hsrevisions,
+  author = {Daan Leijen},
+  title  = {Haskell Revisions},
+  note   = {Implementation available at \url{www.research.microsoft.com/people/daan}},
+  year   = 2011
+  }
+
+@INPROCEEDINGS{Leijen:rollforward,
+  author = {Burckhardt, Sebastian and F\"ahndrich, Manuel and Leijen, Daan},
+  title  = {{Roll Forward, not Back -- A Case for Deterministic Conflict Resolution}},
+  booktitle = {{The 2nd Workshop on Determinism and Correctness in Parallel Programming}},
+  year = 2011
+}
+
+@ARTICLE{Fekete:snapshot,
+  author = {A. Fekete and D. Liarokapis and E. O'Neil and P. O'Neil and D. Shasha},
+ title = {Making snapshot isolation serializable},
+ journal = {ACM Trans. Database Syst.},
+ volume = {30},
+ number = {2},
+ year = {2005},
+ issn = {0362-5915},
+ pages = {492--528}
+}
+
+@article{harris-et-al-MICRO07,
+  author    = {T. Harris and
+               A. Cristal and
+               O. Unsal and
+               E. Ayguad{\'e} and
+               F. Gagliardi and
+               B. Smith and
+               M. Valero},
+  title     = {Transactional Memory: An Overview},
+  journal   = {IEEE Micro},
+  volume    = {27},
+  number    = {3},
+  year      = {2007},
+  pages     = {8-29},
+  ee        = {http://doi.ieeecomputersociety.org/10.1109/MM.2007.63},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@article{lamport-79,
+  author =       {L. Lamport},
+  title =        {How to make a multiprocessor computer that correctly executes multiprocess programs},
+  journal =      {IEEE Trans. Comp.},
+  year =         {1979},
+  volume =    {C-28},
+  number =    {9},
+  pages =     {690--691},
+  dont_month =     {September},
+}
+
+
+@InProceedings{welc-saha-tabatabai-SPAA08,
+  author = {A. Welc and B. Saha and A.-R. Adl-Tabatabai},
+  title = 	 {Irrevocable transactions and their applications},
+  year = 	 {2008},
+  booktitle = {Symposium on Parallel Algorithms and Architectures (SPAA)},
+  pages = {285--296}
+}
+
+@article{hanlon07,
+ author = {C. O'Hanlon},
+ title = {A Conversation with {J}ohn {H}ennessy and {D}avid {P}atterson},
+ journal = {Queue},
+ volume = {4},
+ number = {10},
+ year = {2007},
+ pages = {14--22}
+}
+
+@book{larus07book,
+ author = {J. Larus and R. Rajwar},
+ title = {Transactional Memory},
+ publisher = {Morgan \& Claypool},
+ year = {2007}
+}
+
+@book{ hatton04book,
+ author = {E. Hatton and A. S. Lobao and D. Weller},
+ title = {Beginning .{NET} Game Programming in C\#},
+ publisher = {Apress},
+ year = {2004}
+}
+
+@Misc{workloadworkshop,
+  key = {workloadworkshop},
+  howpublished = {Workshop on TM Workloads, http://freya.cs.uiuc.edu/WTW/},
+  year =      {2006},
+}
+
+@inproceedings{Abadi:ame,
+ author = {Abadi, M. and A. Birrell and T. Harris and M. Isard},
+ title = {Semantics of transactional memory and automatic mutual exclusion},
+ booktitle = {Principles of Prog. Lang. (POPL)},
+ year = {2008},
+ pages = {63--74},
+ doi = {http://doi.acm.org/10.1145/1328438.1328449},
+ dont_publisher = {ACM},
+ dont_address = {New York, NY, USA},
+ }
+
+@inproceedings{lee-et-al-ASPLOS2010,
+ author = {D. Lee and B. Wester and K. Veeraraghavan and S. Narayanasamy and P. Chen and J. Flinn},
+ title = {Respec: Efficient Online Multiprocessor Replay via Speculation and External Determinism},
+ booktitle = {Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+ year = {2010},
+ }
+
+@inproceedings{yahav-POPL01,
+ author = {E. Yahav},
+ title = {Verifying safety properties of concurrent {Java} programs using 3-valued logic},
+ booktitle = {Principles of Programming Languages (POPL)},
+ year = {2001},
+ dont_isbn = {1-58113-336-7},
+ pages = {27--40},
+ dont_location = {London, United Kingdom},
+ dont_doi = {http://doi.acm.org/10.1145/360204.360206},
+ dont_publisher = {ACM Press},
+}
+
+@inproceedings{koskinen-parkinson-herlihy-POPL10,
+ author = {E. Koskinen and M. Parkinson and M. Herlihy},
+ title = {Coarse-grained transactions},
+ booktitle = {Principles of Programming Languages (POPL)},
+ year = {2010},
+ dont_isbn = {978-1-60558-479-9},
+ pages = {19--30},
+ dont_location = {Madrid, Spain},
+ dont_doi = {http://doi.acm.org/10.1145/1706299.1706304},
+ dont_publisher = {ACM},
+ dont_address = {New York, NY, USA},
+ }
+
+@inproceedings{lee-palsberg-ppopp2010,
+ author = {J. Lee and J. Palsberg},
+ title = {Featherweight X10: a core calculus for async-finish parallelism},
+ booktitle = {Principles and Practice of Parallel Programming (PPoPP)},
+ year = {2010},
+ }
+
+
+@inproceedings{herlihy-koskinen-PPOPP08,
+ author = {M. Herlihy and E. Koskinen},
+ title = {Transactional boosting: a methodology for highly-concurrent transactional objects},
+ booktitle = {Principles and Practice of Parallel Programming (PPoPP)},
+ year = {2008},
+ isbn = {978-1-59593-795-7},
+ pages = {207--216},
+ dont_location = {Salt Lake City, UT, USA},
+ dont_doi = {http://doi.acm.org/10.1145/1345206.1345237},
+ dont_publisher = {ACM},
+ dont_address = {New York, NY, USA},
+ }
+
+@inproceedings{vafeiadis-herlihy-hoare-shapiro-PPOPP06,
+ author = {V. Vafeiadis and M. Herlihy and T. Hoare and M. Shapiro},
+ title = {Proving correctness of highly-concurrent linearisable objects},
+ booktitle = {Principles and Practice of Parallel Programming (PPoPP)},
+ year = {2006},
+ dont_isbn = {1-59593-189-9},
+ pages = {129--136},
+ dont_location = {New York, New York, USA},
+ dont_doi = {http://doi.acm.org/10.1145/1122971.1122992},
+ dont_publisher = {ACM},
+ dont_address = {New York, NY, USA},
+ }
+
+
+@inproceedings{scott07iiswc,
+ author = {M. Scott and M. Spear and L. Dalessandro and V. Marathe},
+ title = {Delaunay Triangulation with Transactions and Barriers},
+ booktitle = {{IEEE} International Symposium on Workload Characterization},
+ year = {2007},
+ pages = {107--113}
+}
+
+@inproceedings{watson07pact,
+ author = {I. Watson and C. Kirkham and M. Lujan},
+ title = {A Study of a Transactional Parallel Routing Algorithm},
+ booktitle = {International Conference on Parallel Architectures and Compilation Techniques},
+ year = {2007},
+ pages = {388--398}
+}
+
+@article{rhal06lncs,
+ author = {A. El Rhalibi and M. Merabti and Y Shen},
+ title = {Improving Game Processing in Multithreading and Multiprocessor Architecture},
+ journal = {Lecture Notes in Computer Science},
+ year = {2006},
+ volume = {3942},
+ pages = {669--679}
+}
+
+@InProceedings{rinard-diniz,
+  author =       {M. Rinard and P. Diniz},
+  title =        {Eliminating Synchronization Bottlenecks in Object-Based Programs Using Adaptive Replication},
+  year =      {1999},
+  booktitle =    {International Conference on Supercomputing },
+}
+
+@inproceedings{aydo08transact,
+ author = {U. Aydonat and T. Abdelrahman},  
+title = {Serializability of Transactions in Software Transactional Memory},
+  booktitle = {Workshop on Transactional Computing (TRANSACT)}, 
+ year = {2008}
+ }
+@inproceedings{riegel-fetzer-felber-TRANSACT06,
+   author = {T. Riegel and C. Fetzer and P. Felber},  
+   title = {Snapshot Isolation for Software Transactional Memory},
+   booktitle = {Workshop on Transactional Computing (TRANSACT)}, 
+   year = {2006}
+}
+
+
+
+@techreport{ blund06trep,
+ author = {C. Blundell and E. Lewis and M. Martin}, 
+ title = {Unrestricted Transactional Memory: Supporting {I/O} and System Calls within Transactions},  
+institution = {University of Pennsylvania},  
+year = {2006},  
+number = {TR-CIS-06-09} 
+}
+
+@techreport{ companionTR,
+ author = {S. Burckhardt and D. Leijen}, 
+ title = {Semantics of Concurrent Revisions (Full Version)},  
+institution = {Microsoft},  
+year = {2010},  
+number = {MSR-TR-2010-94} 
+}
+
+
+@article{fraser-harris-TOCS07,
+ author = {K. Fraser and T. Harris},
+ title = {Concurrent programming without locks},
+ journal = {ACM Trans. Comput. Syst.},
+ volume = {25},
+ number = {2},
+ year = {2007},
+ issn = {0734-2071},
+ pages = {5}
+}
+
+@Misc{leiserson-prokop-98,
+  OPTkey = 	 {},
+  author = 	 {C. E. Leiserson and H. Prokop},
+  title = 	 {A Minicourse on Multithreaded Programming},
+  OPThowpublished = {},
+  OPTmonth = 	 {},
+  year = 	 {1998},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@inproceedings{frigo-halpern-leiserson-lewin-berlin-SPAA09,
+ author = {M. Frigo and P. Halpern and C. E. Leiserson and S. Lewin-Berlin},
+ title = {Reducers and other Cilk++ hyperobjects},
+ booktitle = {Sym. on Par. Algorithms and Architectures (SPAA)},
+ year = {2009},
+ dont_isbn = {978-1-60558-606-9},
+ pages = {79--90},
+ dont_location = {Calgary, AB, Canada},
+ dont_doi = {http://doi.acm.org/10.1145/1583991.1584017},
+ dont_publisher = {ACM},
+ dont_address = {New York, NY, USA},
+ }
+
+@INPROCEEDINGS{Leijen:revisions,
+  author   = {Sebastian Burckhardt and Alexandro Baldassion and Daan Leijen},
+  title    = {Concurrent Programming with Revisions and Isolation Types},
+  booktitle= {{OOPSLA}'10},
+  year     = 2010,
+  month    = Oct,
+  location = {Reno, Nevada}
+}
+
+
+@INPROCEEDINGS{Leijen:crsemantics,
+  author ="Burckhardt, Sebastian and Leijen, Daan", 
+  title  ="Semantics of Concurrent Revisions", 
+  booktitle="European Symposium on Programming ({ESOP}'11)", 
+  year=2011
+}
+
+
+@INPROCEEDINGS{Liang:monads,
+    author = {Sheng Liang and Paul Hudak and Mark Jones},
+    title = {Monad Transformers and Modular Interpreters},
+    booktitle = {\popl{22nd}{95}},
+    year = {1995}
+}
+
+@INPROCEEDINGS{Launchbury:monadstate,
+    author = {John Launchbury and Amr Sabry},
+    title = {Monadic State: Axiomatization and Type Safety},
+    booktitle = {ICFP'97},
+    year = {1997},
+    pages = {227--238}
+}
+
+
+
+@inproceedings{King:graphs,
+ author = {King, David J. and Launchbury, John},
+ title = {Structuring depth-first search algorithms in Haskell},
+ booktitle = {\popl{22nd}{95}},
+ year = {1995},
+ isbn = {0-89791-692-1},
+ pages = {344--354},
+ location = {San Francisco, California, United States}
+}
+
+@unpublished{coq,
+  author = {The Coq Development Team},
+  title  = {{The Coq Proof Assistant, Reference Manual Version 8.3. INRIA}}, 
+  year   = 2011,
+  note   = {\url{http://coq.inria.fr}}
+}
+
+@inproceedings{Filliatre:garsiawachs,
+  author = {Jean-Christophe Filli\^atre},
+  title = {{A Functional Implementation of the Garsia--Wachs Algorithm}},
+  booktitle = {ACM SIGPLAN Workshop on ML},
+  publisher = {ACM},
+  year = 2008,
+  address = {Victoria, British Columbia, Canada},
+  month = {September}
+}
+
+@inproceedings{Scala:effects,
+ author = {Rytz, Lukas and Odersky, Martin and Haller, Philipp},
+ title = {Lightweight Polymorphic Effects},
+ booktitle = {European Conference on Object-Oriented Programming ({ECOOP}), {Beijing, China}},
+ year = 2012,
+ month = jun
+}
+
+
+@inproceedings{Benton:relsemantics,
+ author = {Benton, Nick and Kennedy, Andrew and Beringer, Lennart and Hofmann, Martin},
+ title = {Relational semantics for effect-based program transformations with dynamic allocation},
+ booktitle = {PPDP '07: Proc. of the 9th ACM SIGPLAN int. conf. on Principles and Practice of Declarative Prog.},
+ year = {2007},
+ pages = {87--96}
+}
+
+@inproceedings{Benton:exceptioneffects,
+ author = {Benton, Nick and Buchlovsky, Peter},
+ title = {Semantics of an effect analysis for exceptions},
+ booktitle = {TLDI '07: Proceedings of the 2007 ACM SIGPLAN international workshop on Types in languages design and implementation},
+ year = {2007},
+ pages = {15--26}
+}
+
+@inproceedings{Benton:monadseffects,
+ author = {Benton, Nick and Hughes, John and Moggi, Eugenio},
+ title = {Monads and Effects},
+ booktitle = {Applied Semantics, International Summer School, APPSEM 2000, Caminha, Portugal, September 9-15, 2000, Advanced Lectures},
+ year = {2002},
+ pages = {42--122}
+}
+
+@inproceedings{Gifford:imperative,
+ author = {Gifford, David K. and Lucassen, John M.},
+ title = {Integrating functional and imperative programming},
+ booktitle = {LFP '86: Proceedings of the 1986 ACM conference on LISP and functional programming},
+ year = {1986},
+ pages = {28--38}
+}
+
+
+@article{Naumann:purity,
+ author = {Naumann, David A.},
+ title = {Observational purity and encapsulation},
+ journal = {Theor. Comput. Sci.},
+ volume = {376},
+ number = {3},
+ year = {2007},
+ issn = {0304-3975},
+ pages = {205--224}
+}
+
+@inproceedings{Lucassen:polyeffect,
+ author = {Lucassen, J. M. and Gifford, D. K.},
+ title = {Polymorphic effect systems},
+ booktitle = {POPL '88},
+ year = {1988},
+ pages = {47--57}
+ }
+
+@inproceedings{Pessaux:exceptions,
+ author = {Pessaux, Fran\c{c}ois and Leroy, Xavier},
+ title = {Type-based analysis of uncaught exceptions},
+ booktitle = {POPL '99},
+ year = {1999},
+ isbn = {1-58113-095-3},
+ pages = {276--290}
+}
+
+@article{Talpin:effects,
+ author = {Talpin, Jean-Pierre and Jouvelot, Pierre},
+ title = {The type and effect discipline},
+ journal = {Inf. Comput.},
+ volume = {111},
+ number = {2},
+ year = {1994},
+ issn = {0890-5401},
+ pages = {245--296}
+}
+
+@article{Wadler:marriage,
+ author = {Wadler, Philip and Thiemann, Peter},
+ title = {The marriage of effects and monads},
+ journal = {ACM Trans. Comput. Logic},
+ volume = {4},
+ number = {1},
+ year = {2003},
+ issn = {1529-3785},
+ pages = {1--32}
+}
+
+@article{Mitchell:subtypes,
+  author = {Mitchell, J.C.},
+  title = {Type inference with simple subtypes},
+  journal = {Journal of Functional Programming},
+  volume = 1,
+  number = 3, 
+  pages = {245--286},
+  year = 1991
+}
+
+@phdthesis{Talpin:thesis,
+  author = {Talpin, J.P.},
+  title = {Theoretical and practical aspects of type and effect inference},
+  school = {Ecole des Mines de Paris and University Paris VI, Paris, France},
+  year = 1993
+}
+
+@inproceedings{Tolmach:monadhierarchy,
+ author = {Tolmach, Andrew P.},
+ title = {Optimizing {ML} Using a Hierarchy of Monadic Types},
+ booktitle = {TIC '98}, 
+ year = {1998},
+ isbn = {3-540-64925-5},
+ pages = {97--115}
+}
+
+@article{Tofte:regioninf,
+ author = {Tofte, Mads and Birkedal, Lars},
+ title = {A region inference algorithm},
+ journal = {ACM Trans. Program. Lang. Syst.},
+ volume = {20},
+ number = {4},
+ year = {1998},
+ issn = {0164-0925},
+ pages = {724--767}
+}
+
+@inproceedings{Tofte:regions,
+ author = {Tofte, Mads and Talpin, Jean-Pierre},
+ title = {Implementation of the typed call-by-value $\lambda$-calculus using a stack of regions},
+ booktitle = {POPL'94},
+ year = {1994},
+ pages = {188--201}
+} 
+
+
+@inproceedings{Nielson:polyeffect,
+ author = {Nielson, Hanne Riis and Nielson, Flemming and Amtoft, Torben},
+ title = {Polymorphic Subtyping for Effect Analysis: The Static Semantics},
+ booktitle = {Selected papers from the 5th LOMAPS Workshop on Analysis and Verification of Multiple-Agent Languages},
+ year = {1997},
+ isbn = {3-540-62503-8},
+ pages = {141--171}
+}
+
+@inproceedings{Leroy:valuerestriction,
+ author = {Leroy, Xavier},
+ title = {Polymorphism by name for references and continuations},
+ booktitle = {POPL '93: Proc. of the 20th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+ year = {1993},
+ pages = {220--231}
+}
+
+@book{Goslin:java,
+ author = {Gosling, James and Joy, Bill and Steele, Guy L.},
+ title = {The  Java Language Specification},
+ year = {1996},
+ isbn = {0201634511},
+ publisher = {Addison-Wesley Longman Publishing Co., Inc.},
+ address = {Boston, MA, USA},
+}
+
+
+@inproceedings{Marino:genericeffects,
+ author = {Marino, Daniel and Millstein, Todd},
+ title = {A generic type-and-effect system},
+ booktitle = {TLDI '09: Proceedings of the 4th international workshop on Types in language design and implementation},
+ year = {2009},
+ pages = {39--50}
+}
+
+@ARTICLE{Reynolds:subtypes,
+  author = {Reynolds, John C.},
+  title = {Using category theory to design implicit conversions and generic operators}, 
+  editor = {D. Jones},
+  series = 94,
+  year = 1980,
+  month = Jan,
+  journal = {Proceedings of the Aarhus Workshop on Semantics-Directed Compiler Generation, Lecture Notes in Computer Science. Springer-Verlag}
+}
+
+@inproceedings{Pottier:simplifyingsubtypes,
+    author = {Francois Pottier},
+    title = {Simplifying Subtyping Constraints},
+    booktitle = {In Proceedings of the 1996 ACM SIGPLAN International Conference on Functional Programming},
+    year = {1996},
+    pages = {122--133}
+}
+
+@PHDTHESIS{Smith:thesis,
+    author = {Smith, Geoffrey Seward},
+    title = {Polymorphic Type Inference for Languages with Overloading and Subtyping},
+    school = {Cornell University},
+    year = {1991}
+}
+
+@article{Baez:rosetta,
+ archivePrefix = {arXiv},
+ author = {{Baez}, J. C. and {Stay}, M.},
+ eprint = {0903.0340},
+ journal = {ArXiv e-prints},
+ keywords = {article, physics, quantum, topology},
+ month = {March},
+ posted-at = {2009-03-16 00:49:51},
+ priority = {2},
+ title = {Physics, Topology, Logic and Computation: A Rosetta Stone},
+ url = {http://arxiv.org/abs/0903.0340},
+ year = {2009}
+}
+
+@MISC{Leinster:hicat,
+  author = {Tom Leinster},
+  title = {Higher Operads, Higher Categories},
+  url = {http://www.citebase.org/abstract?id=oai:arXiv.org:math/0305049},
+  year = {2003}
+}
+
+
+@INPROCEEDINGS{Leijen:hml,
+ author = {Leijen, Daan},
+ title = {Flexible types: robust type inference for first-class polymorphism},
+ booktitle = {{POPL'09}: Proceedings of the 36th annual ACM SIGPLAN-SIGACT symposium on Principles of Programming Languages},
+ year = {2009},
+ month= Feb,
+ pages = {66--77}
+}
+
+@TECHREPORT{Leijen:hmltech,
+  author   = {Leijen, Daan},
+  title    = {Flexible types: robust type inference for first-class polymorphism},
+  institution = {Microsoft Research},
+  year = 2009,
+  month = Mar,
+  number = {{MSR-TR-2008-55}}
+}
+
+@INPROCEEDINGS{KuanMacQueen:ranked,
+  author = {George Kuan and David MacQueen},
+  title  = {Efficient {ML} Type Inference using Ranked Type Variables},
+  booktitle = {The {2007 ACM SIGPLAN} Workshop on {ML (ML 2007)}}, 
+  address   = {{Freiburg, Germany}},
+  year  = 2007,
+  month = Oct
+}
+
+@UNPUBLISHED{Leijen:hmlproto,
+  author = {Daan Leijen},
+  title  = {A reference implementation of {HML}},
+  note   = {Available at \url{http://research.microsoft.com/users/daan/pubs.html}},
+  year   = 2008,
+  month  = apr
+}
+
+@TECHREPORT{RemyLebotlan:recasting,
+  author = {Le Botlan, Didier  and  R{\'{e}}my, Didier},
+  title = {Recasting {MLF}},
+  year = {2007},
+  month = JUN,
+  institution = {INRIA},
+  number = {6228},
+  type = {Research Report},
+  pages = {60 p.},
+  address = {Rocquencourt, BP 105, 78 153 Le Chesnay Cedex, France}
+}
+
+@INPROCEEDINGS{Leijen:hmf,
+  author   = {Daan Leijen},
+  title    = {{HMF}: Simple Type Inference for First-Class Polymorphism},
+  booktitle = {13th ACM symp. of the International Conference on Functional Programming (ICFP'08)},
+  year = 2008,
+  month = Sep,
+  location = {Victoria, Canada},
+  note = {Extended version available as a technical report: {MSR-TR-2007-118}, Sep 2007, Microsoft Research}
+}
+
+@TECHREPORT{Leijen:hmftech,
+  author   = {Daan Leijen},
+  title    = {{HMF}: Simple Type Inference for First-Class Polymorphism},
+  institution = {Microsoft Research},
+  year = 2007,
+  month = Sep,
+  number = {{MSR-TR-2007-118}}
+}
+@INPROCEEDINGS{Vytiniotis:fph,
+  author   = {Dimitrios Vytiniotis and Stephanie Weirich and Peyton Jones, Simon},
+  title    = {{FPH} : First-class Polymorphism for {Haskell}},
+  booktitle = {\icfpx{13th}{08}},
+  year     = 2008,
+  month    = sep,
+  location = {Victoria, Canada}
+}
+
+
+@INPROCEEDINGS{ PierceTurner:local,
+  author = "Benjamin C. Pierce and David N. Turner",
+  title = "Local Type Inference",
+  booktitle = "\popl{25th}{98}",
+  pages = {252--265},
+  year = 1998
+}
+
+
+@BOOK{CurryFeys:types,
+  author = "H. Curry and R. Feys",
+  title = "Combinatory Logic",
+  publisher = "North-Holland",
+  year = "1958",
+  volume = "1"
+}
+
+@PHDTHESIS(Damas:phdthesis,
+  author  = "Luis Damas" ,
+  title   = "Type Assignment in Programming Languages",
+  school  = "University of Edinburgh" ,
+  year    = "1985" ,
+  month   = "April",
+  note    = "Technical report CST-33-85")
+
+
+@UNPUBLISHED{Jones:formalhm,
+  title	     = {Formal properties of the {Hindley-Milner} type system},
+  author     = {Mark P. Jones},
+  year	     = 1995,
+  month      = aug,
+  note	     = {Unpublished notes}
+}
+
+@INPROCEEDINGS{CardelliLeroy:dotnotation,
+  AUTHOR = {Luca Cardelli and Xavier Leroy},
+  TITLE = {Abstract types and the dot notation},
+  BOOKTITLE = {Proceedings IFIP TC2 working conference
+                         on programming concepts and methods},
+  PAGES = {479--504},
+  EDITOR = {M. Broy and C. B. Jones},
+  PUBLISHER = {North-Holland},
+  YEAR = {1990},
+  NOTE = {Also available as research report 56, DEC Systems Research Center}
+}
+
+@ARTICLE{GarrigueRemy:semiexplicit,
+  title     = {Semi-explicit first-class polymorphism for {ML}},
+  author    = {Jacques Garrigue and Didier R\'emy},
+  journal   = {Journal of Information and Computation},
+  volume    = 155,
+  pages     = {134--169},
+  year      = 1999
+}
+
+
+
+@INPROCEEDINGS{DamasMilner:hm,
+ author = {Luis Damas and Robin Milner},
+ title = {Principal type-schemes for functional programs},
+ booktitle = {\popl{9th}{82}},
+ year = {1982},
+ pages = {207--212},
+ location = {Albuquerque, Mexico},
+}
+
+
+@INPROCEEDINGS{LeroyMauny:dynamics,
+  title     = {Dynamics in {ML}},
+  author    = {Xavier Leroy and Mauny, M},
+  booktitle = {{ACM} conference on {F}unctional {P}rogramming and {C}omputer {A}rchitecture ({FPCA'91})},
+  year      = 1991,
+  publisher = SV,
+  note      = {volume 523 of LNCS}
+}
+
+@INPROCEEDINGS{Leijen:mlftof,
+  title     = {A Type Directed Translation from {MLF} to {System F}},
+  author    = {Daan Leijen},
+  booktitle = {\icfp{07}},
+  location  = {{F}reiburg, {G}ermany},
+  month     = "Oct.",
+  year      = 2007
+}
+
+@INPROCEEDINGS{PeytonJones:boxytypes,
+  title     = {Boxy types: type inference for higher-rank types and impredicativity},
+  author    = {Dimitrios Vytiniotis and Stephanie Weirich and Peyton Jones, Simon},
+  booktitle = {\icfp{06}},
+  location  = {{P}ortland, {OR}},
+  month     = sep,
+  year      = 2006
+}
+
+@INPROCEEDINGS{Remy:fml,
+  title     = {Simple, partial type-inference for {S}ystem-{F} based on type-containment},
+  author    = {Didier R\'emy},
+  booktitle = {\icfp{05}},
+  location  = {{T}allin, Estonia},
+  month	    = sep,
+  year      = 2005
+}
+
+@ARTICLE{Wells:systemF,
+  title	    = {Typability and type checking in {S}ystem-{F} are equivalent and undecidable},
+  author    = {Wells, J.B.},
+  journal   = {Ann. Pure Appl. Logic},
+  volume    = 98,
+  number    = {1--3},
+  pages     = {111--156}, 
+  year      = 1999
+}
+
+@UNPUBLISHED{PeytonJones:scoped,
+  title     = {Lexically scoped type variables},
+  author    = {Peyton Jones, Simon and Shields, Mark},
+  note      = {Draft},
+  year      = 2004,
+  month     = mar
+}     
+
+@INPROCEEDINGS{Leijen:scopedlabels,
+  author    = {Leijen, Daan},
+  title     = {Extensible records with scoped labels},
+  booktitle = {Proc. of the 2005 Symp.f on Trends in Functional Programming (TFP'05)},
+  location  = {{T}allin, {E}stonia},
+  month     = sep,
+  year      = 2005
+}
+
+
+@INPROCEEDINGS{LeijenLoeh:qualifiedmlf,
+  author    = {Leijen, Daan and L\"oh, Andres},
+  title     = {Qualified types for {MLF}},
+  booktitle = {\icfp{05}},
+  location  = {{T}allin, {E}stonia},
+  publisher = {ACM Press},
+  month     = "Sep.",
+  year      = 2005
+}
+
+@PHDTHESIS{Dijkstra:phdthesis,
+  author    = {Atze Dijkstra},
+  title     = {Stepping through {H}askell},
+  school    = {Universiteit Utrecht}, 
+  month     = "Nov.",
+  year      = 2005
+}
+
+%---------------------------------------------------------
+% Modules
+%---------------------------------------------------------
+
+@inproceedings{MacQueen:deptypes,
+  author    = {David MacQueen},
+  title     = {Using Dependent Types to Express Modular Structure},
+  booktitle = {Thirteenth {ACM} Symposium on Principles of Programming Languages},
+  location  = {Florida},
+  pages     = {277--286},
+  year      = 1986
+}
+
+@inproceedings{Jones:fcpolymorphism,
+  author    = {Jones, Mark P.},
+  title     = {First-class Polymorphism with Type Inference},
+  booktitle = {24th ACM Symposium on Principles of Programming Languages (POPL'97)},
+  location  = {Paris, France},
+  month     = jan,
+  year      = 1997
+}
+
+@inproceedings{Jones:parsignatures,
+  author    = {Mark Jones},
+  title     = {Using parameterized signatures to express modular structure},
+  booktitle = {Proc. of the Twenty Third Annual ACM Symposium on Principles of Programming Languages},
+  location  = {St. Petersburg Beach, Florida},
+  month     = jan,
+  year      = 1996
+}
+
+
+@inproceedings{Simonet:hmx,
+  author    = {Vincent Simonet},
+  title     = {An extension of {HM(X)} with first-class existential and universal datatypes},
+  booktitle = {\icfpx{8th}{03}},
+  location  = {Uppsala, Sweden},
+  publisher = {ACM Press},
+  pages     = {39--50},
+  month     = aug,
+  year      = 2005
+}
+
+@article{MitchellPlotkin:abstracttypes,
+  author    = {Mitchell, John C. and Plotkin, Gordon D.},
+  title     = {Abstract types have Existential Type},
+  journal   = {{ACM} Transactions on Programming Languages and Systems},
+  volume    = {10},
+  number    = {3},
+  pages     = {470--502},
+  month     = jul,
+  year      = 1988 
+}
+
+@article{CardelliWegner:understanding,
+  author = "Luca Cardelli and Peter Wegner",
+  title = "On Understanding Types, Data Abstraction, and Polymorphism",
+  journal = "ACM Computing Surveys",
+  volume = "17",
+  number = "4",
+  pages = "471--522",
+  year = "1985"
+}
+
+@inproceedings{Leroy:manifest,
+  author = {Xavier Leroy},
+  title = {Manifest types, modules, and separate compilation},
+  booktitle = {POPL '94: Proceedings of the 21st ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  year = {1994},
+  isbn = {0-89791-636-0},
+  pages = {109--122},
+  location = {Portland, Oregon, United States},
+  doi = {http://doi.acm.org/10.1145/174675.176926},
+  publisher = {ACM Press},
+  address = {New York, NY, USA}
+}
+
+@article{LauferOdersky:existentials,
+  author  = {Konstantin L\"aufer and Martin Odersky},
+  title   = {Polymorphic type inference and abstract data types},
+  journal = {Trans. on Programming Languages and Systems},
+  year    = 1994
+}
+
+@inproceedings{Remy:mlart,
+ author = {Didier Remy},
+ title = {Programming Objects with {ML-ART}, an Extension to {ML} with Abstract and Record Types},
+ booktitle = {TACS '94: Proc. Int. Conf. on Theoretical Aspects of Computer Software},
+ year = {1994},
+ pages = {321--346}
+}
+
+@techreport{MaunyPottier:existentials,
+  author = {Michel Mauny and Pottier, Fran\c ois},
+  title = {An implementation of {Caml}-light with existential types},
+  institution = {INRIA-Rocquencourt},
+  month = oct,
+  year = 1993
+}
+
+@ARTICLE{LeroyMauny:mldynamics,
+  AUTHOR = {Xavier Leroy and Michel Mauny},
+  TITLE = {Dynamics in {ML}},
+  JOURNAL = {Journal of Functional Programming},
+  YEAR = 1993,
+  VOLUME = 3,
+  NUMBER = 4,
+  PAGES = {431--463}
+}
+
+
+%---------------------------------------------------------
+% Higher rank types
+%---------------------------------------------------------
+
+@INPROCEEDINGS{Remy:mlfgraph,
+ author = {Didier R{\'e}my and Boris Yakobowski},
+ title = {A graphical presentation of {MLF} types with a linear-time unification algorithm},
+ booktitle = {{TLDI'07}},
+ year = {2007},
+ pages = {27--38},
+ location = {Nice, France},
+ }
+
+@UNPUBLISHED{LeBotlanRemy:mlfsimple,
+  author = {Le Botlan, Didier and R{\'e}my, Didier},
+  title  = {{MLF} made simple},
+  note   = {Draft, available electronically at \url{http://gallium.inria.fr/~remy/project/mlf}},
+  year   = 2006
+}
+
+
+
+@INPROCEEDINGS{LeBotlanRemy:mlf,
+  author    = {Le Botlan, Didier  and R{\'e}my, Didier}, 
+  title     = {{MLF}: Raising {ML} to the Power of {S}ystem-{F}},
+  booktitle = {\icfp{03}},
+  location  = {Uppsala, Sweden}, 
+  year      = {2003},
+  pages     = {27--38},
+  month     = {aug}
+}
+
+@UNPUBLISHED{Remy:efficientrec,
+  author    = {Didier R{\'e}my},
+  title     = {Efficient representation of extensible records},
+  note      = {INRIA Rocquencourt},
+  year      = 2001
+}
+
+@INPROCEEDINGS{ShieldsPeytonJones:fcmodules,
+  author    = {Mark Shields and Peyton-Jones, Simon},
+  title     = {First-class Modules for {H}askell},
+  booktitle = {Ninth International Conference on Foundations of Object-Oriented Languages ({FOOL} 9)},
+  address   = {Portland, Oregon},
+  month     = dec,
+  year      = 2001
+}
+
+@ARTICLE{GarrigueRemy:semipoly,
+  author    = {Jaques Garrigue and Didier R\'emy},
+  title     = {Semi-expicit first-class polymorphism for {ML}},
+  journal   = {Journal of Information and Computation},
+  volume    = 151,
+  pages     = {134--169},
+  year      = 1999
+}
+
+%---------------------------------------------------------
+% Types
+%---------------------------------------------------------
+
+@PHDTHESIS{LeBotlan:phdthesis,
+  author    = {Le Botlan, Didier},
+  title     = {{ML\textsuperscript{F}}: Une extension de {ML} avec polymorphisme de second ordre et instanciation implicite},
+  school    = {{INRIA} Rocquencourt},
+  note      = {Also in English},
+  year      = 2004,
+  month     = may
+}
+
+
+@INPROCEEDINGS{Jones:fcpoly,
+  author    = {Mark Jones},
+  title     = {First-class Polymorphism with Type Inference},
+  booktitle = {Proceedings of the Twenty Fourth Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+  address   = {Paris, France}, 
+  month     = jan,
+  year      = 1997
+}
+
+%---------------------------------------------------------
+% Records
+%---------------------------------------------------------
+
+@MISC{Remy:caseconcat,
+  AUTHOR = {Didier R{\'e}my},
+  TITLE = {A case study of typechecking with constrained types:
+                 Typing record concatenation},
+  HOWPUBLISHED = {Workshop on Advances in Types for Computer Science},
+  MONTH = AUG,
+  YEAR = {1995},
+  URL = {http://cristal.inria.fr/~remy/work/sub-concat.dvi.gz}
+}
+
+@INPROCEEDINGS{Pottier:threepart,
+  AUTHOR = {François Pottier},
+  TITLE = {A 3-part type inference engine},
+  BOOKTITLE = {European Symposium on Programming (ESOP)},
+  PUBLISHER = {Springer Verlag},
+  SERIES = {Lecture Notes in Computer Science},
+  VOLUME = {1782},
+  PAGES = {320--335},
+  MONTH = MAR,
+  YEAR = {2000},
+  URL = {http://cristal.inria.fr/~fpottier/publis/fpottier-esop-2000.ps.gz}
+}
+
+@TECHREPORT{Leijen:recordsproof,
+author      = {Daan Leijen},
+title       = {Unqualified records and variants: proofs},
+institution = {\dept{} of Computer Science, Universiteit Utrecht},
+number      = {UU-CS-2005-00},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html},
+year        = 2005
+}
+
+@UNPUBLISHED{HolyGrail,
+  author    = {Terry Gilliam and Terry Jones},
+  title     = {Monty {Python} and the {Holy Grail}},
+  note      = {By G. Chapman and J. Cleese},
+  year      = {1975}
+}
+
+@PHDTHESIS{Sulzmann:phdthesis,
+  author    = {Martin Sulzmann},
+  title     = {A General Framework for {Hindley/Milner} Type Systems with Constraints},
+  school    = {\dept{} of Computer Science, Yale University},
+  year      = 2000,
+  month     = may
+}
+
+@UNPUBLISHED{Sulzmann:recordsrev,
+  author    = {Martin Sulzmann},
+  title     = {Type systems for records revisited},
+  note      = {Unpublished report},
+  year      = 1998,
+  month     = jun
+}
+
+@TECHREPORT{Sulzmann:records,
+  author    = {Martin Sulzmann},
+  title     = {Designing record systems},
+  number    = {YALEU/DCS/RR-1128},
+  year      = 1997,
+  month     = apr,
+  institution = {Yale University}
+}
+
+@INPROCEEDINGS{Sulzmann:hmx,
+  author    = {Martin Sulzmann and Martin Odersky and Martin Wehr},
+  title     = {Type inference with constrained types},
+  booktitle = {Foundations of Object-Oriented Programming Languages ({FOOL'4})},
+  year      = 1997,
+  month     = jan
+}
+
+@ARTICLE{Odersky:hmx,
+ author     = {Martin Odersky and Martin Sulzmann and Martin Wehr},
+ title      = {Type inference with constrained types},
+ journal    = {Theory and Practice of Object Systems},
+ volume     = {5},
+ number     = {1},
+ year       = {1999},
+ issn       = {1074-3227},
+ pages      = {35--55},
+ doi        = {http://dx.doi.org/10.1002/(SICI)1096-9942(199901/03)5:1<35::AID-TAPO4>3.0.CO;2-4},
+ publisher  = {John Wiley \& Sons, Inc.},
+}
+
+@TECHREPORT{GasterJones:trex,
+author      = {Gaster, Ben R. and Jones, Mark P.},
+title       = {A Polymorphic Type System for Extensible Records and Variants},
+institution = {University of Nottingham},
+number      = {{NOTTCS-TR-96-3}},
+year        = 1996
+}
+
+@PHDTHESIS{Gaster:phdthesis,
+  author    = {Gaster, Benedict R.},
+  title     = {Records, Variants, and Qualified Types},
+  school    = {\dept{} of Computer Science, University of Nottingham},
+  year      = 1998,
+  month     = jul
+}
+%  note      = {{NOTTCS-TR-98-3}}
+
+@UNPUBLISHED{Leijen:morrow,
+  author    = {Leijen, Daan},
+  title     = {Morrow: a row-oriented programming language},
+  note      = {\url{http://www.equational.org/morrow}},
+  year      = {2006},
+  month     = jan
+}
+
+@INPROCEEDINGS{Lewis:implicit,
+  author    = {Jeff Lewis and Mark Shields and Erik Meijer and John Launchbury},
+  title     = {Implicit parameters: dynamic scoping with static types},
+  booktitle = {\popl{27th}{00}},
+  address   = {Boston, Massachussets},
+  year      = 2000,
+  month     = Jan,
+  pages     = {108--118}
+}
+
+@INPROCEEDINGS{Garrigue:labelsel,
+  author    = {Jacques Garrigue and A\"\i{}t-Kaci, Hassan},
+  title     = {The typed polymorphic label selective calculus},
+  booktitle = {\popl{21th}{94}},
+  address   = {Portland, OR},
+  year      = 1994,
+  month     = Jan,
+  pages     = {35--47}
+}
+
+@INPROCEEDINGS{Nishimura:fcmessages,
+ author     = {Susumu Nishimura},
+ title      = {Static typing for dynamic messages},
+ booktitle  = {\popl{25th}{98}},
+ year       = {1998},
+ isbn       = {0-89791-979-3},
+ pages      = {266--278},
+ location   = {San Diego, California, United States},
+ doi        = {http://doi.acm.org/10.1145/268946.268968},
+}
+% publisher  = {ACM Press}
+
+@ARTICLE{Muller:fcmessages,
+ author     = {Martin M\"uller and Susumu Nishimura},
+ title      = {Type inference for first-class messages with feature constraints},
+ journal    = {International Journal of Foundations of Computer Science},
+ volume     = 11,
+ number     = 1,
+ year       = 2000,
+ pages      = {29-- 63}
+}
+
+@INPROCEEDINGS{Paritosh:fcmessages,
+ author     = {Paritosh Shroff and Smith, Scott F.},
+ title      = {Type inference for first-class messages with match-functions},
+ booktitle  = {Foundations of Object-Oriented Languages},
+ year       = {2004},
+ month      = jan,
+ location   = {Venice, Italy}
+}
+
+@ARTICLE{Milner:types,
+  author    = {Robin Milner},
+  title     = {A theory of type polymorphism in programming},
+  journal   = {Journal of Computer and System Sciences},
+  volume    = 17,
+  pages     = {248--375},
+  year      = 1978
+}
+
+@ARTICLE{Hindley:types,
+  author    = {Hindley, J.R.},
+  title     = {The principal type scheme of an object in combinatory logic},
+  journal   = {Trans. of the American Mathematical Society},
+  volume    = 146,
+  pages     = {29--60},
+  month     = "Dec.",
+  year      = 1969
+}
+
+@INPROCEEDINGS{Jones:qualifiedtypes,
+  author    = {Jones, Mark P.},
+  title     = {A theory of qualified types},
+  booktitle = {4th. European Symposium on Programming {(ESOP'92)}}, 
+  location  = {Rennes, France}, 
+  publisher = SV,
+  series    = {Lecture Notes in Computer Science}, 
+  volume    = 582, 
+  pages     = {287--306},
+  month     = feb,
+  year      = 1992
+}
+
+@BOOK{Jones:phdthesis,
+  author    = {Jones, Mark P.},
+  title     = {Qualified types in Theory and Practice},
+  series    = {Distinguished Dissertations in Computer Science},
+  publisher = {{Cambridge University Press}},
+  year      = 1994
+}
+
+@ARTICLE{Jones:constructorclasses,
+  author    = {Jones, Mark P.},
+  title     = {A system of constructor classes: overloading and implicit higher-order polymorphism},
+  journal   = {Journal of Functional Programming},
+  volume    = 5,
+  number    = 1,
+  pages     = {1--35},
+  publisher = {{Cambridge University Press}}, 
+  month     = jan,
+  year      = 1995
+}
+%  note      = {Previously appeared in {FPCA'93, Copenhagen, Denmark, June 1993}},
+
+@INPROCEEDINGS{Pottier:constraintrows,
+  author    = {François Pottier},
+  title     = {A Constraint-Based Presentation and Generalization of Rows},
+  url       = {http://pauillac.inria.fr/~fpottier/publis/fpottier-lics03.ps.gz},
+  booktitle = {Eighteenth Annual {IEEE} Symposium on Logic In Computer Science (LICS'03)},
+  pages     = {331--340},
+  address   = {Ottawa, Canada},
+  month     = jun,
+  year      = {2003},
+}
+
+@ARTICLE{Ohori:records,
+ author     = {Atsushi Ohori},
+ title      = {A polymorphic record calculus and its compilation},
+ journal    = {ACM Transactions on Programming Languages and Systems},
+ volume     = {17},
+ number     = {6},
+ year       = {1995},
+ issn       = {0164-0925},
+ pages      = {844--895},
+ doi        = {http://doi.acm.org/10.1145/218570.218572},
+ publisher  = {ACM Press},
+ }
+
+ @ARTICLE{Robinson:logic,
+  author    = {Robinson, J.~A.},
+  title     = {A machine-oriented logic based on the resolution principle},
+  journal   = {Journal of the {ACM}},
+  volume    = 12,
+  number    = 1,
+  pages     = {23--41},
+  year      = 1965,
+  month     = jan
+}
+
+@TECHREPORT{Jones:improvement,
+  author    = {Jones, Mark P.},
+  title     = {Simplifying and Improving Qualified Types},
+  number    = {YALEU/DCS/RR-1040},
+  year      = 1994,
+  institution = {\dept{} of Computer Science, Yale University}
+}
+%  month     = jun,
+
+@ARTICLE{Pierce:intersection,
+  author    = {Pierce, Benjamin C.},
+  title     = {Intersection types and bounded polymorphism},
+  journal   = {Mathematical Structures in Computer Science},
+  volume    = 7,
+  number    = 2,
+  pages     = {129--193},
+  month     = apr,
+  year      = 1997
+}
+
+@INPROCEEDINGS{Reynolds:forsythe,
+  author    = {Reynolds, John C.},
+  title     = {Design of the programming language {Forsythe}},
+  booktitle = {{ALGOL}-like languages},
+  editor    = {P.W.~O'Hearn and R.D.~Tennent},
+  pages     = {173--233},
+  publisher = {Birkh\"auser},
+  year      = 1997
+}
+
+@INPROCEEDINGS{BerthomieuSagazan:records,
+  author    = {Berthomieu, Bernard and de Sagazan, C.},
+  title     = {A Calculus of Tagged Types, with Applications to Process Languages},
+  booktitle = {{TAPSOFT} Workshop on Types for Program Analysis},
+  location  = {Aarhus, Denmark}, 
+  month     = may,
+  year      = 1995
+}
+
+@ARTICLE{CardelliMitchell:records,
+  author    = {Luca Cardelli and John Mitchell},
+  title     = {Operations on Records},
+  journal   = {Journal of Mathematical Structures in Computer Science},
+  volume    = 1,
+  number    = 1,
+  pages     = {3--48},
+  month     = mar,
+  year      = 1991
+}
+
+@CONFERENCE{HarperPierce:records,
+  author    = {Robert Harper and Pierce, Benjamin C.},
+  title     = {A record calculus based on symmetric concatenation},
+  booktitle = {\popl{18th}{91}},
+  location  = {Orlando, Florida},
+  pages     = {131--142},
+  month     = jan,
+  year      = 1991
+}
+
+@INCOLLECTION{Remy:records,
+  author     = {Didier R{\'e}my},
+  title      = {Type Inference for Records in a Natural Extension of {ML}},
+  booktitle  = {Theoretical Aspects Of Object-Oriented Programming. Types, Semantics and Language Design},
+  publisher  = {MIT Press},
+  year       = 1993,
+  editor     = {Carl A. Gunter and John C. Mitchell},
+}
+%  note       = {Earlier version appeared in {POPL}'89, pages 77--87.}
+
+@INCOLLECTION{Remy:concat,
+  author     = {Didier R{\'e}my},
+  title      = {Typing Record Concatenation for Free},
+  booktitle  = {Theoretical Aspects Of Object-Oriented Programming. Types, Semantics and Language Design},
+  publisher  = {MIT Press},
+  year       = 1993,
+  editor     = {Carl A. Gunter and John C. Mitchell}
+}
+
+@INPROCEEDINGS{Remy:fastrecords,
+author     = {Didier R{\'e}my},
+title      = {Efficient Representation of Extensible Records},
+booktitle  = {Proceedings of the 1992 workshop on {ML} and its Applications},
+year       = 1992,
+pages      = {66--75},
+address    = {San Francisco, USA},
+month      = jun
+}
+
+@InProceedings{Wand:records,
+  author    = {Mitchell Wand},
+  title     = {Complete Type Inference for Simple Objects},
+  booktitle = {Proceedings of the 2nd. {IEEE} Symposium on Logic in Computer Science},
+  year      = {1987},
+  pages     = {37-44},
+  note      = {{Corrigendum in LICS'88}, page 132}
+}
+
+@ARTICLE{Wand:concat,
+  author    =	{Wand, Mitchell},
+  title     = {Type Inference for Record Concatenation and Multiple Inheritance}, 
+  journal   =	{Information and Computation},
+  year      = {1991},
+  volume    = {93},
+  pages     = {1--15},
+}
+
+@TECHREPORT{MakholmWells:concat,
+  author    = {Makholm, Henning and Wells, J.~B.},
+  title     = {Type Inference and Principal Typings for Symmetric Record Concatenation and Mixin Modules},
+  institution = {School of Mathematical and Computer Sciences, {Heriot-Watt} University},
+  number    = {HW-MACS-TR-0030},
+  year      = 2005,
+  month     = mar
+}
+
+%  note      = {Preliminary version appeared in Proceedings of the 4th. IEEE Symposium on Logic in Computer Science, 1989, pages 92--97.}
+
+@ARTICLE{PierceTurner:objects,
+  author    = {Pierce, Benjamin C. and Turner, David N.},
+  title     = {Simple Type Theoretic Foundations for Object-Oriented Programming},
+  journal   = {Journal of Functional Programming},
+  volume    = 4,
+  number    = 2,
+  pages     = {207-247},
+  year      = 1994,
+  month     = apr
+}
+
+@INPROCEEDINGS{Jones:fcstructures,
+  author    = {Jones, Mark P.},
+  title     = {From {Hindley-Milner} Types to First-Class Structures},
+  booktitle = {Proceedings of the Haskell Workshop},
+  location  = {La Jolla, California},
+  year      = 1995,
+  month     = jun,
+  note      = {Yale University Research Report YALEU/DCS/RR-1075}
+}
+
+@INPROCEEDINGS{Jones:modules,
+ author     = {Jones, Mark P.},
+ title      = {Using parameterized signatures to express modular structure},
+ booktitle  = {\popl{23th}{96}},
+ year       = {1996},
+ isbn       = {0-89791-769-3},
+ pages      = {68--78},
+ location   = {St. Petersburg Beach, Florida, United States},
+ doi        = {http://doi.acm.org/10.1145/237721.237731},
+ publisher  = {ACM Press}
+}
+
+@INPROCEEDINGS{Visser:stratego,
+  author    = {Eelco Visser},
+  title     = {Stratego: {A} Language for Program Transformation based on Rewriting Strategies},
+  booktitle = {Rewriting Techniques and Applications {(RTA'01)}},
+  pages     = {357--361},
+  year      = 2001,
+  editor    = {A. Middeldorp},
+  volume    = 2051,
+  series    = {Lecture Notes in Computer Science},
+  month     = may,
+  publisher = {Springer-Verlag}
+}
+
+@INPROCEEDINGS{Visser:rewriting,
+  author    = {Visser, Eelco and Z.-e.-A. Benaissa},
+  title     = {A core language for rewriting},
+  editor    = {C. Kirchner and H. Kirchner},
+  booktitle = {Second International Workshop on Rewriting Logic and its Applications ({WRLA'98})}, 
+  volume    = 15,
+  series    = {Electronic Notes in Theoretical Computer Science}, 
+  location  = {Pont-à-Mousson, France},
+  month     = sep,
+  year      = 1998,
+  publisher = {Elsevier Science Publishers}
+}
+
+@INPROCEEDINGS{Moor:fcags,
+  author    = {Oege de Moor and Kevin Backhouse and Swierstra, S. Doaitse},
+  title     = {First Class Attribute Grammars}, 
+  booktitle = {Third Workshop on Attribute Grammars and their Applications}, 
+  location  = {Ponte de Lima}, 
+  month     = jul,
+  year      = 2000
+}
+
+@INPROCEEDINGS{Wadler:views,
+ author = {Wadler, Philip},
+ title = {Views: a way for pattern matching to cohabit with data abstraction},
+ booktitle = {\popl{14th}{87}},
+ year = {1987},
+ isbn = {0-89791-215-2},
+ pages = {307--313},
+ location = {Munich, West Germany},
+ doi = {http://doi.acm.org/10.1145/41625.41653},
+ publisher = {ACM Press},
+}
+
+@ARTICLE{PeytonJones:higherrank,
+ author = {Peyton Jones, Simon and Dimitrios Vytiniotis and Stephanie Weirich and Mark Shields},
+ title = {Practical type inference for arbitrary-rank types},
+ journal = {Journal of Functional Programming},
+ volume = {17},
+ number = {1},
+ year = {2007},
+ pages = {1--82},
+ publisher = {Cambridge University Press},
+ address = {New York, NY, USA},
+ }
+
+
+@INPROCEEDINGS{OderskyLaufer:annotations,
+  author    = {Martin Odersky and Konstantin L\"aufer},
+  title     = {Putting Type Annotations To Work},
+  booktitle =	{\popl{23th}{96}},
+  year      =	1996,
+  pages     = {54-67},
+  month     =	jan
+}
+
+@INPROCEEDINGS{Garrigue:patternmatching,
+  author    = {Jacques Garrigue},
+  title     = {Typing deep pattern-matching in presence of polymorphic variants},
+  booktitle = {Proceedings of the {JSSST} Workshop on Programming and Programming Languages}, 
+  location  = {Gamagori, Japan}, 
+  month     = mar,
+  year      = 2004
+}
+
+@INPROCEEDINGS{PeytonJones:transform,
+  author    = {Peyton Jones, Simon},
+  title     = {Compiling {Haskell} by program transformation: a report from the trenches}, 
+  booktitle = {Proceedings of the European Symposium on Programming (ESOP'96)}, 
+  location  = {Linkping, Sweden}, 
+  publisher = SV,
+  series    ="Lecture Notes in Computer Science",
+  volume    ="1058",
+  month     = jan,
+  year      = 1996
+}
+
+@INPROCEEDINGS{Odersky:systemo,
+ author     = {Martin Odersky and Philip Wadler and Martin Wehr},
+ title      = {A second look at overloading},
+ booktitle  = {{FPCA '95}: Proceedings of the seventh international conference on Functional Programming languages and Computer Architecture},
+ year       = 1995,
+ isbn       = {0-89791-719-7},
+ pages      = {135--146},
+ location   = {La Jolla, California, USA}
+}
+
+@TECHREPORT{Jones:composingmonads,
+    author = {Mark P. Jones and Luc Duponcheel},
+    title = {Composing Monads},
+    institution = {Dept. of Computer Science, Yale University},
+    number = {{YALEU/DCS/RR-1004}},
+    year = {1993}
+}
+
+%---------------------------------------------------------
+% GUI
+%---------------------------------------------------------
+@PHDTHESIS{Leijen:phdthesis,
+  author    = {Daan Leijen},
+  title     = {The $\lambda$ Abroad -- A Functional Approach to Software Components},
+  school    = {\dept{} of Computer Science, Universiteit Utrecht, The Netherlands},
+  year      = 2003
+}
+
+@INPROCEEDINGS{Leijen:wxhaskell,
+  author    = {Daan Leijen},
+  title     = {{wxHaskell}},
+  booktitle = {{ACM} Sigplan 2004 {Haskell} Workshop},
+  year      = {2004},
+  month     = sep,
+  publisher = {ACM Press},
+  address   = {{Snowbird, Utah, USA}},
+  pubcat    = {workshop},
+}
+
+@INPROCEEDINGS{ReidSingh:fudgets,
+  author    = {Alastair Reid and Satnam Singh},
+  title     = {Implementing Fudgets with standard widget sets},
+  booktitle = {Glasgow Functional Programming workshop},
+  pages     = {222--235},
+  publisher = SV,
+  year      = 1993
+}
+
+@INPROCEEDINGS{FinnePeytonJones:haggis,
+  author        ={Sigbj\"orn Finne and Peyton Jones, Simon},
+  title         ={Composing {H}aggis},
+  booktitle     ={Proceedings of the Fifth Eurographics Workshop on Programming Paradigms in Computer Graphics},
+  year          =1995
+}
+
+@InProceedings{CourtneyElliott:fruit,
+  author        = "Antony Courtney and Conal Elliott",
+  title         = "Genuinely Functional User Interfaces",
+  booktitle     = "ACM Sigplan 2001 {Haskell} Workshop",
+  year          = 2001,
+  month         = sep,
+}
+
+@INPROCEEDINGS{Courtney:yampa,
+ author         = {Antony Courtney and Henrik Nilsson and John Peterson},
+ title          = {The {Yampa} arcade},
+ booktitle      = {Proceedings of the {ACM SIGPLAN} workshop on {Haskell}},
+ year           = {2003},
+ isbn           = {1-58113-758-3},
+ pages          = {7--18},
+ location       = {Uppsala, Sweden},
+ doi            = {http://doi.acm.org/10.1145/871895.871897},
+ publisher      = {ACM Press},
+}
+
+@INPROCEEDINGS{WanTahaHudak:frp,
+  author        = {Zhanyong Wan and Walid Taha and Paul Hudak},
+  title         = {Real-time {FRP}},
+  booktitle     = {Proceedings of the sixth {ACM SIGPLAN} international conference on Functional programming},
+  year          = {2001},
+  isbn          = {1-58113-415-0},
+  pages         = {146--156},
+  location      = {Florence, Italy},
+  publisher     = {ACM Press},
+}
+
+@INPROCEEDINGS{NobleRunciman:gadgets,
+  author        ="Noble, Rob and Runciman, Colin",
+  title         ="{G}adgets: {L}azy {F}unctional {C}omponents for {G}raphical {U}ser {I}nterfaces",
+  year          =1995,
+  eds           ="Hermenegildo, Manuel and Swierstra, S. Doaitse",
+  month         =sep,
+  pages         ="321-340",
+  publisher     =SV,
+  series        ="Lecture Notes in Computer Science",
+  volume        ="982",
+  booktitle     ="{PLILP}'95: Seventh International Symposium on Programming Languages, Implementations, Logics and Programs"
+}
+
+@PHDTHESIS{CarlssonHallgren:fudgetsthesis,
+  author    = {Magnus Carlsson and Thomas Hallgren},
+  title     = {Fudgets -- Purely Functional Processes with applications to Graphical User Interfaces},
+  school    = {\dept{} of Computing Science, {Chalmers} University of Technology and {Gothenburg} University},
+  year      = 1998
+}
+
+@INPROCEEDINGS{CarlssonHallgren:fudgets,
+  author    = {Magnus Carlsson and Thomas Hallgren},
+  title     = {Fudgets -- a graphical user interface in a lazy functional language},
+  booktitle = {Functional Programming and Computer Architectures ({FPCA})},
+  pages     = {321--330},
+  publisher = ACM,
+  month     = jun,
+  year      = 1993
+}
+
+@INPROCEEDINGS{Scholz:streams,
+  author    = {Enno Scholz},
+  title     = {Imperative streams -— a monadic combinator library for synchronous programming},
+  booktitle = {Proceedings of the third ACM SIGPLAN international conference on Functional programming},
+  year      = {1998},
+  pages     = {261--272},
+  location  = {Baltimore, Maryland, United States},
+  publisher = {ACM Press},
+}
+
+@INPROCEEDINGS{HeerenLeijen:helium,
+  author    = {Bastiaan Heeren and Daan Leijen and Arjan van IJzendoorn},
+  title     = {Helium, for Learning {H}askell},
+  booktitle = {ACM Sigplan 2003 Haskell Workshop},
+  year      = {2003},
+  publisher = {ACM Press},
+  address   = {New York},
+  pages     = {62 -- 71},
+  pubcat    = {workshop},
+}
+
+@INPROCEEDINGS{Vullinghs:tkgofer,
+  author     = {Ton Vullinghs and Daniel Tuinman and Wolfram Schulte},
+  title      = {Lightweight {GUI}s for Functional Programming},
+  booktitle  = {Proceedings of the 7th International Symposium on Programming Languages: Implementations, Logics and Programs},
+  year       = {1995},
+  pages      = {341--356},
+  publisher  = {Springer-Verlag},
+}
+
+@INPROCEEDINGS{Claessen:tkgofer,
+  author      = {Koen Claessen and Ton Vullinghs and Erik Meijer},
+  title       = {Structuring graphical paradigms in {TkGofer}},
+  booktitle   = {Second International Conference on Functional programming ({ICFP})},
+  year        = 1997,
+  pages       = {251--262},
+  note        = {Also appeared in {ACM SIGPLAN} {N}otices 32, 8, (Aug. 1997)}
+}
+
+@UNPUBLISHED{yahu,
+  author      = {Koen Claessen},
+  title       = {The {Yahu} library},
+  note        = {\url{http://www.cs.chalmers.se/Cs/Grundutb/Kurser/afp/yahu.html}}
+}
+
+@UNPUBLISHED{htoolkit,
+  author      = {Angelov, Krasimir A.},
+  title       = {The {HToolkit} project},
+  note        = {\url{http://htoolkit.sourceforge.net}}
+}
+
+@UNPUBLISHED{frantk,
+  author      = {Meurig Sage},
+  title       = {The {FranTk} library},
+  note        = {\url{http://www.haskell.org/FranTk}}
+}
+
+@UNPUBLISHED{gtk2hs,
+  author      = {Axel Simons and Manuel Chakravarty},
+  title       = {The {Gtk2Hs} library},
+  note        = {\url{http://gtk2hs.sourceforge.net}}
+} 
+
+@UNPUBLISHED{htk,
+  author      = {Einar Karlsen and George Russell and Andree L\"udtke and Christoph L\"uth},
+  title       = {The {HTk} library},
+  note        = {\url{http://www.informatik.uni-bremen.de/htk}}
+} 
+                         
+@UNPUBLISHED{wxEiffel,
+  author      = {Uwe Sander and others},
+  title       = {The {wxEiffel} library},
+  note        = {\url{http://wxeiffel.sourceforge.net}}
+} 
+
+@UNPUBLISHED{wxWidgets,
+  author      = {Julian Smart and Robert Roebling and Vadim Zeitlin and Robin Dunn and others},
+  title       = {The {wxWidgets} library},
+  note        = {\url{http://www.wxwidgets.org}}
+} 
+
+@UNPUBLISHED{Garrigue:lablgtk,
+  author      = {Jacques Garrigue},
+  title       = {The {LablGtk} library},
+  note        = {\url{http://wwwfun.kurims.kyoto-u.ac.jp/soft/olabl/lablgtk.html}}
+}
+
+@UNPUBLISHED{wxfruit,
+  author      = {Bart Robinson},
+  title       = {{wxFruit}: A Practical {GUI} Toolkit for Functional Reactive Programming},
+  note        = {\url{http://zoo.cs.yale.edu/classes/cs490/03-04b/bartholomew.robinson}}
+}
+
+@INPROCEEDINGS{ElliottHudak:fran,
+  author      = {Conal Elliott and Paul Hudak},
+  title       = {Functional Reactive Animation},
+  booktitle   = {The proceedings of the 1997 ACM Sigplan International Conference on Functional Programming ({ICFP97 })},
+  location    = {{Amsterdam}, The {Netherlands}},
+  year        = 1997,
+  pages       = {263--273},
+  publisher   = ACM
+}
+
+@INPROCEEDINGS{Baars:dynamics,
+  author      = {Arthur Baars and Doaitse Swierstra},
+  title       = {Typing dynamic typing},
+  booktitle   = {Proceedings of the seventh {ACM SIGPLAN} international conference on Functional programming},
+  year        = {2002},
+  isbn        = {1-58113-487-8},
+  pages       = {157--166},
+  location    = {Pittsburgh, PA, USA},
+  doi         = {http://doi.acm.org/10.1145/581478.581494},
+  publisher   = {ACM Press},
+ }
+
+@INPROCEEDINGS{BaarsLoh:perms,
+  author    = {Baars, Arthur. and L\"oh, Andres and Swierstra, Doaitse},
+  title     = {Parsing Permutation Phrases},
+  booktitle = {Proceedings of the 2001 {ACM} {SIGPLAN} {H}askell {W}orkshop},
+  year      = {2001},
+  pages     = {171--182},
+  editor    = {Hinze, R.},
+  publisher = {Elsevier},
+  pubcat    = {workshop proceedings},
+}
+
+@MASTERSTHESIS{Pang:thesis,
+  title     = {Binding {Haskell} to Object-Oriented Component Systems via Reflection},
+  school    = {The University of New South Wales, School of Computer Science and Engineering},
+  author    = {Andr\´e Pang},
+  month     = jun,
+  year      = 2003,
+  note      = {\url{http://www.algorithm.com.au/files/reflection/reflection.pdf}}
+}
+
+@PHDTHESIS{Schrage:proxima,
+  author    = {Martijn Schrage},
+  title     = {{Proxima}: a generic presentation oriented {XML} editor},
+  school    = {\dept{} of Computer Science, Universiteit Utrecht, The Netherlands},
+  year      = 2004,
+  note      = {Submitted to the reading committee.}
+}
+
+
+@UNPUBLISHED{ffi,
+  title     = {The {Haskell} 98 foreign function interface 1.0: an addendum to the {Haskell} 98 report},
+  author    = {Manuel Chakravarty and Sigbjorn Finne and Fergus Henderson and Marcin Kowalczyk and Daan Leijen and Simon Marlow and Erik Meijer and Sven Panne and Peyton-Jones, Simon and Alastair Reid and Malcolm Wallace and Michael Weber},
+  year      = 2003,
+  month     = Dec,
+  note      = {\url{http://www.cse.unsw.edu.au/~chak/haskell/ffi}}
+}
+
+@PHDTHESIS{Reppy:exene,
+  author      = {John H.~Reppy},
+  title       = {Higher Order Concurrency},
+  school      = {Cornell University},
+  year        = 1992
+}
+
+@ARTICLE{Laufer:existential,
+  author  = "L{\"{a}}ufer, K.",
+  title   = "Type Classes with Existential Types",
+  journal = "Journal of Functional Programming",
+  year    = 1996,
+  month   = may,
+  volume  = 6,
+  number  = 3,
+  pages   = "485--517",
+  url     = "ftp://ftp.math.luc.edu/pub/laufer/papers/haskell+extypes.ps.gz" 
+}
+
+@INPROCEEDINGS{AchtenPeytonJones:objectio,
+  author      = {Peter Achten and Peyton Jones, Simon},
+  title       = {Porting the {Clean} Object {I/O} Library to {Haskell}},
+  booktitle   = {Proceedings of the 12th International Workshop on Implementation of Functional Languages (2000)},
+  pages       = {194--213},
+  year        = 2000
+}
+
+@ARTICLE{AchtenPlasmeijer:clean,
+  author      = "Peter Achten and Marinus J.~Plasmeijer",
+  title       = "The Ins and Outs of {Clean} {I/O}",
+  journal     = "Journal of Functional Programming",
+  volume      = "5",
+  number      = "1",
+  pages       = "81--110",
+  year        = "1995"
+}
+
+@INPROCEEDINGS{AchtenGroningenPlasmeijer:clean,
+  author      = {Achten, P.M. and van Groningen, J.H.G. and Plasmeijer, M.J.},
+  year        = 1993,
+  title       = {High Level Specification of {I/O} in Functional Languages},
+  eds         = {Launchbury, J. and Sansom, P.},
+  booktitle   = {Workshop Notes in Computer Science},
+  note        = {Glasgow Workshop on Functional Programming, Ayr, Scotland, 6-8 June 1992},
+  publisher   = SV,
+  pages       = {1--17}
+}
+
+@TECHREPORT{AchtenPlasmeijer:beautybeast,
+  author      = {Achten, P.M. and Plasmeijer, M.J.},
+  title       = {The Beauty and the Beast},
+  number      = {93--03},
+  month       = mar,
+  year        = 1993,
+  institution = {Research Institute for Declarative Systems, \dept{}
+                 of Informatics, Faculty of Mathematics and Informatics, University
+                 of Nijmegen}
+}
+
+@UNPUBLISHED{Chakravarty:ihaskell,
+  author      = {Manuel Chakravarty},
+  title       = {A State Based {GUI} Library without Mutable Variables},
+  note        = {Talk at the Sixteenth {WG2.8} Technical Meeting, {Packwood, WA, USA}},
+  month       = jul,
+  year        = 2000
+}
+
+@INPROCEEDINGS{ErkokLaunchbury:mdo,
+  author    = "Levent {Erk\"{o}k} and John Launchbury",
+  title     = "Recursive Monadic Bindings",
+  booktitle = "Proceedings of the Fifth {ACM} {SIGPLAN} International Conference on Functional Programming, {ICFP'00}", 
+  year      = "2000",
+  month     = sep,
+  ISBN      = "1-58113-202-6",
+  pages     = "174--185",
+  publisher = "ACM Press",
+}       
+
+@PHDTHESIS{Erkok:phdthesis,
+  author    = {Levent Erk\"ok},
+  title     = {Value recursion in Monadic Computations},
+  school    = {Oregon Graduate Institute, {OHSU}},
+  address   = {Portland, Oregon},
+  month     = oct,
+  year      = 2002
+}
+
+@INPROCEEDINGS{Russell:events,
+ author     = {George Russell},
+ title      = {Events in {Haskell}, and how to implement them},
+ booktitle  = {Proceedings of the sixth {ACM SIGPLAN} international conference on Functional programming},
+ year       = {2001},
+ isbn       = {1-58113-415-0},
+ pages      = {157--168},
+ location   = {Florence, Italy},
+ doi        = {http://doi.acm.org/10.1145/507635.507655},
+ publisher  = {ACM Press}
+}
+
+@INPROCEEDINGS{Paterson:arrows,
+  title     = "A New Notation for Arrows",
+  author    = "Ross Paterson",
+  booktitle = "International Conference on Functional Programming",
+  location  = "Firenze, Italy",
+  publisher = "ACM Press",
+  pages     = "229-240",
+  month     = Sep,
+  year      = 2001
+}
+
+@INPROCEEDINGS{Hughes:arrows,
+  author    = {John Hughes},
+  title     = {Generalising Monads to Arrows},
+  booktitle = {Science of Computer Programming},
+  volume    = {37}, 
+  pages     = {67--111}, 
+  month     = May,
+  year      = 2000
+}
+
+
+
+@INPROCEEDINGS{BarendsenSmetsers:uniqueness,
+  AUTHOR    = {E. Barendsen and S. Smetsers},
+  TITLE     = {{U}niqueness {T}ype {I}nference},
+  EDITOR    = {M. Hermenegildo and S.D. Swierstra},
+  BOOKTITLE = {Proceedings of the 7th International Symposium on Programming Language
+               Implementation and Logic Programming ({PLILP}'95),
+               {Utrecht, The Netherlands}},
+  SERIES    = {Lecture Notes in Computer Science},
+  VOLUME    = {982},
+  PUBLISHER = SV,
+  YEAR      = 1995,
+  PAGES     = {189--206}
+}
+%---------------------------------------------------------
+% Components, objects
+%---------------------------------------------------------
+@BOOK{Antipatterns,
+author      = {William J.~Brown and Raphael C.~Malveau and Hays W.~``Skip''~McCormick and Thomas J.~Mowbray},
+title       = {Antipatterns: Refactoring Software, Architectures, and Projects in Crisis},
+publisher   = {Wiley Computer Publishing},
+year        = 1998,
+isbn        = {0-471-19713-0}
+}
+
+@BOOK{Brocksmidt:insideole,
+author      = {Kraig Brockschmidt},
+title       = {Inside OLE (second edition)},
+publisher   = {Microsoft Press},
+year        = 1995
+}
+
+@BOOK{Box:com,
+author      = {Don Box},
+title       = {Essential {COM}},
+publisher   = AW,
+year        = 1997,
+month       = dec,
+isbn        = {0-201-63446-5}
+}
+
+@UNPUBLISHED{ComponentPascal:com,
+author      = {Dominik Gruntz}, 
+title       = {Implementing {COM} Objects with the {Direct-To-COM} Compiler},
+note        = {\url{http://www.oberon.ch/resources/component_pascal/com_example.html}},
+year        = 1998
+}
+
+@INPROCEEDINGS{Dylan:com,
+author      = {Gray, David N. and Hotchkiss John and LaForge Seth and Shalit Andrew and Weinberg Tony},
+title       = {Modern languages and Microsoft's component object model},
+publisher   = ACM,
+booktitle   = {Communications of the {ACM}},
+year        = 1998,
+month       = may,
+volume      = 41,
+number      = 5,
+pages       = {55-65}
+}
+
+@TECHREPORT{Huelsbergen:smlffi,
+author      = {Huelsbergen, Lorenz},
+title       = {A portable {C} interface for standard {ML} of {N}ew {J}ersey},
+institution = {{AT\&T Bell} Laboratories},
+year        = 1996,
+month       = jan,
+note        = {\url{http://cm.bell-labs.com/cm/cs/what/smlnj}}
+}
+
+@TechReport{VogelGray:idl,
+author      = {Vogel, A. and Gray, B.},
+title       = {Translating {D}{C}{E} {I}{D}{L} in {O}{M}{G} {I}{D}{L} and vice versa},
+institution =  {{CRC} for Distributed Systems Technology},
+year        = {1995},
+number      = {22},
+address     = {Brisbane}
+}
+
+@INPROCEEDINGS{VogelGrayDuddy:idl,
+author      = {Vogel, A. and Gray, B. and Duddy, K.},
+title       = {Understanding any {IDL}, lesson one: {DCE and CORBA}},
+booktitle   = {SDNE}, 
+year        = 1996
+}
+
+
+
+@TECHREPORT{Klint:toolbus,
+author      = {Paul Klint},
+title       = {A guide to ToolBus programming},
+institution = {University of Amsterdam},
+month       = may,
+year        = 1993
+}
+
+@BOOK{Lindholm:jvm,
+author      ={Tim Lindholm and Frank Yellin},
+title       ={The {J}ava({TM}) Virtual Machine Specification (2nd Edition)},
+publisher   ={{A}ddison-{W}esley},
+month       = apr,
+year        = 1999,
+isbn        = {0-201-43294-3}
+}
+
+@MASTERSTHESIS{Leijen:msthesis,
+author      ={Daan Leijen},
+title       ={Functional Components: {COM} components in {Haskell}},
+school      ={University of {Amsterdam}},
+year        ={1998},
+}
+
+
+@INPROCEEDINGS{LeijenMeijer:webscripting,
+author      = {Erik Meijer and Daan Leijen and James Hook},
+title       = {Client-side Web Scripting with {H}askell{S}cript},
+booktitle   = {Practical Aspects of Declarative Languages (PADL)},
+eds         = {Goyal Gupta},
+address     = {{B}erlin},
+publisher   = {{S}pringer-{V}erlag},
+volume      = 1551,
+pages       = {196--210},
+year        = 1998,
+url         = {http://www.cs.uu.nl/people/daan/pubs.html}
+}
+
+@INPROCEEDINGS{LeijenMeijer:automation,
+author      = {Daan Leijen and Erik Meijer and James Hook},
+title       = {{H}askell as an Automation Controller},
+booktitle   = {The 3rd International Summerschool on Advanced Functional Programming},
+eds         = {S.~Doaitse Swierstra and Pedro R.~Henriques and Jos\'e N.~Oliveira},
+series      = {{LNCS}}, 
+publisher   = {{S}pringer-{V}erlag},
+volume      = 1608,
+pages       = {268--288},
+address     = {{B}raga, {P}ortugal},
+month       = sep,
+year        = 1999,
+isbn        = {3-540-66241-3}
+}
+
+@INPROCEEDINGS{LeijenFinne:hdirect2,
+author      = {Sigbj\"orn Finne and Daan Leijen and Erik Meijer and Peyton Jones, Simon},
+title       = {Calling Hell from Heaven and Heaven from Hell},
+booktitle   = {The International Conference on Functional Programming ({ICFP'99})},
+address     = {{P}aris, {France}},
+year        = {1999},
+note        = {Also appeared in {ACM SIGPLAN} {N}otices 34, 9, (Sep. 1999)},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html}
+}
+
+
+@INPROCEEDINGS{LeijenFinne:hdirect,
+author      = {Sigbj\"orn Finne and Daan Leijen and Erik Meijer and Peyton Jones, Simon},
+title       = {{H}/{D}irect: {A} {B}inary {F}oreign {L}anguage {I}nterface to {H}askell},
+booktitle   = {The International Conference on Functional Programming ({ICFP}'99)},
+address     = {{B}altimore, {USA}},
+year        = {1998},
+note        = {Also appeared in {ACM SIGPLAN} {N}otices 34, 1, (Jan. 1999)},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html}
+}
+
+
+@INPROCEEDINGS{Leijen:comcomponents,
+author      = {Peyton Jones, Simon and Erik Meijer and Daan Leijen},
+title       = {Scripting {C}{O}{M} components from {H}askell},
+booktitle   = {Fifth International Conference on Software Reuse ({ICSR'98})},
+address     = {Victoria, B.C., Canada},
+eds         = {P.~Devanbu and J.~Poulin},
+publisher   = {{IEEE} Computer Society Press},
+month       = jun,
+year        = {1998},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html}
+}
+
+@INPROCEEDINGS{Leijen:braga,
+author      = {Daan Leijen and Erik Meijer and James Hook},
+title       = {Haskell as an automation controller},
+booktitle   = {3rd International Summerschool on Advanced Functional Programming},
+address     = {{Braga}, {Portugal}},
+publisher   = {Springer Lecture Notes in Computer Science (LNCS)},
+volume      = 1608,
+year        = 1999
+}
+
+@INPROCEEDINGS{Leijen:webscripting,
+author      = {Erik Meijer and Daan Leijen and James Hook},
+title       = {Client-side web scripting with {HaskellScript}},
+booktitle   = {Proceedings of Practical Aspects of Declarative Languages (PADL)},
+year        = 1999
+}
+
+@UNPUBLISHED{Leroy:ocamlffi,
+author      = {Leroy, Xavier},
+title       = {Interfacing {C} with {O}bjective {C}aml},
+institution = {{INRIA} {R}ocquencourt, {F}rance},
+note        = {\url{http://caml.inria.fr/ocaml}},
+year        = 1996
+}
+
+
+@MANUAL{Microsoft:agent,
+author      = {Microsoft},
+title       = {{D}eveloping for {M}icrosoft {A}gent},
+publisher   = {Microsoft Press},
+year        = {1998}
+}
+
+@MANUAL{Microsoft:automation,
+author      = {Microsoft},
+title       = {Automation Programmers Reference},
+publisher   = {Microsoft Press},
+year        = 1997
+}
+
+@MANUAL{Microsoft:com,
+title         = {The {COM} Reference},
+organization  = {Microsoft Press},
+year          = 1992
+}
+
+@BOOK{Microsoft:dotnet,
+author        = {Jeff Prosise},
+title         = {Programming Microsoft .{NET}},
+publisher     = {Microsoft Press},
+month         = may,
+year          = 2002,
+isbn          = {0-7356-1376-1}
+}
+
+@MANUAL{Microsoft:jdirect,
+title         = {{SDK} for {Java}},
+organization  = {Microsoft},
+year          = 1998,
+url           = {http://www.microsoft.com/java/}
+}
+
+
+@INPROCEEDINGS{PeytonJones:greencard,
+author        = {Peyton Jones, Simon and Thomas Nordin and Alastair Reid},
+title         = {{Green Card}: a foreign-language interface for {Haskell}},
+booktitle     = {Haskell Workshop},
+year          = 1997
+}
+
+@INPROCEEDINGS{RoseMuller:scheme,
+author      = {Rose, John R. and Muller, Hans},
+title       = {Integrating the {S}cheme and {C} languages},
+booktitle   = {Proceedings of the {ACM} 1992 Conference on {L}isp and {F}unctinal {P}rogramming},
+address     = {{San Francisco},{California}},
+year        = 1992,
+pages       = {247--259},
+isbn        = {0-89791-481-3}
+}
+
+
+@BOOK{Rogerson:com,
+author      = {Dale Rogerson},
+title       = {Inside COM},
+publisher   = {Microsoft Press},
+year        = 1997
+}
+
+@UNPUBLISHED{Serrano:bigloo,
+author      = {Serrano, M.},
+title       = {Bigloo user's manual},
+note        = {\url{http://www-sop.inria.fr/mimosa/fp/Bigloo}},
+year        = 1999
+}
+
+
+@BOOK{OMG:corba,
+author      = {{Object Management Group}},
+title       = {The Common Object Request Broker: Architecture and Specification (revision 1.2)},
+publisher   = {Object Management Group},
+year        = 1993,
+note        = {OMG Document Number 93.12.43}
+}
+
+@BOOK{Szyperski:components,
+author      = {Clemens Szyperski},
+title       = {Component Software - Beyond Object-Oriented Programming},
+publisher   = {{Addison-Wesley} / {ACM} Press},
+year        = 1998,
+isbn        = {0-201-17888-5}
+}
+
+
+
+@BOOK{Siegel:corba,
+author      = {Jon Siegel},
+title       = {{C}{O}{R}{B}{A} {F}undamentals and {P}rogramming},
+publisher   = {John Wiley \& Sons},
+year        = {1996}
+}
+
+
+@UNPUBLISHED{Smart:wxwindows,
+author      = {Julian Smart},
+title       = {The {wxWindows} {GUI} library},
+note        = {\url{http://www.wxwindows.org}},
+year        = 1992
+}
+
+@BOOK{Sussman:ado,
+author      = {David Sussman},
+title       = {{ADO} programmer's reference (3rd edition)},
+publisher   = {{W}rox Press inc},
+isbn        = {1-861-00463-X},
+year        = 2000,
+month       = aug
+}
+
+
+@UNPUBLISHED{Wallace:nhcffi,
+author      = {Wallace, Malcolm},
+title       = {Calling {H}askell from {C} using {Green Card}},
+note        = {\url{http://www.cs.york.ac.uk/fp/nhc}},
+year        = 1998
+}
+
+@Manual{XOpen:dce,
+title       = {X/Open Preliminary Specification X/Open {D}{C}{E}: {R}emote {P}rocedure {C}all},
+author      = {X/Open Company Ltd},
+year        = {1993}
+}
+
+
+%---------------------------------------------------------
+% Compilers
+%---------------------------------------------------------
+@MANUAL{Ada:report,
+author      = {Tucker Taft, S. and Duff (eds.), Robert~A.},
+title       = {{A}da95 Reference Manual: Language and Standard Libraries}, 
+organization= {International Standard {ISO/IEC} 8652:1995({E})},
+booktitle   = LNCS,
+volume      = 1246,
+publisher   = SV,
+year        = 1997,
+isbn        = {3-540-63144-5}
+}
+
+@BOOK{AhoSethiUllman:compilers,
+author	    = {Alfred V.~Aho and Ravi Sethi and Jeffrey D.~Ullman},
+title	    = {Compilers -- Principles, Techniques and Tools},
+publisher   = AW,
+isbn        = {0-201-10194-7},
+year	    = 1986
+}
+
+@BOOK{Burge:programming,
+author      = {Burge, W.H.},
+title       = {Recursive Programming Techniques},
+publisher   = AW,
+isbn        = {0-201-14450-6},
+year        = 1975
+}
+
+
+
+%---------------------------------------------------------
+% Databases
+%---------------------------------------------------------
+
+@article{Buneman:comprehensions,
+author      = {Peter Buneman and Leonid Libkin and Dan Suciu and Val Tannen and Limsoon Wong},
+title       = {Comprehension Syntax},
+journal     = {ACM SIGMOD Record},
+volume      = 23,
+number      = 1,
+pages       = {87--96},
+month       = mar,
+year        = 1996,
+url         = {ftp://ftp.cis.upenn.edu/pub/papers/db-research/sigmod_record94.ps.Z}
+}
+
+@article{Buneman:typedqueries,
+author      = {Peter Buneman and Atsushi Ohori},
+title       = {Polymorphism and Type Inference in Database Programming},
+journal     = {ACM Transactions on Database Systems},
+volume      = 21,
+number      = 1,
+pages       = {30--76},
+year        = 1996,
+month       = mar,
+url         = {http://www.jaist.ac.jp/~ohori/dblang.ps}
+}
+
+@article{Boute:divmod,
+author      = {Raymond T.~Boute},
+title       = {The {E}uclidean Definition of the Functions div and mod},
+journal     = {{ACM} {T}ransactions on {P}rogramming {L}anguages and {S}ystems ({TOPLAS})},
+publisher   = ACM,
+address     = {{N}ew {Y}ork, {NY}, {USA}},
+volume      = 14,
+number      = 2,
+pages       = {127--144},
+month       = apr,
+year        = 1992
+}
+
+
+@ARTICLE{Ceri:translating,
+author      = {Stefano Ceri and Georg Gottlob},
+title       = {Translating {SQL} Into Relational Algebra: Optimization, Semantics, and Equivalence of {SQL} Queries},
+journal     = {IEEE Transactions on Software Engineering},
+volume      = 11,
+number      = 4,
+}
+
+@UNPUBLISHED{Decisionsoft:xmlscript,
+author      = {DecisionSoft},
+title       = {{XML} script and its uses},
+year        = 2000,
+note        = {available at: \url{http://www.DecisionSoft.com/TechnicalDescription.html}}
+}
+
+@TECHREPORT{Cardelli:fam,
+author      = {Luca Cardelli},
+title       = {The {F}unctional {A}bstract {M}achine},
+number      = {TR-107}, 
+institution = {{AT\&T} {B}ell Laboratories}, 
+month       = apr,
+year        = 1983,
+url         = {http://www.luca.demon.co.uk/Bibliography.html}
+}
+
+@INPROCEEDINGS{BjesseClaessen:lava,
+title       = {Lava: Hardware Design in {H}askell},
+author      = {Per Bjesse and Koen Claessen and Mary Sheeran and Satnam Singh}, 
+booktitle   = ICFP,
+address     = {Baltimore (Maryland, USA)},
+year        = 1998
+}
+
+@BOOK{Date:reldbases,
+author      = {C.J.~Date},
+title       = {An Introduction to Database Systems (6th edition)},
+isbn        = {0-201-82458-2},
+publisher   = AW,
+year        = 1995
+}
+
+
+%---------------------------------------------------------
+% Functional programming
+%---------------------------------------------------------
+
+@INPROCEEDINGS{Augustsson:cayenne,
+author      = {Augustsson, Lennart},
+title       = {Cayenne -- a Language with Dependent Types},
+booktitle   = {International Conference on Functional Programming},
+pages       = {239--250},
+year        = 1998
+}
+
+@UNPUBLISHED{Baars:syntax,
+author      = {Arthur Baars},
+title       = {Syntax macros},
+note        = {available at \url{http://www.cs.uu.nl/people/arthurb/macros.html}},
+year        = 2002
+}
+
+@INPROCEEDINGS{Beazley:swig,
+author      = {David Beazley},
+title       = {{SWIG}: {A}n Easy to Use Tool for Integrating Scripting Languages with {C} and {C++ }},
+booktitle   = {4th annual {Tcl/Tk} workshop},
+address     = {{Monterey}, {CA}},
+month       = jul,
+year        = 1996,
+url         = {http://www.swig.org/papers/Tcl96/tcl96.html}
+}
+
+@BOOK{Bird:intro,
+author      ={Richard Bird},
+title       ={Introduction to Functional Programming using {H}askell (2nd edition)},
+publisher   ={Prentice Hall},
+year        =1998,
+isbn        ={0-13-484346-0}
+}
+
+
+
+@INPROCEEDINGS{Bjesse:lava,
+author      = {Per Bjesse and Koen Claessen and Mary Sheeran and Satnam Singh},
+title       = {Lava: Hardware Design in {H}askell},
+booktitle   = {proceedings of the ICFP},
+year        = 1998,
+address     = {Baltimore, Maryland}
+}
+
+
+
+@INPROCEEDINGS{Chakravarty:hsc,
+author      = {Manuel Chakravarty},
+title       = {C $\rightarrow$ Haskell, or Yet Another Interfacing Tool.},
+eds         = {Pieter Koopman and Chris Clack}, 
+booktitle   = {Implementation of Functional Languages, 11th. International Workshop ({IFL'99})}, 
+publisher   = SV,
+series      = LNCS,
+volume      = 1868,
+year        = 2000
+}
+
+
+@INPROCEEDINGS{ClaessenSands:sharing,
+author      = {Claessen, Koen and Sands, David},
+title       = {Observable Sharing for Functional Circuit Description},
+booktitle   = {{ASIAN}'99, 5th {A}sian Computing Science Conference},
+address     = {Phuket, Thailand},
+url         = {http://www.cs.chalmers.se/~dave/papers/observable-sharing.ps},
+series      = LNCS,
+publisher   = SV,
+volume      = 1742,
+pages       = {62--73},
+year        = 1999
+}
+
+
+@article{Cody:float,
+author      = {Cody et al., W.~J.},
+title       = {A proposed radix- and word-length-independent standard for floating-point arithmetic},
+journal     = {{IEEE} {M}icro},
+volume      = 4,
+number      = 4,
+pages       = {86--100},
+year        = 1984,
+month       = aug
+}
+
+
+@TECHREPORT{Email:protocol,
+author      = {David H.~Crocker},
+title       = {Standard for the Format of Arpa Internet Text Messages},
+number      = {RFC 822},
+year        = 1982,
+url         = {http://www.imc.org/rfc822}
+}
+
+
+@ARTICLE{Goldberg:float,
+title       = {What every computer scientist should know about floating-point arithmetic},
+author      = {Goldberg David},
+journal     = {{ACM} {C}omputing {S}urveys},
+pages       = {5--48},
+volume      = 23,
+number      = 1,
+year        = 1991
+}
+
+@ARTICLE{Goldberg:floatdesign,
+title       = {The Design of Floating-Point Data Types},
+author      = {Goldberg David},
+journal     = {{ACM} {L}etters on {P}rogramming {L}anguages and {S}ystems},
+pages       = {138--151},
+volume      = 1,
+number      = 2,
+year        = 1992,
+month       = jun
+}
+
+@BOOK{Gosling:java,
+author      = {James Gosling and Bill Joy and Guy Steele},
+title       = {The {J}ava Language Specification},
+publisher   = AW,
+year        = 1996
+}
+
+@MANUAL{Haskell:report,
+author      = {Peyton Jones, Simon and Hughes (eds.), John},
+title       = {Report on the language Haskell'98},
+year        = {1998},
+month       = feb,
+url         = {http://www.haskell.org/report}
+}
+
+@MANUAL{Haskell:ffi,
+author      = {Chakravarty (ed.), Manuel},
+title       = {The {Haskell} 98 Foreign Function Interface 1.0: {A}n Addendum to the {H}askell 98 Report},
+year        = {2002},
+url         = {http://www.cse.unsw.edu.au/~chak/haskell/ffi}
+}
+
+
+@ARTICLE{Hauser:floatexn,
+title       = {Handling Floating-Point Exceptions in Numeric Programs},
+author      = {Hauser John~R.},
+booktitle   = {{ACM} {T}ransactions on {P}rogramming {L}anguages and {S}ystems ({TOPLAS})},
+volume      = 18,
+number      = 2,
+year        = 1996,
+pages       = {139--174},
+month       = mar
+}
+
+@ARTICLE{Hill:exprparser,
+author      = {Hill, Steve},
+title       = {Combinators for Parsing Expressions},
+journal     = JFP,
+volume      = 6,
+number      = 3,
+pages       = {445--463},
+year        = 1996,
+month       = may
+}
+
+@INPROCEEDINGS{Hudak:domain,
+author      = {Paul Hudak},
+title       = {Modular Domain Specific languages and tools},
+booktitle   = {Fifth International Conference on Software Reuse ({ICSR'98})},
+address     = {Victoria, B.C., Canada},
+month       = jun,
+year        = 1998,
+eds         = {P.~Devanbu and J.~Poulin},
+publisher   = {{IEEE} Computer Society Press},
+pages       = {134--142},
+url         = {http://www.cs.yale.edu/homes/hudak-paul/hudak-dir/icsr98.ps}
+}
+
+@ARTICLE{Hughes:matters,
+author      = {John Hughes},
+title       = {{Why Functional Programming Matters}},
+journal     = {{C}omputer {J}ournal},
+volume      = {32},
+number      = {2},
+pages       = {98--107},
+year        = {1989}
+}
+
+@INPROCEEDINGS{Hughes:pretty,
+author      = {John Hughes},
+title       = {{The Design of a Pretty-printing Library}},
+booktitle   = {{Advanced Functional Programming}},
+editor      = {J. Jeuring and E. Meijer},
+year        = 1995,
+pages       = {53--96},
+volume      = 925,
+publisher   = {Springer Verlag, LNCS}
+}
+
+@PHDTHESIS{Hughes:thesis,
+author      = {John Hughes},
+title       = {The Design and Implementation of Programming Languages},
+school      = {University of {O}xford},
+year        = 1984
+}
+
+@INPROCEEDINGS{Johnsson:lambdalifting,
+author      = {Thomas Johnsson},
+title       = {Lambda Lifting: Transforming Programs to Recursive Equations},
+booktitle   = {proceedings of {F}unctional {P}rogramming {L}anguages and {C}omputer {A}rchitecture, LNCS},
+volume      = 201,
+pages       = {190--203},
+address     = {{Nancy, France}},
+year        = 1985,
+month       = sep
+}
+
+@INPROCEEDINGS{Johnsson:gmachine,
+author      = {Thomas Johnsson},
+title       = {Efficient compilation of lazy evaluation},
+booktitle   = {proceedings of the {ACM} Conference on Compiler Construction},
+pages       = {58--69},
+address     = {{Montreal, Canada}},
+year        = 1984,
+month       = jun
+}
+
+
+@TECHREPORT{Jones:gofer,
+author      = {Mark Jones},
+title       = {The implementation of the {Gofer} functional programming system}, 
+number      = {{YALEU/DCS/RR-1030}}, 
+institution = {Yale University}, 
+address     = {New Haven, Connecticut},
+month       = may,
+year        = 1994
+}
+
+
+
+@ARTICLE{Kahrs:typedtree,
+author      = {Stefan Kahrs},
+title       = {Red-Black Trees with Types},
+journal     = JFP,
+volume      = 11,
+number      = 4,
+pages       = {425--432},
+month       = jul,
+year        = 2001
+}
+
+@ARTICLE{Hutton:parsers,
+author      = {Graham Hutton},
+title       = {Higher-Order Functions for Parsing},
+journal     = JFP,
+volume      = 2,
+number      = 3,
+pages       = {232--343},
+url         = {http://www.cs.nott.ac.uk/\dept{}/Staff/gmh/parsing.ps},
+year        = 1992,
+month       = jul
+}
+
+@BOOK{Knuth:divmod,
+author      = {Donald.~E. Knuth},
+title       = {The Art of Computer Programming, Vol 1, Fundamental Algorithms},
+publisher   = AW,
+year        = 1972
+}
+
+@ARTICLE{Landin:next700,
+author      = {Peter J.~Landing},
+title       = {The next 700 programming languages},
+journal     = CACM,
+volume      = 9,
+number      = 3,
+pages       = {157--164},
+month       = mar,
+year        = 1966
+}
+
+@INPROCEEDINGS{Laufer:exist,
+author      = {Konstantin L\"aufer and Martin Oderski},
+title       = {An extension of {ML} with first-class abstract types},
+booktitle   = {Workshop on {ML} and its Applications},
+year        = 1992
+}
+
+@INPROCEEDINGS{LeijenMeijer:haskelldb,
+author      = {Daan Leijen and Erik Meijer},
+title       = {Domain Specific Embedded Compilers},
+booktitle   = {2nd {USENIX} Conference on Domain Specific Languages ({DSL'99})},
+address     = {Austin, Texas},
+month       = oct,
+year        = 1999,
+pages       = {109-122},
+note        = {Also in {ACM SIGPLAN} {N}otices 35, 1, (Jan. 2000)},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html}
+}
+%publisher   = {{USENIX} Association},
+
+@TECHREPORT{Leroy:zinc,
+author      = {Xavier Leroy},
+title       = {The {ZINC} experiment: an economical implementation of the {ML} language},
+number      = {117}, 
+institution = {INRIA}, 
+year        = 1990
+}
+
+@TECHREPORT{Leroy:ocaml,
+author      = {Xavier Leroy},
+title       = {Le {syst\`eme} Caml Special Light: modules et compilation efficace en Caml},
+number      = 2721,
+institution = {INRIA, France},
+month       = nov,
+year        = 1995
+}
+
+@UNPUBLISHED{Marais:webl,
+author      = {H.~Marais},
+title       = {Compaq's Web Language: A Programming Language for the Web},
+year        = 1999,
+note        = {available at: \url{http://www.research.compaq.com/SRC/WebL/WebL.pdf}}
+}
+
+@INPROCEEDINGS{Marlow:webserver,
+author      = {Simon Marlow},
+title       = {Writing High-Performance Server Applications in Haskell, Case Study: A Haskell Web Server},
+booktitle   = {Haskell Workshop},
+address     = {Montreal, Canada},
+month       = sep,
+year        = 2000
+}
+
+@INPROCEEDINGS{Mercury:corba,
+author      = {David Jeffery and Tyson Dowd and Zoltan Somogyi},
+title       = {{MCORBA}: a {CORBA} binding for {M}ercury},
+booktitle   = {Proceedings of the First International Workshop on Practical Aspects of Declarative Languages, LNCS},
+publisher   = SV,
+volume      = 1551,
+pages       = {211--222},
+address     = {San Antonio, Texas},
+month       = jan,
+year        = 1999
+}
+
+@PHDTHESIS{Meijer:thesis,
+author      = {Erik Meijer},
+title       = {Calculating Compilers},
+school      = {Nijmegen University},
+url         = {http://www.research.microsoft.com/~emeijer},
+year        = 1992
+}
+
+@ARTICLE{Meijer:cgi,
+author      = {Erik Meijer},
+title       = {Server side web scripting in Haskell},
+journal     = JFP,
+volume      = 10,
+number      = 1,
+pages       = {1--18},
+year        = 2000,
+month       = jan
+}
+
+@INPROCEEDINGS{Mountjoy:provingstg,
+author      = {Mountjoy, Jon},
+title       = {The spineless tagless G-machine, naturally},
+booktitle   = {Proceedings of the third {ACM SIGPLAN} International Conference on Functional programming},
+address     = {Baltimore, Maryland},
+year        = 1998
+}
+
+
+ 
+
+
+@ARTICLE{Oosterhout:scripting,
+author      = {John K.~Oosterhout},
+title       = {Scripting: {H}igher {L}evel {P}rogramming for the 21st century},
+journal     = {{IEEE} computer magazine},
+year        = 1998,
+month       = mar,
+url         = {http://home.pacbell.net/ouster/scripting.html}
+}
+
+
+@ARTICLE{PartridgeWright:predparsers,
+author      = {Andrew Partridge and David Wright},
+title       = {Predictive parser combinators need four values to report errors},
+journal     = JFP,
+volume      = 6,
+number      = 2,
+pages       = {355--364},
+year        = 1996,
+month       = mar
+}
+
+@ARTICLE{PeytonJones:transformopt,
+author      = {Peyton Jones, Simon and Santos, Andre},
+title       = {A transformation-based optimiser for {H}askell},
+journal     = {Science of Computer Programming},
+volume      = 32,
+number      = {1--3}, 
+pages       = {3--47}, 
+month       = sep,
+year        = 1998
+}
+
+@INPROCEEDINGS{PeytonJones:letfloating,
+author      = {Peyton Jones, Simon and Partain, Will and Santos, Andre},
+title       = {Let-floating: moving bindings to give faster programs},
+booktitle   = {International Conference on Function Programming (ICFP)},
+address     = {Philadelphia},
+month       = may,
+year        = 1996
+}
+
+@UNPUBLISHED{PeytonJones:spec,
+author      = {Peyton Jones, Simon and Ennals, Robert},
+title       = {Optimistic Evaluation: a fast evaluation strategy for non-strict programs},
+month       = mar,
+year        = 2003,
+note        = {submitted to ICFP'03}
+}
+
+@BOOK{PeytonJones:impfun,
+author      = {Peyton Jones, Simon},
+title       = {The Implementation of Functional Programming Languages},
+publisher   = {Prentice-Hall, International series in computer science},
+year        = 1986,
+isbn        = {0-13-453325-9}
+}
+
+@INPROCEEDINGS{PeytonJonesMarlow:inliner,
+author      = {Peyton Jones, Simon and Marlow, Simon},
+title       = {Secrets of the Glasgow Haskell Compiler inliner},
+booktitle   = {Workshop on Implementing Declarative Languages},
+year        = 1999,
+note        = {revised version submitted to {JFP}, {Feb} 2001}
+}
+
+@INPROCEEDINGS{PeytonJones:imperative,
+author      = {Peyton Jones, Simon L. and Philip Wadler},
+title       = {Imperative Functional Programming},
+booktitle   = {POPL},
+volume      = 20,
+year        = 1993,
+pages       = {71--84},
+}
+
+@INPROCEEDINGS{PeytonJones:template,
+author      = {Peyton Jones, Simon and Sheard, Tim},
+title       = {Template meta-programming for {H}askell},
+booktitle   = {{H}askell {W}orkshop},
+address     = {{P}ittsburg, {P}ennsylvania},
+year        = 2002,
+pages       = {1--16},
+isbn        = {1-58113-605-6}
+}
+
+@INPROCEEDINGS{PeytonJones:weak,
+author      = {Peyton Jones, Simon and Simon Marlow and Conal Elliott},
+title       = {Stretching the storage manager: weak pointers and stable names in {Haskell}},
+booktitle   = {IFL},
+year        = 1999
+}
+
+
+@ARTICLE{PeytonJones:stg,
+author      = {Peyton Jones, Simon},
+title       = {Implementing non-strict languages on stock hardware: The {S}pineless {T}agless {G}-machine},
+journal     = JFP,
+volume      = 2,
+number      = 2,
+pages       = {127--202},
+year        = 1992,
+month       = apr,
+url         = {http://www.research.microsoft.com/~simonpj/Papers/papers.html\#compiler}
+}
+
+
+@ARTICLE{ PeytonJones:lambdalifting,
+author      = {Peyton Jones, Simon and David Lester},
+title       = {A Modular Fully-lazy Lambda Lifter in {H}askell},
+journal     = {Software -- Practice and Experience},
+volume      = 21,
+number      = 5,
+pages       = {479-506},
+year        = 1991
+}
+
+
+@BOOK{Plasmeijer:clean,
+author      = {Plasmeijer, Marinus and van Eekelen, Marco}, 
+title       = {Functional Programming and Parallel Graph Rewriting},
+publisher   = AW,
+year        = 1993,
+isbn        = {0-201-41663-8}
+}
+
+@TECHREPORT{Plotkin:opsem,
+author      = {Gordon D.~Plotkin},
+title       = {A Structural Approach to Operational Semantics},
+institution = {Computer Science department, Aarhus University},
+number      = {{DAI-MI FN-19}},
+year        = 1981,
+month       = sep
+}
+
+@PHDTHESIS{Rojemo:thesis,
+author      = {Niklas R{\"o}jemo},
+title       = {Garbage collection and memory efficiency in lazy functional languages},
+school      = {Chalmers University of Technology},
+url         = {http://www.cs.chalmers.se/~rojemo/thesis.html},
+year        = 1995
+}
+
+@INPROCEEDINGS{Sandholm:bigwig,
+author      = {A.~Sandholm and M.~Schwartzbach},
+title       = {A type system for dynamic Web documents},
+booktitle   = {Proceedings of the 27th annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL'00)},
+address     = {Boston, MA},
+month       = jan,
+year        = 2000,
+publisher   = ACM,
+pages       = {290--301}
+}
+
+@PHDTHESIS{Shields:phdthesis,
+author      = {Mark Shields},
+title       = {Static Types for Dynamic Documents},
+school      = {Oregon Graduate Institute},
+year        = 2001,
+month       = feb,
+nrpages     = 261
+}
+
+@INPROCEEDINGS{Shields:hx,
+author      = {Shields, Mark and Peyton Jones, Simon},
+title       = {First-class modules for {H}askell},
+booktitle   = {Ninth International Conference on Foundation of Object-Oriented Languages ({FOOL} 9)},
+address     = {Portland, Oregon},
+month       = dec,
+year        = 2001
+}
+
+@PHDTHESIS{Shields:thesis,
+author      = {Mark Shields},
+title       = {Static Types for Dynamic Documents},
+school      = {Oregon Graduate Institute},
+url         = {http://www.cse.ogi.edu/~mbs/pub/thesis},
+month       = feb,
+year        = 2001
+}
+
+@INPROCEEDINGS{ShieldsMeijer:tir,
+author      = {Mark Shields and Erik Meijer},
+title       = {Type Indexed Rows},
+booktitle   = {28th Annual {ACM} {SIGPLAN-SIGACT} Symposium on Principles of Programming Languages},
+address     = {{L}ondon, {E}ngland},
+pages       = {261--275}, 
+year        = 2001,
+month       = jan,
+url         = {http://www.cse.ogi.edu/~mbs/pub/type_indexed_rows}
+}
+
+@UNPUBLISHED{ShieldsMeijer:xmlambda,
+author      = {Mark Shields and Erik Meijer},
+title       = {{XMLambda}: A Functional Programming Language for Constructing and Manipulating {XML} Documents},
+note        = {Draft report about the XM$\lambda$ language},
+url         = {http://www.cse.ogi.edu/~mbs/pub/xmlambda}
+}
+
+@TECHREPORT{SMTP,
+author      = {Jonathan B.~Postel},
+title       = {Simple Mail Transfer Protocal},
+number      = {RFC 821},
+year        = {1982},
+url         = {http://www.imc.org/rfc821}
+}
+
+@BOOK{Steele:commonlisp,
+author      = {Steele Jr., Guy L.},
+title       = {{C}ommon {LISP}: The Language, 2nd edition},
+publisher   = {{D}igital {P}ress},
+address     = {{W}oburn, {MA}, {USA}},
+year        = 1990,
+isbn        = {1-55558-041-6}
+}
+
+@TECHREPORT{Sun:jsp,
+author      = {E.~Pelegr\i-Llopart},
+title       = {Java Server pages specification (version 1.2)},
+institution = {Sun Microsystems, Inc},
+number      = {JSR-000053},
+address     = {Palo Alto, CA},
+month       = oct,
+year        = 2000,
+note        = {available at: \url{http://java.sun.com/aboutJava/communityprocess/first/jst053/jsp12.pdf}}
+}
+
+@INPROCEEDINGS{SwierstraAzero:combinators,
+author      = {Swierstra, Doaitse and Azero Alcocer, Pablo and J, Saraiava},
+title       = {Designing and implementing combinator languages},
+booktitle   = {Advanced Functional Programming, Third international school ({AFP'98})},
+series      = LNCS,
+publisher   = SV,
+volume      = 1608,
+pages       = {150-206},
+year        = 1999
+}
+
+
+@INPROCEEDINGS{Wadler:listofsuc,
+author	    = {Philip Wadler},
+title	    = {How to replace failure with a list of successes},
+booktitle   = {Functional Programming Languages and Computer Architecture},
+series      = LNCS,
+publisher   = SV,
+volume	    = 201,
+pages	    = {113--128},
+year	    = 1985
+}
+
+@INPROCEEDINGS{Wadler:compmonads,
+author      = {Wadler, Philip},
+title       = {Comprehending {M}onads},
+booktitle   = {Mathemetical Structures in Computer Science},
+note        = {Special issue of the 6'th Conference on {L}isp and Functional Programming},
+volume      = 2,
+pages       = {461--493},
+year        = 1992
+}
+
+@INPROCEEDINGS{Wadler:essence,
+author      = {Wadler, Philip},
+title       = {The Essence of Functional Programming},
+booktitle   = {19'th Symposium on Principles of Programming Languages},
+publisher   = ACM,
+address     = {Albuquerque, {N}ew {M}exico},
+pages       = {1--14},
+url         = {http://cm.bell-labs.com/cm/cs/who/wadler/topics/monads.html},
+year        = 1992,
+month       = jan
+}
+
+
+@INPROCEEDINGS{Wadler:freetheorems,
+author      = {Wadler, Philip},
+title       = {Theorems for Free},
+booktitle   = {4'th International Conference on Functional Programming and Computer Architecture},
+editor      = {Mac Queen},
+address     = {London},
+publisher   = AW,
+pages       = {347-359},
+longurl         = {http://cm.bell-labs.com/cm/cs/who/wadler/topics/parametricity.html},
+year        = {1989},
+month       = sep
+}
+
+@UNPUBLISHED{Wadler:pretty,
+author      = {Philip Wadler},
+title       = {A prettier printer},
+note        = {Talk at \emph{The Fun of Programming},A symposium in honour of Professor Richard Bird's 60th birthday. Oxford, 24-25 March 2003. (Original paper April 1997, revised March 1998.) \url{http://www.research.avayalabs.com/user/wadler/topics/language-design.html#prettier}},
+year        = 1997
+}
+
+@UNPUBLISHED{W3c:css,
+title       = {Cascading Style Sheets, level 1},
+author      = {H.~Lie and B.~Bos},
+note        = {revised ed., W3C Recommendation},
+month       = jan,
+year        = 1999,
+url         = {http://www.w3c.org/TR/1999/REC-CSS1-19990111}
+}
+
+%---------------------------------------------------------
+% Parsing
+%---------------------------------------------------------
+@INPROCEEDINGS{Fokker:funparsers,
+author      = {Jeroen Fokker},
+title       = {Functional Parsers},
+booktitle   = {Advanced Functional Programming, First International Spring School},
+address     = {B{\aa}stad, Sweden},
+eds         = {Jeuring, Johan and Meijer, Erik},
+series      = LNCS,
+volume      = 925,
+pages       = {1--23},
+publisher   = SV,
+url         = {http://www.cs.uu.nl/~jeroen/article/parsers/parsers.ps},
+year        = 1995,
+month       = may
+}
+
+@MANUAL{GillMarlow:happy,
+author      = {Gill, Andy and Marlow, Simon},
+title       = {Happy -- The Parser Generator for {H}askell},
+note        = {University of {G}lasgow},
+url         = {http://www.haskell.org/happy},
+year        = 1995
+}
+
+
+@TECHREPORT{HuttonMeijer:monparsers,
+author      = {Graham Hutton and Erik Meijer},
+title       = {Monadic Parser Combinators},
+institution = {\dept{} of Computer Science, University of Nottingham},
+number      = {NOTTCS-TR-96-4},
+url         = {http://www.cs.nott.ac.uk/\dept{}/Staff/gmh/monparsing.ps},
+year        = 1996
+}
+
+@INPROCEEDINGS{KoopmanPlasmeijer:parsers,
+author      = {Pieter Koopman and Rinus Plasmeijer},
+title       = {Efficient Combinator Parsers},
+booktitle   = {Implementation of Functional Languages},
+series      = LNCS,
+publisher   = SV,
+volume      = 1595,
+pages       = {122--138},
+ftp         = {ftp.cs.kun.nl/pub/CSI/SoftwEng.FunctLang/papers/koop98-EffCombParsIFL98.ps.gz},
+year        = 1999
+}
+
+
+@TECHREPORT{LeijenMeijer:parsec,
+author      = {Daan Leijen and Erik Meijer},
+title       = {Parsec: Direct Style Monadic Parser Combinators for the Real World},
+institution = {\dept{} of Computer Science, Universiteit Utrecht},
+number      = {UU-CS-2001-27},
+url         = {http://www.cs.uu.nl/people/daan/pubs.html},
+year        = 2001
+}
+
+
+@INPROCEEDINGS{SwierstraAzero:errorparsers,
+author      = {Swierstra, Doaitse and Azero Alcocer, Pablo},
+title       = {Fast, Error Correcting Parser Combinators: A Short Tutorial},
+booktitle   = {SOFSEM'99, Theory and Practice of Informatics, 26th Seminar on Current Trends in Theory and Practice of Informatics},
+eds         = {Pavelka, Jan and Tel, Gerard and Bartosek, Miroslav},
+series      = LNCS,
+publisher   = SV,
+volume      = 1725,
+pages       = {111-129},
+url         = {http://www.cs.uu.nl/groups/ST/Software/UU_Parsing},
+year        = 1999,
+month       = nov
+}
+
+@INPROCEEDINGS{SwierstraDuponcheel:errorparsers,
+author      = {Doaitse Swierstra and Luc Duponcheel},
+title       = {Deterministic, Error Correcting Combinator Parsers},
+booktitle   = {Advanced Functional Programming, Second International Spring School},
+eds         = {Meijer, Erik and Sheard, Tim and Launchbury, John},
+series      = LNCS,
+publisher   = SV,
+volume      = 1129,
+pages       = {184--207},
+url         = {http://www.cs.uu.nl/groups/ST/Software/UU_Parsing/AFP2.ps},
+year        = 1996
+}
+
+
+%---------------------------------------------------------
+% the h/direct paper
+%---------------------------------------------------------
+
+@UNPUBLISHED{W3c:xmlquery,
+author      = {P.~Fankhauser and M.~Fernandez and A.~Malhotra and M.~Rys and J.~Sim\'eon and P.~Wadler},
+title       = {The {XML} Query Algebra},
+note        = {W3C Working Draft},
+month       = dec,
+year        = 2000,
+url         = {http://www.w3c.org/TR/2000/WD-query-algebra-20001204}
+}
+
+@UNPUBLISHED{W3c:xmlquerymodel,
+author      = {M.~Fernandez and J.~Robi},
+title       = {The {XML} Query Data Model},
+note        = {W3C Working Draft},
+month       = may,
+year        = 2000,
+url         = {http://www.w3c.org/TR/2000/WD-query-datamodel-20000511}
+}
+
+@UNPUBLISHED{w3c:xsl,
+author      = {S.~Adler and A.~Berglund},
+title       = {Extensible Stylesheet Language (XSL), version 1.0},
+note        = {W3C Candidate Recommendation},
+month       = nov,
+year        = 2000,
+url         = {http://www.w3c.org/TR/2000/CR-xsl-20001121}
+}
+
+@UNPUBLISHED{w3c:xslt,
+author      = {J.~Clark},
+title       = {{XSL} Transformations, ({XSLT})},
+note        = {W3C Recommendation},
+month       = nov,
+year        = 1999,
+url         = {http://www.w3c.org/TR/1999/REC-xslt-19991116}
+}
+
+@UNPUBLISHED{W3c:xexpr,
+author      = {G.T.~Nicol},
+title       = {{XEXPR} - A Scripting Language for XML},
+note        = {W3C Note},
+month       = nov,
+year        = 2000,
+url         = {http://www.w3c.org/TR/2000/NOTE-xexpr-20001121}
+}
+
+@UNPUBLISHED{Xmlforall:xfa,
+author      = {{XML for all Inc.}},
+title       = {{XFA} reference manual},
+year        = 1999,
+note        = {available at: \url{http://www.xmlforall.com/cgi-bin/xfa?doc:doc40}}
+}
+
+
+%---------------------------------------------------------
+% the com paper (example)
+%---------------------------------------------------------
+
+@InProceedings{Finalization,
+  author = {AB Hayes},
+  title = {Finalization in the collector interface},
+  booktitle = {Proceedings of the International Workshop on Memory Management (IWMM'92), St Malo},
+  publisher = {Springer Verlag LNCS 637},
+  editor = {EY Bekkers and J Cohen},
+  month = {Sept},
+  year = {1992},
+  pages = {277-298}
+}
+
+
+
+@article{StateInHaskell,
+AUTHOR = {Peyton Jones, Simon L and Launchbury, John},
+TITLE = {{State in Haskell}},
+JOURNAL = {Lisp and Symbolic Comp.},
+VOLUME = {8},
+NUMBER = {4},
+PAGES = {293--341},
+YEAR = {1995}
+}
+
+
+
+
+%---------------------------------------------------------
+% the script paper (example)
+%---------------------------------------------------------
+@BOOK{Patterns
+,AUTHOR="Erich Gamma and Richard Helm and Ralph Johnson and John Vlissides"
+,TITLE="Design Patterns"
+,PUBLISHER="Addison-Wesley"
+,YEAR="1995"
+}
+
+@MANUAL{Automation
+,TITLE="Automation Programmers Reference"
+,ORGANIZATION="Microsoft Press"
+,YEAR="1997"
+}
+
+@MANUAL{VB
+,TITLE="Visual Basic 5 Reference Manual"
+,ORGANIZATION="Microsoft Press"
+,YEAR="1997"
+}
+
+@BOOK{UnderstandingAciveX
+,AUTHOR="David Chappel"
+,TITLE="Understanding ActiveX and OLE"
+,PUBLISHER="Microsoft Press"
+,YEAR="1996"
+}
+
+
+@BOOK{InsideOle
+,AUTHOR="Kraig Brockschmidt"
+,TITLE="Inside OLE (second edition)"
+,PUBLISHER="Microsoft Press"
+,YEAR="1995"
+}
+
+
+@misc{overlapping,
+author={Philip Wadler},
+howpublished={Personal communication}
+}
+
+@booklet{HaskellReport,
+  author =       "J. Peterson (editor) et. al.",
+  title =        "Report on the Programming Language {H}{a}{s}{k}{e}{l}{l} Version 1.4",
+  howpublished =  "\texttt{http://www.haskell.org/}",
+  month =        "April 6",
+  year =         "1997"
+}
+
+@article{ServerSide,
+AUTHOR = {Erik Meijer},
+TITLE = {{S}erver-side {S}cripting in {H}askell},
+JOURNAL = {Journal of Functional Programming},
+YEAR = {Accepted for publication}
+}
+
+
+@MANUAL{Agents
+,TITLE="Developing for Microsoft Agent"
+,ORGANIZATION="Microsoft Press"
+,YEAR="1998"
+}
+
+@BOOK{DHTML
+,AUTHOR={Scott Isaacs}
+,TITLE="Inside Dynamic HTML"
+,PUBLISHER="Microsoft Press"
+,YEAR="1997"
+}
+
+@BOOK{CSS
+,editor={H{\aa}kon Wium Lie and Bert Bos}
+,TITLE="Cascading Style Sheets"
+,PUBLISHER="Addison-Wesley"
+,YEAR="1997"
+}
+
+
+@BOOK{InsideCom
+,AUTHOR="Dale Rogerson"
+,TITLE="Inside COM"
+,PUBLISHER="Microsoft Press"
+,YEAR="1997"
+}
+
+@BOOK{ActiveXInsideOut
+,AUTHOR="Adam Denning"
+,TITLE="ActiveX Controls Inside Out (second edition)"
+,PUBLISHER="Microsoft Press"
+,YEAR="1997"
+}
+
+
+@BOOK{Petzold
+,AUTHOR="Charles Petzold"
+,TITLE="Programming Windows 95"
+,PUBLISHER="Microsoft Press"
+,YEAR="1996"
+}
+
+
+@InProceedings{Hawk,
+title={{M}icroprocessor {S}pecification in {H}awk},
+author={John Matthews and John Launchbury and Byron Cook},
+booktitle={International Conference on Computer Languages},
+year={1998}
+}
+
+@MANUAL{Hugs
+,TITLE="Hugs 1.4"
+,ORGANIZATION="The University of Nottingham and Yale University"
+,YEAR="1998"
+,ADDRESS="\texttt{http://www.haskell.org/hugs}"
+}
+
+@booklet{HTML4
+, TITLE="{H}{T}{M}{L} 4.0 Specification"
+, AUTHOR="D. Ragget and Arnoud Le Hors and Ian Jacobs"
+, MONTH="December"
+, YEAR="1997"
+, HOWPUBLISHED="\texttt{http://www.w3.org/TR/REC-html40}"
+}
+
+@booklet{DOM1
+, TITLE="{D}ocument {O}bject {M}odel ({D}{O}{M}) {L}evel 1 {S}pecification"
+, AUTHOR="Lauren Wood et. al."
+, MONTH="October"
+, YEAR="1998"
+, HOWPUBLISHED="\texttt{http://www.w3.org/TR/REC-DOM-Level-1}"
+}
+
+@InCollection{wadler95:_monads_funct_progr,  author =    {Philip Wadler},
+  title =    {Monads for functional programming},
+  booktitle =    {Advanced Functional Programming},
+  publisher =  {Springer Verlag},  year =  1995,
+  editor =   {J. Jeuring and E. Meijer},  volume =   925,  series =  {LNCS}
+}
+
+@TECHREPORT{email,
+author      = {David H.~Crocker},
+title       = {Standard for the Format of Arpa Internet Text Messages},
+number      = {RFC 822},
+year        = 1982,
+url         = {http://www.imc.org/rfc822}
+}
+
+
+@BOOK{Wall:perl,
+author      = {L.~Wall and T.~Christiansen and J.~Orwant},
+title       = {Programming {P}erl},
+publisher   = {{O'Reilly and Associates}},
+month       = jul,
+year        = 2000,
+note        = {3rd ed.}
+}
+
+@ARTICLE{Wirth:oberon,
+author      = {Niklaus Wirth},
+title       = {The Programming Language {O}beron},
+journal     = {Software Practice and Experience},
+publisher   = SV,
+volume      = 19,
+number      = 9,
+year        = 1988,
+note        = {The {O}beron language report},
+url         = {http://www.oberon.ethz.ch}
+}
+
+@INPROCEEDINGS{King:combmonads,
+author = {King, David J. and Wadler, Philip},
+title = {Combining Monads},
+booktitle = {Proceedings of the 1992 Glasgow Workshop on Functional Programming},
+year = {1993},
+isbn = {3-540-19820-2},
+pages = {134--143},
+publisher = {Springer-Verlag},
+address = {London, UK}
+}

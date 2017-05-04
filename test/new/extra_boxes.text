@@ -1,0 +1,36 @@
+Title	: Test Css attributes
+Heading Base: 2
+
+# Css
+
+A paragraph
+
+A framed[^fn1] paragraph 1
+{ border-style=solid border-width=1px \
+  padding=1ex margin=1ex text-indent=0pt }
+
+A framed[^fn2] paragraph 2
+{ border-style=solid border-width=1px \
+  padding=1ex margin=1ex text-indent=0pt \
+  height=2cm  }
+
+
+A framed paragraph 3
+{ border-style=solid border-width=1px \
+  padding=1ex text-indent=0pt \
+  height=2cm width=4cm .align-center }
+
+A framed paragraph 4
+{ border-style=solid border-width=1px \
+  padding=1ex text-indent=0pt \
+  height=2cm width=4cm margin-left=auto margin-right=auto }
+
+some centered text
+{ text-align=center }
+
+some centered text
+{ text-align=center width=2cm margin-left=auto margin-right=auto }
+
+
+[^fn1]: footnote 1
+[^fn2]: footnote 2

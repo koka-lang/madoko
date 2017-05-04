@@ -1,0 +1,136 @@
+Title         : My Academic Paper
+Author        : You
+Affiliation   : Research institute
+Email         : you@bar.com
+
+Author        : My co-author
+Affiliation   : Other institute
+Email         : other@bar.com
+
+Colorizer     : javascript
+Bibliography  : example
+Heading base  : 2
+
+Bib Style     : plainnat
+Cite Style    : natural
+
+Doc class     : [10pt]style/sigplanconf.cls
+
+Name References: Referenze
+
+floating-endperiod: :
+
+.newline {
+  tex-cmd: "\protect\newline\hspace{\textwidth}";
+}
+
+[INCLUDE=lipsum]
+
+[TITLE]
+
+~ Abstract
+The [[\mdcurrentfontsize{}]{input=texraw}pabstract]{font-size:16pt} of the [[\mdcurrentfontsize{}]{input=texraw}paper]{font-size:2}. Cum justo odio, dapibus ac facilisis in,
+egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor
+mauris condimentum nibh, ut fermentum massa justo sit amet.
+~
+
+
+# Introduction     { #sec-intro }
+
+[greek δααν. こんにちは is Japanese.]{font-family:"MS Gothic"}
+
+Figure [#fig-butterfly] in Section [#sec-intro] shows a monarch butterfly.
+Note that you can drag&drop images into the editor pane to include them in
+the document, and similarly with bibtex files, latex style files, etc.
+
+~ Equation {.para-end}
+x=mc^2
+~
+
+~ MathDefs
+\newcommand{\router}[1]{R_{#1}}
+~
+
+## Network Optimized Datalog
+
+~ Snippet
+\begin{picture}(100,70)(-10,0)
+ \thicklines
+ \put(0, 60){$A$}
+ \put(7, 63){\vector(1,0){20}}
+ \put(27, 60){$\router{1}$}
+ \put(37, 63){\vector(1,0){60}}
+ \put(100,60){$\router{2}$}
+ \put(110,63){\vector(1,0){20}}
+ \put(131,60){$B$}
+ \put(32, 59){\vector(2,-3){30}}
+ \put(68, 15){\vector(2, 3){30}}
+ \put(60, 5){$\router{3}$}
+ \put(70, 10){\vector(1,0){30}}
+ \put(105, 5){$D$} 
+\end{picture}
+~
+
+
+&lipsum1;
+
+~ Equation {#eq-test .para-end}
+x=mc^3
+~
+
+&lipsum2;
+
+~ Figure { #fig-butterfly caption="A Monarch butterfly[]{.newline}^1^ test" page-align=here }
+![butterfly]
+~
+
+[butterfly]: images/butterfly.png "butterfly"  { width=4em }
+
+#  Content
+
+A definition of $e$ is shown in Equation [#euler] proved by Theorem [#th-euler]:
+
+~ Equation { #euler }
+e = \lim_{n\to\infty} \left( 1 + \frac{1}{n} \right)^n
+~
+
+~ Theorem {#th-euler; caption:"a caption"}
+(_Euler's theorem_) More math here.
+~
+
+~ Proof { caption: "Of Theorem [#th-euler]" }
+Here is a proof.
+~
+
+Let's program some Javascript:
+``` javascript
+function hello() {
+  return "hello world!"
+}
+```
+
+~ Remark
+Great
+~
+
+# More
+
+Our [contributions]{font-family='"MS Gothic"'} are:
+
+* A figure of a _butterfly_;
+* Some **mathematics**;
+* And some source code;
+* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+  Textual citations, like @Knuth:Tex are also possible.
+
+
+~ Note
+The syntax highlighting works in PDF too.
+~
+
+# Conclusion
+
+Really fun to write Markdown :-)
+
+[BIB]
+

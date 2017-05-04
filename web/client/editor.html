@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html manifest="madoko.appcache">
+<head>
+
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+<title>Madoko</title>
+
+<!-- Editor themes -->
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-dark-theme.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="lib/vs/editor/css/vs-theme.css" />
+<link rel="shortcut icon" type="image/x-icon" href="images/icon-madoko.ico"/>
+
+<!-- madoko style -->
+<link rel="stylesheet" type="text/css" href="styles/madoko.css">
+
+<!-- main style -->
+<link rel="stylesheet" type="text/css" href="styles/main.css">
+
+
+</head>
+
+<body class="theme-dark" >
+<noscript>
+<div id="nojscript" class="load-error">
+<p>Madoko is a dynamic application that requires JavaScript.</p>
+<p>Please enable JavaScript in your browser and reload.</p>
+</div>
+</noscript>
+<div id="oldbrowser" class="load-error" style="display:none">
+<p>Madoko uses HTML5 features and requires a recent browser version to work correctly.</p>
+<p>Please upgrade your browser to a more recent version.</p>
+<p>Madoko is known to work with IE 10+, Chrome 31+, Safari 7+, and Firefox 27+.</p>
+</div>
+<div id="multibrowser" class="load-error" style="display:none">
+<p>Snap! You opened too many Madoko instances in the browser.</p>
+<p>Unfortunately, Madoko can only open up to nine windows/tabs in a single browser. Close a few and try again.</p>
+</div>
+
+<div id="main" style="display:none">
+<div class="app-header header-bar">
+    <!-- <a href="https://www.madoko.net" title="Madoko home page"><img id="madoko-logo" class="button" src="images/dark/icon-madoko.png"/></a>
+    -->
+    <div id="document" class="popup touch"
+      ><img id="cloud" src="images/dark/button-folder.png"/>
+      <div id="document-content" class="menu boxed">
+        <div id="new" class="button" title="Create a new document"
+          ><span class="icon"><img src="images/icon-plus.png"/></span>New ... </div>
+        <div id="open" class="button" title="Open document from cloud storage"
+          ><span class="icon"><img src="images/icon-local.png"/></span>Open ... <span class="shortcut">(Alt-O)</span></div>
+        <div id="save" class="button" title="Save document to cloud storage"
+          ><span class="icon"><img src="images/icon-disk.png"/></span>Save To ...</div>        
+        <div id="menu-include" class="button" title="Insert items from disk"
+          ><span class="icon"><img src="images/icon-upload.png"/></span>Insert File...</div>        
+        <hr/>      
+        <div id="snapshot" class="button" title="Save a full copy of the current document in a 'snapshots/<document>-<date>' sub-folder on the cloud storage"
+          ><span class="icon"><img src="images/icon-snapshot.png"/></span>Save a snapshot ...</div>        
+        <div id="azure" class="button" title="Save document as a website deployed on Azure (needs a connection to Dropbox)"
+          ><span class="icon"><img src="images/icon-azure.png"/></span>Publish to Azure ...</div>
+        <div id="import-tex" class="button" title="Import and convert local LaTeX document to Madoko"
+          ><span class="icon"><img src="images/icon-upload.png"/></span>Import LaTeX document ...</div>
+        <hr/>
+          <div id="pull" class="button" title="Pull updates from cloud storage or repository.
+(done automatically for repositories every 30 seconds)"
+          ><span class="icon"><img src="images/icon-pull2.png"/></span>Pull Only<span class="shortcut">(Alt-P)</span></div>
+          <div id="sync-now" class="button" title="Synchronize with cloud storage or a repository.
+(done automatically for cloud storage every 30 seconds)"
+          ><span class="icon"><img src="images/icon-sync.png"/></span>Synchronize<span class="shortcut">(Ctrl-S / Alt-S)</span></div>                          
+        <hr/>
+        <div id="export-html" class="button" title="Export the document as a stand-alone web-page (HTML)">
+        <span class="icon"><img src="images/icon-html.png" title="Generate HTML"/></span>Generate HTML page<span class="shortcut">(Alt-H)</span></div>
+        <div id="export-pdf" class="button" title="Export the document as PDF">
+        <span class="icon"><img src="images/icon-pdf.png" title="Generate PDF"/></span>Generate PDF document<span class="shortcut">(Alt-L)</span></div>
+        <div id="export-texzip" class="button" title="Export a zip file containing all files needed for a LaTeX submission.
+Unpacking the zip and running LaTeX on the main document should produce the final PDF.">
+        <span class="icon"><img src="images/icon-zip.png" title="Generate LaTeX bundle"/></span>Generate LaTeX bundle<span class="shortcut">(Alt-Z)</span></div>
+      </div
+    ></div
+    ><div id="toolbox" class="popup touch">
+      <img src="images/dark/icon-user-write.png"/>
+      <div id="toolbox-content" class="menu boxed pinnable" data-bounded="editorpane">
+      </div>
+    </div
+    ><div id="connection" class="popup">
+      <img id="connection-logo" src="images/icon-empty.png"/>
+      <img id="icon-disconnect" class="item-disconnect" src="images/dark/icon-disconnect.png"/>
+      <div id="connection-content" class="menu boxed">
+        <div id="connection-message"></div>
+        <div id="signin" class="button" title="Sign in"
+          ><span class="icon"><img src="images/icon-signin.png"/></span>Sign in ...</div>
+        <div id="signout" class="button" title="Sign out"
+          ><span class="icon"><img src="images/icon-signout.png"/></span>Sign out ...</div>
+        <div id="invite" class="button" title="Share this document folder to collaborate with others"
+          ><span class="icon"><img src="images/icon-share.png"/></span>
+          <a id="invite-link" href="" target="_blank">Invite co-authors <img src="images/icon-link.png"/></a></div>
+      </div>
+    </div
+    ><div id="edit-select" class="popup" >     
+      <span id="edit-select-header">&nbsp;</span>
+      <div id="edit-select-content" class="menu boxed">
+        <div id="edit-select-directory"></div>
+        <div id="edit-select-files"></div>        
+      </div
+    ></div>
+    <div id="users-menu" class="popup">
+      <span id="users-status">
+        <img id="icon-users" class="status" src="images/dark/icon-users.png" title="Document is opened by other users"/>
+        <img id="icon-users-read" class="status" src="images/dark/icon-users.png" title="Document is viewed by other users"/>
+        <img id="icon-users-edit" class="status" src="images/dark/icon-users-edit.png" title="Document is edited concurrently by other users"/>
+      </span>
+      <div id="users-panel" class="menu boxed">
+      </div>
+    </div>
+    <img id="sync-spinner" class="button gspinner" src="images/dark/spinner-sync.gif" title="Synchronizing with cloud storage..."/>
+      
+    <div class="right">
+      <img id="view-spinner" class="gspinner" src="images/dark/spinner-view.gif" title="Rendering..."/>
+      <div class="button touch">
+        <img id="view-sync" class="" src="images/dark/button-view-sync.png" title="Synchronize editor with the preview (or double-click in the preview)"/>      
+      </div>
+      <div class="button touch">
+        <img id="view-full" class="" src="images/dark/icon-view-full.png" title="Switch to full screen preview (Alt-V)"/>
+      </div>
+      <div id="menu-settings" class="popup touch no-close-on-click">
+        <img src="images/dark/button-settings.png" />
+        <div id="menu-settings-content" class="menu boxed">
+          <div class="button" title="Synchronize automatically with cloud storage, or pull automatically from a repository
+(every 30 seconds)">
+            <input type="checkbox" id="checkAutoSync" checked/> Synchronize automatically</div>
+          <div class="button" title="Show line numbers in the editor">
+            <input type="checkbox" id="checkLineNumbers"/> Show line numbers</div>
+          <div class="button" title="Wrap lines in the editor">
+            <input type="checkbox" id="checkWrapLines"/> Wrap lines</div>
+          <div class="button" title="Automatically check spelling">
+            <input type="checkbox" id="checkSpellCheck"/> Check spelling</div>
+         <hr/>
+          <div class="button" 
+               title="Do not update the view until there is a pause in typing.
+  Delaying the view update increases performance with large documents or slow browsers.">
+            <input type="checkbox" id="checkDelayedUpdate"/> Delayed view updates</div>
+          <div class="button" 
+               title="Do not update the view automatically.
+  This setting can save energy or can be used on very slow browsers to increase responsiveness.">
+            <input type="checkbox" id="checkDisableAutoUpdate"/> Disable automatic view updates</div>
+          <div class="button" 
+               title="Do not use the Madoko server to typeset mathematics and/or the bibliography">
+            <input type="checkbox" id="checkDisableServer"/> Disable server</div>         
+         <hr/>
+         <div>
+          <span class="menu-label">Theme:</span> 
+            <span id="theme-zen" class="button"><span class="color-box" style="background-color:#836d6d">&nbsp;</span> Autumn</span>
+            <span id="theme-ivory" class="button"><span class="color-box" style="background-color:Floralwhite">&nbsp;</span> Ivory</span>
+            <span id="theme-midnight" class="button"><span class="color-box" style="background-color:#666">&nbsp;</span> Midnight</span>
+         </div>
+        <div>
+          <span class="menu-label">Font:</span> 
+            <span id="font-small" class="button">Small</span>
+            <span id="font-medium" class="button">Normal</span>
+            <span id="font-large" class="button">Large</span>
+            <span id="font-x-large" class="button">X-Large</span>
+         </div>
+         <div></div>       
+        </div>
+      </div
+      ><div id="help" class="popup touch">
+        <img src="images/dark/button-help.png" title="About"/>
+        <div id="help-content" class="menu boxed">
+          <a target="_blank" class="button" href="https://koka-lang.github.io/madoko/reference.html">
+            Madoko reference manual <img src="images/icon-link.png"/></a>
+          <a target="_blank" class="button" href="https://www.madoko.net">
+            Madoko home page <img src="images/icon-link.png"/></a>
+          <a target="_blank" class="button" href="https://github.com/koka-lang/madoko/issues">
+            Report an issue or start a discussion <img src="images/icon-link.png"/></a>
+          <hr/>
+          <div class="notice"
+        >      Copyright &copy; 2014&ndash;2017, Microsoft Corporation<br>
+               Created at Microsoft Research by Daan Leijen.<br>
+               Madoko is free software and available under the Apache 2.0 license
+               on <a target="_blank" href="http://madoko.codeplex.com">codeplex.com</a>.               
+              <div id="showversion" class="button">Madoko, version <span id="madokoWebVersion">...</span> <span id="madokoDigest"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>  
+</div>
+
+<div id="main-body" class="app-body panel vertical" data-panel-hide="view">
+  <div id="editorpane" class="pane left">
+    <div class="pane-content" >
+      <div id="editor" class="pane-view"></div>
+    </div>
+  </div  
+  ><div id="viewpane" class="pane right normal">
+      <div class="pane-content" id="view-container">
+      <div id="fullview-header" class="header-bar">
+        <span class="content">Madoko viewer
+         <span class="right"><span id="close-fullview" class="button" title="Close the preview window (Alt-V)"><img src="images/dark/icon-close.png"/></span></span>
+        </span></div>
+      <iframe id="view" class="pane-view view" sandbox="allow-scripts allow-popups" src="preview/preview.html"></iframe>
+    </div>
+  </div
+></div>
+
+<div class="app-footer header-bar">
+  <div id="view-message" class="popup no-close-on-click">
+    <img id="console-ok" src="images/dark/button-console.png"/>    
+    <img id="console-warn" class="hide" src="images/dark/button-console-warn.png"/>    
+    <div id="console" class="madoko menu boxed">
+      <div id="console-out" class="monospace short"></div>
+    </div>
+  </div>
+  <span id="status"></span>    
+  <img id="export-spinner" class="gspinner" src="images/dark/spinner-view.gif" title="Rendering on server..."/>        
+  <span class="ms-notice">
+    <a href="http://go.microsoft.com/fwlink/?LinkId=386394">terms of use</a> |
+    <a href="http://go.microsoft.com/fwlink/?LinkID=286687">privacy and cookies</a> |
+    &copy; 2014&ndash;2017 microsoft research&nbsp;
+  </span>
+</div>
+</div>
+
+
+<!-- file picker -->
+<div id="fade"></div>
+<div id="picker" class="modal">
+<div id="picker-header" class="app-header header-bar">
+  <span id="command-name"></span>
+  <img id="header-logo" src="images/dark/icon-dropbox.png"/>
+  <span id="header-text"></span>
+  <div id="folder-name"></div>
+  <input id="file-name" type="text"/>  
+  <!-- <img id="icon-close" class="button" src="images/dark/icon-close.png" title="Close the dialog"/> -->
+</div>
+<div class="app-body">
+  <div class="app-content"> 
+    <div id="message-signin" class="message">Not signed in.</div>        
+    <div id="message-connect" class="message">Connected.</div>
+    <div id="message-message" class="message"></div>
+    <div id="message-alert" class="message">The current local document has changes that have not been saved to the cloud yet!
+    <br/>Are you sure you want to discard these changes?
+    <br/>
+    <br/>
+    <br/><small>(Select <code>Synchronize now</code> or <code>Save To</code> from the menu to save your changes)</small></div>
+    <div id="message-template" class="message">Select a template<hr></div>
+    <div id="templates">
+      <div class='item selected' data-path='default'>
+        <img class='item-icon' src='images/template-default.png'/><span class='item-name'>Default document</span>
+      </div>
+      <div class='item' data-path='sigplanconf;style/sigplanconf.cls;example.bib'>
+        <img class='item-icon' src='images/template-article.png'/><span class='item-name'>Academic article</span>
+      </div>
+      <div class='item' data-path='bookm;example.bib'>
+        <img class='item-icon' src='images/template-bookm.png'/><span class='item-name'>Book or Manual</span>
+      </div>
+      <div class='item' data-path='presentation'>
+        <img class='item-icon' src='images/template-presentation.png'/><span class='item-name'>Presentation</span>
+      </div>
+      <hr/>
+      <div class='item' data-path='acmart;style/acmart.mdk;acmart.cls;style/acm-reference-format.bst;acmclassify.mdk;example.bib'>
+        <img class='item-icon' src='images/template-acmart.png'/><span class='item-name'>New <a  target="_blank"  href="http://sigplan.org/Resources/Author/#acmart-format">ACM</a> style article (PACMPL, SIGPLAN, etc)</span>
+      </div>
+      <div class='item' data-path='lipics;style/lipics.mdk;style/lipics.cls;cc-by.pdf;lipics-logo-bw.pdf;example.bib'>
+        <img class='item-icon' src='images/template-lipics.png'/><span class='item-name'><a  target="_blank"  href="http://www.dagstuhl.de/en/publications/lipics/instructions-for-authors/">LIPIcs</a> style article</span>
+      </div>
+      <div class='item' data-path='lncs;style/lncs.mdk;style/llncs.cls;example.bib'>
+        <img class='item-icon' src='images/template-lncs.png'/><span class='item-name'><a target="_blank" href="http://www.springer.com/computer/lncs/lncs+authors">Springer LNCS</a> style article</span>
+      </div>
+      <div class='item' data-path='sigplanconf;style/sigplanconf.cls;example.bib'>
+        <img class='item-icon' src='images/template-sigplanconf.png'/><span class='item-name'><a  target="_blank" href="http://www.sigplan.org/Resources/Author/">SIGPLAN</a> conference style article</span>
+      </div>
+      <div class='item' data-path='ieee;style/ieee.mdk;style/IEEEtran.cls;style/IEEEtran.bst;example.bib'>
+        <img class='item-icon' src='images/template-ieee.png'/><span class='item-name'><a  target="_blank" href="http://www.ieee.org/conferences_events/conferences/publishing/templates.html">IEEE</a> style article</span>
+      </div>
+      <div class='item' data-path='webpage'>
+        <img class='item-icon' src='images/template-webpage.png'/><span class='item-name'>Web page</span>
+      </div>      
+    </div>
+    <div id="listing">
+    </div>
+    <div id="upload">
+      <div id="dropzone">
+        Drop file(s) here
+      </div>
+      <small>(Or select manually: <input type="file" id="pickfiles" name="Choose" multiple /><br/>Also, you can directly drop files into the editor pane)</small>
+    </div>
+    <div id="commit">
+       <p>Commit message:<br>
+       <input id="commit-message" type="text" />
+       </p>
+       <ul id="commit-modified">
+       </ul>
+       <div><input id="commit-all" type="checkbox" title="(Un)check all"></div>
+    </div>
+    <div id="snapshot">
+       <p>Snapshot description:<br>
+       <input id="snapshot-message" type="text" />
+       </p>
+    </div>
+  </div>
+</div>
+<div id="picker-footer" class="app-footer header-bar">
+  <div id="login-info"><span id="remote-username"></span> <div id="button-signout" class="button">sign out</div></div>  
+  <div id="picker-buttons">
+    <div id="button-snapshot" class="button">Save Snapshot</div>
+    <div id="button-commit" class="button">Commit</div>
+    <div id="button-signin" class="button">Sign in</div>
+    <div id="button-discard" class="button">Discard</div>
+    <div id="button-open" class="button">Open</div>
+    <div id="button-new" class="button">Create</div>
+    <div id="button-save" class="button">Save To</div>
+    <div id="button-push" class="button">Publish</div>
+    <div id="button-cancel" class="button">Cancel</div>
+  </div>
+</div>
+</div>
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" data-main="scripts/startup.js" src="lib/vs/loader.js"></script>
+
+</body>
+</html>

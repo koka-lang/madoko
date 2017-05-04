@@ -1,0 +1,649 @@
+Package         : [heading-base={&heading-base;},section-num={&tex-section-num;},bib-label={&bib-label;},fontspec={&font-spec;}]madoko2
+Logo            : False
+Tex2            : True
+Maketitle       : False
+Heading Depth   : 3 
+Toc Depth       : 3 
+Heading Base    : 2
+Tex Section Num : False
+Bib Label       : True
+Math Mode       : static
+Font Spec       : True
+Title Running   :
+Author Running  :
+Bib Search Url  :
+Csl Style       :
+
+<!-- standard elements -->
+Article   { html-elem:article }
+Section   { html-elem:section }
+Aside     { html-elem:aside }
+Nav,.Toc  { html-elem:nav }
+
+.Framed   { border: solid black 1px }
+Center    { .align-center }
+Remote    { tight:true; margin-bottom: 0pt }
+
+Pre       { input: pre; .para-block; display:block }
+Code      { input: pre }
+Hr        { .madoko }
+Table     { .madoko }
+Dd        { html-elem: dd; margin-left: 1.5em }
+Dt        { html-elem: dt; font-weight: bold }
+
+FlushLeft   { .align-left }
+FlushRight  { .align-right }
+Comment     { display: none }
+
+Snippet     { input: math; display:block; math-full: true }
+Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
+@if html {
+  Footnote { 
+    before: "[\/^&label;.^]{.footnote-before}";
+    after : "&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}";
+  }
+}
+
+@if html && (not full) {
+  math svg share paths: false
+  .body.madoko { tag: false; }
+}
+
+<!-- lists -->
+.Ul-Li    { @ul-li; label: "[(@ul-li)]{.ul-li-label}" }
+.Ol-Li    { @ol-li; label: "[(@ol-li)]{.ol-li-label}" }
+.Dl-Li    { @dl-li; label: "[(@dl-li)]{.dl-li-label}" }
+Ol        { @ol-li: decimal }
+Ul        { @ul-li: decimal }
+Dl        { @dl-li: decimal }
+.li-label { display: inline-block; width: 2.5em; margin-left: -3em; margin-right: 0.5em; text-align: right }
+
+<!-- special input -->
+.TexRaw         { input: texraw }
+.HtmlRaw        { input: htmlraw }
+.MathInline     { input: math }
+MathDisplay     { input: math; .para-block }
+MathPre         { input: mathpre; .para-block }
+MathDefs        { input: mathdefs; }
+HtmlOnly        { input: htmlonly; tag: false }
+Tex             { input: tex; tag: false }
+TexOnly         { input: texonly; tag: false }
+Bib             { input: tex }
+math-inline     { input: math }
+math-display    { input: math }
+
+.hidden         { display: none }
+.noindent       { text-indent: 0em }
+.align-center   { text-align: center }
+.texturl        { .monospace }
+
+.booktable {
+  rule-top-width          : 2px;
+  rule-bottom-width       : 2px 
+  rule-mid-width          : 1.35px;
+  thead-tr-font-weight    : normal;
+  rule-top-sep            : 4pt;
+  rule-bottom-sep         : 4pt;
+  rule-mid-sep            : 3pt; 
+  thead-tr-1-padding-top  : 3pt;
+  thead-tr-padding-bottom : 3pt;
+}
+
+
+<!-- heading elements -->
+h0 { label: "[@h0]{.heading-label}"; @h0:upper-roman }
+h1 { label: "[@h1]{.heading-label}" }
+h2 { @h1-h2; label: "[@h1.@h1-h2]{.heading-label}" }
+h3 { @h1-h2-h3; label: "[@h1.@h1-h2.@h1-h2-h3]{.heading-label}" }
+h4 { @h1-h2-h3-h4; label: "[@h1.@h1-h2.@h1-h2-h3.@h1-h2-h3-h4]{.heading-label}" }
+
+heading-endperiod: .
+heading-format   : &label;&heading-endperiod;&ensp;
+
+@if heading-depth>=1 {
+  h1 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=2 {
+  h2 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=3 {
+  h3 { before: "[&heading-format;]{.heading-before}" }
+}
+@if heading-depth>=4 {
+  h4 { before: "[&heading-format;]{.heading-before}" }
+}
+@if toc-depth>=0 {
+  h0 { toc; toc-depth:1 }
+}
+@if toc-depth>=1 {
+  h1 { toc  }
+}
+@if toc-depth>=2 {
+  h2 { toc }
+}
+@if toc-depth>=3 {
+  h3 { toc }
+}
+@if toc-depth>=4 {
+  h4 { toc }
+}
+
+h1,h2,h3,h4 {
+  toc-line: "&heading-format;&source;"; 
+}
+
+.tocblock,.tocitem { tight:true }
+
+<!-- entities -->
+Defaults        : True
+
+lowline         : &#x5F;
+qed             : [&box;]{float: right}
+vfill           : \/
+@if tex {
+  vfill         : [\vfill{}]{input: texraw}
+  lowline       : &#0818;
+  qed           : [\qed{}]{input: texraw}
+}
+eg              : e.g.
+ie              : i.e.
+etal            : et al.
+
+LogoLatex       : $\mbox{\LaTeX}$
+LogoTex         : $\mbox{\TeX}$
+LogoLatexe      : $\mbox{\LaTeXe}$
+LogoBibtex      : $\mbox{\sc{Bib}\TeX}$
+LogoAmstex      : $\mbox{\AmSTeX}$
+LogoMadoko      : Created with [Madoko.net](https://www.madoko.net).
+.LogoMadoko     { display:block; text-align: right; font-size: xx-small; margin-top: 4em; tight: true }
+
+smallskip       : []{display: block; margin-bottom: 0.5em }
+medskip         : []{display: block; margin-bottom: 1em }
+bigskip         : []{display: block; margin-bottom: 2em }
+@if tex {
+  smallskip     : [\smallskip]{input:texraw}
+  medskip       : [\medskip]{input:texraw}
+  bigskip       : [\bigskip]{input:texraw}
+}
+
+<!-- notes -->
+note-endperiod : &heading-endperiod;
+note-format    : **[&caption;]{.note-caption}**&note-endperiod;&nl;
+
+.Note     { display: block; before: "[&note-format;]{.note-before}"; caption:"&name-note;" }
+.Remark   { .Note; caption: "&name-remark;" }
+.Todo     { .Note; caption: "&name-todo;" }
+
+<!-- equations and math -->
+Equation {
+  label: "[(@equation)]{.equation-label}";
+  replace: '[&label;]{.equation-before}&nl;~ Begin MathDisplay { color: "&color;"; math-full: "&math-full;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  line-adjust: 0;
+  .para-block;
+  tex-label-before: "&id;";
+}
+
+Math {
+  replace: '~ Begin MathDisplay { color:"&color;"; math-full:"&math-full;"; line-adjust:0}&nl;&source;&nl;~ End MathDisplay&nl;';
+  tight: true;
+  .para-block
+}
+
+MathPreCenter { 
+  tex-env:mdmathprecenter; 
+  text-align:center; 
+}
+
+theorem-caption-end   : &&;br;
+theorem-caption-format: ([&source;]{font-style:italic})
+.theorem-caption      { replace: '@if source != "" @then "&theorem-caption-format;"' }
+theorem-caption       : [&caption;]{.theorem-caption}&theorem-caption-end;
+
+theorem-endperiod     : &heading-endperiod;
+theorem-format        : **&name-theorem;\ &label;&theorem-endperiod;** &theorem-caption;
+lemma-format          : **&name-lemma;\ &label;&theorem-endperiod;** &theorem-caption;
+proposition-format    : **&name-proposition;\ &label;&theorem-endperiod;** &theorem-caption;
+corollary-format      : **&name-corollary;\ &label;&theorem-endperiod;** &theorem-caption;
+example-format        : **&name-example;\ &label;&theorem-endperiod;** &theorem-caption;
+definition-format     : **&name-definition;\ &label;&theorem-endperiod;** &theorem-caption;
+proof-format          : **&name-proof;**&theorem-endperiod; &theorem-caption;
+
+Theorem {
+  label: '[@theorem]{.theorem-label}';
+  before: '[&theorem-format;]{.theorem-before}';
+}
+Lemma {
+  label: '[@lemma]{.lemma-label}';
+  before: '[&lemma-format;]{.lemma-before}'
+}
+Proof {
+  before: "[&proof-format;]{.proof-before}";
+  theorem-caption-end: " " 
+}
+Proposition { 
+  label: '[@proposition]{.proposition-label}';
+  before: '[&proposition-format;]{.proposition-before}';
+}
+Corollary {
+  label: '[@corollary]{.corollary-label}';
+  before: '[&corollary-format;]{.corollary-before}';
+}
+Example {
+  label: '[@example]{.example-label}';
+  before: '[&example-format;]{.example-before}';
+}
+Definition {
+  label: '[@definition]{.definition-label}';
+  before: '[&definition-format;]{.definition-before}';
+}
+Theorem,Lemma,Proof,Corollary,Proposition,Example,Definition {
+  display: block;
+  margin: 1ex 0pt;
+}
+
+<!-- figures -->
+TableFigure {
+  label: '[@tablefigure]{.table-label}';
+  toc:"tables"; .floating ; float-env: table; float-name: "&name-table;";
+}
+Figure {
+  label: '[@figure]{.figure-label}';
+  toc:"figures"; .floating ; float-env: figure; float-name: "&name-figure;";
+}
+
+WrapFigure {
+  label: '[@wrapfigure]{.wrapfigure-label}';
+  html-elem: figure;
+  .float;
+  float: right;
+  tex-float: outside;
+  width: 40%;  
+}
+
+floating-endperiod: .
+floating-format   : **&float-name;\ &label;&floating-endperiod;**&nbsp;
+
+.Floating {
+  .align-center;
+  .float;
+  elem      : floating;
+  html-elem : figure;
+  toc-line  : '&label;. &caption;';
+  after: '&nl;********* {.figureline}&nl;[[&floating-format;]{.caption-before}[&caption;]{.caption-text}]{.figure-caption; html-elem:fig-caption}&nl;{tag:false}&nl;';
+}
+
+SubFigureRow { .columns; .align-center }
+SubFigure {
+  @Figure-SubFigure;
+  @Figure-SubFigure: lower-alpha;
+  label     : '@Figure@Figure-SubFigure';
+  fig-label : '(@Figure-SubFigure)';
+  caption   : '';
+  after     : "&nl;~ Begin SubFigureCaption&nl;&toc-line;&nl;~End SubFigureCaption&nl;"; 
+  vertical-align: bottom;
+  padding   : 0.5ex;
+  tight     : true;
+  text-align: center;
+  .column;
+  toc-line  : '[&fig-label; ]{.caption-before} &caption;';
+  toc       : "figures";
+  toc-depth : 2;
+}
+SubFigureCaption {
+  tight: true;
+  margin-top: 1ex;
+}
+
+toc.toc-contents  { before: "# &name-contents; { -; toc:clear; .heading-contents }&nl;" }
+toc.toc-figures   { before: "# &name-figures;  { -; toc:clear; .heading-figures }&nl;" }
+toc.toc-tables    { before: "# &name-tables;   { -; toc:clear; .heading-tables }&nl;" }
+
+<!-------------------------------------------------------------------
+   Bibliography
+--------------------------------------------------------------------->
+Bibl {
+  @bib;
+}
+.bibitem-label {
+  display: none;
+}
+Bibitem {
+  @bib-bibitem;
+  label     : '@bib-bibitem';
+  cite-label: '&label;';
+  bibitem-label: '';
+  tight     : true;
+  replace   : '@if (bib-search-url!="") and (searchterm!="") @then "&source; [&mglass;](http://&bib-search-url;/search?q=&searchterm;){.bibsearch}"';
+}
+
+@if not (tex) {
+  Bib Search Url: www.bing.com
+  Bibl { before: "# &name-references; { -; .heading-references }&nl;" }
+}
+
+@if not(tex) or (csl-style!="False") {
+  Bibitem { before: '[&bibitem-label;]{.bibitem-before}' }
+}
+@if not(tex) and (csl-style=="False") {
+  Bibitem { bibitem-label:"[&cite-label;]" }
+}
+@if tex and (csl-style!="False") {
+  Bib Label: hide
+  .bibitem-before { tex-cmd:\mdbibitemlabel }
+}
+
+@if tex {
+  bibliography { #sec-bibliography; toc; toc-line: "&name-references;"; tex-label-inner-before:"&id;" }
+}
+
+
+<!-------------------------------------------------------------------
+   Bibliography styling in HTML
+--------------------------------------------------------------------->
+
+Html Bib Label Width: 2rem
+
+@if html and not(cite-style~~/^(numeric|super|False)\b/i) {
+  .bibitem-before {
+    display: none;
+  }
+  bibitem { 
+    text-indent: -1em;
+    margin-left: 1em;
+  }
+}
+
+@if html and (cite-style~~/^(numeric|super|False)\b/i) {
+  .bibitem-before {
+    padding-right: 0.5em;
+    width        : calc(&html-bib-label-width; - 0.5em);
+    text-align   : right;
+    font-size    : 90%;
+  }
+  bibitem { 
+    text-indent: -&html-bib-label-width;;
+    margin-left: &html-bib-label-width;;
+  }
+}
+
+
+<!-------------------------------------------------------------------
+   Internationalization
+--------------------------------------------------------------------->
+
+name-references   : References
+name-contents     : Contents
+name-figures      : Figures
+name-tables       : Tables
+name-abstract     : Abstract
+
+name-figure       : Figure
+name-table        : Table
+
+name-note         : Note
+name-remark       : Remark
+name-todo         : Todo
+
+name-theorem      : Theorem
+name-lemma        : Lemma
+name-proof        : Proof
+name-proposition  : Proposition
+name-corollary    : Corollary
+name-example      : Example
+name-definition   : Definition
+
+seealso       : see also
+sseealso      : See also
+
+<!-- names to support babel bibliographies generated by `custom-bib` (with the `merlin.mbs` package) -->
+name-and      : and
+name-etal     : et\ al
+name-editors  : editors
+name-eds      : eds.
+name-editor   : editor
+name-ed       : ed.
+name-edby     : edited by
+name-edition  : edition
+name-edn      : edn.
+name-volume   : volume
+name-vol      : vol.
+name-of       : of
+name-number   : number
+name-no       : no.
+name-in       : in
+name-pages    : pages
+name-pp       : pp.
+name-page     : page
+name-p        : p.
+name-chapter    : chapter
+name-chap       : chap.
+name-techreport : Technical Report
+name-techrep    : Tech. Rep.
+name-mthesis    : Master's thesis
+name-phdthesis  : Ph.D. thesis
+name-first      : first
+name-firsto     : 1st
+name-second     : second
+name-secondo    : 2nd
+name-third      : third
+name-thirdo     : 3rd
+name-fourth     : fourth
+name-fourtho    : 4th
+name-fifth      : fifth
+name-fiftho     : 5th
+name-st   : st
+name-nd   : nd
+name-rd   : rd
+name-th   : th
+name-jan  : January
+name-feb  : February
+name-mar  : March
+name-apr  : April
+name-may  : May
+name-jun  : June
+name-jul  : July
+name-aug  : August
+name-sep  : September
+name-oct  : October
+name-nov  : November
+name-dec  : December
+name-ins  : in
+name-inj  : in
+
+<!-------------------------------------------------------------------
+   Syntax highlighting
+--------------------------------------------------------------------->
+
+.token.keyword        { color: blue }
+.token.string.escape  { color: gray }
+.token.comment        { color: darkgreen }
+.token.constant       { color: purple }
+.token.constructor    { color: purple }
+.token.type           { color: teal }
+.token.type.delimiter { color: teal }
+.token.special        { color: navy }
+.token.doc            { color: gray }
+.token.meta           { color: gray }
+.token.tag            { color: navy }
+.token.attribute      { color: purple }
+.token.namespace      { color: navy }
+.token.title          { font-weight: bold }
+
+.token.string,.token.regexp   { color: maroon }
+.token.error,.token.invalid   { color: red }
+
+.token.number, .token.literal { .constant }
+
+.token.emphasis,.token.italic { font-style: italic }
+.token.strong,.token.bold     { font-weight: bold  }
+
+pre.pretty, code.pretty       { .serif } 
+
+.ptoken.identifier    { font-style: italic }
+.ptoken.constructor   { font-style: italic }
+.ptoken.operator      { tex-cmd: "\ppreop" }
+.ptoken.comment       { color: gray }
+.ptoken.keyword       { .sans-serif } 
+
+@if not tex {
+  pre.pretty, code.pretty { font-size: 100% }
+}
+
+@if tex {
+  .token.keyword      { color: navy }
+}
+
+
+<!-------------------------------------------------------------------
+   HTML commands 
+--------------------------------------------------------------------->
+@if html {
+  abstract  { 
+    before:"**&name-abstract;.** ";
+    margin-left: 3em;
+    margin-right: 3em;
+    font-size: small;
+  }
+}
+
+<!-------------------------------------------------------------------
+   Tex commands 
+--------------------------------------------------------------------->
+
+HR         { tex-cmd: "\mdhr"; display: block }
+Pre        { tex-env-outer: mdpre }
+Pre.pretty { tex-env-outer-postfix: pretty }
+Abstract   { tex-env: abstract }
+
+H0,H1,H2,H3,H4,H5,H6  { display: block; }
+H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { 
+  tex-cmd-postfix:"*";
+  toc-line: "&source;";
+}
+
+@if heading-base<=0 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\part" } 
+  H2     { tex-cmd:"\chapter" }
+  H3     { tex-cmd:"\section" }
+  H4     { tex-cmd:"\subsection" }
+  H5     { tex-cmd:"\subsubsection" } 
+  H6     { tex-cmd:"\paragraph" } 
+}
+@if heading-base==1 {
+  H0     { tex-cmd:"\part" }
+  H1     { tex-cmd:"\chapter" } 
+  H2     { tex-cmd:"\section" }
+  H3     { tex-cmd:"\subsection" }
+  H4     { tex-cmd:"\subsubsection" }
+  H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base==2 {
+  H0     { tex-cmd:"\chapter" }
+  H1     { tex-cmd:"\section" } 
+  H2     { tex-cmd:"\subsection" }
+  H3     { tex-cmd:"\subsubsection" }
+  H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
+@if heading-base>=3 {
+  H0     { tex-cmd:"\section" }
+  H1     { tex-cmd:"\subsection" } 
+  H2     { tex-cmd:"\subsubsection" }
+  H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
+}
+
+Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
+TableFigure     { tex-env-outer: "table[&tex-float-placement;]"; tex-float-placement: "tbp" }
+.figure-caption { tex-cmd: "\mdcaption" }
+.caption-text   { tex-cmd: "\mdcaptiontext" }
+.wide           { tex-env-outer-postfix: "*" }
+.figure-label   { tex-cmd: "\mdcaptionlabel" }
+.table-label    { tex-cmd: "\mdcaptionlabel" }
+
+Li       { tex-cmd-before: "\item" }
+Ul       { tex-env: "itemize"  }
+Ol       { tex-env: "enumerate"  }
+Dl       { tex-env: "mddefinitions" }
+Dt       { tex-cmd: "\mddefterm"; .noindent }
+Dd       { tex-env: "mddefdata" }
+Code     { tex-cmd: "\mdcode" }
+
+Strong   { tex-cmd: "\textbf" }
+Em       { tex-cmd: "\emph" }
+Sup      { tex-cmd: "\mdsup" }
+Sub      { tex-cmd: "\mdsub" }
+Del      { tex-cmd: "\mddel" }
+BlockQuote{ tex-env: "quote" }
+.Columns  { tex-tabcolsep: "0pt" }
+.Column   { tex-env-outer: "mdcolumn" }
+.inst     { tex-cmd: "\mdinst" }
+.equation-before { tex-cmd: "\mdmathtag" } 
+
+Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\mdsetrefname{&name-references;}%mdk&nl;"  }
+BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
+.Newblock    { tex-cmd-before="\newblock " }
+toc          { tex-env:mdtoc }
+tocblock     { tex-env:mdtocblock }
+tocitem      { tex-cmd:"\mdtocitemx{&data-toc-target;}" }
+
+bibliography { data-hanging-indent:0 }
+bibliography { tex-cmd-outer: "{\mdbibindent{&data-hanging-indent;}%mdk&nl;" }
+
+bibliography.bib-natural, bibliography.bib-textual {
+  tex-cmd-outer: "{\mdsupressbiblabel\mdbibindent{&data-hanging-indent;}";
+}
+
+@if tex2 {
+  Th { font-weight: "bold" }
+}
+
+@if tex and tex-section-num {
+  .heading-before { display: none }
+}
+
+<!-- tex author block -->
+TitleBlock,TitleHeader,Title,Subtitle           { tight: true }
+TitleNote,TitleFooter,Authors,AuthorRow,Author  { tight: true }
+AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
+
+
+@if tex {
+  Maketitle: True
+  .serif      { font-family: serif;     }
+  .sans-serif { font-family: sans-serif }
+  .monospace  { font-family: monospace  }
+}
+
+@if Maketitle {
+  Author        { display: inline-block  }
+  TitleBlock    { display: inline-block;
+                  tex-cmd-inner-after: "\mdtitleauthorrunning{&title-running;}{&author-running;}";  
+                }
+  TitleHeader,Authors,AuthorRow { tag: false }
+  Author        { tex-cmd-before:"\mdxauthorstart"; tex-cmd-after:"\mdxauthorend"; display:table-cell }
+  TitleBlock    { tex-cmd-before:"\mdxtitleblockstart"; tex-cmd-after:"\mdxtitleblockend"; display:block }
+  Title         { tex-cmd:"\mdxtitle" }
+  Subtitle      { tex-cmd:"\mdxsubtitle" }
+  TitleNote     { tex-cmd:"\mdxtitlenote" }
+  TitleFooter   { tex-cmd:"\mdxtitlefooter" }
+  AuthorName    { tex-cmd:"\mdxauthorname" }
+  AuthorAddress { tex-cmd:"\mdxauthoraddress" }
+  AuthorNote    { tex-cmd:"\mdxauthornote" }
+  AuthorEmail   { tex-cmd:"\mdxauthoremail" }  
+}
+
+@if not Maketitle {
+  TitleBlock,TitleHeader,Authors,TitleFooter  { .align-center }
+  TitleBlock,Title,Subtitle,TitleNote         { .para-block }
+
+  Authors       { width: 80% }
+  AuthorRow     { .columns; margin-top: 2ex; width: 100% } 
+  Author        { .column; text-align: center }
+  .AuthorEmail  { .email }
+
+  Title         { font-size: xx-large; font-weight: bold; margin-bottom: 0.5ex }
+  Subtitle      { font-size: x-large; margin-bottom: 0.5ex }
+  AuthorName    { font-size: large }
+  TitleFooter   { margin-top: 0.5ex }
+}

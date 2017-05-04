@@ -1,0 +1,94 @@
+Description:
+    Madoko settings for the ACM programming language style. (PACMPL)
+
+Keywords        : Use the 'Keywords' meta-data key to set keywords
+Conference      : Use the 'Conference' meta-data key to set the conference
+Conference Short: Use the 'Conference Short' meta-data key to set the short conference
+Conference Date : Use the 'Conference Short' meta-data key to set the conference date
+Conference Location: Use the 'Conference Location' meta-data key to set the conference location
+Conference Year : Use the 'Conference Year' meta-data key to set the conference year
+
+ISBN            : Use the 'ISBN' meta-data key to set the ISBN number
+DOI             : Use the 'DOI' meta-data key to set the DOI number
+Start Page      : 1
+Acm Journal     : PACMPL
+Acm Volume      : 1
+Acm Article     : 1
+Acm Year        : &conference-year;
+Acm Month       : 1
+Acm Copyright   : none
+Acm Copyright Year: &conference-year; 
+Acm Format      : acmlarge
+
+Doc class       : [&acm-format;]acmart.cls
+Bib Style       : style/acm-reference-format.bst
+Cite Style      : natural
+Pdf Latex       : pdflatex
+Package         : [libertine]newtxmath
+Author Columns  : 1
+Name Figure     : Fig.
+
+Tex Doc Header*:
+    \acmConference[&conference-short;]{&conference;}{&conference-date;, &conference-year;}{&conference-location;}
+    \acmISBN{&ISBN;}
+    \acmDOI{&DOI;}
+    \startPage{&start-page;}
+    \keywords{&keywords;}  %% \keywords is optional
+    \renewcommand\authorinfo[3]{\author{#1}\affiliation{\institution{#2}}\email{#3}}
+    \setcopyright{&acm-copyright;}
+    \copyrightyear{&acm-copyright-year;}
+    \acmJournal{&acm-journal;}
+    \acmVolume{&acm-volume;}
+    \acmArticle{&acm-article;}
+    \acmYear{&acm-year;}
+    \acmMonth{&acm-month;}
+
+AcmClassification {
+  input: texraw;
+}
+    
+@if html {
+  p {
+    line-height: 1.3;
+  }
+  authorname { 
+    font-variant: small-caps;
+    .sans-serif;    
+  }
+  titleblock, titleheader, authors { class: clear }
+  author      { text-align: left; padding: 0pt }
+  abstract    { 
+    before: clear;
+    margin: 1em 0ex;
+    padding: 0.25em 0em; 
+    border: 1px black solid; border-width: 1px 0pt; 
+  }
+  authorname,authoraddress,authoremail { display: inline }
+  authorname,authoraddress  { after: ", " }
+  authorrow { margin: 0pt }
+  authors { margin-top: 1em }  
+}
+
+@if html && (acm-format != "sigplan") {
+  h1 { 
+    font-variant: small-caps;    
+    replace: "/[\s\S]*/\L\0/c"; 
+  }
+}
+
+@if html && (acm-format!="sigconf") && (acm-format!="sigplan") {
+  h1, h2, authorname {
+    .sans-serif;
+  }
+  h1, authorname {
+    letter-spacing: 0.5px; 
+  }
+}
+
+@if html && ((acm-format=="acmlarge") || (acm-format=="acmtog")) {
+  h1, h2 {
+    font-weight: normal; 
+  }
+}
+
+    

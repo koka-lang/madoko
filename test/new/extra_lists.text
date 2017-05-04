@@ -1,0 +1,40 @@
+Title	: Test list margins and borders
+Heading Base: 2
+
+
+# Testing
+
+Here is a paragraph
+
+- and
+- a 
+- list
+{ border-style=solid border-width=1px margin-left=1em margin-top=1ex }
+
+Test
+
+1. and
+2. a 
+3. list
+{ border-style=solid border-width=1px margin-left=1em margin-top=1ex }
+
+A link to [daan] and some [email] and [crazy].
+
+[daan]: http://research.microsoft.com/~daan
+[email]: a_name@foo.bar
+[crazy]: http://x_x^x|x@x#x~x&x$x<xx.bar
+
+Test
+Here is a paragraph
+
+- and
+- a 
+- list
+
+Test
+
+1. and
+2. a 
+3. list
+
+Test

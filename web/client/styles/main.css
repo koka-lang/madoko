@@ -1,0 +1,1864 @@
+/*---------------------------------------------------------------------------
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+---------------------------------------------------------------------------*/
+
+/*
+notes:
+  When using "calc" we give a non-calc argument first to support browsers
+  that do not support calc expressions.
+*/
+
+html,body,#main {
+  height: 100%;
+  padding: 0pt;
+  margin: 0pt;
+  overflow: hidden;
+}
+
+
+.load-error {
+  display: none;
+}
+
+.load-error, .auth-redirect {
+  margin: 1em 16% 1em 16%;
+  padding: 0em 1em;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: Gainsboro;
+}
+
+#nojscript {
+  display: block;
+}
+
+/* Colors */
+#main, .spinner.spin {
+  background-color: white;  
+}
+.output {
+  background-color: white;
+  border-style: solid;
+}
+.header-bar, .output {
+  border-color: silver;
+  border-width: 1px;
+}
+.view {
+  background-color: white;
+}
+
+/*---------------------------------------------------------
+    theme dark
+---------------------------------------------------------*/
+
+.theme-dark .app-body {
+  background-color: white;      
+}
+.theme-dark #main,
+.theme-dark .spinner.spin, 
+.theme-dark .output,
+.theme-dark .header-bar,
+.theme-dark .panel-bar,
+.theme-dark div.modal {
+  background-color: #135;
+  border-color: #135;
+  box-shadow-color: #135;
+  border-style: none;
+  color: white;
+}
+
+.theme-dark #toolbox .menu,
+.theme-dark div.modal {
+  color: #135;
+}
+
+
+.theme-dark .header-bar .menu {
+  color: black;
+}
+
+.theme-dark .header-bar .menu .button:hover {
+  background-color: Gainsboro;
+}
+
+.theme-dark .monaco-editor.vs .clnr {
+  color: #666;
+}
+
+.theme-dark .popup:hover,
+.theme-dark .popup>.button:hover,
+.theme-dark .header-bar a:hover,
+.theme-dark .header-bar .button:hover {
+  background-color: #357;
+}
+
+/*---------------------------------------------------------
+    theme steel
+---------------------------------------------------------*/
+
+.theme-steel .app-body {
+  background-color: white;      
+}
+.theme-steel #main,
+.theme-steel .spinner.spin, 
+.theme-steel .output,
+.theme-steel .header-bar,
+.theme-steel .panel-bar,
+.theme-steel div.modal {
+  background-color: #58626f;
+  border-color: #58626f;
+  box-shadow-color: #58626f;
+  border-style: none;
+  color: white;
+}
+
+.theme-steel #toolbox .menu {
+  color: #58626f;
+}
+
+.theme-steel .header-bar .menu,
+.theme-steel div.modal {
+  color: black;
+}
+.theme-steel .header-bar .menu .button:hover {
+  background-color: Gainsboro;
+}
+
+.theme-steel .monaco-editor.vs .clnr {
+  color: #666;
+}
+
+.theme-steel .popup:hover,
+.theme-steel .popup>.button:hover,
+.theme-steel .header-bar a:hover,
+.theme-steel .header-bar .button:hover {
+  background-color: #58626f;
+}
+
+
+
+#edit-select-directory {
+  display: none;
+}
+
+/* Application panes */
+#main {
+  padding: 0em;
+}
+
+.app-body {
+  height: calc(100% - 4.5rem);
+}
+
+.header-bar {
+  height: 1.4rem;
+  margin: 0pt;
+  padding: 0pt;
+}
+
+.header-bar, .toolbar, modal, .load-error, .auth-redirect, .menu.hover .info, input {
+  font-family: "Segoe UI", Segoe, "DejaVu Sans", "Trebuchet MS", sans-serif;
+}
+
+.header-bar, .monaco-editor-hover, #picker, #picker input {
+  /* font-weight: 100; */
+}
+
+.header-bar {
+  padding: 0.5rem;
+}
+.header-bar>div {
+  vertical-align: top;
+}
+
+
+.app-footer.header-bar {
+  padding-bottom: 0.2rem;
+}
+
+.pane {
+  height: 100%;
+  width: 49%;
+  xtransition: width 1s;
+}
+
+.pane-content {
+  height: 100%;
+  position: relative;
+}
+
+.pane.left {
+  width: calc(53% - 5px);
+}
+.pane.right {
+  width: calc(47%);
+}
+
+/* ------------------------------------------------------
+    panels
+----------------------------------------------------------*/
+.panel {
+  position:relative;
+}
+.panel.vertical>.panel-bar:hover {
+  cursor: col-resize;
+}
+.panel.horizontal>.panel-bar:hover {
+  cursor: row-resize;
+}
+.panel.vertical>.panel-bar {
+  height: 100%;
+  width: 2px;
+  float: left;
+}
+.panel.horizontal>.panel-bar {
+  height: 2px;
+  width: 100%;
+}
+.panel-bar.resizing {
+  position: absolute;
+  opacity : 0.8;
+}
+.panel.vertical>div:last-child {
+  float: right;
+  width: calc(50% - 2px);
+}
+.panel.vertical>div:first-child {
+  float: left;
+  width: 50%;
+}
+.panel.horizontal>div:first-child {
+  height: 50%;
+}
+
+
+#main .pane-view {
+  height: 100%;
+  width: 100%;
+}
+
+#main[data-view=full] .pane-view {
+  height: calc(100% - 1.4rem); /* minus header bar */
+}
+
+.rounded #main .pane-view {
+  margin: 5px;
+  border: 0px solid white;
+  border-radius: 10px;
+  overflow: hidden;
+  height: calc(100% - 10px);
+  width: calc(100% - 10px);
+}
+
+.rounded div.boxed {
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.squared #main .pane-view {
+  margin: 0px 5px;
+  width: calc(100% - 10px);
+}
+
+/* header & footer */
+
+.header-bar img {
+  height: 1em;
+  vertical-align: -0.1em;
+}
+
+.header-bar div.button.touch {
+  display: inline-block;
+}
+
+.header-bar .right {
+  float: right;
+}
+
+
+img#console-ok {
+  height: 1.4em;
+  vertical-align: -0.2em;
+}
+
+#main .app-footer {
+  font-size: small;
+}
+
+.ms-notice {
+  float     : right;
+  font-size : x-small;
+  margin-top: 0.1em;
+}
+
+.app-footer a.external {
+  text-decoration: underline;
+}
+
+.app-footer a {
+  color: white;
+  text-decoration: none;
+}
+
+.app-footer #view-message {
+  margin-left: 0.25em;
+}
+
+.app-footer #status {
+  width: 50%;
+}
+
+/* Main elements in panes */
+
+.view {
+  border: none;
+}
+
+#console-out {
+  overflow: scroll;
+  padding: 0.5rem;
+  transition: height 0.8s;
+  height: calc(100% - 1rem);
+  color: black;
+  white-space: nowrap;  
+}
+
+#console-out a, #console-out .save-link {
+  color: blue;
+}
+
+#console-out a:hover, #console-out .save-link {
+  color: blue;
+  background-color: Gainsboro;
+}
+
+span.save-link {
+  text-decoration: underline;
+}
+
+span.save-link:hover {
+  cursor: pointer;
+}
+
+/* buttons */
+.button {
+  padding: 0em 0.2em;
+}
+
+.button:hover {
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: Gainsboro;
+}
+
+.button.disable:hover {
+  background-color: white;
+}
+
+.button:active {
+  background-color: Gray;
+}
+
+
+/* menus */
+.menu {
+  font-size: 90%;
+  overflow: visible;
+}
+
+.menu hr {
+  margin-top: 0.3em;
+  margin-bottom: 0.2em;
+  border: none;
+  box-shadow: none;
+  border-top: solid #AAA 1px;
+}
+
+.menu div .icon, .menu div input {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+  padding: 0;
+  margin-right: 0.5em;
+} 
+
+
+#icon-disconnect {
+  visibility: hidden;
+  height: 0.5em;
+  margin-left: -0.3em;
+  vertical-align: 0.35em;
+  margin-right: -0.3em;
+}
+
+.disconnected #icon-disconnect {
+  visibility: visible;
+}
+
+#signin, #signout, #local-message, #localhost-message, #http-message, #invite {
+  display: none;
+}
+
+.remote-local #local-message,
+.remote-localhost #localhost-message,
+.remote-http #http-message {
+  display: block;
+  font-size: smaller;
+  padding: 0.5ex;
+}
+
+.disconnected #signin {
+  display: block;
+}
+
+.connected #signout {
+  display: block;
+}
+
+.remote-dropbox #invite,
+.remote-github #invite {
+  display: block;
+}
+
+
+.header-bar div.popup, .header-bar>div.button {
+  padding: 0em 0.4em;
+}
+
+
+#toolbox>div>div.button {
+  display: inline-block;
+  color: #135;
+}
+
+#toolbox .button {
+  padding: 0em 0.25em;
+}
+
+#toolbox>div>div.options>div {
+  width: 9em;
+}
+
+#toolbox #tool-color-content {
+  width: 7.75em;
+}
+
+#toolbox #tool-custom-content,
+#toolbox #tool-include-content,
+#toolbox #tool-math-content,
+#toolbox #tool-styling-content,
+#toolbox #tool-metadata-content {
+  width: 12em;
+  max-height: 32em;
+}
+
+#toolbox #tool-reference-content,
+#toolbox #tool-cite-content,
+#toolbox #tool-font-content {
+  width: 12em;
+  white-space: nowrap;
+}
+
+#toolbox #tool-symbol .menu {
+  width: 17em;
+}
+
+#toolbox .symbol {
+  display: inline-block;
+  width: 1em;
+}
+
+#toolbox .help, #menu-include .help {
+  float: right;  
+  padding: 0em 0.25em;
+  color: Gainsboro;
+}
+
+#toolbox .button:hover>.help {
+  color: black;
+}
+
+#toolbox .help:hover {
+  background-color: #AAA !important;  
+}
+
+#toolbox .named ~ .named {
+  border-left: 1px solid #135;
+  border-radius: 0px;
+}
+
+#toolbox div.menu div.menu {
+  font-size: small;
+}
+
+#toolbox .colorbox {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 1px solid black;  
+}
+
+#toolbox .red { background-color: red; }
+#toolbox .lime { background-color: lime; }
+#toolbox .blue { background-color: blue; }
+#toolbox .yellow { background-color: yellow; }
+#toolbox .cyan { background-color: cyan; }
+#toolbox .magenta { background-color: magenta; }
+#toolbox .maroon { background-color: maroon; }
+#toolbox .green { background-color: green; }
+#toolbox .navy { background-color: navy; }        
+#toolbox .olive { background-color: olive; }
+#toolbox .teal { background-color: teal; }
+#toolbox .purple { background-color: purple; }
+#toolbox .orange { background-color: orange; }
+#toolbox .black { background-color: black; }
+#toolbox .gray { background-color: gray; }
+#toolbox .lightgray { background-color: lightgray; }
+#toolbox .white { background-color: white; }
+
+#toolbox .button.icon {
+  display: inline;
+}
+
+/* File items */
+
+.disable, .file.generated, .file.image {
+  color: #AAA;
+}
+
+.rendered .disable {
+  color: black;
+}
+
+#connection {
+  padding-right: 0em;
+}
+#edit-select {
+  padding: 0em;
+}
+
+#edit-select-header {
+  padding-left: 0.25em;
+  cursor: default;
+}
+
+#edit-select-header .folder {
+  padding-right: 0.15em;
+}
+
+#edit-select-header .disable,
+#edit-select-header .file-share {
+  color: #888;
+}
+
+.file-status {
+  font-size: 0.7em;
+  vertical-align: 0.1em;
+}
+
+.exported .disable {
+  color: black;  
+}
+
+/*
+.binaries {
+  background-color: #F8F8F8;
+}
+*/
+#edit-select-files .binaries {
+  margin-top: 1ex;
+}
+
+#edit-select-files .binaries>div {
+  border-top: 1px solid #AAA;
+  margin-top: 1.25ex;
+}
+#edit-select-files .rendered {
+  border-bottom: 1px solid #AAA;
+  padding-bottom: 1ex;
+}
+
+#edit-select-files div.heading {
+  font-size: xx-small;
+  color: #AAA;
+}
+
+.theme-dark #edit-select-header .disable {
+  color: #BBB;
+}
+
+#edit-select-directory img {
+  float: right;
+}
+
+.file.main {
+  font-weight: bolder;
+}
+
+.file.hide {
+  display: none;
+}
+
+.shortcut, .file-size, .file-share {
+  display: inline-block;
+  float: right;
+  margin: 0.5ex;
+  color: inherit;
+}
+
+.shortcut, .file-size, .file-share, .file-remove {  
+  font-size: x-small;
+}
+
+.file-remove {
+  margin: 0ex 0.5ex;
+}
+
+.menu.hover .shortcut {
+  padding-top: 0em;
+}
+
+.file-share {
+  padding-right: 0.5em;
+}
+
+a.file-share:hover {
+  background-color: Gainsboro !important;
+}
+
+
+/* Generic */
+
+.hide {
+  display: none;
+}
+
+.boxed {
+  border: 1px solid !important;
+  border-color: black;
+}
+
+
+/* Editor Header */
+
+#edit-select {
+  width: 40%;
+}
+
+#export-spinner {
+  height: 1em;
+}
+
+
+#save-folder {
+  width: 11em;
+  color: DimGray;
+}
+
+#help .notice {
+  font-size: small;
+  color: DimGray;
+  padding-left: 0.5ex;
+}
+
+#help .notice .button {
+  padding-left: 0ex !important;
+}
+
+#connection a img,
+#help-content a img {
+  height: 0.5em;
+  margin-right: 0.1em;
+  margin-left: 0.1em;
+  vertical-align: 0.1em;
+}
+
+#help-content>a {
+  display: block;
+}
+
+#connection a,
+#help-content>a {
+  color: black;
+  text-decoration: none;
+}
+
+#connection a:hover,
+#help-content>a:hover {
+  background-color: Gainsboro;
+}
+
+
+.msg-error, .msg-exception {
+  color: red;
+  font-weight: bold;
+}
+.msg-warning {
+  color: #cc0000;
+  font-weight: normal;
+}
+
+.msg-section .msg-status {
+  color: green;
+}
+
+.msg-section {
+  border-bottom: 1px dotted Gainsboro;
+  border-radius: 0pt !important;
+  padding-bottom: 0.2em;
+}
+
+.msg-section:hover {
+  background-color: Gainsboro;
+}
+
+.msg-time {
+  display: inline-block;
+  float: right;
+  color: #888;
+}
+
+#status {
+  padding-left: 0.5ex;
+}
+
+.menu-label {
+  display: inline-block;
+  width: 3.5em;
+}
+
+#main[data-fontscale=small] #font-small, 
+#main[data-fontscale=medium] #font-medium, 
+#main[data-fontscale=large] #font-large, 
+#main[data-fontscale=x-large] #font-x-large { 
+  text-decoration: underline 
+} 
+
+#main[data-view=full] #editorpane,
+#main[data-view=full] #main-body .panel-bar,
+#main[data-view=full] .pinned,
+#main[data-view=full] .app-header,
+#main[data-view=full] .app-footer {
+  display: none !important;
+}
+
+#main[data-view=full] .app-body {
+  height: 100%;
+}
+
+#main[data-view=full] #viewpane {
+  display: block !important;
+  position: absolute;
+  top: 0pt;
+  left: 0pt;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  padding: 0pt;
+  margin: 0pt;
+  overflow: hidden;
+}
+  
+#main[data-view=full] #fullview-header {
+  display: block !important;
+  padding: 0em 0.5em;  
+  transition: height 0.5s;
+}
+
+#fullview-header {
+  display: none;
+}
+
+.header-bar.collapsed {
+  height: 0.4ex;  
+}
+
+.header-bar.collapsed .content {
+  display: none;
+}
+
+.color-box {
+  display:inline-block;
+  border:1px solid black; 
+  height: 0.7em; 
+  width:0.7em; 
+  vertical-align:-0.4em;
+}
+
+
+/* Monaco token classes */
+.monaco-editor .spellerror {
+  border-bottom: 1px dotted red;
+}
+.monaco-editor .glyph-warning, .monaco-editor .glyph-spellerror {
+  background: url(../images/glyph-warning.png) no-repeat center;
+}
+.monaco-editor .glyph-error {
+  background: url(../images/glyph-error.png) no-repeat center;
+}
+.monaco-editor .glyph-error.outdated,
+.monaco-editor .glyph-warning.outdated {
+  background-color: orange !important;
+}
+
+.monaco-editor .xmargin-error {
+  background-color: red;
+  xwidth: 5px !important;
+  xleft: 2px;
+}
+
+.monaco-editor .margin-merge {
+  background-color: #7e0000;
+  width: 6px !important;
+  left: 2px;
+}
+
+.monaco-editor .margin-merge.merge-change,
+.monaco-editor .margin-merge.merge-deletion,
+.monaco-editor .margin-merge.merge-conflict {
+  background-color: #7e0000;
+}
+.monaco-editor .margin-merge.outdated {
+  background-color: #4b0000;
+}
+
+.monaco-editor .margin-merge.merge-insertion {
+  background-color: #007e00;
+}
+.monaco-editor .margin-merge.merge-insertion.outdated {
+  background-color: #004b00;
+}
+
+.monaco-editor .margin-merge.merge-original {
+  background-color: #00007e;
+}
+.monaco-editor .margin-merge.merge-original.outdated {
+  background-color: #00004b;
+}
+
+.monaco-editor .token.open, .monaco-editor .token.close {
+  color: inherit;
+}
+
+.monaco-editor .glyph-edit {
+  background-image: url(../images/icon-user-read.png);
+  background-size: 100%;
+}
+
+
+.monaco-editor                        { color: black; }
+.monaco-editor .token.identifier      { }
+.monaco-editor .token.operators       { }
+.monaco-editor .token.keyword         { color: blue }
+.monaco-editor .token.string          { color: maroon } 
+.monaco-editor .token.string.escape   { color: gray }
+.monaco-editor .token.comment         { color: darkgreen }
+.monaco-editor .token.comment.doc     { font-style: normal }
+.monaco-editor .token.constant        { color: purple; }
+.monaco-editor .token.entity          {  }
+.monaco-editor .token.tag             { color: blue }
+.monaco-editor .token.info-token      { color: black }
+.monaco-editor .token.warn-token      { color: black }
+.monaco-editor .token.error-token     { color: darkred }
+.monaco-editor .token.debug-token     { color: gray }
+.monaco-editor .token.regexp          { color: maroon }
+.monaco-editor .token.attribute.name  { color: navy }
+.monaco-editor .token.attribute.value { color: maroon }
+.monaco-editor .token.constructor     { color: purple }
+.monaco-editor .token.namespace       { color: navy }
+.monaco-editor .token.header          { color: navy }
+.monaco-editor .token.type            { color: teal } 
+.monaco-editor .token.type.delimiter  { color: teal; } 
+.monaco-editor .token.predefined      { color: navy }
+.monaco-editor .token.invalid         { border-bottom: red dotted 1px }
+.monaco-editor .token.code            { color: maroon }
+.monaco-editor .token.code.keyword    { color: navy }
+.monaco-editor .token.typevar         { font-style: italic; }
+
+.monaco-editor .token.delimiter   {  } /* .[curly,square,parenthesis,angle,array,bracket] */
+.monaco-editor .token.number      {  }    /* .[hex,octal,binary,float] */
+.monaco-editor .token.variable    {  }  /* .[name,value]  */
+.monaco-editor .token.meta        { color: navy }      /* .[content] */
+
+.monaco-editor .token.bold            { font-weight: bold; }
+.monaco-editor .token.italic          { font-style: italic; }
+
+.monaco-editor .token.madoko.comment { color: gray; }
+
+/*----------------------------------------
+  madoko font sizes
+  ---------------------------------------- */
+
+.monaco-editor.font-small {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.monaco-editor.font-large {
+  font-size: 16px;
+  line-height: 21px;
+}
+
+.monaco-editor.font-x-large {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+
+/*----------------------------------------
+  madoko specific
+  ---------------------------------------- */
+
+.monaco-editor .latex.constructor {
+  font-style:italic; /* #4E0000; */
+}
+
+.monaco-editor .token.link.special {
+  font-weight: bold;
+  color: inherit;
+}
+
+.monaco-editor .token.code.keyword {
+  color: navy;
+}
+
+.monaco-editor .token.metadata {
+  color: navy;
+}
+
+.monaco-editor .token.string.escape {
+  color: gray;
+}
+
+.monaco-editor .token.invalid {
+  border-bottom: Gray dotted 2px;
+}
+
+.monaco-editor, .monaco-editor .lines-decorations {
+  background-color: #FFFAF4;
+}
+
+.monaco-editor .token.madoko.link.escape,
+.monaco-editor .token.madoko.definition.escape {
+  color: gray;
+}
+
+.monaco-editor .token.madoko.keyword.heading,
+.monaco-editor .token.madoko.keyword.heading.delimiter,
+.monaco-editor .token.madoko.keyword.list,
+.monaco-editor .token.madoko.keyword.quote,
+.monaco-editor .token.madoko.keyword.image,
+.monaco-editor .token.madoko.metadata.special,
+.xmonaco-editor .token.madoko.metadata.key {
+  color: inherit;
+  font-weight: bold;
+}
+
+.monaco-editor .token.madoko.keyword.heading.level1,
+.monaco-editor .token.madoko.keyword.heading.level2 {
+  font-size: 1.4em;  
+}
+.monaco-editor .token.madoko.keyword.heading.level3 {
+  font-size: 1.2em;  
+}
+
+.monaco-editor .token.escape,
+.monaco-editor .token.open.madoko,
+.monaco-editor .token.close.madoko,
+.monaco-editor .token.delimiter.madoko {
+  color: silver;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.monaco-editor .token.madoko.custom.delimiter {
+  color: inherit !important;
+  font-weight: bold;
+}
+.monaco-editor .token.madoko.keyword.heading.delimiter {
+  color: inherit;
+  font-weight: bold;
+}
+
+.monaco-editor .token.madoko.attrs,
+.monaco-editor .token.madoko.metadata.key,
+.monaco-editor .token.madoko.link.internal,
+.monaco-editor .token.madoko.entity {  
+  color: gray;
+}
+
+
+/*----------------------------------------
+  vs theme
+  ---------------------------------------- */
+.monaco-editor.vs .monaco-editor-hover.monaco-editor-background {
+  background-color: white;
+}
+
+.monaco-editor.vs, .monaco-editor.vs .lines-decorations, .monaco-editor.vs .monaco-editor-background {
+  background-color: #F8F2E8;
+}
+
+.monaco-editor.vs .glyph-margin {
+  background-color: #E8E2D8; 
+}
+
+.monaco-editor.vs .line-numbers {
+  background-color: #E8E2D8;
+  color: #a69797;
+}
+
+
+.monaco-editor.vs, .monaco-editor.vs .token.madoko { 
+  color: #2e1c1c;
+}
+
+.monaco-editor.vs .token.madoko.comment {
+  color: gray;
+}
+
+.monaco-editor.vs .latex.token.delimiter,
+.monaco-editor.vs .latex.token { 
+  color: #6c1c1c; /* #048; */
+}
+.monaco-editor.vs .latex.keyword {
+  color: #404; /* #008 */
+}
+.monaco-editor.vs .latex.comment {
+  color: gray; /* #008 */
+}
+.monaco-editor.vs .latex.constructor  {
+  color: #6c6060; /* #894949; */
+}
+
+.monaco-editor.vs .token.escape,
+.monaco-editor.vs .token.string.escape,
+.monaco-editor.vs .token.open.madoko,
+.monaco-editor.vs .token.close.madoko,
+.monaco-editor.vs .token.delimiter.madoko {
+  color: #aba4a4; /* #a69797; */
+}
+
+.monaco-editor.vs .token.madoko.attrs,
+.monaco-editor.vs .token.madoko.metadata.key,
+.monaco-editor.vs .token.madoko.link,
+.monaco-editor.vs .token.madoko.entity,
+.monaco-editor.vs .token.madoko.escape.definition {  
+  color: #817676; /* #836d6d; */
+}
+
+.monaco-editor.vs .token.code { 
+  color: #6c1c1c;
+}
+
+
+/* -----------------------------------------
+   ivory theme
+   ----------------------------------------- */
+.monaco-editor.ivory, .monaco-editor.ivory .lines-decorations, .monaco-editor.ivory .current-line, .monaco-editor.ivory .monaco-editor-background {
+  background-color: Floralwhite;
+}
+
+.monaco-editor.ivory .monaco-editor-hover.monaco-editor-background {
+  background-color: white;
+}
+
+.monaco-editor.ivory .line-numbers {
+  background-color: Gainsboro;
+}
+.monaco-editor.ivory .current-line {
+  border: 2px solid #EEE;
+}
+
+
+.monaco-editor.ivory .latex.token.delimiter,
+.monaco-editor.ivory .latex { 
+  color: #048; 
+}
+.monaco-editor.ivory .latex.keyword {
+  color: #008;
+}
+.monaco-editor.ivory .latex.constructor  {
+  font-style: italic;
+}
+
+.monaco-editor.ivory .token.code { 
+  color: #006;
+}
+
+
+/* -----------------------------------------
+   vs-dark theme
+   ----------------------------------------- */
+.monaco-editor.vs-dark .latex,
+.monaco-editor.vs-dark .token.delimiter.latex { 
+  color: #897;
+}
+.monaco-editor.vs-dark .keyword.latex {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .keyword.predefined.latex,
+.monaco-editor.vs-dark .latex.number {
+  color: #B5CEA8;
+}
+
+.monaco-editor.vs-dark .token.code {
+  color: #897;
+}
+.monaco-editor.vs-dark .token.code.keyword {
+  color: #B5CEA8;
+}
+.monaco-editor.vs-dark .token.metadata {
+  color: #BD5050;
+}
+.monaco-editor.vs-dark .token.string.escape {
+  color: #999; /* #CE9178; */
+}
+
+.monaco-editor.vs-dark .token.escape,
+.monaco-editor.vs-dark .token.string.escape,
+.monaco-editor.vs-dark .token.open.madoko,
+.monaco-editor.vs-dark .token.close.madoko,
+.monaco-editor.vs-dark .token.delimiter.madoko {
+  color: gray;
+}
+
+
+
+/* status icons */
+#users-status img {
+  vertical-align: -0.5ex;
+  display: none;
+}
+
+#users-status.users-open img#icon-users,
+#users-status.users-read img#icon-users-read,
+#users-status.users-write img#icon-users-edit {
+  display: inline;
+}
+
+#users-status {
+  display: none;
+}
+
+#users-status.users-read,
+#users-status.users-open,
+#users-status.users-write {
+  display: inline;
+}
+
+
+/* Generic Spinner */
+
+.spinner, .gspinner {
+  visibility: hidden;
+}
+
+.spinner.spin, .gspinner.spin {
+  visibility: visible;
+}
+
+
+/* Generic Popup */
+
+.popup {
+  position: relative;
+  display: inline-block;
+}
+
+.popup > div {
+  transition: height 0.8s; 
+}
+
+.popup > div {
+  display: none;
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+  top: 1.25em;
+  left: 0pt;
+  background-color: white;
+  max-height: 24rem;  
+  padding: 0.5ex;
+}
+
+.popup:hover > div, 
+.popup.hover > div,
+.popup > div.pinned {
+  display: block;
+}
+
+#main[data-theme=vs-dark] .popup > div.pinned {
+  background-color: #BBB;
+}
+
+.pinned .pin, .pinned.moving .unpin, .unpin {
+  display: none;
+}
+
+.pinned.moving .pin, .pinned .unpin {
+  display: inline;
+}
+
+/*
+.content-pinned {
+  visibility: hidden !important;
+}
+
+.content-pinned>div {
+  visibility: visible !important;
+}
+*/
+
+.pinbox {
+  float: right;
+  margin-top: calc(-1ex + 1px);
+  margin-right: calc(-0.5ex + 1px);
+  padding: 0pt;
+}
+
+.pinbox img {
+  padding: 0pt !important;
+  vertical-align:f 0pt;
+  margin: 0pt;
+}
+
+.moving .pinbox,
+.moving .pinbox .button:hover {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+
+div.pinned.boxed.menu {
+  border-color: #135;
+  box-shadow: 1px 1px 0px;
+}
+
+#toolbox.popup > div,
+#toolbox #tool-symbol.popup > div {
+  overflow-y: visible;
+}
+
+#toolbox .symbol.invisible {
+  border: 1px solid Gainsboro;
+  width: auto;
+}
+
+/* Widths of popup content */
+#edit-select-content {
+  width: 70%;
+  overflow-y: auto;
+}
+
+#document-content {
+  width: 18em;
+}
+
+#help-content {
+  width: 21em;
+}
+
+#menu-settings-content {
+  width: 20em;
+}
+
+#toolbox #toolbox-content {
+  width: 23em;
+}
+
+#toolbox .menu {
+  width: 22em;
+}
+
+#connection-content {
+  min-width: 12em;
+}
+
+#help-content {
+  left: -19em;
+}
+
+#menu-settings-content {
+  left: -18.5em;
+}
+
+#help {
+  margin-right: 0.5em;
+}
+
+#console {
+  width: 40rem;
+  top: -20rem;
+  height: 20rem;
+  padding: 0pt;
+}
+
+#users-panel {
+  width: 12em;
+  font-size: 90%;
+}
+
+#menu-include.popup {
+  display: block;
+}
+
+#menu-include-content {
+  width: 12em;
+  left: 100%;
+  top: 0pt;
+}
+
+
+/* --------------------------------------------
+  Modal dialog
+----------------------------------------------*/
+
+div.modal {
+  display: none; 
+  position: absolute; 
+  left: 25%; 
+  top: 20%; 
+  border: 2px solid;
+  background-color: white;
+  width: 50%;
+  height: 50%;
+  z-index: 100; 
+ 
+  font-family: "Segoe UI", sans-serif;
+}
+
+@media screen and (max-width:800px) {
+  div.modal {
+    left: 10%; 
+    width: 80%;
+  }
+}
+
+@media screen and (min-width:800px) and (max-width:1200px) {
+  div.modal {
+    left: 20%; 
+    width: 60%;
+  }
+}
+
+.modal .app-content {
+  padding: 0.5em 1em;
+}
+
+#fade {
+  display: none;  
+  position: absolute; 
+  left: 0%; 
+  top: 0%; 
+  background-color: #135;
+  -moz-opacity: 30; 
+  opacity: .30;
+  filter: alpha(opacity=30);
+  width: 100%;
+  height: 100%;
+  z-index: 90; 
+}
+
+.modal .app-body {
+  height: calc(100% - 6rem + 1px);
+  width: 100%;
+  overflow: auto;
+}
+
+.modal .header-bar {
+  padding: 1rem;
+  white-space: nowrap;
+}
+
+.modal .header-bar img {
+  height: 1.5em;
+  vertical-align: bottom;
+}
+
+.modal .app-content {
+  padding: 0.5em 1em;
+}
+
+.modal .app-footer {
+  text-align: right;
+  }
+
+.modal .button {
+  display: inline;
+  border: 1px white solid;
+  border-radius: 5px;
+  padding-bottom: 0.2em;
+  margin: 0em 0.25em;
+}
+
+.modal .button.active {
+  border-width: 2px;
+}
+
+
+/* ----------------------------------------------------------
+   File Picker
+-----------------------------------------------------------*/
+
+/* menus */
+#picker .menu .button {
+  display: block;
+}
+
+#picker .menu .button:hover {
+  background-color: Gainsboro !important;
+}
+
+.modal .header-bar>div {
+  vertical-align: text-bottom;
+}
+
+
+/* view */
+
+#picker .message {
+  display: none;
+}
+
+#picker #listing, #picker #templates {
+  display: none;
+}
+
+#picker.command-open #listing,
+#picker.command-save #listing,
+#picker.command-push #listing,
+#picker.command-new #listing,
+#picker.page-me #listing,
+#picker.page-template #templates {
+  display: block;
+}
+
+#picker.page-template #listing {
+  display: none;
+}
+
+/* folder name */
+
+#picker #folder-name {
+  display: none;
+  max-width: 80%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+#picker.command-open #folder-name,
+#picker.command-save #folder-name,
+#picker.command-push #folder-name,
+#picker.command-new #folder-name,
+#picker.command-connect #folder-name {
+  display: inline-block;
+}
+
+#picker.page-alert #folder-name {
+  display: none;
+}
+
+#picker .dir {
+  text-decoration: underline;
+}
+
+#picker .dir:hover {
+  background-color: #357;
+  cursor: pointer;
+}
+
+#picker .dirsep {
+  color: Gainsboro;
+}
+
+#picker #file-name {
+  width: 11em;
+  display: none;
+  font-size: 1em;
+  border: 1px;
+  padding-left: 0.1em;
+}
+
+#picker #file-name[readonly] {
+  background-color: Gainsboro;
+}
+
+#picker.command-save #file-name,
+#picker.command-push #file-name, 
+#picker.command-new #file-name {
+  display: inline;
+}
+
+#picker.page-me #file-name,
+#picker.page-alert #file-name,
+#picker.page-repo #file-name {
+  display: none;
+}
+
+#picker.page-template #file-name {
+  display: inline;
+}
+
+
+
+/* items */
+
+div.item {
+  display: inline-block;
+  width: calc(50% - 2em);
+  min-width: calc(50% - 2em);
+  padding: 0.2em 0.5em 0.2em 0.5em; 
+  overflow: hidden;
+  white-space: nowrap;  
+}
+
+div.item:hover {
+  background-color: Gainsboro;
+  cursor: pointer;
+}
+
+div.item.disabled {
+  display: none; 
+}
+
+div.item.document {
+  font-weight: bolder;
+}
+
+.item-icon {
+  height: 1.5em;
+  width : 1.5em;
+  margin: 0em 0.5em 0em 0em;
+  vertical-align: -0.3em;
+}
+
+
+.item-disconnect {
+  height: 0.5em;
+  width: 0.5em;
+  margin-left: -0.5em;
+  vertical-align: 0.5em;
+  margin-right: 0.25em;
+}
+
+#templates .item-icon {
+  height: 4em;
+  width: 4em;
+  vertical-align: middle;
+}
+#templates div.item {
+  max-height: 4.1em;
+}
+
+#page-me .item-icon {
+  height: 2em;
+  width: 2em;
+}
+#page-me div.item {
+  max-height: 2.1em;
+}
+
+
+
+.item-select {
+  background-color: white;
+}
+
+.item.selected,
+.item.selected:hover {
+  background-color: #8AC;
+}
+
+.item-file.disabled {
+  /* display: none; */
+  display: inline-block !important;
+  /* color: #888; */
+  opacity: 0.4;
+}
+
+.item.disabled input {
+  visibility: hidden;
+}
+
+/* buttons */
+#picker-buttons {
+  float: right;
+}
+
+#picker .button {
+  display: none;
+}
+
+#picker .app-content .button {
+  color: white;
+  border-color: black;
+  background-color: #135;
+}
+#picker .app-content .button:hover {
+  background-color: #357;
+}
+
+#picker.command-signin #message-signin, 
+#picker.command-message #message-message,
+#picker.page-alert #message-alert,
+#picker.page-template #message-template {
+  display: block;
+}
+
+#picker.command-signin #button-signin,
+#picker.command-open #button-open,
+#picker.command-save #button-save,
+#picker.command-new #button-new,
+#picker.command-push #button-push,
+#picker.command-commit #button-commit,
+#picker.command-snapshot #button-snapshot,
+#picker.page-alert #button-discard,
+#picker #button-signout,
+#picker #button-cancel,
+#picker #icon-close {
+  display: inline;
+}
+
+#picker.page-me #button-signin,
+#picker.page-me #button-signout,
+#picker.remote-local #button-signout,
+#picker.remote-localhost #button-signout,
+#picker.page-alert #button-new,
+#picker.page-alert #button-save,
+#picker.page-alert #button-open,
+#picker.page-alert #button-signout {
+  display: none;
+}
+
+#picker.page-repo #button-new,
+#picker.page-me #button-new,
+#picker.page-me #button-open,
+#picker.page-me #button-save,
+#picker.page-me #button-push {
+  /*
+  border-color: #AAA;
+  color: #AAA;
+  */
+  opacity: 0.5;
+}
+
+#picker.command-signin #login-info,
+#picker.command-alert #login-info,
+#picker.command-message #login-info {
+  display: none;
+}
+
+#picker #upload, 
+#picker #commit,
+#picker #snapshot {
+  display: none;
+}
+
+#picker.command-upload #upload,
+#picker.command-commit #commit,
+#picker.command-snapshot #snapshot {
+  display: block;
+}
+
+#picker #commit-message,
+#picker #snapshot-message {
+  font-size: 1em;
+  vertical-align: middle;
+  width: 80%;
+}
+
+#picker #commit ul {
+  margin: 0pt;
+  margin-bottom: 1ex;
+  padding-left: 0pt;
+  list-style-type: none;
+}
+
+#picker #commit .change-add {
+  color: Darkgreen;
+}
+#picker #commit .change-update {
+  color: Navy;
+}
+#picker #commit .change-delete {
+  color: Maroon;
+}
+
+
+#picker #upload {
+  margin: 1em 0em;
+  text-align: center;
+}
+
+#picker #dropzone {
+  margin: 1em auto 2em auto;
+  width: 50%;
+  height: 4em;
+  border: dotted 1px black;
+  border-radius: 10px;
+  text-align: center;
+  padding-top: 2em;
+  background-color: Gainsboro;
+}
+
+
+
+#remote-down {
+  height: 0.6em;
+  margin-left: -0.4em;
+}
+
+#login-info {
+  float: left;
+  font-size: small;
+}
+
+#message-signin, #message-connect, #message-alert, #message-message, #message-template {
+  text-align: center;
+  width: 100%;
+  padding-bottom: 1ex;
+  border-bottom: 1px solid;
+  margin-bottom: 1em;
+}
+
+#picker #remote-local {
+  display: none;
+}
+
+#picker.command-new #remote-local {
+  display: block;
+}
+
+#picker #header-logo {
+  display: inline;
+  padding-right: 0.25em;
+}
+
+#picker #command-name {
+  font-size: larger;
+  padding-right: 0.75em;
+  vertical-align: -0.1em; /* aligns with all */
+}
+
+
+#picker #icon-close.button {
+  border: none;
+  float: right;
+  margin-top: -0.2em;
+  padding-top: 0.2em;
+  vertical-align: middle;
+}
+
+#picker .version-display {
+  text-align: left;
+}
+
+#picker .version-display .version-alert {
+  border-bottom: 1px solid black;
+  padding: 1ex;
+}
+#picker .version-display .version-updates {
+  font-size: smaller;
+  margin-top: 1ex;
+}
+#picker ul.version-updates {
+  margin-top: 0ex;
+  padding-left: 1em;
+  list-style-type: none;
+}
+#picker ul.version-updates>li+li {
+  border-top: 1px solid black;
+  margin-top: 1em;
+}
+#picker ul.version-updates ul {
+  list-style-type: disc;
+}
+
+#picker div.item[data-path=onedrive] {
+  display:none;
+}
+
+/* hover box */
+.hoverbox {
+  position: relative;
+}
+
+.hoverbox-content {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  left: calc(100% - 5em);
+}
+
+.hoverbox:hover .hoverbox-content {
+  display: block;
+}
+
+.hoverbox-content img {
+  height: auto;
+  width: auto;
+  max-width: 5em;
+  max-height: 5em;
+}
+
+
+body.viewer,
+iframe.viewer {
+  padding: 0pt;
+  margin: 0pt;
+  height: 99%;
+  width: 100%;
+  border: none;
+}
+
+#auth-redirect p {
+  text-align: center; 
+  font-size: large; 
+  margin-top: 1em;
+}
+
+.button, .popup>div, .monaco-editor-hover {
+  /* border-radius: 3px; */
+  padding: 0.25ex 0.5ex !important;
+}
+
+
+/*
+.popup>div, .monaco-editor-hover {
+  border-radius: 5px;
+  border: 1px solid black;
+  padding: 0.5ex !important;
+}
+*/
+
+.monaco-editor-hover .shortcut {
+  margin: 0em;
+  padding-left: 0.5em;
+}
+
+/*
+div.touch {
+  display: inline-block;
+  width: 1.5em !important;
+  height: 1.5em !important;
+  padding: 0pt !important;
+  border: 1px solid white;
+  border-radius: 8em;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0ex 0.5ex;
+}
+
+
+.touch>div {
+  text-align: left;
+}
+*/

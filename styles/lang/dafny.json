@@ -1,0 +1,127 @@
+{
+  "displayName": "Dafny",
+  "name":        "dafny",
+  "mimeTypes":   ["text/x-dafny"],
+    
+  "lineComment":      "//",
+  "blockCommentStart": "/*",
+  "blockCommentEnd":   "*/",
+
+  "keywords": [
+    "class","trait","datatype","codatatype","newtype","type","iterator",
+    "function","predicate","copredicate","inductive",
+    "var","method","constructor","lemma","colemma",
+    "ghost","static","abstract","async","protected",
+    "module","import","default","as","opened",
+    "include",
+    "extends","refines","returns","yields",
+    "assert","assume","break","then","else","if","label","return","yield","await",
+    "while","print","where",
+    "old","forall","exists","new","calc","modify","in","this","fresh",
+    "match","case","false","true","null"
+  ],
+  
+  "extraKeywords": [
+  ],
+  
+  "verifyKeywords": [
+    "requires","ensures","modifies","reads","free","invariant","decreases"
+  ],
+  
+  "extraVerifyKeywords": [
+  ],
+  
+  "types": [
+    "bool","char","int","nat","real",
+    "set","multiset","seq","string","map",
+    "imap","iset",
+    "object","array"
+  ],
+  
+  "extraTypes": [
+  ],
+
+  
+  "brackets": [
+    ["{","}","delimiter.curly"],  
+    ["[","]","delimiter.square"],  
+    ["(",")","delimiter.parenthesis"] 
+  ],
+  
+  "autoClosingPairs": [["\"","\""], ["@brackets"]],
+
+  
+  "escapes": "\\\\(?:[nrt\\\\\"'0]|u[0-9A-Fa-f]{4})",
+  
+  "digits": "[0-9](_?[0-9])*",
+  "hexdigits": "[0-9a-fA-F](_?[0-9a-fA-F])*",
+  "identifier": "[a-zA-Z'_\\?][\\w'\\?]*",
+  
+  "tokenizer": {
+    "root": [
+      
+      ["(\\{)(\\s*:\\s*@identifier)", ["@brackets","meta.attribute"]],
+      
+      
+      ["(')(@escapes)(')(?![\\w'\\?])", ["string.char","string.char.escape","string.char" ]],
+      ["'[^\\\\'\\n\\r]'(?![\\w'\\?])", "string.char" ],
+      
+      
+      ["array([2-9]\\d*|1\\d+)", "type.keyword" ],
+      ["@identifier", { 
+        "cases": {"@keywords": "keyword",
+                "@extraKeywords": "keyword",
+                "@verifyKeywords": "constructor.identifier",
+                "@extraVerifyKeywords": "constructor.identifier",
+                "@types"   : "type.keyword",
+                "@extraTypes" : "type.keyword",
+                "@default" : "identifier" }}],            
+      [":=","keyword"],
+      [":\\|","keyword"],
+      
+      
+      { "include": "@whitespace" },
+      
+      ["[{}()\\[\\]]", "@brackets"],
+      ["[;]", "delimiter"],
+
+      
+      ["@digits\\.@digits", "number"],      
+      ["0x@hexdigits",  "number"],
+      ["@digits", "number.dec"],
+
+      
+      ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["\"",  "string", "@string" ],
+      
+      
+      ["@\"", { "token": "string.quote", "bracket": "@open", "next": "@litstring" } ]      
+    ],
+
+    "whitespace": [
+      ["[ \\t\\r\\n]+", "white"],
+      ["\\/\\*",       "comment", "@comment" ],
+      ["\\/\\/.*$",    "comment"]
+    ],
+
+    "comment": [
+      ["[^\\/*]+", "comment" ],
+      ["\\/\\*", "comment", "@push" ],    
+      ["\\*/",    "comment", "@pop"  ],
+      ["[\\/*]",   "comment" ]
+    ],  
+
+    "string": [
+      ["[^\\\\\"]+",  "string"],
+      ["@escapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["\"",        "string", "@pop" ]
+    ],
+    
+    "litstring": [
+      ["[^\"]+",    "string"],
+      ["\"\"",       "string.escape"],
+      ["\"",        { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+NETWORK:
+*
+
+FALLBACK:
+
+CACHE:
+version.json

@@ -1,0 +1,253 @@
+Title       : Highlight test &egrave;&ccedil;
+Title Note  : &date;, &time;
+Author      : Dan Ros&egrave;n&cedil;
+
+.ptoken.type { color: teal }
+
+xPre{ 
+  background-color:Ivory; padding:1ex; border: dotted black 1px; 
+}
+
+[TITLE]
+
+[TOC]
+
+# Highlighting code
+
+[test]{color:#E0E0E0}
+
+[test2]{background-color:#E0E0E0}
+
+## Koka
+
+```koka
+public type tree<a> {
+  con Leaf(value :a)
+  con Node(left :tree<a>, right :tree<a>)
+}
+
+fun show( t : tree<char> ) : string
+{
+  match(t) {
+    Leaf(c) -> core/show(c)
+    Node(l,r) -> "Node(" + show(l) + "," + show(r) + ")"
+  }
+}
+```
+
+## Java
+
+```java
+// Type source code in your Java here...
+public class HelloWorld { 
+   public static void main(String[] args) { 
+      System.out.println("Hello, World\n");
+   }
+}
+```
+
+## Csharp:
+
+```csharp
+// CSharp 4.0 ray-tracer sample by Luke Hoban
+using System.Drawing;
+using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows.Forms;
+
+namespace RayTracer {
+    public class RayTracer {
+
+        private int screenWidth;
+        private int screenHeight;
+```
+
+## Python:
+
+```python
+from Tkinter import *
+import Pmw, string
+
+class SLabel(Frame):
+    """ SLabel defines a 2-sided label within a Frame. The
+        left hand label has blue letters the right has white letters """
+    def __init__(self, master, leftl, rightl):
+        Frame.__init__(self, master, bg='gray40')
+        self.pack(side=LEFT, expand=YES, fill=BOTH)
+        Label(self, text=leftl, fg='steelblue1',
+                     font=("arial", 6, "bold"), width=5, bg='gray40').pack(
+                         side=LEFT, expand=YES, fill=BOTH)
+        Label(self, text=rightl, fg='white',
+                     font=("arial", 6, "bold"), width=1, bg='gray40').pack(
+                         side=RIGHT, expand=YES, fill=BOTH)
+```
+
+## Javascript                         
+
+```javascript
+function hi() {
+  return "hello world";
+}
+```
+
+```javascript5
+module test {
+  export function hi() {
+    return "hello world";
+  }
+}
+```
+
+and more
+
+```text/javascript
+function hi() {
+  return "hello world";
+}
+```
+
+
+and more
+
+```text/javascript
+function hi() {
+  \(&pi;\) = 3.14;
+  return "hello world";
+}
+
+function hi() {
+  \($\pi$\) = 3.14;
+  /* comment
+  \(&pi;\)
+  end comment */
+  return "hello world";
+}
+
+```
+
+## Html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monarch Workbench</title>
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- a comment
+  -->
+  <style>
+    body { font-family: Consolas; } /* nice */
+  </style>
+</head>
+<body>
+  <div class="test">
+    <script>
+      function() {
+        alert("hi </script>"); // javascript
+      };
+    </script>
+    <script type="text/x-dafny">
+      class Foo {
+        x : int;
+        invariant x > 0;
+      };
+    </script>
+  </div>
+</body>
+</html>
+```
+
+## Ruby
+
+```ruby
+# as a list of coefficients, from the greatest to the least.
+def polyval(x, coef)
+    sum = 0
+    coef = coef.clone           # Don't want to destroy the original
+    while true
+        sum += coef.shift       # Add and remove the next coef
+        break if coef.empty?    # If no more, done entirely.
+        sum *= x                # This happens the right number of times.
+    end
+    return sum
+end
+```
+
+## Dot
+
+```dot
+digraph "If.try_if_then"
+{
+  label = "If.try_if_then";
+  rankdir="TD";
+
+  node [fontname="Helvetica", shape=record, fontsize="12", color="lightblue", style="filled"];
+
+  edge [fontname="Helvetica", fontsize="10", color="black"];
+
+  subgraph "cluster_node_57"
+  { /* block node_57 */
+  label = "";
+```
+
+## Dafny
+```dafny
+// out-parameters.
+method M(N: int, a: array) returns (sum: int, max: int)
+  requires 0 <= N & a != null & a.Length == N;
+  ensures sum <= N * max;
+{
+  sum := 0;
+  max := 0;
+  var i := 0;
+  while (i < N)
+    invariant i <= N & sum <= i * max;
+```
+
+## SMT
+```smt
+; This example illustrates different uses of the arrays
+; supported in Z3.
+; This includes Combinatory Array Logic (de Moura & Bjorner, FMCAD 2009).
+;
+(define-sort A () (Array Int Int))
+(declare-fun x () Int)
+(declare-fun y () Int)
+```
+
+
+## Fancy
+
+Here is some code type set with `.pretty` like `let haskell`{.pretty; language:haskell}
+instead of `let haskell`{language:haskell}:
+
+``` Haskell { .pretty; \
+              replace:"//->/\(->|&rarr;\)//\\(?![()])/\(&lambda;\)//g"; \
+              replace:"/_(?=[a-zA-Z])/\(_|&lowline;\)/g"; \
+              replace:"/([a-zA-Z])(\d)\b/\(\1~\2~\)/g"; \
+            }
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in Bin lt rt "hi"
+                   )
+replace_min t   =  (cata_tree rep_alg t) (cata_tree min_alg t)
+```
+
+And one more example:
+
+``` haskell { .pretty; replace: "/->/\(->|&rarr;\)/g"; } 
+substitute1  :: (String, Int) -> Exp -> Exp
+substitute1  (var, val) exp = subst exp where
+  subst (Number i)       =  Number i
+  subst (Add a b)        =  Add (subst a) (subst b)
+  subst (Subtract a b)   =  Subtract (subst a) (subst b)
+  subst (Multiply a b)   =  Multiply (subst a) (subst b)
+  subst (Divide a b)     =  Divide (subst a) (subst b)
+  subst (Variable name)  =  if var == name
+                             then Number val
+                             else Variable name 
+```          

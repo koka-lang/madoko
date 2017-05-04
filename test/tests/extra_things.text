@@ -1,0 +1,47 @@
+Title	: Examples
+Script	: https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?lang=scm&lang=latex
+Heading Base: 2
+
+~pre	: .prettyprint  .linenums 
+.upper  : replace='/^[\s\S]*$/\U\0\E and more/' 
+.fib    : replace='/^x?$/y/' replace='/xx(x*)/[x\1]{.fib}[\1]{.fib}/' notag 
+
+# Examples
+
+Fibonacci of 6 is how many y's?
+[xxxxxx]{.fib}
+
+Some [Upper case text]{.upper}.
+Here is an image ![monarch].
+
+  [monarch]:  ../butterfly.png { width=2cm vertical-align=middle }
+
+~ Framed {text-align=center tight}
+framed text
+~
+
+
+
+```
+function hello() {
+	alert("hello world")
+}
+```
+
+And indented
+
+	function hello() {
+		alert("hello world")
+	}
+
+``` latex
+\begin{itemize}
+\item Some \textbf{latex} code.
+\item Good for math $2\sin$. 
+\item But a horrible macro language :-(.
+\end{itemize}
+```
+
+``` scheme {.lang-scm}
+(friends 'of '(parentheses))
+```

@@ -1,0 +1,740 @@
+%%
+%% This is file `arrows.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% arrows.dtx  (with options: `package')
+%% 
+%% Copyright (C) 2017
+%% Daan Leijen, Microsoft Research
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%   http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 2003/12/01 or later.
+%% 
+%% This work has the LPPL maintenance status "author-maintained".
+%% 
+\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+\ProvidesPackage{arrows}
+    [2004/11/05 v1.0 .dtx arrows file]
+\RequirePackage{options}
+\RequirePackage{pict2e}
+\RequirePackage{graphicx}
+\RequirePackage{overlay}
+\let\pIIe@drawGraph@org\pIIe@drawGraph
+\def\pIIe@drawGraph{\pIIe@extraops\pIIe@drawGraph@org}
+\def\pIIe@extraops{\pIIe@op@strokestyle}
+\def\pIIe@op@strokestyle{}
+\newcommand*\pIIe@strokedashes[3][0pt]{%
+  \ifdim#2=\z@\relax
+    \def\pIIe@op@strokestyle{}% solid stroke by default
+  \else
+    \ifcase\pIIe@mode\relax
+    \or% Postscript
+      \def\pIIe@op@strokestyle{%
+        \pIIe@addtoGraph{[}%
+        \pIIe@add@nums{#2}{#3}%
+        \pIIe@addtoGraph{]\space}%
+        \pIIe@add@num{#1}%
+        \pIIe@addtoGraph{setdash}%
+      }%
+    \or% PDF
+      \def\pIIe@op@strokestyle{%
+        \pIIe@addtoGraph{[}%
+        \pIIe@add@nums{#2}{#3}%
+        \pIIe@addtoGraph{]\space}%
+        \pIIe@add@num{#1}%
+        \pIIe@addtoGraph{d}%
+      }%
+    \fi
+  \fi
+}
+\newcommand*\strokedashes[3][0]{%
+  \pIIe@strokedashes[#1\@wholewidth]{#2\@wholewidth}{#3\@wholewidth}%
+}
+\newcommand*\strokesolid{\strokedashes{0}{0}}
+\newcommand*\strokedashed{\strokedashes{5}{5}}
+\newcommand*\strokedotted{\strokedashes{0.8}{3}}
+\newcommand*\circleat{\@killglue\@ifstar{\pIIe@dotat}{\pIIe@@circleat}}%
+\def\pIIe@@circleat(#1,#2){\pIIe@circleat@{#1}{#2}}%
+\def\pIIe@dotat(#1,#2){\pIIe@circleat@[1]{#1}{#2}}%
+\newcommand*\pIIe@circleat@[4][0]{%
+  \begingroup
+  \@ovxx#2\unitlength
+  \@ovyy#3\unitlength
+  \let\pIIe@@qcircle@old\pIIe@@qcircle
+  \def\pIIe@@qcircle##1##2{%
+    \advance\@ovxx by ##1\relax
+    \advance\@ovyy by ##2\relax
+    \pIIe@@qcircle@old\@ovxx\@ovyy%
+  }%
+  \ifnum#1=1\relax\circle*{#4}\else\circle{#4}\fi
+  \endgroup\ignorespaces
+}
+\newcommand*\scalelinethickness[1]{%
+  \linethickness{#1\@wholewidth}%
+}
+\def\drawgrid(#1,#2)#3{%
+  \@killglue
+  \@tempcnta=\numexpr\number\dimexpr#1\p@\relax/%
+                     \number\dimexpr#3\p@\relax\relax%
+  \multiput(0,0)(#3,0){\the\@tempcnta}{\line(0,1){#2}}%
+  \put(#1,0){\line(0,1){#2}}%
+  \@tempcnta=\numexpr\number\dimexpr#2\p@\relax/%
+                     \number\dimexpr#3\p@\relax\relax%
+  \multiput(0,0)(0,#3){\the\@tempcnta}{\line(1,0){#1}}%
+  \put(0,#2){\line(1,0){#1}}%
+  \ignorespaces
+}
+\def\drawxygrid(#1,#2)(#3,#4)#5#6{%
+  \drawgrid(#3,#4){#5}%
+  \color{.!80!black}%
+  \polyline(#1,0)(#1,#4)%
+  \polyline(0,#2)(#3,#2)%
+  \put(#1,-0.6){\put(-0.25,0){\scriptsize 0}}%
+  \put(-0.5,#2){\put(0,-0.25){\scriptsize 0}}%
+  \drawarrow[label-anchor=1.1,label=top,label-distance=1pt]%
+    (0,0,top)-|>(0,#4,bottom){\scriptsize\textsf{y}}%
+  \drawarrow[label-anchor=1.1,label=left,label-distance=1pt]%
+    (0,0,right)-|>(#3,0,left){\scriptsize\textsf{x}}%
+  \put(#1,#2){#6}%
+  \ignorespaces
+}
+\options{
+  /arrow/.new family,
+  /arrow,
+  style/.new value,
+  start/.new value,
+  start-anchor/.new value = top,
+  start-angle/.new num = -270,
+  start-x/.new length,
+  start-y/.new length,
+  start-marker/.new value = [none]none,
+  start-distance/.new value = 0,
+  start-reversed/.new toggle,
+  end/.new value,
+  end-anchor/.new value = top,
+  end-angle/.new num = -270,
+  end-x/.new length,
+  end-y/.new length,
+  end-marker/.new value = [none]pointer,
+  end-distance/.new value = 0,
+  end-reversed/.new toggle,
+  label-anchor/.new value = 0.5,
+  label-distance/.new length = \@ne\p@,
+  label-shift-x/.new length,
+  label-shift-y/.new length,
+  label-cmd/.new value,
+  label/.new value = bottom-right,
+  edge/.new value = solid,
+  edge-color/.new color = [.],
+  tension/.new value = [1]1,
+  tension-scale/.new value = [1]1,
+  marker-scale/.new value = 1,
+  marker-color/.new color = [.],
+  marker-stroke/.new value,
+  stroke-scale/.new value = 1,
+  scale/.new value = 1,
+  looseness/.new alias = /arrow/tension,
+  stroke/.new style = {edge=#1,marker-stroke=#1},
+  color/.new style = {edge-color=#1,marker-color=#1},
+  marker-distance/.new style = {start-distance=#1,end-distance=#1},
+  show-anchors/.new style = [true]{show-marker-anchors=#1,%
+                                   show-label-anchor=#1,show-node-spans=#1},
+  show-marker-anchors/.new toggle,
+  show-label-anchor/.new toggle,
+  show-node-spans/.new toggle,
+  show-control-points/.new toggle,
+  show-color/.new color = blue,
+  marker-reversed/.new toggle,
+  start-width/.new length,
+  start-height/.new length,
+  end-width/.new length,
+  end-height/.new length,
+  %
+  @start-x/.new length,
+  @start-y/.new length,
+  @end-x/.new length,
+  @end-y/.new length,
+  @start-cpx/.new length,
+  @start-cpy/.new length,
+  @end-cpx/.new length,
+  @end-cpy/.new length,
+  @start-length/.new length,
+  @end-length/.new length,
+  @label-x/.new length,
+  @label-y/.new length,
+  @start-name/.new value,
+  @end-name/.new value,
+  @start-marker-dx/.new value,
+  @end-marker-dx/.new value,
+}
+
+\newcommand*\newarrowstyle[2]{%
+  \options{/arrow,#1/.new style* = {#2}}%
+}
+\newcommand*\arrowset[1]{%
+  \options{/arrow,#1}%
+}
+
+
+\AtBeginDocument{%
+  \edef\arrow@wholewidth{\the\@wholewidth}% used to adjust marker scale
+}
+\newcommand\arrow@marker@set[3]{%
+  \csdef{marker@#1@#2}{#3}%
+}
+
+\newcommand\arrow@ifmarker[1]{%
+  \ifcsdef{marker@#1@draw}%
+}
+
+\newcommand*\arrow@marker@[2]{\csuse{marker@#1@#2}}
+
+\newcommand\arrow@marker[3][0pt]{%
+  \arrow@ifmarker{#2}{\arrow@marker@{#2}{#3}}{#1}%
+}
+
+\newcommand*\arrow@scaletounit[1]{%
+  \arrow@divdim{#1}{\unitlength}%
+}
+\newcommand*\arrow@divdim[2]{%
+  \dimexpr\number\numexpr\number\dimexpr#1\relax*65536/%
+                         \number\dimexpr#2\relax sp\relax
+}
+\newcommand*\arrow@markerdim[3]{%
+  \arrow@ifmarker{#1}{%
+    #3=\arrow@scaletounit{\csuse{marker@#1@#2}\p@}%
+    #3=\option{/arrow/marker-scale}#3\relax%
+  }{#3=\z@\p@}%
+}
+
+\def\newarrowmarker#1(#2,#3,#4)#5{%
+  \arrow@marker@set{#1}{rx}{#2}%
+  \arrow@marker@set{#1}{x}{#3}%
+  \arrow@marker@set{#1}{wd}{#4}%
+  \arrow@marker@set{#1}{draw}{#5}%
+}
+\newarrowmarker{none}(0,0,0){}%
+
+\newarrowmarker{rounded}(0.5,0.5,1){%
+  \setlength{\unitlength}{\@wholewidth}%
+  \ifoptionblank{/arrow/edge-color}{}{\color{\option{/arrow/edge-color}}}%
+  \circleat*(0.5,0){0.99}%
+}
+\newarrowmarker{pointer}(0,2,3){%
+  \roundjoin\roundcap\moveto(3,2)%
+  \curveto(2,0.5)(1,0.25)(0,0)%
+  \curveto(1,-0.25)(2,-0.5)(3,-2)%
+  \strokepath%
+  \iftoggle{/arrow/marker-reversed}{}{%
+    \polyline(0,0)(2,0)%
+  }%
+}
+\newarrowmarker{dpointer}(0,4,5){%
+  \roundjoin\roundcap
+  \moveto(5,2)%
+  \curveto(4,0.5)(3,0.25)(2,0)%
+  \curveto(3,-0.25)(4,-0.5)(5,-2)%
+  \strokepath%
+  \moveto(3,2)%
+  \curveto(2,0.5)(1,0.25)(0,0)%
+  \curveto(1,-0.25)(2,-0.5)(3,-2)%
+  \strokepath%
+  \polyline(0,0)(2,0)%
+  \iftoggle{/arrow/marker-reversed}{}{%
+    \polyline(2,0)(4,0)%
+  }%
+}
+\newarrowmarker{vector}(0,4,4){%
+  \beveljoin\moveto(4,1.5)%
+  \curveto(3,0.7)(1,0.2)(0,0)%
+  \curveto(1,-0.2)(3,-0.7)(4,-1.5)%
+  \fillpath%
+  \iftoggle{/arrow/marker-reversed}{%
+    \polyline(0,0)(2,0)%
+  }{}%
+}
+
+\newarrowmarker{triangle}(0,4,4){%
+  \polygon*(0,0)(4,2)(4,-2)%
+  \iftoggle{/arrow/marker-reversed}{%
+    \polyline(0,0)(2,0)%
+  }{}%
+}
+
+\newarrowmarker{dot}(1.5,1.5,3){\circleat*(1.5,0){3}}
+\newarrowmarker{circle}(0,3,3){\circleat(1.5,0){3}}
+\newarrowmarker{rcircle}(3,0,3){\circleat(1.5,0){3}}
+\newcommand*\arrow@positionat[1]{%
+  \ov@getpos{\option{/arrow/@#1-name}}\@ovxx\@ovyy
+  \options{/arrow/#1-x=\@ovxx,/arrow/#1-y=\@ovyy}%
+  \ov@getsize{\option{/arrow/@#1-name}}\@ovxx\@ovyy
+  \options{/arrow/#1-width=\@ovxx,/arrow/#1-height=\@ovyy}%
+}%
+\newcommand*\arrow@adjustposition@anchor[1]{%
+  \@ovdx=\option{/arrow/#1-width}%
+  \@ovdy=\option{/arrow/#1-height}%
+  \ifdim\dimexpr\@ovdx + \@ovdy\relax=\z@\relax\else
+    \ifoptionequal{/arrow/#1-anchor}{right}{%
+      \advance\@ovxx by \@ovdx\relax
+      \advance\@ovyy by 0.5\@ovdy\relax
+    }%
+    {\ifoptionequal{/arrow/#1-anchor}{top}{%
+      \advance\@ovxx by 0.5\@ovdx\relax
+      \advance\@ovyy by \@ovdy\relax
+    }%
+    {\ifoptionequal{/arrow/#1-anchor}{left}{%
+      \advance\@ovyy by 0.5\@ovdy\relax
+    }%
+    {\ifoptionequal{/arrow/#1-anchor}{bottom}{%
+      \advance\@ovxx by 0.5\@ovdx\relax
+    }%
+    {\ifoptionequal{/arrow/#1-anchor}{center}{%
+      \advance\@ovxx by 0.5\@ovdx\relax
+      \advance\@ovyy by 0.5\@ovdy\relax
+    }%
+    {}}}}}%
+  \fi
+}
+
+\newcommand*\arrow@adjustposition@marker[1]{%
+  \@tempdima=\option{/arrow/#1-distance}\p@%
+  \iftoggle{/arrow/#1-reversed}{%
+    \arrow@markerdim{\option{/arrow/#1-marker}}{wd}\@tempdimc%
+    \arrow@markerdim{\option{/arrow/#1-marker}}{rx}\@tempdimb
+    \advance\@tempdimc by -\@tempdimb
+    \advance\@tempdima by \@tempdimc
+    \options{/arrow/@#1-marker-dx=%
+              \arrow@marker@{\option{/arrow/#1-marker}}{rx}}%
+  }{%
+    \arrow@markerdim{\option{/arrow/#1-marker}}{x}\@tempdimb%
+    \advance\@tempdima by \@tempdimb
+    \options{/arrow/@#1-marker-dx=%
+              \arrow@marker@{\option{/arrow/#1-marker}}{x}}%
+  }%
+  \ifdim\@tempdima=\z@\relax\else
+    \CalculateSin{\option{/arrow/#1-angle}}%
+    \CalculateCos{\option{/arrow/#1-angle}}%
+    %\typeout{distance #1: \the\@tempdima}%
+    \advance\@ovxx by %
+      \dimexpr\UseCos{\option{/arrow/#1-angle}}\@tempdima\relax
+    \advance\@ovyy by %
+      \dimexpr\UseSin{\option{/arrow/#1-angle}}\@tempdima\relax
+  \fi
+}
+
+\newcommand*\arrow@adjustposition[1]{%
+  \@ovxx=\option{/arrow/#1-x}%
+  \@ovyy=\option{/arrow/#1-y}%
+  \arrow@adjustposition@anchor{#1}%
+  \arrow@adjustposition@marker{#1}%
+  \options{/arrow/@#1-x=\@ovxx,/arrow/@#1-y=\@ovyy}%
+}
+\newcommand\arrow@reverse[2]{%
+  \eifstrequal{#1}{#2}{\options{/arrow/#1-reversed}}{}%
+}
+\newcommand\arrow@adjustmarker[1]{%
+  \ifoptionequal{/arrow/#1-marker}{>}{%
+    \options{/arrow/#1-marker=pointer}\arrow@reverse{#1}{start}}%
+  {\ifoptionequal{/arrow/#1-marker}{<}{%
+    \options{/arrow/#1-marker=pointer}\arrow@reverse{#1}{end}}%
+  {\ifoptionequal{/arrow/#1-marker}{|>}{%
+    \options{/arrow/#1-marker=vector}\arrow@reverse{#1}{start}}%
+  {\ifoptionequal{/arrow/#1-marker}{<|}{%
+    \options{/arrow/#1-marker=vector}\arrow@reverse{#1}{end}}%
+  {\ifoptionequal{/arrow/#1-marker}{>>}{%
+    \options{/arrow/#1-marker=dpointer}\arrow@reverse{#1}{start}}%
+  {\ifoptionequal{/arrow/#1-marker}{<<}{%
+    \options{/arrow/#1-marker=dpointer}\arrow@reverse{#1}{end}}%
+  {\ifoptionequal{/arrow/#1-marker}{*}{%
+    \options{/arrow/#1-marker=dot}}%
+  {}}}}}}}%
+}
+
+\newcommand*\arrow@sqrt[2]{%
+  \@tempdima\dimexpr#1\relax
+  \@tempdimb=0.7071\@tempdima
+  \ifdim\@tempdimb<128\p@
+    \advance\@tempdimb by \dimexpr1pt * \@tempdima/\@tempdimb\relax
+    \divide\@tempdimb by 2%
+    \advance\@tempdimb by \dimexpr1pt * \@tempdima/\@tempdimb\relax
+    \divide\@tempdimb by 2%
+    \advance\@tempdimb by \dimexpr1pt * \@tempdima/\@tempdimb\relax
+    \divide\@tempdimb by 2%
+  \fi
+  #2=\@tempdimb\relax
+}
+
+\newcommand\arrow@adjustmarkerscale{%
+  \@tempdima=\dimexpr\arrow@wholewidth\relax
+  \ifdim\@wholewidth=\@tempdima\relax\else
+    \@tempdima=\arrow@divdim\@wholewidth\@tempdima%
+    \ifdim\@tempdima<1.01\p@\relax
+      \ifdim\@tempdima>0.99\p@\relax
+        \@tempdima=1\p@
+      \fi
+    \fi
+    \ifdim\@tempdima=1\p@\relax\else
+      \arrow@sqrt\@tempdima\@tempdima
+      \@tempdima=\option{/arrow/marker-scale}\@tempdima
+      \options{/arrow/marker-scale/.expanded=\strip@pt\@tempdima}%
+    \fi
+  \fi
+}
+\newcommand\arrow@defaultdegree@[4]{%
+  \ifnum\option{/arrow/#1-angle}=-270\relax
+    \@tempcnta=#3\relax
+    \@tempcntb=#4\relax
+    \ifblank{#2}{}%
+    {\ifstrequal{#2}{left}{\advance\@tempcnta by \@tempcntb}%
+    {\ifstrequal{#2}{right}{\advance\@tempcnta by -\@tempcntb}%
+    {\ifstrequal{#2}{top}{\advance\@tempcnta by \@tempcntb}%
+    {\ifstrequal{#2}{bottom}{\advance\@tempcnta by -\@tempcntb}%
+    {%assume it was in degrees
+     \@tempcnta=\numexpr#2\relax
+     \ifnum\@tempcnta<\z@\relax\advance\@tempcnta by 360\fi
+     \ifnum\@tempcnta>359\relax\advance\@tempcnta by -360\fi
+    }}}}}%
+    \options{/arrow/#1-angle=\@tempcnta}%
+  \fi
+}
+
+\def\arrow@parseanchor@#1-#2-#3\relax#4\relax{%
+  \ifblank{#1#2}{}{%
+  \ifstrequal{#1}{top}{%
+    \options{/arrow/#4-anchor=#1}%
+    \arrow@defaultdegree@{#4}{#2}{90}{45}%
+  }%
+  {\ifstrequal{#1}{bottom}{%
+    \options{/arrow/#4-anchor=#1}%
+    \arrow@defaultdegree@{#4}{#2}{270}{-45}%
+  }%
+  {\ifstrequal{#1}{right}{%
+    \options{/arrow/#4-anchor=#1}%
+    \arrow@defaultdegree@{#4}{#2}{0}{45}%
+  }%
+  {\ifstrequal{#1}{left}{%
+    \options{/arrow/#4-anchor=#1}%
+    \arrow@defaultdegree@{#4}{#2}{180}{-45}%
+  }%
+  {\ifstrequal{#1}{center}{%
+    \options{/arrow/#4-anchor=#1}%
+    \ifnum\option{/arrow/#4-angle}=-270\relax
+      \ifstrequal{#2}{left}%
+        {\options{/arrow/#4-angle=180}}%
+        {\arrow@defaultdegree@{#4}{#2}{0}{90}}%
+    \fi
+  }%
+  {%we assume it was in degrees
+    \eifblank{#1}{\@tempcnta=-\numexpr#2\relax}{\@tempcnta=\numexpr#1\relax}%
+    \ifnum\@tempcnta<\z@\relax\advance\@tempcnta by 360\fi
+    \ifnum\@tempcnta>359\relax\advance\@tempcnta by -360\fi
+    \ifnum\@tempcnta<45\relax
+      \options{/arrow/#4-anchor=right}%
+    \else\ifnum\@tempcnta<136\relax
+      \options{/arrow/#4-anchor=top}%
+    \else\ifnum\@tempcnta<215\relax
+      \options{/arrow/#4-anchor=left}%
+    \else\ifnum\@tempcnta<316\relax
+      \options{/arrow/#4-anchor=bottom}%
+    \else
+      \options{/arrow/#4-anchor=right}%
+    \fi\fi\fi\fi
+    \options{/arrow/#4-angle=\@tempcnta}%
+  }}}}}%
+  }% \ifblank
+}
+
+\newcommand\arrow@adjustanchor[1]{%
+  \letoption{/arrow/#1}\arrow@anchor
+  \expandafter\arrow@parseanchor@\arrow@anchor--\relax#1\relax
+}
+\newcommand\arrow@controlpoint[1]{%
+  \CalculateSin{\option{/arrow/#1-angle}}%
+  \CalculateCos{\option{/arrow/#1-angle}}%
+  \options{%
+    /arrow/@#1-cpy=\UseSin{\option{/arrow/#1-angle}}\arrow@tension
+                    + \option{/arrow/@#1-y},
+    /arrow/@#1-cpx=\UseCos{\option{/arrow/#1-angle}}\arrow@tension
+                    + \option{/arrow/@#1-x}}%
+}
+\newcommand\arrow@tensionadjust[1]{%
+  \@ovdx=\dimexpr\option{/arrow/@start-x} - \option{/arrow/@end-x}\relax
+  \ifdim\@ovdx<\z@\relax\@ovdx=-\@ovdx\fi
+  \@ovdy=\dimexpr\option{/arrow/@start-y} - \option{/arrow/@end-y}\relax
+  \ifdim\@ovdy<\z@\relax\@ovdy=-\@ovdy\fi
+  \pIIe@pyth\@ovdx\@ovdy\dimen@\relax
+  \ifdim\dimen@<0.5em\relax\dimen@=0.5em\fi
+  #1=\strip@pt\dimen@\dimexpr0.033em\relax
+}
+\newcommand\arrow@setstrokestyle[1]{%
+  \ifoptionblank{#1}{}{%
+    \ifoptionequal{#1}{-}{\strokesolid}%
+    {\ifoptionequal{#1}{.}{\strokedotted}%
+    {\ifoptionequal{#1}{--}{\strokedashed}%
+    {\csuse{stroke\option{#1}}}}}%
+  }%
+}
+
+\def\arrow@parsestyle#1-#2#3\relax{%
+  \ifblank{#1}{}{\options{/arrow/start-marker=#1}}%
+  \if#2.\relax
+    \options{/arrow/edge=dotted,/arrow/end-marker=#3}%
+  \else\if#2-\relax
+    \options{/arrow/edge=dashed,/arrow/end-marker=#3}%
+  \else
+    \options{/arrow/edge=solid,/arrow/end-marker=#2#3}%
+  \fi\fi
+}
+\newcommand\arrow@adjuststyle{%
+  \ifoptionblank{/arrow/style}{}{%
+    \edefoption{/arrow/style}\arrow@temp
+    \expandafter\arrow@parsestyle\arrow@temp\relax\relax\relax
+  }%
+}
+\newcommand\arrow@markerdraw[1]{%
+  \ifoptionequal{/arrow/#1-marker}{none}{}{%
+  \arrow@ifmarker{\option{/arrow/#1-marker}}{%
+    \put(\optionunit{/arrow/@#1-x},\optionunit{/arrow/@#1-y}){%
+    \begingroup
+      \ifoptionblank{/arrow/marker-color}{}%
+        {\unskip\optioncolor{/arrow/marker-color}}%
+      \ifoptionblank{/arrow/marker-stroke}{}%
+        {\arrow@setstrokestyle{/arrow/marker-stroke}}%
+      \setlength{\unitlength}{1\p@}%
+      \scalebox{\option{/arrow/marker-scale}}{%
+        \dimen@=\option{/arrow/#1-angle}\p@
+        \iftoggle{/arrow/#1-reversed}{%
+          \options{/arrow/marker-reversed=true}%
+          \advance\dimen@ by 180\p@\relax
+        }{\options{/arrow/marker-reversed=false}}%
+        \rotatebox{\strip@pt\dimen@}{%
+          \@tempdima=\@wholewidth%
+          \@tempdima=\arrow@divdim\@tempdima{\option{/arrow/marker-scale}\p@}%
+          \linethickness{\@tempdima}%
+          \@tempdima=\option{/arrow/@#1-marker-dx}\p@\relax%
+          \@tempdima=-\@tempdima
+          \put(\strip@pt\@tempdima,0){%
+            \arrow@marker{\option{/arrow/#1-marker}}{draw}%
+          }%
+        }%
+      }%
+    \endgroup
+    \arrow@debug{/arrow/show-marker-anchors}{\circle*{0.3}}%
+  }}{}}%
+}
+\newcommand*\arrow@linepoint[7][0.5]{%
+  #6=\dimexpr#2 + (#1#4 - #1#2)\relax
+  #7=\dimexpr#3 + (#1#5 - #1#3)\relax
+}
+
+\newcommand*\arrow@bezierpoint[3][0.5]{%
+  \arrow@linepoint[#1]%
+    {\option{/arrow/@start-x}}{\option{/arrow/@start-y}}%
+    {\option{/arrow/@start-cpx}}{\option{/arrow/@start-cpy}}#2#3%
+  \arrow@linepoint[#1]%
+    {\option{/arrow/@end-cpx}}{\option{/arrow/@end-cpy}}%
+    {\option{/arrow/@end-x}}{\option{/arrow/@end-y}}\@ovdx\@ovdy
+  \arrow@linepoint[#1]%
+    {\option{/arrow/@start-cpx}}{\option{/arrow/@start-cpy}}%
+    {\option{/arrow/@end-cpx}}{\option{/arrow/@end-cpy}}\@ovro\@ovri
+  \arrow@linepoint[#1]#2#3\@ovro\@ovri#2#3%
+  \arrow@linepoint[#1]\@ovro\@ovri\@ovdx\@ovdy\@ovdx\@ovdy
+  \arrow@linepoint[#1]#2#3\@ovdx\@ovdy#2#3%
+}
+
+\newsavebox{\arrow@labelbox}
+\newcommand*\arrow@labelpos{%
+  \@ovxx=\option{/arrow/label-shift-x}%
+  \@ovyy=\option{/arrow/label-shift-y}%
+  \ifoptionequal{/arrow/label}{_}{\options{/arrow/label=bottom-right}}{}%
+  \ifoptionequal{/arrow/label}{^}{\options{/arrow/label=top-right}}{}%
+  \ifoptionequal{/arrow/label}{__}{\options{/arrow/label=bottom-left}}{}%
+  \ifoptionequal{/arrow/label}{^\char'\^}{\options{/arrow/label=top-left}}{}%
+  \ifoptionanyof{/arrow/label}{top-right,top,top-left}{%
+    \advance\@ovyy by \option{/arrow/label-distance}%
+  }{\ifoptionanyof{/arrow/label}{bottom-right,bottom,bottom-left}{%
+    \advance\@ovyy by -\ht\arrow@labelbox
+    \advance\@ovyy by -\option{/arrow/label-distance}%
+  }{%
+    \advance\@ovyy by -0.5\ht\arrow@labelbox
+  }}%
+  \ifoptionanyof{/arrow/label}{top-left,left,bottom-left}{%
+    \advance\@ovxx by -\wd\arrow@labelbox
+    \advance\@ovxx by -\option{/arrow/label-distance}%
+  }{\ifoptionanyof{/arrow/label}{top-right,right,bottom-right}{%
+    \advance\@ovxx by \option{/arrow/label-distance}%
+  }{%
+    \advance\@ovxx by -0.5\wd\arrow@labelbox
+  }}%
+  \@tempdima=\arrow@scaletounit\@ovxx
+  \@tempdimb=\arrow@scaletounit\@ovyy
+  \arrow@bezierpoint[\option{/arrow/label-anchor}]\@ovxx\@ovyy%
+  \arrow@debug{/arrow/show-label-anchor}{%
+    \circleat*(\strip@pt\@ovxx,\strip@pt\@ovyy){2}%
+  }%
+  \advance\@ovxx by \@tempdima
+  \advance\@ovyy by \@tempdimb
+  \options{/arrow/@label-x=\@ovxx,/arrow/@label-y=\@ovyy}%
+}
+\newcommand*\arrow@drawnodespan[1]{%
+  \ov@getsize{\option{/arrow/@#1-name}}\@ovdx\@ovdy
+  \ov@getpos{\option{/arrow/@#1-name}}\@ovxx\@ovyy
+  \arrow@drawrect\@ovxx\@ovyy\@ovdx\@ovdy%
+}
+
+\newcommand*\arrow@drawrect[4]{%
+  \@tempdima=\dimexpr#1 + #3\relax
+  \@tempdimb=\dimexpr#2 + #4\relax
+  \@ovxx=\dimexpr#1\relax
+  \@ovyy=\dimexpr#2\relax
+  \polygon%
+    (\strip@pt\@ovxx,\strip@pt\@ovyy)%
+    (\strip@pt\@tempdima,\strip@pt\@ovyy)%
+    (\strip@pt\@tempdima,\strip@pt\@tempdimb)%
+    (\strip@pt\@ovxx,\strip@pt\@tempdimb)%
+}
+
+\newcommand*\arrow@drawcontrol[1]{%
+  \polyline(\optionunit{/arrow/@#1-x},\optionunit{/arrow/@#1-y})%
+           (\optionunit{/arrow/@#1-cpx},\optionunit{/arrow/@#1-cpy})%
+}
+
+\newcommand\arrow@debug[2]{%
+  \iftoggle{#1}{\begingroup
+    \unskip\optioncolor{/arrow/show-color}%
+    \linethickness{0.2pt}%
+    #2%
+  \endgroup}{}%
+}
+\newlength\arrow@tension
+
+\newcommand\arrow@draw[1]{%
+  %\color{black}%
+  \roundcap\roundjoin%
+  \ifoptionequal{/arrow/scale}{1}{}%
+    {\scalelinethickness{\option{/arrow/scale}}}%
+  \arrow@adjuststyle
+  \arrow@adjustmarkerscale
+  \ifdim\option{/arrow/stroke-scale}\p@=1\p@\relax\else
+    \linethickness{\option{/arrow/stroke-scale}\@wholewidth}%
+  \fi
+  \arrow@adjustanchor{start}\arrow@adjustanchor{end}%
+  \arrow@adjustmarker{start}\arrow@adjustmarker{end}%
+  \arrow@adjustposition{start}\arrow@adjustposition{end}%
+  \arrow@tensionadjust\arrow@tension
+  \arrow@tension=\option{/arrow/tension}\arrow@tension\relax
+  \arrow@tension=\option{/arrow/tension-scale}\arrow@tension\relax
+  \arrow@controlpoint{start}\arrow@controlpoint{end}%
+  \ifoptionequal{/arrow/edge}{none}{}{%
+    \begingroup
+      \arrow@setstrokestyle{/arrow/edge}%
+      \ifoptionblank{/arrow/edge-color}{}%
+        {\unskip\optioncolor{/arrow/edge-color}}%
+      \cbezier%
+        (\optionunit{/arrow/@start-x},\optionunit{/arrow/@start-y})%
+        (\optionunit{/arrow/@start-cpx},\optionunit{/arrow/@start-cpy})%
+        (\optionunit{/arrow/@end-cpx},\optionunit{/arrow/@end-cpy})%
+        (\optionunit{/arrow/@end-x},\optionunit{/arrow/@end-y})%
+    \endgroup%
+  }%
+  \arrow@markerdraw{start}%
+  \arrow@markerdraw{end}%
+  \ifblank{#1}{}{%
+    \savebox{\arrow@labelbox}{\option{/arrow/label-cmd}{#1}}%
+    \arrow@labelpos
+    \put(\optionunit{/arrow/@label-x},\optionunit{/arrow/@label-y}){%
+      \usebox{\arrow@labelbox}%
+    }%
+    \arrow@debug{/arrow/show-node-spans}{%
+      \arrow@drawrect%
+        {\option{/arrow/@label-x}}{\option{/arrow/@label-y}}%
+        {\wd\arrow@labelbox}{\ht\arrow@labelbox}%
+    }%
+  }%
+  \arrow@debug{/arrow/show-node-spans}{%
+    %{\strokedotted\polygon(0,0)(\ovdx,0)(\ovdx,\ovdy)(0,\ovdy)}%
+    \arrow@drawnodespan{start}\arrow@drawnodespan{end}%
+  }%
+  \arrow@debug{/arrow/show-control-points}{%
+    \arrow@drawcontrol{start}\arrow@drawcontrol{end}%
+  }%
+}
+
+\newcommand\arrowbetween[1][]{\arrow@between[#1]{1}}
+\newcommand\drawarrowbetween[1][]{\arrow@between[#1]{0}}
+
+\newcommand\arrow@between[6][]{%
+  \begingroup
+  \options{/arrow,#1}%
+  \ifblank{#4}{}{\options{/arrow/style=#4}}%
+  \arrow@parsenode{start}#3,,\relax
+  \arrow@parsenode{end}#5,,\relax
+  \ifnum#2=1\relax
+    \begin{overlaybetween}{\option{/arrow/@start-name}}%
+                          {\option{/arrow/@end-name}}%
+  \fi%
+  \arrow@positionat{start}%
+  \arrow@positionat{end}%
+  \arrow@draw{#6}%
+  \ifnum#2=1\end{overlaybetween}\fi
+  \endgroup
+}
+\def\arrow@parsenode#1#2,#3,#4\relax{%
+  \ifblank{#3}{}{\options{/arrow/#1=#3}}%
+  \options{/arrow/@#1-name=#2}%
+}
+
+\newcommand\drawarrow[1][]{%
+  \begingroup
+  \options{/arrow,#1}%
+  \arrow@drawat
+}
+\def\arrow@drawat(#1)#2(#3)#4{%
+  \arrow@parsexy{start}#1,,\relax%
+  \arrow@parsexy{end}#3,,\relax%
+  \ifblank{#2}{}{\options{/arrow/style=#2}}%
+  \arrow@draw{#4}%
+  \endgroup
+}
+\def\arrow@parsexy#1#2,#3,#4,#5\relax{%
+  \options{/arrow/#1-x=#2\p@,/arrow/#1-y=#3\p@}%
+  \ifblank{#4}{}{\options{/arrow/#1=#4}}%
+}
+
+\providecommand\arrow{\arrowbetween}
+\newcommand\showmarker[3][]{%
+  \begingroup
+  \setlength{\unitlength}{10pt}%
+  \begin{picture}(15,11){\put(0,1.5){%
+    \color{gainsboro}%
+    \drawxygrid(2,4)(15,8){1}{%
+      \color{gray}%
+      \put(\arrow@marker@{#2}{wd},-4){%
+        \strokedashed\line(0,1){8}%
+        \put(-0.25,-0.6){\scriptsize \arrow@marker@{#2}{wd}}%
+      }%
+      \circleat*(0,0){0.2}\circleat*(12,0){0.2}%
+      \color{black}%
+      \put(4.5,4.2){\scriptsize\sffamily #2\ifblank{#3}{}{, \texttt{#3}}}%
+      \drawarrow[scale=10,edge-color=gray,marker-color=black,%
+                 end=right,start=left,start-reversed,
+                 start-marker=#2,end-marker=#2,
+                 show-marker-anchors,show-color=gray,
+                 #1,%
+                 marker-scale=3.16% sqrt(10)
+                 ](12,0)(0,0){}%
+    }%
+  }}%
+  \end{picture}%
+  \endgroup%
+}
+\endinput
+%%
+%% End of file `arrows.sty'.

@@ -1,0 +1,29 @@
+title		: Math pre
+author		: Daan
+author note : &time;
+
+
+~Pre,~Code  : input=mathpre 
+        replace="/\|->>/{\dlongmapsto}/g"
+        replace="/>->/{\longrightarrow}/g"
+        replace="/->/{\rightarrow}/g"
+        replace="/</{\langle}/g"
+        replace="/>/{\rangle}/g"
+
+# Testing
+
+Math pre:
+
+~ MathPre
+@function sqr(x : int) \{\ x * x \}
+~
+
+Or indented:
+
+    @function sqr(x : int) \{\ x * x \}
+
+Or fenced:
+
+```
+@function sqr(x : int) \{\ x * x \}
+```

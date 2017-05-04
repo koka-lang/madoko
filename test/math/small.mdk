@@ -1,0 +1,21 @@
+Embed      : 0
+Math Svg use fonts: true
+Math Svg Share Paths: false
+Math Embed: 0
+
+# Mathematics $xy^2$
+
+A famous equation $\hspace{1em}$ is $e = mc^2$, but another $\int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}}$ famous one is:
+~ Equation  {#eq-gaussian; caption:"The Gaussian equation" }
+ \int_{-\infty}^\infty e^{-a x^2} d x = \sqrt{\frac{\pi}{a}} 
+~
+
+Here is the baseline $x$ and $\sigma_{\lambda} = \frac{24 \pi^3}{\lambda^4 N^2}\left(\frac{n^2-1}{n^2+2}\right)^{\!2}$ problem.
+And as an equation:
+~ Equation
+\sigma_{\lambda} = 
+  \frac{24 \pi^3}{\lambda^4 N^2}
+  \left(\frac{n^2-1}{n^2+2}\right)^{\!2}
+~
+
+it looks fine. $x=2$.

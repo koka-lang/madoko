@@ -1,0 +1,35 @@
+Title	: Anatomy book examples
+Heading Base: 2
+~dl,.test : border-left-style=solid border-color=Blue border-width=10px padding-left=5px
+
+# Expressions, Syntax, and Evaluation {#Chapter1}
+
+This chapter introduces three fundamental concepts in programming
+languages: *expressions*, *syntax* and *evaluation*. These concepts are
+illustrated by a simple language of arithmetic expressions.
+{data-tag=Expr2}
+
+expression
+  ~ An *expression* is a combination of variables, values
+    and operations over these values. For example, the arithmetic expression `2+3`
+    uses two numeric values `2` and `3` and an operation `+` that operates on
+    numeric values.
+syntax
+  ~ The *syntax* of an expression prescribes how the various
+    components of the expressions can be combined. In general it is not the case that
+    the components of expressions can be combined arbitrarily: they must obey certain
+    rules. For example `2 3` or `+ +` are not valid arithmetic expressions.
+evaluation
+  ~ Each expression has a meaning (or value), which is defined by the
+    *evaluation* of that expression. Evaluation is a process where expressions
+    composed of various components get simplified until eventually we get a value.
+    For example evaluating `2 + 3` results in `5`.
+{data-tag=Expr3}
+
+Here is a paragraph
+
+* and
+* a 
+* list
+
+Test

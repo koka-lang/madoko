@@ -1,0 +1,184 @@
+title		: definition lists
+author	   	: Daan
+author note : &time;
+Doc Class   : article
+
+~Pre        : replace=//\\(?![()])/\(&lambda;\)//g 
+~Pre,~Code  : .pretty
+.pre-indented: language=koka
+.code2      : language=haskell
+.pretty     : replace="/_(?=[a-zA-Z])/\(&lowline;\)/g" 
+              replace="/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g"
+              replace="//->/\(->|&rarr;\)//</\(<|&lang;\)//>/\(>|&rang;\)//g"
+
+.language-koka: replace="/\/\/(.*)/\(\/\/|&emsp;&fslash;&fslash;\1\)/g"
+.language-haskell: replace="/(?=--)/\(|&emsp;\)/g"
+
+<style>
+.pretty td {
+  border: 1px dotted black;
+}
+.xpretty .token {
+  color: black !important;
+}
+
+.pretty.lang-koka .token.keyword {
+  color: black;
+  font-weight: bold;
+  font-family: corbel,sans-serif;
+}
+</style>
+
+~ TexRaw
+\newcommand{\mdTokenPrettyType}[1]{\textcolor{Teal}{#1}}
+~
+
+
+[TITLE]
+[TOC]
+
+parser
+
+    effect parser<e,a> = string -> e list<(a,string)> {
+      function unit( x ) {
+        return fun(s) { [(x,s)] }
+      }
+      function bind( p, f ) {
+        return fun(s) { p(s).concatMap( fun(r) { f(r.fst)(r.snd) } ) }
+      }
+    }
+
+Pretty koka:
+
+	function test( xs : list<int> ) {
+	  xs.map fun(x) { x*x }
+	  if (xs.length==0) then 1 else xs.sum() // test
+	}
+
+Here is some ``haskell data List``, and `module Hi`{language=haskell} and here some more:
+
+``` haskell  
+data Exp   =  Number     Int
+           |  Add        Exp Exp
+           |  Subtract   Exp Exp
+           |  Multiply   Exp Exp
+           |  Divide     Exp Exp
+           |  Variable   String        -- added
+           deriving (Eq)
+
+substitute1 :: (String, Int) -> Exp -> Exp
+substitute1 (var, val) exp = subst exp where
+  subst (Number i)       =  Number i
+  subst (Add a b)        =  Add (subst a) (subst b)
+  subst (Subtract a b)   =  Subtract (subst a) (subst b)
+  subst (Multiply a b)   =  Multiply (subst a) (subst b)
+  subst (Divide a b)     =  Divide (subst a) (subst b)
+  subst (Variable name)  =  if var == name
+                             then Number val
+                             else Variable name          
+```          
+
+``` Html 
+<span>test     </span>
+<span>aligned  </span> &amp;
+```
+
+``` Haskell  
+data Exp   =  Number    Int
+           |  Add       Exp Exp
+           |  Subtract  Exp Exp
+           |  Multiply  Exp Exp
+           |  Divide    Exp Exp
+           |  Variable  String        -- added
+           deriving (Eq)
+```
+
+Scan:
+
+``` Haskell 
+scanr1        :: (a -> a -> a) -> [a] -> [a]
+scanr1 f xxs  =  case xxs of 
+                   x:xs ->  case xs of 
+                              []  ->  [x] 
+                              _   ->  let  qs = scanr1 f xs 
+                                      in   case qs of 
+                                            q:_ -> f x q : qs
+```          
+
+Rep-min problem:
+
+``` Haskell
+rep_alg         =  (  \_          -> \m ->  Leaf m
+                   ,  \lfun rfun  -> \m ->  let  lt = lfun m
+                                                 rt = rfun m
+                                            in Bin lt rt "hi"
+                   )
+replace_min’ t  =  (cata_tree rep_alg t) (cata_tree min_alg t)
+```
+
+``` koka
+// source effectful code
+function map(xs, f) {
+  match(xs) {
+    Nil -> Nil
+    Cons(y, ys) ->
+      val z   = f(y)
+      val zs  = map(ys, f)
+      Cons(z, zs)
+  }
+}
+
+function xor() {
+  val [p,q] =
+    map( [1,2], fun(_) { flip() } )
+
+  (p||q) && not(p&&q)
+}
+
+```
+
+``` koka
+// translated monadic code
+function map(d:dict<e>, xs, f) {
+  match(xs) {
+    Nil -> d.unit(Nil)
+    Cons(y, ys) ->
+      d.bind( f(y), fun(z) {
+        d.bind( map(ys, f), fun(zs) {
+          d.unit(Cons(z, zs)
+  })})}
+}
+
+function xor() {
+  dict_amb.bind( 
+    map( dict_amb, [1,2], fun(_) { flip() } ),
+    fun([p,q]) {
+      dict_amb.unit( (p||q) && not(p&&q) )
+    })
+}
+```
+
+``` koka
+function parse( p : () -> <parser|e> a, input : string ) : e list<(a,string)> {
+    from_parser(p)(input)
+}
+
+function succeed( x : a ) : parser a { to_parser fun(input) { [(x,input)] }
+
+function satisfy( pred : (string) -> maybe(<a,string>) ) : <parser> a {
+    to_parser fun(input) {
+        match(pred(input)) {
+            Just((x,rest))  -> [(x,rest)]
+            Nothing         -> []
+    }}
+}
+
+function choice( p1 : () -> <parser|e> a, p2 : () -> <parser|e> a ) : <parser|e> a {
+    to_parser fun(input) {
+        match (parse(p1,input)) {
+            Nil -> parse(p2,input)
+            res -> res
+    }}
+}
+```
+-->

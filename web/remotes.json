@@ -1,0 +1,40 @@
+{
+  "dropbox": {
+    "client_id"     : "3vj9witefc2z44w",
+    "xclient_secret": "nxBmMsSFbnjRgFSdjFPFGQ==",
+    "token_url"     : "https://api.dropbox.com/1/oauth2/token",
+    "account_url"   : "https://api.dropbox.com/1/account/info",
+    "revoke"        : {
+      "method": "POST",
+      "url"   : "https://api.dropbox.com/1/disable_access_token",
+      "authorization": "Bearer"
+    },
+    "sources"       : ["https://*.dropbox.com","https://*.dropboxapi.com"]
+  },
+  "github": {
+    "client_id"     : "9c24f7ac71d1ede26ba3",
+    "xclient_secret": "wYsZMyNcx3oDjS3qM8vkGJtlicSotccSOYkCCgkLkBqzhnG77isOqIiVRkzQWqhy",
+    "token_url"     : "https://github.com/login/oauth/access_token",
+    "account_url"   : "https://api.github.com/user",
+    "revoke"        : {
+      "method": "DELETE",
+      "url"   : "https://api.github.com/applications/{client_id}/tokens/{access_token}",
+      "authorization": "Basic"
+    },
+    "sources"       : ["https://api.github.com"]
+  },
+  "onedrive": {
+    "client_id"     : "000000004C113E9D",
+    "xclient_secret": "YlyRNQrVwKwgm9JbY9d/yot1dyU7DCwBEb9Hl17l9sEeh7hOQnnumcetzGUwiy/W",
+    "token_url"     : "https://login.live.com/oauth20_token.srf",
+    "account_url"   : "https://apis.live.net/v5.0/me",
+    "sources"       : ["https://login.live.com","https://apis.live.net","https://*.livefilestore.com"]
+  },
+  "onedrive2": {
+    "client_id"     : "000000004C113E9D",
+    "xclient_secret": "YlyRNQrVwKwgm9JbY9d/yot1dyU7DCwBEb9Hl17l9sEeh7hOQnnumcetzGUwiy/W",
+    "token_url"     : "https://login.live.com/oauth20_token.srf",
+    "account_url"   : "https://api.onedrive.com/v1.0/drive",
+    "sources"       : ["https://login.live.com","https://api.onedrive.com","https://*.livefilestore.com"]
+  }
+}

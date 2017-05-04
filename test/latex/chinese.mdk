@@ -1,0 +1,47 @@
+Title         : 世界，我感觉很不好。
+
+Author        : 周大平
+Affiliation   : 锑星社会科学院
+Email         : you@bar.com
+
+Bibliography  : example.bib
+Doc class     : [reprint,nocopyrightspace]style/sigplanconf.cls
+Package       : [UTF8]ctex
+Tex Header    :
+  \def\refname{&name-references;}
+  \renewenvironment{abstract}{\section*{&name-abstract;}\normalsize}{}
+  
+name-references   : 参考
+name-abstract     : 摘要
+
+.cjk {
+  list-style-type:none;
+}
+.cjk-li { 
+  @ol-li:"cjk-decimal";
+  li-label: "@ol-li";
+}
+
+[TITLE]
+
+~ Abstract
+没有鱼！
+~
+
+# 糟透了     { #sec-intro }
+没有超盐酸怎么养鱼[@Fberg04]。
+
+1. 1
+2. 2
+3. 3
+4. 4
+5. 5
+6. 6
+7. 7
+8. 8
+9. 9
+10. 10
+11. 11
+{ .cjk }
+
+[BIB]

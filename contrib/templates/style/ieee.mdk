@@ -1,0 +1,11 @@
+Description:
+  Style file for the IEEE transactions style.
+Heading Base  : 2
+Bib Style     : style/IEEEtran.bst
+Doc Class     : style/IEEEtran.cls
+
+@if html {
+  H1 { font-variant:small-caps; text-align:center; font-weight:100 }
+  H2 { font-weight:normal; font-style:italic }
+  .Abstract { font-weight: bold; replace:clear; before:"_Abstract_ -- " }
+}

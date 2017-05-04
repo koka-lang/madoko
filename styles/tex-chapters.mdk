@@ -1,0 +1,9 @@
+Documentation: 
+   Use the `\chapter` command for `H1` elements instead of `\section`.
+
+~H0       : tex-cmd=\part
+~H1       : tex-cmd=\chapter 
+~H2       : tex-cmd=\section
+~H3       : tex-cmd=\subsection
+~H4       : tex-cmd=\subsubsection
+~H5,~H6   : tex-cmd=\paragraph 

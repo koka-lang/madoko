@@ -1,0 +1,76 @@
+{
+  "displayName": "Boogie",
+  "name":        "boogie",
+  "mimeTypes":   ["text/x-boogie"],
+  "fileExtensions": ["bpl"],
+    
+  "lineComment":      "//",   
+  "blockCommentStart": "/*",
+  "blockCommentEnd":   "*/",
+
+  "keywords": [
+    "type","const","function","axiom","var","procedure","implementation",
+    "returns",
+    "assert","assume","break","call","then","else","havoc","if","goto","return","while",
+    "old","forall","exists","lambda","cast",
+    "false","true"
+  ],
+
+  "verifyKeywords": [
+    "where","requires","ensures","modifies","free","invariant",
+    "unique","extends","complete"
+  ],
+  
+  "types": [
+    "bool","int"
+  ],
+
+  "escapes": "\\\\(?:[abfnrtv\\\\\"\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
+
+  "tokenizer": {
+    "root": [
+      
+      ["bv(0|[1-9]\\d*)", "type.keyword" ],
+      ["\\\\?[a-zA-Z_'\\~#\\$\\^\\.\\?\\\\`][\\w_'\\~#\\$\\^\\.\\?\\\\`]*(\\s*:\\s*$)?", 
+        { "cases": {"$1": "constructor",
+                  "@keywords": "keyword",
+                  "@verifyKeywords": "constructor.identifier",
+                  "@types"   : "type.keyword",
+                  "@default" : "identifier" }}],            
+      [":=","keyword"],
+      
+      
+      { "include": "@whitespace" },
+      
+      ["[\\{\\}\\(\\)\\[\\]]", "@brackets"],
+      ["[;]", "delimiter"],
+
+      
+      ["[0-9]+bv[0-9]+", "number"],  
+      ["[0-9]+", "number"],
+      ["\"\"$", "string.invalid"], 
+      ["\"\"", "string", "@string" ]
+    ],
+
+    "whitespace": [
+      ["[ \\t\\r\\n]+", "white"],
+      ["/\\*", "comment", "@comment" ],
+      ["//.*", "comment"]
+    ],
+
+    "comment": [
+      ["[^/\\*]+", "comment" ],
+      ["/\\*",  "comment", "@push" ],
+      ["\\*/",  "comment", "@pop"  ],
+      ["[/\\*]", "comment"]
+    ],
+
+    "string": [
+      ["[^\\\\\"\"]+$", "string.invalid", "@pop"],  
+      ["@escapes$", "string.escape.invalid", "@pop"], 
+      ["[^\\\\\"\"]+", "string"],
+      ["@escapes", "string.escape"],
+      ["\"\"", "string", "@pop" ]
+    ]
+  }
+}

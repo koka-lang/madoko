@@ -1,0 +1,87 @@
+{
+  "log": [
+    { "version": "0.9",
+      "date"   : "2017-03-31",
+      "updates": [
+        "Fix timezone date parsing"
+      ]
+    },
+    { "version": "0.5.5-beta",
+      "date"   : "2016-07-02",
+      "updates": [
+        "Fix error in parsing `--rundir` flag",
+        "Change default paths: use `<configdir>/log` for logs, and `<configdir>/run` for running LaTeX"
+      ]
+    },
+    { "version": "0.5.3-beta",
+      "date"   : "2016-02-04",
+      "updates": [
+        "Support LaTeX bundles",
+        "Fix `startsWith` bug (issue [119](https://madoko.codeplex.com/workitem/119))"
+      ]
+    },
+    { "version": "0.5.2-beta",
+      "date"   : "2016-01-11",
+      "updates": [
+        "Return `madoko2.sty` style file when generating PDF"
+      ]
+    },
+    { "version": "0.5.1-beta",
+      "date"   : "2016-01-04",
+      "updates": [
+        "Support new bibliography output"
+      ]
+    },
+    { "version": "0.5.0-beta",
+      "date"   : "2015-12-29",
+      "updates": [
+        "Support new math modes",
+        "Support CSL style sheets"
+      ]
+    },
+    { "version": "0.4.0-beta",
+      "date"   : "2015-12-15",
+      "updates": [
+        "Support running Madoko/LaTeX locally",
+      ]
+    },
+    { "version": "0.3.3-beta",
+      "date"   : "2015-12-09",
+      "updates": [
+        "Support relative file names",
+        "Reduce size of the log files"
+      ]
+    },
+    { "version": "0.3.2-beta",
+      "date"   : "2015-11-23",
+      "updates": [
+        "Remove spurious trace messages"
+      ]
+    },
+    { "version": "0.3.1-beta",
+      "date"   : "2015-10-31",
+      "updates": [
+        "Pass secret in url fragment for increased security"
+      ]
+    },
+    { "version": "0.2.1-beta",
+      "date"   : "2015-10-23",
+      "updates": [
+        "Fixed IE caching bug on metadata requests"
+      ]
+    },
+    { "version": "0.1.4-alpha",
+      "date"   : "2015-10-14",
+      "updates": [
+        "Do not list invalid or inaccessible files in a folder",
+        "Improve error messages"
+      ]
+    },
+    { "version": "0.1.3-alpha",
+      "date"   : "2015-10-10",
+      "updates": [
+        "Initial secure version"
+      ]
+    }
+  ]
+}

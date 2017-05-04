@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="never" page-range-format="chicago">
+  <info>
+    <title>Madoko internal citation style</title>
+    <id>http://www.zotero.org/styles/madoko</id>
+    <link href="http://www.zotero.org/styles/madoko" rel="self"/>
+    <link href="http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html" rel="documentation"/>
+    <author>
+      <name>Daan Leijen</name>
+    </author>
+    <category citation-format="author-date"/>
+    <category field="generic-base"/>
+    <summary>Madoko internal citation style.
+      This emits citations in the format "short authors|year|long authors",
+      that can be processed by Madoko for flexible citation formatting.      
+    </summary>
+    <updated>2016-01-10T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License</rights>
+  </info>
+  <macro name="contributors-short">
+    <names variable="author">
+      <name form="short" and="text" delimiter=", " initialize-with=". " et-al-min="3" et-al-use-first="1"/>
+      <substitute>
+        <names variable="editor"/>
+        <names variable="translator"/>
+        <names variable="director"/>          
+      </substitute>
+    </names>
+  </macro>
+  <macro name="contributors-long">
+    <names variable="author">
+      <name form="short" and="text" delimiter=", " initialize-with=". " et-al-min="8" et-al-use-first="6"/>
+      <substitute>
+        <names variable="editor"/>
+        <names variable="translator"/>
+        <names variable="director"/>          
+      </substitute>
+    </names>
+  </macro>
+  <macro name="date-in-text">
+    <choose>
+      <if variable="issued">
+        <group delimiter=" ">
+          <date variable="original-date" form="text" date-parts="year" prefix="[" suffix="]"/>
+          <date variable="issued">
+            <date-part name="year"/>
+          </date>
+        </group>
+      </if>
+      <else-if variable="accessed">
+        <date variable="accessed">
+          <date-part name="year"/>
+        </date>
+      </else-if>
+      <else-if variable="status">
+        <text variable="status"/>
+      </else-if>
+      <else>
+        <text term="no date" form="short"/>
+      </else>
+    </choose>
+  </macro>
+  <citation et-al-min="3" et-al-use-first="1" disambiguate-add-year-suffix="true" disambiguate-add-names="true" disambiguate-add-givenname="true" givenname-disambiguation-rule="primary-name">
+    <layout delimiter=";">
+      <group delimiter="|">
+        <text macro="contributors-short"/>
+        <text macro="date-in-text"/>
+        <text macro="contributors-long"/>              
+      </group>
+    </layout>
+  </citation>
+  <bibliography hanging-indent="true" et-al-min="11" et-al-use-first="7" subsequent-author-substitute="&#8212;&#8212;&#8212;" entry-spacing="0">
+    <sort>
+      <key macro="contributors"/>
+      <key variable="issued"/>
+      <key variable="title"/>
+    </sort>
+    <layout suffix=".">
+      <text macro="contributors-long"/>
+    </layout>
+  </bibliography>
+</style>

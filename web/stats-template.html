@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!--
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
+<style>
+body {
+  background-color: Gainsboro;
+  font-family: "Segoe UI", sans-serif;
+}
+
+#page {
+  margin: 2em 10% 2em 10%;
+  padding: 1em;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: white;
+}
+
+.chart {
+  width:95%;
+  margin-bottom: 1em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chart * {
+  font-family: "Segoe UI", sans-serif !important;
+}
+
+#dailyx {
+  border-top: 1px solid black;
+  margin-top: 2em;
+}
+.local-time {
+  font-size: small;
+  color: gray;
+  padding-left: 1em;
+}
+table, th,tr {
+  width: 100%;
+  border: 1px solid black;
+}
+table td {
+  max-width: 12em;
+  vertical-align: top;
+  padding: 0pt 1ex;
+}
+table tr:nth-child(even), table thead tr {
+  background-color: gainsboro;
+}
+
+</style>
+
+</head>
+
+<body>
+<div id="page">
+
+<h2>Madoko.net Statistics</h2>
+<p><span id="date"></span></p>
+<p>Total unique users: <span id="userCount"></span><p>
+<h2>Daily charts</h2>
+<div id="daily">
+</div>
+<div id="dailyx">
+</div>
+
+<h2>Top domains</h2>
+<div id="domains"></div>
+
+<h2>Recent errors</h2>
+<div id="errors"></div>
+
+<h2>Top Users</h2>
+<div id="users"></div>
+
+<h2>Recent scans</h2>
+<div id="scans"></div>
+
+</div>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawCharts);
+
+  function draw( divName, name, attr, title ) {
+    var data = [['date', name]].concat(stats.daily.map(function(elem) {
+      return [elem.key.substr(5),elem.value[attr]];
+    }));
+    
+    var options = {
+      title: title,      
+      legend: "none",
+      pointSize: 3,
+      chartArea: { backgroundColor: "Floralwhite" },
+    };
+
+    var div = document.createElement("DIV");
+    div.className = "chart";
+    div.id = "daily-" + attr;
+    document.getElementById(divName || "daily").appendChild(div);
+
+    var chart = new google.visualization.LineChart(div);
+    chart.draw(google.visualization.arrayToDataTable(data), options);
+  }
+
+
+  // Get the properties of an object.
+  function properties(obj) {
+    var attrs = [];
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        attrs.push(key);
+      }
+    } 
+    return attrs;
+  }
+
+  function rows( divName, hdr, rows ) {
+    var content = "";
+    var props = properties(hdr);
+    content += "<table>\n<thead><tr>" + props.map( function(prop) { return "<th>" + prop + "</th>"; } ).join("") + "</tr></thead><tbody>\n";
+    rows.forEach( function(row) {
+      content += "<tr>" + props.map( function(prop) { return "<td>" + row[hdr[prop]] + "</td>"; } ).join("") + "</tr>\n";
+    });
+    content += "</tbody></table>";
+    var elem = document.getElementById(divName);
+    elem.innerHTML = elem.innerHTML + content;
+  }
+
+  function drawCharts() {
+    var statsStr = document.getElementById("stats").textContent;
+    stats = JSON.parse(decodeURIComponent(statsStr));
+
+    var date = new Date(stats.date);
+    document.getElementById("date").innerHTML = date.toUTCString() + "<span class='local-time'>(local time: " + date.toLocaleString() + ")</span>";
+    document.getElementById("userCount").innerHTML = stats.userCount;
+
+    draw("daily", "cumulative users","cumUserCnt","Unique cumulative users");
+    draw("daily", "page hits","pagesCnt","Page hits per day");
+    draw("daily", "index hits","pageIdxCnt","Index page hits per day");
+    
+    draw("dailyx", "users","userCnt","Unique users per day");
+    draw("dailyx", "avg. work time","avgWTm","Average work time in minutes per day");
+    draw("dailyx", "requests","reqCount","Requests per day");
+    draw("dailyx", "latex runs","runCount","LaTeX requests per day");
+    draw("dailyx", "max latex run","maxSTm","Maximum LaTeX job per day (in milliseconds)");
+
+    rows("errors", {message: "msg", url: "url", date: "date", ip: "ip", domain: "domain" }, stats.errors.errors );
+    rows("scans", {url: "url", count: "count", domain:"domain", ip: "ip", date: "date" }, stats.errors.scans );
+    rows("domains", { count: "count", ip: "ip", domain: "domain" }, stats.domains );
+    rows("users", { name: "name", remote: "remote", count: "reqCount", minutes: "workTime", editTime: "editTime", viewTime: "viewTime"  }, stats.users );
+  }
+ 
+var stats = {};
+</script>
+
+<pre id="stats" style="display:none">STATSHERE</pre>
+
+
+</body>
+</html>

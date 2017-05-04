@@ -1,0 +1,68 @@
+Description:
+    Madoko settings for the LIPIcs LaTeX document class.
+    Set the following keys:
+    * Keywords
+    * Classification
+    * Copyright
+Keywords      : Set the `Keywords` metadata key 
+Classification: Set the ACM `Classification` metadata key
+Copyright     : Set the `Copyright` metadata key
+Bib style     : plainnat
+Doc Class     : [UKenglish]style/lipics.cls
+Heading base  : 2
+Refer         : cc-by.pdf
+Refer         : lipics-logo-bw.pdf
+@tex Maketitle: True
+@tex ~Body    : display=inline-block
+
+~Lemma        : @Theorem label="[@Theorem]{.Lemma-label}"
+~Corollary    : @Theorem label="[@Theorem]{.Corollary-label}"
+~Definition   : @Theorem label="[@Theorem]{.Definition-label}"
+~Example      : @Theorem label="[@Theorem]{.Example-label}"
+
+@html ~h1           : before=clear before="[&label;]{.numbox}&ensp;"
+@html ~title,~h1,~h2,~h3,~h4,.caption:  font-family="Calibri,'helvetica neue',sans-serif"
+@html .orange       : background-color=#FFC966  
+@html .numbox       : width=1em text-align=center .orange
+@html captionbox    : [&nbsp;]{.orange width=1.2ex height=1.2ex vertical-align=-0.8ex}&nbsp;
+@tex .caption-before: .hidden
+~Figure       : after=clear 
+                after="&nl;~{notag tight}&nl;[[&captionbox;**Figure &label;**]{.caption}&ensp;]{.caption-before}[&caption;]{tex-elem=mdCaptionOf}&nl;~&nl;"
+
+Tex Header    :
+    \hypersetup{colorlinks=false}
+    \graphicspath{{images/}}
+    \defcommand{\mdmaketitle}{\maketitle}
+    \makeatletter
+    \renewcommand{\authorinfo}[3]{%
+      \stepcounter{md@authorcount}%
+      \ifnum\the\value{md@authorcount}>1%
+        \csgdef{@sep\the\value{md@authorcount}}{\Authsep}% lipics does not use \global :(
+      \else
+        \csgdef{@sep\the\value{md@authorcount}}{}
+      \fi
+      \author[\arabic{md@authorcount}]{#1}%     
+      \protected@edef\@more{#2#3}%
+      \expandafter\ifx\@more\relax\relax\else
+        \affil[\arabic{md@authorcount}]{\mdBrSep{#2}{#3}}%
+      \fi
+    }
+    \makeatother
+
+@notex2 Tex Header    :
+    \renewcommand{\mdBibBefore}{}
+    \renewcommand{\mdMaketitle}{\maketitle}
+    \renewcommand{\mdAuthor}[4]{%
+      \stepcounter{md@authorcount}%
+      \author[\arabic{md@authorcount}]{#1}\affil[\arabic{md@authorcount}]{\mdAuthorAddressNote{#2}{#3}\texttt{#4}}%
+    }
+    \newcommand{\mdCaptionOf}[1]{\captionof{figure}{#1}}
+
+Tex Header*   :
+    \Copyright{&Copyright;}
+    \subjclass{&Classification;}
+    \keywords{&Keywords;}
+
+star: false
+
+[INCLUDE=tex-amsthms]

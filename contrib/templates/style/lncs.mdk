@@ -1,0 +1,15 @@
+Description:
+    Madoko settings for the LLNCS LaTeX document class.
+Heading base  : 2
+Doc Class     : style/llncs.cls
+
+Tex Header*:
+    \pagestyle{plain}
+
+@if not (tex) {
+  .inst { display:none }
+}
+
+@if tex {
+  .inst { tex-cmd: "\inst" }
+}

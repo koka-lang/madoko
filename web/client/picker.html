@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- 
+  Copyright 2013 Microsoft Corporation.
+ 
+  This is free software; you can redistribute it and/or modify it under the
+  terms of the Apache License, Version 2.0. A copy of the License can be
+  found in the file "license.txt" at the root of this distribution.
+-->
+
+<!-- madoko style -->
+<link rel="stylesheet" type="text/css" href="styles/madoko.css">
+
+<!-- main style -->
+<link rel="stylesheet" type="text/css" href="styles/main.css">
+
+<style>
+
+/* Application layout */
+body {
+  font-family: "Segoe UI", sans-serif;
+}
+
+.header-bar {
+  padding: 0.7rem 1em 0.3rem 1em !important;
+  height: 2rem;
+  white-space: nowrap;
+}
+
+.header-bar img {
+  height: 1.5em;
+  vertical-align: bottom;
+}
+
+#app {
+  height: 100%;
+}
+
+.app-body {
+  height: calc(100% - 6rem);
+  width: 100%;
+  overflow: auto;
+}
+
+.app-footer {
+  text-align: right;
+  padding-top: 0.5em;
+}
+
+/* menus */
+#remote-menu {
+  width: 10em;
+}
+
+.menu .button {
+  display: block;
+}
+
+.menu .button:hover {
+  background-color: Gainsboro !important;
+}
+
+/* view */
+
+.app-content {
+  padding: 0.5em 1em;
+}
+
+.message {
+  display: none;
+}
+
+#remotes {
+  margin-right: 0.5em;
+}
+
+.command-alert #remotes {
+  display: none;
+}
+
+#listing {
+  display: none;
+}
+
+.command-open #listing,
+.command-save #listing,
+.command-new #listing {
+  display: block;
+}
+
+/* folder name */
+
+#folder-name {
+  display: none;
+  max-width: 80%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.command-open #folder-name,
+.command-save #folder-name,
+.command-new #folder-name {
+  display: inline-block;
+}
+
+.dir:hover {
+  background-color: #357;
+  cursor: pointer;
+}
+
+.dirsep {
+  color: Gainsboro;
+}
+
+#file-name {
+  width: 14em;
+  display: none;
+  font-size: 1em;
+  vertical-align: 0.2em;
+}
+
+.command-save #file-name, 
+.command-new #file-name {
+  display: inline;
+}
+
+/* items */
+
+div.item {
+  display: inline-block;
+  width: calc(50% - 3em);
+  padding: 0.2em 0.5em 0.2em 2.5em;
+}
+
+div.item:hover {
+  background-color: Gainsboro;
+  cursor: pointer;
+}
+
+.item-icon {
+  height: 1.5em;
+  width : 1.5em;
+  margin: 0em 0em 0em -2em;
+  float: left;
+}
+
+.item-select {
+  background-color: white;
+}
+
+.item.selected,
+.item.selected:hover {
+  background-color: #8AC;
+}
+
+.item-file.disabled {
+  color: #AAA;
+}
+
+.item.disabled input {
+  visibility: hidden;
+}
+
+/* buttons */
+
+.button {
+  display: none;
+  border: 1px white solid;
+  border-radius: 5px;
+  padding-bottom: 0.2em;
+  margin: 0em 0.25em;
+}
+
+.app-content .button {
+  color: white;
+  border-color: black;
+  background-color: #135;
+}
+.app-content .button:hover {
+  background-color: #357;
+}
+
+
+.command-login #message-login, 
+.command-connect #message-connect,
+.command-alert #message-alert {
+  display: block;
+}
+
+.command-login #button-login,
+.command-alert #button-discard,
+.command-open #button-choose,
+.command-save #button-save,
+.command-new #button-new,
+#button-logout,
+#button-cancel {
+  display: inline;
+}
+
+.command-login #login-info,
+.command-alert #login-info {
+  display: none;
+}
+
+#remote-down {
+  height: 0.6em;
+  margin-left: -0.4em;
+}
+
+
+#login-info {
+  float: left;
+  font-size: small;
+}
+
+#message-login, #message-connect, #message-alert {
+  text-align: center;
+  width: 100%;
+}
+
+#remote-local {
+  display: none;
+}
+
+.command-login-new #remote-local, 
+.command-new #remote-local {
+  display: block;
+}
+</style>
+
+</head>
+
+<body class="theme-dark" >
+<div id="app" class="command-login">
+<div class="app-header header-bar">
+  <div id="remotes" class="popup">
+    <img id="remote-logo" src="images/dark/icon-dropbox.png"/>
+    <img id="remote-down" src="images/dark/icon-tri-down.png"/>  
+    <div id="remote-menu" class="menu boxed">
+      <div id="remote-dropbox" class="button" title="Dropbox cloud storage"
+          ><span class="icon"><img src="images/icon-dropbox.png"/></span> Dropbox</div>
+      <div id="remote-onedrive" class="button" title="Onedrive cloud storage"
+        ><span class="icon"><img src="images/icon-onedrive.png"/></span> Onedrive</div>    
+      <div id="remote-local" class="button" title="Browser local storage"
+        ><span class="icon"><img src="images/icon-local.png"/></span> Local</div>    
+    </div>
+  </div>
+  <div id="folder-name"></div>
+  <input id="file-name" type="text"></input>
+</div>
+<div class="app-body">
+  <div class="app-content">
+    <div id="message-login" class="message">Not connected.</div>       
+    <div id="message-connect" class="message">Connected.</div>
+    <div id="message-alert" class="message">The current document has not been saved yet.
+    <br/>Are you sure you want to discard these changes?</div>
+    <div id="listing">
+    </div>
+  </div>
+</div>
+<div class="app-footer header-bar">
+  <div id="login-info"><span id="remote-username"></span> <div id="button-logout" class="button">logout</div>
+  </div>
+  <div id="button-login" class="button">login</div>
+  <div id="button-discard" class="button">Discard</div>
+  <div id="button-choose" class="button">Open</div>
+  <div id="button-new" class="button">Create</div>
+  <div id="button-save" class="button">Save As</div>
+  <div id="button-cancel" class="button">Cancel</div>
+</div>
+</div>
+
+<!-- use the monaco loader to implement "require" -->
+<script type="text/javascript" src="lib/vs/loader.js"></script>
+
+<!-- start the picker -->
+<script type="text/javascript">
+require.config({
+  baseUrl: "lib"
+});
+
+require( ["../scripts/picker"], function(picker) {
+  picker.run();
+});
+</script>
+
+</body>
+</html>

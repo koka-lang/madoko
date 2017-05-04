@@ -1,0 +1,26 @@
+Version       : 3.2.0
+Theme         : 
+Bootstrap Url : https://maxcdn.bootstrapcdn.com/bootstrap/&version;/
+Bootswatch Url: https://maxcdn.bootstrapcdn.com/bootswatch/&version;/&theme;/bootstrap.min.css
+Css           : &bootstrap-url;css/bootstrap.min.css
+Css           : &bootstrap-url;css/bootstrap-theme.min.css
+Css           : &bootswatch-url;
+Html Meta     : http-equiv="X-UA-Compatible" content="IE=edge"
+Html Meta     : name="viewport" content="width=device-width, initial-scale=1"
+Heading Depth : 0
+Toc Depth     : 2
+Html Header   :         
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+      body.madoko, body.madoko.preview[data-view=full] { 
+        padding: 0pt;
+        margin: 0pt;
+        max-width: 100%;
+      }
+    </style>
+Html Footer   :
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="&bootstrap-url;js/bootstrap.min.js"></script>
