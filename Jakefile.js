@@ -154,6 +154,7 @@ task("justcopy", [], function() {
   jake.mkdirP(path.join(webclient,path.join(styleDir,"images")));
   jake.mkdirP(path.join(webclient,path.join(styleDir,"csl")));
   jake.mkdirP(path.join(webclient,path.join(styleDir,"locales")));
+  jake.mkdirP(path.join(webclient,path.join(styleDir,"scripts")));
   var js = new jake.FileList().include(path.join(styleDir,"*.css"))
                               .include(path.join(styleDir,"*.mdk"))
                               .include(path.join(styleDir,"lang","*.json"))
