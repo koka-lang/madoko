@@ -528,7 +528,7 @@ function fmtOptArg( pre:string, pkg : string, norm : string -> string,  ext : st
 } 
 
 
-val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?([^\*]+)\s*(?:\*\s*)?$")
+val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?{?([^\*]+)\s*(?:\*\s*)?(?:}\s*)?$")
 
 
 
