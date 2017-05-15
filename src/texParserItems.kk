@@ -891,6 +891,7 @@ function texTheBibliography( cap : matched, context : texContext ) : string {
   "~ Begin Bibliography { " + numcite +
     " ; caption:" + cap.groups[1].unbrace.quote +
     (if (context.bststyle.bool) then " ; data-style:" + context.bststyle.quote else "") +
+    " spellcheck:false;"
     " }\n" + (cap.groups[2] + "\n\n").parse(context) + 
     "\n~ End Bibliography\n"
 }
