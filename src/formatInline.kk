@@ -422,7 +422,7 @@ function fmtCodeEscaped( context : inlineContext, txt : string, format : (string
 
         val innerEsc   = context.fmtCmd("span", context.formatInline(cap.groups[3]), 
                            context.formatDefaults(attrsNone.addClass( "code-escaped" )))
-        val escaped    = formatToken(classes2,innerEsc)
+        val escaped    = formatToken(classes2,innerEsc).replaceAll("%mdk\n","{}")
         val fmt3       = "<ESCAPED width=" + width.show + ">" + escaped + "</ESCAPED>"
 
         val (fmt4,st3) = codeEscape(src.substr1(cap.next),st2)
