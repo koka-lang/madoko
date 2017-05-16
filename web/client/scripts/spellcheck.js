@@ -37,8 +37,8 @@ var SpellCheckMenu = (function() {
 
   SpellCheckMenu.prototype.getContent = function() {
     var self = this;
-    return ("<div class='button' data-cmd='ignore'><span class='info'>Ignore: </span>" +
-                "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-I)</span></div>" +
+    return ("<div class='button' data-cmd='ignore'><span class='info'>Add word: </span>" +
+                "<span class='word'>" + Util.escape(self.text) + "</span><span class='shortcut info'>(Alt-A)</span></div>" +
             "<div class='button' data-cmd='next'><span class='info'>Jump to next error<span class='shortcut info'>(Alt-N)</span></span></div>");
   }
 
@@ -79,7 +79,7 @@ var SpellCheckMenu = (function() {
     ev.stopPropagation();
     if (self.checker)  self.checker.ignore( self.text );
     if (self.remover)  self.remover(null,self.text); // remove decoration   
-    if (self.gotoNext) self.gotoNext(self.range.getEndPosition());
+    // if (self.gotoNext) self.gotoNext(self.range.getEndPosition());
   }
 
   SpellCheckMenu.prototype.replaceWith = function(i) {

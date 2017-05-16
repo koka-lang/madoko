@@ -119,6 +119,7 @@ var madokoFormat = {
       "caption": bibitem._citeCaption,
       "data-line": bibitem._line,
       "searchterm": encodeURIComponent(bibitem._citeCaption.replace(/\s+/g," ")).replace(/[\/\\:\-()\[\]]/g,""),
+      "spellcheck": "false"
     }
     if (bibitem._bibitemLabel) attrs["bibitem-label"] = bibitem._bibitemLabel;
     var attrsText = "{" + joinx(properties(attrs).map( function(key) { 

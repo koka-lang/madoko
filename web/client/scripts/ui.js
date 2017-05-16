@@ -530,7 +530,7 @@ var UI = (function() {
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     bindKey( "Alt-Z",  function()   { self.generateTexZip(); } );
-    bindKey( { key: "Alt-I", stop: true },  function(ev)   { 
+    bindKey( { key: "Alt-A", stop: true },  function(ev)   { 
       if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
         self.spellCheckMenu.menu.ignore(ev);
         self.spellCheckMenu.hide();

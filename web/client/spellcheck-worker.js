@@ -198,8 +198,8 @@ require(["../scripts/map","../scripts/util","typo/typo"], function(Map,Util,Typo
   var rxMathEnv  = /\n *(~+) *(?:Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\2 *(?=\n|$)/;
   var rxMathEnv2 = /\n *(~+) *Begin +(Equation|TexRaw|Math|MathDisplay|Snippet).*[\s\S]*?\n *\3 *End +\4(?=\n|$)/;
   var rxHtml     = /\n *<(\w+)[^\n>]*>[\s\S]*?\n *<\/\5 *> *(?=\n|$)/;
-  var rxNoCheckEnv  = /\n *(~+) *(?:[\w\-]*) *\{.*?\bspellcheck *[:=] *[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\6 *(?=\n|$)/;
-  var rxNoCheckEnv2 = /\n *(~+) *Begin +([\w\-]*) *\{.*?\bspellcheck *[:=] *[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\7 *End +\8(?=\n|$)/;
+  var rxNoCheckEnv  = /\n *(~+) *(?:[\w\-]*) *\{.*?\bspellcheck *[:=] *['"]?[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\6 *(?=\n|$)/;
+  var rxNoCheckEnv2 = /\n *(~+) *[Bb]egin +([\w\-]*) *\{.*?\bspellcheck *[:=] *['"]?[Ff]alse\b.*?\}.*\n[\s\S]*?\n *\7 *[Ee]nd +\8(?=\n|$)/;
   var rxMath     = /\$((?:[^\\\$]|\\[\s\S])+)\$/;
   var rxMathEnv3 = /\n *\$\$( *\n(?:[^\\\$]|\\[\s\S]|\$[^\$])*)\$\$ *(?=\n|$)/;
   var rxMathEnv4 = /\n *\\\[( *\n(?:[^\\]|\\[^\]])*)\\\] *(?=\n|$)/;

@@ -891,7 +891,6 @@ function texTheBibliography( cap : matched, context : texContext ) : string {
   "~ Begin Bibliography { " + numcite +
     " ; caption:" + cap.groups[1].unbrace.quote +
     (if (context.bststyle.bool) then " ; data-style:" + context.bststyle.quote else "") +
-    " spellcheck:false;"
     " }\n" + (cap.groups[2] + "\n\n").parse(context) + 
     "\n~ End Bibliography\n"
 }
@@ -995,7 +994,8 @@ function makeBibitem( context : texContext, keyx : string, labx : string, conten
                  //if (lab!="") then makeAttr("tex-bibitem-label", "[" + labx.unbrace + "]") else "",
                  //makeAttr("label", label),
                  makeAttr("caption", caption),
-                 makeAttr("searchterm", search )]
+                 makeAttr("searchterm", search ),
+                 makeAttr("spellcheck","false")]
 
   val attrs = (attrs0 + attrs1).joinAttrs
 
