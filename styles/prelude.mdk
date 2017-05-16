@@ -367,6 +367,9 @@ Html Bib Label Width: 2rem
   }
 }
 
+@if html {
+  .bib-doi { font-size: smaller; }
+}
 
 <!-------------------------------------------------------------------
    Internationalization
