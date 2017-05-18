@@ -18,7 +18,10 @@
     "instanceof", "int", "interface", "long", "native", "new", "null", "package", "private", 
     "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", 
     "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", 
-    "with"
+    "with",
+    "yield",
+    "async","await",
+    "export","from","as"
   ],
 
   "extraKeywords": [
@@ -62,7 +65,8 @@
     
   "tokenizer": {
     "root": [
-      
+      ["(?:function|yield|await)[\\*]?","keyword"],
+
       ["([a-zA-Z_\\$][\\w\\$]*)(\\s*)(:?)", { 
         "cases": { "$1@keywords": ["keyword","white","delimiter"],
                  "$1@extraKeywords": ["keyword","white","delimiter"],
