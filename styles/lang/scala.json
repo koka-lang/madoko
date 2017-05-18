@@ -1,0 +1,162 @@
+{
+  "displayName":    "Scala",
+  "name":           "scala",
+  "mimeTypes":      ["text/x-scala"],
+  "fileExtensions": ["scala"],
+  
+  "lineComment":      "//",   
+  "blockCommentStart": "/*",
+  "blockCommentEnd":   "*/",
+
+  "keywords": [
+    "abstract", "case", "catch", "class", "def",
+    "do", "else", "extends", "false", "final",
+    "finally", "for", "forSome", "if", "implicit",
+    "import", "lazy", "macro", "match", "new",
+    "null", "object", "override", "package", "private",
+    "protected", "return", "sealed", "super", "this",
+    "throw", "trait", "try", "true", "type",
+    "val", "var", "while", "with", "yield",
+    "_", ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@"
+  ],
+  
+  "extraKeywords": [],
+
+  "typeKeywords": [
+    "boolean", "double", "byte", "int", "short", "char", "void", "long", "float"
+  ],
+
+  "extraTypeKeywords": [],
+
+  "operators": [],
+  
+  "extraOperators": [],
+  "symbols":  "[!#%&\\*\\+\\-\":<=>?\\^|~]+",
+  "escapes":  "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
+  "jsescapes":  "\\\\(?:[btnfr\\\\\"']|[0-7][0-7]?|[0-3][0-7]{2})",
+  "tokenizer": {
+    "root": [
+      ["s\"",  "string", "@substring" ],
+      ["[a-z_$][\\w$]*", { "cases": { "@typeKeywords": "keyword.type",
+                                   "@extraTypeKeywords": "keyword.type",
+                                   "@keywords": "keyword",
+                                   "@extraKeywords": "keyword",
+                                   "@default": "identifier"} }],
+      ["[A-Z][\\w\\$]*", "type.identifier" ],  
+      ["<(\\w+)\\/>", { "token": "tag.tag-$1", "log":"test" } ],
+      ["^[ \\t]*<(\\w+)(?=\\s*[\\/>]|\\s+\\w)", { "token": "tag.tag-$1", "bracket": "@open", "next": "@tag.$1", "log": "open $1" }],
+      ["^[ \\t]*<\\/(\\w+)\\s*>",  { "token": "tag.tag-$1", "bracket": "@close", "next": "@pop", "log": "close $1" } ],
+      { "include": "@whitespace" }, 
+      ["[{}()\\[\\]]", "@brackets"],
+      ["[<>](?!@symbols)", "@brackets"],
+      ["@symbols", { "cases": { "@keywords": "keyword.operator", 
+                              "@default": "operator" } } ],
+      ["\"\"\"", { "token": "string.quote", "bracket": "@open", "next": "@litstring" } ],
+      ["\\d*\\.\\d+([eE][\\-+]?\\d+)?[fFdD]?", "number.float"],
+      ["0[xX][0-9a-fA-F_]*[0-9a-fA-F][Ll]?", "number.hex"],
+      ["0[0-7_]*[0-7][Ll]?", "number.octal"],
+      ["0[bB][0-1_]*[0-1][Ll]?", "number.binary"],
+      ["\\d+[lL]?", "number"],
+      ["[;,.]", "delimiter"],
+      ["`([^`\\\\]|\\\\.)*$", "identifier.invalid" ],  
+      ["`",  "identifier", "@quoted" ],
+      ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["\"",  "string", "@string" ],
+      ["'[^\\\\']'", "string"],
+      ["(')(@escapes)(')", ["string","string.escape","string"]],
+      ["'", "string.invalid"]
+           
+    ],
+
+    "whitespace": [
+      ["[ \\t\\r\\n]+", "white"],
+      ["\\/\\*",       "comment", "@comment" ],
+      ["\\/\\/.*$",    "comment"]
+    ],
+
+    "comment": [
+      ["[^\\/*]+", "comment" ],
+      ["\\/\\*",    "comment.invalid" ],
+      ["\\*/",    "comment", "@pop"  ],
+      ["[\\/*]",   "comment" ]
+    ],  
+
+    "string": [
+      ["[^\\\\\"]+",  "string"],
+      ["@escapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["\"",        "string", "@pop" ]
+    ],
+    
+    "substring": [
+      ["[^\\\\\\$\"]+",  "string"],
+      ["@escapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["\\$([a-zA-Z_]\\w*)", "identifier" ],
+      ["\\$\\{",     { "token": "delimiter.curly", "bracket": "@open", "next": "@embeddedscala"} ],
+      ["\\$",       "string" ],
+      ["\"",        "string", "@pop" ]
+    ],
+        
+    "quoted": [
+      ["[^`]+",    "identifier"],
+      ["@escapes", "identifier.escape"],
+      ["\\\\.",      "identifier.escape.invalid"],
+      ["`",        "identifier", "@pop" ]    
+    ],
+    
+    "litstring": [
+      ["[^\"]+",    "string"],
+      ["\"\"?(?!\")", "string"],
+      ["\"\"\"",     { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
+    ],
+    "tag": [
+      ["[ \\t\\r\\n]+", "white" ],
+      ["(type)(\\s*=\\s*)(\")([^\"]+)(\")", [ "attribute.name", "delimiter", "attribute.value",
+                                         {"token": "attribute.value", "switchTo": "@tag.$S2.$4" },
+                                         "attribute.value"] ], 
+      ["(type)(\\s*=\\s*)(')([^']+)(')", [ "attribute.name", "delimiter", "attribute.value",
+                                         {"token": "attribute.value", "switchTo": "@tag.$S2.$4" },
+                                         "attribute.value"] ], 
+      ["(\\w+)(\\s*=\\s*)(\"[^\"]*\"|'[^']*')", ["attribute.name","delimiter","attribute.value"]],
+      ["\\w+", "attribute.name" ],      
+      ["\\/>", "tag.tag-$S2", "@pop"],
+      [">", { "cases": { "$S2==xstyle" : { "token": "tag.tag-$S2", "switchTo": "@embedded.$S2", "nextEmbedded": "text/css"},
+                       "$S2==xscript": { "cases": { "$S3"     : { "token": "tag.tag-$S2", "switchTo": "@embedded.$S2", "nextEmbedded": "$S3" },
+                                                 "@default": { "token": "tag.tag-$S2", "switchTo": "@embedded.$S2", "nextEmbedded": "text/javascript" } } },
+                       "@default"   : { "token": "tag.tag-$S2", "switchTo": "html", "log": "switch to html $S2" } } }]
+    ],
+    
+    "html": [
+      ["<(\\w+)\\/>", { "token": "tag.tag-$1" } ],
+      ["<(\\w+)(?=\\s*[\\/>]|\\s+\\w)", { "token": "tag.tag-$1", "bracket": "@open", "next": "@tag.$1", "log": "open" }],
+      ["<\\/(\\w+)\\s*>",  { "token": "tag.tag-$1", "bracket": "@close", "next": "@pop" } ],
+      ["{", { "token": "@brackets", "next": "@embeddedscala" } ],
+      { "include": "@whitespace" } 
+    ],
+    
+    "embeddedscala": [
+      ["}", { "token": "@brackets", "next": "@pop" }],
+      ["{", { "token": "@brackets", "next": "@push"} ],
+      {"include":"@root"}
+    ],
+    
+    "embedded": [
+      ["[^\"'&lt;]+", ""],
+      ["&lt;\\/(\\w+)\\s*&gt;", { "cases": { "$1==$S2" : { "token": "@rematch", "switchTo": "@html", "nextEmbedded": "@pop" },
+                                  "@default": "" } }],
+      ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["'([^'\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["\"", "string", "@htmlstring.\"" ],
+      ["'", "string", "@htmlstring.'" ],
+      ["&lt;", ""]
+    ],
+    "htmlstring": [
+      ["[^\\\\\"']+", "string"], 
+      ["@jsescapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["[\"']",     { "cases": { "$#==$S2" : { "token": "string", "next": "@pop" },
+                              "@default": "string" }} ]
+    ]
+  }
+}
