@@ -88,6 +88,7 @@ var SpellCheckMenu = (function() {
     if (replace && self.replacer) {
       self.replacer( self.range, replace );
       if (self.remover && self.info && self.info.id) self.remover(self.info.id); // remove decoration    
+      /*
       if (self.gotoNext) {
         setTimeout( function() {
           var pos = self.range.getStartPosition();
@@ -95,6 +96,7 @@ var SpellCheckMenu = (function() {
           self.gotoNext(pos);
         }, 100 );
       }
+      */
     }
   }
 
