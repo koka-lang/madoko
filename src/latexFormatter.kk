@@ -226,8 +226,14 @@ function texEntity( cap : matched ) {
 }
 
 
+function getTableEnv( attrs : attrs ) : string {
+  if (attrs.hasBoolKey("pretty-breakable") || attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */) 
+   then attrs.lookupKey("tex-longtable","longtable")
+   else "tabular"
+}
+
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
-  val table = if (attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */) then "longtable" else "tabular"
+  val table = attrs.getTableEnv
   val content = 
       "\\begin{mdcodetabular}" + ct.columns.show.braced + 
     "\\begin" + table.braced + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +

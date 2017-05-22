@@ -296,13 +296,16 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   val lang   = attrs0.hasKey("language").maybe("",id)
   val attrs1 = if (lang=="") then attrs0 else attrs0.addClasses(["language-" + lang, "lang-"+lang, lang])
   val attrs  = context.formatDefaults(attrs1,env)
-  //trace("code: " + env + ": " + attrs.show)
+  //trace("code: " + env + ": " + attrs2.show)
 
   val cattrs = match(attrs.hasKey("data-line-first")) {
                  Nothing -> attrsNone
                  Just(v) -> attrsNone.addKeyval("data-line",v)
-               }
-
+                }
+  val cattrsTable  = if (attrs.hasBoolKey("pretty-breakable")) 
+                 then cattrs.addKeyvals([("pretty-breakable","true"),("tex-longtable",attrs.lookupKey("tex-longtable","longtable"))])
+                 else cattrs
+  
   val pretty = attrs.hasClass("pretty")               
   val plain0 = (lang=="" || !(context.highlight) || attrs.hasClass("plain") || attrs.hasClass("prettyprint"))
   val plain = if (plain0) then plain0 else {
@@ -362,7 +365,7 @@ public function fmtCode( context : inlineContext, env0 : string, txt : string, a
   val content 
     = if (pretty && env != "code" ) then {
         val ct = codeAlign(codeEscape(txt),context.prettyAlign).map( codeUnescape )
-        context.fmtCodeTable(ct,cattrs)
+        context.fmtCodeTable(ct,cattrsTable)
       }
       else codeUnescape(codeEscape(txt), 0) // todo: optimize the escape/unescape path?
 
