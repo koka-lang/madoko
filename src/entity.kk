@@ -439,8 +439,8 @@ val entities : list<entity> = [
   Entity("thicksp", 8196, @"\;", True ),
   Entity("medsp", 8197, @"\:", True ),
   Entity("thinsp", 8201, @"\,", True ),
-  Entity("strut", 8203, @"\strut", False ),
   Entity("zwsp", 8203, @"\hspace{0pt}", False ),
+  Entity("strut", 8203, @"\strut", False ),
   Entity("pagebreak", 12, @"\newpage", False), //use form feed character
   Entity("zwnj", 8204, @"{}", False),
   Entity("zwj", 8205, "", False),
