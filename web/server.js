@@ -1071,7 +1071,8 @@ function oauthRevoke(req,res,remoteName,access_token) {
     url: instantiate( remote.revoke.url ),
     method: remote.revoke.method, 
     secure: true, 
-    json: true 
+    json: true,
+    contentType: "application/json" // dropbox needs this
   };
   if (remote.revoke.authorization==="Bearer") {  //dropbox
     options.headers = { Authorization: "Bearer " + access_token };
@@ -1084,7 +1085,7 @@ function oauthRevoke(req,res,remoteName,access_token) {
   else {
     options.query = { access_token: access_token };
   }
-  return makeRequest(options).then( function(info) {
+  return makeRequest(options, JSON.stringify(null) /* for dropbox */).then( function(info) {
     if (info) console.log(" successfully revoked the access token");
   });
 }
