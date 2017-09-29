@@ -1140,8 +1140,9 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         var domain = reqparam.url.replace( /^([^\?\#]+).*$/, "$1" );
         var msg    = (req.statusText || ("network request failed (" + domain + ")")) + (message ? ": " + message : "");
         var type = req.getResponseHeader("Content-Type") || req.responseType;
-        if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && req.responseText) {
-          var res = jsonParse(req.responseText,null);
+        var text = ((type=="" || startsWith(type,"text")) && req.responseText) ? req.responseText : "";
+        if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && text) {
+          var res = jsonParse(text,null);
           if (res.error && res.error.message) {
             msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
           }
@@ -1151,9 +1152,15 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
           else if (res.message) {
             msg = msg + ": " + res.message;
           }
+          else if (res.error_summary) {  // dropbox
+            msg = msg + ": " + res.error_summary;            
+          }
         }
-        else if (startsWith(type,"text/") && req.responseText) {
-          msg = msg + ": " + req.responseText;
+        else if (startsWith(type,"text") && text) {
+          msg = msg + ": " + text;
+        }
+        if (opts.headers && opts.headers["Dropbox-API-Arg"]) {
+          msg = msg + ": " + JSON.stringify(opts.headers["Dropbox-API-Arg"]);7
         }
 
         if (httpCode===404 && req.statusText) msg = msg + ": " + domain;
@@ -1261,10 +1268,12 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
 
     // set headers
     properties(headers).forEach( function(hdr) {
-      req.setRequestHeader(hdr, headers[hdr]);
+      var val = headers[hdr];
+      req.setRequestHeader(hdr, (typeof val === "string" ? val : JSON.stringify(val)));
     });
 
     if (contentType) req.setRequestHeader("Content-Type", contentType);   
+
     if (startsWith(reqparam.url,"/")) { // same domain request
       req.setRequestHeader("X-Requested-With","XMLHttpRequest"); // CSRF mitigation 
     }

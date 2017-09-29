@@ -866,6 +866,14 @@ properties(remotes).forEach( function(name) {
     ];
   }
   if (remote.sources) Array.prototype.push.apply(remotes.sources, remote.sources);
+  if (remote.authorization == null) remote.authorization = "";
+  if (typeof remote.account === "string") {
+    remote.account = {
+      url: remote.account,
+      method: "GET",
+      authorization: remote.authorization
+    };
+  }
 });
 
 function redirectPage(remote, message, status, xlogin ) { 
@@ -951,22 +959,31 @@ function oauthLogin(req,res) {
     if (!tokenInfo || !tokenInfo.access_token) {
       return redirectError(remote, "Failed to get access token from the token server.");
     }
+    console.log("tokenInfo: ", tokenInfo );
     var options = { 
-      url: remote.account_url, 
+      url: remote.account.url, 
+      method: remote.account.method,
       secure: true, 
       json: true,
       headers: { "User-Agent": "Madoko" },
     };
-    if (remote.useAuthHeader) {
+    var body = null;
+    if (tokenInfo.account_id) {
+      options.contentType = "application/json";
+      body = JSON.stringify({ account_id : tokenInfo.account_id });
+    }
+    if (remote.account.authorization == "Bearer") {
       options.headers.Authorization = "Bearer " + tokenInfo.access_token;
     }
     else {
       options.query = { access_token: tokenInfo.access_token };
     }
-    return makeRequest( options ).then( function(info) {
+
+    return makeRequest( options, body ).then( function(info) {
+      console.log("account info: ", info );
       if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
       var login = {
-        uid:    info.uid || info.id || info.user_id || info.userid || null,
+        uid:    info.uid || info.id || info.user_id || info.userid || info.account_id || tokenInfo.account_id || null,
         name:   info.display_name || info.displayName || info.name || "",
         email:  info.email || null,
         avatar: info.avatar_url || info.avatar || null,
@@ -976,6 +993,7 @@ function oauthLogin(req,res) {
         remote: remote.name,
         nonce:  uniqueHash(),        
       };
+      if (login.name.display_name) login.name = login.name.display_name; // dropbox v2
       console.log("logged into " + remote.name + ": " + login.name);      
       if (log) {
         log.entry( { 
@@ -986,7 +1004,9 @@ function oauthLogin(req,res) {
           name:   login.name, 
           email:  login.email, 
           avatar: login.avatar,
-          date:   login.created, ip: req.ip, url: req.url 
+          date:   login.created, 
+          ip:     req.ip, 
+          url:    req.url 
         });
       }      
       delete req.session.logins[remote.name]; // delete legacy login if necessary

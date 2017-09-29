@@ -11,7 +11,7 @@ define([],function() {
 
   var rxISO = /^(\d\d\d\d)\-?(\d\d)\-?(\d\d)(?:T(\d\d):?(\d\d)(?:[:]?(\d\d)(?:[\.,](\d+))?)?(?:Z|([\+\-])(\d\d)(?:[:]?(\d\d))?)?)?$/i;
     
-  var rxIsoZ = /\.?0+(?=Z|$)/
+  var rxIsoZ = /\.0+(?=Z|$)/;
 
   function dateFromISO(s) {
     function parseNum(n) {

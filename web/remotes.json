@@ -1,5 +1,5 @@
 {
-  "dropbox": {
+  "dropbox1": {
     "client_id"     : "3vj9witefc2z44w",
     "xclient_secret": "nxBmMsSFbnjRgFSdjFPFGQ==",
     "token_url"     : "https://api.dropbox.com/1/oauth2/token",
@@ -10,6 +10,23 @@
       "authorization": "Bearer"
     },
     "sources"       : ["https://*.dropbox.com","https://*.dropboxapi.com"]
+  },
+  "dropbox": {
+    "client_id"     : "3vj9witefc2z44w",
+    "xclient_secret": "nxBmMsSFbnjRgFSdjFPFGQ==",
+    "token_url"     : "https://api.dropboxapi.com/oauth2/token",
+    "account"       : {
+      "method": "POST",
+      "url"   : "https://api.dropboxapi.com/2/users/get_account",
+      "authorization": "Bearer"
+    },
+    "revoke"        : {
+      "method": "POST",
+      "url"   : "https://api.dropboxapi.com/2/auth/token/revoke",
+      "authorization": "Bearer"
+    },
+    "sources"       : ["https://*.dropbox.com","https://*.dropboxapi.com"],
+    "authorization" : "Bearer"
   },
   "github": {
     "client_id"     : "9c24f7ac71d1ede26ba3",

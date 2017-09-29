@@ -1,19 +1,19 @@
 /*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
 ---------------------------------------------------------------------------*/
 
-define(["../scripts/promise","../scripts/util","../scripts/oauthRemote"], 
-        function(Promise,Util,OAuthRemote) {
+define(["../scripts/promise","../scripts/util","../scripts/date","../scripts/oauthRemote"],
+        function(Promise,Util,StdDate,OAuthRemote) {
 
 var dropbox = new OAuthRemote( {
   name         : "dropbox",
-  defaultDomain: "https://api.dropbox.com/1/",
-  revokeUrl    : "https://api.dropbox.com/1/disable_access_token",
-  loginUrl     : "https://www.dropbox.com/1/oauth2/authorize",
+  defaultDomain: "https://api.dropboxapi.com/2/",
+  revokeUrl    : "https://api.dropboxapi.com/2/auth/token/revoke",
+  loginUrl     : "https://www.dropbox.com/oauth2/authorize",
   loginParams  : {
     client_id: "3vj9witefc2z44w",
   },
@@ -25,33 +25,38 @@ var dropbox = new OAuthRemote( {
 /* ----------------------------------------------
   Basic file API
 ---------------------------------------------- */
-var longTimeout = 60000; // 1 minute for pull or push content
-var root        = "dropbox";
-var contentUrl  = "https://api-content.dropbox.com/1/files/" + root + "/";
-var pushUrl     = "https://api-content.dropbox.com/1/files_put/" + root + "/";
-var metadataUrl = "https://api.dropbox.com/1/metadata/" + root + "/";
-var fileopsUrl  = "https://api.dropbox.com/1/fileops/";
-var sharesUrl   = "https://api.dropbox.com/1/shares/" + root + "/";
-var sharedFoldersUrl = "https://api.dropboxapi.com/2/sharing/get_folder_metadata";
+var longTimeout     = 60000; // 1 minute for pull or push content
+var filelistUrl     = "files/list_folder";
+var metadataUrl     = "files/get_metadata";
+var sharedFoldersUrl= "sharing/get_folder_metadata";
+var createFolderUrl = "files/create_folder_v2";
+var contentUrl      = "https://content.dropboxapi.com/2/";
+var pullUrl         = contentUrl + "files/download";
+var pushUrl         = contentUrl + "files/upload";
+var sharesUrl       = contentUrl + "sharing/create_shared_link_with_settings";
 
 function encodeURIPath(s) {
   var p = encodeURI(s);
   return p.replace(/%2F/g,"/");
 }
 
+function dropboxPath(fname) {
+  var f = Util.normalize(fname);
+  return (f ? "/" + f : "");
+}
 
 function addPathInfo(info) {
   return dropbox.withUserId( function(uid) {
     info.globalPath = "//dropbox/unshared/" + uid + info.path;
-    if (!info.parent_shared_folder_id) return info;
+    if (!info.sharing_info || !info.sharing_info.parent_shared_folder_id) return info;
     // shared
-    return sharedFolderInfo(info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
+    return sharedFolderInfo(info.sharing_info.parent_shared_folder_id).then( function(sinfo) {  // this is cached
       if (sinfo) {
         var subpath = (Util.startsWith(info.path,sinfo.path_lower + "/") ? info.path.substr(sinfo.path_lower.length+1) : info.path);
-        var shared = (Util.startsWith(sinfo.path_lower, "/") ? sinfo.path_lower.substr(1) : sinfo.path_lower);        
+        var shared = (Util.startsWith(sinfo.path_lower, "/") ? sinfo.path_lower.substr(1) : sinfo.path_lower);
         info.sharedPath = "//dropbox/shared/" + sinfo.shared_folder_id + "/" + shared + "/" + subpath;
         info.globalPath = info.sharedPath; // use the shared path
-      }      
+      }
       return info;
     }, function(err) {
       Util.message( new Error("dropbox: could not get shared info: " + (err.message || err)), Util.Msg.Error );
@@ -61,17 +66,26 @@ function addPathInfo(info) {
 }
 
 function pullFile(fname,binary) {
-  var opts = { url: Util.combine(contentUrl,encodeURIPath(fname)), timeout: longTimeout, binary: binary };
+  var opts = { 
+    url: pullUrl, 
+    timeout: longTimeout, 
+    binary: binary,
+    headers: { "Dropbox-API-Arg": { path: dropboxPath(fname) } },
+    contentType: "text/plain"
+  };
   return dropbox.requestGET( opts ).then( function(content,req) {
-    var infoHdr = req.getResponseHeader("x-dropbox-metadata");
+    var infoHdr = req.getResponseHeader("Dropbox-API-Result");
     var info = (infoHdr ? JSON.parse(infoHdr) : { path: fname });
     info.content = content;
     return addPathInfo(info);
+  }, function(err) {
+    if (err && err.httpCode === 409) return null;
+    throw err;
   });
 }
 
 function fileInfo(fname) {
-  return dropbox.requestGET( { url: Util.combine(metadataUrl,encodeURIPath(fname)) } );
+  return dropbox.requestPOST( { url: metadataUrl }, null, { path: dropboxPath(fname), include_deleted: true } );
 }
 
 function sharedFolderInfo(id) {
@@ -81,21 +95,28 @@ function sharedFolderInfo(id) {
 }
 
 function folderInfo(fname) {
-  var url = Util.combine(metadataUrl,encodeURIPath(fname));
-  return dropbox.requestGET( { url: url }, { list: true });
+  var url = filelistUrl
+  return dropbox.requestPOST( { url: url }, null, { path: (fname ? "/" + fname : "") });
 }
 
-function pushFile(fname,content) {
-  var url = Util.combine(pushUrl,encodeURIPath(fname)); 
-  return dropbox.requestPUT( { url: url, timeout: longTimeout }, {}, content ).then( function(info) {
+function pushFile(fname,content,binary) {
+  var opts = {
+    url: pushUrl,
+    timeout: longTimeout,
+    headers: { "Dropbox-API-Arg": {
+      path: dropboxPath(fname),
+      mode: { ".tag": "overwrite" }
+    }},
+    contentType: (binary ? "application/octet-stream" : "text/plain; charset=dropbox-cors-hack")
+  }
+  return dropbox.requestPOST( opts, null, content ).then( function(info) {
     if (!info) throw new Error("dropbox: could not push file: " + fname);
     return addPathInfo(info);
-  });  
+  });
 }
 
 function createFolder( dirname ) {
-  var url = fileopsUrl + "create_folder";
-  return dropbox.requestPOST( url, { root: root, path: dirname }).then( function(info) {
+  return dropbox.requestPOST( createFolderUrl, null, { path: dropboxPath(dirname) }).then( function(info) {
     return true; // freshly created
   }, function(err) {
     if (err && err.httpCode === 403) return false;
@@ -104,8 +125,16 @@ function createFolder( dirname ) {
 }
 
 function getShareUrl( fname ) {
-  var url = Util.combine(sharesUrl,encodeURIPath(fname));
-  return dropbox.requestPOST( { url: url }, { short_url: false } ).then( function(info) {
+  var now = new Date();
+  var oneweekLater = now.setDate( now.getDate() + 7 ); // handles overflow
+  var settings = {
+    path: dropboxPath(fname),
+    settings: {
+      requested_visibility: "public",
+      expires: oneweekLater.toISOString()
+    }
+  }
+  return dropbox.requestPOST( { url: sharesUrl }, null, settings ).then( function(info) {
     if (!info.url) return null;
     var share = info.url;
     // if (Util.extname(fname) === ".html") share = share.replace(/\bdl=0\b/,"dl=1");
@@ -193,10 +222,11 @@ var Dropbox = (function() {
 
   Dropbox.prototype.pushFile = function( fpath, content ) {
     var self = this;
-    return pushFile( self.fullPath(fpath), content ).then( function(info) {
-      return { 
-        path: info.path,
-        createdTime: new Date(info.modified),
+    var binary = (content instanceof ArrayBuffer || content.buffer instanceof ArrayBuffer);
+    return pushFile( self.fullPath(fpath), content, binary ).then( function(info) {
+      return {
+        path: info.path_display,
+        createdTime: StdDate.dateFromISO(info.server_modified),
         globalPath: info.globalPath,
         sharedPath: info.sharedPath,
         rev: info.rev,
@@ -206,27 +236,32 @@ var Dropbox = (function() {
 
   Dropbox.prototype.pullFile = function( fpath, binary ) {
     var self = this;
-    return self.getMetaData(fpath).then( function(meta) { // TODO: can we make this one request?
-      if (!meta || meta.deleted) return Promise.rejected("file not found: " + fpath);
-      return pullFile( self.fullPath(fpath), binary ).then( function(info) {
-        var file = {
-          path: fpath,
-          content: info.content,
-          createdTime: meta.modifiedTime,
-          globalPath: info.globalPath,
-          sharedPath: info.sharedPath
-        };
-        return file;
-      });
+    // return self.getMetaData(fpath).then( function(meta) { // TODO: can we make this one request?
+    //  if (!meta || meta.deleted) return Promise.rejected("file not found: " + fpath);
+    return pullFile( self.fullPath(fpath), binary ).then( function(info) {
+      if (!info) return Promise.rejected("file not found: " + fpath );
+      var file = {
+        path: fpath,
+        content: info.content,
+        createdTime: StdDate.dateFromISO(info.server_modified), //meta.modifiedTime,
+        globalPath: info.globalPath,
+        sharedPath: info.sharedPath
+      };
+      return file;
     });
+    //});
   }
 
-  Dropbox.prototype.getMetaData = function( fpath ) {    
+  Dropbox.prototype.getMetaData = function( fpath ) {
     var self = this;
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info ? { modifiedTime: new Date(info.modified), deleted: info.is_deleted } : null);
+      if (!info) return null; 
+      return { 
+        modifiedTime: StdDate.dateFromISO(info.server_modified), 
+        deleted: (info[".tag"]==="deleted") 
+      };
     }, function(err) {
-      if (err && err.httpCode===404) return null;
+      if (err && (err.httpCode===404 || err.httpCode===409)) return null;
       throw err;
     });
   }
@@ -242,9 +277,10 @@ var Dropbox = (function() {
   Dropbox.prototype.listing = function( fpath ) {
     var self = this;
     return folderInfo( self.fullPath(fpath) ).then( function(info) {
-      return (info ? info.contents : []).map( function(item) {
-        item.type = item.is_dir ? "folder" : "file";
-        item.isShared = (item.shared_folder || item.parent_shared_folder_id ? true : false);
+      return (info ? info.entries : []).map( function(item) {
+        item.type = item[".tag"] || "file";
+        item.path = Util.normalize(item.path_display || item.path_lower || "");
+        item.isShared = (item.sharing_info || item.shared_folder || item.parent_shared_folder_id ? true : false);
         return item;
       });
     });
@@ -261,7 +297,7 @@ var Dropbox = (function() {
   };
 
   return Dropbox;
-})();   
+})();
 
 
 
