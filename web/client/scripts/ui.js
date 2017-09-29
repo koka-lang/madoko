@@ -3996,7 +3996,7 @@ var symbolsMath = [
         item.textContent = tool.display;
       }
       if (tool.helpLink && !tool.icon) {
-        if (Util.startsWith(tool.helpLink,"#")) tool.helpLink = "http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html" + tool.helpLink;
+        if (Util.startsWith(tool.helpLink,"#")) tool.helpLink = "https://koka-lang.github.io/madoko/reference.html" + tool.helpLink;
         var help = document.createElement("A");
         help.href = tool.helpLink;
         help.textContent = "?";
