@@ -237,8 +237,9 @@ var OAuthRemote = (function() {
       var options = {
         url: self.revokeUrl,
         headers: { Authorization: "Bearer " + token },
-      }
-      return Util.requestPOST( options ).then( function() {}, function(err) {
+        contentType: "application/json"
+      };
+      return Util.requestPOST( options, null, JSON.stringify(null) ).then( function() {}, function(err) {
         if (err && err.httpCode === 401) return; // sometimes we revoke in parallel and some will fail
         throw err;
       });

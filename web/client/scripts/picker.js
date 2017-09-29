@@ -49,10 +49,10 @@ var Picker = (function() {
   var remotes = {
     dropbox: { remote: new Dropbox.Dropbox(), folder: "" },
     github: { remote: new Github.Github(), folder: "" },
-    local: { remote: new LocalRemote.LocalRemote(), folder: "" },
-    localhost: { remote: new Localhost.Localhost(), folder: "" },
     onedrive: { remote: new Onedrive.Onedrive(), folder: "" },
     onedrive2: { remote: new Onedrive2.Onedrive2(), folder: "" },
+    localhost: { remote: new Localhost.Localhost(), folder: "" },
+    local: { remote: new LocalRemote.LocalRemote(), folder: "" },
     me: { remote: new LocalRemote.LocalRemote(), folder: "//" },
   };
   remotes.me.remote.logo = "icon-me.png";
@@ -697,11 +697,11 @@ var Picker = (function() {
         if (item.types==null) item.types = item.type.split(".");
         if (!item.disabled && !canSelect(item.path,item.types[0],self.options.extensions)) item.disabled = true;
       });
-      items = items.sort(function(i1,i2) {
+      items = (folder==="//" ? items : items.sort(function(i1,i2) {
         var s1 = (i1.disabled ? "1" : "0") + Util.basename(i1.path);
         var s2 = (i2.disabled ? "1" : "0") + Util.basename(i2.path);
         return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
-      });
+      }));
       var html = items.map( function(item) {
         var mime = item.mime || Util.mimeFromExt(item.path)
         return "<div class='item " + item.types.map(function(tp) { return "item-" + tp; }).join(" ") + 
@@ -730,7 +730,8 @@ var Picker = (function() {
   Picker.prototype.getRoots = function() {
     var self = this;
     Util.addClassName(app,"page-me");
-    var items = Util.properties(remotes).map( function(remoteName) {
+    var names = Util.properties(remotes);
+    var items = names.map( function(remoteName) {
       var remote = remotes[remoteName].remote;
       return remote.connect().then( function(status) {
         return { 

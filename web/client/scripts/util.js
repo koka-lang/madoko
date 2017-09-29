@@ -1140,8 +1140,8 @@ define(["std_core","std_path","../scripts/promise","../scripts/map"],
         var domain = reqparam.url.replace( /^([^\?\#]+).*$/, "$1" );
         var msg    = (req.statusText || ("network request failed (" + domain + ")")) + (message ? ": " + message : "");
         var type = req.getResponseHeader("Content-Type") || req.responseType;
-        var text = ((type=="" || startsWith(type,"text")) && req.responseText) ? req.responseText : "";
-        if ((startsWith(type,"application/json") || startsWith(type,"text/javascript")) && text) {
+        var text = ((type=="" || startsWith(type,"text") || type=="application/json") && req.responseText) ? req.responseText : "";
+        if ((type == "application/json" || startsWith(type,"text/javascript")) && text) {
           var res = jsonParse(text,null);
           if (res.error && res.error.message) {
             msg = msg + ": " + res.error.message + (res.error.code ? "(" + res.error.code + ")" : "");
