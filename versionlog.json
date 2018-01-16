@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "1.1.6",
+      "date": "2018-01-16",
+      "updates": [
+        "Fix handling of deleted files on Dropbox v2",
+        "Limit number of concurrent write requests on Dropbox"
+      ]
+    },
     { "version": "1.1.5",
       "date": "2017-09-29",
       "updates": [
