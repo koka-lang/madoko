@@ -14,6 +14,8 @@ define([],function() {
   var rxIsoZ = /\.0+(?=Z|$)/;
 
   function dateFromISO(s) {
+    if (s==null) s = "";
+    
     function parseNum(n) {
       var i = parseInt(n,10);
       return (isNaN(i) ? undefined : i);

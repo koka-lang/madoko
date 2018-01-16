@@ -951,7 +951,8 @@ var Storage = (function() {
           return self._syncFile(diff,cursors,merges,file,pullOnly); 
         }); 
       });
-      return Promise.whenBatched( syncs, 4 ).then( function(res) {
+      // batch only with 2 since dropbox will fail on more than 2 concurrent write requests..
+      return Promise.whenBatched( syncs, 2 ).then( function(res) {
         Util.message("Synchronized with " + self.remote.displayName + " storage", Util.Msg.Info );
         return true;
       }, function(err) {

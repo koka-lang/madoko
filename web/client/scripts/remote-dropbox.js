@@ -304,7 +304,8 @@ var Dropbox = (function() {
     return fileInfo( self.fullPath(fpath) ).then( function(info) {
       if (!info) return null; 
       return { 
-        modifiedTime: StdDate.dateFromISO(info.server_modified), 
+        // server_modified is undefined for deleted files...
+        modifiedTime: (info.server_modified==null ? new Date(0) : StdDate.dateFromISO(info.server_modified)), 
         deleted: (info[".tag"]==="deleted") 
       };
     }, function(err) {
