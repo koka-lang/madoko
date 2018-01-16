@@ -867,9 +867,10 @@ properties(remotes).forEach( function(name) {
   }
   if (remote.sources) Array.prototype.push.apply(remotes.sources, remote.sources);
   if (remote.authorization == null) remote.authorization = "";
-  if (typeof remote.account === "string") {
+  if (remote.account_url == null && typeof remote.account === "string") remote.account_url = remote.account;
+  if (typeof remote.account_url === "string") {
     remote.account = {
-      url: remote.account,
+      url: remote.account_url,
       method: "GET",
       authorization: remote.authorization
     };
@@ -978,7 +979,7 @@ function oauthLogin(req,res) {
     else {
       options.query = { access_token: tokenInfo.access_token };
     }
-
+    
     return makeRequest( options, body ).then( function(info) {
       console.log("account info: ", info );
       if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
