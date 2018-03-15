@@ -57,7 +57,7 @@ Colorizer   : madoko
 
 ~MadokoNet  : before="[madoko.net]: " background-color=Gainsboro
 
-Script      : https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js
+Script      : https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js
 
 Copyright   : Copyright 2013, Daan Leijen, Microsoft Corporation.
 License     : This is free software; you can redistribute it and/or modify it under the
@@ -3530,8 +3530,8 @@ output, PDF output is still highlighted using Madoko.  To enable prettify,
 first include the Google script in the metadata (see Section [#sec-metadata]):
 
 ``` 
-Script: https://google-code-prettify.googlecode.com\
-        /svn/loader/run_prettify.js
+Script: https://cdn.rawgit.com/google/code-prettify\
+        /master/loader/run_prettify.js
 ```
 
 and add the `.prettyprint` class using attributes:
@@ -3547,7 +3547,7 @@ function hi() {
 Note that Madoko automatically disables static syntax highlighting in the HTML
 output if the `.prettyprint` class is present.
 
-[GPretty]: http://code.google.com/p/google-code-prettify
+[GPretty]: https://github.com/google/code-prettify
 
 
 ## Advanced styling in LaTeX  { #sec-latex-style }
