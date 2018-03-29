@@ -29,16 +29,11 @@ var webclient = path.join(web,"client");
 // Check out Koka in a peer directory of Madoko; i.e. `.../dev/madoko` and `.../dev/koka-0.6`:
 //
 // > cd ..
-// > git clone https://github.com/koka-lang/koka.git  koka-0.6
+// > git clone https://github.com/koka-lang/koka.git -b v0.6.0-dev --depth 1 koka-0.6
 //
-// Then set it to the older version:
+// Then install dependencies and build the release version:
 //
-// > cd koka-0.6
-// > git checkout v0.6.0-dev
 // > npm install
-//
-// and build the release version:
-//
 // > jake compiler VARIANT=release
 
 var kokaDir   = "../koka-0.6"
