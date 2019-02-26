@@ -368,6 +368,15 @@ function transformDiv( blocks : list<block>, attrs : attrs, fcontext : formatCon
       }
       Div(txt.parseBlocks(adjLineNo,fcontext.lineMap,citestyle,fcontext.inlineContext.metadata),attrs)
     }
+    MathPoly -> {
+      val adjLineNo = match (attrs.hasKey("line-adjust")) {
+        Nothing -> attrs.lineNo.incLineNo
+        Just(d) -> attrs.lineNo.incLineNo(d.parseInt().maybe(0,id))
+      }
+      val attrsx = attrs.setLineNo(fcontext.lineMap,adjLineNo,overwrite=True)
+      // keep the source unchanged
+      Div([Source(attrs.source,MathPoly,attrsx)], attrs)
+    }
     input -> {
       val adjLineNo = match (attrs.hasKey("line-adjust")) {
         Nothing -> attrs.lineNo.incLineNo

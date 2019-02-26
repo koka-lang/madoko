@@ -417,6 +417,7 @@ public type input {
   MathPre     // TeX math, preformatted
   Math        // TeX math
   MathDefs    // TeX math definitions
+  MathPoly    // Column aligned tex math
   Tex         // TeX code that should be parsed (i.e for the bibliography)
   Raw( only: maybe<formatter> = Nothing ) // Raw content for some backend (or all)
   Markdown( only: maybe<formatter> = Nothing )  // Markdown -- perhaps only for some backend
@@ -428,6 +429,7 @@ public function showInput( r : input ) {
     MathPre -> "mathpre"
     Math -> "math"
     MathDefs -> "mathdefs"
+    MathPoly -> "mathpoly"
     Tex-> "tex"
     Raw(monly) -> "raw(" + (monly.maybe("",showFormatter)) + ")"
     Markdown -> "markdown"

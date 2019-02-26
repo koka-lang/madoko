@@ -18,6 +18,7 @@ import std/path   // extname
 import common
 import attributes
 import inline
+import latexFormatter
 import htmlFormatter  // htmlEscape
 import entity
 import hilite // inlineMode
@@ -710,6 +711,7 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
   val attrsx  = context.defaults.matchRules(sname,attrs)
   val attrsd  = context.formatAttrs(attrsx)            
 
+  // this runs the replacers
   val txt = attrsd.transformText(txt0,context.labels,context.metadata)
   match(attrsd.input) {
     Pre      -> context.fmtCode("", txt, attrsd) // todo: use sname as env name?
@@ -727,6 +729,55 @@ function fmtSpan( context : inlineContext, txt0 : string, attrs : attrs ) : stri
     Markdown | attrsd.notag -> context.formatInline(txt)
     // MathDefs, Tex, Markdown 
     _  -> context.fmtCmd("span", context.formatInline(txt), attrsd )
+  }
+}
+
+public function fmtPoly( context : inlineContext, txt0 : string, attrs : attrs = attrsNone, lineInfo : string = "" ) : string {
+  // add newline because of comments in latex (and we do use trimLines on the content)
+  val (kind,left,right,rightx) = ("Display","\\[" + (if (attrs.name.isEmpty) then "" else "\\label{" + attrs.name + "}"),"\n\\]","%mdk\n")
+
+  // idea: have special math mode where we
+  // 1) compute the alignment
+  // 2) generate polytable code and insert linebreaks etc.
+  // 3) then run the replacements on the generated code
+
+  // do some alignment computations:
+  val aligned = codeAlign(txt0)
+  // trace(aligned.show)
+
+  // generate layout
+  val txt1 = fmtLatexPolyTable(context, aligned, attrs)
+
+  // perform replacements
+  val txt = attrs.transformText(txt1, context.labels, context.metadata)
+
+  val lkind  = kind.toLower
+  val class  = "math-" + lkind
+  val attrsd = context.applyDefaults("span",attrs.addClass(class))
+  val mode   = if (attrsd.hasBoolKey("math-full") || attrsd.hasBoolKey("snippet-needpdf") || attrsd.hasBoolKey("math-needpdf")) then Full else Plain
+  //ptxt = if (attrs.hasClass("mathpre")) then mathPre(txt) else txt
+  // val txt    = txt0.trimLines
+  val texcmd = if (kind=="Inline")
+                then context.fmtMathCmd("span", left+lineInfo+txt+right+rightx, attrsd)
+                else context.fmtMathEnv("div",  left+lineInfo+txt+right+rightx, attrsd)
+  match(context.fmt) {
+    FmtTex -> texcmd
+    _      -> {
+      val mtxt = left + txt.escapeMath(context.fmt) + right
+      val mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
+      if (context.mathStatic || mode.isFull /* never use mathjax for full math */) {
+        val digest = md5(txt)
+        log("math-" + mode.show,
+              @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" +
+                texcmd + "\\end{md" + kind + "Snippet}%mdk")
+        //trace("math: " + digest)
+        match(context.mathinfos[digest]) {
+          Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))
+          Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
+        }
+      }
+      else mcmd
+    }
   }
 }
 
