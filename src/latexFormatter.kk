@@ -266,13 +266,6 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])
 }
 
-
-// \begin{pmboxed}%
-// \column{B}{l}\column{E}{l}%
-// \>[B]\mathid{m}\mathspace\>[E]\in\mathspace\mathid{Method}\mathspace::=\mathspace\syntaxKeyword{method}\mathspace\mathid{Name}\mathspace\mathbb{N}\mathspace\syntaxKeyword{throws}\mathspace\overline{\mathid{Name}}\mathspace\{\mathspace\overline{\mathbb{L}:\mathspace\mathid{Instr}}\mathspace\}\\
-// \>[B]\mathid{label}\mathspace\>[E]\in\mathspace\mathbb{L}\\
-// \>[B]\mathid{name}\mathspace\>[E]\in\mathspace\mathid{Name}
-// \end{pmboxed}
 public function fmtLatexPolyTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
   val table = attrs.getTableEnv
   val cols = list(1, ct.columns)
