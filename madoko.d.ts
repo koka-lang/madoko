@@ -1,12 +1,24 @@
 declare module 'madoko' {
-  type MadokoOptions = any;
+  type Options = any;
+  type Position = { path: string, line: number }
+  type Label = {
+      id: string,
+      element: string,
+      caption: string,
+      position?: Position
+  }
+  type DocumentInfo = {
+      lineMap: any,
+      labels: Label[],
+      context: any
+  }
 
   //(md : string, stdout : string, needRerun : bool, options : options/options, files : string, filesRefer : string, filesWrite : string, labels : string, links : string, customs : string, entities : string) -> <(io :: E)> ()
-  type MadokoCallback = 
+  type Callback = 
      (md: string, 
       stdout: string, 
       needRerun: boolean, 
-      options: MadokoOptions, 
+      options: Options, 
       files: string, 
       filesRefer: string, 
       filesWrite: string, 
@@ -25,14 +37,21 @@ declare module 'madoko' {
 
   export function writeTextFile(fileName : string, content : string): any;
 
-  export function initialOptions(args?: string): MadokoOptions;
+  export function initialOptions(args?: string): Options;
 
   export function markdown(
       inputName: string, 
       input: string, 
       outdir: string, 
-      options: MadokoOptions, 
+      options: Options, 
       modes: string, 
       convertTex: boolean, 
-      cont: MadokoCallback): any;
+      cont: Callback): any;
+  
+  export function analyze(
+      inputName: string, 
+      content: string, 
+      outdir: string, 
+      options: Options, 
+      callback: (DocumentInfo) => any): any;
 }

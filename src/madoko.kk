@@ -171,7 +171,7 @@ function logMetadata( mdata : metadata ) {
 
 
 // Create an ":inlineContext"
-function inlineContext( fmt : formatter, 
+public function inlineContext( fmt : formatter, 
                                metadata : dict<string>,
                                mathinfos : dict<mathinfo>,
                                embedinfos : dict<embedinfo>,

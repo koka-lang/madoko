@@ -17,6 +17,25 @@ import options
 import driver
 import storage
 import mathStatic
+import formatBlock   // just the formatContext
+import inline // for inlineContext
+import std/regex
+
+public struct position (path: string, line: int)
+
+public struct labeledElement (
+  id: string,
+  element: string,
+  caption: string,
+  position: null<position>
+)
+
+public struct analyzeResults (
+  lineMap : lineMap,
+  labels: vector<labeledElement>,
+  // just for debugging purposes we also include the original formatContext
+  context : formatContext
+)
 
 public function initialOptions( args : string = "" ) : io options {
   val opts = if (args=="") then Options(version=version/version)
@@ -128,3 +147,41 @@ public function markdown( inputName : string, input : string, outdir : string, o
   }
   ()
 }
+
+public function analyze(
+  inputName : string, content : string, outdir : string,
+  opts : options,
+  continue : (analyzeResults) -> io ()
+) : io () { 
+  val copts = coptions(options = opts, outputDir = outdir, convertTex = False)
+  val outName = outputName(inputName, copts)
+  processContentLSP(inputName, outName, content, copts) fun (ctx) {
+    val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
+    val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), ctx)
+    continue(res)
+  }
+}
+
+function labelInfo(elem: (string, label)): labeledElement {
+  val (id, label) = elem
+  LabeledElement(id, label.element, label.labelCaption, null(label.labelPosition))
+}
+
+function labelPosition(label : label) : maybe<position> {
+  match(label.labelAttrs.hasKey("data-line")) {
+    Just(info) -> {
+      val (path, lineno) = parseLineInfo(info)
+      Just(Position(path.lastPathSegment, lineno))
+      // if (lineno <= 0 || info.startsWith("0;")) then Nothing else Just((path.lastPathSegment, lineno))
+    }
+    Nothing    -> Nothing    
+  }
+}
+
+function lastPathSegment( lineInfo : string ) : string {
+  match (lineInfo.find(rxLastPath)) {
+    Nothing   -> lineInfo
+    Just(cap) -> cap.groups[1]
+  }
+}
+val rxLastPath = regex( @";([^:;]+):$" )

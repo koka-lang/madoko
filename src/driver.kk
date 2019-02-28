@@ -27,6 +27,8 @@ import mathStatic
 import texParser
 import includes
 import bibliography
+import formatBlock   // just the formatContext
+import definitions   // for parseBody
 
 public struct runners(
   runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : (int) -> io () ) -> io (),
@@ -421,3 +423,85 @@ public function withLogCompress( name: string, action : () -> <ndet|e> a ) : <nd
 }
 
 val rxDataLinesPre = regex("(?:\r?\n%mdk-data-line=.*(?=\r?\n%mdk-data-line))+")
+
+
+
+
+public function processContentLSP(
+  inName : string, outName : string, content : string, 
+  opts : commandOptions,
+  continue : (formatContext) -> io ()
+) : io () {
+  val styleDir = opts.installDir + "/../styles"
+  val searchDirs = [inName.dirname,outName.dirname,styleDir]
+  val opts0  = opts.options
+
+  content.include(False, inName, outName, searchDirs, opts0) fun(icontent0,lmap) {
+    // remove madoko comments
+    val icontent = icontent0.removeMadokoComments
+
+    // set up options               
+    val date   = now()                             
+    val opts1  = opts0(lineMap=lmap, 
+                       processTimeout=if (opts0.sandbox) then 60000 else opts0.processTimeout,
+                       metadata=opts0.metadata 
+                       + [("docname",inName.stemname),("filename",inName)]
+                       + [("madoko-version",opts0.version)]
+                       + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5)),
+                          ("year",date.year.show),("month",date.month.show2),("day",date.day.show2),
+                          ("hours",date.hours.show2),("minutes",date.minutes.show2),("seconds",date.seconds.show2)] )
+
+    // extract default cite-style if it exists
+    val opts2  = opts1.extractCitestyle(outName)
+
+    val mmopts = opts2.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
+
+    // TODO remove some of these for LSP mode
+
+    // always read dims: even in dynamic mode some pdf math may exist
+    val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",False)
+    val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math)
+
+    val xopts  = opts2(math=(opts2.math)(dim=mdim,svgDefs=svgdefs))
+    val mopts  = mmopts(math=(mmopts.math)(dim=mdim,svgDefs=svgdefs))
+
+    // register languages for highlighting
+    registerColorizers(mopts, searchDirs, icontent);
+
+    // copy early since async latex may start for math
+    if (mopts.copyStyles) { // && !(xopts.sandbox) // allow even in sandbox
+      // if (mopts.embedLimit < 16*1024) {  // only copy standard css style if it will not be embedded
+      tryCopyTextFileFromNoSandboxTo( "madoko.css", styleDir, outName.dirname )
+    }
+
+    processLSP(icontent, xopts, continue)
+  }
+}
+
+function processLSP(content : string, xopts0 : options, continue : (formatContext) -> io ()) : io () {
+  
+  // Just extract metadata and symbols (copied from markdownNormal)
+  // first normalize the input: all tabs to 4 spaces.
+  val fmt = FmtHtml
+  val (options1, src) = parseMeta(xopts0, fmt, content.normalizeSource)
+  val options = options1(metadata = options1.metadata.completeAuthorKeys)
+  val xfull = options.full.maybe(True,id)     
+
+  val icontext  = inlineContext(fmt,options.metadata.dict,
+                                    options.math.dim,
+                                    options.embedinfos, 
+                                    options.citestyle.maybe(citeNumeric,id),
+                                    options.sanitize,options.bench,options.verbose,
+                                    options.math.mode.isStatic,
+                                    options.highlight,options.starBold,options.sandbox,options.prettyAlign) 
+  
+  val (_, fcontext) =
+    parseBody(
+      initialFormatContext(icontext,options.lineMap, options.headingBase,options.pedantic, fmt), 
+      options.lineNo,
+      src,
+      options.metadata, options.tocDepth,
+      options.sectionBase,options.sectionMax)
+   
+  continue(fcontext)
+}
