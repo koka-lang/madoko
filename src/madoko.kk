@@ -99,7 +99,15 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   if (fmt.isFmtHtml) {
     fcontext.inlineContext.labels.list().foreach fun(elem) {
       val (name,label) = elem
-      log("labels","{ \"name\": " + name.json + ", \"text\": " + label.labelText.json + ", \"caption\": " + label.labelCaption.json + " }" );
+      val labelName = "\"name\": " + name.json
+      val labelPos = match(label.labelPosition) {
+        Just((path, lineno)) -> ", \"position\": {\"path\": \"" + path + "\", \"line\":" + lineno.show + "}"
+        Nothing -> ""
+      }
+      val element = ", \"element\": " + label.element.json
+      val text    = ", \"text\": " + label.labelText.json
+      val caption = ", \"caption\": " + label.labelCaption.json
+      log("labels","{" + labelName + labelPos + element + text + caption + " }");
     }
     fcontext.inlineContext.links.list().foreach fun(elem) {
       val (name,link) = elem
@@ -108,6 +116,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
     logEntities(); // log standard entities
     logMetadata(options.metadata);
   }
+
 
   // generate full html/tex if needed
   val res = if (xfull) 
@@ -120,6 +129,25 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   if (options.verbose>=3) then trace("done")
   (res,options)           
 }
+
+function labelPosition(label : label) : maybe<(string, int)> {
+  match(label.labelAttrs.hasKey("data-line")) {
+    Just(info) -> {
+      val (path, lineno) = parseLineInfo(info)
+      Just((path.lastPathSegment, lineno))
+      // if (lineno <= 0 || info.startsWith("0;")) then Nothing else Just((path.lastPathSegment, lineno))
+    }
+    Nothing    -> Nothing    
+  }
+}
+
+public function lastPathSegment( lineInfo : string ) : string {
+  match (lineInfo.find(rxLastPath)) {
+    Nothing   -> lineInfo
+    Just(cap) -> cap.groups[1]
+  }
+}
+val rxLastPath = regex( @";([^:;]+):$")
 
 // Export initial options for JavaScript usage
 public val initialOptions0 = initialOptions();

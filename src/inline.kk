@@ -220,6 +220,7 @@ public function parseLineInfo( lineInfo : string ) : (string,int) {
 val rxDataLine = regex( @"^(.*:)?(\d+)$")
 
 
+// Here the current position is available.
 function formatInlineAcc( context : inlineContext, acc : builder<h>, txt : string, 
                           lineNo : int, linePrefix : string ) : st<h> string
 {
