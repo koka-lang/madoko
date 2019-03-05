@@ -487,21 +487,28 @@ function processLSP(content : string, xopts0 : options, continue : (formatContex
   val options = options1(metadata = options1.metadata.completeAuthorKeys)
   val xfull = options.full.maybe(True,id)     
 
-  val icontext  = inlineContext(fmt,options.metadata.dict,
+  val icontext = inlineContext(fmt, options.metadata.dict,
                                     options.math.dim,
                                     options.embedinfos, 
                                     options.citestyle.maybe(citeNumeric,id),
                                     options.sanitize,options.bench,options.verbose,
                                     options.math.mode.isStatic,
-                                    options.highlight,options.starBold,options.sandbox,options.prettyAlign) 
-  
-  val (_, fcontext) =
+                                    options.highlight,options.starBold,options.sandbox,options.prettyAlign)
+
+  val (warns0, (_, fcontext)) = withLog("warning") { 
     parseBody(
       initialFormatContext(icontext,options.lineMap, options.headingBase,options.pedantic, fmt), 
       options.lineNo,
       src,
       options.metadata, options.tocDepth,
       options.sectionBase,options.sectionMax)
-   
+  }
+  // TODO dont collect warnings stringly typed.
+  log("stdout", warns0)
+  // val warns = fixWarnings(warns0)
+  // if (warns != "") {
+  //   log("stdout", warns)
+  // }
+
   continue(fcontext)
 }

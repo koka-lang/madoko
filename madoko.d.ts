@@ -10,7 +10,8 @@ declare module 'madoko' {
   type DocumentInfo = {
       lineMap: any,
       labels: Label[],
-      context: any
+      context: any,
+      log: string
   }
 
   //(md : string, stdout : string, needRerun : bool, options : options/options, files : string, filesRefer : string, filesWrite : string, labels : string, links : string, customs : string, entities : string) -> <(io :: E)> ()

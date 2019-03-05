@@ -34,7 +34,8 @@ public struct analyzeResults (
   lineMap : lineMap,
   labels: vector<labeledElement>,
   // just for debugging purposes we also include the original formatContext
-  context : formatContext
+  context : formatContext,
+  log: string
 )
 
 public function initialOptions( args : string = "" ) : io options {
@@ -148,18 +149,26 @@ public function markdown( inputName : string, input : string, outdir : string, o
   ()
 }
 
+// Currently the logs are very sparse... Did I omit too much of the
+// processing to catch errors?
 public function analyze(
   inputName : string, content : string, outdir : string,
   opts : options,
   continue : (analyzeResults) -> io ()
 ) : io () { 
+  printRedirect( fun(s) { log("stdout", s) });
+
   val copts = coptions(options = opts, outputDir = outdir, convertTex = False)
   val outName = outputName(inputName, copts)
-  processContentLSP(inputName, outName, content, copts) fun (ctx) {
-    val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
-    val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), ctx)
-    continue(res)
+  withLog("stdout") {
+    processContentLSP(inputName, outName, content, copts) fun (ctx) {
+      val stdout = getLog("stdout")
+      val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
+      val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), ctx, stdout)
+      continue(res)
+    }
   }
+  ()
 }
 
 function labelInfo(elem: (string, label)): labeledElement {
@@ -168,7 +177,7 @@ function labelInfo(elem: (string, label)): labeledElement {
 }
 
 function labelPosition(label : label) : maybe<position> {
-  match(label.labelAttrs.hasKey("data-line")) {
+  match(label.labelAttrs.hasKey("data-line")) { // || label.labelAttrs.hasKey("data-line-first")
     Just(info) -> {
       val (path, lineno) = parseLineInfo(info)
       Just(Position(path.lastPathSegment, lineno))
