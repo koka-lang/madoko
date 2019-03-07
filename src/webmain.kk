@@ -231,6 +231,11 @@ public function analyze(
   ()
 }
 
+
+// Sometimes we don't want to process the full document but only
+// obtain the document structure of the currently open editor.
+// Sadly, parseBlocks does not provide enough positioning information
+// on the blocks ATM.
 public function parseBlocks(text: string): div vector<blockElement> {
   parseBlocks(text, 0, End, mdata = dict()).toBlockElements
 }
