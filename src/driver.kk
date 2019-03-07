@@ -430,7 +430,7 @@ val rxDataLinesPre = regex("(?:\r?\n%mdk-data-line=.*(?=\r?\n%mdk-data-line))+")
 public function processContentLSP(
   inName : string, outName : string, content : string, 
   opts : commandOptions,
-  continue : (formatContext) -> io ()
+  continue : (list<block>, formatContext) -> io ()
 ) : io () {
   val styleDir = opts.installDir + "/../styles"
   val searchDirs = [inName.dirname,outName.dirname,styleDir]
@@ -478,7 +478,7 @@ public function processContentLSP(
   }
 }
 
-function processLSP(content : string, xopts0 : options, continue : (formatContext) -> io ()) : io () {
+function processLSP(content : string, xopts0 : options, continue : (list<block>, formatContext) -> io ()) : io () {
   
   // Just extract metadata and symbols (copied from markdownNormal)
   // first normalize the input: all tabs to 4 spaces.
@@ -495,7 +495,7 @@ function processLSP(content : string, xopts0 : options, continue : (formatContex
                                     options.math.mode.isStatic,
                                     options.highlight,options.starBold,options.sandbox,options.prettyAlign)
 
-  val (warns0, (_, fcontext)) = withLog("warning") { 
+  val (warns0, (blocks, fcontext)) = withLog("warning") { 
     parseBody(
       initialFormatContext(icontext,options.lineMap, options.headingBase,options.pedantic, fmt), 
       options.lineNo,
@@ -510,5 +510,5 @@ function processLSP(content : string, xopts0 : options, continue : (formatContex
   //   log("stdout", warns)
   // }
 
-  continue(fcontext)
+  continue(blocks, fcontext)
 }

@@ -10,8 +10,22 @@ declare module 'madoko' {
   type DocumentInfo = {
       lineMap: any,
       labels: Label[],
+      blocks: Block[],
       context: any,
       log: string
+  }
+  type Block = {
+    kind: string,
+    // the element id, empty if not present
+    id: string,
+    // the tag name, empty if not present
+    name: string,
+    // the child nodes
+    content: Block[],
+    // the element classes
+    classes: string[],
+    // the annotated attributes
+    attributes: any
   }
 
   //(md : string, stdout : string, needRerun : bool, options : options/options, files : string, filesRefer : string, filesWrite : string, labels : string, links : string, customs : string, entities : string) -> <(io :: E)> ()

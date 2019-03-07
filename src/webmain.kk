@@ -17,10 +17,12 @@ import options
 import driver
 import storage
 import mathStatic
+import block         // just for the type block
 import formatBlock   // just the formatContext
 import inline // for inlineContext
 import std/regex
 
+// TODO change to { path, from, to } to express ranges
 public struct position (path: string, line: int)
 
 public struct labeledElement (
@@ -33,10 +35,68 @@ public struct labeledElement (
 public struct analyzeResults (
   lineMap : lineMap,
   labels: vector<labeledElement>,
+  blocks: vector<blockElement>,
   // just for debugging purposes we also include the original formatContext
-  context : formatContext,
+  context : formatContext,  
   log: string
 )
+
+// the type of block nodes we export to js / typescript
+public struct blockElement (
+  // the block kind
+  kind: string,
+  // the element id, empty if not present
+  id: string,
+  // the tag name, empty if not present
+  name: string,
+  // the child nodes
+  content: vector<blockElement>,
+  // the text content
+  text: string,
+  // the classes
+  classes: vector<string>,
+  // attributes of the block node (like "caption")
+  attributes: dict<string>
+  // TODO also include position and range information.
+)
+
+function toBlockElements(bs: list<block>): div vector<blockElement> {
+  vector(bs.map(toBlockElement).concatMaybe)
+}
+
+// TODO also include range information in extracted block structure
+function toBlockElement(b: block): div maybe<blockElement> {
+  match(b) {
+    HLine( attrs ) -> 
+      Just(BlockElement("hline", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals)))
+    Para( text, attrs ) -> 
+      Just(BlockElement("para", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+    Code( text, _, attrs) -> 
+      Just(BlockElement("code", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+    Quote( content, attrs) -> 
+      Just(BlockElement("quote", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+    List( _, content, attrs) -> 
+      Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+    Item( content, attrs) -> 
+      Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+    Heading( _, text, attrs) ->
+      Just(BlockElement("list", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+    // currently table cells are ignored
+    Table( _, _, _, attrs) -> 
+      Just(BlockElement("table", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals)))
+    Div( content, attrs) ->
+      Just(BlockElement("div", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+    Source( text, _, attrs) -> 
+      Just(BlockElement("source", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+    // DefLink( id, link) ->
+    // DefFootnote( id, content) ->
+    // Empty() -> 
+    // Special( name, value, attrs) -> 
+    // Line( text, _, attrs) -> 
+    _ -> Nothing
+  }
+}
+
 
 public function initialOptions( args : string = "" ) : io options {
   val opts = if (args=="") then Options(version=version/version)
@@ -161,14 +221,18 @@ public function analyze(
   val copts = coptions(options = opts, outputDir = outdir, convertTex = False)
   val outName = outputName(inputName, copts)
   withLog("stdout") {
-    processContentLSP(inputName, outName, content, copts) fun (ctx) {
+    processContentLSP(inputName, outName, content, copts) fun (blocks, ctx) {
       val stdout = getLog("stdout")
       val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
-      val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), ctx, stdout)
+      val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), blocks.toBlockElements, ctx, stdout)
       continue(res)
     }
   }
   ()
+}
+
+public function parseBlocks(text: string): div vector<blockElement> {
+  parseBlocks(text, 0, End, mdata = dict()).toBlockElements
 }
 
 function labelInfo(elem: (string, label)): labeledElement {
