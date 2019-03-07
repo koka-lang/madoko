@@ -78,9 +78,9 @@ function toBlockElement(b: block): div maybe<blockElement> {
     List( _, content, attrs) -> 
       Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
     Item( content, attrs) -> 
-      Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("item", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
     Heading( _, text, attrs) ->
-      Just(BlockElement("list", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("heading", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
     // currently table cells are ignored
     Table( _, _, _, attrs) -> 
       Just(BlockElement("table", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals)))
