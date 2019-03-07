@@ -510,21 +510,35 @@ function parseBlocksAccLine( context : blockContext,  acc : list<block>, line : 
 {
   if (src=="") return acc;    
   val (block,next,matched) = matchRules(context.grammar,context(lineNo=line),src,raw)
-  val line2  = line + matched.count("\n")
-  val ofs    = match(matched.find(rxPreWhite)) {
-                 Nothing   -> 0
-                 Just(cap) -> cap.regex/matched.count("\n")
-               }
+  val lines  = matched.count("\n")
+  
+  // Adjust start and end line and exclude preceding and trailing empty lines
+  val start = line + matched.linesMatching(rxPreWhite)  
+  val end   = line + lines - matched.linesMatching(rxPostWhite)
   val block2 = block.adjustAttrs( fun(attrs:attrs) { 
-    attrs.setLineNo(context.lineMap,line+ofs) 
+    attrs.setLineNo(context.lineMap, start).setRange(context.lineMap, start, end)
   })
-  parseBlocksAccLine( context, Cons(block2,acc), line2, src.substr1(next) )
+  parseBlocksAccLine( context, Cons(block2,acc), line + lines, src.substr1(next) )
 }
 
 val rxPreWhite = regex(@"^\s+")
+val rxPostWhite = regex(@"\s+$")
+function linesMatching(s : string, r : regex): int {
+  match(s.find(r)) {
+    Nothing   -> 0
+    Just(cap) -> cap.regex/matched.count("\n")
+  }
+}
 
 function raw( s : string ) : block {
   Line(s)
+}
+
+public function setRange( attrs: attrs, lineMap: lineMap, start: int, end: int) : attrs {  
+  // TODO annotating the element in an attribute to later parse it back seems wrong.
+  // also the file on both should be the same!
+  attrs.addKeyval("data-line-start", translateLine(lineMap, start))
+  attrs.addKeyval("data-line-end", translateLine(lineMap, end))
 }
 
 public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int, overwrite : bool = False ) : attrs {
