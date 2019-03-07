@@ -537,8 +537,7 @@ function raw( s : string ) : block {
 public function setRange( attrs: attrs, lineMap: lineMap, start: int, end: int) : attrs {  
   // TODO annotating the element in an attribute to later parse it back seems wrong.
   // also the file on both should be the same!
-  attrs.addKeyval("data-line-start", translateLine(lineMap, start))
-  attrs.addKeyval("data-line-end", translateLine(lineMap, end))
+  attrs.addKeyval("data-line-start", translateLine(lineMap, start)).addKeyval("data-line-end", translateLine(lineMap, end))
 }
 
 public function setLineNo( attrs: attrs, lineMap: lineMap, lineNo : int, overwrite : bool = False ) : attrs {

@@ -1,6 +1,7 @@
 declare module 'madoko' {
   type Options = any;
   type Position = { path: string, line: number }
+  type Range = { path: string, from: number, to: number }
   type Label = {
       id: string,
       element: string,
@@ -25,7 +26,9 @@ declare module 'madoko' {
     // the element classes
     classes: string[],
     // the annotated attributes
-    attributes: any
+    attributes: any,
+    // the range (lines are 1-based and inclusive)
+    range?: Range
   }
 
   //(md : string, stdout : string, needRerun : bool, options : options/options, files : string, filesRefer : string, filesWrite : string, labels : string, links : string, customs : string, entities : string) -> <(io :: E)> ()

@@ -25,6 +25,9 @@ import std/regex
 // TODO change to { path, from, to } to express ranges
 public struct position (path: string, line: int)
 
+// lines are 1-based and inclusive.
+public struct range (path: string, from: int, to: int)
+
 public struct labeledElement (
   id: string,
   element: string,
@@ -56,38 +59,58 @@ public struct blockElement (
   // the classes
   classes: vector<string>,
   // attributes of the block node (like "caption")
-  attributes: dict<string>
+  attributes: dict<string>,
   // TODO also include position and range information.
+  position: null<range>
 )
 
-function toBlockElements(bs: list<block>): div vector<blockElement> {
-  vector(bs.map(toBlockElement).concatMaybe)
+function range(attr: attrs, inputName: string): maybe<range> {
+  match (attr.hasKey("data-line-start")) {
+    Just(start) -> catch({
+      val end = attr.lookupKey("data-line-end", start)
+      val (path, startLine) = start.extractPosition(inputName)
+      val (_, endLine) = end.extractPosition(inputName)
+      Just(Range(path, startLine, endLine))
+    }, fun(exn) { Nothing })
+    Nothing -> Nothing
+  }
+}
+
+function extractPosition(locationString: string, inputName: string): exn (string, int) {
+  val locs = (inputName + ":" + locationString).split(";").list
+  val last = locs.last.split(":")
+  (last[0], last[1].parseInt.unJust)
+}
+
+// we need the inputName to normalize position information
+function toBlockElements(bs: list<block>, inputName: string): div vector<blockElement> {
+  vector(bs.map(fun(b){ b.toBlockElement(inputName) }).concatMaybe)
 }
 
 // TODO also include range information in extracted block structure
-function toBlockElement(b: block): div maybe<blockElement> {
+function toBlockElement(b: block, inputName: string): div maybe<blockElement> {
   match(b) {
     HLine( attrs ) -> 
-      Just(BlockElement("hline", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("hline", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Para( text, attrs ) -> 
-      Just(BlockElement("para", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("para", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Code( text, _, attrs) -> 
-      Just(BlockElement("code", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("code", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Quote( content, attrs) -> 
-      Just(BlockElement("quote", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("quote", attrs.name, attrs.elem, content.toBlockElements(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     List( _, content, attrs) -> 
-      Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("list", attrs.name, attrs.elem, content.toBlockElements(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Item( content, attrs) -> 
-      Just(BlockElement("item", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("item", attrs.name, attrs.elem, content.toBlockElements(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Heading( _, text, attrs) ->
-      Just(BlockElement("heading", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("heading", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     // currently table cells are ignored
     Table( _, _, _, attrs) -> 
-      Just(BlockElement("table", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("table", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Div( content, attrs) ->
-      Just(BlockElement("div", attrs.name, attrs.elem, content.toBlockElements, "", vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("div", attrs.name, attrs.elem, content.toBlockElements(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Source( text, _, attrs) -> 
-      Just(BlockElement("source", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals)))
+      Just(BlockElement("source", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     // DefLink( id, link) ->
     // DefFootnote( id, content) ->
     // Empty() -> 
@@ -224,7 +247,7 @@ public function analyze(
     processContentLSP(inputName, outName, content, copts) fun (blocks, ctx) {
       val stdout = getLog("stdout")
       val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
-      val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), blocks.toBlockElements, ctx, stdout)
+      val res = AnalyzeResults(ctx.lineMap, vector(labeledElems), blocks.toBlockElements(inputName), ctx, stdout)
       continue(res)
     }
   }
@@ -236,9 +259,9 @@ public function analyze(
 // obtain the document structure of the currently open editor.
 // Sadly, parseBlocks does not provide enough positioning information
 // on the blocks ATM.
-public function parseBlocks(text: string): div vector<blockElement> {
-  parseBlocks(text, 0, End, mdata = dict()).toBlockElements
-}
+// public function parseBlocks(text: string): div vector<blockElement> {
+//   parseBlocks(text, 0, End, mdata = dict()).toBlockElements
+// }
 
 function labelInfo(elem: (string, label)): labeledElement {
   val (id, label) = elem

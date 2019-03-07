@@ -32,6 +32,19 @@ public external maybe( n : null<a> ) : maybe<a> {
   js inline "(#1==null ? $std_core.Nothing : $std_core.Just(#1))"
 }
 
+function unjust( m : maybe<a> ) : exn a {
+  match(m) {
+    Just(x) -> x
+  }
+}
+
+function (||)( m1 : maybe<a>, m2: maybe<a> ) : maybe<a> {
+  match(m1) {
+    Nothing -> m2
+    _       -> m1
+  }
+}
+
 // Warning messages get logged
 public function warning( message : string, logname : string = "warning" ) : () {
   log(logname,"  warning: " + message)
