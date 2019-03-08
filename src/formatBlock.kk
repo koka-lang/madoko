@@ -301,8 +301,9 @@ public function formatBlock( context : formatContext, block : block ) : div stri
       context.fmtTable(Nil,[Row(cols)],cols.map(fun(c){ c.cellAttrs }),attrs)
     }    
     
-    Div(content,attrs) -> {    
+    Div(content,attrs) -> {
       val txt = formatBlocksX(context,content)
+      // trace(txt)
       val rnd = attrs.input
       match (attrs.hasKey("bib-id")) {
         Just(bibid) -> {
@@ -343,7 +344,7 @@ function deriveMathAttrs( parentAttrs : attrs ) {
   attrsNone.addClasses( parentAttrs.classes.filter(fun(c) { c.startsWith("snippet") || c.startsWith("math") } ) )
            .addKeyvals( parentAttrs.keyvals.filter( fun(kv) {
                           val key = kv.fst
-                          key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-")
+                          key.startsWith("color") || key.startsWith("font-") || key.startsWith("snippet-") || key.startsWith("math-") || key.startsWith("data-line-")
                         }))
 }
 

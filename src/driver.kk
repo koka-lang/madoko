@@ -77,6 +77,8 @@ public function processContent( inName : string, outName : string, content : str
 
     // always read dims: even in dynamic mode some pdf math may exist
     val dims = if (mmopts.rebuild) then "" else outName.changeExt(".dimx").readTextFileDef("",False)
+    // parseMathDim also generates the svgdefs which are included at the bottom
+    // of the generated HTML page
     val (mdim,svgdefs,_) = dims.parseMathDim(mmopts.math)
 
     val xopts  = opts2(math=(opts2.math)(dim=mdim,svgDefs=svgdefs))
@@ -197,14 +199,19 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   function phaseHtml() 
   {
     // markdown to html          
-    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions,_,_)))))) = 
+    val (fileEmbed,(mathLocations, (mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions,_,_))))))) = 
                               withLog("embed") {
-                               withLogCompress("math-plain") {
-                                withLogCompress("math-full") {
-                                 withLogCompress("warning") { 
-                                  withLogCompress("aux") { 
-                                   markdown(icontent,xopts0) 
-                                 }}}}}
+                                withLogCompress("math-locations") {
+                                 withLogCompress("math-plain") {
+                                  withLogCompress("math-full") {
+                                   withLogCompress("warning") { 
+                                    withLogCompress("aux") { 
+                                     markdown(icontent,xopts0) 
+                                   }}}}}}
+
+    // write math locations to file
+    tryWriteTextFile(outName.appendStem("-math-locations").changeExt(".csv"), mathLocations)
+
     // write an aux file
     val bibChanged =
       if (logs == "" || !logs.contains("\\citation{")) then []
@@ -285,6 +292,9 @@ function process( inName : string, outName : string, searchDirs : list<string>,
             Just((mdim2,svgdefs)) -> {
               // write html again
               mopts.print("re-aligning math in HTML.")
+
+              mopts.print("Writing out math definitions to svg file")
+              tryWriteTextFile(outName.changeExt(".svg"), svgdefs)
               
               val html2 = markdown(icontent,xopts(math=(xopts.math)(dim=mdim2,svgDefs=svgdefs))).fst
               if (!(tryWriteTextFile(outName,html2))) {
