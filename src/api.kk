@@ -95,64 +95,48 @@ function processContent(
   inName : string, content : string,
   continue : (list<block>, formatContext) -> io ()
 ) : io () {
-  // is this ever used?
-  val outName = "/tmp/madoko/out.mdk"
 
-  val searchDirs = [inName.dirname]
-
-  val opts0 = Options(
+  val initOptions = Options(
     version=version/version,
     lineNoWeb=True,
-    math=Mathoptions(mode = Dynamic), // don't generate math latex
+    math=Mathoptions(mode = Static),
     embedLimit=0,
     verbose=1,
-    copyStyles=False)
+    copyStyles=True)
 
-  // running fastMode destroys positioning
-  val fastMode = False
+  // Just extract metadata and symbols (copied from markdownNormal)
+  // first normalize the input: all tabs to 4 spaces.
+  val (options, src) = parseMeta(initOptions, FmtHtml, content.normalizeSource)
 
-  content.include(fastMode, inName, outName, searchDirs, opts0) fun(icontent0,lmap) {
-    // remove madoko comments
-    val icontent = icontent0 //.removeMadokoComments
+  val icontext = inlineContext(FmtHtml,
+    options.metadata.dict,
+    options.math.dim,
+    options.embedinfos,
+    options.citestyle.maybe(citeNumeric, id),
+    options.sanitize,
+    options.bench,
+    options.verbose,
+    options.math.mode.isStatic,
+    options.highlight,
+    options.starBold,
+    options.sandbox,
+    options.prettyAlign)
 
-    val opts1  = opts0(lineMap=lmap,
-                       processTimeout=if (opts0.sandbox) then 60000 else opts0.processTimeout,
-                       metadata=opts0.metadata)
-
-    // Just extract metadata and symbols (copied from markdownNormal)
-    // first normalize the input: all tabs to 4 spaces.
-    val (options, src) = parseMeta(opts1, FmtHtml, icontent.normalizeSource)
-
-    val icontext = inlineContext(FmtHtml,
-      options.metadata.dict,
-      options.math.dim,
-      options.embedinfos,
-      options.citestyle.maybe(citeNumeric, id),
-      options.sanitize,
-      options.bench,
-      options.verbose,
-      options.math.mode.isStatic,
-      options.highlight,
-      options.starBold,
-      options.sandbox,
-      options.prettyAlign)
-
-    val (warns0, (blocks, fcontext)) = withLog("warning") {
-      parseBody(
-        initialFormatContext(icontext, options.lineMap, options.headingBase, options.pedantic, FmtHtml),
-        options.lineNo,
-        src,
-        options.metadata, options.tocDepth, options.sectionBase, options.sectionMax)
-    }
-    // TODO don't collect warnings stringly typed.
-    log("stdout", warns0)
-    // val warns = fixWarnings(warns0)
-    // if (warns != "") {
-    //   log("stdout", warns)
-    // }
-
-    continue(blocks, fcontext)
+  val (warns0, (blocks, fcontext)) = withLog("warning") {
+    parseBody(
+      initialFormatContext(icontext, options.lineMap, options.headingBase, options.pedantic, FmtHtml),
+      options.lineNo,
+      src,
+      options.metadata, options.tocDepth, options.sectionBase, options.sectionMax)
   }
+  // TODO don't collect warnings stringly typed.
+  log("stdout", warns0)
+  // val warns = fixWarnings(warns0)
+  // if (warns != "") {
+  //   log("stdout", warns)
+  // }
+
+  continue(blocks, fcontext)
 }
 
 
