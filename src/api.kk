@@ -185,32 +185,32 @@ function toBlockInfos(bs: list<block>, inputName: string): div vector<blockInfo>
 // TODO also include range information in extracted block structure
 function toBlockInfo(b: block, inputName: string): div maybe<blockInfo> {
   match(b) {
-    HLine( attrs ) -> 
+    HLine( attrs ) ->
       Just(BlockInfo("hline", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    Para( text, attrs ) -> 
+    Para( text, attrs ) ->
       Just(BlockInfo("para", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    Code( text, _, attrs) -> 
+    Code( text, _, attrs) ->
       Just(BlockInfo("code", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    Quote( content, attrs) -> 
+    Quote( content, attrs) ->
       Just(BlockInfo("quote", attrs.name, attrs.elem, content.toBlockInfos(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    List( _, content, attrs) -> 
+    List( _, content, attrs) ->
       Just(BlockInfo("list", attrs.name, attrs.elem, content.toBlockInfos(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    Item( content, attrs) -> 
+    Item( content, attrs) ->
       Just(BlockInfo("item", attrs.name, attrs.elem, content.toBlockInfos(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Heading( _, text, attrs) ->
       Just(BlockInfo("heading", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     // currently table cells are ignored
-    Table( _, _, _, attrs) -> 
+    Table( _, _, _, attrs) ->
       Just(BlockInfo("table", attrs.name, attrs.elem, vector(), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     Div( content, attrs) ->
       Just(BlockInfo("div", attrs.name, attrs.elem, content.toBlockInfos(inputName), "", vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
-    Source( text, _, attrs) -> 
+    Source( text, _, attrs) ->
       Just(BlockInfo("source", attrs.name, attrs.elem, vector(), text, vector(attrs.classes), dict(attrs.keyvals), attrs.range(inputName).null))
     // DefLink( id, link) ->
     // DefFootnote( id, content) ->
-    // Empty() -> 
-    // Special( name, value, attrs) -> 
-    // Line( text, _, attrs) -> 
+    // Empty() ->
+    // Special( name, value, attrs) ->
+    // Line( text, _, attrs) ->
     _ -> Nothing
   }
 }
