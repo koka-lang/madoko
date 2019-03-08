@@ -3,6 +3,7 @@ module api
 import std/dict
 import std/regex
 import std/log
+import std/path
 
 import backports
 import version
@@ -12,7 +13,11 @@ import formatBlock  // just for formatContext
 import common       // for label, lineMap, and attrs
 import inline       // for parseLineInfo
 import driver       // for outputName, processContentLSP
+import metadata     // for parseMeta
+import madoko       // for normalizeSource, lastPathSegment
+import definitions  // for parseBody
 import options
+import includes
 
 
 // Types that are part of the public API
@@ -35,7 +40,7 @@ public struct documentInfo (
   labels: vector<referenceInfo>,
   blocks: vector<blockInfo>,
   // just for debugging purposes we also include the original formatContext
-  context : formatContext,  
+  context : formatContext,
   log: string
 )
 
@@ -71,25 +76,11 @@ public struct blockInfo (
 // processing to catch errors?
 public function analyze(
   inputName : string, content : string, continue : (documentInfo) -> io ()
-) : io () { 
+) : io () {
   printRedirect( fun(s) { log("stdout", s) });
 
-  // is this ever used?
-  val outDir = "/tmp/madoko"
-
-  val opts = Options(
-    version=version/version, 
-    lineNoWeb=True,
-    math=Mathoptions(mode = Dynamic), // don't generate math latex
-    embedLimit=0,
-    verbose=1,
-    copyStyles=False)
-
-  val copts = CommandOptions(options = opts, outputDir = outDir, convertTex = False)
-  val outName = outputName(inputName, copts)
-
   withLog("stdout") {
-    processContentLSP(inputName, outName, content, copts) fun (blocks, ctx) {
+    processContent(inputName, content) fun (blocks, ctx) {
       val stdout = getLog("stdout")
       val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
       val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
@@ -97,6 +88,71 @@ public function analyze(
     }
   }
   ()
+}
+
+
+function processContent(
+  inName : string, content : string,
+  continue : (list<block>, formatContext) -> io ()
+) : io () {
+  // is this ever used?
+  val outName = "/tmp/madoko/out.mdk"
+
+  val searchDirs = [inName.dirname]
+
+  val opts0 = Options(
+    version=version/version,
+    lineNoWeb=True,
+    math=Mathoptions(mode = Dynamic), // don't generate math latex
+    embedLimit=0,
+    verbose=1,
+    copyStyles=False)
+
+  // running fastMode destroys positioning
+  val fastMode = False
+
+  content.include(fastMode, inName, outName, searchDirs, opts0) fun(icontent0,lmap) {
+    // remove madoko comments
+    val icontent = icontent0 //.removeMadokoComments
+
+    val opts1  = opts0(lineMap=lmap,
+                       processTimeout=if (opts0.sandbox) then 60000 else opts0.processTimeout,
+                       metadata=opts0.metadata)
+
+    // Just extract metadata and symbols (copied from markdownNormal)
+    // first normalize the input: all tabs to 4 spaces.
+    val (options, src) = parseMeta(opts1, FmtHtml, icontent.normalizeSource)
+
+    val icontext = inlineContext(FmtHtml,
+      options.metadata.dict,
+      options.math.dim,
+      options.embedinfos,
+      options.citestyle.maybe(citeNumeric, id),
+      options.sanitize,
+      options.bench,
+      options.verbose,
+      options.math.mode.isStatic,
+      options.highlight,
+      options.starBold,
+      options.sandbox,
+      options.prettyAlign)
+
+    val (warns0, (blocks, fcontext)) = withLog("warning") {
+      parseBody(
+        initialFormatContext(icontext, options.lineMap, options.headingBase, options.pedantic, FmtHtml),
+        options.lineNo,
+        src,
+        options.metadata, options.tocDepth, options.sectionBase, options.sectionMax)
+    }
+    // TODO don't collect warnings stringly typed.
+    log("stdout", warns0)
+    // val warns = fixWarnings(warns0)
+    // if (warns != "") {
+    //   log("stdout", warns)
+    // }
+
+    continue(blocks, fcontext)
+  }
 }
 
 
@@ -173,15 +229,6 @@ function labelPosition(label : label) : maybe<position> {
       Just(Position(path.lastPathSegment, lineno))
       // if (lineno <= 0 || info.startsWith("0;")) then Nothing else Just((path.lastPathSegment, lineno))
     }
-    Nothing    -> Nothing    
-  }
-}
-
-function lastPathSegment( lineInfo : string ) : string {
-  val rxLastPath = regex( @";([^:;]+):$" )
-
-  match (lineInfo.find(rxLastPath)) {
-    Nothing   -> lineInfo
-    Just(cap) -> cap.groups[1]
+    Nothing    -> Nothing
   }
 }
