@@ -27,8 +27,6 @@ import mathStatic
 import texParser
 import includes
 import bibliography
-import formatBlock   // just the formatContext
-import definitions   // for parseBody
 
 public struct runners(
   runPdfLatex : ( srcFile : string, texFile : string, opts : options, content : string, continue : (int) -> io () ) -> io (),
