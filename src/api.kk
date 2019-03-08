@@ -80,21 +80,17 @@ public function analyze(
   printRedirect( fun(s) { log("stdout", s) });
 
   withLog("stdout") {
-    processContent(inputName, content) fun (blocks, ctx) {
-      val stdout = getLog("stdout")
-      val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
-      val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
-      continue(res)
-    }
+    val (blocks, ctx) = processContent(content)
+    val stdout = getLog("stdout")
+    val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
+    val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
+    continue(res)
   }
   ()
 }
 
 
-function processContent(
-  inName : string, content : string,
-  continue : (list<block>, formatContext) -> io ()
-) : io () {
+public function processContent(content : string) : io (list<block>, formatContext) {
 
   val initOptions = Options(
     version=version/version,
@@ -136,7 +132,7 @@ function processContent(
   //   log("stdout", warns)
   // }
 
-  continue(blocks, fcontext)
+  (blocks, fcontext)
 }
 
 
