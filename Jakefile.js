@@ -142,6 +142,20 @@ task("web", [], function() {
   });
 },{async:true})
 
+//-----------------------------------------------------
+// Tasks: api 
+//-----------------------------------------------------
+desc("build madoko api")
+task("api", [], function() {
+  // fixVersion("web/client/editor.html");
+  var args = Array.prototype.slice.call(arguments).join(" ")
+  var cmd = kokaCmd + " -v -l " + args + " " + "api"
+  jake.logger.log("> " + cmd);
+  jake.exec(cmd, {interactive: true}, function(err) {
+    complete();
+  });
+},{async:true})
+
 var localTexDir = "c:/texlive/texmf-local/tex/latex/local";
 desc("setup web");
 task("justcopy", [], function() {
