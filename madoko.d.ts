@@ -33,5 +33,6 @@ declare module 'madoko' {
   export function analyze(
       inputName: string, 
       content: string,
+      resolveIncludes: boolean, // perform includes?
       callback: (DocumentInfo) => any): any;
 }
