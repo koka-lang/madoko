@@ -197,7 +197,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
   function phaseHtml() 
   {
     // markdown to html          
-    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions)))))) = 
+    val (fileEmbed,(mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions,_,_)))))) = 
                               withLog("embed") {
                                withLogCompress("math-plain") {
                                 withLogCompress("math-full") {

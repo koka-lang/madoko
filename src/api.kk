@@ -79,8 +79,19 @@ public function analyze(
 ) : io () {
   printRedirect( fun(s) { log("stdout", s) });
 
+  val options = Options(
+    version=version/version,
+    lineNoWeb=True,
+    math=Mathoptions(mode = Static),
+    embedLimit=0,
+    verbose=1,
+    full=Just(False),
+    copyStyles=False)
+
   withLog("stdout") {
-    val (blocks, ctx) = processContent(content)
+    // TODO speed up again, by adding option to not run `formatBlocks` 
+    //      AT ALL for the presentation compiler.
+    val (_,_,blocks, ctx) = markdown(content, options)
     val stdout = getLog("stdout")
     val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
     val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
@@ -88,53 +99,6 @@ public function analyze(
   }
   ()
 }
-
-
-public function processContent(content : string) : io (list<block>, formatContext) {
-
-  val initOptions = Options(
-    version=version/version,
-    lineNoWeb=True,
-    math=Mathoptions(mode = Static),
-    embedLimit=0,
-    verbose=1,
-    copyStyles=True)
-
-  // Just extract metadata and symbols (copied from markdownNormal)
-  // first normalize the input: all tabs to 4 spaces.
-  val (options, src) = parseMeta(initOptions, FmtHtml, content.normalizeSource)
-
-  val icontext = inlineContext(FmtHtml,
-    options.metadata.dict,
-    options.math.dim,
-    options.embedinfos,
-    options.citestyle.maybe(citeNumeric, id),
-    options.sanitize,
-    options.bench,
-    options.verbose,
-    options.math.mode.isStatic,
-    options.highlight,
-    options.starBold,
-    options.sandbox,
-    options.prettyAlign)
-
-  val (warns0, (blocks, fcontext)) = withLog("warning") {
-    parseBody(
-      initialFormatContext(icontext, options.lineMap, options.headingBase, options.pedantic, FmtHtml),
-      options.lineNo,
-      src,
-      options.metadata, options.tocDepth, options.sectionBase, options.sectionMax)
-  }
-  // TODO don't collect warnings stringly typed.
-  log("stdout", warns0)
-  // val warns = fixWarnings(warns0)
-  // if (warns != "") {
-  //   log("stdout", warns)
-  // }
-
-  (blocks, fcontext)
-}
-
 
 // Computing position and range information
 // ---------------------------------------

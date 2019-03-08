@@ -34,13 +34,13 @@ import std/log
 public function markdown( src : string, 
                           options : options = initialOptions0, 
                           fmt : formatter = FmtHtml 
-                        ) : pure (string,options)
+                        ) : pure (string,options,list<block>,formatContext)
 {
   if (options.xmp) then markdownXmp(src,options,fmt) else markdownNormal(src,options,fmt)
 }
 
 // Process only markdown between <xmp> tags 
-function markdownXmp( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options)
+function markdownXmp( src : string, options : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options,list<block>,formatContext)
 {
   val commented = "~begin htmlraw\n" + src.replaceAll(rxxmp,"\n~end htmlraw\n$2\n~begin htmlraw\n") + "\n~end htmlraw"
   markdownNormal(commented, options, fmt)
@@ -53,7 +53,7 @@ public function normalizeSource( src : string ) : string {
 }
 
 // Takes source markdown input and returns formatted html
-function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options)
+function markdownNormal( src0 : string, options0 : options = initialOptions0, fmt : formatter = FmtHtml ) : pure (string,options,list<block>,formatContext)
 {  
   // first normalize the input: all tabs to 4 spaces.
   val (options1,src) = parseMeta(options0,fmt,src0.normalizeSource)
@@ -127,7 +127,7 @@ function markdownNormal( src0 : string, options0 : options = initialOptions0, fm
   if (!xfull || !(fmt.isFmtTex))  then fmtLatexFull("",options,fcontext.inlineContext.metadata) else ""
   
   if (options.verbose>=3) then trace("done")
-  (res,options)           
+  (res,options,fblocks,fcontext)
 }
 
 function labelPosition(label : label) : maybe<(string, int)> {
