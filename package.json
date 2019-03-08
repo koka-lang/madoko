@@ -20,7 +20,7 @@
     "Academic"
   ],
   "preferGlobal": true,
-  "main": "./lib/api.js",
+  "main": "./lib/madoko.js",
   "bin": {
     "madoko": "./lib/cli.js"
   },
