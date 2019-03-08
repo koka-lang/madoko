@@ -74,6 +74,7 @@ public struct blockInfo (
 //
 // TODO Currently the logs are very sparse... Did I omit too much of the
 // processing to catch errors?
+// TODO add option to skip includes
 public function analyze(
   inputName : string, content : string, continue : (documentInfo) -> io ()
 ) : io () {
@@ -87,17 +88,19 @@ public function analyze(
     verbose=1,
     full=Just(False),
     copyStyles=False)
+  
+  content.include(False, inputName, "out/test.mdk", [inputName.dirname], options) fun(includedContent, lmap) {
 
-  withLog("stdout") {
-    // TODO speed up again, by adding option to not run `formatBlocks` 
-    //      AT ALL for the presentation compiler.
-    val (_,_,blocks, ctx) = markdown(content, options)
-    val stdout = getLog("stdout")
-    val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
-    val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
-    continue(res)
+    withLog("stdout") {
+      // TODO speed up again, by adding option to not run `formatBlocks` 
+      //      AT ALL for the presentation compiler.
+      val (_,_,blocks, ctx) = markdown(includedContent, options(lineMap=lmap))
+      val stdout = getLog("stdout")
+      val labeledElems = ctx.inlineContext.labels.list().map(labelInfo)
+      val res = DocumentInfo(vector(labeledElems), blocks.toBlockInfos(inputName), ctx, stdout)
+      continue(res)
+    }
   }
-  ()
 }
 
 // Computing position and range information
