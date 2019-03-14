@@ -280,7 +280,7 @@ function fmtLatexPolyRow(cells: list<ccell>, col: int) : string {
   match(cells) {
     Nil -> ""
     Cons(cell, rest) -> {
-      val rendered = "\\>[C" + col.show + "]" + cell.content
+      val rendered = "\\>[C" + col.show + "][l]" + cell.content
       rendered + fmtLatexPolyRow(rest, col + cell.span)
     }
   }
