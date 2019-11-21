@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -25,7 +25,7 @@ import texParserBase
 import texParserItems
 
 /* --------------------------------------
-  Latex grammar 
+  Latex grammar
 ---------------------------------------- */
 
 
@@ -68,7 +68,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texcomment1", regex(@"^\\begin{comment}([\s\S]*?)\\end{comment}"), texComment ),
   Rule("texcomment2", regex(@"^(\n *%.*\n(?: *%.*\n)*)"), texComment),
-  Rule("texlcomment", regex(@"^(%.*)"), texComment),  
+  Rule("texlcomment", regex(@"^(%.*)"), texComment),
   Rule("texfigure",   regex(@"^\\begin{(figure|table)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texCaptioned ),
   Rule("texwfigure",  regex(@"^\\begin{wrapfigure}" + optarg + texarg + texarg + @"?([\s\S]*?)\\end{wrapfigure}"), texWrapFigure ),
   Rule("texlabeled",  regex(@"^\\begin{(definition|lemma|theorem|proposition|corollary|proof|example|thm|dfn)(\*)?}" + optarg + @"?([\s\S]*?)\\end{\1\*?}"), texLabeled ),
@@ -84,7 +84,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texnoindent", regex(@"^\\noindent\b([\s\S]*?\n) *\n"), texNoIndent ),
   Rule("texvspacex",  regex(@"^\\vspace\b\*?\s*" + texarg + @"(?=(?:\s|%.*)*[^\\\{\s])([\s\S]*?\n) *(?=\n|\\(?:end|item|begin|noindent)\b)"), texVSpacePara ),
-  
+
   Rule("texminipage", regex(@"^\\begin{minipage}\s*" + optarg + "?" + optarg + "?" + optarg + "?" + texarg ), texBeginMinipage ),
   Rule("texvspace",   regex(@"^\\vspace\b\*?\s*" + texarg), texVSpace ),
   Rule("texhspace",   regex(@"^\\hspace\b\*?\s*" + texarg), texHSpace ),
@@ -102,7 +102,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texonly",     regex(@"^\\(uncover|only|visible)\b\s*" + overlay + "?" + texargg), texUncover ),
   Rule("texbcblock",  regex(@"^\\begin{(" + texenvcaption + @")}\s*" + overlay + "?" + texargg), texBeginCaptionBlock ),
   Rule("texecblock",  regex(@"^\\end{(" + texenvcaption + @")}"), texEndCaptionBlock ),
-  
+
   /* Specials */
   Rule("texinclude",  regex(@"^\\(include(?:only)?|input)\b\s*" + texarg + eol), texInclude ),
   Rule("textitle",    regex(@"^\\(?:maketitle|titlepage)\b" + eol), texMakeTitle ),
@@ -121,7 +121,7 @@ val texGrammar : grammar<string,texContext> = [
   /* Common inline elements */
   Rule("texref",      regex(@"^(~)?\\ref\b" + texargg), texRef ),
   Rule("texverb",     regex(@"^\\(?:verb|lstinline)\*?([!\+%\|\.\^#@])(.*?)\1"), texCode ),
-  
+
   Rule("texmath1",    regex(@"^(?:\$(?:[^\\\$]|\\.)+\$|\\\((?:[^\\]|\\[^\)])*\\\))"), texMathInline ),
   Rule("texmath2",    regex(@"^(?:\$\$(?:[^\\\$]|\\.|\$(?!\$))*\$\$|\\\[(?:[^\\]|\\[^\]])*\\\])"), texMathDisplay ),
   Rule("texmathenv1",  regex(@"^\\begin\{(equation|displaymath)(\*)?\}([\s\S]*?)\\end{\1\2}"), texMathEnv ),
@@ -145,6 +145,8 @@ val texGrammar : grammar<string,texContext> = [
   Rule("cite",        regex(@"^\\(short)?[Cc]ite(?:(author)|(year(?:par)?)|(al)?([pt]|A?N?P?)?(\*)?)\b" + optarg + "?" + optarg + "?" + texarg), texCite),
   Rule("bibinfo",     regex(@"^\\bibinfo\b\s*" + texarg + @"\s*" + texarg), texBibinfo ),
   Rule("bblname",     regex(@"^\\bbl([a-z]+)\b\s*"), texBblName ), // for custom-bib international bst styles
+  Rule("showISSN",    regex(@"^\\show(ISSN|LCCN|CODEN|DOI|ISBN(?:[a-z]*)?|note|articletitle)\b\s*" + texarg), texBibinfo ),
+  Rule("showDOI",     regex(@"^\\urldef\\tempurl" + eol + @"\\url" + eol + texarg + eol + @"\\showDOI\{\\tempurl\}"), texDoi ),
 
   Rule("texsl",       regex(@"^\{\\(?:text)?sl\b" + texargs + @"\}"), texSlanted ),
   Rule("texsl2",      regex(@"^\\{\\slshape\b\s*" + texargs + @"\}"), texSlanted ),
@@ -164,7 +166,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texsf1",      regex(@"^\\textsf\b\s*" + texarg), texSans ),
   Rule("texsf2",      regex(@"^\{\\sffamily\b\s*" + texargs + @"\}"), texSans ),
   Rule("texquote",    regex(@"^\\enquote\b\s*" + texarg), texDquot ),
-  Rule("texccmd",     regex(@"^\\(alert)\b\s*" + texarg), texClassCmd ),  
+  Rule("texccmd",     regex(@"^\\(alert)\b\s*" + texarg), texClassCmd ),
   Rule("texeol",      regex(@"^\\\\" + optarg + "?"), texLineBreak ),
   Rule("texcolor1",   regex(@"^\\(?:text|cell)color\b\s*" + optarg + "?" + texargg + texargg), texTextColor ),
   Rule("texcolor2",   regex(@"^\{\s*\\color\b\s*" + optarg + "?" + texargg + texargs + @"\}"), texTextColor ),
@@ -182,7 +184,7 @@ val texGrammar : grammar<string,texContext> = [
 
   Rule("texdquot",    regex(@"^``((?:[^'\\\n]|\\.|'(?!'))*)''"), texDquot ),
   Rule("texsquot",    regex(@"^`((?:[^'\\\n]|\\.)*)'"), texSquot ),
-  Rule("texdquot1",   regex(@"^``"), texOther ),  
+  Rule("texdquot1",   regex(@"^``"), texOther ),
 
   Rule("texrule",     regex(@"^\\rule\b\s*" + optarg + "?" + texarg + texarg ), texRule ),
 
@@ -197,7 +199,7 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texignore2",  regex(@"^\\(" + texignore2 + @")\b\s*" + optargs + texargg + texargg), texAlwaysIgnore4 ),
   Rule("texignore1",  regex(@"^\\(" + texignore1 + @")\b\s*" + optargs + texarg), texAlwaysIgnore3 ),
   Rule("texignore0",  regex(@"^\\(" + texignore0 + @")\b\s*" + optargs), texAlwaysIgnore ),
-  
+
   Rule("texenvbegin", regex(@"^\\begin\{([a-zA-Z@]+)(\*)?\}\s*" + overlay + "?" + optarg + @"?\s*"), texEnvBegin),
   Rule("texenvend",   regex(@"^\\end\{([a-zA-Z@]+)\*?\}\s*"), texEnvEnd),
 
@@ -212,19 +214,19 @@ val texGrammar : grammar<string,texContext> = [
   Rule("texraw1",     regex(@"^\\" + texRawCmd1 + @"\b\s*" + optargs + texarg), texRaw ),
   Rule("texraw2",     regex(@"^\\" + texRawCmd2 + @"\b\s*" + optargs + texarg + texarg), texRaw ),
 
-  Rule("texgroup",    regex(@"^\{" + texargs + @"\}" ), texGroup ),  
+  Rule("texgroup",    regex(@"^\{" + texargs + @"\}" ), texGroup ),
   Rule("texcmd2",     regex(@"^\\(" + texcmd2 + @")\b\s*" + optargs + texarg + optargs + texarg), texIgnore ),
   Rule("texcmd1",     regex(@"^\\(" + texcmd1 + @")\b\s*" + optargs + texarg), texIgnore ),
   //Rule("texcmd0",     regex(@"^\\(" + texcmd0 + @")\b\s*" + optargs), texIgnore ),
   Rule("texcmd",      regex(@"^(\\[a-zA-Z@]+)\b\s*(" + optargs + ")"), texGenericCommand ),
 
   Rule("texchar",     regex(@"^\\[^a-zA-Z]"), texChar ),
-  
+
   Rule("texother",    regex(@"^[\s\S]"), texOther ),
 ]
 
 /* --------------------------------------
-  Parse TeX  elements 
+  Parse TeX  elements
 ---------------------------------------- */
 
 
@@ -234,7 +236,7 @@ public function parseTex( txt : string, id: string = "", citestyle : citestyle =
   val normTxt = txt.replaceAll(regex(@"\r\n?"),"\n").replaceAll(regex(@"\t"),"   ")
                  /*
                  // strip initial comments
-                 .replaceAll(regex(@"^(\s|%.*)+"),"") 
+                 .replaceAll(regex(@"^(\s|%.*)+"),"")
                  // strip off comments
                  // little conservative but % sometimes occurs inside url's
                  .replaceAll(rxTexComment, fun(cap) {
@@ -261,6 +263,5 @@ function parseTexAcc( context : texContext, acc : builder<h>, txt : string ) : s
 {
   if (txt=="") return acc.build
   val (s,next,_) = matchRules(context.grammar,context,txt,id)
-  parseTexAcc(context, acc.append(s), txt.substr1(next))  
+  parseTexAcc(context, acc.append(s), txt.substr1(next))
 }
-
