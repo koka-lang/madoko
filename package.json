@@ -1,7 +1,7 @@
 {
   "name": "madoko",
   "author": "Daan Leijen, Microsoft Corp.",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "homepage": "http://madoko.codeplex.com",
   "description": "Madoko is a fast scholarly Markdown processor written in Koka",
   "licenses": [
@@ -48,6 +48,6 @@
   },
   "repository": {
     "type": "hg",
-    "url": "https://hg.codeplex.com/madoko"
+    "url": "https://github.com/koka-lang/madoko"
   }
 }

@@ -1,5 +1,12 @@
 {
   "log" : [
+    { "version": "1.1.7",
+      "date": "2020-02-05",
+      "updates": [
+        "Fixes for TexLive 2019",
+        "Update ACMart style template, fix doi references"
+      ]
+    },
     { "version": "1.1.6",
       "date": "2018-01-16",
       "updates": [
@@ -145,7 +152,7 @@
         "Fix rendering of table-of-contents in LaTeX to do nicer line breaking",
         "Fix file path encoding in Dropbox for Chinese characters"
       ]
-    }, 
+    },
     { "version": "1.0.0-rc2",
       "date": "2016-01-11",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
@@ -160,7 +167,7 @@
         "Fix auto-scroll error in the preview",
         "Fix file path encoding in Onedrive for Chinese characters"
       ]
-    }, 
+    },
     { "version": "1.0.0-rc1",
       "date": "2016-01-04",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icon (or delete it manually from the 'out' folder).",
@@ -171,7 +178,7 @@
         "Improved error locations for citations",
         "Various small bug fixes for CSL styles"
       ]
-    }, 
+    },
     { "version": "1.0.0-rc",
       "date": "2015-12-29",
       "alert": "The standard prelude has changed: please re-load the 'prelude.mdk' in the file selection menu by pressing the grey reload icons (or deleting them manually from the 'out' folder).",
@@ -189,7 +196,7 @@
       "date": "2015-12-15",
       "updates": [
          "Support running Madoko/LaTex locally through [madoko-local](https://www.npmjs.com/package/madoko-local)",
-         "Support `page-break-before` and `page-break-after` attributes"         
+         "Support `page-break-before` and `page-break-after` attributes"
       ]
     },
     { "version": "0.9.22-beta",
@@ -219,7 +226,7 @@
          "Reduce mathematics and image size for HTML output by 2.",
          "Syntax highlighted tokens can now be fully styled within Madoko: use `.token.keyword { color: blue }` for example.",
          "Improved mathematics and preformatted code output for LaTeX.",
-         "Properly merge files that were deleted on the server.", 
+         "Properly merge files that were deleted on the server.",
          "Add `Tex Doc Header` metadata key for including TeX commands after `\\begin{document}`.",
          "Improve handling of `display:none` elements",
          "Enable debugging of included Javascript fragments",
@@ -245,7 +252,7 @@
         "Improve LaTeX running times",
         "Enable microtype typography (character protrusion and font expansion) in PDF output",
         "Fix bug where images with uppercase extensions were not correctly embedded",
-        "Fix default Mathjax link for dynamic math"        
+        "Fix default Mathjax link for dynamic math"
       ]
     },
     { "version": "0.9.16-beta",
@@ -272,7 +279,7 @@
         "Fix bug where language definitions were not found on case-sensitive file systems.",
         "Improved error messages for missing fonts in LaTeX.",
         "Improved error locations for math definitions",
-        "Fixed bug where documents hosted on HTTP were not displayed correctly."        
+        "Fixed bug where documents hosted on HTTP were not displayed correctly."
       ]
     },
     { "version": "0.9.14-beta",
@@ -281,7 +288,7 @@
         "Improved performance of math and PDF generation.",
         "Use new Onedrive cloud storage API.",
         "Improved security of token management; re-logins may be required.",
-        "Improved CSRF mitigation and token revokation.",        
+        "Improved CSRF mitigation and token revokation.",
         "Fixed bug in group replacement with `\\` escapes.",
         "Fixed bug in '&lt;!--meta' handling of whitespace."
       ]
@@ -342,7 +349,7 @@
         "The `References` header is now part of the `[BIB]` element for better compatibility with LaTeX; remove any explicit `References` header in older documents.",
         "Support for `CSS header` and `Tex Header` metadata keys.",
         "Support for sub-figures using `~SubFigure` and `~SubFigureRow`",
-        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules."       
+        "Every madoko document now has a implicit `~Body` element around everything that can be styled though metadata rules."
       ]
     },
     {
@@ -363,7 +370,7 @@
         "Fix infinite reloading bug.",
         "Fixed syntax highlighting of `.md` files.",
         "Fix spell checking on IE.",
-        "Various fixes in LaTeX madoko style files."        
+        "Various fixes in LaTeX madoko style files."
       ]
     }
   ]
