@@ -21,10 +21,10 @@ the `madoko-local` program:
 ```
 and that's it :-)
 
-# Usage 
+# Usage
 
 Simply run the `madoko-local` program with the directory that you would
-like to access as an argument. Everything in that directory, and all its 
+like to access as an argument. Everything in that directory, and all its
 sub-directories will be accessible to Madoko. Here we run it with access
 to the current directory:
 ```
@@ -70,10 +70,10 @@ Usage:
 
 Arguments:
 
-* `mount-directory` 
-  : The server only provides access to files and subdirectories under the 
-    mount directory but not outside of it. If not given, the last specified 
-    directory is used (which is stored in the local configuration file). 
+* `mount-directory`
+  : The server only provides access to files and subdirectories under the
+    mount directory but not outside of it. If not given, the last specified
+    directory is used (which is stored in the local configuration file).
     If this is the first run the current working directory is used.
 
 Options:
@@ -90,10 +90,10 @@ Options:
     to generate bibliographies. This means you are no longer dependent
     on the server to run LaTeX for you. This flag requires that you have
     installed both Madoko (`npm install -g madoko`) and
-    LaTeX -- it is recommended to use  the latest [TexLive] _simple_ (or _full_) 
+    LaTeX -- it is recommended to use  the latest [TexLive] _simple_ (or _full_)
     installation which is also used on the Madoko server.       
 * `--verbose[=<n>]`
-  : Emit more tracing messages. 
+  : Emit more tracing messages.
     Set `n` to 2 to be the most verbose.
 * `--secret[=secret]`
   : If no secret is provided, a new random secret is
@@ -112,20 +112,20 @@ Options:
     specified `url`. Only specify trusted websites here
     since that website can obtain local disk access!    
 * `--port=<n>`
-  : Use the specified port to serve `madoko-local`. 
-    This can be useful if you have other servers running that 
-    already use port 80.
+  : Use the specified port to serve `madoko-local`.
+    This can be useful if you have other servers running that
+    already use port 8080.
 * `--rundir=<dir>`,
   : The directory under which Madoko stores temporary files when
-    running Madoko (if the `--run` flag is present). Defaults to 
+    running Madoko (if the `--run` flag is present). Defaults to
     `<homedir>/.madoko/run`.
 * `--runcmd=<cmd>`,
   : The command to use when running Madoko locally. By default this
-    is `madoko`. 
+    is `madoko`.
 * `--runflags=<flags>`,
   : Extra flags to pass to the Madoko program when running locally.
     These flags are appended to the standard flags, namely:
-    `-vv -mmath-embed:512 --odir=out --sandbox`. 
+    `-vv -mmath-embed:512 --odir=out --sandbox`.
 
 `madoko-local` stores the last generated secret and last used
 mount-directory in the local configuration file at
@@ -137,12 +137,12 @@ When you pass the `--run` flag, the `madoko-local` program will not
 only serve files, but also run the local Madoko installation to generate
 PDF's, render mathematics, or generate the bibliography. This means that
 the Madoko web server is only used for the editing environment and updates
--- all document processing will be done locally. 
+-- all document processing will be done locally.
 
 When running locally, `madoko-local` will store
 files temporarily under the `<rundir>/<temp-name>` directory where it runs
 Madoko with the `--sandbox` flag to restrict access to files under that
-directory only. 
+directory only.
 
 When running Madoko locally, you need to have both Madoko and LaTeX installed.
 Madoko can be installed through the Node package manager as:
@@ -151,12 +151,12 @@ Madoko can be installed through the Node package manager as:
 ```
 For LaTeX, the latest [TexLive] full installation is recommended since it
 is also used on the Madoko server and it respects the `openin_any` and
-`openout_any` settings which are needed to run LaTeX safely in a sandboxed mode. 
+`openout_any` settings which are needed to run LaTeX safely in a sandboxed mode.
 Also, for rendering of mathematics, you need to ensure you have
 `dvisvgm` version 1.14 or higher installed. Instructions on how to
 upgrade `dvisvgm` can be found in the [reference manual][dvisvgm].
 
-[dvisvgm]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#dvisvgm 
+[dvisvgm]: http://research.microsoft.com/en-us/um/people/daan/madoko/doc/reference.html#dvisvgm
 
 # Security
 

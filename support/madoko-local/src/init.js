@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -43,9 +43,9 @@ var config = {
   configdir : null,             // save config info here ($HOME/.madoko)
   logdir    : null,             // save log files here (<configdir>/log)
   mountdir  : null,             // the local directory to give access to.
-  port      : 80,
+  port      : 8080,
   origin    : "https://www.madoko.net",
-  secret    : null, 
+  secret    : null,
   verbose   : 0,
   limits    : {
     fileSize    : 64*mb,
@@ -77,7 +77,7 @@ Options
   .option("--runflags <opts>", "pass extra options <opts> to the madoko program")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
   .option("--rmdelay <secs>","delay before run directory is removed", parseInt )
-  
+
 Options.on("--help", function() {
   console.log([
     "  Notes:",
@@ -102,7 +102,7 @@ function initializeConfig() {
   if (Options.homedir) config.homedir = Options.homedir;
   config.configdir = Util.combine(config.homedir, ".madoko");
   config.logdir = Util.combine(config.configdir,"log");
-  
+
   // Try to read local config file
   var configFile  = Path.join(config.configdir,"config.json");
   var localConfig = Util.jsonParse(Util.readFileSync(configFile, {encoding:"utf8"}, "{}" ));
@@ -116,7 +116,7 @@ function initializeConfig() {
   }
   else {
     // generate a secret
-    config.secret = Util.secureHash(12);    
+    config.secret = Util.secureHash(12);
 
     // write back secret to localConfig...
     localConfig.secret = config.secret;
@@ -140,9 +140,9 @@ function initializeConfig() {
 
   // Run
   if (Options.run) {
-    if (typeof Options.runcmd === "string") 
+    if (typeof Options.runcmd === "string")
       config.run = Options.runcmd;
-    else 
+    else
       config.run = "madoko";
 
     if (typeof Options.runflags === "string") {
