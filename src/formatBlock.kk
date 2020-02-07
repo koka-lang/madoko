@@ -230,8 +230,10 @@ public function formatBlock( context : formatContext, block : block ) : div stri
           // context.logLineInfo(parentAttrs)
           context.inlineContext.fmtMath(True,txt.mathPreBlock,parentAttrs.deriveMathAttrs,getLineInfo(parentAttrs))
         }
+        MathPoly -> {
+          context.inlineContext.fmtPoly(txt, parentAttrs, getLineInfo(parentAttrs))
+        }
         MathDefs  -> {
-          //context.logLineInfo(parentAttrs)
           val lineInfo = getLineInfo(parentAttrs)
           val mtxt = txt.escapeMath(context.fmt)
           match(context.fmt) {

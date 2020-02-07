@@ -298,6 +298,7 @@ public function extendAttrs( attrs0 : attrs, attrsStr : string, source : string 
               elif (v=="math") then Math
               elif (v=="mathpre") then MathPre
               elif (v=="mathdefs") then MathDefs
+              elif (v=="mathpoly") then MathPoly
               elif (v=="normal") then Markdown()
               elif (v=="markdown") then Markdown()
               elif (v=="htmlonly") then Markdown(Just(FmtHtml))

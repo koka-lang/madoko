@@ -263,7 +263,27 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
               head.fmtRows("th",colfmts,defcolwidth) + "\n" +
               body.fmtRows(td,colfmts,defcolwidth) +
               "\\end{" + table + "}\\end{mdtabular}\n"
-  attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])              
+  attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])
+}
+
+public function fmtLatexPolyTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
+  val table = attrs.getTableEnv
+  val cols = list(1, ct.columns)
+  val colDefs = cols.map(fun(col) { "\\column{C" + col.show + "}{l}%mdk\n" })
+  val rowss = ct.rows.map(fun(row) { fmtLatexPolyRow(row, 1) })
+  val content =
+      "\\begin{mdmathpre}\\begin{pmboxed}%mdk\n" + colDefs.join("") + rowss.join("\\\\%mdk\n") + "%mdk\n\\end{pmboxed}\\end{mdmathpre}%mdk"
+  texEnv("",content,attrs.addClass("para-block"))
+}
+
+function fmtLatexPolyRow(cells: list<ccell>, col: int) : string {
+  match(cells) {
+    Nil -> ""
+    Cons(cell, rest) -> {
+      val rendered = "\\>[C" + col.show + "]" + cell.content
+      rendered + fmtLatexPolyRow(rest, col + cell.span)
+    }
+  }
 }
 
 type line {

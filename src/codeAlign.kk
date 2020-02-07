@@ -77,6 +77,8 @@ public function codeAlign( txt : string, sep : int = 2 ) : codeTable
   val acols = colss.merge 
   //trace("\nalign cols: " + acols.map(show).join(","))
   val rows  = zipWith(ls,colss) fun(line,cols){ makeRow(acols,line,cols,sep) }
+  // trace("\nrows:\n" + rows.map(fun(row) { row.map(show).join(",") }).join("\n"))
+
   CodeTable( acols.length + 1, rows )
 }
 
