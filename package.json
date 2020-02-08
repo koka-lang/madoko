@@ -39,9 +39,9 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "amdefine": ">=0.0.4",
-    "requirejs": ">=2.1",
-    "mkdirp": ">=0.3.5"
+    "amdefine": "^1.0.1",
+    "mkdirp": "^0.3.5",
+    "requirejs": "^2.3.6"
   },
   "devDependencies": {
     "jake": ">=0.7.6"
