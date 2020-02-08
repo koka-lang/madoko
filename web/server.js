@@ -831,6 +831,7 @@ function encrypt(secret,value) {
 
 function decrypt(secret,value) {
   var decipher = crypto.createDecipher('aes256', secret);
+  //decipher.setAutoPadding(false);
   var decrypted = decipher.update(value, 'base64', 'utf8') + decipher.final('utf8');
   return decrypted;
 }
