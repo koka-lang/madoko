@@ -34,7 +34,7 @@ var webclient = path.join(web,"client");
 // Then set it to the older version:
 //
 // > cd koka-0.6
-// > git checkout v0.6.0-dev
+// > git checkout v0.6.1-dev   (or v0.6.x-dev)
 // > npm install
 //
 // and build the release version:
@@ -47,11 +47,11 @@ var kokaExe   = path.join(kokaDir,"out/release/koka-0.6.0-dev")
 var testDir   = "test";
 
 var kokaFlags = "-i" + sourceDir + " -i" + libraryDir + " " + (process.env.kokaFlags || "");
-var kokaCmd = kokaExe + " " + kokaFlags + " -c -o" + outputDir + " --outname=" + main + " " 
+var kokaCmd = kokaExe + " " + kokaFlags + " -c -o" + outputDir + " --outname=" + main + " "
 
 
 //-----------------------------------------------------
-// Tasks: compilation 
+// Tasks: compilation
 //-----------------------------------------------------
 task("default",["madoko"]);
 
@@ -68,7 +68,7 @@ task("madoko", [], function(cs) {
   fixVersion();
   var cmd = kokaCmd + " -v " + args + " " + maincli;
   jake.logger.log("> " + cmd);
-  jake.exec(cmd, {interactive: true}, function() { 
+  jake.exec(cmd, {interactive: true}, function() {
     jake.cpR(path.join(sourceDir,"cli.js"), outputDir);
     ["monarch/monarch.js",
      "csl/bibtex-parse.js",
@@ -79,7 +79,7 @@ task("madoko", [], function(cs) {
     ].forEach( function(contrib) {
       jake.cpR(path.join(contribDir,contrib), outputDir);
     });
-    complete(); 
+    complete();
   })
 },{async:true});
 
@@ -116,7 +116,7 @@ task("copystyles", [], function() {
 });
 
 //-----------------------------------------------------
-// Tasks: clean 
+// Tasks: clean
 //-----------------------------------------------------
 desc("remove all generated files.");
 task("clean", function() {
@@ -129,7 +129,7 @@ task("clean", function() {
 });
 
 //-----------------------------------------------------
-// Tasks: web 
+// Tasks: web
 //-----------------------------------------------------
 desc("build web madoko")
 task("web", [], function() {
@@ -148,7 +148,7 @@ task("justcopy", [], function() {
   // copy all madoko sources
   var js = new jake.FileList().include(path.join(outputDir,"*.js"));
   copyFiles(outputDir,js.toArray(),path.join(webclient,"lib"));
-  
+
   // copy style, language, and image files
   jake.mkdirP(path.join(webclient,path.join(styleDir,"lang")));
   jake.mkdirP(path.join(webclient,path.join(styleDir,"images")));
@@ -162,17 +162,17 @@ task("justcopy", [], function() {
                               .include(path.join(styleDir,"locales","*.xml"))
                               .include(path.join(styleDir,"scripts","*.js"));
   copyFiles(styleDir,js.toArray(),path.join(webclient,styleDir));
-  
+
   js     = new jake.FileList().include(path.join(contribDir,"styles","*.css"))
                               .include(path.join(contribDir,"styles","*.mdk"))
                               .include(path.join(contribDir,"styles","*.bib"))
                               .include(path.join(contribDir,"styles","*.cls"));
   copyFiles(path.join(contribDir,"styles"),js.toArray(),path.join(webclient,styleDir));
-  
+
   js     = new jake.FileList().include(path.join(contribDir,"images","*.png"))
                               .include(path.join(contribDir,"images","*.pdf"));
   copyFiles(contribDir,js.toArray(),path.join(webclient,styleDir));
-  
+
   jake.mkdirP(path.join(webclient,"templates","style"));
   var templateDir = path.join(contribDir,"templates");
   js     = new jake.FileList().include(path.join(templateDir,"*"))
@@ -195,13 +195,13 @@ task("justcopy", [], function() {
   var sty = new jake.FileList().include(path.join(styleDir,"*.sty"));
   // copyFiles(styleDir,sty.toArray(),localTexDir);
   copyFiles(styleDir,sty.toArray(),path.join(webclient,styleDir))
-}); 
+});
 
 task("webcopy",["web","justcopy"], function() {
 });
 
 //-----------------------------------------------------
-// Tasks: test 
+// Tasks: test
 //-----------------------------------------------------
 desc("run tests.\n  test[--extra]    # run tests for extensions.");
 task("test", ["madoko"], function() {
@@ -210,29 +210,29 @@ task("test", ["madoko"], function() {
   testCmd = "node test " + testFlags + args.filter(function(s){ return (s.substr(0,2) == "--"); }).join(" ")
   jake.log("> " + testCmd)
   jake.exec(testCmd, {printStdout: true, printStderr: true})
-}); 
+});
 
 //-----------------------------------------------------
-// Tasks: bench 
+// Tasks: bench
 //-----------------------------------------------------
 desc("run benchmark.\n  bench[--quick]   # run the bench mark in quick mode.");
 task("bench", [], function() {
-  testFlags=(process.env.testFlags||"") 
+  testFlags=(process.env.testFlags||"")
   args = Array.prototype.slice.call(arguments)
   testCmd = "node test --bench --gfm " + testFlags + args.join(" ")
   jake.log("> " + testCmd)
   jake.exec(testCmd,{interactive:true})
-}); 
+});
 
 //-----------------------------------------------------
 // Tasks: doc
 //-----------------------------------------------------
-desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")  
+desc("generate documentation.\n  doc[--pdf]       # generate pdf too (using LaTeX).")
 task("doc", [], function() {
   var docout = "out";
   args = Array.prototype.slice.call(arguments).join(" ");
   var pngs = new jake.FileList().include(path.join("doc","*.png"));
-  copyFiles("doc",pngs.toArray(),path.join("doc",docout));  
+  copyFiles("doc",pngs.toArray(),path.join("doc",docout));
   process.chdir("doc");
   mdCmd = "node ../lib/cli.js -v --odir=" + docout + " " + args + " reference.mdk mathdemo.mdk slidedemo.mdk";
   jake.log("> " + mdCmd);
@@ -268,19 +268,19 @@ task("publish", [], function () {
 //-----------------------------------------------------
 // Tasks: line count
 //-----------------------------------------------------
-desc("line count.")  
+desc("line count.")
 task("linecount", [], function() {
   var sources = new jake.FileList().include(path.join(sourceDir,"*.kk"));
   // var sources = new jake.FileList().include(path.join("lib","*.js"));
   var src = sources.toArray().map( function(file) { return fs.readFileSync(file,{encoding:"utf8"}); }).join()
   //xsrc     = src.replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t\r]*\n|^[ \t]*\/\/.*\n/gm, "")
   comments = lineCount(src.match(/^[ \t]*\/\*[\s\S]*?\*\/[ \t\r]*\n|^[ \t]*\/\/.*\n/gm).join())
-  blanks   = src.match(/\r?\n[ \t]*(?=\r?\n)/g).length  
+  blanks   = src.match(/\r?\n[ \t]*(?=\r?\n)/g).length
   total    = lineCount(src)
-  jake.log("total lines   : " + total)  
+  jake.log("total lines   : " + total)
   jake.log(" source lines : " + (total-comments-blanks))
-  jake.log(" comment lines: " + comments) 
-  jake.log(" blank lines  : " + blanks ) 
+  jake.log(" comment lines: " + comments)
+  jake.log(" blank lines  : " + blanks )
 });
 
 function lineCount(s) {
@@ -291,8 +291,8 @@ function lineCount(s) {
 // Tasks: documentation generation & editor support
 //-----------------------------------------------------
 var cmdMarkdown = "node " + path.join(outputDir,maincli + ".js");
-          
-desc("create source documentation.")  
+
+desc("create source documentation.")
 task("sourcedoc", [], function(mode) {
   jake.logger.log("build documentation");
   var out = outputDir + "doc"
@@ -322,11 +322,11 @@ task("sublime", function(sversion) {
   var sversion = sversion || "2"
   if (process.env.APPDATA) {
     sublime = path.join(process.env.APPDATA,"Sublime Text " + sversion);
-  } 
+  }
   else if (process.env.HOME) {
-    if (path.platform === "darwin") 
+    if (path.platform === "darwin")
       sublime = path.join(process.env.HOME,"Library","Application Support","Sublime Text " + sversion);
-    else 
+    else
       sublime = path.join(process.env.HOME,".config","sublime-text-" + sversion);
   }
   sublime = path.join(sublime,"Packages");
@@ -339,7 +339,7 @@ task("sublime", function(sversion) {
     var sublimeCS = path.join(sublime,dirCS);
 
     jake.mkdirP(sublimeCS);
-    jake.cpR(path.join("support","sublime-text","Snow.tmTheme"),sublimeCS);    
+    jake.cpR(path.join("support","sublime-text","Snow.tmTheme"),sublimeCS);
     jake.cpR(path.join("support","sublime-text","madoko"),sublime);
   }
 });
@@ -356,7 +356,7 @@ var usageInfo = [
 function showHelp() {
   jake.logger.log(usageInfo);
   jake.showAllTaskDescriptions(jake.program.opts.tasks);
-  process.exit();  
+  process.exit();
 }
 
 desc("show this information");
@@ -385,12 +385,12 @@ function getVersion() {
     }
   }
   return "<unknown>"
-} 
+}
 
 
 function fixVersion(fname) {
   fname = fname || path.join(sourceDir,"version.kk");
-  
+
   var version = getVersion();
   var content1 = fs.readFileSync(fname,{encoding: "utf8"});
   if (content1) {
@@ -399,14 +399,14 @@ function fixVersion(fname) {
     if (content1 !== content2) {
       jake.logger.log("updating version string in '" + fname + "' to '" + version + "'")
       fs.writeFileSync(fname,content2,{encoding: "utf8"});
-    } 
+    }
   }
 }
 
 function fileExist(fileName) {
   var stats = null;
   try {
-    stats = fs.statSync(fileName);    
+    stats = fs.statSync(fileName);
   }
   catch(e) {};
   return (stats != null);
@@ -417,12 +417,12 @@ function fileExist(fileName) {
 function copyFiles(rootdir,files,destdir) {
   rootdir = rootdir || "";
   rootdir = rootdir.replace(/\\/g, "/");
-  jake.mkdirP(destdir);        
+  jake.mkdirP(destdir);
   files.forEach(function(filename) {
     // make relative
     var destname = path.join(destdir,(rootdir && filename.lastIndexOf(rootdir,0)===0 ? filename.substr(rootdir.length) : filename));
-    var logfilename = (filename.length > 30 ? "..." + filename.substr(filename.length-30) : filename);    
-    var logdestname = (destname.length > 30 ? "..." + destname.substr(destname.length-30) : destname);    
+    var logfilename = (filename.length > 30 ? "..." + filename.substr(filename.length-30) : filename);
+    var logdestname = (destname.length > 30 ? "..." + destname.substr(destname.length-30) : destname);
     //jake.logger.log("cp -r " + logfilename + " " + logdestname);
     jake.cpR(filename,path.dirname(destname));
   })
