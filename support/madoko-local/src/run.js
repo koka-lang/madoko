@@ -165,7 +165,8 @@ function madokoRunIn( config, userpath, docname, files, target ) {
   return saveFiles( userpath, files ).then( function() {
     Sandbox.getSafePath(userpath,docname); // is docname safe?
     var tgtflag = (target===Target.Pdf ? " --pdf" : (target===Target.TexZip ? " --texzip" : ""));
-    var flags = "-vv --verbose-max=0 -mmath-embed:512 -mmath-concurrency:1 -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
+    var flags = "-vv --verbose-max=0 -mmath-embed:512 -mmath-concurrency:" + config.concurrency.toString() +
+                " -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
     var extraflags = config.runflags || "";
     var timeout = (target>Target.Math ? config.limits.timeoutPDF : config.limits.timeoutMath);
     var startTime = Date.now();

@@ -1,9 +1,10 @@
 {
   "log": [
-    { "version": "0.9.3",
+    { "version": "0.9.4",
       "date"   : "2020-02-14",
       "updates": [
-        "More liberal timeouts"
+        "More liberal timeouts",
+        "Add concurrency option"
       ]
     },
     { "version": "0.9.1",

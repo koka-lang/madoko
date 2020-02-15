@@ -11,6 +11,8 @@ standard cloud storage (like Dropbox) or are already using
 a particular Git repository but still want to have the
 rich editing experience provided by Madoko.net.
 
+It is also useful to render all LaTeX on a local machine.
+
 # Installation
 
 Ensure you have [Node.js] installed on your system. When that
@@ -28,10 +30,11 @@ like to access as an argument. Everything in that directory, and all its
 sub-directories will be accessible to Madoko. Here we run it with access
 to the current directory:
 ```
-> madoko-local -l .
+> madoko-local -r -l .
 listening on           : http://localhost:8080
 connecting securely to : https://www.madoko.net
 serving files under    : C:\Users\dknuth\docs
+running madoko using   : madoko  (concurrency: 4)
 
 ---------------------------------------------------------------
 access server at       : http://localhost#secret=OsuwK3HbMoI7
@@ -41,6 +44,10 @@ This starts a local server that only listens on the local host and does
 not accept connections from outside. It also shows that it connects using
 secure https with the Madoko website, and which local directory is
 accessible within Madoko.
+
+The `-r` flag also runs Madoko on the local machine to render math or PDF
+using LaTeX (without `-r` this is done on the madoko.net server which
+may be slower).
 
 The `-l` flag will launch the browser and go to the listed url, i.e.
 `http://localhost:8080#secret=OsuwK3HbMoI7` in our example. The 'secret' in
@@ -106,7 +113,10 @@ Options:
   : Specify the user home directory. In this directory
     `madoko-local` will create a `.madoko` directory
     that contains log files and the local configuration
-    file (`config.json`).    
+    file (`config.json`).
+* `-c<n>`, `--concurrency=<n>`
+  : Run madoko with the specified concurrency to speed up
+    svg rendering for mathematics.
 * `--origin=<url>`
   : Instead of serving `https://www.madoko.net` use the
     specified `url`. Only specify trusted websites here
