@@ -1,9 +1,10 @@
 {
   "log" : [
-    { "version": "1.1.10",
+    { "version": "1.1.11",
       "date": "2020-02-14",
       "updates": [
-        "Run dvisvgm in parallel (default: \"Math Concurrency: 4\")"
+        "Run dvisvgm in parallel (default: \"Math Concurrency: 4\")",
+        "Allow 2 minute process timeout in sandbox mode",
       ]
     },
     { "version": "1.1.8",

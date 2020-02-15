@@ -25,7 +25,7 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else value)
     elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(math = (options.math)(latexFull=if (lvalue=="true") then "default" else value))
     elif (key=="math-latex") options(math = (options.math)(latex=if (lvalue=="true") then "default" else value))
-    elif (key=="math-concurrency") options(math = (options.math)(concurrency=ivalue))
+    elif (key=="math-concurrency") options(math = (options.math)(concurrency=if (ivalue>=0 && ivalue<=256) then ivalue else options.math.concurrency))
     elif (key=="bibtex") options(bibtex=value)
     elif (key=="convert") options(math = (options.math)(convert=value))
     elif (key=="ps2pdf") options(math = (options.math)(ps2pdf=value))
@@ -42,7 +42,7 @@ public function updateSandbox( options : options, key : string, lvalue : string,
     elif (key=="pdflatex" || key=="pdf-latex") options(pdflatex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.pdflatex) )
     elif (key=="math-latex-full" || key=="math-pdflatex" || key=="math-pdf-latex") options(math = (options.math)(latexFull=if (lvalue=="true") then "default" else safeLatex(lvalue, options.math.latexFull) ))
     elif (key=="math-latex") options(math = (options.math)(latex=if (lvalue=="true") then "default" else safeLatex(lvalue, options.math.latex) ))
-    elif (key=="math-concurrency") options(math = (options.math)(concurrency=if(ivalue >= 1 && ivalue <= 8) then ivalue else options.math.concurrency))    
+    elif (key=="math-concurrency") options(math = (options.math)(concurrency=if(ivalue >= 1 && ivalue <= 16) then ivalue else options.math.concurrency))
     elif (key=="bibtex") options(bibtex=safeBibtex(lvalue,options.bibtex))
     else {
       //  if (options.verbose >= 3) warning("custom metadata key: " + key)
