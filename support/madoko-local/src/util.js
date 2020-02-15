@@ -151,7 +151,7 @@ function ensureDir(dir) {
 
 // remove everything in dir recursively
 function removeDirAll(dir) {
-  return new Promise( function(cont) { return rmdirRF(dir,{maxRetries:5},cont); }
+  return new Promise( function(cont) { return rmdirRF(dir,{maxRetries:5},cont); });  
 }
 
 // remove a directory if it is empty

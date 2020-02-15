@@ -29,7 +29,7 @@ sub-directories will be accessible to Madoko. Here we run it with access
 to the current directory:
 ```
 > madoko-local -l .
-listening on           : http://localhost
+listening on           : http://localhost:8080
 connecting securely to : https://www.madoko.net
 serving files under    : C:\Users\dknuth\docs
 
@@ -43,7 +43,7 @@ secure https with the Madoko website, and which local directory is
 accessible within Madoko.
 
 The `-l` flag will launch the browser and go to the listed url, i.e.
-`http://localhost#secret=OsuwK3HbMoI7` in our example. The 'secret' in
+`http://localhost:8080#secret=OsuwK3HbMoI7` in our example. The 'secret' in
 the url is unique on each computer and used as an extra level of
 security.
 

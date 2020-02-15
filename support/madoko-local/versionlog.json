@@ -1,5 +1,11 @@
 {
   "log": [
+    { "version": "0.9.3",
+      "date"   : "2020-02-14",
+      "updates": [
+        "More liberal timeouts"
+      ]
+    },
     { "version": "0.9.1",
       "date"   : "2020-02-05",
       "updates": [

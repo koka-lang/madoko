@@ -17,10 +17,10 @@ var main      = "madoko-local";
 var sourceDir = "src";
 var mainCli   = Path.join(sourceDir,"cli.js");
 var nodeExe   = "node";
-var defaultArgs = "--port=81 --verbose=2"
+var defaultArgs = "--port=8080 --run --verbose=2"
 
 //-----------------------------------------------------
-// Tasks: compilation 
+// Tasks: compilation
 //-----------------------------------------------------
 task("default",["server"]);
 
@@ -31,8 +31,8 @@ task("server", [], function() {
   fixVersion();
   var cmd = [nodeExe,mainCli,defaultArgs,args].join(" ");
   jake.logger.log("> " + cmd);
-  jake.exec(cmd, {interactive: true}, function() { 
-    complete(); 
+  jake.exec(cmd, {interactive: true}, function() {
+    complete();
   });
 },{async:true});
 
@@ -56,7 +56,7 @@ var usageInfo = [
 function showHelp() {
   jake.logger.log(usageInfo);
   jake.showAllTaskDescriptions(jake.program.opts.tasks);
-  process.exit();  
+  process.exit();
 }
 
 desc("show this information");
@@ -85,12 +85,12 @@ function getVersion() {
     }
   }
   return "<unknown>"
-} 
+}
 
 
 function fixVersion(fname) {
   fname = fname || Path.join(sourceDir,"config.js");
-  
+
   var config = {
     version: getVersion(),
     main   : main,
@@ -108,14 +108,14 @@ function fixVersion(fname) {
     }
     if (content !== content0) {
       Fs.writeFileSync(fname,content,{encoding: "utf8"});
-    } 
+    }
   }
 }
 
 function fileExist(fileName) {
   var stats = null;
   try {
-    stats = Fs.statSync(fileName);    
+    stats = Fs.statSync(fileName);
   }
   catch(e) {};
   return (stats != null);
@@ -126,12 +126,12 @@ function fileExist(fileName) {
 function copyFiles(rootdir,files,destdir) {
   rootdir = rootdir || "";
   rootdir = rootdir.replace(/\\/g, "/");
-  jake.mkdirP(destdir);        
+  jake.mkdirP(destdir);
   files.forEach(function(filename) {
     // make relative
     var destname = Path.join(destdir,(rootdir && filename.lastIndexOf(rootdir,0)===0 ? filename.substr(rootdir.length) : filename));
-    var logfilename = (filename.length > 30 ? "..." + filename.substr(filename.length-30) : filename);    
-    var logdestname = (destname.length > 30 ? "..." + destname.substr(destname.length-30) : destname);    
+    var logfilename = (filename.length > 30 ? "..." + filename.substr(filename.length-30) : filename);
+    var logdestname = (destname.length > 30 ? "..." + destname.substr(destname.length-30) : destname);
     //jake.logger.log("cp -r " + logfilename + " " + logdestname);
     jake.cpR(filename,Path.dirname(destname));
   })
