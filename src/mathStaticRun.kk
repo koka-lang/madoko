@@ -234,16 +234,17 @@ function groupPages( gcount : int, count : int, cur : pages, acc : list<pages>, 
   }
 }
 
-function dvisvgPages( pages : pages, concurrency : int ) : list<string> {
+function splitPages(pages : pages, concurrency : int) : list<pages> {
   val n   = pages.count
   val g   = if (n < 10 || concurrency <= 0) then 0 else ((n / concurrency) + 1);
-  val pss = if (g == 0) then [pages] else unsafeNoDiv{ groupPages(g,0,[],[],pages) }
-  pss.map( fun(ps) {
-    "-p" + ps.map( fun(rng) {
+  if (g <= 0) then [pages] else unsafeNoDiv{ groupPages(g,0,[],[],pages) }
+}
+
+function dvisvgPages( pages : pages ) : string {
+  "-p" + pages.map( fun(rng) {
       val (lo,hi) = rng
       lo.show + (if (lo>=hi) then "" else "-" + hi.show)
     }).join(",")
-  })
 }
 
 function convertPages( pages : pages ) : string {
@@ -294,7 +295,7 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
       // extension should be dvi or xdv
       // add 0.2pt (~0.07mm of extra bounding box for better rendering of svg's)
       val fuzz = 0.2
-      val cmd = dvisvgPages(pages,opts.concurrency).map( fun(pageRange) {
+      val cmd = splitPages(pages,opts.concurrency).map(fun(xpages) {
                   opts.dvisvg.quote +
                     (if (opts.svgFontFormat=="" || opts.svgFontFormat=="none")
                       then " -n"
@@ -302,11 +303,12 @@ function mathConvImgCmd( mode : mathkind, fname : string, mrender : mathrender, 
                       then ""
                       else " --font-format=" + opts.svgFontFormat.quote) +
                     (if (fuzz > 0.0) then " -b" + fuzz.showFixed(1) + "pt" else "") +
-                    " -e -j -v3 -d" + opts.svgPrec.show + " " +
-                    pageRange +
+                    (if (opts.svgBBoxExact) then " -e" else "") +
+                    " -a -j -v3 -d" + opts.svgPrec.show + " " +
+                    dvisvgPages(xpages) +
                     " -o " + (baseImg + "-%1p.svg").quote +
                     " " + fname.basename.quote
-                }).join(";")  // run in parallel
+                }).join(";")
       (cmd,0,fuzz)
     }
     Png | fname.extname==".dvi" -> {

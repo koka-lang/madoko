@@ -56,6 +56,7 @@ public struct mathoptions (
   svgPrec   : int    = 3,         // decimal points used in svg rendering
   svgDefs   : string = "",        // used internally to share svg definitions
   svgFontFormat: string = "",     // embed fonts directly in svg, use 'none' or '' to use SVG paths
+  svgBBoxExact : bool = False,    // use exact bounding box
 
   concurrency   : int  = 4,       // max concurrency for generating math renderings
 

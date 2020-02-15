@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -16,7 +16,7 @@ import options
 import optionsSandbox
 
 
-public function updateMath( options:options, key: string, lvalue: string, value:string, ivalue: int, bvalue:bool ) : options 
+public function updateMath( options:options, key: string, lvalue: string, value:string, ivalue: int, bvalue:bool ) : options
 {
   if (key=="mathjax-ext" || key=="mathjax-extension")  options(math = (options.math)(mjext=if (value=="") then "" else options.math.mjext + ";" + value))
   elif (key=="math-mode") options.setMathMode(value)
@@ -34,12 +34,13 @@ public function updateMath( options:options, key: string, lvalue: string, value:
   elif (key=="math-svg-precision") options(math = (options.math)(svgPrec=min(6,max(ivalue,0))))
   elif (key=="math-svg-use-fonts") options(math = (options.math)(svgFontFormat=if (bvalue) then "woff,ah" else "none"))
   elif (key=="math-svg-font-format") options(math = (options.math)(svgFontFormat=lvalue))
+  elif (key=="math-svg-bbox-exact") options(math = (options.math)(svgBBoxExact=bvalue))
   elif (key=="mathjax") then (if (value!="")
                                then options(math = (options.math)(mode=Dynamic, mathjax=(if (lvalue=="true") then "default" else value)))
                                else options(math = (options.math)(mode=Static, mathjax="")))
   else {
     options.updateSandbox(key,lvalue,value,ivalue)
-  }  
+  }
 }
 
 
