@@ -49,14 +49,14 @@ var config = {
   verbose   : 0,
   limits    : {
     fileSize    : 64*mb,
-    logFlush    : 1*minute,
+    logFlush    : 5*minute,
     timeoutPDF  : 2*minute,
-    timeoutMath : 1*minute,
+    timeoutMath : 2*minute,
   },
   run       : null,     // program to run Madoko locally
   rundir    : null,     // directory under which to run LaTeX. (<configdir>/run)
   runflags  : "",       // extra run flags.
-  rmdirDelay: 5*second, // after this amount the run directory gets removed
+  rmdirDelay: 10*second, // after this amount the run directory gets removed
   mime      : null,     // gets set to Express.static.mime
   launch    : false,    // if true, launch the browser at startup
 }
