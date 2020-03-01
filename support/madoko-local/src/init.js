@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -43,20 +43,21 @@ var config = {
   configdir : null,             // save config info here ($HOME/.madoko)
   logdir    : null,             // save log files here (<configdir>/log)
   mountdir  : null,             // the local directory to give access to.
-  port      : 80,
+  port      : 8080,
   origin    : "https://www.madoko.net",
-  secret    : null, 
+  secret    : null,
   verbose   : 0,
+  concurrency: 4,
   limits    : {
     fileSize    : 64*mb,
-    logFlush    : 1*minute,
+    logFlush    : 5*minute,
     timeoutPDF  : 2*minute,
-    timeoutMath : 1*minute,
+    timeoutMath : 2*minute,
   },
   run       : null,     // program to run Madoko locally
   rundir    : null,     // directory under which to run LaTeX. (<configdir>/run)
   runflags  : "",       // extra run flags.
-  rmdirDelay: 5*second, // after this amount the run directory gets removed
+  rmdirDelay: 10*second, // after this amount the run directory gets removed
   mime      : null,     // gets set to Express.static.mime
   launch    : false,    // if true, launch the browser at startup
 }
@@ -77,7 +78,8 @@ Options
   .option("--runflags <opts>", "pass extra options <opts> to the madoko program")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
   .option("--rmdelay <secs>","delay before run directory is removed", parseInt )
-  
+  .option("-c, --concurrency <n>", "render math using <n> (=" + config.concurrency.toString() + ") processors", parseInt )
+
 Options.on("--help", function() {
   console.log([
     "  Notes:",
@@ -102,7 +104,7 @@ function initializeConfig() {
   if (Options.homedir) config.homedir = Options.homedir;
   config.configdir = Util.combine(config.homedir, ".madoko");
   config.logdir = Util.combine(config.configdir,"log");
-  
+
   // Try to read local config file
   var configFile  = Path.join(config.configdir,"config.json");
   var localConfig = Util.jsonParse(Util.readFileSync(configFile, {encoding:"utf8"}, "{}" ));
@@ -116,7 +118,7 @@ function initializeConfig() {
   }
   else {
     // generate a secret
-    config.secret = Util.secureHash(12);    
+    config.secret = Util.secureHash(12);
 
     // write back secret to localConfig...
     localConfig.secret = config.secret;
@@ -126,6 +128,9 @@ function initializeConfig() {
   // Port
   if (Options.port) config.port = Options.port;
   else if (typeof localConfig.port === "number") config.port = localConfig.port;
+
+  // Concurrency
+  if (Options.concurrency) config.concurrency = Options.concurrency;
 
   // Origin
   if (Options.origin) config.origin = Options.origin;
@@ -140,9 +145,9 @@ function initializeConfig() {
 
   // Run
   if (Options.run) {
-    if (typeof Options.runcmd === "string") 
+    if (typeof Options.runcmd === "string")
       config.run = Options.runcmd;
-    else 
+    else
       config.run = "madoko";
 
     if (typeof Options.runflags === "string") {

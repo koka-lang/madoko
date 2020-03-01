@@ -17,19 +17,31 @@ Acm Article     : 1
 Acm Year        : &conference-year;
 Acm Month       : 1
 Acm Copyright   : none
-Acm Copyright Year: &conference-year; 
-Acm Format      : acmlarge
+Acm Copyright Year: &conference-year;
+Acm Format      : acmsmall
+Acm Number      : ICFP
+Acm Price       : 15.00
+Acm Booktitle   : &conference;
+Short Title     : &Title;
 
 Doc class       : [&acm-format;]acmart.cls
 Bib Style       : style/acm-reference-format.bst
 Cite Style      : natural
+@html Csl Style : madoko-natural
+
 Pdf Latex       : pdflatex
+Package         : [tt=false]libertine
+Package         : [varqu]zi4
 Package         : [libertine]newtxmath
+Package         : flushend
+
 Author Columns  : 1
 Name Figure     : Fig.
 
+
 Tex Doc Header*:
     \acmConference[&conference-short;]{&conference;}{&conference-date;, &conference-year;}{&conference-location;}
+    \acmBooktitle{&acm-booktitle; (&conference-short;), &conference-date;, &conference-year;, &conference-location;}
     \acmISBN{&ISBN;}
     \acmDOI{&DOI;}
     \startPage{&start-page;}
@@ -37,42 +49,46 @@ Tex Doc Header*:
     \renewcommand\authorinfo[3]{\author{#1}\affiliation{\institution{#2}}\email{#3}}
     \setcopyright{&acm-copyright;}
     \copyrightyear{&acm-copyright-year;}
-    \acmJournal{&acm-journal;}
-    \acmVolume{&acm-volume;}
-    \acmArticle{&acm-article;}
+    %\acmJournal{&acm-journal;}
+    %\acmVolume{&acm-volume;}
+    %\acmNumber{&acm-number;}
+    %\acmArticle{&acm-article;}
     \acmYear{&acm-year;}
-    \acmMonth{&acm-month;}
+    %\acmMonth{&acm-month;}
+    \acmPrice{&acm-price;}
+    \def\shorttitle{&short-title;}
+    \def\acmshorttitle{&short-title;}
 
 AcmClassification {
   input: texraw;
 }
-    
+
 @if html {
   p {
     line-height: 1.3;
   }
-  authorname { 
+  authorname {
     font-variant: small-caps;
-    .sans-serif;    
+    .sans-serif;
   }
   titleblock, titleheader, authors { class: clear }
   author      { text-align: left; padding: 0pt }
-  abstract    { 
+  abstract    {
     before: clear;
     margin: 1em 0ex;
-    padding: 0.25em 0em; 
-    border: 1px black solid; border-width: 1px 0pt; 
+    padding: 0.25em 0em;
+    border: 1px black solid; border-width: 1px 0pt;
   }
   authorname,authoraddress,authoremail { display: inline }
   authorname,authoraddress  { after: ", " }
   authorrow { margin: 0pt }
-  authors { margin-top: 1em }  
+  authors { margin-top: 1em }
 }
 
 @if html && (acm-format != "sigplan") {
-  h1 { 
-    font-variant: small-caps;    
-    replace: "/[\s\S]*/\L\0/c"; 
+  h1 {
+    font-variant: small-caps;
+    replace: "/[\s\S]*/\L\0/c";
   }
 }
 
@@ -81,14 +97,12 @@ AcmClassification {
     .sans-serif;
   }
   h1, authorname {
-    letter-spacing: 0.5px; 
+    letter-spacing: 0.5px;
   }
 }
 
 @if html && ((acm-format=="acmlarge") || (acm-format=="acmtog")) {
   h1, h2 {
-    font-weight: normal; 
+    font-weight: normal;
   }
 }
-
-    

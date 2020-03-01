@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -32,7 +32,7 @@ document.addEventListener( "keydown", function(ev) {
   if (ev.ctrlKey)  code |= KeyMask.ctrlKey;
   if (ev.altKey)   code |= KeyMask.altKey;
   if (ev.metaKey)  code |= KeyMask.metaKey;
-  if (ev.shiftKey) code |= KeyMask.shiftKey;       
+  if (ev.shiftKey) code |= KeyMask.shiftKey;
   keyHandlers.forEach( function(handler) {
     if (handler.code === code) {
       if (handler.stop) {
@@ -65,10 +65,10 @@ var localStorageLimit = 5000000; // (~5mb)
 function localStorageSave( fname, obj, createMinimalObj ) {
   var key = "local/" + fname;
   if (!localStorage) {
-    Util.message("cannot make local backup: upgrade your browser.", Util.Msg.Error ); 
+    Util.message("cannot make local backup: upgrade your browser.", Util.Msg.Error );
     return false;
   }
-  try {    
+  try {
     localStorage.setItem( key, JSON.stringify(obj) );
     return true;
   }
@@ -97,7 +97,7 @@ function localStorageLoad( fname ) {
   }
   catch(e) {
     return null;
-  } 
+  }
 }
 
 function getModeFromExt(ext) {
@@ -106,9 +106,9 @@ function getModeFromExt(ext) {
 
 var origin = window.location.origin ? window.location.origin : window.location.protocol + "//" + window.location.host;
 
-var State = { Normal:"normal", 
-              Loading:"loading", 
-              Init:"initializing", 
+var State = { Normal:"normal",
+              Loading:"loading",
+              Init:"initializing",
               Syncing:"synchronizing",
               Exporting:"exporting" }
 
@@ -120,7 +120,7 @@ var UI = (function() {
     self.state  = State.Init;
     self.editor = null;
     self.app  = document.getElementById("main");
-            
+
     self.refreshRate = 500;
     self.serverRefreshRate = 2500;
     self.runner = runner;
@@ -144,33 +144,33 @@ var UI = (function() {
     };
 
     //Monaco.Editor.createCustomMode(MadokoMode.mode);
-    window.onbeforeunload = function(ev) { 
+    window.onbeforeunload = function(ev) {
       //if (self.storage.isSynced()) return;
       localStorage.removeItem("viewer-html");
       localStorage.removeItem("viewer-scroll");
       self.saveSettings();
-      if (self.localSave()) return; 
+      if (self.localSave()) return;
       var message = "Changes to current document have not been saved yet!\n\nIf you leave this page, any unsaved work will be lost.";
       (ev || window.event).returnValue = message;
       return message;
     };
 
-    var firstTime = localStorage.settings === undefined;  
+    var firstTime = localStorage.settings === undefined;
     self.loadSettings();
     self.initUIElements("",firstTime);
-  
+
     self.loadFromHash().then( function() {
-      // Initialize madoko and madoko-server runner    
-      self.initRunners();      
+      // Initialize madoko and madoko-server runner
+      self.initRunners();
     }).then( function() { }, function(err) {
-      Util.message(err, Util.Msg.Error);          
+      Util.message(err, Util.Msg.Error);
     }).always( function() {
       self.state = State.Normal;
     });
   }
 
   UI.prototype.reload = function(force) {
-    var self = this; 
+    var self = this;
     if (Localhost.localhost.hosted) {
       Localhost.localhost.reload(force);
     }
@@ -200,7 +200,7 @@ var UI = (function() {
         return;
       }
       else if (state) {
-        self.state = state;      
+        self.state = state;
       }
     }
     try {
@@ -220,7 +220,7 @@ var UI = (function() {
         if (state) self.state = State.Normal;
         if (status) Util.message( status, Util.Msg.Status);
         return res;
-      }        
+      }
     }
     catch(exn) {
       if (state) self.state = State.Normal;
@@ -257,7 +257,7 @@ var UI = (function() {
         });
       }
       Util.forEachProperty(defaultCheckBoxes, function(name,checked) {
-        initCheckbox(name,checked);        
+        initCheckbox(name,checked);
       });
     }
 
@@ -267,7 +267,7 @@ var UI = (function() {
     if (!lsettings) {
       // legacy
       var json = localStorage.getItem("settings");
-      if (!json) { 
+      if (!json) {
         json = localStorage.getItem("local/local");
       }
       if (json) lsettings = Util.jsonParse(json,{});
@@ -279,7 +279,7 @@ var UI = (function() {
       theme            : "vs",
       fontScale        : "medium"
     });
-    
+
     if (lsettings) {
       self.updateSettings( lsettings );
     }
@@ -289,7 +289,7 @@ var UI = (function() {
     if (cap) {
       var json = decodeURIComponent(cap[1]);
       self.updateSettings( Util.jsonParse(json,{}) );
-    }    
+    }
   }
 
   UI.prototype.updateSettings = function(obj) {
@@ -325,22 +325,22 @@ var UI = (function() {
     // set value
     self.settings[name] = value;
     self.saveSettings();
-        
+
     // special actions
     if (name==="theme") {
       if (self.editor) self.editor.updateOptions( { theme: self.getCurrentTheme() });
       self.app.setAttribute("data-theme",value);
     }
     else if (name==="wrapLines") {
-      if (self.editor) self.editor.updateOptions( { wrappingColumn: (value ? 0 : -1 ) } ); 
+      if (self.editor) self.editor.updateOptions( { wrappingColumn: (value ? 0 : -1 ) } );
     }
     else if (name==="lineNumbers") {
-      if (self.editor) self.editor.updateOptions( { lineNumbers: value } );  
+      if (self.editor) self.editor.updateOptions( { lineNumbers: value } );
     }
     else if (name==="disableAutoUpdate" && self.asyncMadoko) {
       if (value) {
         self.asyncMadoko.pause();
-      } 
+      }
       else {
         self.asyncMadoko.resume();
       }
@@ -355,7 +355,7 @@ var UI = (function() {
     }
     else if (name==="fontScale") {
       if (self.editor) {
-        var editView  = self.editor.getView();      
+        var editView  = self.editor.getView();
         var lines     = editView.viewLines;
         var rng       = lines._currentVisibleRange;
         var midLine   = Math.round(rng.startLineNumber + ((rng.endLineNumber - rng.startLineNumber + 1)/2));
@@ -367,7 +367,7 @@ var UI = (function() {
     else if (name==="viewFull") {
       var view = value ? "full" : "normal";
       self.app.setAttribute("data-view",view);
-      self.dispatchViewEvent( { eventType: "view", view: view } );      
+      self.dispatchViewEvent( { eventType: "view", view: view } );
       setTimeout( function(ev) { Util.dispatchEvent(window,"resize"); }, 100 );
     }
   }
@@ -393,11 +393,11 @@ var UI = (function() {
     // common elements
     self.usersStatus = document.getElementById("users-status");
     self.usersPanel  = document.getElementById("users-panel");
-    self.spinner = document.getElementById("view-spinner");    
+    self.spinner = document.getElementById("view-spinner");
     self.spinner.spinDelay = 750;
-    self.syncer  = document.getElementById("sync-spinner");  
-    self.syncer.spinDelay = 100;  
-    self.exportSpinner = document.getElementById("export-spinner");    
+    self.syncer  = document.getElementById("sync-spinner");
+    self.syncer.spinDelay = 100;
+    self.exportSpinner = document.getElementById("export-spinner");
     self.exportSpinner.spinDelay = 1000;
     self.view    = document.getElementById("view");
     self.editSelectHeader = document.getElementById("edit-select-header");
@@ -408,20 +408,20 @@ var UI = (function() {
     self.lastRenderWasSlow = false;
     self.lastViewRenderWasSlow = false;
 
-    // listen to application cache    
-    self.appUpdateReady = false; 
-    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
-      // reload immediately if an update is ready 
+    // listen to application cache
+    self.appUpdateReady = false;
+    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+      // reload immediately if an update is ready
       self.reload(true);
     }
     else {
       window.applicationCache.addEventListener( "updateready", function(ev) {
-        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) { 
+        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
           if (!self.appUpdateReady) {
             window.applicationCache.swapCache();
             self.appUpdateReady = true;
-          } 
-        }           
+          }
+        }
       });
     }
 
@@ -451,7 +451,7 @@ var UI = (function() {
         //arrowSize: 10,
       },
       quickSuggestions: true,
-    });    
+    });
 
 
     self.lastActivity = 0;
@@ -459,9 +459,9 @@ var UI = (function() {
     window.addEventListener("click",function(ev) {
       self.lastActivity = ev.timeStamp || Date.now();
     });
-    
+
     Util.onResize( function() {
-      self.editor.layout();      
+      self.editor.layout();
       self.syncView({force: true});
       self.lastActivity = Date.now();
     });
@@ -470,14 +470,14 @@ var UI = (function() {
 
     // synchronize on scrolling
     self.syncInterval = 0;
-    self.editor.addListener("scroll", function (ev) {    
-      function scroll() { 
+    self.editor.addListener("scroll", function (ev) {
+      function scroll() {
         self.anonEvent( function() {
-          var scrolled = self.syncView({editorScroll:true}); 
+          var scrolled = self.syncView({editorScroll:true});
           if (!scrolled) {
             clearInterval(self.syncInterval);
             self.syncInterval = 0;
-          }      
+          }
         }, [State.Syncing]);
       }
 
@@ -487,35 +487,35 @@ var UI = (function() {
         self.syncInterval = setInterval(scroll, 100);
         //scroll();
       }
-    });  
+    });
 
     self.changed = false;
     self.lastEditChange = 0;
-    self.editor.addListener("change", function (ev) {  
+    self.editor.addListener("change", function (ev) {
       self.changed = true;
       self.lastEditChange = ev.timeStamp || Date.now();
       self.lastActivity = self.lastEditChange;
     });
-    self.editor.addListener("keydown", function (ev) { 
-      self.lastActivity = ev.timeStamp || Date.now();   
+    self.editor.addListener("keydown", function (ev) {
+      self.lastActivity = ev.timeStamp || Date.now();
       if (self.stale || self.changed) self.lastEditChange = self.lastActivity; // so delayed refresh keeps being delayed even on cursor keys.
     });
-    
-    self.editor.addCommand({ key: 'Alt-Q' }, function(ev) { 
+
+    self.editor.addCommand({ key: 'Alt-Q' }, function(ev) {
       self.anonEvent( function() { self.onFormatPara(ev); }, [State.Syncing] );
     });
-    self.editor.addListener("keydown", function (ev) { 
+    self.editor.addListener("keydown", function (ev) {
       if (ev.key === "Enter" && !ev.altKey && !ev.shiftKey && !ev.metaKey && !ev.ctrlKey) {
         var line = self.editor.getModel().getLineContent(self.editor.getPosition().lineNumber);
         if (rxTable.test(line)) {
           ev.stopPropagation();
           ev.preventDefault();
-          self.addTableRow();            
+          self.addTableRow();
         }
       }
     });
-    
-    
+
+
     // Key bindings
 
     bindKey( "Alt-S",  function()   { self.synchronize(); } );
@@ -530,15 +530,15 @@ var UI = (function() {
     bindKey( "Alt-H",  function()   { self.generateHtml(); } );
     bindKey( "Alt-L",  function()   { self.generatePdf(); } );
     bindKey( "Alt-Z",  function()   { self.generateTexZip(); } );
-    bindKey( { key: "Alt-A", stop: true },  function(ev)   { 
+    bindKey( { key: "Alt-A", stop: true },  function(ev)   {
       if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
         self.spellCheckMenu.menu.ignore(ev);
         self.spellCheckMenu.hide();
       }
     });
     for(var i = 1; i <= 8; i++) {
-      (function(idx) { 
-        bindKey( "Alt-" + idx.toString(),  function(ev)   { 
+      (function(idx) {
+        bindKey( "Alt-" + idx.toString(),  function(ev)   {
           if (self.spellCheckMenu && self.spellCheckMenu.isVisible()) {
             ev.preventDefault();
             ev.stopPropagation();
@@ -561,7 +561,7 @@ var UI = (function() {
 
       if (Util.hasClassName(elem,"save-link")) {
         ev.cancelBubble = true;
-        var path = decodeURIComponent(elem.getAttribute("data-path")); 
+        var path = decodeURIComponent(elem.getAttribute("data-path"));
         var mime = decodeURIComponent(elem.getAttribute("data-mime"));
         if (path) {
           self.saveUserContent(path,mime);
@@ -574,7 +574,7 @@ var UI = (function() {
 
 
     // ----
-    
+
     document.getElementById("sync-now").onclick = function(ev) {
       self.synchronize();
     };
@@ -593,9 +593,9 @@ var UI = (function() {
       var delta = now - self.lastMouseUp;
       self.lastMouseUp = now;
       if (delta <= 200) { // check for double click
-        self.anonEvent( function() {        
+        self.anonEvent( function() {
           if (ev.target.type === 6) { // on text
-            var lineNo = ev.target.position.lineNumber; 
+            var lineNo = ev.target.position.lineNumber;
             var line   = self.editor.getModel().getLineContent(lineNo);
             // match include?
             var cap = /^\s*\[\s*INCLUDE\s*=["']?([^"'\]\n\r\t:]+)["']?\s*(:\s*\w+\s*)?\]\s*$/.exec(line)
@@ -614,7 +614,7 @@ var UI = (function() {
               if (cap1 && cap2) {
                 var matched = cap1[0] + cap2[0];
                 if (matched && matched.length > 0 && self.storage && self.storage.existsLocal(matched)) {
-                  self.editFile(matched);  
+                  self.editFile(matched);
                 }
               }
             }
@@ -637,7 +637,7 @@ var UI = (function() {
           self.insertFiles(files,pos);
         }
         else if ((ev.target.type === 4 /* line-decorations */ || ev.target.type === 2 /* glyph_margin */ )
-                 && ev.target.position && ev.target.element) 
+                 && ev.target.position && ev.target.element)
         {
           var msg = self.getDecorationMessage(self.editName,ev.target.position.lineNumber, ev.target.type===2);
           if (msg) {
@@ -648,9 +648,9 @@ var UI = (function() {
     });
 
     self.editor.addListener("")
-    
+
     self.editorPane = document.getElementById("editor");
-    self.editorPane.addEventListener("drop", function(ev) {      
+    self.editorPane.addEventListener("drop", function(ev) {
       ev.stopPropagation();
       ev.preventDefault();
       self.anonEvent( function() {
@@ -660,8 +660,8 @@ var UI = (function() {
           viewLine = viewLine.parentNode;
         }
         if (viewLine) {
-          var editView = self.editor.getView();      
-          var lines    = editView.viewLines;        
+          var editView = self.editor.getView();
+          var lines    = editView.viewLines;
           var posLine  = -1;
           for(var i = 0; i < lines._lines.length; i++) {
             if (lines._lines[i]._domNode === viewLine) {
@@ -683,27 +683,27 @@ var UI = (function() {
       ev.preventDefault();
       ev.dataTransfer.dropEffect = "copy";
     }, false);
-    
-    self.spellCheckMenu = CustomHover.create("spellcheck.content.hover.menu",self.editor, 
-      new SpellCheck.SpellCheckMenu(self.spellChecker, 
+
+    self.spellCheckMenu = CustomHover.create("spellcheck.content.hover.menu",self.editor,
+      new SpellCheck.SpellCheckMenu(self.spellChecker,
         function(id) {
           return self.findDecorationById(id);
         },
         function(range,replacement) {
           var command = new ReplaceCommand.ReplaceCommand( range, replacement );
           self.editor.executeCommand("madoko",command);
-        }, 
+        },
         function(id,tag) {
           self.removeDecorationsOn(id,tag);
-        }, 
+        },
         function(pos) {
           self.gotoNextError(pos);
         }
       )
     );
 
-    self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor, 
-      new ErrorMenu.ErrorMenu( 
+    self.errorMenu = CustomHover.create("error.glyph.hover.menu",self.editor,
+      new ErrorMenu.ErrorMenu(
         function(pos) {
           self.gotoNextError(pos);
         }
@@ -714,20 +714,20 @@ var UI = (function() {
     // synchronize on cursor position changes
     // disabled for now, scroll events seem to be enough
     /*
-    self.editor.addListener("positionChanged", function (e) {    
+    self.editor.addListener("positionChanged", function (e) {
       self.syncView();
     });
     */
-    
+
     // listen to preview load messages
     window.addEventListener("message", function(ev) {
       self.anonEvent( function() {
         // check origin and source so no-one but our view can send messages
         if ((ev.origin !== "null" && ev.origin !== origin) || typeof ev.data !== "string") return;
-        if (ev.source !== self.view.contentWindow) return;      
+        if (ev.source !== self.view.contentWindow) return;
         // console.log("preview event: " + ev.data);
         var info = JSON.parse(ev.data);
-        if (!info || !info.eventType) return;        
+        if (!info || !info.eventType) return;
         if (info.eventType === "previewContentLoaded") {
           return self.viewLoaded();
         }
@@ -753,7 +753,7 @@ var UI = (function() {
     self.iconDisconnect = document.getElementById("icon-disconnect");
     self.lastVersionCheck = 0;
 
-    // request cached version; so it corresponds to the cache-manifest version  
+    // request cached version; so it corresponds to the cache-manifest version
     self.version = null;
     Util.getAppVersionInfoFull().then( function(version) {
       if (version) {
@@ -761,7 +761,7 @@ var UI = (function() {
         var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
         var shortDate   = self.version.date.substr(0,10);
         var elem = document.getElementById("madokoWebVersion");
-        if (elem) elem.textContent = self.version.version || "?";       
+        if (elem) elem.textContent = self.version.version || "?";
         elem = document.getElementById("madokoVersion");
         if (elem) elem.textContent = self.version.madokoVersion || "?";
         elem = document.getElementById("madokoDigest");
@@ -769,19 +769,19 @@ var UI = (function() {
           elem.textContent = ", " + shortDate + " " + shortDigest;
           elem.setAttribute("title","digest: " + self.version.digest);
         }
-      
+
         // check if we just updated
         var localVersion = Util.jsonParse(localStorage.getItem("version"));
         if (localVersion==null || localVersion.digest !== version.digest) {
           localStorage.setItem("version", JSON.stringify(version));
           self.showUpdateMessage();
         }
-      } 
+      }
     });
     document.getElementById("showversion").onclick = function() {
       self.showUpdateMessage();
     };
-    
+
     var autoSync = function() {
       var now = Date.now();
 
@@ -791,19 +791,19 @@ var UI = (function() {
       }
 
       // update connection status and synchronize
-      self.updateConnectionStatus().then( function(status) {        
+      self.updateConnectionStatus().then( function(status) {
         if (self.storage.remote.canSync) {
           if (status===0) {
             if (now - self.lastConUsersCheck >= 5000) {
               self.showConcurrentUsers( now - self.lastConUsersCheck < 30000 );
             }
           }
-          
+
           if (status===400) {
             Util.message("Could not synchronize because the Madoko server could not be reached (offline?)", Util.Msg.Info);
           }
           else { // force login if not connected
-            if (self.settings.autoSync && self.state === State.Normal) { 
+            if (self.settings.autoSync && self.state === State.Normal) {
               if (self.lastSync === 0 || (now - self.lastSync >= 30000 && now - self.lastEditChange > 5000)) {
                 self.lastSync = Date.now(); // set last sync so we won't popup too many dialogs..
                 self.synchronize(self.storage.remote.canCommit); // pull only?
@@ -813,42 +813,42 @@ var UI = (function() {
         }
       });
 
-      // check if an app update happened 
+      // check if an app update happened
       if (self.state === State.Normal && self.appUpdateReady) {
-        self.appUpdateReady = false;        
-        Util.message("Madoko has been updated. Please reload.", Util.Msg.Status);     
+        self.appUpdateReady = false;
+        Util.message("Madoko has been updated. Please reload.", Util.Msg.Status);
         self.reload(true);
       }
 
       // check the version number on the server every minute
-      if (now - self.lastVersionCheck >= 60000) {  
+      if (now - self.lastVersionCheck >= 60000) {
         self.lastVersionCheck = now;
         // first post stats
         self.postStat();
-        // request lastest appversion from the server 
+        // request lastest appversion from the server
         Util.getAppVersionInfo(true).then( function(version) {
           if (!version) return;
           if (self.appUpdateReady || !self.version) return;
           if (self.version.digest === version.digest) return;
           if (self.version.updateDigest === version.digest) { // are we updating right now to this version?
-            // firefox doesn't reliably send a update ready event, check here also. 
+            // firefox doesn't reliably send a update ready event, check here also.
             if (window.applicationCache.status === window.applicationCache.UPDATEREADY)
                 //|| window.applicationCache.status === window.applicationCache.IDLE)  // this is for Firefox which doesn't update the status correctly
             {
               window.applicationCache.swapCache();
-              self.appUpdateReady = true;              
+              self.appUpdateReady = true;
             }
             else if (isFirefox && window.applicationCache.status === window.applicationCache.IDLE) {
-              self.version.digest = version.digest; // prevent further alerts 
+              self.version.digest = version.digest; // prevent further alerts
               alert("Madoko has updated but Firefox has a bug (780197) preventing it to update automatically." +
                     "\nClear your history (in particular the 'Offline website data') -- and reload." +
                     "\n\nA quick way to clear the Madoko application cache is to press 'Shift+F2' and" +
                     "\nissue the command 'appcache clear' (and reload after that)");
             }
           }
-          else { 
+          else {
             self.version.updateDigest = version.digest; // remember we update to this version
-            window.applicationCache.update(); // update the cache -- will trigger a reload later on.                     
+            window.applicationCache.update(); // update the cache -- will trigger a reload later on.
             Util.message("Downloading updates...", Util.Msg.Status);
           }
         });
@@ -870,10 +870,10 @@ var UI = (function() {
 
     var openEvent = function(ev) {
       self.event( "loaded", "loading...", State.Loading, function() {
-        return Storage.openFile(self.storage).then( function(res) { 
+        return Storage.openFile(self.storage).then( function(res) {
           return self.updateConnectionStatus().then( function() {
             if (!res) return Promise.resolved(); // canceled
-            return self.openFile(res.storage,res.docName); 
+            return self.openFile(res.storage,res.docName);
           });
         }, function(err) {
           self.updateConnectionStatus();
@@ -885,35 +885,35 @@ var UI = (function() {
 
     document.getElementById("import-tex").onclick = function(ev) {
       self.event( "imported", "importing...", State.Loading, function() {
-        return self.importTex().always( function() { 
+        return self.importTex().always( function() {
           return self.updateConnectionStatus();
         });
       });
     };
-    
+
     document.getElementById("signin").onclick = function(ev) {
-      if (self.storage && self.storage.remote.needSignin) {        
+      if (self.storage && self.storage.remote.needSignin) {
         return self.anonEvent( function() {
           return self.login(" ");
-        });      
+        });
       }
     };
-    
+
     document.getElementById("signout").onclick = function(ev) {
-      if (self.storage && self.storage.remote.needSignin) {        
+      if (self.storage && self.storage.remote.needSignin) {
         return self.anonEvent( function() {
           return self.storage.remote.logout(true).then( function() {
             return self.updateConnectionStatus();
           });
-        });      
+        });
       }
     };
-    
+
     var newEvent = function(ev) {
       self.event( "created", "creating...", State.Loading, function() {
-        return Storage.createFile(self.storage).then( function(res) { 
+        return Storage.createFile(self.storage).then( function(res) {
           if (!res) return Promise.resolved(); // canceled
-          return self.openFile(res.storage,res.docName); 
+          return self.openFile(res.storage,res.docName);
         });
       });
     };
@@ -928,27 +928,27 @@ var UI = (function() {
         return self.saveTo();
       });
     }
-    
+
     document.getElementById("export-html").onclick = function(ev) {
-      self.generateHtml(); 
+      self.generateHtml();
     }
 
     document.getElementById("azure").onclick = function(ev) {
-      self.generateSite(); 
+      self.generateSite();
     }
 
     document.getElementById("export-pdf").onclick = function(ev) {
-      return self.generatePdf(); 
+      return self.generatePdf();
     }
 
     document.getElementById("export-texzip").onclick = function(ev) {
-      return self.generateTexZip(); 
+      return self.generateTexZip();
     }
 
     document.getElementById("snapshot").onclick = function(ev) {
-      self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() { 
+      self.event( "Snapshot created", "saving snapshot...",  State.Syncing, function() {
         return self.withSyncSpinner( function() {
-          return self.storage.createSnapshot(self.docName); 
+          return self.storage.createSnapshot(self.docName);
         });
       });
     }
@@ -957,14 +957,14 @@ var UI = (function() {
       self.anonEvent( function() {
         self.editSelect();
       }, [State.Syncing]);
-    };   
-       
+    };
+
     document.getElementById("edit-select-files").onclick = function(ev) {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV") {
           if (elem.nodeName === "A") return; //don't proceed if clicking on explicit link
-          elem = elem.parentNode;          
+          elem = elem.parentNode;
         }
         if (elem && elem.getAttribute) {  // IE10 doesn't support data-set so we use getAttribute
           var path = decodeURIComponent(elem.getAttribute("data-file"));
@@ -988,7 +988,7 @@ var UI = (function() {
                   return self.saveUserContent( path, mime );
                 }
                 else {
-                  return self.editFile(path);            
+                  return self.editFile(path);
                 }
               }, [State.Syncing,State.Exporting]);
             }
@@ -1001,7 +1001,7 @@ var UI = (function() {
       self.anonEvent( function() {
         var elem = ev.target;
         while(elem && elem.nodeName !== "DIV") {
-          elem = elem.parentNode;          
+          elem = elem.parentNode;
         }
         if (!elem) return;
         var epath = elem.getAttribute("data-path");
@@ -1060,8 +1060,8 @@ var UI = (function() {
 
     document.getElementById("console-out").ondblclick = messageDblClick;
     document.getElementById("status").ondblclick = messageDblClick;
-   
-    self.syncer.onclick = function(ev) {      
+
+    self.syncer.onclick = function(ev) {
       self.synchronize();
     }
 
@@ -1071,10 +1071,10 @@ var UI = (function() {
       });
     }
 
-    
+
     // narrow and wide editor panes
-    //viewpane.addEventListener('transitionend', function( event ) { 
-    //  self.syncView(); 
+    //viewpane.addEventListener('transitionend', function( event ) {
+    //  self.syncView();
     //}, false);
 
     function toggleFullView() {
@@ -1098,11 +1098,11 @@ var UI = (function() {
     document.getElementById("close-fullview").onclick = function(ev) {
       closeFullView();
     }
-    
+
     document.getElementById("view-full").onclick = function(ev) {
       toggleFullView();
     }
-    
+
     // font size
     document.getElementById("font-small").onclick = function(ev) {
       self.updateSettings ({fontScale:"small"});
@@ -1116,7 +1116,7 @@ var UI = (function() {
     document.getElementById("font-x-large").onclick = function(ev) {
       self.updateSettings({fontScale:"x-large"});
     }
-    
+
     // Theme
     document.getElementById("theme-ivory").onclick = function(ev) {
       self.updateSettings({theme:"ivory"})
@@ -1132,8 +1132,8 @@ var UI = (function() {
     self.initTools();
 
     // emulate hovering by clicks for touch devices
-    Util.enablePopupClickHovering();    
-    
+    Util.enablePopupClickHovering();
+
     // pinned menus
     var pin = Util.enablePinned();
 
@@ -1166,10 +1166,10 @@ var UI = (function() {
     }
     else if (isConnected) {
       Util.removeClassName(self.app,"disconnected");
-      Util.addClassName(self.app,"connected");      
+      Util.addClassName(self.app,"connected");
     }
     else {
-      Util.removeClassName(self.app,"connected");      
+      Util.removeClassName(self.app,"connected");
       Util.addClassName(self.app,"disconnected");
     }
 
@@ -1177,7 +1177,7 @@ var UI = (function() {
       self.connectionMessage.textContent = stg.remote.displayName;
       self.connectionMessage.title       = stg.remote.title;
     }
-    
+
     var inviteUrl = "";
     if (stg && stg.remote) {
       var remoteLogo = "images/dark/" + stg.remote.logo;
@@ -1190,7 +1190,7 @@ var UI = (function() {
           document.getElementById("connection-content").setAttribute("title", "As " + userName);
         });
       }
-      */    
+      */
     }
     document.getElementById("invite-link").href = inviteUrl;
   }
@@ -1200,7 +1200,7 @@ var UI = (function() {
     if (!stg) stg = self.storage;
     if (!stg) return Promise.resolved(false);
     return stg.connect().then( function(status) {
-      self.isConnected = (status === 0); 
+      self.isConnected = (status === 0);
       self.updateRemoteLogo(stg,self.isConnected);
       return status;
     });
@@ -1208,19 +1208,19 @@ var UI = (function() {
 
   UI.prototype.setEditText = function( text, options, mode ) {
     var self = this;
-    self.editor.editFile(self.editName,text,options,mode)    
+    self.editor.editFile(self.editName,text,options,mode)
     self.lastSpellCheck = 0;
   }
 
-  UI.prototype.getEditText = function() { 
+  UI.prototype.getEditText = function() {
     var self = this;
-    return self.editor.getValue(); 
+    return self.editor.getValue();
   }
 
   UI.prototype.setStale = function() {
     var self = this;
     self.stale = true;
-    if (self.asyncMadoko) self.asyncMadoko.setStale();    
+    if (self.asyncMadoko) self.asyncMadoko.setStale();
   }
 
   function findSpan( text, line0, col0, line1, col1 ) {
@@ -1261,7 +1261,7 @@ var UI = (function() {
       else {
         var s = text1.substr(end1);
         end0 = text0.indexOf(s,i);
-        if (end0 < 0) return null;      
+        if (end0 < 0) return null;
       }
       while( end0 > i ) {
         if (text0[end0] !== text1[end1]) break;
@@ -1309,7 +1309,7 @@ var UI = (function() {
   function findTextNode( elem, text ) {
     if (!elem || !text) return null;
     if (elem.nodeType===3) {
-      if (elem.textContent === text) return elem;      
+      if (elem.textContent === text) return elem;
     }
     else {
       for( var child = elem.firstChild; child != null; child = child.nextSibling) {
@@ -1317,12 +1317,12 @@ var UI = (function() {
         if (res) return res;
       }
     }
-    return null;  
+    return null;
   }
 
   UI.prototype.viewLoaded = function() {
     var self = this;
-    // self.syncView({ force: true });               
+    // self.syncView({ force: true });
   }
 
   UI.prototype.viewHTML = function( html, time0 ) {
@@ -1334,8 +1334,8 @@ var UI = (function() {
       self.stat.editTotal = self.stat.editTotal + (self.lastEditChange - self.stat.editLast);
     }
     self.stat.editLast = self.lastEditChange;
-    
-    
+
+
     function updateFull() {
       update();
       // for separate viewer
@@ -1355,7 +1355,7 @@ var UI = (function() {
       return false;
     }
 
-    if (self.html0) {      
+    if (self.html0) {
       var dif = simpleDiff(self.html0,html);
       if (!dif || /[<>"]/.test(dif.text)) return updateFull();
       var newSpan = { pos0: dif.start, pos1: dif.end1, text: dif.text1 };
@@ -1365,12 +1365,12 @@ var UI = (function() {
       var i = self.html0.indexOf(oldSpan.text);
       if (i !== oldSpan.pos0) return updateFull();
       // ok, we can identify a unique text node in the html
-      update(oldSpan.textContent,newSpan.textContent);      
+      update(oldSpan.textContent,newSpan.textContent);
       return true;
     }
     else {
       return updateFull();
-    }  
+    }
   }
 
   function stripMarkup(s) {
@@ -1399,8 +1399,8 @@ var UI = (function() {
       // clear
       self.citations = null;
       if (self.editor) self.editor.setSuggestCitations([]);
-      menu.innerHTML = noCitations;    
-      return;  
+      menu.innerHTML = noCitations;
+      return;
     }
 
     // parse citations from this bib file
@@ -1426,7 +1426,7 @@ var UI = (function() {
     cites = cites.sort(function(c1,c2) {
       var s1 = c1.name.toLowerCase();
       var s2 = c2.name.toLowerCase();
-      return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0)); 
+      return (s1 < s2 ? -1 : (s1 > s2 ? 1 : 0));
     });
 
     if (self.editor) self.editor.setSuggestCitations(cites);
@@ -1447,13 +1447,13 @@ var UI = (function() {
     var json = "["+ txt.split("\n").filter(function(line){ return (line.length>0); }).join(",\n") + "]";
     var items = Util.jsonParse(json,[]);
     var itemMap = new Map();
-    items.forEach( function(item) { 
+    items.forEach( function(item) {
       var key = item[keyName];
       if (!itemMap.contains(key)) itemMap.set( key, item );
     });
     return itemMap.sortedKeyElems().map( function(kv) { return kv.value; });
   }
-  
+
   var customSnippets = new Map([
     { key: "equation", value: "Equation { #eq-{{name}} }" },
     { key: "figure", value: "Figure { #fig-{{name}} caption=\"{{caption}}\" }\n{{content}}" },
@@ -1483,7 +1483,7 @@ var UI = (function() {
 
     // parse labels
     var cites = new Map();
-    var labels = jsonParseLineArray(labelsTxt).filter( function(item) { 
+    var labels = jsonParseLineArray(labelsTxt).filter( function(item) {
       if (Util.startsWith(item.name, "fn-")) {
         return false;
       }
@@ -1498,7 +1498,7 @@ var UI = (function() {
       label.title = stripMarkup(label.caption || label.text);
       return label;
     });
-    
+
     // update suggestions
     if (self.editor) self.editor.setSuggestLabels(labels);
 
@@ -1518,7 +1518,7 @@ var UI = (function() {
     });
     if (self.editor) self.editor.setSuggestLinks(links);
 
-    
+
 
     // render labels
     var menuLabels = document.getElementById("tool-reference-content");
@@ -1541,7 +1541,7 @@ var UI = (function() {
     if (elem.spinDelay == null) elem.spinDelay = self.refreshRate * 2;
     if (elem.spinners < 0) elem.spinners = 0;
 
-    if (enable && elem.spinners === 0) {      
+    if (enable && elem.spinners === 0) {
       setTimeout( function() {
         if (elem.spinners >= 1) Util.addClassName(elem,"spin");
       }, elem.spinDelay );
@@ -1563,7 +1563,7 @@ var UI = (function() {
       self.showSpinner(enable);
     }
 
-    self.asyncMadoko = new Util.AsyncRunner( self.refreshRate, showSpinner, 
+    self.asyncMadoko = new Util.AsyncRunner( self.refreshRate, showSpinner,
       function() {
         var changed = self.changed;
         self.changed = false;
@@ -1588,12 +1588,12 @@ var UI = (function() {
           self.docText = self.getEditText();
         }
         return self.runner.runMadoko(self.docText, {
-                  docname: self.docName, 
-                  round: round, 
+                  docname: self.docName,
+                  round: round,
                   time0: Date.now(),
                   showErrors: function(errs) { self.showErrors(errs,false,"warning"); }
                 }).then( function(res) {
-              self.htmlText = res.content; 
+              self.htmlText = res.content;
               self.fileOrder = res.fileOrder || []; // used for gotoNextError
               var quick = self.viewHTML(res.content, res.ctx.time0);
               self.updateLabels(res.labels,res.links,res.customs,res.entities);
@@ -1606,9 +1606,9 @@ var UI = (function() {
                   if ((res.mathPlainDoc && self.lastMathPlainDoc !== res.mathPlainDoc) ||
                       (res.mathFullDoc && self.lastMathFullDoc !== res.mathFullDoc)) { // prevents infinite math rerun on latex error
                     self.asyncServer.setStale();
-                  } 
+                  }
                   if (res.mathPlainDoc) self.lastMathPlainDoc = res.mathPlainDoc;
-                  if (res.mathFullDoc) self.lastMathFullDoc = res.mathFullDoc;                
+                  if (res.mathFullDoc) self.lastMathFullDoc = res.mathFullDoc;
                 }
                 else {
                   self.asyncServer.setStale();
@@ -1621,14 +1621,14 @@ var UI = (function() {
               if (!res.runAgain && self.syncOnRender) {
                 self.syncOnRender = false;
                 self.syncView({force:true});
-              }          
+              }
               self.removeDecorations(false,"merge");
               self.showConcurrentUsers( true );
 
               // adjust delayed view?
               self.lastRenderWasSlow = (res.avgTime > 400);
-              
-              
+
+
               /*
               // adjust refresh rate dynamically
               if (res.avgTime > 1000 && self.refreshRate < 1000) {
@@ -1640,7 +1640,7 @@ var UI = (function() {
                 self.asyncMadoko.resume(self.refreshRate);
               }
               */
-              
+
               /*
               // adjust delayed view update automatically
               if (res.avgTime > 300) {
@@ -1652,46 +1652,47 @@ var UI = (function() {
                 self.checkDelayedUpdate.checked = false;
               }
               */
-              
-              return ("update: " + res.ctx.round + 
-                        (quick ? "  (quick view update)" : "") + 
+
+              return ("update: " + res.ctx.round +
+                        (quick ? "  (quick view update)" : "") +
                         (!self.settings.delayedUpdate ? " (continuous)" : "") +
                         //"\n  refresh rate: " + self.refreshRate.toFixed(0) + "ms" +
                         ", avg. time: " + res.avgTime.toFixed(0) + "ms" +
-                        " (" + (self.lastRenderWasSlow ? "slow" : (self.lastViewRenderWasSlow ? "slow-view" : "quick")) + ")");                                                        
+                        " (" + (self.lastRenderWasSlow ? "slow" : (self.lastViewRenderWasSlow ? "slow-view" : "quick")) + ")");
             },
             function(err) {
-              self.onError(err);              
+              self.onError(err);
             }
           );
       }
     );
 
-    self.asyncServer = new Util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) }, 
+    self.asyncServer = new Util.AsyncRunner( self.serverRefreshRate, function(enable) { self.showSpinner(enable, self.exportSpinner) },
       function() { return false; },
       function(round) {
         var ctx = {
-          docname: self.docName, 
+          docname: self.docName,
           round:round,
           disableServer: self.settings.disableServer,
           statusMessage: "Rendering math and references",
           showErrors: function(errs) { self.showErrors(errs,false); },
         };
-        return self.runner.runMadokoServer(self.docText, ctx ).then( 
+        return self.runner.runMadokoServer(self.docText, ctx ).then(
           function(ctx) {
             // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
-            return self.asyncMadoko.run(true);
+            self.asyncMadoko.run(true);
+            return "Rendering math done";
           },
           function(err) {
-            self.onError(err);            
+            self.onError(err);
           }
-        );     
+        );
       }
     );
 
     self.lastSpellCheck = 0;
-    self.asyncSpellCheck = new Util.AsyncRunner( 2000, null, 
+    self.asyncSpellCheck = new Util.AsyncRunner( 2000, null,
       function() {
         var now = Date.now();
         return (self.settings.spellCheck && self.lastEditChange > self.lastSpellCheck && ((now - self.lastEditChange) > 1000));
@@ -1726,7 +1727,7 @@ var UI = (function() {
     var pos  = self.editor.getPosition();
     var text = self.getEditText();
     self.editContent = text;
-    if (self.storage)  self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly     
+    if (self.storage)  self.storage.writeFile( self.editName, text, { position: pos } ); // todo: not for readOnly
   }
 
   // synchronous save state to local disk
@@ -1734,24 +1735,24 @@ var UI = (function() {
     var self = this;
     self.saveSettings();
     if (!self.storage || !self.editName) return {};
-    
-    self.flush();    
-    var pos  = self.editor.getPosition();    
-    var doc = { 
-      docName: self.docName, 
-      editName: self.editName, 
+
+    self.flush();
+    var pos  = self.editor.getPosition();
+    var doc = {
+      docName: self.docName,
+      editName: self.editName,
       pos: pos,
-      storage: self.storage.persist(self.tabDb.limit()),      
+      storage: self.storage.persist(self.tabDb.limit()),
     };
     try {
       window.tabStorage.setItem( "document", doc );
-      window.tabStorage.setItem( "editContent", self.editContent ); // updated by flush    
+      window.tabStorage.setItem( "editContent", self.editContent ); // updated by flush
       return doc;
     }
     catch(exn) {
       Util.message("Unable to save document state to local storage: " + exn.toString(), Util.Msg.Warning);
       return doc;
-    };    
+    };
   }
 
   // Asynchonous full save
@@ -1794,7 +1795,7 @@ var UI = (function() {
         var fname = (files && files[0]) ? files[0].name : null;
         if (!fname || Util.extname(fname) !== ".tex") throw new Error("Sorry, can only import .tex files.");
         var docName = Storage.sanitizeFileName(Util.stemname(fname)) + ".mdk";
-        var stg = Storage.createNullStorage();        
+        var stg = Storage.createNullStorage();
         stg.writeFile(docName,"")
         return self.setStorage(stg,docName).then( function() {
           self.insertFiles(files);
@@ -1813,7 +1814,7 @@ var UI = (function() {
         if (!yes) throw new Error("operation cancelled");
         return Storage.httpOpenFile(url,doc);
       }).then( function(res) {
-        return self.openFile(res.storage,res.docName); 
+        return self.openFile(res.storage,res.docName);
       }).then( function() {
         return true;
       }, function(err) {
@@ -1839,12 +1840,12 @@ var UI = (function() {
         }
         return self.withSyncSpinner( function() {
           return stg.readFile(docName, false);
-        }).then( function(file) {           
+        }).then( function(file) {
           if (self.storage) {
             self.storage.destroy();     // clears all event listeners
             self.updateCitations(null); // clears citations
             self.updateLabels(null,null,null,null); // clears references
-            self.dispatchViewEvent({eventType: "reload"});      
+            self.dispatchViewEvent({eventType: "reload"});
             //self.viewHTML( "<p>Rendering...</p>", Date.now() );
             //self.storage.clearEventListener(self);
           }
@@ -1860,7 +1861,7 @@ var UI = (function() {
               self.previewFileUpdate(file);
             }
           });
-          
+
           self.storage.addEventListener("update",self);
           //self.storage.addEventListener("delete",self);
           self.runner.setStorage(self.storage);
@@ -1870,13 +1871,13 @@ var UI = (function() {
           var remoteType = self.storage.remote.type;
           var remoteMsg = (remoteType==="local" ? "browser local" : remoteType);
           self.remoteLogo.src = "images/dark/" + remoteLogo;
-          self.remoteLogo.title = "Connected to " + remoteMsg + " storage";        
+          self.remoteLogo.title = "Connected to " + remoteMsg + " storage";
           */
           self.editor.clearEditState();
           self.editName = "";
-          return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() { 
+          return self.editFile(self.docName).always( function() { self.setStale(); } ).then( function() {
             return self.updateConnectionStatus().then( function() {
-              return fresh; 
+              return fresh;
             });
           });
         });
@@ -1886,7 +1887,7 @@ var UI = (function() {
 
   UI.prototype.initializeStorage = function(stg,docName,cont) {
     var self = this;
-    docName = docName || "document.mdk";        
+    docName = docName || "document.mdk";
     var cap = /[#&]template=([^=&#;]+)/.exec(window.location.hash);
     if (cap) window.location.hash = "";
     if (cap || !stg) {
@@ -1900,7 +1901,7 @@ var UI = (function() {
           return cont(stg,docName,true);
         });
       });
-    } 
+    }
     else {
       return cont(stg,docName,false);
     }
@@ -1927,15 +1928,15 @@ var UI = (function() {
     if (self.editName) {
       self.flush(self.editName);
     }
-    //self.state = State.Loading;            
-    if (fpath===self.editName) loadEditor = Promise.resolved(null) 
-     else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {       
+    //self.state = State.Loading;
+    if (fpath===self.editName) loadEditor = Promise.resolved(null)
+     else loadEditor = self.spinWhile(self.syncer, self.storage.readFile(fpath, false)).then( function(file) {
             self.hideDecorations();
             self.showConcurrentUsers(false,"none");
             if (self.editName === self.docName) {
               self.docText = self.getEditText();
             }
-            
+
             var options = {
               readOnly: !Storage.isEditable(file),
               theme: self.getCurrentTheme(),
@@ -1949,7 +1950,7 @@ var UI = (function() {
             self.onFileUpdate(file); // update display etc.
             return Storage.getEditPosition(file);
       });
-    return loadEditor.then( function(posx) {      
+    return loadEditor.then( function(posx) {
       if (!pos) pos = posx;
       if (pos) {
         self.gotoPosition(pos, reveal );
@@ -1959,10 +1960,10 @@ var UI = (function() {
       self.localFullSave();
       // self.syncView({force:true})  // not yet rendered so cannot sync just yet
       self.syncOnRender = true;
-    }); 
-    // .always( function() { 
-    //   self.state = State.Normal; 
-    // });    
+    });
+    // .always( function() {
+    //   self.state = State.Normal;
+    // });
   }
 
   UI.prototype.onContentChanged = function(ev) {
@@ -1973,9 +1974,9 @@ var UI = (function() {
     var self = this;
     self.editor.setPosition(pos,true,true);
     if (reveal) {
-      self.editor.revealPosition( pos, true, true );    
+      self.editor.revealPosition( pos, true, true );
 
-    }               
+    }
 
   }
 
@@ -1999,7 +2000,7 @@ var UI = (function() {
     if (!TabStorage.claim(tabNo)) throw new Error("Cannot open document: it is already opened in another tab");
     var obj = window.tabStorage.getItemFrom(tabNo,"document");
     if (obj==null || obj.storage == null) return self.setStorage(null,null);
-             
+
     // read needed files
     return Promise.map( obj.storage.files, function(fname) {
       var key = "/" + fname;
@@ -2028,10 +2029,10 @@ var UI = (function() {
 
   UI.prototype.checkSynced = function() {
     var self = this;
-    return Promise.do( function() { 
-      if (self.storage) 
+    return Promise.do( function() {
+      if (self.storage)
         return self.storage;
-      else 
+      else
         return self.localLoad().then( function() { return self.localStorage; });
     }).then( function(stg) {
       if (stg && !stg.isSynced()) {
@@ -2048,7 +2049,7 @@ var UI = (function() {
   UI.prototype.openFile = function(storage,fname) {
     var self = this;
     var mime = Util.mimeFromExt(fname);
-    if (fname && !(mime === "text/madoko" || mime==="text/markdown") ) return Util.message("only markdown (.mdk) files can be selected",Util.Msg.Error);      
+    if (fname && !(mime === "text/madoko" || mime==="text/markdown") ) return Util.message("only markdown (.mdk) files can be selected",Util.Msg.Error);
     return self.setStorage( storage, fname );
   }
 
@@ -2056,7 +2057,7 @@ var UI = (function() {
   UI.prototype.displayFile = function(file,extensive) {
     var self = this;
     var disable = (Storage.isEditable(file) ? "" : " disable");
-    var sym  = // ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") + 
+    var sym  = // ((self.storage.remote.canCommit && file.sha==null) ? "<span title='Changes not yet committed'>&#x2217;</span>" : "") +
                 (file.modified || (self.storage.remote.canCommit && file.sha===null) ? "<span title='Changes not yet synchronized'>&#9679;</span>" : "");
     var icon = "<span class='file-status'>" + sym + "</span>";
     var span = "<span class='file " + file.mime.replace(/[^\w]+/g,"-") + disable + "'" +
@@ -2064,7 +2065,7 @@ var UI = (function() {
                      Util.escape(file.path) + icon + "</span>";
     var extra = "";
     if (extensive) {
-      var len = file.content.length;        
+      var len = file.content.length;
       if (Storage.isEditable(file)) {
         var matches = file.content.replace(/<!--[\s\S]*?-->/,"").match(/[^\d\s~`!@#$%^&\*\(\)\[\]\{\}\|\\\/<>,\.\+=:;'"\?]+/g);
         var words   = matches ? matches.length : 0;
@@ -2110,10 +2111,10 @@ var UI = (function() {
           var hide    = ""; // (Util.extname(file.path) === ".dimx" ? " hide" : "");
           var nosync  = (file.nosync ? " nosync" : "");
           var line = "<div data-file='" + encodeURIComponent(file.path) + "' " +
-                        "class='button file hoverbox" + disable + main + hide + nosync + "'>" + 
+                        "class='button file hoverbox" + disable + main + hide + nosync + "'>" +
                             self.displayFile(file,true) + "</div>";
-          var info = { line: line, path: file.path }                            
-          if (Util.startsWith(file.mime,"image/")) images.push(info); 
+          var info = { line: line, path: file.path }
+          if (Util.startsWith(file.mime,"image/")) images.push(info);
           else if (!disable) files.push(info);
           else if (Util.stemname(self.docName) === Util.stemname(file.path) && (ext===".pdf" || ext===".html" || ext===".zip")) finals.push(info);
           else if (file.nosync) nosyncs.push(info);
@@ -2121,11 +2122,11 @@ var UI = (function() {
         }
       });
     };
-    
+
     /*
     var dir = document.getElementById("edit-select-directory");
     if (dir) {
-      dir.innerHTML = "<img src='images/" + self.storage.remote.logo + "'/> " + 
+      dir.innerHTML = "<img src='images/" + self.storage.remote.logo + "'/> " +
                         Util.escape( self.storage.folder() ) + "<hr/>";
     }
     */
@@ -2149,13 +2150,13 @@ var UI = (function() {
                 (divname ? "\n</div>" : "");
     }
 
-    div.innerHTML = 
+    div.innerHTML =
       joinLines(finals,"rendered","rendered") +
-      joinLines(files, "files", "files") + 
-      "<div class='binaries'>" + 
-        joinLines(images,"images","images") + 
-        joinLines(generated, "generated","generated") + 
-        joinLines(nosyncs, "nosyncs","server provided") + 
+      joinLines(files, "files", "files") +
+      "<div class='binaries'>" +
+        joinLines(images,"images","images") +
+        joinLines(generated, "generated","generated") +
+        joinLines(nosyncs, "nosyncs","server provided") +
       "</div>";
   }
 
@@ -2169,7 +2170,7 @@ var UI = (function() {
 
     if (!self.storage.remote.canSync || self.settings.disableServer) {  // unconnected storage (null or http)
       self.usersStatus.className = "";
-      return; 
+      return;
     }
     else if (quick && (self.usersStatus.className === "" || self.usersStatus.className === "users-open" )) {  // don't do a get request for a quick check
       return;
@@ -2178,11 +2179,11 @@ var UI = (function() {
       self.usersStatus.className = "";
     }
     else if (!edit) {
-      if (self.storage && self.storage.isModified(self.editName)) 
+      if (self.storage && self.storage.isModified(self.editName))
         edit = "write";
       else if (now > self.lastActivity + 120000)  // after 2 minutes of non-activity, become open which reduces get requests to server
         edit = "open";
-      else 
+      else
         edit = "read";
     }
     var editInfo = {
@@ -2197,7 +2198,7 @@ var UI = (function() {
     docFile = docFile + "*"; // special name for overall document
     files[docFile] = { kind: edit, line: 0 };
     files[editFile] = { kind: edit, line: self.editor.getPosition().lineNumber };
-    
+
     self.lastConUsersCheck = Date.now();
     self.storage.remote.getUserName().then( function(name) {
       var body = {
@@ -2218,7 +2219,7 @@ var UI = (function() {
               var info = users.getOrCreate(user.name,user);
               if (user.kind==="write") {
                 info.path = fname;
-                info.kind = user.kind;           
+                info.kind = user.kind;
                 info.line = user.line;
               }
               else if (!Util.endsWith(fileName,"*")) {
@@ -2241,24 +2242,24 @@ var UI = (function() {
             readers = true;
           }
           status = status + "<div class='button user-" + user.kind + "' " +
-                            "title='" + (user.kind==="write" ? "Editing document" : (user.kind==="read" ? "Viewing document" : "Opened document")) + 
-                                      " " + Util.escape(Util.basename(user.path)) + 
-                                      (user.line>0 ? ":" + Util.escape(user.line.toString()) : "") + 
+                            "title='" + (user.kind==="write" ? "Editing document" : (user.kind==="read" ? "Viewing document" : "Opened document")) +
+                                      " " + Util.escape(Util.basename(user.path)) +
+                                      (user.line>0 ? ":" + Util.escape(user.line.toString()) : "") +
                                       "' " +
-                            "data-path='" + encodeURIComponent(user.path) + "' " + 
+                            "data-path='" + encodeURIComponent(user.path) + "' " +
                             (user.line != null ? "data-line='" + encodeURIComponent(user.line.toString()) + "' " : "") +
-                            ">" + 
+                            ">" +
                     "<span class='icon'><img src='images/icon-user-" + user.kind + ".png'></span>" +
-                    Util.escape(user.name) + 
+                    Util.escape(user.name) +
                     "</div>";
         });
         self.usersPanel.innerHTML = status;
-      
+
         if (edits.length > 0) {
           self.usersStatus.className = "users-write";
         }
         else if (users.count() > 0) {
-          self.usersStatus.className = (readers ? "users-read" : "users-open");        
+          self.usersStatus.className = (readers ? "users-read" : "users-open");
         }
         else {
           self.usersStatus.className = "";
@@ -2266,7 +2267,7 @@ var UI = (function() {
 
         // decorations
         self.showConcurrentEdits(edits);
-        
+
       });
     });
   }
@@ -2279,10 +2280,10 @@ var UI = (function() {
     var now = Date.now();
     var body = {
       editTime: self.stat.editTotal,
-      viewTime: now - self.stat.viewStart, 
+      viewTime: now - self.stat.viewStart,
     };
     body.activeTime = (now < self.lastActivity + 60000 ? 60000 : 0); // any activity in the last minute?
-     
+
     self.stat.editTotal = 0;
     self.stat.viewStart = now;
 
@@ -2295,7 +2296,7 @@ var UI = (function() {
 
 
   function _saveUserContent( path, mime, content, tryOpenFirst ) {
-    // blob is created in our origin; 
+    // blob is created in our origin;
     // so we should make sure a user can only save, not open a window in our domain
     // since a html page could read our local storage or do rest calls with our cookie.
     // (this could be problem if a user opens a document with 'evil' content)
@@ -2313,7 +2314,7 @@ var UI = (function() {
         window.open(url,name);
         return;
       }
-      catch(exn) {}  
+      catch(exn) {}
     }
 
     // The rest of the code handles all cases to allow saving the content locally
@@ -2337,7 +2338,7 @@ var UI = (function() {
       }
       catch(exn) { // on mobile
         var link = self.getViewLink(path,mime);
-        if (link) return Util.message( { message: "Document exported", link: link }, Util.Msg.Status );        
+        if (link) return Util.message( { message: "Document exported", link: link }, Util.Msg.Status );
       }
     }
   }
@@ -2346,7 +2347,7 @@ var UI = (function() {
     var self = this;
     if (!mime) mime = Util.mimeFromExt(path);
     var prefix = "";
-    
+
     if (mime==="application/pdf") {
       var url = self.storage.getShareUrl(path); // for PDF share is best; dropbox preview is great
       if (!url && URL.createObjectURL && !navigator.msSaveOrOpenBlob) {  // don't use for IE
@@ -2358,15 +2359,15 @@ var UI = (function() {
         }
       }
       if (url) {
-        prefix = "&nbsp;(<a class='external' target='_blank' title='view in browser' href='" + Util.escape(url) + "'>view</a>)"; 
+        prefix = "&nbsp;(<a class='external' target='_blank' title='view in browser' href='" + Util.escape(url) + "'>view</a>)";
       }
     }
     // probably html, cannot use blob url directly (since a user can right-click and open in our origin)
     // we create fake url's that call "saveUserContent" on click
     return (function(msg) {
-      return msg + prefix + 
-        "&nbsp;(<span class='save-link' title='download and open' data-path='" + encodeURIComponent(path) + 
-            "' data-mime='" + encodeURIComponent(mime) + "'>open</span>)"; 
+      return msg + prefix +
+        "&nbsp;(<span class='save-link' title='download and open' data-path='" + encodeURIComponent(path) +
+            "' data-mime='" + encodeURIComponent(mime) + "'>open</span>)";
     });
   }
 
@@ -2406,22 +2407,22 @@ var UI = (function() {
 
   UI.prototype.generateOnServer = function(target,ext,msg) {
     var self = this;
-    self.event( null, msg + "...", State.Exporting, function() { 
+    self.event( null, msg + "...", State.Exporting, function() {
       self.localSave();
-      var ctx = { 
-        round: 0, 
-        docname: self.docName, 
-        target: target, 
+      var ctx = {
+        round: 0,
+        docname: self.docName,
+        target: target,
         includeImages: true,
         disableServer: self.settings.disableServer,
         statusMessage: msg,
-        showErrors: function(errs) { self.showErrors(errs,true); } 
+        showErrors: function(errs) { self.showErrors(errs,true); }
       };
       //if (self.settings.disableServer) {
       //  Util.message("Cannot generate PDF because the 'disable server' menu is checked", Util.Msg.Error);
       //  return;
       //}
-      return self.spinWhile( self.exportSpinner, 
+      return self.spinWhile( self.exportSpinner,
         self.runner.runMadokoServer( self.docText, ctx ).then( function(errorCode) {
           if (errorCode !== 0) throw ( msg + " failed: " + ctx.message);
           var name = "out/" + Util.changeExt(self.docName,"." + ext);
@@ -2440,12 +2441,12 @@ var UI = (function() {
     var self = this;
     return self.generateOnServer("texzip","zip","Creating LaTeX bundle");
   }
-  
+
   UI.prototype.generateHtml = function() {
     var self = this;
-    self.event( null, "Rendering HTML...", State.Exporting, function() { 
+    self.event( null, "Rendering HTML...", State.Exporting, function() {
       self.localSave();
-      return self.spinWhile( self.exportSpinner, 
+      return self.spinWhile( self.exportSpinner,
         self.runner.runMadokoLocal( self.docName, self.docText, { embedLimit: 512*1024 } ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
           self.storage.writeFile( name, content );
@@ -2458,8 +2459,8 @@ var UI = (function() {
 
   UI.prototype.generateSite = function() {
     var self = this;
-    self.event( "Saved website", "exporting...", State.Exporting, function() { 
-      return self.spinWhile( self.exportSpinner, 
+    self.event( "Saved website", "exporting...", State.Exporting, function() {
+      return self.spinWhile( self.exportSpinner,
         self.runner.runMadokoLocal( self.docName, self.docText ).then( function(content) {
           var name = "out/" + Util.changeExt(self.docName,".html");
           self.storage.writeFile( name, content );
@@ -2474,7 +2475,13 @@ var UI = (function() {
     Editor operations
   -------------------------------------------------- */
   function reformatTable( lines, column ) {
-    var rxCell = /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?!$|[:~=\-\r\n]))+)([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/g;
+    var rxCellCodeInline = /(?:``(?:[^`]|`(?!`))*``|`(?:[^`]|``)*`)/.source;
+    var rxCellTexInline1 = /(?:\$(?!\{)(?:[^\\\$\|]|\\[\s\S])+\$)/.source;
+    var rxCellTexInline2 = /(?:\$\{(?:[^\\\$]|\\[\s\S])+\$)/.source;
+    var rxCellContent = /\\./.source + "|" + rxCellTexInline1 + "|" + rxCellTexInline2 + "|" + rxCellCodeInline + "|" + /[^\\|+]|\+ *(?!$|[:~=\-\r\n])/.source;
+    var rxCellContents = "((?:" + rxCellContent + ")+)";
+    var rxCell = new RegExp(/((?:^ *(?:\||\+(?=[:=~-])))?)/.source + rxCellContents            + /([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/.source, "g");
+    //var rxCell =             /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?!$|[:~=\-\r\n]))+)([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/g;
     var rows = lines.map( function(line) {
        var cells = [];
        var cap;
@@ -2484,7 +2491,7 @@ var UI = (function() {
         cells.push( cap[3] ); // separator
        }
        if (!cells || cells.length===0) {
-         return [line,"","|"]; 
+         return [line,"","|"];
        }
        return cells;
     });
@@ -2566,8 +2573,8 @@ var UI = (function() {
     var col     = hang0.length;
     var hangCol = col;
     text = text.substr(col);
-    
-    // split in non-breakable parts    
+
+    // split in non-breakable parts
     var parts = []; // text.split(/\s(?!\s*\[)/);
     var rxpart = /(?:[^\s\\\$\{`]|\\[\s\S]|\$(?:[^\\\$]|\\.)*\$|\{(?:[^\\\}]|\\.)*\}|(`+)(?:[^`]|(?!\1)`)*\1|\s+\[|[\\\$\{`])+/;
     var rxspace = /\s+/;
@@ -2586,7 +2593,7 @@ var UI = (function() {
           text = text.substr(cap[0].length); // skip whitespace
         }
       }
-    }  
+    }
 
     // and put the parts together inside the column boundaries
     parts.forEach( function(part) {
@@ -2618,14 +2625,14 @@ var UI = (function() {
       var cap = /^(\s*)/.exec(line);
       return (cap ? cap[1].length : 0);
     });
-    
+
     var listCap = /^[ \t]*(([\*\+\-]|\d\.)[ \t]+)/.exec(text);
     var listHang = listCap ? listCap[0].length : 0;
-      
+
     var hang0  = new Array(indents[0]+1).join(" ");
     var indent = Math.max( Math.max(indents[0],listHang), (indents.length > 1 ? Math.min.apply( null, indents.slice(1) ) : 0) );
     var hang   = new Array(indent+1).join(" ");
-    
+
     // reformat
     var paraText = para.join(" ");
     return breakLines(paraText, column || 72, hang0, hang);
@@ -2658,13 +2665,13 @@ var UI = (function() {
       // find table extent
       while ( start > 1 && rxTable.test(lines[start-2]) ) {
         start--;
-      } 
+      }
       while (end < lines.length && rxTable.test(lines[end])) {
         end++;
       }
       var table = lines.slice(start-1,end);
       if (table.length <= 0) return null;
-      content = reformatTable(table,column); 
+      content = reformatTable(table,column);
       newpos = pos;
     }
     else {
@@ -2720,7 +2727,7 @@ var UI = (function() {
     var cap;
     while ((cap = reMeta.exec(text))) {
       text = text.substr(cap[0].length);
-      lineNo += Util.lineCount(cap[0]); 
+      lineNo += Util.lineCount(cap[0]);
     }
     return lineNo;
   }
@@ -3045,52 +3052,52 @@ var symbolsMath = [
   { entity: "diams", code: 9830 },
 ];
 
-  var toolDefInclude = { 
+  var toolDefInclude = {
     name: "include",
     title: "Include a local file",
     options: [
-      { name    : "Image", 
+      { name    : "Image",
         title   : "Insert an image",
         helpLink: "#sec-image",
         upload  : "Please select an image.",
         exts    : [".jpg",".png",".svg",".gif",".eps"],
       },
-      { name    : "Markdown", 
+      { name    : "Markdown",
         title   : "Include another markdown file",
         upload  : "Please select a markdown file.",
         exts    : [".mdk",".md",".mkdn",".markdown"],
       },
-      { name    : "Bibliography", 
+      { name    : "Bibliography",
         helpLink: "#sec-bib",
         title   : "Include a BibTeX bibliography file",
         upload  : "Please select a BibTeX bibliography file",
         exts    : [".bib"],
       },
-      { name    : "Bibliography style (.bst)", 
+      { name    : "Bibliography style (.bst)",
         helpLink: "#sec-bib",
         title   : "Use a specific bibliography style",
         upload  : "Please select a BibTeX bibliography style file",
         exts    : [".bst"],
       },
-      { name    : "Language colorizer", 
+      { name    : "Language colorizer",
         helpLink: "#syntax-highlighting",
         title   : "Include a language syntax highlighting specification",
         upload  : "Please select a syntax highlighting specification file",
         exts    : [".json"],
       },
-      { name    : "CSS style", 
+      { name    : "CSS style",
         helpLink: "#html-keys",
         title   : "Include a CSS style file (.css)",
         upload  : "Please select a CSS style file.",
         exts    : [".css"],
       },
-      { name    : "LaTeX package", 
+      { name    : "LaTeX package",
         helpLink: "#latex-keys",
         title   : "Include a LaTeX package, style, or TeX file",
         upload  : "Please select a LaTeX package file",
         exts    : [".sty",".tex"],
       },
-      { name    : "LaTeX document class", 
+      { name    : "LaTeX document class",
         helpLink: "#latex-keys",
         title   : "Include a LaTeX document class",
         upload  : "Please select a LaTeX document class file",
@@ -3114,41 +3121,41 @@ var symbolsMath = [
       icon    : true,
       title   : "Inline code",
     }),
-    { name    : "link", 
+    { name    : "link",
       icon    : true,
       title   : "Insert a link",
       content : "link",
       keys    : ["Ctrl-K"],
-      replacer: function(txt,rng) { 
+      replacer: function(txt,rng) {
                   var self = this;
                   var name = txt.replace(/[^\w\- ]+/g,"").substr(0,16);
                   var url  = "http://" + name.replace(/\s+/g,"_") + ".com";
                   var def  = "\n[" + name + "]: " + url + " \"" + name + " title\"\n";
                   self.insertAfterPara(self.editor.getPosition().lineNumber, def);
-                  return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");   
+                  return "[" + txt + "]" + (name===txt ? "" : "[" + name + "]");
                 },
     },
     toolInline("formula","$","$",{
       icon    : true,
       title   : "Inline formula",
       content : "e = mc^2",
-      keys    : ["Alt-F"],      
-    }), 
-    toolInline("sub","~","~", {  
+      keys    : ["Alt-F"],
+    }),
+    toolInline("sub","~","~", {
       icon     : true,
       title    : "Sub-script",
-      transform: function(txt) { 
-                  return txt.replace(/~/g,"\\~").replace(/ /g,"\\ "); 
+      transform: function(txt) {
+                  return txt.replace(/~/g,"\\~").replace(/ /g,"\\ ");
                 },
     }),
-    toolInline("super","^","^", { 
+    toolInline("super","^","^", {
       icon    : true,
       title   : "Super-script",
-      transform: function(txt) { 
-                  return txt.replace(/\^/g,"\\^").replace(/ /g,"\\ "); 
+      transform: function(txt) {
+                  return txt.replace(/\^/g,"\\^").replace(/ /g,"\\ ");
                 },
     }),
-    { name    : "font", 
+    { name    : "font",
       icon    : true,
       title   : "Change the font family",
       options : [
@@ -3167,7 +3174,7 @@ var symbolsMath = [
         toolCss("font-family","\"Segoe UI, sans-serif\"",""),
       ]
     },
-    { name    : "fontsize", 
+    { name    : "fontsize",
       icon    : true,
       title   : "Change the font size",
       options : [
@@ -3179,12 +3186,12 @@ var symbolsMath = [
         toolFontSize("medium"),
         toolFontSize("large"),
         toolFontSize("x-large"),
-        toolFontSize("xx-large"),        
+        toolFontSize("xx-large"),
         toolFontSize("initial", "The initial font size"),
         toolFontSize("2ex","A specific font size (%|ex|em|pt|px)"),
       ]
-    },    
-    { name    : "color", 
+    },
+    { name    : "color",
       icon    : true,
       title   : "Change the font color",
       options : [
@@ -3196,7 +3203,7 @@ var symbolsMath = [
         toolColor("magenta"),
         toolColor("maroon"),
         toolColor("green"),
-        toolColor("navy"),        
+        toolColor("navy"),
         toolColor("olive"),
         toolColor("teal"),
         toolColor("purple"),
@@ -3205,10 +3212,10 @@ var symbolsMath = [
         toolColor("gray"),
         toolColor("lightgray"),
         toolColor("white"),
-        toolColor("#335577"),  
+        toolColor("#335577"),
       ]
-    },    
-    { name    : "heading", 
+    },
+    { name    : "heading",
       icon    : true,
       title   : "Insert a heading",
       options: [
@@ -3216,9 +3223,9 @@ var symbolsMath = [
         heading("Heading 2","##"),
         heading("Heading 3","###"),
         heading("Heading 4","####"),
-        heading("Heading 5","#####"),        
+        heading("Heading 5","#####"),
       ]
-    },      
+    },
     {
       name: "symbol",
       icon: true,
@@ -3272,12 +3279,12 @@ var symbolsMath = [
     },
     { element: "BR",
     },
-    { name    : "pre", 
+    { name    : "pre",
       icon    : true,
       title   : "Code block",
       content : "function hello() {\n  return \"world\";\n}",
-      replacer: function(txt,rng) { 
-                  return blockRange(rng,"``` javascript" + block(txt) + "```"); 
+      replacer: function(txt,rng) {
+                  return blockRange(rng,"``` javascript" + block(txt) + "```");
                 },
     },
     { name    : "ul",
@@ -3325,43 +3332,43 @@ var symbolsMath = [
           return null;
         }
       }
-    },  
-    { name    : "img", 
+    },
+    { name    : "img",
       icon    : true,
       title   : "Insert an image",
       content : "",
       upload  : "Please select an image.",
       exts    : [".jpg",".png",".svg",".gif"],
-    },   
+    },
     { name    : "aligncenter",
       icon    : true,
       title   : "Text and block alignment",
       options : [
-        toolBlock("alignleft", { 
+        toolBlock("alignleft", {
           block   : "Align-Left",
           html    : "<img src='images/icon-tool-alignleft.png'/> Left",
-          title   : "Left align text and blocks", 
+          title   : "Left align text and blocks",
           helpLink: "#special-attribute-classes",
           content : "Left aligned text.",
         }),
-        toolBlock("aligncenter", { 
+        toolBlock("aligncenter", {
           block   : "Center",
           html    : "<img src='images/icon-tool-aligncenter.png'/> Center",
-          title   : "Center text and blocks", 
+          title   : "Center text and blocks",
           helpLink: "#special-attribute-classes",
           content : "Centered text.",
         }),
-        toolBlock("alignright", { 
+        toolBlock("alignright", {
           block   : "Align-Right",
           html    : "<img src='images/icon-tool-alignright.png'/> Right",
-          title   : "Right align text and blocks", 
+          title   : "Right align text and blocks",
           helpLink: "#special-attribute-classes",
           content : "Right aligned text.",
         }),
-        toolBlock("justify", { 
+        toolBlock("justify", {
           block   : "Justify",
           html    : "<img src='images/icon-tool-justify.png'/> Justify",
-          title   : "Justify text", 
+          title   : "Justify text",
           helpLink: "#sec-css",
           content : "Justified text.",
         }),
@@ -3371,40 +3378,40 @@ var symbolsMath = [
       icon    : true,
       title   : "Insert a figure",
       options : [
-        toolBlock("normal", { 
+        toolBlock("normal", {
           block   : "Figure",
           html    : "<img src='images/icon-tool-figurewide.png'/> Normal",
-          title   : "Insert a regular figure", 
+          title   : "Insert a regular figure",
           helpLink: "#sec-figure",
           content : "Here is a normal figure.",
           attrs   : "#fig-myfigure; caption:\"My caption.\"",
         }),
-        toolBlock("left", { 
-          block   : "Figure", 
+        toolBlock("left", {
+          block   : "Figure",
           html    : "<img src='images/icon-tool-figure.png'/> Left",
           helpLink: "#sec-float",
           attrs   : "#fig-myfigure; caption:\"My caption.\"; float:left; width:50%; margin-right:1em",
           content : "Here is a left figure.",
-          title   : "Insert a left-side figure with text wrap around", 
+          title   : "Insert a left-side figure with text wrap around",
         }),
-        toolBlock("right", { 
-          block   : "Figure", 
+        toolBlock("right", {
+          block   : "Figure",
           html    : "<img src='images/icon-tool-figureright.png'/> Right",
           helpLink: "#sec-float",
           content : "Here is a right figure.",
           attrs   : "#fig-myfigure; caption:\"My caption.\"; float:right; width:50%; margin-left:1em",
-          title   : "Insert a right-side figure with text wrap around", 
+          title   : "Insert a right-side figure with text wrap around",
         }),
-        toolBlock("wide", { 
-          block   : "Figure", 
+        toolBlock("wide", {
+          block   : "Figure",
           helpLink: "#sec-figure",
-          html    : "<img src='images/icon-tool-figurewide2.png'/> Wide",          
+          html    : "<img src='images/icon-tool-figurewide2.png'/> Wide",
           attrs   : "#fig-myfigure; caption:\"My caption.\"; .wide",
           content : "Here is a wide figure.",
-          title   : "Insert a wide figure. In LaTeX such figure spans two columns (using the \\figure* command)", 
+          title   : "Insert a wide figure. In LaTeX such figure spans two columns (using the \\figure* command)",
         }),
       ],
-    },   
+    },
     { name    : "table",
       icon    : true,
       title   : "Table",
@@ -3417,16 +3424,16 @@ var symbolsMath = [
         toolTable(7),
         toolTable(8),
       ]
-    }, 
+    },
     { name   : "undo",
       icon   : true,
-      command: "undo", 
+      command: "undo",
       title  : "(Ctrl-Z) Undo"
     },
     { name   : "redo",
       icon   : true,
       command: "redo",
-      title  : "(Ctrl-Y) Redo" 
+      title  : "(Ctrl-Y) Redo"
     },
     { element: "BR",
     },
@@ -3479,7 +3486,7 @@ var symbolsMath = [
         },
         customBlock("note"),
         customBlock("remark"),
-        customBlock("example"),        
+        customBlock("example"),
         customBlock("abstract","", "The abstract."),
         customBlock("framed","","A block with a solid border."),
         customBlock("center","","A block with centered items."),
@@ -3501,7 +3508,7 @@ var symbolsMath = [
         },
         customBlock("HtmlOnly","","This is only displayed in HTML","",null,"Insert markdown that is only used in HTML output"),
         customBlock("TexRaw","","% Raw LaTeX content","",null,"Insert raw LaTeX code (for PDF output only)"),
-        customBlock("TexOnly","","This is only displayed in PDF","",null,"Insert markdown that is only used in PDF output"),        
+        customBlock("TexOnly","","This is only displayed in PDF","",null,"Insert markdown that is only used in PDF output"),
       ]
     },
     { name: "math",
@@ -3509,10 +3516,10 @@ var symbolsMath = [
       style: "overflow-y: auto",
       options: [
         customBlock("equation", "{ #eq-euler }","e = \\lim_{n\\to\\infty} \\left( 1 + \\frac{1}{n} \\right)^n","","#sec-math"),
-        customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$.", "#sec-math" ), 
+        customBlock("theorem",  "{ #th-euler }\n(_Euler's formula_)\\", "For any real number $x$, we have: $e^{ix} = \\cos x + i \\sin x$.", "#sec-math" ),
         customBlock("proof", "", "Trivially by induction. [&box;]{float=right}" ),
         customBlock("lemma"),
-        customBlock("proposition"), 
+        customBlock("proposition"),
         customBlock("corollary"),
         customBlock("definition"),
         customBlock("MathPre","","@function sqr_\\pi( num :int ) \\{\n   @return (num {\\times} num \\times{} \\pi)\n\}","","#sec-mathpre","Math mode that respects whitespace and identifier names"),
@@ -3538,7 +3545,7 @@ var symbolsMath = [
         toolStyle("float","float:right; width:50%; margin-left:1em","left|right","Limited support in LaTeX, but works for figures"),
         toolStyle("line-height","=1.5em","<length>"),
         toolStyle("vertical-align","=middle","top|middle|bottom|baseline|<length>"),
-        toolStyle("display","=inline","block|inline|inline-block|hidden"),        
+        toolStyle("display","=inline","block|inline|inline-block|hidden"),
         toolStyle("margin-left","=1ex"),
         toolStyle("margin-right","=1ex"),
         toolStyle("margin-top","=1ex"),
@@ -3546,7 +3553,7 @@ var symbolsMath = [
         toolStyle("padding-left","=1ex"),
         toolStyle("padding-right","=1ex"),
         toolStyle("padding-top","=1ex"),
-        toolStyle("padding-bottom","=1ex"),        
+        toolStyle("padding-bottom","=1ex"),
       ]
     },
     { name: "metadata",
@@ -3583,11 +3590,11 @@ var symbolsMath = [
         */
       ]
 
-    },    
+    },
     toolDefInclude,
   ];
 
-  
+
 
 
   UI.prototype.toolInsertCitation = function(txt,rng,cite) {
@@ -3715,13 +3722,13 @@ var symbolsMath = [
     return null;
   }
 
-  UI.prototype.styleReplacer = function(txt,rng,value) {    
+  UI.prototype.styleReplacer = function(txt,rng,value) {
     var self = this;
     var cap;
 
     // anything ending with attributes: just extend
     cap = /^(.*)([ \t]*\}\s*)$/.exec(txt);
-    if (cap) {  
+    if (cap) {
       return cap[1] + " " + value + cap[2];
     }
 
@@ -3730,32 +3737,32 @@ var symbolsMath = [
       var res = self._styleReplaceInLine(rng,value);
       if (res) return res;
     }
-    
+
     // custom block with attributes?
     cap = /^([ \t]*~.*?)([ \t]*\}[ \t]*$[\s\S]*)/m.exec(txt);
-    if (cap) {  
+    if (cap) {
       return cap[1] + " " + value + cap[2];
     }
 
-    // custom block 
+    // custom block
     cap = /^([ ]{0,3}~.*)([\s\S]*?\r?\n[ \t]*~+\s*(?:[ \t]*End\b.*\s*)?)/i.exec(txt);
-    if (cap) {  
+    if (cap) {
       return cap[1] + "  { " + value + " }" + cap[2];
     }
 
     // paragraph or list block?
-    if (rng.startColumn===1 && rng.startLineNumber < rng.endLineNumber) { 
-      if (rng.endColumn===1) { 
+    if (rng.startColumn===1 && rng.startLineNumber < rng.endLineNumber) {
+      if (rng.endColumn===1) {
         return txt + "{ " + value + " }\n";
       }
-      var maxEndColumn = self.editor.getModel().getLineMaxColumn(rng.endLineNumber);     
+      var maxEndColumn = self.editor.getModel().getLineMaxColumn(rng.endLineNumber);
       if (maxEndColumn === rng.endColumn) {
         return txt + "\n{ " + value + " }\n";
       }
     }
-    
+
     // default
-    return "[" + txt + "]{ " + value + " }";    
+    return "[" + txt + "]{ " + value + " }";
   }
 
   function toolInline(name,pre,post,extra) {
@@ -3775,7 +3782,7 @@ var symbolsMath = [
   }
 
   function toolFigure(icon) {
-    return { 
+    return {
       name    : "figure",
       icon    : icon,
       helpLink: "#sec-figure",
@@ -3794,9 +3801,9 @@ var symbolsMath = [
       title: title,
       replacer: function(txt,rng) {
         var self = this;
-        var lineNo = findMetaPos(self.getEditText());      
+        var lineNo = findMetaPos(self.getEditText());
         if (lineNo > 0) {
-          var pos = { lineNumber: lineNo, column: 1 };      
+          var pos = { lineNumber: lineNo, column: 1 };
           self.insertText( pad(name,12," ") + ": " + value + "\n", pos );
         }
         return null;
@@ -3818,7 +3825,7 @@ var symbolsMath = [
       cols.push(i+1);
     }
     var w = 14;
-    var lline = pad("",w,"-"); 
+    var lline = pad("",w,"-");
     var cline = ":" + pad("",w-2,"-") + ":"
     var headline = "+" + lline + "|" + cline + "+" + (columns <= 2 ? "" : cols.slice(2).map( function(c) { return (c===2 ? cline : lline); } ).join("|") + "+");
     var head   = "|" + cols.map( function(c) { return pad( (c===2 ? " Centered " : " Heading ") + c.toString(), w, " "); } ).join("|") + "|";
@@ -3847,12 +3854,12 @@ var symbolsMath = [
   }
 
   function customBlock(name,post,content,postContent,helpLink,title) {
-    return { 
+    return {
       name: name,
       content: content || "Here is a " + name + ".",
       helpLink: helpLink,
       title: title,
-      replacer: function(txt,rng) { 
+      replacer: function(txt,rng) {
         return wrapBlock(rng,"~ " + Util.capitalize(name) + (post ? " " + post : ""), txt, "~" + (rng.isEmpty() && postContent ? "\n\n" + postContent : ""));
       }
     }
@@ -3871,16 +3878,16 @@ var symbolsMath = [
   }
 
   function toolCustom(name,display,content,helpLink,title) {
-    return { 
+    return {
       name: name,
       display: display || Util.capitalize(name),
       content: content || "Here is a " + name + ".",
       helpLink: helpLink,
       title: title,
-      replacer: function(txt,rng) { 
+      replacer: function(txt,rng) {
         return wrapBlock(rng,"~ " + Util.capitalize(name), txt, "~");
       }
-    }    
+    }
   }
 
   function wrapBlock(rng,pre,txt,post) {
@@ -3918,7 +3925,7 @@ var symbolsMath = [
 
   UI.prototype.initToolKeys = function(tool,elem) {
     var self = this;
-    var handler = function() { self.toolCommand(tool); }        
+    var handler = function() { self.toolCommand(tool); }
     if (tool.keys) {
       tool.keys.forEach( function(key) {
         bindKey(key,handler);
@@ -3955,12 +3962,12 @@ var symbolsMath = [
       if (!elem) return;
       var entity = decodeURIComponent(elem.getAttribute("data-entity"));
       if (!entity) return;
-      self.toolCommand( { 
-        name: "symbol", 
+      self.toolCommand( {
+        name: "symbol",
         replacer: function(txt,rng) {
           return entity;
         }
-      });      
+      });
     });
   }
 
@@ -4008,8 +4015,8 @@ var symbolsMath = [
       parent.appendChild(item);
     }
     if (tool.options || tool.symbols || tool.dynamic) {
-      Util.addClassName(item,"popup");        
-      Util.addClassName(item,tool.options ? "options":"symbols");        
+      Util.addClassName(item,"popup");
+      Util.addClassName(item,tool.options ? "options":"symbols");
       if (!tool.icon) Util.addClassName(item,"named");
       var menu = document.getElementById(item.id + "-content");
       if (!menu) {
@@ -4019,7 +4026,7 @@ var symbolsMath = [
       }
       Util.addClassName(menu,"menu");
       Util.addClassName(menu,"boxed");
-      if (tool.style) menu.setAttribute("style",tool.style);      
+      if (tool.style) menu.setAttribute("style",tool.style);
       if (tool.options) {
         tool.options.forEach(function(subtool) {
           self.initTool(subtool,menu,parentName + "-" + tool.name);
@@ -4033,13 +4040,13 @@ var symbolsMath = [
       }
     }
     else {
-      item.addEventListener("click", function(ev) { 
+      item.addEventListener("click", function(ev) {
         if (ev.target.nodeName !== "A") {
-          self.toolCommand(tool); 
+          self.toolCommand(tool);
         }
       });
     }
-    self.initToolKeys(tool,item);          
+    self.initToolKeys(tool,item);
   }
 
   UI.prototype.initTools = function() {
@@ -4075,7 +4082,7 @@ var symbolsMath = [
         var cmd = self["command" + Util.capitalize(tool.command)];
         if (cmd) return cmd.call(self);
       }
-    }, [State.Syncing]);      
+    }, [State.Syncing]);
   }
 
 
@@ -4104,7 +4111,7 @@ var symbolsMath = [
     return;
   }
 
-  // Insert or replace some text in the document 
+  // Insert or replace some text in the document
   UI.prototype.insertOrReplaceText = function( replacer, defText ) {
     var self = this;
     var select = self.editor.getSelection();
@@ -4124,16 +4131,16 @@ var symbolsMath = [
         command = new ReplaceCommand.ReplaceCommandWithoutChangingPosition( select, newText );
       } else {
         command = new Editor.ReplaceCommandWithSelection(select,newText);
-      } 
-      self.editor.executeCommand("madoko",command);      
+      }
+      self.editor.executeCommand("madoko",command);
     }
   }
 
 
-  // Insert some text in the document 
+  // Insert some text in the document
   UI.prototype.insertText = function( txt, pos, moveToEnd ) {
     var self = this;
-    if (!pos) pos = self.editor.getPosition(); 
+    if (!pos) pos = self.editor.getPosition();
     var rng = new Range.Range( pos.lineNumber, pos.column, pos.lineNumber, pos.column );
     var command;
     if (moveToEnd)
@@ -4150,14 +4157,14 @@ var symbolsMath = [
     var stem = Util.stemname(file.name);
     var name = Storage.sanitizeFileName(Util.basename(file.name));
 
-    if (Util.isImageMime(mime)) name = "images/" + name;    
+    if (Util.isImageMime(mime)) name = "images/" + name;
     if (encoding===Storage.Encoding.Base64) {
       var cap = /^data:([\w\/\+\-]+);(base64),([\s\S]*)$/.exec(content);
       if (!cap) {
         Util.message("invalid base64 encoding", Util.Msg.Error );
         return;
       }
-      content = cap[3];  
+      content = cap[3];
     }
     if (content.length >= 1.34*1024*1024) {
       throw new Error("file size is too large (maximum insertion size is about 1mb)");
@@ -4166,9 +4173,9 @@ var symbolsMath = [
       Util.message("file size is very large; consider resizing to keep it under 512kb", Util.Msg.Warning);
     }
 
-    
+
     var text = "";
-    var message = "inserted"; 
+    var message = "inserted";
     if (Util.isImageMime(mime)) {
       var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
       if (isNew) {
@@ -4201,7 +4208,7 @@ var symbolsMath = [
         self.setStale();
       }, function(err) {
         Util.message("Failed to convert " + name + ": " + err.toString(), Util.Msg.Error );
-      });      
+      });
     }
     else {
       var isNew = self.storage.writeFile( name, content, {encoding:encoding,mime:mime});
@@ -4234,8 +4241,8 @@ var symbolsMath = [
           Util.message( "unsupported drop file extension: " + ext, Util.Msg.Warning );
           return;
         }
-        var lineNo = findMetaPos(self.getEditText());      
-        if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };      
+        var lineNo = findMetaPos(self.getEditText());
+        if (lineNo > 0) pos = { lineNumber: lineNo, column: 1 };
       }
     }
     if (text) {
@@ -4250,15 +4257,15 @@ var symbolsMath = [
     var self = this;
     if (!files) return;
     if (!pos) pos = self.editor.getPosition();
-    for (var i = 0, f; f = files[i]; i++) {      
-      var encoding = Storage.Encoding.fromExt(f.name);      
+    for (var i = 0, f; f = files[i]; i++) {
+      var encoding = Storage.Encoding.fromExt(f.name);
       var mime = f.type || Util.mimeFromExt(f.name);
       if (!(Util.isImageMime(mime) || Util.isTextMime(mime))) { // only images or text..
         continue;
       }
-      
+
       var reader = new FileReader();
-      reader.onload = (function(_file,_encoding,_mime) { 
+      reader.onload = (function(_file,_encoding,_mime) {
         return function(loadEvt) {
           try {
             self.insertFile( _file, loadEvt.target.result, _encoding, _mime, pos );
@@ -4271,13 +4278,13 @@ var symbolsMath = [
 
       if (encoding===Storage.Encoding.Base64)
         reader.readAsDataURL(f);
-      else 
+      else
         reader.readAsText(f);
     }
   }
 
   /*---------------------------------------------------
-    Decorations 
+    Decorations
   -------------------------------------------------- */
 
   UI.prototype.removeDecorations = function(discardSticky,type) {
@@ -4289,15 +4296,15 @@ var symbolsMath = [
       var newdecs = [];
       self.decorations.forEach( function(decoration) {
         if (type && !Util.startsWith(decoration.type,type)) {
-          // do nothing          
-          newdecs.push(decoration);          
+          // do nothing
+          newdecs.push(decoration);
         }
         else if (discardSticky || !decoration.sticky ||
                   (decoration.expire && decoration.expire < now)) {
           if (decoration.id) {
             updateDecorationRange(decoration, model);
             changeAccessor.removeDecoration(decoration.id);
-            decoration.id = null;          
+            decoration.id = null;
           }
         }
         else {
@@ -4306,18 +4313,18 @@ var symbolsMath = [
           if (decoration.id && decoration.path === self.editName) {
             var dec = decoration.options || { isWholeLine : true };
             if (decoration.glyphType) dec.glyphMarginClassName = 'glyph-' + decoration.glyphType + '.outdated';
-            if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated'; 
+            if (decoration.marginType) dec.linesDecorationsClassName = 'margin-' + decoration.marginType + '.outdated';
             changeAccessor.changeDecorationOptions(decoration.id, dec );
           }
           else if (decoration.id) {
             updateDecorationRange(decoration, model);
             changeAccessor.removeDecoration(decoration.id);
-            decoration.id = null;          
+            decoration.id = null;
           }
         }
       });
       self.decorations = newdecs;
-    });    
+    });
   }
 
   UI.prototype.removeDecorationsOn = function(id,tag) {
@@ -4382,7 +4389,7 @@ var symbolsMath = [
     if (rng.endColumn != null) {
       return  new Range.Range( rng.startLineNumber, rng.startColumn, rng.endLineNumber, rng.endColumn );
     }
-    else if (rng.lineNumber != null) { // it's a position 
+    else if (rng.lineNumber != null) { // it's a position
       return new Range.Range( rng.lineNumber, rng.column, rng.lineNumber, rng.column );
     }
     else {
@@ -4399,7 +4406,7 @@ var symbolsMath = [
   var rulerColorWarning    = 'rgba(18,136,18,0.7)';
   var rulerColorConcurrent = 'rgba(18,18,255,0.7)';
   var rulerColorMerge      = 'rgba(18,136,18,0.7)';
-  
+
   UI.prototype.showErrors = function( errors, sticky, type ) {
     var self = this;
     if (!type) type = "error";
@@ -4407,21 +4414,21 @@ var symbolsMath = [
     var decs = [];
     errors.forEach( function(error) {
       if (!error.path) error.path = self.docName;
-      decs.push( { 
-        id: null, 
+      decs.push( {
+        id: null,
         type: error.type || type,
         glyphType: error.glyphType || error.type || type,
-        sticky: sticky, 
-        outdated: false, 
-        // message: error.message, 
+        sticky: sticky,
+        outdated: false,
+        // message: error.message,
         menu: self.errorMenu,
-        options: { 
-          htmlMessage: Util.escape(error.message), 
+        options: {
+          htmlMessage: Util.escape(error.message),
           isWholeLine: true,
           overviewRuler: {
             color: error.type === "warning" ? rulerColorWarning : rulerColorError,
             position: 4 /* Right */
-          },          
+          },
         },
         path: error.path,
         range: newRange(error.range),
@@ -4441,13 +4448,13 @@ var symbolsMath = [
     var now = Date.now();
     merges.forEach( function(merge) {
       if (!merge.path) merge.path = self.editName;
-      var dec = { 
-        id: null, 
+      var dec = {
+        id: null,
         type: "merge.merge-" + merge.type,
-        sticky: true, 
-        outdated: false, 
+        sticky: true,
+        outdated: false,
         expire: now + (60000), // expire merges after 1 minute?
-        message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""), 
+        message: "Merged (" + merge.type + ")" + (merge.content ? ":\n\"" + merge.content + "\"": ""),
         path: merge.path,
         range: newRange( merge.startLine ),
         options: {
@@ -4456,13 +4463,13 @@ var symbolsMath = [
             color: rulerColorMerge,
             position: 4 /* Right */
           },
-        }        
+        }
       };
       dec.marginType = dec.type;
-      decs.push(dec);      
+      decs.push(dec);
     });
     self.removeDecorations(false,"merge");
-    self.addDecorations(decs);      
+    self.addDecorations(decs);
   }
 
   UI.prototype.showSpellErrors = function( errors ) {
@@ -4471,20 +4478,20 @@ var symbolsMath = [
     var now = Date.now();
     errors.forEach( function(err) {
       if (!err.path) err.path = self.editName;
-      var dec = { 
-        id: null, 
+      var dec = {
+        id: null,
         tag: err.tag,
         type: "spellerror",
-        sticky: true, 
-        outdated: false, 
+        sticky: true,
+        outdated: false,
         //glyphType: "spellcheck",
         //expire: now + (60000), // expire merges after 1 minute?
-        // message: err.message, 
+        // message: err.message,
         menu: self.spellCheckMenu,
         path: err.path,
         range: newRange(err.range),
-        options: { 
-          isOverlay:true, 
+        options: {
+          isOverlay:true,
           stickiness: 1, /* never grows at edges */
           inlineClassName: "spellerror",
           overviewRuler: {
@@ -4493,10 +4500,10 @@ var symbolsMath = [
           },
         },
       };
-      decs.push(dec);      
+      decs.push(dec);
     });
     self.removeDecorations(true,"spellerror");
-    self.addDecorations(decs);      
+    self.addDecorations(decs);
   }
 
 
@@ -4545,8 +4552,8 @@ var symbolsMath = [
           // overlapping range?
           // todo: check column range, perhaps merge messages?
           if (dec.type == dec2.type && (dec.options==null || dec.options.isWholeLine===true) &&
-              dec.path === dec2.path && 
-                dec.range.startLineNumber <= dec2.range.endLineNumber && 
+              dec.path === dec2.path &&
+                dec.range.startLineNumber <= dec2.range.endLineNumber &&
                  dec.range.endLineNumber >= dec2.range.startLineNumber) {
             if (!dec.outdated && dec2.outdated) {
               // swap, so we remove the outdated one
@@ -4554,7 +4561,7 @@ var symbolsMath = [
               dec = dec2;
               dec2 = self.decorations[j];
             }
-   
+
             // update dec2 to merge
             if (dec.message !== dec2.message) dec2.message = dec2.message + "\n-----\n" + dec.message;
             if (dec.marginType && !dec2.marginType) dec2.marginType = dec.marginType;
@@ -4582,12 +4589,12 @@ var symbolsMath = [
     if (!path) path = self.editName;
     for (var i = 0; i < self.decorations.length; i++) {
       var dec = self.decorations[i];
-      if (dec.path === path && 
+      if (dec.path === path &&
             dec.range.startLineNumber <= lineNo && dec.range.endLineNumber >= lineNo &&
               (isGlyph ? dec.glyphType : dec.marginType) ) {
         return dec.message;
       }
-    }    
+    }
     return "";
   }
 
@@ -4681,17 +4688,17 @@ var symbolsMath = [
       var menu = dec.menu;
       if (menu) {
         var text = self.editor.getModel().getValueInRange(r);
-        setTimeout( function() { 
-          menu.startShowingAt(null, r, text, dec); 
-        }, 50 );        
+        setTimeout( function() {
+          menu.startShowingAt(null, r, text, dec);
+        }, 50 );
       }
     });
   }
 
   /* --------------------------------------------------------------
-     View synchronization 
+     View synchronization
   -------------------------------------------------------------- */
-  
+
   UI.prototype.dispatchViewEvent = function( ev ) {
     var self = this;
     // we use "*" since sandboxed iframes have a null origin
@@ -4717,7 +4724,7 @@ var symbolsMath = [
     }
   }
 
-  UI.prototype.syncView = function( options, startLine, endLine, cursorLine ) 
+  UI.prototype.syncView = function( options, startLine, endLine, cursorLine )
   {
     var self = this;
     try {
@@ -4729,7 +4736,7 @@ var symbolsMath = [
         cursorLine = self.editor.getPosition().lineNumber;
       }
       if (startLine==null) {
-        var editView  = self.editor.getView();      
+        var editView  = self.editor.getView();
         var lines = editView.viewLines;
         var rng = lines._currentVisibleRange;
         startLine = rng.startLineNumber;
@@ -4752,12 +4759,12 @@ var symbolsMath = [
       if (lineNo === self.lastLineNo && !options.force) return false;
       self.lastLineNo = lineNo;
 
-      // use physical textline; 
+      // use physical textline;
       // start-, end-, cursor-, and lineNo are all view lines.
       // if wrapping is enabled, this will not correspond to the actual text line
       var textLine = self.viewToTextLine(lineNo);
       var slines = null;
-      
+
       // find the element in the view tree
       var event = options;
       event.eventType   = "scrollToLine";
@@ -4768,9 +4775,9 @@ var symbolsMath = [
       event.lineCount   = lineCount;
       event.sourceName  = self.editName === self.docName ? null : self.editName;
       event.height      = self.view.clientHeight;
-      
+
       // for separate viewer
-      // localStorage.setItem("viewer-scroll",JSON.stringify(event)); 
+      // localStorage.setItem("viewer-scroll",JSON.stringify(event));
 
       // post scroll message to view iframe
       self.dispatchViewEvent(event);
@@ -4792,7 +4799,7 @@ var symbolsMath = [
       self.onFileDelete(ev.file);
     }
     else if (ev.type === "flush") {
-      self.flush( ev.path ); 
+      self.flush( ev.path );
     }
     else if (ev.type === "destroy") {
       self.dispatchViewEvent( {
@@ -4802,7 +4809,7 @@ var symbolsMath = [
   }
 
   UI.prototype.onFileDelete = function(file) {
-    var self = this;    
+    var self = this;
     if (Util.isReferMime(file.mime)) {
       self.dispatchViewEvent( {
         eventType: "file-delete",
@@ -4833,7 +4840,7 @@ var symbolsMath = [
       var folder = fullFolder;
       if (folder.length > 30) folder = "..." + folder.substr(folder.length-30);
       var prefix = "<span class='folder'>" + folder + (folder ? "/" : "") + "</span>";
-      
+
       var postfix = self.displayFile(file);
       var fileDisplay = prefix + postfix;
       if (!self.fileDisplay || self.fileDisplay !== fileDisplay) { // prevent too many calls to setInnerHTML
@@ -4841,7 +4848,7 @@ var symbolsMath = [
         var title = "//" + self.storage.remote.displayName + fullFolder + (fullFolder ? "/" : "") + file.path;
         self.editSelectHeader.innerHTML = "<span title='" + Util.escape(title) + "'>" + fileDisplay + "</span>";
       }
-      if (self.editContent !== file.content) { // only update edit text if content update 
+      if (self.editContent !== file.content) { // only update edit text if content update
         self.setEditText(file.content);
       }
     }
@@ -4856,18 +4863,18 @@ var symbolsMath = [
   }
 
   UI.prototype.saveTo = function() {
-    var self = this;    
+    var self = this;
     return Storage.saveAs(self.storage,self.docName).then( function(res) {
-      if (!res || !res.storage) throw new Error("cancel"); 
+      if (!res || !res.storage) throw new Error("cancel");
       return self.withSyncSpinner( function() {
-        return res.storage.syncOrCommit().then( function() { // ensure we can save the new storage object 
+        return res.storage.syncOrCommit().then( function() { // ensure we can save the new storage object
           return self.setStorage(res.storage,res.docName).then( function() { // .. before setting this as our new storage
             return res.docName;
-          });           
+          });
         });
       });
-    }); 
-  } 
+    });
+  }
 
   UI.prototype.withSyncSpinner = function( makePromise) {
     var self = this;
@@ -4881,8 +4888,8 @@ var symbolsMath = [
     var self = this;
     return self.event( "", "", State.Syncing, function() {
       if (!self.isConnected) {
-        return self.login().then( function() {  
-          return self._synchronize(pullOnly); 
+        return self.login().then( function() {
+          return self._synchronize(pullOnly);
         });
       }
       else if (self.storage && self.storage.remote.readonly) {
@@ -4897,7 +4904,7 @@ var symbolsMath = [
   UI.prototype.pull = function() {
     var self = this;
     return self.event( "", "", State.Syncing, function() {
-      return self.login().then( function() {  
+      return self.login().then( function() {
         return self._synchronize(true);
       });
     });
@@ -4907,7 +4914,7 @@ var symbolsMath = [
     var self = this;
     self.lastSync = Date.now();
     if (self.storage) {
-      var cursors = {};        
+      var cursors = {};
       var line0 = self.editor.getPosition().lineNumber;
       cursors["/" + self.docName] = line0;
       self.showConcurrentUsers(false);
@@ -4933,10 +4940,10 @@ var symbolsMath = [
   UI.prototype.spellCheck = function() {
     var self = this;
     return self.anonEvent( function() {
-      var ctx = { 
-        round: 0, 
-        path: self.editName, 
-        show: function(errors) { return self.showSpellErrors(errors); } 
+      var ctx = {
+        round: 0,
+        path: self.editName,
+        show: function(errors) { return self.showSpellErrors(errors); }
       };
       return self.spellChecker.check( self.editor.getValue(), ctx ).then( function(res) {
         Util.message("Spell check done.", Util.Msg.Status);
@@ -4950,17 +4957,17 @@ var symbolsMath = [
       return "<li>" + upd.version + (upd.date ? ",  " + upd.date : "") + "<ul>" +
                 upd.updates.map( function(item) {
                   return "<li>" + Util.miniMarkdown(item) + "</li>";
-                }).join("") + 
-              "</ul></li>"; 
+                }).join("") +
+              "</ul></li>";
     }
-    self.anonEvent( function() {        
+    self.anonEvent( function() {
       var shortDigest = "(" + self.version.digest.substr(0,6) + ")";
       var shortDate   = self.version.date.substr(0,10);
       var log = (self.version.log instanceof Array ? self.version.log : [self.version.log]);
       var logdiv = "<ul class='version-updates'>"
                       + log.map( showUpdate ).join("\n") + "</ul>"
 
-      var htmlMessage = "<div class='version-display'>" + 
+      var htmlMessage = "<div class='version-display'>" +
                     (!self.version.log[0].alert ? "" : "<div class='version-alert'>" + Util.miniMarkdown(self.version.log[0].alert) + "</div>") +
                     (!self.version.log[0].message ? "" : "<div class='version-message'>" + Util.miniMarkdown(self.version.log[0].message) + "</div>") +
                     (logdiv) +
@@ -4970,10 +4977,10 @@ var symbolsMath = [
   }
 
 
-  // object    
+  // object
   return UI;
 })();
 
 // module
 return UI;
-}); 
+});

@@ -163,10 +163,14 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
       val mcmd = context.fmtCmd("span",context.fmtText(mtxt),attrsd)
       if (context.mathStatic || mode.isFull /* never use mathjax for full math */) {
         val digest = md5(txt)
+        // This is where we have both the range and the md5-digest!
+        logMathLocation(digest, attrs)
+
         log("math-" + mode.show, 
               @"\begin{md" + kind + "Snippet}[" + digest + "]%mdk\n" + 
                 texcmd + "\\end{md" + kind + "Snippet}%mdk")
-        //trace("math: " + digest)
+        // trace(txt)
+        // trace("math: " + digest)
         match(context.mathinfos[digest]) {
           Nothing  -> context.fmtCmd("span",mcmd,attrsNone.addClass("math-rendering").addKeyval("html-title","Rendering math..."))
           Just(mi) -> context.fmtMathImg(mi,txt,mtxt,attrsd)
@@ -176,6 +180,13 @@ public function fmtMath( context : inlineContext, isDisplay : bool, txt0 : strin
     }
   }
 } 
+
+function logMathLocation(digest: string, attrs: attrs) {
+  val start = attrs.lookupKey("data-line-start", "")
+  val end   = attrs.lookupKey("data-line-end", "")
+  if (start == "" || end == "") return ()
+  else log("math-locations", start + "," + end + "," + digest)
+}
 
 public function fmtMathImg( context : inlineContext, mi : mathinfo, txt : string, mtxt : string, attrs : attrs ) {
   val scale = match(attrs.hasKey("math-scale")) {

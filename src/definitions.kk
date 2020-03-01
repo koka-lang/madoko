@@ -138,7 +138,7 @@ function parseDefinitionsFull(
     // set label
     if (attrsx.name != "") then {
       val labelCaption = attrsx.hasKey("caption").maybe("",id)
-      labels[attrsx.name] := Label(bname,attrsx.label,labelCaption)   
+      labels[attrsx.name] := Label(bname,attrsx.label,labelCaption,attrsx)   
       match (attrsx.hasKey("cite-label")) {
         Nothing -> ()
         Just(clabel) -> {
