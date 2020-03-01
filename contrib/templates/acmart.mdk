@@ -39,6 +39,9 @@ But sad or merry, I must leave it now. Farewell!
 [TITLE]
 ~
 
+~TexRaw
+\def\shorttitle{\acmshorttitle}
+~
 
 # Introduction     { #sec-intro }
 
@@ -70,7 +73,7 @@ Our contributions are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And references to Tex books [@Knuth:TeX;@Lamport:LaTeX;@Goo93;@Fberg04] and others [@Grandstrand]. 
+* And references to Tex books [@Knuth:TeX;@Lamport:LaTeX;@Goo93;@Fberg04] and others [@Grandstrand].
 
 # Content
 
@@ -117,7 +120,7 @@ slumber
 Roads go ever ever on. &qed;
 ~
 
-~ Todo 
+~ Todo
 Finish the proof
 ~
 
@@ -149,7 +152,7 @@ with a flash like the lightning. "Dread has come upon you all! Alas! it
 has come more swiftly than I guessed."
 
     for i:=maxint to 0 do
-    begin 
+    begin
         j:=square(root(i));
     end;
 
@@ -179,4 +182,3 @@ get out of it? and am I going to come back alive?"
 # Conclusion
 
 Really fun to write Markdown :-)
-

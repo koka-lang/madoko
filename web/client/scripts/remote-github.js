@@ -16,7 +16,7 @@ var github = new OAuthRemote( {
   loginUrl     : "https://github.com/login/oauth/authorize",
   loginParams  : {
     client_id: "9c24f7ac71d1ede26ba3",
-    scope    : "repo",
+    scope    : "repo,read:org",
   },
   logoutUrl    : "https://github.com/logout",
   logoutTimeout: 5000,
@@ -54,6 +54,9 @@ function getItems( repoPath, branch, tpath, full ) {
 
 
 function getAllRepos() {
+  // used to need to list over all orgs but in v3 all accessible repositories are returned by default for a user.  */
+  return getRepos(); 
+  /*
   return github.requestGET( { url: "user/orgs", cache: 10000 }, { per_page:100 } ).then(function(orgs) {
     var getrepos = orgs.map( function(org) { return github.requestGET( { url: org.url + "/repos", cache: 10000 }, { per_page:100 } ); } );
     getrepos.unshift( getRepos() );
@@ -61,6 +64,7 @@ function getAllRepos() {
       return [].concat.apply([],reposs);
     });
   });
+  */
 }
 
 function splitPath(path) {

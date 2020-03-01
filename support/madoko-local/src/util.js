@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -28,7 +28,7 @@ var dateFromISO = require("./date.js").dateFromISO;
 
 
 // -------------------------------------------------------------
-// Helpers 
+// Helpers
 // -------------------------------------------------------------
 
 function startsWith(s,pre) {
@@ -69,7 +69,7 @@ function properties(obj) {
     if (obj.hasOwnProperty(key)) {
       attrs.push(key);
     }
-  } 
+  }
   return attrs;
 }
 
@@ -89,13 +89,13 @@ function secureHash(len) {
 
 // -------------------------------------------------------------
 // Wrap promises
-// We use promises mostly to reliable catch exceptions 
+// We use promises mostly to reliable catch exceptions
 // -------------------------------------------------------------
 
 function programDir() {
-  var m = module; 
-  if (m==null) return ''; 
-  while(m.parent) { m = m.parent; }; 
+  var m = module;
+  if (m==null) return '';
+  while(m.parent) { m = m.parent; };
   return (m.filename ? m.filename : '');
 };
 
@@ -111,7 +111,7 @@ function jsonParse(s,def) {
 function fileExistSync(fileName) {
   var stats = null;
   try {
-    stats = Fs.statSync(fileName);    
+    stats = Fs.statSync(fileName);
   }
   catch(e) {};
   return (stats != null);
@@ -122,7 +122,7 @@ function readFileSync( fileName, options, defaultContent ) {
     return Fs.readFileSync(fileName,options);
   }
   catch(err) {
-    if (defaultContent !== undefined) 
+    if (defaultContent !== undefined)
       return defaultContent;
     else
       throw err;
@@ -146,27 +146,30 @@ function writeFileSync( fileName, content, options) {
 
 
 function ensureDir(dir) {
-  return new Promise( function(cont) { mkdirp(dir,cont); } );
+  return mkdirp(dir);
 }
 
 // remove everything in dir recursively
 function removeDirAll(dir) {
-  return new Promise( function(cont) { rmdirRF(dir,cont); } );
+  return new Promise( function(cont) { return rmdirRF(dir,{maxRetries:5},cont); });  
 }
 
 // remove a directory if it is empty
 function removeDir(dir) {
-  return new Promise( function(cont) { Fs.rmdir(dir,cont); } );
+  return new Promise( function(cont) { return Fs.rmdir(dir,{maxRetries:5},cont); });
 }
 
 function writeFile( fpath, content, options ) {
   return new Promise( function(cont) {
     Fs.writeFile( fpath, content, options, function(err) {
       if (err && err.code === "ENOENT" && options.ensuredir) {
-        mkdirp( Path.dirname(fpath), function(err) {
-          if (err) return cont(err);
-          Fs.writeFile(fpath,content,options,cont);
-        });
+        try {
+          mkdirp.sync( Path.dirname(fpath) );
+        }
+        catch(err) {
+          return cont(err);
+        }
+        Fs.writeFile(fpath,content,options,cont);
       }
       else {
         cont(err);
@@ -185,10 +188,13 @@ function appendFile( fpath, content, options ) {
   return new Promise( function(cont) {
     Fs.appendFile( fpath, content, options, function(err) {
       if (err && err.code === "ENOENT" && options.ensuredir) {
-        mkdirp( Path.dirname(fpath), function(err) {
-          if (err) return cont(err);
-          Fs.appendFile(fpath,content,options,cont);
-        });
+        try {
+          mkdirp.sync( Path.dirname(fpath) );
+        }
+        catch(err) {
+          return cont(err);
+        }
+        Fs.appendFile(fpath,content,options,cont);
       }
       else cont(err);
     });
@@ -217,9 +223,9 @@ function dnsReverse( ip ) {
         doms = null;
         console.log("unable to resolve ip: " + err.toString() );
       }
-      cont(null,doms);      
+      cont(null,doms);
     });
-  });  
+  });
 }
 
 function pathIsEqual( p1, p2 ) {
@@ -273,7 +279,7 @@ return {
   appendFile  : appendFile,
   readDir     : readDir,
   fstat       : fstat,
-  dnsReverse  : dnsReverse,  
+  dnsReverse  : dnsReverse,
   pathIsEqual : pathIsEqual,
 
   // Errors

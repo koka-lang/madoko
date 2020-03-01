@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2013-2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -37,10 +37,10 @@ public struct runners(
 
 val standardTexStyles = ["ellipse.sty","options.sty","longbox.sty","longfbox.sty","madoko2.sty"]
 
-public function processContent( inName : string, outName : string, content : string, 
+public function processContent( inName : string, outName : string, content : string,
                           opts : commandOptions, firstTime : bool = False,
                           runners : runners,
-                          continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io () 
+                          continue : (output:string,inputName:string,outputName:string,options:options) -> io () ) : io ()
 {
   if (opts.options.sandbox) enforceSandbox()
   if (opts.convertTex) {
@@ -57,11 +57,11 @@ public function processContent( inName : string, outName : string, content : str
     // remove madoko comments
     val icontent = icontent0.removeMadokoComments
     // set up options
-               
-    val date   = now()                             
-    val opts1  = opts0(lineMap=lmap, 
-                       processTimeout=if (opts0.sandbox) then 60000 else opts0.processTimeout,
-                       metadata=opts0.metadata 
+
+    val date   = now()
+    val opts1  = opts0(lineMap=lmap,
+                       processTimeout=if (opts0.sandbox) then 120000 else opts0.processTimeout,
+                       metadata=opts0.metadata
                        + [("docname",inName.stemname),("filename",inName)]
                        + [("madoko-version",opts0.version)]
                        + [("date",date.isoLocalDate),("time",date.isoLocalTime.substr(0,5)),
@@ -71,7 +71,7 @@ public function processContent( inName : string, outName : string, content : str
     // extract default cite-style if it exists
     val opts2  = opts1.extractCitestyle(outName)
 
-    val mmopts = if (opts2.xmp) 
+    val mmopts = if (opts2.xmp)
                   then opts2.parseMeta( FmtHtml, icontent.normalizeSource.extractFirstXmp ).fst
                   else opts2.parseMeta( FmtHtml, icontent.normalizeSource ).fst  // get bibdata,bibstyle,mathimg
 
@@ -94,24 +94,24 @@ public function processContent( inName : string, outName : string, content : str
       // }
       if (xopts.tex || mopts.math.mode.isStatic) { // only copy style files if generating tex or if math is static
         val isTex2  = match(mopts.metadata.find( fun(md) { md.fst == "tex2" } )) {
-                        Just(md) -> md.snd.toLower == "true"  
+                        Just(md) -> md.snd.toLower == "true"
                         _ -> False
                       }
         val files = if (isTex2)
                      then standardTexStyles
-                     else ["css.sty","madoko.sty"]                      
-        files.foreach fun(fname) { 
+                     else ["css.sty","madoko.sty"]
+        files.foreach fun(fname) {
           tryCopyTextFileFromNoSandboxTo(fname, styleDir, outName.dirname )
         }
       }
     }
 
-    process( inName, outName, searchDirs, content, icontent, xopts, mopts, firstTime, runners) 
+    process( inName, outName, searchDirs, content, icontent, xopts, mopts, firstTime, runners)
       fun() {
         processContent(inName,outName,content,opts,False,runners,continue) // redo!
       }
       fun(html) {
-        continue(html,inName,outName,mopts)  
+        continue(html,inName,outName,mopts)
       }
   }
 }
@@ -127,23 +127,23 @@ val rxXmp = regex(@"<xmp\b.*?>([\s\S]*?)</xmp>")
 val rxCurDir = regex(@"^(\.)(?=[\\/])")
 
 function process( inName : string, outName : string, searchDirs : list<string>,
-                  content : string, icontent : string, 
+                  content : string, icontent : string,
                   xopts0 : options, mopts : options, firstTime : bool, runners : runners,
                   redo : () -> io (),
-                  continue : (string) -> io () ) : io () 
+                  continue : (string) -> io () ) : io ()
 {
   function genTexZip(outTexName:string, refers:list<string>) {
     if (mopts.texzip) {
-      createTexZip( inName, outTexName, refers, mopts, runners, fun(err) { () } )                  
+      createTexZip( inName, outTexName, refers, mopts, runners, fun(err) { () } )
     }
   }
 
   function genPdf(outTexName:string, refers:list<string>) {
     if (mopts.pdf) {
-      (runners.runPdfLatex)( inName, outTexName, mopts, content, fun(err) { 
+      (runners.runPdfLatex)( inName, outTexName, mopts, content, fun(err) {
         if (err==0) then genTexZip(outTexName, refers) else ()
-      }) 
-    }        
+      })
+    }
     else () // cannot zip without pdf
   }
 
@@ -152,7 +152,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
     val infos = files.concat fun(fname) {
                   val mime = mimeFromExt(fname);
-                  val data = if (mime.startsWith("text/")) 
+                  val data = if (mime.startsWith("text/"))
                                 then searchReadTextFileDef(fname,"",searchDirs,"",False)
                               elif (mime.startsWith("image/"))
                                 then {
@@ -163,7 +163,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                               else ""
 
                   // write the file to the out directory
-                  if (data != "" && (data.length > mopts.embedLimit)) { 
+                  if (data != "" && (data.length > mopts.embedLimit)) {
                     val newName = combine(outName.dirname,fname) // assumes just relative embed names!
                     if (newName.normalize != fname.normalize) {
                       //trace("copying: " + fname + " to " + newName)
@@ -176,37 +176,37 @@ function process( inName : string, outName : string, searchDirs : list<string>,
                       }
                       ()
                     }
-                  }  
-                  
+                  }
+
                   // embed
-                  if (data != "" && data.length < mopts.embedLimit) 
+                  if (data != "" && data.length < mopts.embedLimit)
                    then [(fname,Embedinfo(fname,data))]
                   else {
                     if (fname!="" && mopts.embedLimit > 0) {
-                      mopts.printErr("warning: unable to embed: " + fname + 
+                      mopts.printErr("warning: unable to embed: " + fname +
                                        (if (data.length > 0) then " (too large)" else " (does not exist)"))
                     }
                     []
                   }
                 }
     if (infos.length == 0) return (opts,html0)
-      
+
     val newopts = opts(embedinfos = opts.embedinfos + infos.dict, verbose=min(opts.verbose,1))
     val newhtml = markdown(icontent,newopts).fst
     (newopts,newhtml)
   }
 
-  function phaseHtml() 
+  function phaseHtml()
   {
-    // markdown to html          
-    val (fileEmbed,(mathLocations, (mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions,_,_))))))) = 
+    // markdown to html
+    val (fileEmbed,(mathLocations, (mathPlain,(mathFull,(warns0,(logs, (html0,_fullOptions,_,_))))))) =
                               withLog("embed") {
                                 withLogCompress("math-locations") {
                                  withLogCompress("math-plain") {
                                   withLogCompress("math-full") {
-                                   withLogCompress("warning") { 
-                                    withLogCompress("aux") { 
-                                     markdown(icontent,xopts0) 
+                                   withLogCompress("warning") {
+                                    withLogCompress("aux") {
+                                     markdown(icontent,xopts0)
                                    }}}}}}
 
     // write math locations to file
@@ -220,7 +220,7 @@ function process( inName : string, outName : string, searchDirs : list<string>,
         if (mopts.bibStyle.extname != "" || mopts.bibStyle.dirname != "") {
           // copy bst file
           tryCopyTextFileFromTo( mopts.bibStyle.basename, mopts.bibStyle.dirname, outName.dirname )
-          ()          
+          ()
         }
         */
         writeCitationsData( logs, outName, searchDirs, mopts.bib.splitPaths, mopts )
@@ -241,11 +241,11 @@ function process( inName : string, outName : string, searchDirs : list<string>,
     }
     else {
       // do embedding
-      val (xopts,html) = embedFiles(xopts0,fileEmbed.split("\n").list,html0);                                 
+      val (xopts,html) = embedFiles(xopts0,fileEmbed.split("\n").list,html0);
 
       // write html result
       if (!(tryWriteTextFile(outName,html))) {
-        mopts.printErr("error: unable to write: " + outName) 
+        mopts.printErr("error: unable to write: " + outName)
       }
 
       // show warnings
@@ -259,13 +259,13 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
       // generate tex
       val outTexName = outName.changeExt(".tex")
-      val texRefers = 
+      val texRefers =
         if (!mopts.tex) then [] else {
-          if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )        
-          val (texwarns, (texFiles, (texRefer, tex))) 
+          if (mopts.verbose >= 1) println("process: " + inName + " -> " + outTexName )
+          val (texwarns, (texFiles, (texRefer, tex)))
                 = withLog("texwarning", {
                     withLog("files", {
-                      withLog("filesRefer", { 
+                      withLog("filesRefer", {
                        markdown(icontent,xopts,FmtTex).fst
                       })
                     })
@@ -273,11 +273,11 @@ function process( inName : string, outName : string, searchDirs : list<string>,
           if (texwarns != "") {
             log("stdout",texwarns)
             if (mopts.verbose>=1) {
-              print(texwarns) 
+              print(texwarns)
             }
           }
           if (!(tryWriteTextFile(outTexName,tex))) {
-            mopts.printErr("error: unable to write: " + outTexName) 
+            mopts.printErr("error: unable to write: " + outTexName)
           }
           texFiles.split("\n").list + texRefer.split("\n").list
         }
@@ -295,10 +295,10 @@ function process( inName : string, outName : string, searchDirs : list<string>,
 
               mopts.print("Writing out math definitions to svg file")
               tryWriteTextFile(outName.changeExt(".svg"), svgdefs)
-              
+
               val html2 = markdown(icontent,xopts(math=(xopts.math)(dim=mdim2,svgDefs=svgdefs))).fst
               if (!(tryWriteTextFile(outName,html2))) {
-                mopts.printErr("error: unable to write: " + outName) 
+                mopts.printErr("error: unable to write: " + outName)
               }
             }
             Nothing -> ()
@@ -306,12 +306,12 @@ function process( inName : string, outName : string, searchDirs : list<string>,
           //if (mopts.verbose>=1) println("  done typesetting math.")
           genPdf(outTexName,texRefers)
         }
-      }    
+      }
       else {
         genPdf(outTexName,texRefers)
-      }    
+      }
 
-      continue(html)            
+      continue(html)
     }
   }
 
@@ -349,7 +349,7 @@ function fixWarnings(txt : string) : string {
           Just(cap) -> {
             val count = hist[line].mbint
             hist[line] := count+1
-            if (count == 4) 
+            if (count == 4)
              then Just("warning: " + location + " ignoring from now on:" + line + "\n")
             elif (count > 4)
              then Nothing
@@ -402,23 +402,23 @@ function registerColorizers( opts : options, searchDirs : list<string>, content 
         }
       }
     }
-  }         
+  }
 }
 
 public function outputName( inputName : string, options : commandOptions ) : string {
-  val noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext 
+  val noextName = if (inputName.endsWith(".xmp.html")) then inputName.substr(0,inputName.length-9) else inputName.noext
   val outName = if (options.convertTex) then inputName + ".mdk" else noextName + ".html"
-  if (options.outputDir=="") 
-   then outName 
-   else options.outputDir + "/" + outName.basename                  
+  if (options.outputDir=="")
+   then outName
+   else options.outputDir + "/" + outName.basename
 }
 
 function tryCopyTextFileFromNoSandboxTo( fname, srcDir, outDir ) {
   val inName = combine(srcDir,fname)
   val outName = combine(outDir,fname)
-  catch { 
+  catch {
     val txt = readTextFileNoSandbox( inName )
-    tryWriteTextFile(outName,txt)    
+    tryWriteTextFile(outName,txt)
     ()
   }
   fun(exn) { () }

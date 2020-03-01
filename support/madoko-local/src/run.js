@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -18,7 +18,7 @@ var Sandbox     = require("./sandbox.js");
 
 
 // -------------------------------------------------------------
-// Helpers 
+// Helpers
 // -------------------------------------------------------------
 
 // this routine replace parent directory references (..) by a .parent directory
@@ -33,7 +33,7 @@ function xnormalize(fpath) {
     }
     else if (part==="..") {
       if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
-        roots.pop(); 
+        roots.pop();
       }
       else {
         roots.push(".parent");
@@ -75,14 +75,14 @@ var Target = {
 };
 
 // Read madoko generated files.
-// config: 
-//   limits.fileSize : int 
+// config:
+//   limits.fileSize : int
 //   mime.lookup(path)
 function readFiles( config, userpath, docname, target, out ) {
   var ext    = Path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
-  var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
-                "-math-plain.tex", "-math-full.tex", 
+  var fnames = [".dimx", "-math-plain.dim", "-math-full.dim",
+                "-math-plain.tex", "-math-full.tex",
                 "-math-plain.final.tex", "-math-full.final.tex",
                 "-bib.bbl", "-bib.final.aux", // todo: handle multiple bibliographies
                 "-bib.bbl.mdk", "-bib.bib.json",
@@ -90,7 +90,7 @@ function readFiles( config, userpath, docname, target, out ) {
                 .concat( target>Target.Math ? [".pdf",".tex"] : [] )
                 .concat( target===Target.TexZip ? [".zip"] : [] )
                 .map( function(s) { return Util.combine( outdir, stem + s ); })
-                .concat(  target>Target.Math ? [Util.combine(outdir,"madoko2.sty")] : [] );                
+                .concat(  target>Target.Math ? [Util.combine(outdir,"madoko2.sty")] : [] );
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
@@ -140,7 +140,7 @@ function readFiles( config, userpath, docname, target, out ) {
         }
       );
     });
-  }));  
+  }));
 }
 
 // execute madoko program
@@ -150,7 +150,7 @@ function madokoExec( program, userpath, docname, flags, extraflags, timeout ) {
   return new Promise( function(cont) {
     Log.message("> " + command);
     Cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
-  }); 
+  });
 }
 
 // Run madoko program
@@ -165,10 +165,11 @@ function madokoRunIn( config, userpath, docname, files, target ) {
   return saveFiles( userpath, files ).then( function() {
     Sandbox.getSafePath(userpath,docname); // is docname safe?
     var tgtflag = (target===Target.Pdf ? " --pdf" : (target===Target.TexZip ? " --texzip" : ""));
-    var flags = "-vv --verbose-max=0 -mmath-embed:512 -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
+    var flags = "-vv --verbose-max=0 -mmath-embed:512 -mmath-concurrency:" + config.concurrency.toString() +
+                " -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
     var extraflags = config.runflags || "";
-    var timeout = (target>Target.Math ? config.limits.timeoutPDF : config.limits.timeoutMath);    
-    var startTime = Date.now();    
+    var timeout = (target>Target.Math ? config.limits.timeoutPDF : config.limits.timeoutMath);
+    var startTime = Date.now();
     return madokoExec( config.run, userpath, docname, flags, extraflags, timeout ).then( function(stdout,stderr) {
       var endTime = Date.now();
       var out = stdout + "\n" + stderr + "\n";
@@ -183,7 +184,7 @@ function madokoRunIn( config, userpath, docname, files, target ) {
       });
     }, function(err,stdout,stderr) {
       Log.info("madoko failed: \nstdout: " + stdout + "\nstderr: " + stderr + "\n");
-      if (err) Log.info(err.toString()); 
+      if (err) Log.info(err.toString());
       err.stdout = stdout;
       err.stderr = stderr;
       throw err;
