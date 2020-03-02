@@ -776,7 +776,7 @@ function fmtCite(context : inlineContext, nbsp: string, citations : list<cite>, 
         ""
       }
     }
-    res
+    nbsp + res
 
   // [@Goo93]	 (Goossens et al., 1993)	Natural
   // [+@Goo93]	 (Goossens, Mittelbach, and Samarin, 1993)	Long – all authors
@@ -784,7 +784,7 @@ function fmtCite(context : inlineContext, nbsp: string, citations : list<cite>, 
   } else {
     val cites = citations.map(fun(cite){ cite.name }).join(", ")
     // TODO also support other cite styles
-    "\\citep{" + cites + "}"
+    nbsp + "\\citep{" + cites + "}"
   }
 }
 
