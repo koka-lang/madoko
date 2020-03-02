@@ -41,7 +41,8 @@
   "dependencies": {
     "amdefine": "^1.0.1",
     "mkdirp": "^0.3.5",
-    "requirejs": "^2.3.6"
+    "requirejs": "^2.3.6",
+    "rimraf": "^3.0.1"
   },
   "devDependencies": {
     "jake": ">=0.7.6"
