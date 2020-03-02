@@ -1,5 +1,11 @@
 {
   "log" : [
+    { "version": "1.2.1",
+      "date": "2020-03-02",
+      "updates": [
+        "Allow use \\ref in LaTeX to refer to Madoko entities"
+      ]
+    },
     { "version": "1.2.0",
       "date": "2020-02-15",
       "updates": [

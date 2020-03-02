@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2013-2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -32,15 +32,15 @@ var limits = {
   requestsPerDomain: 100,     // at most X concurrent requests per domain
   requestsPerUser  : 10,      // at most X concurrent requests per user
   requestNewUser   : 10,      // at most X users per hour per domain
-  maxProcesses: 10, 
-  hashLength  : 16,  
-  fileSize    : 16*mb,         
+  maxProcesses: 10,
+  hashLength  : 16,
+  fileSize    : 16*mb,
   cookieAge   : 30*day,       // our session cookie expires after one month
   timeoutPDF  : 4*minute,
   timeoutMath : 2*minute,
   timeoutGET  : 30*second,
   atomicDelay : 1*minute,     // a push to cloud storage is assumed visible everywhere after this time
-  editDelay   : 30*second,  
+  editDelay   : 30*second,
   logFlush    : 1*minute,
   logDigest   : 8*hour,
   rmdirDelay  : 120*second,
@@ -48,7 +48,7 @@ var limits = {
   tokenMaxMaxAge : 356 * day,  // maximum configurable max age (1 year)
 };
 
-var allowedIps = null; 
+var allowedIps = null;
 var blockedIps = null;
 var privateIps = /^(::ffff:)?(131\.107\.(147|174|159|160|192)\.\d+|127\.0\.0\.1|167\.220\.\d+\.\d+|173\.160\.195\.\d+)$/;
 
@@ -75,7 +75,7 @@ var compress      = require('compression');
 
 // -------------------------------------------------------------
 // Wrap promises
-// We use promises mostly to reliable catch exceptions 
+// We use promises mostly to reliable catch exceptions
 // -------------------------------------------------------------
 var Promise = require("./client/scripts/promise.js");
 var Map     = require("./client/scripts/map.js");
@@ -112,13 +112,13 @@ function dnsReverse( ip, callback ) {
         doms = null;
         console.log("unable to resolve ip: " + err.toString() );
       }
-      callback(doms);      
+      callback(doms);
     });
   }
   catch(exn) {
     console.log("unable to resolve ip: " + exn.toString() );
     callback(null);
-  }  
+  }
 }
 
 function response( res, data, status ) {
@@ -151,7 +151,7 @@ function onError(req,res,err) {
         error: result,
         user: res.user || { id: (req.session ? req.session.userid : null) },
         ip: req.ip,
-        domains: doms,    
+        domains: doms,
         url: req.url,
         date: new Date().toISOString()
       });
@@ -162,7 +162,7 @@ function onError(req,res,err) {
 }
 
 // -------------------------------------------------------------
-// server mode 
+// server mode
 // -------------------------------------------------------------
 var Mode = {
   Normal: "normal",
@@ -173,7 +173,7 @@ var mode = Mode.maintenance;
 
 
 // -------------------------------------------------------------
-// Events 
+// Events
 // -------------------------------------------------------------
 
 var users   = new Map();  // userid -> { requests: int }
@@ -200,7 +200,7 @@ setInterval( function() {
       domain.newUsers = 0;
     }
   });
-}, hour); 
+}, hour);
 
 
 function initSession(req,res) {
@@ -223,7 +223,7 @@ function initSession(req,res) {
   var today = new Date().toDateString();
   if (req.session.lastDate != today) req.session.lastDate = today; // update cookie at least once every day
   if (req.sessionCookies.get("auth")) res.clearCookie("auth",{path:"/"}); // legacy
-  
+
   //console.log(req.session.toJSON());
   return req.session.userid;
 }
@@ -238,18 +238,18 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
     var start = Date.now();
 
     if (useSession) {
-      initSession(req,res);    
+      initSession(req,res);
     }
-    
+
     var entry =  {
       type: "none",
       ip: req.ip,
       url: req.url,
-      params: req.params, 
-      date: new Date(start).toISOString(),  
-      id: req.session.userid,      
-    };    
-    if (logev) logev.entry( entry );    
+      params: req.params,
+      date: new Date(start).toISOString(),
+      id: req.session.userid,
+    };
+    if (logev) logev.entry( entry );
     var logit = (req.url != "/rest/edit");
     entry.type = "request";
     domain = domainsGet(req);
@@ -282,7 +282,7 @@ function event( req, res, useSession, action, maxRequests, allowAll ) {
 
 
 // -------------------------------------------------------------
-// Set up server app  
+// Set up server app
 // -------------------------------------------------------------
 var app = express();
 
@@ -304,7 +304,7 @@ app.use(function(err, req, res, next){
 });
 
 // -------------------------------------------------------------
-// Security   
+// Security
 // -------------------------------------------------------------
 app.use(function(req, res, next){
   // console.log("referer: " + req.get("Referrer") + ", path: " + req.path + ", host: " + req.hostname);
@@ -317,13 +317,13 @@ app.use(function(req, res, next){
     res.setHeader("Cache-Control","no-cache");
   }
   else {
-    //console.log("cache: regular: " + req.path); 
+    //console.log("cache: regular: " + req.path);
   }
-  
-  // tell browsers to immediately redirect to https    
+
+  // tell browsers to immediately redirect to https
   res.setHeader("Strict-Transport-Security","max-age=43200; includeSubDomains");
-  
-  // default is very secure: just our server and no XHR/inline/eval 
+
+  // default is very secure: just our server and no XHR/inline/eval
   var csp = { "default-src": "'self'",
               "connect-src": "'none'",
               "report-uri": "/rest/report/csp",
@@ -333,11 +333,11 @@ app.use(function(req, res, next){
   // preview is sandboxed
   if (startsWith(req.path,"/preview/")) {
     delete csp["default-src"];
-    csp["sandbox"]      = "allow-scripts allow-popups"; // already set in document, but just to be sure :-)    
+    csp["sandbox"]      = "allow-scripts allow-popups"; // already set in document, but just to be sure :-)
   }
   else {
     // Don't allow content to be loaded in an iframe
-    // res.setHeader("X-Frame-Options","ALLOW-FROM http://localhost");              
+    // res.setHeader("X-Frame-Options","ALLOW-FROM http://localhost");
 
     // index uses bootstrap theme
     if (req.path==="/" || req.path==="/index.html") {
@@ -351,8 +351,8 @@ app.use(function(req, res, next){
       csp["style-src"]    = "'self' 'unsafe-inline'";  // editor needs unsafe-inline for styles.
       csp["img-src"]      = "'self' data:";
       csp["connect-src"]  = "'self' " + remotes.sources.join(" ");
-    } 
-    else if (endsWith(req.path,".svg")) { 
+    }
+    else if (endsWith(req.path,".svg")) {
       csp["style-src"]   = "'self' 'unsafe-inline'";   // editor/contrib/find needs this.
     }
   }
@@ -373,7 +373,7 @@ app.use(function(req,res,next) {
 });
 
 // -------------------------------------------------------------
-// Helpers 
+// Helpers
 // -------------------------------------------------------------
 
 function startsWith(s,pre) {
@@ -407,7 +407,7 @@ function properties(obj) {
     if (obj.hasOwnProperty(key)) {
       attrs.push(key);
     }
-  } 
+  }
   return attrs;
 }
 
@@ -427,7 +427,7 @@ function jsonParse(s,def) {
   }
 }
 
-var mimeTypes = {    
+var mimeTypes = {
   mdk: "text/madoko",
   md: "text/markdown",
   mkdn: "text/markdown",
@@ -443,7 +443,7 @@ var mimeTypes = {
   pdf: "application/pdf",
   json: "application/json",
   zip: "application/zip",
-  
+
   tex: "text/tex",
   sty: "text/latex",
   cls: "text/latex",
@@ -494,7 +494,7 @@ var Log = (function(){
 
   function Log(base) {
     var self = this;
-    self.base = base || "log-";    
+    self.base = base || "log-";
     self.lastDigest = 0;
     self.start();
   }
@@ -505,10 +505,10 @@ var Log = (function(){
       clearInterval(self.ival);
       flush();
     }
-    
+
     self.log = [];
     self.ival = setInterval( function() {
-      self.flush();      
+      self.flush();
     }, limits.logFlush );
   }
 
@@ -573,7 +573,7 @@ setInterval( function() {
     type: "pages",
     pagesCount: pagesCount,
     pages: pages.keyElems(),
-    date: new Date().toISOString(),    
+    date: new Date().toISOString(),
   };
   if (log) log.entry( pagesStat, true );
   pagesCount = 0;
@@ -588,7 +588,7 @@ setInterval( function() {
 function getUser( req ) {  // : { id: string, requests: int, path: string }
   var requests = usersGetRequests(req.session.userid);
   if (requests >= limits.requestsPerUser) throw { httpCode: 429, message: "too many requests from this user" } ;
-  
+
   return {
     id: req.session.userid,
     requests: requests,
@@ -617,15 +617,15 @@ function withUser( req, action ) {
     if (stats) throw { httpCode: 429, message: "can only run one process per user -- try again later" };
     return ensureDir(user.path);
   }).then( function() {
-    return action(user);    
-  }).always( function() {  
-    entry.type = "user";  
-    entry.time = Date.now() - start; 
+    return action(user);
+  }).always( function() {
+    entry.type = "user";
+    entry.time = Date.now() - start;
     entry.size = 0;
     entry.files = req.body.files.map( function(file) {
       var size = file.content.length;
       entry.size += size;
-      return { 
+      return {
         path: file.path,
         //encoding: file.encoding,
         //mime: file.mime,
@@ -634,16 +634,16 @@ function withUser( req, action ) {
     });
     log.entry( entry );
     if (user.path) {
-      //console.log("remove: " + user.path);      
+      //console.log("remove: " + user.path);
       setTimeout( function() {
         rmdir( user.path, function(err) {
           if (err) {
             var eentry = { type: "error", error: { message: "unable to remove: " + user.path + ": " + err.toString() } };
-            extend(eentry,entry);          
+            extend(eentry,entry);
             logerr.entry( eentry );
           }
         });
-      }, limits.rmdirDelay );    
+      }, limits.rmdirDelay );
     }
     user.requests--;
   });
@@ -668,7 +668,7 @@ function xnormalize(fpath) {
     }
     else if (part==="..") {
       if (roots.length > 0 && roots[roots.length-1] !== ".parent") {
-        roots.pop(); 
+        roots.pop();
       }
       else {
         roots.push(".parent");
@@ -686,7 +686,7 @@ function safePath(root,path) {
   var fpath = combine( root, xnormalize(path));
   if (!root || !startsWith(fpath,root + "/") || !rxRootRelative.test(fpath.substr(root.length+1))) {
     console.log("unauthorized file: " + path);
-    console.log(" root : " + root + "\n fpath: " + fpath);    
+    console.log(" root : " + root + "\n fpath: " + fpath);
     throw new Error("unauthorized file name: " + path);
   }
   return fpath;
@@ -718,8 +718,8 @@ function saveFiles( userpath, files ) {
 function readFiles( userpath, docname, target, out ) {
   var ext    = path.extname(docname);
   var stem   = docname.substr(0, docname.length - ext.length );
-  var fnames = [".dimx", "-math-plain.dim", "-math-full.dim", 
-                "-math-plain.tex", "-math-full.tex", 
+  var fnames = [".dimx", "-math-plain.dim", "-math-full.dim",
+                "-math-plain.tex", "-math-full.tex",
                 "-math-plain.final.tex", "-math-full.final.tex",
                 "-bib.bbl", "-bib.final.aux", // todo: handle multiple bibliographies
                 "-bib.bbl.mdk", "-bib.bib.json",
@@ -727,7 +727,7 @@ function readFiles( userpath, docname, target, out ) {
                 .concat( target>Target.Math ? [".pdf",".tex"] : [] )
                 .concat( target===Target.TexZip ? [".zip"] : [] )
                 .map( function(s) { return combine( outdir, stem + s ); })
-                .concat(  target>Target.Math ? [combine(outdir,"madoko2.sty")] : [] );                
+                .concat(  target>Target.Math ? [combine(outdir,"madoko2.sty")] : [] );
   // find last log file
   var rxLog = /^[ \t]*log written at: *([\w\-\/\\]+\.log) *$/mig;
   var cap = rxLog.exec(out);
@@ -774,7 +774,7 @@ function readFiles( userpath, docname, target, out ) {
         }
       );
     });
-  }));  
+  }));
 }
 
 // execute madoko program
@@ -783,7 +783,7 @@ function madokoExec( userpath, docname, flags, timeout ) {
   return new Promise( function(cont) {
     console.log("> " + command);
     cp.exec( command, {cwd: userpath, timeout: timeout || 10000, maxBuffer: 512*1024 }, cont);
-  }); 
+  });
 }
 
 var Target = {
@@ -795,12 +795,12 @@ var Target = {
 // Run madoko program
 function madokoRun( userpath, docname, files, target ) {
   return saveFiles( userpath, files ).then( function() {
-    safePath(userpath,docname); // is docname safe?    
+    safePath(userpath,docname); // is docname safe?
     var tgtflag = (target===Target.Pdf ? " --pdf" : (target===Target.TexZip ? " --texzip" : ""));
     var flags = " -vv --verbose-max=0 -mmath-embed:512 -membed:" + (target > Target.Math ? "512" : "0") + tgtflag;
     return madokoExec( userpath, docname, flags, (target > Target.Math ? limits.timeoutPDF : limits.timeoutMath) ).then( function(stdout,stderr) {
       var out = stdout + "\n" + stderr + "\n";
-      console.log("result: \n" + out);      
+      console.log("result: \n" + out);
       return readFiles( userpath, docname, target, out ).then( function(filesOut) {
         return {
           files: filesOut.filter( function(file) { return (file.content && file.content.length > 0); } ),
@@ -878,7 +878,7 @@ properties(remotes).forEach( function(name) {
   }
 });
 
-function redirectPage(remote, message, status, xlogin ) { 
+function redirectPage(remote, message, status, xlogin ) {
   if (!remote) remote = { name: ""};
   if (!status) status = "ok";
   if (!message) {
@@ -894,13 +894,13 @@ function redirectPage(remote, message, status, xlogin ) {
     '<body id="auth-redirect">',
     '  <div class="auth-redirect">',
     '    <p id="message">' + message + '</p>',
-    '    <p><button id="button-close">Close Window</button></p>', 
+    '    <p><button id="button-close">Close Window</button></p>',
     '    <script id="auth" data-status="' + encodeURIComponent(status) + '" ' +
             'data-remote="' + encodeURIComponent(remote.name) + '" ' +
             (xlogin ? 'data-xlogin="' + encodeURIComponent(xlogin) + '" ' : '') +
             'src="../scripts/auth-redirect.js" type="text/javascript"></script>',
     '  </div>',
-    '</body>',    
+    '</body>',
     '</html>'
   ].join("\n");
 }
@@ -927,7 +927,7 @@ function oauthLogin(req,res) {
   //console.log("remotes: " + JSON.stringify(remotes));
   var state  = { };
   try { state = JSON.parse(decodeURIComponent(cookie)); } catch(exn) { };
-  
+
   if (state.remote) remote = remotes[state.remote];
   if (!remote) {
     return redirectError(remote, "Unknown remote service. (Are cookies blocked from <code>https://www.madoko.net</code>?)" );
@@ -945,14 +945,14 @@ function oauthLogin(req,res) {
   var uri = req.protocol + "://" + (req.hostname || req.host) + req.path;
   if (!remote.redirect_uris || remote.redirect_uris.indexOf(uri) < 0) {
     console.log(remote.redirect_uris);
-    return redirectError(remote, "Invalid redirection url: " + uri ); 
+    return redirectError(remote, "Invalid redirection url: " + uri );
   }
 
   // get access token
-  var query = { 
-    code: req.query.code,                
-    grant_type: "authorization_code", 
-    redirect_uri: uri,    
+  var query = {
+    code: req.query.code,
+    grant_type: "authorization_code",
+    redirect_uri: uri,
     client_id: remote.client_id,
     client_secret: remote.client_secret,
   };
@@ -962,10 +962,10 @@ function oauthLogin(req,res) {
       return redirectError(remote, "Failed to get access token from the token server.");
     }
     console.log("tokenInfo: ", tokenInfo );
-    var options = { 
-      url: remote.account.url, 
+    var options = {
+      url: remote.account.url,
       method: remote.account.method,
-      secure: true, 
+      secure: true,
       json: true,
       headers: { "User-Agent": "Madoko" },
     };
@@ -980,7 +980,7 @@ function oauthLogin(req,res) {
     else {
       options.query = { access_token: tokenInfo.access_token };
     }
-    
+
     return makeRequest( options, body ).then( function(info) {
       console.log("account info: ", info );
       if (info.owner && info.owner.user) info = info.owner.user; // onedrive2
@@ -993,31 +993,31 @@ function oauthLogin(req,res) {
         refresh_token: tokenInfo.refresh_token,
         created:new Date().toISOString(),
         remote: remote.name,
-        nonce:  uniqueHash(),        
+        nonce:  uniqueHash(),
       };
       if (login.name.display_name) login.name = login.name.display_name; // dropbox v2
-      console.log("logged into " + remote.name + ": " + login.name);      
+      console.log("logged into " + remote.name + ": " + login.name);
       if (log) {
-        log.entry( { 
-          type:   "login", 
-          id:     req.session.userid, 
-          uid:    login.uid, 
-          remote: remote.name, 
-          name:   login.name, 
-          email:  login.email, 
+        log.entry( {
+          type:   "login",
+          id:     req.session.userid,
+          uid:    login.uid,
+          remote: remote.name,
+          name:   login.name,
+          email:  login.email,
           avatar: login.avatar,
-          date:   login.created, 
-          ip:     req.ip, 
-          url:    req.url 
+          date:   login.created,
+          ip:     req.ip,
+          url:    req.url
         });
-      }      
+      }
       delete req.session.logins[remote.name]; // delete legacy login if necessary
-      req.session.logins[remote.name] = { 
+      req.session.logins[remote.name] = {
         created: login.created,
-        name   : login.name, 
+        name   : login.name,
       };
       var xlogin = userEncrypt(req, login);
-      return redirectPage(remote, null, "xlogin", xlogin);      
+      return redirectPage(remote, null, "xlogin", xlogin);
     }, function(err) {
       console.log("access_token failed: " + err.toString());
       return redirectError(remote, "Failed to retrieve account information.");
@@ -1032,11 +1032,11 @@ function oauthRefresh(req,res,login) {
   var remote = remotes[login.remote];
   if (!remote || !login.access_token || !login.refresh_token) return Promise.resolved();
   if (log) log.entry( { type: "refresh", id: req.session.userid, uid: login.uid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
-  
-  console.log( remote.name + ": refreshing token...");  
+
+  console.log( remote.name + ": refreshing token...");
   var query = {
     refresh_token: login.refresh_token,
-    grant_type: "refresh_token", 
+    grant_type: "refresh_token",
     redirect_uri:  "https://" + (req.hostname || req.host) + "/oauth/redirect",
     client_id: remote.client_id,
     client_secret: remote.client_secret,
@@ -1050,7 +1050,7 @@ function oauthRefresh(req,res,login) {
     // login.created =  new Date().toISOString();  // don't extend life time beyond our limit
     login.nonce = uniqueHash();
     var xlogin = userEncrypt(req,login);
-    return { access_token: login.access_token, xlogin: xlogin };    
+    return { access_token: login.access_token, xlogin: xlogin };
   });
 }
 
@@ -1060,7 +1060,7 @@ function oauthRevoke(req,res,remoteName,access_token) {
   if (!remote || !access_token) return Promise.resolved();
   if (log) log.entry( { type: "revoke", id: req.session.userid, remote: remote.name, created: remote.created, date: (new Date()).toISOString(), ip: req.ip, url: req.url } );
 
-  delete req.session.logins[remote.name]; 
+  delete req.session.logins[remote.name];
   if (!remote.revoke) return Promise.resolved();
 
   function instantiate( s ) {
@@ -1068,11 +1068,11 @@ function oauthRevoke(req,res,remoteName,access_token) {
             .replace(/\{client_id\}/g, remote.client_id );
   }
 
-  console.log(remote.name + ": revoking token...");  
-  var options = { 
+  console.log(remote.name + ": revoking token...");
+  var options = {
     url: instantiate( remote.revoke.url ),
-    method: remote.revoke.method, 
-    secure: true, 
+    method: remote.revoke.method,
+    secure: true,
     json: true,
     contentType: "application/json" // dropbox needs this
   };
@@ -1167,10 +1167,10 @@ function makeRequest(options,obj) {
     }
     options.headers['Content-Length'] = data.length;
   }
-  
+
   return new Promise( function(cont) {
     var req;
-    var timeout = setTimeout( function() { 
+    var timeout = setTimeout( function() {
       if (req) req.abort();
     }, (options.timeout && options.timeout > 0 ? options.timeout : limits.timeoutGET ) );
     console.log("OUT " + options.method + " " + options.url);
@@ -1212,16 +1212,16 @@ function makeRequest(options,obj) {
       req.write(data);
     }
     req.end();
-  });  
+  });
 }
 
 /* -------------------------------------------------------------
    Enable atomic file push
 
-Since cloud storage like onedrive generally don't provide 
-atomic updates, we provide it. The idea is that a client 
+Since cloud storage like onedrive generally don't provide
+atomic updates, we provide it. The idea is that a client
 will push a file update together with the creation time it expects
-the file to be. 
+the file to be.
 ------------------------------------------------------------- */
 
 var atomics = new Map();
@@ -1253,7 +1253,7 @@ function pushAtomic( name, time, release ) {
       // only remove if not concurrently reaquired by someone else
       atomics.remove(name);
     }
-    return { message: "released" };    
+    return { message: "released" };
   }
   else {
     if (atime <= 0 || atime < time) {
@@ -1284,7 +1284,7 @@ function pushAtomic( name, time, release ) {
    Since it proves hard to create truly global unique names,
    we also have an aliases map which maps file names to other names.
    This way we can use revisions on dropbox for example to create
-   unique names. 
+   unique names.
 ------------------------------------------------------------- */
 
 var edits = new Map();
@@ -1320,12 +1320,12 @@ function resolveAlias(name) {
   var xname = name;
   while ((aliasInfo = aliases.get(xname)) != null && xname !== aliasInfo.name) {
     xname = aliasInfo.name;
-  } 
+  }
   if (xname !== name) {
-    //console.log("resolve alias final: " + name + " -> " + xname);    
+    //console.log("resolve alias final: " + name + " -> " + xname);
   }
   return xname;
-} 
+}
 
 // return a record { readers, writers } that show how many
 // other readers and writers there are.
@@ -1378,7 +1378,7 @@ function editUpdate( req, userid, files, userName ) {
     var realname = resolveAlias(fname);
     updateEditInfo( userid, realname, info, userName);
     res[fname] = getEditInfo(userid, realname);
-    console.log("user: " + (userName || userid) + ": " + fname + ": " + (realname == fname ? "" : "as " + realname + ": ") + 
+    console.log("user: " + (userName || userid) + ": " + fname + ": " + (realname == fname ? "" : "as " + realname + ": ") +
                   info.kind + ":" + info.line + "\n  " + JSON.stringify(res[fname]));
   });
   return res;
@@ -1391,7 +1391,7 @@ function editCreateAlias( req, userid, alias, name ) {
   var realname = resolveAlias(name);
   if (realname == alias) return; // no cycles please
   var now = Date.now();
-  aliases.set(alias, { createdTime: Date.now(), name: name });  
+  aliases.set(alias, { createdTime: Date.now(), name: name });
 }
 
 // -------------------------------------------------------------
@@ -1408,12 +1408,12 @@ app.post('/rest/run', function(req,res) {
       var docname  = req.body.docname || "document.mdk";
       var files    = req.body.files || [];
       var target   = (req.body.pdf || req.body.target==="pdf" ? Target.Pdf : (req.body.target==="texzip" ? Target.TexZip : Target.Math ));
-      return madokoRun( user.path, docname, files, target ).always( function() { runs--; } );  
+      return madokoRun( user.path, docname, files, target ).always( function() { runs--; } );
     }
     finally {
       runs--;
     }
-  }); 
+  });
 });
 
 app.post('/rest/push-atomic', function(req,res) {
@@ -1455,13 +1455,13 @@ app.put( "/rest/stat", function(req,res) {
     });
     console.log("stat user: " + name + ": editing: " + stat.editTime.toString() + "ms, active: " + stat.activeTime.toString() + "ms");
     log.entry( {
-      type: "stat", 
+      type: "stat",
       user: { id: req.session.userid, name: name },
       editTime: stat.editTime,
       viewTime: stat.viewTime,
       activeTime: stat.activeTime,
       ip: req.ip,
-      url: req.url,      
+      url: req.url,
       date: new Date().toISOString()
     });
   });
@@ -1485,9 +1485,9 @@ app.post("/oauth/token", function(req,res) {
     var login = userDecrypt(req,req.body.xlogin);
     if (!login)  throw { httpCode: 401, message: "Not logged in to " + (req.query.remote || "<unknown>") };
     oauthCheckExpiration(req,login);
-    
-    return { 
-      access_token: login.access_token, 
+
+    return {
+      access_token: login.access_token,
       can_refresh : (login.refresh_token != null),
       name : login.name,
       uid  : login.uid,
@@ -1504,7 +1504,7 @@ app.post("/oauth/refresh", function(req,res) {
     if (!login || !login.refresh_token) throw { httpCode: 400, message: "cannot refresh tokens" };
     oauthCheckExpiration(req,login);
 
-    return oauthRefresh(req,res,login);      
+    return oauthRefresh(req,res,login);
   });
 });
 
@@ -1568,7 +1568,7 @@ app.get("/doc", function(req,res) {
 });
 
 var staticOptions = {
-  maxAge: 10000  
+  maxAge: 10000
 }
 var staticClient      = express.static( combine(__dirname, "client"), staticOptions);
 var staticMaintenance = express.static( combine(__dirname, "maintenance"), staticOptions);
@@ -1638,11 +1638,11 @@ var httpApp = express();
 httpApp.use(function(req, res, next) {
   logRequest(req,"http-redirection");
   // don't allow queries
-  if (req.url.indexOf("?") >= 0) { 
+  if (req.url.indexOf("?") >= 0) {
     res.status(403).send("Can only serve through secure connections.");
   }
   else {
-    res.redirect("https://" + (req.hostname || req.host) + req.path); 
+    res.redirect("https://" + (req.hostname || req.host) + req.path);
   }
 });
 
@@ -1688,5 +1688,3 @@ mode = Mode.Normal;
 
 // and listen to console commands
 listen();
-
-

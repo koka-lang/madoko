@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2013 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -30,17 +30,17 @@ function warning( msg : string ) {
 }
 
 public function fmtLatexEnv(context : inlineContext, env : string, txt : string, attrs : attrs ) : string {
-  if (env=="") 
-   then texText(txt) 
+  if (env=="")
+   then texText(txt)
   elif (env=="ul" || env=="ol")
    then texList(env,txt,attrs)
    else texEnv(env,txt,attrs)
 }
 
 public function fmtLatexCmd(context : inlineContext, cmd : string, txt : string, attrs : attrs ) : string {
-  if (cmd=="") then texText(txt) 
-  elif (cmd=="br") then "\\mdbr\n" 
-  // elif (cmd=="code") then "\\lstinline|" + txt + "|" 
+  if (cmd=="") then texText(txt)
+  elif (cmd=="br") then "\\mdbr\n"
+  // elif (cmd=="code") then "\\lstinline|" + txt + "|"
   else texCmd(cmd,txt,attrs)
 }
 
@@ -62,7 +62,7 @@ public function fmtLatexEscape( context : inlineContext, txt : string, allowEnti
   if (allowEntity)
    then texText(htmlEscape(txt,allowEntity))
    else // we use lstlisting with 'mathescape' and escape just $ and |
-        txt.replaceAll(regex(@"\$"),@"$\mbox{\$}$").replaceAll(regex(@"\|"),@"$\mbox{\char124}$")  
+        txt.replaceAll(regex(@"\$"),@"$\mbox{\$}$").replaceAll(regex(@"\|"),@"$\mbox{\char124}$")
 }
 
 public function fmtLatexFootnote(context : inlineContext, id : string, fn : footnote ) : string {
@@ -75,7 +75,7 @@ function normalize( sandbox: bool, path : string ) : string {
 
 public function fmtLatexLink( context : inlineContext, isImage : bool, link : link, content : string ) {
   val attrs = if (link.linkid.bool) then link.linkattrs.addKeyval("data-linkid",link.linkid) else link.linkattrs
-  val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)  
+  val url   = texLinkText(if (link.href.startsWith("#")) then link.href.substr(1) else link.href)
   if (isImage) {
     // expand extensions and set file refers
     val hrefs  = url.expandChoices
@@ -84,13 +84,13 @@ public function fmtLatexLink( context : inlineContext, isImage : bool, link : li
     val imgname = normalize(context.sandbox,imgref)
     log("files",imgname)
 
-    val (attrsx, args) = cssImageArgs(attrs)   
-    texCmdX( "\\includegraphics[" + args + "]" + imgname.noext.braced, "" /*content*/, attrsx ) 
+    val (attrsx, args) = cssImageArgs(attrs)
+    texCmdX( "\\includegraphics[" + args + "]" + imgname.noext.braced, "" /*content*/, attrsx )
   }
   else {
     val titleCmd = if (link.linkattrs.hasClass("tex-tooltip")) then [("tex-cmd-outer-after","\\mdtooltip" + extractText(link.title).braced)] else []
-    val cmd   = if (attrs.hasClass("localref")) 
-                 then (if (attrs.hasClass("bibref")) 
+    val cmd   = if (attrs.hasClass("localref"))
+                 then (if (attrs.hasClass("bibref"))
                         then "\\mdcite" + url.braced
                         else "\\mdref" + url.braced )
                  else "\\href" + url.braced
@@ -105,7 +105,7 @@ function extractText( s : string ) : string {
 
 val regxTexCmd = regex(rxTexCmd)
 
-public function fmtLatexCodePlain( context : inlineContext, txt : string, startline : bool ) : string 
+public function fmtLatexCodePlain( context : inlineContext, txt : string, startline : bool ) : string
 {
   txt.htmlEscape(False).texText.preSpace(startline)
 }
@@ -128,7 +128,7 @@ public function fmtLatexCodeToken(context:inlineContext, classes : list<string>,
 }
 
 /*
-function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string) 
+function fmtLatexCodeHilite( context : inlineContext, txt : string, startLine : bool ) : (string)
 {
   unTokenize(txt,startLine)
 }
@@ -144,24 +144,24 @@ function unTokenize( txt : string, startLine : bool ) : string {
         }
         elif (cap.matched=="<br>") then {
           nl := True
-          "\\prebr{}\n" 
+          "\\prebr{}\n"
         }
         else cap.matched
       })
       .replaceAll(rxToken, fun(cap) {
         val classes=cap.groups[1].toLower.trim.split(rxSpaces).list
-        fmtLatexCodeToken( classes, cap.groups[2] )    
+        fmtLatexCodeToken( classes, cap.groups[2] )
       })
-} 
+}
 val rxToken = regex(@"<span\s+.*?\bclass=['""]?([^""']+)['""]?[^>]*>([\s\S]*?)</span>",ignoreCase=True)
 val rxBr = regex(@"\n|<br>")
 val rxTagged = regex(@"([^<>]+)|<([^>]*)>")
 */
 
 public function preSpace( txt : string, start : bool = True ) : string {
-  val txt1 = if (!start) then txt 
-              else txt.replaceAll(rxIndent, fun(cap) { 
-                     cap.groups[1] + @"\preindent{" + cap.groups[2].length.show + "}" 
+  val txt1 = if (!start) then txt
+              else txt.replaceAll(rxIndent, fun(cap) {
+                     cap.groups[1] + @"\preindent{" + cap.groups[2].length.show + "}"
                    })
   txt1.replaceAll("\n","\\\\\n").replaceAll(" ","~")
   /*
@@ -180,7 +180,7 @@ function texLinkText( txt : string ) : string {
 }
 
 public function texText( txt : string ) : string {
-  txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)     
+  txt.replaceAll(rxSpecial,texSpecial).replaceAll(rxEntity,texEntity)
 }
 
 val rxEntity  = regex(@"&((?:#[xX]?)?(\w)(\w*));")
@@ -215,27 +215,27 @@ function texSpecial( cap : matched ) : string {
   }
 }
 
-val accents 
+val accents
   = texAccents.list.map(fun(te) { (te.snd, te.fst ) }).dict
 
 function texEntity( cap : matched ) {
   match(accents[cap.groups[3]]) {
     Just(cmd) -> @"{\" + cmd + "{" + cap.groups[2] + "}}"
     Nothing   -> entityToTex(cap.groups[1])
-  } 
+  }
 }
 
 
 function getTableEnv( attrs : attrs ) : string {
-  if (attrs.hasBoolKey("pretty-breakable") || attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */) 
+  if (attrs.hasBoolKey("pretty-breakable") || attrs.hasBoolKey("breakable") || attrs.hasClass("long") /* legacy */)
    then attrs.lookupKey("tex-longtable","longtable")
    else "tabular"
 }
 
 public function fmtLatexCodeTable( context : inlineContext, ct : codeTable, attrs : attrs ) : string {
   val table = attrs.getTableEnv
-  val content = 
-      "\\begin{mdcodetabular}" + ct.columns.show.braced + 
+  val content =
+      "\\begin{mdcodetabular}" + ct.columns.show.braced +
     "\\begin" + table.braced + "{" + list(1,ct.columns).map(fun(_) {"l"}).join("") + "}\n" +
     ct.rows.map( fun(row) { row.map(fmtLatexCodeCell).join("&") }).join("\\\\\n") +
     "\n\\end" + table.braced + "\\end{mdcodetabular}%mdk\n"
@@ -258,12 +258,12 @@ public function fmtLatexTable( context : inlineContext, head : list<row>, body :
   val defcolwidth  = colattrsx.fmtDefaultColumnWidth
   val tabcolsep    = attrs.lookupKey("tex-tabcolsep","1ex").cssWidth
   val tbody = "\\begin{mdtabular}" + columns.show.braced  + defcolwidth.braced + tabcolsep.braced +
-                "%mdk\n\\begin{" + table + "}" + 
+                "%mdk\n\\begin{" + table + "}" +
                 "{" + colfmts.join + "}" +
               head.fmtRows("th",colfmts,defcolwidth) + "\n" +
               body.fmtRows(td,colfmts,defcolwidth) +
               "\\end{" + table + "}\\end{mdtabular}\n"
-  attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])              
+  attrs.cssAttrs(tbody, if (breakable) then [("display","block")] else [])
 }
 
 type line {
@@ -277,12 +277,12 @@ val fmtRowLineBreak = "\\morecmidrules\n" // \\\\[-\\mdTablelineskip]\n"
 function fmtColumn( attrs : attrs, colattr : attrs ) : string {
   match(colattr.hasKey("text-align")) {
     Just(alignment) -> alignment.substr(0,1)
-    Nothing -> "l" 
+    Nothing -> "l"
   }
 }
 
 function fmtDefaultColumnWidth( colattrs : list<attrs> ) : string {
-  val fixed = colattrs.concat( fun(ca) { 
+  val fixed = colattrs.concat( fun(ca) {
     if(ca.hasKey("width").bool) then {
       val kvs = dict(ca.keyvals).cssExpandKeys
       ["-" + dimBorderBoxWidth(kvs)]
@@ -297,12 +297,12 @@ function fmtDefaultColumnWidth( colattrs : list<attrs> ) : string {
 function fmtRows( rows : list<row>, td : string, colfmts : list<string>, defcolwidth : string ) : string {
   var lastIsLine := False
   val xrows = rows.map fun(row) {
-    val lineRow = row.cells.map(fun(cell) { 
+    val lineRow = row.cells.map(fun(cell) {
                     if (cell.cellAttrs.hasClass("cell-line")) then Single
-                    elif (cell.cellAttrs.hasClass("cell-double-line")) then Double 
-                    else NoLine 
+                    elif (cell.cellAttrs.hasClass("cell-double-line")) then Double
+                    else NoLine
                   } )
-    if (!(lineRow.all(isNoLine))) then { 
+    if (!(lineRow.all(isNoLine))) then {
       val res = (if (lastIsLine) then fmtRowLineBreak else "") + fmtLine(lineRow,row)
       lastIsLine := True
       res
@@ -317,7 +317,7 @@ function fmtRows( rows : list<row>, td : string, colfmts : list<string>, defcolw
 }
 
 
-function fmtLine( lines : list<line>, row : row ) : string 
+function fmtLine( lines : list<line>, row : row ) : string
 {
   function width( cattrs : attrs ) {
     match(cattrs.hasKey("rule-width")) {
@@ -327,22 +327,22 @@ function fmtLine( lines : list<line>, row : row ) : string
   }
 
   val line2 = if (!(lines.any(isDouble))) then "" else {
-    fmtRowLineBreak + 
+    fmtRowLineBreak +
      zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       val attrs = cell.cellAttrs
-      if (!(line.isDouble)) then "" 
-       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
-     }).join            
+      if (!(line.isDouble)) then ""
+       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}"
+     }).join
   }
-  
+
   val line1 = if (!(lines.any(isNoLine)) && line2=="") then "\\midrule" + width(row.rowAttrs) else {
     zipWithIndexed(row.cells,lines,fun(i,cell,line) {
       val attrs = cell.cellAttrs
-      if (line.isNoLine) then "" 
-       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}" 
+      if (line.isNoLine) then ""
+       else "\\cmidrule" + width(attrs) + "{" + (i+1).show + "-" + (i+ attrs.lookupKey("column-span","1").parseInt.maybe(1,id)).show + "}"
      }).join
   }
-  
+
   line1 + line2
 }
 
@@ -351,11 +351,11 @@ function fmtRow( td : string, row : row, colfmts : list<string>, defcolwidth : s
   rcolor = match (row.rowAttrs.hasKey("background-color")) {
              Nothing   -> ""
              Just(clr) -> "\\rowcolor" + fmtColorArg(clr)
-           }     
+           }
   rcolor + */
-  zipWith(row.cells,colfmts, fun(cell,colfmt) { fmtCell(td,cell.text.trim,cell.cellAttrs,colfmt,defcolwidth) }).join("&") 
+  zipWith(row.cells,colfmts, fun(cell,colfmt) { fmtCell(td,cell.text.trim,cell.cellAttrs,colfmt,defcolwidth) }).join("&")
     + "\\\\\n"
-} 
+}
 
 
 
@@ -375,23 +375,23 @@ function fmtCellInline( elem : string, body : string, attrs : attrs, colfmt : st
   val colspan = attrs.lookupKey("column-span","1")
   val align   = match(attrs.hasKey("text-align")) {
                   Just(alignment) -> alignment.substr(0,1)
-                  Nothing -> if (elem=="th") then "c" else "l" 
+                  Nothing -> if (elem=="th") then "c" else "l"
                 }
   val bcolor  = match (attrs.hasKey("background-color")) {
                   Nothing   -> ""
                   Just(clr) -> "{\\mdcellcolor" + cssColorArg(clr) + "}"
-                }            
+                }
   val fmt     = (if (attrs.hasClass("cell-border-left")) then "|" else "") + align +
                 (if (attrs.hasClass("cell-border-right")) then "|" else "")
 
   val attrsx  = attrs( classes = attrs.classes.filter(fun(c){ c != "cell-border-left" && c != "cell-border-right" && !(c.startsWith("align-"))}),
                        keyvals = attrs.keyvals.filter(fun(kv){ kv.fst != "column-span" && kv.fst != "background-color" && kv.fst != "text-align"}))
 
-  val content = if (elem=="column") 
+  val content = if (elem=="column")
                  then texEnv(elem,body,attrsx)
-                 else texCmd(elem,body,attrsx.addKeyval("display","inline")) 
-                 
-  if (colspan=="1" && fmt==colfmt) then bcolor + content 
+                 else texCmd(elem,body,attrsx.addKeyval("display","inline"))
+
+  if (colspan=="1" && fmt==colfmt) then bcolor + content
    else "\\multicolumn{" + colspan + "}{" + fmt + "}{" + bcolor + content + "}"
 }
 
@@ -433,18 +433,18 @@ function texEnvPlain( env : string, body : string, attrs : attrs ) : string {
   val envCmd = // "\\begin{" + envName + "}" + attrs.texAttrsX + "%mdk\n" +
                attrs.cssAttrs(body,[("display","block")],env) // + "%mdk\n" +
                // "\\end{" + envName + "}%mdk\n"
-  envCmd               
+  envCmd
   /*
   match(attrs.hasKey("float")) {
     Nothing   -> envCmd
     Just(flt) -> "\\mdfloatbox{" + flt + "}{" + attrs.lookupKey("lines","") + "}{" + envCmd + "}"
-  } 
-  */              
+  }
+  */
 }
 
 function texClassName( attrs : attrs, def : string ) : (string,attrs) {
   val name = attrs.elementName(def)
-  (name.normalizeCmd.capitalize,attrs(classes=attrs.classes.filter(fun(c){ c != name })))    
+  (name.normalizeCmd.capitalize,attrs(classes=attrs.classes.filter(fun(c){ c != name })))
 }
 
 function normalizeCmd( cmd : string ) {
@@ -458,7 +458,7 @@ val rxCmdSpecial = regex(@"[^a-zA-Z0-9]")
 
 
 /* --------------------------------------
-  Full header 
+  Full header
 ---------------------------------------- */
 public function fmtLatexFull(body : string, options : options, metadata : dict<string> ) : string {
   fmtLatexFullX(body,options,metadata)
@@ -468,7 +468,7 @@ public function fmtLatexMathFull( mode: mathkind, body : string, options : optio
   fmtLatexFullX(body,options,dict(),mode.show,options.math.getMathRender(mode).show )
 }
 
-function fmtLatexFullX(body : string, options : options, metadata1 : dict<string>, mathmode : string = "", mathrender : string = "") : string 
+function fmtLatexFullX(body : string, options : options, metadata1 : dict<string>, mathmode : string = "", mathrender : string = "") : string
 {
   val metadata0 = [("heading-base",options.headingBase.show),
                    ("tex-section-num", options.texSectionNum.show.toLower),
@@ -478,19 +478,19 @@ function fmtLatexFullX(body : string, options : options, metadata1 : dict<string
 
   function expand(s) { s.expandKeys(metadata) }
   function norm(p)   { normalize(options.sandbox,p) }
-    
+
   val plainMath = (mathmode == "plain")
-  val pkgs = (options.packages.expand + (if (plainMath) then "" else options.packagesx.expand)).splitPaths 
+  val pkgs = (options.packages.expand + (if (plainMath) then "" else options.packagesx.expand)).splitPaths
   val doc0 = if (options.docClass != "") then options.docClass.norm
              elif (options.headingBase >= 2) then "article" else "book"
   val doc  = doc0.expand
-  
+
   [fmtOptArg(@"\documentclass", doc, norm, ext = ".cls" ),
    "% generated by Madoko, version " + options.version,
    "%mdk-data-line={1}",
    if (mathmode.isEmpty) then "" else @"\newcommand\mdmathmode{" + mathmode + "}",
    if (mathrender.isEmpty) then "" else @"\newcommand\mdmathrender{" + mathrender + "}",
-   pkgs.map(fun(pkg) { 
+   pkgs.map(fun(pkg) {
       match (pkg.find(rxTexFile)) {
         Just -> {
           log("files", changeExt(pkg,".tex") );
@@ -504,7 +504,7 @@ function fmtLatexFullX(body : string, options : options, metadata1 : dict<string
    @"\begin{document}",
    options.texDocHeader.expand,
    if (plainMath) then "" else options.texDocHeaderx.expand,
-   body, 
+   body,
    options.texFooter.expand,
    @"\end{document}",""
    ].join("\n")
@@ -512,7 +512,7 @@ function fmtLatexFullX(body : string, options : options, metadata1 : dict<string
 
 val rxTexFile = regex(@"^[^\n\r\[\]]+?\.tex$",ignoreCase=True)
 
-function fmtOptArg( pre:string, pkg : string, norm : string -> string,  ext : string = ".sty" ) : string 
+function fmtOptArg( pre:string, pkg : string, norm : string -> string,  ext : string = ".sty" ) : string
 {
   pre + (match(pkg.find(rxPkgOpt)) {
     Just(cap) -> {
@@ -520,7 +520,7 @@ function fmtOptArg( pre:string, pkg : string, norm : string -> string,  ext : st
       if (pname.extname!="" || pname.dirname!="") {
         log("files", changeExt(pname,ext) );
       }
-      (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") + 
+      (if (cap.groups[1] != "") then "[" + cap.groups[1] + "]" else "") +
         "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname).norm + "}"
     }
     Nothing  -> {
@@ -531,7 +531,7 @@ function fmtOptArg( pre:string, pkg : string, norm : string -> string,  ext : st
       "{" + (if (ext==".cls" || ext==".sty") then pname.noext else pname).norm + "}"
     }
   })
-} 
+}
 
 
 val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?{?([^\*]+)\s*(?:\*\s*)?(?:}\s*)?$")
@@ -546,7 +546,7 @@ val rxPkgOpt = regex(@"^\s*(?:\[(.*?)\]\s*)?{?([^\*]+)\s*(?:\*\s*)?(?:}\s*)?$")
 function cssAttrs( attrs0 : attrs = attrsNone, body : string, defaults = [], elem = "" ) : string {
   val attrs = attrs0.adjustFloatAttrs()
   val kvs = dict(defaults + attrs.keyvals).cssExpandKeys()
-  val hidden = 
+  val hidden =
     match(kvs["display"]) {
       Just(disp) -> (disp.cssValue.toLower == "none")
       Nothing    -> False
@@ -559,7 +559,7 @@ function cssAttrs( attrs0 : attrs = attrsNone, body : string, defaults = [], ele
                 ["tex-cmd","tex-innercmd","tex-cmd","tex-env","tex-outercmd","tex-outerenv"].any(fun(k) { kvs0.containsKey(k) }))
              then kvs0
              else kvs0 + [("tex-cmd","\\md" + elem.normalizeCmd)].dict
-  */            
+  */
   body.insertCmd(kvs,"tex-cmd-inner-before")
       .appendCmd(kvs,"tex-cmd-inner-after")
       .applyCmd(kvs,"tex-cmd-inner")
@@ -594,8 +594,8 @@ function adjustFloatAttrs( attrs : attrs ) : attrs {
 
 function applyBlock( body : string, isBlock : bool, attrs : attrs ) : string {
   val lineinfo = match(attrs.hasKey("data-line")) {
-    Just(info) -> "\n%mdk-data-line={" + info + "}" 
-    Nothing    -> ""    
+    Just(info) -> "\n%mdk-data-line={" + info + "}"
+    Nothing    -> ""
   }
   if (isBlock) then lineinfo + "\n" + body.trim + "%mdk\n" else body
 }
@@ -604,10 +604,10 @@ function applyCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> {
-      val post = kvs[key + "-postfix"].maybe("",id)      
-      if (cmd.startsWith("{")) 
+      val post = kvs[key + "-postfix"].maybe("",id)
+      if (cmd.startsWith("{"))
         then cmdconnect(cmd.substr(1) + post, body).braced
-        else cmd + post + body.braced 
+        else cmd + post + body.braced
     }
   }
 }
@@ -616,7 +616,7 @@ function insertCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> {
-      val cbody = cmdconnect( (if (cmd.startsWith("{")) then cmd.substr(1) else cmd), body) 
+      val cbody = cmdconnect( (if (cmd.startsWith("{")) then cmd.substr(1) else cmd), body)
       if (cmd.startsWith("{")) then cbody.braced else cbody
     }
   }
@@ -627,7 +627,7 @@ function appendCmd( body : string, kvs : dict<string>, key : string ) : string {
   match(kvs[key]) {
     Nothing -> body
     Just(cmd) -> {
-      body + cmd 
+      body + cmd
     }
   }
 }
@@ -648,23 +648,23 @@ function applyEnv( body : string, kvs : dict<string>, key : string, attrs : attr
 }
 val rxEnv = regex(@"^(\w+)([\s\S]*)$")
 
-function blockEnv( body : string, env : string, args : string = "" ) {      
+function blockEnv( body : string, env : string, args : string = "" ) {
   "\\begin{" + env + "}" + args + "%mdk\n" + body + "%mdk\n\\end{" + env + "}"
 }
 
-function trimEnv( body : string, env : string, args : string = "" ) {      
+function trimEnv( body : string, env : string, args : string = "" ) {
   body.trim.blockEnv(env,args)
 }
 
 function braceCmd( body : string, cmd : string ) : string {
-  "{" + cmd.cmdconnect(body.unbrace) + "}"  
+  "{" + cmd.cmdconnect(body.unbrace) + "}"
 }
 
 function unbrace( s : string ) : string {
   if (s.startsWith("{") && s.endsWith("}")) then {
-    if (s.indexOf("}") < s.length-1) 
-      then s // prevent unbracing: {\cmd}gkkgk{\test} 
-      else s.substr(1,s.length-2) 
+    if (s.indexOf("}") < s.length-1)
+      then s // prevent unbracing: {\cmd}gkkgk{\test}
+      else s.substr(1,s.length-2)
   }
   elif (s.contains(rxCommentEnd)) then s + "\n"
   else s
@@ -674,7 +674,7 @@ val rxCommentEnd = regex(@"(?:^|[^\\])%.*$")
 
 function cmdconnect( cmd : string, s : string ) : string {
   if (cmd.isEmpty || s.isEmpty || cmd.endsWith("}")) then cmd + s
-  elif (s.contains(rxCmdOk)) then cmd + s 
+  elif (s.contains(rxCmdOk)) then cmd + s
   elif (s.contains(rxCmdSpace)) then cmd + "{}" + s
   else cmd + " " + s
 }
@@ -682,12 +682,21 @@ val rxCmdOk = regex(@"^[^a-zA-Z0-9\s]")
 val rxCmdSpace = regex(@"^\s")
 
 
-function trimEnvCmd( body : string, name : string, args : string, isBlock : bool ) {      
-  if (isBlock) 
+function trimEnvCmd( body : string, name : string, args : string, isBlock : bool ) {
+  if (isBlock)
     then body.trimEnv( "mdb" + name, args)
-    else "\\md" + name + args + body.braced  
+    else "\\md" + name + args + body.braced
 }
 
+function texlabel(attrs:attrs,kvs:dict<string>) : string {
+  match(kvs["tex-label-content"]) {
+    Just(content) -> content
+    Nothing -> match(attrs.label.find(regex(@"^\[(.*)\]\{.*\}$"))) {
+      Just(cap) -> cap.groups[1]
+      Nothing   -> attrs.label
+    }
+  }
+}
 
 function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
   body0
@@ -697,22 +706,22 @@ function cssInner( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : 
     .cssFont(kvs)
     .cssText(kvs,attrs,isBlock)
     .onKey(kvs,"tex-label-inner-before", fun(value,body) {
-      "\\label" + value.braced + "%mdk\n" + body
+      "\\mdlabel" + value.braced + attrs.texlabel(kvs).braced + "%mdk\n" + body
     })
 }
 
 function cssOuter( body0 : string, kvs : dict<string>, attrs : attrs, isBlock : bool ) : string {
   val body1 = if (kvs["tex-label-inner-before"].isJust) then body0 else
     match(kvs["tex-label-before"]) {
-      Just(lab) -> "\\label" + lab.braced + "%mdk\n" + body0 
+      Just(lab) -> "\\mdlabel" + lab.braced + attrs.texlabel(kvs).braced + "%mdk\n" + body0
       _ -> match(kvs["tex-label"]) {
-        Just(lab) | lab.bool -> body0 + "\\label" + lab.braced + "%mdk\n"
-        _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\label" + attrs.name.braced + "%mdk\n"
+        Just(lab) | lab.bool -> body0 + "\\mdlabel" + lab.braced + attrs.texlabel(kvs).braced + "%mdk\n"
+        _ -> if (attrs.name.isEmpty) then body0 else body0 + "\\mdlabel" + attrs.name.braced + attrs.texlabel(kvs).braced + "%mdk\n"
       }
     }
   val body2 = if (isBlock) then {
       val body1x = body1
-        .onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {  
+        .onKeys(kvs,["margin-left","margin-right","margin-top","margin-bottom"], fun(b) {
           b.margins(kvs)
         })
       if (!kvs.containsKey("tex-wrap-width")) then body1x else {
@@ -766,7 +775,7 @@ function cssText( body : string, kvs : dict<string>, attrs :attrs, isBlock : boo
         cmdconnect("\\noindent",b)
       })
       .onKey( kvs, "text-indent", fun(value,b) {
-        cmdconnect( (if (attrs.hasClass("noindent")) then "" else "\\noindent") + 
+        cmdconnect( (if (attrs.hasClass("noindent")) then "" else "\\noindent") +
                     (if (value==""||value=="0"||value=="0em") then "" else "\\hspace*" + value.cssWidth.braced)
                   , b )
       })
@@ -785,7 +794,7 @@ function cssImageArgs( attrs : attrs ) : (attrs,string) {
   val kvs = attrs.keyvals.dict
   val w   = dimContentWidth(kvs)
   val h   = dimContentHeight(kvs)
-  val args0 = "keepaspectratio=true" + 
+  val args0 = "keepaspectratio=true" +
                 (if (w.isEmpty) then "" else ",width=" + w) +
                 (if (h.isEmpty) then "" else ",height=" + h)
     /*
@@ -814,10 +823,10 @@ function cssImageArgs( attrs : attrs ) : (attrs,string) {
 
 function cssListArgs( attrs : attrs ) : string {
   val kvs = attrs.keyvals.dict
-  val args = 
+  val args =
     (if (attrs.hasClass("compact")) then "noitemsep,topsep=\\mdcompacttopsep" else "")
     .onKey( kvs, "start", fun(value,b) {
-      b + ",start=" + cssValue(value)      
+      b + ",start=" + cssValue(value)
     })
     .onKey( kvs, "list-style-type", fun(value0,b) {
       val value = value0.cssValue
@@ -831,7 +840,7 @@ function cssListArgs( attrs : attrs ) : string {
                   elif (value=="square") then "$\\blacksquare$"
                   elif (value=="dash") then "{--}"
                   elif (value=="none") then ""
-                  else "\\arabic*"                
+                  else "\\arabic*"
       val fmt = match(kvs["list-format"]) {
                   Nothing -> if (tag.endsWith("*")) then "#1" + (if (attrs.hasClass("list-sep-paren")) then ")" else ".") else "#1"
                   Just(f) -> f
@@ -848,7 +857,7 @@ function cssListArgs( attrs : attrs ) : string {
 
 function cssFont( body : string, kvs : dict<string> ) : string {
   body
-    .onKey( kvs,"font-weight", fun(value,b) { 
+    .onKey( kvs,"font-weight", fun(value,b) {
       val cmd = if (value=="bold") then "\\bfseries"
                 elif (value=="bolder") then "\\bfseries"
                 elif (value=="lighter") then "\\lfseries"
@@ -861,7 +870,7 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                 }
       b.braceCmd(cmd)
     })
-    .onKey( kvs,"font-size", fun(value,b) { 
+    .onKey( kvs,"font-size", fun(value,b) {
       val cmd = if (value=="larger") then "\\mdfontsize{\\dimfont{1.2}}"
                 elif (value=="smaller") then "\\mdfontsize{\\dimfont{0.8}}"
                 elif (value=="xx-small") then "\\tiny"
@@ -872,18 +881,18 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                 elif (value=="x-large") then "\\Large"
                 elif (value=="xx-large") then "\\LARGE"
                 else {
-                  "\\mdfontsize" + value.cssFontLength.braced  
+                  "\\mdfontsize" + value.cssFontLength.braced
                 }
       b.braceCmd(cmd)
     })
-    .onKey( kvs,"font-style", fun(value,b) { 
+    .onKey( kvs,"font-style", fun(value,b) {
       val cmd = if (value=="italic") then "\\itshape"
                 elif (value=="oblique") then "\\slshape"
                 elif (value=="normal") then "\\upshape"
                 else { warning("illegal font-style value: " + value); "\\upshape" }
       b.braceCmd(cmd)
     })
-    .onKey( kvs,"font-variant", fun(value,b) { 
+    .onKey( kvs,"font-variant", fun(value,b) {
       val cmd = if (value=="small-caps") then "\\scshape"
                 elif (value=="all-small-caps") then "\\scshape"
                 elif (value=="petite-caps") then "\\scshape"
@@ -892,7 +901,7 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                 else ""
       b.braceCmd(cmd)
     })
-    .onKey( kvs,"font-family", fun(value,b) { 
+    .onKey( kvs,"font-family", fun(value,b) {
       val fonts = value.cssSplitList.filter(bool)
       val (tfonts,xfonts) = fonts.filter(fun(f) { !f.startsWith("html-") }).partition( fun(f) { f.startsWith("tex-") })
       val families = (tfonts + xfonts).map( fun(fam) {
@@ -904,21 +913,21 @@ function cssFont( body : string, kvs : dict<string> ) : string {
                       else {
                         if (fam.startsWith("tex-family-")) then {
                           match( fam.find( regex(@"^tex-family[-/](?:([A-Z]\w\w?)[-/])?([\w\-]+)(?:/(l|m|b|bx|sb|c))?(?:/(n|it|sl|bf|sc))?(?:[@/](\d+\.\d+))?$"))) {
-                            Just(cap) -> 
+                            Just(cap) ->
                               "@" + [cap.groups[1],cap.groups[2],cap.groups[3],cap.groups[4],cap.groups[5]].join("/")
-                            Nothing -> 
+                            Nothing ->
                               fam.substr(11)
                           }
                         }
                         elif (fam.startsWith("tex-cmd-"))
                           then "!" + fam.substr(8)
-                          else (if (fam.startsWith("tex-")) then fam.substr(4) else fam) 
+                          else (if (fam.startsWith("tex-")) then fam.substr(4) else fam)
                       }
           if (spec.contains(',')) then spec.braced else spec
         })
       val cmd = match (families) {
         Cons(spec,Nil) | spec.startsWith("!") -> "\\" + spec.substr(1)
-        _ -> "\\mdfontfamily" + families.join(",").braced 
+        _ -> "\\mdfontfamily" + families.join(",").braced
       }
       b.braceCmd(cmd)
     })
@@ -932,17 +941,17 @@ function cssFont( body : string, kvs : dict<string> ) : string {
 
 
 function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) : string {
-  val body1 = body0.onKey(kvs,margin + "-left", fun(width,body) { 
+  val body1 = body0.onKey(kvs,margin + "-left", fun(width,body) {
                 "\\hspace*" + cssWidth(width).braced + body
               })
-              .onKey(kvs,margin + "-right", fun(width,body) { 
+              .onKey(kvs,margin + "-right", fun(width,body) {
                 body + "\\hspace*" + cssWidth(width).braced
               })
   val body2 = if (kvs.cssIsInlineBlock) {
-                body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) { 
-                        "\\md" + margin + "tb" + 
-                          cssHeight(kvs.find(margin + "-top")).braced + 
-                          cssHeight(kvs.find(margin + "-bottom")).braced + 
+                body1.onKeys(kvs,[margin + "-top", margin + "-bottom"],fun(body) {
+                        "\\md" + margin + "tb" +
+                          cssHeight(kvs.find(margin + "-top")).braced +
+                          cssHeight(kvs.find(margin + "-bottom")).braced +
                           body.braced
                 })
               }
@@ -952,7 +961,7 @@ function cssInlineMargin( body0 : string, kvs : dict<string>, margin : string ) 
     elif (value=="right") then "\\mdfloatright" + body.braced
     elif (value=="center") then "\\mdfloatcenter" + body.braced
     else body
-  })              
+  })
 }
 
 function padding( body : string, kvs : dict<string> ) : string {
@@ -1011,7 +1020,7 @@ function dimMarginBoxWidth( kvs : dict<string>, widthName = "width"  ) {
 
   val extra = [kvs.find("margin-left"),kvs.find("margin-right")
               ].filter(bool).map( fun(wd) { wd.cssWidth })
-  if (extra.isNil) 
+  if (extra.isNil)
    then width
    else "\\dimeval" + ([width] + extra).join("+").braced
 }
@@ -1023,7 +1032,7 @@ function dimBorderBoxWidth( kvs : dict<string>, widthName = "width"  ) {
   val extra = [kvs.find("border-left-width"),kvs.find("padding-left"),
                kvs.find("border-right-width"),kvs.find("padding-right")
               ].filter(bool).map( fun(wd) { wd.cssWidth })
-  if (extra.isNil) 
+  if (extra.isNil)
    then width
    else "\\dimeval" + ([width] + extra).join("+").braced
 }
@@ -1039,7 +1048,7 @@ function dimContentWidth( kvs : dict<string>, widthName = "width" ) {
   if (w.isEmpty) return ""
 
   val width0 = if (maxw.isEmpty) then w.cssWidth else "\\dimmin" + w.cssWidth.braced + maxw.cssWidth.braced
-  val width  = if (minw.isEmpty) then width0 else "\\dimmax" + width0.braced + minw.cssWidth.braced 
+  val width  = if (minw.isEmpty) then width0 else "\\dimmax" + width0.braced + minw.cssWidth.braced
   width
 }
 
@@ -1054,7 +1063,7 @@ function dimContentHeight( kvs : dict<string> ) {
   if (h.isEmpty) return ""
 
   val height0 = if (maxh.isEmpty) then h.cssHeight else "\\dimmin" + h.cssHeight.braced + maxh.cssHeight.braced
-  val height  = if (minh.isEmpty) then height0 else "\\dimmax" + height0.braced + minh.cssHeight.braced 
+  val height  = if (minh.isEmpty) then height0 else "\\dimmax" + height0.braced + minh.cssHeight.braced
   height
 }
 // -----------------------------------------------------------------------------
@@ -1065,7 +1074,7 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
   val breakable = kvs.find("breakable").bool || kvs.find("long").bool
   val fboxkeys  = ["border-top-style","border-bottom-style","border-left-style","border-right-style",
                    "vertical-align", "height-align", "baseline",
-                   "background-color","height","width"]                  
+                   "background-color","height","width"]
   if (breakable || kvs.containsAny(fboxkeys)) {
     // use longfbox
     val attrs = [kvs.cssTRBL("padding","",cssWidthX),
@@ -1098,14 +1107,14 @@ function cssBox( body : string, kvs : dict<string>, isBlock : bool ) : string {
     body
       .onKey(kvs,"text-align", fun(value,b) {
         if (!isBlock) then b else {
-          blockEnv( b, 
+          blockEnv( b,
             if (value=="left") then "mdflushleft"
             elif (value=="right") then "mdflushright"
             elif (value=="center") then "mdcenter"
             else "mdjustify")
         }
       })
-      .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(b) {  
+      .onKeys(kvs,["padding-left","padding-right","padding-top","padding-bottom"], fun(b) {
         if (isBlock) then b.padding(kvs) else b.cssInlineMargin(kvs,"padding")
       })
   }
@@ -1129,7 +1138,7 @@ function cssTRBL( kvs : dict<string>, pre : string, post : string, show : string
   val (bottom,bottomv) = kvs.cssAttrX(pre + "-bottom" + post, show)
   val (left,leftv) = kvs.cssAttrX(pre + "-left" + post, show)
 
-  if (topv==rightv && rightv==bottomv && bottomv==leftv) 
+  if (topv==rightv && rightv==bottomv && bottomv==leftv)
    then (if (top.isNil) then [] else [pre + post + "=" + topv])
    else [top,right,bottom,left].concat
 }
@@ -1151,7 +1160,7 @@ function cssRadius( kvs : dict<string>, key : string ) : list<string> {
         [h,v] -> [key + "={" + h.cssWidth + "," + v.cssWidth + "}"]
         _ -> {
           warning("illegal CSS radius: " + key + ":'" + value)
-          [] 
+          []
         }
       }
     }
@@ -1163,9 +1172,9 @@ function cssAttr( kvs : dict<string>, key : string, show : string -> string, all
     Nothing -> []
     Just(value) -> {
       if (allowed.isCons && !allowed.any(fun(v) { v==value })) then {
-        warning("illegal CSS value: " + key + ":'" + value + "'\n  expecting one of: " + allowed.join(",")) 
+        warning("illegal CSS value: " + key + ":'" + value + "'\n  expecting one of: " + allowed.join(","))
         []
-      } 
+      }
       else {
         [cssKey + "=" + value.show]
       }
@@ -1218,4 +1227,3 @@ function nosuppressKey( kv : (string,string) ) : bool {
   val key = kv.fst
   (key != "source" && !(key.startsWith("html-") || key.startsWith("css-")))
 }
-

@@ -437,6 +437,10 @@
 }
 \let\mdpaddingtb\mdmargintb
 
+% ---------------------------------------------------
+% Labels: allows referring to Madoko figures in Latex
+% ---------------------------------------------------
+\newcommand\mdlabel[2]{\ifblank{#2}{\label{#1}}{{\def\@currentlabel{#2}\label{#1}}}}
 
 % ---------------------------------------------------
 % Css box model
