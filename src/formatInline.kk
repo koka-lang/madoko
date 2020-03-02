@@ -561,7 +561,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
                           Nothing -> []
                           Just(cap) -> {
                             log("aux",@"\citation{" + cap.groups[3] + "}")
-                            val lab = ("@" + cap.groups[3]).definitionId
+                            val lab = ("@" + cap.groups[3])
                             [Cite(lab.substr(1), cap.groups[1], cap.groups[4], cap.groups[2], "NUMBER", "YEAR", "AUTHORS", 0)]
                           }
                         }
