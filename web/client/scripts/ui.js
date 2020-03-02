@@ -1681,7 +1681,8 @@ var UI = (function() {
           function(ctx) {
             // self.asyncServer.clearStale(); // stale is usually set by intermediate madoko runs
             // run madoko locally again using our generated files (and force a run)
-            return self.asyncMadoko.run(true);
+            self.asyncMadoko.run(true);
+            return "Rendering math done";
           },
           function(err) {
             self.onError(err);
@@ -2475,8 +2476,9 @@ var UI = (function() {
   -------------------------------------------------- */
   function reformatTable( lines, column ) {
     var rxCellCodeInline = /(?:``(?:[^`]|`(?!`))*``|`(?:[^`]|``)*`)/.source;
-    var rxCellTexInline = /(?:\$\{(?:[^\\\$]|\\[\s\S])+\$)/.source;
-    var rxCellContent = /\\./.source + "|" + rxCellTexInline + "|" + rxCellCodeInline + "|" + /[^\\|+]|\+ *(?!$|[:~=\-\r\n])/.source;
+    var rxCellTexInline1 = /(?:\$(?!\{)(?:[^\\\$\|]|\\[\s\S])+\$)/.source;
+    var rxCellTexInline2 = /(?:\$\{(?:[^\\\$]|\\[\s\S])+\$)/.source;
+    var rxCellContent = /\\./.source + "|" + rxCellTexInline1 + "|" + rxCellTexInline2 + "|" + rxCellCodeInline + "|" + /[^\\|+]|\+ *(?!$|[:~=\-\r\n])/.source;
     var rxCellContents = "((?:" + rxCellContent + ")+)";
     var rxCell = new RegExp(/((?:^ *(?:\||\+(?=[:=~-])))?)/.source + rxCellContents            + /([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/.source, "g");
     //var rxCell =             /((?:^ *(?:\||\+(?=[:=~-])))?)((?:[^\\|+]|\\.|\+ *(?!$|[:~=\-\r\n]))+)([|]+|[\+]+(?= *[:~=\-\r\n]| *$))/g;

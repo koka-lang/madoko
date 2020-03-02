@@ -446,8 +446,9 @@ function columns( row : string, context : blockContext, ofs: int ) : row {
 }
 
 val rxCellCodeInline = @"(?:``(?:[^`]|`(?!`))*``|`(?:[^`]|``)*`)"
-val rxCellTexInline = @"(?:\$\{((?:[^\\\$]|\\[\s\S])+)\$)"
-val rxCellContent = @"(?:\\.|"+ rxCellTexInline + @"|" + rxCellCodeInline + @"|[^\\|+]|\+ *(?![-=]))"
+val rxCellTexInline1 = @"(?:\$(?!\{)(?:(?:[^\\\$\|]|\\[\s\S])+)\$)"
+val rxCellTexInline2 = @"(?:\$\{(?:(?:[^\\\$]|\\[\s\S])+)\$)"
+val rxCellContent = @"(?:\\.|"+ rxCellTexInline1 + @"|" + rxCellTexInline2 + @"|" + rxCellCodeInline + @"|[^\\|+]|\+ *(?![-=]))"
 val rxCell = regex(@"(?:^ *(?:\||\+(?=[-=])))?(" + rxCellContent + @"+(?:[|]+|[+]+(?= *[-=])|$))")
 val rxRowAttr = regex(@"[\+\|]" + xattrs + "$")
 

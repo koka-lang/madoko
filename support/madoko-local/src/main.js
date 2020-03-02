@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -32,20 +32,20 @@ var localHostIP = "127.0.0.1";
 var config = Init.initializeConfig();
 
 // -------------------------------------------------------------
-// Set up server app  
+// Set up server app
 // -------------------------------------------------------------
 var app = App.createServer(config.limits.fileSize);
 config.mime = app.locals.mime;
 
 // set extra mime types
-app.locals.mime.define({    
+app.locals.mime.define({
   "text/madoko": ["mdk"],
   "text/markdown": ["md","mkdn","markdown"],
   "text/plain": ["tex","sty","cls","bib","bbl","aux","dimx","dim","csl","bst"],
 });
 
 // -------------------------------------------------------------
-// Security   
+// Security
 // -------------------------------------------------------------
 
 app.use(function(req, res, next){
@@ -55,7 +55,7 @@ app.use(function(req, res, next){
       throw new Util.HttpError( "unauthorized access; secret key is not correct.", 401 );
     }
   }
- 
+
   // extra check: only serve to local host
   if (req.ip !== req.connection.remoteAddress || req.ip !== localHostIP) {
     throw new Util.HttpError( "only serving localhost", 403 );
@@ -64,7 +64,7 @@ app.use(function(req, res, next){
   // check mount directory matches
   if (config.mountdir && req.query && req.query.mount) {
     if (!Util.pathIsEqual(req.query.mount, config.mountdir)) {
-      throw new Util.HttpError(  
+      throw new Util.HttpError(
         ["Document was previously served from a different local root directory!",
          "  Previous root: " + req.query.mount,
          "  Current root : " + config.mountdir].join("\n"), 403 );
@@ -75,7 +75,7 @@ app.use(function(req, res, next){
 });
 
 // Use content security policy; very safe by default.
-App.useCSP(app, { 
+App.useCSP(app, {
   "default-src": "'self'",
   "connect-src": "'self'",
   "style-src"  : "'self' 'unsafe-inline'", // mostly for chrome-extensions :-(
@@ -95,15 +95,15 @@ function finfoFromStat( stat, fpath ) {
     finfo = null;
   }
   else {
-    finfo = { 
+    finfo = {
       bytes: stat.size,
-      modified: stat.mtime.toISOString(),    
+      modified: stat.mtime.toISOString(),
       is_dir: stat.isDirectory(),
       path: fpath,
       contents: [],
     };
   };
-  return finfo;    
+  return finfo;
 }
 
 
@@ -112,12 +112,12 @@ function getLocalPath(fpath) {
 }
 
 // -------------------------------------------------------------
-// Initial page 
+// Initial page
 // -------------------------------------------------------------
 
 function getConfig(req,res) {
   if (req.query.show) {
-    Log.message("\nlocally host madoko to: " + req.connection.remoteAddress + " (" + req.hostname + ")\n" + 
+    Log.message("\nlocally host madoko to: " + req.connection.remoteAddress + " (" + req.hostname + ")\n" +
                   "serving files under   : " + config.mountdir + "\n");
   }
   res.send( {
@@ -150,7 +150,7 @@ function getMetadata(req,res) {
               finfo.contents.push( finfoFromStat(stats[i], Util.combine(relpath,files[i])) );
             }
           }
-          Log.trace("dir listing: " + finfo.path + ": " + finfo.contents.length.toString() + " items.");      
+          Log.trace("dir listing: " + finfo.path + ": " + finfo.contents.length.toString() + " items.");
           return finfo;
         });
       });
@@ -180,7 +180,7 @@ function getReadFile(req,res) {
 
 function putWriteFile(req,res) {
   Log.info("write file  : " + req.query.path);
-  var fpath = getLocalPath(req.query.path); 
+  var fpath = getLocalPath(req.query.path);
   var rtime = (typeof req.query.remoteTime === "string" ? Util.dateFromISOString(req.query.remoteTime) : null);
   return Util.fstat( fpath ).then( function(stat) {
     if (stat && rtime) {
@@ -198,8 +198,8 @@ function putWriteFile(req,res) {
         return Util.fstat(fpath).then( function(stat) {
           if (!stat) throw new Util.HttpError( "File could not be saved");
           Log.trace("file write : final mtime: " + stat.mtime.toISOString());
-          res.send({ 
-            path: req.query.path, 
+          res.send({
+            path: req.query.path,
             modified: stat.mtime.toISOString(),
           });
         });
@@ -252,11 +252,11 @@ App.entries( app, {
   "PUT/rest/writefile": putWriteFile,
   "POST/rest/createfolder" : postCreateFolder,
   "POST/rest/run"     : postRun,
-  "POST/report/csp"   : cspReport,     
+  "POST/report/csp"   : cspReport,
 });
 
 // -------------------------------------------------------------
-// Static content 
+// Static content
 // -------------------------------------------------------------
 
 App.serveStatic(app, Util.combine(config.installdir, "static") );
@@ -268,7 +268,7 @@ App.serveStatic(app, Util.combine(config.installdir, "static") );
 App.handleErrors(app);
 
 // -------------------------------------------------------------
-// Start listening 
+// Start listening
 // -------------------------------------------------------------
 
 Http.createServer(app).listen(config.port, "localhost"); // only listen on local host
@@ -279,7 +279,7 @@ var accessPoint = localHost + (config.secret ? "#secret=" + encodeURIComponent(c
 console.log("listening on        : " + localHost );
 console.log("connect securely to : " + config.origin );
 console.log("serving files under : " + config.mountdir );
-if (config.run) console.log("running madoko using: " + config.run );
+if (config.run) console.log("running madoko using: " + config.run + "  (concurrency: " + config.concurrency.toString() + ")");
 console.log("");
 console.log("---------------------------------------------------------------");
 console.log("access server at    : " + accessPoint );

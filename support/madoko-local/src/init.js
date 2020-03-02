@@ -47,6 +47,7 @@ var config = {
   origin    : "https://www.madoko.net",
   secret    : null,
   verbose   : 0,
+  concurrency: 4,
   limits    : {
     fileSize    : 64*mb,
     logFlush    : 5*minute,
@@ -77,6 +78,7 @@ Options
   .option("--runflags <opts>", "pass extra options <opts> to the madoko program")
   .option("--verbose [n]","output trace messages (0 none, 1 info, 2 debug)", parseInt )
   .option("--rmdelay <secs>","delay before run directory is removed", parseInt )
+  .option("-c, --concurrency <n>", "render math using <n> (=" + config.concurrency.toString() + ") processors", parseInt )
 
 Options.on("--help", function() {
   console.log([
@@ -126,6 +128,9 @@ function initializeConfig() {
   // Port
   if (Options.port) config.port = Options.port;
   else if (typeof localConfig.port === "number") config.port = localConfig.port;
+
+  // Concurrency
+  if (Options.concurrency) config.concurrency = Options.concurrency;
 
   // Origin
   if (Options.origin) config.origin = Options.origin;
