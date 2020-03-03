@@ -1,9 +1,11 @@
 {
   "log" : [
-    { "version": "1.2.1",
+    { "version": "1.2.2",
       "date": "2020-03-02",
       "updates": [
-        "Allow use \\ref in LaTeX to refer to Madoko entities"
+        "Allow use \\ref in LaTeX to refer to Madoko entities",
+        "Add ACMArt bibliography style (acmart-natural.csl)",
+        "Hyperlink authors in author-year citation to the first citation year"
       ]
     },
     { "version": "1.2.0",
