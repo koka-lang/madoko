@@ -26,8 +26,8 @@ Short Title     : &Title;
 
 Doc class       : [&acm-format;]acmart.cls
 Bib Style       : style/acm-reference-format.bst
-Cite Style      : natural
-@html Csl Style : madoko-natural
+Csl Style       : style/acmart-natural
+Cite Style      : natural:sort:"[","]","; "," "," "
 
 Pdf Latex       : pdflatex
 Package         : [tt=false]libertine
@@ -38,26 +38,34 @@ Package         : flushend
 Author Columns  : 1
 Name Figure     : Fig.
 
+Tex Section Num : True
+Bib Label       : True
+
+Tex Header*:
+    \iftoggle{/madoko/math}{}{%
+      \acmConference[&conference-short;]{&conference;}{&conference-date;, &conference-year;}{&conference-location;}
+      \acmBooktitle{&acm-booktitle; (&conference-short;), &conference-date;, &conference-year;, &conference-location;}
+      \acmISBN{&ISBN;}
+      \acmDOI{&DOI;}
+      \startPage{&start-page;}
+      \keywords{&keywords;}  %% \keywords is optional
+      \renewcommand\authorinfo[3]{\author{#1}\affiliation{\institution{#2}}\email{#3}}
+      \setcopyright{&acm-copyright;}
+      \copyrightyear{&acm-copyright-year;}
+      %\acmJournal{&acm-journal;}
+      %\acmVolume{&acm-volume;}
+      %\acmNumber{&acm-number;}
+      %\acmArticle{&acm-article;}
+      \acmYear{&acm-year;}
+      %\acmMonth{&acm-month;}
+      \acmPrice{&acm-price;}
+    }
 
 Tex Doc Header*:
-    \acmConference[&conference-short;]{&conference;}{&conference-date;, &conference-year;}{&conference-location;}
-    \acmBooktitle{&acm-booktitle; (&conference-short;), &conference-date;, &conference-year;, &conference-location;}
-    \acmISBN{&ISBN;}
-    \acmDOI{&DOI;}
-    \startPage{&start-page;}
-    \keywords{&keywords;}  %% \keywords is optional
-    \renewcommand\authorinfo[3]{\author{#1}\affiliation{\institution{#2}}\email{#3}}
-    \setcopyright{&acm-copyright;}
-    \copyrightyear{&acm-copyright-year;}
-    %\acmJournal{&acm-journal;}
-    %\acmVolume{&acm-volume;}
-    %\acmNumber{&acm-number;}
-    %\acmArticle{&acm-article;}
-    \acmYear{&acm-year;}
-    %\acmMonth{&acm-month;}
-    \acmPrice{&acm-price;}
+  \iftoggle{/madoko/math}{}{%
     \def\shorttitle{&short-title;}
     \def\acmshorttitle{&short-title;}
+  }
 
 AcmClassification {
   input: texraw;
@@ -83,6 +91,15 @@ AcmClassification {
   authorname,authoraddress  { after: ", " }
   authorrow { margin: 0pt }
   authors { margin-top: 1em }
+}
+
+@if tex {
+  .bibref,.localref,a {
+    color: purple;
+  }
+  pre,code1 {
+   font-size:small;
+ }
 }
 
 @if html && (acm-format != "sigplan") {
