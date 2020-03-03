@@ -5,7 +5,8 @@
       "updates": [
         "Allow use \\ref in LaTeX to refer to Madoko entities",
         "Add ACMArt bibliography style (acmart-natural.csl)",
-        "Hyperlink authors in author-year citation to the first citation year"
+        "Hyperlink authors in author-year citation to the first citation year",
+        "Ensure proper indentation when using div blocks with display:none"
       ]
     },
     { "version": "1.2.0",
