@@ -410,19 +410,21 @@ var UI = (function() {
 
     // listen to application cache
     self.appUpdateReady = false;
-    if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-      // reload immediately if an update is ready
-      self.reload(true);
-    }
-    else {
-      window.applicationCache.addEventListener( "updateready", function(ev) {
-        if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
-          if (!self.appUpdateReady) {
-            window.applicationCache.swapCache();
-            self.appUpdateReady = true;
+    if (window.applicationCache != null) {
+      if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+        // reload immediately if an update is ready
+        self.reload(true);
+      }
+      else {
+        window.applicationCache.addEventListener( "updateready", function(ev) {
+          if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
+            if (!self.appUpdateReady) {
+              window.applicationCache.swapCache();
+              self.appUpdateReady = true;
+            }
           }
-        }
-      });
+        });
+      }
     }
 
     // resizable panels
@@ -827,6 +829,7 @@ var UI = (function() {
         self.postStat();
         // request lastest appversion from the server
         Util.getAppVersionInfo(true).then( function(version) {
+          if (window.applicationCache==null) return;
           if (!version) return;
           if (self.appUpdateReady || !self.version) return;
           if (self.version.digest === version.digest) return;

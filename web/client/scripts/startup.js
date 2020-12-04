@@ -18,7 +18,9 @@ require.config({
 -------------------------------------------------------------------------*/
   
 // test browser features 
-if (typeof Worker === "undefined" || typeof localStorage === "undefined" || typeof(window.applicationCache) === "undefined") {
+if (typeof Worker === "undefined" || typeof localStorage === "undefined" 
+   /* || typeof(window.applicationCache) === "undefined" */ 
+   ) {
   document.getElementById("oldbrowser").style.display = "block";
 }
 else {
