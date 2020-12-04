@@ -10,8 +10,7 @@ Email       : other@bar.com
 
 Logo          : True
 Bibliography  : example.bib
-Doc class     : [acmlarge]acmart.cls
-Bib Style     : style/acm-reference-format.bst
+Acm Formal    : acmsmall
 
 Conference      : ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications
 Conference Short: OOPSLA'17
@@ -20,7 +19,6 @@ Conference Year : 2017
 Conference Location: Vancouver, Canada
 ISBN            : 978-x-xxxx-xxxx-x/YY/MM
 DOI             : 10.1145/nnnnnnn.nnnnnnn
-Acm Format      : acmlarge
 
 
 ~ HtmlOnly

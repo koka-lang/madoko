@@ -307,7 +307,7 @@ public function newLink( href : string, title : string = "", linkattrs : attrs =
   Link(href,title,
        if (!bench && href.startsWith("#"))
         then linkattrs.addClass("localref") 
-        else linkattrs,
+        else linkattrs.addClass("externalref"),
        linkid)
 }
 
