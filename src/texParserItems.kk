@@ -861,7 +861,7 @@ function texDoi( cap : matched, context : texContext ) : string {
     Just(capx) -> capx.groups[1]
     Nothing    -> txt
   }
-  if (txt=="") then "" else ("[doi:[" + path + "](https://doi.org/" + urlEncode(path) + ")]{.doi}")
+  if (txt=="") then "" else ("[https://doi.org/" + path + "](https://doi.org/" + urlEncode(path) + "){.doi}")
 }
 
 function urlEncode(txt) : string {
