@@ -253,8 +253,8 @@ val entities : list<entity> = [
   Entity("ccaron", 269, @"\v{c}", False), 
   Entity("Dcaron", 270, @"\v{D}", False), 
   Entity("dcaron", 271, @"\v{d}", False), 
-  Entity("Dstroke", 272, @"\DH", False),  // todo
-  Entity("dstroke", 273, @"\dh", False),  // todo
+  Entity("Dstrok", 272, @"\DH", False),  // todo
+  Entity("dstrok", 273, @"\dh", False),  // todo
   Entity("Emacron", 274, @"\={E}", False),
   Entity("emacron", 275, @"\={e}", False),
   Entity("Ebreve", 276, @"\u{E}", False),
@@ -275,8 +275,8 @@ val entities : list<entity> = [
   Entity("gcedil", 291, @"\c{g}", False),
   Entity("Hcirc", 292, @"\^{H}", False),
   Entity("hcirc", 293, @"\^{h}", False),
-  Entity("Hstroke", 294, @"{H}", False),  // todo
-  Entity("hstroke", 295, @"{h}", False),  // todo
+  Entity("Hstrok", 294, @"{H}", False),  // todo
+  Entity("hstrok", 295, @"{h}", False),  // todo
   Entity("Itilde", 296, @"\~{I}", False),
   Entity("itilde", 297, @"\~{\i}", False),
   Entity("Imacron", 298, @"\={I}", False),
@@ -302,8 +302,8 @@ val entities : list<entity> = [
   // Entity("Ldotm", 319, @"\mdDotm{L}", False),   
   // Entity("ldotm", 320, @"\mdDotm{l}", False), 
 
-  Entity("Lstroke", 321, @"\L", False),  
-  Entity("lstroke", 322, @"\l", False),  
+  Entity("Lstrok", 321, @"\L", False),  
+  Entity("lstrok", 322, @"\l", False),  
 
   Entity("Nacute", 323, @"\'{N}", False),  
   Entity("nacute", 324, @"\'{n}", False),
@@ -347,8 +347,8 @@ val entities : list<entity> = [
   Entity("tcedil", 355, @"\c{t}", False),
   Entity("Tcaron", 356, @"\v{T}", False),   
   Entity("tcaron", 357, @"\v{t}", False), 
-  Entity("Tstroke", 358, @"\mdUnicode{358}", False),  
-  Entity("tstroke", 359, @"\mdUnicode{359}", False),  
+  Entity("Tstrok", 358, @"\mdUnicode{358}", False),  
+  Entity("tstrok", 359, @"\mdUnicode{359}", False),  
   Entity("Utilde", 360, @"\~{U}", False),
   Entity("utilde", 361, @"\~{u}", False),
   Entity("Umacron", 362, @"\={U}", False),

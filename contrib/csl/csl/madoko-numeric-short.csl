@@ -175,7 +175,7 @@
         <if type="legal_case" match="none">
           <choose>
             <if variable="DOI">
-              <text variable="DOI" prefix="doi:"/>
+              <text variable="DOI"/>
             </if>
             <else>
               <text variable="URL"/>

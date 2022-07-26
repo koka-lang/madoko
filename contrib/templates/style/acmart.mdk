@@ -12,17 +12,18 @@ ISBN            : Use the 'ISBN' meta-data key to set the ISBN number
 DOI             : Use the 'DOI' meta-data key to set the DOI number
 Start Page      : 1
 Acm Journal     : PACMPL
-Acm Volume      : 1
-Acm Article     : 1
+Acm Volume      : 4
+Acm Article     : 99
 Acm Year        : &conference-year;
 Acm Month       : 1
 Acm Copyright   : none
 Acm Copyright Year: &conference-year;
 Acm Format      : acmsmall
 Acm Number      : ICFP
-Acm Price       : 15.00
+Acm Price       :
 Acm Booktitle   : &conference;
 Short Title     : &Title;
+Acm Submission ID :
 
 Doc class       : [&acm-format;]acmart.cls
 Bib Style       : style/acm-reference-format.bst
@@ -41,24 +42,27 @@ Name Figure     : Fig.
 Tex Section Num : True
 Bib Label       : True
 
+
 Tex Header*:
     \iftoggle{/madoko/math}{}{%
-      \acmConference[&conference-short;]{&conference;}{&conference-date;, &conference-year;}{&conference-location;}
-      \acmBooktitle{&acm-booktitle; (&conference-short;), &conference-date;, &conference-year;, &conference-location;}
-      \acmISBN{&ISBN;}
+      %\bibliographystyle{ACM-Reference-Format}
+      %\acmISBN{&ISBN;}
       \acmDOI{&DOI;}
       \startPage{&start-page;}
       \keywords{&keywords;}  %% \keywords is optional
-      \renewcommand\authorinfo[3]{\author{#1}\affiliation{\institution{#2}}\email{#3}}
+      \subtitle{&Subtitle;}
       \setcopyright{&acm-copyright;}
+      %\setcopyright{none}
       \copyrightyear{&acm-copyright-year;}
-      %\acmJournal{&acm-journal;}
-      %\acmVolume{&acm-volume;}
-      %\acmNumber{&acm-number;}
-      %\acmArticle{&acm-article;}
-      \acmYear{&acm-year;}
-      %\acmMonth{&acm-month;}
+      %\renewcommand\footnotetextcopyrightpermission[1]{}
       \acmPrice{&acm-price;}
+      \acmYear{&acm-year;}
+      \acmSubmissionID{&acm-submission-id;}
+      \acmJournal{&acm-journal;}
+      \acmVolume{&acm-volume;}
+      \acmNumber{&acm-number;}
+      \acmArticle{&acm-article;}
+      \acmMonth{&acm-month;}
     }
 
 Tex Doc Header*:
@@ -94,9 +98,6 @@ AcmClassification {
 }
 
 @if tex {
-  .bibref,.localref,a {
-    color: purple;
-  }
   pre,code1 {
    font-size:small;
  }

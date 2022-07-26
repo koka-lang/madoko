@@ -39,7 +39,7 @@
     <choose>
       <if variable="volume"/>
       <else-if variable="DOI">
-        <text variable="DOI" prefix="doi:"/>
+        <text variable="DOI"/>
       </else-if>
       <else-if variable="URL">
         <text term="at"/>

@@ -31,7 +31,7 @@
   "extraTypeKeywords": [],
   
   "directives": [
-    "include","if","endif","ifdef","define","line","warning","error"
+    "include","if","elif","else","endif","ifdef","define","line","warning","error"
   ],
 
   "operators": [

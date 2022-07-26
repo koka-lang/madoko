@@ -37,7 +37,9 @@ var webclient = path.join(web,"client");
 // > git checkout v0.6.1-dev   (or v0.6.x-dev)
 // > npm install
 //
-// you may need to install ghc (v8.0.1) and run cabal:
+// you may need to install ghc (tested with v8.0.1) and run cabal:
+//
+// > cabal update
 // > cabal install mtl containers parsec text directory process random base
 //
 // and build the release version:

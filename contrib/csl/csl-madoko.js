@@ -185,7 +185,7 @@ var madokoFormat = {
   },
   "@DOI/true": function (state, str) {
     var doitext = getBibitem( this, state).DOItext || str;
-    return "[" + doitext + "](https://dx.doi.org/" + escapeURL(str) + "){.bib-doi}";
+    return "[https://doi.org/" + doitext + "](https://doi.org/" + escapeURL(str) + "){.bib-doi}";
   }
 };
 

@@ -1407,7 +1407,7 @@ FUNCTION {begin.bib}
   write$ newline$
   "\providecommand{\urlalt}[2]{\href{#1}{#2}}"
   write$ newline$
-  "\providecommand{\doi}[1]{doi:\urlalt{http://dx.doi.org/#1}{#1}}"
+  "\providecommand{\doi}[1]{\urlalt{https://doi.org/#1}{#1}}"
   write$ newline$
   "\providecommand{\bibinfo}[2]{#2}"
   write$ newline$
