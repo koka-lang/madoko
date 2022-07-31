@@ -807,7 +807,8 @@
 
 \newcommand\prespace{\hspace*{\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
-\newcommand\prebr{\strut\newline\strut\ignorespaces}
+\newcommand\prestrut{\strut}
+\newcommand\prebr{\prestrut\newline\strut\ignorespaces}
 
 \newenvironment{mdpre}%
   {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright\mdnohyphens

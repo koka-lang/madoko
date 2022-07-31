@@ -14,7 +14,6 @@ Logo        : True
 .cbox       : replace="[&strut;]{border-width=1px border-style=solid \
                         height=0.9em width=0.9em background-color=&source;}"
 
-
 [TITLE]
 
 ~ Abstract
