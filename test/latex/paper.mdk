@@ -63,7 +63,7 @@ Our contributions are:
 * A figure of a _butterfly_;
 * Some **mathematics**;
 * And some source code;
-* And references to Tex books [@Knuth:Tex;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
+* And references to Tex books [@Knuth:TeX;@Lamport:Latex;@Goo93;@FBerg04] and others [@Grandstrand]. 
 
 # Content
 
@@ -82,8 +82,8 @@ function hello() {
 
 ## There and back again
 
-It had a perfectly round door like a porthole, painted green, with a
-shiny yellow brass knob in the exact middle. The door opened on to a
+It had a perfectly round door like 
+`a porthole, painted green,\(&zwsp;\)with a shiny yellow brass` knob in the exact middle. The door opened on to a
 tube-shaped hall like a tunnel: a very comfortable tunnel without smoke,
 with paneled walls, and floors tiled and carpeted, provided with
 polished chairs, and lots and lots of pegs for hats and coats; the hobbit

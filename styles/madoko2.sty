@@ -797,7 +797,6 @@
 
 \newcommand\mdnohyphens{\hyphenchar\font=-1\relax}
 
-\newcommand\mdcode[1]{\texttt{\mdnohyphens #1}}
 \newcommand\mdprecode{}
 \newlength\mdpreskip
 \setlength\mdpreskip{\mdcompactskip}
@@ -823,8 +822,14 @@
   {\setlength\md@postskip{#1}\par\addvskip{#1}\noindent}%
   {\par\addvskip{\md@postskip}}%
 
-
-
+%\newcommand\mdcode[1]{\texttt{\mdnohyphens #1}}
+\newcommand\mdcodespace{ }
+\newcommand\mdcode[1]{\texttt{%
+  \mdsetprespace
+  \let\nobreakspace\mdcodespace
+  \mdnohyphens 
+  #1}}
+  
 %-------------------------------------------------------------
 % Pretty code
 %-------------------------------------------------------------
