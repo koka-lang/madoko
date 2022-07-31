@@ -166,6 +166,11 @@ bigskip         : []{display: block; margin-bottom: 2em }
   bigskip       : [\bigskip]{input:texraw}
 }
 
+smallnegskip    : []{display: block; margin-bottom: -0.5em }
+mednegskip      : []{display: block; margin-bottom: -1em }
+bignegskip      : []{display: block; margin-bottom: -2em }
+
+
 <!-- notes -->
 note-endperiod : &heading-endperiod;
 note-format    : **[&caption;]{.note-caption}**&note-endperiod;&nl;
