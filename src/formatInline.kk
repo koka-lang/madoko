@@ -44,13 +44,15 @@ public val rxLink = regex(linkreg)
 function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = [
   Rule("itext",     regex(@"^" + normal + "+"), inlineNormal ),
 
-  Rule("iquotes",   regex(@"^(?:'(?!\s|s\b|re\b)((?:[^\\'`\$\[<]|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""`\$\[<]|\\.)*)"")"), inlineQuotes ),
+  //Rule("iquotes",   regex(@"^(?:'(?!\s|s\b|re\b)((?:[^\\'`\$\[<]|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""`\$\[<]|\\.)*)"")"), inlineQuotes ),
+  Rule("iquotes",   regex(@"^(?:'(?!\s|s\b|re\b)((?:[^\\']|\\.|'[a-zA-Z])*)'(?![a-zA-Z])|""((?:[^\\""]|\\.)*)"")"), inlineQuotes ),
   Rule("icode",     regex(@"^(`+)((?:[^`]|(?!\1)`)*)\1(?:" + attrs + ")?"), inlineCode ),
   Rule("ilink",     regex(@"^([\n ]*)" + linkreg), inlineLink ),
   Rule("iemph*",    regex(@"^(\*)((?:[^\\*]|\\.)+)\*"), inlineEmph),
 
   Rule("iimg",      regex(@"^()!" + linkreg), inlineImg ),
   Rule("ifootnote", regex(@"^\[\^" + xlinkid + @"\]"), inlineFootnote ),
+  //Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iguil",     regex(@"^<<((?:[^\\>]|>(?!>)|\\.)*)>>"), inlineQuotes ),
   Rule("iautolink", regex(@"^<([^/\s>][^\s>]*?(@|:/)[^\s>]+?)>(?:" + attrs + ")?"), inlineAutoLink ),
   Rule("istrong_",  regex(@"^(__)((?:[^\\]|\\.)+?)__(?!_)"), inlineStrong),
