@@ -22,6 +22,7 @@ import common
 import entity
 import texCommon
 import texParserBase
+import formatInline
 
 /* use entity for these commands */
 val texEntities = [("LaTeX","LogoLaTeX"),("LaTeXe","LogoLaTeXe"),("BibTeX","LogoBibTeX"),("AmSTeX","LogoAmSTeX"),("TeX","LogoTeX")].dict
@@ -861,7 +862,7 @@ function texDoi( cap : matched, context : texContext ) : string {
     Just(capx) -> capx.groups[1]
     Nothing    -> txt
   }
-  if (txt=="") then "" else ("[https://doi.org/" + path + "](https://doi.org/" + urlEncode(path) + "){.doi}")
+  if (txt=="") then "" else ("[" + hypenateUrl( "https://doi.org/" + path ) + "](https://doi.org/" + urlEncode(path) + "){.doi}")
 }
 
 function urlEncode(txt) : string {

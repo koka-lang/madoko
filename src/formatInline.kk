@@ -479,7 +479,7 @@ function inlineEscape( cap : matched, context : inlineContext ) : string {
   else context.fmtText(txt)
 }
 
-function hypenateUrl( url : string ) : string {
+public function hypenateUrl( url : string ) : string {
   url.replaceAll(rxPostHyphen,"$1&#8203;").replaceAll("%","&#8203;%")
 }
 val rxPostHyphen = regex(@"([\-\._/\?#\[\]@!$&'\(\)\*\+,;=]+)")

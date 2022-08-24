@@ -185,9 +185,14 @@ var madokoFormat = {
   },
   "@DOI/true": function (state, str) {
     var doitext = getBibitem( this, state).DOItext || str;
-    return "[https://doi.org/" + doitext + "](https://doi.org/" + escapeURL(str) + "){.bib-doi}";
+    return "[" + hyphenateUrl( "https://doi.org/" + doitext ) + "](https://doi.org/" + escapeURL(str) + "){.bib-doi}";
   }
 };
+
+function hyphenateUrl(url) {
+  return url.replace(/([\-\._/\?#\[\]@!$&'\(\)\*\+,;=]+)/g,"$1&#8203;");
+}
+
 
 function getBibitem( self, state ) {
   var id = self.item_id;
