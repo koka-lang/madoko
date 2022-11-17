@@ -41,6 +41,24 @@ MacOSX, and is used on the [Madoko.net] server as well.
 [MacTeX]:     http://tug.org/mactex/
 [Madoko.net]: https://www.madoko.net
 
+## Compile madoko
+
+We compile madoko at this time with an older version of Koka. Check out Koka
+in a peer directory of Madoko; i.e. `.../dev/madoko` and `.../dev/koka-0.6`:
+
+    cd ..
+    git clone https://github.com/koka-lang/koka.git  koka-0.6
+
+Then set it to the older version:
+
+    cd koka-0.6
+    git checkout v0.6.0-dev
+    npm install
+
+and build the release version:
+
+    jake variant=release
+
 ## Madoko philosophy
 
 The main design goal of Madoko is to enable light-weight creation of 

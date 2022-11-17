@@ -44,7 +44,7 @@ var webclient = path.join(web,"client");
 //
 // and build the release version:
 //
-// > jake compiler VARIANT=release
+// > jake compiler variant=release
 
 var kokaDir   = "../koka-0.6"
 var libraryDir= path.join(kokaDir,"lib")
