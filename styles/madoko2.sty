@@ -302,14 +302,14 @@
 % ---------------------------------------------------
 
 % expressions for various css units
-\newcommand*\dimeval[1]{\dimexpr #1\relax}
+\newcommand*\dimevaluate[1]{\dimexpr #1\relax}
 \newcommand*\dimpx[1]{#1\px}
 \newcommand*\dimrem[1]{#1\dim@rem}
 \newcommand*\dimch[1]{#1\dim@ch}
 \newcommand*\dimvh[1]{#1\textheight}
 \newcommand*\dimvw[1]{#1\textwidth}
-\newcommand*\dimvmin[1]{\dimeval{\dimmin\textwidth\textheight * #1}}
-\newcommand*\dimvmax[1]{\dimeval{\dimmax\textwidth\textheight * #1}}
+\newcommand*\dimvmin[1]{\dimevaluate{\dimmin\textwidth\textheight * #1}}
+\newcommand*\dimvmax[1]{\dimevaluate{\dimmax\textwidth\textheight * #1}}
 
 \newlength\dim@rem
 \newlength\dim@ch
@@ -378,7 +378,7 @@
 %
 % \dimauto{<width>}{<other-margin>}
 \newcommand\dimauto[2]{%
-  \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
+  \ifblank{#2}{\dimevaluate{(\linewidth-#1)/2}}{\dimevaluate{\linewidth-#1-#2}}%
 }
 
 \newenvironment{mdmarginlr}[2]{%
