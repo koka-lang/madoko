@@ -302,14 +302,14 @@
 % ---------------------------------------------------
 
 % expressions for various css units
-\newcommand*\dimeval[1]{\dimexpr #1\relax}
+\newcommand*\dimevalx[1]{\dimexpr #1\relax}
 \newcommand*\dimpx[1]{#1\px}
 \newcommand*\dimrem[1]{#1\dim@rem}
 \newcommand*\dimch[1]{#1\dim@ch}
 \newcommand*\dimvh[1]{#1\textheight}
 \newcommand*\dimvw[1]{#1\textwidth}
-\newcommand*\dimvmin[1]{\dimeval{\dimmin\textwidth\textheight * #1}}
-\newcommand*\dimvmax[1]{\dimeval{\dimmax\textwidth\textheight * #1}}
+\newcommand*\dimvmin[1]{\dimevalx{\dimmin\textwidth\textheight * #1}}
+\newcommand*\dimvmax[1]{\dimevalx{\dimmax\textwidth\textheight * #1}}
 
 \newlength\dim@rem
 \newlength\dim@ch
@@ -378,7 +378,7 @@
 %
 % \dimauto{<width>}{<other-margin>}
 \newcommand\dimauto[2]{%
-  \ifblank{#2}{\dimeval{(\linewidth-#1)/2}}{\dimeval{\linewidth-#1-#2}}%
+  \ifblank{#2}{\dimevalx{(\linewidth-#1)/2}}{\dimevalx{\linewidth-#1-#2}}%
 }
 
 \newenvironment{mdmarginlr}[2]{%
@@ -807,8 +807,8 @@
 
 \newcommand\prespace{\hspace*{\presp}}
 \newcommand\preindent[1]{\hspace*{#1\presp}}
-\newcommand\prestrut{\strut}
-\newcommand\prebr{\prestrut\newline\strut\ignorespaces}
+\newcommand\mdprestrut{\strut}
+\newcommand\prebr{\mdprestrut\newline\strut\ignorespaces}
 
 \newenvironment{mdpre}%
   {\begin{mdparblock}[\mdpreskip]\ttfamily\raggedright\mdnohyphens
@@ -828,9 +828,9 @@
 \newcommand\mdcode[1]{\texttt{%
   \mdsetprespace
   \let\nobreakspace\mdcodespace
-  \mdnohyphens 
+  \mdnohyphens
   #1}}
-  
+
 %-------------------------------------------------------------
 % Pretty code
 %-------------------------------------------------------------

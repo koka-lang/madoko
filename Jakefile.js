@@ -34,21 +34,16 @@ var webclient = path.join(web,"client");
 // Then set it to the older version:
 //
 // > cd koka-0.6
-// > git checkout v0.6.1-dev   (or v0.6.x-dev)
-// > npm install
+// > git checkout v0.6.2-dev   (or v0.6.x-dev)
+// > stack build
 //
-// you may need to install ghc (tested with v8.0.1) and run cabal:
+// And copy the exe to the top directory:
 //
-// > cabal update
-// > cabal install mtl containers parsec text directory process random base
-//
-// and build the release version:
-//
-// > jake compiler VARIANT=release
+// > cp .../koka-0.6/.stack-work/install/.../bin/koka.exe .
 
 var kokaDir   = "../koka-0.6"
 var libraryDir= path.join(kokaDir,"lib")
-var kokaExe   = path.join(kokaDir,"out/release/koka-0.6.0-dev")
+var kokaExe   = path.join(kokaDir,"koka.exe") // "out/release/koka-0.6.0-dev"
 var testDir   = "test";
 
 var kokaFlags = "-i" + sourceDir + " -i" + libraryDir + " " + (process.env.kokaFlags || "");

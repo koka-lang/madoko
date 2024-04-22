@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------
   Copyright 2015 Daan Leijen, Microsoft Corporation.
- 
+
   This is free software; you can redistribute it and/or modify it under the
   terms of the Apache License, Version 2.0. A copy of the License can be
   found in the file "license.txt" at the root of this distribution.
@@ -21,7 +21,7 @@ function properties(obj) {
     if (obj.hasOwnProperty(key)) {
       attrs.push(key);
     }
-  } 
+  }
   return attrs;
 }
 
@@ -89,15 +89,15 @@ var texvals1 = texnest(texvals0) + "*"
 var texvals  = texnest(texvals1) + "*"
 
 // ---------------------------------------------
-// Convert authors 
+// Convert authors
 // ---------------------------------------------
 function convertAuthorList(item, bibitem, ctex, options, ikey, bikey ) {
   var texarg  = new RegExp("^(?:" + texcmd + "|\\{" + texvals + "\\})" );
   var texword = new RegExp("(?:[^\\s\\{]|\\{" + texvals + "\\})+", "g");
-    
+
   // is the first letter lower-case? This is used to determine the 'von' part
   // of a name so we need to be conservative in the case of, say, chinese names
-  // where there is no lowercase vs. uppercase. 
+  // where there is no lowercase vs. uppercase.
   function firstIsLower(w) {
     if (!w) return false;
     var cap = texarg.exec(w);
@@ -120,15 +120,15 @@ function convertAuthorList(item, bibitem, ctex, options, ikey, bikey ) {
 
   item[ikey] = trim(authors).split(/\s*\band\b\s*/gi).map( function(author) {
     if (author==="others") return { literal: "others" };
-    
+
     var parts = author.split(/\s*,\s*/g);
     var first = [];
     var von   = [];
     var last  = [];
     var jr    = [];
-    if (parts.length>1) { // vonlast,first - vonlast,jr,first 
+    if (parts.length>1) { // vonlast,first - vonlast,jr,first
       // split the vonlast part
-      var ws = words(parts[0]); 
+      var ws = words(parts[0]);
       for(var i = 0; i < ws.length; i++) {
         if (i < ws.length-1 && firstIsLower(ws[i])) {
           von.push(ws[i]);
@@ -148,7 +148,7 @@ function convertAuthorList(item, bibitem, ctex, options, ikey, bikey ) {
       }
     }
     else { // one name
-      var ws    = words(author);      
+      var ws    = words(author);
       for(var i = 0; i < ws.length; i++) {
         if (firstIsLower(ws[i])) {
           von.push(ws[i]);
@@ -180,14 +180,14 @@ function convertAuthors(item,bibitem,ctex,options) {
   convertAuthorList(item,bibitem, ctex,options, "translator", "translator");
   convertAuthorList(item,bibitem, ctex,options, "director", "director");
   convertAuthorList(item,bibitem, ctex,options, "editor", "eds");
-  if (bibitem.editortype==="director") 
+  if (bibitem.editortype==="director")
     convertAuthorList(item,bibitem, ctex,options, "director", "editor");
   else
     convertAuthorList(item,bibitem, ctex,options, "editor", "editor");
 }
 
 // ---------------------------------------------
-// Convert entry type 
+// Convert entry type
 // ---------------------------------------------
 
 var typeMap = {
@@ -237,7 +237,7 @@ var typeMap = {
   newsarticle   : "article-newspaper",
   performance   : "speech",
   review        : "review",
-  software      : "book",
+  software      : "software",
   standard      : "legislation",
   video         : "motion-picture",
 }
@@ -246,9 +246,9 @@ function convertType(item, bibitem) {
   var tp = typeMap[bibitem.bibtype];
   if (tp==null) {
     if (bibitem.bibtype==="unpublished") {
-      if (bibitem.eventdate || bibitem.eventtitle || bibitem.venue) 
+      if (bibitem.eventdate || bibitem.eventtitle || bibitem.venue)
         item.type = "speech";
-      else 
+      else
         item.type = "manuscript";
     }
     else {
@@ -314,19 +314,19 @@ function convertTitles(item,bibitem,ctex) {
 // ---------------------------------------------
 
 function convertDate(item,bibitem,ikey,bikey) {
-  var prefix = bikey.replace("date","");    
+  var prefix = bikey.replace("date","");
   var dates = [];
   var rng = bibitem[bikey];
   if (!rng) {
     // old-style date
     dates[0] = [bibitem[prefix+"year"],bibitem[prefix+"month"],bibitem[prefix+"day"]];
-    dates[1] = [bibitem[prefix+"endyear"],bibitem[prefix+"endmonth"],bibitem[prefix+"endday"]];    
+    dates[1] = [bibitem[prefix+"endyear"],bibitem[prefix+"endmonth"],bibitem[prefix+"endday"]];
   }
   else {
     // parse modern date
     dates = rng.split(/\s*\/\s*/g).map( function(date) { return date.split(/\s*\-\s*/g); } );
   }
-  
+
   dates = dates.map( function(date) {
     return (date ? date.filter( function(x) { return (x ? true : false); } ).map( function(n) {
       return convertMonth(n.replace(/^\-\-+/,"-").replace(/^0+(?=\d)/,""));
@@ -335,7 +335,7 @@ function convertDate(item,bibitem,ikey,bikey) {
 
   if (dates && dates.length>0) item[ikey] = { "date-parts": dates };
   if (bibitem[prefix+"season"]) item[ikey].season = bibitem[prefix+"season"];
-  if (bibitem[prefix+"circa"]) item[ikey].season = bibitem[prefix+"circa"];  
+  if (bibitem[prefix+"circa"]) item[ikey].season = bibitem[prefix+"circa"];
 }
 
 var months = { "jan":1,"feb":2,"mar":3,"apr":4,"may":5,"jun":6,
@@ -383,24 +383,24 @@ function convertStandard(item,bibitem,ctex) {
 function convertMisc(item,bibitem,ctex,options) {
   item["publisher-place"] = ctex(firstOf(bibitem,["address",(bibitem.bibtype === "patent" ? "" : "location")]));
   if (bibitem.bibtype==="patent") {
-    item["jurisdiction"]= ctex(bibitem["location"]); 
+    item["jurisdiction"]= ctex(bibitem["location"]);
   }
-  
+
   // pages
   var pages = bibitem.pages;
   if (pages) {
     item.page = pages.replace(/\-\-\-?/g,"-");
     item["page-first"] = pages.replace(/^(\d+).*$/,"$1");
   }
-  
+
   // volume
   item.volume = joinx([bibitem.volume,bibitem.part], ".");
   item.note   = ctex(joinx([bibitem.type!=="periodical" ? bibitem.note : "", bibitem.addendum],"."));
-  
+
   // number
   var number = bibitem.number;
   if (number) {
-    if (item.type==="book" || item.type==="chapter" || 
+    if (item.type==="book" || item.type==="chapter" ||
           item.type==="paper-conference" || item.type==="entry-encyclopedia") {
       // collection-number
       item["collection-number"] = number;
@@ -427,7 +427,7 @@ function convertMisc(item,bibitem,ctex,options) {
         else lang = langopts.variant;
       }
     }
-    var langinfo = Locales.getLocaleInfo(lang);  
+    var langinfo = Locales.getLocaleInfo(lang);
     if (langinfo) item.language = langinfo.langid;
   }
 
@@ -450,7 +450,7 @@ function convertElectronic(item,bibitem,ctex,options) {  // do before convertMis
     if (bibitem.note && rxArxiv.test(bibitem.note)) {
       etype = "arxiv";
       eprint = bibitem.note.replace(rxArxiv,"");
-      bibitem.note = "";    
+      bibitem.note = "";
     }
     else if (bibitem.pmcid || bibitem.pmc) {
       etype = "pmcid";
@@ -529,12 +529,12 @@ function convertElectronic(item,bibitem,ctex,options) {  // do before convertMis
       urlpre  = etypeid("HDL");
       urltext = eprint;
       url     = "https://hdl.handle.net/" + epath;
-    }  
+    }
     else if (etype==="mr") {
       urlpre  = etypeid("MR");
       urltext = eprint;
       url     = "https://www.ams.org/mathscinet-getitem?mr=MR" + epath;
-    }  
+    }
   }
   else if (bibitem.note && /^https?:\/\/.*/.test(bibitem.note)) {
     url = bibitem.note;
@@ -557,7 +557,7 @@ function convertElectronic(item,bibitem,ctex,options) {  // do before convertMis
   var doitext = bibitem.doitext || "";
   if (options.url !== false && bibitem.url) {
     if (!doi && options.doi !== false && rxDoi.test(bibitem.url)) {
-      doi = bibitem.url;        
+      doi = bibitem.url;
       doitext = urltext;
     }
     else {
@@ -603,14 +603,14 @@ function transformCrossRef( bibitem ) {
   var item = {};
   var multiVolume = /^mv/.test(bibitem.bibtype);
   var isBooklike  =(bibitem.bibtype==="book" || bibitem.bibtype==="proceedings" ||
-                    bibitem.bibtype==="collection" || bibitem.bibtype==="reference" || 
+                    bibitem.bibtype==="collection" || bibitem.bibtype==="reference" ||
                     bibitem.bibtype==="periodical");
 
   properties(bibitem).forEach( function(key) {
     if (dontPropagate[key]) return;
     item[key] = bibitem[key];
     if (key === "author") {
-      if (bibitem.bibtype==="book" || bibitem.bibtype==="mvbook") 
+      if (bibitem.bibtype==="book" || bibitem.bibtype==="mvbook")
         item.bookauthor = bibitem.author;
     }
     if (multiVolume) {
@@ -621,7 +621,7 @@ function transformCrossRef( bibitem ) {
     if (isBooklike) {
       if (bibitem.title)    item.booktitle = bibitem.title;
       if (bibitem.subtitle) item.booksubtitle = bibitem.subtitle;
-      if (bibitem.titleaddon) item.booktitleaddon = bibitem.titleaddon;      
+      if (bibitem.titleaddon) item.booktitleaddon = bibitem.titleaddon;
     }
   });
   return item;
@@ -671,11 +671,11 @@ function convertBibitem(bibitem, bibitems, ctex, baseOptions) {
   }
 
   var item = {};
-  item.id = bibitem.bibkey;  
-  
+  item.id = bibitem.bibkey;
+
   convertType(item, bibitem);
   if (bibitem.type) item.genre = bibitem.type;
-  
+
   convertAuthors(item,bibitem,ctex,options);
   convertTitles(item,bibitem,ctex);
   convertDates(item,bibitem);
@@ -699,7 +699,7 @@ function convertBibitem(bibitem, bibitems, ctex, baseOptions) {
 
 
 // ---------------------------------------------
-// 
+//
 // ---------------------------------------------
 
 function evalBib(entries,convTex,fname,options) {
@@ -710,8 +710,8 @@ function evalBib(entries,convTex,fname,options) {
   var warnings = [];
   var bibitems = {};
 
-  var bib = { 
-    _preamble : "", 
+  var bib = {
+    _preamble : "",
     _comments : "",
   };
 
@@ -739,7 +739,7 @@ function evalBib(entries,convTex,fname,options) {
       bib[item.id.toLowerCase()] = item;
     }
   });
-  
+
   return { bib: bib, warnings: warnings.join("\n") };
 }
 
@@ -753,7 +753,7 @@ convertTex: function from string to string -- applied to bibtex fields
 options   : optional options; options can be extended in every bibliography entry
             by using the field 'options', like: 'options={useprefix=true}'
   bibtex     : set to 'true' to disable cross-reference transformations
-               (setting for example a 'title' field in a BOOK entry to 'booktitle' when 
+               (setting for example a 'title' field in a BOOK entry to 'booktitle' when
                  imported into a @INCHAPTER entry.)
   juniorcomma: set to 'true' to emit a comma before a 'Jr' part of a name
   useprefix  : set to 'true' to make a particle ('von' part) non-dropping in a citation.
@@ -794,7 +794,7 @@ function bibtexToCsl( inputs, convertTex, options ) {
     res.warnings = joinx([res.warnings,bib.warnings],"\n");
     var preamble = joinx([res.bib._preamble,bib.bib._preamble],"\n");
     var comments = joinx([res.bib._comments,bib.bib._comments],"\n");
-    extend(res.bib,bib.bib); 
+    extend(res.bib,bib.bib);
     res.bib._preamble = preamble;
     res.bib._comments = comments;
   });

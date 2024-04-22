@@ -2,8 +2,8 @@ Package         : [heading-base={&heading-base;},section-num={&tex-section-num;}
 Logo            : False
 Tex2            : True
 Maketitle       : False
-Heading Depth   : 3 
-Toc Depth       : 3 
+Heading Depth   : 3
+Toc Depth       : 3
 Heading Base    : 2
 Tex Section Num : False
 Bib Label       : True
@@ -38,7 +38,7 @@ Comment     { display: none }
 Snippet     { input: math; display:block; math-full: true }
 Footnote    { label: "[@footnote]{.footnote-label}"; line-adjust: 0 }
 @if html {
-  Footnote { 
+  Footnote {
     before: "[\/^&label;.^]{.footnote-before}";
     after : "&nl;&&;null;[&#8617;](#back-&id;){.footnote-backref}";
   }
@@ -79,12 +79,12 @@ math-display    { input: math }
 
 .booktable {
   rule-top-width          : 2px;
-  rule-bottom-width       : 2px 
+  rule-bottom-width       : 2px
   rule-mid-width          : 1.35px;
   thead-tr-font-weight    : normal;
   rule-top-sep            : 4pt;
   rule-bottom-sep         : 4pt;
-  rule-mid-sep            : 3pt; 
+  rule-mid-sep            : 3pt;
   thead-tr-1-padding-top  : 3pt;
   thead-tr-padding-bottom : 3pt;
 }
@@ -129,7 +129,7 @@ heading-format   : &label;&heading-endperiod;&ensp;
 }
 
 h1,h2,h3,h4 {
-  toc-line: "&heading-format;&source;"; 
+  toc-line: "&heading-format;&source;";
 }
 
 .tocblock,.tocitem { tight:true }
@@ -195,9 +195,9 @@ Math {
   .para-block
 }
 
-MathPreCenter { 
-  tex-env:mdmathprecenter; 
-  text-align:center; 
+MathPreCenter {
+  tex-env:mdmathprecenter;
+  text-align:center;
 }
 
 theorem-caption-end   : &&;br;
@@ -224,9 +224,9 @@ Lemma {
 }
 Proof {
   before: "[&proof-format;]{.proof-before}";
-  theorem-caption-end: " " 
+  theorem-caption-end: " "
 }
-Proposition { 
+Proposition {
   label: '[@proposition]{.proposition-label}';
   before: '[&proposition-format;]{.proposition-before}';
 }
@@ -263,7 +263,7 @@ WrapFigure {
   .float;
   float: right;
   tex-float: outside;
-  width: 40%;  
+  width: 40%;
 }
 
 floating-endperiod: .
@@ -285,7 +285,7 @@ SubFigure {
   label     : '@Figure@Figure-SubFigure';
   fig-label : '(@Figure-SubFigure)';
   caption   : '';
-  after     : "&nl;~ Begin SubFigureCaption&nl;&toc-line;&nl;~End SubFigureCaption&nl;"; 
+  after     : "&nl;~ Begin SubFigureCaption&nl;&toc-line;&nl;~End SubFigureCaption&nl;";
   vertical-align: bottom;
   padding   : 0.5ex;
   tight     : true;
@@ -353,7 +353,7 @@ Html Bib Label Width: 2rem
   .bibitem-before {
     display: none;
   }
-  bibitem { 
+  bibitem {
     text-indent: -1em;
     margin-left: 1em;
   }
@@ -366,7 +366,7 @@ Html Bib Label Width: 2rem
     text-align   : right;
     font-size    : 90%;
   }
-  bibitem { 
+  bibitem {
     text-indent: -&html-bib-label-width;;
     margin-left: &html-bib-label-width;;
   }
@@ -486,13 +486,13 @@ name-inj  : in
 .token.emphasis,.token.italic { font-style: italic }
 .token.strong,.token.bold     { font-weight: bold  }
 
-pre.pretty, code.pretty       { .serif } 
+pre.pretty, code.pretty       { .serif }
 
 .ptoken.identifier    { font-style: italic }
 .ptoken.constructor   { font-style: italic }
 .ptoken.operator      { tex-cmd: "\ppreop" }
 .ptoken.comment       { color: gray }
-.ptoken.keyword       { .sans-serif } 
+.ptoken.keyword       { .sans-serif }
 
 @if not tex {
   pre.pretty, code.pretty { font-size: 100% }
@@ -504,10 +504,10 @@ pre.pretty, code.pretty       { .serif }
 
 
 <!-------------------------------------------------------------------
-   HTML commands 
+   HTML commands
 --------------------------------------------------------------------->
 @if html {
-  abstract  { 
+  abstract  {
     before:"**&name-abstract;.** ";
     margin-left: 3em;
     margin-right: 3em;
@@ -516,7 +516,7 @@ pre.pretty, code.pretty       { .serif }
 }
 
 <!-------------------------------------------------------------------
-   Tex commands 
+   Tex commands
 --------------------------------------------------------------------->
 
 HR         { tex-cmd: "\mdhr"; display: block }
@@ -525,40 +525,40 @@ Pre.pretty { tex-env-outer-postfix: pretty }
 Abstract   { tex-env: abstract }
 
 H0,H1,H2,H3,H4,H5,H6  { display: block; }
-H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  { 
+H0.clearnum,H1.clearnum,H2.clearnum,H3.clearnum,H4.clearnum,H5.clearnum,H6.clearnum  {
   tex-cmd-postfix:"*";
   toc-line: "&source;";
 }
 
 @if heading-base<=0 {
   H0     { tex-cmd:"\part" }
-  H1     { tex-cmd:"\part" } 
+  H1     { tex-cmd:"\part" }
   H2     { tex-cmd:"\chapter" }
   H3     { tex-cmd:"\section" }
   H4     { tex-cmd:"\subsection" }
-  H5     { tex-cmd:"\subsubsection" } 
-  H6     { tex-cmd:"\paragraph" } 
+  H5     { tex-cmd:"\subsubsection" }
+  H6     { tex-cmd:"\paragraph" }
 }
 @if heading-base==1 {
   H0     { tex-cmd:"\part" }
-  H1     { tex-cmd:"\chapter" } 
+  H1     { tex-cmd:"\chapter" }
   H2     { tex-cmd:"\section" }
   H3     { tex-cmd:"\subsection" }
   H4     { tex-cmd:"\subsubsection" }
-  H5,H6  { tex-cmd:"\paragraph" } 
+  H5,H6  { tex-cmd:"\paragraph" }
 }
 @if heading-base==2 {
   H0     { tex-cmd:"\chapter" }
-  H1     { tex-cmd:"\section" } 
+  H1     { tex-cmd:"\section" }
   H2     { tex-cmd:"\subsection" }
   H3     { tex-cmd:"\subsubsection" }
-  H4,H5,H6  { tex-cmd:"\paragraph" } 
+  H4,H5,H6  { tex-cmd:"\paragraph" }
 }
 @if heading-base>=3 {
   H0     { tex-cmd:"\section" }
-  H1     { tex-cmd:"\subsection" } 
+  H1     { tex-cmd:"\subsection" }
   H2     { tex-cmd:"\subsubsection" }
-  H3,H4,H5,H6  { tex-cmd:"\paragraph" } 
+  H3,H4,H5,H6  { tex-cmd:"\paragraph" }
 }
 
 Figure          { tex-env-outer: "figure[&tex-float-placement;]"; tex-float-placement: "tbp" }
@@ -586,7 +586,7 @@ BlockQuote{ tex-env: "quote" }
 .Columns  { tex-tabcolsep: "0pt" }
 .Column   { tex-env-outer: "mdcolumn" }
 .inst     { tex-cmd: "\mdinst" }
-.equation-before { tex-cmd: "\mdmathtag" } 
+.equation-before { tex-cmd: "\mdmathtag" }
 
 Bibliography { tex-env: "thebibliography{&caption;}"; tex-cmd-after: "\par"; tex-cmd-outer-before: "\mdsetrefname{&name-references;}%mdk&nl;"  }
 BibItem      { tex-cmd-before:"\bibitem&tex-bibitem-args;"; tex-bibitem-args:"&tex-bibitem-label;{&id;}"; tex-bibitem-label:"" }
@@ -626,7 +626,7 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
 @if Maketitle {
   Author        { display: inline-block  }
   TitleBlock    { display: inline-block;
-                  tex-cmd-inner-after: "\mdtitleauthorrunning{&title-running;}{&author-running;}";  
+                  tex-cmd-inner-after: "\mdtitleauthorrunning{&title-running;}{&author-running;}";
                 }
   TitleHeader,Authors,AuthorRow { tag: false }
   Author        { tex-cmd-before:"\mdxauthorstart"; tex-cmd-after:"\mdxauthorend"; display:table-cell }
@@ -638,7 +638,7 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
   AuthorName    { tex-cmd:"\mdxauthorname" }
   AuthorAddress { tex-cmd:"\mdxauthoraddress" }
   AuthorNote    { tex-cmd:"\mdxauthornote" }
-  AuthorEmail   { tex-cmd:"\mdxauthoremail" }  
+  AuthorEmail   { tex-cmd:"\mdxauthoremail" }
 }
 
 @if not Maketitle {
@@ -646,7 +646,7 @@ AuthorName,AuthorAddress,AuthorEmail,AuthorNote { tight: true }
   TitleBlock,Title,Subtitle,TitleNote         { .para-block }
 
   Authors       { width: 80% }
-  AuthorRow     { .columns; margin-top: 2ex; width: 100% } 
+  AuthorRow     { .columns; margin-top: 2ex; width: 100% }
   Author        { .column; text-align: center }
   .AuthorEmail  { .email }
 
