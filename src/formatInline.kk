@@ -38,6 +38,7 @@ val linkhref = @"\s*<?([^\s>)]*)>?(?:\s+['""](.*?)['""])?\s*"
 val xlinkid   = @"((?:[^\[\]\n]|\[[^\]\n]*\])*)"
 val linktxt  = @"\[(?!\^)((?:\[(?:[^\[\]]|\[(?:[^\[\]]|\[[^\]]*\])*\])*\]|\\.|[^\\\]]|\](?=[^\[{]*\]))*)\]"
 val linkreg  = linktxt + @"((?:\(" + linkhref + @"\)|\s*\[" + xlinkid + @"\])?(?:" + attrs + @")?)"
+val entity   = @"&(#?[\w\-:]*);"
 
 public val rxLink = regex(linkreg)
 
@@ -63,7 +64,7 @@ function inlineCoreGrammar( fmt : formatter ) : grammar<string,inlineContext> = 
   Rule("isup",      regex(@"^\^((?:[^\^\\\n\r]|\\.)+)\^"), inlineSup ),
   Rule("itagcode",  regex(@"^(<code\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)([\s\S]*?)(</code>)"), inlineTagCode ),
   Rule("itag",      regex(@"^<(?:!--[\s\S]*?-->|/?\w+\b(?:""[^""]*""|'[^']*'|[^'"">])*?>)"), inlineTag ),
-  Rule("ientity",   regex(@"^&(#?[\w\-:]*);"), inlineEntity ),
+  Rule("ientity",   regex(@"^" + entity), inlineEntity ),
   //Rule("ilabel",    regex(@"^(#[a-zA-Z][\w\-:]*);?"), inlineLabel ),
 
   Rule("idashes",   regex(@"^--(-)?"), inlineDashes ),
@@ -613,7 +614,7 @@ function inlineLinkNoRef( isImage:bool, spaces : string, nbsp : string, txt : st
   }
 }
 val rxCiteSep         = regex(@"\s*[;]\s*")
-val rxCiteSepExclude  = regex(@"[^\\;\s]|\\.")
+val rxCiteSepExclude  = regex(entity + @"|[^\\;\s]|\\.")
 val rxCitation        = regex(@"^((?:[^\w\\@+!-]|[+!-](?!@)|\\.|\w(?![+!-]?@))*)(?:([+!-]?)@" + rxCitename + @")([\s\S]*)$")
 val rxCitename        = @"(\w(?:[\w]|[:\-\.]\w)*)"
 
