@@ -1,0 +1,167 @@
+{
+  "displayName":    "TLA+",
+  "name":           "tla",
+  "mimeTypes":      ["text/x-tla"],
+  "fileExtensions": ["tla"],
+  "editorOptions": { "tabSize": 4, "insertSpaces": false },
+
+  "lineComment": "\\*",
+  "blockCommentStart": "(*",
+  "blockCommentEnd":   "*)",
+
+  "keywords": [
+    "EXTENDS",
+    "VARIABLE",
+    "VARIABLES",
+    "LET",
+    "IN",
+    "EXCEPT",
+    "ENABLED",
+    "UNCHANGED",
+    "LAMBDA",
+    "DOMAIN",
+    "CONSTANTS",
+    "CONSTANT",
+    "CHOOSE",
+    "LOCAL",
+    "ASSUME",
+    "ASSUMPTION",
+    "AXIOM",
+    "RECURSIVE",
+    "INSTANCE",
+    "WITH",
+    "THEOREM",
+    "SUBSET",
+    "UNION",
+    "SF_",
+    "WF_",
+    "USE",
+    "DEFS",
+    "BY",
+    "DEF",
+    "SUFFICES",
+    "PROVE",
+    "OBVIOUS",
+    "NEW",
+    "QED",
+    "RECURSIVE",
+    "PICK",
+    "HIDE",
+    "DEFINE",
+    "WITNESS",
+    "HAVE",
+    "TAKE",
+    "PROOF",
+    "ACTION",
+    "COROLLARY",
+    "LEMMA",
+    "OMITTED",
+    "ONLY",
+    "PROPOSITION",
+    "STATE",
+    "TEMPORAL"
+  ],
+  "controlKeywords": [
+    "IF",
+    "THEN",
+    "ELSE",
+    "CASE",
+    "OTHER"
+  ],
+  "escapes": "\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})",
+  "moduleStart": "((?:\\s*)-{4,}\\s*)((?:MODULE)\\s*)(\\w+)(\\s*-{4,})",
+  "varDefinitions": "(\\w+)(\\s*==)",
+  "primedOperators": "\\b(\\w+')",
+  "operators": "(\\w+)(\\s*\\((?!\\*))",
+  "tokenizer": {
+    "root": [
+      [
+        "@moduleStart",
+        [
+          "comment",
+          "tag",
+          "type",
+          "comment"
+        ]
+      ],
+      [
+        "@varDefinitions",
+        [
+          "type",
+          ""
+        ]
+      ],
+      [
+        "@primedOperators",
+        "keyword"
+      ],
+      [
+        "@operators",
+        [
+          "type",
+          ""
+        ]
+      ],
+      [
+        "[A-Z][\\w\\$]*",
+        {
+          "cases": {
+            "@keywords": "tag",
+            "@controlKeywords": "regexp"
+          }
+        }
+      ],
+      {
+        "include": "@whitespace"
+      },
+      [
+        "[;,.]",
+        "delimiter"
+      ],
+      [
+        "\"([^\"\\\\]|\\\\.)*$",
+        "string.invalid"
+      ],
+      [
+        "\"",
+        {
+          "token": "string.quote",
+          "bracket": "@open",
+          "next": "@string"
+        }
+      ]
+    ],
+    "whitespace": [
+      ["[ \\t\\r\\n]+", "white"],
+      ["\\(\\*",        "comment", "@comment" ],
+      ["\\\\\\*.*$",    "comment"]
+    ],
+
+    "comment": [
+      ["(\\\\\\*|[^\\\\*])", "comment"],
+      ["\\*\\)$", "comment", "@pop"]
+    ],
+    "string": [
+      [
+        "[^\\\\\"]+",
+        "string"
+      ],
+      [
+        "@escapes",
+        "string.escape"
+      ],
+      [
+        "\\\\.",
+        "string.escape.invalid"
+      ],
+      [
+        "\"",
+        {
+          "token": "string.quote",
+          "bracket": "@close",
+          "next": "@pop"
+        }
+      ]
+    ]
+  }
+}
